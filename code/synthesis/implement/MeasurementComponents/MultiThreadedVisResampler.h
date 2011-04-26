@@ -47,10 +47,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MultiThreadedVisibilityResampler: public VisibilityResamplerBase
   {
   public: 
-    
+    enum VBLoader {NOONE=-1, DATATOGRID=0, GRIDTODATA, RESIDUALCALC};
      MultiThreadedVisibilityResampler():
       resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), 
-      sumwt_p(), gridderWorklets_p(), vbsVec_p(), visResamplerCtor_p()
+      sumwt_p(), gridderWorklets_p(), vbsVec_p(), visResamplerCtor_p(), 
+      whoLoadedVB_p(NOONE), currentVBS_p(0)
     {
       nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, 1);
       if (nelements_p < 0) nelements_p = 1;
@@ -67,6 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       cleanup();
       nelements_p=0;
+      currentVBS_p=0;
     }
 
     MultiThreadedVisibilityResampler(const MultiThreadedVisibilityResampler& other){copy(other);};
@@ -144,7 +146,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 			   const Matrix<Double>& sumwt);
 
     void allocateBuffers();
-    void scatter(Vector<VBStore>& vbsStores,const VBStore& vbs);
+    void scatter(Matrix<VBStore>& vbsStores,const VBStore& vbs);
 
     Int nelements_p;
     Bool doublePrecision_p;
@@ -153,8 +155,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<CountedPtr<Array<Complex> > > singleGriddedData_p;
     Vector<CountedPtr<Matrix<Double> > > sumwt_p;
     Vector<CountedPtr<ResamplerWorklet> > gridderWorklets_p;
-    Vector<VBStore> vbsVec_p;
-    //    CountedPtr<ThreadCoordinator<Bool> > threadClerk_p;
+    //    Vector<VBStore> vbsVec_p;
+    Matrix<VBStore> vbsVec_p;
+
     CountedPtr<ThreadCoordinator<Int> > threadClerk_p;
     Bool threadStarted_p;
     // DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
@@ -162,6 +165,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Timers t4G_p,t4DG_p;
     async::Mutex *mutexForResamplers_p;
     CountedPtr<VisibilityResamplerBase> visResamplerCtor_p;
+    Int whoLoadedVB_p;
+    Int currentVBS_p;
  };
 }; //# NAMESPACE CASA - END
 
