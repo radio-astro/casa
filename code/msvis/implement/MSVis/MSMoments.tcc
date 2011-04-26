@@ -397,7 +397,12 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   TableRecord rec = desc.rwKeywordSet() ;
   String inUnit ;
   if ( rec.nfields() != 0 ) {
-    rec.get( rec.fieldNumber( "UNIT" ), inUnit ) ;
+    if ( rec.isDefined("UNIT") )
+      rec.get( rec.fieldNumber( "UNIT" ), inUnit ) ;
+    else if ( rec.isDefined("QuantumUnit") )
+      rec.get( rec.fieldNumber( "QuantumUnit" ), inUnit ) ;
+    else
+      inUnit = "K" ;
   }
   else {
     inUnit = "K" ;
@@ -509,7 +514,11 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
     colDesc.setName( "FLOAT_DATA" ) ;
     if ( goodUnits ) {
       // TODO: Set unit for MS?
-      colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits.getName() ) ;
+      //colDesc.rwKeywordSet().define( colDesc.rwKeywordSet().fieldNumber( "UNIT" ), momentUnits.getName() ) ;
+      if ( colDesc.rwKeywordSet().isDefined( "UNIT" ) )
+        colDesc.rwKeywordSet().define( "UNIT", momentUnits.getName() ) ;
+      else
+        colDesc.rwKeywordSet().define( "QuantumUnits", momentUnits.getName() ) ;
     }
     else {
       if ( giveMessage ) {

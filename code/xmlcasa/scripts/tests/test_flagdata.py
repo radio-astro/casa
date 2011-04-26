@@ -72,8 +72,8 @@ class test_rfi(test_base):
         
     def test1(self):
         flagdata(vis=self.vis, mode='rfi', time_amp_cutoff=2.0)
-        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 4179)
-        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 212)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 70902, 3000)
+        test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 5252, 144)
 
 
 class test_shadow(test_base):
@@ -598,7 +598,7 @@ class test_selections_alma(test_base):
         '''test scanintent selection'''
         # flag POINTING CALIBRATION scans 
         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
-        flagdata(vis=self.vis, scanintent='CAL*POINT*')
+        flagdata(vis=self.vis, intent='CAL*POINT*')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
         
 

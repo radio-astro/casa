@@ -14,7 +14,7 @@ from sdbaseline import sdbaseline
 
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, maskmode, order, interactive, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
 #def sdcal(sdfile, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, maskmode, order, verify, masklist, thresh, avg_limit, edge, outfile, outform, overwrite, plotlevel):
-def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, nwave, maxwavelength, clipthresh, clipniter, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
+def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, average, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, kernel, kwidth, blfunc, order, npiece, nwave, maxwavelength, clipthresh, clipniter, masklist, maskmode, thresh, avg_limit, edge, verifycal, verifysm, verifybl, verbosebl, outfile, outform, overwrite, plotlevel):
 
         a=inspect.stack()
         stacklevel=0
@@ -48,33 +48,33 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
 
 
             if calmode != 'none' or average: 
-              if kernel =='none' and maskmode=='none':
+              if kernel =='none' and blfunc=='none':
                 sdaverageout = outfile
               else:
                 sdaverageout = 'sdaverageout.tmp'
                 tmpfilelist+=sdaverageout+' '
                 if kernel !='none':
-                  if maskmode !='none':
+                  if blfunc !='none':
                     sdsmoothout = 'sdsmoothout.tmp'
                     sdbaselineout = outfile
                     tmpfilelist+=sdsmoothout+' '
                   else:
                     sdsmoothout = outfile
                 else:
-                  if maskmode != 'none':
+                  if blfunc != 'none':
                     sdbaselineout = outfile
             else:
               if kernel != 'none':
                 sdaverageout = 'sdaverageout_noncal.tmp'
                 tmpfilelist+=sdaverageout+' '
-                if maskmode == 'none':
+                if blfunc == 'none':
                   sdsmoothout = outfile
                 else:
                   sdsmoothout = 'sdsmoothout.tmp'
                   tmpfilelist+=sdsmoothout+' '
                   sdbaselineout = outfile
               else:
-                if maskmode != 'none':
+                if blfunc != 'none':
                   sdbaselineout = outfile
                   sdaverageout = 'sdaverageout_noncal.tmp'
                   tmpfilelist+=sdaverageout+' '
@@ -134,7 +134,7 @@ def sdcal(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, ca
             #print "*** sdbaseline stage ***";
             casalog.post( "" )
             casalog.post( "*** sdbaseline stage ***")
-            if maskmode != 'none':
+            if blfunc != 'none':
               tmpoutfile = sdbaselineout
               #sdbaseline.defaults()
 #              sdbaseline(sdfile=tmpsdfile, maskmode=maskmode,order=order,interactive=interactive,masklist=masklist, thresh=thresh, avg_limit=avg_limit, edge=edge, outfile=tmpoutfile, outform=outform, overwrite=True, plotlevel=plotlevel)

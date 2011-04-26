@@ -386,7 +386,7 @@ void QtProfile::setMultiProfile(int st)
       relative->setEnabled(false);
    }
    if(lastPX.nelements() > 0){
-      wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY);
+      wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
    }
 
 }
@@ -395,7 +395,7 @@ void QtProfile::setRelativeProfile(int st)
 {
    //qDebug() << "relative profile state change=" << st;  
    if(lastPX.nelements() > 0){
-      wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY);
+      wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
    }
 }
 
@@ -641,7 +641,7 @@ void QtProfile::changeCoordinateType(const QString &text) {
     rightButton->setVisible(0);
 
     if(lastPX.nelements() > 0){ // update display with new coord type
-	wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY);
+	wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
     }
 
 }
@@ -748,12 +748,12 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 
 void QtProfile::wcChanged( const String c,
 			   const Vector<Double> px, const Vector<Double> py,
-			   const Vector<Double> wx, const Vector<Double> wy ) 
+			   const Vector<Double> wx, const Vector<Double> wy,
+			   const ProfileType ptype)
 {
     if (!isVisible()) return;
     if (!analysis) return;
     //cout << "profile wcChanged     cube=" << cube << endl;
-
     //qDebug() << "top=" << fileName;
     //QHashIterator<QString, ImageAnalysis*> j(*over);
     //while (j.hasNext()) {
@@ -770,14 +770,19 @@ void QtProfile::wcChanged( const String c,
       return;
     }
 
-    // cout << "wcChanged: coordType=" << c 
-    //      << " coordinate=" << coordinate
+    // cout << "wcChanged: coordType=" << c
+    //     << " coordinate=" << coordinate
     //	 << " coordinateType=" << coordinateType << endl;
 
+    last_event_cs.resize(c.size());
     last_event_cs = c;
+    last_event_px.resize(px.size());
     last_event_px = px;
+    last_event_py.resize(py.size());
     last_event_py = py;
+    last_event_wx.resize(wx.size());
     last_event_wx = wx;
+    last_event_wy.resize(wy.size());
     last_event_wy = wy;
 
     if (c != coordinate) {
@@ -790,8 +795,8 @@ void QtProfile::wcChanged( const String c,
        
     Int ns;
     px.shape(ns);
-    //cout << "ns =" << ns << endl;  
-    //cout << "cube =" << cube << endl;  
+    //cout << "ns =" << ns << endl;
+    //cout << "cube =" << cube << endl;
   
     Vector<Double> pxv(ns);
     Vector<Double> pyv(ns);
@@ -811,17 +816,30 @@ void QtProfile::wcChanged( const String c,
     }
 
     if (ns < 1) return;
-    if (ns == 1) {
-        pc->setTitle("Single Point Profile");
-        region = "Point";
-    }
-    else if (ns == 2) {
-        pc->setTitle("Rectangle Region Profile");
-        region = "Rect";
-    }
-    else {
-        pc->setTitle("Polygon Region Profile");
-        region = "Poly";
+
+    switch (ptype)
+    {
+       case SINGPROF:
+    	   pc->setTitle("Single Point Profile");
+    	   region = "Point";
+    	   break;
+       case RECTPROF:
+    	   pc->setTitle("Rectangle Region Profile");
+           region = "Rect";
+           break;
+       case ELLPROF:
+    	   pc->setTitle("Elliptical Region Profile");
+           region = "Ellipse";
+           break;
+       case POLYPROF:
+           pc->setTitle("Polygon Region Profile");
+           region = "Poly";
+           break;
+       case UNKNPROF:
+    	   break;
+       default:
+           pc->setTitle("");
+           region = "";
     }
     pc->setWelcome("");
 
@@ -838,7 +856,7 @@ void QtProfile::wcChanged( const String c,
        position = QString("[%1, %2]").arg(xpos).arg(ypos);
     }
 
-    //qDebug() << c.chars() << "xpos:" 
+    //qDebug() << c.chars() << "xpos:"
     //           << xpos << "ypos:" << ypos;
     //qDebug() << "position:" << position;
     te->setText(position);
@@ -1060,7 +1078,7 @@ void QtProfile::wcChanged( const String c,
 }
 
 void QtProfile::redraw( ) {
-    wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy );
+    wcChanged( last_event_cs, last_event_px, last_event_py, last_event_wx, last_event_wy, UNKNPROF);
 }
 
 void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {

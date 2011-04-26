@@ -320,7 +320,8 @@ void ROVisibilityIterator::origin()
     curStartRow_p=0;
     freqCacheOK_p=False;
     flagOK_p = weightSpOK_p = False;
-    visOK_p.resize(3); visOK_p[0]=visOK_p[1]=visOK_p[2]=False;
+    visOK_p.resize(3);
+    visOK_p = False;
     floatDataCubeOK_p = False;
     setSelTable();
     attachColumns(attachTable());
@@ -382,9 +383,7 @@ void ROVisibilityIterator::advance()
 {
   newChanGroup_p=False;
   flagOK_p = False;
-  visOK_p[0] = False;
-  visOK_p[1] = False;
-  visOK_p[2] = False;
+  visOK_p = False;
   floatDataCubeOK_p = False;
   weightSpOK_p = False;
   curStartRow_p=curEndRow_p+1;
@@ -506,6 +505,8 @@ ROVisibilityIterator::getTopoFreqs(Vector<Double> & lsrFreq, Vector<Double> & se
     selFreq.assign (selFreq_p);
 }
 
+
+
 void ROVisibilityIterator::setState()
 {
   if (stateOk_p) return;
@@ -555,6 +556,13 @@ void ROVisibilityIterator::setState()
   stateOk_p=True;
 }
 
+const MSDerivedValues &
+ROVisibilityIterator::getMSD () const
+{
+    return msd_p;
+}
+
+
 void ROVisibilityIterator::updateSlicer()
 {
   
@@ -600,9 +608,7 @@ void ROVisibilityIterator::setTileCache(){
     const ColumnDescSet& cds=thems.tableDesc().columnDescSet();
 
     // Get the first row number for this DDID.
-    Vector<uInt> rownums;
-    rowIds(rownums);
-    uInt startrow = rownums[0];
+    uInt startrow = msIter_p.table().rowNumbers()(0);
 
     Vector<String> columns(8);
     // complex

@@ -174,42 +174,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>5</value>
     </param>
 
-    <param type="any" name="masklist">
-            <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
-            <any type="variant" limittype="string  doubleArray"/>
-            <value type="doubleArray"></value>
-    </param>
-
-    <param type="string" name="maskmode">
-            <description>mode of setting additional channel masks</description>
-            <value>none</value>
-            <allowed kind="enum">
-            <value>none</value>
-            <value>auto</value>
-            <value>list</value>
-	    <value>interact</value>
-            </allowed>
-    </param>
-
-    <param type="double" name="thresh" subparam='true'>
-            <description>S/N threshold for linefinder</description>
-            <value>5.0</value>
-    </param>
-
-    <param type="int" name="avg_limit" subparam='true'>
-            <description>channel averaging for broad lines</description>
-            <value>4</value>
-    </param>
-
-    <param type="intArray" name="edge" subparam='true'>
-            <description>channels to drop at beginning and end of spectrum</description>
-            <value type='vector'><value>0</value></value>
-    </param>
-
     <param type="string" name="blfunc">
 	    <description>baseline model function</description>
-            <value>poly</value>
+            <value>none</value>
 	    <allowed kind="enum">
+                <value>none</value>
 	        <value>poly</value>
 	        <value>cspline</value>
 	        <value>sinusoid</value>
@@ -237,13 +206,44 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
-            <description>clipping threshold for iterative spline fitting</description>
+            <description>clipping threshold for iterative fitting</description>
             <value>3.0</value>
     </param>
 
     <param type="int" name="clipniter" subparam="true">
-            <description>maximum number of iteration in spline fitting</description>
-            <value>1</value>
+            <description>maximum iteration number</description>
+            <value>0</value>
+    </param>
+
+    <param type="any" name="masklist">
+            <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
+            <any type="variant" limittype="string  doubleArray"/>
+            <value type="doubleArray"></value>
+    </param>
+
+    <param type="string" name="maskmode">
+            <description>mode of setting additional channel masks for baselining</description>
+            <value>auto</value>
+            <allowed kind="enum">
+            <value>auto</value>
+            <value>list</value>
+	    <value>interact</value>
+            </allowed>
+    </param>
+
+    <param type="double" name="thresh" subparam='true'>
+            <description>S/N threshold for linefinder</description>
+            <value>5.0</value>
+    </param>
+
+    <param type="int" name="avg_limit" subparam='true'>
+            <description>channel averaging for broad lines</description>
+            <value>4</value>
+    </param>
+
+    <param type="intArray" name="edge" subparam='true'>
+            <description>channels to drop at beginning and end of spectrum</description>
+            <value type='vector'><value>0</value></value>
     </param>
 
     <param type="bool" name="verifycal">
@@ -335,32 +335,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="kwidth"><value>5</value></default>
                 </equals>
             </when>
-            <when param="maskmode">
-                <equals value="none"/>
-                <equals value="list"/>
-                <equals value="interact"/>
-                <equals value="auto">
-                        <default param="thresh"><value>5.0</value></default>
-                        <default param="avg_limit"><value>4</value></default>
-                        <default param="edge"><value type='vector'><value>0</value></value></default>
-                </equals>
-            </when>
 	    <when param="blfunc">
+                <equals value="none"/>
 		<equals value="poly">
 			<default param="order"><value>5</value></default>
 	        </equals>
                 <equals value="cspline">
 			<default param="npiece"><value>2</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
-			<default param="clipniter"><value>1</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
                 <equals value="sinusoid">
 			<default param="nwave"><value type="int">3</value></default>
 			<default param="maxwavelength"><value>1.0</value></default>
 			<default param="clipthresh"><value>3.0</value></default>
-			<default param="clipniter"><value>1</value></default>
+			<default param="clipniter"><value>0</value></default>
 	        </equals>
 	    </when>
+            <when param="maskmode">
+                <equals value="auto">
+                        <default param="thresh"><value>5.0</value></default>
+                        <default param="avg_limit"><value>4</value></default>
+                        <default param="edge"><value type='vector'><value>0</value></value></default>
+                </equals>
+                <equals value="list"/>
+                <equals value="interact"/>
+            </when>
     </constraints>
 
     </input>
@@ -472,7 +472,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: 0.0 (no correction)
         kernel -- type of spectral smoothing
                 options: 'none','hanning','gaussian','boxcar'
-                default: 'none'
+                default: 'none' (no smoothing)
 
             &gt;&gt;&gt;kernel expandable parameter
                  kwidth -- width of spectral smoothing kernel
@@ -481,49 +481,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          example: 5 or 10 seem to be popular for boxcar
                                   ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
-        masklist -- list or string of mask regions to INCLUDE in BASELINE fit
-                    a string masklist allows per IF selection of channels.
-                default: [] (entire spectrum)
-                example: [[1000,3000],[5000,7000]]
-                         '0:1000~3000;5000~7000, 1:200~350;450~600'
-                         when maskmode is 'auto' or 'interact', this mask 
-                         will be applied first before fitting as base mask
-        maskmode -- mode of setting additional channel masks
-                options: (str) 'none','auto','list','interact'
-                default: 'none'
-                example: maskmode='auto' runs linefinder to detect line regions 
-                         to be excluded from fitting. this mode requires three 
-                         expandable parameters: thresh, avg_limit, and edge.
-                         USE WITH CARE! May need to tweak the expandable parameters.
-                         maskmode='none' and 'list' uses the given masklist only: 
-                         no additional masks applied.
-                         maskmode='interact' allows users to manually modify the 
-                         mask regions by dragging mouse on the spectrum plotter GUI.
-                         use LEFT or RIGHT button to add or delete regions, 
-                         respectively.
-
-            &gt;&gt;&gt; maskmode expandable parameters
-                 thresh -- S/N threshold for linefinder
-                         default: 5
-                         example: a single channel S/N ratio above which the channel is
-                                  considered to be a detection
-                 avg_limit -- channel averaging for broad lines
-                         default: 4
-                         example: a number of consecutive channels not greater than
-                                  this parameter can be averaged to search for broad lines
-                 edge -- channels to drop at beginning and end of spectrum
-                         default: 0
-                         example: [1000] drops 1000 channels at beginning AND end
-                                  [1000,500] drops 1000 from beginning and 500 from end
-
-                 Note: For bad baselines threshold should be increased,
-                 and avg_limit decreased (or even switched off completely by
-                 setting this parameter to 1) to avoid detecting baseline
-                 undulations instead of real lines.
-
         blfunc -- baseline model function
-                options: (str) 'poly','cspline','sinusoid'
-                default: 'poly'
+                options: (str) 'none','poly','cspline','sinusoid'
+                default: 'none' (no baselining)
                 example: blfunc='poly' uses a single polynomial line of 
                          any order which should be given as an expandable 
                          parameter 'order' to fit baseline. 
@@ -550,10 +510,50 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  maxwavelength -- the longest sinusoidal wavelength in unit of 
                          spectral window width.
                          default: 1.0
-                 clipthresh -- clipping threshold for iterative spline fitting
+                 clipthresh -- clipping threshold for iterative fitting
                          default: 3
-                 clipniter -- maximum number of iteration in spline fitting
-                         default: 1
+                 clipniter -- maximum iteration number
+                         default: 0 (no iteration, i.e., no clipping)
+
+        masklist -- list or string of mask regions to INCLUDE in BASELINE fit
+                    a string masklist allows per IF selection of channels.
+                default: [] (entire spectrum)
+                example: [[1000,3000],[5000,7000]]
+                         '0:1000~3000;5000~7000, 1:200~350;450~600'
+                         when maskmode is 'auto' or 'interact', this mask 
+                         will be applied first before fitting as base mask
+        maskmode -- mode of setting additional channel masks for baselining
+                options: (str) 'auto','list','interact'
+                default: 'auto'
+                example: maskmode='auto' runs linefinder to detect line regions 
+                         to be excluded from fitting. this mode requires three 
+                         expandable parameters: thresh, avg_limit, and edge.
+                         USE WITH CARE! May need to tweak the expandable parameters.
+                         maskmode='list' uses the given masklist only: 
+                         no additional masks applied.
+                         maskmode='interact' allows users to manually modify the 
+                         mask regions by dragging mouse on the spectrum plotter GUI.
+                         use LEFT or RIGHT button to add or delete regions, 
+                         respectively.
+
+            &gt;&gt;&gt; maskmode expandable parameters
+                 thresh -- S/N threshold for linefinder
+                         default: 5
+                         example: a single channel S/N ratio above which the channel is
+                                  considered to be a detection
+                 avg_limit -- channel averaging for broad lines
+                         default: 4
+                         example: a number of consecutive channels not greater than
+                                  this parameter can be averaged to search for broad lines
+                 edge -- channels to drop at beginning and end of spectrum
+                         default: 0
+                         example: [1000] drops 1000 channels at beginning AND end
+                                  [1000,500] drops 1000 from beginning and 500 from end
+
+                 Note: For bad baselines threshold should be increased,
+                 and avg_limit decreased (or even switched off completely by
+                 setting this parameter to 1) to avoid detecting baseline
+                 undulations instead of real lines.
 
         verifycal -- verify the results of calibration
                 options: (bool) True,False

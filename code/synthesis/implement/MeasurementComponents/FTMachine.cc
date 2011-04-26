@@ -921,20 +921,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-
-      /*
-      if(uvwMachine_p)
-	delete uvwMachine_p;
-      if(other.uvwMachine_p)
-	uvwMachine_p=new UVWMachine(*other.uvwMachine_p);
-      else
-	uvwMachine_p=0;
-      doUVWRotation_p=other.doUVWRotation_p;
+    // Set uvwMachine to NULL ..will force regeneration
+    uvwMachine_p=0;
+    outRecord.define("douvwrotation", doUVWRotation_p);
+    outRecord.define("freqinterpmethod", static_cast<Int>(freqInterpMethod_p));
+    outRecord.define("spwchanselflag", spwChanSelFlag_p);
+    outRecord.define("freqframevalid", freqFrameValid_p);
+    /*
       //Spectral and pol stuff 
-      freqInterpMethod_p=other.freqInterpMethod_p;
-      spwChanSelFlag_p.resize();
-      spwChanSelFlag_p=other.spwChanSelFlag_p;
-      freqFrameValid_p=other.freqFrameValid_p;
       selectedSpw_p.resize();
       selectedSpw_p=other.selectedSpw_p;
       imageFreq_p.resize();
@@ -1217,7 +1211,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       doConversion_p[spw]=condoo;
     }
     else{
-      lsrFreq=vb.lsrFrequency();
+      lsrFreq=vb.frequency();
+      doConversion_p[spw]=False;
+    }
+    if(lsrFreq.nelements() ==0){
+      return False;
     }
     lsrFreq_p.resize(lsrFreq.nelements());
     lsrFreq_p=lsrFreq;
@@ -1430,3 +1428,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   
 } //# NAMESPACE CASA - END
+

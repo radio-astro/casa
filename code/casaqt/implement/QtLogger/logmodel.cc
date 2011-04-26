@@ -241,11 +241,16 @@ void LogModel::appendData(const QString &data)
 			QString date 	= items.at(0);
 			QString priority= items.at(1);
 			QString origin;
-			if ( items.size() > 3 ) {
+			if (items.size() > 3) {
 				origin = items.at(2);
 			}
                         if (items.size() == 3) {
+                             if (items.at(2).contains("::")){
+				origin = items.at(2);
+                             }
+                             else {
 				origin = " ";
+                             }
                         }
 
 			// qDebug() << "date=" << date << "\t";
@@ -257,7 +262,12 @@ void LogModel::appendData(const QString &data)
 
 			if(items.size() == 3) {
 				QString message = items.at(2);
-				message.replace('\r','\n');
+                                if (items.at(2).contains("::")){
+			        	message = "   ";
+                                }
+                                else {
+				        message.replace('\r','\n').truncate(2500);
+                                }
 				columnData << message;
 				// qDebug() << message << "\t";
 			}
@@ -266,8 +276,7 @@ void LogModel::appendData(const QString &data)
 
 				// one quirk: multi-line messages are 'encoded' with \r
 				// in place of newline (\n) characters, we should put these back
-				message.replace('\r','\n');
-
+				message.replace('\r','\n').truncate(2500);
 				columnData << message;
 				// qDebug() << message << "\t";
 			}

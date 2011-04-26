@@ -16,20 +16,30 @@ import asap as sd
 
 # Unit test of sdtpimaging task.
 
+###
+# Base class for sdtpimaging unit test
+###
+class sdtpimaging_unittest_base:
+    """
+    Base class for sdtpimaging unit test.
+    """
+    taskname='sdtpimaging'
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
+
+
 
 ###
 # Test on bad parameter settings, data selection, ...
 ###
-class sdtpimaging_test0(unittest.TestCase):
+class sdtpimaging_test0(unittest.TestCase,sdtpimaging_unittest_base):
     """
     Test on bad parameter settings
     """
     # Input and output names
     sdfile='tpimaging.ms'
-    prefix='sdtpimaging.Test0'
+    prefix=sdtpimaging_unittest_base.taskname+'Test0'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
 
     def setUp(self):
         self.res=None
@@ -43,52 +53,52 @@ class sdtpimaging_test0(unittest.TestCase):
             shutil.rmtree(self.sdfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test000(self):
         """Test 000: Default parameters"""
         self.res=sdtpimaging()
         self.assertFalse(self.res)
         
-    def test01(self):
+    def test001(self):
         """Test 001: Bad antenna id"""
         self.res=sdtpimaging(sdfile=self.sdfile,antenna='99')
         self.assertFalse(self.res)        
 
-    def test02(self):
+    def test002(self):
         """Test 002: Bad stokes string"""
         self.res=sdtpimaging(sdfile=self.sdfile,stokes='J')
         self.assertFalse(self.res)
         
-    def test03(self):
+    def test003(self):
         """Test 003: Try to create image without output image name"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename='')
         self.assertFalse(self.res)
 
-    def test04(self):
+    def test004(self):
         """Test 004: Negative imsize"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,imsize=[-1])
         self.assertFalse(self.res)
 
-    def test05(self):
+    def test005(self):
         """Test 005: Negative cell size"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,cell=[-1])
         self.assertFalse(self.res)
 
-    def test06(self):
+    def test006(self):
         """Test 006: Bad phase center string"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,phasecenter='XXX')
         self.assertFalse(self.res)
 
-    def test07(self):
+    def test007(self):
         """Test 007: Bad pointing column name"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,pointingcolumn='XXX')
         self.assertFalse(self.res)
 
-    def test08(self):
+    def test008(self):
         """Test 008: Unexisting grid function"""
         self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,gridfunction='XXX')
         self.assertFalse(self.res)
  
-    def test09(self):
+    def test009(self):
         """Test 009: Invalid calmode"""
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='ps')
         self.assertFalse(self.res)
@@ -97,17 +107,16 @@ class sdtpimaging_test0(unittest.TestCase):
 ###
 # Test to image data without spatial baseline subtraction
 ###
-class sdtpimaging_test1(unittest.TestCase):
+class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
     """
     Test to image data without spatial baseline subtraction
     """
     # Input and output names
     sdfile='tpimaging.ms'
-    prefix='sdtpimaging.Test1'
+    prefix=sdtpimaging_unittest_base.taskname+'Test1'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
     refimage='nobaseline.im'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
 
     def setUp(self):
         self.res=None
@@ -127,6 +136,7 @@ class sdtpimaging_test1(unittest.TestCase):
         os.system( 'rm -rf '+self.sdfile+'*' )
 
     def _compare(self):
+        self._checkfile(self.outimage)
         default(imval)
         refval=imval(imagename=self.refimage,box='-1,-1',stokes='XX')
         val=imval(imagename=self.outimage,box='-1,-1',stokes='XX')
@@ -137,26 +147,31 @@ class sdtpimaging_test1(unittest.TestCase):
         casalog.post( 'maxdiff=%s'%maxdiff )
         return maxdiff
 
-    def test00(self):
+    def test100(self):
         """Test 100: test to image data without spatial baseline subtraction"""
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='none',stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
         
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
+        
+        
 ###
 # Test to image data with spatial baseline subtraction
 ###
-class sdtpimaging_test2(unittest.TestCase):
+class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
     """
     Test to image data with spatial baseline subtraction
     """
     # Input and output names
     sdfile='tpimaging.ms'
-    prefix='sdtpimaging.Test2'
+    prefix=sdtpimaging_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
     refimage='dobaseline.im'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdtpimaging/'
 
     def setUp(self):
         self.res=None
@@ -176,6 +191,7 @@ class sdtpimaging_test2(unittest.TestCase):
         os.system( 'rm -rf '+self.sdfile+'*' )
 
     def _compare(self):
+        self._checkfile(self.outimage)
         default(imval)
         refval=imval(imagename=self.refimage,box='-1,-1',stokes='XX')
         val=imval(imagename=self.outimage,box='-1,-1',stokes='XX')
@@ -187,11 +203,16 @@ class sdtpimaging_test2(unittest.TestCase):
         casalog.post( 'maxdiff=%s'%maxdiff )
         return maxdiff
 
-    def test00(self):
+    def test200(self):
         """Test 200: test to image data without spatial baseline subtraction"""
         self.res=sdtpimaging(sdfile=self.sdfile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
+        
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
 
 
 def suite():

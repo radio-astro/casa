@@ -42,6 +42,7 @@
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/TiledLineStepper.h> 
 #include <lattices/Lattices/LatticeStepper.h> 
+#include <casa/System/Aipsrc.h>
 namespace casa{
   //
   //--------------------------------------------------------------------------------------------
@@ -722,4 +723,34 @@ namespace casa{
 	  }
 	}
   }
+  //
+  //---------------------------------------------------------------
+  // Get the value of the named variable from ~/.aipsrc (or ~/.casarc)
+  // or from a env. variable (in this precidence order).
+  //
+  template <class T>
+  T SynthesisUtils::getenv(const char *name,const T defaultVal)
+  {
+    stringstream defaultStr;
+    defaultStr << defaultVal;
+    Int val;
+    uInt handle = Aipsrc::registerRC(name, defaultStr.str().c_str());    
+    String strVal = Aipsrc::get(handle);
+    stringstream toT(strVal);
+    toT >> val;
+    // Looks like Aipsrc did not find the named variable.  See if an
+    // env. variable is defined.
+    if (val==defaultVal)
+      {
+	char *valStr=NULL;
+	if ((valStr = std::getenv(name)) != NULL)
+	  {
+	    stringstream toT2(valStr);
+	    toT2 >> val;
+	  }
+      }
+    return val;
+  }
+  template 
+  Int SynthesisUtils::getenv(const char *name, const Int defaultVal);
 } // namespace casa

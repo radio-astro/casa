@@ -20,6 +20,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	try:
                 casalog.origin('importasdm')
 		viso = ''
+		visoc = '' # for the wvr corrected version, if needed
                 if singledish:
                    ocorr_mode = 'ao'
                    corr_mode = 'ao'
@@ -28,10 +29,16 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                       casalog.post('compression=True has no effect for single-dish format.')
 		if(len(vis) > 0) :
 		   viso = vis
+		   tmps = vis.rstrip('.ms')
+		   if(tmps==vis):
+			   visoc = vis+"-wvr-corrected"
+		   else:
+			   visoc = tmps+"-wvr-corrected.ms"			   
                    if singledish:
                       viso = vis.rstrip('/') + '.importasdm.tmp.ms'
 		else :
 		   viso = asdm + '.ms'
+		   visoc = asdm + '-wvr-corrected.ms'
 		   vis = asdm
                    if singledish:
                       viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
@@ -51,8 +58,9 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   execute_string= execute_string +' --verbose'
 		if(showversion) :
 		   execute_string= execute_string +' --revision'
-		if not overwrite and os.path.exists(viso) :
+		if not overwrite and os.path.exists(viso):
 		   raise Exception, "You have specified and existing ms and have indicated you do not wish to overwrite it"
+	   
 		execute_string = execute_string + ' ' + asdm + ' ' + viso
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
@@ -63,10 +71,20 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                    raise Exception, "asdm coversion error, please check if it is a valid ASDM"
 		if compression :
                    #viso = viso + '.compressed'
-                   viso = visover.rstrip('.ms') + '.compressed.ms'
-                ok=fg.open(viso);
-                ok=fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
-                ok=fg.done();
+                   viso = viso.rstrip('.ms') + '.compressed.ms'
+                   visoc = visoc.rstrip('.ms') + '.compressed.ms'
+
+		if(wvr_corrected_data=='no' or wvr_corrected_data=='both'):
+			if os.path.exists(viso):
+			   fg.open(viso)
+			   fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
+			   fg.done();
+		elif(wvr_corrected_data=='yes' or wvr_corrected_data=='both'):
+			if os.path.exists(visoc):
+			   fg.open(visoc)
+			   fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
+			   fg.done();			
+
                 if singledish:
                    casalog.post('temporary MS file: %s'%viso)
                    casalog.post('        ASAP file: %s'%vis)

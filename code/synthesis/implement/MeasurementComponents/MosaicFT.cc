@@ -616,12 +616,14 @@ void MosaicFT::finalizeToSky()
     convWeightImage_p=0;
     doneWeightImage_p=True;
 
+    /*
     if(1){
       PagedImage<Float> thisScreen(skyCoverage_p->shape(), 
 				   skyCoverage_p->coordinates(), "Screen");
       thisScreen.copyData(*skyCoverage_p);
     }
-    
+    */
+
   }
 
   if(pointingToImage) delete pointingToImage; pointingToImage=0;

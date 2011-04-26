@@ -28,6 +28,7 @@
 #include <plotms/Data/PlotMSIndexer.h>
 
 #include <casa/OS/Timer.h>
+#include <casa/OS/HostInfo.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/Sort.h>
 #include <lattices/Lattices/ArrayLattice.h>
@@ -57,6 +58,207 @@ bool PlotMSCache2::axisIsMetaData(PMS::Axis axis) {
 }
 
 const unsigned int PlotMSCache2::THREAD_SEGMENT = 10;
+
+
+PMSCacheVolMeter::PMSCacheVolMeter():
+  nDDID_(0),
+  nPerDDID_(),
+  nRowsPerDDID_(),
+  nChanPerDDID_(),
+  nCorrPerDDID_(),
+  nAnt_(0) {}
+
+
+PMSCacheVolMeter::PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave):
+  nDDID_(0),
+  nPerDDID_(),
+  nRowsPerDDID_(),
+  nChanPerDDID_(),
+  nCorrPerDDID_(),
+  nAnt_(0) {
+
+  ROMSColumns msCol(ms);
+
+  // Initialize chunks and rows counters
+  nDDID_=msCol.dataDescription().nrow();
+  nPerDDID_.resize(nDDID_);
+  nPerDDID_.set(0);
+  nRowsPerDDID_.resize(nDDID_);
+  nRowsPerDDID_.set(0);
+  nChanPerDDID_.resize(nDDID_);
+  nCorrPerDDID_.resize(nDDID_);
+
+  // Fill Corr/Chan-per-DDID Vectors
+  Vector<Int> nChanPerSpw;
+  msCol.spectralWindow().numChan().getColumn(nChanPerSpw);
+  Vector<Int> nCorrPerPol;
+  msCol.polarization().numCorr().getColumn(nCorrPerPol);
+  Vector<Int> polPerDDID;
+  msCol.dataDescription().polarizationId().getColumn(polPerDDID);
+  Vector<Int> spwPerDDID;
+  msCol.dataDescription().spectralWindowId().getColumn(spwPerDDID);
+
+  Bool chave=(ave.channel() && ave.channelValue()>1.0);
+
+  for (Int iddid=0;iddid<nDDID_;++iddid) {
+    // ncorr is simple (for now, maybe Stokes later?):
+    nCorrPerDDID_(iddid)=nCorrPerPol(polPerDDID(iddid));
+    // nChan depends on averaging:
+    Int nchan0=nChanPerSpw(spwPerDDID(iddid));
+    Int nchanA=Int(ceil(Double(nchan0)/ave.channelValue()));
+    nChanPerDDID_(iddid)= (chave ? nchanA : nchan0);
+  }
+  //  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
+  //  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
+  // nAnt:
+  nAnt_=msCol.antenna().nrow();
+
+}
+
+PMSCacheVolMeter::~PMSCacheVolMeter() {}
+
+  
+void PMSCacheVolMeter::add(Int DDID,Int nRows) {
+  ++nPerDDID_(DDID);
+  nRowsPerDDID_(DDID)+=nRows;
+}
+
+void PMSCacheVolMeter::add(const VisBuffer& vb) {
+  this->add(vb.dataDescriptionId(),vb.nRow());
+}
+
+String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesmask) {
+
+  //  cout << "nPerDDID_     = " << nPerDDID_ << endl;
+  //  cout << "nRowsPerDDID_ = " << nRowsPerDDID_ << endl;
+  //  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
+  //  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
+
+  Long totalVol(0);
+  for (map<PMS::Axis,Bool>::iterator pAi=axes.begin();
+       pAi!=axes.end(); ++pAi) {
+    if (pAi->second) {
+      Long axisVol(0);
+      switch(pAi->first) {
+      case PMS::SCAN:
+      case PMS::FIELD:
+      case PMS::SPW:
+	axisVol=sizeof(Int)*sum(nPerDDID_);
+	break;
+      case PMS::TIME:
+      case PMS::TIME_INTERVAL:
+	axisVol=sizeof(Double)*sum(nPerDDID_);
+	break;
+      case PMS::CHANNEL:
+	axisVol=sizeof(Int)*sum(nPerDDID_*nChanPerDDID_);
+	break;
+      case PMS::FREQUENCY:
+      case PMS::VELOCITY:
+	axisVol=sizeof(Double)*sum(nPerDDID_*nChanPerDDID_);
+	break;
+      case PMS::CORR:
+	axisVol=sizeof(Int)*sum(nPerDDID_*nCorrPerDDID_);
+	break;
+      case PMS::ANTENNA1:
+      case PMS::ANTENNA2:
+      case PMS::BASELINE:
+	axisVol=sizeof(Int)*sum(nRowsPerDDID_);
+	break;
+      case PMS::UVDIST:
+      case PMS::U:
+      case PMS::V:
+      case PMS::W:
+	axisVol=sizeof(Double)*sum(nRowsPerDDID_);
+	break;
+      case PMS::UVDIST_L:
+	axisVol=sizeof(Double)*sum(nRowsPerDDID_*nChanPerDDID_);
+	break;
+      case PMS::AMP:
+      case PMS::PHASE:
+      case PMS::REAL:
+      case PMS::IMAG:
+	axisVol=sizeof(Float)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
+	break;
+      case PMS::FLAG:
+	axisVol=sizeof(Bool)*sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_);
+	break;
+      case PMS::FLAG_ROW:
+	axisVol=sizeof(Bool)*sum(nRowsPerDDID_);
+	break;
+      case PMS::WT:
+	axisVol=sizeof(Int)*sum(nRowsPerDDID_);
+	break;
+      case PMS::AZ0:
+      case PMS::EL0:
+      case PMS::HA0:
+      case PMS::PA0:
+	axisVol=sizeof(Double)*sum(nPerDDID_);
+	break;
+      case PMS::ANTENNA:
+	axisVol=sizeof(Int)*nAnt_*sum(nPerDDID_);
+	break;
+      case PMS::AZIMUTH:
+      case PMS::ELEVATION:
+	axisVol=sizeof(Double)*nAnt_*sum(nPerDDID_);
+	break;
+      case PMS::PARANG:
+	axisVol=sizeof(Float)*nAnt_*sum(nPerDDID_);
+	break;
+      case PMS::ROW:
+	axisVol=sizeof(uInt)*sum(nRowsPerDDID_);
+	break;
+      default: break;
+      } // switch
+      totalVol+=axisVol;
+      //      cout << " " << PMS::axis(pAi->first) << " volume = " << axisVol << " bytes." << endl;
+    } 
+  } // for 
+
+  // Add in the plotting mask
+  //  (TBD: only if does not reference the flags) 
+  if (True) {  // ntrue(axesmask)<2) {
+    Vector<Long> nplmaskPerDDID(nDDID_,0);
+    nplmaskPerDDID(nPerDDID_>Long(0))=1;
+    if (axesmask(0)) nplmaskPerDDID*=nCorrPerDDID_;
+    if (axesmask(1)) nplmaskPerDDID*=nChanPerDDID_;
+    if (axesmask(2)) nplmaskPerDDID*=nRowsPerDDID_;
+    if (axesmask(3)) nplmaskPerDDID*=Long(nAnt_);
+    Int plmaskVol=sizeof(Bool)*sum(nplmaskPerDDID);
+    //    cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
+    totalVol+=plmaskVol;
+  }
+
+  // Finally, count the total points for the plot:
+  Vector<Long> nPointsPerDDID(nDDID_,0);
+  nPointsPerDDID(nPerDDID_>Long(0))=1;
+  if (axesmask(0)) nPointsPerDDID*=nCorrPerDDID_;
+  if (axesmask(1)) nPointsPerDDID*=nChanPerDDID_;
+  if (axesmask(2)) nPointsPerDDID*=nRowsPerDDID_;
+  if (axesmask(3)) nPointsPerDDID*=Long(nAnt_);
+  Int totalPoints=sum(nPointsPerDDID);
+
+  Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
+  Double bytesPerPt=Double(totalVol)/Double(totalPoints);  // bytes/pt
+  Double hostMemGB=Double(HostInfo::memoryTotal(true)*1000)/1.0e9; // in GB
+  Double fracMem=100.0*(totalVolGB+0.5)/hostMemGB;  // %
+
+  stringstream ss;
+  ss << "Data selection will yield a total of " << totalPoints 
+     << " plottable points (flagged and unflagged)." << endl
+     << "The plotms cache will require an estimated " 
+     << totalVolGB << " GB of memory (" << bytesPerPt << " bytes/point)." << endl
+     << "In total (+0.5 GB overhead), plotms requires " << fracMem 
+     << "% of the memory avail. to CASA (" << hostMemGB << " GB) for this plot.";
+
+  if ((totalVolGB+0.5)>hostMemGB) {
+    ss << endl << "Insufficient memory!";
+    throw(AipsError(ss.str()));
+  }
+
+  return ss.str();
+
+}
+
 
 PlotMSCache2::PlotMSCache2(PlotMSApp* parent):
   plotms_(parent),
@@ -89,6 +291,9 @@ PlotMSCache2::PlotMSCache2(PlotMSApp* parent):
 }
 
 PlotMSCache2::~PlotMSCache2() {
+
+  //  cout << "PMSC2::~PMSC2" << endl;
+
   // Deflate everything
   deleteIndexer();
   deletePlotMask();
@@ -165,6 +370,7 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
     fldnames_.resize();
     antnames_=msCol.antenna().name().getColumn(); 	 
     fldnames_=msCol.field().name().getColumn(); 	 
+    vm_=PMSCacheVolMeter(ms,averaging_);
   } 	 
   
   if (averaging_.anyAveraging()) {
@@ -192,14 +398,26 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
   // done its job and cleared the cache if the underlying MS/selection has
   // changed).
   vector<PMS::Axis> loadAxes; vector<PMS::DataColumn> loadData;
+
+  // A map that keeps track of all pending loaded axes
+  map<PMS::Axis,Bool> pendingLoadAxes;
+
+
+
   
   // Check meta-data.
   for(unsigned int i = 0; i < N_METADATA; i++) {
+    pendingLoadAxes[METADATA[i]]=true; // all meta data will be loaded
     if(!loadedAxes_[METADATA[i]]) {
       loadAxes.push_back(METADATA[i]);
       loadData.push_back(PMS::DEFAULT_DATACOLUMN);
     }
   }
+
+
+  // Ensure all _already-loaded_ axes are in the pending list
+  for (Int i= 0;i<PMS::NONE;++i)
+    if (loadedAxes_[PMS::Axis(i)]) pendingLoadAxes[PMS::Axis(i)]=true;
         
   // Check given axes.  Should only be added to load list if: 1) not
   // already in load list, 2) not loaded, or 3) loaded but with different
@@ -211,6 +429,8 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
     found = false;
     axis = axes[i];
     
+    // add to pending list
+    pendingLoadAxes[axis]=true;
 
     // if data vector is not the same length as axes vector, assume
     // default data column
@@ -267,6 +487,7 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
 	 averaging.spw() ) {
       
       countChunks(viter,nIterPerAve,averaging,thread);
+      trapExcessVolume(pendingLoadAxes);
       loadChunks(viter,averaging,nIterPerAve,
 		 loadAxes,loadData,thread);
       
@@ -275,6 +496,7 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
       
       // supports only channel averaging...    
       countChunks(viter,thread);
+      trapExcessVolume(pendingLoadAxes);
       loadChunks(viter,loadAxes,loadData,averaging,thread);
       
     }
@@ -326,8 +548,12 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
 }
 
 void PlotMSCache2::clear() {
-    deleteCache();
-    refTime_p=0.0;
+  logLoad("Clearing the existing plotms cache.");
+  deleteIndexer();
+  deletePlotMask();
+  deleteCache();
+  refTime_p=0.0;
+  dataLoaded_=False;
 }
 
 #define PMSC_DELETE(VAR)                                                \
@@ -393,6 +619,8 @@ void PlotMSCache2::release(const vector<PMS::Axis>& axes) {
 
 void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool globalYRange) {
 
+  logLoad("Setting up iteration indexing (if necessary), and calculating plot ranges.");
+
   //  cout << "############ PlotMSCache2::setUpIndexer: " << PMS::axis(iteraxis) 
   //       << " cacheReady() = " << boolalpha << cacheReady() << endl;
 
@@ -441,8 +669,9 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
     */
 
     for (Int ich=0;ich<nChunk_;++ich)
-      for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl)
-	bslnMask(*(baseline_[ich]->data()+ibl))=True;
+      if (goodChunk_(ich))
+	for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl)
+	  bslnMask(*(baseline_[ich]->data()+ibl))=True;
     //    cout << "bslnMask = " << boolalpha << bslnMask << endl;
 
     // Remember only the occuring baseline indices
@@ -469,12 +698,13 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
     Vector<Bool> antMask(nAnt_,False);
     indgen(antList);
     for (Int ich=0;ich<nChunk_;++ich)
-      for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl) {
-	Int a1=*(antenna1_[ich]->data()+ibl);
-	Int a2=*(antenna2_[ich]->data()+ibl);
-	if (a1>-1) antMask(a1)=True;
-	if (a2>-1) antMask(a2)=True;
-      }
+      if (goodChunk_(ich))
+	for (Int ibl=0;ibl<chunkShapes()(2,ich);++ibl) {
+	  Int a1=*(antenna1_[ich]->data()+ibl);
+	  Int a2=*(antenna2_[ich]->data()+ibl);
+	  if (a1>-1) antMask(a1)=True;
+	  if (a2>-1) antMask(a2)=True;
+	}
     // Remember only the occuring antenna indices
     iterValues=antList(antMask).getCompressedArray();
     nIter=iterValues.nelements();
@@ -525,13 +755,18 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
     indexer_[iter]->setGlobalMinMax(globalXRange,globalYRange);
   }
 
-  /*
-  cout << "Global ranges: " << endl;
-  cout << "Unflagged: " << xminG_ << "-" << xmaxG_ << " / " << yminG_ << "-" << ymaxG_ << endl;
-  cout << "Flagged:   " << xflminG_ << "-" << xflmaxG_ << " / " << yflminG_ << "-" << yflmaxG_ << endl;
-  cout << "Use global ranges? : " << boolalpha << globalXRange << " " << globalYRange << endl;
-  */
-
+  {
+    stringstream ss;
+    ss << "Global ranges:" << endl 
+       << PMS::axis(currentX_) << ": " 
+       << xminG_ << "-" << xmaxG_ << " (unflagged); "
+       << xflminG_ << "-" << xflmaxG_ << " (flagged)." << endl
+       << PMS::axis(currentY_) << ": " 
+       << yminG_ << "-" << ymaxG_ << " (unflagged); "
+       << yflminG_ << "-" << yflmaxG_ << "(flagged).";
+    logLoad(ss.str());
+    //  cout << "Use global ranges? : " << boolalpha << globalXRange << " " << globalYRange << endl;
+  }
 }
 
 
@@ -585,7 +820,6 @@ void PlotMSCache2::increaseChunks(Int nc) {
   flagrow_.resize(nChunk_,False,True);
 
   wt_.resize(nChunk_,False,True);
-  imwt_.resize(nChunk_,False,True);
 
   az0_.resize(nChunk_,True);
   el0_.resize(nChunk_,True);
@@ -619,7 +853,6 @@ void PlotMSCache2::increaseChunks(Int nc) {
     flag_[ic] = new Array<Bool>();
     flagrow_[ic] = new Vector<Bool>();
     wt_[ic] = new Matrix<Float>();
-    imwt_[ic] = new Matrix<Float>();
     antenna_[ic] = new Vector<Int>();
     az_[ic] = new Vector<Double>();
     el_[ic] = new Vector<Double>();
@@ -736,7 +969,10 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi,
     }
     */
 
-    for (vi.origin(); vi.more(); vi++) chunk++;
+    for (vi.origin(); vi.more(); vi++) {
+      ++chunk;
+      vm_.add(vb);
+    }
   }
   if(chunk != nChunk_) increaseChunks(chunk);
   
@@ -776,6 +1012,8 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
   Int thisscan(-1),lastscan(-1);
   Int thisfld(-1),lastfld(-1);
   Int thisspw(-1),lastspw(-1);
+  Int thisddid(-1),lastddid(-1);
+  Int maxAveNRows(0);
   Int chunk(0);
   Int ave(-1);
   Double interval(0.0);
@@ -805,6 +1043,7 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
       thisscan=vb.scan()(0);
       thisfld=vb.fieldId();
       thisspw=vb.spectralWindow();
+      thisddid=vb.dataDescriptionId();
 
       // New chunk means new ave interval, IF....
       if ( // (!combfld && !combspw) ||                // not combing fld nor spw, OR
@@ -826,6 +1065,14 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
 	       << (ave==-1) << "\n";
 	}
 
+	// If we have accumulated enough info, poke the volume meter,
+	//  with the _previous_ info, and reset the ave'd row counter
+	if (ave>-1) {
+	  vm_.add(lastddid,maxAveNRows);
+	  maxAveNRows=0;
+	}
+
+
 	avetime1=time1;  // for next go
 	ave++;
 	
@@ -838,6 +1085,10 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
 	nIterPerAve(ave)=0;
       }
       
+      // Keep track of the maximum # of rows that might get averaged
+      maxAveNRows=max(maxAveNRows,vb.nRow());
+
+
       // Increment chunk-per-sol count for current solution
       nIterPerAve(ave)++;
       
@@ -859,8 +1110,11 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
       lastscan=thisscan;
       lastfld=thisfld;
       lastspw=thisspw;
+      lastddid=thisddid;
     }
   }
+  // Add in the last iteration
+  vm_.add(lastddid,maxAveNRows);
   
   Int nAve(ave+1);
   nIterPerAve.resize(nAve,True);
@@ -872,6 +1126,22 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
   if (nChunk_ != nAve) increaseChunks(nAve);
   
 }
+
+void PlotMSCache2::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
+  try {
+    String s;
+    s=vm_.evalVolume(pendingLoadAxes,netAxesMask(currentX_,currentY_));
+    logLoad(s);
+  } catch(AipsError& log) {
+    // catch volume excess, clear the existing cache, and rethrow
+    logLoad(log.getMesg());
+    clear();
+    throw(AipsError("Please try 'force reload', selecting less data, or averaging."));
+  }
+}
+
+
+
  
 void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
 			     const vector<PMS::Axis> loadAxes,
@@ -891,6 +1161,8 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
 
   Int chunk = 0;
   chshapes_.resize(4,nChunk_);
+  goodChunk_.resize(nChunk_);
+  goodChunk_.set(False);
   double progress;
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
     for(vi.origin(); vi.more(); vi++) {
@@ -926,7 +1198,8 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
       chshapes_(1,chunk)=vb.nChannel();
       chshapes_(2,chunk)=vb.nRow();
       chshapes_(3,chunk)=vi.numberAnt();
-      
+      goodChunk_(chunk)=True;
+
       for(unsigned int i = 0; i < loadAxes.size(); i++) {
 	//	cout << PMS::axis(loadAxes[i]) << " ";
 	loadAxis(vb, chunk, loadAxes[i], loadData[i]);
@@ -966,6 +1239,8 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
   vbu_=VisBufferUtil(vb);
 
   chshapes_.resize(4,nChunk_);
+  goodChunk_.resize(nChunk_);
+  goodChunk_.set(False);
   double progress;
   vi.originChunks();
   vi.origin();
@@ -1052,20 +1327,30 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
     // The averaged VisBuffer
     VisBuffer& avb(pmsvba.aveVisBuff());
 
-    // Form Stokes parameters, if requested
-    if (transformations_.formStokes())
-      avb.formStokes();
+    // Only if the average yielded some data
+    if (avb.nRow()>0) {
 
-    // Cache the data shapes
-    chshapes_(0,chunk)=avb.nCorr();
-    chshapes_(1,chunk)=avb.nChannel();
-    chshapes_(2,chunk)=avb.nRow();
-    chshapes_(3,chunk)=vi.numberAnt();
-
-    for(unsigned int i = 0; i < loadAxes.size(); i++) {
-      loadAxis(avb, chunk, loadAxes[i], loadData[i]);
-    }
+      // Form Stokes parameters, if requested
+      if (transformations_.formStokes())
+	avb.formStokes();
       
+      // Cache the data shapes
+      chshapes_(0,chunk)=avb.nCorr();
+      chshapes_(1,chunk)=avb.nChannel();
+      chshapes_(2,chunk)=avb.nRow();
+      chshapes_(3,chunk)=vi.numberAnt();
+      goodChunk_(chunk)=True;
+
+      for(unsigned int i = 0; i < loadAxes.size(); i++) {
+	loadAxis(avb, chunk, loadAxes[i], loadData[i]);
+      }
+    }
+    else {
+      // no points in this chunk
+      goodChunk_(chunk)=False;
+      chshapes_.column(chunk)=0;
+    }
+
     // If a thread is given, update it.
     if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
 			  chunk % THREAD_SEGMENT == 0)) {
@@ -1073,6 +1358,10 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
       thread->setProgress((unsigned int)((progress * 100) + 0.5));
     }
   }
+
+  //  cout << boolalpha << "goodChunk_ = " << goodChunk_ << endl;
+
+
 }
 
 void PlotMSCache2::forceVBread(VisBuffer& vb,
@@ -1229,7 +1518,24 @@ void PlotMSCache2::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
 
 }
 
+Vector<Bool> PlotMSCache2::netAxesMask(PMS::Axis xaxis,PMS::Axis yaxis) {
+
+  if (xaxis==PMS::NONE || yaxis==PMS::NONE)
+    throw(AipsError("Problem in PlotMSCache2::netAxesMask()."));
+
+  Vector<Bool> xmask(4,False);
+  setAxesMask(xaxis,xmask);
+  Vector<Bool> ymask(4,False);
+  setAxesMask(yaxis,ymask);
+
+  return (xmask || ymask);
+
+}
+
+
 void PlotMSCache2::setPlotMask() {
+
+  logLoad("Generating the plot mask.");
 
   // Generate the plot mask
   deletePlotMask();
@@ -1245,6 +1551,10 @@ void PlotMSCache2::setPlotMask() {
 
 
 void PlotMSCache2::setPlotMask(Int chunk) {
+
+  // Do nothing if chunk empty
+  if (!goodChunk_(chunk))
+    return;
 
   IPosition nsh(3,1,1,1),csh;
   

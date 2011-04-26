@@ -60,18 +60,18 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
-      <value>wt</value>
+      <value>wt</value><value>weight</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
       <value>hourang</value><value>hourangle</value>
-      <value>parang</value><value>parallacticangle</value>
+      <value>parang</value><value>parangle</value><value>parallacticangle</value>
       <value>antenna</value><value>ant</value>
       <value>ant-azimuth</value>
       <value>ant-elevation</value>
       <value>ant-hourang</value><value>ant-hourangle</value>
-      <value>ant-parang</value><value>ant-parallacticangle</value>
+      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
     </allowed>
@@ -114,18 +114,18 @@ MS Parameters
       <value>phase</value>
       <value>real</value>
       <value>imag</value><value>imaginary</value>
-      <value>wt</value>
+      <value>wt</value><value>weight</value>
       <value>imwt</value>
       <value>flag</value>
       <value>azimuth</value>
       <value>elevation</value>
       <value>hourang</value><value>hourangle</value>
-      <value>parang</value><value>parallacticangle</value>
+      <value>parang</value><value>parangle</value><value>parallacticangle</value>
       <value>antenna</value><value>ant</value>
       <value>ant-azimuth</value>
       <value>ant-elevation</value>
       <value>ant-hourang</value><value>ant-hourangle</value>
-      <value>ant-parang</value><value>ant-parallacticangle</value>
+      <value>ant-parang</value><value>ant-parangle</value><value>ant-parallacticangle</value>
       <value>row</value>
       <value>flagrow</value>
     </allowed>  
@@ -142,6 +142,48 @@ MS Parameters
         <value>residual</value>
       </allowed>
     </param>
+
+
+
+<!--
+###############################################################################
+Axis Range Parameters
+###############################################################################
+-->
+
+
+  <param type="bool" name="xautorange">
+    <description>Automatically set X axis range</description>
+    <value>True</value>
+  </param>
+
+    <param type="double" name="xmin" subparam="true">
+      <description>Low value of X</description>
+      <value>0</value>
+    </param>
+    <param type="double" name="xmax" subparam="true">
+      <description>High value of X</description>
+      <value>0</value>
+    </param>
+
+
+  <param type="bool" name="yautorange">
+    <description>Automatically set Y axis range</description>
+    <value>True</value>
+  </param>
+    
+    <param type="double" name="ymin" subparam="true">
+      <description>Low value of Y</description>
+      <value>0</value>
+    </param>
+    
+    <param type="double" name="ymax" subparam="true">
+      <description>High value of Y</description>
+      <value>0</value><!-- note to self: do not leave blank. -->
+    </param>
+
+
+
 
 
 <!--
@@ -403,7 +445,7 @@ Colorization Parameters
     </param>
     
     <param type="string" name="coloraxis" subparam="true">
-        <description>which data column to use for colorizing</description>
+        <description>selects which data to use for colorizing</description>
         <value />
         <allowed kind="enum">
             <value />
@@ -472,7 +514,7 @@ Grid Parameters
 </param>
 
 <param type="string" name="majorcolor" subparam="true">
-    <description>Color in hex code of major grid lines</description>
+    <description>Color as name or hex code of major grid lines</description>
     <value>B0B0B0</value>
 </param>
 
@@ -500,7 +542,7 @@ Grid Parameters
 </param>
 
 <param type="string" name="minorcolor" subparam="true">
-    <description>Color in hex code of minor grid lines</description>
+    <description>Color as name or hex code of minor grid lines</description>
     <value>D0D0D0</value>
 </param>
 
@@ -548,12 +590,12 @@ Export plot as image Parameters
     Misc Parameters
 ###############################################################################
 -->
-
+<!-- remove for 3.2 release - restore when we know exactly how to make this work right
      <param type="bool" name="showgui">
          <description>Show GUI</description>
          <value>True</value>
      </param>
-
+-->
 
 
 
@@ -709,6 +751,7 @@ Constraints
       <equals value="velocity"/>
        <equals value="vel"/>
       <equals value="wt"/>
+       <equals value="weight"/>
       <equals value="imwt"/>
       <equals value="flag"/>
       <equals value="azimuth"/>
@@ -716,6 +759,7 @@ Constraints
       <equals value="hourang"/>
        <equals value="hourangle"/>
       <equals value="parang"/>
+       <equals value="parangle"/>
        <equals value="parallacticangle"/>
       <equals value="antenna"/>
        <equals value="ant"/>
@@ -724,10 +768,12 @@ Constraints
       <equals value="ant-hourang"/>
        <equals value="ant-hourangle"/>
       <equals value="ant-parang"/>
+       <equals value="ant-parangle"/>
        <equals value="ant-parallacticangle"/>
       <equals value="row"/>
       <equals value="flagrow"/>
     </when>
+
     
     <when param="yaxis">
       <equals type="string" value="" />
@@ -783,6 +829,7 @@ Constraints
       <equals value="hourang"/>
        <equals value="hourangle"/>
       <equals value="parang"/>
+       <equals value="parangle"/>
        <equals value="parallacticangle"/>
       <equals value="antenna"/>
        <equals value="ant"/>
@@ -791,11 +838,31 @@ Constraints
       <equals value="ant-hourang"/>
        <equals value="ant-hourangle"/>
       <equals value="ant-parang"/>
+       <equals value="ant-parangle"/>
        <equals value="ant-parallacticangle"/>
       <equals value="row"/>
       <equals value="flagrow"/>
     </when>
 
+
+
+    <when param="xautorange">
+        <equals type="bool" value="True" />
+        <equals type="bool" value="False">
+            <default param="xmin"><value type="double">0</value></default> 
+            <default param="xmax"><value type="double">0</value></default> 
+        </equals>
+    </when>
+
+    
+    <when param="yautorange">
+        <equals type="bool" value="True" />
+        <equals type="bool" value="False">
+            <default param="ymin"><value type="double">0</value></default>
+            <default param="ymax"><value type="double">0</value></default>
+        </equals>
+    </when>
+    
     <when param="selectdata">
       <equals type="bool" value="True">
         <default param="field"><value type="string" /></default>
@@ -926,10 +993,25 @@ Constraints
            default: ''
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
+                    valid values (alphabetical, = indicates synonyms): 
+                      'amp' = 'amplitude',  'ant',  'ant-azimuth',  'ant-elevation',  'antenna',
+                      'antenna1' = 'ant1',  'antenna2' = 'ant2',  
+                      'ant-hourang' = 'ant-hourangle',  
+                      'ant-parallacticangle' = 'ant-parangle' = 'ant-parang',  
+                      'azimuth',  'baseline',  'chan' = 'channel',  'corr' = 'correlation',  
+                      'elevation',  'field',  'flag',  'flagrow',  'freq' = 'frequency',  
+                      'hourang' = 'hourangle',  'imag' = 'imaginary',  'imwt',   
+                      'parallacticangle' = 'parangle' = 'parang',   'phase',  
+                      'real',  'row',  'scan',  
+                      'spw',  'time',  'timeint' = 'timeinterval' = 'time_interval', 
+                      'u',  'uvdist',  'uvdistl' = 'uvdist_l',  'v',  'velocityvel', 'w', 
+                      'weight' = 'wt'
+
       &gt;&gt;&gt; xaxis, yaxis expandable parameters
-        xdatacolumn, ydatacolumn -- which data column to use for data axes
-                                    default: '' (uses PlotMS default/current
-                                    set).
+        xdatacolumn, 
+        ydatacolumn  -- which data column to use for data axes
+                        default: '' (uses PlotMS default/current set).
+                        options:  'data',  'corrected' = 'corr',  'model', 'residual'                     
     
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
@@ -1013,12 +1095,30 @@ Constraints
     colorize -- to color data points according to some quantity
                 default: false
       &gt;&gt;&gt; colorize expandable parameters
-        coloraxis -- which data column ('axis') to use for colorizing
-                     default: ''  (ignored - same as colorizing off)
+        coloraxis -- which data to use for colorizing
+                options (= indicates synonyms): 
+                    'scan',  'field',  'spw',  'antenna1' = 'ant1',  'antenna2' = 'ant2',
+                    'baseline',  'channel' = 'chan',  'corr' = 'correlation'
     
     title  -- title along top of plot (called "canvas" in some places)
-    xlabel, ylabel -- text to label horiz. and vert. axes, with formatting (%% and so on)
     
+    xlabel -- text to label horizontal axis, with formatting using '%%' 
+    ylabel -- text to label horizontal axis, with formatting using '%%' 
+    
+    showmajorgrid  -- show major grid lines (horiz and vert.)
+                  default: False.
+      &gt;&gt;&gt;  major grid expandable parameters
+        majorwidth  -- line width in pixels of major grid lines
+        majorstyle  -- major grid line style: solid dash dot none
+        majorcolor  -- color in hex code of major grid lines
+
+    showminorgrid  -- show minor grid lines (horiz and vert.)
+                  default: False.
+      &gt;&gt;&gt;  minor grid expandable parameters
+        minorwidth  --  line width in pixels of minor grid lines
+        minorstyle  --  minor grid line style: solid dash dot none
+        minorcolor  --  color in hex code of minor grid lines
+
     plotfile -- name of plot file to save automatically
                 default: ''  (i.e., draw an interactive plot in the gui)
       &gt;&gt;&gt; plotfile expandable parameters 

@@ -32,15 +32,13 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   cvel_regression.py
   cvel_regression2.py
   fits-import-export_regression.py
+  fls3a_hi_regression.py
   g192_regression.py
   h121_regression.py
   imagepoltest_regression.py
   imagetest_regression.py
-  irc_cs_regression.py
   irc_cs_task_regression.py
-  irc_hc3n_regression.py
   irc_hc3n_task_regression.py
-  irc_sio_regression.py
   l02d_regression.py
   leo2pt_regression.py
   listcal_regression.py
@@ -55,11 +53,8 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   ngc4826_tutorial_regression.py
   ngc5921_regression.py
   ngc5921_uvcontsub2.py
-  ori_ch3oh_regression.py
-  ori_hc3n_regression.py
   ori_hc3n_task_regression.py
   orion_regression.py
-  ori_sio_regression.py
   ori_sio_task_regression.py
   plotxy_regression.py
   pointing_regression.py

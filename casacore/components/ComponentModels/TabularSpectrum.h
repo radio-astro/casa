@@ -154,7 +154,8 @@ public:
 
   // Construct a Tabular  values with I and f specified
   // exponent.
-  TabularSpectrum(const MFrequency& refFreq, Vector<MFrequency::MVType>& freq, Vector<Flux<Double> >& flux, const MFrequency::Ref& refFrame);
+  TabularSpectrum(const MFrequency& refFreq, const Vector<MFrequency::MVType>& freq,
+                  const Vector<Flux<Double> >& flux, const MFrequency::Ref& refFrame);
 
   // The copy constructor uses copy semantics
   TabularSpectrum(const TabularSpectrum& other);

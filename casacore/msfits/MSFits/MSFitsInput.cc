@@ -1504,7 +1504,7 @@ void MSFitsInput::fillAntennaTable(BinaryTable& bt)
        {ms_p.antenna().addRow(); row++;}
    }
    row = ms_p.antenna().nrow()-1;
-   for(Int i=0;i<ms_p.antenna().nrow();i++)
+   for(uInt i=0;i<ms_p.antenna().nrow();i++)
      ant.flagRow().put(i,True);
 
    for (Int i=0; i<nAnt; i++) {

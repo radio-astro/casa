@@ -189,6 +189,187 @@ void QtRTRegion::doubleClicked(Int x, Int y) {
 }
   
   
+void QtELRegion::regionReady() {
+  Record mouseRegion;
+  WorldCanvasHolder* wch = 0;
+  if(getMouseRegion(mouseRegion, wch)) {
+    emit mouseRegionReady(mouseRegion, wch);  }  }
+
+
+
+Bool QtELRegion::getMouseRegion(Record& mouseRegion,
+                                WorldCanvasHolder*& wch) {
+	// Retrieve the current rectangular region record and WCH, if any.
+	// Construct from the rectangular coordinates the ellipse therein
+	// (If nothing is ready, returns False).
+
+	// Here are fields of a typical polygon mouseRegion record as emitted
+	// in the mouseRegionReady signal by this routine; the example polygon
+	// here has only four points, a typical polygon filled with section
+	// points of an ellipse has typically more .
+	//
+	// type: String "polygon"
+	// zindex: Int 23
+	// pixel: subRecord {
+	//   x: Double array with shape [4]  [229, 306, 312, 257]
+	//   y: Double array with shape [4]  [236, 249, 201, 198]  }
+	// linear: subRecord {
+	//   x: Double array with shape [4]  [142.536, 211.372, 216.736, 167.567]
+	//   y: Double array with shape [4]  [154.03, 165.642, 122.767, 120.087]  }
+	// (-->following field may be missing if undefined)
+	// world: subRecord {
+	//   x: Double array with shape [4]  [4.66745, 4.66351, 4.66321, 4.66602]
+	//   y: Double array with shape [4]  [1.22487, 1.2251, 1.22427, 1.22421]
+	//   units: String array with shape [2]  ["rad", "rad"]  }   (<--x, y)
+
+  mouseRegion = Record();	// Initialize to empty Record.
+
+
+  if(!ellipseDefined() || itsCurrentWC==0) return False;
+  wch = pd_->wcHolder(itsCurrentWC);
+	// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
+	// locating the important coordinate state 'zindex' on wch
+	// (inaccessible from WC), instead of on WC, was a blunder....
+  if(wch==0) return False;
+
+  mouseRegion.define("type", "polygon");
+
+  Int zindex = 0;
+  if (wch->restrictionBuffer()->exists("zIndex")) {
+    wch->restrictionBuffer()->getValue("zIndex", zindex);  }
+
+  mouseRegion.define("zindex", zindex);
+
+  // get the pix-coordinates
+  Int x1, y1, x2, y2;
+  get(x1, y1, x2, y2);
+
+
+  Double theta = 0.0; // pangle * (Float)C::degree;
+  Double ang, tmp, x_tmp, y_tmp;
+  Double smajor = fabs((Double)x1 - (Double)x2)/2.0;
+  Double sminor = fabs((Double)y1 - (Double)y2)/2.0;
+  Double xcen   = ((Double)x1 + (Double)x2)/2.0;
+  Double ycen   = ((Double)y1 + (Double)y2)/2.0;
+  Vector<Double> px, py, lx, ly, wx, wy,
+		  pix(2), lin(2), wld(2);
+  Bool wldOk=True;
+
+  // determine the number of segments
+  uInt nsegments = uInt( min(5000., 2 * C::pi * max(abs(smajor), abs(sminor))+ 0.5));
+  if (nsegments < 4) nsegments = 4;
+
+  // size the vectors
+  px.resize(nsegments);
+  py.resize(nsegments);
+  lx.resize(nsegments);
+  ly.resize(nsegments);
+  wx.resize(nsegments);
+  wy.resize(nsegments);
+
+  // go over all segments
+  for (uInt i = 0; i < nsegments; i++) {
+
+	  // compute one segment point
+	  ang = (Double)i / (Double)(nsegments - 1) * C::circle;
+	  x_tmp = smajor * cos(ang);
+	  y_tmp = sminor * sin(ang);
+	  ang = theta;
+	  tmp   = xcen + ( x_tmp * cos(ang) - y_tmp * sin(ang) );
+	  y_tmp = ycen + ( x_tmp * sin(ang) + y_tmp * cos(ang) );
+	  x_tmp = tmp;
+
+	  // transfer values to the pix-polygon
+	  pix[0] = px[i] = x_tmp;	// (px, py are Double)
+	  pix[1] = py[i] = y_tmp;
+
+	  // compute the pixel coordinates
+	  if(!itsCurrentWC->pixToLin(lin, pix)) return False;	  // (unlikely).
+
+	  // compute the world coordinates
+	  if(wldOk) wldOk = wldOk && itsCurrentWC->linToWorld(wld, lin);
+
+	  // transfer values to the lin-polygon
+	  lx[i] = lin[0];
+	  ly[i] = lin[1];
+
+	  // if possible, transfer to
+	  // the world-polygon
+	  if(wldOk) {
+		  wx[i] = wld[0];
+		  wy[i] = wld[1];
+	  }
+
+  }
+
+  // create some empty records
+  Record pixel, linear, world;
+
+  // load the records
+  pixel.define("x", px);   pixel.define("y", py);
+  linear.define("x", lx);  linear.define("y", ly);
+  if(wldOk) {
+    world.define("x", wx);  world.define("y", wy);
+    world.define("units", wch->worldAxisUnits());  }
+
+  // load the output records
+  mouseRegion.defineRecord("pixel", pixel);
+  mouseRegion.defineRecord("linear", linear);
+  if(wldOk) mouseRegion.defineRecord("world", world);
+
+  return True;  }
+
+
+void QtELRegion::clicked(Int x, Int y) {
+   //this has same implementation as doubleClicked
+   //we use single 'clicked' for activation
+   return;
+}
+
+void QtELRegion::doubleClicked(Int x, Int y) {
+   //cout << "QtELRegion ellipse " << x << " " << y <<  endl;
+   if (itsCurrentWC==0)
+      return ;
+   WorldCanvasHolder* wch = pd_->wcHolder(itsCurrentWC);
+   if (wch == 0)
+     return ;
+
+   Vector<Double> pix(2), lin(2), wld(2);
+   pix(0) = x;
+   pix(1) = y;
+   //cout << "pix=(" << pix(0) << ", " << pix(1) << ")" <<  endl;
+   if (!itsCurrentWC->pixToLin(lin, pix))
+     return ;
+
+   //cout << "lin=(" << lin(0) << ", " << lin(1) << ")" <<  endl;
+   Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
+   //cout << "wldOk=" << wldOk << endl;
+   //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
+   Vector<String> unit;
+   unit = wch->worldAxisUnits();
+   //cout << "units=(" << unit(0) << ", " << unit(1) << ")" <<  endl;
+   unit.resize(2, true);
+   //cout << "units=" << unit <<  endl;
+
+   if (!wldOk)
+      return;
+
+   Record clickPoint;
+   clickPoint.define("type", "click");
+   clickPoint.define("tool", "Ellipse");
+   Record pixel, linear, world;
+   pixel.define("pix", pix);
+   linear.define("lin", lin);
+   world.define("wld", wld);
+   world.define("units", unit);
+   clickPoint.defineRecord("pixel", pixel);
+   clickPoint.defineRecord("linear", linear);
+   clickPoint.defineRecord("world", world);
+
+   emit echoClicked(clickPoint);
+}
+
+
 void QtPTRegion::regionReady() {
   
   updateRegion();	// (Useful for profile signalling; will begin

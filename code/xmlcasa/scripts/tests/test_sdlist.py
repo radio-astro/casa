@@ -82,7 +82,7 @@ class sdlist_test(unittest.TestCase):
     def test03(self):
         """Test 3: Test overwrite=True"""
         tid = "03"
-        sdfile = self.sdfile1
+        sdfile = self.sdfile2
         listfile = self.outroot+tid+".out"
         result = sdlist(sdfile=sdfile,listfile=listfile)
         self.assertEqual(result,None,
@@ -90,7 +90,7 @@ class sdlist_test(unittest.TestCase):
         self.assertTrue(os.path.exists(listfile),
                         msg="Output file doesn't exist after the 1st run.")
         # overwrite 'listfile'
-        sdfile = self.sdfile2
+        sdfile = self.sdfile1
         listfile = self.outroot+tid+".out"
         result = sdlist(sdfile=sdfile,listfile=listfile,overwrite=True)
         self.assertEqual(result,None,

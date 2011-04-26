@@ -91,12 +91,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="outfile">
-            <description>name of output file</description>
+            <description>name of output file (See a WARNING in help document)</description>
             <value></value>
     </param>
 
     <param type="string" name="outform">
-            <description>output file format (ASCII,MS,SDFITS,ASAP)</description>
+            <description>output file format (ASCII,MS,SDFITS,ASAP) (See a WARNING in help document)</description>
             <value>ASAP</value>
             <allowed kind="enum">
             <value>ASCII</value>
@@ -114,7 +114,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite the output file if already exists</description>
+            <description>overwrite the output file if already exists (See a WARNING in help document)</description>
             <value>True</value>
     </param>
 
@@ -162,16 +162,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          this selection is in addition to scanlist,
                          field, and iflist
         maskflag -- list of mask regions to apply flag/unflag 
+                    Note, this parameter is ignored if one or more rows are 
+                    given in flagrow, or clip=True.
                 default: [] (entire spectrum)
                 example: [[1000,3000],[5000,7000]]
-                WARNING: if one or more rows are given in flagrow, or 
-                         clip=True, this parameter is ignored
         flagrow -- list of row numbers to apply flag/unflag
+                   Note, this parameter is effective only when one or more row 
+                   numbers are given explicitly and also clip=False
                 default: [] (no row selection)
                 example: [0, 2, 3]
-                WARNING: this parameter is effective only when 
-                         one or more row numbers are given explicitly 
-                         and also clip=False
         clip -- flag data that are outside a specified range
                 options: (bool)True,False
                 default: False
@@ -186,27 +185,29 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         flagmode -- flag mode
                 default: 'flag'
                 options: 'flag','unflag'
-                WARNING: an option 'restore' has been abolished since CASA 3.2. 
-                         To get flag info, use a new SD task 'sdflagmanager'. 
         interactive -- determines interactive flagging
                 options: (bool) True,False
                 default: False
         outfile -- Name of output file
                 default: ''
-                WARNING: by default (outfile=''), actual output file name is 
-                         set as follows: 
-                           (1) if overwrite=True, sdfile (input) will be overwritten. 
-                           (2) if overwrite=False, outfile will be &lt;sdfile&gt;_f. 
+                Note: by default (outfile=''), actual output file name is set as follows: 
+                      (1) if overwrite=True (default), sdfile (input) will be overwritten.
+                      WARNING: If the formats of input and ouput files are different, 
+                               this causes complete loss of input file.
+                      (2) if overwrite=False, outfile will be &lt;sdfile&gt;_f. 
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'
                 example: the ASAP format is easiest for further sd
                          processing; use MS for CASA imaging.
+                WARNING: Be sure outform is same as the input file format when you 
+                         overwrite the input file by overwrite=True and outfile='' (default).
         overwrite -- overwrite the output file if already exists
                 options: (bool) True,False
                 default: True
-                WARNING: default value has been changed to True since CASA 3.2. 
-                         if outform='ASCII', this parameter is ignored 
+                WARNING: input file is overwritten if overwrite=True and outfile='' (default). 
+                         This causes the complete loss of input file if the formats of
+                         input and ouput files are different.
         plotlevel -- control for plotting of results
                 options: (int) 0=none, 1=some, 2=more, &lt;0=hardcopy
                 default: 0 (no plotting)
@@ -245,9 +246,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Please note that this task is still experimental.
 
         WARNING for overwrite option:
-        Since CASA 3.2, the default value of the option 'overwrite' has 
-        been changed to True, thereby the current dataset (sdfile) is 
+        Be sure 'outform' is the same as data format of input file when you
+        overwrite it. Since CASA 3.1, the default value of the option 'overwrite'
+        has been changed to True, thereby the current dataset (sdfile) is 
         overwritten unless a different file name is set to outfile. 
+        There is a known issue in overwriting sdfile. If 'outform' differs to the
+        data format of sdfile, the data is overwritten with the new data format 
+        (specified by 'outform') and the data in the original format will be lost.
 
         WARNING for the GBT raw SDFITS format data as input:
         SDtasks are able to handle GBT raw SDFITS format data since the 

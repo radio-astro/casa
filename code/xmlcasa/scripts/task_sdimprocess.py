@@ -65,10 +65,16 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         raise Exception, "sdimages allows only one input file for pressed-out method." 
                     else:
                         sdimages = sdimages[0]
+                if type(direction) == list:
+                    if len(direction) != 1:
+                        raise Exception, "direction allows only one direction for pressed-out method."
+                    else:
+                        direction = direction[0]
+                        
 
                 # mask
                 image = ia.newimagefromimage(infile=sdimages,outfile=tmpmskname)
-                imshape = ia.shape()
+                imshape = image.shape()
                 nx = imshape[0]
                 ny = imshape[1]
                 nchan = imshape[2]
@@ -92,7 +98,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                         else:
                                             if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
                                                 pixmsk[ix][iy] = 0.0
-                            image.putchunk( pixmsk, [0,0,ichan,ipol] )
+                                image.putchunk( pixmsk, [0,0,ichan,ipol] )
                     elif len(imshape) == 3:
                         # no polarization axis
                         for ichan in range(nchan):
@@ -108,7 +114,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                     else:
                                         if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
                                             pixmsk[ix][iy] = 0.0
-                        image.putchunk( pixorg, [0,0,ichan] )
+                            image.putchunk( pixmsk, [0,0,ichan] )
                      
 
                 # smoothing
@@ -156,7 +162,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 elif direction == 90.0:
                     fitaxis = 1
                 else:
-                    raise Exception, "Sorry, the task don't supports inclined scan with respect to horizontal or vertical axis, right now."
+                    raise Exception, "Sorry, the task don't support inclined scan with respect to horizontal or vertical axis, right now."
                 polyimage = convimage.fitpolynomial( fitfile=tmppolyname, axis=fitaxis, order=numpoly, overwrite=True )
                 polyimage = ia.newimage( tmppolyname )
 
@@ -168,15 +174,15 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                     for ichan in range(nchan):
                         for ipol in range(npol):
                             pixorg = imageorg.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol])
-                            pixpol = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan,ipol] )
-                            pixsub = pixorg - pixsmo
+                            pixpol = polyimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] )
+                            pixsub = pixorg - pixpol
                             polyimage.putchunk( pixsub, [0,0,ichan,ipol] )
                 elif len(imshape) == 3:
                     # no polarization axis
                     for ichan in range(nchan):
                         pixorg = imageorg.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
-                        pixsmo = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
-                        pixsub = pixorg - pixsmo
+                        pixpol = polyimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
+                        pixsub = pixorg - pixpol
                         polyimage.putchunk( pixsub, [0,0,ichan] )
 
                 # output
@@ -216,7 +222,12 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 imshape = outimage.shape()
                 nx = imshape[0]
                 ny = imshape[1]
-                nchan = imshape[2]                
+                nchan = imshape[2]
+                tmp=[]
+                for i in xrange(len(sdimages)):
+                    tmp.append(numpy.zeros(imshape,dtype=float))
+                maskedpixel=numpy.array(tmp)
+                del tmp
 
                 # mask
                 for i in range(len(sdimages)):
@@ -239,12 +250,15 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                         for iy in range(pixmsk.shape[1]):
                                             if thresh[0] == nolimit:
                                                 if pixmsk[ix][iy] > thresh[1]:
+                                                    maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
                                                     pixmsk[ix][iy] = 0.0
                                             elif thresh[1] == nolimit:
                                                 if pixmsk[ix][iy] < thresh[0]:
+                                                    maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
                                                     pixmsk[ix][iy] = 0.0
                                             else:
                                                 if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
+                                                    maskedpixel[i][ix][iy][ichan][ipol]=pixmsk[ix][iy]
                                                     pixmsk[ix][iy] = 0.0
                                     realimage.putchunk( pixmsk, [0,0,ichan,ipol] )
                             realimage.close()
@@ -258,15 +272,22 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                                     for iy in range(pixmsk.shape[1]):
                                         if thresh[0] == nolimit:
                                             if pixmsk[ix][iy] > thresh[1]:
+                                                maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
                                                 pixmsk[ix][iy] = 0.0
                                         elif thresh[1] == nolimit:
                                             if pixmsk[ix][iy] < thresh[0]:
+                                                maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
                                                 pixmsk[ix][iy] = 0.0
                                         else:
                                             if pixmsk[ix][iy] < thresh[0] or pixmsk[ix][iy] > thresh[1]:
+                                                maskedpixel[i][ix][iy][ichan]=pixmsk[ix][iy]
                                                 pixmsk[ix][iy] = 0.0
-                                realimage.putchunk( pixorg, [0,0,ichan] )
+                                realimage.putchunk( pixmsk, [0,0,ichan] )
                             realimage.close()
+                maskedvalue=None
+                if any(maskedpixel.flatten()!=0.0):
+                        maskedvalue=maskedpixel.mean(axis=0)
+                del maskedpixel
 
                 # set weight factor
                 weights = numpy.ones( shape=(len(sdimages),nx,ny), dtype=float )
@@ -287,29 +308,35 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         maskw = 0.5 * nx * masks[i] 
                         for ix in range(nx):
                             for iy in range(ny):
-                                dd = abs( float(ix) - 0.5 * nx )
+                                dd = abs( float(ix) - 0.5 * (nx-1) )
                                 if dd < maskw:
                                     cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                                     weights[i][ix][iy] = 1.0 - cosd * cosd
+                                if weights[i][ix][iy] == 0.0:
+                                    weights[i][ix][iy] += eps*0.01
                     elif abs(numpy.cos(direction[i]*dtor)) < eps:
                         # direction is around 90 deg
                         maskw = 0.5 * ny * masks[i]
                         for ix in range(nx):
                             for iy in range(ny):
-                                dd = abs( float(iy) - 0.5 * ny )
+                                dd = abs( float(iy) - 0.5 * (ny-1) )
                                 if dd < maskw:
                                     cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                                     weights[i][ix][iy] = 1.0 - cosd * cosd
+                                if weights[i][ix][iy] == 0.0:
+                                    weights[i][ix][iy] += eps*0.01
                     else:
                         maskw = 0.5 * sqrt( nx * ny ) * masks[i]
                         for ix in range(nx):
                             for iy in range(ny):
                                 tand = numpy.tan((direction[i]-90.0)*dtor)
-                                dd = abs( ix * tand - iy - 0.5 * nx * tand + 0.5 * ny )
+                                dd = abs( ix * tand - iy - 0.5 * (nx-1) * tand + 0.5 * (ny-1) )
                                 dd = dd / sqrt( 1.0 + tand * tand )
                                 if dd < maskw:
                                     cosd = numpy.cos(0.5*numpy.pi*dd/maskw)
                                     weights[i][ix][iy] = 1.0 - cosd * cosd
+                                if weights[i][ix][iy] == 0.0:
+                                    weights[i][ix][iy] += eps*0.01 
                     # shift
                     xshift = -((ny-1)/2)
                     yshift = -((nx-1)/2)
@@ -321,8 +348,6 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         tmp = weights[i,0:1].copy()
                         weights[i,0:nx-1] = weights[i,1:nx].copy()
                         weights[i,nx-1:nx] = tmp
-              
-         
 
                 # FFT
                 if len(imshape) == 4:
@@ -355,9 +380,9 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                             realimage.putchunk( pixfft.real, [0,0,ichan] )
                             imagimage.putchunk( pixfft.imag, [0,0,ichan] )
                             del pixval, pixfft
-                        raelimage.close()
+                        realimage.close()
                         imagimage.close()
-                        
+                
                 # weighted mean
                 if len(imshape) == 4:
                     npol = imshape[3]
@@ -425,13 +450,15 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         pixifft = pixfft.reshape((nx,ny,1))
                         outimage.putchunk( pixifft.real, [0,0,ichan] )
                         del pixval, pixifft
+                if maskedvalue is not None:
+                    outimage.putchunk(outimage.getchunk()+maskedvalue)
                 realimage.close()
                 imagimage.close()
                 outimage.close()
 
         except Exception, instance:
             casalog.post( str(instance), priority = 'ERROR' )
-            return
+            raise Exception, instance
         finally:
             if os.path.exists( tmpmskname ):
                  os.system( 'rm -rf %s' % tmpmskname )

@@ -148,7 +148,7 @@ private:
 
     void _setResults();
 
-
+    String _radToRa(const Float ras) const;
     String _resultsToString() const;
 
     String _elementToString(

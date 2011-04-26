@@ -370,6 +370,28 @@ void ImageProfileFitter::_setResults() {
 	}
 }
 
+String ImageProfileFitter::_radToRa(Float ras) const{
+
+   Int h, m;
+   Float rah = ras * 12 / C::pi;
+   h = (int)floor(rah);
+   Float ram = (rah - h) * 60;
+   m = (int)floor(ram);
+   ras = (ram - m) * 60;
+   ras = (int)(1000 * ras) / 1000.;
+
+   String raStr = (h < 10) ? "0" : "";
+        raStr.append(String::toString(h)).append(String(":"))
+        .append(String((m < 10) ? "0" : ""))
+        .append(String::toString(m)).append(String(":")) 
+        .append(String((ras < 10) ? "0" : ""))
+        .append(String::toString(ras));
+
+   return raStr;
+
+}
+
+
 String ImageProfileFitter::_resultsToString() const {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
@@ -435,10 +457,14 @@ String ImageProfileFitter::_resultsToString() const {
 			summary << "Fit centered at:" << endl;
 			for (uInt i=0; i<world.size(); i++) {
 				if ((Int)i != _fitAxis) {
+                                        //summary << "ax=" << axesNames[i] 
+                                        //        << " world=" << world[i] 
+                                        //        << endl;
 					if (axesNames[i].startsWith("RIG")) {
 						// right ascension
-						summary << "    RA         : "
-							<< MVTime(world[i]).string(MVTime::TIME, 9) << endl;
+						summary << "    RA         :   "
+						//	<< MVTime(world[i]).string(MVTime::TIME, 9) << endl;
+							<< _radToRa(world[i]) << endl;
 					}
 					else if (axesNames[i].startsWith("DEC")) {
 						// declination

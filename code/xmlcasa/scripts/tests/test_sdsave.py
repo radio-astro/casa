@@ -24,11 +24,13 @@ import asap as sd
 ###
 # Base class for all testing classes
 ###
-class sdsave_test_base:
+class sdsave_unittest_base:
     """
     Base class for testing classes.
     Implements several methods to compare the results.
     """
+    taskname='sdsave'
+    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
     basefile='OrionS_rawACSmod_cal2123.asap'
     summaryStr = None
     firstSpec = None
@@ -36,6 +38,11 @@ class sdsave_test_base:
     ifno = None
     cycleno = None
     scanno = None
+
+    def _checkfile( self, name ):
+        isthere=os.path.exists(name)
+        self.assertEqual(isthere,True,
+                         msg='output file %s was not created because of the task failure'%(name))
 
     def _setAttributes(self):
         """
@@ -80,6 +87,7 @@ class sdsave_test_base:
         extension=st[-1]
         #casalog.post('filename='+filename)
         if extension == 'asap' or extension == 'ms' or extension == 'fits':
+            self._checkfile(filename)
             s=sd.scantable(filename,False)
             n=s.nrow()
             sp=numpy.array(s._getspectrum(0))
@@ -89,6 +97,7 @@ class sdsave_test_base:
             wcout=commands.getoutput('ls '+st[0]+'*.txt'+' | wc')
             n=int(wcout.split()[0])*self.npol
             filein=st[0]+'_SCAN%d_CYCLE%d_IF%d.txt'%(self.scanno,self.cycleno,self.ifno)
+            self._checkfile(filein)
             f=open(filein)
             sp=[]
             line = f.readline()
@@ -105,15 +114,14 @@ class sdsave_test_base:
 ###
 # Test on bad parameter settings, data selection, data averaging, ...
 ###
-class sdsave_test0(unittest.TestCase):
+class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
     """
     Test on data selection, data averaging...
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.asap'
-    prefix='sdsaveTest0'
+    prefix=sdsave_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -127,17 +135,17 @@ class sdsave_test0(unittest.TestCase):
             shutil.rmtree(self.sdfile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test000(self):
         """Test 000: Default parameters"""
         self.res=sdsave()
         self.assertFalse(self.res)
         
-    def test01(self):
+    def test001(self):
         """Test 001: Time averaging without weight"""
         self.res=sdsave(sdfile=self.sdfile,timeaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
-    def test02(self):
+    def test002(self):
         """Test 002: Polarization averaging without weight"""
         self.res=sdsave(sdfile=self.sdfile,polaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
@@ -146,18 +154,17 @@ class sdsave_test0(unittest.TestCase):
 ###
 # Test to read scantable and write various types of format
 ###
-class sdsave_test1(unittest.TestCase,sdsave_test_base):
+class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
     """
     Read scantable data, write various types of format.
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.asap'
-    prefix='sdsaveTest1'
+    prefix=sdsave_unittest_base.taskname+'Test1'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -176,25 +183,25 @@ class sdsave_test1(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test100(self):
         """Test 100: test to read scantable and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
-    def test01(self):
+    def test101(self):
         """Test 101: test to read scantable and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test102(self):
         """Test 102: test to read scantable and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test103(self):
         """Test 103: test to read scantable and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -204,18 +211,17 @@ class sdsave_test1(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read MS and write various types of format
 ###
-class sdsave_test2(unittest.TestCase,sdsave_test_base):
+class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
     """
     Read MS data, write various types of format.
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.ms'
-    prefix='sdsaveTest2'
+    prefix=sdsave_unittest_base.taskname+'Test2'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -235,25 +241,25 @@ class sdsave_test2(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test200(self):
         """Test 200: test to read MS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
         
-    def test01(self):
+    def test201(self):
         """Test 201: test to read MS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test202(self):
         """Test 202: test to read MS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test203(self):
         """Test 203: test to read MS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -263,18 +269,17 @@ class sdsave_test2(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read ATNF SDFITS and write various types of format
 ###
-class sdsave_test3(unittest.TestCase,sdsave_test_base):
+class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
     """
     Read ATNF SDFITS data, write various types of format.
     """
     # Input and output names
     sdfile='OrionS_rawACSmod_cal2123.fits'
-    prefix='sdsaveTest3'
+    prefix=sdsave_unittest_base.taskname+'Test3'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -294,25 +299,25 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test300(self):
         """Test 300: test to read ATNF SDFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
-    def test01(self):
+    def test301(self):
         """Test 301: test to read ATNF SDFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test302(self):
         """Test 302: test to read ATNF SDFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test303(self):
         """Test 303: test to read ATNF SDFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -322,18 +327,17 @@ class sdsave_test3(unittest.TestCase,sdsave_test_base):
 ###
 # Test to read GBT SDFITS and write various types of format
 ###
-class sdsave_test4(unittest.TestCase):
+class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
     """
     Read GBT SDFITS data, write various types of format.
     """
     # Input and output names
     sdfile='AGBT06A_sliced.fits'
-    prefix='sdsaveTest4'
+    prefix=sdsave_unittest_base.taskname+'Test4'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -348,26 +352,26 @@ class sdsave_test4(unittest.TestCase):
             os.system( 'rm -f '+self.sdfile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test400(self):
         """Test 400: test to read GBT SDFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
-    def test01(self):
+    def test401(self):
         """Test 401: test to read GBT SDFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test402(self):
         """Test 402: test to read GBT SDFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test403(self):
         """Test 403: test to read GBT SDFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
@@ -393,18 +397,17 @@ class sdsave_test4(unittest.TestCase):
 ###
 # Test to read NROFITS and write various types of format
 ###
-class sdsave_test5(unittest.TestCase):
+class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
     """
     Read NROFITS data, write various types of format.
     """
     # Input and output names
     sdfile='B68test.nro'
-    prefix='sdsaveTest5'
+    prefix=sdsave_unittest_base.taskname+'Test5'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
     outfile2=prefix+'.fits'
     outfile3=prefix
-    datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdsave/'
 
     def setUp(self):
         self.res=None
@@ -419,26 +422,26 @@ class sdsave_test5(unittest.TestCase):
             os.system( 'rm -f '+self.sdfile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
-    def test00(self):
+    def test500(self):
         """Test 500: test to read NROFITS and to write as scantable"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
-    def test01(self):
+    def test501(self):
         """Test 501: test to read NROFITS and to write as MS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
-    def test02(self):
+    def test502(self):
         """Test 502: test to read NROFITS and to write as SDFITS"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
-    def test03(self):
+    def test503(self):
         """Test 503: test to read NROFITS and to write as ASCII"""
         self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)

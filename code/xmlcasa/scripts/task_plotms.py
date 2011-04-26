@@ -5,6 +5,8 @@ from taskinit import *
 def plotms(vis=None, 
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None,
+           xautorange=None, xmin=None, xmax=None,
+           yautorange=None, ymin=None, ymax=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
            correlation=None, array=None, msselect=None,
@@ -21,8 +23,8 @@ def plotms(vis=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
            plotfile=None, format=None,
-           highres=None, interactive=None, overwrite=None,
-           showgui=None
+           highres=None, interactive=None, overwrite=None  # ,
+           #           showgui=None    --- remove for 3.2 release, restore later
 ):
 
 # we'll add these later
@@ -48,9 +50,10 @@ def plotms(vis=None,
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (uses PlotMS defaults/current set).
         &gt;&gt;&gt; xaxis, yaxis expandable parameters
-        xdatacolumn, ydatacolumn -- which data column to use for data axes
-                                    default: '' (uses PlotMS default/current
-                                    set).
+        xdatacolumn, 
+        ydatacolumn -- which data column to use for data axes
+                       default: '' (uses PlotMS default/current set).
+                       
     selectdata -- data selection parameters flag
                   (see help par.selectdata for more detailed information)
                   default: False
@@ -142,7 +145,8 @@ def plotms(vis=None,
 
     try:            
         # Check synonyms
-
+        # format is:  synonym['new_term'] = 'existing_term', with 
+        # the existing term being what's coded in PlotMSConstants.h  (case insensitive)
         synonyms = {}
         synonyms['timeinterval'] = synonyms['timeint'] = 'time_interval'
         synonyms['chan'] = 'channel'
@@ -150,20 +154,28 @@ def plotms(vis=None,
         synonyms['vel'] = 'velocity'
         synonyms['correlation'] = 'corr'
         synonyms['ant1'] = 'antenna1'
+        synonyms['weight'] = 'wt'
         synonyms['ant2'] = 'antenna2'
         synonyms['uvdistl'] = 'uvdist_l'
         synonyms['amplitude'] = 'amp'
         synonyms['imaginary'] = 'imag'
         synonyms['ant'] = 'antenna'
-        synonyms['parallacticangle'] = 'parang'
+        synonyms['parallacticangle'] = 'parangle'
+        synonyms['parang'] = 'parangle'
         synonyms['hourangle'] = 'hourang'
         synonyms['ant-hourangle'] = 'ant-hourang'
         synonyms['ant-parallacticangle'] = 'ant-parang'
+        synonyms['ant-parangle'] = 'ant-parang'
         
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
         
-        tp.setgui( showgui );
+        # synonyms for data columns (only one, so just hardcode it)
+        if (xdatacolumn=='cor' or xdatacolumn=='corr'):  xdatacolumn='corrected'
+        if (ydatacolumn=='cor' or ydatacolumn=='corr'):  ydatacolumn='corrected'
+
+
+        tp.setgui( True );     ####  showgui );
 
 
         # Set filename and axes
@@ -218,12 +230,15 @@ def plotms(vis=None,
         pm.setXAxisLabel(xlabel,False)
         pm.setYAxisLabel(ylabel,False)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
-                         showminorgrid, minorwidth, minorstyle, minorcolor,False)
-        
+                         showminorgrid, minorwidth, minorstyle, minorcolor, False)
+        pm.setXRange(xautorange, xmin, xmax, False)
+        pm.setYRange(yautorange, ymin, ymax, False)
+
         # Update and show
         pm.update()
-        if (showgui):
-            pm.show()
+        #if (showgui):
+        #    pm.show()
+        pm.show()
         
         # write file if requested
         if(plotfile != ""):

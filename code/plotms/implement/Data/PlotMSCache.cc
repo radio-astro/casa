@@ -403,6 +403,8 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
 
   Int chunk = 0;
   chshapes_.resize(4,nChunk_);
+  goodChunk_.resize(nChunk_);
+  goodChunk_.set(False);
   double progress;
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()) {
     for(vi.origin(); vi.more(); vi++) {
@@ -438,6 +440,7 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
       chshapes_(1,chunk)=vb.nChannel();
       chshapes_(2,chunk)=vb.nRow();
       chshapes_(3,chunk)=vi.numberAnt();
+      goodChunk_(chunk)=True;
       
       for(unsigned int i = 0; i < loadAxes.size(); i++) {
 	//	cout << PMS::axis(loadAxes[i]) << " ";
@@ -478,6 +481,8 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
   vbu_=VisBufferUtil(vb);
 
   chshapes_.resize(4,nChunk_);
+  goodChunk_.resize(nChunk_);
+  goodChunk_.set(False);
   double progress;
   vi.originChunks();
   vi.origin();
@@ -564,20 +569,30 @@ void PlotMSCache::loadChunks(ROVisibilityIterator& vi,
     // The averaged VisBuffer
     VisBuffer& avb(pmsvba.aveVisBuff());
 
-    // Form Stokes parameters, if requested
-    if (transformations_.formStokes())
-      avb.formStokes();
+    if (avb.nRow()>0) {
 
-    // Cache the data shapes
-    chshapes_(0,chunk)=avb.nCorr();
-    chshapes_(1,chunk)=avb.nChannel();
-    chshapes_(2,chunk)=avb.nRow();
-    chshapes_(3,chunk)=vi.numberAnt();
-
-    for(unsigned int i = 0; i < loadAxes.size(); i++) {
-      loadAxis(avb, chunk, loadAxes[i], loadData[i]);
-    }
+      // Form Stokes parameters, if requested
+      if (transformations_.formStokes())
+	avb.formStokes();
       
+      // Cache the data shapes
+      chshapes_(0,chunk)=avb.nCorr();
+      chshapes_(1,chunk)=avb.nChannel();
+      chshapes_(2,chunk)=avb.nRow();
+      chshapes_(3,chunk)=vi.numberAnt();
+      goodChunk_(chunk)=True;
+ 
+      for(unsigned int i = 0; i < loadAxes.size(); i++) {
+	loadAxis(avb, chunk, loadAxes[i], loadData[i]);
+      }
+      
+    }
+    else {
+      // no points in this chunk
+      goodChunk_(chunk)=False;
+      chshapes_.column(chunk)=0;
+    }
+
     // If a thread is given, update it.
     if(thread != NULL && (nChunk_ <= (int)THREAD_SEGMENT ||
 			  chunk % THREAD_SEGMENT == 0)) {
@@ -1524,6 +1539,10 @@ void PlotMSCache::flagInCache(const PlotMSFlagging& flagging,Bool flag) {
 
 void PlotMSCache::setPlotMask(Int chunk) {
 
+  // Do nothing if chunk empty
+  if (!goodChunk_(chunk))
+    return;
+
   IPosition nsh(3,1,1,1),csh;
   
   for (Int iax=0;iax<3;++iax) {
@@ -1832,7 +1851,7 @@ void PlotMSCache::setChunk(Int i) {
   if (i==0) currChunk_=0;  // probably insufficient as a general reset!
 
   // Bump up if needed
-  if (i > (nPoints_(currChunk_)-1)) ++currChunk_; 
+  while (i > (nPoints_(currChunk_)-1)) ++currChunk_; 
 
   irel_=i;
   if (currChunk_>0) 
@@ -2232,6 +2251,9 @@ void PlotMSCache::computeRanges() {
   Int totalN(0);
   for (Int ic=0;ic<nChunk_;++ic) {
     
+    if (!goodChunk_(ic))
+      continue;
+
     nTotalPoints_+=plmask_[ic]->nelements();
     
     Int thisN=ntrue(*plmask_[ic]);

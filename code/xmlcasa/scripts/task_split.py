@@ -191,24 +191,16 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     # Write history to output MS, not the input ms.
     myms.open(outputvis, nomodify=False)
     myms.writehistory(message='taskname=split', origin='split')
-    myms.writehistory(message='vis         = "'+str(vis)+'"',
-                      origin='split')
-    myms.writehistory(message='outputvis   = "'+str(outputvis)+'"',
-                      origin='split')
-    myms.writehistory(message='field       = "'+str(field)+'"',
-                      origin='split')
-    myms.writehistory(message='spw       = '+str(spw), origin='split')
-    myms.writehistory(message='width       = '+str(width), origin='split')
-    myms.writehistory(message='antenna     = "'+str(antenna)+'"',
-                      origin='split')
-    myms.writehistory(message='timebin     = "'+str(timebin)+'"',
-                      origin='split')
-    myms.writehistory(message='timerange   = "'+str(timerange)+'"',
-                      origin='split')
-    myms.writehistory(message='datacolumn  = "'+str(datacolumn)+'"',
-                      origin='split')
-    myms.writehistory(message='combine  = "'+str(combine)+'"',
-                      origin='split')
+    # Write the arguments.
+    for arg in split.func_code.co_varnames[:split.func_code.co_argcount]:
+        msg = "%-11s = " % arg
+        val = eval(arg)
+        if type(val) == str:
+            msg += '"'
+        msg += str(val)
+        if type(val) == str:
+            msg += '"'
+        myms.writehistory(message=msg, origin='split')
     myms.close()
 
     return True

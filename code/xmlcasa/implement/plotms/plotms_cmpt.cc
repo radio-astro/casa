@@ -345,15 +345,8 @@ string plotms::getColorAxis(const int plotIndex)
 void plotms::setTitle(const string& text,  const bool updateImmediately, const int plotIndex) 
 {
     launchApp();
-    string t = text;
-    if (text=="")  
-        t="%%yaxis%% vs. %%xaxis%%";
-        // I have no idea where in plotms this default is defined; I am just hard coding what I see when I run casaplotms. 
-        // We don't have access to plotms internal defaults at this point anyway.
-        // A better idea might be to pass "DEFAULT" or some unlikely series of punctuation marks,
-        // and let the plotms code substitute the default it knows about.
     Record params;
-    params.define(PlotMSDBusApp::PARAM_CANVASTITLE,  t);
+    params.define(PlotMSDBusApp::PARAM_CANVASTITLE,  text);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
@@ -364,12 +357,8 @@ void plotms::setTitle(const string& text,  const bool updateImmediately, const i
 void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
 {
     launchApp();
-    string t = text;
-    if (text=="")  
-        t="%%axis%%%%ifrefvalue%% (from %%refvalue%%)%%endifrefvalue%%";
-        // see note for setTitle()
     Record params;
-    params.define(PlotMSDBusApp::PARAM_XAXISLABEL,  t);
+    params.define(PlotMSDBusApp::PARAM_XAXISLABEL,  text);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
@@ -380,12 +369,8 @@ void plotms::setXAxisLabel(const string& text,  const bool updateImmediately, co
 void plotms::setYAxisLabel(const string& text,  const bool updateImmediately, const int plotIndex) 
 {
     launchApp();
-    string t = text;
-    if (text=="")  
-        t="%%axis%%%%ifrefvalue%% (from %%refvalue%%)%%endifrefvalue%%";
-        // see note for setTitle()
     Record params;
-    params.define(PlotMSDBusApp::PARAM_YAXISLABEL,  t);
+    params.define(PlotMSDBusApp::PARAM_YAXISLABEL,  text);
     params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
     params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
     QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
@@ -787,6 +772,42 @@ void plotms::setGridParams(
             PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
 }
 
+
+
+void plotms::setXRange(const bool xautorange,  const double xmin, const double xmax,
+                const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_XAUTORANGE,  xautorange);
+    params.define(PlotMSDBusApp::PARAM_XMIN,        xmin);
+    params.define(PlotMSDBusApp::PARAM_XMAX,        xmax);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
+    
+}
+
+
+
+void plotms::setYRange(const bool yautorange,  const double ymin, const double ymax,
+                const bool updateImmediately, const int plotIndex) 
+{
+    launchApp();
+    Record params;
+    params.define(PlotMSDBusApp::PARAM_YAUTORANGE,  yautorange);
+    params.define(PlotMSDBusApp::PARAM_YMIN,        ymin);
+    params.define(PlotMSDBusApp::PARAM_YMAX,        ymax);
+    params.define(PlotMSDBusApp::PARAM_UPDATEIMMEDIATELY, updateImmediately);
+    params.define(PlotMSDBusApp::PARAM_PLOTINDEX, plotIndex);
+    QtDBusXmlApp::dbusXmlCallNoRet(dbus::FROM_NAME, app.dbusName( ),
+            PlotMSDBusApp::METHOD_SETPLOTPARAMS, params, true);    
+    
+}
+
+
+
 // A _temporary_ method to enable turning off the iteration path
 bool plotms::enableIter(const bool enable) {
 
@@ -802,6 +823,7 @@ bool plotms::enableIter(const bool enable) {
   return true;
 
 }
+
 
 
 

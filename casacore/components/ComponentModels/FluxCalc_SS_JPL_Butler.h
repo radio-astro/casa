@@ -131,6 +131,13 @@ class FluxCalc_SS_JPL_Butler
   ComponentType::Shape compute(Vector<Flux<Double> >& values,
                                Vector<Flux<Double> >& errors, Double& angdiam,
                                const Vector<MFrequency>& mfreqs);
+
+  // Same as the above, but for a set of sets of frequencies, i.e.
+  // mfreqs[spw] is a set of frequencies for channels in spectral window spw.
+  ComponentType::Shape compute(Vector<Vector<Flux<Double> > >& values,
+                               Vector<Vector<Flux<Double> > >& errors,
+                               Double& angdiam,
+                               const Vector<Vector<MFrequency> >& mfreqs);
  private:
   enum KnownObjects {
     Mercury = 0,

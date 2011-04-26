@@ -1258,13 +1258,15 @@ void QtDisplayPanelGui::showImageProfile() {
 				     const Vector<Double>, 
 				     const Vector<Double>,
 				     const Vector<Double>, 
-				     const Vector<Double> )),
+				     const Vector<Double>,
+				     const ProfileType)),
                     profile_,
                     SLOT(wcChanged( const String,
 				    const Vector<Double>, 
 				    const Vector<Double>,
 				     const Vector<Double>, 
-				     const Vector<Double> )));
+				     const Vector<Double>,
+				     const ProfileType)));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      pos,
@@ -1278,16 +1280,41 @@ void QtDisplayPanelGui::showImageProfile() {
 				    const Vector<Double>, 
 				    const Vector<Double>,
 				    const Vector<Double>, 
-				    const Vector<Double> )),
+				    const Vector<Double>,
+				    const ProfileType)),
                    profile_,
                    SLOT(wcChanged( const String,
 				   const Vector<Double>, 
 				   const Vector<Double>,
-				     const Vector<Double>, 
-				     const Vector<Double> )));
+				   const Vector<Double>,
+				   const Vector<Double>,
+				   const ProfileType )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      rect,
+                    SLOT(setCoordType(const String&)));
+                }
+
+                QtEllipseTool *ellipse = (QtEllipseTool*)
+                      (ppd->getTool(QtMouseToolNames::ELLIPSE));
+                if (ellipse) {
+                   connect(ellipse,
+                   SIGNAL(wcNotify( const String,
+				    const Vector<Double>,
+				    const Vector<Double>,
+				    const Vector<Double>,
+				    const Vector<Double>,
+				    const ProfileType )),
+                   profile_,
+                   SLOT(wcChanged( const String,
+				   const Vector<Double>,
+				   const Vector<Double>,
+				   const Vector<Double>,
+				   const Vector<Double>,
+				   const ProfileType )));
+                   connect(profile_,
+                    SIGNAL(coordinateChange(const String&)),
+                    ellipse,
                     SLOT(setCoordType(const String&)));
                 }
 
@@ -1298,14 +1325,16 @@ void QtDisplayPanelGui::showImageProfile() {
                    SIGNAL(wcNotify( const String,
 				    const Vector<Double>, 
 				    const Vector<Double>,
-                                    const Vector<Double>, 
-                                    const Vector<Double> )),
+				    const Vector<Double>,
+				    const Vector<Double>,
+				    const ProfileType )),
                    profile_,
                    SLOT(wcChanged( const String, 
 				   const Vector<Double>, 
 				   const Vector<Double>,
-				     const Vector<Double>, 
-				     const Vector<Double> )));
+				   const Vector<Double>,
+				   const Vector<Double>,
+				   const ProfileType )));
                    connect(profile_, 
                     SIGNAL(coordinateChange(const String&)),
                      poly,

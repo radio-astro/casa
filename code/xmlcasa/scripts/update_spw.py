@@ -15,13 +15,14 @@ Example:
 '3'
 """
 
-import copy, re
+import copy
 
 def update_spw(spw, spwmap=None):
     """
     Given an spw:chan selection string, return what it should be after the spws
     have been remapped (i.e. by split), and a map from input to output spws
-    (spwmap).  It does not change spw.
+    (spwmap).  It does not change spw OR the *channels* part of the output spw
+    string!  (See update_spwchan)
 
     If given, spwmap will be used as a dictionary from (string) input spw to
     (string) output spws.  Otherwise it will be freshly calculated.  Supplying
@@ -34,12 +35,12 @@ def update_spw(spw, spwmap=None):
     >>> from update_spw import update_spw
     >>> myfitspw, spws = update_spw('0~3,5;6:1~7;11~13', None)
     >>> myfitspw
-    '0~3,4,5:1~7;11~13'
+    '0~3,4;5:1~7;11~13'
     >>> myspw = update_spw('1,5;6:8~10', spws)[0]
     >>> myspw   # not '0,1,2:8~10'
-    '1,4,5:8~10'
+    '1,4;5:8~10'
     >>> update_spw('0~3,5;6:1~7;11~13,7~9:0~3,11,7~8:6~8', None)[0]
-    '0~3,4,5:1~7;11~13,6~8:0~3,9,6~7:6~8'
+    '0~3,4;5:1~7;11~13,6~8:0~3,9,6~7:6~8'
     
     # Let's say we want updates of both fitspw and spw, but fitspw and spw
     # are disjoint (in spws).
@@ -55,6 +56,9 @@ def update_spw(spw, spwmap=None):
     >>> myspw = update_spw(spw, spwmap)[0]
     >>> myspw
     '5~13'
+    >>> myspw = update_spw('0,1,3;5~8:20~30;44~50^2', None)[0]
+    >>> myspw
+    '0,1,2;3~6:20~30;44~50^2'
     """
     # Blank is valid.  Blank is good.
     if not spw:
@@ -75,17 +79,21 @@ def update_spw(spw, spwmap=None):
     inspw = True    # Must start with an spw.
     spwgrp = ''
     chagrp = ''
-    
-    for c in spw:
-        if c == ',' or (inspw and c == ';'):  # Start new [spw, chan] pair.
-            # Store old one.
-            spwchans.append([spwgrp, chagrp])
-            if make_spwmap:
-                if spwgrp.find('~') > -1:
-                    start, end = map(int, spwgrp.split('~'))
+
+    def store_spwchan(sstr, cstr):
+        spwchans.append([sstr, cstr])
+        if make_spwmap:
+            for sgrp in sstr.split(';'):
+                if sgrp.find('~') > -1:
+                    start, end = map(int, sgrp.split('~'))
                     spws.update(range(start, end + 1))
                 else:
-                    spws.add(int(spwgrp))
+                    spws.add(int(sgrp))        
+    
+    for c in spw:
+        if c == ',':               # Start new [spw, chan] pair.
+            # Store old one.
+            store_spwchan(spwgrp, chagrp)
 
             # Initialize new one.
             spwgrp = ''
@@ -98,13 +106,7 @@ def update_spw(spw, spwmap=None):
         else:
             chagrp += c
     # Store final [spw, chan] pair.
-    spwchans.append([spwgrp, chagrp])
-    if make_spwmap:
-        if spwgrp.find('~') > -1:
-            start, end = map(int, spwgrp.split('~'))
-            spws.update(range(start, end + 1))
-        else:
-            spws.add(int(spwgrp))
+    store_spwchan(spwgrp, chagrp)
 
     # print "spwchans =", spwchans
     # print "spws =", spws
@@ -117,11 +119,15 @@ def update_spw(spw, spwmap=None):
             i += 1
     outstr = ''
     for sc in spwchans:
-        if sc[0].find('~') > -1:
-            start, end = sc[0].split('~')
-            outstr += spwmap[start] + '~' + spwmap[end]
-        else:
-            outstr += spwmap[sc[0]]
+        sgrps = sc[0].split(';')
+        for sind in xrange(len(sgrps)):
+            sgrp = sgrps[sind]
+            if sgrp.find('~') > -1:
+                start, end = sgrp.split('~')
+                sgrps[sind] = spwmap[start] + '~' + spwmap[end]
+            else:
+                sgrps[sind] = spwmap[sgrp]
+        outstr += ';'.join(sgrps)
         if sc[1]:
             outstr += ':' + sc[1]
         outstr += ','

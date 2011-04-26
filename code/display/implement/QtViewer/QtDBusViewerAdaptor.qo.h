@@ -113,6 +113,7 @@ namespace casa {
     
     signals:
 	void interact( QDBusVariant );
+	void exiting( QDBusVariant );
 
     protected slots:
 

@@ -53,10 +53,10 @@ class QtViewerBase;
 
 namespace QtMouseToolNames {
 
-  enum { nTools = 10 };
+  enum { nTools = 11 };
   
   extern const String ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-               RECTANGLE, POLYGON, POLYLINE,  MULTICROSSHAIR, ANNOTATIONS,
+               RECTANGLE, ELLIPSE, POLYGON, POLYLINE,  MULTICROSSHAIR, ANNOTATIONS,
 	       NONE;
 
   //# nTools is an invalid tool index (or stands for "none") in these arrays.

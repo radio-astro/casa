@@ -283,18 +283,6 @@ void PlotRangeWidget::setRange(bool isDate, bool isCustom, double from,
 			year, mon, day, hour, min,  sec);
 		timeTo->setText(QString(txt));
         
-        #if (0)  // OLD CODE - keep for ref while writing new code
-        PMS::dateDouble(from, year, mon, day, hour, min, sec);
-        timeFrom->setDate(QDate(year, mon, day));
-        timeFrom->setTime(QTime(hour, min, (int)sec,
-                          (int)((modf(sec, &temp) * 1000) + 0.5)));
-        
-        PMS::dateDouble(to, year, mon, day, hour, min, sec);
-        timeTo->setDate(QDate(year, mon, day));
-        timeFrom->setTime(QTime(hour, min, (int)sec,
-                          (int)((modf(sec, &temp) * 1000) + 0.5)));
-        #endif 
-        
     } else {
         doubleFrom->setText(QString::number(from));
         doubleTo->setText(QString::number(to));

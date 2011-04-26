@@ -185,7 +185,9 @@ casa_add_library( display
   implement/DisplayEvents/MWCPolylineTool.cc
   implement/DisplayEvents/MWCPolyTool.cc
   implement/DisplayEvents/MWCPTRegion.cc
+  implement/DisplayEvents/MWCEllipseTool.cc
   implement/DisplayEvents/MWCRectTool.cc
+  implement/DisplayEvents/MWCETRegion.cc
   implement/DisplayEvents/MWCRTRegion.cc
   implement/DisplayEvents/MWCRTZoomer.cc
   implement/DisplayEvents/PCInvisTool.cc

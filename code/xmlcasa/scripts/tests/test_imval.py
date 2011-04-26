@@ -923,7 +923,8 @@ class imval_test(unittest.TestCase):
         expected = mycsys.toworld([45,45,0,5])['numeric']
         got = myimval["coords"][5,5]
         diff = got - expected
-        self.assertTrue(all(diff == 0))
+        # not 0 because of 32 bit precision issues
+        self.assertTrue(max(abs(diff)) < 1e-16)
         
     
 def suite():

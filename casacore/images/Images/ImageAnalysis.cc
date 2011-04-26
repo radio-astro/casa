@@ -1385,16 +1385,11 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 
 	// Make the convolver
 	Image2DConvolver<Float> ic;
-    try {
         ic.convolve(
             *itsLog, *pImOut, subImage, kernelType, axes3,
             parameters, autoScale, scale, True
         );
-    }
-    catch (AipsError x) {
-        delete pImOut;
-        RETHROW(x);
-    }
+
 	// Return image
 	return pImOut;
 }
@@ -3179,21 +3174,6 @@ ImageAnalysis::insert(const String& infile, Record& Region,
 
 }
 
-//bool
-//image::isopen()
-//{
-//  bool rstat(false);
-//  try {
-//    *itsLog << LogOrigin("ImageAnalysis", "isopen");
-//
-//    if (pImage_p != 0) rstat = true;
-
-//  } catch (AipsError x) {
-//    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-//    RETHROW(x);
-//  }
-//  return rstat;
-//}
 
 Bool ImageAnalysis::ispersistent() {
 	*itsLog << LogOrigin("ImageAnalysis", "ispersistent");
@@ -6238,12 +6218,10 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 		const String& imagetype) {
 	bool rstat(false);
 	*itsLog << LogOrigin("ImageAnalysis", "maketestimage");
-	try {
-#ifdef CASA_USECASAPATH
-		String var (EnvironmentVariable::get("CASAPATH"));
-#else
-		String var(EnvironmentVariable::get("AIPSPATH"));
-#endif
+	String var = EnvironmentVariable::get("CASAPATH");
+	if (var.empty()) {
+		var = EnvironmentVariable::get("AIPSPATH");
+	}
 		if (!var.empty()) {
 			String fields[4];
 			Int num = split(var, fields, 4, String(" "));
@@ -6259,30 +6237,15 @@ bool ImageAnalysis::maketestimage(const String& outfile, const Bool overwrite,
 				Bool zeroblanks = False;
 				rstat = ImageAnalysis::imagefromfits(outfile, fitsfile,
 						whichrep, whichhdu, zeroblanks, overwrite);
-			} else {
-#ifdef CASA_USECASAPATH
-				*itsLog << LogIO::WARN
-				<< "Environment variable CASAPATH=["
-#else
-				*itsLog << LogIO::WARN << "Environment variable AIPSPATH=["
-#endif		
-						<< var << "] malformed." << LogIO::POST;
 			}
-		} else {
-#ifdef CASA_USECASAPATH
-			*itsLog << LogIO::WARN << "Environment variable CASAPATH undefined."
-			<< LogIO::POST;
-#else
-			*itsLog << LogIO::WARN
-					<< "Environment variable AIPSPATH undefined."
-					<< LogIO::POST;
-#endif
+			else {
+				*itsLog << LogIO::EXCEPTION << "Bad environment variable";
+			}
 		}
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+		else {
+			*itsLog << LogIO::EXCEPTION << "Environment variable undefined, can't get data path";
+		}
+
 	return rstat;
 }
 
@@ -6291,7 +6254,6 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		Record& region, const String& Mask, const bool dropdeg,
 		const bool overwrite) {
 	ImageInterface<Float>* outImage = 0;
-	try {
 		*itsLog << LogOrigin("ImageAnalysis", "newimage");
 
 		// Open
@@ -6345,11 +6307,7 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 			// Copy data and mask
 			LatticeUtilities::copyDataAndMask(*itsLog, *outImage, subImage);
 		}
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+
 	return outImage;
 }
 
@@ -6359,7 +6317,6 @@ ImageAnalysis::newimagefromfile(const String& fileName) {
 	if (itsLog == 0)
 		itsLog = new LogIO();
 
-	try {
 		*itsLog << LogOrigin("ImageAnalysis", "newimagefromfile");
 
 		// Check whether infile exists
@@ -6381,11 +6338,7 @@ ImageAnalysis::newimagefromfile(const String& fileName) {
 		if (outImage == 0) {
 			*itsLog << "Failed to create image tool" << LogIO::EXCEPTION;
 		}
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+
 	return outImage;
 }
 
@@ -6560,8 +6513,7 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
 		const Int whichrep, const Int whichhdu, const Bool zeroBlanks,
 		const Bool overwrite) {
 	ImageInterface<Float>* outImage = 0;
-	try {
-		*itsLog << LogOrigin("ImageAnalysis", "newimagefromfits");
+		*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 		// Check output file
 		if (!overwrite && !outfile.empty()) {
@@ -6591,11 +6543,7 @@ ImageAnalysis::newimagefromfits(const String& outfile, const String& fitsfile,
 		if (outImage == 0) {
 			*itsLog << "Failed to create image tool" << LogIO::EXCEPTION;
 		}
-	} catch (AipsError x) {
-		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
+
 	return outImage;
 }
 

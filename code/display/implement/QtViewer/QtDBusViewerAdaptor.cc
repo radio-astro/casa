@@ -1029,8 +1029,8 @@ namespace casa {
     }
 
     QtDBusViewerAdaptor::~QtDBusViewerAdaptor() {
-
-
+	QVariant v(true);
+	emit exiting(QDBusVariant(v));
     }
 
     QtDisplayData *QtDBusViewerAdaptor::finddata( int key ) {

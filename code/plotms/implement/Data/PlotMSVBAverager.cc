@@ -108,6 +108,7 @@ void PlotMSVBAverager::finalizeAverage()
 	  for (Int ichn=0;ichn<nChan_p;++ichn) {
 	    for (Int icor=0;icor<nCorr_p;++icor) {
 	      Float& thiswt(avBuf_p.weightCube()(icor,ichn,ibln));
+	      // normalize ibln data at obln:
 	      if (!avBuf_p.flagCube()(icor,ichn,ibln) &&
 		  doWC_p &&  
 		  thiswt>0.0) {
@@ -121,6 +122,15 @@ void PlotMSVBAverager::finalizeAverage()
 		  avBuf_p.correctedVisCube()(icor,ichn,obln)=
 		    avBuf_p.correctedVisCube()(icor,ichn,ibln)/thiswt;
 	      } // !flagCube & wt>0
+	      else {
+		// make sure obln is zero
+		if (obln<ibln) {
+		  if (doVC_p)  avBuf_p.visCube()(icor,ichn,obln)=0.0;
+		  if (doMVC_p) avBuf_p.modelVisCube()(icor,ichn,obln)=0.0;
+		  if (doCVC_p) avBuf_p.correctedVisCube()(icor,ichn,obln)=0.0;
+		}
+	      }
+	      // copy flags, weights to obln
 	      if (obln<ibln) {
 		avBuf_p.flagCube()(icor,ichn,obln)=avBuf_p.flagCube()(icor,ichn,ibln);
 		if (doWC_p)
@@ -133,13 +143,18 @@ void PlotMSVBAverager::finalizeAverage()
 	    avBuf_p.uvwMat().column(obln)=
 	      avBuf_p.uvwMat().column(ibln)/blnWtSum_p(ibln);
 
-	} // flagRow
+	} // row is flagged! 
 	else {
-	  // if flagRow, set flagCube, too
+	  // if flagRow, make sure everything is 'zero' at obln
 	  avBuf_p.flagCube().xyPlane(obln)=True;
+	  if (obln<ibln) {
+	    if (doVC_p)  avBuf_p.visCube().xyPlane(obln)=0.0;
+	    if (doMVC_p) avBuf_p.modelVisCube().xyPlane(obln)=0.0;
+	    if (doCVC_p) avBuf_p.correctedVisCube().xyPlane(obln)=0.0;
+	    if (doWC_p)  avBuf_p.weightCube().xyPlane(obln)=0.0;
+	    if (doUVW_p) avBuf_p.uvwMat().column(obln)=0.0;
+	  }
 	}
-
-
 	if (obln<ibln) {
 	  avBuf_p.flagRow()(obln)=avBuf_p.flagRow()(ibln);
 	  avBuf_p.antenna1()(obln)=avBuf_p.antenna1()(ibln);
@@ -177,7 +192,7 @@ void PlotMSVBAverager::finalizeAverage()
     // Time:
     //    aveTime_p/=vbWtSum_p;
     //    avBuf_p.time()=aveTime_p;
-    avBuf_p.time()=timeRef_p+(maxTime_p-minTime_p)/2.0;  // must be center of the interval!
+    avBuf_p.time()=timeRef_p+(maxTime_p+minTime_p)/2.0;  // must be center of the interval!
     avBuf_p.timeInterval()=maxTime_p-minTime_p;
     avBuf_p.scan()=aveScan_p;
 
@@ -192,6 +207,10 @@ void PlotMSVBAverager::finalizeAverage()
   }
   else {
 
+    // No rows!
+    avBuf_p.nRow()=0;
+
+    //    cout << avBuf_p.nRow() << endl;
 
     // cout << "nBln = " << nBln << " (" << nBlnMax_p << ")" << endl;
     //cout << "vbWtSum_p = " << vbWtSum_p << endl;
@@ -199,7 +218,7 @@ void PlotMSVBAverager::finalizeAverage()
 
     // Should not be able to reach here
     //  (there is always at least one good baseline, even if flagged)
-    // throw(AipsError("Big problem in finalizeAverage!"));
+    //    throw(AipsError("Big problem in finalizeAverage!"));
   }
 };
 

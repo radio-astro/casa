@@ -51,10 +51,11 @@ def simdata(
     # put output in directory called "project"
     fileroot=project
     if os.path.exists(fileroot):
-        if overwrite:
-            shutil.rmtree(fileroot)
-            os.mkdir(fileroot)
-        else:
+#        if overwrite:
+#            shutil.rmtree(fileroot)
+#            os.mkdir(fileroot)
+#        else:
+        if not overwrite:
 # this will break re-analysis of existing ms..
 #            timestr=time.strftime("%y%b%d_%H:%M:%S",time.gmtime(os.path.getctime(fileroot)))
 #            if os.path.exists(fileroot+"."+timestr):
@@ -77,7 +78,7 @@ def simdata(
 
 
     saveinputs=myf['saveinputs']
-    saveinputs('simdata',project+".simdata.last")
+    saveinputs('simdata',fileroot+"/"+project+".simdata.last")
 
 
 
@@ -168,7 +169,7 @@ def simdata(
                 # if we're not predicting, then we want to use the previously
                 # created modelflat, because it may have components added 
                 msg("flat sky model "+modelflat+" exists, predict not requested",priority="warn")
-                msg(" working from existing image - please delete it if you wish to overwrite.",priority="warn")
+                msg(" working from existing model image - please delete it if you wish to overwrite.",priority="warn")
             else:
                 # create and add components into modelflat with util.flatimage()
                 util.flatimage(newmodel,complist=complist,verbose=verbose)
@@ -361,7 +362,7 @@ def simdata(
         else:
             if type(ptgfile)==type([]):
                 ptgfile=ptgfile[0]
-            ptgfile=ptgfile.replace('$project',project)
+            ptgfile=ptgfile.replace('$project',fileroot+"/"+project)
             nfld, pointings, etime = util.read_pointings(ptgfile)
             if max(etime) <=0:
                 etime = qa.convert(qa.quantity(integration),"s")['value']
@@ -1309,6 +1310,7 @@ def simdata(
             cl.open(complist)
             ia.setbrightnessunit("Jy/pixel")
             ia.modify(cl.torecord(),subtract=False)
+            cl.done()
             modelcsys=ia.coordsys()
             modelshape=ia.shape()
 
@@ -1664,8 +1666,10 @@ def simdata(
             shutil.rmtree(imagename+".residual.flat")  
         if os.path.exists(imagename+".flux"):
             shutil.rmtree(imagename+".flux")  
+        absdiff = imagename + '.absdiff'        
         if os.path.exists(absdiff):
-            shutil.rmtree(absdiff)  
+            shutil.rmtree(absdiff)   
+        absconv = imagename + '.absconv'        
         if os.path.exists(absconv):
             shutil.rmtree(absconv)  
 #        if os.path.exists(imagename+".diff"):

@@ -247,7 +247,7 @@ namespace casa{
 	// Freq   = freqHi;
 	// Freq = freqHi = 1856e6;
 	Freq = freqHi ;//= refVal(0);
-	cerr << "CF Ref. Freq = " << freqHi << endl;
+	//	cerr << "CF Ref. Freq = " << freqHi << endl;
 	ap.freq = freqHi/1E9;
 	
 	IPosition imsize(skyShape);

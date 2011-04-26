@@ -71,7 +71,7 @@ namespace casa{
     	ftaper += geom->taperpoly[0]*x;
 	x *= df;
     }
-    sprintf(geomfile, "%s.surface", geom->name);
+    sprintf(geomfile, "../../alma/%s.surface", geom->name);
     
     a = newAntenna(sub_h, feed_x, feed_y, feed_z, ftaper, thmax, geomfile);
     if(!a) return 0;

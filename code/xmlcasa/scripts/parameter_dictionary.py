@@ -222,7 +222,7 @@ class par(str):
 		ONLY pixel values acceptable at this time.
 		Default: none (all);
 		Example: box='0,0,50,50'
-		Example: box='[10,20,30,40];[100,100,150,150]'
+		Example: box='10,20,30,40,100,100,150,150'
 		"""
 
 	@staticmethod
@@ -263,6 +263,7 @@ class par(str):
 			 'baseline', 'none' (for sdtpimaging)
 	        default: 'none'
 		example: choose 'none' if you have already calibrated
+                WARNING: 'fsotf' is not implemented yet
 		
 		-----------------------------------------------------------
 		
@@ -1144,6 +1145,16 @@ class par(str):
 		default: '10s'
 		"""
 		
+	@staticmethod
+	def intent():
+                """
+                Observing intent (a.k.a "scan intent") to be processed
+                default: '' (all)
+                examples: intent='*BANDPASS*'  selects data labelled with BANDPASS intent
+                          intent='*POINTING*,*BAND*'  selects data labelled either with POINTING
+                                 or BAND
+                """  
+
 	@staticmethod
 	def interactive():
 		"""

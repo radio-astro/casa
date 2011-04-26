@@ -100,6 +100,14 @@ public:
     static const String PARAM_MINORSTYLE;    // string
     static const String PARAM_MAJORWIDTH;    // int 
     static const String PARAM_MINORWIDTH;    // int 
+    static const String PARAM_XAUTORANGE;    // bool
+    static const String PARAM_XMIN;          // double
+    static const String PARAM_XMAX;          // double
+    static const String PARAM_YAUTORANGE;    // bool
+    static const String PARAM_YMIN;          // double
+    static const String PARAM_YMAX;          // double
+    
+    
     // </group>
 
     // DBus method name for getting the log parameters, including: the sink

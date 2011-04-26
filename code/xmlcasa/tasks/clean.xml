@@ -439,6 +439,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>True</value>
     </param>
 <!--========================================================= -->
+     <param type="bool" name="allowchunk" subparam="false">
+      <description>Whether allowing to divide the big image cube by channel chunks </description>
+       <value>False</value>
+     </param>
+<!--========================================================= -->
     <constraints>
             <when param="selectdata">
 		  <equals type="bool" value="False"/>
@@ -690,10 +695,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        spw -- Select spectral window/channels
                NOTE: channels de-selected here will contain all zeros if
                          selected by the parameter mode subparameters.    
-                   ',' separates spws and spw-ranges
-                   ';' separates channels and channel-ranges
-                   ':' connects spws to channels      
-                   '~' indicates ranges
                default: ''=all spectral windows and channels
                  spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
                  spw='0:5~61'; spw 0, channels 5 to 61
@@ -708,6 +709,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  spw='3:10~20;50~60,4:0~30' for different channel ranges for spw ids 3 and 4
                  spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+                 spw='1~4;6:15~48' for channels 15 through 48 for spw ids 1,2,3,4 and 6
                   
        selectdata -- Other data selection parameters
                default: True
