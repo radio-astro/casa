@@ -553,10 +553,19 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   vbs.endRow_p = vbs.nRow_p;
 
   vbs.uvw_p.reference(uvw);
+  //  vbs.uvw_p.reference(vb.uvwMat());
   vbs.imagingWeight_p.reference(elWeight);
   vbs.visCube_p.reference(data);
+  // vbs.modelCube_p.reference(vb.modelVisCube());
+  // if (useCorrected) 
+  //   vbs.correctedCube_p.reference(vb.correctedVisCube());
+  // else 
+  //   vbs.visCube_p.reference(vb.visCube());
+  //   //  vbs.useCorrected_p = useCorrected;
+
   vbs.freq_p.reference(interpVisFreq_p);
   vbs.rowFlag_p.resize(0); vbs.rowFlag_p = vb.flagRow();  
+  //  vbs.rowFlag_p.reference(vb.flagRow());  
   if(!usezero_p) 
     for (Int rownr=startRow; rownr<=endRow; rownr++) 
       if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) vbs.rowFlag_p(rownr)=True;
@@ -565,7 +574,11 @@ void rGridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   // However the VBS objects should ultimately be references
   // directly to bool cubes.
   //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
+
+  //**************
   vbs.flagCube_p.resize(flags.shape());    vbs.flagCube_p = False; vbs.flagCube_p(flags!=0) = True;
+  //  vbs.flagCube_p.reference(vb.flagCube());
+  //**************
 
   visResampler_p->setParams(uvScale,uvOffset,dphase);
   visResampler_p->setMaps(chanMap, polMap);

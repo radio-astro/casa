@@ -239,8 +239,13 @@ public:
   // term in the CFCache.
   virtual void setMiscInfo(const Int qualifier)=0;
 
+  virtual void setCanComputeResiduals(Bool& b) {canComputeResiduals_p=b;};
   virtual Bool canComputeResiduals() {return canComputeResiduals_p;};
+  //
+  // Make the VB and VBStore interefaces for the interim re-factoring
+  // work.  Finally removed the VB interface.
   virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) = 0;
+  //virtual void ComputeResiduals(VBStore& vb)=0;
 protected:
 
   LogIO logIO_p;
