@@ -55,6 +55,9 @@ public:
   PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave);
   ~PMSCacheVolMeter();
 
+  // reset (as if default ctor was run)
+  void reset();
+
   // add in via a VisBuffer
   void add(const VisBuffer& vb);
 
