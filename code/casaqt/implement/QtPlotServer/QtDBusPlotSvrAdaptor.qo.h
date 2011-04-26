@@ -73,7 +73,29 @@ namespace casa {
 	QDBusVariant hide( int panel );
 	QDBusVariant show( int panel );
 
-	bool done( );
+	QDBusVariant loaddock( const QString &file_or_xml, const QString &loc="top", const QStringList &dockable=QStringList( ), int panel=0 );
+
+	void done( );
+
+    protected slots:
+
+	void emit_button( QtPlotSvrPanel*, QString name );
+	void emit_check( QtPlotSvrPanel*, QString name, int );
+	void emit_radio( QtPlotSvrPanel*, QString name, bool );
+	void emit_linetext( QtPlotSvrPanel*, QString name, const QString &value );
+	void emit_slidevalue( QtPlotSvrPanel*, QString name, int );
+	void emit_closing( QtPlotSvrPanel*, bool gone );
+
+    signals:
+
+	void button( int panel, QString name );
+	void check( int panel, QString name, int value );
+	void radio( int panel, QString name, bool value );
+	void linetext( int panel, QString name, const QString &value );
+	void slidevalue( int panel, QString name, int value );
+
+	void closing( int panel, bool gone );
+	void exiting( );
 
     private:
 
@@ -92,6 +114,8 @@ namespace casa {
 	    const std::list<int> &data( ) const { return data_; }
 	    QtPlotSvrPanel *&panel( ) { return panel_; }
 	    const QtPlotSvrPanel *panel( ) const { return panel_; }
+
+	    ~panel_desc( ) { }
 
 	private:
 	    std::list<int> data_;

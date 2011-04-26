@@ -64,7 +64,27 @@ namespace casa {
 
 	    void replot( );
 
+	    QString loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable );
+
+	    virtual ~QtPlotSvrPanel( ) { }
+
+	signals:
+
+	    void button( QtPlotSvrPanel *, QString );
+	    void check( QtPlotSvrPanel *, QString, int );
+	    void radio( QtPlotSvrPanel *, QString, bool );
+	    void linetext( QtPlotSvrPanel *, QString, const QString &text );
+	    void slidevalue( QtPlotSvrPanel *, QString, int );
+	    void closing( QtPlotSvrPanel *, bool );
+
 	protected slots:
+
+	    void emit_button( );
+	    void emit_check( int );
+	    void emit_radio( bool );
+	    void emit_linetext( const QString &text );
+	    void emit_slidevalue( int );
+
 	    void zoom( int x=-1 );
 	    void zoomed( const QwtDoubleRect & );
 
@@ -73,6 +93,8 @@ namespace casa {
 	    // scripted (via dbus) panels should override the closeEvent( ) and hide the gui
 	    // instead of deleting it when it was created via a dbus script...
 	    void closeEvent(QCloseEvent *event);
+
+	    QWidget *loaddock( QString file );
 
 	private:
 	    QWidget *container;

@@ -81,7 +81,23 @@ namespace casa {
 	dbus::variant hide(const int32_t& panel=0)
 			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::hide(panel)); }
 
-	bool done() { return edu::nrao::casa::plotserver_proxy::done( ); }
+	void done() { edu::nrao::casa::plotserver_proxy::done( ); }
+
+	dbus::variant loaddock( const std::string &file_or_xml, const std::string &loc="top", const std::vector<std::string> &dockable=std::vector<std::string>( ), const int32_t& panel=0 )
+			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::loaddock(file_or_xml, loc, dockable, panel)); }
+
+
+	//
+	// signals...
+	//
+	void button(const int32_t& panel, const std::string& name) { }
+	void check(const int32_t& panel, const std::string& name, const int32_t& state) { }
+	void radio(const int32_t& panel, const std::string& name, const bool& state) { }
+	void linetext(const int32_t& panel, const std::string& name, const std::string& text) { }
+	void slidevalue(const int32_t& panel, const std::string& name, const int32_t& value) { }
+	void exiting( ) { }
+	void closing(const int32_t& panel, const bool &gone) { }
+
 
     };
 }
