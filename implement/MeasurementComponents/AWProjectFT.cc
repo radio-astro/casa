@@ -1378,7 +1378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> dphase(vb.uvw().nelements());
     dphase=0.0;
     //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
+    for (Int i=startRow;i<endRow;i++) 
       {
 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
 	uvw(2,i)=vb.uvw()(i)(2);
@@ -1483,7 +1483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> dphase(vb.uvw().nelements());
     dphase=0.0;
     //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
+    for (Int i=startRow;i<endRow;i++) 
       {
 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
 	uvw(2,i)=vb.uvw()(i)(2);
@@ -2226,7 +2226,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> dphase(vb.uvw().nelements());
     dphase=0.0;
     //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
+    for (Int i=startRow;i<endRow;i++) 
       {
 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
 	uvw(2,i)=vb.uvw()(i)(2);
@@ -2262,7 +2262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rowFlags=0;
     rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      for (Int rownr=startRow; rownr<endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
     
     IPosition s,gradS;
@@ -2296,7 +2296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	centerLoc2D=0;
 	
 	// Loop over all rows
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	for (Int rownr=startRow; rownr<endRow; rownr++) 
 	  {
 	    
 	    // Calculate uvw for this row at the center frequency
@@ -2398,7 +2398,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Double> dphase(vb.uvw().nelements());
     dphase=0.0;
     //NEGATING to correct for an image inversion problem
-    for (Int i=startRow;i<=endRow;i++) 
+    for (Int i=startRow;i<endRow;i++) 
       {
 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
 	uvw(2,i)=vb.uvw()(i)(2);
@@ -2435,10 +2435,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rowFlags=0;
     rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      for (Int rownr=startRow; rownr<endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
 	
-    for (Int rownr=startRow; rownr<=endRow; rownr++) 
+    for (Int rownr=startRow; rownr<endRow; rownr++) 
       if (vb.antenna1()(rownr) != vb.antenna2()(rownr)) 
 	rowFlags(rownr) = (vb.flagRow()(rownr)==True);
     
@@ -2485,7 +2485,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	centerLoc2D=0;
 	
 	// Loop over all rows
-	for (Int rownr=startRow; rownr<=endRow; rownr++) 
+	for (Int rownr=startRow; rownr<endRow; rownr++) 
 	  {
 	    
 	    // Calculate uvw for this row at the center frequency
@@ -2592,7 +2592,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     //NEGATING to correct for an image inversion problem
     //
-    for (Int i=startRow;i<=endRow;i++) 
+    for (Int i=startRow;i<endRow;i++) 
       {
 	for (Int idim=0;idim<2;idim++) uvw(idim,i)=-vb.uvw()(i)(idim);
 	uvw(2,i)=vb.uvw()(i)(2);
@@ -2625,7 +2625,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rowFlags=0;
     rowFlags(vb.flagRow())=True;
     if(!usezero_p) 
-      for (Int rownr=startRow; rownr<=endRow; rownr++) 
+      for (Int rownr=startRow; rownr<endRow; rownr++) 
 	if(vb.antenna1()(rownr)==vb.antenna2()(rownr)) rowFlags(rownr)=1;
     
     visResampler_p->setParams(uvScale,uvOffset,dphase);
@@ -2657,16 +2657,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else if (whichVBColumn == FTMachine::OBSERVED)
       vb.visCube().xyPlane(row)=Complex(0.0,0.0);
   }
-void AWProjectFT::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
-{
-  VBStore vbs;
-  vbs.nRow_p = vb.nRow();
-  vbs.modelCube_p.reference(vb.modelVisCube());
-  if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
-  else vbs.visCube_p.reference(vb.visCube());
-  vbs.useCorrected_p = useCorrected;
-  visResampler_p->ComputeResiduals(vbs);
-}
+
+  void AWProjectFT::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
+  {
+    VBStore vbs;
+    vbs.nRow_p = vb.nRow();
+    vbs.modelCube_p.reference(vb.modelVisCube());
+    if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
+    else vbs.visCube_p.reference(vb.visCube());
+    vbs.useCorrected_p = useCorrected;
+    visResampler_p->ComputeResiduals(vbs);
+  }
+
+  // void AWProjectFT::ComputeResiduals(VBStore &vbs)
+  // {
+  //   vbs.nRow_p = vb.nRow();
+  //   vbs.modelCube_p.reference(vb.modelVisCube());
+  //   if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
+  //   else vbs.visCube_p.reference(vb.visCube());
+  //   vbs.useCorrected_p = useCorrected;
+  //   visResampler_p->ComputeResiduals(vbs);
+  // }
 
 } //# NAMESPACE CASA - END
 

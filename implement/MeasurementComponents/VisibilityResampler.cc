@@ -120,7 +120,7 @@ namespace casa{
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
     cacheAxisIncrements(grid.shape().asVector());
 
-    for(Int irow=rbeg; irow< rend; irow++){          // For all rows
+    for(Int irow=rbeg; irow < rend; irow++){          // For all rows
       
       if(!rowFlag[irow]){                        // If the row is not flagged
 	
@@ -243,7 +243,7 @@ namespace casa{
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
     cacheAxisIncrements(grid.shape().asVector());
 
-    for(Int irow=rbeg; irow<rend; irow++) {
+    for(Int irow=rbeg; irow < rend; irow++) {
       if(!rowFlag[irow]) {
 
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
@@ -344,16 +344,16 @@ namespace casa{
 
     if (!vbs.useCorrected_p)
       {
-	for(uInt ichan=start(0); ichan<last(0); ichan++)
-	  for(uInt ipol=start(1); ipol<last(1); ipol++)
-	    for(uInt irow=start(2); irow<last(2); irow++)
+	for(uInt ichan = start(0); ichan < last(0); ichan++)
+	  for(uInt ipol = start(1); ipol < last(1); ipol++)
+	    for(uInt irow = start(2); irow < last(2); irow++)
 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.visCube_p(ichan,ipol,irow);
       }
     else
       {
-	for(uInt ichan=start(0); ichan<last(0); ichan++)
-	  for(uInt ipol=start(1); ipol<last(1); ipol++)
-	    for(uInt irow=start(2); irow<last(2); irow++)
+	for(uInt ichan = start(0); ichan < last(0); ichan++)
+	  for(uInt ipol = start(1); ipol < last(1); ipol++)
+	    for(uInt irow = start(2); irow < last(2); irow++)
 	      vbs.modelCube_p(ichan,ipol,irow) = vbs.modelCube_p(ichan,ipol,irow) - vbs.correctedCube_p(ichan,ipol,irow);
       }
       
