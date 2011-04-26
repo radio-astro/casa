@@ -632,17 +632,17 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
 
   switch (iteraxis) {
   case PMS::SCAN: {
-    iterValues=scan_;
+    iterValues=scan_(goodChunk_).getCompressedArray();
     nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
     break;
   }
   case PMS::SPW: {
-    iterValues=spw_;
+    iterValues=spw_(goodChunk_).getCompressedArray();
     nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
     break;
   }
   case PMS::FIELD: {
-    iterValues=field_;
+    iterValues=field_(goodChunk_).getCompressedArray();
     nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
     break;
   }
