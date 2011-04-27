@@ -144,24 +144,39 @@ void PlotMSPlotTab::plotsChanged(const PlotMSPlotManager& manager) {
         itsCurrentPlot_ = NULL;
         itsCurrentParameters_ = NULL;
     }
+
+    // Set chooser to the only plot (see NB below)
+    goChooser->setCurrentIndex(0);
+    goClicked();
+
+
+    /*
+NB: Disable the "goChooser" menu because it is currently
+ill-conceived, incompletely executed, and doesn't work 
+correctly.  The role of this menu and its features 
+will be re-evaluated during the 3.2 dev cycle.
     
     // Add "new" action(s) to go chooser.
     goChooser->addItem("New Single Plot");
-    goChooser->addItem("New Multi Plot");
+    goChooser->addItem("New Iter Plot");
     int plotTypes = 2;
     
     // Add "clear" action to go chooser.
     goChooser->addItem("Clear Plotter");
-    
+
     // If not showing a current plot, pick the latest plot if it exists.
     if(itsCurrentPlot_ == NULL && goChooser->count() > plotTypes + 1)
         setIndex = goChooser->count() - (plotTypes + 2);
-    
+
     // Set to current plot, or latest plot if no current plot, and set tab.
     if(setIndex >= 0 && setIndex < goChooser->count() - (plotTypes + 1)) {
         goChooser->setCurrentIndex(setIndex);
         goClicked();
     }
+    */
+
+
+
 }
 
 
