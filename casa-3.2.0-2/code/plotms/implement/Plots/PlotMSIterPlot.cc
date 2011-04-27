@@ -104,11 +104,11 @@ void PlotMSIterPlot::setupPlotSubtabs(PlotMSPlotTab& tab) const {
     tab.insertAxesSubtab(1);
     tab.insertIterateSubtab(2);
     tab.insertTransformationsSubtab(3);
-    tab.insertCacheSubtab(4);
-    tab.insertDisplaySubtab(5);
-    tab.insertCanvasSubtab(6);
-    tab.insertExportSubtab(7);
-    tab.clearSubtabsAfter(8);
+    //    tab.insertCacheSubtab(4);
+    tab.insertDisplaySubtab(4);
+    tab.insertCanvasSubtab(5);
+    tab.insertExportSubtab(6);
+    tab.clearSubtabsAfter(7);
 }
 
 void PlotMSIterPlot::attachToCanvases() {
@@ -202,7 +202,7 @@ bool PlotMSIterPlot::parametersHaveChanged_(const PlotMSWatchedParameters& p,
     
     const PMS_PP_MSData* d = itsParams_.typedGroup<PMS_PP_MSData>();
     if(d == NULL) return true;
-    
+
     // Update TCL params.
     itsTCLParams_.releaseWhenDone = releaseWhenDone;
     itsTCLParams_.updateCanvas = (updateFlag & PMS_PP::UPDATE_MSDATA) ||
@@ -255,11 +255,25 @@ bool PlotMSIterPlot::updateCache() {
 
     PMS_PP_MSData* d = itsParams_.typedGroup<PMS_PP_MSData>();
     PMS_PP_Cache* c = itsParams_.typedGroup<PMS_PP_Cache>();
+    PMS_PP_Iteration* iter = itsParams_.typedGroup<PMS_PP_Iteration>();
     if(d == NULL || c == NULL) return false; // shouldn't happen
     
     // Don't load if data isn't set or there was an error during data opening.
     if(!d->isSet()) return false;
     
+    // Trap bad averaging/iteration combo:
+    if (d->averaging().baseline() &&
+	iter->iterationAxis()==PMS::ANTENNA) {
+      stringstream ss;
+      ss << "Cannot iterate on Antenna if averaging over baseline, so turning off iteration.";
+      itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,
+					   PMS::LOG_ORIGIN_PLOT, 
+					   ss.str(), 
+					   PMS::LOG_EVENT_PLOT);
+      iter->setIterationAxis(PMS::NONE);
+    }
+
+
     // Let the plot know that the data (will) change.
     itsPlot_->dataChanged();
     
