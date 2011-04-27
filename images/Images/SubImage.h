@@ -95,8 +95,8 @@ public:
   // should be writable (if the original image is non-writable, the
   // SubImage is always set to non-writable).
   // <group>
-  SubImage (const ImageInterface<T>& image, AxesSpecifier=AxesSpecifier());
-  SubImage (const ImageInterface<T>& image, Bool writableIfPossible,
+  SubImage (ImageInterface<T>& image, AxesSpecifier=AxesSpecifier());
+  SubImage (ImageInterface<T>& image, Bool writableIfPossible,
 	    AxesSpecifier=AxesSpecifier());
   // </group>
 
@@ -106,7 +106,7 @@ public:
   // <group>
   SubImage (const ImageInterface<T>& image, const LattRegionHolder& region,
 	    AxesSpecifier=AxesSpecifier());
-  SubImage (const ImageInterface<T>& image, const LattRegionHolder& region,
+  SubImage (ImageInterface<T>& image, const LattRegionHolder& region,
 	    Bool writableIfPossible, AxesSpecifier=AxesSpecifier());
   // </group>
   
@@ -251,7 +251,7 @@ public:
 
   static SubImage<T> createSubImage(
 	  ImageRegion*& outRegion, ImageRegion*& outMask,
-      const ImageInterface<T>& inImage, const Record& region,
+      ImageInterface<T>& inImage, const Record& region,
       const String& mask, LogIO *os, Bool writableIfPossible,
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
   );
