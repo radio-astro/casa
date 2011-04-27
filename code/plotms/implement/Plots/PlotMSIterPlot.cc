@@ -621,12 +621,13 @@ void PlotMSIterPlot::cacheLoaded_(bool wasCanceled) {
        << "  itsCache2_.cacheReady() = " << itsCache2_.cacheReady() 
        << endl; 
   */
-
   // Ensure we fail gracefully if cache loading yielded nothing
-  if (!itsCache2_.cacheReady()) {
+  //   or was cancelled
+  if (!itsCache2_.cacheReady() || wasCanceled) {
     detachFromCanvases();
     initializePlot();
     releaseDrawing();
+    itsCache2_.clear();
     return;
   }
 
