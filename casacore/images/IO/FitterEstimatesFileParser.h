@@ -114,7 +114,7 @@ class FitterEstimatesFileParser {
 		FitterEstimatesFileParser();
 
 		// parse the file
-		void _parseFile(const RegularFile& myFile, const ImageInterface<Float>& image);
+		void _parseFile(const RegularFile& myFile);
 		void _createComponentList(const ImageInterface<Float>& image);
 };
 

@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Int ImageMetaData::stokesPixelNumber(const String& stokesString) const {
     	Int pixNum = itsCoordinates.stokesPixelNumber(stokesString);
-    	if (pixNum >= nStokes()) {
+    	if (pixNum >= (Int)nStokes()) {
     		pixNum = -1;
     	}
     	return pixNum;

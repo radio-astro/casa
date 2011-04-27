@@ -58,7 +58,7 @@ FitterEstimatesFileParser::FitterEstimatesFileParser (
 		*itsLog << LogIO::NORMAL << "Estimates file " << filename << " is not readable"
 			<< LogIO::EXCEPTION;
 	}
-	_parseFile(myFile, image);
+	_parseFile(myFile);
 	_createComponentList(image);
 
 }
@@ -80,7 +80,7 @@ String FitterEstimatesFileParser::getContents() const {
 }
 
 void FitterEstimatesFileParser::_parseFile(
-	const RegularFile& myFile, const ImageInterface<Float>& image
+	const RegularFile& myFile
 ) {
 	itsLog->origin(LogOrigin("FitterEstimatesFileParser","_parseFile"));
 
