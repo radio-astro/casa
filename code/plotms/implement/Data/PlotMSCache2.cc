@@ -249,7 +249,15 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
 
   Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
   Double bytesPerPt=Double(totalVol)/Double(totalPoints);  // bytes/pt
-  Double hostMemGB=Double(HostInfo::memoryTotal(true)*1000)/1.0e9; // in GB
+
+  //  cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
+  //  cout << "HostInfo::memoryTotal(true)  = " << HostInfo::memoryTotal(true) << endl;
+  //  cout << "HostInfo::memoryFree()       = " << HostInfo::memoryFree() << endl;
+
+  // Memory available to plotms is the min of user's casarc and free
+  Double hostMemGB=Double(min( Int(HostInfo::memoryTotal(true)),
+			       Int(HostInfo::memoryFree()) )
+			  )/1.0e6; // in GB
   Double fracMem=100.0*(totalVolGB+0.5)/hostMemGB;  // %
 
   stringstream ss;
@@ -1145,10 +1153,14 @@ void PlotMSCache2::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
     s=vm_.evalVolume(pendingLoadAxes,netAxesMask(currentX_,currentY_));
     logLoad(s);
   } catch(AipsError& log) {
-    // catch volume excess, clear the existing cache, and rethrow
+    // catch detected volume excess, clear the existing cache, and rethrow
     logLoad(log.getMesg());
     clear();
-    throw(AipsError("Please try 'force reload', selecting less data, or averaging."));
+    stringstream ss;
+    ss << "Please try selecting less data or averaging and/or" << endl
+       << " 'force reload' (to clear unneeded cache items) and/or" << endl
+       << " letting other memory-intensive processes finish.";
+    throw(AipsError(ss.str()));
   }
 }
 
