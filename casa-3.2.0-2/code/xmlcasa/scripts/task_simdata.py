@@ -375,6 +375,10 @@ def simdata(
         # model is centered at model_refdir, and has model_size; this is the offset in 
         # angular arcsec from the model center to the imcenter:        
         mepoch, mra, mdec = util.direction_splitter(model_refdir)
+        if ra['value'] >= 359.999:
+            ra['value']=ra['value']-360.
+        if mra['value'] >= 359.999:
+            mra['value']=mra['value']-360.
         shift = [ (qa.convert(ra,'deg')['value'] - 
                    qa.convert(mra,'deg')['value'])/pl.cos(qa.convert(mdec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value']-qa.convert(mdec,'deg')['value']) ]
