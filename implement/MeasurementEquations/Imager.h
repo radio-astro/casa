@@ -670,7 +670,8 @@ protected:
   Bool createFTMachine();
 
   Bool removeTable(const String& tablename);
-
+  Bool updateSkyModel(const Vector<String>& model,
+		      const String complist);
   Bool createSkyEquation(const String complist="");
   Bool createSkyEquation(const Vector<String>& image, 
 			 const Vector<Bool>& fixed,
