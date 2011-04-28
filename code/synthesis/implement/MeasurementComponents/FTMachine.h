@@ -156,7 +156,7 @@ public:
   // Non const vb version - so that weights can be modified in-place
   // note : we should remove the previous (const) version with the weight matrix.
   virtual void put(VisBuffer& vb, Int row=-1, Bool dopsf=False, 
-		   FTMachine::Type type= FTMachine::OBSERVED){};
+		   FTMachine::Type type= FTMachine::OBSERVED){put(vb,row,dopsf,type,Matrix<Float>(0,0));};
 
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
