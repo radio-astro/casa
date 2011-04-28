@@ -73,7 +73,7 @@ private:
   Int nDDID_;
 
   // Counters
-  Vector<Long> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
+  Vector<uInt64> nPerDDID_,nRowsPerDDID_,nChanPerDDID_,nCorrPerDDID_;
 
   // The number of antennas (max)
   Int nAnt_;

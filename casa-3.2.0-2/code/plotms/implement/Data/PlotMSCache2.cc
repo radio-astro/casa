@@ -139,16 +139,27 @@ void PMSCacheVolMeter::add(const VisBuffer& vb) {
 
 String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesmask) {
 
-  //  cout << "nPerDDID_     = " << nPerDDID_ << endl;
-  //  cout << "nRowsPerDDID_ = " << nRowsPerDDID_ << endl;
-  //  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
-  //  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
+  /*
+  cout << "nPerDDID_     = " << nPerDDID_ << endl;
+  cout << "nRowsPerDDID_ = " << nRowsPerDDID_ << endl;
+  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
+  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
 
-  Long totalVol(0);
+  cout << "Product = " << nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_ << endl;
+  cout << "Sum     = " << sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_) << endl;
+
+  cout << "sizeof(Int)    = " << sizeof(Int) << endl;
+  cout << "sizeof(Long)   = " << sizeof(Long) << endl;
+  cout << "sizeof(uInt64)   = " << sizeof(uInt64) << endl;
+  cout << "sizeof(Float)  = " << sizeof(Float) << endl;
+  cout << "sizeof(Double) = " << sizeof(Double) << endl;
+  */
+
+  uInt64 totalVol(0);
   for (map<PMS::Axis,Bool>::iterator pAi=axes.begin();
        pAi!=axes.end(); ++pAi) {
     if (pAi->second) {
-      Long axisVol(0);
+      uInt64 axisVol(0);
       switch(pAi->first) {
       case PMS::SCAN:
       case PMS::FIELD:
@@ -224,27 +235,30 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
     } 
   } // for 
 
+  
+  
+
   // Add in the plotting mask
   //  (TBD: only if does not reference the flags) 
   if (True) {  // ntrue(axesmask)<2) {
-    Vector<Long> nplmaskPerDDID(nDDID_,0);
-    nplmaskPerDDID(nPerDDID_>Long(0))=1;
+    Vector<uInt64> nplmaskPerDDID(nDDID_,0);
+    nplmaskPerDDID(nPerDDID_>uInt64(0))=1;
     if (axesmask(0)) nplmaskPerDDID*=nCorrPerDDID_;
     if (axesmask(1)) nplmaskPerDDID*=nChanPerDDID_;
     if (axesmask(2)) nplmaskPerDDID*=nRowsPerDDID_;
-    if (axesmask(3)) nplmaskPerDDID*=Long(nAnt_);
+    if (axesmask(3)) nplmaskPerDDID*=uInt64(nAnt_);
     Int plmaskVol=sizeof(Bool)*sum(nplmaskPerDDID);
     //    cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
     totalVol+=plmaskVol;
   }
 
   // Finally, count the total points for the plot:
-  Vector<Long> nPointsPerDDID(nDDID_,0);
-  nPointsPerDDID(nPerDDID_>Long(0))=1;
+  Vector<uInt64> nPointsPerDDID(nDDID_,0);
+  nPointsPerDDID(nPerDDID_>uInt64(0))=1;
   if (axesmask(0)) nPointsPerDDID*=nCorrPerDDID_;
   if (axesmask(1)) nPointsPerDDID*=nChanPerDDID_;
   if (axesmask(2)) nPointsPerDDID*=nRowsPerDDID_;
-  if (axesmask(3)) nPointsPerDDID*=Long(nAnt_);
+  if (axesmask(3)) nPointsPerDDID*=uInt64(nAnt_);
   Int totalPoints=sum(nPointsPerDDID);
 
   Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
@@ -1960,7 +1974,7 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 	Int ncorr=corrType.nelements();
 	Int nchan=channel.nelements();
 	Int nrow=vb.nRow();
-	if (True) {
+	if (False) {
 	  Int currChunk=flchunks(order[iflag]);
 	  Double time=getTime(currChunk,0);
 	  Int spw=Int(getSpw(currChunk,0));
