@@ -470,9 +470,14 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
     QtDisplayData* qdd = qdds.getRight();
     DisplayData*    dd = qdd->dd();
     
-    if(dd->classType()==Display::Annotation ||
-       dd->classType()==Display::CanvasAnnotation) continue;
-	// (Tracking information is not provided for these dd types).
+    if ( dd->classType()==Display::Annotation ||
+	 dd->classType()==Display::CanvasAnnotation) continue;
+		// (Tracking information is not provided for these dd types).
+
+    if ( bLen_ > 1 && pd_->isBlinkDD(dd) && ! dd->conformsTo(wc) ) continue;
+		// Fetching tracking info for a non-conforming display data results
+		//           in "blanking" the tracking info...
+		// During "blinking" mode, this is bad...
 
     trackingRec.define(qdd->name(), qdd->trackingInfo(ev));  }
   
