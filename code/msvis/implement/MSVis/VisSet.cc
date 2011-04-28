@@ -671,7 +671,7 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
             ms.addColumn(tdModelScale, modelScaleStMan);
    
 
-            TiledShapeStMan modelCompStMan("", modelTileShape);
+            TiledShapeStMan modelCompStMan("ModelCompTiled", modelTileShape);
             ms.addColumn(tdModelComp, modelCompStMan);
             ms.addColumn(tdModel, *ccModel);
 
@@ -707,12 +707,12 @@ void VisSet::addCalSet(MeasurementSet& ms, Bool compress) {
             StandardStMan corrScaleStMan("CorrScaleOffset");
             ms.addColumn(tdCorrScale, corrScaleStMan);
 
-            TiledShapeStMan corrCompStMan("", corrTileShape);
+            TiledShapeStMan corrCompStMan("CorrectedCompTiled", corrTileShape);
             ms.addColumn(tdCorrComp, corrCompStMan);
             ms.addColumn(tdCorr, *ccCorr);
 
         } else {
-            TiledShapeStMan corrStMan("", corrTileShape);
+            TiledShapeStMan corrStMan("CorrectedTiled", corrTileShape);
             ms.addColumn(tdCorr, corrStMan);
         };
         MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);
@@ -921,7 +921,7 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress) {
 	ms.addColumn(tdModelScale, modelScaleStMan);
 	
 	
-	TiledShapeStMan modelCompStMan("", modelTileShape);
+	TiledShapeStMan modelCompStMan("ModelCompTiled", modelTileShape);
 	ms.addColumn(tdModelComp, modelCompStMan);
 	ms.addColumn(tdModel, *ccModel);
 	
@@ -955,12 +955,12 @@ void VisSet::addCalSet2(MeasurementSet& ms, Bool compress) {
 	StandardStMan corrScaleStMan("CorrScaleOffset");
 	ms.addColumn(tdCorrScale, corrScaleStMan);
 	
-	TiledShapeStMan corrCompStMan("", corrTileShape);
+	TiledShapeStMan corrCompStMan("CorrectedCompTiled", corrTileShape);
 	ms.addColumn(tdCorrComp, corrCompStMan);
 	ms.addColumn(tdCorr, *ccCorr);
 	
       } else {
-	TiledShapeStMan corrStMan("", corrTileShape);
+	TiledShapeStMan corrStMan("CorrectedTiled", corrTileShape);
 	ms.addColumn(tdCorr, corrStMan);
       };
       MeasurementSet::addColumnToDesc(td, MeasurementSet::CORRECTED_DATA, 2);

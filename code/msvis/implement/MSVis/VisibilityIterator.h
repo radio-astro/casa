@@ -680,6 +680,7 @@ protected:
   // and lets the OS do the caching rather than than having the table system
   // cache extra tiles.
   virtual void setTileCache();
+  virtual void getDataManagerType();
   //Check if spw is in selected SPW for actual ms
   virtual Bool isInSelectedSPW(const Int& spw);
 
@@ -814,6 +815,10 @@ protected:
   VisImagingWeight imwgt_p;
 
   Bool asyncEnabled_p; // Allows lower-level code to make an async "copy" of this VI.
+  Vector<String> columns_p;
+  Vector<String> dataManType_p;
+  Vector<String> dataManGroup_p;
+
 };
 
 inline Bool ROVisibilityIterator::more() const { return more_p;}
