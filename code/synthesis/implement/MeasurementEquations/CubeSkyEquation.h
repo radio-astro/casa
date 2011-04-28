@@ -55,7 +55,7 @@ class CubeSkyEquation : public SkyEquation {
   virtual void gradientsChiSquared(Bool incremental, Bool commitModel=False);
   
   virtual void initializePutSlice(const VisBuffer& vb, Int cubeSlice=0, Int nCubeSlice=1);
-  virtual void putSlice(const VisBuffer& vb, Bool dopsf, 
+  virtual void putSlice(VisBuffer& vb, Bool dopsf, 
 			FTMachine::Type col,Int cubeSlice=0, 
 			Int nCubeSlice=1);
   virtual void finalizePutSlice(const VisBuffer& vb,  
@@ -93,11 +93,6 @@ class CubeSkyEquation : public SkyEquation {
   //frequency range from image
   Bool getFreqRange(ROVisibilityIterator& vi, const CoordinateSystem& coords,
 		  Int slice, Int nslice);
-
-  //Bool resizeWorkArrays(Bool add);
-  Bool calcVisWeights(const VisBuffer& vb, Int modelindex);
-  Bool modifySpecModelVis(VisBuffer& vb, Int modelindex);
-  Matrix<Float> visweights_p;
 
  private:
   // if skyjones changed in get or put we need to tell put or get respectively

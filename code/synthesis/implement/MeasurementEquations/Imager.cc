@@ -3973,12 +3973,15 @@ Bool Imager::clean(const String& algorithm,
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
 	doWideBand_p = True;
-	if ( (ftmachine_p != "ft") && (ftmachine_p != "wproject") && (ftmachine_p != "wbawp")) {
+
+        // check for wrong ftmachine specs.
+	if ( (ftmachine_p != "ft") && (ftmachine_p != "wproject")) {
 	  os << LogIO::SEVERE
-             << "Multi-scale Multi-frequency Clean currently works only with the default ftmachine and wproject"
+             << "Multi-scale Multi-frequency Clean currently works only with ft and wproject"
              << LogIO::POST;
 	  return False;
 	}
+
 	if (!scaleInfoValid_p) {
           this->unlock();
           os << LogIO::WARN << "Scales not yet set, using power law" << LogIO::POST;
