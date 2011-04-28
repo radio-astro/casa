@@ -62,7 +62,8 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
       msHasWtSp_p(False),
-      lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+      lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False), columns_p(0), 
+      dataManType_p(0), dataManGroup_p(0)
 {
   initsinglems(ms);
 }
@@ -435,6 +436,50 @@ ROVisibilityIterator& ROVisibilityIterator::nextChunk()
   return *this;
 }
 
+void ROVisibilityIterator::getDataManagerType(){
+
+  columns_p.resize(8);
+  dataManType_p.resize(8);
+  dataManType_p.set("UNKNOWN");
+  dataManGroup_p.resize(8);
+  dataManGroup_p.set("");
+  columns_p(0)=MS::columnName(MS::DATA);
+  columns_p(1)=MS::columnName(MS::CORRECTED_DATA);
+  columns_p(2)=MS::columnName(MS::MODEL_DATA);
+  // boolean
+  columns_p(3)=MS::columnName(MS::FLAG);
+  // float
+  columns_p(4)=MS::columnName(MS::WEIGHT_SPECTRUM);
+  columns_p(5)=MS::columnName(MS::WEIGHT);
+  columns_p(6)=MS::columnName(MS::SIGMA);
+  // double
+  columns_p(7)=MS::columnName(MS::UVW);
+  Record theRec=msIter_p.ms().dataManagerInfo();
+  for( uInt k=0; k < theRec.nfields(); ++k){
+    if(theRec.dataType(k) ==TpRecord){
+      const Record subRec=theRec.asRecord(k);
+      String dataman="UNKNOWN";
+      String datamangrp="";
+      if(subRec.isDefined("COLUMNS")){
+	const Vector<String> cols(subRec.asArrayString("COLUMNS"));
+	if(subRec.isDefined("TYPE"))
+	  dataman=subRec.asString("TYPE");
+	if(subRec.isDefined("NAME"))
+	  datamangrp=subRec.asString("NAME");
+	for(uInt jj=0; jj < cols.nelements(); ++jj){
+	  for (uInt uu=0; uu< 8 ; ++uu){
+	    if(columns_p[uu]==cols[jj]){
+	      dataManType_p[uu]=dataman;
+	      dataManGroup_p[uu]=datamangrp;
+	    }
+	  }
+	}
+      }
+    }
+  } 
+
+}
+
 void ROVisibilityIterator::setSelTable()
 {
   // work out how many rows to return 
@@ -593,6 +638,10 @@ void ROVisibilityIterator::setTileCache(){
   {
     if(! (msIter_p.newDataDescriptionId() || msIter_p.newMS()) )
       return;
+    if(msIter_p.newMS() || msIterAtOrigin_p){
+      getDataManagerType();
+
+    }
 
     const MeasurementSet& thems=msIter_p.ms();
     if(thems.tableType() == Table::Memory)
@@ -601,62 +650,47 @@ void ROVisibilityIterator::setTileCache(){
 
     // Get the first row number for this DDID.
     uInt startrow = msIter_p.table().rowNumbers()(0);
-
-    Vector<String> columns(8);
-    // complex
-    columns(0)=MS::columnName(MS::DATA);
-    columns(1)=MS::columnName(MS::CORRECTED_DATA);
-    columns(2)=MS::columnName(MS::MODEL_DATA);
-    // boolean
-    columns(3)=MS::columnName(MS::FLAG);
-    // float
-    columns(4)=MS::columnName(MS::WEIGHT_SPECTRUM);
-    columns(5)=MS::columnName(MS::WEIGHT);
-    columns(6)=MS::columnName(MS::SIGMA);
-    // double
-    columns(7)=MS::columnName(MS::UVW);
-    //
-for (uInt k=0; k< columns.nelements(); ++k){
-      if (cds.isDefined(columns(k))) {
-	const ColumnDesc& cdesc=cds[columns(k)];
+    for (uInt k=0; k< columns_p.nelements(); ++k){
+      if (cds.isDefined(columns_p(k))) {
+	//const ColumnDesc& cdesc=cds[columns(k)];
 	String dataManType="";
-	dataManType=cdesc.dataManagerType();
+	dataManType=dataManType_p[k];
 	//have to do something special about weight_spectrum as it tend to exist but 
 	//has no valid data
-	if(columns[k]==MS::columnName(MS::WEIGHT_SPECTRUM))
+	if(columns_p[k]==MS::columnName(MS::WEIGHT_SPECTRUM))
 	  if(!existsWeightSpectrum())
 	    dataManType="";
      
 	// Sometimes  columns may not contain anything yet
 	
-	if((columns[k]==MS::columnName(MS::DATA) && (colVis.isNull() ||
+	if((columns_p[k]==MS::columnName(MS::DATA) && (colVis.isNull() ||
 						     !colVis.isDefined(0))) || 
-	   (columns[k]==MS::columnName(MS::MODEL_DATA) && (colModelVis.isNull() ||
+	   (columns_p[k]==MS::columnName(MS::MODEL_DATA) && (colModelVis.isNull() ||
 							   !colModelVis.isDefined(0))) ||
-	   (columns[k]==MS::columnName(MS::CORRECTED_DATA) && (colCorrVis.isNull() ||
+	   (columns_p[k]==MS::columnName(MS::CORRECTED_DATA) && (colCorrVis.isNull() ||
 							       !colCorrVis.isDefined(0))) ||
-	   (columns[k]==MS::columnName(MS::FLAG) && (colFlag.isNull() ||
+	   (columns_p[k]==MS::columnName(MS::FLAG) && (colFlag.isNull() ||
 						     !colFlag.isDefined(0))) ||
-	   (columns[k]==MS::columnName(MS::WEIGHT) && (colWeight.isNull() ||
+	   (columns_p[k]==MS::columnName(MS::WEIGHT) && (colWeight.isNull() ||
 						       !colWeight.isDefined(0))) ||
-	   (columns[k]==MS::columnName(MS::SIGMA) && (colSigma.isNull() ||
+	   (columns_p[k]==MS::columnName(MS::SIGMA) && (colSigma.isNull() ||
 						      !colSigma.isDefined(0))) ||
-	   (columns[k]==MS::columnName(MS::UVW) && (colUVW.isNull() ||
+	   (columns_p[k]==MS::columnName(MS::UVW) && (colUVW.isNull() ||
 						    !colUVW.isDefined(0))) ){
 	    dataManType="";
 	}
 	
    
 	
-	if(dataManType.contains("Tiled")  && (!String(cdesc.dataManagerGroup()).empty())){
+	if(dataManType.contains("Tiled")  && (!String(dataManGroup_p[k]).empty())){
 	  try {
 	    
 	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
-							   cdesc.dataManagerGroup());
+							   dataManGroup_p[k]);
 	    
 
-	    /*
-	    cerr << "Data man type " << cdesc.dataManagerType() << "  nhyper " <<
+	    
+	    /*  cerr << "Data man type " << cdesc.dataManagerType() << "  nhyper " <<
 	      tacc.nhypercubes() << " colname " << columns[k] << endl;
 
 	    for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
@@ -679,10 +713,12 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	    ///need to fix the 0 bucket size in the filler anyways...then this is not needed
 	    if(setCache){
 	      if(tacc.nhypercubes() ==1){
+		//		cerr << columns_p[k] << " setcache 0 slicer " << useSlicer_p << endl;
 		tacc.setCacheSize (0, 1);
 	      }
 	      else{
-		tacc.setCacheSize (startrow, 1);
+		//	cerr << columns_p[k] << " setcache row " << startrow << " slicer " << useSlicer_p << endl;
+		tacc.setCacheSize (0, 1);
 	      }
 	    }
 	    
