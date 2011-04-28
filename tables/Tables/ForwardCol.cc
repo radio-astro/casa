@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ForwardCol.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ForwardCol.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/ForwardCol.h>
@@ -133,8 +133,9 @@ void ForwardColumnEngine::removeColumn (DataManagerColumn* colp)
 	    delete refColumns_p[i];
 	    decrementNcolumn();
 	    for (; i<ncolumn(); i++) {
-		refColumns_p[i-1] = refColumns_p[i];
+		refColumns_p[i] = refColumns_p[i+1];
 	    }
+            refColumns_p[i] = 0;
 	    return;
 	}
     }
@@ -218,14 +219,17 @@ DataManager* ForwardColumnEngine::makeObject (const String& dataManagerName,
 }
 void ForwardColumnEngine::registerClass()
 {
-    DataManager::registerCtor ("ForwardColumnEngine",
-			       ForwardColumnEngine::makeObject);
+    DataManager::registerCtor (className(), makeObject);
 }
 String ForwardColumnEngine::dataManagerName() const
 {
     return dataManName_p;
 }
 String ForwardColumnEngine::dataManagerType() const
+{
+    return className();
+}
+String ForwardColumnEngine::className()
 {
     return "ForwardColumnEngine";
 }

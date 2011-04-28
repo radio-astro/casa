@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Compare.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Compare.h 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #ifndef CASA_COMPARE_H
 #define CASA_COMPARE_H
@@ -50,6 +50,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 typedef int ObjCompareFunc (const void*, const void*);
 // </group>
 
+
+// <summary> abstract base class for comparing two objects </summary>
+// <use visibility=export>
+// <reviewed reviewer="Friso Olnon" date="1995/02/24" tests="" demos="">
+//
+// <synopsis> 
+// The abstract class <src>BaseCompare<T></src> is used for comparisons
+// in sorting or iterating. One can derive a concrete comparison class
+// from it.
+// </synopsis>
+
+class BaseCompare
+{
+public:
+    virtual ~BaseCompare() {}
+
+    // Compare two objects, and return
+    // <ul>
+    //  <li> -1  if obj1 < obj2;
+    //  <li>  0  if obj1 == obj2;
+    //  <li>  1  otherwise.
+    // </ul>
+    virtual int comp (const void* obj1, const void* obj2) const = 0;
+
+    // Get the data type of the comparison.
+    // By default it returns TpOther.
+    virtual DataType dataType() const
+      { return TpOther; }
+};
+
 // <summary> compare two objects </summary>
 // <use visibility=export>
 // <reviewed reviewer="Friso Olnon" date="1995/02/24" tests="" demos="">
@@ -65,20 +95,26 @@ typedef int ObjCompareFunc (const void*, const void*);
 // <li> operator<
 // </templating>
 
-template<class T> class ObjCompare
+template<class T> class ObjCompare: public BaseCompare
 {
 public:
+    virtual ~ObjCompare();
+
     // Compare two objects, and return
     // <ul>
     //  <li> -1  if obj1 < obj2;
     //  <li>  0  if obj1 == obj2;
     //  <li>  1  otherwise.
     // </ul>
-    // The function is not inlined allowing one to take the address of
+    // The static function is not inlined allowing one to take the address of
     // it. Furthermore, the function's signature agrees with
     // <linkto group="Compare.h#ObjCompareFunc">ObjCompareFunc</linkto> so
     // that it can be used in the <linkto class="Sort">Sort</linkto> class.
     static int compare (const void* obj1, const void* obj2);
+    virtual int comp (const void* obj1, const void* obj2) const;
+
+    // Get the data type of the comparison.
+    virtual DataType dataType() const;
 };
 
 

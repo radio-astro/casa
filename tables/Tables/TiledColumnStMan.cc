@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledColumnStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledColumnStMan.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #include <tables/Tables/TiledColumnStMan.h>
 #include <tables/Tables/TSMColumn.h>
@@ -93,18 +93,6 @@ DataManager* TiledColumnStMan::makeObject (const String& group,
 String TiledColumnStMan::dataManagerType() const
 {
     return "TiledColumnStMan";
-}
-
-Record TiledColumnStMan::dataManagerSpec() const
-{
-    Record rec;
-    rec.define ("DEFAULTTILESHAPE", tileShape_p.asVector());
-    rec.define ("MAXIMUMCACHESIZE", Int(persMaxCacheSize_p));
-    if (cubeSet_p.nelements() > 0) {
-        rec.define ("TILESHAPE", cubeSet_p[0]->tileShape().asVector());
-    }
-    rec.define ("SEQNR", sequenceNr());
-    return rec;
 }
 
 Bool TiledColumnStMan::canAccessColumn (Bool& reask) const
@@ -204,6 +192,11 @@ void TiledColumnStMan::setupCheck (const TableDesc& tableDesc,
     }
 }
 
+
+IPosition TiledColumnStMan::defaultTileShape() const
+{
+    return tileShape_p;
+}
 
 void TiledColumnStMan::addRow (uInt nrow)
 {

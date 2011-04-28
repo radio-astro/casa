@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tConcatTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: tConcatTable.cc 21025 2011-03-03 15:09:00Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/ScaColDesc.h>
@@ -52,6 +52,10 @@
 
 void doIt (const Table& tab)
 {
+  cout << ">>> -------------------" << endl;
+  cout << "partNamesF " << tab.getPartNames() << endl;
+  cout << "partNamesT " << tab.getPartNames(True) << endl;
+  cout << "<<<" << endl;
   ROScalarColumn<Int> ab2(tab,"ab");
   ROScalarColumn<Int> ac (tab,"ac");
   ROScalarColumn<uInt> ad(tab,"ad");

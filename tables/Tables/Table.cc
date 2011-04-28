@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.cc 20952 2010-09-06 11:50:09Z gervandiepen $
+//# $Id: Table.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -276,6 +276,13 @@ Table& Table::operator= (const Table& that)
 }
 
 
+Block<String> Table::getPartNames (Bool recursive) const
+{
+    Block<String> names;
+    baseTabPtr_p->getPartNames (names, recursive);
+    return names;
+}
+
 void Table::closeSubTables() const
 {
   return keywordSet().closeTables();
@@ -448,11 +455,11 @@ void Table::open (const String& name, const String& type, int tableOption,
         if (!dir.isDirectory()) {
             throw TableNoDir(absName);
         }
-        //# Check if the table description exists.
+        //# Check if the table.dat file exists.
         String desc = Table::fileName(absName);
         File file (desc);
         if (!file.exists()) {
-            throw TableNoDescFile(desc);
+            throw TableNoDatFile(desc);
         }
         //# Read the file type and verify that it is a table
         AipsIO ios (desc);
@@ -460,13 +467,13 @@ void Table::open (const String& name, const String& type, int tableOption,
         if (t != "Table") {
             throw TableInvType(absName, "Table", t);
         }
-
+	//# Check if the table exists.
+	if (! Table::isReadable (absName)) {
+	    throw (TableNoFile (absName));
+	}
 	// Create the BaseTable object and add a PlainTable to the cache.
 	baseTabPtr_p = makeBaseTable (absName, type, tableOption,
 				      lockOptions, tsmOpt, True, 0);
-	if (baseTabPtr_p == 0) {
-	    throw (AllocError("Table::open",1));
-	}
     }
     baseTabPtr_p->link();
     if (deleteOpt) {
@@ -514,7 +521,7 @@ BaseTable* Table::lookCache (const String& name, int tableOption,
 			     const TableLock& lockOptions)
 {
     //# Exit if table is not in cache yet.
-    PlainTable* btp = PlainTable::tableCache(name);
+    PlainTable* btp = PlainTable::tableCache()(name);
     if (btp == 0) {
 	return btp;
     }
@@ -553,7 +560,7 @@ void Table::throwIfNull() const
 
 Bool Table::isOpened (const String& tableName)
 {
-    return  (PlainTable::tableCache (Path(tableName).absoluteName()) != 0);
+    return (PlainTable::tableCache()(Path(tableName).absoluteName()) != 0);
 }
 
 
@@ -581,7 +588,7 @@ Bool Table::hasDataChanged()
 uInt Table::nAutoLocks()
 {
     uInt n=0;
-    const TableCache& cache = PlainTable::tableCache;
+    const TableCache& cache = PlainTable::tableCache();
     uInt ntab = cache.ntable();
     for (uInt i=0; i<ntab; i++) {
 	const PlainTable& table = *(cache(i));
@@ -597,7 +604,7 @@ uInt Table::nAutoLocks()
 
 void Table::relinquishAutoLocks (Bool all)
 {
-    TableCache& cache = PlainTable::tableCache;
+    TableCache& cache = PlainTable::tableCache();
     uInt ntab = cache.ntable();
     for (uInt i=0; i<ntab; i++) {
 	PlainTable& table = *(cache(i));
@@ -618,7 +625,7 @@ Vector<String> Table::getLockedTables (FileLocker::LockType lockType,
                                        int lockOption)
 {
     vector<String> names;
-    TableCache& cache = PlainTable::tableCache;
+    TableCache& cache = PlainTable::tableCache();
     uInt ntab = cache.ntable();
     for (uInt i=0; i<ntab; i++) {
 	PlainTable& table = *(cache(i));
@@ -776,17 +783,17 @@ Table Table::sort (const Block<String>& names,
 Table Table::sort (const Block<String>& names,
 		   const Block<Int>& orders, int option) const
 {
-    //# Insert a block with zero compare function pointers.
+    //# Insert a block with null compare objects.
     return sort (names,
-	      PtrBlock<ObjCompareFunc*>(names.nelements(), static_cast<ObjCompareFunc*>(0)),
-	      orders, option);
+                 Block<CountedPtr<BaseCompare> >(names.nelements()),
+                 orders, option);
 }
 
 //# Sort on multiple columns and orders with given functions.
 Table Table::sort (const Block<String>& names,
-		   const PtrBlock<ObjCompareFunc*>& cmpFuncs,
+		   const Block<CountedPtr<BaseCompare> >& cmpObjs,
 		   const Block<Int>& orders, int option) const
-    { return Table(baseTabPtr_p->sort (names, cmpFuncs, orders, option)); }
+    { return Table(baseTabPtr_p->sort (names, cmpObjs, orders, option)); }
 
 
 //# Create an expression node to handle a keyword.
@@ -867,36 +874,64 @@ Table Table::operator! () const
 
 
 //# Test if table exists and is readable.
-Bool Table::isReadable (const String& tableName)
+Bool Table::isReadable (const String& tableName, Bool throwIf)
 {
     String tabName = Path(tableName).absoluteName();
-    //# Test if the table file exists.
-    File file (Table::fileName(tabName));
+    //# Check if the table directory exists.
+    File dir(tabName);
+    if (!dir.exists()) {
+        if (throwIf) {
+            throw TableNoFile(tabName);
+        }
+        return False;
+    }
+    if (!dir.isDirectory()) {
+        if (throwIf) {
+            throw TableNoDir(tabName);
+        }
+        return False;
+    }
+    //# Test if the table.dat file exists.
+    String datFile = Table::fileName(tabName);
+    File file (datFile);
     if (!file.exists()) {
-	return False;
+        if (throwIf) {
+            throw TableNoDatFile(tabName);
+        }
+        return False;
     }
     //# Open the table file and get its type.
-    //# An exception may be thrown, but chances are very low.
+    //# An exception might be thrown, but chances are very low.
     AipsIO ios (Table::fileName(tabName));
     Bool valid = True;
     try {
 	if (ios.getNextType() != "Table") {
+            if (throwIf) {
+                throw TableInvType(tabName, "Table", tabName);
+            }
 	    valid = False;
 	}
-    } catch (AipsError x) {
+    } catch (AipsError& x) {
+        if (throwIf) {
+            throw;
+        }
 	valid = False;
     } 
     return valid;
 }
 //# Test if table exists and is writable.
-Bool Table::isWritable (const String& tableName)
+Bool Table::isWritable (const String& tableName, Bool throwIf)
 {
     String tabName = Path(tableName).absoluteName();
-    if (! isReadable (tabName)) {
+    if (! isReadable (tabName, throwIf)) {
 	return False;
     }
     File file (Table::fileName(tabName));
-    return file.isWritable();
+    Bool wb = file.isWritable();
+    if (throwIf  &&  !wb) {
+        throw TableError("Table " + tableName + " is not writable");
+    }
+    return wb;
 }
 
 

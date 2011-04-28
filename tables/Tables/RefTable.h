@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: RefTable.h 21025 2011-03-03 15:09:00Z gervandiepen $
 
 #ifndef TABLES_REFTABLE_H
 #define TABLES_REFTABLE_H
@@ -275,8 +275,9 @@ public:
     virtual void renameHypercolumn (const String& newName,
 				    const String& oldName);
 
-    // Find the data manager with the given name.
-    virtual DataManager* findDataManager (const String& dataManagerName) const;
+    // Find the data manager with the given name or for the given column.
+    virtual DataManager* findDataManager (const String& name,
+                                          Bool byColumn) const;
 
     // Get a vector of row numbers.
     virtual Vector<uInt> rowNumbers() const;
@@ -342,6 +343,13 @@ private:
     // Declaring it private, makes it unusable.
     RefTable& operator= (const RefTable&);
 
+    // Get the names of the tables this table consists of.
+    virtual void getPartNames (Block<String>& names, Bool recursive) const;
+
+    // Show the extra table structure info (name of root table).
+    void showStructureExtra (std::ostream&) const;
+
+    // Make a table description for the given columns.
     static void makeDesc (TableDesc& desc, const TableDesc& rootDesc,
 			  SimpleOrderedMap<String,String>& nameMap,
 			  Vector<String>& names);

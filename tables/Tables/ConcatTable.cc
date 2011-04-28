@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatTable.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: ConcatTable.cc 21025 2011-03-03 15:09:00Z gervandiepen $
 
 #include <tables/Tables/ConcatTable.h>
 #include <tables/Tables/ConcatColumn.h>
@@ -133,6 +133,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+
+  void ConcatTable::getPartNames (Block<String>& names, Bool recursive) const
+  {
+    if (recursive) {
+      for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
+        baseTabPtr_p[i]->getPartNames (names, recursive);
+      }
+    } else {
+      uInt inx = names.size();
+      names.resize (inx + baseTabPtr_p.nelements());
+      for (uInt i=0; i<baseTabPtr_p.nelements(); ++i) {
+        names[inx+i] = baseTabPtr_p[i]->tableName();
+      }
+    }
+  }
 
   void ConcatTable::reopenRW()
   {
@@ -526,9 +541,20 @@ void ConcatTable::addColumn (const TableDesc& tableDesc,
   }
 
 
-  DataManager* ConcatTable::findDataManager (const String& dataManagerName) const
+  DataManager* ConcatTable::findDataManager (const String& name,
+                                             Bool byColumn) const
   {
-    return baseTabPtr_p[0]->findDataManager (dataManagerName);
+    return baseTabPtr_p[0]->findDataManager (name, byColumn);
+  }
+
+  void ConcatTable::showStructureExtra (std::ostream& os) const
+  {
+    for (uInt i=0; i<baseTabPtr_p.size(); ++i) {
+      os << (i==0 ? "concat " : "       ");
+      os << baseTabPtr_p[i]->tableName() << " (" 
+         << baseTabPtr_p[i]->nrow() << " rows, "
+         << baseTabPtr_p[i]->tableDesc().ncolumn() << " columns)" << endl;
+    }
   }
 
 } //# NAMESPACE CASA - END

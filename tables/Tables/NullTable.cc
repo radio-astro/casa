@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.cc 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: NullTable.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #include <tables/Tables/NullTable.h>
 #include <tables/Tables/Table.h>
@@ -180,7 +180,7 @@ void NullTable::removeRow (uInt)
   throwError ("removeRow");
 }
 
-DataManager* NullTable::findDataManager (const String&) const
+DataManager* NullTable::findDataManager (const String&, Bool) const
 {
   throwError ("findDataManager");
   return 0;
@@ -268,7 +268,7 @@ Bool NullTable::adjustRownrs (uInt, Vector<uInt>&,
 }
 
 BaseTable* NullTable::doSort (PtrBlock<BaseColumn*>&,
-			      const PtrBlock<ObjCompareFunc*>&,
+			      const Block<CountedPtr<BaseCompare> >&,
 			      const Block<Int>&,
 			      int)
 {

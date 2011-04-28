@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.h 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: MemoryTable.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_MEMORYTABLE_H
 #define TABLES_MEMORYTABLE_H
@@ -214,9 +214,10 @@ public:
   virtual void renameHypercolumn (const String& newName,
 				  const String& oldName);
 
-  // Find the data manager with the given name.
+  // Find the data manager with the given name or for the given column.
   // There is only one storage manager (MemoryStMan) with name MSM.
-  virtual DataManager* findDataManager (const String& dataManagerName) const;
+  virtual DataManager* findDataManager (const String& name,
+                                        Bool byColumn) const;
 
 
 private:

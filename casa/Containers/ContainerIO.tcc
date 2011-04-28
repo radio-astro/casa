@@ -1,21 +1,21 @@
-//# Compare.cc: Templated function to compare two objects
-//# Copyright (C) 1994,1995
+//# ContainerIO.tcc: text output IO for any container
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
-//#
+//# 
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//#
+//# 
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//#
+//# 
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
+//# 
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
@@ -23,35 +23,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Compare.tcc 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: ContainerIO.tcc 21013 2011-01-06 08:35:09Z gervandiepen $
 
-#include <casa/Utilities/Compare.h>
+//# Includes
+#include <casa/Containers/ContainerIO.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template<class T>
-ObjCompare<T>::~ObjCompare()
-{}
-
-template<class T>
-int ObjCompare<T>::compare (const void* obj1, const void* obj2)
-{
-    return (*(const T*)obj1  < *(const T*)obj2  ?  -1 :
-	   (*(const T*)obj1 == *(const T*)obj2  ?  0 : 1));
-}
-
-template<class T>
-int ObjCompare<T>::comp (const void* obj1, const void* obj2) const
-{
-    return (*(const T*)obj1  < *(const T*)obj2  ?  -1 :
-	   (*(const T*)obj1 == *(const T*)obj2  ?  0 : 1));
-}
-
-template<class T>
-DataType ObjCompare<T>::dataType() const
-{
-    return whatType ((T*)0);
-}
+  template<class ITER>
+  void showDataIter (ostream& os, ITER begin, const ITER& end, const char* sep,
+                     const char* prefix, const char* postfix)
+  {
+    // Note that the begin iterator is passed by value, so it can be used
+    // directly.
+    os << prefix;
+    Bool first = True;
+    for (; begin!=end; ++begin) {
+      if (first) {
+        first = False;
+      } else {
+        os << sep;
+      }
+      os << *begin;
+    }
+    os << postfix;
+  }
 
 } //# NAMESPACE CASA - END
 

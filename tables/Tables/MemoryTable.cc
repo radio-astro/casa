@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MemoryTable.cc 20889 2010-05-17 06:53:39Z gervandiepen $
+//# $Id: MemoryTable.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 
 #include <tables/Tables/MemoryTable.h>
@@ -313,9 +313,10 @@ void MemoryTable::renameHypercolumn (const String& newName, const String& oldNam
   tdescPtr_p->renameHypercolumn (newName, oldName);
 }
 
-DataManager* MemoryTable::findDataManager (const String& dataManagerName) const
+DataManager* MemoryTable::findDataManager (const String& name,
+                                           Bool byColumn) const
 {
-  return colSetPtr_p->findDataManager (dataManagerName);
+  return colSetPtr_p->findDataManager (name, byColumn);
 }
 
 } //# NAMESPACE CASA - END

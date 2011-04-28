@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSIter.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MSIter.h 20998 2010-11-17 07:10:12Z gervandiepen $
 
 #ifndef MS_MSITER_H
 #define MS_MSITER_H
@@ -36,6 +36,7 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <tables/Tables/ScalarColumn.h>
+#include <casa/Utilities/Compare.h>
 #include <casa/BasicSL/String.h>
 #include <scimath/Mathematics/SquareMatrix.h>
 #include <scimath/Mathematics/RigidVector.h>
@@ -53,14 +54,17 @@ class TableIterator;
 // Small helper class to specify an 'interval' comparison for table iteration
 // by time interval.
 // </synopsis>
-class MSInterval {
+class MSInterval : public BaseCompare
+{
 public:
-    static void setOffset(Double offset) {offset_p=offset;}
-    static void setInterval(Double interval) {interval_p=interval;}
-    static Int compare(const void * obj1, const void * obj2);
+  explicit MSInterval(Double interval) : interval_p(interval), offset_p(0) {}
+    virtual ~MSInterval() {};
+    virtual int comp(const void * obj1, const void * obj2) const;
+    void setOffset(Double offset) {offset_p=offset;}
+    void setInterval(Double interval) {interval_p=interval;}
 private:
-    static Double interval_p;
-    static Double offset_p;
+    Double interval_p;
+    mutable Double offset_p;
 };
 
 // <summary> 
@@ -267,8 +271,7 @@ public:
   // Return frame for polarization (returns PolFrame enum)
   Int polFrame() const;
 
-  // Return the frequencies (in Hz, acc. to the MS def'n v.2) corresponding to
-  // the DATA matrix.
+  // Return the frequencies corresponding to the DATA matrix.
   const Vector<Double>& frequency() const;
 
   // Return frequency of first channel with reference frame as a Measure.

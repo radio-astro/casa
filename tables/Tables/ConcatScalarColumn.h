@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatScalarColumn.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ConcatScalarColumn.h 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #ifndef TABLES_CONCATSCALARCOLUMN_H
 #define TABLES_CONCATSCALARCOLUMN_H
@@ -105,17 +105,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Handle the creation and deletion of sort keys.
     // <group>
     virtual void makeSortKey (Sort& sortobj,
-			      ObjCompareFunc* cmpFunc,
+                              CountedPtr<BaseCompare>& cmpObj,
 			      Int order,
 			      const void*& dataSave);
     virtual void makeRefSortKey (Sort& sortobj,
-				 ObjCompareFunc* cmpFunc,
+                                 CountedPtr<BaseCompare>& cmpObj,
 				 Int order,
 				 const Vector<uInt>& rownrs,
 				 const void*& dataSave);
     virtual void fillSortKey (const Vector<T>* vecPtr,
 			      Sort& sortobj,
-			      ObjCompareFunc* cmpFunc,
+                              CountedPtr<BaseCompare>& cmpObj,
 			      Int order);
     virtual void freeSortKey (const void*& dataSave);
     // </group>

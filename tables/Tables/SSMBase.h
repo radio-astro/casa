@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMBase.h 20883 2010-04-27 06:02:21Z gervandiepen $
+//# $Id: SSMBase.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_SSMBASE_H
 #define TABLES_SSMBASE_H
@@ -188,13 +188,23 @@ public:
   // Record a record containing data manager specifications.
   virtual Record dataManagerSpec() const;
 
+  // Get data manager properties that can be modified.
+  // It is only ActualCacheSize (the actual cache size in buckets).
+  // It is a subset of the data manager specification.
+  virtual Record getProperties() const;
+
+  // Modify data manager properties.
+  // Only ActualCacheSize can be used. It is similar to function setCacheSize
+  // with <src>canExceedNrBuckets=False</src>.
+  virtual void setProperties (const Record& spec);
+
   // Get the version of the class.
   uInt getVersion() const;
   
   // Set the cache size (in buckets).
   // If <src>canExceedNrBuckets=True</src>, the given cache size can be
   // larger than the nr of buckets in the file. In this way the cache can
-  // be made large enough for a future file extnsion.
+  // be made large enough for a future file extension.
   // Otherwise, it is limited to the actual number of buckets. This is useful
   // if one wants the entire file to be cached.
   void setCacheSize (uInt aCacheSize, Bool canExceedNrBuckets=True);
@@ -389,10 +399,10 @@ private:
   uInt         itsNrRows;
   
   // Column offset
-  Block <uInt> itsColumnOffset;
+  Block<uInt> itsColumnOffset;
 
   // Row Index ID containing all the columns in a bucket
-  Block <uInt> itsColIndexMap;
+  Block<uInt> itsColIndexMap;
 
   // Will contain all indices
   PtrBlock<SSMIndex*>  itsPtrIndex;
