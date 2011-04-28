@@ -190,6 +190,7 @@
 
 #include <synthesis/MeasurementComponents/AWProjectFT.h>
 #include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/MeasurementComponents/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/AWConvFunc.h>
 
 using namespace std;
@@ -2912,6 +2913,22 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
     
   }
+
+  /******* Start MTFT code ********/
+  // MultiTermFT is a container for an FTMachine of any type.
+  //    It will apply Taylor-polynomial weights during gridding and degridding
+  //    and will do multi-term grid-correction (normalizations).
+  //    (1) ft_p already holds an FT of the correct type
+  //    (2) If nterms>1, create a new MultiTermFT using ft_p, and reassign ft_p. 
+  // Currently, Multi-Term applies only to wideband imaging.
+  if( ntaylor_p > 1 )
+  { 
+    //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
+     FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
+     ft_p = tempftm;
+  }
+  /******* End MTFT code ********/
+
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
   ft_p->setFreqInterpolation(freqInterpMethod_p);
   if(doTrackSource_p){

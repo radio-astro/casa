@@ -48,6 +48,7 @@
 #include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
+#include <synthesis/MeasurementComponents/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -104,8 +105,8 @@ void CubeSkyEquation::init(FTMachine& ft){
   Int nmod=sm_->numberOfModels();
 
   doflat_p=False;
-  //if(sm_->getAlgorithm()=="MSMFS") 
-  if(sm_->numberOfTaylorTerms()>1) 
+  
+   if(sm_->numberOfTaylorTerms()>1) 
     {
       nmod = (sm_->numberOfModels()/sm_->numberOfTaylorTerms()) * (2 * sm_->numberOfTaylorTerms() - 1);
     }
@@ -232,6 +233,20 @@ void CubeSkyEquation::init(FTMachine& ft){
     for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ft_));
       iftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ift_));
+    }
+  }
+  else if (ft.name() == "MultiTermFT") {
+    ft_=new MultiTermFT(static_cast<MultiTermFT &>(ft));
+    ift_=new MultiTermFT(static_cast<MultiTermFT &>(ft));
+    ftm_p[0]=ft_;
+    iftm_p[0]=ift_;
+    for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new MultiTermFT(static_cast<MultiTermFT &>(*ft_));
+      iftm_p[k]=new MultiTermFT(static_cast<MultiTermFT &>(*ift_));
+    }
+     for (Int k=0; k < (nmod); ++k){ 
+      ftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
+      iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
     }
   }
   else {
@@ -893,8 +908,6 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
     if(nCubeSlice>1){
       iftm_p[model]->reset();
     }
-    /* MFS */
-    if(sm_->numberOfTaylorTerms()>1) ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
     dirDep= dirDep || (ftm_p[model]->name() == "MosaicFT");
@@ -913,7 +926,7 @@ void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
 }
 
 void
-CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
+CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int cubeSlice, Int nCubeSlice) {
 
     AlwaysAssert(ok(),AipsError);
     Int nRow=vb.nRow();
@@ -949,15 +962,7 @@ CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col,
             }
 
             for (Int model=0; model<sm_->numberOfModels(); ++model){
-                //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
-                if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-                    calcVisWeights(vb,model);
-		    iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
-                    iftm_p[model]->put(vb, row, dopsf, col, visweights_p);
-                }
-                else{
-                    iftm_p[model]->put(vb, row, dopsf, col);
-                }
+                     iftm_p[model]->put(vb, row, dopsf, col);
             }
         }
     }
@@ -972,28 +977,12 @@ CubeSkyEquation::putSlice(const VisBuffer & vb, Bool dopsf, FTMachine::Type col,
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;
         for (Int model=0; model<sm_->numberOfModels(); ++model){
-            //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
-            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-                calcVisWeights(vb,model);
-		iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
-                iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
-            }
-            else{
-                iftm_p[model]->put(vb, -1, dopsf, col);
-            }
+                 iftm_p[model]->put(vb, -1, dopsf, col);
         }
     }
     else {
         for (Int model=0; model<sm_->numberOfModels(); ++model){
-            //if(sm_->getAlgorithm()=="MSMFS"){ /* MFS */
-            if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-                calcVisWeights(vb,model);
-		iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
-                iftm_p[model]->put(vb, -1, dopsf, col, visweights_p);
-            }
-            else{
                 iftm_p[model]->put(vb, -1, dopsf, col);
-            }
         }
     }
 
@@ -1061,7 +1050,6 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
       }
     }
     sliceCube(imGetSlice_p[model], model, cubeSlice, nCubeSlice, 1);
-    if (sm_->numberOfTaylorTerms() > 1) ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
     ftm_p[model]->initializeToVis(*(imGetSlice_p[model]), vb);
   }
   ft_=&(*ftm_p[0]);
@@ -1157,10 +1145,6 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
       if(incremental || (nmodels > 1)){
 	for (Int model=0; model < nmodels; ++model){
 	  ftm_p[model]->get(vb,row);
-	  //if(sm_->getAlgorithm()=="MSMFS"){/* MFS */
-          if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-	    modifySpecModelVis(vb,model);
-	  }
 	  refvb.reference(vb.modelVisCube().xyPlane(row));
 	  refres.reference(result.modelVisCube().xyPlane(row));
 	  refres += refvb;
@@ -1182,10 +1166,6 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     if(incremental || (nmodels > 1)){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
-	//if(sm_->getAlgorithm()=="MSMFS"){/* MFS */
-        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-	  modifySpecModelVis(vb,model);
-	}
 	result.modelVisCube()+=vb.modelVisCube();
       }
     }
@@ -1196,10 +1176,6 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
     if(incremental || (nmodels >1)){
       for (Int model=0; model < nmodels; ++model){
 	ftm_p[model]->get(vb);
-	//if(sm_->getAlgorithm()=="MSMFS")/* MFS */
-        if(sm_->numberOfTaylorTerms()>1) { /* MFS */
-	  modifySpecModelVis(vb,model);
-	}
 	result.modelVisCube()+=vb.modelVisCube();
       }
     }
@@ -1278,67 +1254,6 @@ CubeSkyEquation::getFreqRange(ROVisibilityIterator& vi,
 
     return True;
 
-}
-
-/* MFSCode */
-Bool CubeSkyEquation::calcVisWeights(const VisBuffer& vb, Int modelindex)
-{
-    Int taylor = sm_->getTaylorIndex(modelindex);
-
-    // make sure shape of visweights_p is correct - same as vb.imagingWeight()
-    if( taylor == 0 ) 
-    {       
-        if(visweights_p.shape() != vb.imagingWeight().shape())
-            visweights_p.resize(vb.imagingWeight().shape());
-        visweights_p = vb.imagingWeight();
-    }
-    else
-    {
-        Float freq=0.0,mulfactor=1.0;
-        Vector<Double> selfreqlist(vb.frequency());
-        Double reffreq = sm_->getReferenceFrequency();
-
-        for (Int row=0; row<vb.nRow(); row++)
-            for (Int chn=0; chn<vb.nChannel(); chn++)
-            {
-                freq = selfreqlist(IPosition(1,chn));
-                mulfactor = ((freq-reffreq)/reffreq);
-
-                visweights_p(chn,row) = (vb.imagingWeight())(chn,row) * pow(mulfactor,taylor);
-
-            }
-    }
-
-    return True;
-}
-
-/* MFSCode */
-Bool CubeSkyEquation::modifySpecModelVis(VisBuffer& vb, Int modelindex)
-{
-    Int taylor = sm_->getTaylorIndex(modelindex);
-
-    if( taylor == 0 ){ return True; }
-    else
-    {
-        Float freq=0.0,mulfactor=1.0;
-        Vector<Double> selfreqlist(vb.frequency());
-        Double reffreq = sm_->getReferenceFrequency();
-        //       Cube<Complex> modelvis = vb.modelVisCube();
-
-        for (uInt pol=0; pol< uInt((vb.modelVisCube()).shape()[0]); pol++)
-            for (uInt chn=0; chn< uInt(vb.nChannel()); chn++)
-                for (uInt row=0; row< uInt(vb.nRow()); row++)
-                {
-                    freq = selfreqlist(IPosition(1,chn));
-                    mulfactor = ((freq-reffreq)/reffreq);
-
-                    //	    modelvis(pol,chn,row) *= pow(mulfactor,taylor);
-                    (vb.modelVisCube())(pol,chn,row) *= pow(mulfactor,taylor);
-                }
-        // vb.modelVisCube() = modelvis;
-    }
-
-    return True;
 }
 
 void CubeSkyEquation::fixImageScale()
