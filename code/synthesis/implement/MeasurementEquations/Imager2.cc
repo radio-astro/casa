@@ -382,10 +382,20 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	// This needs some careful thought about roundoff - it is likely 
 	// still adding an extra half-channel at top and bottom but 
 	// if the freqResolution is nonlinear, there are subtleties
-	Int lastchan=dataStart_p[i]+ dataNchan_p[i]*dataStep_p[i];
-        for(Int k=dataStart_p[i] ; k < lastchan ;  k+=dataStep_p[i]){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(dataStep_p[i]-0.5)));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(dataStep_p[i]-0.5)));
+	Int elnchan=chanFreq.nelements();
+	Int firstchan=0;
+        Int elstep=1;
+	for (uInt jj=0; jj < dataspectralwindowids_p.nelements(); ++jj){
+	  if(dataspectralwindowids_p[jj]==spw){
+	    firstchan=dataStart_p[jj];
+	    elnchan=dataNchan_p[jj];
+	    elstep=dataStep_p[jj];
+	  }	
+	}
+	Int lastchan=firstchan+ elnchan*elstep;
+        for(Int k=firstchan ; k < lastchan ;  k+=elstep){
+	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(elstep-0.5)));
+	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(elstep-0.5)));
         }
       }
       else{
@@ -894,10 +904,20 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	// This needs some careful thought about roundoff - it is likely 
 	// still adding an extra half-channel at top and bottom but 
 	// if the freqResolution is nonlinear, there are subtleties
-	Int lastchan=dataStart_p[i]+ dataNchan_p[i]*dataStep_p[i];
-        for(Int k=dataStart_p[i] ; k < lastchan ;  k+=dataStep_p[i]){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(dataStep_p[i]-0.5)));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(dataStep_p[i]-0.5)));
+	Int elnchan=chanFreq.nelements();
+	Int firstchan=0;
+        Int elstep=1;
+	for (uInt jj=0; jj < dataspectralwindowids_p.nelements(); ++jj){
+	  if(dataspectralwindowids_p[jj]==spw){
+	    firstchan=dataStart_p[jj];
+	    elnchan=dataNchan_p[jj];
+	    elstep=dataStep_p[jj];
+	  }	
+	}
+	Int lastchan=firstchan+ elnchan*elstep;
+        for(Int k=firstchan ; k < lastchan ;  k+=elstep){
+	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(elstep-0.5)));
+	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(elstep-0.5)));
         }
       }
       else{
@@ -2721,7 +2741,6 @@ Bool Imager::createFTMachine()
     //                            skyPosThreshold_p);
     //   }
     useDoublePrecGrid=False;
-    cerr << "Forcing use of single precision grid for now...." << endl;
     CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
     CountedPtr<ConvolutionFunction> awConvFunc = new AWConvFunc(apertureFunction);
     CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
@@ -2805,7 +2824,6 @@ Bool Imager::createFTMachine()
       // 	}
       //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
       useDoublePrecGrid=False;
-      cerr << "Forcing use of single precision grid for now...." << endl;
       CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
       CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction);
       CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
@@ -2949,6 +2967,42 @@ Bool Imager::removeTable(const String& tablename) {
       }
     }
   }
+  return True;
+}
+
+Bool Imager::updateSkyModel(const Vector<String>& model,
+			    const String complist) {
+  LogIO os(LogOrigin("imager", "updateSkyModel()", WHERE));
+  if(redoSkyModel_p)
+    throw(AipsError("Programming error: update skymodel is called without a valid skymodel"));
+  Bool coordMatch=True; 
+  for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+    CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
+    coordMatch= coordMatch || checkCoord(cs, model(thismodel));
+    ///return False if any fails anyways
+    if(!coordMatch)
+      return False;
+    if(model(thismodel)=="") {
+      os << LogIO::SEVERE << "Need a name for model "
+	 << model << LogIO::POST;
+      return False;
+    }
+    else {
+      if(!Table::isReadable(model(thismodel))) {
+	os << LogIO::SEVERE << model(thismodel) << "is unreadable"
+	   << model << LogIO::POST;
+	return False;
+      }
+    }
+    images_p[thismodel]=0;
+    images_p[thismodel]=new PagedImage<Float>(model(thismodel));
+    AlwaysAssert(!images_p[thismodel].null(), AipsError);
+    sm_p->updatemodel(thismodel, *images_p[thismodel]);
+  } 
+  if((complist !="") && Table::isReadable(complist)){
+      ComponentList cl(Path(complist), True);
+      sm_p->updatemodel(cl);
+    }
   return True;
 }
 
@@ -3695,8 +3749,13 @@ Bool Imager::checkCoord(const CoordinateSystem& coordsys,
   if(imageShape(1) != ny_p)
     return False;
 
-  if (imageCoord.nCoordinates() != coordsys.nCoordinates())
+
+ 
+  if(!imageCoord.near(coordsys)){
     return False;
+  }
+  
+  /*
   DirectionCoordinate dir1(coordsys.directionCoordinate(0));
   DirectionCoordinate dir2(imageCoord.directionCoordinate(0));
   if(dir1.increment()(0) != dir2.increment()(0))
@@ -3707,7 +3766,7 @@ Bool Imager::checkCoord(const CoordinateSystem& coordsys,
   SpectralCoordinate sp2(imageCoord.spectralCoordinate(2));
   if(sp1.increment()(0) != sp2.increment()(0))
     return False;
-
+  */
   return True;
 }
 
@@ -4396,6 +4455,8 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 } 
 
 } //# NAMESPACE CASA - END
+
+
 
 
 

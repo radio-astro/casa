@@ -3446,41 +3446,18 @@ Bool Imager::updateresidual(const Vector<String>& model,
 
     if(redoSkyModel_p)
       throw(AipsError("use restore instead of updateresidual"));
-    Bool coordMatch=True; 
-    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-      CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
-      coordMatch= coordMatch || checkCoord(cs, model(thismodel));
-      if(!coordMatch)
-	throw(AipsError("Coordinates of models to be updated are different from what is in the cache of imager "));
-      if(model(thismodel)=="") {
-	os << LogIO::SEVERE << "Need a name for model "
-	   << model << LogIO::POST;
-	return False;
-      }
-      else {
-	if(!Table::isReadable(model(thismodel))) {
-	  os << LogIO::SEVERE << model(thismodel) << "is unreadable"
-	     << model << LogIO::POST;
-	  return False;
-	}
-      }
-      images_p[thismodel]=0;
-      images_p[thismodel]=new PagedImage<Float>(model(thismodel));
-	AlwaysAssert(!images_p[thismodel].null(), AipsError);
-	sm_p->updatemodel(thismodel, *images_p[thismodel]);
-      }
-    if((complist !="") && Table::isReadable(complist)){
-      ComponentList cl(Path(complist), True);
-      sm_p->updatemodel(cl);
-    }
-    
-    
-    
+    if(!updateSkyModel(model, complist))
+	throw(AipsError("Could not do an updateresidual please use restore"));      
     addResiduals(residual);
+    for (Int thismodel=0;thismodel<Int(residuals_p.nelements());++thismodel) {
+      if(!residuals_p[thismodel].null()) 
+	sm_p->addResidual(thismodel, *residuals_p[thismodel]);   
+    }
     sm_p->solveResiduals(*se_p);
-    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+    /*for (uInt k=0 ; k < residuals_p.nelements(); ++k){
       residuals_p[k]->copyData(sm_p->getResidual(k));
     }
+    */
     restoreImages(image);
     
 
@@ -3742,6 +3719,8 @@ Bool Imager::clean(const String& algorithm,
   traceEvent(1,"Entering Imager::clean",22);
 #endif
   Bool converged=True; 
+
+
 
   ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
@@ -4580,8 +4559,14 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   this->lock();
   try {
     
-    if(sm_p) destroySkyEquation();
-    
+    if(!redoSkyModel_p){
+      //let us try to update the sm_p then
+      //so as to keep the state and psf's etc if they have been calculated
+      //useful when cleaning, modify/clip model then predict, selfcal and clean again
+      if(!updateSkyModel(model, complist))
+	destroySkyEquation();
+    }
+
     if(incremental) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: adding to MODEL_DATA column" << LogIO::POST;
@@ -4591,16 +4576,18 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
          << "Fourier transforming: replacing MODEL_DATA column" << LogIO::POST;
     }
 
-    //    if (!se_p)
-    if(!createSkyEquation(model, complist)) return False;
+    if (redoSkyModel_p){
+      if(!createSkyEquation(model, complist)) return False;
+    }
     if(incremental){
       for (Int mod=0; mod < (sm_p->numberOfModels()); ++mod){
 	(sm_p->deltaImage(mod)).copyData(sm_p->image(mod));
       }
     }
+    
     se_p->predict(incremental);
     
-    destroySkyEquation();
+    // destroySkyEquation();
     
     this->unlock();
     return True;
@@ -6791,6 +6778,18 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	    }
 	  }
+	  ///guess we are done with the viewer
+	  if((viewer_p !=0) && (clean_panel_p != 0)){
+	    if(image_id_p !=0)
+	      viewer_p->unload(image_id_p);
+	    if(mask_id_p !=0)
+	      viewer_p->unload(mask_id_p);
+	    viewer_p->close(clean_panel_p);
+	    clean_panel_p=0;
+	    image_id_p=0;
+	    mask_id_p=0;
+	  }
+	  
 	}
        } //catch  (AipsError x) {
        //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
