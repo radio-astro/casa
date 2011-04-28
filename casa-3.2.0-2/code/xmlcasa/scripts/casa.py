@@ -151,7 +151,7 @@ from listobs import  listobs
 from listvis import  listvis
 from mosaic import  mosaic
 from msview import msview
-from peel import  peel
+# from peel import  peel
 from plotants import  plotants
 from plotcal import  plotcal
 from plotms import  plotms
