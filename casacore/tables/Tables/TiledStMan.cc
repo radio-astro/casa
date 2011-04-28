@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledStMan.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #include <tables/Tables/TiledStMan.h>
 #include <tables/Tables/TSMColumn.h>
@@ -46,8 +46,8 @@
 #include <casa/IO/AipsIO.h>
 #include <casa/OS/DOos.h>
 #include <casa/BasicMath/Math.h>
-#include <casa/System/AipsrcValue.h>
 #include <tables/Tables/DataManError.h>
+
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -286,7 +286,7 @@ void TiledStMan::setDataManagerName(const String& newHypercolumnName)
 
 Record TiledStMan::dataManagerSpec() const
 {
-    Record rec;
+    Record rec = getProperties();
     rec.define ("DEFAULTTILESHAPE", defaultTileShape().asVector());
     rec.define ("MAXIMUMCACHESIZE", Int(persMaxCacheSize_p));
     Record subrec;
@@ -306,6 +306,21 @@ Record TiledStMan::dataManagerSpec() const
     rec.define ("SEQNR", sequenceNr());
     return rec;
 }
+
+Record TiledStMan::getProperties() const
+{
+    Record rec;
+    rec.define ("ActualMaxCacheSize", Int(maxCacheSize_p));
+    return rec;
+}
+
+void TiledStMan::setProperties (const Record& rec)
+{
+    if (rec.isDefined("ActualMaxCacheSize")) {
+        setMaximumCacheSize (rec.asInt("ActualCacheSize"));
+    }
+}
+
 
 void TiledStMan::setShape (uInt, TSMCube*, const IPosition&, const IPosition&)
 {
@@ -363,12 +378,12 @@ TSMCube* TiledStMan::makeTSMCube (TSMFile* file, const IPosition& cubeShape,
                                   Int64 fileOffset)
 {
     TSMCube* hypercube;
-    if (tsmMode(tileShape.nelements()).option() == TSMOption::MMap) {
+    if (tsmOption().option() == TSMOption::MMap) {
         //cout << "mmapping TSM1" << endl;
       AlwaysAssert (file->bucketFile()->isMapped(), AipsError);
         hypercube = new TSMCubeMMap (this, file, cubeShape, tileShape,
                                      values, fileOffset);
-    } else if (tsmMode(tileShape.nelements()).option() == TSMOption::Buffer) {
+    } else if (tsmOption().option() == TSMOption::Buffer) {
         //cout << "buffered TSM1" << endl;
         AlwaysAssert (file->bucketFile()->isBuffered(), AipsError);
         hypercube = new TSMCubeBuff (this, file, cubeShape, tileShape,
@@ -879,7 +894,7 @@ TSMCube* TiledStMan::makeHypercube (const IPosition& cubeShape,
 
 void TiledStMan::createFile (uInt index)
 {
-  TSMFile* file = new TSMFile (this, index, tsmMode(nrdim_p));
+  TSMFile* file = new TSMFile (this, index, tsmOption());
     fileSet_p[index] = file;
 }
 
@@ -1116,7 +1131,7 @@ void TiledStMan::headerFileGet (AipsIO& headerFile, uInt tabNrrow,
 	headerFile >> flag;
 	if (flag) {
 	    if (fileSet_p[i] == 0) {
-	      fileSet_p[i] = new TSMFile (this, headerFile, i, tsmMode(nrdim_p));
+                fileSet_p[i] = new TSMFile (this, headerFile, i, tsmOption());
 	    }else{
 		fileSet_p[i]->getObject (headerFile);
 	    }
@@ -1134,13 +1149,13 @@ void TiledStMan::headerFileGet (AipsIO& headerFile, uInt tabNrrow,
     }
     for (i=0; i<nrCube; i++) {
 	if (cubeSet_p[i] == 0) {
-	  if (tsmMode(nrdim_p).option() == TSMOption::MMap) {
+            if (tsmOption().option() == TSMOption::MMap) {
                 //cout << "mmapping TSM" << endl;
                 cubeSet_p[i] = new TSMCubeMMap (this, headerFile);
-	  } else if (tsmMode(nrdim_p).option() == TSMOption::Buffer) {
+            } else if (tsmOption().option() == TSMOption::Buffer) {
                 //cout << "buffered TSM" << endl;
                 cubeSet_p[i] = new TSMCubeBuff (this, headerFile,
-                                                tsmMode(nrdim_p).bufferSize());
+                                                tsmOption().bufferSize());
             }else{
                 //cout << "caching TSM" << endl;
 	        cubeSet_p[i] = new TSMCube (this, headerFile);
@@ -1171,29 +1186,6 @@ TSMFile* TiledStMan::getFile (uInt sequenceNumber)
 	throw (DataManInternalError ("TiledStMan::getFile"));
     }
     return fileSet_p[sequenceNumber];
-}
-
-TSMOption TiledStMan::tsmMode(uInt) const
-{
-  String opt;
-  AipsrcValue<String>::find (opt, "table.tsm.option", String("default"));
-  opt.downcase();
-  if(opt==String("default")){
-    /*if (nrDim == 4) {
-      return TSMOption(TSMOption::Cache);
-    }
-    else {
-      return TSMOption(TSMOption::MMap);
-    }
-    */
-    //switching default to Cache as of 2011/02/14
-    //following tests that shows MMap has terrible performance on lustre
-    //though cache  is a bit  slower  on local disk for flagging
-    return TSMOption(TSMOption::Cache);
-  }
-  else{
-    return tsmOption().option();
-  }
 }
 
 } //# NAMESPACE CASA - END

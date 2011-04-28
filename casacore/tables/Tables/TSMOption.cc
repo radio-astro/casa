@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMOption.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TSMOption.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/TSMOption.h>
 #include <casa/System/AipsrcValue.h>
@@ -67,25 +67,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (itsMaxCacheSize <= -2) {
       AipsrcValue<Int>::find (itsMaxCacheSize, "table.tsm.maxcachesizemb", -1);
     }
-    // Default is to use mmap for existing files on 64 bit systems.
-    // Otherwise the old caching behaviour
+    // Default is to use the old caching behaviour
+    // Abandoned default to use mmap for existing files on 64 bit systems.
     if (itsOption == TSMOption::Default) {
       itsOption = TSMOption::Cache;
-      /*
-//
-// Bad things are happening if the table is really large like with an evla 
-// measurementset so we're commenting out this default behavior for now
-// wky 10-feb-2010
-//
-
-#ifdef AIPS_64B
-      if (!newTable) {
-        itsOption = TSMOption::MMap;
-      }
-#endif
-      
-*/
-
+      ///#ifdef AIPS_64B
+      ///      if (!newTable) {
+      ///        itsOption = TSMOption::MMap;
+      ///      }
+      ///#endif
     }
   }
 

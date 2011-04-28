@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMBase.cc 20883 2010-04-27 06:02:21Z gervandiepen $
+//# $Id: SSMBase.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/SSMBase.h>
 #include <tables/Tables/SSMColumn.h>
@@ -154,8 +154,8 @@ SSMBase::SSMBase (const String& aDataManName,
       itsBucketRows = 32;
     }
   }
-  if (spec.isDefined ("CACHESIZE")) {
-    itsPersCacheSize = max(2, spec.asInt ("CACHESIZE"));
+  if (spec.isDefined ("PERSCACHESIZE")) {
+    itsPersCacheSize = max(2, spec.asInt ("PERSCACHESIZE"));
   }
 }
 
@@ -213,12 +213,27 @@ String SSMBase::dataManagerName() const
 
 Record SSMBase::dataManagerSpec() const
 {
-  // Make sure the cache is initialized, so the header is certainly read.
+  Record rec = getProperties();
+  rec.define ("BUCKETSIZE", Int(itsBucketSize));
+  rec.define ("PERSCACHESIZE", Int(itsPersCacheSize));
+  rec.define ("IndexLength", Int(itsIndexLength));
+  return rec;
+}
+
+Record SSMBase::getProperties() const
+{
+  // Make sure the cache is initialized, so the header has certainly been read.
   const_cast<SSMBase*>(this)->getCache();
   Record rec;
-  rec.define ("BUCKETSIZE", Int(itsBucketSize));
-  rec.define ("CACHESIZE", Int(itsPersCacheSize));
+  rec.define ("ActualCacheSize", Int(itsCacheSize));
   return rec;
+}
+
+void SSMBase::setProperties (const Record& rec)
+{
+  if (rec.isDefined("ActualCacheSize")) {
+    setCacheSize (rec.asInt("ActualCacheSize"), False);
+  }
 }
 
 void SSMBase::clearCache()
@@ -772,7 +787,8 @@ void SSMBase::addColumn (DataManagerColumn* aColumn)
 
     if (rowsPerBucket < 1) {
       // The BucketSize is too small to contain data.
-      throw (DataManError ("StandardStMan::addColumn  bucketsize too small"));
+      throw (DataManError ("StandardStMan::addColumn  bucketsize too small"
+                           " for adding column " + aColumn->columnName()));
     }
 
     uInt nrIdx=itsPtrIndex.nelements();

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableKeyword.cc 20839 2009-12-01 10:15:16Z gervandiepen $
+//# $Id: TableKeyword.cc 21040 2011-04-07 13:26:55Z gervandiepen $
 
 
 //# Includes
@@ -171,7 +171,7 @@ void TableKeyword::flush (Bool fsync) const
 	} else {
 	    // The table is not open here, but might be open elsewhere.
 	    // So only flush if open elsewhere, thus in the TableCache.
-	    PlainTable* ptab = PlainTable::tableCache (attr_p.name());
+            PlainTable* ptab = PlainTable::tableCache() (attr_p.name());
 	    if (ptab) {
 	        ptab->flush (fsync, True);
 	    }

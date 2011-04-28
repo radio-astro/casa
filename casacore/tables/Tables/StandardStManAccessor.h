@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StandardStManAccessor.h 20883 2010-04-27 06:02:21Z gervandiepen $
+//# $Id: StandardStManAccessor.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_STANDARDSTMANACCESSOR_H
 #define TABLES_STANDARDSTMANACCESSOR_H
@@ -104,11 +104,12 @@ class ROStandardStManAccessor : public RODataManAccessor
 {
 public:
 
-    // Construct the object for the data manager in the table.
-    // An exception is thrown if the data manager type does not
-    // match the type of this ROStandardStManAccessor object.
-    ROStandardStManAccessor (const Table& aTable,
-			     const String& aDataManagerName);
+    // Construct the object for a data manager in the table given the name
+    // of the data manager or the column.
+    // An exception is thrown if the data manager type is not the incremental
+    // storage manager.
+    ROStandardStManAccessor (const Table& table, const String& name,
+                             Bool byColumn=False);
 
     ~ROStandardStManAccessor();
 

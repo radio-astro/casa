@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ISMBase.h 20883 2010-04-27 06:02:21Z gervandiepen $
+//# $Id: ISMBase.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_ISMBASE_H
 #define TABLES_ISMBASE_H
@@ -121,6 +121,16 @@ public:
 
     // Record a record containing data manager specifications.
     virtual Record dataManagerSpec() const;
+
+    // Get data manager properties that can be modified.
+    // It is only ActualCacheSize (the actual cache size in buckets).
+    // It is a subset of the data manager specification.
+    virtual Record getProperties() const;
+
+    // Modify data manager properties.
+    // Only ActualCacheSize can be used. It is similar to function setCacheSize
+    // with <src>canExceedNrBuckets=False</src>.
+    virtual void setProperties (const Record& spec);
 
     // Get the version of the class.
     uInt version() const;

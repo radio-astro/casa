@@ -85,11 +85,6 @@ DataManager* TiledCellStMan::makeObject (const String& group,
     return smp;
 }
 
-TSMOption TiledCellStMan::tsmMode(uInt) const
-{
-  return TSMOption(TSMOption::Cache);
-}
-
 String TiledCellStMan::dataManagerType() const
     { return "TiledCellStMan"; }
 

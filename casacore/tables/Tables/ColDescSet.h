@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColDescSet.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColDescSet.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_COLDESCSET_H
 #define TABLES_COLDESCSET_H
@@ -194,9 +194,6 @@ private:
     //# This is in fact a Block<ColumnDesc*>, but a void* is used
     //# to reduce the number of template instantiations.
     Block<void*> colSeq_p;
-    // A switch indicating if the registration of the DataManagers
-    // has been done (False = not done yet).
-    static Bool registrationDone_p;
 };
 
 

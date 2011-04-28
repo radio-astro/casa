@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaRecordColData.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaRecordColData.h 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #ifndef TABLES_SCARECORDCOLDATA_H
 #define TABLES_SCARECORDCOLDATA_H
@@ -150,12 +150,14 @@ public:
     // Add this column and its data to the Sort object.
     // Sorting on records is not supported, so an exception is thrown.
     // <group>
-    virtual void makeSortKey (Sort&, ObjCompareFunc* cmpFunc, Int order,
+    virtual void makeSortKey (Sort&, CountedPtr<BaseCompare>& cmpObj,
+                              Int order,
 			      const void*& dataSave);
     // Do it only for the given row numbers.
-    virtual void makeRefSortKey (Sort&, ObjCompareFunc* cmpFunc, Int order,
-				 const Vector<uInt>& rownrs,
-				 const void*& dataSave);
+    virtual void makeRefSortKey (Sort&, CountedPtr<BaseCompare>& cmpObj,
+                                 Int order,
+                                 const Vector<uInt>& rownrs,
+                                 const void*& dataSave);
     // </group>
 
     // Free storage on the heap allocated by makeSortkey().
@@ -165,7 +167,7 @@ public:
     // Allocate value buffers for the table iterator.
     // Iteration based on records is not supported, so an exception is thrown.
     virtual void allocIterBuf (void*& lastVal, void*& curVal,
-			       ObjCompareFunc*& cmpFunc);
+			       CountedPtr<BaseCompare>& cmpObj);
 
     // Free the value buffers allocated by allocIterBuf.
     virtual void freeIterBuf (void*& lastVal, void*& curVal);

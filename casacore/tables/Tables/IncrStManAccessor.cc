@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IncrStManAccessor.cc 20883 2010-04-27 06:02:21Z gervandiepen $
+//# $Id: IncrStManAccessor.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/IncrStManAccessor.h>
@@ -36,18 +36,18 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ROIncrementalStManAccessor::ROIncrementalStManAccessor (const Table& table,
-					    const String& dataManagerName)
-: dataManPtr_p (0)
+                                                        const String& name,
+                                                        Bool byColumn)
+  : RODataManAccessor (table, name, byColumn),
+    dataManPtr_p (0)
 {
-    DataManager* dmptr = findDataManager (table, dataManagerName);
-    ISMBase dataMan;
-    if (dmptr->dataManagerType() != dataMan.dataManagerType()) {
-	throw (DataManError ("Data manager " + dataManagerName + " has type "
-			     + dmptr->dataManagerType() + "; expected "
-			     + dataMan.dataManagerType()));
+    dataManPtr_p = dynamic_cast<ISMBase*>(baseDataManager());
+    if (dataManPtr_p == 0) {
+	throw (DataManError ("ROIncrementalStManAccessor " + name +
+                             " constructed for data manager type "
+			     + baseDataManager()->dataManagerType() +
+			     "; expected IncrementalStMan"));
     }
-    // The types match, so it is now safe to cast.
-    dataManPtr_p = (ISMBase*)dmptr;
 }
 
 ROIncrementalStManAccessor::~ROIncrementalStManAccessor()

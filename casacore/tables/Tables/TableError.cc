@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableError.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableError.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/TableError.h>
 
@@ -63,17 +63,19 @@ TableNoFile::TableNoFile (const String& name,Category c)
 TableNoFile::~TableNoFile () throw()
 {}
 
+
 TableNoDir::TableNoDir (const String& name,Category c)
 : TableError(name + " is not a directory",c)
 {}
 TableNoDir::~TableNoDir () throw()
 {}
 
-TableNoDescFile::TableNoDescFile (const String& filename,Category c)
+
+TableNoDatFile::TableNoDatFile (const String& filename,Category c)
 : TableError(filename.empty() ? String("No table name given at open") :
-	                      "File " + filename + " does not exist",c)
+	                      "Table file " + filename + " does not exist",c)
 {}
-TableNoDescFile::~TableNoDescFile () throw()
+TableNoDatFile::~TableNoDatFile () throw()
 {}
 
 
@@ -91,9 +93,10 @@ TableInvOpt::~TableInvOpt () throw()
 {}
 
 
-TableInvType::TableInvType (const String& tableName, const String& tpin, 
-                            const String& tpfil,Category c)
-: TableError (tableName + ": Expected type " + tpin + ", found " + tpfil,c)
+TableInvType::TableInvType (const String& tableName,
+                            const String& tpin, const String& tpfil,Category c)
+: TableError ("Table file " + tableName + "is incorrect: Expected type "
+              + tpin + ", found " + tpfil, c)
 {}
 TableInvType::~TableInvType () throw()
 {}

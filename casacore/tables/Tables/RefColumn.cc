@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RefColumn.cc 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #include <casa/Arrays/Vector.h>
 #include <tables/Tables/RefColumn.h>
@@ -202,17 +202,17 @@ void RefColumn::setMaximumCacheSize (uInt nbytes)
     { colPtr_p->setMaximumCacheSize (nbytes); }
 
 
-void RefColumn::makeSortKey (Sort& sortobj, ObjCompareFunc* cmpFunc,
+void RefColumn::makeSortKey (Sort& sortobj, CountedPtr<BaseCompare>& cmpObj,
 			     Int order, const void*& dataSave)
-    { colPtr_p->makeRefSortKey (sortobj, cmpFunc, order,
+    { colPtr_p->makeRefSortKey (sortobj, cmpObj, order,
 				refTabPtr_p->rowNumbers(), dataSave); }
 
 void RefColumn::freeSortKey (const void*& dataSave)
     { colPtr_p->freeSortKey (dataSave); }
 
 void RefColumn::allocIterBuf (void*& lastVal, void*& curVal,
-			      ObjCompareFunc*& cmpFunc)
-    { colPtr_p->allocIterBuf (lastVal, curVal, cmpFunc); }
+			      CountedPtr<BaseCompare>& cmpObj)
+    { colPtr_p->allocIterBuf (lastVal, curVal, cmpObj); }
 
 void RefColumn::freeIterBuf (void*& lastVal, void*& curVal)
     { colPtr_p->freeIterBuf (lastVal, curVal); }

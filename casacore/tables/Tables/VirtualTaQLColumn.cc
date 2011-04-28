@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VirtualTaQLColumn.cc 20926 2010-07-05 11:42:12Z gervandiepen $
+//# $Id: VirtualTaQLColumn.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/VirtualTaQLColumn.h>
 #include <tables/Tables/Table.h>
@@ -198,13 +198,16 @@ DataManager* VirtualTaQLColumn::makeObject (const String&,
 
 void VirtualTaQLColumn::registerClass()
 {
-  DataManager::registerCtor ("VirtualTaQLColumn",
-			     VirtualTaQLColumn::makeObject);
+  DataManager::registerCtor (className(), makeObject);
 }
 
-String VirtualTaQLColumn::dataManagerType() const
+String VirtualTaQLColumn::className()
 {
   return "VirtualTaQLColumn";
+}
+String VirtualTaQLColumn::dataManagerType() const
+{
+  return className();
 }
 
 Record VirtualTaQLColumn::dataManagerSpec() const

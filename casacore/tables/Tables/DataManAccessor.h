@@ -23,21 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DataManAccessor.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DataManAccessor.h 21059 2011-04-27 07:12:11Z gervandiepen $
 
 #ifndef TABLES_DATAMANACCESSOR_H
 #define TABLES_DATAMANACCESSOR_H
 
 //# Includes
 #include <casa/aips.h>
+#include <tables/Tables/DataManager.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-//# Forward Declarations
-class DataManager;
-class Table;
-class String;
-
 
 // <summary>
 // Base class for the Data Manager Accessor classes.
@@ -80,36 +75,41 @@ class String;
 
 class RODataManAccessor
 {
+public:
+    // Construct an empty object.
+    RODataManAccessor()
+      : itsDataManager(0)
+    {}
+
+    // Construct the accessor object for a data manager in the table.
+    // An exception is thrown if the name of the data manager or column is
+    // unknown.
+    RODataManAccessor (const Table& table, const String& name,
+                       Bool byColumn);
+
+    // Set data manager properties using the fields in the record.
+    // Each data manager has its specific set of properties.
+    void setProperties (const Record&) const;
+
+    // Get data manager properties as a record.
+    Record getProperties() const;
+
+    // Get the data manager type.
+    String dataManagerType() const
+      { return itsDataManager->dataManagerType(); } 
+
+    // Get the data manager name.
+    String dataManagerName() const
+      { return itsDataManager->dataManagerName(); } 
+
 protected:
-    // Construct the object.
-    RODataManAccessor();
+    // Get the data manager for the given data manager or column name.
+    DataManager* baseDataManager() const
+      { return itsDataManager; }
 
-    ~RODataManAccessor();
-
-    // Copy constructor (copy semantics).
-    RODataManAccessor (const RODataManAccessor& that);
-
-    // Assignment (copy semantics).
-    RODataManAccessor& operator= (const RODataManAccessor& that);
-
-    // Get the data manager for the given data manager name.
-    DataManager* findDataManager (const Table& table,
-				  const String& dataManagerName) const;
+private:
+    DataManager* itsDataManager;
 };
-
-
-
-inline RODataManAccessor::RODataManAccessor()
-{}
-inline RODataManAccessor::~RODataManAccessor()
-{}
-inline RODataManAccessor::RODataManAccessor (const RODataManAccessor&)
-{}
-inline RODataManAccessor& RODataManAccessor::operator=
-                                            (const RODataManAccessor&)
-{ return *this; }
-
-
 
 
 } //# NAMESPACE CASA - END

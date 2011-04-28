@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledShapeStMan.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TiledShapeStMan.h 21012 2010-12-21 07:22:02Z gervandiepen $
 
 #ifndef TABLES_TILEDSHAPESTMAN_H
 #define TABLES_TILEDSHAPESTMAN_H
@@ -210,6 +210,9 @@ public:
 
     // Get the type name of the data manager (i.e. TiledShapeStMan).
     virtual String dataManagerType() const;
+
+    // Return a record containing data manager specifications and info.
+    virtual Record dataManagerSpec() const;
 
     // TiledShapeStMan can access a column if there are 2 hypercubes
     // and the first one is empty.

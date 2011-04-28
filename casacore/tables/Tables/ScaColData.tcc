@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaColData.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaColData.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/ScaColData.h>
 #include <tables/Tables/ScaColDesc.h>
@@ -180,7 +180,7 @@ void ScalarColumnData<T>::putScalarColumnCells (const RefRows& rownrs,
 
 template<class T>
 void ScalarColumnData<T>::makeSortKey (Sort& sortobj,
-				       ObjCompareFunc* cmpFunc,
+				       CountedPtr<BaseCompare>& cmpObj,
 				       Int order,
 				       const void*& dataSave)
 {
@@ -191,9 +191,6 @@ void ScalarColumnData<T>::makeSortKey (Sort& sortobj,
     dataSave = 0;
     uInt nrrow = nrow();
     Vector<T>* vecPtr = new Vector<T>(nrrow);
-    if (vecPtr == 0) {
-	throw (AllocError ("ScalarColumnData::makeSortKey", 1));
-    }
     Bool reask;
     if (canAccessScalarColumn (reask)) {
 	getScalarColumn (vecPtr);
@@ -205,12 +202,12 @@ void ScalarColumnData<T>::makeSortKey (Sort& sortobj,
 	autoReleaseLock();
     }
     dataSave = vecPtr;
-    fillSortKey (vecPtr, sortobj, cmpFunc, order);
+    fillSortKey (vecPtr, sortobj, cmpObj, order);
 }
 
 template<class T>
 void ScalarColumnData<T>::makeRefSortKey (Sort& sortobj,
-					  ObjCompareFunc* cmpFunc,
+                                          CountedPtr<BaseCompare>& cmpObj,
 					  Int order,
 					  const Vector<uInt>& rownrs,
 					  const void*& dataSave)
@@ -221,9 +218,6 @@ void ScalarColumnData<T>::makeRefSortKey (Sort& sortobj,
     dataSave = 0;
     uInt nrrow = rownrs.nelements();
     Vector<T>* vecPtr = new Vector<T>(nrrow);
-    if (vecPtr == 0) {
-	throw (AllocError ("ScalarColumnData::makeRefSortKey", 1));
-    }
     Bool reask;
     if (canAccessScalarColumnCells (reask)) {
 	getScalarColumnCells (rownrs, vecPtr);
@@ -235,13 +229,13 @@ void ScalarColumnData<T>::makeRefSortKey (Sort& sortobj,
 	autoReleaseLock();
     }
     dataSave = vecPtr;
-    fillSortKey (vecPtr, sortobj, cmpFunc, order);
+    fillSortKey (vecPtr, sortobj, cmpObj, order);
 }
 
 template<class T>
 void ScalarColumnData<T>::fillSortKey (const Vector<T>* vecPtr,
 				       Sort& sortobj,
-				       ObjCompareFunc* cmpFunc,
+                                       CountedPtr<BaseCompare>& cmpObj,
 				       Int order)
 {
     //# Pass the real vector storage as the sort data.
@@ -250,10 +244,10 @@ void ScalarColumnData<T>::fillSortKey (const Vector<T>* vecPtr,
     //# an unknown data type.
     Bool deleteIt;
     const T* datap = vecPtr->getStorage (deleteIt);
-    if (cmpFunc == 0) {
-	cmpFunc = ObjCompare<T>::compare;
+    if (cmpObj.null()) {
+        cmpObj = new ObjCompare<T>();
     }
-    sortobj.sortKey (datap, cmpFunc, sizeof(T),
+    sortobj.sortKey (datap, cmpObj, sizeof(T),
 		     order == Sort::Descending  ?  Sort::Descending
 		                                 : Sort::Ascending);
     vecPtr->freeStorage (datap, deleteIt);
@@ -270,16 +264,13 @@ void ScalarColumnData<T>::freeSortKey (const void*& dataSave)
 
 template<class T>
 void ScalarColumnData<T>::allocIterBuf (void*& lastVal, void*& curVal,
-					ObjCompareFunc*& cmpFunc)
+					CountedPtr<BaseCompare>& cmpObj)
 {
     T* valp = new T[2];
-    if (valp == 0) {
-	throw (AllocError ("ScalarColumnData::AllocIterBuf", 1));
-    }
     lastVal = valp;
     curVal  = valp + 1;
-    if (cmpFunc == 0) {
-	cmpFunc = ObjCompare<T>::compare;
+    if (cmpObj.null()) {
+	cmpObj = new ObjCompare<T>;
     }
 }
 

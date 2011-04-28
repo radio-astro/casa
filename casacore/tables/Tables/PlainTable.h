@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PlainTable.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: PlainTable.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_PLAINTABLE_H
 #define TABLES_PLAINTABLE_H
@@ -236,11 +236,14 @@ public:
     virtual void renameHypercolumn (const String& newName,
 				    const String& oldName);
 
-    // Find the data manager with the given name.
-    virtual DataManager* findDataManager (const String& dataManagerName) const;
+    // Find the data manager with the given name or for the given column.
+    virtual DataManager* findDataManager (const String& name,
+                                          Bool byColumn) const;
 
 
-    static TableCache tableCache;           //# cache of open (plain) tables
+    // Get access to the TableCache.
+    static TableCache& tableCache()
+      { return theirTableCache; }
 
 private:
     // Copy constructor is forbidden, because copying a table requires
@@ -283,6 +286,9 @@ private:
     // Determine and set the endian format (big or little).
     void setEndian (int endianFormat);
 
+    // Throw an exception if the table is not writable.
+    void checkWritable (const char* func) const;
+
 
     ColumnSet*     colSetPtr_p;        //# pointer to set of columns
     Bool           tableChanged_p;     //# Has the main data changed?
@@ -292,6 +298,8 @@ private:
     Bool           bigEndian_p;        //# True  = big endian canonical
                                        //# False = little endian canonical
     TSMOption      tsmOption_p;
+    //# cache of open (plain) tables
+    static TableCache theirTableCache;
 };
 
 

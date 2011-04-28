@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStManAccessor.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TiledStManAccessor.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/TiledStManAccessor.h>
@@ -37,14 +37,16 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ROTiledStManAccessor::ROTiledStManAccessor (const Table& table,
-					    const String& dataManagerName)
-: dataManPtr_p (0)
+					    const String& name,
+                                            Bool byColumn)
+  : RODataManAccessor (table, name, byColumn),
+    dataManPtr_p (0)
 {
-    DataManager* dmptr = findDataManager (table, dataManagerName);
-    dataManPtr_p = dynamic_cast<TiledStMan*>(dmptr);
+    dataManPtr_p = dynamic_cast<TiledStMan*>(baseDataManager());
     if (dataManPtr_p == 0) {
-	throw (DataManError ("Data manager " + dataManagerName + " has type "
-			     + dmptr->dataManagerType() +
+	throw (DataManError ("ROTiledStManAccessor " + name +
+                             " constructed for data manager type "
+			     + baseDataManager()->dataManagerType() +
 			     "; expected Tiled*StMan"));
     }
 }

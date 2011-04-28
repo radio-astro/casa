@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStManAccessor.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledStManAccessor.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_TILEDSTMANACCESSOR_H
 #define TABLES_TILEDSTMANACCESSOR_H
@@ -161,10 +161,12 @@ public:
     // until a 'true' ROTiledStManAccessor object is assigned to it.
     ROTiledStManAccessor ();
 
-    // Construct the object for the data manager in the table.
-    // An exception is thrown if the data manager type does not
-    // match the type of this TiledDataStManAccessor object.
-    ROTiledStManAccessor (const Table& table, const String& dataManagerName);
+    // Construct the object for a data manager in the table given the name
+    // of the data manager or the column.
+    // An exception is thrown if the data manager type is not any tiled
+    // storage manager.
+    ROTiledStManAccessor (const Table& table, const String& name,
+                          Bool byColumn=False);
 
     ~ROTiledStManAccessor();
 

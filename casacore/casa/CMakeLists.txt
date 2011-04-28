@@ -44,6 +44,7 @@ Containers/StackError.cc
 Containers/ValueHolder.cc
 Containers/Record2Interface.cc
 Containers/Stack2.cc
+Containers/ContainerIO.tcc
 Exceptions/Error2.cc
 HDF5/HDF5Record.cc
 HDF5/HDF5Error.cc
@@ -123,6 +124,7 @@ OS/IBMConversion.cc
 OS/RawDataConversion.cc
 OS/LECanonicalDataConversion.cc
 OS/SymLink.cc
+OS/Mutex.cc
 Quanta/UnitMap3.cc
 Quanta/UnitName.cc
 Quanta/Unit.cc
@@ -454,6 +456,7 @@ OS/malloc.h
 OS/Memory.h
 OS/ModcompConversion.h
 OS/ModcompDataConversion.h
+OS/Mutex.h
 OS/Path.h
 OS/PrecTimer.h
 OS/RawDataConversion.h

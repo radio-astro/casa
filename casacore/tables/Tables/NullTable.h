@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NullTable.h 20854 2010-01-20 14:08:47Z gervandiepen $
+//# $Id: NullTable.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_NULLTABLE_H
 #define TABLES_NULLTABLE_H
@@ -105,7 +105,8 @@ public:
   virtual void addRow (uInt nrrow, Bool initialize);
   virtual Bool canRemoveRow() const;
   virtual void removeRow (uInt rownr);
-  virtual DataManager* findDataManager (const String& dataManagerName) const;
+  virtual DataManager* findDataManager (const String& name,
+                                        Bool byColumn) const;
   virtual void addColumn (const ColumnDesc& columnDesc, Bool addToParent);
   virtual void addColumn (const ColumnDesc& columnDesc,
 			  const String& dataManager, Bool byName,
@@ -127,7 +128,7 @@ public:
   virtual Bool adjustRownrs (uInt nrrow, Vector<uInt>& rownrs,
 			     Bool determineOrder) const;
   virtual BaseTable* doSort (PtrBlock<BaseColumn*>&,
-			     const PtrBlock<ObjCompareFunc*>&,
+			     const Block<CountedPtr<BaseCompare> >&,
 			     const Block<Int>& sortOrder,
 			     int sortOption);
   virtual void renameSubTables (const String& newName,
