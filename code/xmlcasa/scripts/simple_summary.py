@@ -654,12 +654,12 @@ class simple_summary:
         ms.done()
         self._trange.append(head['BeginTime'])
         self._trange.append(head['EndTime'])
-        scans=[]
+        scans_=[]
         for i in head.keys():
             if i.startswith('scan_'):
-                scans.append(i)
-        for i in range(len(scans)):
-            scans=head['scan_'+str(i+1)]
+                scans_.append(i)
+        for i in scans_:
+            scans=head[i]
             slen=len(scans.keys())
             for j in range(slen):
                 self._scan.append(scans[str(j)])
