@@ -530,11 +530,11 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0));
       }
 
-      //in order to outframe to work need to set here original freq frame
+      // Now use outframe (instead of data frame) as the rest of
+      // the modes do
       //
-      //
-      //mySpectral = new SpectralCoordinate(freqFrame_p,
-      mySpectral = new SpectralCoordinate(obsFreqRef,
+      mySpectral = new SpectralCoordinate(freqFrame_p,
+      //mySpectral = new SpectralCoordinate(obsFreqRef,
       					  chanFreq(0),
                                           finc,  
       					  refChan, restFreq);
