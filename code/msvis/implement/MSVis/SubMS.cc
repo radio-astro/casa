@@ -214,6 +214,16 @@ namespace casa {
 	if(chanStep_p[k] == 0)	// CAS-2224, triggered by spw='0:2'
 	  chanStep_p[k] = 1;	// (as opposed to '0:2~2').
 	
+        if((nchan_p[k] + 1) % (chanStep_p[k] * widths_p[k]) != 0)
+          os << LogIO::WARN
+             << "The number of selected channels, " << nchan_p[k]
+             << ", for spw " << spw_p[k] << " is not a multiple of the increment, "
+             << chanStep_p[k] * widths_p[k] << ".\n"
+             << "The reported width and frequency of the final channel may be"
+             << "\noff by a fraction of a channel width.\n"
+             << "(This is being worked on.)"
+             << LogIO::POST;
+
         nchan_p[k] = 1 + (nchan_p[k] - chanStart_p[k]) / (chanStep_p[k] * widths_p[k]);
         if(nchan_p[k] < 1)
           nchan_p[k] = 1;
@@ -248,8 +258,19 @@ namespace casa {
       }
 
       nchan_p = mySpwTab.numChan().getColumn();
-      for(uInt k = 0; k < nspw; ++k)
+      for(uInt k = 0; k < nspw; ++k){
+        if((nchan_p[k] + 1) % (chanStep_p[k] * widths_p[k]) != 0)
+          os << LogIO::WARN
+             << "The number of selected channels, " << nchan_p[k]
+             << ", for spw " << spw_p[k] << " is not a multiple of the increment, "
+             << chanStep_p[k] * widths_p[k] << ".\n"
+             << "The reported width and frequency of the final channel may be"
+             << "\noff by a fraction of a channel width.\n"
+             << "(This is being worked on.)"
+             << LogIO::POST;
+
         nchan_p[k] = 1 + (nchan_p[k] - 1) / widths_p[k];
+      }
     }
     
     // Check for and filter out selected spws that aren't included in
