@@ -453,23 +453,23 @@ Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
 
   // If factor greater than zero, fill the bounds non-trivially
   if (factor > 0) {
-    
+ 
     // Decipher averaging factor
     Int width = 1;
     if(factor > 1.0)
       width = Int(factor); // factor supplied in channel units
-    
+ 
     // Calculate bounds for each spw
     for(Int ispw = 0; ispw < numberSpw(); ++ispw){
-      
+   
       // Number of SELECTED channels PRIOR to averaging
       Int nChan0 = numberChan(ispw);
-      
+   
       // factor might have been supplied as a fraction;
       //  width is then potentially spw-dependent
       if(factor <= 1.0)
 	width = Int(factor * Float(nChan0));
-      
+   
       // Get the selected channel list
       Vector<Int> chans;
       chanIds(chans, ispw);
@@ -478,12 +478,12 @@ Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
       // range of channels selected (not the number of them)
       //  (will be revised later, if nec.)
       Int nChanOut0 = 1 + (chans[nChan0 - 1] - chans[0]) / width;
-      
+   
       // Initialize the bounds container for this spw
       Matrix<Int>& currBounds(bounds[ispw]);
       currBounds.resize(nChanOut0, 4);
       //currBounds.set(0);
-      
+   
       Int outChan = 0;
       Int firstchan = chans[0];
       Int lastchan = chans[nChan0 - 1];
@@ -493,14 +493,24 @@ Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
       uInt selchanind = 0;
 
       for(Int ich = firstchan; ich <= lastchan; ich += width){
+        Int w = width;
+
+        // Use a clamped width in case (lastchan - firstchan + 1) % width != 0.
+        if(ich + w - 1 > lastchan)
+          w = lastchan + 1 - ich;
+
         // The start and end in MS channel #s.
         currBounds(outChan, 0) = ich;
-        currBounds(outChan, 1) = ich + width - 1;
+        currBounds(outChan, 1) = ich + w - 1;
 
         // The start and end in selected reckoning.
         currBounds(outChan, 2) = selchanind;
-        selchanind += width;
+        selchanind += w;
         currBounds(outChan, 3) = selchanind - 1;
+
+        // for(uInt ii = 0; ii < 4; ++ii)
+        //   cerr << "currBounds(" << outChan << ", " << ii << ") = "
+        //        << currBounds(outChan, ii) << endl;
         ++outChan;
       }
     } // ispw
@@ -513,6 +523,83 @@ Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
   // Return the bounds Vector reference
   return bounds;
 }
+
+// Vector<Matrix<Int> >& ROVisIterator::setChanAveBounds(Float factor,
+// 						      Vector<Matrix<Int> >& bounds) {
+
+//   if (!useNewSlicer_p) throw(AipsError("Help!"));
+
+//   // For every spw...
+//   bounds.resize(numberSpw());
+
+//   // If factor greater than zero, fill the bounds non-trivially
+//   if (factor>0) {
+    
+//     // Decipher averaging factor
+//     Int width(1);
+//     if (factor>1.0) width=Int(factor); // factor supplied in channel units
+    
+//     // Calculate bounds for each spw
+//     for (Int ispw=0;ispw<numberSpw();++ispw) {
+      
+//       // Number of SELECTED channels PRIOR to averaging
+//       Int nChan0=numberChan(ispw);
+      
+//       // factor might have been supplied in factional units;
+//       //  width is then potentially spw-dependent
+//       if (factor<=1.0)
+// 	width=Int(factor*Float(nChan0));
+      
+//       // Get the selected channel list
+//       Vector<Int> chans;
+//       chanIds(chans,ispw);
+
+//       // The nominal number of output channels depends on the full
+//       // range of channels selected (not the number of them)
+//       //  (will be revised later, if nec.)
+//       Int nChanOut0((chans(nChan0-1)-chans(0)+1+width)/width);
+      
+//       // Initialize the bounds container for this spw
+//       Matrix<Int>& currBounds(bounds(ispw));
+//       currBounds.resize(nChanOut0,4);
+//       currBounds.set(0);
+      
+//       // Actual output channel count; initialization
+//       Int nChanOut=1;
+//       Int lo(chans(0));
+//       currBounds(0,0)=lo;
+//       currBounds(0,2)=0;
+//       for (Int ich=0;ich<nChan0;++ich) 
+// 	if ( (chans(ich)-lo+1)>width ) {
+// 	  currBounds(nChanOut-1,1)=chans(ich-1);   // end of previous
+// 	  currBounds(nChanOut-1,3)=ich-1;
+// 	  lo=currBounds(nChanOut,0)=chans(ich);    // start of next
+// 	  currBounds(nChanOut,2)=ich;    // start of next
+// 	  ++nChanOut;
+// 	}
+//       currBounds(nChanOut-1,1)=chans(nChan0-1);    // end of final set
+//       currBounds(nChanOut-1,3)=(nChan0-1);    // end of final set
+      
+// //       for(uInt ii = 0; ii < 4; ++ii)
+// //         cerr << "currBounds(" << nChanOut - 1 << ", " << ii << ") = "
+// //              << currBounds(nChanOut - 1, ii) << endl;
+
+//       // contract bounds container, if necessary
+//       if (nChanOut<nChanOut0)
+// 	currBounds.resize(nChanOut,4,True);
+      
+//     } // ispw
+
+
+//   } // factor > 0
+
+//   // Internal reference  (needed?)
+//   chanAveBounds_p.reference(bounds);
+
+//   // Return the bounds Vector reference
+//   return bounds;
+
+// }
 
 Int ROVisIterator::numberChan(Int spw) const {
 
