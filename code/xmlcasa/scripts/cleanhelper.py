@@ -2232,25 +2232,31 @@ class cleanhelper:
             if nfld >= selfield[0]:
               srcid=tb.getcell('SOURCE_ID',selfield[0])
             else:
-              raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
-                 "no SOURCE corresponding field ID=%s, please supply restfreq" % selfield[0])
+              if mode=='velocity':
+                raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
+                  "no SOURCE corresponding field ID=%s, please supply restfreq" % selfield[0])
           finally:
             tb.close()
           #SOUECE_ID in FIELD table = -1 if no SOURCE table
           if srcid==-1:
-            if self.usespecframe!=self.dataspecframe:
+            if mode=='velocity':
               raise TypeError, "Rest frequency info is not supplied"
           try:
             tb.open(invis+'/SOURCE')
             tb2=tb.query('SOURCE_ID==%s' % srcid)
             nsrc = tb2.nrows()
             if nsrc > 0 and tb2.iscelldefined('REST_FREQUENCY',0):
-              restf=str(tb2.getcell('REST_FREQUENCY',0)[0])+'Hz'
-
+              rfqs = tb2.getcell('REST_FREQUENCY',0)
+              if len(rfqs)>0:  
+                restf=str(rfqs[0])+'Hz'
+              else:
+                if mode=='velocity':  
+                  raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
+                    "REST_FREQUENCY entry for ID %s in SOURCE table is empty, please supply restfreq" % srcid)    
             else:
-              if self.usespecframe!=self.dataspecframe:
+              if mode=='velocity':
                 raise TypeError, ("Cannot set REST_FREQUENCY from the data: "+
-                 " no SOURCE corresponding field ID=%s, please supply restfreq" % selfield[0])
+                 "no SOURCE corresponding field ID=%s, please supply restfreq" % selfield[0])
           finally:
             tb.close()
             tb2.close()
