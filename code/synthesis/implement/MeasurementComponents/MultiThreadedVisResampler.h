@@ -72,9 +72,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     MultiThreadedVisibilityResampler(const MultiThreadedVisibilityResampler& other){copy(other);};
+
+    // This version will make a clone with shared data buffers (the
+    // complex grids and the sum-of-weights arrays).
     MultiThreadedVisibilityResampler* clone(){return new MultiThreadedVisibilityResampler(*this);};
+
+    // With newDataBuffers=False, this version of clone will behave
+    // same as clone().  With newDataBuffers=True, this version will
+    // make the data buffers independent in each cloned version.
+    MultiThreadedVisibilityResampler* clone(Bool newDataBuffers)
+    {
+      MultiThreadedVisibilityResampler *clonedCopy;
+
+      //Allocate a new instance, and copy the internals.
+      //     clonedCopy = new MultiThreadedVisibilityResampler(*this);
+      clonedCopy = clone();
+
+      // Now reset the data buffers with independent buffers.
+      if (newDataBuffers)  clonedCopy->allocateDataBuffers();
+      return clonedCopy;
+    };
     MultiThreadedVisibilityResampler& operator=(const MultiThreadedVisibilityResampler& other);
+
     void cleanup();
+
     void copy(const MultiThreadedVisibilityResampler& other);
 
     virtual Int nelements() {return nelements_p;};
@@ -145,7 +166,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // void initializeBuffers(const Array<T>& griddedData,
     // 			   const Matrix<Double>& sumwt);
 
-    void allocateBuffers();
+    void allocateBuffers(Bool newDataBuffers=True);
+    void makeInfrastructureContainers();
+    Double allocateDataBuffers();
+    void startThreads();
     void scatter(Matrix<VBStore>& vbsStores,const VBStore& vbs);
 
     Int nelements_p;
