@@ -135,6 +135,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 bmajor = qsmoothsize
                 bminor = qsmoothsize
                 convimage = image.convolve2d( outfile=tmpconvname, major=bmajor, minor=bminor, overwrite=True )
+		convimage.done()
                 convimage = ia.newimage( tmpconvname )
 
                 # get dTij (original - smoothed)
@@ -164,6 +165,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 else:
                     raise Exception, "Sorry, the task don't support inclined scan with respect to horizontal or vertical axis, right now."
                 polyimage = convimage.fitpolynomial( fitfile=tmppolyname, axis=fitaxis, order=numpoly, overwrite=True )
+		polyimage.done()
                 polyimage = ia.newimage( tmppolyname )
 
                 # subtract fitted image from original map
