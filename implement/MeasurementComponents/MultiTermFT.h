@@ -146,7 +146,6 @@ protected:
   Int thisterm_p;
   Double reffreq_p;
   CountedPtr<FTMachine> subftm_p;
-  //FTMachine *subftm_p;
 
   Bool dbg_p;
 };

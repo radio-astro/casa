@@ -62,9 +62,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual VisibilityResamplerBase* clone() 
     {return new VisibilityResampler(*this);}
 
-    virtual VisibilityResampler* clone(Bool newDataBuffers) 
-    {throw(AipsError("Internal Error: VisibilityResampler::clone() is not meant to be called."));};
-
     virtual void setParams(const Vector<Double>& uvwScale, const Vector<Double>& offset,
 			   const Vector<Double>& dphase)
     {

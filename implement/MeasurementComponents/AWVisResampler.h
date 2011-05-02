@@ -50,8 +50,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual VisibilityResamplerBase* clone()
     {return new AWVisResampler(*this);}
-    virtual AWVisResampler* clone(Bool newDataBuffers) 
-    {throw(AipsError("Internal Error: AWVisResampler::clone() is not meant to be called."));};
     
     // AWVisResampler(const AWVisResampler& other): VisibilityResampler(other),cfMap_p(), conjCFMap_p()
     // {copy(other);}

@@ -3975,9 +3975,10 @@ Bool Imager::clean(const String& algorithm,
 	doWideBand_p = True;
 
         // check for wrong ftmachine specs.
-	if ( (ftmachine_p != "ft") && (ftmachine_p != "wproject")) {
+	if ( (ftmachine_p != "ft") && (ftmachine_p != "wproject") && 
+             (ftmachine_p != "wbawp") && (ftmachine_p != "nift") ) {
 	  os << LogIO::SEVERE
-             << "Multi-scale Multi-frequency Clean currently works only with ft and wproject"
+             << "Multi-scale Multi-frequency Clean currently works only with ft and wproject (and wbawp,nift)"
              << LogIO::POST;
 	  return False;
 	}

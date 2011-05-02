@@ -59,7 +59,8 @@
 // This is the list of FTMachine types supported by MultiTermFT
 #include <synthesis/MeasurementComponents/GridFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
-
+#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 //---------------------------------------------------------------------- 
@@ -97,6 +98,16 @@ MultiTermFT::MultiTermFT(const MultiTermFT& other) : machineName_p("MultiTermFT"
       { subftm_p = new GridFT(static_cast<const GridFT&>(*other.subftm_p)); }
      else if(other.subFTMname_p=="wproject") 
       { subftm_p = new WProjectFT(static_cast<const WProjectFT&>(*other.subftm_p)); }
+     else if(other.subFTMname_p=="wbawp") 
+      { subftm_p = new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*other.subftm_p)); }
+     else if(other.subFTMname_p=="nift") 
+      { 
+	//         subftm_p = new rGridFT(static_cast<const rGridFT&>(*other.subftm_p)); 
+	//subftm_p = ((rGridFT*)&(*other.subftm_p))->clone();
+        subftm_p = ((rGridFT*)&(*other.subftm_p))->clone();
+	//cout << "MTFT : copy constructor : newft->visresampler_p : " << &(*(subftm_p->visResampler_p)) << endl;
+
+      }
     else 
       {throw(AipsError("FTMachine "+other.subFTMname_p+" is not supported with MS-MFS")); }
 
@@ -195,9 +206,10 @@ void MultiTermFT::initializeToSky(ImageInterface<Complex>& iimage,
 void MultiTermFT::put(VisBuffer& vb, Int row, Bool dopsf, 
 		      FTMachine::Type type) //, const Matrix<Float>& imwght) // Last parameter is ignored.
 {
+  //cout << "MTFT::put for term " << thisterm_p << endl;
   modifyVisWeights(vb);
   /// I want to use the non-const, non-weight version of put, but for this, all ftms will have to implement it.
-  subftm_p->put((const VisBuffer&)vb,row,dopsf,type); //,Matrix<Float>(0,0)); 
+  subftm_p->put((const VisBuffer&)vb,row,dopsf,type,Matrix<Float>(0,0)); 
 }
 
 void MultiTermFT::finalizeToSky()
