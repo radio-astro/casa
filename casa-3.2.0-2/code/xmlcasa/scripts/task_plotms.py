@@ -5,8 +5,6 @@ from taskinit import *
 def plotms(vis=None, 
            xaxis=None, xdatacolumn=None, 
            yaxis=None, ydatacolumn=None,
-           xautorange=None, xmin=None, xmax=None,
-           yautorange=None, ymin=None, ymax=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
            correlation=None, array=None, msselect=None,
@@ -18,7 +16,8 @@ def plotms(vis=None,
            extendflag=None,
            extcorr=None, extchannel=None,
            iteraxis=None,xselfscale=None,yselfscale=None,
-           colorize=None, coloraxis=None,
+           coloraxis=None,
+           plotrange=None,
            title=None, xlabel=None, ylabel=None,
            showmajorgrid=None, majorwidth=None, majorstyle=None,  majorcolor=None,    
            showminorgrid=None, minorwidth=None, minorstyle=None,  minorcolor=None,    
@@ -124,10 +123,7 @@ def plotms(vis=None,
         showgui -- Whether or not to display the plotting GUI
                   default: True; example showgui=False
 
-    colorize -- to color data points according to some quantity
-                default: false
-      &gt;&gt;&gt; colorize expandable parameters
-        coloraxis -- which data column ('axis') to use for colorizing
+    coloraxis -- which axis to use for colorizing
                      default: ''  (ignored - same as colorizing off)
     
     title  -- title along top of plot (called "canvas" in some places)
@@ -148,7 +144,7 @@ def plotms(vis=None,
         # format is:  synonym['new_term'] = 'existing_term', with 
         # the existing term being what's coded in PlotMSConstants.h  (case insensitive)
         synonyms = {}
-        synonyms['timeinterval'] = synonyms['timeint'] = 'time_interval'
+        synonyms['timeinterval'] = synonyms['timeint'] = synonyms['time_interval']='interval'
         synonyms['chan'] = 'channel'
         synonyms['freq'] = 'frequency'
         synonyms['vel'] = 'velocity'
@@ -156,16 +152,13 @@ def plotms(vis=None,
         synonyms['ant1'] = 'antenna1'
         synonyms['weight'] = 'wt'
         synonyms['ant2'] = 'antenna2'
-        synonyms['uvdistl'] = 'uvdist_l'
+        synonyms['uvdistl'] = synonyms['uvdist_l']='uvwave'
         synonyms['amplitude'] = 'amp'
         synonyms['imaginary'] = 'imag'
         synonyms['ant'] = 'antenna'
-        synonyms['parallacticangle'] = 'parangle'
-        synonyms['parang'] = 'parangle'
-        synonyms['hourangle'] = 'hourang'
-        synonyms['ant-hourangle'] = 'ant-hourang'
-        synonyms['ant-parallacticangle'] = 'ant-parang'
-        synonyms['ant-parangle'] = 'ant-parang'
+        synonyms['parang'] = synonyms['parallacticangle'] = 'parangle'
+        synonyms['hourang'] = 'hourangle'
+        synonyms['ant-parallacticangle']=synonyms['ant-parang'] = 'ant-parangle'
         
         if(synonyms.has_key(xaxis)): xaxis = synonyms[xaxis]
         if(synonyms.has_key(yaxis)): yaxis = synonyms[yaxis]
@@ -222,7 +215,6 @@ def plotms(vis=None,
             xselfscale=yselfscale=False
         pm.setPlotMSIterate(iteraxis,xselfscale,yselfscale,False);
         # (Colorization)
-        pm.setColorizeFlag(colorize,False)
         pm.setColorAxis(coloraxis,False)
 
         # Set various user-directed appearance parameters
@@ -231,8 +223,18 @@ def plotms(vis=None,
         pm.setYAxisLabel(ylabel,False)
         pm.setGridParams(showmajorgrid, majorwidth, majorstyle, majorcolor,
                          showminorgrid, minorwidth, minorstyle, minorcolor, False)
-        pm.setXRange(xautorange, xmin, xmax, False)
-        pm.setYRange(yautorange, ymin, ymax, False)
+
+        if (len(plotrange)!=4):
+            if (len(plotrange)==0):
+                plotrange=[0.0,0.0,0.0,0.0]
+            else:
+                raise Exception, 'plotrange parameter has incorrect number of elements.'
+
+        xrange=plotrange[1]-plotrange[0]
+        yrange=plotrange[3]-plotrange[2]
+
+        pm.setXRange((xrange<=0.), plotrange[0],plotrange[1], False)
+        pm.setYRange((yrange<=0.), plotrange[2],plotrange[3], False)
 
         # Update and show
         pm.update()
