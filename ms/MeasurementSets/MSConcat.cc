@@ -616,24 +616,18 @@ void MSConcat::checkCategories(const ROMSMainColumns& otherCols) const {
   const uInt nCat = cat.nelements();
   if (nCat != otherCat.nelements()) {
     os << LogIO::WARN 
-       <<"Flag category columns do match in these two ms's\n" 
-       <<"This is not important as Flag category is being deprecated"
+       <<"Flag category column shape does not match in these two MSs.\n" 
+       <<"This may not be important as Flag category is being deprecated. Will try to continue ..."
        << LogIO::POST;
     return;
-    //throw(AipsError(String("MSConcat::checkCategories\n") + 
-    //		    String("cannot concatenate this measurement set as ") +
-    //		    String("it has a different number of flag categories")));
   }
   for (uInt c = 0; c < nCat; c++) {
     if (cat(c) != otherCat(c)) {
       os << LogIO::WARN 
-	 <<"Flag category columns do match in these two ms's\n" 
-	 <<"This is not important as Flag category is being deprecated"
+	 <<"Flag category column shape does not match in these two MSs.\n" 
+	 <<"This may not be important as Flag category is being deprecated. Will try to continue ..."
 	 << LogIO::POST;
       return;
-      //throw(AipsError(String("MSConcat::checkCategories\n") + 
-      //		      String("cannot concatenate this measurement set as ") +
-      //		      String("it has different flag categories")));
     }
   }
 }
