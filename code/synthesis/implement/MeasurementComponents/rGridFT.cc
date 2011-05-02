@@ -212,6 +212,16 @@ rGridFT& rGridFT::operator=(const rGridFT& other)
   }
 
 //----------------------------------------------------------------------
+//  CountedPtr<rGridFT> rGridFT::clone()
+  rGridFT* rGridFT::clone()
+  {
+    rGridFT* newftm = new rGridFT(*this);
+     CountedPtr<VisibilityResamplerBase> newvisresampler = newftm->visResampler_p->clone();
+    newftm->visResampler_p = newvisresampler;
+    return newftm;
+  }
+
+//----------------------------------------------------------------------
 void rGridFT::init() {
 
   logIO() << LogOrigin("rGridFT", "init")  << LogIO::NORMAL;

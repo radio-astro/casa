@@ -75,23 +75,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // This version will make a clone with shared data buffers (the
     // complex grids and the sum-of-weights arrays).
-    MultiThreadedVisibilityResampler* clone(){return new MultiThreadedVisibilityResampler(*this);};
-
-    // With newDataBuffers=False, this version of clone will behave
-    // same as clone().  With newDataBuffers=True, this version will
-    // make the data buffers independent in each cloned version.
-    MultiThreadedVisibilityResampler* clone(Bool newDataBuffers)
+    MultiThreadedVisibilityResampler* clone()
     {
-      MultiThreadedVisibilityResampler *clonedCopy;
-
       //Allocate a new instance, and copy the internals.
-      //     clonedCopy = new MultiThreadedVisibilityResampler(*this);
+      MultiThreadedVisibilityResampler *clonedCopy;
       clonedCopy = clone();
-
-      // Now reset the data buffers with independent buffers.
-      if (newDataBuffers)  clonedCopy->allocateDataBuffers();
+      // Now reset the data buffers with independent buffers (arrays of size 0)
+      clonedCopy->allocateDataBuffers();
       return clonedCopy;
     };
+
     MultiThreadedVisibilityResampler& operator=(const MultiThreadedVisibilityResampler& other);
 
     void cleanup();

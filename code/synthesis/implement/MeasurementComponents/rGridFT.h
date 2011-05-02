@@ -156,6 +156,9 @@ public:
   // Assignment operator
   rGridFT &operator=(const rGridFT &other);
 
+  // Clone
+  rGridFT* clone();
+
   ~rGridFT();
 
   // Initialize transform to Visibility plane using the image
