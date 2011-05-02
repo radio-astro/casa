@@ -61,7 +61,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VisibilityResamplerBase& operator=(const VisibilityResamplerBase& other);
 
     virtual VisibilityResamplerBase* clone() = 0;
-    virtual void copy(const VisibilityResamplerBase& other);
+    virtual VisibilityResamplerBase* clone(Bool newDataBuffers) = 0;
+
+    void copy(const VisibilityResamplerBase& other);
     virtual void setParams(const Vector<Double>& uvwScale, 
 			   const Vector<Double>& offset,
 			   const Vector<Double>& dphase) = 0;

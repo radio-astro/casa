@@ -48,15 +48,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public: 
     VisibilityResampler(): VisibilityResamplerBase() {};
     VisibilityResampler(const CFStore& cfs): VisibilityResamplerBase(cfs) {};
-    VisibilityResampler(const VisibilityResampler& other):VisibilityResamplerBase()    {copy(other);}
+    VisibilityResampler(const VisibilityResampler& other):VisibilityResamplerBase()
+    {copy(other);}
 
     //    {setConvFunc(cfs);};
     virtual ~VisibilityResampler() {};
 
     //    VisibilityResampler& operator=(const VisibilityResampler& other);
 
+    void copy(const VisibilityResampler& other)
+    {VisibilityResamplerBase::copy(other);}
+
     virtual VisibilityResamplerBase* clone() 
     {return new VisibilityResampler(*this);}
+
+    virtual VisibilityResampler* clone(Bool newDataBuffers) 
+    {throw(AipsError("Internal Error: VisibilityResampler::clone() is not meant to be called."));};
 
     virtual void setParams(const Vector<Double>& uvwScale, const Vector<Double>& offset,
 			   const Vector<Double>& dphase)
