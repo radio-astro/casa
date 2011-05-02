@@ -76,9 +76,6 @@
                         <value>Butler-JPL-Horizons 2010</value>
 			</allowed>
 		</param>
-
-
-
 	</input>
 <returns type="void"/>
 
@@ -113,6 +110,14 @@
        'field' parameter.  Recognized objects are listed below, under
        'standard'.
 
+       Note that fluxdensity, modimage, and standard interact in a possibly
+       confusing way!  Generally, if fluxdensity[0] (Stokes I) is &lt;= 0, it
+       will be ignored and standard (which has a default) will be used to
+       calculate flux density as a function of frequency, even if modimage is
+       specified.  If fluxdensity([0]) is &gt; 0, it will be used, at the price
+       of disabling frequency scaling, i.e. the given fluxdensity will be used
+       for all frequencies.
+
        Keyword arguments:
        vis -- Name of input visibility file
                default: none.  example: vis='ngc5921.ms'
@@ -137,14 +142,12 @@
               spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
 
-       Use one of the two methods below:  modimage or fluxdensity
-
        modimage -- Model image (I only) for setting the model visibilities.
               default: '' means use fluxdensity instead of modimage. 
               Each field must be done separately.  The image clean model
               will be scaled from the frequency in the model to that actually
-              used (ignoring fluxdensity), unless fluxdensity = 0
-              (or fluxdensity[0] = 0).
+              used (ignoring fluxdensity), unless fluxdensity &gt; 0
+              (or fluxdensity[0] &gt; 0).
               Both the amplitude and phase are calculated.
               At the AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
@@ -172,7 +175,7 @@
                          will put in I,Q,U,V flux densities of 2.63,0.21,-0.33,
                          and 0.02, respectively, in the model column.
 
-       standard -- Flux density standard, used if fluxdensity&lt;0
+       standard -- Flux density standard, used if fluxdensity[0] &lt; 0.0
                default: 'Perley-Butler 2010'; example: standard='Baars'
                Options: 'Baars','Perley 90','Perley-Taylor 95',
                   'Perley-Taylor 99', 'Perley-Butler 2010',

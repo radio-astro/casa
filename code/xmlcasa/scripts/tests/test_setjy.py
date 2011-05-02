@@ -85,13 +85,14 @@ class setjy_test_modimage(CheckAfterImportuvfits):
     def do_initial_setup(self):
         for do_scaling in [False, True]:
             self.__class__.records[do_scaling] = self.run_setjy(do_scaling)
+        self.__class__.records['fluxdens'] = self.run_setjy(False, 1234.0)
         shutil.rmtree(self.inpms)
         # setjy returns None :-P
         #return self.__class__.records[False]['setjyran'] and \
         #       self.__class__.records[True]['setjyran']
         return True
 
-    def run_setjy(self, do_scaling):
+    def run_setjy(self, do_scaling, fluxdens=0):
         record = {'setjyran': False}
         try:
             if do_scaling:
@@ -102,7 +103,7 @@ class setjy_test_modimage(CheckAfterImportuvfits):
             else:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
-                                           fluxdensity=0,
+                                           fluxdensity=fluxdens,
                                            async=False)
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
@@ -140,6 +141,15 @@ class setjy_test_modimage(CheckAfterImportuvfits):
         except Exception, e:
             print "results with scaling:", self.records[True]
             raise e
+        
+    def test_fluxdens(self):
+        """modimage != '' and fluxdensity > 0"""
+        try:
+            check_eq(self.records['fluxdens']['short'], 1233.7, 0.05)
+            check_eq(self.records['fluxdens']['long'],  1095.2, 0.05)
+        except Exception, e:
+            print "results with modimage and fluxdensity", self.records['fluxdens']
+            raise e    
 
 class Uranus(SplitChecker):
     need_to_initialize = True
