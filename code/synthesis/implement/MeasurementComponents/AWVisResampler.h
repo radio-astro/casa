@@ -44,28 +44,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class AWVisResampler: public VisibilityResampler
   {
   public: 
-    AWVisResampler(): VisibilityResampler()  {};
+    AWVisResampler(): VisibilityResampler(),cfMap_p(), conjCFMap_p()  {};
     AWVisResampler(const CFStore& cfs): VisibilityResampler(cfs) {}
     virtual ~AWVisResampler() {};
 
-    virtual VisibilityResamplerBase* clone()     {return new AWVisResampler(*this);}
+    virtual VisibilityResamplerBase* clone()
+    {return new AWVisResampler(*this);}
+    virtual AWVisResampler* clone(Bool newDataBuffers) 
+    {throw(AipsError("Internal Error: AWVisResampler::clone() is not meant to be called."));};
     
-    AWVisResampler(const AWVisResampler& other): VisibilityResampler(other)
-    {copy(other);}
+    // AWVisResampler(const AWVisResampler& other): VisibilityResampler(other),cfMap_p(), conjCFMap_p()
+    // {copy(other);}
 
-    virtual void copy(const AWVisResampler& other) 
-    {
-      VisibilityResamplerBase::copy(other);
-      cfMap_p.assign(other.cfMap_p);
-      conjCFMap_p.assign(other.conjCFMap_p);
-    }
-    AWVisResampler& operator=(const AWVisResampler& other) {copy(other);return *this;}
+    void copy(const AWVisResampler& other) 
+    {VisibilityResampler::copy(other); setCFMaps(other.cfMap_p, other.conjCFMap_p);}
+
+    // AWVisResampler& operator=(const AWVisResampler& other) 
+    // {copy(other);return *this;}
 
     virtual void setCFMaps(const Vector<Int>& cfMap, const Vector<Int>& conjCFMap)
-    {
-      SETVEC(cfMap_p,cfMap);
-      SETVEC(conjCFMap_p,conjCFMap);
-    }
+    {SETVEC(cfMap_p,cfMap);SETVEC(conjCFMap_p,conjCFMap);}
 
     // virtual void setConvFunc(const CFStore& cfs) {convFuncStore_p = cfs;};
     //
