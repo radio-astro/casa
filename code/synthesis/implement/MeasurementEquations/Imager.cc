@@ -4843,7 +4843,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
   TempImage<Float> *tmodimage(NULL);
 
   try {
-    Bool precompute = (fluxdens(0) < 0 || (model != ""));
+    Bool precompute = fluxdens[0] <= 0.0;
 
     // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
