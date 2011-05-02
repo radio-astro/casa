@@ -112,11 +112,13 @@
 
        Note that fluxdensity, modimage, and standard interact in a possibly
        confusing way!  Generally, if fluxdensity[0] (Stokes I) is &lt;= 0, it
-       will be ignored and standard (which has a default) will be used to
-       calculate flux density as a function of frequency, even if modimage is
-       specified.  If fluxdensity([0]) is &gt; 0, it will be used, at the price
-       of disabling frequency scaling, i.e. the given fluxdensity will be used
-       for all frequencies.
+       will be ignored.  If it is &lt; 0, standard (which has a default) will
+       be used to calculate flux density as a function of frequency, even if
+       modimage is specified.  If is is exactly 0 and modimage is given, the
+       brightness of the model image will be used as is.  If fluxdensity([0])
+       is &gt; 0, it will be used.  The latter two options come at the price of
+       disabling frequency scaling, i.e. the same fluxdensity will be used for
+       all frequencies.
 
        Keyword arguments:
        vis -- Name of input visibility file
@@ -143,25 +145,30 @@
                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
 
        modimage -- Model image (I only) for setting the model visibilities.
-              default: '' means use fluxdensity instead of modimage. 
-              Each field must be done separately.  The image clean model
+              It is recommended to use modimage for sources that are resolved
+              by the observation, but the Butler-JPL-Horizons standard supplies
+              a basic model of what several Solar System objects look like.
+              default: '' means use fluxdensity instead of modimage.  Each
+              field must be done separately.  The flux density of the image
               will be scaled from the frequency in the model to that actually
-              used (ignoring fluxdensity), unless fluxdensity &gt; 0
-              (or fluxdensity[0] &gt; 0).
-              Both the amplitude and phase are calculated.
-              At the AOC or CV, the models are located in
+              used (ignoring fluxdensity), unless fluxdensity &gt;= 0 (or
+              fluxdensity[0] &gt;= 0).  If fluxdensity([0]) is 0.0, the image's
+              flux density will be used.  If fluxdensity([0]) &gt; 0.0, it will
+              be used.  Both the amplitude and phase are calculated.  At the
+              AOC or CV, the models are located in
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
                    lib64
        scalebychan=False
                This determines whether the fluxdensity set in the model is
                calculated on a per channel basis. If False then it only one
-               fluxdensity value is given per spw
+               fluxdensity value is given per spw.  Not used if fluxdensity[0]
+               &gt;= 0.0.
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
-               default: -1, uses [1,0,0,0] flux density for all sources,
-                  except for 3C286, 3C48 and 3C147, which use standard flux
-                  densities.  It is recommended to use modimage for
-                  these sources if they are resolved by the observation.
+               default: -1, uses [1,0,0,0] flux density for unrecognized sources,
+               and standard flux densities for ones recognized by 'standard',
+               including 3C286, 3C48, 3C147, and several planets, moons, and
+               asteroids.
                Only one flux density can be specified at a time.  The phases are
                   set to zero.
                example   fluxdensity=-1  will insert 1.0 for all calibrators
