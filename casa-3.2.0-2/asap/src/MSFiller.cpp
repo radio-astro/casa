@@ -223,10 +223,16 @@ void MSFiller::fill()
   if ( caltab.nrow() == 0 ) 
     isSysCal_ = False ;
   else {
-    if ( !caltab.tableDesc().isColumn( colTcal_ ) ) 
+    if ( !caltab.tableDesc().isColumn( colTcal_ ) ) {
       colTcal_ = "TCAL" ;
-    if ( !caltab.tableDesc().isColumn( colTsys_ ) ) 
+      if ( !caltab.tableDesc().isColumn( colTcal_ ) ) 
+        colTcal_ = "NONE" ;
+    }
+    if ( !caltab.tableDesc().isColumn( colTsys_ ) ) {
       colTsys_ = "TSYS" ;
+      if ( !caltab.tableDesc().isColumn( colTcal_ ) ) 
+        colTsys_ = "NONE" ;
+    }
   }
 //   colTcal_ = "TCAL" ;
 //   colTsys_ = "TSYS" ;
@@ -642,7 +648,8 @@ void MSFiller::fill()
             ROScalarColumn<Double> *scIntervalCol = new ROScalarColumn<Double>( caltabsel, "INTERVAL" ) ;
             scInterval = scIntervalCol->getColumn() ;
             delete scIntervalCol ;
-            scTsysCol.attach( caltabsel, colTsys_ ) ;
+            if ( colTsys_ != "NONE" )
+              scTsysCol.attach( caltabsel, colTsys_ ) ;
           }
 
           sdh.npol = max( sdh.npol, npol ) ;
@@ -805,14 +812,14 @@ void MSFiller::fill()
 
                 // TSYS
                 Matrix<Float> tsys ;
-                if ( sysCalIdx[irow] != -1 )
+                if ( sysCalIdx[irow] != -1 && colTsys_ != "NONE" )
                   tsys = scTsysCol( irow ) ;
                 else 
                   tsys = defaulttsys ;
 
                 // TCAL_ID
                 Block<uInt> tcalids( npol, 0 ) ;
-                if ( sysCalIdx[irow] != -1 ) {
+                if ( sysCalIdx[irow] != -1 && colTcal_ != "NONE" ) {
                   tcalids = getTcalId( feedId, spwId, scTime[sysCalIdx[irow]] ) ;
                 }
 
@@ -1349,6 +1356,16 @@ void MSFiller::fillTcal( boost::object_pool<ROTableColumn> *tpoolr )
   if ( !isSysCal_ ) {
     // add dummy row
     os_ << "No SYSCAL rows" << LogIO::POST ;
+    table_->tcal().table().addRow(1,True) ;
+    Vector<Float> defaultTcal( 1, 1.0 ) ;
+    ArrayColumn<Float> tcalCol( table_->tcal().table(), "TCAL" ) ;
+    tcalCol.put( 0, defaultTcal ) ;
+    return ;
+  }
+
+  if ( colTcal_ == "NONE" ) {
+    // add dummy row
+    os_ << "No TCAL column" << LogIO::POST ;
     table_->tcal().table().addRow(1,True) ;
     Vector<Float> defaultTcal( 1, 1.0 ) ;
     ArrayColumn<Float> tcalCol( table_->tcal().table(), "TCAL" ) ;
