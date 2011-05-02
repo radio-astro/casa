@@ -2282,7 +2282,7 @@ class cleanhelper:
             descendingnewfreqs=False
           else:
             descendingnewfreqs=True
-        if debug: print "Start, width after cvelfreqs =",start,width 
+        if debug: print "Mode, Start, width after cvelfreqs =",mode, start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
           raise TypeError, ("Output frequency grid cannot be calculated: "+
                  " please check start and width parameters")
@@ -2319,11 +2319,12 @@ class cleanhelper:
               reverse=False 
             else:
               reverse=True
-          elif width=="":
-            if descendingnewfreqs:
+          elif width=="": #default width
+            if descendingnewfreqs and mode=="frequency":
               reverse=False
             else:
               reverse=True
+               
           elif type(width)==str:
             if width.lstrip().find('-')==0:
               negativew=True
@@ -2337,6 +2338,16 @@ class cleanhelper:
                 reverse=True
               else:
                 reverse=False
+        else: #ascending data
+          # depends on sign of width only
+          if width=="" and mode=="velocity": #default width
+              reverse=True
+          elif type(width)==str:
+            if width.lstrip().find('-')==0:
+                reverse=True
+            else:
+                reverse=False
+
         if reverse:
            newfreqs.reverse()
         #if (start!="" and mode=='channel') or \
