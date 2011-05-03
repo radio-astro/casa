@@ -2868,12 +2868,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	lDouble regridCenterVel; 
 	if(regridCenter>-C::c){
           // (we deal with invalid values later)
-	  if(centerIsStart && regridChanWidth > 0.){ 
+	  if(centerIsStart){
+	    Double tcWidth;
+	    if(regridChanWidth > 0.){
+	      tcWidth = regridChanWidth;
+	    }
+	    else{
+	      tcWidth = vrad(transNewXin[0]-transCHAN_WIDTH[0]/2.,regridVeloRestfrq)
+		- vrad(transNewXin[0]+transCHAN_WIDTH[0]/2.,regridVeloRestfrq);
+	    }
 	    if(startIsEnd){ // start is the center of the last channel (in freq)
-	      regridCenter -= regridChanWidth/2.;
+	      regridCenter -= tcWidth/2.;
 	    }
 	    else{ // start is the center of the first channel (in freq)
-	      regridCenter += regridChanWidth/2.;
+	      regridCenter += tcWidth/2.;
 	    }
 	  }
 
@@ -2945,12 +2953,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	}
 	lDouble regridCenterVel; 
 	if(regridCenter > -C::c){
-	  if(centerIsStart && regridChanWidth > 0.){ 
-	    if(startIsEnd){ // start is the center of the last channel
-	      regridCenter -= regridChanWidth/2.;
+	  if(centerIsStart){
+	    Double tcWidth;
+	    if(regridChanWidth > 0.){
+	      tcWidth = regridChanWidth;
 	    }
-	    else{ // start is the center of the first channel
-	      regridCenter += regridChanWidth/2.;
+	    else{
+	      tcWidth = vopt(transNewXin[0]-transCHAN_WIDTH[0]/2.,regridVeloRestfrq)
+		- vopt(transNewXin[0]+transCHAN_WIDTH[0]/2.,regridVeloRestfrq);
+	    }
+	    if(startIsEnd){ // start is the center of the last channel (in freq)
+	      regridCenter -= tcWidth/2.;
+	    }
+	    else{ // start is the center of the first channel (in freq)
+	      regridCenter += tcWidth/2.;
 	    }
 	  }
           // (we deal with invalid values later)
@@ -3042,12 +3058,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  centerIsStart = True;
 	}
 	else{
-	  if(centerIsStart && regridChanWidth > 0.){ // start is the center of the first channel
-	    if(startIsEnd){
-	      regridCenter += regridChanWidth/2.;
+	  if(centerIsStart){ // start is the center of the first channel
+	    Double tcWidth;
+	    if(regridChanWidth > 0.){ 
+	      tcWidth = regridChanWidth;
 	    }
 	    else{
-	      regridCenter -= regridChanWidth/2.;
+	      tcWidth = transCHAN_WIDTH[0];
+	    }
+	    if(startIsEnd){
+	      regridCenter += tcWidth/2.;
+	    }
+	    else{
+	      regridCenter -= tcWidth/2.;
 	    }
 	  }
 	}
@@ -3059,12 +3082,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	// wavelength ...
 	lDouble regridCenterWav; 
 	if(regridCenter > 0.){
-	  if(centerIsStart && regridChanWidth > 0.){
-	    if(startIsEnd){  // start is the center of the last channel
-	      regridCenter -= regridChanWidth/2.;
+	  if(centerIsStart){
+	    Double tcWidth;
+	    if(regridChanWidth > 0.){
+	      tcWidth = regridChanWidth;
 	    }
-	    else{  // start is the center of the first channel
-	      regridCenter += regridChanWidth/2.;
+	    else{
+	      tcWidth = lambda(transNewXin[0]-transCHAN_WIDTH[0]/2.)
+		- lambda(transNewXin[0]+transCHAN_WIDTH[0]/2.);
+	    }
+	    if(startIsEnd){ // start is the center of the last channel (in freq)
+	      regridCenter -= tcWidth/2.;
+	    }
+	    else{ // start is the center of the first channel (in freq)
+	      regridCenter += tcWidth/2.;
 	    }
 	  }
 	  regridCenterF = freq_from_lambda(regridCenter); 
