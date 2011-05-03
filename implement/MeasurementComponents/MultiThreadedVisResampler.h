@@ -79,7 +79,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       //Allocate a new instance, and copy the internals.
       MultiThreadedVisibilityResampler *clonedCopy;
-      clonedCopy = clone();
+      clonedCopy = new MultiThreadedVisibilityResampler(*this);
       // Now reset the data buffers with independent buffers (arrays of size 0)
       clonedCopy->allocateDataBuffers();
       return clonedCopy;
