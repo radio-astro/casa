@@ -61,13 +61,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if os.path.exists(asdm):
 			raise Exception, "Output ASDM %s already exists - will not overwrite." % asdm
 
-		# determine parameter datacolumn
-		tb.open(vis)
-		allcols = tb.colnames()
-		tb.close()
-		if not (datacolumn in allcols):
-			raise Exception, "Input MS does not contain datacolumn %s" % datacolumn
-
+		# determine sb and subscan duration
 		ssdur_secs = 24.*3600 # default is one day, i.e. there will be only one subscan per scan
 		if not(subscanduration==""):
 			if (qa.canonical(subscanduration)['unit'].find('s') < 0):

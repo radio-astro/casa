@@ -25,7 +25,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="string" name="datacolumn"  ignorecase="True">
 	    <description>specifies which MS data column is used to fill the visibilites in the ASDM</description>
-	    <value>DATA</value>
+	    <value>data</value>
 	    <allowed kind="enum">
 	       <value>data</value>
 	       <value>corrected</value>
@@ -74,9 +74,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   asdm -- Name of output ASDM file (directory),
           default: none; example: asdm='ExecBlock3'
 
-  datacolumn -- specifies which of the MS data columns (DATA,
-           CORRECTED_DATA, or MODEL_DATA) should be used as the
-           visibilities in the ASDM, default: DATA
+  datacolumn -- specifies which of the MS data columns (data,
+           corrected, or model) should be used as the
+           visibilities in the ASDM, default: data
 
   archiveid -- the X0 in uid://X0/X1/X&lt;running&gt;
                default: "S0"
@@ -103,8 +103,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   datacolumn='corrected', archiveid='S021', rangeid='X1418', 
   verbose=False)
   will produce an ASDM named 'uid___S021_X1418_X1' using the 
-  datacolumn 'CORRECTED_DATA' in the MS 'ngc4826.ms' with minimal
+  datacolumn 'corrected' in the MS 'ngc4826.ms' with minimal
   log output. 
+
+  Note concerning ALMA data: exportasdm presently is not able to export 
+  from MSs containing WVR data. If you attempt to export such an MS, you
+  will receive an error message saying that you can only export data of
+  processor type "CORRELATOR". It will also give you the list of SPWs
+  which contain CORRELATOR data. You will then have to split out these
+  SPWs using the task "split" and run exportasdm on the resulting MS. 
 
   </example>
 
