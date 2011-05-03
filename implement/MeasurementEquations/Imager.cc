@@ -4847,27 +4847,34 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     expand_blank_sel(selToRawSpwIds, ms_p->spectralWindow().nrow());
     expand_blank_sel(fldids, ms_p->field().nrow());
 
-    // Forbid multiple fields for some circumstances
-    if (fldids.nelements()>1) {
+    // Warn against multiple fields in some circumstances.
+    if (fldids.nelements() > 1 && (model != "" || !precompute)) {
+      String errmsg("setjy is applying a single ");
 
-      if (model!="") {
-	String errmsg("setjy cannot apply a model image to multiple fields");
-	os << LogIO::SEVERE
-	   << errmsg << endl
-	   << "run setjy once per field, or use ft"
-	   << LogIO::POST;
-	throw(AipsError(errmsg));
+      if(model != ""){
+	errmsg += "modimage";
+        if(!precompute)
+          errmsg += " or ";
       }
 
-      if (!precompute) {
-	String errmsg("setjy cannot apply user flux density to multiple fields");
-	os << LogIO::SEVERE
-	   << errmsg << endl
-	   << "run setjy once per field"
-	   << LogIO::POST;
-	throw(AipsError(errmsg));
-      }
+      if(!precompute)
+        errmsg += "fluxdensity";
+
+      errmsg += " to multiple fields!\n";
+      os << LogIO::WARN
+         << errmsg
+         << "This could be a user error, but sometimes a single name will\n"
+         << "resolve to > 1 field index.\n"
+         << LogIO::POST;
+      //throw(AipsError(errmsg));
     }
+
+    os << LogIO::NORMAL;
+    if(precompute)
+      os << "Using " << (chanDep ? "channel" : "spw") << " dependent flux densities";
+    else
+      os << "The applied flux density does not depend on frequency.";
+    os << LogIO::POST;
 
     // Ignore user-polarization if using an image:
     if (model!="") {
