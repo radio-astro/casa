@@ -293,7 +293,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
       Int widthbtime = 22;
       Int widthetime = 10;
       Int widthFieldId = 5;
-      Int widthField = 13;
+      Int widthField = 20;
       Int widthObsMode = 20;
       Int widthnrow = 7;
       Int widthInttim = 7;
@@ -327,7 +327,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	datetime.replace(25+timeref.length(),1,")");
 	os << datetime;
 	os << "Scan  FldId FieldName " 
-           <<"nVis   Int(s)   SpwIds      ScanIntent" << endl;
+           <<"        nVis   Int(s)   SpwIds      ScanIntent" << endl;
 
 	// Setup iteration over timestamps within this iteration:
 	Block<String> jcols(2);
@@ -474,8 +474,8 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	      os.output().width(widthFieldId); os << lastfldids(0) << " ";
 	      os.output().setf(ios::left, ios::adjustfield);
 	      String name=fieldnames(lastfldids(0));
-	      if (name.length()>12) name.replace(11,1,'*');
-	      os.output().width(widthField); os << name.at(0,12);
+	      if (name.length()>20) name.replace(19,1,'*');
+	      os.output().width(widthField); os << name.at(0,20);
               
 	      os.output().width(widthnrow); os << thisnrow;
 	      os.output().width(widthInttim); os << meanIntTim;
@@ -590,8 +590,8 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	os.output().width(widthFieldId); os << lastfldids(0) << " ";
 	os.output().setf(ios::left, ios::adjustfield);
 	String name=fieldnames(lastfldids(0));
-	if (name.length()>12) name.replace(11,1,'*');
-	os.output().width(widthField); os << name.at(0,12);
+	if (name.length()>20) name.replace(19,1,'*');
+	os.output().width(widthField); os << name.at(0,20);
 	os.output().width(widthnrow); os << thisnrow;
 	os.output().width(widthInttim); os << meanIntTim;
 	os.output().width(widthLead);  os << "  ";
@@ -1136,7 +1136,7 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
     Int widthLead  =  2;	
     Int widthField =  5;	
     Int widthCode  =  5;	
-    Int widthName  = 13;
+    Int widthName  = 20;
     Int widthRA    = 14;
     Int widthDec   = 15;
     Int widthType  =  8;
@@ -1168,12 +1168,12 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 	MVAngle mvRa = mRaDec.getAngle().getValue()(0);
 	MVAngle mvDec= mRaDec.getAngle().getValue()(1);
 	String name=msFC.name()(fld);
-	if (name.length()>12) name.replace(11,1,"*");
+	if (name.length()>20) name.replace(19,1,"*");
 	os.output().setf(ios::left, ios::adjustfield);
 	os.output().width(widthLead);	os << "  ";
         os.output().width(widthField);	os << (fld);
 	os.output().width(widthCode);   os << msFC.code()(fld);
-	os.output().width(widthName);	os << name.at(0,12);
+	os.output().width(widthName);	os << name.at(0,20);
 	os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,10);
 	os.output().width(widthDec);	os << mvDec.string(MVAngle::DIG2,10);
 	os.output().width(widthType);
@@ -1346,7 +1346,7 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
     Int widthLead =  2;
     Int widthSrc  =  5;	
     //      Int widthTime = 15;
-    Int widthName = 13;
+    Int widthName = 20;
     //      Int widthRA   = 14;
     //      Int widthDec  = 15;
     Int widthSpw  =  6;
@@ -1376,14 +1376,14 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
       MVAngle mvRa=mRaDec.getAngle().getValue()(0);
       MVAngle mvDec=mRaDec.getAngle().getValue()(1);
       String name=msSC.name()(row);
-      if (name.length()>12) name.replace(11,1,"*");
+      if (name.length()>20) name.replace(19,1,"*");
       
       os.output().setf(ios::left, ios::adjustfield);
       os.output().width(widthLead);	os<< "  ";
       //	os.output().width(widthTime);
       //				os<< MVTime(msSC.time()(row)/86400.0).string();
       os.output().width(widthSrc);	os<< msSC.sourceId()(row);
-      os.output().width(widthName);	os<< name.at(0,12);
+      os.output().width(widthName);	os<< name.at(0,20);
       //	os.output().width(widthRA);	os<< mvRa(0.0).string(MVAngle::TIME,10);
       //	os.output().width(widthDec);	os<< mvDec.string(MVAngle::DIG2,10);
       os.output().width(widthSpw);	
