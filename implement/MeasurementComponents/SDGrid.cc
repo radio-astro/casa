@@ -623,7 +623,7 @@ extern "C" {
 }
 
 void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		 FTMachine::Type type,const Matrix<Float>& imwght )
+		 FTMachine::Type type)
 {
   LogIO os(LogOrigin("SDGrid", "put"));
   
@@ -649,10 +649,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
     return;
 
   const Matrix<Float> *imagingweight;
-  if(imwght.nelements()>0)
-    imagingweight=&imwght;
-  else
-    imagingweight=&(vb.imagingWeight());
+  imagingweight=&(vb.imagingWeight());
 
 
   if(dopsf) type=FTMachine::PSF;

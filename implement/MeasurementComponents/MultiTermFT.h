@@ -43,7 +43,7 @@
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
 //#include <synthesis/MeasurementComponents/SynthesisPeek.h>
-
+#include <casa/OS/Timer.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -88,14 +88,14 @@ public:
   void put(VisBuffer& vb, Int row=-1, Bool dopsf=False,
 	   FTMachine::Type type=FTMachine::OBSERVED);
 
+  // Have a const version for compatibility with other FTMs.. Throw an exception if called.
+  void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
+	   FTMachine::Type type=FTMachine::OBSERVED)
+  {throw(AipsError("MultiTermFT::put called with a const vb. This FTM needs to modify the vb."));};
 
-  // Place-holder for the version of put() that all FTMachines currently use.
-  // This should go away when the above version of put() is used everywhere.  
-  virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-                   FTMachine::Type type=FTMachine::OBSERVED, 
-    	   const Matrix<Float>& imwght=Matrix<Float>(0,0))
-  {throw(AipsError("MultiTermFT::put() called with const vb"));};
-  
+  // Calculate residual visibilities if possible.
+  // The purpose is to allow rGridFT to make this multi-threaded
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected); 
 
   // Make an image : subftm->makeImage()
   void makeImage(FTMachine::Type type,
@@ -128,8 +128,6 @@ public:
   virtual void setNoPadding(Bool nopad){subftm_p->setNoPadding(nopad);};
   virtual String name(){return machineName_p;};
   virtual void setMiscInfo(const Int qualifier){thisterm_p=qualifier;};
-  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) 
-  {throw(AipsError("MultiTermFT::ComputeResiduals() is not implemented."));};
 
 protected:
 
@@ -147,7 +145,9 @@ protected:
   Double reffreq_p;
   CountedPtr<FTMachine> subftm_p;
 
-  Bool dbg_p;
+  Bool dbg_p,dotime_p;
+  Timer tmr_p;
+  Double time_get, time_put, time_res;
 };
 
 } //# NAMESPACE CASA - END

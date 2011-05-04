@@ -938,8 +938,7 @@ void FixVis::processSelected(uInt numInSel)
   ms_p.unlock();
 }
   
-void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type, 
-                 const Matrix<Float>&)
+void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type)
 {
   //Check if ms has changed then cache new spw and chan selection
   if(vb.newMS())
