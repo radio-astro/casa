@@ -5002,7 +5002,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
             }
             else {
               os << LogIO::SEVERE << "Missing SOURCE_MODEL column."
-                 << LogIO::SEVERE << "Using default, I=1.0"
+                 << LogIO::SEVERE << "Continuing with the default, I = 1.0 Jy"
                  << LogIO::POST;
               fluxUsed = 0;
               fluxUsed(0) = 1.0;
@@ -5010,6 +5010,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	  }
 	  else {
 	    // Source not found; use Stokes I=1.0 Jy for now
+            // (The flux standard already issued a complaint like this...)
+            // os << LogIO::WARN
+            //    << fieldName << " was not recognized by " << standard
+            //    << ".\nContinuing with the default, I = 1.0 Jy"
+            //    << LogIO::POST;
 	    fluxUsed=0;
 	    fluxUsed(0)=1.0;
 	    fluxScaleName="default";
@@ -5234,10 +5239,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         begin[0]=0;
         Vector<Int> stepsize(1);
         stepsize[0]=1;
-        setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
-                MRadialVelocity(),
-                selectSpw, selectField, msSelectString, "", "",
-                Vector<Int>(), "", "", "", "", True, true);
+        if(useimage || tempCLs[selspw] != "")
+          setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
+                  MRadialVelocity(),
+                  selectSpw, selectField, msSelectString, "", "",
+                  Vector<Int>(), "", "", "", "", True, true);
 
         if (!nullSelect_p) {
 
@@ -5254,9 +5260,12 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	    se_p->predict(False);
 	    destroySkyEquation();
           }
-          else
+          else if(tempCLs[selspw] != "")
             ft(modelv, tempCLs[selspw], False);
-
+          else
+            os << LogIO::NORMAL
+               << "Skipping an empty component list for spw " << rawspwid
+               << LogIO::POST;
         };
 	
         if (tmodimage) delete tmodimage;
