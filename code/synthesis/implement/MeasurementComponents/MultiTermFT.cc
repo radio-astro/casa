@@ -71,7 +71,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      thisterm_p(0), reffreq_p(reffreq), machineName_p("MultiTermFT")
   {
     dbg_p=False;
+    dotime_p=False;
+
+    canComputeResiduals_p = subftm_p->canComputeResiduals();
     if(dbg_p) cerr << "MTFT :: constructor" << endl;
+    if(dbg_p) cerr << "can compute residuals : " << canComputeResiduals_p << endl;
+
+    time_get=0.0;
+    time_put=0.0;
+    time_res=0.0;
   }
 
 //---------------------------------------------------------------------- 
@@ -91,6 +99,8 @@ MultiTermFT::MultiTermFT(const MultiTermFT& other) : machineName_p("MultiTermFT"
 {
      operator=(other);
 
+     if(dbg_p) cerr << "In MTFT copy constructor for " << other.subftm_p->name() << endl;
+
     // The operator= would have copied only the pointer, and not made a new instance of subftm_p
     // Make the new instance of subftm_p here. 
     // Ideally, this should call "clone" of that ftm, so that the if/else stuff can all go away.
@@ -102,16 +112,14 @@ MultiTermFT::MultiTermFT(const MultiTermFT& other) : machineName_p("MultiTermFT"
       { subftm_p = new AWProjectWBFT(static_cast<const AWProjectWBFT&>(*other.subftm_p)); }
      else if(other.subFTMname_p=="nift") 
       { 
-	//         subftm_p = new rGridFT(static_cast<const rGridFT&>(*other.subftm_p)); 
-	//subftm_p = ((rGridFT*)&(*other.subftm_p))->clone();
         subftm_p = ((rGridFT*)&(*other.subftm_p))->clone();
 	//cout << "MTFT : copy constructor : newft->visresampler_p : " << &(*(subftm_p->visResampler_p)) << endl;
-
       }
     else 
       {throw(AipsError("FTMachine "+other.subFTMname_p+" is not supported with MS-MFS")); }
 
-    if(dbg_p) cerr << "In MTFT copy constructor for " << other.subftm_p->name() << endl;
+    // Check if the sub ftm can calculate its own residuals....
+    canComputeResiduals_p = subftm_p->canComputeResiduals();
 
 }
 
@@ -179,18 +187,38 @@ void MultiTermFT::initializeToVis(ImageInterface<Complex>& iimage,
 {
   if(dbg_p) cerr << "MTFT::initializeToVis for term " << thisterm_p << endl;
   subftm_p->initializeToVis(iimage,vb);
+  time_get=0.0;
 }
 
 void MultiTermFT::get(VisBuffer& vb, Int row)
 {
+  if(dotime_p) tmr_p.mark();
+
   subftm_p->get(vb,row);
   modifyModelVis(vb);
+
+  if(dotime_p) time_get += tmr_p.real();
 }
 
 void MultiTermFT::finalizeToVis()
 {
   if(dbg_p) cerr << "MTFT::finalizeToVis for term " << thisterm_p <<endl;
   subftm_p->finalizeToVis();
+  if(dotime_p) cout << " taylor " << thisterm_p << "***************   get time : " << time_get << endl;
+}
+
+
+//---------------------------------------------------------------------------------------------------
+//----------------------  Calculate Residual Visibilities -------------------------------
+//---------------------------------------------------------------------------------------------------
+  void MultiTermFT::ComputeResiduals(VisBuffer &vb, Bool useCorrected)
+{
+  if(dotime_p) tmr_p.mark();
+
+  if(subftm_p->canComputeResiduals()) subftm_p->ComputeResiduals(vb,useCorrected);
+  else throw(AipsError("MultiTerm::ComputeResiduals : subftm of MultiTermFT cannot compute its own residuals !"));
+  
+  if(dotime_p) time_res += tmr_p.real();
 }
 
 //---------------------------------------------------------------------------------------------------
@@ -200,22 +228,30 @@ void MultiTermFT::initializeToSky(ImageInterface<Complex>& iimage,
 			     Matrix<Float>& weight, const VisBuffer& vb)
 {
   if(dbg_p) cerr << "MTFT::initializeToSky for term " << thisterm_p << endl;
+
   subftm_p->initializeToSky(iimage,weight,vb);
+
+  if(dotime_p) {time_put=0.0; time_res=0.0;}
 }
 
 void MultiTermFT::put(VisBuffer& vb, Int row, Bool dopsf, 
 		      FTMachine::Type type) //, const Matrix<Float>& imwght) // Last parameter is ignored.
 {
-  //cout << "MTFT::put for term " << thisterm_p << endl;
+  if(dotime_p) tmr_p.mark();
+
   modifyVisWeights(vb);
-  /// I want to use the non-const, non-weight version of put, but for this, all ftms will have to implement it.
-  subftm_p->put((const VisBuffer&)vb,row,dopsf,type,Matrix<Float>(0,0)); 
+  subftm_p->put(vb,row,dopsf,type); 
+
+  if(dotime_p) time_put += tmr_p.real();
 }
 
 void MultiTermFT::finalizeToSky()
 {  
   if(dbg_p) cerr << "MTFT::finalizeToSky for term " << thisterm_p << endl;
+
   subftm_p->finalizeToSky();
+
+  if(dotime_p) cout << " taylor " << thisterm_p << "*************** can compute residual " << canComputeResiduals_p << " res time : " << time_res << "   put time  :" << time_put << endl;
 }
 
 //---------------------------------------------------------------------------------------------------

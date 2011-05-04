@@ -1317,8 +1317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void AWProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
-			  FTMachine::Type type,
-			  const Matrix<Float>& imwght)
+			FTMachine::Type type)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "put"));
     // Take care of translation of Bools to Integer
@@ -1328,8 +1327,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Nant_p     = vb.msColumns().antenna().nrow();
 
     const Matrix<Float> *imagingweight;
-    if(imwght.nelements()>0) imagingweight=&imwght;
-    else                     imagingweight=&(vb.imagingWeight());
+    imagingweight=&(vb.imagingWeight());
 
     Cube<Complex> data;
     //Fortran gridder need the flag as ints 

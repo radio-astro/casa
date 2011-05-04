@@ -226,10 +226,10 @@ void GridBoth::finalizeToSky()
 }
 
 void GridBoth::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		   FTMachine::Type type, const Matrix<Float>& wgt)
+		   FTMachine::Type type)
 {
-  synMachine_p->put(vb, row, dopsf, type, wgt);
-  sdMachine_p->put(vb, row, dopsf, type, wgt);
+  synMachine_p->put(vb, row, dopsf, type);
+  sdMachine_p->put(vb, row, dopsf, type);
 }
 
 void GridBoth::get(VisBuffer& vb, Int row)

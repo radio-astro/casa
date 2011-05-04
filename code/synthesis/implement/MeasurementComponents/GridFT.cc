@@ -531,7 +531,7 @@ extern "C" {
 		Int*);
 }
 void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf, 
-		 FTMachine::Type type, const Matrix<Float>& imwght)
+		 FTMachine::Type type)
 {
 
   gridOk(gridder->cSupport()(0));
@@ -560,10 +560,7 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     }
 
   const Matrix<Float> *imagingweight;
-  if(imwght.nelements()>0)
-    imagingweight=&imwght;
-  else
-    imagingweight=&(vb.imagingWeight());
+  imagingweight=&(vb.imagingWeight());
   
   if(dopsf) {type=FTMachine::PSF;}
 

@@ -150,13 +150,13 @@ public:
 
   // Put coherence to grid
   virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
-  		   FTMachine::Type type= FTMachine::OBSERVED, 
-  		   const Matrix<Float>& imweight = Matrix<Float>(0,0)) = 0;
+		   FTMachine::Type type= FTMachine::OBSERVED)=0;
 
   // Non const vb version - so that weights can be modified in-place
-  // note : we should remove the previous (const) version with the weight matrix.
+  // Currently, used only by MultiTermFT
   virtual void put(VisBuffer& vb, Int row=-1, Bool dopsf=False, 
-		   FTMachine::Type type= FTMachine::OBSERVED){put(vb,row,dopsf,type,Matrix<Float>(0,0));};
+  	           FTMachine::Type type= FTMachine::OBSERVED)
+                    {put((const VisBuffer&)vb,row,dopsf,type);};
 
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
