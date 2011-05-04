@@ -904,9 +904,11 @@ class simutil:
 
 
         obsfreq=freq_ghz.get("value")
-        t_rx = pl.interp([obsfreq],f0,t0)[0]
-        if obsfreq>f0[-1] or obsfreq<f0[0]:
-            t_rx = pl.polyval(pl.polyfit(f0,t0,2),obsfreq)
+        z=pl.where(abs(obsfreq-pl.array(f0)) == min(abs(obsfreq-pl.array(f0))))
+        t_rx=t0[z[0]]
+#        t_rx = pl.interp([obsfreq],f0,t0)[0]
+#        if obsfreq>f0[-1] or obsfreq<f0[0]:
+#            t_rx = pl.polyval(pl.polyfit(f0,t0,2),obsfreq)
         # too jumpy
         # sp=spline(f0,t0)
         # t_rx = sp(obsfreq)[0]

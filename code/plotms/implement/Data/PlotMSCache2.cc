@@ -139,16 +139,27 @@ void PMSCacheVolMeter::add(const VisBuffer& vb) {
 
 String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesmask) {
 
-  //  cout << "nPerDDID_     = " << nPerDDID_ << endl;
-  //  cout << "nRowsPerDDID_ = " << nRowsPerDDID_ << endl;
-  //  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
-  //  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
+  /*
+  cout << "nPerDDID_     = " << nPerDDID_ << endl;
+  cout << "nRowsPerDDID_ = " << nRowsPerDDID_ << endl;
+  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
+  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
 
-  Long totalVol(0);
+  cout << "Product = " << nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_ << endl;
+  cout << "Sum     = " << sum(nRowsPerDDID_*nChanPerDDID_*nCorrPerDDID_) << endl;
+
+  cout << "sizeof(Int)    = " << sizeof(Int) << endl;
+  cout << "sizeof(Long)   = " << sizeof(Long) << endl;
+  cout << "sizeof(uInt64)   = " << sizeof(uInt64) << endl;
+  cout << "sizeof(Float)  = " << sizeof(Float) << endl;
+  cout << "sizeof(Double) = " << sizeof(Double) << endl;
+  */
+
+  uInt64 totalVol(0);
   for (map<PMS::Axis,Bool>::iterator pAi=axes.begin();
        pAi!=axes.end(); ++pAi) {
     if (pAi->second) {
-      Long axisVol(0);
+      uInt64 axisVol(0);
       switch(pAi->first) {
       case PMS::SCAN:
       case PMS::FIELD:
@@ -224,32 +235,43 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
     } 
   } // for 
 
+  
+  
+
   // Add in the plotting mask
   //  (TBD: only if does not reference the flags) 
   if (True) {  // ntrue(axesmask)<2) {
-    Vector<Long> nplmaskPerDDID(nDDID_,0);
-    nplmaskPerDDID(nPerDDID_>Long(0))=1;
+    Vector<uInt64> nplmaskPerDDID(nDDID_,0);
+    nplmaskPerDDID(nPerDDID_>uInt64(0))=1;
     if (axesmask(0)) nplmaskPerDDID*=nCorrPerDDID_;
     if (axesmask(1)) nplmaskPerDDID*=nChanPerDDID_;
     if (axesmask(2)) nplmaskPerDDID*=nRowsPerDDID_;
-    if (axesmask(3)) nplmaskPerDDID*=Long(nAnt_);
+    if (axesmask(3)) nplmaskPerDDID*=uInt64(nAnt_);
     Int plmaskVol=sizeof(Bool)*sum(nplmaskPerDDID);
     //    cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
     totalVol+=plmaskVol;
   }
 
   // Finally, count the total points for the plot:
-  Vector<Long> nPointsPerDDID(nDDID_,0);
-  nPointsPerDDID(nPerDDID_>Long(0))=1;
+  Vector<uInt64> nPointsPerDDID(nDDID_,0);
+  nPointsPerDDID(nPerDDID_>uInt64(0))=1;
   if (axesmask(0)) nPointsPerDDID*=nCorrPerDDID_;
   if (axesmask(1)) nPointsPerDDID*=nChanPerDDID_;
   if (axesmask(2)) nPointsPerDDID*=nRowsPerDDID_;
-  if (axesmask(3)) nPointsPerDDID*=Long(nAnt_);
+  if (axesmask(3)) nPointsPerDDID*=uInt64(nAnt_);
   Int totalPoints=sum(nPointsPerDDID);
 
   Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
   Double bytesPerPt=Double(totalVol)/Double(totalPoints);  // bytes/pt
-  Double hostMemGB=Double(HostInfo::memoryTotal(true)*1000)/1.0e9; // in GB
+
+  //  cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
+  //  cout << "HostInfo::memoryTotal(true)  = " << HostInfo::memoryTotal(true) << endl;
+  //  cout << "HostInfo::memoryFree()       = " << HostInfo::memoryFree() << endl;
+
+  // Memory available to plotms is the min of user's casarc and free
+  Double hostMemGB=Double(min( Int(HostInfo::memoryTotal(true)),
+			       Int(HostInfo::memoryFree()) )
+			  )/1.0e6; // in GB
   Double fracMem=100.0*(totalVolGB+0.5)/hostMemGB;  // %
 
   stringstream ss;
@@ -644,17 +666,17 @@ void PlotMSCache2::setUpIndexer(PMS::Axis iteraxis, Bool globalXRange, Bool glob
 
   switch (iteraxis) {
   case PMS::SCAN: {
-    iterValues=scan_;
+    iterValues=scan_(goodChunk_).getCompressedArray();
     nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
     break;
   }
   case PMS::SPW: {
-    iterValues=spw_;
+    iterValues=spw_(goodChunk_).getCompressedArray();
     nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
     break;
   }
   case PMS::FIELD: {
-    iterValues=field_;
+    iterValues=field_(goodChunk_).getCompressedArray();
     nIter=genSort(iterValues,(Sort::QuickSort | Sort::NoDuplicates));
     break;
   }
@@ -1145,10 +1167,14 @@ void PlotMSCache2::trapExcessVolume(map<PMS::Axis,Bool> pendingLoadAxes) {
     s=vm_.evalVolume(pendingLoadAxes,netAxesMask(currentX_,currentY_));
     logLoad(s);
   } catch(AipsError& log) {
-    // catch volume excess, clear the existing cache, and rethrow
+    // catch detected volume excess, clear the existing cache, and rethrow
     logLoad(log.getMesg());
     clear();
-    throw(AipsError("Please try 'force reload', selecting less data, or averaging."));
+    stringstream ss;
+    ss << "Please try selecting less data or averaging and/or" << endl
+       << " 'force reload' (to clear unneeded cache items) and/or" << endl
+       << " letting other memory-intensive processes finish.";
+    throw(AipsError(ss.str()));
   }
 }
 
@@ -1948,7 +1974,7 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 	Int ncorr=corrType.nelements();
 	Int nchan=channel.nelements();
 	Int nrow=vb.nRow();
-	if (True) {
+	if (False) {
 	  Int currChunk=flchunks(order[iflag]);
 	  Double time=getTime(currChunk,0);
 	  Int spw=Int(getSpw(currChunk,0));

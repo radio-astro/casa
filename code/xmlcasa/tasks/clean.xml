@@ -663,6 +663,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: none; 
                example: vis='ngc5921.ms'
                         vis=['ngc5921a.ms','ngc5921b.ms']; multiple MSes
+                        NOTE: the specification of multiple MSes does not work for mode='mfs' yet.
        imagename -- Pre-name of output images:
                default: none; example: imagename='m2'
                output images are:

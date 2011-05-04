@@ -612,17 +612,20 @@ void plotms::launchApp() {
         String filter = itsLogFilter_.empty() ? "" :
                         PlotMSDBusApp::APP_LOGFILTER_SWITCH + "=" +
                         itsLogFilter_;
-	String iter="-iter";
+
+	String nopop="--nopopups";
 
 	// If user has turned off iter, be sure not to launch with it
+	String iter="";
 	if (!doIter_)
-	  iter="";
+	  iter="--noiter";
 
         execlp(PlotMSDBusApp::APP_NAME.c_str(),
                PlotMSDBusApp::APP_NAME.c_str(),
                PlotMSDBusApp::APP_CASAPY_SWITCH.c_str(),
-	       iter.c_str(),
+	       nopop.c_str(),
                file.c_str(), filter.c_str(),
+	       iter.c_str(),
                NULL);
         
     } else {
@@ -813,8 +816,16 @@ bool plotms::enableIter(const bool enable) {
 
   // Do something only if changing state
   if (enable!=doIter_) {
-    cout << "Closing the plotms application to " << (enable ? "enable" : "disable") << " iteration." << endl;
-    closeApp();
+
+    if (enable)
+      cout << "IF you have _already_ launched plotms, please exit and" << endl
+	   << " restart casapy to enable iteration-capable plotting." << endl
+	   << " Otherwise, you should be good to go!" << endl;
+    else {
+      cout << "IF you have _already_ launched plotms, please exit and" << endl
+	   << " restart casapy _and_ rerun this method to disable iteration-capable plotting." << endl
+	   << " Otherwise, you should be good to go!" << endl;
+    }
     doIter_=enable;
   }
   else
