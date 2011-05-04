@@ -20,10 +20,33 @@ def fixplanets(vis, field, fixuvw=False):
             mytime = tb.getcell('TIME',0)
             casalog.post( "TIME "+str(mytime), 'NORMAL')
             tb.close()
-            os.system('rm -rf fixplanetstemp2')
+
             tb.open(vis+'/POINTING')
-            tb.query('TRACKING==True AND NEARABS(TIME,'+str(mytime)+',INTERVAL/2.)',
-                     name='fixplanetstemp2')
+            ttb = tb.query('TRACKING==True AND NEARABS(TIME,'+str(mytime)+',INTERVAL/2.)',
+                           name='fixplanetstemp2')
+            if(ttb.nrows()==0):
+                del ttb
+                os.system('rm -rf fixplanetstemp2')
+                ttb = tb.query('TRACKING==True AND NEARABS(TIME,'+str(mytime)+',3.)', # search within 3 seconds
+                           name='fixplanetstemp2')
+                if(ttb.nrows()==0):
+                    del ttb
+                    casalog.post( "Cannot find any POINTING table rows with TRACKING==True within 3 seconds of TIME "+str(mytime), 'WARN')
+                    casalog.post( "Will try without requiring TRACKING==True ...", 'WARN')
+                    os.system('rm -rf fixplanetstemp2')
+                    ttb = tb.query('NEARABS(TIME,'+str(mytime)+',INTERVAL/2.)', 
+                                   name='fixplanetstemp2')
+                    if(ttb.nrows()==0):
+                        del ttb
+                        os.system('rm -rf fixplanetstemp2')
+                        ttb = tb.query('NEARABS(TIME,'+str(mytime)+',3.)', # search within 3 seconds
+                                       name='fixplanetstemp2')
+                        if(ttb.nrows()==0):
+                            del ttb
+                            tb.close()
+                            casalog.post( "Cannot find any POINTING table rows within 3 seconds of TIME "+str(mytime), 'SEVERE')
+                            return # give up
+            del ttb
             tb.close()
             tb.open('fixplanetstemp2')
             mydir = tb.getcell('DIRECTION',0)

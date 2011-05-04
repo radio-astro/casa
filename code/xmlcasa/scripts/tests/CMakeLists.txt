@@ -32,6 +32,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_cvel.py
   test_cvelfreqs.py
   test_exportasdm.py
+  test_fixplanets.py
   test_fixvis.py
   test_flagdata.py
   test_flagdata2.py
