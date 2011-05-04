@@ -1121,6 +1121,8 @@ class cleanhelper:
                            raise TypeError, 'Error reading worldbox file'      
                         #
                         refframe=self.csys['direction0']['conversionSystem']
+                        if refframe.find('_VLA')>0:
+                          refframe=refframe[0:refframe.find('_VLA')]
                         ra =[splitline[2],splitline[3]]
                         dec = [splitline[4],splitline[5]]
 
@@ -2321,9 +2323,12 @@ class cleanhelper:
               reverse=True
           elif width=="": #default width
             if descendingnewfreqs and mode=="frequency":
-              reverse=False
-            else:
+            #if descendingnewfreqs:
+              #reverse=False
               reverse=True
+            else:
+              #reverse=True
+              reverse=False
                
           elif type(width)==str:
             if width.lstrip().find('-')==0:
