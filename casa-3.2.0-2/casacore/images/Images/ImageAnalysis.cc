@@ -26,11 +26,11 @@
 //# $Id: ImageAnalysis.cc 20491 2009-01-16 08:33:56Z gervandiepen $
 //   
 #include <casa/aips.h>
-#include <case/iostream.h>
-#include <case/sstream.h>
-#include <case/Arrays/ArrayIO.h>
-#include <case/Arrays/ArrayMath.h>
-#include <case/Arrays/ArrayUtil.h>
+#include <casa/iostream.h>
+#include <casa/sstream.h>
+#include <casa/Arrays/ArrayIO.h>
+#include <casa/Arrays/ArrayMath.h>
+#include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/MaskedArray.h>
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/BasicMath/Random.h>
@@ -162,9 +162,9 @@ ImageAnalysis::~ImageAnalysis() {
 	    if (type == ImageOpener::AIPSPP) {
 	      PagedImage<Float> * pip = dynamic_cast<PagedImage<Float> *>(pImage_p);
 	      if (pip) {
-		// SRankin: commented the following line out as it does not appear to be necessary
-		// in the typical case, and in some cases causes CASA to crash.  This will be reviewed.
-		// after the CASA-3.2.0 release.
+		// SRankin: commented the following line out as it does not appear to be needed
+		// in the typical case, and in some cases causes CASA to crash.  This change will 
+		// be reviewed after the CASA-3.2.0 release.
 		// pip->table().relinquishAutoLocks(True);
 		pip->table().unlock();
 	      }
