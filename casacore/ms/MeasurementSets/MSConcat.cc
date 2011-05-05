@@ -191,8 +191,30 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   // merge STATE
   Block<uInt> newStateIndices;
   Bool doState = False;
-  // STATE is a required subtable but can be empty
-  if(otherMS.state().nrow()>0){
+  // STATE is a required subtable but can be empty in which case the state id in the main table is -1
+  Bool itsStateNull = (itsMS.state().isNull() || (itsMS.state().nrow() == 0));
+  Bool otherStateNull = (otherMS.state().isNull() || (otherMS.state().nrow() == 0));
+
+  if(itsStateNull && otherStateNull){
+    log << LogIO::NORMAL << "No valid state tables present. Result won't have one either." << LogIO::POST;
+  }
+  else if(itsStateNull && !otherStateNull){
+    log << LogIO::WARN << itsMS.tableName() << " does not have a valid state table," << endl
+	<< "  the MS to be appended, however, has one. Result won't have one." 
+	<< LogIO::POST;
+    doState = True; // i.e. the appended MS Main table state id will have to be set to -1
+  }
+  else if(!itsStateNull && otherStateNull){
+    log << LogIO::WARN << itsMS.tableName() << " does have a valid state table," << endl
+	<< "  the MS to be appended, however, doesn't. Result won't have one." 
+	<< LogIO::POST;
+    doState = True; // i.e. itsMS Main table state id will have to be set to -1
+
+    Vector<uInt> delrows(itsMS.state().nrow());
+    indgen(delrows);
+    itsMS.state().removeRow(delrows); 
+  }
+  else{ // both state tables are filled
     const uInt oldStateRows = itsMS.state().nrow();
     newStateIndices = copyState(otherMS.state());
     const uInt addedRows = itsMS.state().nrow() - oldStateRows;
@@ -382,6 +404,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       }
     }
   }  
+  
+  if(doState && otherStateNull){ // the state ids for the first table will have to be set to -1
+    for(uInt r = 0; r < curRow; r++) {
+      thisStateId.put(r, -1);
+    }
+  }  
      
   // SCAN NUMBER
   // find the distinct ObsIds in use in this MS
@@ -484,7 +512,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     }
 
     if(doState){
-      thisStateId.put(curRow, newStateIndices[otherStateId(r)]);
+      if(itsStateNull || otherStateNull){
+	thisStateId.put(curRow, -1);
+      }
+      else{
+	thisStateId.put(curRow, newStateIndices[otherStateId(r)]);
+      }
     }
     else{
       thisStateId.put(curRow, otherStateId, r);
