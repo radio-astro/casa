@@ -97,7 +97,7 @@ namespace casa{
     support(0) = convFuncStore_p.xSupport[0];
     support(1) = convFuncStore_p.ySupport[0];
 
-    Bool Dummy,gDummy;
+    Bool Dummy, gDummy;
     T __restrict__ *gridStore = grid.getStorage(gDummy);
     const Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
     Double *__restrict__ convFunc=(*(convFuncStore_p.rdata)).getStorage(Dummy);
@@ -128,7 +128,7 @@ namespace casa{
 	  
 	  //	  if (vbs.imagingWeight(ichan,irow)!=0.0) {  // If weights are not zero
 	  if (imagingWeight[ichan+irow*nDataChan]!=0.0) {  // If weights are not zero
-	    achan=chanMap_p[ichan];
+	    achan=chanMap_p(ichan);
 	    
 	    if((achan>=0) && (achan<nGridChan)) {   // If selected channels are valid
 	      
@@ -146,7 +146,7 @@ namespace casa{
 		  if((!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol])){
 		    apol=polMap_p(ipol);
 		    if ((apol>=0) && (apol<nGridPol)) {
-		      igrdpos[2]=apol; igrdpos[3]=achan;
+		      igrdpos(2)=apol; igrdpos(3)=achan;
 		      
 		      norm=0.0;
 
@@ -156,16 +156,18 @@ namespace casa{
 				   // (vbs.visCube(ipol,ichan,irow)*phasor);
 				   (visCube[ipol+ichan*nDataPol+irow*nDataPol*nDataChan]*phasor);
 
-		      for(Int iy=-support[1]; iy <= support[1]; iy++) 
+		      for(Int iy=-support(1); iy <= support(1); iy++) 
 			{
-			  iloc(1)=abs((int)(sampling[1]*iy+off[1]));
-			  igrdpos[1]=loc[1]+iy;
-			  for(Int ix=-support[0]; ix <= support[0]; ix++) 
+			  iloc(1)=abs((int)(sampling(1)*iy+off(1)));
+			  igrdpos(1)=loc(1)+iy;
+			  wt = convFunc[iloc(1)];
+			  for(Int ix=-support(0); ix <= support(0); ix++) 
 			    {
-			      iloc[0]=abs((int)(sampling[0]*ix+off[0]));
-			      wt = convFunc[iloc[0]]*convFunc[iloc[1]];
+			      iloc[0]=abs((int)(sampling(0)*ix+off(0)));
+			      // wt = convFunc[iloc[0]]*convFunc[iloc[1]];
+			      wt *= convFunc[iloc(0)];
 
-			      igrdpos[0]=loc[0]+ix;
+			      igrdpos(0)=loc(0)+ix;
 			      // grid(grdpos) += nvalue*wt;
 
 			      // The following uses raw index on the 4D grid
@@ -247,7 +249,7 @@ namespace casa{
       if(!rowFlag[irow]) {
 
 	for (Int ichan=0; ichan < nDataChan; ichan++) {
-	  achan=chanMap_p[ichan];
+	  achan=chanMap_p(ichan);
 
 	  if((achan>=0) && (achan<nGridChan)) {
 	    // sgrid(pos,loc,off,phasor,irow,vbs.uvw,
@@ -261,24 +263,24 @@ namespace casa{
 	      for(Int ipol=0; ipol < nDataPol; ipol++) {
 
 		if(!flagCube[ipol+ichan*nDataPol+irow*nDataChan*nDataPol]) { 
-		  apol=polMap_p[ipol];
+		  apol=polMap_p(ipol);
 		  
 		  if((apol>=0) && (apol<nGridPol)) {
-		    igrdpos[2]=apol; igrdpos[3]=achan;
+		    igrdpos(2)=apol; igrdpos(3)=achan;
 		    nvalue=0.0;
 		    norm=0.0;
 
-		    for(Int iy=-support[1]; iy <= support[1]; iy++) 
+		    for(Int iy=-support(1); iy <= support(1); iy++) 
 		      {
-			iloc(1)=abs((Int)(sampling[1]*iy+off[1]));
-			igrdpos[1]=loc[1]+iy;
-			
-			for(Int ix=-support[0]; ix <= support[0]; ix++) 
+			iloc(1)=abs((Int)(sampling(1)*iy+off(1)));
+			igrdpos(1)=loc(1)+iy;
+			wt = convFunc[iloc(1)];
+			for(Int ix=-support(0); ix <= support(0); ix++) 
 			  {
-			    iloc(0)=abs((Int)(sampling[0]*ix+off[0]));
-			    igrdpos[0]=loc[0]+ix;
+			    iloc(0)=abs((Int)(sampling(0)*ix+off(0)));
+			    igrdpos(0)=loc(0)+ix;
 			    
-			    wt=convFunc[iloc[1]]*convFunc[iloc[0]];
+			    wt*=convFunc[iloc(0)];
 			    norm+=wt;
 			    //			    nvalue+=wt*grid(grdpos);
 			    // The following uses raw index on the 4D grid
