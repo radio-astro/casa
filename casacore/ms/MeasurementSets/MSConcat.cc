@@ -636,15 +636,22 @@ void MSConcat::checkCategories(const ROMSMainColumns& otherCols) const {
 Bool MSConcat::copyPointing(const MSPointing& otherPoint,const 
 			    Block<uInt>& newAntIndices ){
 
-  LogIO os(LogOrigin("MSConcat", "concatenate"));
+  LogIO os(LogOrigin("MSConcat", "copyPointing"));
 
-  if((itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0))
-     && (otherPoint.isNull() || (otherPoint.nrow() == 0))
-     ){ // neither of the two MSs do have valid pointing tables
+  Bool itsPointingNull = (itsMS.pointing().isNull() || (itsMS.pointing().nrow() == 0));
+  Bool otherPointingNull = (otherPoint.isNull() || (otherPoint.nrow() == 0));
+
+  if(itsPointingNull &&  otherPointingNull){ // neither of the two MSs do have valid pointing tables
     os << LogIO::NORMAL << "No valid pointing tables present. Result won't have one either." << LogIO::POST;
     return True;
   }
-  else if(otherPoint.isNull() || (otherPoint.nrow() == 0)){
+  else if(itsPointingNull && !otherPointingNull){
+    os << LogIO::WARN << itsMS.tableName() << " does not have a valid pointing table," << endl
+       << "  the MS to be appended, however, has one. Result won't have one." 
+       << LogIO::POST;
+    return False;
+  }
+  else if(!itsPointingNull && otherPointingNull){
     os << LogIO::WARN << "MS to be appended does not have a valid pointing table, "
        << itsMS.tableName() << ", however, has one. Result won't have one." << LogIO::POST;
              
