@@ -34,7 +34,7 @@
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
 #include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
-#include <synthesis/Utilities/ThreadTimers.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
