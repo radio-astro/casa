@@ -184,21 +184,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Version that use internally cached inc_p
     //    template <class T>
-    inline void addTo4DArray(DComplex* __restrict__& store, const Int* __restrict__& iPos, 
+    inline void addTo4DArray(DComplex* __restrict__& store, Int* __restrict__& iPos, 
 			     Complex& nvalue, Double& wt) __restrict__ 
     {addTo4DArray(store, iPos, inc_p, nvalue, wt);}
 
-    inline void addTo4DArray(Complex* __restrict__& store, const Int* __restrict__& iPos, 
+    inline void addTo4DArray(Complex* __restrict__& store, Int* __restrict__& iPos, 
 			     Complex& nvalue, Double& wt) __restrict__ 
     {addTo4DArray(store, iPos, inc_p, nvalue, wt);}
 
     
     // Version where inc_p is supplied from outside
-    inline void addTo4DArray(DComplex* __restrict__& store, const Int* __restrict__& iPos, 
+    inline void addTo4DArray(DComplex* __restrict__& store, Int* __restrict__& iPos, 
 			     const Vector<Int>& inc, Complex& nvalue, Double& wt) __restrict__ 
     {store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]] += (nvalue*Complex(wt));}
 
-    inline void addTo4DArray(Complex* __restrict__& store, const Int* __restrict__& iPos, 
+    inline void addTo4DArray(Complex* __restrict__& store, Int* __restrict__& iPos, 
 			     const Vector<Int>& inc, Complex& nvalue, Double& wt) __restrict__ 
     {store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]] += (nvalue*Complex(wt));}
 
