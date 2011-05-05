@@ -110,11 +110,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(False),
-      convFunc_p(), convWeights_p(), epJ_p(),
+      // convFunc_p(), convWeights_p(),
+      epJ_p(),
       doPBCorrection(True), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
-      visResampler_p(), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p("")
+      visResampler_p(), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p(""),
+      rotatedConvFunc_p()
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -139,6 +141,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
+    //    rotatedConvFunc_p.data=new Array<Complex>();    
   }
   //
   //---------------------------------------------------------------
@@ -157,11 +160,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       gridder(0), isTiled(False), arrayLattice(0), lattice(0), 
       maxAbsData(0.0), centerLoc(IPosition(4,0)), offsetLoc(IPosition(4,0)),
       pointingToImage(0), usezero_p(usezero),
-      convFunc_p(), convWeights_p(), epJ_p(),
+      // convFunc_p(), convWeights_p(),
+      epJ_p(),
       doPBCorrection(doPBCorr), /*cfCache_p(cfcache),*/ paChangeDetector(),
       rotateAperture_p(True),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
-      visResampler_p(visResampler), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p("")
+      visResampler_p(visResampler), sensitivityPatternQualifier_p(0),sensitivityPatternQualifierStr_p(""),
+      rotatedConvFunc_p()
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -186,6 +191,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (cachesize > hostRAM) cachesize=hostRAM;
     sigma=1.0;
     canComputeResiduals_p=DORES;
+    //    rotatedConvFunc_p.data=new Array<Complex>();
   }
   //
   //---------------------------------------------------------------
@@ -309,6 +315,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	visResampler_p=other.visResampler_p; // Copy the counted pointer
 	//	visResampler_p=other.visResampler_p->clone();
 	*visResampler_p = *other.visResampler_p; // Call the appropriate operator=()
+	rotatedConvFunc_p = other.rotatedConvFunc_p;
       };
     return *this;
   };
@@ -978,8 +985,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // convFunc variable for conveinance (legacy reasons).  This may
     // not be required after full-cleanup.
     //
-    convFunc_p.reference(*cfs_p.data);
-    convWeights_p.reference(*cfwts_p.data);
+    // convFunc_p.reference(*cfs_p.data);
+    // convWeights_p.reference(*cfwts_p.data);
 
     convSampling = (Int)cfs_p.sampling(0);
     //
@@ -1237,7 +1244,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(image->shape().product()>cachesize) isTiled=True;
     else                                   isTiled=False;
     
-    
     sumWeight=0.0;
     sumCFWeight = 0.0;
     weight.resize(sumWeight.shape());
@@ -1263,8 +1269,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// if(useDoubleGrid_p) 
 	//   visResampler_p->initializeToSky(griddedData2, sumWeight);
 	// else
-	  visResampler_p->initializeToSky(griddedData, sumWeight);
       }
+    visResampler_p->initializeToSky(griddedData, sumWeight);
   }
   //
   //---------------------------------------------------------------
@@ -1447,6 +1453,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
   //
+  //-------------------------------------------------------------------------
+  // Gridding
+  void AWProjectFT::resampleDataToGrid(Array<Complex>& griddedData_l, VBStore& vbs, 
+				       const VisBuffer& vb, Bool& dopsf)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid"));
+    visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+  }
+  //
   //---------------------------------------------------------------
   //
   void AWProjectFT::get(VisBuffer& vb, Int row)
@@ -1550,6 +1565,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     interpolateFrequencyFromgrid(vb, data, FTMachine::MODEL);
+  }
+  //
+  //-------------------------------------------------------------------------
+  // De-gridding
+  void AWProjectFT::resampleGridToData(VBStore& vbs, Array<Complex>& griddedData_l,
+				       const VisBuffer& vb)
+  {
+    LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData"));
+    visResampler_p->GridToData(vbs, griddedData_l);
   }
   //
   //---------------------------------------------------------------
@@ -2125,14 +2149,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore"));
 
-    Vector<Int> ConjCFMap, CFMap;
+    //    Vector<Int> ConjCFMap, CFMap;
 
-    makeCFPolMap(vb,cfStokes_p,CFMap);
-    makeConjPolMap(vb,CFMap,ConjCFMap);
+    makeCFPolMap(vb,cfStokes_p,CFMap_p);
+    makeConjPolMap(vb,CFMap_p,ConjCFMap_p);
 
     visResampler_p->setParams(uvScale,uvOffset,dphase);
     visResampler_p->setMaps(chanMap, polMap);
-    visResampler_p->setCFMaps(CFMap, ConjCFMap);
+    visResampler_p->setCFMaps(CFMap_p, ConjCFMap_p);
     //
     // Set up VBStore object to point to the relavent info. of the VB.
     //
@@ -2144,7 +2168,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.imagingWeight_p.reference(imagingweight);
     vbs.visCube_p.reference(visData);
     vbs.freq_p.reference(interpVisFreq_p);
-    //   vbs.rowFlag.resize(0); vbs.rowFlag = vb.flagRow();  
+    //    vbs.rowFlag_p.assign(vb.flagRow());  
     vbs.rowFlag_p.reference(vb.flagRow());
     if(!usezero_p) 
       for (Int rownr=0; rownr<vbs.nRow_p; rownr++) 
@@ -2155,40 +2179,58 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // directly to bool cubes.
     //  vbs.rowFlag.resize(rowFlags.shape());  vbs.rowFlag  = False; vbs.rowFlag(rowFlags) = True;
     vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
+
+
+      CFStore cfs_pt;
+      // if(gridder) delete gridder; gridder=0;
+      // gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
+      // 						     uvScale, uvOffset,
+      // 						     "SF");
+
+      // // Setup the CFStore object to carry relavent info. of the Conv. Func.
+      // cfs_pt.xSupport = gridder->cSupport();
+      // cfs_pt.ySupport = gridder->cSupport();
+      // cfs_pt.sampling.resize(2);
+      // cfs_pt.sampling = gridder->cSampling();
+      // if (cfs_pt.rdata.null())
+      // 	cfs_pt.rdata = new Array<Double>(gridder->cFunction());
+      // cfs_pt.set(cfs_p);
+      // visResampler_p->setConvFunc(cfs_pt);
+
+
+
     //
     // Set the convolution function for the re-sampler.
     // Here, rotate the conv. func. by the PA difference first.
     //
     // CFStore::data is a CountedPtr.  The following allocation via
     // "new" without explicit delete should not lead to memory leak.
-    CFStore rotatedConvFunc; rotatedConvFunc.data=new Array<Complex>();
-    // The everything else from cfs_p other than the data itself.
-    rotatedConvFunc.set(cfs_p);
 
-    Double actualPA = getVBPA(vb), currentCFPA = cfs_p.pa.getValue("rad");
-    SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data, cfs_p.coordSys,
-    				       *rotatedConvFunc.data,currentCFPA-actualPA,"LINEAR");
-    visResampler_p->setConvFunc(rotatedConvFunc);
+    //    CFStore rotatedConvFunc; rotatedConvFunc.data=new Array<Complex>();
+    //
+    // Initialize the rotated CF.
+    //
+    if (rotatedConvFunc_p.data.null()) 
+      {
+	rotatedConvFunc_p.data=new Array<Complex>();
+	// Copy everything else from cfs_p other than the data itself.
+	rotatedConvFunc_p.set(cfs_p);
+	(*rotatedConvFunc_p.data).assign(*cfs_p.data);
+      }
+    //
+    // Do an in-place rotation of the CF if necessary.
+    //
+    Double actualPA = getVBPA(vb), currentCFPA = rotatedConvFunc_p.pa.getValue("rad");
+    if (fabs(actualPA-currentCFPA) > 0.1)
+      {
+    	rotatedConvFunc_p.set(cfs_p);
+    	SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data, cfs_p.coordSys,
+    					   *rotatedConvFunc_p.data,currentCFPA-actualPA,"LINEAR");
+    	rotatedConvFunc_p.pa=Quantity(actualPA, "rad");
+      }
+    visResampler_p->setConvFunc(rotatedConvFunc_p);
   }
 
-  //
-  //-------------------------------------------------------------------------
-  // Gridding
-  void AWProjectFT::resampleDataToGrid(Array<Complex>& griddedData_l, VBStore& vbs, 
-				       const VisBuffer& vb, Bool& dopsf)
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid"));
-    visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
-  }
-  //
-  //-------------------------------------------------------------------------
-  // De-gridding
-  void AWProjectFT::resampleGridToData(VBStore& vbs, Array<Complex>& griddedData_l,
-				       const VisBuffer& vb)
-  {
-    LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData"));
-    visResampler_p->GridToData(vbs, griddedData_l);
-  }
   //
   //---------------------------------------------------------------
   //
@@ -2278,10 +2320,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       visResampler_p->setParams(uvScale,uvOffset,dphase);
       visResampler_p->setMaps(chanMap, polMap);
-  Vector<Int> ConjCFMap, CFMap;
-    makeCFPolMap(vb,cfStokes_p,CFMap);
-  makeConjPolMap(vb,CFMap,ConjCFMap);
-  visResampler_p->setCFMaps(CFMap, ConjCFMap);
+      //  Vector<Int> ConjCFMap, CFMap;
+    makeCFPolMap(vb,cfStokes_p,CFMap_p);
+  makeConjPolMap(vb,CFMap_p,ConjCFMap_p);
+  visResampler_p->setCFMaps(CFMap_p, ConjCFMap_p);
     //
     // Begin the actual de-gridding.
     //
@@ -2470,10 +2512,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       visResampler_p->setParams(uvScale,uvOffset,dphase);
       visResampler_p->setMaps(chanMap, polMap);
-  Vector<Int> ConjCFMap, CFMap;
-    makeCFPolMap(vb,cfStokes_p,CFMap);
-  makeConjPolMap(vb,CFMap,ConjCFMap);
-  visResampler_p->setCFMaps(CFMap, ConjCFMap);
+      //  Vector<Int> ConjCFMap, CFMap;
+    makeCFPolMap(vb,cfStokes_p,CFMap_p);
+  makeConjPolMap(vb,CFMap_p,ConjCFMap_p);
+  visResampler_p->setCFMaps(CFMap_p, ConjCFMap_p);
     
     if(isTiled) 
       {

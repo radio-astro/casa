@@ -45,8 +45,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public: 
     AWVisResampler(): VisibilityResampler(),cfMap_p(), conjCFMap_p()  {};
-    AWVisResampler(const CFStore& cfs): VisibilityResampler(cfs) {}
-    virtual ~AWVisResampler() {};
+    AWVisResampler(const CFStore& cfs): VisibilityResampler(cfs)      {}
+    virtual ~AWVisResampler()                                         {};
 
     virtual VisibilityResamplerBase* clone()
     {return new AWVisResampler(*this);}
@@ -119,6 +119,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // //    Int inc0_p, inc1_p, inc2_p, inc3_p;
     // Vector<Int> inc_p;
     Vector<Int> cfMap_p, conjCFMap_p;
+    Vector<Int> gridInc_p, cfInc_p;
     //
     // Re-sample the griddedData on the VisBuffer (a.k.a de-gridding).
     //
@@ -168,13 +169,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     template <class T>
     void addTo4DArray(T *__restrict__& store,
-    		      const Int *__restrict__& iPos, const Vector<Int>& inc, Complex& nvalue, Complex& wt)
+    		      const Int *__restrict__& iPos, const Vector<Int>& inc, 
+		      Complex& nvalue, Complex& wt) __restrict__
     {
-      //      T *tmp=store+(iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]);
-      //      *tmp += nvalue*wt;
+      // T *tmp=store+(iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]);
+      // *tmp += nvalue*wt;
       store[iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3]] += (nvalue*wt);
     }
-
 
     //
     // This rotates the convolution function by rotating the

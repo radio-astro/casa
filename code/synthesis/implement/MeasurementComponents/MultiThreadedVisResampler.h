@@ -33,7 +33,8 @@
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
 #include <synthesis/MeasurementComponents/CFStore.h>
 #include <synthesis/MeasurementComponents/VBStore.h>
-//#include <synthesis/Utilities/ThreadTimers.h>
+#include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
+#include <synthesis/Utilities/ThreadTimers.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -47,11 +48,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MultiThreadedVisibilityResampler: public VisibilityResamplerBase
   {
   public: 
-    enum VBLoader {NOONE=-1, DATATOGRID=0, GRIDTODATA, RESIDUALCALC};
+    //    enum VBLoader {NOONE=-1, DATATOGRID=0, GRIDTODATA, RESIDUALCALC};
      MultiThreadedVisibilityResampler():
       resamplers_p(), doubleGriddedData_p(), singleGriddedData_p(), 
       sumwt_p(), gridderWorklets_p(), vbsVec_p(), visResamplerCtor_p(), 
-      whoLoadedVB_p(NOONE), currentVBS_p(0)
+      whoLoadedVB_p(MThWorkID::NOONE), currentVBS_p(0)
     {
       nelements_p = SynthesisUtils::getenv(FTMachineNumThreadsEnvVar, 1);
       if (nelements_p < 0) nelements_p = 1;
@@ -177,10 +178,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     CountedPtr<ThreadCoordinator<Int> > threadClerk_p;
     Bool threadStarted_p;
-    // DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
-    // DT tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
-    // Timers t4G_p,t4DG_p;
-    async::Mutex *mutexForResamplers_p;
+     // DT tSetupG, tSendDataG, tWaitForWorkG, tOutsideG;
+     // DT tSetupDG, tSendDataDG, tWaitForWorkDG, tOutsideDG;
+     // Timers t4G_p,t4DG_p;
+    //    async::Mutex *mutexForResamplers_p;
     CountedPtr<VisibilityResamplerBase> visResamplerCtor_p;
     Int whoLoadedVB_p;
     Int currentVBS_p;

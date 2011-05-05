@@ -412,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     //    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
     //    CFStore cfs_p, cfwts_p;
-    Array<Complex> convFunc_p, convWeights_p;
+    // Array<Complex> convFunc_p, convWeights_p;
     //
     // Vector to hold the support size info. for the convolution
     // functions pointed to by the elements of convFunctions_p.  The
@@ -475,6 +475,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CountedPtr<VisibilityResamplerBase> visResampler_p;
     Int sensitivityPatternQualifier_p;
     String sensitivityPatternQualifierStr_p;
+    CFStore rotatedConvFunc_p;
+  Vector<Int> ConjCFMap_p, CFMap_p;
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END

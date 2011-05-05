@@ -110,36 +110,51 @@ namespace casa{
     support(0) = convFuncStore_p.xSupport[0];
     support(1) = convFuncStore_p.ySupport[0];
 
-    Bool Dummy;
-    T *gridStore = grid.getStorage(Dummy);
-    const Int *iPosPtr = igrdpos.getStorage(Dummy);
+    Bool Dummy, gDummy;
+    T* __restrict__ gridStore = grid.getStorage(gDummy);
+    const Int * __restrict__ iPosPtr = igrdpos.getStorage(Dummy);
     const Complex* __restrict__ convFuncV=cfs.data->getStorage(Dummy);
       
     Double *freq=vbs.freq_p.getStorage(Dummy);
     Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
 
-    Matrix<Float> imagingWeight(vbs.imagingWeight_p);
-    Cube<Complex> visCube(vbs.visCube_p);
-    Matrix<Double> uvw(vbs.uvw_p);
-    Cube<Bool> flagCube(vbs.flagCube_p);
-    Vector<Int> gridInc, cfInc;
-    //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
-    cacheAxisIncrements(grid.shape().asVector(), gridInc);
-    cacheAxisIncrements(cfShape, cfInc);
+    // Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
+    // Matrix<Double>& uvw=vbs.uvw_p;
+    // Cube<Complex>&  visCube=vbs.visCube_p;
+    // Cube<Bool>&     flagCube=vbs.flagCube_p;
+
+    //    Vector<Int> gridInc, cfInc;
+    //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan); 
+
+    // Cache increment values for adding to grid in gridInc.  This is
+    // supplied to addTo4DArray later.
+    cacheAxisIncrements(grid.shape().asVector(), gridInc_p);
+    // Cache the CF related increments intenrally in
+    // VisibilityResamplerBase for use in getFrom4DArray later.
+    cacheAxisIncrements(cfShape, cfInc_p);
     //    IsNaN<Complex> testNaN;
 
-    Bool * __restrict__ flagCube_ptr=flagCube.getStorage(Dummy);
-    Bool * __restrict__ rowFlag_ptr = rowFlag;
-    Float * __restrict__ imgWts_ptr = imagingWeight.getStorage(Dummy);
-    Complex * __restrict__ visCube_ptr = visCube.getStorage(Dummy);
+    Bool * __restrict__ flagCube_ptr=vbs.flagCube_p.getStorage(Dummy);
+    Bool * __restrict__ rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);;
+    Float * __restrict__ imgWts_ptr = vbs.imagingWeight_p.getStorage(Dummy);
+    Complex * __restrict__ visCube_ptr = vbs.visCube_p.getStorage(Dummy);
     Double * __restrict__ sumWt_ptr = sumwt.getStorage(Dummy);
 
+    // {
+    //   IPosition tt(4);
+    //   for(tt(0)=0;tt(0)<grid.shape()(0);tt(0)++)
+    // 	for(tt(1)=0;tt(1)<grid.shape()(1);tt(1)++)
+    // 	  for(tt(2)=0;tt(2)<grid.shape()(2);tt(2)++)
+    // 	    for(tt(3)=0;tt(3)<grid.shape()(3);tt(3)++)
+    // 	      grid(tt)*=1.0;
+    // }
+
     for(Int irow=rbeg; irow< rend; irow++){   
-      if(!rowFlag[irow]){   
-      //      if(!(*(rowFlag_ptr+irow))){   
-	for(register Int ichan=0; ichan< nDataChan; ichan++){
-	  if (imagingWeight(ichan,irow)!=0.0) {  
-	    //	  if (*(imgWts_ptr + ichan+irow*nDataChan)!=0.0) {  
+      //      if(!rowFlag[irow]){   
+      if(!(*(rowFlag_ptr+irow))){   
+	for(Int ichan=0; ichan< nDataChan; ichan++){
+	  //	  if (imagingWeight(ichan,irow)!=0.0) {  
+	  if (*(imgWts_ptr + ichan+irow*nDataChan)!=0.0) {  
 	    achan=chanMap_p[ichan];
 	    
 	    if((achan>=0) && (achan<nGridChan)) {
@@ -153,16 +168,16 @@ namespace casa{
 
 
 	      sgrid(pos,loc,off, phasor, irow, 
-		    uvw, dphase_p[irow], freq[ichan], 
+		    vbs.uvw_p, dphase_p[irow], freq[ichan], 
 		    uvwScale_p, offset_p, sampling);
 
 	      iloc[2]=max(0, min(nw-1, loc[2]));
 
 	      if (onGrid(nx, ny, nw, loc, support)) { 
 
-		for(register Int ipol=0; ipol< nDataPol; ipol++) { 
-		  if((!flagCube(ipol,ichan,irow))){  
-		    // if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan)))){  
+		for(Int ipol=0; ipol< nDataPol; ipol++) { 
+		  //		  if((!flagCube(ipol,ichan,irow))){  
+		  if((!(*(flagCube_ptr + ipol + ichan*nDataPol + irow*nDataPol*nDataChan)))){  
 		    apol=polMap_p(ipol);
 		    if ((apol>=0) && (apol<nGridPol)) {
 		      igrdpos[2]=apol; igrdpos[3]=achan;
@@ -173,38 +188,38 @@ namespace casa{
 
 		      iloc[3]=PolnPlane;
 
-		      if(dopsf)  nvalue=Complex(imagingWeight(ichan,irow));
-		      else	 nvalue=imagingWeight(ichan,irow)*
-		      		   (visCube(ipol,ichan,irow)*phasor);
+		      // if(dopsf)  nvalue=Complex(imagingWeight(ichan,irow));
+		      // else	 nvalue=imagingWeight(ichan,irow)*
+		      // 		   (visCube(ipol,ichan,irow)*phasor);
 		      // if ((imagingWeight(ichan,irow) > 0.0) || (visCube(ipol,ichan,irow) > 0.0))
 		      // 	cerr << imagingWeight(ichan,irow) << " " << visCube(ipol,ichan,irow)
 		      // 	     << " " << irow << " " << ichan << " " << ipol << endl;
-		      // if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
-		      // else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
-		      // 		   (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
-		      for(register Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+		      if(dopsf)  nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
+		      else	 nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
+		      		   (*(visCube_ptr+ipol+ichan*nDataPol+irow*nDataChan*nDataPol)*phasor);
+		      for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
 			{
 			  iloc(1)=(Int)(scaledSampling[1]*iy+off[1]);
 			  igrdpos[1]=loc[1]+iy;
-			  for(register Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+			  for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
 			    {
 			      iloc[0]=(Int)(scaledSampling[0]*ix+off[0]);
 			      tiloc=iloc;
 			      if (reindex(iloc,tiloc,sinDPA, cosDPA, 
 			      		  convOrigin, cfShape))
 				{
-				  wt = getFrom4DArray(convFuncV, tiloc,cfInc);
+				  wt = getFrom4DArray(convFuncV, tiloc,cfInc_p);
 				  igrdpos[0]=loc[0]+ix;
-				  // grid(grdpos) += nvalue*wt;
+				  //				  grid(igrdpos) += nvalue*wt;
 
 				  // The following uses raw index on the 4D grid
-				  addTo4DArray(gridStore,iPosPtr,gridInc, nvalue,wt);
+				  addTo4DArray(gridStore,iPosPtr,gridInc_p, nvalue,wt);
 				  //				  norm+=real(wt);
 				}
 			    }
 			}
-		      sumwt(apol,achan)+=imagingWeight(ichan,irow);//*norm;
-		      // *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
+		      //		      sumwt(apol,achan)+=imagingWeight(ichan,irow);//*norm;
+		      *(sumWt_ptr+apol+achan*nGridChan)+= *(imgWts_ptr+ichan+irow*nDataChan);
 		    }
 		  }
 		}
@@ -214,7 +229,8 @@ namespace casa{
 	}
       }
     }
-    
+    T *tt=(T *)gridStore;
+    grid.putStorage(tt,gDummy);
   }
   //
   //-----------------------------------------------------------------------------------
@@ -268,15 +284,17 @@ namespace casa{
     const Complex* __restrict__ convFuncV=convFuncStore_p.data->getStorage(Dummy);
     Double *freq=vbs.freq_p.getStorage(Dummy);
     Bool *rowFlag=vbs.rowFlag_p.getStorage(Dummy);
-    Matrix<Float> imagingWeight(vbs.imagingWeight_p);
-    Cube<Complex> visCube(vbs.visCube_p);
-    Matrix<Double> uvw(vbs.uvw_p);
-    Cube<Bool> flagCube(vbs.flagCube_p);
+
+    Matrix<Float>&  imagingWeight=vbs.imagingWeight_p;
+    Matrix<Double>& uvw=vbs.uvw_p;
+    Cube<Complex>&  visCube=vbs.visCube_p;
+    Cube<Bool>&     flagCube=vbs.flagCube_p;
+
     Vector<Int> gridInc, cfInc;
 
     //    cacheAxisIncrements(nx,ny,nGridPol, nGridChan);
-    cacheAxisIncrements(grid.shape().asVector(), gridInc);
-    cacheAxisIncrements(cfShape, cfInc);
+    cacheAxisIncrements(grid.shape().asVector(), gridInc_p);
+    cacheAxisIncrements(cfShape, cfInc_p);
 
     for(Int irow=rbeg; irow<rend; irow++) {
       if(!rowFlag[irow]) {
@@ -328,12 +346,12 @@ namespace casa{
 			    if (reindex(iloc,tiloc,sinDPA, cosDPA, 
 			    		convOrigin, cfShape))
 			      {
-				wt=getFrom4DArray(convFuncV,tiloc,cfInc);
+				wt=getFrom4DArray(convFuncV,tiloc,cfInc_p);
 				norm(apol)+=(wt);
 				//			    nvalue+=wt*grid(grdpos);
 				// The following uses raw index on the 4D grid
 				//				nvalue+=wt*getFrom4DArray(gridStore,iPosPtr,gridInc);
-				nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc);
+				nvalue+=wt*getFrom4DArray(gridStore,igrdpos,gridInc_p);
 			      }
 			  }
 		      }
@@ -404,10 +422,15 @@ namespace casa{
 	      (out[1] >= 0) && (out[1] < size[1]));
     return onGrid;
   }
+
   template 
-  void AWVisResampler::addTo4DArray(DComplex* __restrict__ & store,const Int* __restrict__ & iPos, const Vector<Int>& inc, 
-  				    Complex& nvalue, Complex& wt);
+  void AWVisResampler::addTo4DArray(DComplex* __restrict__ & store,
+				    const Int* __restrict__ & iPos, 
+				    const Vector<Int>& inc, 
+  				    Complex& nvalue, Complex& wt) __restrict__ ;
   template 
-  void AWVisResampler::addTo4DArray(Complex* __restrict__ & store,const Int* __restrict__ & iPos, const Vector<Int>& inc, 
-  				    Complex& nvalue, Complex& wt);
+  void AWVisResampler::addTo4DArray(Complex* __restrict__ & store,
+				    const Int* __restrict__ & iPos, 
+				    const Vector<Int>& inc, 
+  				    Complex& nvalue, Complex& wt) __restrict__;
 };// end namespace casa
