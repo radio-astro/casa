@@ -155,7 +155,6 @@ namespace casa {
     	) {
     		*_log << "Could not set new coordinate values" << LogIO::EXCEPTION;
     	}
-
     	Vector<Double> refValues = outCoords.referenceValue();
     	Vector<Double> refPixels = outCoords.referencePixel();
     	IPosition outShape = inShape;
@@ -175,6 +174,7 @@ namespace casa {
     	if (! outCoords.setReferencePixel(refPixels)) {
     		*_log << "Unable to set reference pixel" << LogIO::EXCEPTION;
     	}
+
     	ImageInterface<Float> *outImage = 0;
     	if (_outname.empty()) {
     		outImage = new TempImage<Float>(outShape, outCoords);
@@ -214,11 +214,12 @@ namespace casa {
     	}
     	else {
     		Float (*function)(const Array<Float>&) = (*funcMap())(_aggType);
+    		Array<Float> data = subImage.get(False);
     		for (uInt i=0; i<outShape.product(); i++) {
-
     			IPosition start = toIPositionInArray(i, outShape);
-    			Array<Float> ary = subImage.getSlice(start, shape);
-    			outImage->putAt(function(ary), start);
+    			IPosition end = start + shape - 1;
+    			Slicer s(start, end, Slicer::endIsLast);
+    			outImage->putAt(function(data(s)), start);
     		}
     	}
     	if (! _outname.empty()) {
