@@ -4066,7 +4066,15 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
       }
     }
     Bool isDescendingData=False;
-    if (oldFreqResolution(0) < 0) isDescendingData=True;
+    // Some descending order data has positive channel widths...so check chan freqs
+    // first...
+    //if (oldFreqResolution(0) < 0) isDescendingData=True;
+    if (oldChanFreqs.nelements()>1) {
+      if ((oldChanFreqs[1] - oldChanFreqs[0])<0) isDescendingData=True;
+    }
+    else if (oldFreqResolution(0) < 0) {
+      isDescendingData=True;
+    }
     
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
