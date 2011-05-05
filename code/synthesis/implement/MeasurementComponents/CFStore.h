@@ -61,8 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool null() {return data.null();};
     void set(const CFStore& other)
     {
-      coordSys = other.coordSys; sampling=other.sampling; 
-      xSupport=other.xSupport; ySupport=other.ySupport;
+      coordSys = other.coordSys; sampling.assign(other.sampling); 
+      xSupport.assign(other.xSupport); ySupport.assign(other.ySupport);
       maxXSupport=other.maxXSupport;  maxYSupport=other.maxYSupport; pa=other.pa;
       mosPointingPos = other.mosPointingPos;
     }
@@ -70,8 +70,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     Vector<Int>& xsup, Vector<Int>& ysup, Int maxXSup, Int maxYSup,
 	     Quantity PA, const Int mosPointing=0)
     {
-      data=dataPtr; coordSys=cs; sampling=samp; 
-      xSupport=xsup; ySupport=ysup;
+      data=dataPtr; coordSys=cs; sampling.assign(samp); 
+      xSupport.assign(xsup); ySupport.assign(ysup);
       maxXSupport=maxXSup;maxYSupport=maxYSup;
       pa=PA;
       mosPointingPos = mosPointing;
