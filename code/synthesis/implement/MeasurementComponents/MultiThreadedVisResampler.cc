@@ -28,7 +28,7 @@
 
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
-//#include <synthesis/Utilities/ThreadTimers.h>
+//#include <msvis/MSVis/UtilJ.h>
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
