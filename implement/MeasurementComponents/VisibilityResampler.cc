@@ -286,14 +286,14 @@ namespace casa{
 			ilocPtr[1]=abs((Int)(samplingPtr[1]*iy+offPtr[1]));
 			//			igrdpos(1)=loc(1)+iy;
 			iPosPtr[1]=locPtr[1]+iy;
-			wt = convFunc[ilocPtr[1]];
+			//			wt = convFunc[ilocPtr[1]];
 			for(Int ix=-supportPtr[0]; ix <= supportPtr[0]; ix++) 
 			  {
 			    ilocPtr[0]=abs((Int)(samplingPtr[0]*ix+offPtr[0]));
 			    //			    igrdpos(0)=loc(0)+ix;
 			    iPosPtr[0]=locPtr[0]+ix;
 			    
-			    wt*=convFunc[ilocPtr[0]];
+			    wt=convFunc[ilocPtr[0]]*convFunc[ilocPtr[1]];
 			    norm+=wt;
 			    //			    nvalue+=wt*grid(grdpos);
 			    // The following uses raw index on the 4D grid
