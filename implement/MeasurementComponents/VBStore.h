@@ -27,6 +27,7 @@
 //# $Id$
 #ifndef SYNTHESIS_VBSTORE_H
 #define SYNTHESIS_VBSTORE_H
+#include <synthesis/MeasurementComponents/Utils.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   class VBStore
@@ -53,23 +54,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       nRow_p=other.nRow_p;  beginRow_p=other.beginRow_p; endRow_p=other.endRow_p;
       dopsf_p = other.dopsf_p;
       useCorrected_p = other.useCorrected_p;
+
       uvw_p.reference(other.uvw_p);
       rowFlag_p.reference(other.rowFlag_p);
       flagCube_p.reference(other.flagCube_p);
       imagingWeight_p.reference(other.imagingWeight_p);
-      visCube_p.reference(other.visCube_p);
       freq_p.reference(other.freq_p);
-      modelCube_p.reference(other.modelCube_p);
+      // if (useCorrected_p) correctedCube_p.reference(other.correctedCube_p);
+      // else visCube_p.reference(other.visCube_p);
+      // if (useCorrected_p) 
+      // 	{
+      // 	  correctedCube_p.reference(other.correctedCube_p);
+      // 	  visCube_p.reference(other.correctedCube_p);
+      // 	}
+      // else visCube_p.reference(other.visCube_p);
       correctedCube_p.reference(other.correctedCube_p);
+      visCube_p.reference(other.visCube_p);
+      modelCube_p.reference(other.modelCube_p);
 
-      // nRow_p=other.nRow_p;  beginRow_p=other.beginRow_p; endRow_p=other.endRow_p;
-      // dopsf_p = other.dopsf_p;
       // uvw_p.assign(other.uvw_p);
       // rowFlag_p.assign(other.rowFlag_p);
       // flagCube_p.assign(other.flagCube_p);
       // imagingWeight_p.assign(other.imagingWeight_p);
-      // visCube_p.assign(other.visCube_p);
       // freq_p.assign(other.freq_p);
+      // visCube_p.assign(other.visCube_p);
+      // modelCube_p.assign(other.modelCube_p);
+      // correctedCube_p.assign(other.correctedCube_p);
     }
 
     Int nRow_p, beginRow_p, endRow_p;

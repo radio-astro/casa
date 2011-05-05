@@ -734,7 +734,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Rotate the convolution function using Image rotation and
     // disable rotation in the gridder
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data,/*convFunc_p*/ cfs_p.coordSys,
 				       rotatedConvFunc,(currentCFPA-actualPA),"LINEAR");
     actualPA = currentCFPA; 
 
@@ -774,7 +774,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int npa=1,actualConvSize;
     Int paIndex_Fortran = paIndex;
-    actualConvSize = convFunc_p.shape()(0);
+    //    actualConvSize = convFunc_p.shape()(0);
+    actualConvSize = cfs_p.data->shape()(0);
     
     //    IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
@@ -837,7 +838,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
     vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     cfs_p.xSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
-    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
+    //    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
     polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
     vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
@@ -887,7 +888,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Array<Complex> rotatedConvFunc;
     // Rotate the convolution function using Image rotation and
     // disable rotation in the gridder
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data) /*convFunc_p*/, cfs_p.coordSys,
 				       rotatedConvFunc,(currentCFPA-actualPA));
     actualPA = currentCFPA; 
 
@@ -920,7 +921,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     Int npa=1,actualConvSize;
     Int paIndex_Fortran = paIndex;
-    actualConvSize = convFunc_p.shape()(0);
+    //    actualConvSize = convFunc_p.shape()(0);
+    actualConvSize = cfs_p.data->shape()(0);
     
     //    IPosition shp=convSupport.shape();
     Int alwaysDoPointing=1;
@@ -987,7 +989,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
     vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     cfs_p.xSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
-    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
+    //    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
     polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
     vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));
@@ -1050,10 +1052,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Rotate the convolution function using Image rotation and
     // disable rotation in the gridder
-    SynthesisUtils::rotateComplexArray(log_l, convFunc_p, cfs_p.coordSys,
+    SynthesisUtils::rotateComplexArray(log_l, *(cfs_p.data)/*convFunc_p*/, cfs_p.coordSys,
         			       rotatedConvFunc_l,(currentCFPA-actualPA));
     if (!avgPBReady_p)
-      SynthesisUtils::rotateComplexArray(log_l, convWeights_p, cfwts_p.coordSys,
+      SynthesisUtils::rotateComplexArray(log_l, *(cfwts_p.data), /*convWeights_p,*/ cfwts_p.coordSys,
     					 rotatedConvWeights_l,(currentCFPA-actualPA));
     // Disable rotation in the gridder
     actualPA = currentCFPA; 
@@ -1109,8 +1111,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //     	  (lastPAUsedForWtImg == MAGICPAVALUE)));
 
     Int doAvgPB=computeAvgPB(actualPA, lastPAUsedForWtImg);//(avgPBReady_p==False);
-    actualConvSize = convFunc_p.shape()(0);
-    actualConvWtSize = convWeights_p.shape()(0);
+    //    actualConvSize = convFunc_p.shape()(0);
+    actualConvSize = cfs_p.data->shape()(0);
+    //    actualConvWtSize = convWeights_p.shape()(0);
+    actualConvWtSize = cfwts_p.data->shape()(0);
 
     if (fabs(lastPAUsedForWtImg-actualPA)*57.2956 >= DELTAPA) lastPAUsedForWtImg = actualPA;
 
@@ -1182,8 +1186,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     uvScale.freeStorage((const Double*&) uvScale_p,deleteThem(UVSCALE));
     vb.frequency().freeStorage((const Double*&)vb_freq_p,deleteThem(VBFREQ));
     cfs_p.xSupport.freeStorage((const Int*&)convSupport_p,deleteThem(CONVSUPPORT));
-    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
-    convWeights_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVWTS));
+    //    convFunc_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVFUNC));
+    //    convWeights_p.freeStorage((const Complex *&)f_convFunc_p,deleteThem(CONVWTS));
     chanMap.freeStorage((const Int*&)chanMap_p,deleteThem(CHANMAP));
     polMap.freeStorage((const Int*&) polMap_p,deleteThem(POLMAP));
     vb.antenna1().freeStorage((const Int*&) vb_ant1_p,deleteThem(VBANT1));

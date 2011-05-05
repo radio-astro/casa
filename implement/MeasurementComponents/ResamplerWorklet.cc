@@ -30,6 +30,7 @@
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <synthesis/MeasurementComponents/VisibilityResampler.h>
 #include <synthesis/MeasurementComponents/ResamplerWorklet.h>
+#include <synthesis/MeasurementComponents/MThWorkIDEnum.h>
 #include <synthesis/Utilities/ThreadCoordinator.h>
 //#include <synthesis/Utilities/ThreadTimers.h>
 #include <fstream>
@@ -142,9 +143,10 @@ namespace casa{
 	// Timers t2G=Timers::getTime();
 	// Timers t2DG=Timers::getTime();
 	// Timers t2R=Timers::getTime();
-	//	if (*doDataToGrid==True)   // Gridding work
-	if (*doDataToGrid==1)   // Gridding work
+	//	if (*doDataToGrid==1)   // Gridding work
+	if (*doDataToGrid==MThWorkID::DATATOGRID)   // Gridding work
 	  {
+	    //	    cerr << myID_p << " " << myVBStore_p->beginRow_p << " " << myVBStore_p->endRow_p << endl;
 	    //	    t2G=Timers::getTime();
 	    if (myGriddedDataDouble_p != NULL)
 	      myResampler_p->DataToGrid(*myGriddedDataDouble_p, *myVBStore_p, 
@@ -153,12 +155,14 @@ namespace casa{
 	      myResampler_p->DataToGrid(*myGriddedDataSingle_p, *myVBStore_p, 
 					*mySumWt_p, myVBStore_p->dopsf_p);
 	  }
-	else if (*doDataToGrid == 0)                      // De-gridding work
+	//	else if (*doDataToGrid == 0)                      // De-gridding work
+	else if (*doDataToGrid == MThWorkID::GRIDTODATA)                      // De-gridding work
 	  {
 	    //	    t2DG=Timers::getTime();
 	    myResampler_p->GridToData(*myVBStore_p, *mySkyFTGrid_p);
 	  }
-	else if (*doDataToGrid == 2)
+	//	else if (*doDataToGrid == 2)
+	else if (*doDataToGrid == MThWorkID::RESIDUALCALC)
 	  {
 	    //	    t2R=Timers::getTime();
 	    myResampler_p->ComputeResiduals(*myVBStore_p);
