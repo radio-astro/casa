@@ -11,6 +11,11 @@ def fixplanets(vis, field, fixuvw=False):
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
             return
+        tb.open(vis+"/FIELD")
+        oldrefcol = []
+        if('PhaseDir_Ref' in tb.colnames()):
+            oldrefcol = tb.getcol('PhaseDir_Ref')
+        tb.close()
         for fld in fields:
             os.system('rm -rf fixplanetstemp')
             tb.open(vis)
@@ -114,6 +119,11 @@ def fixplanets(vis, field, fixuvw=False):
             im.close()
         else:
             casalog.post("UVW coordinates not fixed", 'NORMAL')
+
+        if not oldrefcol==[]: 
+            tb.open(vis+'/FIELD', nomodify=False)
+            tb.putcol('PhaseDir_Ref', oldrefcol)
+            tb.close()
 
     except Exception, instance:
         casalog.post("*** Error \'%s\' " % (instance), 'SEVERE')
