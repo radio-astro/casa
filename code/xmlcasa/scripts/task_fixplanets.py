@@ -19,10 +19,10 @@ def fixplanets(vis, field, fixuvw=False):
         for fld in fields:
             os.system('rm -rf fixplanetstemp')
             tb.open(vis)
-            tb.query('FIELD_ID==0 AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
+            tb.query('FIELD_ID=='+str(fld)+' AND FLAG_ROW==False', name='fixplanetstemp', columns='TIME')
             tb.close()
             tb.open('fixplanetstemp')
-            mytime = tb.getcell('TIME',0)
+            mytime = tb.getcell('TIME',tb.nrows()/2)
             casalog.post( "TIME "+str(mytime), 'NORMAL')
             tb.close()
 
