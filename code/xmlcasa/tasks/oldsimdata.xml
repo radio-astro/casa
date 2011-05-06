@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
  
-<task type="function" name="oldsimdata" category="simulation" visibility="deprecated">
+<task type="function" name="oldsimdata" category="simulation" visibility="hidden">
 
   <shortdescription>simulation task:</shortdescription>
   <description>
