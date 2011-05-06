@@ -545,6 +545,12 @@ void PlotMSIndexer::setUpIndexing() {
   // Contract nSegment_ if we aren't using them all
   if (iseg+1<nSegment_) {
     nSegment_=iseg+1;
+ 
+    // Cope with no segments found
+    //  (this happens when all data is flagged, time-averaging is on,
+    //    and iteration is off, in v3.2)    
+    if (nSegment_==0) nSegment_=1;
+
     // (w/ copy)
     nSegPoints_.resize(nSegment_,True);
     nCumulPoints_.resize(nSegment_,True);
