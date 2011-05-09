@@ -72,6 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual void setPolMap(const Vector<Int>& polMap) {ATerm_p->setPolMap(polMap);};
     //    virtual void setFeedStokes(const Vector<Int>& feedStokes) {ATerm_p->setFeedStokes(feedStokes);};
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
+    virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs);
 
   protected:
     void normalizeAvgPB(ImageInterface<Complex>& inImage,

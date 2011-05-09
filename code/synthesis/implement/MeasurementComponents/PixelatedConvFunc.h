@@ -76,6 +76,7 @@ namespace casa{
 				     ImageInterface<Complex>& theavgPB,
 				     Bool reset=True)
     {throw(AipsError("PixelatedConvFunc::makeAverageRes(Complex) called"));};
+    virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs) {};
 
   private:
     Int nDim;
