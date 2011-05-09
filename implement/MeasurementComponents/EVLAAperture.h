@@ -30,7 +30,8 @@
 #define SYNTHESIS_EVLAAPERTURE_H
 
 #include <images/Images/ImageInterface.h>
-#include <synthesis/MeasurementComponents/ATerm.h>
+//#include <synthesis/MeasurementComponents/ATerm.h>
+#include <synthesis/MeasurementComponents/AzElAperture.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 //
 //---------------------------------------------------------------------
@@ -48,10 +49,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
   class VisBuffer;
-  class EVLAAperture : public ATerm
+  //  class EVLAAperture : public ATerm
+  class EVLAAperture : public AzElAperture
   {
   public:
-    EVLAAperture(): ATerm(), polMap_p(), feedStokes_p() {};
+    //    EVLAAperture(): ATerm(), polMap_p(), feedStokes_p() {};
+    EVLAAperture(): AzElAperture(), polMap_p(), feedStokes_p() {};
     ~EVLAAperture() {};
     EVLAAperture& operator=(const EVLAAperture& other);
     //
