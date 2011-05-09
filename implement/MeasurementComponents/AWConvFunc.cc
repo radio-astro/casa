@@ -673,5 +673,9 @@ namespace casa{
     theavgPB.setCoordinateInfo(localPB.coordinates());
     return True; // i.e., an average PB was made
   }
+  void AWConvFunc::prepareConvFunction(const VisBuffer& vb, CFStore& cfs)
+  {
+    ATerm_p->rotate(vb,cfs);
+  };
 
 };
