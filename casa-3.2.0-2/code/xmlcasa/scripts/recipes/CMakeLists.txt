@@ -24,6 +24,7 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   cluster.py
   cmpmses.py
   find_autocorr.py
+  fixplanets.py
   __init__.py
   lsms.py
   make_labelled_ms.py
