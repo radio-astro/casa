@@ -107,12 +107,15 @@ casa = { 'build': {
          'helpers': {
              'logger': 'casalogger',
              'viewer': 'casaviewer',
+             'info': None,
              'dbus': None,
              'ipcontroller': None,
              'ipengine': None
          },
          'dirs': {
-             'rc': homedir + '/.casa'
+             'rc': homedir + '/.casa',
+             'data': None,
+             'root': None
          },
          'flags': { },
          'files': { },
@@ -121,9 +124,41 @@ casa = { 'build': {
 
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## set up casa root
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.environ.has_key('CASAPATH') :
+    __casapath__ = os.environ['CASAPATH'].split(' ')[0]
+    if not os.path.exists(__casapath__ + "/data") :
+        raise RuntimeError, "CASAPATH environment variable is improperly set"
+    else :
+        casa['dirs']['root'] = __casapath__
+        casa['dirs']['data'] = __casapath__ + "/data"
+else :
+    __casapath__ = casac.__file__
+    while __casapath__ and __casapath__ != "/" :
+        if os.path.exists( __casapath__ + "/data") :
+            break
+        __casapath__ = os.path.dirname(__casapath__)
+    if not os.path.exists(__casapath__ + "/data") :
+        raise RuntimeError, "casa path could not be determined"
+    else :
+        casa['dirs']['root'] = __casapath__
+        casa['dirs']['data'] = __casapath__ + "/data"
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ## setup helper paths...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-##     first try to find executables in likely system areas
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## try to set casapyinfo path...
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( __casapath__ + "/bin/casapyinfo") :
+    casa['helpers']['info'] = __casapath__ + "/bin/casapyinfo"
+
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+##     first try to find executables using casapyinfo...
+##            (since system area versions may be incompatible)...
+##     next try likely system areas...
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 ##
 ##   note:  hosts which have dbus-daemon-1 but not dbus-daemon seem to have a broken dbus-daemon-1...
@@ -134,6 +169,13 @@ for info in [ (['dbus-daemon'],'dbus'),
     exelist = info[0]
     entry = info[1]
     for exe in exelist:
+        if casa['helpers']['info']:
+            casa['helpers'][entry] = (lambda fd: fd.readline().strip('\n'))(os.popen(casa['helpers']['info'] + " --exec 'which " + exe + "'"))
+        if casa['helpers'][entry] and os.path.exists(casa['helpers'][entry]):
+            break
+        else:
+            casa['helpers'][entry] = None
+
         for dir in ['/bin', '/usr/bin', '/opt/local/bin', '/usr/lib/qt-4.3.4/dbus/bin', '/usr/lib64/qt-4.3.4/dbus/bin'] :
             dd = dir + os.sep + exe
             if os.path.exists(dd) and os.access(dd,os.X_OK) :
