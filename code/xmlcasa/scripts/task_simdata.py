@@ -362,8 +362,21 @@ def simdata(
         else:
             if type(ptgfile)==type([]):
                 ptgfile=ptgfile[0]
-            ptgfile=ptgfile.replace('$project',fileroot+"/"+project)
+#            ptgfile=ptgfile.replace('$project',fileroot+"/"+project)
+            ptgfile=ptgfile.replace('$project',project)
+            if not os.path.exists(fileroot+"/"+ptgfile):
+                if os.path.exists(ptgfile):
+                    shutil.copyfile(ptgfile,fileroot+"/"+ptgfile)
+                else:
+                    util.msg("Can't find pointing file "+ptgfile,priority="error")
+                    return False
+            ptgfile=fileroot+"/"+ptgfile
             nfld, pointings, etime = util.read_pointings(ptgfile)
+            # a string of different integrations doesn't work below yet
+#            integration = [str(s)+"s" for s in etime]
+            integration=str(etime[0])+"s"
+            util.msg("Using integration time "+integration+" for all pointings.",priority="warn")
+
             if max(etime) <=0:
                 etime = qa.convert(qa.quantity(integration),"s")['value']
             # expects that the cal is separate, and this is just one round of the mosaic

@@ -2198,10 +2198,16 @@ class cleanhelper:
 
         # ascending or desending data frequencies?
         # based on selected first spw's first CHANNEL WIDTH 
-        if chanres[0] < 0:
-          descending = True        
+        # ==> some MS data may have positive chan width
+        # so changed to look at first two channels of chanfreq (TT)
+        #if chanres[0] < 0:
+        descending = False
+        if len(chanfreqs) > 1 :
+          if chanfreqs[1]-chanfreqs[0] < 0:
+            descending = True        
         else:
-          descending = False
+          if chanres[0] < 0:
+            descending = True
 
         # set dataspecframe:
         elspecframe=["REST",
@@ -2282,9 +2288,7 @@ class cleanhelper:
                               outframe=self.usespecframe,veltype=veltype)
         descendingnewfreqs=False
         if type(newfreqs)==list:
-          if newfreqs[0]-newfreqs[1] < 0:
-            descendingnewfreqs=False
-          else:
+          if newfreqs[1]-newfreqs[0] < 0:
             descendingnewfreqs=True
         if debug: print "Mode, Start, width after cvelfreqs =",mode, start,width 
         if type(newfreqs)==list and len(newfreqs) ==0:
@@ -2382,11 +2386,21 @@ class cleanhelper:
             finc = newfreqs[1]-newfreqs[0]
             if debug: print "finc(newfreqs1-newfreqs0)=",finc
           if mode=="frequency":
+            if descendingnewfreqs:
+              finc = -finc
             retwidth=str(finc)+'Hz'
           elif mode=="velocity":
             # for default width assume it is vel<0 (incresing in freq)
-            v1 = self.convertvf(str(newfreqs[-1])+'Hz',frame,field,restf,veltype=veltype)
-            v0 = self.convertvf(str(newfreqs[-2])+'Hz',frame,field,restf,veltype=veltype)
+            if descendingnewfreqs:
+              ind1=-2
+              ind0=-1
+            else:
+              ind1=-1
+              ind0=-2
+            v1 = self.convertvf(str(newfreqs[ind1])+'Hz',frame,field,restf,veltype=veltype)
+            v0 = self.convertvf(str(newfreqs[ind0])+'Hz',frame,field,restf,veltype=veltype)
+            ##v1 = self.convertvf(str(newfreqs[-1])+'Hz',frame,field,restf,veltype=veltype)
+            ##v0 = self.convertvf(str(newfreqs[-2])+'Hz',frame,field,restf,veltype=veltype)
             #v1 = self.convertvf(str(newfreqs[1])+'Hz',frame,field,restf,veltype=veltype)
             #v0 = self.convertvf(str(newfreqs[0])+'Hz',frame,field,restf,veltype=veltype)
             retwidth = str(qa.quantity(qa.sub(qa.quantity(v0),qa.quantity(v1)))['value'])+'m/s'
