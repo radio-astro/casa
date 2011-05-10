@@ -231,6 +231,20 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
           //if(!haveWS) // sig is needed either way, in case ws == 0.0.
           sig = vb.sigmaMat()(corrind, vbrow);
+
+          // sig needs a sanity check, because a VisBuffer from vbga is not
+          // necessarily still attached to the MS and sigmaMat() is not one
+          // of the accumulated quantities.  This caused problems for
+          // the last integration in CAS-3135.  checkVisIter() didn't do the
+          // trick in that case.  Fortunately sig isn't all that important; if
+          // all the channels have the same weight the only consequence of
+          // setting sig to 1 is that the estimated errors (which we don't yet
+          // use) will be wrong.
+          //
+          // 5e-45 ended up getting squared in the fitter and producing a NaN.
+          if(isnan(sig) || sig < 1.0e-20 || sig > 1.0e20)
+            sig = 1.0;
+
           for(uInt c = 0; c < nchan; ++c){
             // AAARRGGGHHH!!  With Calibrater you have to use vb.flag(), not
             // flagCube(), to get the channel selection!
@@ -262,6 +276,12 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         // perform least-squares fit of a polynomial.
         // Don't try to solve for more coefficients than valid channels.
         Int locFitOrd = min(fitorder_p, static_cast<Int>(totunflaggedchan) - 1);
+
+        // if(locFitOrd < 1)
+        //   os << LogIO::DEBUG1
+        //      << "locFitOrd = " << locFitOrd
+        //      << LogIO::POST;
+
         Polynomial<AutoDiff<Float> > pnom(locFitOrd);
 
         // The way LinearFit is templated, "y" can be Complex, but at the cost
@@ -277,6 +297,28 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         fitter.setFunction(pnom);
         realsolution = fitter.fit(unflaggedfreqs, floatvs, sigma);
 
+        // if(isnan(realsolution[0])){
+        //   os << LogIO::DEBUG1 << "NaN found." << LogIO::POST;
+        //   for(uInt c = 0; c < totunflaggedchan; ++c){
+        //     if(isnan(unflaggedfreqs[c]))
+        //       os << LogIO::DEBUG1
+        //          << "unflaggedfreqs[" << c << "] is a NaN."
+        //          << LogIO::POST;
+        //     if(isnan(floatvs[c]))
+        //       os << LogIO::DEBUG1
+        //          << "floatvs[" << c << "] is a NaN."
+        //          << LogIO::POST;
+        //     if(isnan(sigma[c]))
+        //       os << LogIO::DEBUG1
+        //          << "sigma[" << c << "] is a NaN."
+        //          << LogIO::POST;
+        //     else if(sigma[c] <= 0.0)
+        //       os << LogIO::DEBUG1
+        //          << "sigma[" << c << "] = " << sigma[c]
+        //          << LogIO::POST;
+        //   }
+        // }
+
         // Do imags.
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind)       // Note <=.
           pnom.setCoefficient(ordind, 1.0);
@@ -286,6 +328,8 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
         fitter.setFunction(pnom);
         imagsolution = fitter.fit(unflaggedfreqs, floatvs, sigma);
+
+          
 
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind){      // Note <=.
           coeffs(corrind, ordind, blind) = Complex(realsolution[ordind],
