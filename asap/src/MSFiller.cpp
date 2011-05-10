@@ -1383,7 +1383,24 @@ void MSFiller::fillTcal( boost::object_pool<ROTableColumn> *tpoolr )
     os_ << "No SYSCAL rows" << LogIO::POST ;
     return ;
   } 
-  ROArrayColumn<Float> *tmpTcalCol = new ROArrayColumn<Float>( sctabsel, "TCAL" ) ;
+  ROArrayColumn<Float> *tmpTcalCol = new ROArrayColumn<Float>( sctabsel, colTcal_ ) ;
+  // return if any rows without Tcal value exists
+  Bool notDefined = False ;
+  for ( uInt irow = 0 ; irow < sctabsel.nrow() ; irow++ ) {
+    if ( !tmpTcalCol->isDefined( irow ) ) {
+      notDefined = True ;
+      break ;
+    }
+  }
+  if ( notDefined ) {
+    os_ << "No TCAL value" << LogIO::POST ;
+    delete tmpTcalCol ;
+    table_->tcal().table().addRow(1,True) ;
+    Vector<Float> defaultTcal( 1, 1.0 ) ;
+    ArrayColumn<Float> tcalCol( table_->tcal().table(), "TCAL" ) ;
+    tcalCol.put( 0, defaultTcal ) ;
+    return ;
+  }    
   uInt npol = tmpTcalCol->shape( 0 )(0) ;
   delete tmpTcalCol ;
   //os_ << "fillTcal(): npol = " << npol << LogIO::POST ;
