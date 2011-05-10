@@ -2188,6 +2188,8 @@ class cleanhelper:
         mssel=ms.msseltoindex(vis=invis, spw=spw, field=field)
         selspw=mssel['spw']
         selfield=mssel['field']
+        chaninds=mssel['channel'].tolist()
+        chanst0 = chaninds[0][1]
 
         # frame
         spw0=selspw[0]
@@ -2327,11 +2329,8 @@ class cleanhelper:
               reverse=True
           elif width=="": #default width
             if descendingnewfreqs and mode=="frequency":
-            #if descendingnewfreqs:
-              #reverse=False
               reverse=True
             else:
-              #reverse=True
               reverse=False
                
           elif type(width)==str:
@@ -2375,7 +2374,8 @@ class cleanhelper:
             startfreq=str(newfreqs[-1])+'Hz'
             retstart=self.convertvf(startfreq,frame,field,restf,veltype)
           elif mode=="channel":
-            retstart=0
+            # default start case, use channel selection from spw
+            retstart=chanst0
         
         # set width parameter
         if width!="":
