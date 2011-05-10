@@ -252,13 +252,13 @@ ROVisibilityIteratorAsync::construct (const PrefetchColumns & prefetchColumns, I
     if (contains (Feed1_pa, prefetchColumns_p)){
         prefetchColumns_p.insert (Feed1);
         prefetchColumns_p.insert (Ant1);
-        prefetchColumns_p.insert (Time);
+        prefetchColumns_p.insert (casa::asyncio::Time);
     }
 
     if (contains (Feed2_pa, prefetchColumns_p)){
         prefetchColumns_p.insert (Feed2);
         prefetchColumns_p.insert (Ant2);
-        prefetchColumns_p.insert (Time);
+        prefetchColumns_p.insert (casa::asyncio::Time);
     }
 
     impl_p->vlat_p->setPrefetchColumns (prefetchColumns_p);

@@ -668,108 +668,108 @@ VLAT::createFillerDictionary ()
 
 	fillerDictionary_p.clear();
 
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Ant1,
+	fillerDictionary_p.add(Ant1,
 	                       vlatFunctor0 (& VisBuffer::fillAnt1));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Ant2,
+	fillerDictionary_p.add(Ant2,
 	                       vlatFunctor0 (& VisBuffer::fillAnt2));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ArrayId,
+	fillerDictionary_p.add(ArrayId,
 	                       vlatFunctor0 (& VisBuffer::fillArrayId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Channel,
+	fillerDictionary_p.add(Channel,
 	                       vlatFunctor0 (& VisBuffer::fillChannel));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Cjones,
+	fillerDictionary_p.add(Cjones,
 	                       vlatFunctor0 (& VisBuffer::fillCjones));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::CorrType,
+	fillerDictionary_p.add(CorrType,
 	                       vlatFunctor0 (& VisBuffer::fillCorrType));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Corrected,
+	fillerDictionary_p.add(Corrected,
 	                       vlatFunctor1(& VisBuffer::fillVis,
 	                                    VisibilityIterator::Corrected));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::CorrectedCube,
+	fillerDictionary_p.add(CorrectedCube,
 	                       vlatFunctor1(& VisBuffer::fillVisCube,
 	                                    VisibilityIterator::Corrected));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Direction1,
+	fillerDictionary_p.add(Direction1,
 	                       vlatFunctor0 (& VisBuffer::fillDirection1));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Direction2,
+	fillerDictionary_p.add(Direction2,
 	                       vlatFunctor0 (& VisBuffer::fillDirection2));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Exposure,
+	fillerDictionary_p.add(Exposure,
 	                       vlatFunctor0 (& VisBuffer::fillExposure));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed1,
+	fillerDictionary_p.add(Feed1,
 	                       vlatFunctor0 (& VisBuffer::fillFeed1));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed1_pa,
+	fillerDictionary_p.add(Feed1_pa,
 	                       vlatFunctor0 (& VisBuffer::fillFeed1_pa));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed2,
+	fillerDictionary_p.add(Feed2,
 	                       vlatFunctor0 (& VisBuffer::fillFeed2));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed2_pa,
+	fillerDictionary_p.add(Feed2_pa,
 	                       vlatFunctor0 (& VisBuffer::fillFeed2_pa));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FieldId,
+	fillerDictionary_p.add(FieldId,
 	                       vlatFunctor0 (& VisBuffer::fillFieldId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Flag,
+	fillerDictionary_p.add(Flag,
 	                       vlatFunctor0 (& VisBuffer::fillFlag));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FlagCategory,
+	fillerDictionary_p.add(FlagCategory,
 	                       vlatFunctor0 (& VisBuffer::fillFlagCategory));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FlagCube,
+	fillerDictionary_p.add(FlagCube,
 	                       vlatFunctor0 (& VisBuffer::fillFlagCube));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FlagRow,
+	fillerDictionary_p.add(FlagRow,
 	                       vlatFunctor0 (& VisBuffer::fillFlagRow));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Freq,
+	fillerDictionary_p.add(Freq,
 	                       vlatFunctor0 (& VisBuffer::fillFreq));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ImagingWeight,
+	fillerDictionary_p.add(ImagingWeight,
 	                       vlatFunctor0 (& VisBuffer::fillImagingWeight));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::LSRFreq,
+	fillerDictionary_p.add(LSRFreq,
 	                       vlatFunctor0 (& VisBuffer::fillLSRFreq));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Model,
+	fillerDictionary_p.add(Model,
 	                       vlatFunctor1(& VisBuffer::fillVis,
 	                                    VisibilityIterator::Model));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ModelCube,
+	fillerDictionary_p.add(ModelCube,
 	                       vlatFunctor1(& VisBuffer::fillVisCube,
 	                                    VisibilityIterator::Model));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::NChannel,
+	fillerDictionary_p.add(NChannel,
 	                       vlatFunctor0 (& VisBuffer::fillnChannel));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::NCorr,
+	fillerDictionary_p.add(NCorr,
 	                       vlatFunctor0 (& VisBuffer::fillnCorr));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::NRow,
+	fillerDictionary_p.add(NRow,
 	                       vlatFunctor0 (& VisBuffer::fillnRow));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ObservationId,
+	fillerDictionary_p.add(ObservationId,
 	                       vlatFunctor0 (& VisBuffer::fillObservationId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Observed,
+	fillerDictionary_p.add(Observed,
 	                       vlatFunctor1(& VisBuffer::fillVis,
 	                                    VisibilityIterator::Observed));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ObservedCube,
+	fillerDictionary_p.add(ObservedCube,
 	                       vlatFunctor1(& VisBuffer::fillVisCube,
 	                                    VisibilityIterator::Observed));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::PhaseCenter,
+	fillerDictionary_p.add(PhaseCenter,
 	                       vlatFunctor0 (& VisBuffer::fillPhaseCenter));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::PolFrame,
+	fillerDictionary_p.add(PolFrame,
 	                       vlatFunctor0 (& VisBuffer::fillPolFrame));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ProcessorId,
+	fillerDictionary_p.add(ProcessorId,
 	                       vlatFunctor0 (& VisBuffer::fillProcessorId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Scan,
+	fillerDictionary_p.add(Scan,
 	                       vlatFunctor0 (& VisBuffer::fillScan));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Sigma,
+	fillerDictionary_p.add(Sigma,
 	                       vlatFunctor0 (& VisBuffer::fillSigma));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::SigmaMat,
+	fillerDictionary_p.add(SigmaMat,
 	                       vlatFunctor0 (& VisBuffer::fillSigmaMat));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::SpW,
+	fillerDictionary_p.add(SpW,
 	                       vlatFunctor0 (& VisBuffer::fillSpW));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::StateId,
+	fillerDictionary_p.add(StateId,
 	                       vlatFunctor0 (& VisBuffer::fillStateId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Time,
+	fillerDictionary_p.add(casa::asyncio::Time,
 	                       vlatFunctor0 (& VisBuffer::fillTime));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::TimeCentroid,
+	fillerDictionary_p.add(TimeCentroid,
 	                       vlatFunctor0 (& VisBuffer::fillTimeCentroid));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::TimeInterval,
+	fillerDictionary_p.add(TimeInterval,
 	                       vlatFunctor0 (& VisBuffer::fillTimeInterval));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Uvw,
+	fillerDictionary_p.add(Uvw,
 	                       vlatFunctor0 (& VisBuffer::filluvw));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::UvwMat,
+	fillerDictionary_p.add(UvwMat,
 	                       vlatFunctor0 (& VisBuffer::filluvwMat));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Weight,
+	fillerDictionary_p.add(Weight,
 	                       vlatFunctor0 (& VisBuffer::fillWeight));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::WeightMat,
+	fillerDictionary_p.add(WeightMat,
 	                       vlatFunctor0 (& VisBuffer::fillWeightMat));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::WeightSpectrum,
+	fillerDictionary_p.add(WeightSpectrum,
 	                       vlatFunctor0 (& VisBuffer::fillWeightSpectrum));
 
-    assert (fillerDictionary_p.size() == ROVisibilityIteratorAsync::N_PrefetchColumnIds);
+    assert (fillerDictionary_p.size() == N_PrefetchColumnIds);
                 // Every supported prefetch column needs a filler
 
     //fillerDependencies_p.add ();
@@ -1046,7 +1046,7 @@ VLAT::setPrefetchColumns (const ROVisibilityIteratorAsync::PrefetchColumns & col
 		 c != columns.end();
 		 c ++){
 
-	    ThrowIf (! contains (*c, fillerDictionary_p), format ("Unknown prefetch column id (%d)", *c));
+	    ThrowIf (! containsKey (*c, fillerDictionary_p), format ("Unknown prefetch column id (%d)", *c));
 
 		fillers_p.push_back (fillerDictionary_p [*c]->clone());
 	}

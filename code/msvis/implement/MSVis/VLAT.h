@@ -344,15 +344,15 @@ class VlatFunctor {
 public:
 
 	VlatFunctor (Int precedence = 0)
-	: id_p (ROVisibilityIteratorAsync::N_PrefetchColumnIds), precedence_p (precedence)
+	: id_p (casa::asyncio::N_PrefetchColumnIds), precedence_p (precedence)
 	{}
 	virtual ~VlatFunctor () {}
 
 	virtual void operator() (VisBuffer *) { throw AipsError ("Illegal Vlat Functor");}
 	virtual VlatFunctor * clone () { return new VlatFunctor (* this);}
 
-	ROVisibilityIteratorAsync::PrefetchColumnIds getId () const { return id_p;}
-	void setId (ROVisibilityIteratorAsync::PrefetchColumnIds id) { id_p = id;}
+	casa::asyncio::PrefetchColumnIds getId () const { return id_p;}
+	void setId (casa::asyncio::PrefetchColumnIds id) { id_p = id;}
 	void setPrecedence (Int precedence) { precedence_p = precedence; }
 
 	static Bool byDecreasingPrecedence (const VlatFunctor * a, const VlatFunctor * b)
@@ -363,7 +363,7 @@ public:
 	}
 private:
 
-	ROVisibilityIteratorAsync::PrefetchColumnIds id_p;
+	casa::asyncio::PrefetchColumnIds id_p;
 	Int precedence_p;
 
 };
@@ -510,10 +510,10 @@ public:
 
 protected:
 
-	class FillerDictionary : public map<ROVisibilityIteratorAsync::PrefetchColumnIds, VlatFunctor *> {
+	class FillerDictionary : public map<casa::asyncio::PrefetchColumnIds, VlatFunctor *> {
 
 	public:
-	    void add (ROVisibilityIteratorAsync::PrefetchColumnIds id, VlatFunctor * f)
+	    void add (casa::asyncio::PrefetchColumnIds id, VlatFunctor * f)
 	    {
 	        f->setId (id);
 	        assert (find(id) == end()); // shouldn't already have one for this ID
