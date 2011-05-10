@@ -613,33 +613,34 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
-    ROVIA::PrefetchColumns prefetchColumns =
-        ROVIA::prefetchColumns (ROVIA::Ant1,
-                                ROVIA::Ant2,
-                                ROVIA::ArrayId,
-                                ROVIA::CorrectedCube,
-                                ROVIA::CorrType,
-                                ROVIA::Direction1,
-                                ROVIA::Direction2,
-                                ROVIA::Feed1,
-                                ROVIA::Feed1_pa,
-                                ROVIA::Feed2,
-                                ROVIA::Feed2_pa,
-                                ROVIA::FieldId,
-                                ROVIA::FlagCube,
-                                ROVIA::FlagRow,
-                                ROVIA::Freq,
-                                ROVIA::ImagingWeight,
-                                ROVIA::LSRFreq,
-                                ROVIA::NChannel,
-                                ROVIA::NCorr,
-                                ROVIA::NRow,
-                                ROVIA::PhaseCenter,
-                                ROVIA::PolFrame,
-                                ROVIA::SpW,
-                                ROVIA::Time,
-                                ROVIA::Uvw,
-                                -1);
+    using namespace casa::asyncio;
+
+    PrefetchColumns prefetchColumns = ROVIA::prefetchColumns (Ant1,
+                                                              Ant2,
+                                                              ArrayId,
+                                                              CorrectedCube,
+                                                              CorrType,
+                                                              Direction1,
+                                                              Direction2,
+                                                              Feed1,
+                                                              Feed1_pa,
+                                                              Feed2,
+                                                              Feed2_pa,
+                                                              FieldId,
+                                                              FlagCube,
+                                                              FlagRow,
+                                                              Freq,
+                                                              ImagingWeight,
+                                                              LSRFreq,
+                                                              NChannel,
+                                                              NCorr,
+                                                              NRow,
+                                                              PhaseCenter,
+                                                              PolFrame,
+                                                              SpW,
+                                                              casa::asyncio::Time,
+                                                              Uvw,
+                                                              -1);
 
 //        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
 ////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
