@@ -30,6 +30,19 @@ namespace casa {
 namespace utilj {
 
 String
+formatV (const String & formatString, va_list vaList)
+{
+	char buffer [4096];
+	int nPrinted = vsnprintf (buffer, sizeof (buffer), formatString.c_str(), vaList);
+
+	if (nPrinted >= (int) sizeof (buffer) - 1){
+		buffer [sizeof (buffer) - 2] = '|'; // mark as truncated
+	}
+
+	return buffer;
+}
+
+String
 format (const char * formatString, ...)
 {
 
@@ -41,17 +54,13 @@ format (const char * formatString, ...)
 
 	va_start (vaList, formatString);
 
-	char buffer [4096];
-	int nPrinted = vsnprintf (buffer, sizeof (buffer), formatString, vaList);
-
-	if (nPrinted >= (int) sizeof (buffer) - 1){
-		buffer [sizeof (buffer) - 2] = '|'; // mark as truncated
-	}
+	String result = formatV (formatString, vaList);
 
 	va_end (vaList);
 
-	return buffer;
+	return result;
 }
+
 
 Bool
 getEnv (const String & name, const Bool & defaultValue)
@@ -307,7 +316,7 @@ AipsErrorTrace::AipsErrorTrace ( const String &msg, const String &filename, uInt
     for (int i = 0; i < n; i++){
         message += trace[i] + String ("\n");
     }
-    delete trace;
+    free (trace);
 }
 
 } // end namespace utilj

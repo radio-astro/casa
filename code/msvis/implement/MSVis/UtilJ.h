@@ -15,6 +15,10 @@
 #include <cstdlib>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <functional>
+#include <map>
+#include <set>
+#include <vector>
 
 // The Assert macro is an alias to the standard assert macro when NDEBUG is defined.  When
 // NDEBUG is not defined (release build) then a throw is used to report the error.
@@ -24,6 +28,8 @@
 #else
 #define Assert(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__); }
 #endif
+
+#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__); }
 
 #if defined (NDEBUG)
 #    define Throw(m) \
@@ -53,14 +59,55 @@ public:
 
 };
 
-template <typename Element, typename Container>
+class Strings : public std::vector<String> {};
+
+//template <typename Element, typename Container>
+//Bool
+//contains (const Element & e, const Container & c)
+//{
+//	return c.find(e) != c.end();
+//}
+
+
+template <typename Container>
 Bool
-contains (const Element & e, const Container & c)
+containsKey (const typename Container::key_type & key,
+             const Container & container)
 {
-	return c.find(e) != c.end();
+    return container.find(key) != container.end();
 }
 
+template <typename Container>
+Bool
+contains (const typename Container::value_type & e,
+          const Container & c)
+{
+    // For set and map use containsKey; will work for set but
+    // use with map requires specifying a pair as the first argument
+
+    return std::find(c.begin(), c.end(), e) != c.end();
+}
+
+template <typename F, typename S>
+F & first (std::pair<F,S> & pair) { return pair.first;}
+
+template <typename F, typename S>
+const F & first (const std::pair<F,S> & pair) { return pair.first;}
+
+template <typename F, typename S>
+class FirstFunctor : public std::unary_function<std::pair<F,S>, F>{
+public:
+    F & operator() (std::pair<F,S> & p) { return p.first; }
+    const F & operator() (const std::pair<F,S> & p) { return p.first; }
+};
+
+
+template <typename F, typename S>
+FirstFunctor<F,S> firstFunctor () { return FirstFunctor<F,S> ();}
+
+
 String format (const char * formatString, ...);
+String formatV (const String & formatString, va_list vaList);
 
 template<typename T>
 T
@@ -86,7 +133,95 @@ getEnv (const String & name, const Int & defaultValue);
 String getTimestamp ();
 
 Bool isEnvDefined (const String & name);
+
+
+template <typename Itr>
+String
+join (Itr begin, Itr end, const String & delimiter)
+{
+    String result;
+    Itr i = begin;
+
+    if (i != end){
+
+        result = * i ++;
+
+        for (; i != end; i++){
+            result += delimiter + * i;
+        }
+    }
+
+    return result;
+}
+
+template <typename T>
+String
+join (const T & strings, const String & delimiter)
+{
+    return join (strings.begin(), strings.end(), delimiter);
+}
+
+template <typename Itr, typename F>
+String
+join (Itr begin, Itr end, F f, const String & delimiter)
+{
+    String result;
+    Itr i = begin;
+
+    if (i != end){
+
+        result = f(* i);
+        ++ i;
+
+        for (; i != end; i++){
+            result += delimiter + f (* i);
+        }
+    }
+
+    return result;
+}
+
+template <typename K, typename V>
+std::vector<K>
+mapKeys (const std::map<K,V> & aMap)
+{
+    std::vector<K> result (aMap.size());
+
+    std::transform (aMap.begin(), aMap.end(), back_inserter (result), firstFunctor<K,V>());
+
+    return result;
+}
+
+template <typename F, typename S>
+F & second (std::pair<F,S> & pair) { return pair.second;}
+
+template <typename F, typename S>
+const F & second (const std::pair<F,S> & pair) { return pair.second;}
+
+template <typename F, typename S>
+class SecondFunctor : public std::unary_function<std::pair<F,S>, F>{
+public:
+    S & operator() (std::pair<F,S> & p) { return p.second; }
+};
+
+template <typename F, typename S>
+SecondFunctor<F,S> secondFunctor () { return SecondFunctor<F,S> ();}
+
+template <typename K, typename V>
+std::vector<V>
+mapValues (const std::map<K,V> & aMap)
+{
+    std::vector<K> result (aMap.size());
+
+    std::transform (aMap.begin(), aMap.end(), back_inserter (result), second<K,V>);
+
+    return result;
+}
+
 void printBacktrace (ostream & os, const String & prefix = "");
+
+
+
 void sleepMs (Int milliseconds);
 void toStdError (const String & m, const String & prefix = "*E* ");
 void throwIf (Bool condition, const String & message, const String & file, Int line);
@@ -293,6 +428,85 @@ private:
 
 
 // </group>
+
+/*
+
+Example of using composer and unary.  The composed functors have to be derived from std::unary_function
+
+  int f(int x) { return x*x;}
+  int g(int x) { return 2 * x;}
+  int h(int x) { return 100 + x;}
+
+  vector<int> a;
+  a.push_back(1);
+  a.push_back(2);
+  a.push_back(3);
+
+  transform (a.begin(), a.end(), std::ostream_iterator<int> (cout, "\n"), compose (unary(f), unary(f)));
+
+  // prints out
+  // 4
+  // 16
+  // 36
+
+  transform (a.begin(), a.end(), std::ostream_iterator<int> (cout, "\n"),
+             compose (unary(h), compose (unary(f), unary(f))));
+
+  // prints out
+  // 104
+  // 116
+  // 136
+
+*/
+
+template <typename F, typename G>
+class ComposedFunctor : public std::unary_function <typename G::argument_type, typename F::result_type> {
+
+public:
+
+    ComposedFunctor (F f, G g) : f_p (f), g_p (g) {}
+
+    typename F::result_type operator() (typename G::argument_type x) { return f_p ( g_p (x)); }
+
+private:
+
+    F f_p;
+    G g_p;
+};
+
+template <typename F, typename G>
+ComposedFunctor<F, G>
+compose (F f, G g)
+{
+    return ComposedFunctor <F, G> (f, g);
+}
+
+template <typename D, typename R>
+class UnaryFunctor : public std::unary_function<D,R> {
+public:
+    typedef R (* F) (D);
+
+    UnaryFunctor (F f) : f_p (f) {}
+    R operator() (D x) { return f_p (x); }
+
+private:
+
+    F f_p;
+};
+
+template <typename D, typename R>
+UnaryFunctor <D, R>
+unary (R (*f) (D)) { return UnaryFunctor<D, R> (f);}
+
+class Z {
+public:
+
+    string getName () const { return name_p;}
+
+    string name_p;
+};
+
+
 
 } // end namespace utilj
 
