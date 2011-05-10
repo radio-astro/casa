@@ -68,7 +68,7 @@ MSConcat::MSConcat(MeasurementSet& ms):
   itsMS(ms),
   itsFixedShape(isFixedShape(ms.tableDesc())), 
   newSourceIndex_p(-1), newSourceIndex2_p(-1), newSPWIndex_p(-1),
-  newObsIndexA_p(-1), newObsIndexB_p(-1)
+  newObsIndexA_p(-1), newObsIndexB_p(-1), solSystObjects_p(-1)
 {
   itsDirTol=Quantum<Double>(1.0, "mas");
   itsFreqTol=Quantum<Double>(1.0, "Hz");
@@ -1100,6 +1100,7 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
     else{
       maxSrcId=max(sourceCol.sourceId().getColumn());
     }
+
     TableRecord sourceRecord;
     newSourceIndex_p.clear();
     Int numrows=otherSource.nrow();
@@ -1132,13 +1133,31 @@ Bool MSConcat::copySource(const MeasurementSet& otherms){
     }
 
     doSource_p=True;
+
+    solSystObjects_p.clear();
+
+    const ROMSFieldColumns otherFieldCols(otherms.field());
+    const ROMSFieldColumns fieldCols(itsMS.field());
+    for(uInt i=0; i<itsMS.field().nrow(); i++){
+      MDirection::Types refType = MDirection::castType(fieldCols.phaseDirMeas(i).getRef().getType());
+      if(refType>=MDirection::MERCURY && refType<MDirection::N_Planets){ // we have a solar system object
+	solSystObjects_p.define(fieldCols.sourceId()(i), (Int) refType);
+      }
+    }
+    for(uInt i=0; i<otherms.field().nrow(); i++){
+      MDirection::Types refType = MDirection::castType(otherFieldCols.phaseDirMeas(i).getRef().getType());
+      if(refType>=MDirection::MERCURY && refType<MDirection::N_Planets){ // we have a solar system object
+	solSystObjects_p.define(otherFieldCols.sourceId()(i)+maxSrcId+1, (Int) refType);
+      }
+    }
+
   }
 
   return doSource_p;
 }
 
 Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPol 
-                              //   but before copyField!
+                               //   but before copyField!
 
   doSource2_p = False;
 
@@ -1149,7 +1168,7 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 
     // the number of rows in the source table
     Int numrows_this=newSource.nrow();
-
+    
     if(numrows_this > 0){  // the source table is not empty
 
       TableRecord sourceRecord;
@@ -1196,7 +1215,10 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 	// check if row j has an equivalent row somewhere else in the table
 	for (uint k=0 ; k < numrows_this ; ++k){
 	  if (k!=j && !rowToBeRemoved(j) && !rowToBeRemoved(k)){
-	    if( sourceRowsEquivalent(sourceCol, j, k) ){ // all columns are the same (not testing source, spw id, time, and interval)
+	    Int reftypej = solSystObjects_p(thisId(j));
+	    Int reftypek = solSystObjects_p(thisId(k));
+	    Bool sameSolSystObjects = (reftypek==reftypej) && (reftypek!=-1);
+	    if( sourceRowsEquivalent(sourceCol, j, k, sameSolSystObjects) ){ // all columns are the same (not testing source, spw id, time, and interval)
 	      if(areEQ(sourceCol.spectralWindowId(),j, k)){ // also the SPW id is the same
 		//cout << "Found SOURCE rows " << j << " and " << k << " to be identical." << endl;
 
@@ -1263,11 +1285,14 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
       for (uint j=0 ; j < newNumrows_this ; ++j){
 	// check if row j has an equivalent row somewhere down in the table
 	for (uint k=j+1 ; k < newNumrows_this ; ++k){
-	  if( sourceRowsEquivalent(sourceCol, j, k) && 
+	    Int reftypej = solSystObjects_p(thisId(j));
+	    Int reftypek = solSystObjects_p(thisId(k));
+	    Bool sameSolSystObjects = (reftypek==reftypej) && (reftypek!=-1);
+	  if( sourceRowsEquivalent(sourceCol, j, k, sameSolSystObjects) && 
 	      !areEQ(sourceCol.sourceId(),j, k)){ // all columns are the same except source id (not testing spw id),
 	                                          // spw id must be different, otherwise row would have been deleted above
-// 	    cout << "Found SOURCE rows " << j << " and " << k << " to be identical except for the SPW ID and source id. "
-// 		 << newThisId(k) << " mapped to " << newThisId(j) << endl;
+ 	    //cout << "Found SOURCE rows " << j << " and " << k << " to be identical except for the SPW ID and source id. "
+	    //	 << newThisId(k) << " mapped to " << newThisId(j) << endl;
 	    // give same source id
 	    // make entry in map for (k, j) and rename k
 	    tempSourceIndex3.define(newThisId(k), newThisId(j));
@@ -1341,7 +1366,8 @@ Bool MSConcat::updateSource(){ // to be called after copySource and copySpwAndPo
 }
 
 
-Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj){
+Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt& rowi, const uInt& rowj,
+				    const Bool dontTestDirection){
   // check if the two SOURCE table rows are identical IGNORING SOURCE_ID, SPW_ID, time, and interval
 
   Bool areEquivalent(False);
@@ -1353,7 +1379,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
      areEQ(sourceCol.numLines(), rowi, rowj) &&
      // do NOT test SPW ID!
      // areEQ(sourceCol.spectralWindowId(), rowi, rowj) &&
-     areEQ(sourceCol.direction(), rowi, rowj) &&
+     (areEQ(sourceCol.direction(), rowi, rowj) || dontTestDirection) &&
      areEQ(sourceCol.properMotion(), rowi, rowj)
      ){
     
@@ -1361,7 +1387,7 @@ Bool MSConcat::sourceRowsEquivalent(const MSSourceColumns& sourceCol, const uInt
 
     // test the optional columns next
     areEquivalent = True;
-    if(!(sourceCol.position().isNull())){
+    if(!(sourceCol.position().isNull()) && !dontTestDirection){
       try {
 	areEquivalent = areEQ(sourceCol.position(), rowi, rowj);
       }
