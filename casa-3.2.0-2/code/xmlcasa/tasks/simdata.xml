@@ -668,7 +668,8 @@ mosaic simulation task:
        - tsys-atm: J. Pardo's ATM library will be used to construct an
            atmospheric profile for the ALMA site:
            altitude 5000m, ground pressure 650mbar, relhum=20%, 
-           a water layer of user_pwv at altitude of 2km,
+           a water layer of user_pwv with scale height of 200m
+           (based on preliminary measurements at the ALMA site),
            the sky brightness temperature returned by ATM, 
            and internally tabulated receiver temperatures
        - tsys-manual: instead of using the ATM model, specify the zenith 
