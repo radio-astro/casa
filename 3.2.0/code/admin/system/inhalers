@@ -1,0 +1,177 @@
+AIPS++ consortium hosts
+-----------------------
+
+ATNF, Epping (epping, Mark Calabretta):
+
+ + bootes.atnf.csiro.au    130.155.194.37   Sun  4/40 IPC, Bob Sault
+   brogar.atnf.csiro.au    130.155.194.39   Sun  4/40 IPC, Ray Norris
+ + grus.atnf.csiro.au      130.155.194.40   Sun  4/40 IPC, Mark Calabretta
+   lupus.atnf.csiro.au     130.155.194.38   Sun  4/40 IPC, Neil Killeen
+ * lynx.atnf.csiro.au      130.155.194.25   Sun 10/41 IPC, public
+   mayhem.atnf.csiro.au    130.155.194.42   Sun  4/40 IPC, Henrietta May
+   wyvern.atnf.csiro.au    130.155.194.26   Sun  4/40 IPC, Richard Gooch
+
+
+ATNF, Narrabri (narrabri, Mark Wieringa):
+
+ * molen.atnf.csiro.au     192.207.156.34   Sun Sparc 5, Mark Wieringa
+
+
+BIMA, Illinois (uiuc, Doug Roberts):
+
+ + avior.astrouiuc.edu     128.174.51.153   Sun 4, public
+ + monet.astro.uiuc.edu    141.142.222.28   SGI Onyx, public
+ + dow.astro.uiuc.edu      141.142.222.26   SGI Octane, Doug Roberts
+ + skye.astro.uiuc.edu     141.142.222.27   SGI Octane, Dan Briggs
+
+
+BIMA, Maryland (umd, Peter Teuben):
+
+ x lmc.astro.umd.edu       128.8.251.15     Sun 4/75 Sparc 2, public
+ + saturn.astro.umd.edu    128.8.251.43     Sun 4/60 Sparc 1, Peter Teuben
+
+
+DRAO, Penticton (penticton, Tony Willis):
+
+ + cass.drao.nrc.ca        192.139.21.41
+ + cygnus.drao.nrc.ca      192.139.21.39    IBM RS6000
+   draco.drao.nrc.ca       192.139.21.38    MicroVAX, gateway
+ + kepler.drao.nrc.ca      192.139.21.43    IBM RS6000 320H
+ + sol.drao.nrc.ca         192.139.21.44    Sun 4/50 IPX
+ + tycho.drao.nrc.ca       192.139.21.74    IBM RS6000 320H
+ * virgo.drao.nrc.ca       192.139.21.40    IBM RS6000, Tony Willis
+
+
+HIA, Ottawa (ottawa, Russell Redman):
+
+ * seurat.hia.nrc.ca       132.246.84.3     Sun 4/75 Sparc 2, Russell Redman
+
+
+NFRA, Dwingeloo (dwingel, Henk Vosmeijer):
+
+ * duw01.nfra.nl          192.87.1.152     Sun SS20/1, AIPS++ server
+
+
+NRAL, Jodrell Bank (jodrell, David Shone):
+
+ + jbss0.jb.man.ac.uk      130.88.24.8      Sun 4/75 Sparc 2, public
+ * jbss1.jb.man.ac.uk      130.88.24.15     Sun 4/40 IPC, public
+
+
+NRAO, Charlottesville (cville, Jim Horstkotte):
+
+ + baboon.cv.nrao.edu      192.33.115.103   Sun 4/75 Sparc 2, AIPS++ master
+ + chad.cv.nrao.edu        192.33.115.60    Sun 4/40 IPC, Ger van Diepen
+ * colobus.cv.nrao.edu     192.33.115.19    Sun 4/50 IPX, Brian Glendenning
+ + muse.cv.nrao.edu        192.33.115.85    Sun 4/40 IPC, Darrell Schiebel
+ + rosebud.cv.nrao.edu     192.33.115.78    Sun 4/40 IPC, Jim Horstkotte
+
+
+NRAO, Earlysville (bglenden-home, Brian Glendenning):
+ * dinks.cv.nrao.edu       192.33.115.59    Sun 3/60 Brian Glendenning
+
+
+NRAO, Green Bank (gb, Bob Payne):
+
+ * regulus.gb.nrao.edu     192.33.116.114   Sun 4/50 IPX, public
+ + vega.gb.nrao.edu        192.33.116.118   Sun 4/40 IPC, Bob Payne
+
+
+NRAO, Socorro (socorro, Terri Bottomly):
+
+ + daneel.aoc.nrao.edu     146.88.2.33      Sun 4/75 Sparc 2, Bob Hjellming
+ * fluke.aoc.nrao.edu      146.88.6.17      Sun 4/40 IPX, Terri Bottomly
+ + hookipa.aoc.nrao.edu    146.88.4.15      Sun 4/20 SLC, Stephane Beland
+ + mimbres.aoc.nrao.edu    146.88.4.18      Sun 4/50 IPX, Mark Holdaway
+ + omega.aoc.nrao.edu      146.88.4.9       Sun 4/40 IPC, Bob Duquet
+ + schooner.aoc.nrao.edu   146.88.4.12      Sun 4/20 SLC, Ruth Milner
+ + urania.aoc.nrao.edu     146.88.6.18      Sun 4/40 IPX, Tim Roberts
+ + wotan.aoc.nrao.edu      146.88.4.11      Sun 4/50 IPX, Wes Young
+ + beluga.aoc.nrao.edu     146.88.7.12      Sun 4/50 IPX, Sanjay Bhatnagar
+ + acoma.aoc.nrao.edu      146.88.7.11      Sun 4/50 IPX, Sanjay Bhatnagar
+ + isleta.aoc.nrao.edu     146.88.7.16      Sun 4/50 IPX, Sanjay Bhatnagar
+
+
+TIFR, Pune (tifr, Sanjay Bhatnagar):
+
+ * rohini.gmrt.ernet.in    144.16.27.1      Sun 4/60 Sparc 1, Sanjay Bhatnagar
+   sangam.ncst.ernet.in                     mail router
+   iucca.ernet.in          144.16.31.1      internet link to GMRT
+
+
+Notes:
+   *) The consortium member name includes it's location, AIPS++ site name,
+      and local contact person.
+
+   *) colobus.cv.nrao.edu runs 'exhale'.
+
+   *) Machines which run 'inhale' at each site are marked with "x" or "*".
+
+   *) Machines with mount permission for the master repository are marked
+      with "+" or "*".
+
+
+inhale timetable at consortium sites (northern summer)
+------------------------------------------------------
+
+                                 GMT    Local     EDT  AEST  incr  cuml
+                                ----  ---------  ----  ----  ----  ----
+Master (Charlottesville)        1030  0630  EDT  0630  2030
+ATNF (Epping, first)            1300  2300 AEST  0900  2300   -     6
+ATNF (Narrabri, first)          1330  2330 AEST  0930  2330   -     -
+
+Master (Charlottesville)        2230  1830  EDT  1830  0830
+NRAO (Charlottesville)          2315  1915  EDT  1915  0915  0-5    6
+TIFR (Pune)                     0000  0530  IST  2000  1000  0-5    6
+NFRA                            -
+NRAL (Jodrell Bank)             0000  0100  BST  2000  1000   -     -
+BIMA (Maryland)                 0100  2100  EDT  2100  1100   -     -
+ATNF (Narrabri, second)         0130  1130 AEDT  2130  1130   -     -
+NRAO (Green Bank)               0200  2200  EDT  2200  1200  0-5    6
+ATNF (Epping, second)           0230  1230 AEST  2230  1230   -     -
+BIMA (Illinois)                 0300  2200  CDT  2300  1300  0-5    6
+NRAO (Socorro)                  0000  1800  MDT  2000  1000   -     6
+HIA  (Ottawa)                   0430  0030  EDT  0030  1430  0-5    6
+DRAO (Penticton)                0500  2200  PDT  0100  1500  0-5    6
+
+
+inhale timetable at consortium sites (southern summer)
+------------------------------------------------------
+
+                                 GMT    Local     EST  AEDT  incr  cuml
+                                ----  ---------  ----  ----  ----  ----
+Master (Charlottesville)        1130  0630  EST  0630  2230
+ATNF (Epping, first)            1200  2300 AEDT  0700  2300   -     6
+ATNF (Narrabri, first)          1230  2330 AEDT  0730  2330   -     -
+
+Master (Charlottesville)        2330  1830  EST  1830  1030
+TIFR (Pune)                     0000  0530  IST  1900  1100  0-5    6
+NFRA                            -
+ATNF (Narrabri, second)         0030  1130 AEDT  1930  1130   -     -
+NRAL (Jodrell Bank)             0100  0100  GMT  2000  1200   -     -
+ATNF (Epping, second)           0130  1230 AEDT  2030  1230   -     -
+BIMA (Maryland)                 0200  2100  EST  2100  1300   -     -
+NRAO (Charlottesville)          0230  2130  EST  2130  1330  0-5    6
+NRAO (Green Bank)               0300  2200  EST  2200  1400  0-5    6
+BIMA (Illinois)                 0400  2200  CST  2300  1500  0-5    6
+NRAO (Socorro)                  0100  1800  MST  2000  1200   -     6
+HIA  (Ottawa)                   0530  0030  EST  0030  1630  0-5    6
+DRAO (Penticton)                0600  2200  PST  0100  1700  0-5    6
+
+Time zones
+   AEST: (Australia) Eastern Standard Time
+   AEDT: (Australia) Eastern Daylight-savings Time
+    BST: British Standard Time (daylight-savings)
+    CDT: (North America) Central Daylight-savings Time
+    CST: (North America) Central Standard Time
+    EDT: (North America) Eastern Daylight-savings Time
+    EST: (North America) Eastern Standard Time
+    GMT: Greenwich Mean Time (British non-daylight-savings)
+    IST: Indian Standard Time (no daylight-savings)
+    MDT: (North America) Mountain Daylight-savings Time
+    MST: (North America) Mountain Standard Time
+    PDT: (North America) Pacific Daylight-savings Time
+    PST: (North America) Pacific Standard Time
+
+
+$Id$

@@ -1,0 +1,218 @@
+%% Copyright (C) 1999,2000,2001,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+
+\begin{ahmodule}{images}{Access and analysis of images}
+
+%%\ahinclude{images.g}
+\ahcategory{aips}
+
+\bigskip
+\noindent{\bf Description} 
+
+This module contains functionality to access, create, and analyze 
+\casa\ images.  It offers both basic services and higher-level
+packaged tools.
+
+\noindent The available tools in this module are
+
+\begin{itemize}
+
+\item \ahlink{Image}{images:image} -  create, manipulate and analyze images
+(default tool is {\stf ia}).  This tool provides a range of low to medium 
+level services.  
+
+\item \ahlink{Regionmanager}{images:regionmanager} - create and
+manipulate \regions\ (default tool is {\stf rg}). {\stf WARNING!
+Documentation describes Glish-based tool which has been only partially
+ported to CASA.}
+
+\item \ahlink{Coordsys}{images:coordsys} - create and manipulate Coordinate Systems
+(default tool is {\stf cs}).
+
+%%\item \ahlink{Imagefitter}{images:imagefitter} - interactively fit
+%%2-D models to an image (no default tool).  
+%%
+%%\item \ahlink{Imageprofilefitter}{images:imageprofilefitter} - interactively fit
+%%models to 1-D profiles from an image (no default tool).  
+
+\item \ahlink{Imagepol}{images:imagepol} - this offers specialized polarimetric analysis of images.
+
+%%\item \ahlink{Imageprofilesupport}{images:imageprofilesupport} - this offers 
+%%plotting of 1-D profiles with built in abcissa unit conversions.  This is
+%%not a high-level user \tool.  It is a low-level \tool\ used in high-level
+%%\tools\ such as Imageprofilefitter.
+
+\end{itemize}
+
+
+\noindent{\bf Images} 
+
+We refer to a \casa\ \imagefile\ when we are referring to the actual
+data stored on disk.  The name that you give a \casa\ \imagefile\ is
+actually the name of a directory containing a collection of \casa\
+tables which together constitute the \imagefile.  But you only need to
+refer to the directory name and you can think of it as one {\it logical}
+file.   Some images don't have an associated disk file.  These are
+called ``virtual'' images (e.g. an image that is temporary and entirely
+in memory). Whenever we use the word ``image'', we are just using it in
+a generic sense.  
+
+Images are manipulated with an \ahlink{Image}{images:image} tool. 
+
+
+
+\medskip
+\noindent{\bf Pixel mask}
+
+A \pixelmask\ specifies which pixels are to be considered good (mask
+value {\cf T}) or bad (mask value {\cf F}).  For example, you may have
+imported a \fits\ file which has blanked pixels in it.  These will be
+converted into \pixelmask\ elements whose values are bad ({\cf F}).  Or
+you may have made an error analysis of an image and computed via a
+statistical test that certain pixels should be masked out for future
+analysis.  
+
+An \imagefile\ may contain zero, one, or more \pixelmasks.  However,
+only one mask will be designated as the default mask and be applied
+to the data.
+
+For more details, see the \ahlink{Image}{images:image} tool. 
+
+
+
+\medskip
+\noindent{\bf Region-of-interest}
+
+A \region\, or simply, region, designates which pixels of the image you
+are interested in for some (generally) astrophysical reason.  This
+complements the \pixelmask\ which specifies which pixels are good or bad
+(for statistical reasons).  \Regions\ are generated and manipulated with
+the \ahlink{Regionmanager}{images:regionmanager} tool.   
+
+Briefly, a \region\  may be either a simple shape such as a multi-dimensional box, or a
+2-D polygon, or some compound combination of \regions. For example,
+a 2-D polygon defined in the X and Y axes extended along the Z axis,
+or perhaps a union or intersection of regions.
+
+See the \ahlink{Regionmanager}{images:regionmanager} documentation for
+more details on regions. 
+
+
+\medskip
+\noindent{\bf Coordinates}
+
+We will often refer to (absolute) pixel coordinates.  Consider a 2-D
+image with shape [10,20].  Then our model is that the centre of the 
+bottom-left corner pixel has pixel coordinate [X,Y] = [0,0].  The centre
+of the top-right corner pixel has pixel coordinate [X,Y] = [9,19]. 
+
+When a physical Coordinate System (e.g. an RA/DEC direction coordinate)
+is attached to an image, then we can convert pixel coordinates to a
+world (or physical) coordinate.
+
+The \ahlink{Coordsys}{images:coordsys} \tool\ is available for
+manipulating Coordinate Systems. You can recover the Coordinate System
+from an image into a Coordsys \tool\ via the Image function
+\ahlink{coordsys}{images:image.coordsys}.
+
+For more details, see the \ahlink{Image}{images:image} and
+\ahlink{Coordsys}{images:coordsys} tools.
+
+
+
+\medskip
+\noindent{\bf Lattice Expression Language (LEL)}
+
+This allows you to manipulate expressions involving images.  For
+example, add this image to that image, or multiply the miniumum value of that
+image by the square root of this image.  The LEL syntax is quite rich
+and is described in detail in \htmladdnormallink{note
+223}{../../notes/223/223.html}.  
+
+LEL is used in several of the \ahlink{Image}{images:image} tool
+functions. 
+
+
+%%\bigskip
+\begin{ahexample}
+
+Here is a simple example to give you the flavour of using the {\mf
+image} module.  Suppose we have an image \fits\ disk file; we would like
+to convert it to a \casa\  \imagefile\ (store the image in a \casa\
+table), look at the header information and store it in a record
+for future use, work out some statistics and then close the image.
+%%display the image with the \viewer. 
+
+\begin{verbatim}
+"""
+#
+print "\t----\t Module Ex 1 \t----"
+pathname=os.environ.get("CASAPATH")
+pathname=pathname.split()[0]
+datapath=pathname+"/data/demo/Images/imagetestimage.fits"
+ia.fromfits(outfile='testimage.im', infile=datapath, overwrite=T) # 1
+hdr = ia.summary()                                                # 2
+ia.statistics()                                                   # 3
+ia.close()                                                        # 4
+print "Last example!  Exiting..."
+exit()
+#
+"""
+\end{verbatim}
+%%#ia.view()                                                          # 4
+
+\begin{enumerate}
+    \item Convert (using {\stff fromfits}) an image \fits\ disk file
+          called {\sff `imagetestimage.fits'} in the directory
+          specified by the environment variable {\sff `\$CASAPATH'} 
+          to a \casa\  \imagefile\ called {\sff `testimage.im'}.
+          The \casa\ \imagefile\
+          is now associated with the default \imagetool\ {\stf ia}.
+    \item This summarises (to the Logger) the basic header information in the image
+          (name, masks, regions, brightness units, coordinates etc) and also
+      stores it in a record named hdr.
+    \item This \toolfunction\ evaluates basic statistics from the entire image.
+%%    \item This displays the image with the \viewer.    
+    \item This closes the Image \tool, but does not delete its associated disk \imagefile.
+
+\end{enumerate}
+\end{ahexample}
+
+
+\ahobjs{}
+\ahfuncs{}
+
+\input{image.htex}
+\input{regionmanager.htex}
+\input{coordsys.htex}
+%\input{imagefitter.help}
+%\input{imageprofilefitter.help}
+\input{imagepol.htex}
+%\input{imageprofilesupport.help}
+\input{componentlist.htex}
+
+
+\end{ahmodule}
