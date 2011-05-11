@@ -2181,7 +2181,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
 
 
-      CFStore cfs_pt;
+      // CFStore cfs_pt;
       // if(gridder) delete gridder; gridder=0;
       // gridder = new ConvolveGridder<Double, Complex>(IPosition(2, nx, ny),
       // 						     uvScale, uvOffset,
@@ -2220,14 +2220,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     // Do an in-place rotation of the CF if necessary.
     //
-    Double actualPA = getVBPA(vb), currentCFPA = rotatedConvFunc_p.pa.getValue("rad");
-    if (fabs(actualPA-currentCFPA) > 0.1)
-      {
-    	rotatedConvFunc_p.set(cfs_p);
-    	SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data, cfs_p.coordSys,
-    					   *rotatedConvFunc_p.data,currentCFPA-actualPA,"LINEAR");
-    	rotatedConvFunc_p.pa=Quantity(actualPA, "rad");
-      }
+    // Double actualPA = getVBPA(vb), currentCFPA = rotatedConvFunc_p.pa.getValue("rad");
+    // if (fabs(actualPA-currentCFPA) > 0.1)
+    //   {
+    // 	rotatedConvFunc_p.set(cfs_p);
+    // 	SynthesisUtils::rotateComplexArray(log_l, *cfs_p.data, cfs_p.coordSys,
+    // 					   *rotatedConvFunc_p.data,
+    // 					   //					   currentCFPA-actualPA,
+    // 					   cfs_p.pa.getValue("rad")-actualPA,
+    // 					   "LINEAR");
+    // 	rotatedConvFunc_p.pa=Quantity(actualPA, "rad");
+    //   }
+    convFuncCtor_p->prepareConvFunction(vb,rotatedConvFunc_p);
     visResampler_p->setConvFunc(rotatedConvFunc_p);
   }
 
@@ -2701,7 +2705,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::ComputeResiduals(VisBuffer&vb, Bool useCorrected)
   {
     VBStore vbs;
+
     vbs.nRow_p = vb.nRow();
+    vbs.beginRow_p = 0;
+    vbs.endRow_p = vbs.nRow_p;
+
     vbs.modelCube_p.reference(vb.modelVisCube());
     if (useCorrected) vbs.correctedCube_p.reference(vb.correctedVisCube());
     else vbs.visCube_p.reference(vb.visCube());
