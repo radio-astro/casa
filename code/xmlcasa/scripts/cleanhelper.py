@@ -1327,7 +1327,12 @@ class cleanhelper:
             tmpshp=oldshp
             tmpshp[0]=shp[0]
             tmpshp[1]=shp[1]
-            ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True)
+            if len(oldshp)==4: # include spectral axis for regrid
+              tmpshp[3]=shp[3]
+              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1,3], csys=self.csys, overwrite=True)
+            else:
+              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True)
+
             #dat=ib.getchunk()
             ib.done(verbose=False)
             ia.fromshape(outfile=outfile, shape=shp, csys=self.csys, overwrite=True)
@@ -1344,6 +1349,7 @@ class cleanhelper:
             #            arr[:,:,k,j]=dat[:,:,0,0]
             #ia.putchunk(arr)
             ia.calc('__temp_mask[index3 in [0]]+__looloo') 
+            ia.calcmask('mask(__looloo)')
             ia.done(verbose=False)
             ia.removefile('__looloo')
         else:
