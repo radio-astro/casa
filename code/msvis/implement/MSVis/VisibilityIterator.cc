@@ -662,7 +662,7 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	    
 
 	    /*
-	    cerr << "Data man type " << cdesc.dataManagerType() << "  nhyper " <<
+	    cerr << "Data man type " << dataManType << "  nhyper " <<
 	      tacc.nhypercubes() << " colname " << columns[k] << endl;
 
 	    for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
@@ -2238,8 +2238,7 @@ ROVisibilityIterator::lsrFrequency(const Int& spw, Vector<Double>& freq,
 
     const ROArrayColumn <Double> & chanFreqs = msIter_p.msColumns().spectralWindow().chanFreq();
     const ROScalarColumn<Int> & obsMFreqTypes= msIter_p.msColumns().spectralWindow().measFreqRef();
-
-    MEpoch ep = msIter_p.msColumns().timeMeas()(0); // Setting epoch to iteration's first one
+    MEpoch ep = msIter_p.msColumns().timeMeas()(msIter_p.table().rowNumbers()(curStartRow_p)); // Setting epoch to iteration's first one
     MPosition obsPos = msIter_p.telescopePosition();
     MDirection dir = msIter_p.phaseCenter();
 
