@@ -217,7 +217,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
       for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
         VisBuffer& vb(vbga(ibuf));
-        Int vbrow = vbga.outToInRow(ibuf)[blind];
+        Int vbrow = vbga.outToInRow(ibuf, False)[blind];
 
         if(vbrow >= 0 && !vb.flagRow()[blind]){
           uInt nchan = vb.nChannel();
