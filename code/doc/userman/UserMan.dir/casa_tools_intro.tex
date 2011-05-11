@@ -1,0 +1,68 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+% STM 2007-04-15  tool guide version
+
+\chapter{Introduction}
+\label{chapter:intro}
+
+%\vspace{5mm}
+
+This document describes how to calibrate and image interferometric and
+single-dish radio astronomical data using the CASA (Common Astronomy
+Software Application) package.  CASA is a suite of
+astronomical data reduction tools and tasks that can be run via the
+IPython interface to Python.  CASA is being developed in order to 
+fulfill the data post-processing requirements of the ALMA and EVLA
+projects, but also provides basic and advanced capabilities useful for
+the analysis of data from other radio, millimeter, and submillimeter
+telescopes.
+
+The CASA home page can be found at:
+\begin{itemize}
+  \item \url{http://casa.nrao.edu}
+\end{itemize}
+From there you can find documentation and assistance for the use
+of the package.
+Currently, CASA is in an {\bf alpha release}
+and this should be taken into account as users begin to learn the
+package.
+
+Tools in CASA provide the full capability of the package, and are the
+atomic functions that form the basis of data reduction.  Tasks
+represent the more streamlined operations that a typical user would
+carry out --- in many cases these are Python interface scripts to the
+tools, but with specific, limited access to them and a standardized
+interface for parameter setting.  The idea for having tasks is that
+they are simpler to use, provide a more familiar interface, and are
+easier to learn for most astronomers who are familiar with radio
+interferometric data reduction (and hopefully for novice users as well).
+
+For the moment, the audience is assumed to have some basic grasp of
+the fundamentals of synthesis imaging, so details of how a radio
+interferometer or telescope works and why the data needs to undergo
+calibration in order to make synthesis images are left to other
+documentation --- a good place to start might be Synthesis Imaging in
+Radio Astronomy II (1999, ASP Conference Series Vol. 180, eds. Taylor,
+Carilli \& Perley).
+
+The CASA Reference Library consists of:
+\begin{itemize}
+   \item CASA {\bf Synthesis \& Single Dish Reduction Cookbook} --- 
+     task-based data analysis walkthrough and instructions;
+   \item CASA {\bf in-line help} --- accessed using {\tt help} in the 
+              {\bf casapy} interface;
+   \item The {\bf CASA Toolkit Guide} --- this document; useful when the 
+         tasks do not have everything you want and you need more power
+         and functionality, also contains more detailed descriptions
+         of the philosophy of data analysis;
+   \item The {\bf CASA User Reference Manual} --- 
+         to find out what a specific task or tool does and how to use it.   
+\end{itemize}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
