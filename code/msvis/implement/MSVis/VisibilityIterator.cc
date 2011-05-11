@@ -2238,7 +2238,8 @@ ROVisibilityIterator::lsrFrequency(const Int& spw, Vector<Double>& freq,
 
     const ROArrayColumn <Double> & chanFreqs = msIter_p.msColumns().spectralWindow().chanFreq();
     const ROScalarColumn<Int> & obsMFreqTypes= msIter_p.msColumns().spectralWindow().measFreqRef();
-    MEpoch ep = msIter_p.msColumns().timeMeas()(msIter_p.table().rowNumbers()(curStartRow_p)); // Setting epoch to iteration's first one
+    MEpoch ep;
+    ROScalarMeasColumn<MEpoch>(msIter_p.table(), MS::columnName(MS::TIME)).get(curStartRow_p, ep); // Setting epoch to iteration's first one
     MPosition obsPos = msIter_p.telescopePosition();
     MDirection dir = msIter_p.phaseCenter();
 
