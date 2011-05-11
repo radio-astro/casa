@@ -1733,7 +1733,9 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	  }
 	} // end for
 	theObsTime = mainCols.timeMeas()(minTimeRow);
-	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection." << LogIO::POST;
+	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection:" << LogIO::POST;
+	*itsLog << LogIO::NORMAL << "    " << MVTime(theObsTime.getValue().getTime()).string(MVTime::YMD)
+		<< " (" << theObsTime.getRefString() << ")" << LogIO::POST;
       }
       
       // determine observatory position
