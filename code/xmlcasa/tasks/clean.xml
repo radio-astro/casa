@@ -1010,7 +1010,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    Typically the values range from 0.2 to 1.0.
                    default: 0.6
 
-       imsize -- Image pixel size (x,y).  DOES NOT HAVE TO BE A POWER OF 2
+       imsize -- Image size in pixels (x, y).  DOES NOT HAVE TO BE A POWER
+                 OF 2 (just avoid large primes).
                default = [256,256]; example: imsize=[350,350]
                imsize = 500 is equivalent to [500,500]
                If include outlier fields, e.g., [[400,400],[100,100]] or
