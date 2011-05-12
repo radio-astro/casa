@@ -410,12 +410,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="double" name="cyclefactor" subparam="true">
-      <description>change depth in between of  csclean cycle</description>
+      <description>Controls how often major cycles are done. (e.g. 5 for frequently)</description>
       <value>1.5</value>
     </param>
 <!--========================================================= -->
     <param type="int" name="cyclespeedup" subparam="true">
-	    <description>Cycle threshold doubles in this number of iteration</description>
+	    <description>Cycle threshold doubles in this number of iterations</description>
 	    <value>-1</value>
     </param>
 <!--========================================================= -->
@@ -663,7 +663,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: none; 
                example: vis='ngc5921.ms'
                         vis=['ngc5921a.ms','ngc5921b.ms']; multiple MSes
-                        NOTE: the specification of multiple MSes does not work for mode='mfs' yet.
+                        NOTE: the specification of multiple MSes does not work
+                              for mode='mfs' yet.
        imagename -- Pre-name of output images:
                default: none; example: imagename='m2'
                output images are:
@@ -691,7 +692,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  field='3C286,3C295'; field named 3C286 and 3C295
                  field = '3,4C*'; field id 3, all names starting with 4C
                  For multiple MS input, a list of field strings can be used:
-                 field = ['0~2','0~4']; field ids 0-2 for the first MS and 0-4 for the second 
+                 field = ['0~2','0~4']; field ids 0-2 for the first MS and 0-4
+                         for the second 
                  field = '0~2'; field ids 0-2 for all input MSes
        spw -- Select spectral window/channels
                NOTE: channels de-selected here will contain all zeros if
@@ -729,16 +731,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    timerange='09:44:00' pick data within one integration 
 		             of time
                    timerange='&gt;10:24:00' data after this time
-                   For multiple MS input, a list of timerange strings can be used:
+                   For multiple MS input, a list of timerange strings can be
+                   used:
                    timerange=['09:14:0~09:54:0','&gt;10:24:00']
-                   timerange='09:14:0~09:54:0'';apply the same timerange for all input MSes 
+                   timerange='09:14:0~09:54:0''; apply the same timerange for
+                                                 all input MSes 
                uvrange -- Select data within uvrange (default units meters)
                    default: '' (all); example:
                    uvrange='0~1000klambda'; uvrange from 0-1000 kilo-lambda
                    uvrange='&gt;4klambda';uvranges greater than 4 kilo lambda
-                   For multiple MS input, a list of uvrange strings can be used:
+                   For multiple MS input, a list of uvrange strings can be
+                   used:
                    uvrange=['0~1000klambda','100~1000klamda']
-                   uvrange='0~1000klambda'; apply 0-1000 kilo-lambda for all input MSes
+                   uvrange='0~1000klambda'; apply 0-1000 kilo-lambda for all
+                                            input MSes
                antenna -- Select data based on antenna/baseline
                    default: '' (all)
                    If antenna string is a non-negative integer, it is 
@@ -754,7 +760,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  				(VLA old name)
                    antenna='5,6,9'; all baselines with antennas 5,6,9 
  				   index number
-                   For multiple MS input, a list of antenna strings can be used:
+                   For multiple MS input, a list of antenna strings can be
+                   used:
                    antenna=['5','5&amp;6'];
                    antenna='5'; antenna index 5 for all input MSes
                scan -- Scan number range.
@@ -795,20 +802,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                nchan -- Total number of channels in the output image.
                  Example: nchan=100. 
                  Default: -1; Automatically selects enough channels to cover 
-                 data selected by 'spw' and consistent with 'start' and 'width'. 
+                 data selected by 'spw' consistent with 'start' and 'width'. 
 	         It is often easiest to leave nchan at the default value. 
                start -- First channel, velocity, or frequency. 
                  For mode='channel'; This selects the channel index number 
-                 from the MS (0 based) that you want to correspond to the first 
-                 channel of the output cube. The output cube will be in frequency 
-                 space with the first channel having the frequency of the
-                 MS channel selected by start.  start=0 refers to the first 
-                 channel in the first selected spw, even if that channel 
-                 is de-selected in the spw parameter. Channels de-selected by 
-                 the spw parameter will be filled with zeros if included by
-                 the start parameter. For example, spw=3~8:3~100 and start=2
-                 will produce a cube that starts on the third channel (recall 0
-                 based) of spw index 3, and the first channel will be blank.
+                 from the MS (0 based) that you want to correspond to the
+                 first channel of the output cube. The output cube will be
+                 in frequency space with the first channel having the
+                 frequency of the MS channel selected by start.  start=0
+                 refers to the first channel in the first selected spw, even
+                 if that channel is de-selected in the spw parameter.
+                 Channels de-selected by the spw parameter will be filled with
+                 zeros if included by the start parameter. For example,
+                 spw=3~8:3~100 and start=2 will produce a cube that starts on
+                 the third channel (recall 0 based) of spw index 3, and the
+                 first channel will be blank.
                  example:start=5
                  For mode='velocity' or 'frequency': default=''; 
                  starts at first input channel of first input spw
@@ -829,15 +837,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                interpolation -- Interpolation type for spectral gridding onto 
                  the uv-plane. Options: 'nearest', 'linear', or 'cubic'.
                  default = 'linear' 
-                 Note : 'linear' and 'cubic' interpolation requires data points on both
-                 sides of each image frequency. Errors are therefore possible at edge 
-                 channels, or near flagged data channels.
+                 Note : 'linear' and 'cubic' interpolation requires data
+                        points on both sides of each image frequency. Errors
+                        are therefore possible at edge  channels, or near
+                        flagged data channels.
                  For mode='channel', please use 'nearest'.
                chaniter -- specify how spectral CLEAN is performed, 
                  default: chaniter=False;
                  example: chaniter=True; step through channels 
-               outframe -- For mode='velocity', 'frequency', or 'channel':  velocity
-                 reference frame of output image
+               outframe -- For mode='velocity', 'frequency', or 'channel':
+                             velocity reference frame of output image
                  Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
                           'LGROUP','CMB'
                  default: ''; same as input data
@@ -946,25 +955,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  			     deconvolution, but if interactive=True shows the
  			     primary beam corrected image during interactive. 
 
-               flatnoise -- Controls whether searching for clean components is 
-                   done in a constant noise residual image (True) or in an optimal 
-                   signal-to-noise residual image (False) when ftmosaic='mosaic' is 
-                   chosen.
+ 	       cyclefactor -- Controls the threshhold at which the
+                   deconvolution cycle will pause to degrid and subtract the
+                   model from the visibilities.
+                   With poor PSFs, reconcile often (cyclefactor=4 or 5) for
+                   reliability. 
+                   With good PSFs, use cyclefactor = 1.5 to 2.0 for speed. 
+                   Note: threshold = cyclefactor * max sidelobe * max residual
+ 		   default: 1.5; example: cyclefactor=4
+ 	       cyclespeedup -- The major cycle threshold doubles in this
+                   number of iterations.
+                   Default: -1 (no doubling)
+ 		   Example: cyclespeedup=3
+                   Try cyclespeedup = 50 to speed up cleaning.
+
+               flatnoise -- Controls whether searching for clean components
+                   in done in a constant noise residual image (True) or in an
+                   optimal signal-to-noise residual image (False) when
+                   ftmosaic='mosaic' is chosen.
                    default=True
 
   &gt;&gt;&gt; imagermode='csclean' expandable parameter(s): 
                Image using the Cotton-Schwab algorithm in between major cycles
- 	       cyclefactor -- Change the threshold at which the deconvolution 
-                   cycle will stop, degrid and subtract from the visibilities  
-                   For poor PSFs, reconcile often (cyclefactor=4 or 5); 
-                   For good PSFs, use cyclefactor 1.5 to 2.0. 
-                   Note: threshold = cyclefactor * max sidelobe * max residual
- 		   default: 1.5; example: cyclefactor=4
- 	       cyclespeedup -- Cycle threshold doubles in this number of 
-                   iterations 
-                   default: -1;
- 		   example: cyclespeedup=3
-                   try cyclespeedup = 50 to speed up cleaning 
+
+ 	       cyclefactor -- See above, under imagermode='mosaic'.
+ 	       cyclespeedup -- See above, under imagermode='mosaic'.
 
        multiscale -- set of scales to use in deconvolution.  If set,
                cleans with several resolutions using hobgom clean. The
@@ -1073,17 +1088,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                (d) Filename for region specification (e.g. from viewer).
                    Example: mask='myregion.rgn'
                (e) Combinations of the above options.
-                   Example: mask=['mycleanbox.txt','myimage.mask', 'myregion.rgn']
+                   Example: mask=['mycleanbox.txt', 'myimage.mask',
+                                  'myregion.rgn']
 		   (explicit pixel ranges cannot be included in such a list).
-		   -- If including outlier fields :
-		      -- specify a list of masks : mask=['myimage.mask', 'myregion.rgn']
-		         The number of entries in this list must match the number of fields.
+		   -- If including outlier fields:
+		      -- specify a list of masks: mask=['myimage.mask',
+                                                        'myregion.rgn']
+		         The number of entries in this list must match the
+                         number of fields.
                       -- specify a box-file : mask = 'boxfile.txt' 
 		         Example :
                             #boxfile
                             0 45 66 123 124 
                             1 23 100 300 340
-		         The field index must match the field index in the outlierfile.
+		         The field index must match the field index in the
+                         outlierfile.
 			 Each field index can have only one mask entry.
 			 Unlisted field indices will get full-field masks.
                (f) Threshold on primary-beam.
@@ -1166,11 +1185,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
  	                at 45 degrees
 
        pbcor -- Output primary beam-corrected image
-                If pbcor=False, the final output image is NOT corrected for the 
-                PB pattern (particularly important for mosaics), and therefore is
-                not "flux correct". Correction can also be done after the 
-                fact using immath to divide &lt;imagename&gt;.image by 
-                the &lt;imagename&gt;.flux image. 
+                If pbcor=False, the final output image is NOT corrected for
+                the PB pattern (particularly important for mosaics), and
+                therefore is not "flux correct". Correction can also be
+                done after the  fact using immath to divide
+                &lt;imagename&gt;.image by the &lt;imagename&gt;.flux image. 
  	       default: pbcor=False; output un-corrected image 
  	       example: pbcor=True; output pb-corrected image (masked outside
                         minpb) 
@@ -1184,7 +1203,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                When imagermode='mosaic' :
 	          minpb is applied to the flux.pbcoverage image 
                         (mosaic pb with equal weight per pointing)
-                   minpb is always used to create a mask (regardless of pbcor=True/False) 
+                   minpb is always used to create a mask (regardless of
+                   pbcor=True/False) 
 
        calready -- if True will create scratch columns if they are 
                not there. And after clean completes the predicted model 
@@ -1207,7 +1227,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                      imagename = ['M1_0','M1_1','M1_2]
                      imsize = [[1024,1024],[128,128],[128,128]]
                      phasecenter = ['J2000 13h27m20.98 43d26m28.0',
-                                   'J2000 13h30m52.159 43d23m08.02', 'J2000 13h24m08.16 43d09m48.0']
+                                    'J2000 13h30m52.159 43d23m08.02',
+                                    'J2000 13h24m08.16 43d09m48.0']
 	
                 (b) Text file method  (in outlier.txt)
 
@@ -1220,7 +1241,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    C 1    128  128   13 30 52.158    43 23 08.00
                    C 2    128  128   13 24 08.163    43 09 48.00
 
-		   Note : field-ids (the number after 'C') must start from zero.
+		   Note : field-ids (the number after 'C') must start from
+                          zero.
 
                 In both cases the following images will be made:
                     M1_0.image, M1_1.image, M1_2.image     cleaned images
@@ -1239,20 +1261,24 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 		  (b) Use a box-file to set masks.
-		      This option allows mask-setting for only specified fields. 
+		      This option allows mask-setting for only specified
+                      fields. 
 	           
 		   masks = 'boxfile.txt'
 	
-		   This text-file contains one entry per field (start with index 0) :
+		   This text-file contains one entry per field (start with
+                   index 0):
 		        # boxfile
 		        0 200 200 700 700
 			1 30  30  70  70
 			2 40  40  80  80
 
-		    Not all fields need to be specified. Unspecified fields get full-field masks.
+		    Not all fields need to be specified. Unspecified fields
+                    get full-field masks.
 
 		    If an outlier file is not used, field ids are matched 
-		    with a zero-based image-list. ('field 1 = second field in list).
+		    with a zero-based image-list. ('field 1 = second field in
+                    list).
 
 		    If an outlier file is used, field-ids in the box-file 
 		    must match field-ids in the outlier-file.
