@@ -970,7 +970,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    Try cyclespeedup = 50 to speed up cleaning.
 
                flatnoise -- Controls whether searching for clean components
-                   in done in a constant noise residual image (True) or in an
+                   is done in a constant noise residual image (True) or in an
                    optimal signal-to-noise residual image (False) when
                    ftmosaic='mosaic' is chosen.
                    default=True
