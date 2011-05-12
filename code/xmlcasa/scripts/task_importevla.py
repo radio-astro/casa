@@ -58,6 +58,18 @@ def importevla(asdm=None, vis=None, ocorr_mode=None, compression=None, asis=None
 		   execute_string= execute_string +' --verbose'
 		if not overwrite and os.path.exists(viso) :
 		   raise Exception, "You have specified and existing ms and have indicated you do not wish to overwrite it"
+		#
+		# If viso+".flagversions" then process differently depending on the value of overwrite..
+		#
+		dotFlagversion = viso + ".flagversions"
+		if os.path.exists(dotFlagversion):
+			if overwrite :
+				casalog.post("Found '"+dotFlagversion+"' . It'll be deleted before running the filler.")
+				os.system('rm -rf %s'%dotFlagversion)
+			else :
+				casalog.post("Found '%s' but can't overwrite it."%dotFlagversion)
+				raise Exception, "Found '%s' but can't overwrite it."%dotFlagversion
+
 		execute_string = execute_string + ' ' + asdm + ' ' + viso
 		casalog.post('Running the asdm2MS standalone invoked as:')
 		#print execute_string
