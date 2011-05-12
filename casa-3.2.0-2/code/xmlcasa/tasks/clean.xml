@@ -767,8 +767,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    scan='0~100; scan ids 0-100 for all input MSes
                    Check 'go listobs' to insure the scan numbers are in order.
        mode -- Frequency Specification:
-               NOTE: Channels deselected with spw parameter will contain all
-                     zeros. 
                See examples below.
                default: 'mfs'
                  mode = 'mfs' means produce one image from all 
@@ -777,6 +775,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         output image cube. 
                  mode = 'velocity', channels are specified in velocity.
                  mode = 'frequency', channels are specified in frequency.
+               NOTE: Channels deselected with spw parameter will contain all  zeros. 
 
   &gt;&gt;&gt; mode='mfs' expandable parameters 
                Make a continuum image from the selected frequency
@@ -852,6 +851,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  NOTE: the viewer always defaults to displaying the 'radio'
                    frame, but that can be changed in the position tracking
                    pull down.
+               
+                Note: For ALMA double sideband data, if using velocity mode 
+                         to specify a set of velocities ascending in frequency,
+                         the width parameter (in velocity) must be positive for 
+                         LSB data and negative for USB data.  Defaulting the width
+                         and specifying the number of channels does not work on 
+                         USB data.  Please check the range of your output cube 
+                         carefully to ensure that the range is what you expected.
+
            mode='mfs' examples:
                spw = '0,1'; mode = 'mfs'
                   will produce one image made from all channels in spw 
