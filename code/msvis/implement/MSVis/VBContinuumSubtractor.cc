@@ -168,7 +168,8 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
   // Make the estimate
   LinearFitSVD<Float> fitter;
- 
+  fitter.asWeight(true);        // Makes the "sigma" arg = w = 1/sig**2
+
   coeffsOK.set(False);
 
   // Translate vbga to arrays for use by LinearFitSVD.
@@ -197,7 +198,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
     }
   }
 
-  Vector<Float> sigma(totnumchan_p);
+  Vector<Float> wt(totnumchan_p);
   Vector<Float> unflaggedfreqs(totnumchan_p);
   Vector<Complex> vizzes(totnumchan_p);
   Vector<Float> floatvs(totnumchan_p);
@@ -209,41 +210,44 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
       uInt totchan = 0;
       uInt totunflaggedchan = 0;
 
-      // Fill sigma, unflaggedfreqs, and vizzes with the baseline's values for
+      // Fill wt, unflaggedfreqs, and vizzes with the baseline's values for
       // all channels being used in the fit.
-      sigma.resize(totnumchan_p);
+      wt.resize(totnumchan_p);
       vizzes.resize(totnumchan_p);
       unflaggedfreqs.resize(totnumchan_p);
 
       for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
         VisBuffer& vb(vbga(ibuf));
-        Int vbrow = vbga.outToInRow(ibuf, False)[blind];
+        //Int vbrow = vbga.outToInRow(ibuf, False)[blind];
 
-        if(vbrow >= 0 && !vb.flagRow()[blind]){
+        if(!vb.flagRow()[blind]){
           uInt nchan = vb.nChannel();
           Cube<Complex>& viscube(vb.dataCube(whichcol));
-          Float sig;
+          Float w;
 
           // 2/24/2011: VisBuffer doesn't (yet) have sigmaSpectrum, and I have
           // never seen it in an MS anyway.  Settle for 1/sqrt(weightSpectrum)
           // if it is available or sigmaMat otherwise.
-          const Bool haveWS = vb.existsWeightSpectrum();
+          //const Bool haveWS = vb.existsWeightSpectrum();
+          // 5/13/2011: Sigh.  VisBuffAccumulator doesn't even handle
+          // WeightSpectrum, let alone sigma.
+          //const Bool haveWS = false;
 
-          //if(!haveWS) // sig is needed either way, in case ws == 0.0.
-          sig = vb.sigmaMat()(corrind, vbrow);
+          //if(!haveWS) // w is needed either way, in case ws == 0.0.
+          w = vb.weightMat()(corrind, blind);
 
-          // sig needs a sanity check, because a VisBuffer from vbga is not
+          // w needs a sanity check, because a VisBuffer from vbga is not
           // necessarily still attached to the MS and sigmaMat() is not one
           // of the accumulated quantities.  This caused problems for
           // the last integration in CAS-3135.  checkVisIter() didn't do the
-          // trick in that case.  Fortunately sig isn't all that important; if
+          // trick in that case.  Fortunately w isn't all that important; if
           // all the channels have the same weight the only consequence of
-          // setting sig to 1 is that the estimated errors (which we don't yet
+          // setting w to 1 is that the estimated errors (which we don't yet
           // use) will be wrong.
           //
           // 5e-45 ended up getting squared in the fitter and producing a NaN.
-          if(isnan(sig) || sig < 1.0e-20 || sig > 1.0e20)
-            sig = 1.0;
+          if(isnan(w) || w < 1.0e-20 || w > 1.0e20)
+            w = 1.0;  // Emit a warning?
 
           for(uInt c = 0; c < nchan; ++c){
             // AAARRGGGHHH!!  With Calibrater you have to use vb.flag(), not
@@ -251,13 +255,13 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
             //if(!vb.flagCube()(corrind, c, vbrow)){
             if(!vb.flag()(c, blind)){
               unflaggedfreqs[totunflaggedchan] = freqs[totchan];
-              if(haveWS){
-                Double ws = vb.weightSpectrum()(corrind, c, vbrow);
+              // if(haveWS){
+              //   Double ws = vb.weightSpectrum()(corrind, c, vbrow);
 
-                sigma[totunflaggedchan] = ws != 0.0 ? 1.0 / sqrt(ws) : sig;
-              }
-              else
-                sigma[totunflaggedchan] = sig;
+              //   wt[totunflaggedchan] = ws;
+              // }
+              // else
+                wt[totunflaggedchan] = w / nchan;
               vizzes[totunflaggedchan] = viscube(corrind, c, blind);
               ++totunflaggedchan;
             }
@@ -268,7 +272,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
       if(totunflaggedchan > 0){                 // OK, try a fit.
         // Truncate the Vectors.
-        sigma.resize(totunflaggedchan, True);
+        wt.resize(totunflaggedchan, True);
         //vizzes.resize(totunflaggedchan, True);
         floatvs.resize(totunflaggedchan);
         unflaggedfreqs.resize(totunflaggedchan, True);
@@ -285,7 +289,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         Polynomial<AutoDiff<Float> > pnom(locFitOrd);
 
         // The way LinearFit is templated, "y" can be Complex, but at the cost
-        // of "x" being Complex as well, and worse, sigma too.  It is better to
+        // of "x" being Complex as well, and worse, wt too.  It is better to
         // separately fit the reals and imags.
         // Do reals.
         for(Int ordind = 0; ordind <= locFitOrd; ++ordind)       // Note <=.
@@ -295,7 +299,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           floatvs[c] = vizzes[c].real();
 
         fitter.setFunction(pnom);
-        realsolution = fitter.fit(unflaggedfreqs, floatvs, sigma);
+        realsolution = fitter.fit(unflaggedfreqs, floatvs, wt);
 
         // if(isnan(realsolution[0])){
         //   os << LogIO::DEBUG1 << "NaN found." << LogIO::POST;
@@ -308,13 +312,13 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
         //       os << LogIO::DEBUG1
         //          << "floatvs[" << c << "] is a NaN."
         //          << LogIO::POST;
-        //     if(isnan(sigma[c]))
+        //     if(isnan(wt[c]))
         //       os << LogIO::DEBUG1
-        //          << "sigma[" << c << "] is a NaN."
+        //          << "wt[" << c << "] is a NaN."
         //          << LogIO::POST;
-        //     else if(sigma[c] <= 0.0)
+        //     else if(wt[c] <= 0.0)
         //       os << LogIO::DEBUG1
-        //          << "sigma[" << c << "] = " << sigma[c]
+        //          << "wt[" << c << "] = " << wt[c]
         //          << LogIO::POST;
         //   }
         // }
@@ -327,7 +331,7 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
           floatvs[c] = vizzes[c].imag();
 
         fitter.setFunction(pnom);
-        imagsolution = fitter.fit(unflaggedfreqs, floatvs, sigma);
+        imagsolution = fitter.fit(unflaggedfreqs, floatvs, wt);
 
           
 
