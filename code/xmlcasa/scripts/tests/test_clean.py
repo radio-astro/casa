@@ -390,7 +390,49 @@ class clean_test1(unittest.TestCase):
         self.assertTrue(os.path.exists(self.img+'.image'))
         self.assertTrue(self.compareimages(self.img+'.mask', refpath+'ref_cleantest1boxfile.mask'))
 
+    def test45(self):
+        '''Clean 45: Test input mask image of different channel ranges'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        refpath=datapath+'reference/'
+        shutil.copyfile(datapath+self.boxmsk, self.boxmsk)
+        # wider channel range mask 
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=[115,115,145,145], niter=10)
+        self.assertEqual(self.res, None)
+        # apply to narrower channel range 
+        self.res=clean(vis=self.msfile,imagename=self.img+'.narrow',mode='channel', 
+                       nchan=3, start=2, mask=self.img+'.mask', niter=10)
+        self.assertEqual(self.res, None)
+        # apply the narrower channel range mask to wider channel range clean
+        self.res=clean(vis=self.msfile,imagename=self.img+'.wide',mode='channel',mask=self.img+'.narrow.mask', niter=10)
+      
+        # make sub-image from masks for comparison 
+        ia.open(self.img+'.mask')
+        r1=rg.box([0,0,0,2],[256,256,0,4])
+        sbim=ia.subimage(outfile=self.img+'.subim.mask', region=r1)
+        ia.close()
+        sbim.close()
+        #
+        os.system('cp -r '+self.img+'.mask '+self.img+'.ref.mask')
+        ia.open(self.img+'.narrow.mask')
+        # note: narrow mask made with a single spw does not exactly 
+        # match with the wider cube with 2 spws in width
+        pixs = ia.getchunk(blc=[0,0,0,0],trc=[256,256,0,1])
+        r1=rg.box([0,0,0,0],[256,256,0,1])
+        ia.close()
+        ia.open(self.img+'.ref.mask')
+        ia.set(pixelmask=False)
+        ia.set(pixelmask=True, region=r1)
+        ia.putchunk(pixels=pixs,blc=[0,0,0,2])
+        ia.close()
+
+        self.assertTrue(os.path.exists(self.img+'.narrow.image'))
+        self.assertTrue(os.path.exists(self.img+'.wide.image'))
+        self.assertTrue(self.compareimages(self.img+'.narrow.mask', self.img+'.subim.mask'), 
+                        "mask mismatch for applying a wider chan. range mask to narrower chan. range clean")
+        self.assertTrue(self.compareimages(self.img+'.wide.mask', self.img+'.ref.mask'), 
+                        "mask mismatch for applying a narrower chan. range mask to wider chan. range clean")
  
+     
 class clean_test2(unittest.TestCase):
     
     # Input and output names
