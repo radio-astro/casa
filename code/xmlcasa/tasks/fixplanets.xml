@@ -30,19 +30,40 @@ Fix FIELD, SOURCE, and UVW for given fields based on pointing table information
       <description>recalc uvw?</description>
       <value>False</value>
     </param>
+    <param type="any" name="direction">
+      <description>if set, don\'t use pointing table but set direction to this value</description>
+      <any type="variant"/>
+      <value type="string"></value>
+    </param>
+
 </input>
 
 <example>
-Input Parameters
-vis    --- Name of the input visibility set
+    Input Parameters
+    vis        -- Name of the input visibility set
+    
+    field      -- field selection string
+    
+    fixuvw     -- recalc uvw coordinate? (default: False)
 
-field  --- field selection string
+    direction  -- if set, don't use pointing table but set direction to this value
+               example: 'J2000 19h30m00 -40d00m00', default= '' (use pointing table)
 
-fixuvw --- recalc uvw coordinate? (default: False)
+    Examples:
 
-Example:
+    fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
+          will look up the pointing direction for field 'Titan' in the POINTING table
+          based on the median time in unflagged main table rows for this field,
+          enter this direction in the FIELD and SOURCE tables, and then recalculate
+          the UVW coordinates for this field.
 
- fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
+    fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', False, 'J2000 12h30m15 -02d12m00')
+          will set the directions for field 'Titan' in the FIELD and SOURCE table to the
+          given direction and not recalculate the UVW coordinates.
+          (This can be useful for several purposes, among them preparing a concatenation
+          of datasets. Only fields with the same direction will be recognised as identical.
+          fixplanets can then be run again after the concatenation using parameters as in
+          the first example above.)
 
 </example>
 
