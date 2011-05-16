@@ -429,7 +429,7 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
             fitparams=[]
             f=sd.fitter()
             if ( abs(plotlevel) > 0 ):
-                    init_plot( f, s.nrow())
+                    init_plot( f, s.nrow(), plotlevel)
             for irow in range(s.nrow()):
                 # for plotting
                 fitted=False
@@ -574,7 +574,7 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                 if ( abs(plotlevel) > 0 ):
                         if ( irow < 16 ):
                                 plot( f, irow, fitted, residual )
-
+                
             # Store fit
             if ( fitfile != '' ):
                     #f.store_fit(fitfile)
@@ -656,89 +656,85 @@ def retrieve_fit(fitter, numcomp):
 
 
 ### init_plot
-def init_plot( fitter, n ):
-        # set nrow and ncol (maximum 4x4)
-        if n < 3:
-                nrow=1
-                ncol=n
-        elif n < 5:
-                nrow=2
-                ncol=2
-        elif n < 7:
-                nrow=2
-                ncol=3
-        elif n < 10:
-                nrow=3
-                ncol=3
-        else:
-                nrow=4
-                ncol=4
-        #print 'nrow,ncol=', nrow, ',', ncol
-        casalog.post( 'nrow,ncol= %d,%d' % (nrow, ncol ) )
+def init_plot( fitter, n, plotlevel):
         if n > 16:
-                #print 'Only first 16 results are plotted.'
                 casalog.post( 'Only first 16 results are plotted.', priority = 'WARN' )
+                n = 16
         
         # initialize plotter
-        fitter._p
         if not fitter._p or fitter._p.is_dead:
-                if sd.rcParams['plotter.gui']:
-                        from asap.asaplotgui import asaplotgui as asaplot
-                else:
-                        from asap.asaplot import asaplot
-        fitter._p=asaplot()
+                from asap.asapplotter import new_asaplot
+                visible = False
+                if plotlevel > 0:
+                        if sd.rcParams['plotter.gui']:
+                                visible = True
+                        else:
+                                casalog.post("GUI plot not available", priority = "ERROR")
+                #print "loading new plot"
+                fitter._p = new_asaplot(visible=visible)
         fitter._p.hold()
         fitter._p.clear()
-        fitter._p.set_panels(nrow, ncol, ganged=False)
+        # set nrow and ncol (maximum 4x4)
+        fitter._p.set_panels(rows=n, cols=0, ganged=False)
+        casalog.post( 'nrow,ncol= %d,%d' % (fitter._p.rows, fitter._p.cols ) )
 
 
 ### plot
 def plot( fitter, irow, fitted, residual ):
-        colors=["#777777", "#dddddd", "red", "orange", "purple", "green", "magenta", "cyan"]
-        myp=fitter._p
+        colors = ["#777777", "#dddddd", "red", "orange", "purple", "green", "magenta", "cyan"]
+        myp = fitter._p
 
         myp.subplot(irow)
         # plot spectra
         myp.palette(1,colors)
-        x=fitter.data._getabcissa(irow)
-        y=fitter.data._getspectrum(irow)
-        msk=array(fitter.data._getmask(irow))
-        fmsk=array(fitter.mask)
-        allmsk=logical_and(msk,fmsk)
-	yorg=y
-	nomask=True
-	for i in range(len(allmsk)):
-		nomask = nomask and allmsk[i]
-	label0=['Selected Region','select']
-	label1=['Spectrum','spec']
-	if ( nomask ):
-		label0[0]=label1[0]
-		label0[1]=label1[1]
-	else:
-		# dumped region
-		y=ma.masked_array(yorg,mask=allmsk)
-		if ( irow==0 ):
-			myp.set_line( label=label1[0] )
-		else:
-			myp.set_line( label=label1[1] )
-		myp.plot(x,y)
-	# fitted region
-	myp.palette(0)
-	y=ma.masked_array(yorg,mask=logical_not(allmsk))
-	if ( irow==0 ):
-		myp.set_line(label=label0[0])
-	else:
-		myp.set_line(label=label0[1])
+        x = fitter.data._getabcissa(irow)
+        y = fitter.data._getspectrum(irow)
+        mr = fitter.data._getflagrow(irow)
+        if mr: # a whole spectrum is flagged
+                allmsk = False
+                invmsk = True
+                nomask = False
+        else:
+                msk = array(fitter.data._getmask(irow))
+                fmsk = array(fitter.mask)
+                allmsk = logical_and(msk,fmsk)
+                invmsk = logical_not(allmsk)
+                del msk, fmsk
+                nomask = True
+                for i in range(len(allmsk)):
+                        # nomask is False if any of channel is not in fit range.
+                        nomask = nomask and allmsk[i]
+        yorg = y
+        label0 = ['Selected Region','select']
+        label1 = ['Spectrum','spec']
+        if ( nomask ):
+                label0[0] = label1[0]
+                label0[1] = label1[1]
+        else:
+                # dumped region
+                y=ma.masked_array(yorg,mask=allmsk)
+                if ( irow==0 ):
+                        myp.set_line( label=label1[0] )
+                else:
+                        myp.set_line( label=label1[1] )
+                myp.plot(x,y)
+        # fitted region
+        myp.palette(0)
+        y=ma.masked_array(yorg,mask=invmsk)
+        if ( irow==0 ):
+                myp.set_line(label=label0[0])
+        else:
+                myp.set_line(label=label0[1])
         xlim=[min(x),max(x)]
-	ymin=min(y)
-	ymax=max(y)
-	ymin=ymin-(ymax-ymin)*0.1
-	ymax=ymax+(ymax-ymin)*0.1
-	ylim=[ymin,ymax]
+        ymin=min(y)
+        ymax=max(y)
+        ymin=ymin-(ymax-ymin)*0.1
+        ymax=ymax+(ymax-ymin)*0.1
+        ylim=[ymin,ymax]
         mya=myp.subplots[irow]['axes']
         myp.axes.set_xlim(xlim)
-	myp.axes.set_ylim(ylim)
-	myp.plot(x,y)
+        myp.axes.set_ylim(ylim)
+        myp.plot(x,y)
 
         # plot fitted result
         if ( fitted ):
@@ -749,7 +745,7 @@ def plot( fitter, irow, fitted, residual ):
                                 myp.set_line(label='Residual')
                         else:
                                 myp.set_line(label='res')
-                        y=ma.masked_array(fitter.get_residual(),mask=logical_not(allmsk))
+                        y=ma.masked_array(fitter.get_residual(),mask=invmsk)
                         myp.plot(x,y)
                 # plot fit
                 myp.palette(2)
@@ -757,7 +753,7 @@ def plot( fitter, irow, fitted, residual ):
                         myp.set_line(label='Fit')
                 else:
                         myp.set_line(label='fit')
-                y=ma.masked_array(fitter.fitter.getfit(),mask=logical_not(allmsk))
+                y=ma.masked_array(fitter.fitter.getfit(),mask=invmsk)
                 myp.plot(x,y)
 
         xlab=fitter.data._getabcissalabel(fitter._fittedrow)
@@ -772,4 +768,3 @@ def plot( fitter, irow, fitted, residual ):
         if ( irow/nr == nc-1 ):
                 myp.set_axes('xlabel',xlab)
         myp.release()
-        
