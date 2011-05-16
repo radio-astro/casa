@@ -279,7 +279,7 @@ set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
-set( LATEX2HTML_OPTIONS "\\\"htcasa,section+,next,p-width,5\\\" \\\"\\\" \\\"-p\\\""
+set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5"
       CACHE STRING "LATEX2HTML_CONVERTER options" )
 
 # Use pdflatex
