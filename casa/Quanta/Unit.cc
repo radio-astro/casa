@@ -30,6 +30,8 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Utilities/Regex.h>
+#include <cstdlib>
+#include <cstring>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
