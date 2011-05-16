@@ -29,6 +29,7 @@
 #include <display/QtViewer/FileBox.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
+#include <display/QtViewer/QtWCBox.h>
 
 
 #include <casa/Containers/Block.h>
@@ -41,7 +42,6 @@
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCRegion.h>
 #include <images/Regions/WCCompound.h>
-#include <images/Regions/WCBox.h>
 #include <images/Regions/WCPolygon.h>
 #include <images/Regions/RegionManager.h>
 #include <display/Display/DParameterChoice.h>
@@ -323,7 +323,7 @@ void FileBox::activate(Record rcd) {
       //   continue;
 
       //cout << wcreg->type() << " " << tool << endl;
-      if ((wcreg->type()) == "WCBox" && tool.contains("ectangle")){
+      if ((wcreg->type()) == "QtWCBox" && tool.contains("ectangle")){
          TableRecord boxrec=wcreg->toRecord("");
          //cout << "boxrec=" << boxrec << endl;
          const RecordInterface& blcrec=boxrec.asRecord("blc");
@@ -346,14 +346,14 @@ void FileBox::activate(Record rcd) {
             String error;
             if (!h.fromRecord(error, subRec0)) {
                 throw (AipsError 
-               (String("WCBox::fromRecord - could not recover blc because ") +
+               (String("QtWCBox::fromRecord - could not recover blc because ") +
                 error));
             }
             //blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
             blc(j-dirInd)=h.asQuantumDouble().getValue("rad");
             if (!h.fromRecord(error, subRec1)) {
                 throw (AipsError 
-                (String("WCBox::fromRecord - could not recover trc because ") + 
+                (String("QtWCBox::fromRecord - could not recover trc because ") + 
                 error));
             }
             //trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
@@ -384,7 +384,7 @@ void FileBox::activate(Record rcd) {
          }
          */
 
-         Bool ok = ((WCBox*)wcreg)->getChanExt(blc(2), trc(2));
+         Bool ok = ((QtWCBox*)wcreg)->getChanExt(blc(2), trc(2));
 
          if (trc(0) <= wx(0) && wx(0) <= blc(0) &&
              blc(1) <= wx(1) && wx(1) <= trc(1)) {
@@ -509,7 +509,7 @@ void FileBox::loadRegionFromFile() {
          String box(vers);
          String error = "";
          try{
-            WCBox* worldbox = WCBox::fromBoxString(box, csys, error);
+            QtWCBox* worldbox = QtWCBox::fromBoxString(box, csys, error);
             if (!worldbox)
                 continue;
 
@@ -608,7 +608,7 @@ void FileBox::saveRegionToFile() {
                   chans(1) = cha;
                }
                //cout << "chans " << chans(0) << " " << chans(1) << endl;
-               ((WCBox*)wcreg)->setChanExt(String::toDouble(chans(0)), 
+               ((QtWCBox*)wcreg)->setChanExt(String::toDouble(chans(0)), 
                                            String::toDouble(chans(1)));
             }
             if (pol.length() > 0) {
@@ -621,11 +621,11 @@ void FileBox::saveRegionToFile() {
                   pols(0) = pol;
                   pols(1) = pol;
                }
-               ((WCBox*)wcreg)->setPolExt(String::toDouble(pols(0)), 
+               ((QtWCBox*)wcreg)->setPolExt(String::toDouble(pols(0)), 
                                           String::toDouble(pols(1)));
             }
 
-            String cmt = ((WCBox*)wcreg)->toBoxString();
+            String cmt = ((QtWCBox*)wcreg)->toBoxString();
             //cout << cmt << endl;
        
             listfile << cmt;
@@ -749,14 +749,14 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
     //   return;
 
 
-    if((wcreg->type()) == "WCBox"){
+    if((wcreg->type()) == "QtWCBox"){
       String chans="0~0";
       String pols="0~0";
 
       Double chblc;
       Double chtrc;
-      //cout << "WCBox:" << ((WCBox*)wcreg)->toRecord("");
-      Bool ok = ((WCBox*)wcreg)->getChanExt(chblc, chtrc);
+      //cout << "QtWCBox:" << ((QtWCBox*)wcreg)->toRecord("");
+      Bool ok = ((QtWCBox*)wcreg)->getChanExt(chblc, chtrc);
       if (ok) {
         //cout << "chblc=" << chblc << " chtrc=" << chtrc 
         //     << " Int(chblc)=" << Int(chblc)
@@ -774,8 +774,8 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
 
       Double poblc;
       Double potrc;
-      //cout << "WCBox:" << ((WCBox*)wcreg)->toRecord("");
-      ok = ((WCBox*)wcreg)->getPolExt(poblc, potrc);
+      //cout << "QtWCBox:" << ((QtWCBox*)wcreg)->toRecord("");
+      ok = ((QtWCBox*)wcreg)->getPolExt(poblc, potrc);
       if (ok) {
         //cout << "poblc=" << poblc << " potrc=" << potrc << endl;
         if (poblc > -1 && potrc > -1) {
@@ -812,13 +812,13 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
         String error;
         if (!h.fromRecord(error, subRec0)) {
            throw (AipsError 
-          ("WCBox::fromRecord - could not recover blc because "+error));
+          ("QtWCBox::fromRecord - could not recover blc because "+error));
         }
 
         blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
         if (!h.fromRecord(error, subRec1)) {
            throw (AipsError 
-            ("WCBox::fromRecord - could not recover trc because "+error));
+            ("QtWCBox::fromRecord - could not recover trc because "+error));
         }
         trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
       }
@@ -848,7 +848,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
 
          if (!h.fromRecord(error, specRec0)) {
             throw (AipsError 
-            ("WCBox::fromRecord - could not recover trc because "+error));
+            ("QtWCBox::fromRecord - could not recover trc because "+error));
          }
          if (specRec0.asString("unit") == "pix") {
             chanRange(0) = (Int)h.asQuantumDouble().getValue("pix");
@@ -864,7 +864,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
 
          if (!h.fromRecord(error, specRec1)) {
              throw (AipsError 
-             ("WCBox::fromRecord - could not recover trc because "+error));
+             ("QtWCBox::fromRecord - could not recover trc because "+error));
          }
          if (specRec1.asString("unit") == "pix") {
             chanRange(1) = (Int)h.asQuantumDouble().getValue("pix");
@@ -954,7 +954,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
 
       //if (!h.fromRecord(error, specRec0)) {
       //     throw (AipsError 
-      //      ("WCBox::fromRecord - could not recover trc because "+error));
+      //      ("QtWCBox::fromRecord - could not recover trc because "+error));
       //}
       //Double hz1 = h.asQuantumDouble().getValue("Hz");
       //spectralWorld(0) = hz1;
@@ -963,7 +963,7 @@ void FileBox::addRegionsToShape(RSComposite*& theShapes,
 
       //if (!h.fromRecord(error, specRec1)) {
       //     throw (AipsError 
-      //      ("WCBox::fromRecord - could not recover trc because "+error));
+      //      ("QtWCBox::fromRecord - could not recover trc because "+error));
       //}
       //Double hz2 = h.asQuantumDouble().getValue("Hz");
       //spectralWorld(0) = hz2;
@@ -1050,10 +1050,10 @@ WCUnion* FileBox::unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg){
 
 void FileBox::unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs,
                                           const WCRegion*& wcreg){
-   if ((wcreg->type()) == "WCBox"){
+   if ((wcreg->type()) == "QtWCBox"){
       uInt nreg=outRegPtrs.nelements();
       outRegPtrs.resize(nreg+1);
-      outRegPtrs[nreg]=new WCBox(static_cast<const WCBox & >(*wcreg));
+      outRegPtrs[nreg]=new QtWCBox(static_cast<const QtWCBox & >(*wcreg));
    }
    /*
    else if((wcreg->type()) == "WCPolygon"){
