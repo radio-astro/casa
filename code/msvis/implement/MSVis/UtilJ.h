@@ -12,9 +12,11 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
 #include <cassert>
+#include <cstdarg>
 #include <cstdlib>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <algorithm> 
 #include <functional>
 #include <map>
 #include <set>
