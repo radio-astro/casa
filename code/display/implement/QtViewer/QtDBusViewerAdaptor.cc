@@ -33,6 +33,7 @@
 #include <QTextStream>
 #include <display/QtViewer/QtDBusViewerAdaptor.qo.h>
 #include <display/QtViewer/QtApp.h>
+#include <casaqt/QtUtilities/QtId.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/QtViewer/QtCleanPanelGui.qo.h>
@@ -1065,7 +1066,7 @@ namespace casa {
 		return iter->second->id();
 	}
 
-	int index = QtDBusApp::get_id( );
+	int index = QtId::get_id( );
 	data_desc *dd = new data_desc(index, path, type, data, panel );
 	managed_datas.insert(datamap::value_type(index, dd));
 
@@ -1086,7 +1087,7 @@ namespace casa {
 		return iter->first;
 	}
 
-	int index = QtDBusApp::get_id( );
+	int index = QtId::get_id( );
 	managed_panels.insert(panelmap::value_type(index, new panel_desc(panel)));
 	return index;
     }
