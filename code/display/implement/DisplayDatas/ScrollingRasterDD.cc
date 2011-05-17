@@ -72,6 +72,13 @@ ScrollingRasterDD::ScrollingRasterDD(const uInt nDim,
   itsLatticeShape(arrShape),
   itsResampleHandler(0)
 {
+  initSRDD(aAxisNames, aAxisUnits, mAxis);
+}
+
+void ScrollingRasterDD::initSRDD(const Vector<String> aAxisNames, 
+				 const Vector<String> aAxisUnits,
+				 uInt mAxis)
+{
   if (itsLatticeShape == 0) {
     throw AipsError("ScrollingRasterDD constructor - empty shape given.");
   }
@@ -604,17 +611,28 @@ Bool ScrollingRasterDD::labelAxes(const WCRefreshEvent &ev) {
   return False;
 }
 
-ScrollingRasterDD::ScrollingRasterDD() {
-  uInt aNDim = 3;
-  IPosition aShape(aNDim); aShape = 0;
-  
+ScrollingRasterDD::ScrollingRasterDD(uInt mAxis, uInt scanNo):
+  PrincipalAxesDD (0, 1, mAxis, False),   // False - don't use built-in AxesLabellers
+  itsLatticeConcatPtr(0),
+  itsLatticeStatisticsPtr(0),
+  itsFilledDisplayedLatticePtr(0),
+  itsFixedPos(IPosition(3, 0, 0, 0)),
+  itsFilledCount(0),
+  itsNeedResize(True),
+  itsShiftAxis(1),
+  itsHeaderReceived(False),
+  itsHeaderMin(0.),
+  itsHeaderMax(1.),
+  itsScanNumber(scanNo), 
+  itsLatticeShape(IPosition(3, 0, 0, 0)),
+  itsResampleHandler(0)
+{
   String empty("");
+  const uInt aNDim = itsFixedPos.nelements();
   Vector<String> axisVec(aNDim, empty);
   Vector<String> unitVec(aNDim, empty);
   
-  ScrollingRasterDD::ScrollingRasterDD(
-    aNDim, aShape, axisVec, unitVec
-  );
+  initSRDD(axisVec, unitVec, mAxis);
 }
 
 // (Required) copy constructor.

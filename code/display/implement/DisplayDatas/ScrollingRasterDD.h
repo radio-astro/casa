@@ -118,7 +118,7 @@ protected:
   virtual Vector<String> worldAxisUnits();
 
   // (Required) default constructor.
-  ScrollingRasterDD();
+  ScrollingRasterDD(uInt mAxis=2, uInt scanNo=100);
 
   // (Required) copy constructor.
   ScrollingRasterDD(const ScrollingRasterDD &other);
@@ -153,7 +153,11 @@ protected:
   void setLatticeShape(const IPosition x) { itsLatticeShape = x; }
   IPosition latticeShape() { return itsLatticeShape; }
 
-private: 
+private:
+  // Worker function for c'tors.
+  void initSRDD(const Vector<String> aAxisNames, const Vector<String> aAxisUnits,
+		uInt mAxis);
+
   uInt nDim; 
 
   //ImageInterface<Float> *itsImagePtr;
