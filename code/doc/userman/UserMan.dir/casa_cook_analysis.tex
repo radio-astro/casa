@@ -14,6 +14,7 @@
 % STM 2009-05-20  Patch 4 imsmooth, etc.
 % STM 2009-12-16  Release 0
 % JO  2010-10-12  Release 3.1.0
+% JO  2011-04-24  Release 3.2.0 edits 
 
 \chapter{Image Analysis}
 \label{chapter:analysis}
@@ -22,7 +23,7 @@
   \begin{boxedminipage}{2.5in}
      \centerline{\bf Inside the Toolkit:}
      Image analysis is handled in the {\tt ia} tool.
-     Many options exist there, including region statistics and
+     Many functions exist there, including region statistics and
      image math. See \S~\ref{section:analysis.toolkit} below
      for more information.
   \end{boxedminipage}
@@ -33,8 +34,6 @@ data), the resulting image or image cube must be displayed or
 analyzed in order to extract quantitative information, such as
 statistics or moment images.  In addition, there need to be facilities for
 the coordinate conversion of images for direct comparison.
-We have assembled a skeleton of image analysis tasks for
-this release.  Many more are still under development.
 
 The image analysis tasks are:
 \begin{itemize}
@@ -128,7 +127,7 @@ box        =      ''   #  Select one or more box regions
 #          ONLY pixel values acceptable at this time.
 #          Default: none (all);
 #          Example: box='0,0,50,50'
-#          Example: box='[10,20,30,40];[100,100,150,150]'
+
 
 \end{verbatim}
 \normalsize
@@ -597,24 +596,28 @@ The inputs are:
 \small
 \begin{verbatim}
 #  imfit :: Fit one or more elliptical Gaussian components on an image region(s)
-imagename      =    ''   #  Name of the input image
-box            =    ''   #  Specify one or more box regions for the fit.
-region         =    ''   #  Region name or region specified using rg tool.
-chan           =     0   #  Spectral channel on which to perform fit (only one may be specified).
-stokes         =   'I'   #  Stokes parameter to fit.
-mask           =    ''   #  Mask to be applied to the image
-includepix     =    []   #  Range of pixel values to include for fitting.
-excludepix     =    []   #  Range of pixel values to exclude for fitting.
-residual       =    ''   #  Name of output residual image.
-model          =    ''   #  Name of output model image.
-estimates      =    ''   #  Name of file containing initial estimates of component parameters.
-logfile        =    ''   #  Name of file to write fit results.
-newestimates   =    ''   #  File to write fit results
-async          = False   #  If true the taskname must be started using imfit(...)
+imagename           =         ''        #  Name of the input image
+box                 =         ''        #  Specify one or more box regions for the fit.
+region              =         ''        #  Region name or region specified using rg tool.
+chan                =          0        #  Spectral channel on which to perform fit (only one may be specified).
+stokes              =         ''        #  Stokes parameter to fit. If blank, first stokes plane is used.
+mask                =         ''        #  Mask to be applied to the image
+includepix          =         []        #  Range of pixel values to include for fitting.
+excludepix          =         []        #  Range of pixel values to exclude for fitting.
+residual            =         ''        #  Name of output residual image.
+model               =         ''        #  Name of output model image.
+estimates           =         ''        #  Name of file containing initial estimates of component parameters.
+logfile             =         ''        #  Name of file to write fit results.
+newestimates        =         ''        #  File to write fit results which can be used as initial estimates for next run.
+complist            =         ''        #  Name of output component list table.
+async               =      False        #  If true the taskname must be started using imfit(...)
+
 \end{verbatim}
 \normalsize
-This task will return (as a Python dictionary) the results of the fit.
-
+This task will return (as a Python dictionary) the results of the fit,
+but the results can also be written into a component list table or a
+logfile. 
+ 
 Note that to fit more than a single component, you {\em must} provide
 starting estimates for each component via the {\tt estimates} file.
 See {\tt ``help imfit''} for more details on this.
@@ -1422,10 +1425,7 @@ Plane selection is controlled by {\tt chans} and {\tt stokes}.
 See \S~\ref{section:analysis.pars.planes} for details on plane
 selction.
 
-{\bf ALERT:} As with {\tt imcontsub}, if the image is missing one
-or more of the stokes and spectral axes, then {\tt imstat} will fail.  
-See the discussion of the workaround for this in
-\S~\ref{section:analysis.imcontsub}.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Using the task return value}

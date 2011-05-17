@@ -18,6 +18,7 @@
 % STM 2009-12-11  Release 3.0.0 final
 % JO 2010-03-10     edits for Release 3.0.1
 % JO 2010-10-12 edits Release 3.1.0 
+% STM 2011-05-03  Release 3.2.0 importevla and importasdm update
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -31,8 +32,10 @@ There are a number of tasks used to fill telescope-specific data,
 to import/export standard formats, to list data contents, and
 to concatenate multiple datasets.  These are:
 \begin{itemize}
-   \item {\tt importasdm} --- import ALMA or EVLA data in ASDM format 
-         (\S~\ref{section:io.import.asdm})
+   \item {\tt importasdm} --- import of ALMA data in 
+         {\it ASDM} format (\S~\ref{section:io.import.asdm})
+   \item {\tt importevla} --- import of EVLA data and flags in 
+         {\it ASDM} format (\S~\ref{section:io.import.evla})
    \item {\tt importuvfits} --- import visibility data in UVFITS
          format (\S~\ref{section:io.import.uvfits.import})
    \item {\tt importfitsidi} --- import visibility data in the
@@ -292,8 +295,11 @@ into CASA as a Measurement Set:
 
 \begin{itemize}
 
-\item ALMA and EVLA Science Data Model format data can be imported
+\item ALMA Science Data Model format data can be imported
       into CASA ({\tt importasdm})
+
+\item EVLA Science Data Model format data, including online flags,
+      can imported into CASA ({\tt importevla})
 
 \item VLA Archive format data can be imported into CASA
       ({\tt importvla})
@@ -304,7 +310,7 @@ into CASA as a Measurement Set:
 \end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{ALMA \& EVLA: Filling Science Data Model (ASDM) data}
+\subsection{ALMA: Filling of Science Data Model (ASDM) data}
 \label{section:io.import.asdm}
 
 \begin{wrapfigure}{r}{2.5in}
@@ -331,8 +337,8 @@ later) into a CASA visibility data set (MS).  The default inputs are:
 \begin{verbatim}
 #  importasdm :: Convert an Science Data Model observation into a CASA visibility file
 asdm                =     ''   #  Name of input asdm directory (on disk)
-vis                 =     ''   #  Root name of the ms to be created. Note the .ms is added
-singledish          =  False   # Set true to output single-dish data format 
+vis                 =     ''   #  Root name of the ms to be created. Note the .ms is NOT added
+singledish          =  False   #  Set true to output single-dish data format
 corr_mode           =  'all'   #  correlation mode to be input (ao, co, ac, all)
 srt                 =  'all'   #  spectral resolution type (fr, ca, bw, or all)
 time_sampling       =  'all'   #  time sampling (INTEGRATION and/or SUBINTEGRATION) (i, si, or all)
@@ -340,15 +346,39 @@ ocorr_mode          =   'ca'   #  output correlation mode AUTO_ONLY (ao), CROSS_
 compression         =  False   #  Flag for turning on data compression
 asis                =     ''   #  string of table names separated by spaces to be passed verbatim (* allowed)
 wvr_corrected_data  =   'no'   #  'no' (default), 'yes'= WVR corrected, 'both'= output separate MS
+scans               =     ''   #  processes only the specified scans (see help importasdm)
+ignore_time         =  False   #  rows of tables processed independently of the time range of exec blocks
+process_syspower    =  False   #  The SysPower table is processed if and only if this parameter is set to true.
+process_caldevice   =  False   #  The CalDevice table is processed if and only if this parameter is set to true.
 verbose             =  False   #  Output lots of information while the filler is working
-overwrite           =  False   #  Overwrite an existing MS
+overwrite           =  False   #  Over write an existing MS
 showversion         =  False   #  Report the version of asdm2MS being used
 async               =  False   #  If true the taskname must be started using importasdm(...)
 \end{verbatim}
 \normalsize
 
-{\bf ALERT}: Currently there are no options for filling selected data
-(you get the whole data set).  
+{\bf ALERT}: As of release 3.2, there are now options for filling
+selected scans. This is through the {\tt scans} parameter. 
+
+If {\tt scans} is set, then {\tt importasdm} processes only the scans
+specified in the option's value. This value is a semicolon separated
+list of scan specifications. A scan specification consists in an exec
+bock index followed by the character {\tt ':'} followed by a comma separated
+list of scan indexes or scan index ranges. A scan index is relative to
+the exec block it belongs to. Scan indexes are 1-based while exec
+blocks's are 0-based. The expressions
+\begin{verbatim}
+         "0:1"
+         "2:2~6"
+         "0:1,1:2~6,8;2:,3:24~30"
+         "1,2"
+         "3:"
+\end{verbatim}
+are all valid values for the selection. The {\tt "3:"} selector will be interpreted
+as {\it 'all the scans of the exec block 3'}. An scan index or a scan index
+range not preceded by an exec block index will be interpreted as {\it 'all
+the scans with such indexes in all the exec blocks'}.  By default all
+the scans are considered.
 
 If {\tt singledish=True}, output data format is scantable (single-dish data
 format, see \ref{chapter:sd}) instead of MS. In that case, you must specify
@@ -376,6 +406,95 @@ compression     =   False   #  Flag for turning on data compression
 async           =   False   #  If true the taskname must be started using importoldasdm(...)
 \end{verbatim}
 \normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{EVLA: Filling of Science Data Model (ASDM) data}
+\label{section:io.import.evla}
+
+\begin{wrapfigure}{r}{2.5in}
+  \begin{boxedminipage}{2.5in}
+     \centerline{\underline{\bf Under the Hood:}}
+     The {\tt importevla} task is a modified version of the {\tt
+     importasdm} task, that includes import of online flags from 
+     the {\tt Flag.xml} table into the {\tt FLAG\_CMD} MS table,
+     and a streamlined set of parameters.
+  \end{boxedminipage}
+\end{wrapfigure}
+
+The {\bf importevla} task will fill SDM data from EVLA (or ALMA) into
+a MS, along with online flagging data contained in the {\tt Flag.xml}
+SDM table.  Otherwise, it behaves as {\tt importasdm} but with a
+streamlined parameter set.
+
+The default inputs are:
+
+\small
+\begin{verbatim}
+#  importevla :: Convert a Science Data Model observation into a CASA Measurement Set
+asdm           =      ''  #  Name of input asdm directory (on disk)
+vis            =      ''  #  Root name of the ms to be created. Note the .ms is NOT added
+ocorr_mode     =    'ca'  #  Fill correlation mode AUTO_ONLY (ao), CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+compression    =   False  #  Flag for turning on data compression
+asis           =      ''  #  Create verbatim copies of these SDM tables in the MS.
+scans          =      ''  #  List of scans to fill (default is all scans).
+switchedpower  =   False  #  Enables support for switched-power gain and tsys corrections
+verbose        =   False  #  Output lots of information while the filler is working
+overwrite      =   False  #  Over write an existing MS
+online         =    True  #  Create online flags
+     tbuff     =     1.0  #  time padding buffer (seconds)
+
+flagzero       =    True  #  Create flag for low amplitude/zero points
+     cliplevel =   1e-08  #  zero clipping level
+     flagpol   =    True  #  flag cross-hand corrs also?
+
+shadow         =    True  #  Create flag for shadowed data
+     diameter  =    -1.0  #  diameter to use for shadowing (-1=antenna dia.)
+
+applyflags     =   False  #  Apply flags to MS
+flagbackup     =    True  #  Back up flag column at start
+async          =   False  #  If true the taskname must be started using importevla(...)
+\end{verbatim}
+\normalsize
+
+{\bf ALERT}: If you want to use your EVLA online flags then you must
+use {\tt importevla} rather than {\tt importasdm}.  The {\tt flagcmd} 
+task will process these flags.
+
+The default action of {\bf importevla} is to construct the {\tt FLAG\_CMD} 
+MS table based on the settings of {\tt online}, {\tt flagzero}, and
+{\tt shadow} (and sub-parameters).  If {\tt applyflags=True} then these
+flags will be applied after filling.  We recommend you use the {\tt flagcmd}
+task after filling to examine these flags and then apply.
+
+See {\tt importasdm} (\S~\ref{section:io.import.asdm}) for a
+description of the common parameters.  Some differences:
+
+Note that {\it importevla} uses the {\tt switchedpower} toggle to combine the
+action of the two related parameters that {\tt importasdm} uses.
+
+The {\tt online} parameter controls creation of online flags from the 
+{\tt Flag.xml} SDM table. The {\tt tbuff} parameter adds a time ``buffer''
+padding for these flags in both directions to deal with timing mis-matches.
+{\bf ALERT}: For EVLA data taken before April 2011, you should set {\tt tbuff}
+to a value (in seconds) equal to $1.5\times$ the integration time.
+
+The {\tt flagzero} parameter controls creation of clipping commands to flag
+visibilities with amplitudes below the cutoff given by {\tt cliplevel}. If
+{\tt flagpol=True} then it will flag the cross-hands (e.g. RL and LR) as well,
+which might result in low but correct values of these correlations being thrown
+out (but can catch erroneous zeros also).  
+{\bf ALERT}: This facility is provided as the EVLA correlator, particularly in
+2010, occasionally produces visibilities with zero or very small values that
+need to get flagged out.
+
+The {\tt shadow} parameter turns on creation of flag commands to remove antenna
+timeranges where they are shadowed by other antennas in the array.  By default
+it will flag based on the antenna diameter, but if you want more lenient or 
+conservative flagging then set the {\tt diameter} sub-parameter to a value 
+smaller or larger respectively than the actual diameter.
+{\bf ALERT}: Note that the shadow flagging calculation will only be able to
+detect shadowing by antennas for which there is actual visibility data in
+the MS.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{VLA: Filling data from archive format ({\tt importvla})}
@@ -799,67 +918,70 @@ results in the logger messages:
 \small
 \begin{verbatim}
 ================================================================================
-MeasurementSet Name: /home/sandrock3/smyers/Testing3/Patch4/N5921/ngc5921.demo.ms
-MS Version 2
+           MeasurementSet Name:  /Users/jott/casa/data/day2_TDEM0003_10s_norx      MS Version 2
 ================================================================================
-   Observer: TEST     Project:   
-Observation: VLA
-Data records: 22653       Total integration time = 5280 seconds
-   Observed from   13-Apr-1995/09:19:00.0   to   13-Apr-1995/10:47:00.0 (TAI)
+   Observer: Mark J. Mark Claussen     Project: T.B.D.  
+Observation: EVLA
+Data records: 290218       Total integration time = 10016 seconds
+   Observed from   26-Apr-2010/03:21:56.0   to   26-Apr-2010/06:08:52.0 (UTC)
 
    ObservationID = 0         ArrayID = 0
-  Date        Timerange (TAI)          Scan  FldId FieldName    nVis   Int(s)   SpwIds
-  13-Apr-1995/09:19:00.0 - 09:24:30.0     1      0 1331+305000* 4509   30       [0]
-              09:27:30.0 - 09:29:30.0     2      1 1445+099000* 1890   30       [0]
-              09:33:00.0 - 09:48:00.0     3      2 N5921_2      6048   30       [0]
-              09:50:30.0 - 09:51:00.0     4      1 1445+099000* 756    30       [0]
-              10:22:00.0 - 10:23:00.0     5      1 1445+099000* 1134   30       [0]
-              10:26:00.0 - 10:43:00.0     6      2 N5921_2      6804   30       [0]
-              10:45:30.0 - 10:47:00.0     7      1 1445+099000* 1512   30       [0]
+  Date        Timerange (UTC)          Scan  FldId FieldName nVis   Int(s)   SpwIds      ScanIntent
+  26-Apr-2010/03:21:56.0 - 03:23:16.0     5      2 J0954+1743   2720   9.8      [0, 1]                      
+                                             .......   
+              05:31:21.0 - 05:35:57.5    48      3 IRC+10216    9918   9.7      [0, 1]                      
+              05:36:19.0 - 05:37:26.5    49      2 J0954+1743   2700   9.2      [0, 1]                      
+              05:37:50.0 - 05:42:27.0    50      3 IRC+10216    9918   9.73     [0, 1]                      
+              05:42:49.0 - 05:43:56.0    51      2 J0954+1743   2700   9.18     [0, 1]                      
+              05:44:19.0 - 05:48:55.5    52      3 IRC+10216    9882   9.75     [0, 1]                      
+              05:49:17.0 - 05:50:24.5    53      2 J0954+1743   2700   9.22     [0, 1]                      
+              05:55:46.0 - 06:00:53.0    56      5 J1229+0203   10836  9.69     [0, 1]                      
+              06:06:14.0 - 06:08:52.0    59      7 J1331+3030   5814   9.52     [0, 1]                      
            (nVis = Total number of time/baseline visibilities per scan) 
-Fields: 3
+Fields: 4
   ID   Code Name         RA            Decl           Epoch   SrcId nVis   
-  0    C    1331+305000* 13:31:08.2873 +30.30.32.9590 J2000   0     4509   
-  1    A    1445+099000* 14:45:16.4656 +09.58.36.0730 J2000   1     5292   
-  2         N5921_2      15:22:00.0000 +05.04.00.0000 J2000   2     12852  
+  2    D    J0954+1743   09:54:56.8236 +17.43.31.2224 J2000   2     65326  
+  3    NONE IRC+10216    09:47:57.3820 +13.16.40.6600 J2000   3     208242 
+  5    F    J1229+0203   12:29:06.6997 +02.03.08.5982 J2000   5     10836  
+  7    E    J1331+3030   13:31:08.2880 +30.30.32.9589 J2000   7     5814   
    (nVis = Total number of time/baseline visibilities per field) 
-Spectral Windows:  (1 unique spectral windows and 1 unique polarization setups)
-  SpwID  #Chans Frame Ch1(MHz)    ChanWid(kHz)TotBW(kHz)  Ref(MHz)    Corrs   
-  0          63 LSRK  1412.66507  24.4140625  1550.19688  1413.42801  RR  LL  
-Sources: 3
-  ID   Name         SpwId RestFreq(MHz)  SysVel(km/s) 
-  0    1331+305000* 0     1420.405752    0            
-  1    1445+099000* 0     1420.405752    0            
-  2    N5921_2      0     1420.405752    0            
-Antennas: 27:
-  ID   Name  Station   Diam.    Long.         Lat.         
-  0    1     VLA:N7    25.0 m   -107.37.07.2  +33.54.12.9  
-  1    2     VLA:W1    25.0 m   -107.37.05.9  +33.54.00.5  
-  2    3     VLA:W2    25.0 m   -107.37.07.4  +33.54.00.9  
-  3    4     VLA:E1    25.0 m   -107.37.05.7  +33.53.59.2  
-  4    5     VLA:E3    25.0 m   -107.37.02.8  +33.54.00.5  
-  5    6     VLA:E9    25.0 m   -107.36.45.1  +33.53.53.6  
-  6    7     VLA:E6    25.0 m   -107.36.55.6  +33.53.57.7  
-  7    8     VLA:W8    25.0 m   -107.37.21.6  +33.53.53.0  
-  8    9     VLA:N5    25.0 m   -107.37.06.7  +33.54.08.0  
-  9    10    VLA:W3    25.0 m   -107.37.08.9  +33.54.00.1  
-  10   11    VLA:N4    25.0 m   -107.37.06.5  +33.54.06.1  
-  11   12    VLA:W5    25.0 m   -107.37.13.0  +33.53.57.8  
-  12   13    VLA:N3    25.0 m   -107.37.06.3  +33.54.04.8  
-  13   14    VLA:N1    25.0 m   -107.37.06.0  +33.54.01.8  
-  14   15    VLA:N2    25.0 m   -107.37.06.2  +33.54.03.5  
-  15   16    VLA:E7    25.0 m   -107.36.52.4  +33.53.56.5  
-  16   17    VLA:E8    25.0 m   -107.36.48.9  +33.53.55.1  
-  17   18    VLA:W4    25.0 m   -107.37.10.8  +33.53.59.1  
-  18   19    VLA:E5    25.0 m   -107.36.58.4  +33.53.58.8  
-  19   20    VLA:W9    25.0 m   -107.37.25.1  +33.53.51.0  
-  20   21    VLA:W6    25.0 m   -107.37.15.6  +33.53.56.4  
-  21   22    VLA:E4    25.0 m   -107.37.00.8  +33.53.59.7  
-  23   24    VLA:E2    25.0 m   -107.37.04.4  +33.54.01.1  
-  24   25    VLA:N6    25.0 m   -107.37.06.9  +33.54.10.3  
-  25   26    VLA:N9    25.0 m   -107.37.07.8  +33.54.19.0  
-  26   27    VLA:N8    25.0 m   -107.37.07.5  +33.54.15.8  
-  27   28    VLA:W7    25.0 m   -107.37.18.4  +33.53.54.8  
+Spectral Windows:  (2 unique spectral windows and 1 unique polarization setups)
+ INFO    listobs::ms::summary+     SpwID  #Chans Frame Ch1(MHz)    ChanWid(kHz)TotBW(kHz)  Ref(MHz)    Corrs           
+   0          64 TOPO  36387.2295  125         8000        36387.2295  RR  RL  LR  LL  
+   1          64 TOPO  36304.542   125         8000        36304.542   RR  RL  LR  LL  
+ Sources: 10
+   ID   Name         SpwId RestFreq(MHz)  SysVel(km/s) 
+   0    J1008+0730   0     0.03639232     -0.026       
+   0    J1008+0730   1     0.03639232     -0.026       
+   2    J0954+1743   0     0.03639232     -0.026       
+   2    J0954+1743   1     0.03639232     -0.026       
+   3    IRC+10216    0     0.03639232     -0.026       
+   3    IRC+10216    1     0.03639232     -0.026       
+   5    J1229+0203   0     0.03639232     -0.026       
+   5    J1229+0203   1     0.03639232     -0.026       
+   7    J1331+3030   0     0.03639232     -0.026       
+   7    J1331+3030   1     0.03639232     -0.026       
+ Antennas: 19:
+   ID   Name  Station   Diam.    Long.         Lat.         
+   0    ea01  W09       25.0 m   -107.37.25.2  +33.53.51.0  
+   1    ea02  E02       25.0 m   -107.37.04.4  +33.54.01.1  
+   2    ea03  E09       25.0 m   -107.36.45.1  +33.53.53.6  
+   3    ea04  W01       25.0 m   -107.37.05.9  +33.54.00.5  
+   4    ea05  W08       25.0 m   -107.37.21.6  +33.53.53.0  
+   5    ea07  N06       25.0 m   -107.37.06.9  +33.54.10.3  
+   6    ea08  N01       25.0 m   -107.37.06.0  +33.54.01.8  
+   7    ea09  E06       25.0 m   -107.36.55.6  +33.53.57.7  
+   8    ea12  E08       25.0 m   -107.36.48.9  +33.53.55.1  
+   9    ea15  W06       25.0 m   -107.37.15.6  +33.53.56.4  
+   10   ea19  W04       25.0 m   -107.37.10.8  +33.53.59.1  
+   11   ea20  N05       25.0 m   -107.37.06.7  +33.54.08.0  
+   12   ea21  E01       25.0 m   -107.37.05.7  +33.53.59.2  
+   13   ea22  N04       25.0 m   -107.37.06.5  +33.54.06.1  
+   14   ea23  E07       25.0 m   -107.36.52.4  +33.53.56.5  
+   15   ea24  W05       25.0 m   -107.37.13.0  +33.53.57.8  
+   16   ea25  N02       25.0 m   -107.37.06.2  +33.54.03.5  
+   17   ea27  E03       25.0 m   -107.37.02.8  +33.54.00.5  
+   18   ea28  N08       25.0 m   -107.37.07.5  +33.54.15.8 
 \end{verbatim}
 \normalsize
 using the (default) {\tt verbose=True} option.

@@ -4,6 +4,7 @@
 
 % STM 2007-04-13  split from previous version
 % STM 2007-04-15  tool guide version
+% JO  2011-05-13  Release 3.2 edits
 
 \chapter{Displaying Images}
 \label{chapter:viewer}
@@ -11,6 +12,15 @@
 This chapter describes how to display data with the {\tt casaviewer}
 either as a stand-alone or through the {\tt viewer} task. You can
 display both images and MeasurementSets.
+
+{\bf Alert:} We started to separate the viewing of images and
+measurement sets into two different, more specialized GUIs/tasks: {\tt imview} and {\tt
+  msview}. {\tt imview} will have all options for
+full scriptability (non-interactive plotting). The syntax is in the
+form of python dictionaries, which are flexible and relatively easy
+to use. The scripting syntax is still under
+development but feel free to play with the current examples provided
+in the online help of {\tt imview}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Starting the casaviewer}
@@ -290,10 +300,14 @@ to AIPS task TVFLG).
 \end{figure}
  
 
-{\it Note: There is also a bug in the current MS viewing which
-disables display of the data and flags; use the 'Adjust' panel
-'Flagging Options' Menu to change the 'Show Flagged Regions' option to
-'Masked to Background'. This will be the default for Patch 2.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Loading a Multi-Extension Fits File}
+\label{section:viewer.multiextensionfits}
+The {\tt viewer} can also display multi-extension fits. These files
+are automatically recognized and the {\bf Load Data} window will
+show a little triangle right next to the filename. Clicking the
+triangle exposes the different extensions to be selected and viewed.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Adjusting Display Parameters}

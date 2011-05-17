@@ -16,6 +16,8 @@
 % STM 2009-11-24  Release 3.0.0 editing start
 % JO 2010-02-20 Release edits for 3.0.1 start
 % LC 2010-02-28 plotms chapter added
+% JO 2010-04-20 release 3.2.0 edits start
+% STM 2011-05-05  Release 3.2 flagcmd
 
 
 %\documentclass[11pt]{article}
@@ -77,6 +79,8 @@ The tasks available for plotting and flagging of data are:
       (\S~\ref{section:edit.plot.plotxy})
    \item {\tt flagdata} --- non-interactive flagging of data
       (\S~\ref{section:edit.flagdata})
+   \item {\tt flagcmd} --- manipulate and apply flags using {\tt FLAG\_CMD} table
+      (\S~\ref{section:edit.flagcmd})
    \item {\tt browsetable} --- browse data in any CASA table (including a MS)
       (\S~\ref{section:edit.browse})
    \item {\tt plotants} --- create simple plots of antenna positions
@@ -275,19 +279,34 @@ selectdata          =       True        #  data selection parameters
      msselect       =         ''        #  MS selection (blank for all)
 
 averagedata         =       True        #  data averaging parameters
-     avgchannel     =         ''        #  average over channel?  (blank = False, otherwise value in channels)
-     avgtime        =         ''        #  average over time? (blank = False, other value in seconds)
-     avgscan        =      False        #  only valid if time averaging is turned on.  average over scans?
-     avgfield       =      False        #  only valid if time averaging is turned on.  average over fields?
-     avgbaseline    =      False        #  average over all baselines?  (mutually exclusive with avgantenna)
-     avgantenna     =      False        #  average by per-antenna?  (mutually exclusive with avgbaseline)
+     avgchannel     =         ''        #  average over channel?  (blank = False, otherwise
+                                        #   value in channels)
+     avgtime        =         ''        #  average over time? (blank = False, other value in
+                                        #   seconds)
+     avgscan        =      False        #  only valid if time averaging is turned on.  average
+                                        #   over scans?
+     avgfield       =      False        #  only valid if time averaging is turned on.  average
+                                        #   over fields?
+     avgbaseline    =      False        #  average over all baselines?  (mutually exclusive
+                                        #   with avgantenna)
+     avgantenna     =      False        #  average by per-antenna?  (mutually exclusive with
+                                        #   avgbaseline)
      avgspw         =      False        #  average over all spectral windows?
      scalar         =      False        #  Do scalar averaging?
 
 transform           =      False        #  transform data in various ways?
 extendflag          =      False        #  have flagging extend to other data points?
+iteraxis            =         ''        #  the axis over which to iterate
+coloraxis           =         ''        #  selects which data to use for colorizing
+plotrange           =         []        #  plot axes ranges: [xmin,xmax,ymin,ymax]
+title               =         ''        #  Title written along top of plot
+xlabel              =         ''        #  Text for horizontal axis. Blank for default.
+ylabel              =         ''        #  Text for vertical axis. Blank for default.
+showmajorgrid       =      False        #  Show major grid lines (horiz and vert.)
+showminorgrid       =      False        #  Show minor grid lines (horiz and vert.)
 plotfile            =         ''        #  Name of plot file to save automatically.
-async               =      False        #  If true the taskname must be started using plotms(...)
+async               =      False        #  If true the taskname must be started using
+                                        #   plotms(...)
 
 \end{verbatim}
 \normalsize All of these parameters can also be set or modified from
@@ -318,7 +337,7 @@ When {\tt plotms} is first started, a window will appear as in Figure
 tab (as chosen from the tabs at the top of the {\tt plotms}
 window---e.g., {\bf Plots, Flagging, Tools}...) and the {\bf Plots $>$
   Data} tab (as chosen from the tabs on the far left side of the {\tt
-  plotms} window---e.g., {\bf Data, Axes, Trans}...). First, a
+  plotms} window---e.g., {\bf Data, Axes, Trans, Iter}...). First, a
 measurement set should be loaded by clicking on {\bf Browse} near the
 top of the {\bf Plots $>$ Data} tab, and selecting a {\tt .ms}
 directory (just select the directory itself; do not descend into the
@@ -681,7 +700,13 @@ The X and Y ranges of the plot can be set in the {\bf Plots $>$ Axes} tab. By de
 \subsubsection{Plot Labels}
 \label{section:edit.plot.plotms.labels}
 
-The plot and axes labels which are displayed in the plot window are set in the {\bf Plots $>$ Canvas} tab. To change the plot title, under {\bf Canvas Title}, click on the circle next to the blank box and enter the desired text (note that this is independent of the plot's title in the {\bf Plot Selection} menu; see \S~\ref{section:edit.plot.plotms.window}). To change the X- and Y-axis labels, similarly click on the circles next to the blank boxes under {\bf Show X Axis} and {\bf Show Y Axis} and type the desired text in the blank box. To display these new labels, simply click the {\bf Plot} button.
+The plot and axes labels which are displayed in the plot window are
+set in the {\bf Plots $>$ Canvas} tab. To change the plot title, under
+{\bf Canvas Title}, click on the circle next to the blank box and
+enter the desired text. 
+%(note that this is independent of the plot's title in the {\bf Plot
+%Selection} menu; see \S~\ref{section:edit.plot.plotms.window}). 
+To change the X- and Y-axis labels, similarly click on the circles next to the blank boxes under {\bf Show X Axis} and {\bf Show Y Axis} and type the desired text in the blank box. To display these new labels, simply click the {\bf Plot} button.
 
 The user can determine the locations of axis labels in the {\bf Plots $>$ Axes} tab. The X-axis label switches from the bottom to the top of the plot depending on what is selected for {\bf Attach to:}. Similarly for the Y-Axis, the user can choose to attach axis labels and tickmarks to the {\bf Top} or {\bf Bottom} (note that the axis labels have been attached to the {\bf Bottom} and {\bf Right} in Figure \ref{fig:plotms_axes}.
 
@@ -703,28 +728,28 @@ Grid line colors, thicknesses, and styles are selected independently for the ``m
 
 A plot symbol legend can be added to the plot by clicking on the checkbox next to {\bf Legend} in the {\bf Plots $>$ Canvas} tab. However, given the current functionalities of {\tt plotms}, a symbol legend is of very limited use. This option will become more relevant when overplotting capabilities are included in {\tt plotms}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\begin{figure}[h!]
-\begin{center}
-\pngname{plotms_select_red}{6}
-\caption{\label{fig:plotms_select} Multiple ``single'' plots displayed in a {\tt plotms} window. The {\bf Plot Selection} menu is circled in red (See \S~\ref{section:edit.plot.plotms.window} for more detail). } 
-\hrulefill
-\end{center}
-\end{figure}
-
-\subsubsection{New Plot Windows and Plot Selection}
-\label{section:edit.plot.plotms.window}
-
-A new plot window can be opened using the drop-down menu which is located directly below the upper row of tabs (hereafter called the {\bf Plot Selection} menu; it is labelled as ``Amp vs. Time'' and circled in red in Figure \ref{fig:plotms_select}). To open a new window, select ``New Single Plot'' from this menu, and then click on the {\bf Go} button which will appear after this selection. There will now be two plot windows, one on top of the other, as in Figure \ref{fig:plotms_select}. The new window will be initially blanks, and to plot in it, the measurement set must be re-loaded and re-selected upon(\S~\ref{section:edit.plot.plotms.select}; then click the {\bf Plot} button. 
-
-Both plot windows should now be listed in the {\bf Plot Selection} drop-down menu. To return to editing the original plot, select it from this menu and click the {\bf Edit} button which will appear on selection. The name of each plot in this drop-down menu can be changed using {\bf Plot Title} in the {\bf Plots $>$ Axes} tab. Click on the circle next to the blank box under {\bf Plot Title} and enter the desired text for the title. Note that this is, by default, the same as the plot title displayed in the plot window, but it is not required to be. The plot title in the plot window is determined by {\bf Canvas Title} in the {\bf Plots $>$ Canvas} tab (see \S~\ref{section:edit.plot.plotms.labels}).
-
-The plot windows can be completely cleared by choosing ``Clear Plotter'' from the {\bf Plot Selection} menu. Clicking the {\bf Go} button will not only clear the plots themselves, but will also clear the plot parameters, loaded data, and the cache. 
-
-The {\bf Plot Selection} menu also presents the user with a ``New Multi Plot'' option, but note that multi-plots are not functional in this release of CASA. Selecting ``New Multi Plot'' and clicking the {\bf Go} button will currently crash {\tt plotms}.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%\begin{figure}[h!]
+%\begin{center}
+%\pngname{plotms_select_red}{6}
+%\caption{\label{fig:plotms_select} Multiple ``single'' plots displayed in a {\tt plotms} window. The {\bf Plot Selection} menu is circled in red (See \S~\ref{section:edit.plot.plotms.window} for more detail). } 
+%\hrulefill
+%\end{center}
+%\end{figure}
+%
+%\subsubsection{New Plot Windows and Plot Selection}
+%\label{section:edit.plot.plotms.window}
+%
+%A new plot window can be opened using the drop-down menu which is located directly below the upper row of tabs (hereafter called the {\bf Plot Selection} menu; it is labelled as ``Amp vs. Time'' and circled in red in Figure \ref{fig:plotms_select}). To open a new window, select ``New Single Plot'' from this menu, and then click on the {\bf Go} button which will appear after this selection. There will now be two plot windows, one on top of the other, as in Figure \ref{fig:plotms_select}. The new window will be initially blanks, and to plot in it, the measurement set must be re-loaded and re-selected upon(\S~\ref{section:edit.plot.plotms.select}; then click the {\bf Plot} button. 
+%
+%Both plot windows should now be listed in the {\bf Plot Selection} drop-down menu. To return to editing the original plot, select it from this menu and click the {\bf Edit} button which will appear on selection. The name of each plot in this drop-down menu can be changed using {\bf Plot Title} in the {\bf Plots $>$ Axes} tab. Click on the circle next to the blank box under {\bf Plot Title} and enter the desired text for the title. Note that this is, by default, the same as the plot title displayed in the plot window, but it is not required to be. The plot title in the plot window is determined by {\bf Canvas Title} in the {\bf Plots $>$ Canvas} tab (see \S~\ref{section:edit.plot.plotms.labels}).
+%
+%The plot windows can be completely cleared by choosing ``Clear Plotter'' from the {\bf Plot Selection} menu. Clicking the {\bf Go} button will not only clear the plots themselves, but will also clear the plot parameters, loaded data, and the cache. 
+%
+%The {\bf Plot Selection} menu also presents the user with a ``New Multi Plot'' option, but note that multi-plots are not functional in this release of CASA. Selecting ``New Multi Plot'' and clicking the {\bf Go} button will currently crash {\tt plotms}.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{The Cache}
 \label{section:edit.plot.plotms.cache}
@@ -737,25 +762,64 @@ Finally, the {\bf Available Axes} are those data dimensions which are currently 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%\subsubsection{The Options Tab}
-%\label{section:edit.plot.plotms.options}
+\subsubsection{The Options Tab}
+\label{section:edit.plot.plotms.options}
 
-%A few miscellaneous options are available in the {\bf Options} tab, located near the top of the {\tt plotms} window. The {\bf Tool Button Style} drop-drop down menu determines if icons and/or text represent the buttons in the toolbar near the bottom of the {\tt plotms} window. 
+A few miscellaneous options are available in the {\bf Options} tab,
+the last tab at the top of the {\tt plotms} window. 
+ The {\bf Tool Button Style} drop-drop down menu determines if icons and/or text represent the buttons in the toolbar near the bottom of the {\tt plotms} window. 
 
-%The {\bf Log Events} drop down menu determines how verbose {\tt plotms} is in documenting its actions on the command line.
+The {\bf Log Events} drop down menu determines how verbose {\tt plotms} is in documenting its actions on the command line.
 
-%There is a checkbox that determines the persistence of regions and annotations on new plots, labelled {\bf When changing plot axes, clear any existing regions and annotations}.
+There is a checkbox that determines the persistence of regions and annotations on new plots, labelled {\bf When changing plot axes, clear any existing regions and annotations}.
 
-% Use fixed size for cached images?
+A useful option is the {\bf fixed size for cached image}
+checkbox. It determines how large the dots in the panel are with
+respect to the screen resolution. The values influence how the data
+is redrawn on the panel. When the {\bf Screen resolution} is selected,
+the {\tt plotms} window can be resized without redrawing on
+the canvas -- a considerable speedup for large data sets. The penalty is
+that the dots of the data points are the size of a pixel on the
+screen, which may be very small for high resolution monitors. 
 
-% File chooser history limit?
+Finally, the {\bf File chooser history limit} determines the number of
+remembered directories in the file loading pop-up of the {\bf Browse}
+selection of the {\bf Data} tab.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsubsection{Iteration}
 \label{section:edit.plot.plotms.iter}
 
-{\tt Plotms} does not include functionality for plot iteration in this release of CASA. We refer the reader to {\tt plotxy} (\S~\ref{section:edit.plot.plotxy.iter}) if  plot iteration is desired, 
+In many cases, it is desirable to iterate through the data that were
+selected in the {\it Data} tab. A typical example is to display a single baseline in a time vs. amplitude plot and
+then proceed to the next baselines step by step. This can be done via the {\it Iter} tab on the left hand
+side of {\tt plotms}. A drop-down menu allows you to select the
+parameter to be iterated on, such as baseline or spw (press {\it plot}
+after changing your selection). The plot titles in the main panel in
+{\tt plotms} show which data slice is currently displayed. To proceed
+to the next plot use the {\it green buttons} below the main panel. The
+different button symbols let you to proceed panel by panel or to jump to the first or last
+panel directly.
+ 
+
+There are two scaling options for the axes: {\it Global} and {\it
+  Self}. {\it Global} will use a common axis range based on data
+loaded with the selection criteria specified in the {\it Data}
+tab. {\it Self} readjusts the axes scaling to the data for each
+individual panel of the iteration. 
+
+
+Note that exporting iterated data only refers to the
+shown panel, the exported files do not (yet) collate all the iteration
+panels in say a
+multi-page pdf. So please export every panel separately.
+
+The {\it Rows} and {\it Columns} selection boxes will, in the future, control the number of
+panels for multi-panel plots. This feature is likely available in CASA
+3.3 and higher.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Saving your plot}
@@ -763,11 +827,22 @@ Finally, the {\bf Available Axes} are those data dimensions which are currently 
 
 You can save a copy of a plot to file in the {\bf Plots $>$ Export} tab. Click the {\bf Browse} button for a GUI-based selection of the directory and file name to which the plot will be saved. The file format can also be determined in this GUI by the suffix given to the filename: {\tt .png} (PNG), {\tt .jpg} (JPG), {\tt .ps} (PS), or {\tt .pdf} (PDF). Alternatively, the file format can be selected from the {\bf Format} drop-down menu located just below the {\bf Browse} button. In this case, {\tt plotms} will add a suffix to the file name depending on the format chosen.
 
-{\bf ALERT:} The plot files produced by the PS and PDF options can be large and time-consuming to export.  The JPG is the smallest.
+{\bf ALERT:} The plot files produced by the PS and PDF options can be
+large and time-consuming to export.  The JPG is the smallest.\\ 
+{\bf On
+  MacOS there are known problems when exporting to anything but a file
+  in png
+  format. Until this is fixed, please export to png and use third
+  party software, such as the MacOS
+  application {\tt Preview} or the ImageMagick Tool {\tt convert} to
+  convert the png to pdf, jpg, eps, etc. }
 
 The exported plot resolution can be manipulated using the {\bf High Resolution}, {\bf DPI}, and {\bf Size} options.
 
-Click on {\bf Export} to create the file. Note that, if there is more than one plot displayed in the {\tt plotms} window (\S~\ref{section:edit.plot.plotms.window}), it will only export the currently selected plot.
+Click on {\bf Export} to create the file. Note that, if there is more
+than one plot displayed in the {\tt plotms} window,
+% (\S~\ref{section:edit.plot.plotms.window}), 
+it will only export the currently selected plot.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Exiting {\tt plotms}}
@@ -789,7 +864,10 @@ Alternatively, you can just leave it alone, and {\bf plotms} will keep running i
 \subsection{Plotting and Editing using {\tt plotxy}}
 \label{section:edit.plot.plotxy}
 
+
+
 {\bf ALERT:} The {\tt plotxy} code is fragile and slow, and is being replaced by the {\tt plotms} (\S~\ref{section:edit.plot.plotms}). We retain {\tt plotxy} in this release as not all functionality is available yet in {\tt plotms}.
+
 
 \begin{wrapfigure}{r}{2.5in}
   \begin{boxedminipage}{2.5in}
@@ -800,7 +878,30 @@ Alternatively, you can just leave it alone, and {\bf plotms} will keep running i
   \end{boxedminipage}
 \end{wrapfigure}
 
-{\tt Plotxy} is a tool for visualizing and editing visibility data. Unlike {\tt plotms}, it is useful in scripting, as it can non-interactively produce a hardcopy plot (see \S~\ref{section:edit.plot.plotxy.print}). It also has multi-plot (\S~\ref{section:edit.plot.plotxy.subplot}), iteration (\S~\ref{section:edit.plot.plotxy.iter}), and overplotting (\S~\ref{section:edit.plot.plotxy.overplot}) functionality---unlike {\tt plotms} in the current release. {\tt Plotxy} uses the {\tt matplotlib} plotting library to display its plots. You can find information on {\tt matplotlib} at \url{http://matplotlib.sourceforge.net/}.
+
+%\begin{wrapfigure}{r}{2.5in}
+%  \begin{boxedminipage}{2.5in}
+%     \centerline{\bf Inside the Toolkit:}
+%     Access to {\tt matplotlib} is also provided through 
+%     the {\tt pl} tool. 
+%     See below for a description of the {\tt pl} tool functions. 
+%  \end{boxedminipage}
+%\end{wrapfigure}
+
+{\tt Plotxy} is a tool for visualizing and editing visibility
+data. Unlike {\tt plotms}, it is useful in scripting, as it can
+non-interactively produce a hardcopy plot (see
+\S~\ref{section:edit.plot.plotxy.print}). It also has multi-plot
+(\S~\ref{section:edit.plot.plotxy.subplot}), iteration
+(\S~\ref{section:edit.plot.plotxy.iter}), and overplotting
+(\S~\ref{section:edit.plot.plotxy.overplot}) functionality---unlike
+{\tt plotms} in the current release. {\tt Plotxy} uses the {\tt
+  matplotlib} plotting library to display its plots. You can find
+information on {\tt matplotlib} at
+\url{http://matplotlib.sourceforge.net/}.
+
+
+
 
 \begin{figure}[h!]
 \begin{center}
@@ -1768,6 +1869,13 @@ async     =      False   #
 \section{Non-Interactive Flagging using {\tt flagdata}}
 \label{section:edit.flagdata}
 
+{\bf Alert:} We have a task {\tt flagdata2} that contains the same
+functionality than {\tt flagdata} but has a better interface. Consider
+using {\tt flagdata2} instead of {\tt flagdata}.  If you have a number
+of flagging commands you want to carry out, there is also now
+a {\tt flagcmd} task (\S~\ref{section:edit.flagcmd}) that takes
+commands from files or tables as input.
+
 Task {\tt flagdata} will flag the visibility data set based on the
 specified data selections, most of the information coming from a run
 of the {\tt listobs} task (with/without {\tt verbose=True}). Currently you can
@@ -1782,6 +1890,7 @@ select based on any combination of:
    \item uv-ranges ({\tt uvrange})
    \item times ({\tt timerange}) or scan numbers ({\tt scan})
    \item antenna arrays ({\tt array})
+   \item scan intents ({\tt intent})
 \end{itemize}
 
 and choose to flag, unflag, clip ({\tt setclip} and sub-parameters), and
@@ -1791,30 +1900,36 @@ autocorrelations ({\tt autocorr}).
 The inputs to {\tt flagdata} are:
 \small
 \begin{verbatim}
-#  flagdata :: Flag/Clip data based on selections:
+#  flagdata ::  All purpose flagging task based on selections
+vis                 =         ''        #  Name of file to flag
+flagbackup          =       True        #  Automatically back up the state of flags before the
+                                        #   run?
+mode                = 'manualflag'      #  Mode (manualflag,shadow,quack,summary,autoflag,rfi)
+     autocorr       =      False        #  Flag autocorrelations
+     unflag         =      False        #  Unflag the data specified
+     clipexpr       =   'ABS RR'        #  Expression to clip on
+     clipminmax     =         []        #  Range to use for clipping
+     clipcolumn     =     'DATA'        #  Data column to use for clipping
+     clipoutside    =       True        #  Clip outside the range, or within it
+     channelavg     =      False        #  Average over channels (scalar average)
 
-vis               =         ''   #  Name of input visibility file
-mode              = 'manualflag' #  Mode (manualflag,shadow,quack,summary,autoflag,rfi)
-     autocorr     =      False   #  Flag autocorrelations
-     unflag       =      False   #  Unflag the data specified
-     clipexpr     =   'ABS RR'   #  Expression to clip on
-     clipminmax   =         []   #  Range to use for clipping
-     clipcolumn   =     'DATA'   #  Data column to use for clipping
-     clipoutside  =       True   #  Clip outside the range, or within it
-     channelavg   =      False   #  Average over channels
+spw                 =         ''        #  spectral-window/frequency/channel
+field               =         ''        #  Field names or field index numbers: ''==>all,
+                                        #   field='0~2,3C286'
+selectdata          =       True        #  More data selection parameters (antenna, timerange
+                                        #   etc)
+     antenna        =         ''        #  antenna/baselines: ''==>all, antenna = '3,VA04'
+     timerange      =         ''        #  time range: ''==>all, timerange='09:14:0~09:54:0'
+     correlation    =         ''        #  Select data based on correlation
+     scan           =         ''        #  scan numbers: ''==>all
+     intent         =         ''        #  Select data based on observing intent: ''==>all
+     feed           =         ''        #  multi-feed numbers: Not yet implemented
+     array          =         ''        #  (sub)array numbers: ''==>all
+     uvrange        =         ''        #  uv range: ''==>all; uvrange = '0~100klambda',
+                                        #   default units=meters
 
-spw               =         ''   #  spectral-window/frequency/channel
-field             =         ''   #  Field names or field index numbers: ''==>all, field='0~2,3C286'
-selectdata        =       True   #  More data selection parameters (antenna, timerange etc)
-     antenna      =         ''   #  antenna/baselines: ''==>all, antenna = '3,VA04'
-     timerange    =         ''   #  time range: ''==>all, timerange='09:14:0~09:54:0'
-     correlation  =         ''   #  Select data based on correlation
-     scan         =         ''   #  scan numbers: ''==>all
-     feed         =         ''   #  multi-feed numbers: Not yet implemented
-     array        =         ''   #  (sub)array numbers: ''==>all
-     uvrange      =         ''   #  uv range: ''==>all; uvrange = '0~100klambda', default units=meters
-
-async             =      False   #  If true the taskname must be started using flagdata(...)
+async               =      False        #  If true the taskname must be started using
+                                        #   flagdata(...)
 \end{verbatim}
 \normalsize
 
@@ -2035,6 +2150,522 @@ mode               =    'rfi'  # Mode (manualflag,shadow,quack,summary,autoflag,
 \normalsize
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Command-based flagging using {\tt flagcmd}}
+\label{section:edit.flagcmd}
+
+{\bf Alert:} The {\tt flagcmd} task is under development and
+active testing.  
+
+Task {\tt flagcmd} will flag the visibility data set based on a
+a specified set of flagging commands using a special flagging 
+syntax (\S~\ref{section:edit.flagcmd.syntax}).  These commands
+can be input from the {\tt FLAG\_CMD} MS table, from a 
+{\tt Flag.xml} SDM table, from an ascii
+file, or from input python strings.  Facilities for manipulation,
+listing, or plotting of these flags are also provided.
+
+The inputs to {\tt flagcmd} are:
+\small
+\begin{verbatim}
+#  flagcmd :: Flagging task based on flagging commands
+vis                 =         ''        #  Name of file to flag
+flagmode            =    'table'        #  Flag input mode (table/file/xml/cmd)
+     flagfile       =         ''        #  Name of flag command file to input
+     flagrows       =         []        #  Rows of flagfile to read
+     useapplied     =      False        #  Read in flags marked as applied also?
+     reason         =      'Any'        #  Allowed flag REASON types to select
+
+optype              =    'apply'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     outfile        =         ''        #  Name of output flag or list file
+     flagsort       =  'antenna'        #  combine/sort flags by (antenna/id/reason)
+     flagbackup     =       True        #  Automatically backup the FLAG column before execution?
+     reset          =      False        #  Reset all flags before application?
+
+async               =      False        #  If true the taskname must be started using flagcmd(...)
+\end{verbatim}
+\normalsize
+
+The default input mode is {\tt flagmode='table'} which directs the
+task to input flag commands from the {\tt FLAG\_CMD} MS internal
+table. See \S~\ref{section:edit.flagcmd.flagmode} for more options.
+
+The default operation mode is {\tt optype='apply'} directing the
+task to apply relevant flagging commands to the vis data main table.
+See \S~\ref{section:edit.flagcmd.optype} for more options.
+
+See \S~\ref{section:edit.flagcmd.syntax} for a description of the
+flagging command syntax.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Input modes {\tt flagmode}}
+\label{section:edit.flagcmd.flagmode}
+
+The {\tt flagmode} parameter selects options for the input mode for
+the flagging commands.
+
+Available {\tt flagmode} options are:
+\begin{itemize}
+   \item {\tt 'table'} --- input from MS table (\S~\ref{section:edit.flagcmd.flagmode.table})
+   \item {\tt 'xml'} --- input from XML table (\S~\ref{section:edit.flagcmd.flagmode.xml})
+   \item {\tt 'file'} --- input from ASCII file (\S~\ref{section:edit.flagcmd.flagmode.file})
+   \item {\tt 'cmd'} --- input from Python strings (\S~\ref{section:edit.flagcmd.flagmode.cmd})
+\end{itemize}
+
+\subsubsection{Input flag mode {\tt 'table'}}
+\label{section:edit.flagcmd.flagmode.table}
+
+The default input mode is {\tt flagmode='table'} which directs the
+task to input flag commands from a {\tt FLAG\_CMD} MS table.  
+This has the sub-parameters:
+\small
+\begin{verbatim}
+flagmode            =    'table'        #  Flag input mode (table/file/xml/cmd)
+     flagfile       =         ''        #  Name of flag command file to input
+     flagrows       =         []        #  Rows of flagfile to read
+     useapplied     =      False        #  Read in flags marked as applied also?
+     reason         =      'Any'        #  Allowed flag REASON types to select
+\end{verbatim}
+\normalsize
+If {\tt flagfile = ''} then it will look for the {\tt FLAG\_CMD} 
+table in the MS given by {\tt vis}.  You can use this sub-parameter to
+direct the task to look directly at another table.
+
+The {\tt flagrows} sub-parameter is a simple Python list of the row
+numbers of the table to consider in processing flags.  The default is
+all rows.
+
+The {\tt useapplied} sub-parameter toggles whether only flag commands
+marked as not having been applied are considered (the default), or
+to allow (re)processing using all commands.
+
+The {\tt useapplied} sub-parameter selects the {\tt REASON} type to
+process.  The default {\tt 'Any''} means all commands, note that
+{\tt reason=''} would only select flags who have a blank {\tt REASON}
+column entry.
+
+\subsubsection{Input flag mode {\tt 'xml'}}
+\label{section:edit.flagcmd.flagmode.xml}
+
+The input mode {\tt flagmode='xml'} directs the
+task to input flag commands from a XML SDM online flagging 
+{\tt Flag.xml} file.  
+When set this opens the sub-parameters:
+\small
+\begin{verbatim}
+flagmode            =      'xml'        #  Flag input mode (table/file/xml/cmd)
+     tbuff          =        1.0        #  Time buffer (sec) to pad flags
+     antenna        =         ''        #  Allowed flag antenna names to select by
+     reason         =      'Any'        #  Allowed flag REASON types to select
+\end{verbatim}
+\normalsize
+Set {\tt flagfile} to the path to the file.  The default 
+{\tt flagfile=''} in this mode will look for a file called 
+{\tt Flag.xml} inside the MS directory.  Note that if the
+data was filled from the SDM using {\tt importevla}
+(\S~\ref{section:io.import.evla}) then the relevant XML file
+will have been copied to the MS already.
+
+The {\tt tbuff} sub-parameter sets a padding buffer (in seconds)
+to the begin and end times of the online flags in the XML file.
+As in {\tt importevla}, the online flag time buffer {\tt tbuff} is specified in
+seconds, but in fact should be keyed to the intrinsic online 
+integration time to allow for events (like slewing) that occur
+within an integration period.  This is particularly true for EVLA data,
+where a {\tt tbuff} value of $0.5\times$ to $1.5\times$ the
+integration time is needed.  For example, if data were taken with
+1-second integrations, then at least {\tt tbuff=0.5} should be used,
+likewise {\tt tbuff=5} for 10-second integrations.
+{\bf Note:} For EVLA data you should use $1.5\times$ (e.g.\ 
+{\tt tbuff=15} for 10-second integrations) for data taken in 
+early 2011 or before due to a timing error.  We do not yet know what
+ALMA data will need for padding (if any).
+
+The {\tt antenna} sub-parameter selects the antennas from which
+online flags will be selected (default is all antennas).  For example,
+{\tt antenna='ea01'} is a valid choice for EVLA data.
+
+The {\tt antenna} sub-parameter selects by the {\tt reason} field in
+the {\tt Flag.xml} file.  The default {\tt 'Any''} means all commands.
+Note that {\tt reason=''} would only select flags who have a blank {\tt reason}
+field entry.
+
+\subsubsection{Input flag mode {\tt 'file'}}
+\label{section:edit.flagcmd.flagmode.file}
+
+The input mode {\tt flagmode='file'} directs the
+task to input flag commands from an ASCII file.  
+When set this opens the sub-parameters:
+\small
+\begin{verbatim}
+flagmode            =     'file'        #  Flag input mode (table/file/xml/cmd)
+     flagfile       =         ''        #  Name of flag command file to input
+\end{verbatim}
+\normalsize
+Set {\tt flagfile} to the path to the file.  The default 
+{\tt flagfile=''} in this mode will look for a file called 
+{\tt FlagCMD.txt} inside the MS directory.
+
+\subsubsection{Input flag mode {\tt 'cmd'}}
+\label{section:edit.flagcmd.flagmode.cmd}
+
+The input mode {\tt flagmode='cmd'} directs the
+task to input flag commands from a Python list of strings. 
+When set this opens the sub-parameters:
+\small
+\begin{verbatim}
+flagmode            =      'cmd'        #  Flag input mode (table/file/xml/cmd)
+     command        =       ['']        #  flag command(s) as list of strings
+\end{verbatim}
+\normalsize
+The {\tt command} sub-parameter is the command string list, with one
+command per list element.  For example:
+\small
+\begin{verbatim}
+     command=["mode='shadow'",
+              "mode='clip' cliprange='0~1E-10' clipexpr='ABS_RR'",
+              "mode='clip' cliprange='0~1E-10' clipexpr='ABS_LL'",
+              "mode='quack' quackmode='end' quackinterval=1.0",
+              "antenna='ea01' timerange='00:00:00~01:00:00'",
+              "antenna='ea11' timerange='00:00:00~03:00:00' spw='0~4'"]
+\end{verbatim}
+\normalsize
+is a valid set of flagging commands.  These are equivalent to the
+lines in an ASCII flagging command file for {\tt flagmode='file'}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Operation types {\tt optype}}
+\label{section:edit.flagcmd.optype}
+
+The {\tt optype} selects options for the operating on the selected
+flags and possibly the data.
+
+Available {\tt optype} options are:
+\begin{itemize}
+   \item {\tt 'apply'} --- apply flag commands to data (\S~\ref{section:edit.flagcmd.optype.apply})
+   \item {\tt 'unapply'} --- unpply flags in data (\S~\ref{section:edit.flagcmd.optype.unapply})
+   \item {\tt 'save'} --- save commands to {\tt FLAG\_CMD} table (\S~\ref{section:edit.flagcmd.optype.save})
+   \item {\tt 'list'} --- list flag commands (\S~\ref{section:edit.flagcmd.optype.list})
+   \item {\tt 'plot'} --- plot flag commands (\S~\ref{section:edit.flagcmd.optype.plot})
+   \item {\tt 'clear'} --- clear rows from {\tt FLAG\_CMD} table (\S~\ref{section:edit.flagcmd.optype.clear})
+   \item {\tt 'set'} --- (re)set row/column values in {\tt FLAG\_CMD} table (\S~\ref{section:edit.flagcmd.optype.set})
+\end{itemize}
+
+\subsubsection{Apply flags --- {\tt optype} option {\tt 'apply'}}
+\label{section:edit.flagcmd.optype.apply}
+
+The default operation mode is {\tt optype='apply'} directing the
+task to apply relevant flagging commands to the vis data main table.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =    'apply'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     outfile        =         ''        #  Name of output flag or list file
+     flagsort       =  'antenna'        #  combine/sort flags by (antenna/id/reason)
+     flagbackup     =       True        #  Automatically backup the FLAG column before execution?
+     reset          =      False        #  Reset all flags before application?
+\end{verbatim}
+\normalsize
+
+The {\tt outfile} sub-parameter tells where to record the applied
+flags after application to the data.  If {\tt flagmode='table'} and 
+{\tt flagmode=''} (the flag commands came from the {\tt FLAG\_CMD}
+table) then this is the the default option {\tt outfile=''} will set
+the {\tt APPLIED} column value to {\tt True} in the relevant row of
+the table.  If the flag commands came from elsewhere, then they will
+be added to the {\tt FLAG\_CMD} table and marked as applied. If
+{\tt flagmode} is non-blank, then the commands will be written to the
+indicated ASCII file, but not recorded or marked as applied in the
+{\tt FLAG\_CMD} table.
+
+The {\tt flagsort} sub-parameter, when non-blank, directs the sorting of flags by the
+options {\tt 'antenna'}, {\tt 'id'}, or {\tt 'reason'}.  The default option
+{\tt 'antenna'} is most useful, in particular for cases where the only
+selection is by antenna-time (e.g.\ from current EVLA online
+flags). In the case the number of flagging agents activated at the
+tool level will be minimized and the flagging will be most efficient.
+You can also sort by {\tt id} (same as {\tt ''}, keeping each flag separate) 
+and by {\tt 'reason'} (not particularly useful yet).
+
+The {\tt flagbackup} toggle sets whether a new copy of the MS main
+table {\tt FLAG} column is written to the {\tt .flagversions} backup
+directory for that MS before the requested flagging operation.
+
+The {\tt reset} toggle determines whether {\em all} flags in the MS
+are reset (to ``unflagged'') before applying the current set of
+flagging commands.  This is equivalent to unflagging all the data
+and starting fresh with the new flags.  
+{\bf ALERT:} Use this option with care!
+
+\subsubsection{Unapply flags --- {\tt optype} option {\tt 'unapply'}}
+\label{section:edit.flagcmd.optype.unapply}
+
+The {\tt unapply} option allows unflagging of data based on the selected flag commands.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =  'unapply'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     flagsort       =  'antenna'        #  combine/sort flags by (antenna/id/reason)
+     flagbackup     =       True        #  Automatically backup the FLAG column before execution?
+\end{verbatim}
+\normalsize
+
+The {\tt flagsort} and {\tt flagbackup} sub-parameters behave in this
+option as they do in {\tt optype='apply'} 
+(\S~\ref{section:edit.flagcmd.optype.apply}).
+
+{\tt ALERT:} Flags based on the {\tt shadow} flagging option cannot be
+undone by this method.  You will need to reset all flags and then do
+all other flagging operations (or revert to an appropriate backup of
+the flags using {\tt flagmanager}).
+
+\subsubsection{Save flags --- {\tt optype} option {\tt 'save'}}
+\label{section:edit.flagcmd.optype.save}
+
+The {\tt save} option allows saving of the selected flag commands to
+the {\tt FLAG\_CMD} table.  These flag commands are not applied to the
+data at this time.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =     'save'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     outfile        =         ''        #  Name of output flag or list file
+     flagsort       =  'antenna'        #  combine/sort flags by (antenna/id/reason)
+\end{verbatim}
+\normalsize
+
+The {\tt outfile} sub-parameter directs the task where to save the
+flag commands.  The default option {\tt ''} indicates to save to 
+the MS {\tt FLAG\_CMD} table, unless the flags came from the MS
+{\tt FLAG\_CMD} table ({\tt flagmode='table'} with {\tt flagfile=''})
+in which case it will be just listed to the terminal (there is no
+point in writing it back to the table it came from).
+A non-blank {\tt outfile} value will be interpreted
+as a path to an ASCII file that will contain the commands (one string
+per line).
+
+The {\tt flagsort} sub-parameter operates in this option as it does in
+{\tt optype='apply'} (\S~\ref{section:edit.flagcmd.optype.apply}).
+
+\subsubsection{List flags --- {\tt optype} option {\tt 'list'}}
+\label{section:edit.flagcmd.optype.list}
+
+The {\tt 'list'} option will give a listing of the flagging commands.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =     'list'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     outfile        =         ''        #  Name of output flag or list file
+\end{verbatim}
+\normalsize
+
+The {\tt outfile} sub-parameter gives the name of the output ASCII
+file to which the listing will be directed.  The default action for
+{\tt outfile=''} will be to list the commands to the terminal.
+
+The format of the listing output depends on the source of the flagging
+commands. A set of flagging commands specified through 
+{\tt flagmode='file'} or {\tt 'cmd'} will be listed directly. The
+flagging commands extracted through {\tt flagmode='table'} will
+reflect the columns in the table:
+\begin{verbatim}
+        'Row', 'Timerange', 'Reason', 'Type', 'Applied', 'Lev', 'Sev', 'Command'
+\end{verbatim}
+while commands from {\tt flagmode='xml'} will be shown with the SDM
+XML table fields:
+\begin{verbatim}
+        'Key', 'FlagID', 'Antenna', 'Reason', 'Timerange'
+\end{verbatim}
+
+\subsubsection{Plot flags --- {\tt optype} option {\tt 'plot'}}
+\label{section:edit.flagcmd.optype.plot}
+
+The {\tt 'plot'} option will produce a graphical plot of flags of time versus antenna.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =     'plot'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     outfile        =         ''        #  Name of output flag or list file
+\end{verbatim}
+\normalsize
+This is only useful for online flags or general flag commands that are
+specifically by antenna plus timerange using the standard {\tt REASON}
+codes that are known SDM {\tt Flag.xml} enumerations.
+
+If the {\tt outfile} sub-parameter is non-blank, then a plotfile will
+be made with that name instead of apparing in a matplotlib plotter window
+on the users workstation.
+
+{\tt ALERT:} The plotted enumerations are currently only those known
+to be allowed EVLA online flags as of 15 April 2011, and include:
+\begin{verbatim}
+        'FOCUS', 'SUBREFLECTOR', 'OFF SOURCE', 'NOT IN SUBARRAY'
+\end{verbatim}
+with all others begin plotted as {\tt 'Other'}.
+
+\subsubsection{Clear flags --- {\tt optype} option {\tt 'clear'}}
+\label{section:edit.flagcmd.optype.clear}
+
+The {\tt 'clear'} option will delete selected rows from the 
+{\tt FLAG\_CMD} MS table.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =    'clear'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     clearall       =      False        #  Delete all rows from FLAG_CMD?
+     rowlist        =         []        #  FLAG_CMD rows to operate on
+\end{verbatim}
+\normalsize
+
+The {\tt rowlist} sub-parameter is a simple Python list of the row
+numbers of the table to consider in processing flags.  The default is
+a blank list which indicates the desire to clear all rows.
+
+In either case, if {\tt clearall=False} then nothing will
+happen by default as a safeguard.  If {\tt clearall=True}, then a 
+blank list will direct the deletion of the selected rows from the table.
+
+{\bf ALERT:} Use this option with care.  You can easily mess up the
+{\tt FLAG\_CMD} table.
+
+\subsubsection{Set flags --- {\tt optype} option {\tt 'set'}}
+\label{section:edit.flagcmd.optype.set}
+
+The {\tt 'set'} option allows the user to replace the current values
+for row/column entries in the {\tt FLAG\_CMD} table with new ones.
+This choice opens the sub-parameters:
+\small
+\begin{verbatim}
+optype              =      'set'        #  Flagging mode (apply/unapply/save/list/plot/clear/set)
+     rowlist        =         []        #  FLAG_CMD rows to operate on
+     setcol         =         ''        #  Name of FLAG_CMD column to set
+     setval         =         ''        #  value to set column to
+\end{verbatim}
+\normalsize
+
+The {\tt rowlist} sub-parameter is a simple Python list of the row
+numbers of the table to consider in setting values.  The default is
+a blank list which indicates the desire to set values in all rows.
+
+The {\tt setcol} sub-parameter is a Python string indicating the name
+of the {\tt FLAG\_CMD} table column to operate on for the selected 
+rows.  No default value is given (you will have to set this).  Column
+choices are:
+\begin{verbatim}
+     'APPLIED', 'COMMAND', 'INTERVAL', 'LEVEL', 'REASON', 'SEVERITY', 'TIME', 'TYPE'
+\end{verbatim}
+You will need to use a value of the appropriate type for that column.
+See the MSv2 documentation for the types of these columns (or use 
+{\tt browsetable} to look at them, and edit them directly also).
+
+{\bf ALERT:} Use this option with care.  You can easily mess up the
+{\tt FLAG\_CMD} table.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Flagging command syntax}
+\label{section:edit.flagcmd.syntax}
+
+A flagging command syntax has been devised to populate the {\tt
+COMMAND} column of the {\tt FLAG\_CMD} table and to direct the 
+operation of the {\tt flagcmd} task.
+
+You can use {\tt help flagcmd} inside casapy for this syntax guide also.
+
+This flag command syntax was based on the {\tt flagdata} task
+parameters and so should be familiar to users of that task.
+
+Commands are a string (which may contain internal "strings") consisting of
+{\tt KEY=VALUE} pairs separated by whitespace (see examples below). 
+
+NOTE: There should be no whitespace between {\tt KEY=VALUE} or within
+each {\tt KEY} or {\tt VALUE}, since the simple parser first breaks
+command lines on whitespace, then on {\tt "="}.
+
+Each key should only appear once on a given command line/string.
+
+There is an implicit "mode" for each command, with the default
+being {\tt 'manualflag'} if not given.
+
+Comment lines can start with '\#' and will be ignored
+parts of a command line after a ' \# ' token are also ignored
+
+1. Selection options (used by all flag modes):
+\begin{verbatim}
+  timerange=''
+  antenna=''
+  spw=''
+  correlation=''
+  field=''
+  scan=''
+  feed=''
+  array=''
+  uvrange=''
+\end{verbatim}
+{\bf Note:} a command consisting only of selection key-value pairs
+without one of the special {\tt mode} values given below is a 
+basic ``manualflag'' operation, 
+ie.\ flag all data meeting the selection.
+
+2. Basic elaboration options for online and interface use:
+\begin{verbatim}
+  id=''              # flag ID tag (not necessary)
+  reason=''          # reason string for flag
+  flagtime=''        # a timestamp for when this flag was generated (for 
+                       user history use)
+
+                       NOTE: there is no flagtime column in FLAG_CMD at
+                       this time, but we will propose to add this as an
+                       optional column
+\end{verbatim}
+{\bf NOTE:} These elaboration are currently ignored and not used, but
+can be included safely in commands.
+
+3. Extended elaboration options for online and interface use:
+\begin{verbatim}
+  level=N            # flagging "level" for flags with same reason
+  severity=N         # Severity code for the flag, on a scale of 0-10 in order 
+                       of increasing severity; user specified
+\end{verbatim}
+{\bf Note:} these are FLAG\_CMD columns, but their use is not clearly
+defined. Included here for compatibility and future expansion.
+
+4. Extended manual flagging options:
+\begin{verbatim}
+  unflag=T/F         # this operation is to unflag instead of flag
+
+  mode='clip'
+     cliprange='A~B'    # enable clipping based on value
+     clipcolumn=''
+     clipextend=''
+     clipchanavg=T/F
+     clipexpr=''        # Note: these expression use "_" instead of whitespace
+                          Example: clipexpr='ABS_RR'         
+
+  mode='quack'
+     quackinterval=''   # enable scan-based "quacking" 
+     quackmode=''
+     quackincrement=T/F
+\end{verbatim}
+{\bf Note:} These flagging operations are currently processed in a separate internal run
+to any selection-based basic ``manualflag'' commands.
+
+5. Extended "shadow" option:
+\begin{verbatim}
+  mode='shadow'      # this is a shadowing command
+     diameter=-1
+\end{verbatim}
+{\bf Note:} Again processed in a separate internal run to any
+selection-based basic ``manualflag'' commands.  This currently keys action
+of the ``shadow'' flagging tool, but doesn't result in individual
+flagging commands for the antennas flagged by this.  Stay tuned for
+a future enhancement.
+
+{\bf ALERT:} The {\tt flagcmd} task does not support syntax for use of
+{\tt flagdata} {\tt mode='rfi'} or {\tt mode='autoflag'} at
+this time.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Browse the Data}
 \label{section:edit.browse}
