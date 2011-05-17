@@ -34,7 +34,9 @@ namespace casa {
 
     QtPlotFrame::symbol_map_type QtPlotFrame::symbol_map;
 
-    QSize QtPlotFrame::minimumSizeHint( ) const { return QSize(500,300); }
+    // QSize QtPlotFrame::minimumSizeHint( ) const { return QSize(500,300); }
+    QSize QtPlotFrame::minimumSizeHint( ) const { return QwtPlot::minimumSizeHint( ); }
+
 
     void QtPlotFrame::initialize_symbol_map( ) {
 	#define INSERT_SYMBOL(STRING,VALUE) \
@@ -61,7 +63,7 @@ namespace casa {
 	}
     }
       
-    QtPlotFrame::QtPlotFrame( const QwtText &title, QwtPlot::LegendPosition pos, QWidget *parent ) : QwtPlot(title,parent) {
+    QtPlotFrame::QtPlotFrame( const QwtText &title, const QSize &s, QwtPlot::LegendPosition pos, QWidget *parent ) : QwtPlot(title,parent), size_(s) {
 	legend = new QwtLegend( );
 // 	legend->setDisplayPolicy( QwtLegend::NoIdentifier, QwtLegendItem::ShowLine | QwtLegendItem::ShowSymbol | QwtLegendItem::ShowText );
 	insertLegend(legend,pos);
@@ -71,7 +73,15 @@ namespace casa {
     }
 
 
-    QStringList QtPlotFrame::colors( ) {
+  QSize QtPlotFrame::sizeHint( ) const {
+	if ( ! size_.isValid() || size_.isNull( ) ) {
+	    return QwtPlot::sizeHint( );
+	} else {
+	    return size_;
+	}
+  }
+
+  QStringList QtPlotFrame::colors( ) {
 	// at some point, we may have our own name to QColor map...
 	return QColor::colorNames( );
     }

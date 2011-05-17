@@ -5622,7 +5622,8 @@ Bool Imager::plotuv(const Bool rotate)
     if(rotate) {
     
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot", "right");
+      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot",
+					       std::vector<int>( ), "right");
 
       if ( panel_id.type( ) != dbus::variant::INT ) {
 	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
@@ -5635,8 +5636,9 @@ Bool Imager::plotuv(const Bool rotate)
 
     }
     else {
-       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot" ,"right");
+      PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot" ,
+					       std::vector<int>( ), "right");
 
       if ( panel_id.type( ) != dbus::variant::INT ) {
 	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
@@ -5861,7 +5863,8 @@ Bool Imager::plotvis(const String& type, const Int increment)
 	if((hasModel && hasCorrected) && maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
       }
     PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-    dbus::variant panel_id = plotter->panel( "Stokes I Visibility for "+imageName(),"UVDistance (wavelengths)" , "Amplitude", "Vis-Plot", "right");
+    dbus::variant panel_id = plotter->panel( "Stokes I Visibility for "+imageName(),"UVDistance (wavelengths)" , "Amplitude", "Vis-Plot",
+					     std::vector<int>( ), "right");
     
     if ( panel_id.type( ) != dbus::variant::INT ) {
       os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;

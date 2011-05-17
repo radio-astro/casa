@@ -26,6 +26,7 @@
 //# $Id: $
 #include <casaqt/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h>
 #include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
+#include <casaqt/QtUtilities/QtId.h>
 #include <display/QtViewer/QtApp.h>
 
 namespace casa {
@@ -35,9 +36,23 @@ namespace casa {
     QtDBusPlotSvrAdaptor::~QtDBusPlotSvrAdaptor( ) { emit exiting( ); }
 
 
-    QDBusVariant QtDBusPlotSvrAdaptor::panel( const QString &title, const QString &xlabel, const QString &ylabel,
-					      const QString &window_title, const QString &legend, bool hidden ) {
-	QtPlotSvrPanel *panel = server->panel( title, xlabel, ylabel, window_title, legend );
+    QDBusVariant QtDBusPlotSvrAdaptor::panel( const QString &title, const QString &xlabel, const QString &ylabel, const QString &window_title,
+					      const QList<int> &size, const QString &legend, const QString &zoom, int with_panel, bool new_row,
+					      bool hidden ) {
+	QtPlotSvrPanel *companion = 0;
+
+	if ( with_panel != 0 ) {
+	    if ( managed_panels.find( with_panel ) == managed_panels.end( ) ) {
+		char buf[50];
+		sprintf( buf, "%d", with_panel );
+		return error(QString("companion panel '") + buf + "' not found");
+	    } else {
+		companion = managed_panels.find( with_panel )->second->panel();
+	    }
+	}
+
+	QtPlotSvrPanel *panel = server->panel( title, xlabel, ylabel, window_title, size, legend, zoom, companion, new_row );
+
 	if ( hidden ) panel->hide( );
 	else panel->show( );
 	connect( panel, SIGNAL(button(QtPlotSvrPanel*,QString)), SLOT(emit_button(QtPlotSvrPanel*,QString)) );
@@ -250,6 +265,7 @@ namespace casa {
     }
 
     QDBusVariant QtDBusPlotSvrAdaptor::loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable, int panel ) {
+
 	if ( panel == 0 ) {
 	    if ( managed_panels.size( ) == 1 ) {
 		QString result = managed_panels.begin()->second->panel( )->loaddock( file_or_xml, loc, dockable );
@@ -415,7 +431,7 @@ namespace casa {
 		return iter->first;
 	}
 
-	int index = QtDBusApp::get_id( );
+	int index = QtId::get_id( );
 	managed_panels.insert(panelmap::value_type(index, new panel_desc(panel)));
 	return index;
     }
@@ -427,7 +443,7 @@ namespace casa {
 		return iter->second->id();
 	}
 
-	int index = QtDBusApp::get_id( );
+	int index = QtId::get_id( );
 	data_desc *dd = new data_desc(index, panel, data );
 	managed_datas.insert(datamap::value_type(index, dd));
 	return index;

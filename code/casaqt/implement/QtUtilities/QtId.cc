@@ -1,5 +1,5 @@
-//# QtPlotServer.cc: Qt implementation of main 2D plot server display window.
-//# Copyright (C) 2009
+//# QtId.cc: base class which allows mixing in id generation
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,38 +25,45 @@
 //#
 //# $Id: $
 
-#include <casaqt/QtPlotServer/QtPlotServer.qo.h>
-#include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
-#include <casaqt/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h>
-
+#include <stdlib.h>
+#include <climits>
+#include <algorithm>
+#include <casaqt/QtUtilities/QtId.h>
 
 namespace casa {
 
-    QString QtPlotServer::name_;
+    std::list<int> *QtId::used_ids = 0;
 
-    const QString &QtPlotServer::name( ) {
+    int QtId::get_id( ) {
+
+	if ( used_ids == 0 ) { used_ids = new std::list<int>( ); }
+
 	static bool initialized = false;
+#if defined(__APPLE___)
 	if ( ! initialized ) {
-	    name_ = "plot_server";
+	    initialized = true;
+	    srandomdev( );
 	}
-	return name_;
-    }
-
-    QtPlotServer::QtPlotServer( const char *dbus_name ) {
-	dbus_name_ = (dbus_name ? dbus_name : 0);
-	dbus_ = new QtDBusPlotSvrAdaptor(this);
-	dbus_->connectToDBus(dbus_name_);
-    }
-
-    QtPlotServer::~QtPlotServer( ) {
-	delete dbus_;
-    }
-
-    QtPlotSvrPanel *QtPlotServer::panel( const QString &title, const QString &xlabel, const QString &ylabel, const QString &window_title,
-					 const QList<int> &size, const QString &legend, const QString &zoom, QtPlotSvrPanel *with_panel,
-					 bool new_row ) {
-	QtPlotSvrPanel *result = new QtPlotSvrPanel(title,xlabel,ylabel,window_title,size,legend,zoom,with_panel,new_row);
-	return result;
+#else
+	if ( ! initialized ) {
+	    initialized = true;
+	    union {
+	      void *foo;
+	      unsigned bar;
+	    };
+	    foo = &initialized;
+	    srandom(bar);
+	}
+#endif
+	int rn = (int) random( );
+	while ( rn <= 0 || rn == INT_MAX || rn == SHRT_MAX || rn == CHAR_MAX ||
+		std::find(used_ids->begin( ), used_ids->end( ), rn) != used_ids->end() ) {
+	    rn = (int) random( );
+	}
+// 	used_ids.insert(rn);
+	used_ids->push_back(rn);
+	return rn;
     }
 
 }
+

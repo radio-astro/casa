@@ -40,8 +40,8 @@ namespace casa {
     Q_OBJECT
 	public:
 	    QtPlotFrame( QWidget *parent=NULL ) : QwtPlot(parent), legend(0) { }
-	    QtPlotFrame( const QwtText &title, QwtPlot::LegendPosition pos=QwtPlot::BottomLegend, QWidget *parent=NULL );
-	    QSize minimumSizeHint( ) const;
+	    QtPlotFrame( const QwtText &title, const QSize &s, QwtPlot::LegendPosition pos=QwtPlot::BottomLegend, QWidget *parent=NULL );
+
 	    void addLegend( QwtPlot::LegendPosition pos );
 	    void removeLegend( );
 
@@ -49,7 +49,11 @@ namespace casa {
 	    static QStringList symbols( );
 	    QwtSymbol symbol(const QString &s);
 
+	    QSize minimumSizeHint( ) const;
+	    QSize sizeHint( ) const;
+
 	private:
+	    QSize size_;
 	    typedef std::map<QString,QwtSymbol> symbol_map_type;
 	    static symbol_map_type symbol_map;
 	    static void initialize_symbol_map( );

@@ -56,7 +56,8 @@ namespace casa {
     public slots:
 
 	QDBusVariant panel( const QString &title, const QString &xlabel="", const QString &ylabel="", const QString &window_title="",
-			    const QString &legend="bottom", bool hidden=false  );
+			    const QList<int> &size=QList<int>( ), const QString &legend="bottom", const QString &zoom="bottom",
+			    int with_panel=0, bool new_row=false, bool hidden=false  );
 	QStringList colors( );
 	QStringList symbols( );
 	QDBusVariant line( const QList<double> &x, const QList<double> &y, const QString &color="black",

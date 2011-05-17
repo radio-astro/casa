@@ -47,8 +47,9 @@ namespace casa {
 	    // name used to initialize connection to dbus
 	    static const QString &name( );
 
-	    QtPlotSvrPanel *panel( const QString &title, const QString &xlabel="", const QString &ylabel="",
-				   const QString &window_title="", const QString &legend="bottom" );
+	    QtPlotSvrPanel *panel( const QString &title, const QString &xlabel="", const QString &ylabel="", const QString &window_title="",
+				   const QList<int> &size=QList<int>( ), const QString &legend="bottom", const QString &zoom="bottom",
+				   QtPlotSvrPanel *with_panel=0, bool new_row=false  );
 
 	private:
 	    static QString name_;

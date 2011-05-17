@@ -51,29 +51,58 @@
 #define PATHMAX 1024
 #endif
 
-
 namespace casa {
 
-    QtPlotSvrPanel::QtPlotSvrPanel( QWidget *parent ) : QtPanelBase(parent), container(0), layout(0), slider(0), plot(0)  {
-	container = new QWidget(this);
-	plot = new QtPlotFrame(this);
-	slider = new QSlider(Qt::Horizontal,this);
+    void QtPlotSvrPanel::hide( ) {
+	window_->base( )->hide( );
+    }
+
+    void QtPlotSvrPanel::show( ) {
+	window_->base( )->show( );
+    }
+
+    void QtPlotSvrPanel::closeMainPanel( ) {
+	window_->base( )->closeMainPanel( );
+    }
+
+    bool QtPlotSvrPanel::isVisible( ) {
+	return window_->base( )->isVisible( );
+    }
+
+    void QtPlotSvrPanel::releaseMainPanel( ) {
+	window_->base( )->releaseMainPanel( );
+    }
+
+    QtPlotSvrPanel::QtPlotSvrPanel( QWidget *parent ) : slider(0), plot(0)  {
+        QtPlotSvrMain *b = new QtPlotSvrMain( );
+	connect( b, SIGNAL(closing(bool)), SLOT(emit_closing(bool)) );
+	QWidget *c = new QWidget(b);
+	plot = new QtPlotFrame(b);
+	slider = new QSlider(Qt::Horizontal,b);
 	slider->setTickPosition( QSlider::NoTicks );
 	slider->setRange(0,99);
 	slider->setTickInterval( 10 );
 	zoomer = new QwtPlotZoomer( plot->canvas( ) );
-	connect( slider, SIGNAL(sliderReleased( )), this, SLOT(zoom( )));
-	connect( zoomer, SIGNAL(zoomed(QwtDoubleRect)), this, SLOT(zoomed(QwtDoubleRect)));
-	layout = new QVBoxLayout;
-	layout->addWidget(plot);
-	layout->addWidget(slider);
-	container->setLayout(layout);
-	setCentralWidget( container );
+	connect( slider, SIGNAL(sliderReleased( )), b, SLOT(zoom( )));
+	connect( zoomer, SIGNAL(zoomed(QwtDoubleRect)), b, SLOT(zoomed(QwtDoubleRect)));
+	QVBoxLayout *l = new QVBoxLayout;
+	l->addWidget(plot);
+	l->addWidget(slider);
+	c->setLayout(l);
+	b->setCentralWidget( c );
+	win_desc *wd = new win_desc( b, c, l );
+	window_ = wd;
     }
 
     QtPlotSvrPanel::QtPlotSvrPanel( const QString &label, const QString &xlabel, const QString &ylabel, const QString &window_title,
-				    const QString &legend, QWidget *parent ) : QtPanelBase(parent), container(0),
-									       layout(0), slider(0), plot(0) {
+				    const QList<int> &size, const QString &legend, const QString &zoom, QtPlotSvrPanel *with_panel,
+				    bool new_row, QWidget *parent ) : slider(0), plot(0) {
+
+	bool ztop = (zoom == "top");
+	bool zleft = (ztop ? false : (zoom == "left"));
+	bool zright = (ztop || zleft ? false : (zoom == "right"));
+	bool zbottom = (ztop || zleft || zright ? false : (zoom == "bottom"));
+
 	QwtPlot::LegendPosition  legend_position = QwtPlot::BottomLegend;
 	if ( legend == "top" ) {
 	    legend_position = QwtPlot::TopLegend;
@@ -85,8 +114,61 @@ namespace casa {
 	    legend_position = QwtPlot::RightLegend;
 	}
 
-	container = new QWidget(this);
-	plot = new QtPlotFrame( label, legend_position, this );
+	memory::cptr<row_desc> rd;
+	if ( with_panel && new_row == false && with_panel->rows_->find(with_panel) != with_panel->rows_->end( ) ) {
+	    rows_ = with_panel->rows_;
+	    rd = with_panel->rows_->find(with_panel)->second;
+	    window_ = with_panel->window_;
+	} else {
+
+	    if ( with_panel && new_row == true && with_panel->rows_->find(with_panel) != with_panel->rows_->end( ) ) {
+		rows_ = with_panel->rows_;
+		window_ = with_panel->window_;
+	    } else {
+		rowmap *rm = new rowmap( );
+		rows_ = rm;
+
+		QtPlotSvrMain *b = new QtPlotSvrMain( );
+		QWidget *c = new QWidget(b);
+		QVBoxLayout *l = new QVBoxLayout;
+		c->setLayout(l);
+		win_desc *wd = new win_desc(b, c,l);
+		window_ = wd;
+
+		b->setCentralWidget( window_->container( ) );
+	    }
+
+	    QWidget *row = new QWidget(window_->base( ));
+	    QHBoxLayout *row_layout = new QHBoxLayout;
+	    row->setLayout(row_layout);
+	    window_->layout( )->addWidget(row);
+
+	    row_desc *r = new row_desc( row, row_layout );
+	    rd = r;
+	}
+
+	connect( window_->base( ), SIGNAL(closing(bool)), SLOT(emit_closing(bool)) );
+
+	QWidget *plot_container = new QWidget(window_->base( ));
+
+	QLayout *plot_layout;
+
+	if ( zleft || zright ) {
+	    plot_layout = new QHBoxLayout;
+	} else {
+	    plot_layout = new QVBoxLayout;
+	}
+
+	plot_container->setLayout(plot_layout);
+	rd->layout()->addWidget(plot_container);
+
+	QSize qsize;
+	if ( size.size() == 2 && size[0] > 0 && size[1] > 0 ) {
+	    qsize.setWidth(size[0]);
+	    qsize.setHeight(size[1]);
+	}
+
+	plot = new QtPlotFrame( label, qsize, legend_position, window_->base( ));
 
 	if ( ylabel.length( ) > 0 )
 	    plot->setAxisTitle( QwtPlot::yLeft, ylabel );
@@ -94,22 +176,34 @@ namespace casa {
 	    plot->setAxisTitle( QwtPlot::xBottom, xlabel );
 
 	if ( window_title.length( ) > 0 ) {
-	    setWindowTitle( window_title );
+	    window_->base( )->setWindowTitle( window_title );
 	}
 
-	slider = new QSlider(Qt::Horizontal,this);
-	slider->setTickPosition( QSlider::NoTicks );
-	slider->setRange(0,99);
-	slider->setTickInterval( 10 );
-	slider_last_value = 0;
+	if ( zleft || zright || ztop || zbottom ) {
+	    slider = new QSlider( zleft || zright ? Qt::Vertical : Qt::Horizontal, window_->base() );
+	}
+
+	if ( zleft || ztop ) {
+	    if ( slider ) { plot_layout->addWidget(slider); }
+	    plot_layout->addWidget(plot);
+	} else { 
+	    plot_layout->addWidget(plot);
+	    if ( slider ) { plot_layout->addWidget(slider); }
+	}
+
+	rd->addplot( plot_container, plot_layout, plot, slider );
+	rows_->insert(rowmap::value_type(this,rd));
+
 	zoomer = new QwtPlotZoomer( plot->canvas( ) );
- 	connect( slider, SIGNAL(sliderReleased( )), this, SLOT(zoom( )));
+	if ( slider ) {
+	    slider->setTickPosition( QSlider::NoTicks );
+	    slider->setRange(0,99);
+	    slider->setTickInterval( 10 );
+	    slider_last_value = 0;
+	    connect( slider, SIGNAL(sliderReleased( )), this, SLOT(zoom( )));
+	}
 	connect( zoomer, SIGNAL(zoomed(QwtDoubleRect)), this, SLOT(zoomed(QwtDoubleRect)));
-	layout = new QVBoxLayout;
-	layout->addWidget(plot);
-	layout->addWidget(slider);
-	container->setLayout(layout);
-	setCentralWidget( container );
+
     }
 
     QString QtPlotSvrPanel::loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable ) {
@@ -128,7 +222,7 @@ namespace casa {
 	Qt::DockWidgetArea location = ( loc == "right" ? Qt::RightDockWidgetArea : loc == "left" ? Qt::LeftDockWidgetArea :
 					loc == "top" ? Qt::TopDockWidgetArea : Qt::BottomDockWidgetArea);
 
-	addDockWidget( location, dockwidget, Qt::Vertical );
+	window_->base( )->addDockWidget( location, dockwidget, Qt::Vertical );
 
 	if ( dockable.size( ) == 0 ) {
 	    dockwidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
@@ -181,13 +275,13 @@ namespace casa {
 	    QFile qfile(file);
 	    qfile.open(QFile::ReadOnly);
 	    // return 0 upon error...
-	    QWidget *dock = loader.load(&qfile, this);
+	    QWidget *dock = loader.load(&qfile, window_->base( ));
 	    qfile.close( );
 	    return dock;
 	} else {
 	    QBuffer qfile;
 	    qfile.setData( file.toAscii().constData(), file.size( ) );
-	    QWidget *dock = loader.load(&qfile, this);
+	    QWidget *dock = loader.load(&qfile, window_->base( ));
 	    qfile.close( );
 	    return dock;
 	}
@@ -401,13 +495,13 @@ namespace casa {
 	}
     }
 
-    void QtPlotSvrPanel::closeEvent(QCloseEvent *event) {
+    void QtPlotSvrMain::closeEvent(QCloseEvent *event) {
 	if ( ! isOverridedClose( ) ) {
-	    emit closing( this, false );
+	    emit closing( false );
 	    event->ignore( );
 	    hide( );	  
 	} else {
-	    emit closing( this, true );
+	    emit closing( true );
 	    QtPanelBase::closeEvent(event);
 	}
     }
@@ -432,4 +526,7 @@ namespace casa {
 	emit slidevalue( this, sender( )->objectName( ), value );
     }
 
+    void QtPlotSvrPanel::emit_closing( bool v ) {
+	emit closing( this, v );
+    }
 }

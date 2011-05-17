@@ -29,15 +29,19 @@
 #ifndef CASAQT_QTPLOTSRVPANEL_H
 #define CASAQT_QTPLOTSRVPANEL_H
 
+#include <map>
 #include <QMainWindow>
 #include <QStringList>
 #include <qwt_plot_curve.h>
+#include <casaqt/QtUtilities/QtId.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <casaqt/QtPlotServer/QtPlotHistogram.h>
+#include <casadbus/types/ptr.h>
 
 class QwtPlotCurve;
 class QwtPlotSpectrogram;
 class QVBoxLayout;
+class QHBoxLayout;
 class QSlider;
 class QwtPlotZoomer;
 
@@ -45,13 +49,34 @@ namespace casa {
 
     class QtPlotFrame;
 
-    class QtPlotSvrPanel : public QtPanelBase {
+    class QtPlotSvrMain : public QtPanelBase {
+    Q_OBJECT
+	public:
+	    QtPlotSvrMain( QWidget *parent=0 ) : QtPanelBase( ) { }
+
+	signals:
+	    void closing( bool );
+
+	protected: 
+	    // scripted (via dbus) panels should override the closeEvent( ) and hide the gui
+	    // instead of deleting it when it was created via a dbus script...
+	    void closeEvent(QCloseEvent *event);
+    };
+
+    class QtPlotSvrPanel : public QObject {
     Q_OBJECT
 	public:
 
+	    void hide( );
+	    void show( );
+	    void closeMainPanel( );
+	    bool isVisible( );
+	    void releaseMainPanel( );
+
 	    QtPlotSvrPanel( QWidget *parent=0 );
-	    QtPlotSvrPanel( const QString &title,  const QString &xlabel="", const QString &ylabel="",
-			    const QString &window_title="", const QString &legend="bottom", QWidget *parent=0 );
+	    QtPlotSvrPanel( const QString &title,  const QString &xlabel="", const QString &ylabel="", const QString &window_title="",
+			    const QList<int> &size=QList<int>( ), const QString &legend="bottom", const QString &zoom="bottom",
+			    QtPlotSvrPanel *with_panel=0, bool new_row=false, QWidget *parent=0 );
 
 	    static QStringList colors( );
 	    static QStringList symbols( );
@@ -75,6 +100,7 @@ namespace casa {
 	    void radio( QtPlotSvrPanel *, QString, bool );
 	    void linetext( QtPlotSvrPanel *, QString, const QString &text );
 	    void slidevalue( QtPlotSvrPanel *, QString, int );
+
 	    void closing( QtPlotSvrPanel *, bool );
 
 	protected slots:
@@ -85,20 +111,67 @@ namespace casa {
 	    void emit_linetext( const QString &text );
 	    void emit_slidevalue( int );
 
+	    void emit_closing( bool );
+
 	    void zoom( int x=-1 );
 	    void zoomed( const QwtDoubleRect & );
 
 	protected: 
 
-	    // scripted (via dbus) panels should override the closeEvent( ) and hide the gui
-	    // instead of deleting it when it was created via a dbus script...
-	    void closeEvent(QCloseEvent *event);
-
 	    QWidget *loaddock( QString file );
 
 	private:
-	    QWidget *container;
-	    QVBoxLayout *layout;
+
+	    class row_desc {
+	    public:
+
+		class plot_desc {
+		public:
+		    plot_desc( QWidget *c, QLayout *l, QtPlotFrame *p, QSlider *s ) :
+			container_(c), layout_(l), plot_(p), slider_(s) { }
+		    QWidget *&container( ) { return container_; }
+		    QLayout *&layout( ) { return layout_; }
+		    QtPlotFrame *&plot( ) { return plot_; }
+		    QSlider *&slider( ) { return slider_; }
+
+		private:
+		    QWidget *container_;
+		    QLayout *layout_;
+		    QtPlotFrame *plot_;
+		    QSlider *slider_;
+		};
+
+		row_desc( QWidget *c, QHBoxLayout *l ) : container_(c), layout_(l), id_(QtId::get_id( )) { }
+		QWidget *container( ) { return container_; }
+		QHBoxLayout *layout( ) { return layout_; }
+		void addplot( QWidget *container, QLayout *layout, QtPlotFrame *plot, QSlider *slider )
+				{ plots.push_back( new plot_desc(container, layout, plot, slider ) ); }
+		int id( ) { return id_; }
+	    private:
+		typedef std::list<plot_desc*> plotlist;
+		plotlist plots;
+		QWidget *container_;
+		QHBoxLayout *layout_;
+		int id_;
+	    };
+
+	    class win_desc {
+	    public:
+		win_desc( QtPlotSvrMain *b, QWidget *c, QVBoxLayout *l ) : base_(b), container_(c), layout_(l) { }
+		QtPlotSvrMain *& base( ) { return base_; }
+		QWidget *&container( ) { return container_; }
+		QVBoxLayout *&layout( ) { return layout_; }
+	    private:
+		QtPlotSvrMain *base_;
+		QWidget *container_;
+		QVBoxLayout *layout_;
+	    };
+
+	    typedef std::map<QtPlotSvrPanel*,memory::cptr<row_desc> > rowmap;
+	    memory::cptr<rowmap> rows_;
+
+	    memory::cptr<win_desc> window_;
+
 	    QSlider *slider;
 	    QtPlotFrame *plot;
 	    QwtPlotZoomer *zoomer;

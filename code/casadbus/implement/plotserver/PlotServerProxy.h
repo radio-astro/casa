@@ -49,8 +49,11 @@ namespace casa {
 	PlotServerProxy( const std::string &name=dbusName( ) );
 
 	dbus::variant panel( const std::string& title, const std::string &xlabel="", const std::string &ylabel="",
-			     const std::string &window_title="", const std::string& legend="bottom", const bool& hidden=false )
-	  { return dbus::toVariant( edu::nrao::casa::plotserver_proxy::panel(title,xlabel,ylabel,window_title,legend,hidden) ); }
+			     const std::string &window_title="", const std::vector<int> &size=std::vector<int>( ),
+			     const std::string& legend="bottom", const std::string &zoom="bottom",
+			     const int32_t& with_panel=0, const bool& new_row=false, const bool& hidden=false )
+	  { return dbus::toVariant( edu::nrao::casa::plotserver_proxy::panel(title,xlabel,ylabel,window_title,size,
+									     legend,zoom,with_panel,new_row,hidden) ); }
 	std::vector< std::string > colors( )
 			{ return edu::nrao::casa::plotserver_proxy::colors( ); }
 	std::vector< std::string > symbols( )

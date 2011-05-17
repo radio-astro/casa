@@ -26,9 +26,6 @@
 //# $Id: $
 
 #include <stdlib.h>
-#include <climits>
-#include <algorithm>
-
 #include <QTextStream>
 #include <QDBusConnectionInterface>
 #include <casaqt/QtUtilities/QtDBusApp.h>
@@ -138,35 +135,6 @@ namespace casa {
 	    QTextStream(object_name) << object_base << dbusName( ) << "_" << getpid( );
 
 	return *object_name;
-    }
-
-    int QtDBusApp::get_id( ) {
-	static bool initialized = false;
-#if defined(__APPLE___)
-	if ( ! initialized ) {
-	    initialized = true;
-	    srandomdev( );
-	}
-#else
-	if ( ! initialized ) {
-	    initialized = true;
-	    union {
-	      void *foo;
-	      unsigned bar;
-	    };
-	    foo = &initialized;
-	    srandom(bar);
-	}
-#endif
-	int rn = (int) random( );
-	while ( rn <= 0 || rn == INT_MAX || rn == SHRT_MAX || rn == CHAR_MAX ||
-		std::find(used_ids.begin( ), used_ids.end( ), rn) != used_ids.end() ) {
-// 		used_ids.find(rn) != used_ids.end() ) {
-	    rn = (int) random( );
-	}
-// 	used_ids.insert(rn);
-	used_ids.push_back(rn);
-	return rn;
     }
 
     bool QtDBusApp::connectToDBus( QObject *object,  const QString &dbus_name ) {

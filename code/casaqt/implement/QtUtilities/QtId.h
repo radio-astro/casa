@@ -1,5 +1,5 @@
-//# QtPlotServer.cc: Qt implementation of main 2D plot server display window.
-//# Copyright (C) 2009
+//# QtId.h: base class which allows mixing in id generation
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -24,39 +24,27 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id: $
-
-#include <casaqt/QtPlotServer/QtPlotServer.qo.h>
-#include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
-#include <casaqt/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h>
-
+#ifndef QTIDGEN_H_
+#define QTIDGEN_H_
+#include <list>
 
 namespace casa {
 
-    QString QtPlotServer::name_;
+    class QtId {
+        public:
 
-    const QString &QtPlotServer::name( ) {
-	static bool initialized = false;
-	if ( ! initialized ) {
-	    name_ = "plot_server";
-	}
-	return name_;
-    }
+	    // returns a new "id" to be used for things such as data, widget,
+	    // or object handles on both ends of the dbus connection...
+	    static int get_id( );
 
-    QtPlotServer::QtPlotServer( const char *dbus_name ) {
-	dbus_name_ = (dbus_name ? dbus_name : 0);
-	dbus_ = new QtDBusPlotSvrAdaptor(this);
-	dbus_->connectToDBus(dbus_name_);
-    }
+	private:
 
-    QtPlotServer::~QtPlotServer( ) {
-	delete dbus_;
-    }
+	    QtId( );
+	    QtId( const QtId & );
 
-    QtPlotSvrPanel *QtPlotServer::panel( const QString &title, const QString &xlabel, const QString &ylabel, const QString &window_title,
-					 const QList<int> &size, const QString &legend, const QString &zoom, QtPlotSvrPanel *with_panel,
-					 bool new_row ) {
-	QtPlotSvrPanel *result = new QtPlotSvrPanel(title,xlabel,ylabel,window_title,size,legend,zoom,with_panel,new_row);
-	return result;
-    }
+	    static std::list<int> *used_ids;
+    };
 
 }
+
+#endif
