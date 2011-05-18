@@ -8,7 +8,7 @@ namespace casa {
     int QtRasterData::output_limit = 0;
 
     QwtRasterData *QtRasterData::copy( ) const {
-	if ( output_limit < 20 ) fprintf( stderr, "in copy( )...\n" );
+	// if ( output_limit < 20 ) fprintf( stderr, "in copy( )...\n" );
 	QtRasterData *clone = new QtRasterData(spect);
 	clone->setRangeX(m_RangeX.min, m_RangeX.max);
 	clone->setRangeY(m_RangeY.min, m_RangeY.max);
@@ -16,8 +16,8 @@ namespace casa {
 // 	clone->setBoundingRect(QwtDoubleRect(m_RangeX.min, m_RangeY.min, m_RangeX.max, m_RangeY.max));
 	clone->setData(m_Array, m_DataSize.x, m_DataSize.y, m_minValue, m_maxValue);
 	clone->length_ = length_;
-	if ( output_limit < 20 ) fprintf( stderr, "in copy( ): %f,%f\n", m_RealToArray.x, m_RealToArray.y );
-	if ( output_limit < 20 ) fprintf( stderr, "in copy( ): %f,%f\n", clone->m_RealToArray.x, clone->m_RealToArray.y );
+	// if ( output_limit < 20 ) fprintf( stderr, "in copy( ): %f,%f\n", m_RealToArray.x, m_RealToArray.y );
+	// if ( output_limit < 20 ) fprintf( stderr, "in copy( ): %f,%f\n", clone->m_RealToArray.x, clone->m_RealToArray.y );
 	return clone;
     }
 
@@ -27,8 +27,8 @@ namespace casa {
 	m_RealToArray.x = (bounding_box.right() - bounding_box.left()) / (m_DataSize.x - 1);
 	m_RealToArray.y = (bounding_box.bottom() - bounding_box.top()) / (m_DataSize.y - 1);
 	if ( output_limit < 20 ) {
-	      fprintf( stderr, "%d ---------------------> [(%f,%f), (%f,%f)] [%d,%d]\n", output_limit,
-		       r.left(), r.right(), r.bottom(), r.top(), raster.width(), raster.height() );
+	      // fprintf( stderr, "%d ---------------------> [(%f,%f), (%f,%f)] [%d,%d]\n", output_limit,
+	      // 	       r.left(), r.right(), r.bottom(), r.top(), raster.width(), raster.height() );
 	}
     }
 
@@ -37,33 +37,33 @@ namespace casa {
 	if ( x < bounding_box.left() || x > bounding_box.right() ||
 	     y > bounding_box.bottom( ) || y < bounding_box.top( ) ) {
 	    if ( output_limit < 20 ) {
-	      fprintf( stderr, "%d =====================> [(%f,%f), (%f,%f)]: (%f,%f)\n", output_limit,
-		       bounding_box.left(), bounding_box.right(), bounding_box.bottom(), bounding_box.top(), x, y );
+	      // fprintf( stderr, "%d =====================> [(%f,%f), (%f,%f)]: (%f,%f)\n", output_limit,
+	      // 	       bounding_box.left(), bounding_box.right(), bounding_box.bottom(), bounding_box.top(), x, y );
 	      QwtDoubleRect plot_box(spect->boundingRect( ));
-	      fprintf( stderr, "%d =====================> [(%f,%f), (%f,%f)]\n", output_limit,
-		       plot_box.left(), plot_box.right(), plot_box.bottom(), plot_box.top() );
+	      // fprintf( stderr, "%d =====================> [(%f,%f), (%f,%f)]\n", output_limit,
+	      // 	       plot_box.left(), plot_box.right(), plot_box.bottom(), plot_box.top() );
 	    }
 	}
 
 	++output_limit;
 
-	if ( output_limit < 20 ) fprintf( stderr, "in value(#1): %f, %f\n", m_RealToArray.x, m_RealToArray.y );
-	if ( output_limit < 20 ) fprintf( stderr, "in value(#1): %f, %f\n", x, y );
+	// if ( output_limit < 20 ) fprintf( stderr, "in value(#1): %f, %f\n", m_RealToArray.x, m_RealToArray.y );
+	// if ( output_limit < 20 ) fprintf( stderr, "in value(#1): %f, %f\n", x, y );
  	int xpos = (int)((x - m_RangeX.min) / m_RealToArray.x);
-	if ( output_limit < 20 ) fprintf( stderr, "in value(#2)...\n" );
+	// if ( output_limit < 20 ) fprintf( stderr, "in value(#2)...\n" );
 	int ypos = (int)((y - m_RangeY.min) / m_RealToArray.y);
-	if ( output_limit < 20 ) fprintf( stderr, "in value(#3): %d,%d\n", xpos, ypos );
+	// if ( output_limit < 20 ) fprintf( stderr, "in value(#3): %d,%d\n", xpos, ypos );
 	int pos = ArrPos(xpos, ypos);
-	if ( output_limit < 20 ) fprintf( stderr, "in value(0x%x): %d\n",m_Array,pos );
+	// if ( output_limit < 20 ) fprintf( stderr, "in value(0x%x): %d\n",m_Array,pos );
 	double dvalue = m_Array[pos];
-	if ( output_limit < 20 ) fprintf( stderr, "in value(#5)...\n" );
+	// if ( output_limit < 20 ) fprintf( stderr, "in value(#5)...\n" );
 // 	return dvalue > 0 ? 0 : dvalue;
 	return dvalue;
     }
 
     void QtRasterData::setBoundingRect( const QwtDoubleRect &rect ) {
 	bounding_box = rect;
-	if ( output_limit < 20) fprintf( stderr, "setBoundingRect( ): (%f, %f) (%f, %f)\n", rect.left(), rect.right(), rect.top(), rect.bottom() );
+	// if ( output_limit < 20) fprintf( stderr, "setBoundingRect( ): (%f, %f) (%f, %f)\n", rect.left(), rect.right(), rect.top(), rect.bottom() );
 	QwtRasterData::setBoundingRect( rect );
     }
 
@@ -95,7 +95,7 @@ namespace casa {
 
     void QtRasterData::setData( const double *array, int sizex, int sizey, double min, double max ) {
 
-	if ( output_limit < 20 ) fprintf( stderr, "in setData( )...\n" );
+	// if ( output_limit < 20 ) fprintf( stderr, "in setData( )...\n" );
 
 	m_DataSize.x = sizex;
 	m_DataSize.y = sizey;
@@ -106,12 +106,12 @@ namespace casa {
 	    delete [] m_Array;
 
 	int size = sizex * sizey;
-	if ( output_limit < 20 ) fprintf( stderr, "in setData( ): 0x%x\n", m_Array );
+	// if ( output_limit < 20 ) fprintf( stderr, "in setData( ): 0x%x\n", m_Array );
 	m_Array = new double [size];
-	if ( output_limit < 20 ) fprintf( stderr, "in setData( ): 0x%x\n", m_Array );
-	if ( output_limit < 20 ) fprintf( stderr, "in setData( ): %d, %d\n", sizex, sizey );
+	// if ( output_limit < 20 ) fprintf( stderr, "in setData( ): 0x%x\n", m_Array );
+	// if ( output_limit < 20 ) fprintf( stderr, "in setData( ): %d, %d\n", sizex, sizey );
 	memcpy(m_Array, array, size * sizeof(double));
-	if ( output_limit < 20 ) fprintf( stderr, "in setData( ): %f\n", m_Array[0] );
+	// if ( output_limit < 20 ) fprintf( stderr, "in setData( ): %f\n", m_Array[0] );
 
 	m_RealToArray.x = (bounding_box.right() - bounding_box.left()) / (m_DataSize.x - 1);
 	m_RealToArray.y = (bounding_box.bottom() - bounding_box.top()) / (m_DataSize.y - 1);

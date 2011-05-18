@@ -33,6 +33,7 @@
 #include <QVariantMap>
 #include <QString>
 #include <casaqt/QtPlotServer/QtPlotServer.qo.h>
+#include <qwt_plot_spectrogram.h>
 
 class QwtPlotItem;
 
@@ -135,6 +136,7 @@ namespace casa {
 	    const QwtPlotItem *data( ) const { return data_; }
 	    QtPlotSvrPanel *&panel( ) { return panel_; }
 	    const QtPlotSvrPanel *panel( ) const { return panel_; }
+	    ~data_desc( ) { delete data_; }
 
 	private:
 	    int id_;

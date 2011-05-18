@@ -195,6 +195,19 @@ namespace casa {
 	    }
 	}
 
+	for ( panelmap::iterator pi = managed_panels.begin( ); pi != managed_panels.end(); ++pi ) {
+	    if ( pi->second->panel() == dataiter->second->panel( ) ) {
+		std::list<int> &pd = pi->second->data();
+		for ( std::list<int>::iterator pdi=pd.begin( ); pdi != pd.end( ); ++pdi ) {
+		    if ( *pdi == dataiter->second->id( ) ) {
+			pd.erase(pdi);
+			break;
+		    }
+		}
+		break;
+	    }
+	}
+	      
 	// erase the one curve that matches
 	dataiter->second->data( )->detach( );
 	dataiter->second->panel( )->replot( );
@@ -225,7 +238,9 @@ namespace casa {
 	}
 
 	QwtPlotSpectrogram *spect = paneldesc->panel( )->raster(matrix, sizex, sizey);
-	return QDBusVariant(QVariant(1));
+	int data_id = get_id(paneldesc->panel( ),spect);
+	paneldesc->data( ).push_back(data_id);
+	return QDBusVariant(QVariant(data_id));
     }
 
 
