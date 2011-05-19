@@ -8110,7 +8110,12 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // timeBin_p.  Giving it timeBin_p - 0.5 * interval[0] removes the bias and
   // brings it almost in line with binTimes() (which uses -0.5 *
   // interval[bin_start]).
-  ROVisibilityIterator vi(mssel_p, sort, timeBin_p - 0.5 * mscIn_p->interval()(0));
+  //
+  // late April 2011: MSIter removed the bias, which threw off the correction.
+  //
+  ROVisibilityIterator vi(mssel_p, sort,
+                          //timeBin_p - 0.5 * mscIn_p->interval()(0));
+                          timeBin_p);
   //vi.slurp();
   //cerr << "Finished slurping." << endl;
 
@@ -8340,12 +8345,17 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   if(watch_obs)
     sort[colnum] = MS::OBSERVATION_ID;
 
-  // MSIter tends to produce output INTERVALs that are longer than the
+  // MSIter used to tend toward output INTERVALs that are longer than the
   // requested interval length, by ~0.5 input integrations for a random
   // timeBin_p.  Giving it timeBin_p - 0.5 * interval[0] removes the bias and
   // brings it almost in line with binTimes() (which uses -0.5 *
   // interval[bin_start]).
-  ROVisIterator vi(mssel_p, sort, timeBin_p - 0.5 * mscIn_p->interval()(0));
+  //
+  // MSIter removed the bias in late April 2011.
+  //
+  ROVisIterator vi(mssel_p, sort,
+                   //timeBin_p - 0.5 * mscIn_p->interval()(0));
+                   timeBin_p);
   
   // Apply selection
   vi.selectChannel(chanSlices_p);     // ROVisIterator
