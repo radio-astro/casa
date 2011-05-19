@@ -139,7 +139,7 @@ private:
                const IPosition& axes) const;
 
 // Compute structure function
-   T structureFunction (T d1, T d2) const {return square(d1 - d2);};
+   T structureFunction (T d1, T d2) const {return ((d1 - d2)*(d1-d2));};
 };
 
 
