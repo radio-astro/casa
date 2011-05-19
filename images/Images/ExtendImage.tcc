@@ -57,10 +57,10 @@ ExtendImage<T>::ExtendImage (const ImageInterface<T>& image,
 		     "new csys or shape incompatible with old ones");
   }
   itsExtLatPtr = new ExtendLattice<T> (image, newShape, newAxes, stretchAxes);
-  setCoordsMember (newCsys);
-  setImageInfoMember (itsImagePtr->imageInfo());
-  setMiscInfoMember (itsImagePtr->miscInfo());
-  setUnitMember (itsImagePtr->units());
+  this->setCoordsMember (newCsys);
+  this->setImageInfoMember (itsImagePtr->imageInfo());
+  this->setMiscInfoMember (itsImagePtr->miscInfo());
+  this->setUnitMember (itsImagePtr->units());
   logger().addParent (itsImagePtr->logger());
 }
 

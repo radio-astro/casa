@@ -58,7 +58,7 @@ const value &Map<key,value>::operator()(const key &ky) const {
 template<class key, class value>
 Map<key,value> &Map<key,value>::operator=(const Map<key,value> &m) {
   if (m.Rep)
-    SetRep(m.Rep->Clone());
+    this->SetRep(m.Rep->Clone());
   else
     throw_map_init_error();
   return *this;
@@ -67,7 +67,7 @@ Map<key,value> &Map<key,value>::operator=(const Map<key,value> &m) {
 template<class key, class value>
 Map<key,value> &Map<key,value>::operator=(const Map<key,value> *m) {
   if (m && m->Rep) 
-    SetRep(m->Rep->Clone());
+    this->SetRep(m->Rep->Clone());
   else
     throw_map_init_error();
   return *this;
@@ -272,7 +272,7 @@ ConstMapIter<key,value>::ConstMapIter(const Map<key,value> &st) : Rep(st.getRep(
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<key,value> &other) {
   if (other.isValid()) 
-    SetRep(other.Rep->Clone());
+    this->SetRep(other.Rep->Clone());
   else
     throw_mapiter_init_error();
   return *this;
@@ -281,7 +281,7 @@ ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<k
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<key,value> *other) {
   if (other && (*other).isValid())
-    SetRep(other->Rep->Clone());
+    this->SetRep(other->Rep->Clone());
   else
     throw_mapiter_init_error();
   return *this;
@@ -289,14 +289,14 @@ ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const ConstMapIter<k
 
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const Map<key,value> &other) {
-    SetRep(other.getRep());
+    this->SetRep(other.getRep());
     return *this;
   }
 template<class key, class value>
 ConstMapIter<key,value> &ConstMapIter<key,value>::operator=(const Map<key,value> *other) {
     if (! other)
       throw_mapiter_init_error();
-    SetRep(other->getRep());
+    this->SetRep(other->getRep());
     return *this;
   }
 
@@ -308,7 +308,7 @@ ConstMapIter<key,value>::~ConstMapIter() {
 
 template<class key, class value>
 MapIter<key,value> &MapIter<key,value>::operator=(Map<key,value> &other) {
-  SetRep(other.getRep());
+  this->SetRep(other.getRep());
   return *this;
 }
 
@@ -316,14 +316,14 @@ template<class key, class value>
 MapIter<key,value> &MapIter<key,value>::operator=(Map<key,value> *other) {
   if (! other)
     throw_mapiter_init_error();
-  SetRep(other->getRep());
+  this->SetRep(other->getRep());
   return *this;
 }
 
 template<class key, class value>
 MapIter<key,value> &MapIter<key,value>::operator=(const MapIter<key,value> &other) {
     if (other.isValid()) {
-      SetRep(other.Rep->Clone());
+      this->SetRep(other.Rep->Clone());
     } else
       throw_mapiter_init_error();
     return *this;
@@ -332,7 +332,7 @@ MapIter<key,value> &MapIter<key,value>::operator=(const MapIter<key,value> &othe
 template<class key, class value>
 MapIter<key,value> &MapIter<key,value>::operator=(const MapIter<key,value> *other) {
   if (other && (*other).isValid()) {
-    SetRep(other->Rep->Clone());
+    this->SetRep(other->Rep->Clone());
   } else
     throw_mapiter_init_error();
   return *this;

@@ -49,7 +49,7 @@ ImageHistograms<T>::ImageHistograms (const ImageInterface<T>& image,
 : LatticeHistograms<T>(image, os, showProgress, forceDisk),
   pInImage_p(0)
 {
-   if (!setNewImage(image)) {
+   if (!this->setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
    }
 }
@@ -62,7 +62,7 @@ ImageHistograms<T>::ImageHistograms (const ImageInterface<T>& image,
 : LatticeHistograms<T>(image, showProgress, forceDisk),
   pInImage_p(0)
 {
-   if (!setNewImage(image)) {
+   if (!this->setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
    }
 }
@@ -114,7 +114,7 @@ Bool ImageHistograms<T>::setNewImage(const ImageInterface<T>& image)
       
 // Pass it on to LatticeHistograms
    
-   goodParameterStatus_p = setNewLattice(image);
+   goodParameterStatus_p = this->setNewLattice(image);
 //  
    return goodParameterStatus_p;
 }
