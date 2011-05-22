@@ -47,7 +47,7 @@ SubImage<T>::SubImage()
 {}
 
 template<class T>
-SubImage<T>::SubImage (const ImageInterface<T>& image,
+SubImage<T>::SubImage (ImageInterface<T>& image,
 		       AxesSpecifier axesSpec)
 : itsImagePtr (image.cloneII())
 {
@@ -57,7 +57,7 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 }
 
 template<class T>
-SubImage<T>::SubImage (const ImageInterface<T>& image,
+SubImage<T>::SubImage (ImageInterface<T>& image,
 		       Bool writableIfPossible,
 		       AxesSpecifier axesSpec)
 : itsImagePtr (image.cloneII())
@@ -88,7 +88,7 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 }
 
 template<class T>
-SubImage<T>::SubImage (const ImageInterface<T>& image,
+SubImage<T>::SubImage (ImageInterface<T>& image,
 		       const LattRegionHolder& region,
 		       Bool writableIfPossible,
 		       AxesSpecifier axesSpec)
@@ -231,7 +231,7 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords)
 
 template<class T> SubImage<T> SubImage<T>::createSubImage(
 	ImageRegion*& outRegion, ImageRegion*& outMask,
-	const ImageInterface<T>& inImage, const Record& region,
+	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
 ) {

@@ -49,7 +49,7 @@ namespace casa {
     }
 
     QtPlotServer::~QtPlotServer( ) {
-	// wonder if we need to delete dbus adaptor...
+	delete dbus_;
     }
 
     QtPlotSvrPanel *QtPlotServer::panel( const QString &title, const QString &xlabel, const QString &ylabel,

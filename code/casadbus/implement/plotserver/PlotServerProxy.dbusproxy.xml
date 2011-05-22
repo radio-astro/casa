@@ -70,8 +70,42 @@
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>
-    <method name="done">
-      <arg direction="out" type="b" />
+    <method name="done" />
+    <method name="loaddock">
+      <arg direction="in" type="s" name="file_or_xml" />
+      <arg direction="in" type="s" name="loc" />
+      <arg direction="in" type="as" name="dockable" />
+      <arg direction="in" type="i" name="panel" />
+      <arg direction="out" type="v" />
     </method>
+    <signal name="button">
+      <arg type="i" name="panel" />
+      <arg type="s" name="name" />
+    </signal>
+    <signal name="check">
+      <arg type="i" name="panel" />
+      <arg type="s" name="name" />
+      <arg type="i" name="state" />
+    </signal>
+    <signal name="radio">
+      <arg type="i" name="panel" />
+      <arg type="s" name="name" />
+      <arg type="b" name="state" />
+    </signal>
+    <signal name="linetext">
+      <arg type="i" name="panel" />
+      <arg type="s" name="name" />
+      <arg type="s" name="value" />
+    </signal>
+    <signal name="slidevalue">
+      <arg type="i" name="panel" />
+      <arg type="s" name="name" />
+      <arg type="i" name="value" />
+    </signal>
+    <signal name="closing">
+      <arg type="i" name="panel" />
+      <arg type="b" name="gone" />
+    </signal>
+    <signal name="exiting" />
   </interface>
 </node>

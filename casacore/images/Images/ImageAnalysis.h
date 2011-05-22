@@ -738,7 +738,6 @@ class ImageAnalysis
   
     void _setFitSkyIncludeExclude(
         const Vector<Float>& includepix, const Vector<Float>& excludepix,
-        const Stokes::StokesTypes& stokes, const Float minVal, const Float maxVal,
         Fit2D& fitter
     ) const;
 

@@ -769,7 +769,7 @@ Bool ImageAnalysis::adddegaxes(const String& outfile, PtrHolder<ImageInterface<
 ImageInterface<Float> *
 ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 		const String& kernelFileName, const Double in_scale, Record& region,
-		String& mask, const Bool overwrite, const Bool async) {
+		String& mask, const Bool overwrite, const Bool) {
 
 	*itsLog << LogOrigin("ImageAnalysis", "convolve");
 
@@ -2383,7 +2383,7 @@ ComponentList ImageAnalysis::fitsky(
 	Fit2D fitter(*itsLog);
 
     // Set pixel range depending on Stokes type and min/max
-    _setFitSkyIncludeExclude(includepix, excludepix, stokes, minVal, maxVal, fitter);
+    _setFitSkyIncludeExclude(includepix, excludepix, fitter);
 	*itsLog << origin;
 
     // Recover just single component estimate if desired and bug out
@@ -2620,7 +2620,6 @@ void ImageAnalysis::_fitskyExtractBeam(
 
 void ImageAnalysis::_setFitSkyIncludeExclude(
     const Vector<Float>& includepix, const Vector<Float>& excludepix,
-    const Stokes::StokesTypes& stokes, const Float minVal, const Float maxVal,
     Fit2D& fitter 
 ) const {
     *itsLog << LogOrigin("ImageAnalysis", "_setFitSkyIncludeExclude");
@@ -2945,7 +2944,7 @@ Vector<Bool> ImageAnalysis::haslock() {
 Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 		Record& regionRec, const String& sMask, const Int nbins, const Vector<
 				Double>& includepix, const Bool gauss, const Bool cumu,
-		const Bool log, const Bool list, const String& plotterdev,
+		const Bool log, const Bool list, const String&,
 		const Int nx, const Int ny, const Vector<Int>& size, const Bool force,
 		const Bool disk) {
 
@@ -3806,7 +3805,7 @@ Bool ImageAnalysis::putchunk(const Array<Float>& pixelsArray,
 
 Bool ImageAnalysis::putregion(const Array<Float>& pixels,
 		const Array<Bool>& mask, Record& region, const Bool list,
-		const Bool usemask, const Bool locking, const Bool replicateArray) {
+		const Bool usemask, const Bool, const Bool replicateArray) {
 	*itsLog << LogOrigin("ImageAnalysis", "putregion");
 
 	// used to verify array dimension
@@ -4943,7 +4942,7 @@ Bool ImageAnalysis::statistics(
 	Record& statsout, const Vector<Int>& axes,
 	Record& regionRec, const String& mask, const Vector<String>& plotstats,
 	const Vector<Float>& includepix, const Vector<Float>& excludepix,
-	const String& plotterdev, const Int nx, const Int ny, const Bool list,
+	const String&, const Int nx, const Int ny, const Bool list,
 	const Bool force, const Bool disk, const Bool robust,
 	const Bool verbose
 ) {
@@ -5395,7 +5394,7 @@ Vector<String> ImageAnalysis::summary(Record& header, const String& doppler,
 Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 			   const Bool optical, const Int bitpix, const Double minpix,
 			   const Double maxpix, Record& pRegion, const String& mask,
-			   const Bool overwrite, const Bool dropDeg, const Bool degLast,
+			   const Bool overwrite, const Bool dropDeg, const Bool,
 			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength) {
 
 	*itsLog << LogOrigin("ImageAnalysis", "tofits");
@@ -5551,7 +5550,7 @@ Bool ImageAnalysis::toASCII(const String& outfile, Record& region,
 	return True;
 }
 
-Vector<Double> ImageAnalysis::topixel(Record& value) {
+Vector<Double> ImageAnalysis::topixel(Record&) {
 
 	/*  std::vector<double> rstat;
 	 *itsLog << LogOrigin("ImageAnalysis", "topixel");
@@ -5672,7 +5671,7 @@ Bool ImageAnalysis::haveRegionsChanged(ImageRegion* pNewRegionRegion,
 }
 
 void ImageAnalysis::makeRegionBlock(PtrBlock<const ImageRegion*>& regions,
-		const Record& Regions, LogIO& os) {
+		const Record& Regions, LogIO& ) {
 
 	// Trying to mimick  a glishRegion by a Record of Records
 
@@ -5864,8 +5863,8 @@ Bool ImageAnalysis::deconvolveFromBeam(Quantity& majorFit, Quantity& minorFit,
 Vector<Double> ImageAnalysis::singleParameterEstimate(Fit2D& fitter,
 		Fit2D::Types model, const MaskedArray<Float>& pixels, Float minVal,
 		Float maxVal, const IPosition& minPos, const IPosition& maxPos,
-		Stokes::StokesTypes stokes, const ImageInterface<Float>& im,
-		Bool xIsLong, LogIO& os) const
+		Stokes::StokesTypes , const ImageInterface<Float>& ,
+		Bool , LogIO& os) const
 //
 // position angle +x -> +y
 //
@@ -6648,8 +6647,8 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy, 
 				   Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
 				   const String& xytype, 
-				   const String& specaxis, const Int& whichStokes,
-				   const Int& whichTabular, const Int& whichLinear, 
+				   const String& specaxis, const Int& ,
+				   const Int& , const Int& ,
 				   const String& xunits, const String& specFrame) {
 
 	String whatXY = xytype;

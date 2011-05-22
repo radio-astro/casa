@@ -133,7 +133,7 @@ Bool MomentsBase<T>::setMoments(const Vector<Int>& momentsU)
 }
 
 template<class T>
-Bool MomentsBase<T>::setMomentAxis( const Int &momentAxis )
+Bool MomentsBase<T>::setMomentAxis( const Int &)
 {
   return False ;
 }
@@ -177,9 +177,9 @@ Bool MomentsBase<T>::setWinFitMethod(const Vector<Int>& methodU)
 }
 
 template<class T>
-Bool MomentsBase<T>::setSmoothMethod(const Vector<Int>& smoothAxesU,
-                                     const Vector<Int>& kernelTypesU,
-                                     const Vector<Quantum<Double> >& kernelWidthsU)
+Bool MomentsBase<T>::setSmoothMethod(const Vector<Int>&,
+                                     const Vector<Int>&,
+                                     const Vector<Quantum<Double> >&)
 {
   return False ;
 }

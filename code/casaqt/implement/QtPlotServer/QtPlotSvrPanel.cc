@@ -31,9 +31,26 @@
 #include <qwt_plot_spectrogram.h>
 #include <qwt_legend.h>
 #include <qwt_plot_zoomer.h>
+#include <QDockWidget>
 #include <QSlider>
+#include <QPushButton>
+#include <QCheckBox>
+#include <QRadioButton>
+#include <QLineEdit>
 #include <QVBoxLayout>
- #include <QCloseEvent>
+#include <QCloseEvent>
+#include <QtUiTools>
+#include <limits.h>
+#include <sys/stat.h>
+#include <iostream>
+
+// The maximum number of bytes in a pathname is PATH_MAX 
+#if defined(PATH_MAX)
+#define PATHMAX PATH_MAX
+#else
+#define PATHMAX 1024
+#endif
+
 
 namespace casa {
 
@@ -94,6 +111,88 @@ namespace casa {
 	container->setLayout(layout);
 	setCentralWidget( container );
     }
+
+    QString QtPlotSvrPanel::loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable ) {
+
+	QWidget *widget = loaddock( file_or_xml );
+	if ( widget == 0 ) {
+	    return QString( "failed to load a widget" );
+	}
+
+	QDockWidget *dockwidget = dynamic_cast<QDockWidget*>(widget);
+	if ( dockwidget == 0 ) {
+	    delete widget;
+	    return QString( "widget loaded was not a dock widget" );
+	}
+
+	Qt::DockWidgetArea location = ( loc == "right" ? Qt::RightDockWidgetArea : loc == "left" ? Qt::LeftDockWidgetArea :
+					loc == "top" ? Qt::TopDockWidgetArea : Qt::BottomDockWidgetArea);
+
+	addDockWidget( location, dockwidget, Qt::Vertical );
+
+	if ( dockable.size( ) == 0 ) {
+	    dockwidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+	} else {
+	    QFlags<Qt::DockWidgetArea> l = location;
+	    for (int i=0; i < dockable.size( ); ++i ) {
+		Qt::DockWidgetArea newl = ( dockable[i] == "right" ? Qt::RightDockWidgetArea : 
+					    dockable[i] == "left" ? Qt::LeftDockWidgetArea :
+					    dockable[i] == "top" ? Qt::TopDockWidgetArea :
+					    Qt::BottomDockWidgetArea );
+		l |= newl;
+	    }
+
+	    // if the only dockable location is the specified location, then it is not movable...
+	    if ( l == location ) {
+		dockwidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+	    } else {
+		dockwidget->setFeatures(QDockWidget::DockWidgetMovable);
+		dockwidget->setAllowedAreas( l );
+	    }
+	}
+
+	QList<QPushButton*> buttons = dockwidget->findChildren<QPushButton*>( );
+	for ( QList<QPushButton*>::iterator iter = buttons.begin(); iter != buttons.end(); ++iter ) {
+	  connect( *iter, SIGNAL(clicked( )), SLOT(emit_button( )) );
+	}
+	QList<QCheckBox*> checks = dockwidget->findChildren<QCheckBox*>( );
+	for ( QList<QCheckBox*>::iterator iter = checks.begin(); iter != checks.end(); ++iter ) {
+	  connect( *iter, SIGNAL(stateChanged(int)), SLOT(emit_check(int)) );
+	}
+	QList<QRadioButton*> radios = dockwidget->findChildren<QRadioButton*>( );
+	for ( QList<QRadioButton*>::iterator iter = radios.begin(); iter != radios.end(); ++iter ) {
+	  connect( *iter, SIGNAL(toggled(bool)), SLOT(emit_radio(bool)) );
+	}
+	QList<QLineEdit*> lines = dockwidget->findChildren<QLineEdit*>( );
+	for ( QList<QLineEdit*>::iterator iter = lines.begin(); iter != lines.end(); ++iter ) {
+	  connect( *iter, SIGNAL(textChanged(const QString&)), SLOT(emit_linetext(const QString&)) );
+	}
+	QList<QSlider*> sliders = dockwidget->findChildren<QSlider*>( );
+	for ( QList<QSlider*>::iterator iter = sliders.begin(); iter != sliders.end(); ++iter ) {
+	  connect( *iter, SIGNAL(valueChanged(int)), SLOT(emit_slidevalue(int)) );
+	}
+	return QString("");
+    }
+
+    QWidget *QtPlotSvrPanel::loaddock( QString file ) {
+	QUiLoader loader;
+	struct stat buf;
+	if ( file.size( ) <= PATHMAX && stat(file.toAscii().constData(),&buf) == 0 ) {
+	    QFile qfile(file);
+	    qfile.open(QFile::ReadOnly);
+	    // return 0 upon error...
+	    QWidget *dock = loader.load(&qfile, this);
+	    qfile.close( );
+	    return dock;
+	} else {
+	    QBuffer qfile;
+	    qfile.setData( file.toAscii().constData(), file.size( ) );
+	    QWidget *dock = loader.load(&qfile, this);
+	    qfile.close( );
+	    return dock;
+	}
+    }
+
 
     QwtPlotCurve *QtPlotSvrPanel::line(  const QList<double> &x, const QList<double> &y, const QString &color, const QString &label ) {
 	QwtPlotCurve *curve = new QwtPlotCurve(label);
@@ -304,11 +403,33 @@ namespace casa {
 
     void QtPlotSvrPanel::closeEvent(QCloseEvent *event) {
 	if ( ! isOverridedClose( ) ) {
+	    emit closing( this, false );
 	    event->ignore( );
 	    hide( );	  
 	} else {
+	    emit closing( this, true );
 	    QtPanelBase::closeEvent(event);
 	}
+    }
+
+    void QtPlotSvrPanel::emit_button( ) {
+	emit button( this, sender( )->objectName( ) );
+    }
+
+    void QtPlotSvrPanel::emit_check( int state ) {
+	emit check( this, sender( )->objectName( ), state );
+    }
+
+    void QtPlotSvrPanel::emit_radio( bool state ) {
+	emit radio( this, sender( )->objectName( ), state );
+    }
+
+    void QtPlotSvrPanel::emit_linetext( const QString &text ) {
+	emit linetext( this, sender( )->objectName( ), text );
+    }
+
+    void QtPlotSvrPanel::emit_slidevalue( int value ) {
+	emit slidevalue( this, sender( )->objectName( ), value );
     }
 
 }

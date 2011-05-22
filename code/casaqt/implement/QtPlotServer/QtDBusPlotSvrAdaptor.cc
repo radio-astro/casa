@@ -26,12 +26,13 @@
 //# $Id: $
 #include <casaqt/QtPlotServer/QtDBusPlotSvrAdaptor.qo.h>
 #include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
+#include <display/QtViewer/QtApp.h>
 
 namespace casa {
 
     QtDBusPlotSvrAdaptor::QtDBusPlotSvrAdaptor( QtPlotServer *s ) : QDBusAbstractAdaptor(new QObject()), server(s) { }
 
-    QtDBusPlotSvrAdaptor::~QtDBusPlotSvrAdaptor( ) { }
+    QtDBusPlotSvrAdaptor::~QtDBusPlotSvrAdaptor( ) { emit exiting( ); }
 
 
     QDBusVariant QtDBusPlotSvrAdaptor::panel( const QString &title, const QString &xlabel, const QString &ylabel,
@@ -39,6 +40,12 @@ namespace casa {
 	QtPlotSvrPanel *panel = server->panel( title, xlabel, ylabel, window_title, legend );
 	if ( hidden ) panel->hide( );
 	else panel->show( );
+	connect( panel, SIGNAL(button(QtPlotSvrPanel*,QString)), SLOT(emit_button(QtPlotSvrPanel*,QString)) );
+	connect( panel, SIGNAL(check(QtPlotSvrPanel*,QString,int)), SLOT(emit_check(QtPlotSvrPanel*,QString,int)) );
+	connect( panel, SIGNAL(radio(QtPlotSvrPanel*,QString,bool)), SLOT(emit_radio(QtPlotSvrPanel*,QString,bool)) );
+	connect( panel, SIGNAL(linetext(QtPlotSvrPanel*,QString,const QString &)), SLOT(emit_linetext(QtPlotSvrPanel*,QString,const QString &)) );
+	connect( panel, SIGNAL(slidevalue(QtPlotSvrPanel*,QString,int)), SLOT(emit_slidevalue(QtPlotSvrPanel*,QString,int)) );
+	connect( panel, SIGNAL(closing(QtPlotSvrPanel*,bool)), SLOT(emit_closing(QtPlotSvrPanel*,bool)) );
 	return QDBusVariant(QVariant(get_id(panel)));
     }
 
@@ -242,6 +249,33 @@ namespace casa {
 	return QDBusVariant(QVariant(true));
     }
 
+    QDBusVariant QtDBusPlotSvrAdaptor::loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable, int panel ) {
+	if ( panel == 0 ) {
+	    if ( managed_panels.size( ) == 1 ) {
+		QString result = managed_panels.begin()->second->panel( )->loaddock( file_or_xml, loc, dockable );
+		if ( result == "" ) {
+		    return QDBusVariant(QVariant(true));
+		} else {
+		    return error(result);
+		}
+	    } else {
+		return error(QString("must specify a panel when multiple panels exist"));
+	    }
+	}
+
+	panelmap::iterator iter = managed_panels.find( panel );
+	if ( iter == managed_panels.end( ) ) {
+	    return error(QString("could now find requested panel"));
+	}
+
+	QString result = iter->second->panel( )->loaddock( file_or_xml, loc, dockable );
+	if ( result == "" ) {
+		return QDBusVariant(QVariant(true));
+	} else {
+		    return error(result);
+	}
+    }
+
     QDBusVariant QtDBusPlotSvrAdaptor::close( int panel ) {
 
 	if ( panel == 0 ) {
@@ -317,6 +351,7 @@ namespace casa {
 	    managed_panels.erase(iter);
 	}
 	pp->releaseMainPanel( );
+	pp->deleteLater( );
     }
 
 
@@ -345,9 +380,32 @@ namespace casa {
 	}
     }
 
-    bool QtDBusPlotSvrAdaptor::done( ) {
+    void QtDBusPlotSvrAdaptor::done( ) {
 	close_everything( );
-	return true;
+    }
+
+    void QtDBusPlotSvrAdaptor::emit_button(QtPlotSvrPanel *panel, QString name ) {
+	emit button( get_id(panel), name );
+    }
+
+    void QtDBusPlotSvrAdaptor::emit_check(QtPlotSvrPanel *panel, QString name, int state ) {
+	emit check( get_id(panel), name, state );
+    }
+
+    void QtDBusPlotSvrAdaptor::emit_radio(QtPlotSvrPanel *panel, QString name, bool state ) {
+	emit radio( get_id(panel), name, state );
+    }
+
+    void QtDBusPlotSvrAdaptor::emit_linetext(QtPlotSvrPanel *panel, QString name, const QString &text ) {
+	emit linetext( get_id(panel), name, text );
+    }
+
+    void QtDBusPlotSvrAdaptor::emit_slidevalue(QtPlotSvrPanel *panel, QString name, int value ) {
+	emit slidevalue( get_id(panel), name, value );
+    }
+
+    void QtDBusPlotSvrAdaptor::emit_closing(QtPlotSvrPanel *panel, bool gone ) {
+	emit closing( get_id(panel), gone );
     }
 
     int QtDBusPlotSvrAdaptor::get_id( QtPlotSvrPanel *panel ) {
