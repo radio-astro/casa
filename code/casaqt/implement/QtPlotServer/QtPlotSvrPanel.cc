@@ -429,7 +429,7 @@ namespace casa {
 	// allow this slot to work both with QSlider's
 	// valueChanged( ) or sliderReleased( )...
 	if ( index < 0 ) {
-	    index = slider->value( );
+	    if ( slider ) index = slider->value( );
 	}
 
 	// slider runs (only) from min (0) to max (99), but
@@ -485,13 +485,15 @@ namespace casa {
 
 	QwtDoubleRect base = zoomer->zoomBase( );
 	if ( (r.width()*r.height()) >= (base.width()*base.height()) ) {
-	    slider->setValue( 0 );
+	    if ( slider ) slider->setValue( 0 );
 	    current_zoom_level = 100;
 	} else {
 	    double fraction = (((r.width()*r.height()) / (base.width()*base.height())) * 100.0);
 	    current_zoom_level = fraction;
-	    slider->setValue( (int) (100.0 - current_zoom_level) );
-	    slider_last_value = slider->value( );
+	    if ( slider ) {
+		slider->setValue( (int) (100.0 - current_zoom_level) );
+		slider_last_value = slider->value( );
+	    }
 	}
     }
 
