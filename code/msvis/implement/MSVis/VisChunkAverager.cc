@@ -139,13 +139,21 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
   VisBuffer vb(vi);
   uInt chunkletNum = 0;
   Bool firstValidOutRowInChunk = true;
-  Double time, minTime, maxTime, firstinterval, lastinterval;
   Vector<Bool> firstrowinslot(sphash_to_inprows_p.size());
   firstrowinslot.set(true);
 
   initialize(vb);
+
+  Double minTime, maxTime, firstinterval, lastinterval;
+  Int nrows = vb.nRow();
+  // Paranoid initialization.
+  minTime = vb.time()[0];
+  firstinterval = vb.timeInterval()[0];
+  maxTime = vb.time()[nrows - 1];
+  lastinterval = vb.timeInterval()[nrows - 1];
+
   for(vi.origin(); vi.more(); ++vi){
-    // Iterate through the current VisBuffer
+    // First iterate through the *unflagged* rows of the current VisBuffer.
     Int outrow = 0;
     Bool firstValidOutRowInIntegration = true;
 
@@ -156,30 +164,34 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
 
       if(inrow >= 0){
         if(firstValidOutRowInIntegration){
+          Double time = vb.time()[inrow];
+
           firstValidOutRowInIntegration = false;
-          time = vb.time()[inrow];
 
           // Some initialization for the chunk
           if(firstValidOutRowInChunk){
             firstValidOutRowInChunk = false;
             minTime = time;
-            maxTime = time;
+            maxTime = minTime;
             firstinterval = vb.timeInterval()[inrow];
             lastinterval = firstinterval;
           }
-          
+
           if(time < minTime){
             minTime = time;
+            firstinterval = max(vb.timeInterval()[inrow], 0.0);
           }
           else if(time > maxTime){
             maxTime = time;
-            lastinterval = vb.timeInterval()[inrow];
+            lastinterval = max(vb.timeInterval()[inrow], 0.0);
           }
         }
 
         // Add the VisBuffer row to the current accumulation
+
         if(firstrowinslot[outrow]){
           firstrowinslot[outrow] = false;
+
           avBuf_p.antenna1()[outrow] = vb.antenna1()[inrow];
           avBuf_p.antenna2()[outrow] = vb.antenna2()[inrow];
           avBuf_p.feed1()[outrow] = vb.feed1()[inrow];
@@ -275,6 +287,32 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
     }                   // End of loop over sphit for chunkletNum.
     ++chunkletNum;
   }             // End of loop over chunkletNums (integrations) in vi's current chunk.
+
+
+  // Now go back and see if there were any flagged earlier minTimes or later
+  // maxTimes.  Remember that although TIME and INTERVAL should not care
+  // about flagging, sphash_to_inprows_p does.  BUT, don't let RIDICULOUS
+  // flagged times and intervals contaminate the average.
+  //
+  // ridiculous means off from the unflagged values by > 40 years.
+  // That's a generous but maybe too wide margin.  The most common bad values
+  // seem to be 0s (= 1858 A.D.) and twice the current epoch.
+  // const Double ridiculous = 1262304000.0;
+  // Double acc_minTime = minTime - ridiculous;
+  // Double acc_maxTime = maxTime + ridiculous;
+  // for(vi.origin(); vi.more(); ++vi){
+  //   Double time = vb.time()[0];
+
+  //   if(time < minTime && time > acc_minTime){
+  //     minTime = time;
+  //     firstinterval = max(vb.timeInterval()[0], 0.0);
+  //   }
+  //   else if(time > maxTime && time < acc_maxTime){
+  //     maxTime = time;
+  //     lastinterval = max(vb.timeInterval()[0], 0.0);
+  //   }
+  // }
+
   normalize(minTime, maxTime, firstinterval, lastinterval);
 
   return avBuf_p;
