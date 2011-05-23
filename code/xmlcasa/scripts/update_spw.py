@@ -16,6 +16,8 @@ Example:
 """
 
 import copy
+#from taskinit import mstool
+from casac import homefinder
 
 def update_spw(spw, spwmap=None):
     """
@@ -76,7 +78,7 @@ def update_spw(spw, spwmap=None):
     # Because ; means different things when it separates spws and channel
     # ranges, I can't think of a better way to construct spwchans than an
     # explicit state machine.  (But $spws_alone =~ s/:[^,]+//g;)
-    inspw = True    # Must start with an spw.
+    inspw = True     # until a : is encountered.
     spwgrp = ''
     chagrp = ''
 
@@ -133,6 +135,158 @@ def update_spw(spw, spwmap=None):
         outstr += ','
 
     return outstr.rstrip(','), spwmap # discard final comma.
+
+def spwchan_to_ranges(vis, spw):
+    """
+    Returns the spw:chan selection string spw as a dict of channel selection
+    ranges for vis, keyed by spectral window ID.
+
+    The ranges are stored as tuples of (start channel,
+                                        end channel (inclusive!),
+                                        step).
+
+    Note that '' returns an empty set!  Use '*' to select everything!
+
+    Example:
+    >>> from update_spw import spwchan_to_ranges
+    >>> selranges = spwchan_to_ranges('uid___A002_X1acc4e_X1e7.ms', '7:10~20^2;40~55')
+    ValueError: spwchan_to_ranges() does not support multiple channel ranges per spw.
+    >>> selranges = spwchan_to_ranges('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2')
+    >>> selranges
+    {0: (1,  3,  1), 1: (1,  3,  1), 5: (10, 20,  2), 7: (10, 20,  2)}
+    """
+    mstool = homefinder.find_home_by_name('msHome')
+    myms = mstool.create()
+    selarr = myms.msseltoindex(vis, spw=spw)['channel']
+    nspw = selarr.shape[0]
+    selranges = {}
+    for s in xrange(nspw):
+        if selranges.has_key(selarr[s][0]):
+            raise ValueError, 'spwchan_to_ranges() does not support multiple channel ranges per spw.'
+        selranges[selarr[s][0]] = tuple(selarr[s][1:])
+    return selranges
+
+def update_spwchan(vis, sch0, sch1):
+    """
+    Given an spw:chan selection string sch1, return what it must be changed to
+    to get the same result if used with the output of split(vis, spw=sch0).
+
+    Examples:
+    >>> from update_spw import update_spwchan
+    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2;40~55', '0~1:1~3,5;7:10~20^2;40~55')
+    >>> newspw
+    ''
+    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2;40~55', '0~1:2,3,5;7:12~18^2')
+    ValueError: update_spwchan(vis, sch0, sch1) does not support multiple channel ranges per spw in sch0.
+    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2', '0~1:2~3,5;7:12~18^2')
+    >>> newspw
+    '0~1:1~2,2;3:1~4'
+    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '7', '3')
+    ValueError: '3' is not a subset of '7'.
+    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '7:10~20^2', '7:12~18^3')
+    ValueError: '7:12~18^3' is not a subset of '7:10~20^2'.
+    
+    # Let's say we want updates of both fitspw and spw, but fitspw and spw
+    # are disjoint (in spws).
+    >>> fitspw = '1~10:5~122,15~22:5~122'
+    >>> spw = '6~14'
+    
+    #  Initialize spwchanmap with the union of them.
+    >>> spwchanmap = update_spwchan(join_spws(fitspw, spw), None)[1]
+    
+    >>> myfitspw = update_spwchan(fitspw, spwchanmap)[0]
+    >>> myfitspw
+    '0~9:5~122,14~21:5~122'
+    >>> myspw = update_spwchan(spw, spwchanmap)[0]
+    >>> myspw
+    '5~13'
+    >>> myspw = update_spwchan('0,1,3;5~8:20~30;44~50^2', None)[0]
+    >>> myspw
+    '0,1,2;3~6:0~10;24~30^2'
+    """
+    # Convert '' to 'select everything'.
+    if not sch0:
+        sch0 = '*'
+    if not sch1:
+        sch1 = '*'
+        
+    if sch1 == sch0:
+        return ''
+    elif sch0 == '*':
+        return sch1
+
+    sch0ranges = spwchan_to_ranges(vis, sch0)
+    sch1ranges = spwchan_to_ranges(vis, sch1)
+
+    allchans = spwchan_to_ranges(vis, '*')
+
+    outranges = {}
+    for s in sch1ranges:
+        try:
+            sch0range = sch0ranges[s]
+            sch1range = sch1ranges[s]
+            if (sch1range[0] < sch0range[0]) or (sch1range[1] > sch0range[1]):
+                raise ValueError
+            if sch0range[2] > 1:  # There are gaps, so check more closely.
+                s0list = list(sch0range)
+                s1list = list(sch1range)
+                s0list[1] += 1  # MSSelect is inclusive, but python's
+                s1list[1] += 1  # range() excludes the end value.
+                s0 = set(range(*s0list))
+                s1 = set(range(*s1list))
+                if s1.difference(s0):
+                    raise ValueError
+            outranges[s] = ((sch1range[0] -
+                             sch0range[0]) / sch0range[2],
+                            (sch1range[1] -
+                             sch0range[0]) / sch0range[2],
+                            sch1range[2] / sch0range[2])
+        except:
+            raise ValueError, "'%s' is not a subset of '%s'." % (sch1, sch0)
+        
+    s0spws = sch0ranges.keys()
+    s0spws.sort()
+    s1spws = sch1ranges.keys()
+    s1spws.sort()
+
+    in_to_out_spwmap = {}
+    outspw = 0
+    for s in s0spws:
+        in_to_out_spwmap[s] = outspw
+        outspw += 1
+
+    def ranges_to_grp(startspw, startchans, s1prevspw):
+        grp = str(in_to_out_spwmap[startspw])
+        if s1prevspw != startspw:
+            grp += ';' + str(in_to_out_spwmap[s1prevspw])
+        if startchans != allchans[startspw]:
+            grp += ':' + str(startchans[0])
+            if startchans[1] > startchans[0]:
+                grp += '~' + str(startchans[1])
+                if startchans[2] != 1:
+                    grp += '^' + str(startchans[2])
+        return grp
+
+    newgroups = []
+    startspw = s1spws[0]
+    startchans = outranges[s1spws[0]]
+    s1prevspw = startspw
+    for s1currspw in s1spws:
+        if (s1currspw == s1spws[-1] or
+            (in_to_out_spwmap[s1currspw] > (in_to_out_spwmap[s1prevspw] + 1)) or
+            (outranges[s1currspw] != startchans)):
+            # Finish the old group.
+            if s1currspw == s1spws[-1]:
+                newgroups.append(ranges_to_grp(startspw, startchans, s1currspw))
+            else:
+                newgroups.append(ranges_to_grp(startspw, startchans, s1prevspw))
+
+            # Start a new group.
+            startspw = s1currspw
+            startchans = outranges[s1currspw]
+        s1prevspw = s1currspw
+
+    return ','.join(newgroups)
 
 def expand_tilde(tstr):
     """
