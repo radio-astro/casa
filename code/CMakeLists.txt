@@ -157,7 +157,7 @@ if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
                      COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print
-		     \"$d/libgfortran.${SO}\"; break;} else ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
+		     \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
