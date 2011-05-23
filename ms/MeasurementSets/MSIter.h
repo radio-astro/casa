@@ -383,7 +383,6 @@ protected:
   
   // columns
   ROScalarColumn<Int> colArray_p, colDataDesc_p, colField_p;
-  ROScalarColumn<Double> colTime_p;
 
   //cache for access functions
   MDirection phaseCenter_p;
