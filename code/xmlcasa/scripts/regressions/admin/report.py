@@ -41,7 +41,10 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
                   "CASA Version 3.1.0 (r13568)"]
 
 
-exclude_host = []
+exclude_host = ['el4tst','el4tst64b',
+                'ub8tst','ub8tst64b',
+                'fc8tst','fc8tst64b', 'fc8tst.cv.nrao.edu',
+                'onager','ballista' ]
 exclude_test = {}
 exclude_test['pointing_regression'] = ["CASA Version 2.4.0 (build #8115)"]
 same_version_per_host = False # if False, the latest run for each test is reported
@@ -404,9 +407,9 @@ class report:
         fd.write('<title>CASA regression tests</title>\n')
         fd.write('<body>\n')
         if revision == 'all':
-            fd.write('[ All versions ]  <a href="../CASA_latest/test-report.html">[ Latest test release ]</a><p>')
+            fd.write('[ All versions ]  <a href="CASA_latest/test-report.html">[ Latest test release ]</a><p>')
         else:
-            fd.write('<a href="../CASA/test-report.html">[ All versions ]</a>  [ Latest test release ]<p>')
+            fd.write('<a href="../test-report.html">[ All versions ]</a>  [ Latest test release ]<p>')
 #        fd.write('  <a href="../CASA_230/test-report.html">[ CASA 2.3.0 ]</a>')
 
 #        fd.write('<p>')
@@ -1378,9 +1381,20 @@ class report:
             while line and (len(line) == 0 or line[0] != "/"):
                 #print line
 
+                ###
+                ### workaround the crap that is inserted because the subversion client is too old...
+                ###
+                line.replace("'svn: This client is too old to work with working copy '.'.  You need", "0000000")
+
                 # workarounds for casapyinfo not returning
                 # non-zero on error
                 line = re.sub(" rcasapyinfo.*", "' # changed by report", line)
+                ###
+                ### trailing subversion crap when the client is outdated!
+                ###
+                if re.compile("^to get a newer Subversion client, or to downgrade this working copy."):
+                    lineno += 1
+                    continue
                 if re.compile("^ ").search(line):
                     line = fd.readline().rstrip()
                     lineno += 1
