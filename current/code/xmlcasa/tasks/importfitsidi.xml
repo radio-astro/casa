@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+      <task type="function" name="importfitsidi" category="import/export">
+	<shortdescription>Convert a FITS-IDI file to a CASA visibility data set</shortdescription>
+	<description>Convert a FITS-IDI file to a CASA visiblity data set.
+	</description>
+	<input>
+		<param type="stringArray" mustexist="true" name="fitsidifile">
+			<description>Name(s) of input FITS-IDI file(s)</description>
+			<value></value>
+		</param>
+
+		<param type="string" name="vis">
+			<description>Name of output visibility file (MS)</description>
+			<value></value>
+		</param>
+	</input>
+
+<example>
+	If several files are given, they will be concatenated into one MS.
+
+        Keyword arguments:
+        fitsidifile -- Name(s) of input FITS-IDI file(s)
+                default: none; must be supplied 
+		example='3C273XC1.IDI'
+		example=['3C273XC1.IDI1','3C273XC1.IDI2'] 
+        vis -- Name of output visibility file (MS)
+                default: none; example: vis='3C273XC1.ms'
+        async --  Run asynchronously
+               default = false; do not run asychronously
+
+ </example>
+ </task>
+ </casaxml>
