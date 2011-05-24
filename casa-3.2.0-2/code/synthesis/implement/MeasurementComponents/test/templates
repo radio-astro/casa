@@ -1,2 +1,0 @@
-1000 casa/Arrays/ArrayLogical.cc casa/BasicSL/Complex.h 
-     template Bool allNearAbs(Array<Complex> const &, Array<Complex> const &, Double tol) 

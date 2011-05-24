@@ -1,8 +1,0 @@
-<RCC>
-    <qresource prefix="/" >
-        <file>icons/cross.png</file>
-        <file>icons/spanner.png</file>
-        <file>icons/tick.png</file>
-        <file>icons/hist.png</file>
-    </qresource>
-</RCC>
