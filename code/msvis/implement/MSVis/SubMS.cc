@@ -1536,9 +1536,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
             rangeNum < spwinds_of_uniq_spws[min_k].nelements(); ++rangeNum){
           k = spwinds_of_uniq_spws[min_k][rangeNum];
 
+          Int span = chanStep_p[k] * widths_p[k];
+
           for(Int j = 0; j < nchan_p[k]; ++j){
-            Int inpChan = chanStart_p[k] + j * chanStep_p[k];
-            Int span = widths_p[k] * chanStep_p[k];
+            Int inpChan = chanStart_p[k] + j * span;
 
             if(span > 1){
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
