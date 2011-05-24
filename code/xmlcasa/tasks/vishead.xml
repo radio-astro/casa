@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- Documentation here.                                                -->
+
+<task type="function" name="vishead" category="information, manipulation">
+
+<shortdescription>List, summary, get, and put metadata in a measurement set</shortdescription>
+<description>List, summary, get, and put "header" information in a measurement set.</description>
+
+<input>
+    <param type="string" name="vis" kind="ms" mustexist="true">
+        <description>Name of input visibility file</description>
+        <value></value>
+        <example>vis='ngc5921.ms'</example>
+    </param>
+
+    <param type="string" name="mode">
+        <description>options: list, summary, get, put</description>
+        <allowed kind="enum">
+            <value>list</value>
+            <value>summary</value>
+            <value>get</value>
+            <value>put</value>
+            <value></value> 
+        <!--<value>add</value>
+            <value>del</value>-->
+        </allowed>
+        <value>summary</value>
+        <example>mode=''->'list'; mode='get'</example>
+    </param>
+
+    <param type="stringArray" name="listitems" subparam="true">
+      <description>items to list ([] for all)</description>
+		 <value type="stringArray">
+		   <value type="string">telescope</value>
+		   <value type="string">observer</value>
+		   <value type="string">project</value>
+		   <value type="string">field</value>
+		   <value type="string">freq_group_name</value>
+		   <value type="string">spw_name</value>
+		   <value type="string">schedule</value>
+		   <value type="string">schedule_type</value>
+		   <value type="string">release_date</value>
+		 </value>
+      <example>listitems = ['field', 'ptcs']; see help for list of keywords</example>
+    </param>
+
+    <param type="string" name="hdkey" subparam="true">
+        <description>keyword to get/put</description>
+        <value type="stringArray"></value>
+        <example>hdkey='telescope'; see help for list of keywords</example>
+    </param>
+
+    <param type="string" name="hdindex" subparam="true">
+        <description>keyword index to get/put, counting from zero. ''==>all</description>
+        <value></value>
+        <example>hdindex='3'; see help for list of keywords</example>
+    </param>
+
+    <param type="any" name="hdvalue" subparam="true">
+        <any type="variant"/>
+        <description>value of hdkey</description>
+        <value type="string"></value>
+        <example>hdvalue=['VLA','BIMA']</example>
+    </param>
+
+    <constraints>
+          <when param="mode">
+             <equals type="string" value="list">
+	       <default param="listitems">
+		 <value type="stringArray">
+		   <value type="string">'telescope'</value>
+		   <value type="string">'observer'</value>
+		   <value type="string">'project'</value>
+		   <value type="string">'field'</value>
+		   <value type="string">'freq_group_name'</value>
+		   <value type="string">'spw_name'</value>
+		   <value type="string">'schedule'</value>
+		   <value type="string">'schedule_type'</value>
+		   <value type="string">'release_date'</value>
+		 </value>
+	       </default>
+	     </equals>
+             <equals type="string" value="summary"/>
+             <equals type="string" value="get">
+                   <default param="hdkey"><value type="string"/></default>
+                   <default param="hdindex"><value type="string"/></default>
+             </equals>
+             <equals type="string" value="put">
+                   <default param="hdkey"><value type="string"/></default>
+                   <default param="hdindex"><value type="string"/></default>
+                   <default param="hdvalue"><value type="string"/></default>
+             </equals>
+          </when>
+    </constraints>
+
+</input>
+
+<!-- DIRTY HACK: <description> does not currently (2009-03-10) make it into help or ?,
+                 but <example> does. -->
+<!-- <description> -->
+<example>
+
+        This task allows the user to manipulate some meta-data parameters in a
+        measurement set.  The mode='list' shows those keywords that are
+        presently implemented, with their values.  The contents associated
+        with the keywords can be obtained (get) and changed (put).
+
+        The modes that are available are:
+
+           list    --- List all keywords that are recognized, and list the
+                       value(s) for each.  Only these keywords can be obtained
+                       (get) or changed (put) 
+           summary --- Equivalent to running taskname='listobs'; verbose=F
+           get     --- Get the specified keyword value(s) from the ms
+           put     --- Put the specified keyword value(s) into the ms
+
+        Parameters currently implemented are (June 1, 2009):
+
+           cal_grp              
+           field                 Field names
+           fld_code              Field Observing codes
+           freq_group_name       
+           log                   
+           observer              Observer name
+           project               Project name
+           ptcs                  Phase tracking centers for each field
+           release_date          
+           schedule
+           schedule_type
+           spw_name              Spectral parameters?
+           source_name           Source Names (=Field Names?)
+           telescope             Telescope Name
+
+        Keyword arguments:
+
+        vis  --- Name of input visibility file
+                  default: none, example: vis='my.ms'
+
+        mode --- Mode of operation for vishead
+                  default = 'list'; example: mode='get'
+
+        hdkey--- keyword to get or put from the ms (used in get/put mode only)
+                  ex: hdkey='telescope'
+
+        hdindex--- index (counting from 0) if keyword is an array (used in get/put
+                  mode only)
+                  ex: hdindex='2'; hdindex=''->put/get full array; 
+
+        hdvalue   --- value to be put in the MS (used in put mode only)
+                  ex: hdvalue=array(['MyTelescope'])
+
+<!-- </description> -->
+
+<!-- <example> -->
+        Examples:
+
+           To transfer the parameters to useful python items requires some care.
+
+           taskname = 'vishead'
+           default() 
+           vis = '3C84C.ms'
+           mode = 'get'
+                      
+           to get a field name (string),
+              hdkey = 'field'; hdindex = '2'; hdvalue=vishead(); 
+                       print hdvalue[0] = the name for field='2'                    
+                
+           to get an phase center (number)
+              hdkey = 'ptcs'; hdindex = '1'; hdvalue = vishead();
+                       hdvalue[0][0] gives the ra, hdvalue[0][1] gives the dec in field '1'
+
+
+           taskname = 'vishead'
+           default() 
+           vis = '3C84C.ms'
+           mode = 'put'
+
+          To change a string,
+
+              hdkey = 'field'; hdindex = '2'; hdvalue = 'junk'; vishead()
+                   field='2' is renamed 'junk'
+
+          To change a number, (egs. ra of field=1 to 0.5 radian)
+              is too complicated to figure out!
+             
+
+</example>
+
+</task>
+
+</casaxml>
