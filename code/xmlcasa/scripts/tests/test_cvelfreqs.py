@@ -1800,7 +1800,7 @@ def testvradmode(caseoffset, isDesc):
     testitc()
 
     #################
-    mystart = "-1000m/s"
+    mystart = "-1004m/s"
     mywidth = ""
     ###################
     

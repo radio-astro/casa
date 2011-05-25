@@ -3897,6 +3897,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}
       }
+      else{ // width was not set
+	// for the velocity mode the default t_startIsEnd is True if the sign of width is not known
+	if(t_mode == "velocity"){
+	  t_startIsEnd = True;
+	}
+      }
+
       if(nchan > 0){ // number of output channels was set
 	if(t_mode == "channel_b"){
 	  if(t_cwidth>0){
