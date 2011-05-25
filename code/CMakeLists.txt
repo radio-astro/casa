@@ -156,8 +156,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print
-		     \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
+                     COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; $found = 1; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; $found = 1; break;}}} break if $found; }"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
