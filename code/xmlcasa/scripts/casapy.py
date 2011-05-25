@@ -115,6 +115,7 @@ casa = { 'build': {
          'dirs': {
              'rc': homedir + '/.casa',
              'data': None,
+             'recipes': casadef.python_library_directory+'/recipes',
              'root': None
          },
          'flags': { },
