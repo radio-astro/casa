@@ -44,15 +44,22 @@ Changes FIELD and SOURCE table entries based on user given direction or on POINT
 </input>
 
 <example>
+    This task's main purpose is to correct observations which were performed
+    with correct pointing and correlation but for which incorrect direction
+    information was entered in the FIELD and SOURCE table of the MS.
+    If you actually want to change the phase center of the visibilties in an MS,
+    you should use task fixvis.
+
     Input Parameters
     vis        -- Name of the input visibility set
     
     field      -- field selection string
     
-    fixuvw     -- recalc uvw coordinate? (default: False)
+    fixuvw     -- recalc uvw coordinates? (default: False)
 
     direction  -- if set, don't use pointing table but set direction to this value
-               example: 'J2000 19h30m00 -40d00m00', default= '' (use pointing table)
+                  default= '' (use pointing table)
+                  example: 'J2000 19h30m00 -40d00m00'
 
     refant     -- if using pointing table information, use it from this antenna
                   default: 0 (antenna id 0)
