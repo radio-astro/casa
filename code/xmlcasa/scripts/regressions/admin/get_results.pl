@@ -8,14 +8,20 @@
 # First some global definitions
 #
 
+$sendmail = "/usr/sbin/sendmail";
+$testmanager = 'srankin@nrao.edu';
+
 # Remove hosts, and where to get tests results from
 %dir = ( "el5tst" => "/casa/state/",
 	 "casa-dev-15.aoc.nrao.edu" => "/export/home/casa-dev-15-2/casa-regressions/sresult",
 );
 
+die "no sendmail" unless -x $sendmail;
+
 if (! $prefix ) {
     $prefix = "/export/data/casa-regressions";
 }
+$mail_no = 0;  # global counter
 if (! $mail_dir ) {
     $mail_dir = "$prefix/mail";
     die "no mail directory" unless -d $mail_dir;
@@ -39,8 +45,6 @@ if (! $log_dir ) {
 
 # Orphan test failures go to this email
 $default_email = "drs\@nrao.edu";
-
-$mail_no = 0;  # global counter
 
 $tests_file or die;
 #= "xmlcasa/scripts/regressions/admin/tests_list.txt";
@@ -109,19 +113,19 @@ foreach $host (keys %dir) {
 	}
 
 	if (1 or $dir{$host} ne "/casa/state/")  {
-	    if ($dir{$host} ne "/casa/state/" and $dir{$host} !~ m|/casa-regressions/sresult$| and mysystem("tar zxf result-all.tgz")) {
-		warn "$host: $!";
-		next;
-	    }
+#	    if ($dir{$host} ne "/casa/state/" and $dir{$host} !~ m|/casa-regressions/sresult$| and mysystem("tar zxf result-all.tgz")) {
+#		warn "$host: $!";
+#		next;
+#	    }
 
             $unextracted_size = `gunzip -l result-*tar.gz | awk '{SUM += \$1} END {print SUM}'`;
             chomp($unextracted_size);
 
-            if ($unextracted_size > 100*1024*1024) {
-                warn "$host: data is way too big!";
-                system("/bin/ls -1 *tar.gz 1>&2");
-                next;
-            }
+#            if ($unextracted_size > 100*1024*1024) {
+#                warn "$host: data is way too big!";
+#                system("/bin/ls -1 *tar.gz 1>&2");
+#                next;
+#            }
 
 	    # Wanted to use in the following system call
 	    # tar's --keep-newer-files option
@@ -171,6 +175,69 @@ exit 0;
 
 
 
+### email_address, salutation, testid, svn_rev, type, image, host, casa, tests_file
+sub send_email {
+
+    my $email = shift(@_);
+    my $salutation = shift(@_);
+    my $testid = shift(@_);
+    my $svn_rev = shift(@_);
+    my $type = shift(@_);
+    my $image = shift(@_);
+    my $host = shift(@_);
+    my $casa = shift(@_);
+    my $tests_file = shift(@_);
+
+    my $subrev = $casa;
+    $subrev =~ s|^[^(]+||;
+    $subrev =~ s|\).+$|\)|;
+
+    ++$mail_no;
+    my $email_file = sprintf( "$mail_dir/email%03d.txt", $mail_no );
+
+    unless ( open( SENDMAIL, "> $email_file" ) ) {
+	die "Failed to open $email_file";
+    }
+
+    print SENDMAIL "Reply-to: $testmanager\n";
+    print SENDMAIL "From: CASA Regressions <$testmanager>\n";
+    if ($type ne "exec") {
+	print SENDMAIL "Subject: [Regression] $testid $image-$type $subrev\n";
+    } else {
+	print SENDMAIL "Subject: [Regression] $testid $subrev\n";
+    }
+    print SENDMAIL "To: $email\n";
+    print SENDMAIL "Bcc: Darrell Schiebel <drs\@nrao.edu>, Scott Rankin <srankin\@nrao.edu>\n";
+    print SENDMAIL "Content-type: text/plain\n";
+    print SENDMAIL "\n";
+
+    print SENDMAIL "CASA regression failure: $testid, $casa, $host\n\n";
+
+    print SENDMAIL "Dear $salutation,\n\n";
+    print SENDMAIL "The regression test $testid";
+    if ($type ne "exec") {
+	print SENDMAIL " - $image - $type";
+    }
+    print SENDMAIL " failed on host $host using\n$casa.\n\n";
+    print SENDMAIL "Please check on\n";
+    print SENDMAIL "https://svn.cv.nrao.edu/regressions/CASA_latest/test-report.html#$testid";
+    if ($type eq "exec") {
+	print SENDMAIL " and\nhttps://svn.cv.nrao.edu/regressions/CASA_latest/summary_$testid.html\n";
+    }
+    else {
+	print SENDMAIL "\n";
+    }
+    print SENDMAIL "to confirm and take remedial action.\n";
+    print SENDMAIL "\n";
+    print SENDMAIL "-- \n";
+    print SENDMAIL "This is an automated message, you can reply.\n";
+    print SENDMAIL "You have received this message as contact for $testid according to\n";
+    print SENDMAIL "$tests_file r$svn_rev.\n";
+    unless ( close(SENDMAIL) ) {
+	die "Failed to close $email_file";
+    }
+}
+
 
 sub email_notify 
 {
@@ -208,34 +275,7 @@ sub email_notify
 	    $email = $default_email;
 	}
 
-	#print "Address = '$email'\n";
-
-	$message = "/tmp/message-$$.txt";
-	open FILE, ">$message" or die;
-	
-	print FILE "Dear $email,\n";
-	print FILE "\n";
-	print FILE "The regression test $testid";
-	if ($type ne "exec") {
-	    print FILE " - $image - $type";
-	}
-	print FILE " failed on host $host using\n$casa.\n\n";
-	print FILE "Please check on\n";
-        print FILE "http://www.eso.org/~jmlarsen/ALMA/CASA_latest/test-report.html#$testid";
-	if ($type eq "exec") {
-	    print FILE " and\nhttp://www.eso.org/~jmlarsen/ALMA/CASA/summary_$testid.html\n";
-	}
-	else {
-	    print FILE "\n";
-	}
-	print FILE "to confirm and take remedial action.\n";
-	print FILE "\n";
-	print FILE "-- \n";
-	print FILE "This is an automated message, you can reply.\n";
-	print FILE "You have received this message as contact for $testid according to\n";
-	print FILE "$tests_file r$svn_rev.\n";
-	close FILE or die;
-
+	print "Address = '$email'\n";
 
 	# Filter out here pol* tests where component not found in reference image
 	# (maybe these should not be inserted in the database at all.
@@ -253,36 +293,24 @@ sub email_notify
 	    # This is a spam-preventing check (in case something is wrong with the given path)
 	    # If the script died here and you think $notifications_sent
 	    # points to the correct place, then create an empty file at that location
-	    if (mysystem("grep \"$casa $testid\" $notifications_sent")) {
 #	    if (mysystem("grep \"$casa $testid $image $type\" $notifications_sent")) {
+
+	    if (mysystem("grep \"$casa $testid\" $notifications_sent")) {
+
 		open FILE, ">>$notifications_sent" or die;
 		$ddd = `date -u`; chomp($ddd);
 		print FILE "$ddd: $casa $testid $image $type - $fl\n";
 		close FILE or die;
 
-		$subject = $testid;
-		if ($type ne "exec") {
-		    $subject = "$testid-$image-$type";
-		}
+		send_email( $email, $email, $testid, $svn_rev, $type, $image, $host, $casa, $tests_file );
 
-		$email_file = $mail_dir . "/" . $mail_no . ".email";
-		$mail_no++;
-		open FILE, ">$email_file";
+		print "Sent email notification to $email about $testid\n";
 
-		#print FILE "$email\n";
-		print FILE "drs\@nrao.edu\n";   # for testing without spamming
-
-		print FILE "CASA regression failure: $subject, $casa, $host\n";
-		close FILE or die;
-		mysystem("cat $message >> $email_file");
-		print "Dumped notification to $email_file\n";
-	    }
-	    else {
+	    } else {
 		print "Don't repeat this notification\n";
 	    }
 	}
-	
-	system("/bin/rm $message");
+
     }
 }
 
