@@ -1379,22 +1379,20 @@ class report:
             line = fd.readline().rstrip() ; lineno += 1
             data_file['logfile'] = logfile.split(result_dir)[1].lstrip('/')
             while line and (len(line) == 0 or line[0] != "/"):
-                #print line
-
                 ###
                 ### workaround the crap that is inserted because the subversion client is too old...
                 ###
-                line.replace("'svn: This client is too old to work with working copy '.'.  You need", "0000000")
+                line = line.replace("'svn: This client is too old to work with working copy '.'.  You need", "'$Rev: 4128 $'                           # Data repository version")
+                if line == "to get a newer Subversion client, or to downgrade this working copy." or \
+                       line == "See http://subversion.tigris.org/faq.html#working-copy-format-change" or \
+                       line == "for details.' # Data repository version" :
+                    line = "cruft001             = 330204                                   # cruft from subversion"
 
-                # workarounds for casapyinfo not returning
-                # non-zero on error
+                ###
+                ### workarounds for casapyinfo not returning
+                ### non-zero on error
+                ###
                 line = re.sub(" rcasapyinfo.*", "' # changed by report", line)
-                ###
-                ### trailing subversion crap when the client is outdated!
-                ###
-                if re.compile("^to get a newer Subversion client, or to downgrade this working copy."):
-                    lineno += 1
-                    continue
                 if re.compile("^ ").search(line):
                     line = fd.readline().rstrip()
                     lineno += 1
@@ -1444,9 +1442,11 @@ class report:
                                   'ref_fit1_x', 'ref_fit1_y', 'ref_fit1_fwhm',] }]:
                 for type in req:
                     for key in req[type]:
-                        if data_file['type'] == type and \
-                           data_file['status'] == 'pass' and \
-                           not data_file.has_key(key):
+                        if data_file.has_key('type') and \
+                               data_file.has_key('status') and \
+                               data_file['type'] == type and \
+                               data_file['status'] == 'pass' and \
+                               not data_file.has_key(key):
                             is_valid = False
                             print >> sys.stderr, \
                                   "Warning: %s: type=%s ; missing keys %s" % \
