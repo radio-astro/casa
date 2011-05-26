@@ -539,7 +539,8 @@ class SubMS
               spwind_to_min_spwind_p,
               nchan_p,    // The # of output channels for each range.
               totnchan_p, // The # of output channels for each output spw.
-              chanStart_p,
+              chanStart_p, // 1st input channel index in a selection.
+              chanEnd_p,   // last input channel index in a selection.
               chanStep_p, // Increment between input chans, i.e. if 3, only every third
                           // input channel will be used. 
               widths_p,   // # of input chans per output chan for each range.

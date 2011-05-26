@@ -188,8 +188,11 @@ namespace casa {
     if(chansel.nrow() > 0) {         // Use myspwstr if it selected anything...
       spw_p       = chansel.column(0);
       chanStart_p = chansel.column(1);
-      nchan_p     = chansel.column(2);
+      chanEnd_p   = chansel.column(2);
       chanStep_p  = chansel.column(3);
+
+      uInt nspw = chanEnd_p.nelements();
+      nchan_p.resize(nspw);
 
       // A single width is a default, but multiple widths should be used
       // literally.
@@ -201,30 +204,28 @@ namespace casa {
       }
 
       // Copy the default width to all spws.
-      if(widths_p.nelements() < spw_p.nelements()){
-        widths_p.resize(spw_p.nelements(), True);
-        for(uInt k = 1; k < spw_p.nelements(); ++k)
+      if(widths_p.nelements() < nspw){
+        widths_p.resize(nspw, True);
+        for(uInt k = 1; k < nspw; ++k)
           widths_p[k] = widths_p[0];
       }
 
-      // SubMS uses a different meaning for nchan_p from MSSelection.  For
-      // SubMS it is the # of output channels for each output spw.  For
-      // MSSelection it is end input chan for each output spw.
-      for(uInt k = 0; k < nchan_p.nelements(); ++k){
+      for(uInt k = 0; k < nspw; ++k){
 	if(chanStep_p[k] == 0)	// CAS-2224, triggered by spw='0:2'
 	  chanStep_p[k] = 1;	// (as opposed to '0:2~2').
 	
-        if((nchan_p[k] + 1) % (chanStep_p[k] * widths_p[k]) != 0)
-          os << LogIO::WARN
-             << "The number of selected channels, " << nchan_p[k]
-             << ", for spw " << spw_p[k] << " is not a multiple of the increment, "
-             << chanStep_p[k] * widths_p[k] << ".\n"
-             << "The reported width and frequency of the final channel may be"
-             << "\noff by a fraction of a channel width.\n"
-             << "(This is being worked on.)"
-             << LogIO::POST;
+        // if((nchan_p[k] - chanStart_p[k] + 1) % (chanStep_p[k] * widths_p[k]) != 0)
+        //   os << LogIO::WARN
+        //      << "The number of selected channels, " << nchan_p[k]
+        //      << ", for spw " << spw_p[k] << " is not a multiple of the increment, "
+        //      << chanStep_p[k] * widths_p[k] << ".\n"
+        //      << "The reported width and frequency of the final channel may be"
+        //      << "\noff by a fraction of a channel width.\n"
+        //      << "(This is being worked on.)"
+        //      << LogIO::POST;
 
-        nchan_p[k] = 1 + (nchan_p[k] - chanStart_p[k]) / (chanStep_p[k] * widths_p[k]);
+        nchan_p[k] = 1 + (chanEnd_p[k] -
+                          chanStart_p[k]) / (chanStep_p[k] * widths_p[k]);
         if(nchan_p[k] < 1)
           nchan_p[k] = 1;
       }
@@ -232,6 +233,8 @@ namespace casa {
     else{                            // select everything and rely on widths.
       ROMSSpWindowColumns mySpwTab(ms_p.spectralWindow());
       uInt nspw = mySpwTab.nrow();
+
+      nchan_p = mySpwTab.numChan().getColumn();
       
       spw_p.resize(nspw);
       indgen(spw_p);
@@ -240,6 +243,7 @@ namespace casa {
       chanStep_p.resize(nspw);
       for(uInt k = 0; k < nspw; ++k){
         chanStart_p[k] = 0;
+        chanEnd_p[k]   = nchan_p[k] - 1;
         chanStep_p[k]  = 1;
       }
 
@@ -257,17 +261,16 @@ namespace casa {
         }
       }
 
-      nchan_p = mySpwTab.numChan().getColumn();
       for(uInt k = 0; k < nspw; ++k){
-        if((nchan_p[k] + 1) % (chanStep_p[k] * widths_p[k]) != 0)
-          os << LogIO::WARN
-             << "The number of selected channels, " << nchan_p[k]
-             << ", for spw " << spw_p[k] << " is not a multiple of the increment, "
-             << chanStep_p[k] * widths_p[k] << ".\n"
-             << "The reported width and frequency of the final channel may be"
-             << "\noff by a fraction of a channel width.\n"
-             << "(This is being worked on.)"
-             << LogIO::POST;
+        // if((nchan_p[k] + 1) % (chanStep_p[k] * widths_p[k]) != 0)
+        //   os << LogIO::WARN
+        //      << "The number of selected channels, " << nchan_p[k]
+        //      << ", for spw " << spw_p[k] << " is not a multiple of the increment, "
+        //      << chanStep_p[k] * widths_p[k] << ".\n"
+        //      << "The reported width and frequency of the final channel may be"
+        //      << "\noff by a fraction of a channel width.\n"
+        //      << "(This is being worked on.)"
+        //      << LogIO::POST;
 
         nchan_p[k] = 1 + (nchan_p[k] - 1) / widths_p[k];
       }
@@ -301,6 +304,7 @@ namespace casa {
       uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
       Vector<Int> spwc(ngoodSelSpwSlots);
       Vector<Int> chanStartc(ngoodSelSpwSlots);
+      Vector<Int> chanEndc(ngoodSelSpwSlots);
       Vector<Int> nchanc(ngoodSelSpwSlots);
       Vector<Int> chanStepc(ngoodSelSpwSlots);
       std::set<Int>::iterator bsend = badSelSpwSlots.end();
@@ -310,6 +314,7 @@ namespace casa {
         if(badSelSpwSlots.find(k) == bsend){
           spwc[j]       = spw_p[k];
           chanStartc[j] = chanStart_p[k];
+          chanEndc[j]   = chanEnd_p[k];
           nchanc[j]     = nchan_p[k];
           chanStepc[j]  = chanStep_p[k];
           ++j;
@@ -319,6 +324,8 @@ namespace casa {
       spw_p = spwc;
       chanStart_p.resize(ngoodSelSpwSlots);
       chanStart_p = chanStartc;
+      chanEnd_p.resize(ngoodSelSpwSlots);
+      chanEnd_p = chanEndc;
       nchan_p.resize(ngoodSelSpwSlots);
       nchan_p = nchanc;
       chanStep_p.resize(ngoodSelSpwSlots);
@@ -367,6 +374,9 @@ namespace casa {
     nchan_p = nchan;
     chanStart_p.resize();
     chanStart_p = start;
+    chanEnd_p.resize(spw_p.nelements());
+    for(uInt k =0; k < spw_p.nelements(); ++k)
+      chanEnd_p[k] = nchan[k] - 1;
     chanStep_p.resize();
     chanStep_p = step;
     // check for defaults
@@ -378,6 +388,7 @@ namespace casa {
 	  nchan_p[k]=mySpwTab.numChan()(spw_p[k]);
 	else
 	  nchan_p[k]=nchan[0];
+        chanEnd_p[k] = nchan_p[k] - 1;
       }
       chanStart_p.resize(spw_p.nelements());
       chanStep_p.resize(spw_p.nelements());
@@ -1518,6 +1529,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
       if(spwinds_of_uniq_spws[min_k].nelements() > 1 ||
          nchan_p[k] != numChan(spw_p[k])){
+        Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
 	Int nOutChan = totnchan_p[min_k];
         Vector<Double> chanFreqOut(nOutChan);
         Vector<Double> chanFreqIn = chanFreq(spw_uniq_p[min_k]);
@@ -1526,7 +1538,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         Vector<Double> spwResolOut(nOutChan);
         Vector<Double> spwResolIn = spwResol(spw_uniq_p[min_k]);
         Vector<Double> effBWOut(nOutChan);
-        Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
         Int outChan = 0;
 
         keepShape_p = false;
@@ -1542,12 +1553,24 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
             Int inpChan = chanStart_p[k] + j * span;
 
             if(span > 1){
-              chanFreqOut[outChan] = (chanFreqIn[inpChan] +
-                                      chanFreqIn[inpChan + span - 1]) / 2;
-              spwResolOut[outChan] = spwResolIn[inpChan] * span;
-              chanWidthOut[outChan] = chanWidthIn[inpChan] * widths_p[k];
+              Int lastChan = inpChan + span - 1;
 
-              for(Int avgChan = inpChan; avgChan < inpChan + span;
+              if(lastChan > chanEnd_p[k])
+                // The averaging width is not a factor of the number of
+                // selected input channels, so the last output bin receives
+                // fewer input channels than the other bins.
+                lastChan = chanEnd_p[k];
+
+              chanFreqOut[outChan] = (chanFreqIn[inpChan] +
+                                      chanFreqIn[lastChan]) / 2;
+              Double sep = chanFreqIn[lastChan] - chanFreqIn[inpChan];
+              chanWidthOut[outChan] = sep + 0.5 * (chanWidthIn[inpChan] +
+                                                   chanWidthIn[lastChan]);
+              spwResolOut[outChan] = 0.5 * (spwResolIn[inpChan] +
+                                            spwResolIn[lastChan])
+                                     + abs(sep);
+
+              for(Int avgChan = inpChan; avgChan <= lastChan;
                   avgChan += chanStep_p[k])
                 effBWOut[outChan] += effBWIn[avgChan];
             }
@@ -1563,7 +1586,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         --outChan;
         
         Double totalBW = chanFreqOut[outChan] - chanFreqOut[0] +
-          0.5 * (spwResolOut[outChan] + spwResolOut[0]);
+          0.5 * (effBWOut[outChan] + effBWOut[0]);
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
         msSpW.resolution().put(min_k, spwResolOut);
@@ -3897,6 +3920,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  }
 	}
       }
+      else{ // width was not set
+	// for the velocity mode the default t_startIsEnd is True if the sign of width is not known
+	if(t_mode == "velocity"){
+	  t_startIsEnd = True;
+	}
+      }
+
       if(nchan > 0){ // number of output channels was set
 	if(t_mode == "channel_b"){
 	  if(t_cwidth>0){

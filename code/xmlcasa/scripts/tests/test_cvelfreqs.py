@@ -1799,6 +1799,14 @@ def testvradmode(caseoffset, isDesc):
 
     testitc()
 
+    #################
+    mystart = "-1004m/s"
+    mywidth = ""
+    ###################
+    
+    mycase = caseoffset + 21
+    myspwids = [0]
+    mynchan = 5
 
 ### end function testvradmode() #########
 
