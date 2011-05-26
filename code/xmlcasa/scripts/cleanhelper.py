@@ -2173,8 +2173,11 @@ class cleanhelper:
                 reverse=False
         else: #ascending data
           # depends on sign of width only
+          # with CAS-3117 latest change(rev.15179), velocity start
+          # means lowest velocity for default width
           if width=="" and mode=="velocity": #default width
-              reverse=True
+              # ms.cvelfreqs returns correct order so no reversing
+              reverse=False
           elif type(width)==str:
             if width.lstrip().find('-')==0:
                 reverse=True
