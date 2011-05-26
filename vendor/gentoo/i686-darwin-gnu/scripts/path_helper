@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# Each line of the text files in $EPREFIX/config/paths are directories
+#  that should beadded to the current path.
+#
+# date: Thu Mar 12 10:08:29 MDT 2009
+
+
+PATH=""
+MANPATH=""
+
+shopt -s extglob
+
+function read_path_dir () {
+DIR="$1"
+NEWPATH="$2"
+LPATH="$3"
+SEP=""
+IFS=$'\n'
+for f in "$DIR" "$DIR".d/* ; do
+	for p in $(< "$f") ; do
+		p=$(eval "echo $p")                              # allow shell notation inside the paths files -- security risk?
+		[[ "$NEWPATH" = *(*:)${p}*(:*) ]] && continue    # skip duplicate entries
+		[ ! -z "$NEWPATH" ] && SEP=":"
+		if [ -z "$LPATH" ]; then
+			NEWPATH="${NEWPATH}${SEP}${p}"
+		else
+			NEWPATH="${p}${SEP}${NEWPATH}"
+		fi
+	done
+done 2> /dev/null
+echo $NEWPATH
+}
+
+P=`read_path_dir  /etc/paths    "$PATH"`
+MP=`read_path_dir /etc/manpaths "$MANPATH"`
+
+if [ -z "$EPREFIX" ]; then
+	cd "$(/usr/bin/dirname $0)/.."
+	[ -d "root" ] || mkdir root
+	GENTOOD="${PWD}"
+	EPREFIX="${PWD}/root"
+	cd - &> /dev/null
+fi
+
+P=$( read_path_dir "${GENTOOD}/config/paths"    "$P"  "first")
+MP=$(read_path_dir "${GENTOOD}/config/manpaths" "$MP" "first")
+
+if [ "$1" == "-c" -o \( -z "$1" -a "${SHELL%csh}" != "$SHELL" \) ]; then
+	echo setenv EPREFIX \"$EPREFIX\"
+	echo setenv PATH \"$P\"\;
+	echo setenv MANPATH \"$MP\"\;
+	exit 0
+elif [ "$1" == "-s" -o -z "$1" ]; then
+	echo EPREFIX=\"$EPREFIX\"
+	echo PATH=\"$P\"\; export PATH;
+	echo MANPATH=\"$MP\"\; export MANPATH;
+	exit 0
+else
+	echo "usage: path_helper [-c | -s]" 1>&2
+	exit 1
+fi

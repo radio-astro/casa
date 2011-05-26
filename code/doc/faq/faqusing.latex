@@ -1,0 +1,306 @@
+\documentclass{article}
+\usepackage{html}
+\pagestyle{empty}
+
+\externallabels{../../user/Utility}{../../user/Utility/labels.pl}
+\externallabels{../../user/General}{../../user/General/labels.pl}
+\externallabels{../../user/Display}{../../user/Display/labels.pl}
+\externallabels{../../user/Dish}{../../user/Dish/labels.pl}
+\externallabels{../../user/SynthesisRef}{../../user/SynthesisRef/labels.pl}
+\externallabels{../../user/ATNF}{../../user/ATNF/labels.pl}
+\externallabels{../../user/NFRA}{../../user/NFRA/labels.pl}
+\externallabels{../../user/NRAO}{../../user/NRAO/labels.pl}
+\externallabels{../../reference/Glish}{../../reference/Glish/labels.pl}
+
+\begin{document}
+
+
+{\large \textbf{Frequenty Asked Questions About Using \textsf{AIPS++}}}
+
+
+\begin{enumerate}
+
+\item {\htmlref{When I type a command, all that happens is that I see line after line of \textit{Glish} code.}{Question 1:}}
+
+\item {\htmlref{When I type \texttt{Imager()}, I get an error.}{Question 2:}}
+
+\item {\htmlref{When I type \texttt{x=1}, \textit{Glish} complains about error, parse error at or near \texttt{'='}.}{Question 3:}}
+
+
+\item {\htmlref{When I try to set a string, \textit{Glish} complains.}{Question 4:}}
+ 
+
+\item {\htmlref{I get too much output if I mistakenly type the name of an array.}{Question 5:}}
+
+\item {\htmlref{Strange things happen if I use double quotes around strings.}{Question 6:}}
+
+\item {\htmlref{When I start \textsf{AIPS++} and type ahead, strange things happen.}{Question 7:}}
+
+\item {\htmlref{Some commands don't do what I expect: \texttt{doit(shift=t)}.}{Question 8:}}
+
+\item {\htmlref{How do I run something in the background?}{Question 9:}}
+
+\item {\htmlref{How do I stop something?}{Question 10:}}
+
+\item {\htmlref{AIPS++ is very sloooowwwwww...}{Question 11:}}
+
+\item {\htmlref{How do I copy or rename an Image or MeasurementSet?}{Question 12:}}
+
+\item {\htmlref{How do I make notes in the log?}{Question 13:}}
+
+\item {\htmlref{How can I customize AIPS++ on startup?}{Question 14:}}
+
+\item {\htmlref{The display looks empty.}{Question 15:}}
+
+\item {\htmlref{How do I change directory in Glish?}{Question 16:}}
+
+\item {\htmlref{Why is the Glish prompt sometimes \texttt{-} and sometimes \texttt{+}?}{Question 17:}}
+
+\item {\htmlref{Why do the contents of AIPS++  windows
+sometimes behave strangely after the window is resized?}{Question 18:}}
+
+\item {\htmlref{My display seems to have frozen up, but the Command Line window is still working.}{Question 19:}}
+
+\item {\htmlref{AIPS++ just hangs, now what?.}{Question 20:}}
+
+\end{enumerate}
+
+
+
+\begin{description}
+
+\item[Q:1
+\label{Question 1:}When I type a command, all that happens is that I see line after line of Glish  code.]
+
+Remember to put brackets () after the command. The name of the
+function alone is a valid \textit{Glish} variable that can be passed around
+just as any other variable. We use this capability extensively in the
+\textit{Glish} code.
+
+\vspace{.2in}
+
+\item[Q:2
+\label{Question 2:}When I type \texttt{Imager()}, I get an error.]
+
+\textsf{AIPS++} is case-sensitive, so in this example you need to type
+\texttt{imager()}.  The convention is that names of functions should always be
+lower case, and that different words in a composite name run into each
+other without, for examples, underscores to delineate them.
+
+
+\item[Q:3 
+\label{Question 3:}When I type \texttt{x=1}, \textit{Glish} complains about error, parse error at or near \texttt{'='}.]
+
+Remember that \textit{Glish} needs a colon for assignment: \texttt{x:=1}. The single
+equals is reserved for default arguments. (No, we don't particularly
+like this feature either). 
+
+\item[Q:4
+\label{Question 4:}When I try to set a string, \textit{Glish} complains.]
+
+
+Remember that \textit{Glish}  needs (single) quotes around strings. 
+
+\begin{verbatim}
+     - file:=3C84.MS                             
+                  # Incorrect
+     error, parse error at or near 'C84'
+     warning, uninitialized global variable MS used
+     F 
+     - file:='3C84.MS'                           
+                  # Correct
+
+\end{verbatim}
+
+\item[Q:5
+\label{Question 5:}I get too much output if I mistakenly type the name of an array:]
+
+\textit{Glish} assumes that you really want to see what you type. So if you
+type an array name then the whole thing can be dumped to the
+screen. You can limit the output per array: 
+
+\begin{verbatim}
+     a:=array(0.0, 100, 100)
+     a::print.limit:=10
+\end{verbatim}
+
+     Or, more usually, for all output: 
+\begin{verbatim}
+     system.print.limit:=10
+\end{verbatim}
+
+\item[Q:6
+\label{Question 6:}Strange things happen if I use double quotes around strings.]
+
+The double quote tells \textit{Glish} to split the enclosed string into a
+vector of strings, one for each full word, whereas single quotes
+preserve the entire string as one element. This can affect tests for
+equality in \textit{Glish} code. We try to avoid this error in our code but to
+be safe you should always use single quotes. 
+
+\item[Q:7
+\label{Question 7:}When I start AIPS++ and type ahead, strange things happen.]
+
+Wait until you see a - prompt. \textit{Glish} processes include files in the
+background and can accept inputs while doing so although the result
+may not be reasonable. So it's best to be polite and wait. Here is an
+example of what can happen: 
+
+\begin{verbatim}
+     aips++
+     x:=1
+     "logger.g", line 330: warning$: 
+      no events have been received
+     "logger.g", line 330: error, 
+      non-string type in coercion of <fail>
+\end{verbatim}
+
+\item[Q:8
+\label{Question 8:}Some commands don't do what I expect: \texttt{doit(shift=t)}.]
+
+The documentation says to use \texttt{shift=T}. \textbf{t} is not the same as \texttt{T} (the
+true symbol in \textit{Glish}).In fact, since t is undefined, it is created and
+assigned a value of \texttt{F} (the False symbol), thus doing the opposite of
+what you expected! 
+
+\item[Q:9
+\label{Question 9:}How do I run something in the background?]
+
+Some \texttt{tools} support this via the global \texttt{dowait} variable. See for
+example, Image or Imager. The GUI also allows this.
+
+\item[Q:10
+\label{Question 10:}How do I stop something?]
+
+Control-\texttt{c} will stop a \textit{Glish} function from running. GUI functions can
+be stopped by pressing the \textsf{abort} button. 
+
+\item[Q:11
+\label{Question 11:}AIPS++ is very sloooowwwwww...]
+
+\textsf{AIPS++}  is designed to run well on a canonical machine which is a Sparc
+4 or Ultra or 200 MHz Pentium Pro class machine with 64 Mbytes of
+memory or more. It will run very slowly on a 32MByte Sparc IPX, for
+example, swapping a lot. The best way to check memory availability is
+to use a system utility such as top on Solaris machines. 
+
+\item[Q:12
+\label{Question 12:}How do I copy or rename an Image or MeasurementSet?]
+
+For any Table, you can use \texttt{tablecopy} or \texttt{tablerename}. The \texttt{Catalog}
+tool will also do this, with the option of using a GUI. 
+
+
+\item[Q:13
+\label{Question 13:}How do I make notes in the log?]
+
+Use the logger.note. 
+
+\begin{verbatim}
+     dl.note('Forgot robust weighting - 
+     repeating deconvolution')
+\end{verbatim}
+
+\item[Q:14
+\label{Question 14:}How can I customize AIPS++ on startup?]
+
+There are two possibilities: 
+
+\begin{verbatim}
+     .glishrc 
+\end{verbatim}
+
+         A \textit{Glish} defaults file, \textit{.glishrc}, can be located in your home
+         directory. The \textit{.glishrc}  file can be used to customize \textit{Glish},
+         such as to set search paths for \textit{Glish} scripts, to set default
+         precision on output, to start particular packages, etc. It
+         can contain any valid \textit{Glish} command. The two most important
+         uses are tell \textit{Glish} to use a particular directory for the
+         search path for include files, and to limit the amount of
+         output that \textit{Glish} sends to the screen:
+
+\begin{verbatim}         
+system.path.include:=
+          '. /home/tarzan/tcornwel/aips++/libexec 
+/aips++/beta/sun4sol_gnu/libexec'
+system.print.limit:=10
+\end{verbatim}
+
+         \textit{.aipsrc} An \textsf{AIPS++} defaults file, \textit{.aipsrc}, can be located in
+         your home directory. This is used to hold global choices and
+         information.
+
+         For example:
+ 
+\begin{verbatim}
+catalog.default: gui          
+          #start a GUI catalog on startup
+		
+measures.default: gui       
+          #start a GUI measures on startup
+          
+logger.default: screen       
+          #use the screen for Logger messages
+          
+aipsview.numcolors: 200   
+          #use 200 colors in Aips View palette
+\end{verbatim}
+
+
+\item[Q:15
+\label{Question 15:}The display looks empty.]
+
+Perhaps Netscape has gobbled up all the color table. You have two
+choices, either stop Netscape and restart it with the -install
+command-line option to require a private color map, or specify aipsrc
+variables to start Aips View with a smaller number of colors (see
+display). 
+
+
+\item[Q:16
+\label{Question 16:}How do I change directory in \textit{Glish}?]
+
+You can't at the moment. Instead, you'll have to exit from \textit{Glish}, \texttt{cd}
+at the system prompt, and then restart \textsf{AIPS++}. An alternative is use
+file names with directories specified. We will add capabilitity to
+change directory in the future. 
+
+\item[Q:17
+\label{Question 17:}Why is the Glish prompt sometimes \texttt{-} and sometimes \texttt{+}?]
+
+The statement that you entered is ambiguous. Usually entering a simple
+semi-colon will resolve it.
+
+\item[Q:18
+\label{Question 18:}Why do the contents of the AIPS++
+windows sometimes behave strangely after the window is resized?]
+
+It is a "feature" of the Tk widget set that we use.  Once any window is resized, the new size is
+taken to be fixed, and any subsequent changes to the contents are constrained to fit within
+the window size, instead of expanding it as necessary.  The workaround is not to resize 
+windows unless necessary.
+
+\item[Q:19
+\label{Question 19:}My display seems to have frozen up, but the Command
+Line window is still working.]
+
+A logic error in a GUI can result in this.  First, at the Command Line window, type:
+
+\begin{verbatim}
+tk_release()
+\end{verbatim}
+
+Try this a few times to see if the displays unfreeze.  If so, then please submit a bug 
+report if you think you know under what conditions the freeze occurred.
+
+\item[Q:20
+\label{Question 20:}AIPS++ just hangs, now what?.]
+Check that lockd is running on your NFS server.
+\end{description}
+
+Please E-mail any comments or questions about \textsf{AIPS++} to
+\texttt{aips2-request@nrao.edu.}
+
+\textit{Copyright 1995-2000,2002 Associated Universities Inc.,
+Washington, D.C.}
+\end{document}

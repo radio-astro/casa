@@ -1,0 +1,5 @@
+${EPREFIX:-/opt/gentoo/root}/usr/bin
+${EPREFIX:-/opt/gentoo/root}/usr/sbin
+${EPREFIX:-/opt/gentoo/root}/bin
+${EPREFIX:-/opt/gentoo/root}/sbin
+${EPREFIX:-/opt/gentoo/root}/usr/X11/bin

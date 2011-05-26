@@ -1,0 +1,304 @@
+#
+# CASA - Common Astronomy Software Applications
+# Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
+#
+# This file is part of CASA.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+add_definitions( -DWITHOUT_ACS )
+
+if( APPLE AND
+    NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
+    NOT _gcc_machine MATCHES x86_64 )
+  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586" )
+endif()
+
+casa_add_library( oldalma
+  implement/ASDM/AlmaRadiometerRow.cc
+  implement/ASDM/AlmaRadiometerTable.cc
+  implement/ASDM/Angle.cc
+  implement/ASDM/AngularRate.cc
+  implement/ASDM/AnnotationRow.cc
+  implement/ASDM/AnnotationTable.cc
+  implement/ASDM/AntennaRow.cc
+  implement/ASDM/AntennaTable.cc
+  implement/ASDM/ArrayTime.cc
+  implement/ASDM/ArrayTimeInterval.cc
+  implement/ASDM/ASDM.cc
+  implement/ASDM/Base64.cc
+  implement/ASDM/BeamRow.cc
+  implement/ASDM/BeamTable.cc
+  implement/ASDMBinaries/BaselineMetadata.cc
+  implement/ASDMBinaries/BaselinesSet.cc
+  implement/ASDMBinaries/DataDescriptionsSet.cc
+  implement/ASDMBinaries/Error.cc
+  implement/ASDMBinaries/Integration.cc
+  implement/ASDMBinaries/SDMBinData.cc
+  implement/ASDMBinaries/SDMDataObject.cc
+  implement/ASDMBinaries/SDMDataObjectParser.cc
+  implement/ASDMBinaries/SDMDataObjectReader.cc
+  implement/ASDMBinaries/SDMDataObjectWriter.cc
+  implement/ASDMBinaries/SwitchCyclesList.cc
+  implement/ASDM/Boolean.cc
+  implement/ASDM/Byte.cc
+  implement/ASDM/CalAmpliRow.cc
+  implement/ASDM/CalAmpliTable.cc
+  implement/ASDM/CalAtmosphereRow.cc
+  implement/ASDM/CalAtmosphereTable.cc
+  implement/ASDM/CalBandpassRow.cc
+  implement/ASDM/CalBandpassTable.cc
+  implement/ASDM/CalCurveRow.cc
+  implement/ASDM/CalCurveTable.cc
+  implement/ASDM/CalDataRow.cc
+  implement/ASDM/CalDataTable.cc
+  implement/ASDM/CalDelayRow.cc
+  implement/ASDM/CalDelayTable.cc
+  implement/ASDM/CalDeviceRow.cc
+  implement/ASDM/CalDeviceTable.cc
+  implement/ASDM/CalFluxRow.cc
+  implement/ASDM/CalFluxTable.cc
+  implement/ASDM/CalFocusModelRow.cc
+  implement/ASDM/CalFocusModelTable.cc
+  implement/ASDM/CalFocusRow.cc
+  implement/ASDM/CalFocusTable.cc
+  implement/ASDM/CalGainRow.cc
+  implement/ASDM/CalGainTable.cc
+  implement/ASDM/CalHolographyRow.cc
+  implement/ASDM/CalHolographyTable.cc
+  implement/ASDM/CalPhaseRow.cc
+  implement/ASDM/CalPhaseTable.cc
+  implement/ASDM/CalPointingModelRow.cc
+  implement/ASDM/CalPointingModelTable.cc
+  implement/ASDM/CalPointingRow.cc
+  implement/ASDM/CalPointingTable.cc
+  implement/ASDM/CalPositionRow.cc
+  implement/ASDM/CalPositionTable.cc
+  implement/ASDM/CalPrimaryBeamRow.cc
+  implement/ASDM/CalPrimaryBeamTable.cc
+  implement/ASDM/CalReductionRow.cc
+  implement/ASDM/CalReductionTable.cc
+  implement/ASDM/CalSeeingRow.cc
+  implement/ASDM/CalSeeingTable.cc
+  implement/ASDM/CalWVRRow.cc
+  implement/ASDM/CalWVRTable.cc
+  implement/ASDM/Character.cc
+  implement/ASDM/Complex.cc
+  implement/ASDM/ConfigDescriptionRow.cc
+  implement/ASDM/ConfigDescriptionTable.cc
+  implement/ASDM/CorrelatorModeRow.cc
+  implement/ASDM/CorrelatorModeTable.cc
+  implement/ASDM/DataDescriptionRow.cc
+  implement/ASDM/DataDescriptionTable.cc
+  implement/ASDM/DopplerRow.cc
+  implement/ASDM/DopplerTable.cc
+  implement/ASDM/Double.cc
+  implement/ASDM/EndianStream.cc
+  implement/ASDM/Entity.cc
+  implement/ASDM/EntityId.cc
+  implement/ASDM/EntityRef.cc
+  implement/ASDM/EnumerationParser.cc
+  implement/ASDM/EphemerisRow.cc
+  implement/ASDM/EphemerisTable.cc
+  implement/ASDM/ExecBlockRow.cc
+  implement/ASDM/ExecBlockTable.cc
+  implement/ASDM/FeedRow.cc
+  implement/ASDM/FeedTable.cc
+  implement/ASDM/FieldRow.cc
+  implement/ASDM/FieldTable.cc
+  implement/ASDM/FlagCmdRow.cc
+  implement/ASDM/FlagCmdTable.cc
+  implement/ASDM/Float.cc
+  implement/ASDM/Flux.cc
+  implement/ASDM/FocusModelRow.cc
+  implement/ASDM/FocusModelTable.cc
+  implement/ASDM/FocusRow.cc
+  implement/ASDM/FocusTable.cc
+  implement/ASDM/FreqOffsetRow.cc
+  implement/ASDM/FreqOffsetTable.cc
+  implement/ASDM/Frequency.cc
+  implement/ASDM/GainTrackingRow.cc
+  implement/ASDM/GainTrackingTable.cc
+  implement/ASDM/HistoryRow.cc
+  implement/ASDM/HistoryTable.cc
+  implement/ASDM/HolographyRow.cc
+  implement/ASDM/HolographyTable.cc
+  implement/ASDM/Humidity.cc
+  implement/ASDM/Integer.cc
+  implement/ASDM/Interval.cc
+  implement/ASDM/Length.cc
+  implement/ASDM/Long.cc
+  implement/ASDM/MainRow.cc
+  implement/ASDM/MainTable.cc
+  implement/ASDM/Merger.cc
+  implement/ASDM/Misc.cc
+  implement/ASDM/ObservationRow.cc
+  implement/ASDM/ObservationTable.cc
+  implement/ASDM/Parser.cc
+  implement/ASDM/PartId.cc
+  implement/ASDM/PointingModelRow.cc
+  implement/ASDM/PointingModelTable.cc
+  implement/ASDM/PointingRow.cc
+  implement/ASDM/PointingTable.cc
+  implement/ASDM/PolarizationRow.cc
+  implement/ASDM/PolarizationTable.cc
+  implement/ASDM/Pressure.cc
+  implement/ASDM/ProcessorRow.cc
+  implement/ASDM/ProcessorTable.cc
+  implement/ASDM/ReceiverRow.cc
+  implement/ASDM/ReceiverTable.cc
+  implement/ASDM/SBSummaryRow.cc
+  implement/ASDM/SBSummaryTable.cc
+  implement/ASDM/ScanRow.cc
+  implement/ASDM/ScanTable.cc
+  implement/ASDM/SeeingRow.cc
+  implement/ASDM/SeeingTable.cc
+  implement/ASDM/Short.cc
+  implement/ASDM/SourceParameterRow.cc
+  implement/ASDM/SourceParameterTable.cc
+  implement/ASDM/SourceRow.cc
+  implement/ASDM/SourceTable.cc
+  implement/ASDM/SpectralWindowRow.cc
+  implement/ASDM/SpectralWindowTable.cc
+  implement/ASDM/Speed.cc
+  implement/ASDM/SquareLawDetectorRow.cc
+  implement/ASDM/SquareLawDetectorTable.cc
+  implement/ASDM/StateRow.cc
+  implement/ASDM/StateTable.cc
+  implement/ASDM/StationRow.cc
+  implement/ASDM/StationTable.cc
+  implement/ASDM/StringTokenizer.cc
+  implement/ASDM/SubscanRow.cc
+  implement/ASDM/SubscanTable.cc
+  implement/ASDM/SwitchCycleRow.cc
+  implement/ASDM/SwitchCycleTable.cc
+  implement/ASDM/SysCalRow.cc
+  implement/ASDM/SysCalTable.cc
+  implement/ASDM/Tag.cc
+  implement/ASDM/TagType.cc
+  implement/ASDM/Temperature.cc
+  implement/ASDM/TotalPowerRow.cc
+  implement/ASDM/TotalPowerTable.cc
+  implement/ASDM/WeatherRow.cc
+  implement/ASDM/WeatherTable.cc
+  implement/ASDM/WVMCalRow.cc
+  implement/ASDM/WVMCalTable.cc
+  implement/Enumerations/CACAPolarization.cc
+  implement/Enumerations/CAccumMode.cc
+  implement/Enumerations/CAntennaMake.cc
+  implement/Enumerations/CAntennaType.cc
+  implement/Enumerations/CAssociatedCalNature.cc
+  implement/Enumerations/CAssociatedFieldNature.cc
+  implement/Enumerations/CAtmPhaseCorrection.cc
+  implement/Enumerations/CAxisName.cc
+  implement/Enumerations/CBasebandName.cc
+  implement/Enumerations/CCalCurveType.cc
+  implement/Enumerations/CCalDataOrigin.cc
+  implement/Enumerations/CCalibrationDevice.cc
+  implement/Enumerations/CCalibrationMode.cc
+  implement/Enumerations/CCalType.cc
+  implement/Enumerations/CCorrelationBit.cc
+  implement/Enumerations/CCorrelationMode.cc
+  implement/Enumerations/CCorrelatorCalibration.cc
+  implement/Enumerations/CCorrelatorName.cc
+  implement/Enumerations/CDataContent.cc
+  implement/Enumerations/CDetectorBandType.cc
+  implement/Enumerations/CFieldCode.cc
+  implement/Enumerations/CFilterMode.cc
+  implement/Enumerations/CFluxCalibrationMethod.cc
+  implement/Enumerations/CFocusMethod.cc
+  implement/Enumerations/CHolographyChannelType.cc
+  implement/Enumerations/CInvalidatingCondition.cc
+  implement/Enumerations/CNetSideband.cc
+  implement/Enumerations/CPointingMethod.cc
+  implement/Enumerations/CPointingModelMode.cc
+  implement/Enumerations/CPolarizationType.cc
+  implement/Enumerations/CPositionMethod.cc
+  implement/Enumerations/CPrimitiveDataType.cc
+  implement/Enumerations/CProcessorSubType.cc
+  implement/Enumerations/CProcessorType.cc
+  implement/Enumerations/CReceiverBand.cc
+  implement/Enumerations/CReceiverSideband.cc
+  implement/Enumerations/CSBType.cc
+  implement/Enumerations/CScanIntent.cc
+  implement/Enumerations/CSchedulerMode.cc
+  implement/Enumerations/CSidebandProcessingMode.cc
+  implement/Enumerations/CSourceModel.cc
+  implement/Enumerations/CSpectralResolutionType.cc
+  implement/Enumerations/CStationType.cc
+  implement/Enumerations/CStokesParameter.cc
+  implement/Enumerations/CSubscanIntent.cc
+  implement/Enumerations/CSwitchingMode.cc
+  implement/Enumerations/CSyscalMethod.cc
+  implement/Enumerations/CTimeSampling.cc
+  implement/Enumerations/CWindowFunction.cc
+  implement/Enumerations/CWVRMethod.cc
+  implement/Enumtcl/ACAPolarization.cc
+  implement/Enumtcl/AccumMode.cc
+  implement/Enumtcl/AntennaMake.cc
+  implement/Enumtcl/AntennaType.cc
+  implement/Enumtcl/AssociatedCalNature.cc
+  implement/Enumtcl/AssociatedFieldNature.cc
+  implement/Enumtcl/AtmPhaseCorrection.cc
+  implement/Enumtcl/AxisName.cc
+  implement/Enumtcl/BasebandName.cc
+  implement/Enumtcl/CalCurveType.cc
+  implement/Enumtcl/CalDataOrigin.cc
+  implement/Enumtcl/CalibrationDevice.cc
+  implement/Enumtcl/CalibrationMode.cc
+  implement/Enumtcl/CalType.cc
+  implement/Enumtcl/CorrelationBit.cc
+  implement/Enumtcl/CorrelationMode.cc
+  implement/Enumtcl/CorrelatorCalibration.cc
+  implement/Enumtcl/CorrelatorName.cc
+  implement/Enumtcl/DataContent.cc
+  implement/Enumtcl/DetectorBandType.cc
+  implement/Enumtcl/FieldCode.cc
+  implement/Enumtcl/FilterMode.cc
+  implement/Enumtcl/FluxCalibrationMethod.cc
+  implement/Enumtcl/FocusMethod.cc
+  implement/Enumtcl/HolographyChannelType.cc
+  implement/Enumtcl/InvalidatingCondition.cc
+  implement/Enumtcl/NetSideband.cc
+  implement/Enumtcl/PointingMethod.cc
+  implement/Enumtcl/PointingModelMode.cc
+  implement/Enumtcl/PolarizationType.cc
+  implement/Enumtcl/PositionMethod.cc
+  implement/Enumtcl/PrimitiveDataType.cc
+  implement/Enumtcl/ProcessorSubType.cc
+  implement/Enumtcl/ProcessorType.cc
+  implement/Enumtcl/ReceiverBand.cc
+  implement/Enumtcl/ReceiverSideband.cc
+  implement/Enumtcl/SBType.cc
+  implement/Enumtcl/ScanIntent.cc
+  implement/Enumtcl/SchedulerMode.cc
+  implement/Enumtcl/SidebandProcessingMode.cc
+  implement/Enumtcl/SourceModel.cc
+  implement/Enumtcl/SpectralResolutionType.cc
+  implement/Enumtcl/StationType.cc
+  implement/Enumtcl/StokesParameter.cc
+  implement/Enumtcl/SubscanIntent.cc
+  implement/Enumtcl/SwitchingMode.cc
+  implement/Enumtcl/SyscalMethod.cc
+  implement/Enumtcl/TimeSampling.cc
+  implement/Enumtcl/WindowFunction.cc
+  implement/Enumtcl/WVRMethod.cc
+   )
+
+casa_add_executable( oldalma oldasdm2MS 
+  apps/oldasdm2MS/ASDM2MSFiller.cc
+  apps/oldasdm2MS/oldasdm2MS.cc
+  apps/oldasdm2MS/UvwCoords.cc
+  )
