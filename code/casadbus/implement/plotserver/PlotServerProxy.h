@@ -74,6 +74,10 @@ namespace casa {
 
 	dbus::variant erase(const int32_t& data_or_panel=0)
 			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::erase(data_or_panel)); }
+
+	dbus::variant setlabel(const std::string& xlabel="", const std::string& ylabel="", const std::string& title="", int panel=0)
+			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::setlabel(xlabel,ylabel,title,panel)); }
+
 	dbus::variant close(const int32_t& panel=0)
 			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::close(panel)); }
 	dbus::variant release(const int32_t& panel=0)

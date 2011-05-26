@@ -89,7 +89,11 @@ namespace casa {
 
 	    void replot( );
 
-	    QString loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable );
+	    void setxlabel( const QString &xlabel );
+	    void setylabel( const QString &ylabel );
+	    void settitle( const QString &title );
+	    
+	    std::pair<QDockWidget*,QString> loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable );
 
 	    virtual ~QtPlotSvrPanel( ) { }
 

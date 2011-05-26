@@ -244,6 +244,32 @@ namespace casa {
     }
 
 
+    QDBusVariant QtDBusPlotSvrAdaptor::setlabel( const QString &xlabel, const QString &ylabel, const QString &title, int panel_id ) {
+
+	if ( panel_id != 0 && managed_panels.find( panel_id ) == managed_panels.end( ) ) {
+	    char buf[50];
+	    sprintf( buf, "%d", panel_id );
+	    return error(QString("panel '") + buf + "' not found");
+	}
+
+	panel_desc *paneldesc = 0;
+	if ( panel_id == 0 ) {
+	    if ( managed_panels.size( ) == 0 ) {
+		return error(QString("no panels have been created"));
+	    } else {
+		paneldesc = managed_panels.begin( )->second;
+	    }
+	} else {
+	    paneldesc = managed_panels.find( panel_id )->second;
+	}
+
+	if ( xlabel != "" ) { paneldesc->panel( )->setxlabel( xlabel ); }
+	if ( ylabel != "" ) { paneldesc->panel( )->setylabel( ylabel ); }
+	if ( title != "" ) { paneldesc->panel( )->settitle( title ); }
+	return QDBusVariant(QVariant(true));
+    }
+
+
     QDBusVariant QtDBusPlotSvrAdaptor::hide( int panel ) {
 
 	if ( panel == 0 ) {
@@ -283,11 +309,13 @@ namespace casa {
 
 	if ( panel == 0 ) {
 	    if ( managed_panels.size( ) == 1 ) {
-		QString result = managed_panels.begin()->second->panel( )->loaddock( file_or_xml, loc, dockable );
-		if ( result == "" ) {
-		    return QDBusVariant(QVariant(true));
+		std::pair<QDockWidget*,QString> result = managed_panels.begin()->second->panel( )->loaddock( file_or_xml, loc, dockable );
+		if ( result.first == 0 ) {
+		    return error( result.second == "" ? "dock widget creation failure" : result.second );
 		} else {
-		    return error(result);
+		    int id = QtId::get_id( );
+		    managed_docks.insert(dockmap::value_type(id,result.first));
+		    return QDBusVariant(QVariant(id));
 		}
 	    } else {
 		return error(QString("must specify a panel when multiple panels exist"));
@@ -299,11 +327,13 @@ namespace casa {
 	    return error(QString("could now find requested panel"));
 	}
 
-	QString result = iter->second->panel( )->loaddock( file_or_xml, loc, dockable );
-	if ( result == "" ) {
-		return QDBusVariant(QVariant(true));
+	std::pair<QDockWidget*,QString> result = iter->second->panel( )->loaddock( file_or_xml, loc, dockable );
+	if ( result.first == 0 ) {
+	    return error(result.second == "" ? "dock widget creation failure" : result.second);
 	} else {
-		    return error(result);
+	    int id = QtId::get_id( );
+	    managed_docks.insert(dockmap::value_type(id,result.first));
+	    return QDBusVariant(QVariant(id));
 	}
     }
 

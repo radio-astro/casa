@@ -206,17 +206,17 @@ namespace casa {
 
     }
 
-    QString QtPlotSvrPanel::loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable ) {
+    std::pair<QDockWidget*,QString> QtPlotSvrPanel::loaddock( const QString &file_or_xml, const QString &loc, const QStringList &dockable ) {
 
 	QWidget *widget = loaddock( file_or_xml );
 	if ( widget == 0 ) {
-	    return QString( "failed to load a widget" );
+	    return std::pair<QDockWidget*,QString>(0,QString( "failed to load a widget" ));
 	}
 
 	QDockWidget *dockwidget = dynamic_cast<QDockWidget*>(widget);
 	if ( dockwidget == 0 ) {
 	    delete widget;
-	    return QString( "widget loaded was not a dock widget" );
+	    return std::pair<QDockWidget*,QString>(0,QString("widget loaded was not a dock widget" ));
 	}
 
 	Qt::DockWidgetArea location = ( loc == "right" ? Qt::RightDockWidgetArea : loc == "left" ? Qt::LeftDockWidgetArea :
@@ -265,7 +265,7 @@ namespace casa {
 	for ( QList<QSlider*>::iterator iter = sliders.begin(); iter != sliders.end(); ++iter ) {
 	  connect( *iter, SIGNAL(valueChanged(int)), SLOT(emit_slidevalue(int)) );
 	}
-	return QString("");
+	return std::pair<QDockWidget*,QString>(dockwidget,QString(""));
     }
 
     QWidget *QtPlotSvrPanel::loaddock( QString file ) {
@@ -420,8 +420,20 @@ namespace casa {
 	return QtPlotFrame::symbols( );
     }
 
+    void QtPlotSvrPanel::setxlabel( const QString &xlabel ) {
+	if ( plot ) plot->setAxisTitle( QwtPlot::xBottom, xlabel );
+    }
+
+    void QtPlotSvrPanel::setylabel( const QString &ylabel ) {
+	if ( plot ) plot->setAxisTitle( QwtPlot::yLeft, ylabel );
+    }
+
+    void QtPlotSvrPanel::settitle( const QString &title ) {
+	if ( plot ) plot->setTitle( title );
+    }
+
     void QtPlotSvrPanel::replot( ) {
-	plot->replot( );
+	if ( plot ) plot->replot( );
     }
 
     bool disable_it = false;
