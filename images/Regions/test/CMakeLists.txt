@@ -12,6 +12,7 @@ set (tests
 tRegionHandler
 tRegionManager
 tWCBox
+tWCEllipsoid
 tWCExtension
 tWCLELMask
 tWCUnion

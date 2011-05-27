@@ -50,10 +50,11 @@
 #include <images/Regions/WCComplement.h>
 #include <images/Regions/WCConcatenation.h>
 #include <images/Regions/WCDifference.h>
+#include <images/Regions/WCEllipsoid.h>
 #include <images/Regions/WCExtension.h>
 #include <images/Regions/WCIntersection.h>
+#include <images/Regions/WCLELMask.h>
 #include <images/Regions/WCPolygon.h>
-#include <images/Regions/WCRegion.h>
 #include <images/Regions/WCUnion.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/Table.h>
@@ -124,21 +125,6 @@ namespace casa { //# name space casa begins
   }
 	
 
-  // Private Method.
-  RegionType::AbsRelType RegionManager::regionTypeFromString(const String& absrel){
-
-    String str(absrel);
-    str.upcase();
-    if(str.contains("ABS"))
-      return RegionType::Abs;
-    else if(str.contains("RELREF"))
-      return RegionType::RelRef;
-    else if(str.contains("RELCEN"))
-      return RegionType::RelCen;
-    else
-      throw(AipsError(String("Undefined region type")+absrel));
-  }
-
 
   /*************************************************************
    **  Make BOX region routines                               **
@@ -155,7 +141,7 @@ namespace casa { //# name space casa begins
     if(inc.nelements() != trc.nelements())
       throw(AipsError("inc and trc do not have the shape"));
     */
-    RegionType::AbsRelType leType=regionTypeFromString(absrel);
+    RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
     LCSlicer muiSlicer(blc, trc, inc, frac, leType);
     muiSlicer.setComment( comment );
 
@@ -194,7 +180,7 @@ namespace casa { //# name space casa begins
 				   const String& absrel){
 
     *itsLog << LogOrigin("RegionManager", "wbox");
-    RegionType::AbsRelType leType=regionTypeFromString(absrel);
+    RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
     Vector<Int> absRel(blc.nelements(), leType);
     WCBox worldbox;
 
@@ -371,7 +357,7 @@ namespace casa { //# name space casa begins
     Quantum<Vector<Double> > elY(leY, yUnit);
 
 
-    RegionType::AbsRelType leType=regionTypeFromString(absrel);
+    RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
     WCPolygon worldpoly(elX,elY,IPosition(pixax),csys, leType);
     ImageRegion *leRegion = new ImageRegion(worldpoly);
     return leRegion;
@@ -391,6 +377,141 @@ namespace casa { //# name space casa begins
     }
     return 0;
   }
+
+
+  ImageRegion* RegionManager::wellipse(
+		  const Quantity& xc,
+		  const Quantity& yc,
+		  const Quantity& a,
+		  const Quantity& b,
+		  const Quantity& pa,
+		  const uInt pixelAxis0,
+		  const uInt pixelAxis1,
+		  const CoordinateSystem& csys,
+		  const String& absrel
+  ) {
+	  RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
+	  WCEllipsoid wellipse(xc, yc, a, b, pa, pixelAxis0, pixelAxis1, csys, leType);
+	  return new ImageRegion(wellipse);
+  }
+
+  ImageRegion* RegionManager::wellipse(
+		  const Quantity& xc,
+		  const Quantity& yc,
+		  const Quantity& a,
+		  const Quantity& b,
+		  const Quantity& pa,
+		  const uInt pixelAxis0,
+		  const uInt pixelAxis1,
+		  const String& absrel
+  ) const {
+	  *itsLog << LogOrigin("RegionManager", __FUNCTION__);
+	  if (itsCSys == 0) {
+		  throw(AipsError("CoordinateSystem not set in RegionManager tool"));
+	  }
+	  return wellipse(xc, yc, a, b, pa, pixelAxis0, pixelAxis1, *itsCSys, absrel);
+  }
+
+  ImageRegion* RegionManager::wsphere(
+		  const Vector<Quantity>& center,
+		  const Quantity& radius,
+		  const Vector<Int>& pixelAxes,
+		  const CoordinateSystem& csys,
+		  const String& absrel
+
+  ) {
+	  RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
+	  WCEllipsoid wsphere(center, radius, pixelAxes, csys, leType);
+	  return new ImageRegion(wsphere);
+  }
+
+  ImageRegion* RegionManager::wsphere(
+		  const Vector<Quantity>& center,
+		  const Quantity& radius,
+		  const Vector<Int>& pixelAxes,
+		  const String& absrel
+  ) const {
+	  *itsLog << LogOrigin("RegionManager", __FUNCTION__);
+	  if(itsCSys == 0){
+		  throw(AipsError("CoordinateSystem not set in RegionManager tool"));
+	  }
+	  return wsphere(center, radius, pixelAxes, *itsCSys, absrel);
+  }
+
+  ImageRegion* RegionManager::wellipsoid(
+		  const Vector<Quantity>& center,
+		  const Vector<Quantity>& radii,
+		  const Vector<Int>& pixelAxes,
+		  const CoordinateSystem& csys,
+		  const String& absrel
+  ) {
+	  RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
+	  WCEllipsoid ellipsoid(center, radii, pixelAxes, csys, leType);
+	  return new ImageRegion(ellipsoid);
+  }
+
+  ImageRegion* RegionManager::wellipsoid(
+		  const Vector<Quantity>& center,
+		  const Vector<Quantity>& radii,
+		  const Vector<Int>& pixelAxes,
+		  const String& absrel
+  ) const {
+	  *itsLog << LogOrigin("RegionManager", __FUNCTION__);
+	  if(itsCSys == 0){
+		  throw(AipsError("CoordinateSystem not set in RegionManager tool"));
+	  }
+	  return wellipsoid(center, radii, pixelAxes, *itsCSys, absrel);
+  }
+
+
+  ImageRegion* RegionManager::wshell(
+		  const Vector<Quantity>& center,
+		  const Vector<Quantity>& innerRadii,
+		  const Vector<Quantity>& outerRadii,
+		  const Vector<Int>& pixelAxes,
+		  const CoordinateSystem& csys,
+		  const String& absrel
+  ) {
+	  for (uInt i=0; i<innerRadii.size(); i++) {
+		  if (
+				  innerRadii[i].getValue()
+				  > outerRadii[i].getValue(innerRadii[i].getUnit())
+		  ) {
+			  throw AipsError(
+				  "RegionManager::" + String(__FUNCTION__)
+				  + ": For radius " + String::toString(i)
+				  + " inner radius " + String::toString(innerRadii[i])
+				  + " is greater than outer radius "
+				  + String::toString(outerRadii[i])
+			  );
+		  }
+	  }
+	  RegionType::AbsRelType leType=RegionType::absRelTypeFromString(absrel);
+	  WCEllipsoid inner(center, innerRadii, pixelAxes, csys, leType);
+	  WCEllipsoid outer(center, outerRadii, pixelAxes, csys, leType);
+	  WCDifference shell(outer, inner);
+	  return new ImageRegion(shell);
+  }
+
+  ImageRegion* RegionManager::wshell(
+		  const Vector<Quantity>& center,
+		  const Vector<Quantity>& innerRadii,
+		  const Vector<Quantity>& outerRadii,
+		  const Vector<Int>& pixelAxes,
+		  const String& absrel
+  ) const {
+	  *itsLog << LogOrigin("RegionManager", __FUNCTION__);
+	  if(itsCSys == 0){
+		  throw(AipsError("CoordinateSystem not set in RegionManager tool"));
+	  }
+	  return wshell(center, innerRadii, outerRadii, pixelAxes, *itsCSys, absrel);
+  }
+
+  ImageRegion* RegionManager::wmask(const String& command) {
+	  WCLELMask wmask(command);
+	  return new ImageRegion(wmask);
+  }
+
 
   /*************************************************************
    **  UNION routines                                  **
@@ -913,7 +1034,7 @@ namespace casa { //# name space casa begins
 		  ranges[2*i + 1] = max;
 
 	  }
-	  Vector<uInt> consolidatedRanges = _consolidateAndOrderRanges(ranges);
+	  Vector<uInt> consolidatedRanges = consolidateAndOrderRanges(ranges);
 	  nSelectedChannels = 0;
 	  for (uInt i=0; i<consolidatedRanges.size()/2; i++) {
 		  nSelectedChannels += consolidatedRanges[2*i + 1] - consolidatedRanges[2*i] + 1;
@@ -921,9 +1042,9 @@ namespace casa { //# name space casa begins
 	  return consolidatedRanges;
   }
 
-  Vector<uInt> RegionManager::_consolidateAndOrderRanges(
+  Vector<uInt> RegionManager::consolidateAndOrderRanges(
 		  const Vector<uInt>& ranges
-  ) const {
+  ) {
 	  uInt arrSize = ranges.size()/2;
 	  uInt arrMin[arrSize];
 	  uInt arrMax[arrSize];
@@ -1068,7 +1189,7 @@ namespace casa { //# name space casa begins
 			                                                                                 << " does not match a known polarization." << LogIO::EXCEPTION;
 		  }
 	  }
-	  return _consolidateAndOrderRanges(ranges);
+	  return consolidateAndOrderRanges(ranges);
   }
 
   Vector<Double> RegionManager::_setBoxCorners(const String& box) const {
@@ -1460,7 +1581,8 @@ namespace casa { //# name space casa begins
     	  return stokes;
       }
       Int polAxis = itsCSys->polarizationAxisNumber();
-      uInt stokesBegin, stokesEnd;
+      uInt stokesBegin = 0;
+      uInt stokesEnd = 0;
       ImageRegion *imreg = ImageRegion::fromRecord(region, "");
       Array<Float> blc, trc;
       Bool oneRelAccountedFor = False;
