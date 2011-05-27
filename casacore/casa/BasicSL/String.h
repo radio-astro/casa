@@ -595,6 +595,19 @@ class String : public string {
   // Remove beginning and ending whitespace.
   void trim();
 
+  // remove specified chars (independent of order) from beginning and end of string if it exists there.
+  void trim(Char c[], uInt n);
+
+  // remove specified character from left of string if it exists.
+  // If the character is repeated more than once on the left, all instances
+  // will be removed eg ltrim(',') results in ",,xy" becoming "xy".
+  void ltrim(char c);
+
+  // remove specified character from right of string if it exists.
+  // If the character is repeated more than once on the right, all instances
+  // will be removed eg rtrim(',') results in "xy,," becoming "xy".
+  void rtrim(char c);
+
   // Search functions. Returns either npos (if not found); else position.
   // <note role=warning> The RegexBase ones are ** aips++ additions</note>
   // <group>

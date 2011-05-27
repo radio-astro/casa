@@ -107,29 +107,84 @@ Int String::toInt(const String& string) {
     return var;
 }
 
+
 void String::trim() {
+	Char ws[4];
+	ws[0] = ' ';
+	ws[1] = '\t';
+	ws[2] = '\n';
+	ws[3] = '\r';
+	trim(ws, 4);
+}
+
+void String::trim(Char c[], uInt n) {
     iterator iter = begin();
+    Bool found = True;
     while (
-        iter != end()
-        && (
-            *iter == ' ' || *iter == '\t'
-            || *iter == '\n' || *iter == '\r'
-        )
+        iter != end() && found
     ) {
-        erase(iter);
-    }
-    if (length() > 0) {
-    	iter = end() - 1;
-    	while (
-    			iter != begin() && (
-    				*iter == ' ' || *iter == '\t'
-    				|| *iter == '\n' || *iter == '\r'
-    			)
-    	) {
-    		erase(iter);
-    		iter--;
+    	found = False;
+    	for (uInt i=0; i<n; i++) {
+    		if (*iter == c[i]) {
+    			erase(iter);
+    			found = True;
+    			break;
+    		}
     	}
     }
+
+
+    if (length() > 0) {
+    	found = True;
+    	iter = end() - 1;
+    	while (
+    		iter != begin() && found
+    	) {
+    		found = False;
+    	   	for (uInt i=0; i<n; i++) {
+    	   		if (*iter == c[i]) {
+    	    		erase(iter);
+    	    		found = True;
+    	    		iter--;
+    	    		break;
+    	    	}
+    	    }
+    	}
+    }
+}
+
+void String::ltrim(char c) {
+    iterator iter = begin();
+    while (iter != end()) {
+    	if (*iter == c) {
+    		erase(iter);
+    		// no need to increment iter
+    		// since what was the second character
+    		// is now the first after the erase()
+    	}
+    	else {
+    		break;
+    	}
+    }
+}
+
+void String::rtrim(char c) {
+
+	if (length() > 0) {
+	    iterator iter = begin();
+		iter = end() - 1;
+		while (
+			iter != begin()
+		) {
+			if (*iter == c) {
+				erase(iter);
+				iter--;
+			}
+			else {
+				break;
+			}
+		}
+	}
 }
 
 // Obtain a (separate) 'sub'-string
