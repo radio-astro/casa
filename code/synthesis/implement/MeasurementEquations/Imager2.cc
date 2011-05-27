@@ -363,6 +363,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     Double fmin=C::dbl_max;
     Double fmax=-(C::dbl_max);
     Double fmean=0.0;
+    Int nms = freqrange_p.shape()(0);
     for (Int i=0;i<nspw;++i) {
       Int spw=spectralwindowids_p(i);
       Vector<Double> chanFreq=msc.spectralWindow().chanFreq()(spw); 
@@ -370,7 +371,13 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       
       if(dataMode_p=="none"){
       
-	if(i==0) {
+        if(nms >1) {
+          for (Int j=0; j<nms; ++j) {
+            fmin=min(fmin,freqrange_p(j,0)); 
+            fmax=max(fmax,freqrange_p(j,1)); 
+          }
+        }
+	else if(i==0) {
 	  fmin=min(chanFreq-abs(0.5*freqResolution));
 	  fmax=max(chanFreq+abs(0.5*freqResolution));
 	}
@@ -383,20 +390,30 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	// This needs some careful thought about roundoff - it is likely 
 	// still adding an extra half-channel at top and bottom but 
 	// if the freqResolution is nonlinear, there are subtleties
-	Int elnchan=chanFreq.nelements();
-	Int firstchan=0;
-        Int elstep=1;
-	for (uInt jj=0; jj < dataspectralwindowids_p.nelements(); ++jj){
-	  if(dataspectralwindowids_p[jj]==spw){
-	    firstchan=dataStart_p[jj];
-	    elnchan=dataNchan_p[jj];
-	    elstep=dataStep_p[jj];
-	  }	
-	}
-	Int lastchan=firstchan+ elnchan*elstep;
-        for(Int k=firstchan ; k < lastchan ;  k+=elstep){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(elstep-0.5)));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(elstep-0.5)));
+        // multiple MS case
+        if(nms >1) {
+          for (Int j=0; j<nms; ++j) {
+            fmin=min(fmin,freqrange_p(j,0)); 
+            fmax=max(fmax,freqrange_p(j,1)); 
+          }
+        }
+        // single ms case
+	else {
+          Int elnchan=chanFreq.nelements();
+	  Int firstchan=0;
+          Int elstep=1;
+	  for (uInt jj=0; jj < dataspectralwindowids_p.nelements(); ++jj){
+	    if(dataspectralwindowids_p[jj]==spw){
+	      firstchan=dataStart_p[jj];
+	      elnchan=dataNchan_p[jj];
+	      elstep=dataStep_p[jj];
+	    }	
+	  }
+	  Int lastchan=firstchan+ elnchan*elstep;
+	  for(Int k=firstchan ; k < lastchan ;  k+=elstep){
+	    fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(elstep-0.5)));
+	    fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(elstep-0.5)));
+	  }
         }
       }
       else{
