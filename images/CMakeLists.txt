@@ -13,9 +13,23 @@ endif (APPLE)
 include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 add_library (casa_images
-Regions/WCPolygon.cc
+Annotations/AnnotationBase.cc
+Annotations/AnnAnnulus.cc
+Annotations/AnnCenterBox.cc
+Annotations/AnnCircle.cc
+Annotations/AnnEllipse.cc
+Annotations/AnnLine.cc
+Annotations/AnnPolygon.cc
+Annotations/AnnRegion.cc
+Annotations/AnnRectBox.cc
+Annotations/AnnRotBox.cc
+Annotations/AnnSymbol.cc
+Annotations/AnnText.cc
+Annotations/AnnVector.cc
+Regions/WCEllipsoid.cc
 Regions/RegionManager.cc
 Regions/WCLELMask.cc
+Regions/WCPolygon.cc
 Regions/WCUnion.cc
 Regions/WCRegion2.cc
 Regions/RegionHandlerMemory.cc
@@ -64,6 +78,7 @@ Images/ImageReorderer.cc
 Images/ImageFitter.cc
 Images/ImageProfileFitter.cc
 IO/FitterEstimatesFileParser.cc
+IO/AsciiRegionFileParser.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -84,6 +99,23 @@ RUNTIME DESTINATION bin
 LIBRARY DESTINATION lib
 ARCHIVE DESTINATION lib
 LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+)
+
+install (FILES
+Annotations/AnnotationBase.h
+Annotations/AnnAnnulus.h
+Annotations/AnnCenterBox.cc
+Annotations/AnnCircle.cc
+Annotations/AnnEllipse.h
+Annotations/AnnLine.h
+Annotations/AnnPolygon.h
+Annotations/AnnRectBox.cc
+Annotations/AnnRegion.h
+Annotations/AnnRotBox.h
+Annotations/AnnSymbol.h
+Annotations/AnnText.h
+Annotations/AnnVector.h
+DESTINATION include/casacore/images/Annotations
 )
 
 install (FILES
@@ -183,6 +215,7 @@ Regions/WCComplement.h
 Regions/WCCompound.h
 Regions/WCConcatenation.h
 Regions/WCDifference.h
+Regions/WCEllipsoid.h
 Regions/WCExtension.h
 Regions/WCIntersection.h
 Regions/WCLELMask.h
@@ -204,7 +237,9 @@ DESTINATION include/casacore/images
 )
 
 if (BUILD_TESTING)
+    add_subdirectory (Annotations/test)
     add_subdirectory (Images/test)
+    add_subdirectory (IO/test)
     add_subdirectory (Wnbt/test)
     add_subdirectory (Regions/test)
 endif (BUILD_TESTING)
