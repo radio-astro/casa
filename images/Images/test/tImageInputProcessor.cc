@@ -32,7 +32,8 @@
 
 
 void writeTestString(const String& test) {
-    cout << "\n" << "*** " << test << " ***" << endl;
+    LogIO log;
+    log << LogIO::NORMAL << "*** " << test << " ***" << LogIO::POST;
 }
 
 void _checkCorner(const Record& gotRecord, const Vector<Double>& expected) {
