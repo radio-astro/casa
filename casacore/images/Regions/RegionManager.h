@@ -121,6 +121,82 @@ namespace casa {
 			    const Vector<Int>& pixelaxes,  
 			    const String& absrel);
       
+     static ImageRegion* wellipse(
+    		  const Quantity& xc,
+    		  const Quantity& yc,
+    		  const Quantity& a,
+    		  const Quantity& b,
+    		  const Quantity& pa,
+    		  const uInt pixelAxis0,
+    		  const uInt pixelAxis1,
+    		  const CoordinateSystem& csys,
+    		  const String& absrel
+      );
+
+      //wellipse version without csys...throws an exception if
+      //setcoordsys is not run
+      ImageRegion* wellipse(
+    		  const Quantity& xc,
+    		  const Quantity& yc,
+    		  const Quantity& a,
+    		  const Quantity& b,
+    		  const Quantity& pa,
+    		  const uInt pixelAxis0,
+    		  const uInt pixelAxis1,
+    		  const String& absrel
+      ) const;
+
+      static ImageRegion* wsphere(
+    		  const Vector<Quantity>& center,
+    		  const Quantity& radius,
+    		  const Vector<Int>& pixelaxes,
+    		  const CoordinateSystem& csys,
+    		  const String& absrel
+      );
+      //wsphere version without csys...throws an exception if
+      //setcoordsys is not run
+      ImageRegion* wsphere(
+    		  const Vector<Quantity>& center,
+    		  const Quantity& radius,
+    		  const Vector<Int>& pixelaxes,
+    		  const String& absrel
+      ) const;
+
+      static ImageRegion* wellipsoid(
+    		  const Vector<Quantity>& center,
+    		  const Vector<Quantity>& radii,
+    		  const Vector<Int>& pixelaxes,
+    		  const CoordinateSystem& csys,
+    		  const String& absrel
+      );
+
+      ImageRegion* wellipsoid(
+    		  const Vector<Quantity>& center,
+    		  const Vector<Quantity>& radii,
+    		  const Vector<Int>& pixelaxes,
+    		  const String& absrel
+      ) const;
+
+      static ImageRegion* wshell(
+    		  const Vector<Quantity>& center,
+    		  const Vector<Quantity>& innerRadii,
+    		  const Vector<Quantity>& outerRadii,
+    		  const Vector<Int>& pixelaxes,
+    		  const CoordinateSystem& csys,
+    		  const String& absrel
+      );
+
+      ImageRegion* wshell(
+    		  const Vector<Quantity>& center,
+    		  const Vector<Quantity>& innerRadii,
+    		  const Vector<Quantity>& outerRadii,
+    		  const Vector<Int>& pixelaxes,
+    		  const String& absrel
+      ) const;
+
+      static ImageRegion* wmask(const String& command);
+
+
       /**************************************************************
        ** Routines for combining regions                           **
        **                                                          **
@@ -194,21 +270,19 @@ namespace casa {
       		  const String& box, const IPosition& imShape, const String& imageName=""
         );
 
+      static Vector<uInt> consolidateAndOrderRanges(
+    		  const Vector<uInt>& ranges
+      );
+
     private:
 
       // Function to return the internal Table object to the RegionHandler.
       static Table& getTable (void* ptr, Bool writable);
-      RegionType::AbsRelType regionTypeFromString(const String& absreltype);
       //Convert a string to Quantity
       void toQuantity(Quantity& out, const String& in);
       LogIO *itsLog;
       CoordinateSystem* itsCSys;
       Table tab_p;
-
-
-      Vector<uInt> _consolidateAndOrderRanges(
-      	const Vector<uInt>& ranges
-      ) const;
 
       String _pairsToString(const Vector<uInt>& pairs) const;
 

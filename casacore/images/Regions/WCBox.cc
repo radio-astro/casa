@@ -710,17 +710,6 @@ void WCBox::checkUnits (const IPosition& pixelAxes,
 }
 
 
-void WCBox::unitInit() 
-{
-   static Bool doneUnitInit = False;
-   if (!doneUnitInit) {
-      UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
-      UnitMap::putUser("frac",UnitVal(1.0), "fractional units");
-      UnitMap::putUser("def",UnitVal(1.0), "default value");
-      UnitMap::putUser("default",UnitVal(1.0), "default value");
-      doneUnitInit = True;
-   }
-}
 
 void WCBox::convertPixel(Double& pixel,
                          const Quantum<Double>& value,
