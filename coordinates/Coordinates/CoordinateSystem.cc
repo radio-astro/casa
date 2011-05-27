@@ -701,6 +701,16 @@ const DirectionCoordinate& CoordinateSystem::directionCoordinate(uInt which) con
     return dynamic_cast<const DirectionCoordinate &>(*(coordinates_p[which]));
 }
 
+const DirectionCoordinate& CoordinateSystem::directionCoordinate() const {
+	if (! hasDirectionCoordinate()) {
+		throw AipsError(
+			String(__FUNCTION__)
+			+ ": Coordinate system has no direction coordinate"
+		);
+	}
+	return directionCoordinate(directionCoordinateNumber());
+}
+
 const SpectralCoordinate& CoordinateSystem::spectralCoordinate(uInt which) const
 {
     AlwaysAssert(which < nCoordinates() && 
@@ -708,6 +718,15 @@ const SpectralCoordinate& CoordinateSystem::spectralCoordinate(uInt which) const
     return dynamic_cast<const SpectralCoordinate &>(*(coordinates_p[which]));
 }
 
+const SpectralCoordinate& CoordinateSystem::spectralCoordinate() const {
+	if (! this->hasSpectralAxis()) {
+		throw AipsError(
+			String(__FUNCTION__)
+			+ ": Coordinate system has no spectral coordinate"
+		);
+	}
+	return spectralCoordinate(spectralCoordinateNumber());
+}
 const StokesCoordinate& CoordinateSystem::stokesCoordinate(uInt which) const {
     AlwaysAssert(which < nCoordinates() && 
 		 coordinates_p[which]->type() == Coordinate::STOKES, AipsError);
@@ -1010,6 +1029,8 @@ Bool CoordinateSystem::toWorld(Vector<Double> &world,
     return ok;
 }
 
+
+
 Bool CoordinateSystem::toWorld(Vector<Double> &world, 
 			       const IPosition &pixel) const
 {
@@ -1070,7 +1091,23 @@ Bool CoordinateSystem::toPixel(Vector<Double> &pixel,
     return ok;
 }
 
-
+Quantity CoordinateSystem::toWorldLength(
+    const Double nPixels,
+   	const uInt pixelAxis
+) const {
+	if (pixelAxis >= nPixelAxes()) {
+		throw AipsError(
+			String(__FUNCTION__)
+				+ "pixelAxis greater or equal to nPixelAxes"
+		);
+	}
+	Int coord, coordAxis;
+	findWorldAxis(coord, coordAxis, pixelAxis);
+	return Quantity(
+		fabs(nPixels*coordinates_p[coord]->increment()[coordAxis]),
+		worldAxisUnits()[pixelAxisToWorldAxis(pixelAxis)]
+	);
+}
 
 Bool CoordinateSystem::toWorldMany(Matrix<Double>& world,
                                    const Matrix<Double>& pixel,
@@ -4255,6 +4292,10 @@ void CoordinateSystem::deleteTemps (const uInt which)
 Bool CoordinateSystem::hasSpectralAxis() const {
     Int spectralCoordNum = findCoordinate(Coordinate::SPECTRAL);
     return (spectralCoordNum >= 0 && spectralCoordNum < (Int)nCoordinates());
+}
+
+Int CoordinateSystem::spectralCoordinateNumber() const {
+    return findCoordinate(Coordinate::SPECTRAL);
 }
 
 Int CoordinateSystem::spectralAxisNumber() const {

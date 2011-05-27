@@ -370,10 +370,17 @@ public:
 
     // Return the given Coordinate.
     // Throws an exception if retrieved as the wrong type.
+    // The versions which take no parameters will return the
+    // first (or in most cases only) coordinate of the requested type.
+    // If no such coordinate exists, an exception is thrown.
     // <group>
     const LinearCoordinate &linearCoordinate(uInt which) const;
     const DirectionCoordinate &directionCoordinate(uInt which) const;
+    const DirectionCoordinate &directionCoordinate() const;
+
     const SpectralCoordinate &spectralCoordinate(uInt which) const;
+    const SpectralCoordinate &spectralCoordinate() const;
+
     const StokesCoordinate &stokesCoordinate(uInt which) const;
     const TabularCoordinate &tabularCoordinate(uInt which) const;
     // </group>
@@ -443,6 +450,12 @@ public:
     virtual Bool toPixel(Vector<Double> &pixel, 
 			 const Vector<Double> &world) const;
     // </group>
+
+    // convert a pixel "length" to a world "length"
+    virtual Quantity toWorldLength(
+    	const Double nPixels,
+    	const uInt pixelAxis
+    ) const;
 
     // This is provided as a convenience since it is a very commonly desired
     // operation through CoordinateSystem.  The output vector is resized.   
@@ -766,6 +779,10 @@ public:
 
    // what number is the spectral axis? Returns -1 if no spectral axis exists.
    Int spectralAxisNumber() const;
+
+   // what number is the spectral coordinate? Returns -1 if no spectral coordinate exists.
+   Int spectralCoordinateNumber() const;
+
 
    // does this coordinate system have a polarizaion/stokes axis?
    Bool hasPolarizationAxis() const;
