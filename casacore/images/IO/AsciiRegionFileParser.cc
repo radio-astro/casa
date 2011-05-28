@@ -407,7 +407,7 @@ AsciiRegionFileParser::_getCurrentParamSet(
 		String keyword = consumeMe.substr(0, equalPos);
 		keyword.trim();
 		keyword.downcase();
-		consumeMe.del(0, equalPos + 1);
+		consumeMe.del(0, (Int)equalPos + 1);
 		consumeMe.trim();
 		if (keyword == "label") {
 			key = LABEL;
@@ -902,7 +902,7 @@ Vector<Quantity> AsciiRegionFileParser::_extractTwoQuantityPairs(
 		}
 	}
 
-    consumeMe.del(0, end + 1);
+	consumeMe.del(0, (Int)end + 1);
 	return quantities;
 }
 
