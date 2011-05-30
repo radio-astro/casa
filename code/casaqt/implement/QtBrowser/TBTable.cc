@@ -517,6 +517,96 @@ TBPlotData* TBTable::plotRows(PlotParams& x, PlotParams& y, int rowFrom,
     return data;
 }
 
+TBPlotData* TBTable::plotIndices(PlotParams& dp, int axis, bool x, int row,
+                      TBFilterRuleSequence* rules, ProgressHelper* ph) {
+
+    TBPlotData* data = new TBPlotData();
+    if(ready && (dp.rowNumbers || 0 <= dp.colIndex < fields.size()) &&
+       0<= row && row < totalRows && 
+       (axis == -1 || 0 <= axis && axis <= dp.slice.size())) {
+
+        int n = 1;
+        if(!dp.rowNumbers && axis >= 0) 
+	  n = dataDimensionsAt(dp.colIndex)[axis];
+        int steps = n;
+        steps += 1;
+        if(ph != NULL) ph->setSteps(steps);
+        
+        if(dp.rowNumbers) {
+            double* xarr = new double[n];
+            double* yarr = new double[n];
+            data->rows.resize(n);
+	    if (x) {
+                xarr[0] = 0;
+                yarr[0] = (double) row;
+                data->rows[0] = row;
+            } else {
+                xarr[0] = (double) row;
+                yarr[0] = 0;
+                data->rows[0] = row;
+            }        
+            if(ph != NULL) ph->step();
+            data->data = new PlotPointDataImpl<double>(xarr, yarr, n);
+
+            // apply filter if it exists
+            if(rules != NULL) {
+                TBTable table(location, new DriverParams(dParams));
+                table.setPrintDebug(false);
+                filter(data, table, rules, row, row, 1);
+            }
+            
+            return data;
+        }
+
+        double* indexData = NULL, *columnData = NULL;
+        double* xarr, *yarr;
+
+        vector<String>* f = new vector<String>();
+        f->push_back(fields.at(dp.colIndex)->getName());
+
+        TBTable table(location, new DriverParams(dParams));
+        table.setPrintDebug(false);
+	//TODO: wanna simply call table.dataAt to get data of a row and column
+        Result r = table.loadRows(row, 1, true, f);
+        delete f;
+        if(ph != NULL) ph->step();
+
+        if(r.valid) {
+            indexData = new double[n];
+            columnData = new double[n];
+                
+            data->rows.resize(n);
+            
+            TBData* td = table.data.at(0)->at(0);
+            for(int i = 0; i < n; i++) {
+	        if(axis >= 0)  dp.slice[axis] = i;
+                indexData [i] = (double) i;
+                columnData [i] = getDouble(td, &dp.slice, dp.complex, 
+					   dp.complexAmp);
+                data->rows[i] = row;
+
+                if(ph != NULL) ph->step();
+            }
+
+            if (x) {
+	      xarr = indexData;
+	      yarr = columnData;
+	    } else {
+	      xarr = columnData;
+	      yarr = indexData;
+	    }
+            
+            data->data = new PlotPointDataImpl<double>(xarr, yarr, n);
+            
+            // apply filter if it exists
+            if(rules != NULL)
+                filter(data, table, rules, row, row, 1);
+        }
+    }
+
+    return data;
+}
+
 int TBTable::totalRowsOf(String location) {
     if(subtableRows.size() == 0) {
         return driver->totalRowsOf(location);

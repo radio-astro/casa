@@ -33,6 +33,7 @@
 #include <graphics/GenericPlotter/PlotFactory.h>
 
 #include <QtGui>
+#include <QtGui/QStandardItemModel>
 
 #include <map>
 #include <vector>
@@ -143,12 +144,15 @@ public:
     
     // Sets the dimensions of the slicer to the given vector.  If complex is
     // true, a combobox to choose between phase and amplitude is also shown.
+    // If index is true, a spinbox to select plot axis is also shown.
     bool setDimension(vector<int>* d, bool complex = false);
+    bool setDimension(vector<int>* d, bool complex, bool index);
 
     // Retrieves the array slice into the given vector.  complex is set to true
     // if the slice is for complex numbers; if complex is true, amp indicates
     // whether the slice is for the amplitude (true) or the phase (false).
     void getDimension(vector<int>& d, bool& complex, bool& amp);
+    void getDimension(vector<int>& d, bool& complex, bool& amp, int& axis);
 
 private:
     // All current spinners.
@@ -159,6 +163,13 @@ private:
 
     // Whether the current slice is for a complex or not.
     bool complex;
+
+    // Spinbox and Label to choose axis
+    QSpinBox* plotAxisChooser;
+    QLabel* axisLabel;
+
+private slots:
+    void axisChosen(int axis);
 };
 
 // <summary>
@@ -241,6 +252,16 @@ private:
     
     // Collects the parameters and plots as indicated.
     void doPlot(bool overplot = true);
+
+    // Model for xChooser and yChooser to disable [index] selection
+    QStandardItemModel* xChooserModel;
+    QStandardItemModel* yChooserModel;
+
+    // Flag to indicate whether index based plot is selected or not
+    bool isIndexPlot;
+
+    // Show/Hide row iteration GUI when [index] is deselected/selected.
+    void enableRowIteration(bool visible);
     
 private slots:
     // Slot for when the user chooses a different table from the combobox.
@@ -255,6 +276,12 @@ private slots:
     
     // Slot for code common to xChosen and yChosen.
     void chosen(bool x, int i);
+
+    // Slot for when [index] is chosen
+    void indexChosen(bool x);
+
+    // Slot for when [index] is deselected
+    void indexReleased(bool x, int i);
 
     // Slot for the "Clear and Plot" button.  See doPlot(false);
     void plot();
