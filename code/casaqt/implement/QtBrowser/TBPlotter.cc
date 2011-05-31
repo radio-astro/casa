@@ -497,7 +497,7 @@ void TBPlotter::doPlot(bool overplot) {
         String scolor;
         if(qcolor.isValid()) {
             scolor = qPrintable(qcolor.name());
-            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0);
+            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0,1);
             format.line->setColor(scolor);
         }
         
@@ -506,7 +506,7 @@ void TBPlotter::doPlot(bool overplot) {
         qcolor.setNamedColor(symbolColorEdit->text());
         if(qcolor.isValid()) {
             scolor = qPrintable(qcolor.name());
-            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0);
+            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0,1);
             PlotAreaFillPtr area = format.symbol->areaFill();
             area->setColor(scolor);
             format.symbol->setAreaFill(area);
