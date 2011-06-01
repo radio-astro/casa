@@ -1563,12 +1563,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
                                       chanFreqIn[lastChan]) / 2;
-              Double sep = chanFreqIn[lastChan] - chanFreqIn[inpChan];
-              chanWidthOut[outChan] = sep + 0.5 * (chanWidthIn[inpChan] +
-                                                   chanWidthIn[lastChan]);
+              Double sep = abs(chanFreqIn[lastChan] - chanFreqIn[inpChan]);
+              chanWidthOut[outChan] = sep + 0.5 * abs(chanWidthIn[inpChan] +
+                                                      chanWidthIn[lastChan]);
               spwResolOut[outChan] = 0.5 * (spwResolIn[inpChan] +
                                             spwResolIn[lastChan])
-                                     + abs(sep);
+                                     + sep;
 
               for(Int avgChan = inpChan; avgChan <= lastChan;
                   avgChan += chanStep_p[k])
@@ -1584,8 +1584,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
           }
         }
         --outChan;
-        
-        Double totalBW = chanFreqOut[outChan] - chanFreqOut[0] +
+
+        Double totalBW = abs(chanFreqOut[outChan] - chanFreqOut[0]) +
           0.5 * (effBWOut[outChan] + effBWOut[0]);
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
@@ -1593,7 +1593,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         msSpW.numChan().put(min_k, nOutChan);
         msSpW.chanWidth().put(min_k, chanWidthOut);
         msSpW.effectiveBW().put(min_k, spwResolOut);
-        msSpW.refFrequency().put(min_k, chanFreqOut[0]);
         msSpW.totalBandwidth().put(min_k, totalBW);
       }
       else{
@@ -1602,7 +1601,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	msSpW.numChan().put(min_k, numChan(spw_p[k]));    
 	msSpW.chanWidth().put(min_k, chanWidth(spw_p[k]));
 	msSpW.effectiveBW().put(min_k, effBW(spw_p[k]));
-	msSpW.refFrequency().put(min_k, refFreq(spw_p[k]));
 	msSpW.totalBandwidth().put(min_k, totBW(spw_p[k]));
       }
       
@@ -1610,6 +1608,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       msSpW.freqGroup().put(min_k, freqGroup(spw_p[k]));
       msSpW.freqGroupName().put(min_k, freqGroupName(spw_p[k]));
       msSpW.ifConvChain().put(min_k, ifConvChain(spw_p[k]));
+      msSpW.refFrequency().put(min_k, refFreq(spw_p[k]));
       msSpW.measFreqRef().put(min_k, measFreqRef(spw_p[k]));
       msSpW.name().put(min_k, spwName(spw_p[k]));
       msSpW.netSideband().put(min_k, netSideband(spw_p[k])); 
