@@ -82,6 +82,7 @@ namespace casa{
     void skyMuller(ImageInterface<Complex>& skyJones);
 
     Int getALMABandId(const Double& freq);
+    virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs){};
 
   private:
     

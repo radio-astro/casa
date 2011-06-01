@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColDescSet.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColDescSet.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/ColDescSet.h>
 #include <tables/Tables/TableDesc.h>
@@ -35,19 +35,13 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-//# Initialize the static variable for the DataManager registration.
-Bool ColumnDescSet::registrationDone_p = False;
-
 
 ColumnDescSet::ColumnDescSet()
 : cols_p   (ColumnDesc()),
   colSeq_p (0)
 {
-    //# Register the DataManagers if not done yet.
-    if (!registrationDone_p) {
-	DataManager::registerAllCtor();
-	registrationDone_p = True;
-    }
+    //# Register the main DataManagers if not done yet.
+    DataManager::registerMainCtor();
 }
 
 ColumnDescSet::ColumnDescSet (const ColumnDescSet& that)

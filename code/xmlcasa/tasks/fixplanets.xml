@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<!-- Documentation here.                                                -->
+
+<task type="function" name="fixplanets" category="editing, maninpulation, calibration" >
+
+<shortdescription>Fixes FIELD and SOURCE table entries based on POINTING table, optionally fixes the UVW coordinates</shortdescription>
+<description>
+Fix FIELD, SOURCE, and UVW for given fields based on pointing table information
+</description>
+
+<input>
+    <param type="string" name="vis" kind="ms" mustexist="true">
+        <description>Name of the input visibility set.</description>
+        <value></value>
+        <example>vis='ngc5921.ms'</example>
+    </param>
+    <param type="any" direction="in" name="field">
+      <description>Fields to operate on.  Blank = all.</description>
+      <any type="variant"/>
+      <value>""</value>
+    </param>
+    <param type="bool" name="fixuvw">
+      <description>recalc uvw?</description>
+      <value>False</value>
+    </param>
+</input>
+
+<example>
+Input Parameters
+vis    --- Name of the input visibility set
+
+field  --- field selection string
+
+fixuvw --- recalc uvw coordinate? (default: False)
+
+Example:
+
+ fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
+
+</example>
+
+</task>
+
+</casaxml>

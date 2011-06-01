@@ -2778,8 +2778,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //---------------------------------------------------------------
   //
   void nPBWProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
-			  FTMachine::Type type,
-			  const Matrix<Float>& imwght)
+			  FTMachine::Type type)
   {
     // Take care of translation of Bools to Integer
     Int idopsf=0;
@@ -2790,10 +2789,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
 
     const Matrix<Float> *imagingweight;
-    if(imwght.nelements()>0)
-      imagingweight=&imwght;
-    else
-      imagingweight=&(vb.imagingWeight());
+    imagingweight=&(vb.imagingWeight());
 
     const Cube<Complex> *data;
     if(type==FTMachine::MODEL)

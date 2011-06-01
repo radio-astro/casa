@@ -35,12 +35,14 @@ namespace casa {
    namespace memory {
 	template <class T> class cptr {
 	    public:
+		cptr( ) : ptr((T*)0) { }
 		cptr(T *p) : ptr(p) { }
 		cptr<T>(const cptr<T> &other) : ptr(other.ptr) { }
 		cptr<T>(cptr<T> *other) : ptr(other->ptr) { }
 		T *operator->( ) { return ptr.val; }
 		T &operator*( ) { return *ptr.val; }
 		cptr<T> &operator=( cptr<T> &other ) { ptr = other.ptr; return *this; }
+		cptr<T> &operator=( T *&optr ) { ptr = optr; optr = 0; return *this; }
 		std::string state( ) const {
 		    char buf[128];
 		    sprintf( buf, "0x%lx (%d)", (unsigned long) ptr.val, *ptr.count );
@@ -50,11 +52,12 @@ namespace casa {
 		struct kernel {
 		    T *val;
 		    unsigned int *count;
-		    kernel(T *v) : val(v), count(new unsigned int) { *count = 1; }
-		    kernel( const kernel &other ) : val(other.val), count(other.count) { *count += 1; }
+		    kernel(T *v) : val(v), count(new unsigned int) { *count = 1u; }
+		    kernel( const kernel &other ) : val(other.val), count(other.count) { *count += 1u; }
 		    ~kernel( ) { release( ); }
-		    void operator=( kernel &other ) { release( ); val = other.val; count = other.count; *count += 1; }
-		    void release( ) { if ( --*count == 0 ) { delete val; delete count; } }
+		    void operator=( kernel &other ) { release( ); val = other.val; count = other.count; *count += 1u; }
+		    void operator=( T *oval ) { release( ); val = oval; count = new unsigned int; *count = 1u; }
+		    void release( ) { if ( --*count == 0u ) { delete val; delete count; } }
 		};
 		kernel ptr;
 	};

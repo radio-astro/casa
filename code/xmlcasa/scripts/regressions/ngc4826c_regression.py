@@ -207,7 +207,7 @@ f3_max=1.60     # 12/1/2009.  Are we converging?
 #f3_max=1.6825   # 3/17/2010
 #f3_max = 1.457553 # 3/19/2010, after increasing clean's start by width/2
 
-f3_flux=81.45 # < 12/1/2009
+f3_flux=110.6 # change in channel centres 05/02/2011
 #f3_flux=110.44684 # 3/17/2010
 #f3_flux=99.4 # 3/19/2010     (adjusted clean's start by +1)
 #f3_flux=83.27245 # 3/19/2010 (adjusted clean's start by another +1 (width/2 total))
@@ -216,7 +216,7 @@ jc1_max=1.67 # < 12/1/2009
 #jc1_max=1.71
 
 #jc1_flux=168.87
-jc1_flux=212.11 # < 12/1/2009
+jc1_flux=230.3 # changes due to channel centre change
 #jc1_flux=223.033 # 3/17/2010
 #jc1_flux=224.495 # 3/19/2010 (adjusted clean's start by +1)
 #jc1_flux=212.652 # 3/19/2010 (adjusted clean's start by another +1 (width/2 total)
@@ -226,7 +226,7 @@ jc1_flux=212.11 # < 12/1/2009
 jc2_max=1.53 # < 12/1/2009
 
 #jc2_flux=67.27
-jc2_flux=127.87 # < 12/1/2009
+jc2_flux=147.7 # changes due to change in channel centre
 #jc2_flux=144.9498 # 3/17/2010
 #jc2_flux=145.09 # 3/19/2010  (adjusted clean's start by +1)
 #jc2_flux=135.89555 # 3/19/2010  (adjusted clean's start by another +1 (width/2 total))

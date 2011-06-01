@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.h 20908 2010-06-16 06:17:33Z gervandiepen $
+//# $Id: BaseTable.h 21025 2011-03-03 15:09:00Z gervandiepen $
 
 #ifndef TABLES_BASETABLE_H
 #define TABLES_BASETABLE_H
@@ -34,6 +34,7 @@
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/TableDesc.h>
 #include <casa/Utilities/Compare.h>
+#include <casa/Utilities/CountedPtr.h>
 #include <casa/BasicSL/String.h>
 #include <casa/IO/FileLocker.h>
 
@@ -178,6 +179,10 @@ public:
     const String& tableName() const
 	{ return name_p; }
 
+    // Get the names of the tables this table consists of.
+    // The default implementation adds the name of this table to the block.
+    virtual void getPartNames (Block<String>& names, Bool recursive) const;
+
     // Rename the table.
     // The following options can be given:
     // <dl>
@@ -256,6 +261,13 @@ public:
     // Get the data manager info.
     virtual Record dataManagerInfo() const = 0;
 
+    // Show the table structure (implementation of Table::showStructure).
+    void showStructure (std::ostream&,
+                        Bool showDataMan,
+                        Bool showColumns,
+                        Bool showSubTables,
+                        Bool sortColumns);
+
     // Get readonly access to the table keyword set.
     virtual TableRecord& keywordSet() = 0;
 
@@ -316,9 +328,9 @@ public:
     void removeRow (const Vector<uInt>& rownrs);
     // </group>
 
-    // Find the data manager with the given name.
-    virtual DataManager* findDataManager
-	              (const String& dataManagerName) const = 0;
+    // Find the data manager with the given name or for the given column.
+    virtual DataManager* findDataManager (const String& name,
+                                          Bool byColumn) const = 0;
 
     // Select rows using the given expression.
     BaseTable* select (const TableExprNode&, uInt maxRow);
@@ -357,12 +369,12 @@ public:
 
     // Sort a table on one or more columns of scalars.
     BaseTable* sort (const Block<String>& columnNames,
-		     const PtrBlock<ObjCompareFunc*>& compareFunctionPointers,
+		     const Block<CountedPtr<BaseCompare> >& compareObjects,
 		     const Block<Int>& sortOrder, int sortOption);
 
     // Create an iterator.
     BaseTableIterator* makeIterator (const Block<String>& columnNames,
-				     const PtrBlock<ObjCompareFunc*>&,
+                                     const Block<CountedPtr<BaseCompare> >&,
 				     const Block<Int>& orders, int option);
 
     // Add one or more columns to the table.
@@ -438,7 +450,7 @@ public:
     // The default implementation is suitable for almost all cases.
     // Only in RefTable a smarter implementation is provided.
     virtual BaseTable* doSort (PtrBlock<BaseColumn*>&,
-			       const PtrBlock<ObjCompareFunc*>&,
+                               const Block<CountedPtr<BaseCompare> >&,
 			       const Block<Int>& sortOrder,
 			       int sortOption);
 
@@ -520,6 +532,15 @@ private:
     // some more knowledge (like table name of result).
     // Declaring it private, makes it unusable.
     BaseTable& operator= (const BaseTable&);
+
+    // Show a possible extra table structure header.
+    // It is used by e.g. RefTable to show which table is referenced.
+    virtual void showStructureExtra (std::ostream&) const;
+
+    // Show the info of the given columns.
+    // Sort the columns if needed.
+    void showColumnInfo (ostream& os, const TableDesc&, uInt maxNameLength,
+                         const Array<String>& columnNames, Bool sort) const;
 
     // Throw an exception for checkRowNumber.
     void checkRowNumberThrow (uInt rownr) const;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledShapeStMan.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledShapeStMan.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #include <tables/Tables/TiledShapeStMan.h>
 #include <tables/Tables/TSMColumn.h>
@@ -99,6 +99,13 @@ DataManager* TiledShapeStMan::makeObject (const String& group,
 String TiledShapeStMan::dataManagerType() const
     { return "TiledShapeStMan"; }
 
+
+Record TiledShapeStMan::dataManagerSpec() const
+{
+    Record rec = TiledStMan::dataManagerSpec();
+    rec.define ("IndexSize", nrUsedRowMap_p);
+    return rec;
+}
 
 IPosition TiledShapeStMan::defaultTileShape() const
 {
@@ -504,4 +511,3 @@ TSMCube* TiledShapeStMan::getHypercube (uInt rownr, IPosition& position)
 }
 
 } //# NAMESPACE CASA - END
-

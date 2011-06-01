@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableError.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableError.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_TABLEERROR_H
 #define TABLES_TABLEERROR_H
@@ -127,41 +127,6 @@ public:
 
 
 // <summary>
-// Table error; path is not a directory
-// </summary>
-// <use visibility=export>
-
-// <synopsis> 
-// Table directory with this name could not be found.
-// </synopsis> 
-
-class TableNoDir : public TableError {
-public:
-    // This constructor generates a message telling that the 
-    // table directory with the given name does not exist.
-    TableNoDir (const String& name,Category c=INVALID_ARGUMENT);
-    ~TableNoDir () throw();
-};
-
-// <summary>
-// Table error; table description not found
-// </summary>
-// <use visibility=export>
-
-// <synopsis> 
-// Table description file with this filename could not be found.
-// </synopsis> 
-
-class TableNoDescFile : public TableError {
-public:
-    // This constructor generates a message telling that the a table
-    // or description file does not exist.
-    TableNoDescFile (const String& filename,Category c=INVALID_ARGUMENT);
-    ~TableNoDescFile () throw();
-};
-
-
-// <summary>
 // Table error; no name given to table description
 // </summary>
 // <use visibility=export>
@@ -202,6 +167,44 @@ public:
 };
 
 
+// Table error; path is not a directory
+// </summary>
+// <use visibility=export>
+// <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="">
+// </reviewed>
+
+// <synopsis> 
+// Table directory with this name could not be found.
+// </synopsis> 
+
+class TableNoDir : public TableError {
+public:
+    // This constructor generates a message telling that the 
+    // table directory with the given name does not exist.
+    TableNoDir (const String& name,Category c=INVALID_ARGUMENT);
+    ~TableNoDir () throw();
+};
+
+// <summary>
+// Table error; table.dat file not found
+// </summary>
+// <use visibility=export>
+// <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="">
+// </reviewed>
+
+// <synopsis> 
+// The table.dat file for this table could not be found.
+// </synopsis> 
+
+class TableNoDatFile : public TableError {
+public:
+    // This constructor generates a message telling that the a table
+    // or datription file does not exist.
+    TableNoDatFile (const String& filename,Category c=INVALID_ARGUMENT);
+    ~TableNoDatFile () throw();
+};
+
+
 // <summary>
 // Table error; table type mismatch
 // </summary>
@@ -218,8 +221,9 @@ class TableInvType : public TableError {
 public:
     // This constructor generates a message that the in table type
     // mismatches the table type in the file.
-    TableInvType (const String& tableName, const String& typeIn,
-                  const String& typeFile, Category c=CONFORMANCE);
+    TableInvType (const String& tablename,
+                  const String& typeIn, const String& typeFile,
+                  Category c=CONFORMANCE);
     ~TableInvType () throw();
 };
 

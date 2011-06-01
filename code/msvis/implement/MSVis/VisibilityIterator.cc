@@ -626,9 +626,8 @@ void ROVisibilityIterator::setTileCache(){
     //
 for (uInt k=0; k< columns.nelements(); ++k){
       if (cds.isDefined(columns(k))) {
-	const ColumnDesc& cdesc=cds[columns(k)];
 	String dataManType="";
-	dataManType=cdesc.dataManagerType();
+	dataManType=RODataManAccessor(thems, columns[k], True).dataManagerType();
 	//have to do something special about weight_spectrum as it tend to exist but 
 	//has no valid data
 	if(columns[k]==MS::columnName(MS::WEIGHT_SPECTRUM))
@@ -656,11 +655,10 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	
    
 	
-	if(dataManType.contains("Tiled")  && (!String(cdesc.dataManagerGroup()).empty())){
+	if(dataManType.contains("Tiled") ){
 	  try {
 	    
-	    ROTiledStManAccessor tacc=ROTiledStManAccessor(thems, 
-							   cdesc.dataManagerGroup());
+	    ROTiledStManAccessor tacc(thems, columns[k], True);
 	    
 
 	    /*

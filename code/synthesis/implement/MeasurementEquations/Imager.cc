@@ -3446,41 +3446,18 @@ Bool Imager::updateresidual(const Vector<String>& model,
 
     if(redoSkyModel_p)
       throw(AipsError("use restore instead of updateresidual"));
-    Bool coordMatch=True; 
-    for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
-      CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
-      coordMatch= coordMatch || checkCoord(cs, model(thismodel));
-      if(!coordMatch)
-	throw(AipsError("Coordinates of models to be updated are different from what is in the cache of imager "));
-      if(model(thismodel)=="") {
-	os << LogIO::SEVERE << "Need a name for model "
-	   << model << LogIO::POST;
-	return False;
-      }
-      else {
-	if(!Table::isReadable(model(thismodel))) {
-	  os << LogIO::SEVERE << model(thismodel) << "is unreadable"
-	     << model << LogIO::POST;
-	  return False;
-	}
-      }
-      images_p[thismodel]=0;
-      images_p[thismodel]=new PagedImage<Float>(model(thismodel));
-	AlwaysAssert(!images_p[thismodel].null(), AipsError);
-	sm_p->updatemodel(thismodel, *images_p[thismodel]);
-      }
-    if((complist !="") && Table::isReadable(complist)){
-      ComponentList cl(Path(complist), True);
-      sm_p->updatemodel(cl);
-    }
-    
-    
-    
+    if(!updateSkyModel(model, complist))
+	throw(AipsError("Could not do an updateresidual please use restore"));      
     addResiduals(residual);
+    for (Int thismodel=0;thismodel<Int(residuals_p.nelements());++thismodel) {
+      if(!residuals_p[thismodel].null()) 
+	sm_p->addResidual(thismodel, *residuals_p[thismodel]);   
+    }
     sm_p->solveResiduals(*se_p);
-    for (uInt k=0 ; k < residuals_p.nelements(); ++k){
+    /*for (uInt k=0 ; k < residuals_p.nelements(); ++k){
       residuals_p[k]->copyData(sm_p->getResidual(k));
     }
+    */
     restoreImages(image);
     
 
@@ -3743,6 +3720,8 @@ Bool Imager::clean(const String& algorithm,
 #endif
   Bool converged=True; 
 
+
+
   ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
   if(!valid())
@@ -3994,12 +3973,16 @@ Bool Imager::clean(const String& algorithm,
       else if (algorithm=="msmfs") {
 	doMultiFields_p = False;
 	doWideBand_p = True;
-	if ( ftmachine_p != "ft" && ftmachine_p != "wproject") {
+
+        // check for wrong ftmachine specs.
+	if ( (ftmachine_p != "ft") && (ftmachine_p != "wproject") && 
+             (ftmachine_p != "wbawp") && (ftmachine_p != "nift") ) {
 	  os << LogIO::SEVERE
-             << "Multi-scale Multi-frequency Clean currently works only with the default ftmachine and wproject"
+             << "Multi-scale Multi-frequency Clean currently works only with ft and wproject (and wbawp,nift)"
              << LogIO::POST;
 	  return False;
 	}
+
 	if (!scaleInfoValid_p) {
           this->unlock();
           os << LogIO::WARN << "Scales not yet set, using power law" << LogIO::POST;
@@ -4580,8 +4563,14 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
   this->lock();
   try {
     
-    if(sm_p) destroySkyEquation();
-    
+    if(!redoSkyModel_p){
+      //let us try to update the sm_p then
+      //so as to keep the state and psf's etc if they have been calculated
+      //useful when cleaning, modify/clip model then predict, selfcal and clean again
+      if(!updateSkyModel(model, complist))
+	destroySkyEquation();
+    }
+
     if(incremental) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Fourier transforming: adding to MODEL_DATA column" << LogIO::POST;
@@ -4591,16 +4580,18 @@ Bool Imager::ft(const Vector<String>& model, const String& complist,
          << "Fourier transforming: replacing MODEL_DATA column" << LogIO::POST;
     }
 
-    //    if (!se_p)
-    if(!createSkyEquation(model, complist)) return False;
+    if (redoSkyModel_p){
+      if(!createSkyEquation(model, complist)) return False;
+    }
     if(incremental){
       for (Int mod=0; mod < (sm_p->numberOfModels()); ++mod){
 	(sm_p->deltaImage(mod)).copyData(sm_p->image(mod));
       }
     }
+    
     se_p->predict(incremental);
     
-    destroySkyEquation();
+    // destroySkyEquation();
     
     this->unlock();
     return True;
@@ -4842,7 +4833,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
   TempImage<Float> *tmodimage(NULL);
 
   try {
-    Bool precompute = (fluxdens(0) < 0 || (model != ""));
+    Bool precompute = fluxdens[0] < 0.0;
 
     // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
@@ -4856,27 +4847,34 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     expand_blank_sel(selToRawSpwIds, ms_p->spectralWindow().nrow());
     expand_blank_sel(fldids, ms_p->field().nrow());
 
-    // Forbid multiple fields for some circumstances
-    if (fldids.nelements()>1) {
+    // Warn against multiple fields in some circumstances.
+    if (fldids.nelements() > 1 && (model != "" || !precompute)) {
+      String errmsg("setjy is applying a single ");
 
-      if (model!="") {
-	String errmsg("setjy cannot apply a model image to multiple fields");
-	os << LogIO::SEVERE
-	   << errmsg << endl
-	   << "run setjy once per field, or use ft"
-	   << LogIO::POST;
-	throw(AipsError(errmsg));
+      if(model != ""){
+	errmsg += "modimage";
+        if(!precompute)
+          errmsg += " or ";
       }
 
-      if (!precompute) {
-	String errmsg("setjy cannot apply user flux density to multiple fields");
-	os << LogIO::SEVERE
-	   << errmsg << endl
-	   << "run setjy once per field"
-	   << LogIO::POST;
-	throw(AipsError(errmsg));
-      }
+      if(!precompute)
+        errmsg += "fluxdensity";
+
+      errmsg += " to multiple fields!\n";
+      os << LogIO::WARN
+         << errmsg
+         << "This could be a user error, but sometimes a single name will\n"
+         << "resolve to > 1 field index.\n"
+         << LogIO::POST;
+      //throw(AipsError(errmsg));
     }
+
+    os << LogIO::NORMAL;
+    if(precompute)
+      os << "Using " << (chanDep ? "channel" : "spw") << " dependent flux densities";
+    else
+      os << "The applied flux density does not depend on frequency.";
+    os << LogIO::POST;
 
     // Ignore user-polarization if using an image:
     if (model!="") {
@@ -5004,7 +5002,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
             }
             else {
               os << LogIO::SEVERE << "Missing SOURCE_MODEL column."
-                 << LogIO::SEVERE << "Using default, I=1.0"
+                 << LogIO::SEVERE << "Continuing with the default, I = 1.0 Jy"
                  << LogIO::POST;
               fluxUsed = 0;
               fluxUsed(0) = 1.0;
@@ -5012,6 +5010,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	  }
 	  else {
 	    // Source not found; use Stokes I=1.0 Jy for now
+            // (The flux standard already issued a complaint like this...)
+            // os << LogIO::WARN
+            //    << fieldName << " was not recognized by " << standard
+            //    << ".\nContinuing with the default, I = 1.0 Jy"
+            //    << LogIO::POST;
 	    fluxUsed=0;
 	    fluxUsed(0)=1.0;
 	    fluxScaleName="default";
@@ -5236,10 +5239,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         begin[0]=0;
         Vector<Int> stepsize(1);
         stepsize[0]=1;
-        setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
-                MRadialVelocity(),
-                selectSpw, selectField, msSelectString, "", "",
-                Vector<Int>(), "", "", "", "", True, true);
+        if(useimage || tempCLs[selspw] != "")
+          setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
+                  MRadialVelocity(),
+                  selectSpw, selectField, msSelectString, "", "",
+                  Vector<Int>(), "", "", "", "", True, true);
 
         if (!nullSelect_p) {
 
@@ -5256,9 +5260,12 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	    se_p->predict(False);
 	    destroySkyEquation();
           }
-          else
+          else if(tempCLs[selspw] != "")
             ft(modelv, tempCLs[selspw], False);
-
+          else
+            os << LogIO::NORMAL
+               << "Skipping an empty component list for spw " << rawspwid
+               << LogIO::POST;
         };
 	
         if (tmodimage) delete tmodimage;
@@ -5615,7 +5622,8 @@ Bool Imager::plotuv(const Bool rotate)
     if(rotate) {
     
       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot", "right");
+      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot",
+					       std::vector<int>( ), "right");
 
       if ( panel_id.type( ) != dbus::variant::INT ) {
 	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
@@ -5628,8 +5636,9 @@ Bool Imager::plotuv(const Bool rotate)
 
     }
     else {
-       PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot" ,"right");
+      PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
+      dbus::variant panel_id = plotter->panel( "UV-Coverage for "+imageName(), "U (wavelengths)", "V (wavelengths)", "UV-Plot" ,
+					       std::vector<int>( ), "right");
 
       if ( panel_id.type( ) != dbus::variant::INT ) {
 	os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
@@ -5854,7 +5863,8 @@ Bool Imager::plotvis(const String& type, const Int increment)
 	if((hasModel && hasCorrected) && maxResidualAmp>Ymax)  Ymax = maxResidualAmp;
       }
     PlotServerProxy *plotter = dbus::launch<PlotServerProxy>( );
-    dbus::variant panel_id = plotter->panel( "Stokes I Visibility for "+imageName(),"UVDistance (wavelengths)" , "Amplitude", "Vis-Plot", "right");
+    dbus::variant panel_id = plotter->panel( "Stokes I Visibility for "+imageName(),"UVDistance (wavelengths)" , "Amplitude", "Vis-Plot",
+					     std::vector<int>( ), "right");
     
     if ( panel_id.type( ) != dbus::variant::INT ) {
       os << LogIO::SEVERE << "failed to start plotter" << LogIO::POST;
@@ -6791,6 +6801,18 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	    }
 	  }
+	  ///guess we are done with the viewer
+	  if((viewer_p !=0) && (clean_panel_p != 0)){
+	    if(image_id_p !=0)
+	      viewer_p->unload(image_id_p);
+	    if(mask_id_p !=0)
+	      viewer_p->unload(mask_id_p);
+	    viewer_p->close(clean_panel_p);
+	    clean_panel_p=0;
+	    image_id_p=0;
+	    mask_id_p=0;
+	  }
+	  
 	}
        } //catch  (AipsError x) {
        //os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseTable.cc 20983 2010-10-01 10:02:48Z gervandiepen $
+//# $Id: BaseTable.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/BaseTable.h>
@@ -39,8 +39,10 @@
 #include <tables/Tables/TableError.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Containers/ContainerIO.h>
 #include <casa/Containers/Block.h>
 #include <casa/Containers/Record.h>
+#include <casa/Containers/ValueHolder.h>
 #include <casa/Utilities/Sort.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <casa/BasicSL/String.h>
@@ -220,6 +222,13 @@ int BaseTable::tableType() const
   return Table::Plain;
 }
 
+void BaseTable::getPartNames (Block<String>& names, Bool) const
+{
+  uInt inx = names.size();
+  names.resize (inx + 1);
+  names[inx] = name_p;
+}
+
 TableInfo BaseTable::tableInfo (const String& tableName)
 {
     return TableInfo (tableName + "/table.info");
@@ -319,7 +328,7 @@ void BaseTable::prepareCopyRename (const String& newName,
     }
     // Copy and rename is not allowed if the target table is open.
     Path path(newName);
-    PlainTable* ptr = PlainTable::tableCache(path.absoluteName());
+    PlainTable* ptr = PlainTable::tableCache()(path.absoluteName());
     if (ptr) {
         throw (TableInvOper ("Cannot copy/rename; target table " + newName +
 			     " is still open (is in the table cache)"));
@@ -341,7 +350,7 @@ void BaseTable::prepareCopyRename (const String& newName,
     }else{
 	// The table must exist for Update.
 	if (tableOption == Table::Update) {
-	    throw (TableNoFile(newName));
+            throw (TableNoFile(newName));
 	}
     }   
 }
@@ -377,7 +386,7 @@ void BaseTable::rename (const String& newName, int tableOption)
 	renameSubTables (absNewName, oldName);
 	//# Okay, the table file has been renamed.
 	//# Now rename in the cache (if there) and internally.
-	PlainTable::tableCache.rename (absNewName, oldName);
+        PlainTable::tableCache().rename (absNewName, oldName);
 	name_p = absNewName;
     }
     //# (Un)mark for delete when necessary.
@@ -578,7 +587,7 @@ Vector<uInt>* BaseTable::rowStorage()
 
 //# Sort a table.
 BaseTable* BaseTable::sort (const Block<String>& names,
-			    const PtrBlock<ObjCompareFunc*>& cmpFunc,
+			    const Block<CountedPtr<BaseCompare> >& cmpObj,
                             const Block<Int>& order, int option)
 {
     AlwaysAssert (!isNull(), AipsError);
@@ -599,12 +608,12 @@ BaseTable* BaseTable::sort (const Block<String>& names,
 	}
     }
     // Return the result as a table.
-    return doSort (sortCol, cmpFunc, order, option);
+    return doSort (sortCol, cmpObj, order, option);
 }
 
 //# Do the actual sort.
 BaseTable* BaseTable::doSort (PtrBlock<BaseColumn*>& sortCol,
-			      const PtrBlock<ObjCompareFunc*>& cmpFunc,
+			      const Block<CountedPtr<BaseCompare> >& cmpObj,
                               const Block<Int>& order, int option)
 {
     uInt i;
@@ -613,8 +622,9 @@ BaseTable* BaseTable::doSort (PtrBlock<BaseColumn*>& sortCol,
     //# Pass all keys (and their data) to it.
     Sort sortobj;
     PtrBlock<const void*> dataSave(nrkey);          // to remember data blocks
+    Block<CountedPtr<BaseCompare> > cmp(cmpObj);
     for (i=0; i<nrkey; i++) {
-	sortCol[i]->makeSortKey (sortobj, cmpFunc[i], order[i], dataSave[i]);
+	sortCol[i]->makeSortKey (sortobj, cmp[i], order[i], dataSave[i]);
     }
     //# Create a reference table.
     //# This table will NOT be in row order.
@@ -637,9 +647,6 @@ BaseTable* BaseTable::doSort (PtrBlock<BaseColumn*>& sortCol,
 RefTable* BaseTable::makeRefTable (Bool rowOrder, uInt initialNrrow)
 {
     RefTable* rtp = new RefTable(this, rowOrder, initialNrrow);
-    if (rtp == 0) {
-	throw (AllocError ("BaseTable::makeRefTable", 1));
-    }
     return rtp;
 }
 
@@ -711,9 +718,6 @@ BaseTable* BaseTable::select (const Vector<uInt>& rownrs)
 {
     AlwaysAssert (!isNull(), AipsError);
     RefTable* rtp = new RefTable(this, rownrs);
-    if (rtp == 0) {
-	throw (AllocError ("Table::operator() (rownrs)", 1));
-    }
     return rtp;
 }
 
@@ -721,9 +725,6 @@ BaseTable* BaseTable::select (const Block<Bool>& mask)
 {
     AlwaysAssert (!isNull(), AipsError);
     RefTable* rtp = new RefTable(this, Vector<Bool>(mask));
-    if (rtp == 0) {
-	throw (AllocError ("Table::operator() (mask)", 1));
-    }
     return rtp;
 }
 
@@ -731,9 +732,6 @@ BaseTable* BaseTable::project (const Block<String>& names)
 {
     AlwaysAssert (!isNull(), AipsError);
     RefTable* rtp = new RefTable(this, Vector<String>(names));
-    if (rtp == 0) {
-	throw (AllocError ("BaseTable::project", 1));
-    }
     return rtp;
 }
 
@@ -922,20 +920,18 @@ uInt BaseTable::logicRows (uInt*& inx, Bool& allsw)
 }
 
 
-BaseTableIterator* BaseTable::makeIterator (const Block<String>& names,
-				      const PtrBlock<ObjCompareFunc*>& cmpFunc,
-				      const Block<Int>& order, int option)
+BaseTableIterator* BaseTable::makeIterator
+(const Block<String>& names,
+ const Block<CountedPtr<BaseCompare> >& cmpObj,
+ const Block<Int>& order, int option)
 {
     AlwaysAssert (!isNull(), AipsError);
     if (names.nelements() != order.nelements()
-    ||  names.nelements() != cmpFunc.nelements()) {
+    ||  names.nelements() != cmpObj.nelements()) {
 	throw (TableInvOper ("TableIterator: Unequal block lengths"));
     }
     BaseTableIterator* bti = new BaseTableIterator (this, names,
-						    cmpFunc, order, option);
-    if (bti == 0) {
-	throw (AllocError ("BaseTable::makeIterator", 1));
-    }
+						    cmpObj, order, option);
     return bti;
 }
 
@@ -981,6 +977,156 @@ void BaseTable::checkRowNumberThrow (uInt rownr) const
 		       " exceeds #rows " +
 		       String::toString(nrrow_p+nrrowToAdd_p)
 		       + " in table " + tableName()));
+}
+
+void BaseTable::showStructure (ostream& os, Bool showDataMans, Bool showColumns,
+                               Bool showSubTables, Bool sortColumns)
+{
+  TableDesc tdesc = actualTableDesc();
+  Record dminfo = dataManagerInfo();
+  os << endl << "Structure of table " << tableName()
+     << endl << "------------------ ";
+  os << info_p.type();
+  if (! info_p.subType().empty()) {
+    os << " (" << info_p.subType() << ')';
+  }
+  os << endl;
+  os << nrow() << " rows, " << tdesc.ncolumn() << " columns (using "
+     << dminfo.nfields() << " data managers)" <<endl;
+  showStructureExtra (os);
+  uInt maxl = 0;
+  for (uInt i=0; i<tdesc.ncolumn(); ++i) {
+    if (tdesc[i].name().size() > maxl) {
+      maxl = tdesc[i].name().size();
+    }
+  }
+  if (!showDataMans) {
+    os << endl;
+    showColumnInfo (os, tdesc, maxl, tdesc.columnNames(), sortColumns);
+  } else {
+    for (uInt i=0; i<dminfo.nfields(); ++i) {
+      os << endl << " ";
+      const Record& dm = dminfo.subRecord(i);
+      Record spec;
+      if (dm.isDefined("SPEC")) {
+        spec = dm.subRecord("SPEC");
+      }
+      os << dm.asString("TYPE");
+      os << " file=table.f" << dm.asInt("SEQNR") << " ";
+      os << " name=" << dm.asString("NAME");
+      if (spec.isDefined("BUCKETSIZE")) {
+        os << "  bucketsize=" << spec.asInt("BUCKETSIZE");
+      }
+      os << endl;
+      if (spec.isDefined("HYPERCUBES")) {
+        os << "    hypercubes:" << endl;
+        const Record& hcubes = spec.subRecord("HYPERCUBES");
+        for (uInt k=0; k<hcubes.nfields(); ++k) {
+          const Record& hcube = hcubes.subRecord(k);
+          os << "      bucketsize=" << hcube.asInt("BucketSize");
+          os << " tileshape=";
+          showContainer (os, hcube.asArrayInt("TileShape"));
+          os << " cellshape=";
+          showContainer (os, hcube.asArrayInt("CellShape"));
+          os << " cubeshape=";
+          showContainer (os, hcube.asArrayInt("CubeShape"));
+          os << endl;
+        }
+      }
+      Bool extra = False;
+      for (uint j=0; j<spec.nfields(); j++) {
+        const String& name = spec.name(j);
+        if (name != "SEQNR" && name != "BUCKETSIZE" && name != "HYPERCUBES") {
+          if (!extra) {
+            os << "   ";
+            extra = True;
+          }
+          os << ' '<< name << '=' << spec.asValueHolder(j);
+        }
+      }
+      if (extra) {
+        os << endl;
+      }
+      if (showColumns) {
+        showColumnInfo (os, tdesc, maxl, dm.asArrayString ("COLUMNS"),
+                        sortColumns);
+      }
+    }
+  }
+  TableRecord keywords = keywordSet();
+  Bool hasSub = False;
+  for (uInt i=0; i<keywords.nfields(); ++i) {
+    if (keywords.dataType(i) == TpTable) {
+      if (!hasSub) {
+        os << endl << " SubTables:" << endl;
+        hasSub = True;
+      }
+      os << "    " << keywords.asTable(i).tableName() << endl;
+    }
+  }
+  if (hasSub && showSubTables) {
+    for (uInt i=0; i<keywords.nfields(); ++i) {
+      if (keywords.dataType(i) == TpTable) {
+        Table tab = keywords.asTable(i);
+        // Do not show if the subtable has the same root as this table.
+        // This is needed to avoid endless recursion in case of SORTED_TABLE
+        // in a MeasurementSet.
+        if (! tab.isSameRoot (Table(this, False))) {
+          tab.showStructure (os, showDataMans, showColumns,
+                             showSubTables, sortColumns);
+        }
+      }
+    }
+  }
+}
+
+void BaseTable::showStructureExtra (ostream&) const
+{}
+
+void BaseTable::showColumnInfo (ostream& os, const TableDesc& tdesc,
+                                uInt maxl, const Array<String>& columnNames,
+                                Bool sort) const
+{
+  Vector<String> columns(columnNames);
+  if (sort) {
+    GenSort<String>::sort (columns);
+  }
+  for (uInt j=0; j<columns.size(); ++j) {
+    const ColumnDesc& cdesc = tdesc[columns[j]];
+    TableRecord keywords = cdesc.keywordSet();
+    os << "  " << cdesc.name();
+    for (uInt k=0; k<=maxl - cdesc.name().size(); ++k) {
+      os << ' ';
+    }
+    os << ValType::getTypeStr(cdesc.dataType());
+    if (cdesc.isScalar()) {
+      os << " scalar";
+    } else if (cdesc.isArray()) {
+      if (cdesc.options() & ColumnDesc::FixedShape) {
+        os << " shape=";
+        showContainer (os, cdesc.shape());
+      } else if (cdesc.ndim() > 0) {
+        os << " ndim=" << cdesc.ndim();
+      } else {
+        os << " array";
+      }
+    }
+    if (keywords.isDefined("UNIT") && !keywords.asString("UNIT").empty()) {
+      os << " unit=" << keywords.asString("UNIT");
+    } else if (keywords.isDefined("QuantumUnits")) {
+      os << " unit=";
+      showContainer (os, keywords.asArrayString("QuantumUnits"));
+    }
+    if (keywords.isDefined("MEASINFO")) {
+      const TableRecord& meas = keywords.subRecord("MEASINFO");
+      os << " measure=" << meas.asString("type") << ','
+         << meas.asString("Ref");
+    }
+    if (cdesc.options() & ColumnDesc::Direct) {
+      os << " directly stored";
+    }
+    os << endl;
+  }
 }
 
 } //# NAMESPACE CASA - END

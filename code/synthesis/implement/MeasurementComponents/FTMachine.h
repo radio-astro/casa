@@ -150,8 +150,13 @@ public:
 
   // Put coherence to grid
   virtual void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
-		   FTMachine::Type type= FTMachine::OBSERVED, 
-		   const Matrix<Float>& imweight = Matrix<Float>(0,0)) = 0;
+		   FTMachine::Type type= FTMachine::OBSERVED)=0;
+
+  // Non const vb version - so that weights can be modified in-place
+  // Currently, used only by MultiTermFT
+  virtual void put(VisBuffer& vb, Int row=-1, Bool dopsf=False, 
+  	           FTMachine::Type type= FTMachine::OBSERVED)
+                    {put((const VisBuffer&)vb,row,dopsf,type);};
 
   // Get the final image
   virtual ImageInterface<Complex>& getImage(Matrix<Float>&, Bool normalize=True) = 0;
@@ -239,6 +244,13 @@ public:
   // term in the CFCache.
   virtual void setMiscInfo(const Int qualifier)=0;
 
+  virtual void setCanComputeResiduals(Bool& b) {canComputeResiduals_p=b;};
+  virtual Bool canComputeResiduals() {return canComputeResiduals_p;};
+  //
+  // Make the VB and VBStore interefaces for the interim re-factoring
+  // work.  Finally removed the VB interface.
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) = 0;
+  //virtual void ComputeResiduals(VBStore& vb)=0;
 protected:
 
   LogIO logIO_p;
@@ -277,7 +289,7 @@ protected:
 
 
   // Sum of weights per polarization and per chan
-  Matrix<Double> sumWeight;
+  Matrix<Double> sumWeight, sumCFWeight;
 
   // Sizes
   Int nx, ny, npol, nchan, nvischan, nvispol;
@@ -348,6 +360,7 @@ protected:
   CountedPtr<CFCache> cfCache_p;
   CFStore cfs_p, cfwts_p;
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
+  Bool canComputeResiduals_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

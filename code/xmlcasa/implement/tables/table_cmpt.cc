@@ -2050,7 +2050,7 @@ table::showcache(const bool verbose)
  *itsLog << LogOrigin(__func__, name());
  std::vector<std::string> rstat(0);
  try {
-     const TableCache& cache = PlainTable::tableCache;
+     const TableCache& cache = PlainTable::tableCache();
      if(verbose){
 	 if(cache.ntable()==0){
 	     *itsLog << LogIO::NORMAL << "The Table Cache is empty." << LogIO::POST;

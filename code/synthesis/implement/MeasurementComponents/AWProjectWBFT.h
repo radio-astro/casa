@@ -50,6 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWProjectWBFT(Int nFacets, Long cachesize,
 		  CountedPtr<CFCache>& cfcache,
 		  CountedPtr<ConvolutionFunction>& cf,
+		  CountedPtr<VisibilityResamplerBase>& visResampler,
 		  Bool applyPointingOffset=True,
 		  Bool doPBCorr=True,
 		  Int tilesize=16, 
@@ -61,8 +62,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Construct from a Record containing the AWProjectWBFT state
     AWProjectWBFT(const RecordInterface& stateRec);
     
+    // Copy constructor
+    AWProjectWBFT(const AWProjectWBFT &other):AWProjectFT() {operator=(other);};
+
     // Assignment operator
-    AWProjectWBFT &operator=(const AWProjectWBFT &othher);
+    AWProjectWBFT &operator=(const AWProjectWBFT &other);
     
     ~AWProjectWBFT() {};
 
@@ -130,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // member variable pbLimit_p).
     //
     inline virtual Float pbFunc(const Float& pbPixValue, const Float& pbLimit) 
-    {return  sqrt(pbPixValue);};
+    {Float tt=sqrt(pbPixValue);return  (abs(tt) >= pbLimit)?tt:1.0;};
 
     virtual void finalizeToSky();
     virtual void initializeToSky(ImageInterface<Complex>& image,  Matrix<Float>& weight,
@@ -152,6 +156,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // {sensitivityPatternQualifier_p=qualifier;}
     //    {qualifier_p = qualifier;taylorQualifier_p = "_MFS_"+String::toString(qualifier_p)+"_";};
 
+    //  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
   protected:
     void ftWeightImage(Lattice<Complex>& wtImage, 
 		       const Matrix<Float>& sumWt,
@@ -161,7 +166,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const VisBuffer& vb, Bool& dopsf);
     //    virtual void resampleGridToData(VBStore& vbs, const VisBuffer& vb);
 
-    Bool avgPBReady_p,resetPBs_p, wtImageFTDone;
+    Bool avgPBReady_p,resetPBs_p, wtImageFTDone_p;
 
   private:
     Vector<Int> fieldIds_p;

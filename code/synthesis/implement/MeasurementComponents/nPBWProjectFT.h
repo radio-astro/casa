@@ -240,8 +240,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //    throw(AipsError("nPBWProjectFT::put is not implemented"));
     }
     void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	     FTMachine::Type type=FTMachine::OBSERVED,
-	     const Matrix<Float>& wgt=Matrix<Float>(0,0));
+	     FTMachine::Type type=FTMachine::OBSERVED);
     
     // Make the entire image
     void makeImage(FTMachine::Type type,
@@ -351,6 +350,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     Bool Square=False);
     void correctAntiAliasing(Lattice<Complex>& cf);
     virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+    virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
+
   protected:
     
     // Padding in FFT

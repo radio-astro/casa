@@ -137,6 +137,7 @@ public:
   // fields are modified.
   Bool fixvis(const String& refcode, const String& dataColName);
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
 
 private:
   // Interpret field indices (MSSelection)
@@ -186,8 +187,7 @@ private:
 
   // Fixes the visses in vb for row (or all if row == -1).
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False, 
-           FTMachine::Type type=FTMachine::OBSERVED, 
-           const Matrix<Float>& imweight=Matrix<Float>(0,0));
+           FTMachine::Type type=FTMachine::OBSERVED);
 
   Bool getRestFreq(Vector<Double>& restFreq, const Int spw, const Int fldID);
   void setObsInfo(ObsInfo& obsinfo);

@@ -111,7 +111,9 @@
 #include <synthesis/MeasurementComponents/MSCleanImageSkyModel.h>
 #include <synthesis/MeasurementComponents/NNLSImageSkyModel.h>
 #include <synthesis/MeasurementComponents/WBCleanImageSkyModel.h>
+#include <synthesis/MeasurementComponents/MultiThreadedVisResampler.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
@@ -122,6 +124,7 @@
 #include <synthesis/MeasurementComponents/VPSkyJones.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
+#include <synthesis/MeasurementComponents/VisibilityResamplerBase.h>
 
 #include <synthesis/DataSampling/SynDataSampling.h>
 #include <synthesis/DataSampling/SDDataSampling.h>
@@ -184,6 +187,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <limits>
+
+#include <synthesis/MeasurementComponents/AWProjectFT.h>
+#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
+#include <synthesis/MeasurementComponents/MultiTermFT.h>
+#include <synthesis/MeasurementComponents/AWConvFunc.h>
 
 using namespace std;
 
@@ -375,10 +383,20 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	// This needs some careful thought about roundoff - it is likely 
 	// still adding an extra half-channel at top and bottom but 
 	// if the freqResolution is nonlinear, there are subtleties
-	Int lastchan=dataStart_p[i]+ dataNchan_p[i]*dataStep_p[i];
-        for(Int k=dataStart_p[i] ; k < lastchan ;  k+=dataStep_p[i]){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(dataStep_p[i]-0.5)));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(dataStep_p[i]-0.5)));
+	Int elnchan=chanFreq.nelements();
+	Int firstchan=0;
+        Int elstep=1;
+	for (uInt jj=0; jj < dataspectralwindowids_p.nelements(); ++jj){
+	  if(dataspectralwindowids_p[jj]==spw){
+	    firstchan=dataStart_p[jj];
+	    elnchan=dataNchan_p[jj];
+	    elstep=dataStep_p[jj];
+	  }	
+	}
+	Int lastchan=firstchan+ elnchan*elstep;
+        for(Int k=firstchan ; k < lastchan ;  k+=elstep){
+	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(elstep-0.5)));
+	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(elstep-0.5)));
         }
       }
       else{
@@ -530,11 +548,11 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	finc=freqResolution(IPosition(1,0));
       }
 
-      //in order to outframe to work need to set here original freq frame
+      // Now use outframe (instead of data frame) as the rest of
+      // the modes do
       //
-      //
-      //mySpectral = new SpectralCoordinate(freqFrame_p,
-      mySpectral = new SpectralCoordinate(obsFreqRef,
+      mySpectral = new SpectralCoordinate(freqFrame_p,
+      //mySpectral = new SpectralCoordinate(obsFreqRef,
       					  chanFreq(0),
                                           finc,  
       					  refChan, restFreq);
@@ -887,10 +905,20 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
 	// This needs some careful thought about roundoff - it is likely 
 	// still adding an extra half-channel at top and bottom but 
 	// if the freqResolution is nonlinear, there are subtleties
-	Int lastchan=dataStart_p[i]+ dataNchan_p[i]*dataStep_p[i];
-        for(Int k=dataStart_p[i] ; k < lastchan ;  k+=dataStep_p[i]){
-	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(dataStep_p[i]-0.5)));
-	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(dataStep_p[i]-0.5)));
+	Int elnchan=chanFreq.nelements();
+	Int firstchan=0;
+        Int elstep=1;
+	for (uInt jj=0; jj < dataspectralwindowids_p.nelements(); ++jj){
+	  if(dataspectralwindowids_p[jj]==spw){
+	    firstchan=dataStart_p[jj];
+	    elnchan=dataNchan_p[jj];
+	    elstep=dataStep_p[jj];
+	  }	
+	}
+	Int lastchan=firstchan+ elnchan*elstep;
+        for(Int k=firstchan ; k < lastchan ;  k+=elstep){
+	  fmin=min(fmin,chanFreq[k]-abs(freqResolution[k]*(elstep-0.5)));
+	  fmax=max(fmax,chanFreq[k]+abs(freqResolution[k]*(elstep-0.5)));
         }
       }
       else{
@@ -2647,6 +2675,214 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
     
   }  
+  else if(ftmachine_p=="nift") {
+    os << LogIO::NORMAL // Loglevel INFO
+       << "Using FTMachine " << ftmachine_p << LogIO::POST
+       << "Performing interferometric gridding..."
+       << LogIO::POST;
+    os << LogIO::NORMAL1 // gridfunction_p is too cryptic for most users.
+       << "...with convolution function " << gridfunction_p << LogIO::POST;
+
+    // Make the re-gridder components.  Here, make the basic
+    // re-sampler.
+    CountedPtr<VisibilityResamplerBase> visResamplerCtor = new VisibilityResampler();
+    // Make the multi-threaded re-sampler and supply the basic
+    // re-sampler used in the worklet threads.
+    CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+											       visResamplerCtor);
+    // Now make the FTMachine
+    if(facets_p>1) {
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Multi-facet Fourier transforms will use specified common tangent point:"
+	 << LogIO::POST;
+      os << LogIO::NORMAL << tangentPoint() << LogIO::POST; // Loglevel INFO
+      ft_p = new rGridFT(cache_p / 2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
+			 phaseCenter_p, padding, False, useDoublePrecGrid);
+      
+    }
+    else {
+      os << LogIO::DEBUG1
+         << "Single facet Fourier transforms will use image center as tangent points"
+	 << LogIO::POST;
+      ft_p = new rGridFT(cache_p/2, tile_p, mthVisResampler, gridfunction_p, mLocation_p,
+			padding, False, useDoublePrecGrid);
+
+    }
+    AlwaysAssert(ft_p, AipsError);
+    
+    cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
+    
+  }
+  //===============================================================
+  // A-Projection FTMachine code start here
+  //===============================================================
+  else if (ftmachine_p == "wbawp"){
+
+    if (wprojPlanes_p<=1)
+      {
+	os << LogIO::NORMAL
+	   << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBA-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+    if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+      {
+	os << LogIO::WARN
+	   << "No. of w-planes set too low for W projection - recommend at least 128"
+	   << LogIO::POST;
+	os << LogIO::NORMAL << "Performing WBAW-Projection" << LogIO::POST; // Loglevel PROGRESS
+      }
+
+    // if(!gvp_p) 
+    //   {
+    // 	os << LogIO::NORMAL // Loglevel INFO
+    //        << "Using defaults for primary beams used in gridding" << LogIO::POST;
+    // 	gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+    //                            skyPosThreshold_p);
+    //   }
+    useDoublePrecGrid=False;
+    CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+    CountedPtr<ConvolutionFunction> awConvFunc = new AWConvFunc(apertureFunction);
+    CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+    CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+     											       visResampler);
+    CountedPtr<CFCache> cfcache = new CFCache();
+    cfcache->setCacheDir(cfCacheDirName_p.data());
+    cfcache->initCache();
+    ft_p = new AWProjectWBFT(wprojPlanes_p, cache_p/2, 
+			     cfcache, awConvFunc, mthVisResampler,//visResampler,
+			     /*True */doPointing, doPBCorr, 
+			     tile_p, paStep_p, pbLimit_p, True);
+    ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
+    //
+    // Explicit type casting of ft_p does not look good.  It does not
+    // pick up the setPAIncrement() method of PBWProjectFT without
+    // this
+    //
+    // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
+    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+    if (doPointing) 
+      {
+	try
+	  {
+	    // Warn users we are have temporarily disabled pointing cal
+	    //	    throw(AipsError("Pointing calibration temporarily disabled (gmoellen 06Nov20)."));
+	    //  TBD: Bring this up-to-date with new VisCal mechanisms
+	    VisSet elVS(*rvi_p);
+	    epJ = new EPJones(elVS, *ms_p);
+	    RecordDesc applyRecDesc;
+	    applyRecDesc.addField("table", TpString);
+	    applyRecDesc.addField("interp",TpString);
+	    Record applyRec(applyRecDesc);
+	    applyRec.define("table",epJTableName_p);
+	    applyRec.define("interp", "nearest");
+	    epJ->setApply(applyRec);
+	    ((AWProjectFT *)ft_p)->setEPJones(epJ);
+	  }
+	catch(AipsError& x)
+	  {
+	    //
+	    // Add some more useful info. to the message and translate
+	    // the generic AipsError exception object to a more specific
+	    // SynthesisError object.
+	    //
+	    String mesg = x.getMesg();
+	    mesg += ". Error in loading pointing offset table.";
+	    SynthesisError err(mesg);
+	    throw(err);
+	  }
+      }
+    AlwaysAssert(ft_p, AipsError);
+    cft_p = new SimpleComponentFTMachine();
+    AlwaysAssert(cft_p, AipsError);
+
+  }
+  else if (ftmachine_p == "awp")
+    {
+      if (wprojPlanes_p<=1)
+	{
+	  os << LogIO::NORMAL
+	     << "You are using wprojplanes=1. Doing co-planar imaging (no w-projection needed)" 
+	     << LogIO::POST;
+	  os << LogIO::NORMAL << "Performing A-Projection" << LogIO::POST; // Loglevel PROGRESS
+	}
+      if((wprojPlanes_p>1)&&(wprojPlanes_p<64)) 
+	{
+	  os << LogIO::WARN
+	     << "No. of w-planes set too low for W projection - recommend at least 128"
+	     << LogIO::POST;
+	  os << LogIO::NORMAL << "Performing AW-Projection"
+	     << LogIO::POST; // Loglevel PROGRESS
+	}
+      // if(!gvp_p) 
+      // 	{
+      // 	  os << LogIO::NORMAL // Loglevel INFO
+      // 	     << "Using defaults for primary beams used in gridding" << LogIO::POST;
+      // 	  gvp_p = new VPSkyJones(*ms_p, True, parAngleInc_p, squintType_p,
+      // 				 skyPosThreshold_p);
+      // 	}
+      //      CountedPtr<ATerm> evlaAperture = new EVLAAperture();
+      useDoublePrecGrid=False;
+      CountedPtr<ATerm> apertureFunction = createTelescopeATerm(*ms_p);
+      CountedPtr<ConvolutionFunction> awConvFunc=new AWConvFunc(apertureFunction);
+      CountedPtr<VisibilityResamplerBase> visResampler = new AWVisResampler();
+      CountedPtr<VisibilityResamplerBase> mthVisResampler = new MultiThreadedVisibilityResampler(useDoublePrecGrid,
+												 visResampler);
+      CountedPtr<CFCache> cfcache=new CFCache();
+      cfcache->setCacheDir(cfCacheDirName_p.data());
+      cfcache->initCache();
+      ft_p = new AWProjectFT(wprojPlanes_p, cache_p/2,
+			     cfcache, awConvFunc, mthVisResampler,
+			     doPointing, doPBCorr,
+			     tile_p, pbLimit_p, True);
+      ((AWProjectFT *)ft_p)->setObservatoryLocation(mLocation_p);
+      //
+      // Explicit type casting of ft_p does not look good.  It does not
+      // pick up the setPAIncrement() method of PBWProjectFT without
+      // this
+      //
+      Quantity paInc(paStep_p,"deg");
+      // os << LogIO::NORMAL << "Setting PA increment to " 
+      // 	 << paInc.getValue("deg") << " deg" << endl;
+      ((AWProjectFT *)ft_p)->setPAIncrement(paInc);
+
+      if (doPointing) 
+	{
+	  try
+	    {
+	      VisSet elVS(*rvi_p);
+	      epJ = new EPJones(elVS, *ms_p);
+	      RecordDesc applyRecDesc;
+	      applyRecDesc.addField("table", TpString);
+	      applyRecDesc.addField("interp",TpString);
+	      Record applyRec(applyRecDesc);
+	      applyRec.define("table",epJTableName_p);
+	      applyRec.define("interp", "nearest");
+	      epJ->setApply(applyRec);
+	      ((AWProjectFT *)ft_p)->setEPJones(epJ);
+	  }
+	  catch(AipsError& x)
+	    {
+	      //
+	      // Add some more useful info. to the message and translate
+	      // the generic AipsError exception object to a more specific
+	      // SynthesisError object.
+	      //
+	      String mesg = x.getMesg();
+	      mesg += ". Error in loading pointing offset table.";
+	      SynthesisError err(mesg);
+	      throw(err);
+	    }
+	}
+      AlwaysAssert(ft_p, AipsError);
+      cft_p = new SimpleComponentFTMachine();
+      AlwaysAssert(cft_p, AipsError);
+    }
+  //===============================================================
+  // A-Projection FTMachine code end here
+  //===============================================================
   else {
     os << LogIO::NORMAL // Loglevel INFO
        << "Performing interferometric gridding..."
@@ -2677,6 +2913,22 @@ Bool Imager::createFTMachine()
     AlwaysAssert(cft_p, AipsError);
     
   }
+
+  /******* Start MTFT code ********/
+  // MultiTermFT is a container for an FTMachine of any type.
+  //    It will apply Taylor-polynomial weights during gridding and degridding
+  //    and will do multi-term grid-correction (normalizations).
+  //    (1) ft_p already holds an FT of the correct type
+  //    (2) If nterms>1, create a new MultiTermFT using ft_p, and reassign ft_p. 
+  // Currently, Multi-Term applies only to wideband imaging.
+  if( ntaylor_p > 1 )
+  { 
+    //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
+     FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
+     ft_p = tempftm;
+  }
+  /******* End MTFT code ********/
+
   ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
   ft_p->setFreqInterpolation(freqInterpMethod_p);
   if(doTrackSource_p){
@@ -2732,6 +2984,42 @@ Bool Imager::removeTable(const String& tablename) {
       }
     }
   }
+  return True;
+}
+
+Bool Imager::updateSkyModel(const Vector<String>& model,
+			    const String complist) {
+  LogIO os(LogOrigin("imager", "updateSkyModel()", WHERE));
+  if(redoSkyModel_p)
+    throw(AipsError("Programming error: update skymodel is called without a valid skymodel"));
+  Bool coordMatch=True; 
+  for (Int thismodel=0;thismodel<Int(model.nelements());++thismodel) {
+    CoordinateSystem cs=(sm_p->image(thismodel)).coordinates();
+    coordMatch= coordMatch || checkCoord(cs, model(thismodel));
+    ///return False if any fails anyways
+    if(!coordMatch)
+      return False;
+    if(model(thismodel)=="") {
+      os << LogIO::SEVERE << "Need a name for model "
+	 << model << LogIO::POST;
+      return False;
+    }
+    else {
+      if(!Table::isReadable(model(thismodel))) {
+	os << LogIO::SEVERE << model(thismodel) << "is unreadable"
+	   << model << LogIO::POST;
+	return False;
+      }
+    }
+    images_p[thismodel]=0;
+    images_p[thismodel]=new PagedImage<Float>(model(thismodel));
+    AlwaysAssert(!images_p[thismodel].null(), AipsError);
+    sm_p->updatemodel(thismodel, *images_p[thismodel]);
+  } 
+  if((complist !="") && Table::isReadable(complist)){
+      ComponentList cl(Path(complist), True);
+      sm_p->updatemodel(cl);
+    }
   return True;
 }
 
@@ -3478,8 +3766,13 @@ Bool Imager::checkCoord(const CoordinateSystem& coordsys,
   if(imageShape(1) != ny_p)
     return False;
 
-  if (imageCoord.nCoordinates() != coordsys.nCoordinates())
+
+ 
+  if(!imageCoord.near(coordsys)){
     return False;
+  }
+  
+  /*
   DirectionCoordinate dir1(coordsys.directionCoordinate(0));
   DirectionCoordinate dir2(imageCoord.directionCoordinate(0));
   if(dir1.increment()(0) != dir2.increment()(0))
@@ -3490,7 +3783,7 @@ Bool Imager::checkCoord(const CoordinateSystem& coordsys,
   SpectralCoordinate sp2(imageCoord.spectralCoordinate(2));
   if(sp1.increment()(0) != sp2.increment()(0))
     return False;
-
+  */
   return True;
 }
 
@@ -3956,6 +4249,20 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
   }
   
 }
+ATerm* Imager::createTelescopeATerm(MeasurementSet& ms)
+{
+  LogIO log_l(LogOrigin("Imager", "createTelescopeATerm"));
+  ROMSObservationColumns msoc(ms.observation());
+  String ObsName=msoc.telescopeName()(0);
+  if ((ObsName == "EVLA") || (ObsName == "VLA"))
+    return new EVLAAperture();
+  else
+    log_l << "Telescope name ('"+
+      ObsName+"') in the MS not recognized to create the telescope specific ATerm"
+	  << LogIO::EXCEPTION;
+
+  return NULL;
+}
 
 //use SubMS::calcChanFreqs to calculate spectral gridding 
 //call from imagecoodinates2
@@ -4066,7 +4373,15 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
       }
     }
     Bool isDescendingData=False;
-    if (oldFreqResolution(0) < 0) isDescendingData=True;
+    // Some descending order data has positive channel widths...so check chan freqs
+    // first...
+    //if (oldFreqResolution(0) < 0) isDescendingData=True;
+    if (oldChanFreqs.nelements()>1) {
+      if ((oldChanFreqs[1] - oldChanFreqs[0])<0) isDescendingData=True;
+    }
+    else if (oldFreqResolution(0) < 0) {
+      isDescendingData=True;
+    }
     
     // need theOldRefFrame,theObsTime,mObsPos,mode,nchan,start,width,restfreq,
     // outframe,veltype
@@ -4115,7 +4430,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
     if (imgridfreqs(0)-imgridfreqs(1)>0) isDescendingNewData=True;
     //reverse frequency vector? 
     //evaluate reversing condition differ for chan mode from other modes
-    if(mode.contains('channel')) {
+    if(mode.contains("channel")) {
       if ((descendfreq && !isDescendingNewData && !isDescendingData) |
           (descendfreq && isDescendingNewData && isDescendingData) |
           (!descendfreq && !isDescendingNewData && isDescendingData)) {
@@ -4165,6 +4480,8 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 } 
 
 } //# NAMESPACE CASA - END
+
+
 
 
 

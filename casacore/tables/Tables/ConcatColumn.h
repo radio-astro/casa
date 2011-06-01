@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatColumn.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ConcatColumn.h 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #ifndef TABLES_CONCATCOLUMN_H
 #define TABLES_CONCATCOLUMN_H
@@ -235,7 +235,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Also get a comparison function if undefined.
     // The function freeIterBuf must be called to free the buffers.
     virtual void allocIterBuf (void*& lastVal, void*& curVal,
-			       ObjCompareFunc*& cmpFunc);
+			       CountedPtr<BaseCompare>& cmpObj);
 
     // Free the value buffers allocated by allocIterBuf.
     virtual void freeIterBuf (void*& lastVal, void*& curVal);

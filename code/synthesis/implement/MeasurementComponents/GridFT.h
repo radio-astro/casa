@@ -42,6 +42,7 @@
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <lattices/Lattices/LatticeCache.h>
 #include <lattices/Lattices/ArrayLattice.h>
+//#include <synthesis/MeasurementComponents/SynthesisPeek.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -182,9 +183,7 @@ public:
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED, 
-	   const Matrix<Float>& imwght=Matrix<Float>(0,0));
-
+	   FTMachine::Type type=FTMachine::OBSERVED);
   
   // Make the entire image
   void makeImage(FTMachine::Type type,
@@ -216,6 +215,8 @@ public:
 
   virtual String name();
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
+
 protected:
 
 
@@ -281,6 +282,8 @@ protected:
 
   //machine name
   String machineName_p;
+
+  //  casa::async::SynthesisAsyncPeek *peek;
 };
 
 } //# NAMESPACE CASA - END

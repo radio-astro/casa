@@ -23,17 +23,34 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Compare.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Compare.tcc 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #include <casa/Utilities/Compare.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T>
+ObjCompare<T>::~ObjCompare()
+{}
+
+template<class T>
 int ObjCompare<T>::compare (const void* obj1, const void* obj2)
 {
     return (*(const T*)obj1  < *(const T*)obj2  ?  -1 :
 	   (*(const T*)obj1 == *(const T*)obj2  ?  0 : 1));
+}
+
+template<class T>
+int ObjCompare<T>::comp (const void* obj1, const void* obj2) const
+{
+    return (*(const T*)obj1  < *(const T*)obj2  ?  -1 :
+	   (*(const T*)obj1 == *(const T*)obj2  ?  0 : 1));
+}
+
+template<class T>
+DataType ObjCompare<T>::dataType() const
+{
+    return whatType ((T*)0);
 }
 
 } //# NAMESPACE CASA - END

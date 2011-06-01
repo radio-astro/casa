@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RefTable.cc 20889 2010-05-17 06:53:39Z gervandiepen $
+//# $Id: RefTable.cc 21025 2011-03-03 15:09:00Z gervandiepen $
 
 #include <tables/Tables/RefTable.h>
 #include <tables/Tables/RefColumn.h>
@@ -174,6 +174,17 @@ RefTable::~RefTable()
     BaseTable::unlink (baseTabPtr_p);
 }
 
+
+void RefTable::getPartNames (Block<String>& names, Bool recursive) const
+{
+  if (recursive) {
+    baseTabPtr_p->getPartNames (names, recursive);
+  } else {
+    uInt inx = names.size();
+    names.resize (inx + 1);
+    names[inx] = baseTabPtr_p->tableName();
+  }
+}
 
 uInt* RefTable::getStorage (Vector<uInt>& rownrs)
 {
@@ -393,7 +404,7 @@ void RefTable::makeDesc (TableDesc& desc, const TableDesc& rootDesc,
 	if (rootDesc.isColumn (*mapValPtr)) {
 	    desc.addColumn (rootDesc.columnDesc (*mapValPtr));
 	    if (name != *mapValPtr) {
-		desc.renameColumn (nameMap.getKey(i), nameMap.getVal(i));
+		desc.renameColumn (name, *mapValPtr);
 	    }
 	}else{
 	    unknownCol.define (name, static_cast<void*>(0));
@@ -605,6 +616,13 @@ Record RefTable::dataManagerInfo() const
     return dmi;
 }
 
+void RefTable::showStructureExtra (ostream& os) const
+{
+  os << "out of " << baseTabPtr_p->tableName() << " (" 
+     << baseTabPtr_p->nrow() << " rows, "
+     << baseTabPtr_p->tableDesc().ncolumn() << " columns)" << endl;
+}
+
 //# Get the keyword set.
 TableRecord& RefTable::keywordSet()
     { return baseTabPtr_p->keywordSet(); }
@@ -772,9 +790,14 @@ void RefTable::renameHypercolumn (const String& newName, const String& oldName)
 }
 
 
-DataManager* RefTable::findDataManager (const String& dataManagerName) const
+DataManager* RefTable::findDataManager (const String& name, Bool byColumn) const
 {
-    return baseTabPtr_p->findDataManager (dataManagerName);
+    String origName(name);
+    if (byColumn) {
+        // A column can be renamed, so use the original name.
+        origName = nameMap_p(name);
+    }
+    return baseTabPtr_p->findDataManager (origName, byColumn);
 }
 
 
@@ -949,4 +972,3 @@ void RefTable::refNot (uInt nr, const uInt* inx, uInt nrtot)
 }
 
 } //# NAMESPACE CASA - END
-

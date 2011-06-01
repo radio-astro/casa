@@ -153,7 +153,7 @@ def _immoments_parse_axis( imagename='', axis='' ):
     if ( axis=='ra' or axis.startswith( 'long' ) ):
         # First Directional axis
         retValue=axes[0][0]
-    elif ( axis=='ra' or axis.startswith( 'lat' ) ):
+    elif ( axis=='dec' or axis.startswith( 'lat' ) ):
         # Second  Directional axis
         retValue=axes[1][0]
     elif ( axis.startswith( 'spec' ) ):
@@ -164,7 +164,7 @@ def _immoments_parse_axis( imagename='', axis='' ):
         retValue=axes[3][0]        
     else:
         raise Exception, "Invalid axis specified: "+str(axis) \
-              + ". Expecte one of ra, dec, lat, long, spec, or stokes"
+              + ". Expected one of ra, dec, lat, long, spec, or stokes"
 
     return retValue
     

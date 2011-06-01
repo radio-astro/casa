@@ -171,8 +171,7 @@ public:
 
   // Put coherence to grid by gridding.
   void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	   FTMachine::Type type=FTMachine::OBSERVED,
-	   const Matrix<Float>& wgt=Matrix<Float>(0,0));
+	   FTMachine::Type type=FTMachine::OBSERVED);
 
   // Get the final image: do the Fourier transform and
   // grid-correct, then optionally normalize by the summed weights
@@ -194,6 +193,7 @@ public:
   // Has this operator changed since the last application?
   virtual Bool changed(const VisBuffer& vb);
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
+  virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected) {};
 
 private:
 

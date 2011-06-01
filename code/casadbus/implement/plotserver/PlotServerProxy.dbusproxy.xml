@@ -6,7 +6,11 @@
       <arg direction="in" type="s" name="xlabel" />
       <arg direction="in" type="s" name="ylabel" />
       <arg direction="in" type="s" name="window_title" />
+      <arg direction="in" type="ai" name="size" />
       <arg direction="in" type="s" name="legend" />
+      <arg direction="in" type="s" name="zoom" />
+      <arg direction="in" type="i" name="with_panel" />
+      <arg direction="in" type="b" name="new_row" />
       <arg direction="in" type="b" name="hidden" />
       <arg direction="out" type="v" />
     </method>

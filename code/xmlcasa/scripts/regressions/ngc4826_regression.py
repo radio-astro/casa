@@ -65,6 +65,9 @@ print '--Copy/reinitialize--'
 #22 APR Calibration
 copystring22apr='cp -r '+datapath+'n4826_22apr98.ms n4826_22apr.ms'
 os.system(copystring22apr)
+tb.open('n4826_22apr.ms/HISTORY', nomodify=False)
+tb.removerows(range(tb.nrows()))
+tb.done()
 ###reset the data as pre calibrated state
 clearcal(vis='n4826_22apr.ms')
 ## Set the flux density of 3C273 to 23 Jy
@@ -173,6 +176,9 @@ writefits1time=time.time()
 print '--copy/initialize - 16apr98 --'
 copystring16apr='cp -r '+datapath+'n4826_16apr98.ms n4826_16apr.ms'
 os.system(copystring16apr)
+tb.open('n4826_16apr.ms/HISTORY', nomodify=False)
+tb.removerows(range(tb.nrows()))
+tb.done()
 clearcal(vis='n4826_16apr.ms')
 copy2time=time.time()
 ## Set the flux density of 3C273 to 23 Jy
@@ -369,9 +375,9 @@ calmax16=1.43
 #srcmean=156.9898
 srcmean=147.43
 #immax=151.4
-immax=168.18
+immax=165.99
 #imrms=14.96
-imrms=13.08
+imrms=16.41
 
 # old (pre-minsnr=2)
 #calmean22=17.99

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TiledStMan.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: TiledStMan.h 21014 2011-01-06 08:57:49Z gervandiepen $
 
 #ifndef TABLES_TILEDSTMAN_H
 #define TABLES_TILEDSTMAN_H
@@ -119,16 +119,26 @@ public:
     // setting a maximum cache.
     TiledStMan (const String& hypercolumnName, uInt maximumCacheSize);
 
-    ~TiledStMan();
+    virtual ~TiledStMan();
 
     // Get the name given to the storage manager.
     // This is the name of the hypercolumn.
-    String dataManagerName() const;
+    virtual String dataManagerName() const;
 
     void setDataManagerName (const String& newHypercolumnName);
 
-    // Record a record containing data manager specifications.
+    // Return a record containing data manager specifications.
     virtual Record dataManagerSpec() const;
+
+    // Get data manager properties that can be modified.
+    // It is only ActualCacheSize (the actual cache size in buckets).
+    // It is a subset of the data manager specification.
+    virtual Record getProperties() const;
+
+    // Modify data manager properties.
+    // Only ActualCacheSize can be used. It is similar to function setCacheSize
+    // with <src>canExceedNrBuckets=False</src>.
+    virtual void setProperties (const Record& spec);
 
     // Set the flag to "data has changed since last flush".
     void setDataChanged();
@@ -470,8 +480,6 @@ protected:
     // classes use type TpArray*.
     int arrayDataType (int dataType) const;
 
-    // The TSM option to use for the given tile dimensionality 
-    virtual TSMOption tsmMode(uInt nrDim) const;
 
     //# Declare all data members.
     // The name of the hypercolumn.

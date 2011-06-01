@@ -139,6 +139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class SolvableVisJones;
   class AWProjectFT : public FTMachine {
   public:
+    AWProjectFT();
     
     // Constructor: cachesize is the size of the cache in words
     // (e.g. a few million is a good number), tilesize is the
@@ -148,6 +149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     AWProjectFT(Int nFacets, Long cachesize, 
 		CountedPtr<CFCache>& cfcache,
 		CountedPtr<ConvolutionFunction>& cf,
+		CountedPtr<VisibilityResamplerBase>& visResampler,
 		Bool applyPointingOffset=True,
 		Bool doPBCorr=True,
 		Int tilesize=16, 
@@ -234,10 +236,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     Cube<Float>& pointingOffsets,Int row=-1);
     
     
-    
-    
-    
-    
     // Put coherence to grid by gridding.
     void put(const VisBuffer&,
 	     TempImage<Complex>&, Vector<Double>&, int,
@@ -246,8 +244,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //    throw(AipsError("AWProjectFT::put is not implemented"));
     }
     void put(const VisBuffer& vb, Int row=-1, Bool dopsf=False,
-	     FTMachine::Type type=FTMachine::OBSERVED,
-	     const Matrix<Float>& wgt=Matrix<Float>(0,0));
+	     FTMachine::Type type=FTMachine::OBSERVED);
     
     // Make the entire image
     void makeImage(FTMachine::Type type,
@@ -320,6 +317,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     virtual ImageInterface<Float>& getSensitivityImage() {return *avgPB_p;}
     virtual Matrix<Double>& getSumOfWeights() {return sumWeight;};
+    virtual Matrix<Double>& getSumOfCFWeights() {return sumCFWeight;};
 
     void makeConjPolMap(const VisBuffer& vb, const Vector<Int> cfPolMap, Vector<Int>& conjPolMap);
     //    Vector<Int> makeConjPolMap(const VisBuffer& vb);
@@ -349,6 +347,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       sensitivityPatternQualifier_p=qualifier;
       sensitivityPatternQualifierStr_p = "_tt"+String::toString(sensitivityPatternQualifier_p);
     }
+    virtual void ComputeResiduals(VisBuffer&vb, Bool useCorrected);
   protected:
     
     Int nint(Double val) {return Int(floor(val+0.5));};
@@ -413,7 +412,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     //    CountedPtr<ConvolutionFunction> telescopeConvFunc_p;
     //    CFStore cfs_p, cfwts_p;
-    Array<Complex> convFunc_p, convWeights_p;
+    // Array<Complex> convFunc_p, convWeights_p;
     //
     // Vector to hold the support size info. for the convolution
     // functions pointed to by the elements of convFunctions_p.  The
@@ -472,9 +471,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const Cube<Int>& flagCube,
 			      const Vector<Double>& dphase);
 
-    AWVisResampler visResampler_p;
+    //    AWVisResampler visResampler_p;
+    CountedPtr<VisibilityResamplerBase> visResampler_p;
     Int sensitivityPatternQualifier_p;
     String sensitivityPatternQualifierStr_p;
+    CFStore rotatedConvFunc_p;
+  Vector<Int> ConjCFMap_p, CFMap_p;
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };
 } //# NAMESPACE CASA - END

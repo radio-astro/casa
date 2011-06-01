@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TSMCube.cc 20874 2010-03-30 06:28:34Z gervandiepen $
+//# $Id: TSMCube.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 
 //# Includes
@@ -400,9 +400,6 @@ void TSMCube::makeCache()
                                    bucketSize_p, nrTiles_p, 1, this,
                                    readCallBack, writeCallBack,
                                    initCallBack, deleteCallBack);
-        if (cache_p == 0) {
-            throw (AllocError ("TSMCube::TSMCube", 1));
-        }
     }
 }
 
@@ -691,9 +688,6 @@ char* TSMCube::readCallBack (void* owner, const char* external)
 char* TSMCube::readTile (const char* external)
 {
     char* local = new char[localTileLength_p];
-    if (local == 0) {
-        throw (AllocError ("TSMCube::readCallBack", localTileLength_p));
-    }
     stmanPtr_p->readTile (local, localOffset_p, external, externalOffset_p,
 			  tileSize_p);
     return local;
@@ -715,9 +709,6 @@ char* TSMCube::initCallBack (void* owner)
 {
     uInt size = ((TSMCube*)owner)->localTileLength();
     char* buffer = new char[size];
-    if (buffer == 0) {
-        throw (AllocError ("TSMCube::initCallBack", size));
-    }
     for (uInt i=0; i<size; i++) {
         buffer[i] = 0;
     }
@@ -1477,17 +1468,17 @@ void TSMCube::accessStrided (const IPosition& start, const IPosition& end,
                 sectionOffset += localSize;
             }
             for (j=1; j<nrdim_p; j++) {
-              // "Attempt to increment dataOffset below 0"
-              AlwaysAssert((dataIncr(j) >= 0) ||
-                           (dataOffset >= static_cast<uInt>(-dataIncr(j))),
-                           DataManError);
-              dataOffset    += dataIncr(j);
-              sectionOffset += sectionIncr(j);
-              dataPos(j) += stride(j);
-              if (dataPos(j) <= endPixel(j)) {
-                break;
-              }
-              dataPos(j) = startPixel(j);
+              // Catch attempt to increment dataOffset below 0
+                DebugAssert(dataIncr(j) >= 0 ||
+                            dataOffset >= static_cast<uInt>(-dataIncr(j)),
+                            DataManError);
+                dataOffset    += dataIncr(j);
+                sectionOffset += sectionIncr(j);
+                dataPos(j) += stride(j);
+                if (dataPos(j) <= endPixel(j)) {
+                    break;
+                }
+                dataPos(j) = startPixel(j);
             }
             if (j == nrdim_p) {
                 break;

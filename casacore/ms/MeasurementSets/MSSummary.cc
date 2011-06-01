@@ -327,7 +327,7 @@ void MSSummary::listHow (LogIO& os, Bool verbose) const
 	datetime.replace(25+timeref.length(),1,")");
 	os << datetime;
 	os << "Scan  FldId FieldName " 
-           <<"nVis   Int(s)   SpwIds      ScanIntent" << endl;
+           <<"          nVis   Int(s)   SpwIds      ScanIntent" << endl;
 
 	// Setup iteration over timestamps within this iteration:
 	Block<String> jcols(2);

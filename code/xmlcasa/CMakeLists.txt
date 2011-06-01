@@ -312,6 +312,8 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/viewertool.py
   scripts/vishead_util.py
   scripts/simple_cluster.py
+  scripts/simple_summary.py
+  scripts/parallelSplit.py
   scripts/task_msmoments.py )
 
 casa_add_tasks( xmlcasa xmlcasa_tasks 

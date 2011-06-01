@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaRecordColData.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaRecordColData.cc 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #include <tables/Tables/ScaRecordColData.h>
 #include <tables/Tables/ScaRecordColDesc.h>
@@ -209,7 +209,7 @@ void ScalarRecordColumnData::putRecord (uInt rownr, const TableRecord& rec)
 
 
 void ScalarRecordColumnData::makeSortKey (Sort&,
-					  ObjCompareFunc*,
+					  CountedPtr<BaseCompare>&,
 					  Int,
 					  const void*&)
 {
@@ -218,7 +218,7 @@ void ScalarRecordColumnData::makeSortKey (Sort&,
 }
 
 void ScalarRecordColumnData::makeRefSortKey (Sort&,
-					     ObjCompareFunc*,
+                                             CountedPtr<BaseCompare>&,
 					     Int,
 					     const Vector<uInt>&,
 					     const void*&)
@@ -233,7 +233,7 @@ void ScalarRecordColumnData::freeSortKey (const void*& dataSave)
 }
 
 void ScalarRecordColumnData::allocIterBuf (void*&, void*&,
-					   ObjCompareFunc*&)
+                                           CountedPtr<BaseCompare>&)
 {
     throw (TableError ("Iterating on a column containing records "
 		       "is not possible"));

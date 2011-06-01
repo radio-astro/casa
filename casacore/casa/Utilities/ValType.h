@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ValType.h 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: ValType.h 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #ifndef CASA_VALTYPE_H
 #define CASA_VALTYPE_H
@@ -34,6 +34,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/Utilities/Compare.h>
+#include <casa/Utilities/CountedPtr.h>
 #include <casa/OS/Conversion.h>
 #include <casa/IO/AipsIO.h>
 #include <casa/iosfwd.h>
@@ -181,6 +182,9 @@ public:
 
     // Get the pointer to the routine which compares two values.
     static ObjCompareFunc* getCmpFunc (DataType);
+
+    // Get the object which compares two values.
+    static CountedPtr<BaseCompare> getCmpObj (DataType);
 
     // Put the value into <src>AipsIO</src>.
     // The <src>void*</src> function is not doing anything and is for

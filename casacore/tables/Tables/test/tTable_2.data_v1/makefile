@@ -1,4 +1,4 @@
-# $Id: makefile 17797 2004-08-25 02:46:50Z cvsmgr $
+# $Id: makefile 20551 2009-03-25 00:11:33Z Malte.Marquarding $
  
 # Use the generic AIPS++ checkout makefile.
 #------------------------------------------

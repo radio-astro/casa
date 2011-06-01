@@ -126,6 +126,9 @@ namespace casa{
 
     // virtual void setParams(const Vector<Int>& polMap, const Vector<Int>& feedStokes)
     // {setPolMap(polMap); setFeedStokes(feedStokes);};
+
+    virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs)=0;
+
   private:
     Int nDim;
   protected:

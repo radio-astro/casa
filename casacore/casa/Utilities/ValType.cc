@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ValType.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: ValType.cc 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #include <casa/Utilities/ValType.h>
 #include <casa/OS/CanonicalConversion.h>
@@ -464,6 +464,42 @@ ObjCompareFunc* ValType::getCmpFunc (DataType dt)
 	return &ObjCompare<DComplex>::compare;
     case TpString:
 	return &ObjCompare<String>::compare;
+    default:
+	break;
+    }
+    return 0;
+}
+
+//# Get the comparison object.
+CountedPtr<BaseCompare> ValType::getCmpObj (DataType dt)
+{
+    switch (dt) {
+    case TpBool:
+        return new ObjCompare<Bool>();
+    case TpChar:
+        return new ObjCompare<Char>();
+    case TpUChar:
+        return new ObjCompare<uChar>();
+    case TpShort:
+        return new ObjCompare<Short>();
+    case TpUShort:
+        return new ObjCompare<uShort>();
+    case TpInt:
+        return new ObjCompare<Int>();
+    case TpUInt:
+        return new ObjCompare<uInt>();
+    case TpInt64:
+        return new ObjCompare<Int64>();
+    case TpFloat:
+        return new ObjCompare<float>();
+    case TpDouble:
+        return new ObjCompare<double>();
+    case TpComplex:
+        return new ObjCompare<Complex>();
+    case TpDComplex:
+        return new ObjCompare<DComplex>();
+    case TpString:
+        return new ObjCompare<String>();
     default:
 	break;
     }

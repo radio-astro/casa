@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaColData.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaColData.h 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #ifndef TABLES_SCACOLDATA_H
 #define TABLES_SCACOLDATA_H
@@ -152,10 +152,10 @@ public:
     //   <li> TableInvSort
     // </thrown>
     // <group>
-    void makeSortKey (Sort&, ObjCompareFunc* cmpFunc, Int order,
+    void makeSortKey (Sort&, CountedPtr<BaseCompare>& cmpFunc, Int order,
 		      const void*& dataSave);
     // Do it only for the given row numbers.
-    void makeRefSortKey (Sort&, ObjCompareFunc* cmpFunc, Int order,
+    void makeRefSortKey (Sort&, CountedPtr<BaseCompare>& cmpFunc, Int order,
 			 const Vector<uInt>& rownrs, const void*& dataSave);
     // </group>
 
@@ -164,10 +164,10 @@ public:
     void freeSortKey (const void*& dataSave);
 
     // Allocate value buffers for the table iterator.
-    // Also get a comparison function if undefined.
+    // Also get a comparison object if undefined.
     // The function freeIterBuf must be called to free the buffers.
     void allocIterBuf (void*& lastVal, void*& curVal,
-		       ObjCompareFunc*& cmpFunc);
+		       CountedPtr<BaseCompare>& cmpObj);
 
     // Free the value buffers allocated by allocIterBuf.
     void freeIterBuf (void*& lastVal, void*& curVal);
@@ -210,7 +210,7 @@ private:
     //   <li> TableInvSort
     // </thrown>
     void fillSortKey (const Vector<T>* dataPtr, Sort&,
-		      ObjCompareFunc* cmpFunc, Int order);
+		      CountedPtr<BaseCompare>& cmpObj, Int order);
 };
 
 

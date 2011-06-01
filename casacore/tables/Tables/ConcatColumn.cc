@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ConcatColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ConcatColumn.cc 20997 2010-11-17 07:05:29Z gervandiepen $
 
 #include <tables/Tables/ConcatColumn.h>
 #include <tables/Tables/ConcatTable.h>
@@ -200,8 +200,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void ConcatColumn::allocIterBuf (void*& lastVal, void*& curVal,
-				   ObjCompareFunc*& cmpFunc)
-    { refColPtr_p[0]->allocIterBuf (lastVal, curVal, cmpFunc); }
+                                   CountedPtr<BaseCompare>& cmpObj)
+    { refColPtr_p[0]->allocIterBuf (lastVal, curVal, cmpObj); }
 
   void ConcatColumn::freeIterBuf (void*& lastVal, void*& curVal)
     { refColPtr_p[0]->freeIterBuf (lastVal, curVal); }

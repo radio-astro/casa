@@ -484,6 +484,93 @@ class split_test_cav(SplitChecker):
                  0.0001)
         #self.__class__.n_tests_passed += 1
 
+class split_test_cav5(SplitChecker):
+    need_to_initialize = True
+    corrsels = ['', 'll']
+    inpms = 'viewertest/ctb80-vsm.ms'
+    records = {}
+    #n_tests = 12
+    #n_tests_passed = 0
+    
+    def do_split(self, corrsel):
+        outms = 'cav' + re.sub(',\s*', '', corrsel) + '.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nChannel averaging", corrsel
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw='0:5~16', width=5,
+                             antenna='',
+                             timebin='', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation=corrsel, async=False)
+            tb.open(outms)
+            record['data']   = tb.getcell('DATA', 2)
+            record['weight'] = tb.getcell('WEIGHT', 5)
+            record['sigma']  = tb.getcell('SIGMA', 7)
+            tb.close()
+        except Exception, e:
+            print "Error channel averaging and reading", outms
+            raise e
+        self.records[corrsel] = record
+        return splitran
+
+    def test_sts(self):
+        """Subtables, chan avg. without correlation selection"""
+        self.check_subtables('', [(2, 3)])
+        #self.__class__.n_tests_passed += 1
+
+    def test_sts_ll(self):
+        """Subtables, chan avg. LL"""
+        self.check_subtables('ll', [(1, 3)])
+        #self.__class__.n_tests_passed += 1
+
+    def test_data(self):
+        """DATA[2],   chan avg. without correlation selection"""
+        check_eq(self.records['']['data'],
+                 numpy.array([[17.13964462-42.20331192j, 26.04414749-49.97922897j,
+                               20.67210388-52.81464005j],
+                              [ 5.80819368-43.6548233j,   6.72127867-44.33802414j,
+                               10.60328102-11.62711906j]]),
+                 0.0005)
+        #self.__class__.n_tests_passed += 1
+        
+    def test_data_ll(self):
+        """DATA[2],   chan avg. LL"""
+        check_eq(self.records['ll']['data'],
+                 numpy.array([[ 5.80819368-43.6548233j,  6.72127867-44.33802414j,
+                               10.60328102-11.62711906j]]),
+                 0.0001)
+
+    def test_wt(self):
+        """WEIGHT[5], chan avg. without correlation selection"""
+        check_eq(self.records['']['weight'],
+                 numpy.array([0.38709676, 0.38709676]),
+                 0.001)
+        #self.__class__.n_tests_passed += 1
+
+    def test_wt_ll(self):
+        """WEIGHT[5], chan avg. LL"""
+        check_eq(self.records['ll']['weight'],
+                 numpy.array([0.38709676]),
+                 0.001)
+        #self.__class__.n_tests_passed += 1
+
+    def test_sigma(self):
+        """SIGMA[7],  chan avg. without correlation selection"""
+        check_eq(self.records['']['sigma'],
+                 numpy.array([1.60727513, 1.60727513]),
+                 0.0001)
+        
+    def test_sigma_ll(self):
+        """SIGMA[7],  chan avg. LL"""
+        check_eq(self.records['ll']['sigma'],
+                 numpy.array([1.60727513]),
+                 0.0001)
+        #self.__class__.n_tests_passed += 1
+
+
 class split_test_cst(unittest.TestCase):
     """
     The main thing here is to not segfault even when the SOURCE table
@@ -1042,7 +1129,8 @@ class split_test_tav_then_cvel(SplitChecker):
         #self.__class__.n_tests_passed += 1
 
 def suite():
-    return [split_test_tav, split_test_cav, split_test_cst, split_test_state,
+    return [split_test_tav, split_test_cav, split_test_cav5, split_test_cst,
+            split_test_state,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
             split_test_chanwidth, split_test_cavcd, split_test_almapol]

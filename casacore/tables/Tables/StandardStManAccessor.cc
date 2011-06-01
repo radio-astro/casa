@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StandardStManAccessor.cc 20883 2010-04-27 06:02:21Z gervandiepen $
+//# $Id: StandardStManAccessor.cc 21014 2011-01-06 08:57:49Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/StandardStManAccessor.h>
@@ -35,20 +35,19 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-ROStandardStManAccessor::ROStandardStManAccessor (const Table& aTable,
-					    const String& aDataManagerName)
-: itsSSMPtr (0)
+ROStandardStManAccessor::ROStandardStManAccessor (const Table& table,
+                                                  const String& name,
+                                                  Bool byColumn)
+  : RODataManAccessor (table, name, byColumn),
+    itsSSMPtr (0)
 {
-    DataManager* aDmPtr = findDataManager (aTable, aDataManagerName);
-    SSMBase aDataMan;
-    if (aDmPtr->dataManagerType() != aDataMan.dataManagerType()) {
-	throw (DataManError ("Data manager " + aDataManagerName + " has type "
-			     + aDmPtr->dataManagerType() + "; expected "
-			     + aDataMan.dataManagerType()));
+    itsSSMPtr = dynamic_cast<SSMBase*>(baseDataManager());
+    if (itsSSMPtr == 0) {
+	throw (DataManError ("ROStandardStManAccessor " + name +
+                             " constructed for data manager type "
+			     + baseDataManager()->dataManagerType() +
+			     "; expected StandardStMan"));
     }
-    // The types match, so it is now safe to cast.
-    itsSSMPtr = dynamic_cast<SSMBase*>(aDmPtr);
-    AlwaysAssert(itsSSMPtr != 0, AipsError);
 }
 
 ROStandardStManAccessor::~ROStandardStManAccessor()
