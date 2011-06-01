@@ -241,8 +241,8 @@ TBPlotter::TBPlotter(TBBrowser* b, PlotFactoryPtr f): QMainWindow(),
     connect(plotButton, SIGNAL(clicked()), this, SLOT(plot()));
     connect(overplotButton, SIGNAL(clicked()), this, SLOT(overplot()));
     connect(openButton, SIGNAL(clicked()), this, SLOT(openNewPlotter()));
-    connect(browser, SIGNAL(tableOpened(String)),
-            this, SLOT(tableOpened(String)));
+    connect(browser, SIGNAL(tableOpened(String, String)),
+            this, SLOT(tableOpened(String, String)));
     connect(browser, SIGNAL(tableClosed(String)),
             this, SLOT(tableClosed(String)));
     connect(clearButton, SIGNAL(clicked()),
@@ -742,7 +742,7 @@ void TBPlotter::openNewPlotter() {
     plotter->show();
 }
 
-void TBPlotter::tableOpened(String table) {
+void TBPlotter::tableOpened(String table, String fullpath) {
     tableChooser->addItem(table.c_str());
     tableChooser->setEnabled(true);
 }

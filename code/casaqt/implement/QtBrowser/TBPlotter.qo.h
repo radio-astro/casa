@@ -294,7 +294,7 @@ private slots:
 
     // Slot for when a table is opened in the browser.  Adds the table name
     // to the list of opened tables.
-    void tableOpened(String table);
+    void tableOpened(String table, String fullpath);
 
     // Slot for when a table is closed in the browser.  Removes the table
     // name from the list of opened tables.
