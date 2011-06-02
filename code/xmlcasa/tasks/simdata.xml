@@ -396,7 +396,7 @@ it'll do them for the same amount of time -->
 
     <param type="string" name="graphics">
       <description>display graphics at each stage to [screen|file|both|none]</description>
-      <value type="string">screen</value>
+      <value type="string">both</value>
       <allowed kind="enum">
 	<value>screen</value>
 	<value>file</value>

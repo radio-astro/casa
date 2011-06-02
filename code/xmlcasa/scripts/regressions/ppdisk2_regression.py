@@ -87,7 +87,7 @@ endProc = time.clock()
 
 test_name_ppd = """simdata observation of Wolf & D'Angelo's protoplanetary disk"""
 
-ppdso_im=ia.open(project + '.image')
+ppdso_im=ia.open(project+"/"+project + '.image')
 ppdso_stats=ia.statistics()
 ia.close()
 
