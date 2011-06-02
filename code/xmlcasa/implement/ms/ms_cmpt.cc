@@ -1733,7 +1733,9 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	  }
 	} // end for
 	theObsTime = mainCols.timeMeas()(minTimeRow);
-	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection." << LogIO::POST;
+	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection:" << LogIO::POST;
+	*itsLog << LogIO::NORMAL << "    " << MVTime(theObsTime.getValue().getTime()).string(MVTime::YMD)
+		<< " (" << theObsTime.getRefString() << ")" << LogIO::POST;
       }
       
       // determine observatory position
@@ -2126,9 +2128,13 @@ ms::iterinit(const std::vector<std::string>& columns, const double interval,
 {
    Bool rstat(False);
    try {
-      if(!detached())
-         rstat = itsSel->iterInit(toVectorString(columns), interval, maxrows,
+     if(!detached()){
+       Vector<String> cols=toVectorString(columns);
+       if(cols.nelements()==1 && (cols[0]==String("")))
+	  cols.resize();
+         rstat = itsSel->iterInit(cols, interval, maxrows,
                                   adddefaultsortcolumns);
+     }
    } catch (AipsError x) {
      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
              << LogIO::POST;

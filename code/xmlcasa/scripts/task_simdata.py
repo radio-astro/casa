@@ -362,8 +362,21 @@ def simdata(
         else:
             if type(ptgfile)==type([]):
                 ptgfile=ptgfile[0]
-            ptgfile=ptgfile.replace('$project',fileroot+"/"+project)
+#            ptgfile=ptgfile.replace('$project',fileroot+"/"+project)
+            ptgfile=ptgfile.replace('$project',project)
+            if not os.path.exists(fileroot+"/"+ptgfile):
+                if os.path.exists(ptgfile):
+                    shutil.copyfile(ptgfile,fileroot+"/"+ptgfile)
+                else:
+                    util.msg("Can't find pointing file "+ptgfile,priority="error")
+                    return False
+            ptgfile=fileroot+"/"+ptgfile
             nfld, pointings, etime = util.read_pointings(ptgfile)
+            # a string of different integrations doesn't work below yet
+#            integration = [str(s)+"s" for s in etime]
+            integration=str(etime[0])+"s"
+            util.msg("Using integration time "+integration+" for all pointings.",priority="warn")
+
             if max(etime) <=0:
                 etime = qa.convert(qa.quantity(integration),"s")['value']
             # expects that the cal is separate, and this is just one round of the mosaic
@@ -375,6 +388,10 @@ def simdata(
         # model is centered at model_refdir, and has model_size; this is the offset in 
         # angular arcsec from the model center to the imcenter:        
         mepoch, mra, mdec = util.direction_splitter(model_refdir)
+        if ra['value'] >= 359.999:
+            ra['value']=ra['value']-360.
+        if mra['value'] >= 359.999:
+            mra['value']=mra['value']-360.
         shift = [ (qa.convert(ra,'deg')['value'] - 
                    qa.convert(mra,'deg')['value'])/pl.cos(qa.convert(mdec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value']-qa.convert(mdec,'deg')['value']) ]

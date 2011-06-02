@@ -399,7 +399,6 @@ private:
                      const Int shape,
                      const Bool isBlc) const;
 
-   static void unitInit();
 };
 
 

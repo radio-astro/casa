@@ -28,6 +28,7 @@
 #include <casa/aips.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
+#include <casa/BasicSL/String.h>
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayUtil.h>
@@ -562,7 +563,7 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 		Vector<Float> a(n, 0.0);
 		int idx = 0;
 		string line;
-		string line2[2 * nx];
+		string *line2 = new string[2 * nx];
 		uInt iline = 0;
 		uInt nl = 1;
 		while (nl > 0) {
@@ -582,6 +583,7 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 				iline += 1;
 			}
 		}
+		delete line2;
 		Vector<Float> vec(n);
 		for (uInt i = 0; i < n; i++)
 			vec[i] = a[i];

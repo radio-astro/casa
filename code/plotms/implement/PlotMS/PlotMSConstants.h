@@ -112,24 +112,24 @@ public:
     PMS_ENUM1(Axis, axes, axesStrings, axis,
 	      SCAN,FIELD,TIME,TIME_INTERVAL,
 	      SPW,CHANNEL,FREQUENCY,VELOCITY,CORR,
-	      ANTENNA1,ANTENNA2,BASELINE,
+	      ANTENNA1,ANTENNA2,BASELINE,ROW,
+	      AMP,PHASE,REAL,IMAG,WT,
+	      FLAG,FLAG_ROW,
 	      UVDIST,UVDIST_L,U,V,W,
-	      AMP,PHASE,REAL,IMAG,FLAG,
-	      WT,
 	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
-	      ROW,FLAG_ROW,NONE)
+	      NONE)
 
     PMS_ENUM2(Axis, axes, axesStrings, axis,
-	      "Scan","Field","Time","Time_interval",
+	      "Scan","Field","Time","Interval",
 	      "Spw","Channel","Frequency","Velocity","Corr",
-	      "Antenna1","Antenna2","Baseline",
-	      "UVDist","UVDist_L","U","V","W",
-	      "Amp","Phase","Real","Imag","Flag",
-	      "Wt",
+	      "Antenna1","Antenna2","Baseline","Row",
+	      "Amp","Phase","Real","Imag","Wt",
+	      "Flag","FlagRow",
+	      "UVdist","UVwave","U","V","W",
 	      "Azimuth","Elevation","HourAngle","ParAngle",
-	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAng",
-	      "Row","FlagRow","None")
+	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
+	      "None")
 
     // </group>
               

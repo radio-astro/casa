@@ -1276,10 +1276,12 @@ the ms definition itself. -->
     
      <param type="string" name="column">
      <description>Column name</description>
+     <value></value>
      </param>
 
      <param type="string" name="complex_value">
      <description>Which derived value to use for complex columns (amp, amplitude, phase, imag, real, imaginary)</description>
+     <value></value>
      </param>
     
      <param type="bool" name="useflags">
@@ -1289,43 +1291,43 @@ the ms definition itself. -->
      
      <param type="string" name="spw">
      <description>Spectral Window Indices or names : example : '1,2' </description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="field">
      <description>Field indices or source names : example : '2,3C48' </description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="baseline">
      <description>Baseline number(s): example: "2&amp;3;4&amp;5"</description>
-     <value>""</value>
+     <value></value>
      </param>
     
      <param type="string" name="uvrange">
      <description> UV-distance range, with a unit : example : '2.0-3000.0 m'
-     <value>""</value>
+     <value></value>
      </description>
      </param>
 
      <param type="string" name="time">
      <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="correlation">
      <description>Correlations/polarizations : example : 'RR,LL,RL,LR,XX,YY,XY,YX'</description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="scan">
      <description>Scan number : example : '1,2,3' </description>
-     <value>""</value>
+     <value></value>
      </param>
 
      <param type="string" name="array">
      <description>Array Indices or names : example : 'VLAA' </description>
-     <value>""</value>
+     <value></value>
      </param>
 
   </input>
@@ -1357,6 +1359,7 @@ the ms definition itself. -->
     
      <param type="stringArray" direction="in" name="items">
      <description>Item names</description>
+     <value></value>
      </param>
     
      <param type="bool" direction="in" name="useflags">
@@ -1674,6 +1677,7 @@ Date/Time:                         RR:                      RL:                 
 	   "baseline", "scan", "scanintent", "polarization" and
 	   "uvdist".
 	 </description>
+	 <value></value>
        </param>	
      </input>
      <returns type="bool"/>
@@ -1722,6 +1726,7 @@ Date/Time:                         RR:                      RL:                 
      <param type="any" direction="in" name="items">
      <any type="record"/>
      <description>record with fields contain ranges and enumerations</description>
+     <value></value>
      </param>	
   </input>
   <returns type="bool"/>
@@ -1843,22 +1848,26 @@ Date/Time:                         RR:                      RL:                 
     
      <param type="int" direction="in" name="nchan">
      <description>Number of output channels, positive integer</description>
+     <value>1</value>
      </param>
     
      <param type="int" direction="in" name="start">
      <description>First input channel to use, positive integer</description>
+     <value>0</value>
      </param>
     
      <param type="int" direction="in" name="width">
      <description>
        Number of input channels to average together, positive integer
      </description>
+     <value>1</value>
      </param>
     
      <param type="int" direction="in" name="inc">
      <description>
        Increment to next (group of) input channel(s), positive integer
      </description>
+     <value>1</value>
      </param>
   </input>
   <returns type="bool"/>
@@ -1920,6 +1929,7 @@ Date/Time:                         RR:                      RL:                 
     
      <param type="stringArray" name="wantedpol">
      <description>The polarizations wanted</description>
+     <value></value>
      </param>
   </input>
   <returns type="bool"/>
@@ -1974,6 +1984,7 @@ Date/Time:                         RR:                      RL:                 
       given by the data is used, i.e. the reference frame is not changed. The observatory
       position is taken as the average of all antenna positions.
       </description>
+      <value>LSRK</value>
      </param>
 
      <param type="string" direction="in" name="mode">
@@ -2201,11 +2212,13 @@ Date/Time:                         RR:                      RL:                 
      <param type="intArray" direction="in" name="spwids">
      <description>The list of ids of the spectral windows from which the input grid is to be taken.
      </description>
+     <value>0</value>
      </param>
 
      <param type="intArray" direction="in" name="fieldids">
      <description>The list of ids of the fields which are selected (for observation time determination), default: all
      </description>
+     <value>0</value>
      </param>
     
      <param type="string" direction="in" name="obstime">
@@ -2293,6 +2306,7 @@ Date/Time:                         RR:                      RL:                 
     
      <param type="stringArray" direction="in" name="items">
      <description>Item names</description>
+     <value></value>
      </param>
     
      <param type="bool" direction="in" name="ifraxis">
@@ -2493,6 +2507,7 @@ for i in range(len(tcoord)):
      <param type="any" direction="in" name="items">
      <any type="record"/>
      <description>Record with items and their new values</description>
+     <value></value>
      </param>
   </input>
   <returns type="bool"/>
@@ -2864,14 +2879,17 @@ ignored for setting the bins.
     
      <param type="stringArray" direction="in" name="columns">
      <description>Vector of column names (case sensitive).</description>
+     <value></value>
      </param>
     
      <param type="double" direction="in" name="interval">
      <description>Time interval in seconds (greater than 0), to group together in iteration</description>
+     <value>0.0</value>
      </param>
     
      <param type="int" direction="in" name="maxrows">
      <description>Max number of rows (greater than 0) to return in iteration</description>
+     <value>0</value>
      </param>
     
      <param type="bool" direction="in" name="adddefaultsortcolumns">
@@ -3176,6 +3194,7 @@ We open the MS and ask for the current flag level.
 
      <param type="string" name="item">
      <description>data derived item</description>
+     <value></value>
      </param>
 
      <param type="bool" name="ifraxis">
@@ -3214,10 +3233,12 @@ and keep the results around in an internal buffer.
 
      <param type="string" name="direction">
      <description>choose between time or channel direction: TIME or CHANNEL</description>
+     <value>TIME</value>
      </param>
 
      <param type="int" name="window">
      <description>width of averaging window in timeslots or channels; integer greater than 0</description>
+     <value>1</value>
      </param>
 </input>
 <returns type="any">
@@ -3299,14 +3320,17 @@ and then obtain the results in a record.
 
      <param type="double" name="pixellevel">
      <description>cliplevel for pixels (greater than 0)</description>
+     <value>0.0</value>
      </param>
 
      <param type="double" name="timelevel">
      <description>cliplevel for time slots (greater than 0)</description>
+     <value>0.0</value>
      </param>
 
      <param type="double" name="channellevel">
      <description>cliplevel for channels (greater than 0)</description>
+     <value>0.0</value>
      </param>
 </input>
 <returns type="bool"/>
@@ -3350,6 +3374,7 @@ times this for channels and timeslots.
      <param type="any" name="flags">
        <any type="record"/>
        <description>record with flag and flag\_row</description>
+       <value></value>
      </param>
    </input>
    <returns type="bool"/>
@@ -3752,6 +3777,7 @@ in spectral window 1.
   <input>
     <param type="intArray" direction="in" name="moments">
        <description>A list of moments that you want to compute. Default is an integrarted spectrum.</description>
+       <value>0</value>
     </param>
     <param type="any" direction="in" name="antenna">
       <description>antenna name or id</description>
@@ -3791,10 +3817,12 @@ in spectral window 1.
     <param type="doubleArray" direction="in" name="includemask">
       <description>A range of masks to be included when moments are computed. 
       Default is -1 (all channels).</description>
+      <value>-1</value>
     </param>
     <param type="doubleArray" direction="in" name="excludemask">
       <description>A range of masks to be excluded when moments are computed. 
       Default is -1 (do not exclude channels).</description>
+      <value>-1</value>
     </param>
     <param type="double" direction="in" name="peaksnr">
       <description>The SNR ratio that is a lower limit to be included a 

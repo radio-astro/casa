@@ -51,7 +51,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     PlotMSSelection select;
     PlotMSAveraging averaging;
     bool cachedImageSizeToScreenResolution = false, usePixels = false,
-         casapy = false, debug = false, iterPlot = false, 
+         casapy = false, debug = false, iterPlot = true, 
          nopopups = false;
   
     // Parse arguments.
@@ -71,7 +71,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
            ARG_DEBUG2 = "--debug",
            ARG_LOGFILE = PlotMSDBusApp::APP_LOGFILENAME_SWITCH,
            ARG_LOGFILTER = PlotMSDBusApp::APP_LOGFILTER_SWITCH,
-           ARG_ITERPLOT = "-iter",
+           ARG_NOITERPLOT = "--noiter",
            ARG_NOPOPUPS = "--nopopups";
            
     const vector<String>& selectFields = PlotMSSelection::fieldStrings(),
@@ -117,8 +117,8 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             if(averagingFields.size() > 0)
                 cout << "\n     MS Averaging parameters for initial plot.";
             
-            cout << "\n* " << ARG_ITERPLOT << "\n     "
-                 << "Have initial plot be iteratable instead of single plot."
+            cout << "\n* " << ARG_NOITERPLOT << "\n     "
+                 << "Disable iteration-capable plotting.  (Iteration is now enabled by default.)"
             
 		 << "\n* "  << ARG_NOPOPUPS  << "\n     "
 		 << "Use logger and status bar instead of showing error messages in a popup."
@@ -155,22 +155,22 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             
         } else if(arg2 == ARG_CISTSR || arg2 == ARG_CISTSR2) {
             cachedImageSizeToScreenResolution = true;
-            
+	    continue;
         } else if(arg2 == ARG_PIXELS1 || arg2 == ARG_PIXELS2) {
             usePixels = true;
-            
-        } else if(arg2 == ARG_ITERPLOT) {
-            iterPlot = true;
-            
+	    continue;            
+        } else if(arg2 == ARG_NOITERPLOT) {
+            iterPlot = false;
+	    continue;            
         } else if(arg2 == ARG_NOPOPUPS) {
             nopopups = true;
-            
+	    continue;
         } else if(arg2 == ARG_CASAPY) {
             casapy = true;
-            
+	    continue;
         } else if(arg2 == ARG_DEBUG1 || arg2 == ARG_DEBUG2) {
             debug = true;
-            
+	    continue;                        
         } else if(i < argc - 1) {
             arg3 = argv[++i];
             if(arg3.size() == 0) continue;
@@ -184,7 +184,11 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
             for(unsigned int i = 0; !found && i < averagingFields.size(); i++)
                 if(PMS::strEq(arg2, "avg" + averagingFields[i], true))
                     found = true;
-            if(!found) continue;
+            if(!found) {
+	      cout << "Unrecognized argument: " << arg2 << endl;
+	      cout << "Please type 'casaplotms --help' for more info" << endl;
+	      return 0;
+	    }
         }
         
         if(arg2[arg2.size() - 1] == '=') arg2.erase(arg2.size() - 1);
@@ -216,13 +220,16 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
                     found = true;
                 }
             }
+
         }
     }
     
     // WARNING ABOUT ITERATE being NEW
     if (iterPlot)
-      cout << "NB: Iteratable plots are currently experimental." << endl;
-    
+      cout << "NB: Iteration-capable plotting is ENABLED, but relatively new and somewhat experimental." << endl;
+    else
+      cout << "NB: Iteration-capable plotting is DISABLED.  You must restart to enable it." << endl;
+
     // If run from casapy, don't let Ctrl-C kill the application.
     if(casapy) signal(SIGINT,SIG_IGN);
     

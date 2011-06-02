@@ -30,7 +30,7 @@
 #define SYNTHESIS_ALMAAPERTURE_H
 
 #include <images/Images/PagedImage.h>
-#include <synthesis/MeasurementComponents/ATerm.h>
+#include <synthesis/MeasurementComponents/AzElAperture.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/Images/AntennaResponses.h>
 #include <images/Images/ImageConvolver.h>
@@ -64,7 +64,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ALMA_numAntTypes
   };
 
-  class ALMAAperture : public ATerm
+  //  class ALMAAperture : public ATerm
+  class ALMAAperture : public AzElAperture
   {
   public:
     ALMAAperture();

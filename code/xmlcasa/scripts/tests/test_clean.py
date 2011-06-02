@@ -367,21 +367,7 @@ class clean_test1(unittest.TestCase):
         self.assertFalse(self.res);
 
     def test43(self):
-        '''Clean 43: Test multiple MS input(including two cases with wrong numbers of spw or field given)'''
-        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
-        # copy the ms to make another ms
-        shutil.copytree(datapath+self.msfile, self.msfile+'2')
-        resfail1=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1','0'],field=['0~2','0~2'],imagename=self.img)
-        resfail2=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1'],field=['0~2','0~2','0~2'],imagename=self.img)
-        self.res=clean(vis=[self.msfile,self.msfile+'2'],spw=['0~1','0~1'],field=['0~2','0~2'],imagename=self.img)
-        self.assertFalse(resfail1)
-        self.assertFalse(resfail2)
-        self.assertEqual(self.res,None)
-        # cleanup the copied ms
-        os.system('rm -rf ' + self.msfile+'2')
-     
-    def test44(self):
-        '''Clean 44: Test user input mask from a boxfile'''
+        '''Clean 43: Test user input mask from a boxfile'''
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
         refpath=datapath+'reference/'
         shutil.copyfile(datapath+self.boxmsk, self.boxmsk)
@@ -390,7 +376,49 @@ class clean_test1(unittest.TestCase):
         self.assertTrue(os.path.exists(self.img+'.image'))
         self.assertTrue(self.compareimages(self.img+'.mask', refpath+'ref_cleantest1boxfile.mask'))
 
+    def test44(self):
+        '''Clean 44: Test input mask image of different channel ranges'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        refpath=datapath+'reference/'
+        shutil.copyfile(datapath+self.boxmsk, self.boxmsk)
+        # wider channel range mask 
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel', mask=[115,115,145,145], niter=10)
+        self.assertEqual(self.res, None)
+        # apply to narrower channel range 
+        self.res=clean(vis=self.msfile,imagename=self.img+'.narrow',mode='channel', 
+                       nchan=3, start=2, mask=self.img+'.mask', niter=10)
+        self.assertEqual(self.res, None)
+        # apply the narrower channel range mask to wider channel range clean
+        self.res=clean(vis=self.msfile,imagename=self.img+'.wide',mode='channel',mask=self.img+'.narrow.mask', niter=10)
+      
+        # make sub-image from masks for comparison 
+        ia.open(self.img+'.mask')
+        r1=rg.box([0,0,0,2],[256,256,0,4])
+        sbim=ia.subimage(outfile=self.img+'.subim.mask', region=r1)
+        ia.close()
+        sbim.close()
+        #
+        os.system('cp -r '+self.img+'.mask '+self.img+'.ref.mask')
+        ia.open(self.img+'.narrow.mask')
+        # note: narrow mask made with a single spw does not exactly 
+        # match with the wider cube with 2 spws in width
+        pixs = ia.getchunk(blc=[0,0,0,0],trc=[256,256,0,1])
+        r1=rg.box([0,0,0,0],[256,256,0,1])
+        ia.close()
+        ia.open(self.img+'.ref.mask')
+        ia.set(pixelmask=False)
+        ia.set(pixelmask=True, region=r1)
+        ia.putchunk(pixels=pixs,blc=[0,0,0,2])
+        ia.close()
+
+        self.assertTrue(os.path.exists(self.img+'.narrow.image'))
+        self.assertTrue(os.path.exists(self.img+'.wide.image'))
+        self.assertTrue(self.compareimages(self.img+'.narrow.mask', self.img+'.subim.mask'), 
+                        "mask mismatch for applying a wider chan. range mask to narrower chan. range clean")
+        self.assertTrue(self.compareimages(self.img+'.wide.mask', self.img+'.ref.mask'), 
+                        "mask mismatch for applying a narrower chan. range mask to wider chan. range clean")
  
+     
 class clean_test2(unittest.TestCase):
     
     # Input and output names
@@ -506,7 +534,103 @@ class clean_test3(unittest.TestCase):
                all(stat1['maxpos']==numpy.array([256,356,0,0])))
 
 
-def suite():
-    return [clean_test1]
+class clean_multims_test(unittest.TestCase):
+    # unit tests for multiple ms inputs
+    msfiles = ['point_spw1.ms', 'point_spw2.ms']
+    res = None
+    img = 'cleantest_multims'
 
+    def setUp(self):
+        self.res = None
+        default(clean)
+        for msfile in self.msfiles:
+          if (os.path.exists(msfile)):
+            os.system('rm -rf ' + msfile)
+          datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+          #datapath = '../'
+          shutil.copytree(datapath+msfile, msfile)
+
+    def tearDown(self):
+        for msfile in self.msfiles:
+          if (os.path.exists(msfile)):
+            os.system('rm -rf ' + msfile)
+
+        for imext in ['.image','.model','.residual','.psf']:
+            shutil.rmtree(self.img+imext)
+
+    def test_multims1(self):
+        '''Clean multims test1: Test two cases with wrong numbers of spw or field given)'''
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        resfail1=clean(vis=self.msfiles,spw=['0~1','0~1','0'],field=['0~2','0~2'],imagename=self.img)
+        resfail2=clean(vis=self.msfiles,spw=['0~1','0~1'],field=['0~2','0~2','0~2'],imagename=self.img)
+        self.res=clean(vis=self.msfiles,spw=['0~1','0~1'],field=['0~2','0~2'],imagename=self.img)
+        self.assertFalse(resfail1)
+        self.assertFalse(resfail2)
+        self.assertEqual(self.res,None)
+
+    def test_multims2(self):
+        '''Clean multims test2: Test multiple MSes input in mfs mode'''
+        # expected reference values on r.15199 
+        refimbandw=1.0e+09
+        refimmax=1.198562
+        refimfreq=1.49e+09
+
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        self.res=clean(vis=self.msfiles,mode='mfs', spw='', field='',imsize=[200],
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img)
+        self.assertEqual(self.res,None)
+        imhout=imhead(imagename=self.img+'.image',mode='list')
+        imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
+        imfreqrdiff = abs(refimfreq-float(imhout['crval4']))/refimfreq
+        maxrdiff = abs(refimmax-float(imhout['datamax']))/refimmax
+        # should exactly match for bandwidth and center frequency
+        self.assertTrue(imbwrdiff < 1.0e-9)
+        self.assertTrue(imfreqrdiff < 1.0e-9)
+        self.assertTrue(maxrdiff < 0.01)
+
+    def test_multims3(self):
+        '''Clean multims test3: Test multiple MSes input in mfs mode with spw channel selection'''
+        # expected reference values on r.15199
+        refimbandw=9.2e+08
+        refimmax=1.25990
+        refimfreq=1.45e+09
+
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        self.res=clean(vis=self.msfiles,mode='mfs', spw=['0:0~19','0:0~16'], field='',imsize=[200],
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img)
+        self.assertEqual(self.res,None)
+        imhout=imhead(imagename=self.img+'.image',mode='list')
+        imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
+        imfreqrdiff = abs(refimfreq-float(imhout['crval4']))/refimfreq
+        maxrdiff = abs(refimmax-float(imhout['datamax']))/refimmax
+        # should exactly match for bandwidth and center frequency
+        #print "imhout['cdelt4']=", imhout['cdelt4'], " imhout['crval4']=", imhout['crval4'], " imhout['datamax']=",imhout['datamax']
+        self.assertTrue(imbwrdiff < 1.0e-9)
+        self.assertTrue(imfreqrdiff < 1.0e-9)
+        self.assertTrue(maxrdiff < 0.01)
+        
+    def test_multims4(self):
+        '''Clean multims test4: Test multiple MSes input in frequency mode, make a single fat bw image'''
+        # expected reference values on r.15199
+        refimbandw=1.0e+09
+        refimmax=1.19717
+        refimfreq=1.5e+09
+
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        self.res=clean(vis=self.msfiles,mode='frequency', spw='', field='',imsize=[200],
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, start='1.5GHz', width='1GHz', nchan=1)
+        self.assertEqual(self.res,None)
+        imhout=imhead(imagename=self.img+'.image',mode='list')
+        imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
+        imfreqrdiff = abs(refimfreq-float(imhout['crval4']))/refimfreq
+        maxrdiff = abs(refimmax-float(imhout['datamax']))/refimmax
+        # should exactly match for bandwidth and center frequency
+        #print "imhout['cdelt4']=", imhout['cdelt4'], " imhout['crval4']=", imhout['crval4'], " imhout['datamax']=",imhout['datamax']
+        self.assertTrue(imbwrdiff < 1.0e-9)
+        self.assertTrue(imfreqrdiff < 1.0e-9)
+        self.assertTrue(maxrdiff < 0.01)
+
+def suite():
+    #return [clean_test1]
+    return [clean_test1,clean_multims_test]
 

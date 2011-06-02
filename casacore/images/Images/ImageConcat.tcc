@@ -177,14 +177,14 @@ void ImageConcat<T>::setImage (ImageInterface<T>& image, Bool relax)
    isImage_p(nIm) = True;
    if (nIm==0) {
       ImageInterface<T>::setCoordinateInfo(image.coordinates());
-      setUnitMember (image.units());
-      setImageInfoMember (image.imageInfo());
-      setMiscInfoMember (image.miscInfo());
-      setCoordinates();
+      this->setUnitMember (image.units());
+      this->setImageInfoMember (image.imageInfo());
+      this->setMiscInfoMember (image.miscInfo());
+      this->setCoordinates();
    } else {
       TableRecord rec = miscInfo();
       rec.merge (image.miscInfo(), RecordInterface::RenameDuplicates);
-      setMiscInfoMember (rec);
+      this->setMiscInfoMember (rec);
 
 // Compare the coordinates of this image with the current private coordinates
 

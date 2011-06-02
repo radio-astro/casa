@@ -312,6 +312,14 @@ public:
                        int rowInterval, TBFilterRuleSequence* rule = NULL,
                        ProgressHelper* ph = NULL);
 
+    // Returns data used for plotting (an 1-D array and its indices),
+    // using the given plot parameters, slice axis, and row number.
+    // If a ProgressHelperis provided, progress information is updated 
+    // periodically.
+    TBPlotData* plotIndices(PlotParams& dp, int axis, bool x, int row,
+                       TBFilterRuleSequence* rule = NULL,
+                       ProgressHelper* ph = NULL);
+
     // Returns the total number of rows for the table at the given location, or
     // -1 for an invalid location or other problem.  TBTable caches the total
     // rows of all subtables (i.e., tables pointed to in the table keywords).

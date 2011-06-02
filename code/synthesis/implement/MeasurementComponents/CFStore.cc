@@ -35,9 +35,9 @@ namespace casa{
 	data=other.data; 
 	rdata=other.rdata; 
 	coordSys=other.coordSys; 
-	sampling=other.sampling;
-	xSupport=other.xSupport;
-	ySupport=other.ySupport;
+	sampling.assign(other.sampling);
+	xSupport.assign(other.xSupport);
+	ySupport.assign(other.ySupport);
 	pa=other.pa;
       }
     return *this;

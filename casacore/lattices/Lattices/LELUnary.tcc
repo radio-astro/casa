@@ -40,7 +40,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template <class T>
 LELUnaryConst<T>::LELUnaryConst()
 {
-   setAttr (LELAttribute());
+   this->setAttr (LELAttribute());
 
 #if defined(AIPS_TRACE)
    cout << "LELUnaryConst:: constructor" << endl;
@@ -51,7 +51,7 @@ template <class T>
 LELUnaryConst<T>::LELUnaryConst(const T val)
 : val_p(val)
 {
-   setAttr (LELAttribute());
+   this->setAttr (LELAttribute());
 
 #if defined(AIPS_TRACE)
    cout << "LELUnaryConst:: T constructor" << endl;
@@ -98,7 +98,7 @@ LELUnary<T>::LELUnary(const LELUnaryEnums::Operation op,
 		      const CountedPtr<LELInterface<T> >& pExpr)
 : op_p(op), pExpr_p(pExpr)
 {
-   setAttr(pExpr->getAttribute());
+   this->setAttr(pExpr->getAttribute());
 
 #if defined(AIPS_TRACE)
    cout << "LELUnary:: constructor" << endl;

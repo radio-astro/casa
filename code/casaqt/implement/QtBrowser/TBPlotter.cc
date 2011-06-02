@@ -51,10 +51,18 @@ PlotSlicer::PlotSlicer(): QHBoxLayout(), complex(false) {
     complexChooser = new QComboBox();
     complexChooser->addItem("Amplitude");
     complexChooser->addItem("Phase");
+
+    axisLabel = new QLabel("Plot axis");
+    plotAxisChooser = new QSpinBox();
+    plotAxisChooser->setWrapping(true);
+    connect(plotAxisChooser, SIGNAL(valueChanged(int)),
+            this, SLOT(axisChosen(int)));
 }
 
 PlotSlicer::~PlotSlicer() {
     delete complexChooser;
+    delete plotAxisChooser;
+    delete axisLabel;
     for(unsigned int i = 0; i < spinners.size(); i++)
         delete spinners.at(i);
 }
@@ -62,6 +70,10 @@ PlotSlicer::~PlotSlicer() {
 // Public Methods //
 
 bool PlotSlicer::setDimension(vector<int>* d, bool c) {
+  return setDimension(d,c,false);
+}
+
+bool PlotSlicer::setDimension(vector<int>* d, bool c, bool index) {
     bool valid = true;
     
     // Clear out old widgets
@@ -90,6 +102,20 @@ bool PlotSlicer::setDimension(vector<int>* d, bool c) {
         }
     }
 
+    // ADD axis Slicer
+    bool indexPlot = false;
+    if (index && d != NULL && d->size() > 0){
+      addWidget(axisLabel);
+      plotAxisChooser->setMaximum(d->size() - 1);
+      addWidget(plotAxisChooser);
+      plotAxisChooser->setValue(0);
+      axisChosen(0);
+      indexPlot = true;
+    }
+    axisLabel ->setVisible(indexPlot);    
+    plotAxisChooser->setVisible(indexPlot);
+
+
     // Add complexChooser if necessary
     complex = c;
     complexChooser->setCurrentIndex(0);
@@ -108,6 +134,24 @@ void PlotSlicer::getDimension(vector<int>& d, bool& c, bool& a) {
         a = complexChooser->currentIndex() == 0;
 }
 
+void PlotSlicer::getDimension(vector<int>& d, bool& c, bool& a, int& axis) {
+  getDimension(d,c,a);
+  if (plotAxisChooser->isVisible()){
+    axis = plotAxisChooser->value();
+  } else {
+    axis = -1;
+  }
+}
+
+void PlotSlicer::axisChosen(int axis){
+  if (axis >= 0 && axis < int(spinners.size())){
+    for (unsigned int i = 0; i < spinners.size(); i++){
+      spinners.at(i)->setEnabled(true);
+    }
+    spinners.at(axis)->setEnabled(false);
+  }
+}
+
 
 ///////////////////////////
 // TBPLOTTER DEFINITIONS //
@@ -116,7 +160,7 @@ void PlotSlicer::getDimension(vector<int>& d, bool& c, bool& a) {
 // Constructors/Destructors //
 
 TBPlotter::TBPlotter(TBBrowser* b, PlotFactoryPtr f): QMainWindow(),
-        browser(b), factory(f), plotCanvas(NULL) {
+        browser(b), factory(f), plotCanvas(NULL), isIndexPlot(false) {
     setupUi(this);
     
     if(f.null()) {
@@ -156,9 +200,15 @@ TBPlotter::TBPlotter(TBBrowser* b, PlotFactoryPtr f): QMainWindow(),
     if(tables.size() <= 1)
         tableChooser->setEnabled(false);
 
+    // Need to set up model to disable [index] selection
+    xChooserModel = new QStandardItemModel();
+    yChooserModel = new QStandardItemModel();
+    xChooser->setModel(xChooserModel);
+    yChooser->setModel(yChooserModel);
+
     tableChooser->setCurrentIndex(b->getTabWidget()->currentIndex());
     tableChosen(tableChooser->currentText());
-    
+
     connect(xChooser, SIGNAL(currentIndexChanged(int)),
             this, SLOT(xChosen(int)));
     connect(yChooser, SIGNAL(currentIndexChanged(int)),
@@ -191,8 +241,8 @@ TBPlotter::TBPlotter(TBBrowser* b, PlotFactoryPtr f): QMainWindow(),
     connect(plotButton, SIGNAL(clicked()), this, SLOT(plot()));
     connect(overplotButton, SIGNAL(clicked()), this, SLOT(overplot()));
     connect(openButton, SIGNAL(clicked()), this, SLOT(openNewPlotter()));
-    connect(browser, SIGNAL(tableOpened(String)),
-            this, SLOT(tableOpened(String)));
+    connect(browser, SIGNAL(tableOpened(String, String)),
+            this, SLOT(tableOpened(String, String)));
     connect(browser, SIGNAL(tableClosed(String)),
             this, SLOT(tableClosed(String)));
     connect(clearButton, SIGNAL(clicked()),
@@ -221,6 +271,9 @@ TBPlotter::~TBPlotter() {
     }
 
     if(plotCanvas != NULL) delete plotCanvas;
+
+    delete xChooserModel;
+    delete yChooserModel;
 }
 
 // Public Methods //
@@ -276,17 +329,29 @@ void TBPlotter::doPlot(bool overplot) {
     String xName = qPrintable(xChooser->currentText());
     int xi = xChooser->currentIndex();
     String xType = "";
-    if(xi > 0) xType = types.at(xi - 1);
+    if(xi > 1) xType = types.at(xi - 2);
     String yName = qPrintable(yChooser->currentText());
     int yi = yChooser->currentIndex();
     String yType = "";
-    if(yi > 0) yType = types.at(yi - 1);
+    if(yi > 1) yType = types.at(yi - 2);
         
     int rf = rowFrom->value();
     int rt = rowTo->value();
     int ri = rowInterval->value();
 
-    if(rf > rt) {
+    // Make sure isIndexPlot is set properly
+    if ((isIndexPlot && xi != 1 && yi != 1) || 
+	(!isIndexPlot && (xi ==1 || yi == 1)) || (xi == 1 && yi == 1)) {
+        QMessageBox::critical(this, "Plot Error",
+			      "Invalid data selection for index plotting.");
+        QApplication::restoreOverrideCursor();
+        return;
+      }
+
+    if(isIndexPlot){
+      rt = rf;
+      ri = 1;
+    } else if (rf > rt) {
         int temp = rf;
         rf = rt;
         rt = temp;
@@ -302,8 +367,11 @@ void TBPlotter::doPlot(bool overplot) {
 
     bool xComplex(false), yComplex(false), xAmp(false), yAmp(false);
     vector<int> xs, ys;
-    xSlice.getDimension(xs, xComplex, xAmp);
-    ySlice.getDimension(ys, yComplex, yAmp);
+    int xAxis, yAxis;
+    //xSlice.getDimension(xs, xComplex, xAmp);
+    //ySlice.getDimension(ys, yComplex, yAmp);
+    xSlice.getDimension(xs, xComplex, xAmp, xAxis);
+    ySlice.getDimension(ys, yComplex, yAmp, yAxis);
     
     stringstream ss;
     ss << "For table " << tt->getName() << ", plotting:" << endl;
@@ -329,9 +397,9 @@ void TBPlotter::doPlot(bool overplot) {
     TBConstants::dprint(TBConstants::DEBUG_HIGH, ss.str());
 
     int adjustedX = 0;
-    if(xi > 0) adjustedX = adjustedIndices.at(xi - 1);
+    if(xi > 1) adjustedX = adjustedIndices.at(xi - 2);
     int adjustedY = 0;
-    if(yi > 0) adjustedY = adjustedIndices.at(yi - 1);
+    if(yi > 1) adjustedY = adjustedIndices.at(yi - 2);
 
     TBPlotData* data = NULL;
     try {
@@ -357,7 +425,14 @@ void TBPlotter::doPlot(bool overplot) {
         }
         
         // Get data
-        data = tt->getTable()->plotRows(xp, yp, rf, rt, ri, rule);
+	if (isIndexPlot) {
+	  bool isX = (xi == 1);
+	  data = tt->getTable()->plotIndices((isX ? yp : xp),
+					     (isX ? yAxis : xAxis), 
+					     isX, rf, rule);
+	} else {
+	  data = tt->getTable()->plotRows(xp, yp, rf, rt, ri, rule);
+	}
     } catch(const char* s) {
         QMessageBox::critical(this, "Plot Error",
                               "Error loading data from table.");
@@ -383,7 +458,11 @@ void TBPlotter::doPlot(bool overplot) {
         if(xs.size() > 0) {
             xName += " [";
             for(unsigned int i = 0; i < xs.size(); i++) {
-                xName += TBConstants::itoa(xs.at(i));
+	        if (i != xAxis) {
+		  xName += TBConstants::itoa(xs.at(i));
+		} else {
+		  xName += "*";
+		}
                 if(i < xs.size() - 1) xName += " ";
             }
             xName += "]";
@@ -395,7 +474,11 @@ void TBPlotter::doPlot(bool overplot) {
         if(ys.size() > 0) {
             yName += " [";
             for(unsigned int i = 0; i < ys.size(); i++) {
-                yName += TBConstants::itoa(ys.at(i));
+	        if (i != yAxis) {
+		  yName += TBConstants::itoa(ys.at(i));
+		} else {
+		  yName += "*";
+		}
                 if(i < ys.size() - 1) yName += " ";
             }
             yName += "]";
@@ -414,7 +497,7 @@ void TBPlotter::doPlot(bool overplot) {
         String scolor;
         if(qcolor.isValid()) {
             scolor = qPrintable(qcolor.name());
-            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0);
+            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0,1);
             format.line->setColor(scolor);
         }
         
@@ -423,7 +506,7 @@ void TBPlotter::doPlot(bool overplot) {
         qcolor.setNamedColor(symbolColorEdit->text());
         if(qcolor.isValid()) {
             scolor = qPrintable(qcolor.name());
-            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0);
+            if(scolor.size() > 0 && scolor[0] == '#') scolor.erase(0,1);
             PlotAreaFillPtr area = format.symbol->areaFill();
             area->setColor(scolor);
             format.symbol->setAreaFill(area);
@@ -513,6 +596,8 @@ void TBPlotter::tableChosen(QString n) {
         vector<TBField*>* fields = table->getFields();
         xChooser->addItem("[row #]");
         yChooser->addItem("[row #]");
+        xChooser->addItem("[index]");
+        yChooser->addItem("[index]");
         for(unsigned int i = 0; i < fields->size(); i++) {
             TBField* field = fields->at(i);
             String type = field->getType();
@@ -546,25 +631,40 @@ void TBPlotter::chosen(bool x, int i) {
 
     (x ? xSliceLabel : ySliceLabel)->setEnabled(false);
 
+    // Check for the selection of the other axis
+    int j = (x ? yChooser : xChooser)->currentIndex();
+    if (isIndexPlot && i != 1 && j != 1){
+      // index plot is canceled by this selection
+      indexReleased(x, j);
+    }
+
     if(i == 0) {
         (x ? xSlice : ySlice).setDimension(NULL, false);
         (x ? xValid : yValid) = true;
         return;
     }
     
+    if(i == 1) {
+        //index is selected
+        indexChosen(x);
+        (x ? xValid : yValid) = true;
+        return;
+    }
+        
     map<String, vector<vector<int>*> >::iterator iter =
         dimensions.find(qPrintable(tableChooser->currentText()));
     
     if(iter != dimensions.end()) {
         vector<vector<int>*> dims = iter->second;
 
-        vector<int>* d = dims.at(i - 1);
-        String type = types.at(i - 1);
+        vector<int>* d = dims.at(i - 2);
+        String type = types.at(i - 2);
         bool c = TBConstants::typeIsComplex(type);
         
         if((d != NULL && d->size() > 0) || c)
             (x ? xSliceLabel : ySliceLabel)->setEnabled(true);
-        (x ? xValid : yValid) = (x ? xSlice : ySlice).setDimension(d, c);
+        //(x ? xValid : yValid) = (x ? xSlice : ySlice).setDimension(d, c);
+        (x ? xValid : yValid) = (x ? xSlice : ySlice).setDimension(d, c, (j == 1));
         
         if(!(x ? xValid : yValid)) {
             stringstream ss;
@@ -574,6 +674,59 @@ void TBPlotter::chosen(bool x, int i) {
             QMessageBox::warning(this, "Plot Error", msg.c_str());
         }
     }
+}
+
+void TBPlotter::indexChosen(bool x) {
+    // No spinbox for index axis
+    (x ? xValid : yValid) = (x ? xSlice : ySlice).setDimension(NULL,false);
+
+    // Disable "[index]" of the other axis
+    (x ? yChooserModel : xChooserModel)->item((x ? yChooser : xChooser)->findText("[index]"))->setEnabled(false);
+
+    // Reset spinbox of the other axis
+    int otherId = (x ? yChooser : xChooser)->currentIndex();
+    if (otherId > 2){
+      map<String, vector<vector<int>*> >::iterator iter =
+        dimensions.find(qPrintable(tableChooser->currentText()));
+    
+      if(iter != dimensions.end()) {
+        vector<vector<int>*> dims = iter->second;
+
+	vector<int>* od = dims.at(otherId - 2);
+        String type = types.at(otherId - 2);
+        bool c = TBConstants::typeIsComplex(type);
+
+        if((od != NULL && od->size() > 0) || c)
+            (x ? xSliceLabel : ySliceLabel)->setEnabled(true);
+	(x ? yValid : xValid) = (x ? ySlice : xSlice).setDimension(od, c, true);
+      }
+    } else { // the other axis is row number
+      (x ? yValid : xValid) = (x ? ySlice : xSlice).setDimension(NULL, false, true);
+    }
+    // disable Row iteration
+    enableRowIteration(false);
+
+    isIndexPlot = true;
+}
+
+void TBPlotter::indexReleased(bool x, int i) {
+    // this should be set first
+    isIndexPlot = false;
+
+    // re-configure spinbox of the other axis
+    (x ? yChosen(i) : xChosen(i));
+    // enable "[index]" of the other axis
+    (x ? yChooserModel : xChooserModel)->item((x ? yChooser : xChooser)->findText("[index]"))->setEnabled(true);
+    // enable Row iteration
+    enableRowIteration(true);
+}
+
+void TBPlotter::enableRowIteration(bool visible) {
+    rowTo->setVisible(visible);
+    rowToLabel->setVisible(visible);
+    rowInterval->setVisible(visible);
+    rowIntervalLabel->setVisible(visible);
+    allRowsButton->setVisible(visible);
 }
 
 void TBPlotter::plot() {
@@ -589,7 +742,7 @@ void TBPlotter::openNewPlotter() {
     plotter->show();
 }
 
-void TBPlotter::tableOpened(String table) {
+void TBPlotter::tableOpened(String table, String fullpath) {
     tableChooser->addItem(table.c_str());
     tableChooser->setEnabled(true);
 }

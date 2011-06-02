@@ -641,6 +641,7 @@ protected:
   Vector<Int> datafieldids_p;
   //TT
   Cube<Int> spwchansels_p;
+  Matrix<Double> freqrange_p;
 
   String telescope_p;
   String vpTableStr_p;         // description of voltage patterns for various telescopes

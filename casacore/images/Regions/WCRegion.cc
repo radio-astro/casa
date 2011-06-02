@@ -317,5 +317,92 @@ void WCRegion::makeWorldAbsolute (Vector<Double>& world,
    }
 }
 
+void WCRegion::unitInit() {
+   static Bool doneUnitInit = False;
+   if (!doneUnitInit) {
+      UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
+      UnitMap::putUser("frac",UnitVal(1.0), "fractional units");
+      UnitMap::putUser("def",UnitVal(1.0), "default value");
+      UnitMap::putUser("default",UnitVal(1.0), "default value");
+      doneUnitInit = True;
+   }
+}
+
+void WCRegion::checkAxes (
+	const IPosition& pixelAxes,
+    const CoordinateSystem& cSys,
+    const Vector<String>& quantityUnits
+) const {
+
+	// Make sure we have world axes for these pixel axes
+
+	Vector<Int> worldAxes(pixelAxes.size());
+	Vector<String> units = cSys.worldAxisUnits();
+
+	for (uInt i=0; i<pixelAxes.size(); i++) {
+		worldAxes[i] = cSys.pixelAxisToWorldAxis(pixelAxes[i]);
+		if (worldAxes[i] == -1) {
+			throw (
+				AipsError(
+					"WCRegion::" + String(__FUNCTION__)
+					+ "from " + type() + ": pixelAxes["
+					+ String::toString(i)
+					+ "]=" + String::toString(pixelAxes[i])
+					+ " has no corresponding world axis"
+				)
+			);
+		}
+		String unit = quantityUnits[i];
+		if (unit == "default") {
+			throw (
+				AipsError(
+					"WCRegion::" + String(__FUNCTION__)
+					+ "from " + type() + ": default units are not allowed"
+				)
+			);
+		}
+		if (unit != "pix" && unit != "frac") {
+			if (Unit(unit) != Unit(units(worldAxes[i]))) {
+				throw (
+					AipsError(
+						"WCRegion::" + String(__FUNCTION__)
+						+ "from " + type()
+						+ ": units of quantity[" + String::toString(i)
+						+ "]=" + unit
+						+ " are inconsistent with units of coordinate system"
+						+ "units (" + units(worldAxes[i]) + ")"
+					)
+				);
+			}
+		}
+	}
+}
+
+void WCRegion::convertPixel(
+	Double& pixel,
+    const Double& value,
+    const String& unit,
+    const Int absRel,
+    const Double refPix,
+    const Int shape
+) {
+   Bool isWorld = True;
+   if (unit == "pix") {
+      pixel = value;
+      isWorld = False;
+   } else if (unit == "frac") {
+      pixel = value * shape;
+      isWorld = False;
+   }
+//
+   if (isWorld) return;
+//
+   if (absRel == RegionType::RelRef) {
+      pixel += refPix;
+   } else if (absRel == RegionType::RelCen) {
+      pixel += Double(shape)/2;
+   }
+}
+
 } //# NAMESPACE CASA - END
 

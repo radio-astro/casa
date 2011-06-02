@@ -156,7 +156,8 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
+                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print
+		     \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
@@ -286,7 +287,7 @@ set( RE_CMAKE "YES" CACHE STRING "are we rerunning cmake?" FORCE )
 
 # Use htlatex, do not support latex2html
 find_program( LATEX2HTML_CONVERTER NAMES htlatex )
-set( LATEX2HTML_OPTIONS "\\\"htcasa,section+,next,p-width,5\\\" \\\"\\\" \\\"-p\\\""
+set( LATEX2HTML_OPTIONS "htcasa,section+,next,p-width,5"
       CACHE STRING "LATEX2HTML_CONVERTER options" )
 
 # Use pdflatex
@@ -626,7 +627,7 @@ endif()
 if( NOT PYTHON_FOUND )
 
   if ( NOT PYTHON_LIBNAME )
-    set( _names 2.6 2.5.2 2.5 )
+    set( _names 2.7 2.6 2.5.2 2.5 )
     # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
   else()
     set( _names ${PYTHON_LIBNAME} )

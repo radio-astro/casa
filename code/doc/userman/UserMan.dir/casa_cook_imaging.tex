@@ -26,6 +26,8 @@
 % JO 2010-05-25     Release 3.0.2 edits
 % JO 2010-06-22     remove makemask references
 % JO 2010-10-13   Release 3.1.0 edits
+% JO 2011-04-20  Release 3.2.0 edits start
+
 
 \chapter{Synthesis Imaging}
 \label{chapter:im}
@@ -323,11 +325,6 @@ The following is a list of differences between MS-MFS ({\tt
 
 \begin{enumerate}
 
-\item Minor cycle operates only on the inner quarter of the image: The
-  algorithm involves convolutions via FFTs and restricts cleaning to
-  the inner quarter to prevent aliasing.  The user-defined image size
-  needs to account for this.  Note, this has not been tested for
-  non-square-shaped images.
 
 \item Iterations always proceed as cs-clean major/minor cycles, and
   uses the full psf during minor cycle iterations. There are currently
@@ -339,9 +336,11 @@ The following is a list of differences between MS-MFS ({\tt
 \item Currently, the following options are not supported for {\tt
     nterms}$>1$: {\tt psfmode,} {\tt pbcorr}, {\tt minpb}, {\tt
     imagermode}='mosaic', {\tt outlierfile}, {\tt
-    gridmode}='aprojection', {\tt cyclespeedup},{\tt cyclefactor},
-  anything but {\tt stokes}="I". These options are currently under
-  development and testing.
+    gridmode}='aprojection', {\tt cyclespeedup}, and allowed are one
+  of Stokes I, Q, U, V, RR, LL, XX, YY at a time. More options and combinations are currently under
+  development and testing. Under 'Using CASA' $\rightarrow$ 'Other
+  Documentation' $\rightarrow$ 'Imaging Algorithms in CASA' you can
+  find the latest implementations. 
 
 \end{enumerate}
 
@@ -366,14 +365,15 @@ mode              =  'channel'   #  Spectral image definition(mfs, channel, velo
    nchan          =         -1   #  Number of channels (planes) in output image
    start          =          0   #  first input channel to use
    width          =          1   #  Number of input channels to average
-   interpolation  =   'linear'   #  Spectral interpolation(nearest, linear, cubic)
+   interpolation  =   'nearest'   #  Spectral interpolation(nearest, linear, cubic)
 \end{verbatim}
 \normalsize
 The default {\tt nchan=-1} will automatically produce a cube with the
 number of channels needed to span the (regridded) spectral windows of
 the MS.  {\bf ALERT:} This often results in extra blank channels at the
 beginning and end of the image cube, so it is usually more precise to
-specify {\tt nchan} and {\tt start} to get what you want.  
+specify {\tt nchan} and {\tt start} to get what you want. For best
+results, we also recommend {\tt 'nearest'} interpolation for the {\tt mode=channel}. 
 
 The channelization of the resulting image is determined by the
 channelization in the MS of {\tt vis} of the first {\tt spw} specified
@@ -558,7 +558,18 @@ versus the plane.  Each input channel will be mapped to 1 or 2 output
 planes.  For most users, this is the best choice.
 
 For {\tt 'cubic'}, the channels are gridded using a cubic
-interpolation function.  
+interpolation function. 
+
+'Linear' and 'cubic' interpolation methods require that there are two
+datapoints that sandwich your new, regridded bin. This can introduce
+edge effects like in the first or last channel or adjacent to flagged
+channels where data is only available on one side of the
+spectrum. {\tt interpolation='nearest'} will avoid such edge effects
+but may not work so well for data with spws that overlap. For {\tt
+  mode='velocity'} or {\tt 'frequency'}, 'linear' interpolation
+usually works best and for {\tt mode='channel'} the 'nearest'
+interpolation method is superior. But this could be different
+for your dataset and you should carefully check your results.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Parameter {\tt phasecenter} }
@@ -658,7 +669,9 @@ hands ({\tt RR} and {\tt :LL}) for circularly polarized systems or
 the cross-hands ({\tt XY} and {\tt YX}) for linearly polarized systems
 such as ALMA and ATCA.
 
-This parameter is specified as a string of up to four letters ({\tt IQUV}).
+This parameter is specified as a string of up to four letters and can
+indicate stokes parameters themselves, Right/Left hand polarization
+products, or linear polarizatin products (X/Y). 
 For example,
 \small
 \begin{verbatim}
@@ -666,9 +679,12 @@ For example,
   stokes = 'IQU'          # Intensity and linear polarization
   stokes = 'IV'           # Intensity and circular polarization
   stokes = 'IQUV'         # All Stokes imaging
+  stokes = 'RR'           # Right hand polarization only
+  stokes = 'XXYY'         # Both linear polarizations 
 \end{verbatim}
 \normalsize
-are common choices. ()
+are common choices (see the inline help of {\tt clean} for a full
+range of possible options).
 The output image will have planes (along the ``polarization axis'')
 corresponding to the chosen Stokes parameters.  
 
@@ -679,14 +695,15 @@ includes polarization planes other than I, then choosing {\tt psfmode='hogbom'}
 components) each plane sequentially, while {\tt psfmode='clark'} 
 (\S~\ref{section:im.clean.psfmode.clark}) will deconvolve jointly.
 
-%Fixed in 2.4.0
-%{\bf ALERT:} The {\tt stokes = 'QU'} for linear polarization
-%only is not currently an option.  There is also no option to
-%make single polarization product (e.g. separate {\tt RR} 
-%and {\tt LL}, or {\tt XX} and {\tt YY}) images from data with
-%dual polarizations available.  You currently would have to make
-%{\tt stokes='I'} images from data with a single polarization product
-%(e.g. {\tt RR} or {\tt LL}) split out.
+{\bf Alert:} As of Release 3.2, {\tt clean} expects that all input
+polarizations are present. E.g. if you have RR and LL dual
+polarization data and you flagged parts of RR but not LL, {\tt clean} will
+ignore {\bf both} polarizations in slice. It is possible to split out a
+polarization product with {\tt split} and image separately. But you
+will not be able to combine these part-flagged data in the uv-domain. 
+We will remove that restriction in a future
+CASA release.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Parameter {\tt uvtaper} }
@@ -1238,13 +1255,13 @@ This option can also be combined with {\tt imagermode='csclean'}
 \subsection{The {\tt multiscale} parameter}
 \label{section:im.clean.multiscale}
 
-{\bf ALERT:} The {\tt multiscale} option is currently under
-development and should be used with caution and be considered
-as an ``experimental'' algorithm.  The multi-scale CLEAN
-method is known to need careful tuning in order to properly converge.
-However, currently the only control for
-{\tt multiscale} in the {\tt clean} task is the
-setting of the {\tt scales}.
+%{\bf ALERT:} The {\tt multiscale} option is currently under
+%development and should be used with caution and be considered
+%as an ``experimental'' algorithm.  The multi-scale CLEAN
+%method is known to need careful tuning in order to properly converge.
+%However, currently the only control for
+%{\tt multiscale} in the {\tt clean} task is the
+%setting of the {\tt scales}.
 
 \begin{wrapfigure}{r}{2.5in}
   \begin{boxedminipage}{2.5in}
@@ -2277,8 +2294,9 @@ The file {\tt outlierfile="setup.txt"} is an AIPS-style field file
 used to locate outlier fields.  For example:
 \small
 \begin {verbatim}
-C   main 2048 2048   13 27 20.98     43 26 28.0   # Main field with image size and phase center
-C   out1  128  128   13 30 52.158    43 23 08.00  # First outlier field specification
+C 0   1024 1024   13 27 20.98     43 26 28.0    # Main field with image size and phase center
+C 1    128  128   13 30 52.158    43 23 08.00   # First outlier field specification
+C 2    128  128   13 24 08.163    43 09 48.00   # Second outlier field specification
                       etc
 \end{verbatim}
 \normalsize

@@ -177,12 +177,17 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 			    casalog.post( "Only first 16 spectra is plotted.", priority = 'WARN' )
 
                     if not myp or myp.is_dead:
-                        if plotlevel > 0 and sd.rcParams['plotter.gui']:
-                            from asap.asaplotgui import asaplotgui as asaplot
+                        #if plotlevel > 0 and sd.rcParams['plotter.gui']:
+                        #    from asap.asaplotgui import asaplotgui as asaplot
+                        #else:
+                        #    from asap.asaplot import asaplot
+                        from asap.asapplotter import new_asaplot
+                        if plotlevel > 0:
+                            visible = sd.rcParams['plotter.gui']
                         else:
-                            from asap.asaplot import asaplot
+                            visible = False                        
+                        myp = new_asaplot(visible=visible)
 
-                    myp = asaplot()
                     myp.hold()
                     myp.clear()
                     myp.set_panels(rows=np,cols=0,nplots=np)
@@ -242,7 +247,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     myp.release()
 
                     #Apply flag
-                    if plotlevel > 0:
+                    if plotlevel > 0 and sd.rcParams['plotter.gui']:
                             ans=raw_input("Apply %s (y/n)?: " % flgmode)
                     else:
                             casalog.post("Applying selected flags")
@@ -299,11 +304,13 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                     #row=rowlist[0]
                     row=0
                     if not myp or myp.is_dead:
-                        if sd.rcParams['plotter.gui']:
-                            from asap.asaplotgui import asaplotgui as asaplot
-                        else:
-                            from asap.asaplot import asaplot
-                    myp = asaplot()
+                        #if sd.rcParams['plotter.gui']:
+                        #    from asap.asaplotgui import asaplotgui as asaplot
+                        #else:
+                        #    from asap.asaplot import asaplot
+                        from asap.asapplotter import new_asaplot
+                        myp = new_asaplot(visible=sd.rcParams['plotter.gui'])
+
                     myp.hold()
                     myp.clear()
                     colours = ["green","red","#dddddd","#777777"]

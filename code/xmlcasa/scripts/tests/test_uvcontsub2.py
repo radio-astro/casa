@@ -168,7 +168,7 @@ class combspw(UVContChecker):
 
     def test_1ran(self):
         """combspw fitorder=1 line estimate"""
-        check_eq(self.records[1]['contsub'], -6.25609+17.67916j,
+        check_eq(self.records[1]['contsub'], -7.0302+17.4318428j,
                  0.001)
         
 def suite():

@@ -1,0 +1,27 @@
+# comment all the way to the left
+
+    
+     # comment after some spaces
+#-
+   
+    box [ [ "16h22m22s" , 14d8m2s], [16h21m, 18d ] ], label= 'x bb " ', corr = [q, u ],  coord='B1950_VLA'
+centerbox [ [ "16h22m22s" , 14d8m2s], [4.5arcmin, 62.3arcsec ]] ,  coord='B1950_VLA', corr = [q, u ]
+rotbox [ [ "16h22m22s" , 14d8m2s], [4.5arcmin, 62.3arcsec ] , "22deg" ],  coord='B1950_VLA', corr = [q, u ]
+
+poly [ [ "16h22m22s" , 14d8m2s],  [ "16h22m21s" , 14d8m2s],[ "16h22m21s" , 14d8m1s], [ "16h22m22s" , 14d8m1s] ]
+
+circle [ [ "16h22m22s" , 14d8m2s], 5arcmin" ]
+
+annulus [ [ "16h22m22s" , 14d8m2s], [2arcmin, 5arcmin" ] ]
+
+ellipse [ [ "16h22m22s" , 14d8m2s], [4.5arcmin, 62.3arcsec ] , "45deg" ]
+
+    line [ [ "16h22m22s" , 14d8m2s], [16h21m, 18d ] ]
+
+    vector [ [ "16h22m22s" , 14d8m2s], [16h21m, 18d ] ] linewidth=22
+
+    text [ [ "16h22m22s" , 14d8m2s], "16h21m, [] ' \" 18d"  ]
+    
+        symbol [ [ "16h22m22s" , 14d8m2s], |  ] usetex="False"
+    
+box [ [ 2pix , 2pix], [4pix, 4pix ] ]

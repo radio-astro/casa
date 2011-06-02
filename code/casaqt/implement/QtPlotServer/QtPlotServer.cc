@@ -52,9 +52,10 @@ namespace casa {
 	delete dbus_;
     }
 
-    QtPlotSvrPanel *QtPlotServer::panel( const QString &title, const QString &xlabel, const QString &ylabel,
-					 const QString &window_title, const QString &legend ) {
-	QtPlotSvrPanel *result = new QtPlotSvrPanel(title,xlabel,ylabel,window_title,legend);
+    QtPlotSvrPanel *QtPlotServer::panel( const QString &title, const QString &xlabel, const QString &ylabel, const QString &window_title,
+					 const QList<int> &size, const QString &legend, const QString &zoom, QtPlotSvrPanel *with_panel,
+					 bool new_row ) {
+	QtPlotSvrPanel *result = new QtPlotSvrPanel(title,xlabel,ylabel,window_title,size,legend,zoom,with_panel,new_row);
 	return result;
     }
 

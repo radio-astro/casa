@@ -33,8 +33,10 @@
 #include <QVariantMap>
 #include <QString>
 #include <casaqt/QtPlotServer/QtPlotServer.qo.h>
+#include <qwt_plot_spectrogram.h>
 
 class QwtPlotItem;
+class QDockWidget;
 
 namespace casa {
 
@@ -56,7 +58,8 @@ namespace casa {
     public slots:
 
 	QDBusVariant panel( const QString &title, const QString &xlabel="", const QString &ylabel="", const QString &window_title="",
-			    const QString &legend="bottom", bool hidden=false  );
+			    const QList<int> &size=QList<int>( ), const QString &legend="bottom", const QString &zoom="bottom",
+			    int with_panel=0, bool new_row=false, bool hidden=false  );
 	QStringList colors( );
 	QStringList symbols( );
 	QDBusVariant line( const QList<double> &x, const QList<double> &y, const QString &color="black",
@@ -65,6 +68,8 @@ namespace casa {
 			      const QString &label="", const QString &symbol="", int symbol_size=-1, int dot_size=-1, int panel=0 );
 	QDBusVariant histogram( const QList<double> &values, int bins=0, const QString &color="blue", const QString &label="", int panel=0 );
 	QDBusVariant raster( const QList<double> &matrix, int sizex, int sizey, int panel=0 );
+
+	QDBusVariant setlabel( const QString &xlabel="", const QString &ylabel="", const QString &title="", int panel_id=0 );
 
 	QDBusVariant erase( int data=0 );
 	QDBusVariant close( int panel=0 );
@@ -134,6 +139,7 @@ namespace casa {
 	    const QwtPlotItem *data( ) const { return data_; }
 	    QtPlotSvrPanel *&panel( ) { return panel_; }
 	    const QtPlotSvrPanel *panel( ) const { return panel_; }
+	    ~data_desc( ) { delete data_; }
 
 	private:
 	    int id_;
@@ -151,12 +157,16 @@ namespace casa {
 
 	void close_everything( );
 	void release_everything( );
-
 	QtPlotServer *server;
+
 	typedef std::map<int,panel_desc*> panelmap;
 	typedef std::map<int,data_desc*> datamap;
+	typedef std::map<int,QDockWidget*> dockmap;
+
 	panelmap managed_panels;
 	datamap managed_datas;
+	dockmap managed_docks;
+
         void release( panelmap::iterator & );
   };
 

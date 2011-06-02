@@ -19,6 +19,8 @@
 %Updated JO 2010-03-10 start editing for R3.0.1
 %Updated TT 2010-05-27 start editing for R3.0.2, added inputs from Kana and Takeshi
 %Updated TN 2010-10-12 start editing for R3.1, added inputs from Kana
+%Updated TN 2011-04-12 start editing for R3.2, added inputs from Takeshi
+%Updated TN 2011-04-18 first draft for R3.2, added inputs from Kana, Wataru
 %and myself
 %Updated JO 2010-10-29 JO edits for 3.1.0 
 
@@ -33,8 +35,13 @@
 % time you execute set_restfreqs it adds the new value(s) to the
 % frequencies table) and the last value(s) is used as rest frequencies.
 
+{\bf ALERT:} After the release of CASA 3.2, we will be changing the 
+names of the several SD task parameters including {\tt sdfile} and 
+so on. The name change will be effective from the first casapy-test 
+after CASA 3.2. 
+
 % TT: took out "BETA"  
-{\bf ALERT:} The single-dish analysis package within CASA 
+{\bf NOTE:} The single-dish analysis package within CASA 
 is included in the release for the use
 of the ALMA computing and commissioning groups.  
 %Therefore, this description is included in this Cookbook
@@ -56,7 +63,7 @@ support the Australian telescopes such as Mopra, Parkes, and
 Tidbinbilla, and we have adapted it for use within CASA for
 GBT (see the note below for limitation of GBT SDFITS handling) 
 and eventually ALMA [Note: Some support for the ALMA is now available].  
-{\bf For R3.1, the ASAP version included in CASA was updated to 3.0 
+{\bf For R3.1 or later, the ASAP version included in CASA was updated to 3.0 
 (which is the latest official release of ASAP as of Oct. 2010).
 In ASAP 3.0, data format was also updated from 2.0 to 3.0. 
 This update is backward incompatible so that you have to use data conversion 
@@ -76,7 +83,11 @@ For example, if you run
 \end{verbatim}
 
 you will get testdata.asap.asap3, and original data testdata.asap will be kept.
-Note that this is specific issue for scantable, which is proper data format 
+Note that the install directory of {\tt asap2to3} is \verb!$CASAROOT/lib/casapy/bin!, which is 
+different from the directory where casapy is installed. Here, \verb!CASAROOT! is a path to the 
+root directory of CASA.
+Furthermore, you have to add \verb!$CASAROOT/lib/! to \verb!LD_LIBRARY_PATH! environment variable.
+Note also this is specific issue for scantable, which is proper data format 
 for ASAP. 
 For other data format such as Measurement Set (MS) or SDFITS, you can import the data as usual.
 
@@ -93,7 +104,7 @@ information on the tools.
 All of the ASAP functionality is available within the CASA
 installation.  Since we extended ASAP, there
 are certain functionalities that are available only in the CASA version of ASAP.
-In the following sections of this appendix, we outline how to access ASAP
+In the following subsections, we outline how to access ASAP
 from within CASA and the data flow for standard use cases.
 
 If you run into trouble, be sure to check the list of known issues
@@ -139,7 +150,7 @@ in memory or on disk.  The default is
 \end{verbatim}
 \normalsize
 which is the best choice if there is enough memory
-does it in memory.  On the other hand,
+compared with a size of data to be loaded.  On the other hand,
 \small
 \begin{verbatim}
      sd.rcParams['scantable.storage'] = 'disk'
@@ -331,7 +342,7 @@ the three tasks described.
 Its operation is
 controlled by three main "mode" parameters: {\tt calmode} (which selects
 the type of calibration, if any, to be applied), {\tt kernel} (which selects
-the smoothing), and {\tt blmode} (which selects baseline fitting).  There
+the smoothing), and {\tt blfunc} (which selects baseline fitting).  There
 are also parameters controlling the selection such as {\tt scanlist}, 
 {\tt iflist}, {\tt field}, {\tt scanaverage}, {\tt timeaverage}, and
 {\tt polaverage}.  Note that {\tt sdcal} can be
@@ -351,8 +362,8 @@ parameters that control them. }
 
 The SDtasks support the import and export file formats supported
 by ASAP itself.  For import, this includes:  ASAP (scantables), 
-MS (CASA measurement set), RPFITS, SDFITS and NRO data format.  
-For export, this includes: ASAP (scantables), MS (CASA measurement set),
+MS (CASA Measurement Set), RPFITS, SDFITS and NRO data format.  
+For export, this includes: ASAP (scantables), MS (CASA Measurement Set),
 ASCII (text file), SDFITS (a flavor of SD FITS).
 The {\tt sdsave} task is available exclusively for exporting with these
 data selection options.  The {\tt sdcoadd} task is available to merge data in separate data files
@@ -374,18 +385,19 @@ Calculation of statistics on spectral regions is available in the {\tt sdstat} t
 %%Results are passed in a Python dictionary return variable {\tt xstat}.
 Results are passed by a Python dictionary return variable.
 The statistics of spectra can also be calculated via {\tt msmoments} task.
-The input of {\tt msmoments} task must be in CASA measurement set format.
-The task newly creates measurement set to store statistics values.
+The input of {\tt msmoments} task must be in CASA Measurement Set format.
+The task newly creates Measurement Set to store statistics values.
 
 Basic Gaussian line-fitting is handled by the {\tt sdfit} task.  It can deal
 with the simpler cases, and offers some automation as well as interactive 
 selection of fitting region, but more complicated
 fitting is best accomplished through the toolkit ({\tt sd.fitter}).
 
-Basic non-interactive channel and row flagging is available in the {\tt sdflag} task.
-By default or by specifying outfile parameter, a new file is created containing 
-dataset with the flag information. To update flags in the input data,
-{\tt outfile='none'} must be set.
+Basic interactive and non-interactive channel and row flagging are available 
+in the {\tt sdflag} task. 
+The flags in the input file is updated by default, i.e., {\tt outfile=''} 
+and {\tt overwrite=True}. Otherwise, a new file is created to store dataset
+with updated flag infromation.
 
 Limited total power data analysis functionality is available through 
 the task {\tt sdtpimaging}. A single dish image data cube can be created
@@ -404,10 +416,10 @@ Measurement Set. This can be done by {\tt antenna} parameter. By default
 ({\tt antenna}=0), data associate with antenna id 0 is imported.
 The {\tt antenna} parameter takes no effect for other input data formats.
 
-{\bf R3.1 New Features}\\
-The single dish simulation task, {\tt sdsim}, is merged with synthesis
-simulation task and removed. Please use the unified task, {\tt simdata} 
-(see Appendix \ref{chapter:sim}). 
+%% {\bf R3.1 New Features}\\
+%% The single dish simulation task, {\tt sdsim}, is merged with synthesis
+%% simulation task and removed. Please use the unified task, {\tt simdata} 
+%% (see Appendix \ref{chapter:sim}). 
 
 %\newpage 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -464,6 +476,7 @@ calmode -- calibration mode
         example: choose mode 'none' if
                  already calibrated and want to
                  try averaging
+        WARNING: 'fsotf' is not implemented yet
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
@@ -603,6 +616,7 @@ plotlevel -- control for plotting of results
   tested yet, so that there may be unknown bugs. 
 
 % this 'new features' for R3.0.0
+\medskip
 %{\bf R3.0 New Features:}
 {\bf Notes:}
  \begin{itemize}
@@ -709,12 +723,11 @@ plotlevel -- control for plotting of results
 \begin{verbatim}
 Keyword arguments:
 sdfile -- name of input SD dataset
-antenna -- antenna name or id (only effective for MS input)
+antenna -- antenna name or id (only effective for MS input). 
 fluxunit -- units for line flux
         options: 'K','Jy',''
         default: '' (keep current fluxunit)
-        WARNING: For GBT data, see description below
-        
+        WARNING: For GBT data, see description below.
     >>> fluxunit expandable parameter
          telescopeparm -- the telescope characteristics
                 options: (str) name or (list) list of gain info
@@ -725,12 +738,11 @@ fluxunit -- units for line flux
                          to ASAP are
                          'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43',
                          'CEDUNA','HOBART'. For GBT, it fixes default fluxunit
-                         to 'K' first then converts to a new fluxunit.
+                         to 'K' first then convert to a new fluxunit.
                          telescopeparm=[104.9,0.43] diameter(m), ap.eff.
                          telescopeparm=[0.743] gain in Jy/K
                          telescopeparm='FIX' to change default fluxunit
                          see description below
-
 specunit -- units for spectral axis
         options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
         default: '' (=current)
@@ -742,10 +754,10 @@ frame -- frequency frame for spectral axis
         WARNING: frame='REST' not yet implemented
 doppler -- doppler mode
         options: (str) 'RADIO','OPTICAL','Z','BETA','GAMMA'
-        default: currently set to doppler in scantable
+        default: currently set doppler in scantable
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
-        example: [21,22,23,24]  
+        example: [21,22,23,24]
                  this selection is in addition to field,
                  iflist, and pollist
 field -- selection string for selecting scans by name
@@ -765,20 +777,28 @@ pollist -- list of polarization id numbers to select
                  field, and iflist
 tau -- atmospheric optical depth
         default: 0.0 (no correction)
-blmode -- mode for baseline fitting
+masklist -- list or string of mask regions to INCLUDE in BASELINE fit
+            a string masklist allows per IF selection of channels.
+        default: [] (entire spectrum)
+        example: [[1000,3000],[5000,7000]]
+                 '0:1000~3000;5000~7000, 1:200~350;450~600'
+                 when maskmode is 'auto' or 'interact', this mask 
+                 will be applied first before fitting as base mask
+maskmode -- mode of setting additional channel masks
         options: (str) 'auto','list','interact'
         default: 'auto'
-        example: blmode='auto' uses expandable parameters 
-                 in addition to blpoly to run linefinder
-                 to determine line-free regions
-                 USE WITH CARE! May need to tweak the parameters,
-                 thresh, avg_limit, and edge.
-                 blmode='interact' allows adding and deleting mask 
-                 regions by drawing rectangles on the plot with mouse. 
-                 Draw a rectangle with LEFT-mouse to ADD the region to 
-                 the mask and with RIGHT-mouse to DELETE the region. 
+        example: maskmode='auto' runs linefinder to detect line regions 
+                 to be excluded from fitting. this mode requires three 
+                 expandable parameters: thresh, avg_limit, and edge.
+                 USE WITH CARE! May need to tweak the expandable parameters.
+                 maskmode='list' uses the given masklist only: no additional 
+                 masks applied.
+                 maskmode='interact' allows users to manually modify the 
+                 mask regions by dragging mouse on the spectrum plotter GUI.
+                 use LEFT or RIGHT button to add or delete regions, 
+                 respectively.
        
-    >>> blmode expandable parameters
+    >>> maskmode expandable parameters
          thresh -- S/N threshold for linefinder
                  default: 5
                  example: a single channel S/N ratio above which the channel is
@@ -791,33 +811,56 @@ blmode -- mode for baseline fitting
                  default: 0
                  example: [1000] drops 1000 channels at beginning AND end
                           [1000,500] drops 1000 from beginning and 500 from end
-         batch -- run faster but no detailed output in logger
-                 default: False
-                 example: If True, this task runs faster, but the detailed 
-                          info such as the coefficients of the best-fit function 
-                          is not shown in the CASA logger
-                
          Note: For bad baselines threshold should be increased,
          and avg_limit decreased (or even switched off completely by
          setting this parameter to 1) to avoid detecting baseline
          undulations instead of real lines.
-
-blpoly -- order of baseline polynomial
-        options: (int) (<0 turns off baseline fitting)
-        default: 5
-        example: typically in range 2-9 (higher values
-                 seem to be needed for GBT)
+blfunc -- baseline model function
+        options: (str) 'poly','cspline','sinusoid'
+        default: 'poly'
+        example: blfunc='poly' uses a single polynomial line of 
+                 any order which should be given as an expandable 
+                 parameter 'order' to fit baseline. 
+                 blfunc='cspline' uses a cubic spline function, a piecewise 
+                 cubic polynomial having C2-continuity (i.e., the second 
+                 derivative is continuous at the joining points). 
+                 blfunc='sinusoid' uses a combination of sinusoidal curves. 
+    >>> blfunc expandable parameters
+         order -- order of baseline polynomial
+                 options: (int) (<0 turns off baseline fitting)
+                 default: 5
+                 example: typically in range 2-9 (higher values
+                          seem to be needed for GBT)
+         npiece -- number of the element polynomials of cubic spline curve
+                 options: (int) (<0 turns off baseline fitting)
+                 default: 2
+         nwave -- wave number(s) of sinusoid within a range specified with
+                  maxwavelength. Both integer (for the maximum one) and list 
+                 (for all) can be used. Zero means constant term. 
+                 default: 3
+                 example: nwave=4 uses sinusoids with wave numbers from 0 to 4,
+                            i.e. 0, 1, 2, 3, and 4.
+                          [1,8] uses sinusoids with wave numbers 1 and 8.
+         maxwavelength -- the longest sinusoidal wavelength in unit of 
+                 spectral window width.
+                 default: 1.0
+         clipthresh -- clipping threshold for iterative fitting
+                 default: 3
+         clipniter -- maximum iteration number
+                 default: 0 (no iteration, i.e., no clipping either)
 verify -- verify the results of baseline fitting
         options: (bool) True,False
         default: False
-        WARNING: Currently it just asks whether you accept
+        WARNING: Currently this just asks whether you accept
                  the displayed fit and if not, continues
                  without doing any baseline fit.
-masklist -- list of mask regions to INCLUDE in BASELINE fit
-        default: [] (entire spectrum)
-        example: [[1000,3000],[5000,7000]]
-                 if blmode='auto' then this mask will be applied
-                 before fitting
+verbose -- output fitting results to logger and a file as well
+        default: True
+        example: If False, the fitting results including coefficients, 
+                 residual rms, etc., are not output to either the CASA 
+                 logger or a text file (<outfile>_blparam.txt), while 
+                 the processing speed gets faster by a factor of about 20 
+                 percent
 outfile -- Name of output file
         default: '' (<sdfile>_bs)
 outform -- format of output file
@@ -851,13 +894,29 @@ plotlevel -- control for plotting of results
     conversion and the {\tt telescopeparm} parameter.
     Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
-    By setting {\tt blmode='interact'}, you can set/unset mask regions interactively using
+    By setting {\tt maskmode='interact'}, you can set/unset mask regions interactively using
     mouse buttons. Current mask regions will be shown with yellow shading.
-    Baseline fit parameters and rms of fitted spectra are automatically saved to an
-    ASCII file, {\tt <outfile>\_blparam.txt}.
+    Baseline fit parameters and rms of fitted spectra are saved to an
+    ASCII file, {\tt <outfile>\_blparam.txt}, when {\tt verbose=True}.
 
-   % {\bf R3.0 New Features:}
-    %The parameter, {\tt interactive}, is renamed to {\tt verify}.  
+\medskip
+{\bf R3.2 New Features:}
+\begin{enumerate}
+\item The parameter {\tt masklist} accepts per IF selection of mask regions. 
+      See \S~\ref{section:io.selection.spw.channel} for details. 
+      Note, the mask regions should be specified in unit of {\tt specunit} 
+      in this task.
+\item Cubic spline function and sinusoid are now available for baseline 
+      model in addition to polynomial. Also, iterative n-$\sigma$ clipping 
+      becomes available with cubic spline and sinusoid. 
+\item A number of changes in parameters: {\tt blfunc} and its several 
+      subparameters added to specify baseline model; {\tt blmode} and 
+      {\tt blpoly} renamed as {\tt maskmode} and {\tt order}, respectively. 
+      ({\tt order} is now a subparameter of {\tt blfunc}); {\tt batch} 
+      replaced with {\tt verbose}. 
+\item Better performance in case {\tt maskmode}='auto'. Compared with R3.1, 
+      about 30 times faster in R3.2. 
+\end{enumerate}
   
 \subsubsection{{\tt sdcal}}
 \label{section:sd.sdtasks.tasks.sdcal}
@@ -977,21 +1036,62 @@ kernel -- type of spectral smoothing
                  example: 5 or 10 seems to be popular for boxcar
                           ignored for hanning (fixed at 5 chans)
                           (0 will turn off gaussian or boxcar)
+blfunc -- baseline model function
+        options: (str) 'none','poly','cspline','sinusoid'
+        default: 'none' (no baselining)
+        example: blfunc='poly' uses a single polynomial line of 
+                 any order which should be given as an expandable 
+                 parameter 'order' to fit baseline. 
+                 blfunc='cspline' uses a cubic spline function, a piecewise 
+                 cubic polynomial having C2-continuity (i.e., the second 
+                 derivative is continuous at the joining points).
+                 blfunc='sinusoid' uses a combination of sinusoidal curves. 
+    >>> blfunc expandable parameters
+         order -- order of baseline polynomial
+                 options: (int) (<0 turns off baseline fitting)
+                 default: 5
+                 example: typically in range 2-9 (higher values
+                          seem to be needed for GBT)
+         npiece -- number of the element polynomials of cubic spline curve
+                 options: (int) (<0 turns off baseline fitting)
+                 default: 2
+         nwave -- wave number(s) of sinusoid within a range specified with
+                  maxwavelength. Both integer (for the maximum one) and list 
+                 (for all) can be used. Zero means constant term. 
+                 default: 3
+                 example: nwave=4 uses sinusoids with wave numbers from 0 to 4,
+                            i.e. 0, 1, 2, 3, and 4.
+                          [1,8] uses sinusoids with wave numbers 1 and 8.
+         maxwavelength -- the longest sinusoidal wavelength in unit of 
+                 spectral window width.
+                 default: 1.0
+         clipthresh -- clipping threshold for iterative fitting
+                 default: 3
+         clipniter -- maximum iteration number
+                 default: 0 (no iteration, i.e., no clipping either)
 
-blmode -- mode for baseline fitting
-        options: (str) 'none','auto','list','interact'
-        default: 'none'
-        example: blmode='auto' uses expandable parameters
-                 in addition to blpoly to run linefinder
-                 to determine line-free regions
-                 USE WITH CARE! May need to tweak the parameters,
-                 thresh, avg_limit, and edge.
-                 blmode='interact' allows adding and deleting mask 
-                 regions by drawing rectangles on the plot with mouse. 
-                 Draw a rectangle with LEFT-mouse to ADD the region to 
-                 the mask and with RIGHT-mouse to DELETE the region. 
+masklist -- list or string of mask regions to INCLUDE in BASELINE fit
+            a string masklist allows per IF selection of channels.
+        default: [] (entire spectrum)
+        example: [[1000,3000],[5000,7000]]
+                 '0:1000~3000;5000~7000, 1:200~350;450~600'
+                 when maskmode is 'auto' or 'interact', this mask 
+                 will be applied first before fitting as base mask
+maskmode -- mode of setting additional channel masks
+        options: (str) 'auto','list','interact'
+        default: 'auto'
+        example: maskmode='auto' runs linefinder to detect line regions 
+                 to be excluded from fitting. this mode requires three 
+                 expandable parameters: thresh, avg_limit, and edge.
+                 USE WITH CARE! May need to tweak the expandable parameters.
+                 maskmode='list' uses the given masklist only: 
+                 no additional masks applied.
+                 maskmode='interact' allows users to manually modify the 
+                 mask regions by dragging mouse on the spectrum plotter GUI.
+                 use LEFT or RIGHT button to add or delete regions, 
+                 respectively.
 
-    >>> blmode expandable parameters
+    >>> maskmode expandable parameters
          thresh -- S/N threshold for linefinder
                  default: 5
                  example: a single channel S/N ratio above which the channel is
@@ -1010,28 +1110,25 @@ blmode -- mode for baseline fitting
          setting this parameter to 1) to avoid detecting baseline
          undulations instead of real lines.
 
-blpoly -- order of baseline polynomial
-        options: (int) (<0 turns off baseline fitting)
-        default: 5
-        example: typically in range 2-9 (higher values
-                 seem to be needed for GBT)
 verifycal -- verify the results of calibration
         options: (bool) True,False
         default: False
         WARNING: Currently verifying parameters just asks whether you 
-                  accept the displayed calibraion/fit and if not, 
-                  continues without doing any calibraion/baseline fit.
+                 accept the displayed calibraion/fit and if not, 
+                 continues without doing any calibraion/baseline fit.
 verifysm -- verify the results of smoothing
         options: (bool) True,False
         default: False
 verifybl -- verify the results of baseline fitting
         options: (bool) True,False
         default: False
-masklist -- list of mask regions to INCLUDE in BASELINE fit
-        default: [] (entire spectrum)
-        example: [[1000,3000],[5000,7000]]
-         if blmode='auto' then this mask will be applied
-         before fitting
+verbosebl -- output baseline fitting results to logger and a file as well
+        default: True
+        example: If False, the fitting results including coefficients, 
+                 residual rms, etc., are not output to either the CASA 
+                 logger or a text file (<outfile>_blparam.txt), while 
+                 the processing speed of sdbaseline gets faster by a 
+                 factor of about 20 percent
 outfile -- Name of output file
         default: '' (<sdfile>_cal)
 outform -- format of output file
@@ -1052,6 +1149,7 @@ plotlevel -- control for plotting of results
                  -1 => hardcopy of final plot (will be named
                  <outfile>_calspec.eps)
         WARNING: be careful plotting in fsotf mode!
+
 \end{verbatim}
     
 DESCRIPTION:
@@ -1062,6 +1160,11 @@ DESCRIPTION:
     three steps in one task execution.
     By setting {\tt calmode='none'}
     one can run {\tt sdcal} on already calibrated data for further selection, averaging and atmospheric optical depth correction.
+
+    If you give multiple IFs in iflist, then your scantable will have
+    multiple IFs. This can be handled, but there can be funny interactions
+    later on.  We recommend you split each IF out into separate files
+    by re-running sdcal with each IF in turn.
 
     See the {\tt sdaverage} description for information on the {\tt fluxunit} 
     conversion and the {\tt telescopeparm} parameter.
@@ -1074,11 +1177,19 @@ DESCRIPTION:
     to True. It generally handles multi-IFs by selecting overlaps in IFs and assigning
     new IFs in the output spectra. 
 
-   %% {\bf R3.0 New Features:}
-    
-    The {\tt verifycal}, {\tt verifysm}, and {\tt verifybl}  parameters correspond to parameter
+The {\tt verifycal}, {\tt verifysm}, and {\tt verifybl}  parameters correspond to parameter
     {\tt  verify} in {\tt sdaverage}, {\tt sdsmooth}, and {\tt sdbaseline}, respectively. 
- 
+    
+
+\medskip
+{\bf R3.2 New Features:}
+
+The parameter {\tt masklist} accepts per IF selection of mask regions. 
+See \S~\ref{section:io.selection.spw.channel} for details. 
+Note, the mask regions should be specified in unit of {\tt specunit} 
+in this task.
+
+
 
 \subsubsection{{\tt sdcoadd}}
 \label{section:sd.sdtasks.tasks.sdcoadd}
@@ -1177,13 +1288,14 @@ overwrite -- overwrite the output file if it already exists
 
           See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
+
 \subsubsection{{\tt sdflag}}
 \label{section:sd.sdtasks.tasks.sdflag}
 
 \begin{verbatim}
 Keyword arguments:
 sdfile -- name of input SD dataset
-antenna -- antenna name or id (only effective for MS input)
+antenna -- antenna name or id (only effective for MS input). 
 scanlist -- list of scan numbers to process
         default: [] (use all scans)
         example: [21,22,23,24]
@@ -1205,42 +1317,52 @@ pollist -- list of polarization id numbers to select
                  this selection is in addition to scanlist,
                  field, and iflist
 maskflag -- list of mask regions to apply flag/unflag 
+            Note, this parameter is ignored if one or more rows are 
+            given in flagrow, or clip=True.
         default: [] (entire spectrum)
         example: [[1000,3000],[5000,7000]]
-        WARNING: if one or more rows are given in flagrow, or clip=True, 
-                  this parameter is ignored
-flagrow -- list of row numbers to apply flag/unflag (row-based)
+flagrow -- list of row numbers to apply flag/unflag
+           Note, this parameter is effective only when one or more row 
+           numbers are given explicitly and also clip=False
         default: [] (no row selection)
         example: [0, 2, 3]
-        WARNING: this parameter is effective only when 
-                 one or more row numbers are given explicitly and also clip=False
 clip -- flag data that are outside a specified range
-        options: (bool) True, False
+        options: (bool)True,False
         default: False
-        >>> clip expandable parameters
-                clipminmax -- range of data that will NOT be flagged
-                          default: [] means do not use clip option
-                          example: [0.0,1.5]
-                clipoutside -- clip OUTSIDE the range ?
-                          options: (bool) True, False
-                          default: True
-                          example: clipoutside=False means flag data WITHIN the range.
+     >>> clip expandable parameters
+        clipminmax -- range of data that will NOT be flagged
+                default: [] means do not use clip option
+                example: [0.0,1.5]
+        clipoutside -- clip OUTSIDE the range ?
+                options: (bool)True,False
+                default: True
+                example: clipoutside=False means flag data WITHIN the range.
 flagmode -- flag mode
         default: 'flag'
-        options: 'flag','unflag','restore'
-                 in 'restore' mode, a history of flagging is 
-                 displayed and current flag state is returned
+        options: 'flag','unflag'
+interactive -- determines interactive flagging
+        options: (bool) True,False
+        default: False
 outfile -- Name of output file
-        default: '' (<sdfile>_f)
+        default: ''
+        Note: by default (outfile=''), actual output file name is set as follows: 
+              (1) if overwrite=True, sdfile (input) will be overwritten. 
+              WARNING: If the formats of input and ouput files are different, 
+                       this causes complete loss of input file.
+	      (2) if overwrite=False, outfile will be <sdfile>_f. 
 outform -- format of output file
         options: 'ASCII','SDFITS','MS','ASAP'
         default: 'ASAP'
         example: the ASAP format is easiest for further sd
                  processing; use MS for CASA imaging.
-overwrite -- overwrite the output file if it already exists
+        WARNING: Be sure outform is same as the input file format when you 
+                 overwrite the input file by overwrite=True and outfile='' (default).
+overwrite -- overwrite the output file if already exists
         options: (bool) True,False
-        default: False
-        WARNING: if outform='ASCII', this parameter is ignored 
+        default: True
+        WARNING: input file is overwritten if overwrite=True and outfile='' (default). 
+                 The input file in the original format will be lost if the formats of
+                 input and ouput files are different.
 plotlevel -- control for plotting of results
         options: (int) 0=none, 1=some, 2=more, <0=hardcopy
         default: 0 (no plotting)
@@ -1249,38 +1371,145 @@ plotlevel -- control for plotting of results
                  <outfile>_flag.eps)
         WARNING: be careful plotting in fsotf mode!
 
--------------------------------------------------------------------
-Returns: Current values of maskflag for each spectrum as a list, 
-         only if flagmode is set to 'restore'. Note that the 
-         'restore' mode refers to scanlist, iflist, and pollist.
 
 \end{verbatim}
 
+
     DESCRIPTION:
 
-    Task {\tt sdflag} performs simple channel/row based flagging on spectra.
-    Currently, the available ways of flagging include: (1) channel based
-    flagging by specifying regions in channel, (2) channel based flagging
-    by specifying a range of spectral value, and (3) row based flagging by
-    specifying a list of row numbers.
-    These three ways of flagging can not be executed simultaneously.
-    The first one (channel based) can be executed by giving flag regions
-    in {\tt maskflag}, no row in {\tt flagrow}, and setting {\tt clip}=False.
-    The second one (channel based intensity clipping) can run when you
-    set {\tt clip}=True and specify a range in {\tt clipminmax} (the values
-    given in {\tt maskflag} and {\tt flagrow} are ignored). The third
-    one (row based flagging) is executed when one or more rows are
-    specified in {\tt flagrow} and {\tt clip} is set False.
-    This is not interactive flagging. If {\tt plotlevel>=1}, the task asks 
-    you if you really apply the flags before it is actually written to the data 
-    with a plot indicating flagged regions. The flags
-    are not written to the current (input) datasets unless {\tt outfile='none'}.
-    Flagged regions (or values of flag masks already applied) of the input data 
-    can be listed by setting {\tt flagmode='restore'}. It will print out a summary on
-    the screen and returns maskflag values for each spectrum as a list.
-    Please note that this task is still experimental.
+        Task {\tt sdflag} performs both interactive and non-interactive channel/row 
+        based flagging on spectra.
+        Currently, the available ways of non-interactive flagging include: 
+        (1) channel based flagging by specifying a range of spectral values 
+        with {\tt clip=True}, (2) row based flagging by specifying a list of row 
+        numbers to the {\tt flagrow} parameter, and (3) channel based flagging by 
+        specifying regions in channel to the {\tt maskflag} parameter. 
+        These three ways of flagging can not be executed simultaneously. 
+        If more than one parameter above are specified, the task looks for 
+        them in the above order and operates the first specified way of 
+        flagging operation.
+
+        Interactive flagging is available when {\tt interactive=True}. 
+        The available ways of interactive flagging include: 
+        (1) row based flagging by selecting 'panel' and (2) channel
+        based flagging by selecting 'region's of channels on Flag plotter. 
+        Note that the Flag plotter is loaded after carrying out the 
+        non-interactive flag operation if any specified. See the following instruction for
+        details of how to select channel regions and spectra on the plotter.
+
+        If {\tt plotlevel} $ \ge 1 $, the task asks you if you really apply the 
+        flags before it is actually written to the data with a plot 
+        indicating flagged regions.
+        Please note that this task is still experimental.
+
+        WARNING for {\tt overwrite} option:\\
+        Be sure {\tt outform} is the same as data format of input file when you
+        overwrite it. Since CASA 3.1, the default value of the option {\tt overwrite}
+        has been changed to True, thereby the current dataset ({\tt sdfile}) is 
+        overwritten unless a different file name is set to {\tt outfile}. 
+        There is a known issue in overwriting {\tt sdfile}. If {\tt outform} differs to the
+        data format of {\tt sdfile}, the data is overwritten with the new data format 
+        (specified by {\tt outform}) and the data in the original format will be lost.
 
     See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
+
+
+\medskip
+{\bf R3.2 New Features:}
+
+Interactive flag oparations are available.
+
+\bigskip
+{\bf Interactive flag operations on the Flag plotter}
+
+When {\tt sdflag} is executed with {\tt interactive=True}, 
+interactive flag operation is available on a plotter, {\tt Flag Plotter}, 
+as shown in Figure \ref{fig:flagplotter}.
+{\tt Flag Plotter} uses the {\tt matplotlib} plotting library to display 
+its plots. You can find information on {\tt matplotlib} at
+\url{http://matplotlib.sourceforge.net/}.
+Note the plotter is loaded after non-interactive flag operation, 
+if any of {\tt maskflag}, {\tt flagrow}, or {\tt clip} is specified.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{sdflag_flagplotter}{4.5}
+\caption{\label{fig:flagplotter} 
+  The {\tt Flag plotter}.
+  The {\bf bottom set of buttons} are the standard {\tt matplotlib} toolbar. 
+  See the caption of Figure \ref{fig:matplotlib} for detailed descriptions.
+  The {\bf upper set of buttons in the lower left} are:
+  1) {\bf region}. Press this to begin marking regions (rather than
+  zooming or panning).  
+  2) {\bf panel}. Press this to begin marking panels to select the whole 
+  spectrum.
+  3,4,5,6) {\bf clear, flag, unflag, statistics}.  Click on these to clear, 
+  flag, unflag, or calculate statistics of the data within the marked 
+  regions and spectra.  
+  7) {\bf notation}. Press this to begin editing notes on the plotter. 
+  8,9) $ {\bf +} $, $ {\bf -} $. Click to move to the next or previous page in a series 
+  of iterated plots. The page counter on their left shows the current page 
+  number. Finally, the {\bf Quit} is on the bottom right.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The {\tt Flag Plotter} has two rows of buttons at the bottom to 
+control its operation -- in particular, to determine flagging and 
+unflagging behaviors. 
+When no button in the toolbar is depressed, 
+the {\tt Flag Plotter} is in spectral value mode. 
+Click on a spectrum to select it and drag the mouse to print 
+the spectral value at the channel position of mouse. The value is printed 
+to the bottom right corner of plotter window.
+
+The buttons on the lower row are the standard 
+{\tt matplotlib} navigation buttons. 
+See \S~\ref{section:edit.plot.plotxy.control} about details of their 
+capabilities.
+
+In a row above it, there are a set of the other buttons (left to right):
+\begin{itemize}
+\item {\bf region} --- If depressed lets you mark channel regions
+  in the panels. This is done by left-clicking the mouse twice at start 
+  and end channels of a region to mark. The marked regions are indicated 
+  with gray boxes. Clicking the button again will un-depress it and go back 
+  to the default spectral value mode.
+  You can Mark multiple regions before doing something.
+\item {\bf panel} --- If depressed lets you mark spectra in the panels.
+  This is done by left-clicking the mouse on panels you want to mark the 
+  whole spectrum. The marked panels are colored in gray.
+  Clicking the button again will un-depress it and go back 
+  to the default spectral value mode.
+  You can Mark multiple spectra before doing something.
+\item {\bf clear} --- Click this to forget marked regions and spectra.
+\item {\bf flag} --- Click this to Flag the points in marked regions and spectra.
+\item {\bf unflag} --- Click this to Unflag any flagged point that
+  would be in marked regions and spectra (even if invisible).
+\item {\bf statistics} --- Click this to print out statics of marked regions 
+  and spectra to the logger.
+\item {\bf notation} --- If depressed lets you edit texts on the plotter. 
+  Clicking the button again will un-depress it and go back 
+  to the default spectral value mode.
+  See \S~\ref{section:sd.sdtasks.tasks.sdplot} for details.
+\item $ {\bf +} $ and $ {\bf -} $ --- Step to the next or previous plot 
+  in an iteration. The page counter on their left shows the current page
+  number.
+\item {\bf Quit} --- Click this to close {\tt Flag Plotter}.
+\end {itemize}
+
+To operate flagging and unflagging interactively,
+press {\bf region} button (which will appear to depress), 
+then mark channel regions by left-clicking the mouse at start 
+and end channels of the region (each selection will add an additional region), 
+and/or press {\bf panel} button (which will appear to depress),
+then mark spectra by left-clicking on their panels (each selection 
+will add an additional spectrum).
+You can get rid of all your regions and spectra by clicking {\bf clear} 
+button.
+Once regions and spectra are marked, click on one of {\bf flag},
+{\bf unflag}, and {\bf statistics} button to take the action.
+
 
 \subsubsection{{\tt sdflagmanager}}
 \label{section:sd.sdtasks.tasks.sdflagmanager}
@@ -1310,7 +1539,7 @@ merge -- Merge operation
         DESCRIPTION:
 
         These flag version files are copies of the flag column for a
-        measurement set.  They can be restored to the data set to obtain
+        Measurement Set.  They can be restored to the data set to obtain
         a previous flag version.  It is wise to
         save a flagversion at the beginning or after serious editing.    
 
@@ -1620,13 +1849,13 @@ overwrite -- overwrite the output file if already exists
     as a scantable into ASAP.  It will optionally output this summary
     as file.
     
-    Note that if your {\tt PAGER} environment variable is set to 'less' and
-    the {\tt 'verbose'} ASAP environment variable to True
-    (the default), then the screen version of the summary will page.
-    You can disable this for sdlist by setting
-         {\tt sd.rcParams['verbose']=False}
-    before running {\tt sdlist}.  Set it back afterward if you want lots
-    of information.
+%%     Note that if your {\tt PAGER} environment variable is set to 'less' and
+%%     the {\tt 'verbose'} ASAP environment variable to True
+%%     (the default), then the screen version of the summary will page.
+%%     You can disable this for sdlist by setting
+%%          {\tt sd.rcParams['verbose']=False}
+%%     before running {\tt sdlist}.  Set it back afterward if you want lots
+%%     of information.
 
     See the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
@@ -1726,7 +1955,7 @@ overwrite -- overwrite the output file if already exists
      
      The {\tt fluxunit}, {\tt specunit}, and {\tt frame} can be set, otherwise, the current
      settings of the first spectral data in the expression are used.  
-     Other selections (e.g. scan No, . IF, Pol) also apply to all 
+     Other selections (e.g. scan No, IF, Pol) also apply to all 
      the spectral data in the expression, so if any of the data are
      not selected, the task will produce no output. 
      
@@ -1820,6 +2049,11 @@ pollist -- list of polarization id numbers to select
         example: [1]
                  this selection is in addition to scanlist,
                  field, and iflist
+beamlist -- list of beam id numbers to select
+        default: [] (use all beams)
+        example: [1]
+                 this selection is in addition to scanlist,
+                 field, iflist, and pollist
 scanaverage -- average integs within scans
         options: (bool) True,False
         default: False
@@ -1858,17 +2092,19 @@ plottype -- type of plot
          default: 'spectra'
      >>> plottype expandable parameter
          stack -- code for stacking on single plot for spectral plotting
-                 options: 'p','b','i','t','s' or
-                          'pol', 'beam', 'if', 'time', 'scan'
+                 options: 'p','b','i','t','s','r' or
+                          'pol', 'beam', 'if', 'time', 'scan', 'row'
                  default: 'p'
-                 example: maximum of 25 stacked spectra
+                 example: maximum of 16 stacked spectra
                           stack by pol, beam, if, time, scan
+                 Note stack selection is ignored when panel='r'.
          panel -- code for splitting into multiple panels for spectral plotting
-                 options: 'p','b','i','t','s' or
-                          'pol', 'beam', 'if', 'time', 'scan'
+                 options: 'p','b','i','t','s','r' or
+                          'pol', 'beam', 'if', 'time', 'scan', 'row'
                  default: 'i'
-                 example: maximum of 25 panels
+                 example: maximum of 16 panels
                           panel by pol, beam, if, time, scan
+                 Note panel selection is ignored when stack='r'.
         flrange -- range for flux axis of plot for spectral plotting
                 options: (list) [min,max]
                 default: [] (full range)
@@ -1893,6 +2129,10 @@ plottype -- type of plot
                 options: (float) doppler velocity (km/s)
                 default: 0.0
                 example: linedop=-30.0
+        subplot -- number of subplots (row and column) on a page
+                   NOTICE plotter will slow down when a large number is specified
+                   default: -1 (auto)
+                   example: 23 (2 rows by 3 columns)
         colormap -- the colours to be used for plot lines. 
                 default: None
                 example: colormap="green red black cyan magenta" (html standard)
@@ -1926,11 +2166,12 @@ plotstyle -- customise plot settings
         options: (bool) True, False
         default: True
     >>> plotstyle expandable parameter
-        layout -- a list of subplots layout in figure coordinate (0-1), 
+        margin -- a list of subplot margins in figure coordinate (0-1), 
                   i.e., fraction of the figure width or height.
                   The order of elements should be:
                   [left, bottom, right, top, horizontal space btw panels,
                   vertical space btw panels]
+                example: margin = [0.125, 0.1, 0.9, 0.9, 0.2, 0.2]
         legendloc -- legend location on the axes (0-10)
                    options: (integer) 0 -10 
                             see help of "sd.plotter.set_legend" for 
@@ -1974,29 +2215,8 @@ overwrite -- overwrite the output file if already exists
         individual panels.  We recommend that you use {\tt scanlist}, {\tt field},
         and {\tt iflist} to give a single selection for each run.
 
-        This task adds an additional toolbar to Matplotlib plotter which
-        has five buttons, 'spec value', 'statistics', 'notaion', '+ page'
-        and 'Quit'.
-        When the 'spec value' button is pressed and activated, you can
-        display a spectral value on the toolbar along with mouse
-        movement. Click the LEFT-mouse button over a spectrum to select
-        it, and drag mouse in the panel to output the spectral value of
-        x-position of mouse cursor. The selection is released when you
-        release the mouse button.
-        When 'statistic' button is pressed and activated, you can get
-        statistic values of a channel region selected by mouse. Select a
-        rectangle region with LEFT/RIGHT-mouse to SELECT/EXCLUDE the
-        channel region to calculate statistics for the all spectra
-        plotted. The results are printed on the casa logger.
-        When 'notation' button is pressed and activated, you can
-        graphically add a text on a position of plot. Click the
-        LEFT-mouse on a position of plot to load notaion window, and
-        input a text to the textbox, select an anchor, and press 'print'
-        button to print it on the plot. Click RIGHT-mouse on a text and
-        cascade menu will let you select either delete or modify it.
-        When you select a panel parameter with more than 16 panels,
-        '+ page' button is activated and let you go through pages.
-        Press 'Quit' button to close the plotter.
+        This task adds an additional toolbar to Matplotlib plotter. See the following 
+        instructions for details of its capability.
 
         *** other plottype options ***\\
         Currently most of the parameters are ignored in these modes.
@@ -2013,20 +2233,125 @@ overwrite -- overwrite the output file if already exists
         Also, see the {\tt sdaverage} description for note on GBT raw SDFITS format data.
 
         WARNING: be careful plotting otf data with lots of fields!
-  
-{\bf R3.1 New Features:}\\
-New parameters added to control the appearance of plots. 
-A boolean parameter, {\tt header}, controls whether or not header is
-printed on a plot and the subparameter, {\tt headsize}, specifies
-font size. When a boolean parameter, {\tt plotsyle}, is True, users can
-specify margins between subplots and legend location by the
-subparameters, {\tt layout} and {\tt legendloc}. 
 
-Default values changed for subparameters {\tt tweight = 'tintsys'} and
-{\tt pweight = 'tsys'}.
+\medskip  
+{\bf R3.2 New Features:}
 
-Two new buttons, 'notaion' and '+ page', added to the toolbar on
-plot.
+Two new parameters are added to the task. 
+A new parameter {\tt beamlist} enables selecting data to plot by a list of beam IDs.
+The other new parameter {\tt subplot} is a sub-parameter of {\tt plottype='spectra'}, 
+and controls row and column numbers of panels on a page of plot.
+
+Toolbar buttons are reorganized.
+The spectral value mode is set to default and the button for it is removed from the toolbar.
+A new button is added to plot the previous page.
+
+
+\bigskip
+{\bf GUI Plot Control on ASAP Plotter}
+
+The principal ways to plot single dish spectra are using 
+the {\tt sdplot} task and {\tt sd.plotter} toolkit. 
+These task and toolkit load {\tt ASAP Plotter} which uses 
+the {\tt matplotlib} plotting library to display plots. 
+You can find information on {\tt matplotlib} at
+\url{http://matplotlib.sourceforge.net/}.
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{asapplotter_toolbar}{4.5}
+\caption{\label{fig:sdplot_toolbar}
+  The toolbars on {\tt ASAP plotter}.
+  The {\bf bottom set of buttons} are the standard {\tt matplotlib} toolbar. 
+  See the caption of Figure \ref{fig:matplotlib} for detailed descriptions.
+  The {\bf upper set of buttons} are:
+  1) {\bf notation}. Press this to begin editing notes on the plotter. 
+  2) {\bf statistics}.Press this to begin printing statistics to the logger.
+  3,4) $ {\bf +} $, $ {\bf -} $. Click to move to the next or previous page in a series 
+  of iterated plots. The page counter on their left shows the current page 
+  number. Finally, the {\bf Quit} is on the bottom right.}
+\hrulefill
+\end{center}
+\end{figure}
+
+The {\tt ASAP Plotter} has two rows of buttons at the bottom to 
+control interactive operations as shown in Figure \ref{fig:sdplot_toolbar}. 
+When none of the button is depressed, the {\tt ASAP Plotter} is in spectral 
+value mode. Click on a spectrum to select it and drag the mouse to print 
+the spectral value at the channel position of mouse. The value is printed 
+to the bottom right corner of plotter window.
+
+The buttons on the lower row are the standard 
+{\tt matplotlib} navigation buttons. 
+See \S~\ref{section:edit.plot.plotxy.control} about details of their 
+capabilities.
+
+In a row above it, there are a set of the other buttons (left to right):
+\begin{itemize}
+\item {\bf notation} --- If depressed lets you edit texts on the plotter. 
+  See below for details of text edition.
+  Clicking the button again will un-depress it and go back 
+  to the default spectral value mode.
+\item {\bf statistics} --- If depressed lets you print statics of a 
+  selected regions of scantable to the logger.
+  See below for details of region selection.
+  Clicking the button again will un-depress it and go back 
+  to the default spectral value mode.
+\item $ {\bf +} $ and $ {\bf -} $ --- Step to the next or previous plot 
+  in an iteration. The page counter on their left shows the current page
+  number.
+\item {\bf Quit} --- Click this to close {\tt ASAP Plotter}.
+\end {itemize}
+
+{\bf Editing texts on the plotter}\\
+\begin{figure}[h!]
+\begin{center}
+\pnghigh{asapplotter_notationwin}{1.5}
+\caption{\label{fig:notationwin} The Notation widget.}
+\hrulefill
+\end{center}
+\end{figure}
+
+When the {\bf notation} button is depressed, 
+it lets you edit texts on the plotter. 
+Left-click at a position on the plotter to print a new text,
+and the {\tt Notation window} is loaded (Figure \ref{fig:notationwin}).
+Type the arbitrary text in the text box, select an anchor, and press 
+the {\bf print} button to print it at the position you clicked.
+There are three choices of anchors: {\bf figure}, 
+{\bf panel}, and {\bf data}. 
+The {\bf figure} or {\bf panel} locates the text at a fixed position 
+in the figure or subplot, respectively. Its relative position to 
+the figure or subplot boundaries doesn't change when you resize the plotter.
+On the other hand, the text is fixed on a position in the data coordinate 
+of subplot, when {\bf data} is selected as the anchor. 
+The text moves along with plotted spectra as you pan the subplot.
+
+You can modify or delete texts you added on the plotter. 
+To do it, right-click on a text to show a menu with 
+{\bf Modify} and {\bf Delete}. 
+When {\bf Modify} is selected, the {\tt Notation window} is loaded
+to modify the selected text. 
+Click on {\bf Delete} and confirm the operation in a pop-up dialog 
+to delete the text.
+Clicking the {\bf notation} button again will un-depress it and go back 
+to the default spectral value mode.
+
+
+{\bf Printing statistics of scantable}\\
+When {\bf statistics} button is depressed, 
+it lets you print statistics of a selected channel region 
+of the scantable plotted. 
+The statistics values are printed to the logger.
+You can select a channel region by left- or right-clicking and 
+dragging the mouse to draw a rectangle. 
+Draw it with left-mouse to print statistics within the region,
+while do with right-mouse to print statistics excluding the region.
+Clicking the {\bf statistics} button again will un-depress it and go back 
+to the default spectral value mode.
+
+
+
 
 \subsubsection{{\tt sdsave}}
 \label{section:sd.sdtasks.tasks.sdsave}
@@ -2326,7 +2651,9 @@ calmode -- calibration mode (currently only baseline subtraction)
                         the baseline 
          blpoly -- polynomial order for the baseline fit
                        default: 1
-                       
+         backup -- set True to create badkup for input data
+                       default: True
+
 flaglist -- list of scan numbers to flag (ranges can be accepted)  
         default: [] (use all scans)
         example: [[0,3],80]
@@ -2401,6 +2728,9 @@ DESCRIPTION:
         By setting {\tt flaglist}, one can set flag by scan numbers to be excluded from imaging.
         (Note: 'scan numbers' are determined from state id and related to SUB\_SCAN column in STATE
         subtable and they are typically different from SCAN\_NUMBER in MS.)
+        By default, baseline subtraction stage overwrites \verb!(FLOAT_)DATA! column of input data. You can 
+        keep original data by setting {\tt backup} parameter to True. In this case, the task make a 
+        copy of input data specified by sdfile parameter. Name of backup file is <sdfile>.sdtpimaging.bak.<timestamp>. 
         The selection of polarizations can be made by specifying the polarization name in stokes,
         such as 'XX' or 'YY' for linear polarizations. For example, with {\tt createimage=True},
         {\tt stokes='XXYY'} will produces an image cube with each plane contains the image of one of 
@@ -2410,9 +2740,10 @@ DESCRIPTION:
         {\tt pointingcolumn} is
         used to specify which pointing data column to use for imaging.
 
-        %{\bf R3.0 New Feature:}
-         %A new parameter {\tt gridfunction} is added. This parameter specifies the grid
-         %function for imaging as any one of 'BOX' (Box-car), 'SF' (Spheroidal), or 'PB' (Primary-beam).
+\medskip
+        {\bf R3.2 New Feature:}
+        A new parameter {\tt backup} is added. If {\tt backup} is True, the original data is copied 
+        by predefined name since the original data is overwritten by default.
 
 
 \subsubsection{{\tt sdimprocess}}
@@ -2689,7 +3020,7 @@ sdlist()
 #Obs Date:      2006/01/19/01:45:58
 #Project:       AGBT06A_018_01
 #Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
-#Antenna Name:  GBT
+#Antenna Name:  GBT@GREENBANK
 #Flux Unit:     Jy
 #Rest Freqs:    [4.5490258e+10] [Hz]
 #Abcissa:       Channel
@@ -2699,49 +3030,49 @@ sdlist()
 #     Beam    Position (J2000)
 #          IF       Frame   RefVal          RefPix    Increment   
 #--------------------------------------------------------------------------------
-#  20 OrionS_psr     01:45:58    4 x       30.0s
+#  20 OrionS         01:45:58    4 x       30.0s PSOFF
 #        0    05:15:13.5 -05.24.08.2
 #            0      LSRK   4.5489354e+10   4096    6104.233
 #            1      LSRK   4.5300785e+10   4096    6104.233
 #            2      LSRK   4.4074929e+10   4096    6104.233
 #            3      LSRK   4.4166215e+10   4096    6104.233
-#  21 OrionS_ps      01:48:38    4 x       30.0s
+#  21 OrionS         01:48:38    4 x       30.0s PSON
 #        0    05:35:13.5 -05.24.08.2
 #            0      LSRK   4.5489354e+10   4096    6104.233
 #            1      LSRK   4.5300785e+10   4096    6104.233
 #            2      LSRK   4.4074929e+10   4096    6104.233
 #            3      LSRK   4.4166215e+10   4096    6104.233
-#  22 OrionS_psr     01:51:21    4 x       30.0s
+#  22 OrionS         01:51:21    4 x       30.0s PSOFF
 #        0    05:15:13.5 -05.24.08.2
 #            0      LSRK   4.5489354e+10   4096    6104.233
 #            1      LSRK   4.5300785e+10   4096    6104.233
 #            2      LSRK   4.4074929e+10   4096    6104.233
 #            3      LSRK   4.4166215e+10   4096    6104.233
-#  23 OrionS_ps      01:54:01    4 x       30.0s
+#  23 OrionS         01:54:01    4 x       30.0s PSON
 #        0    05:35:13.5 -05.24.08.2
 #            0      LSRK   4.5489354e+10   4096    6104.233
 #            1      LSRK   4.5300785e+10   4096    6104.233
 #            2      LSRK   4.4074929e+10   4096    6104.233
 #            3      LSRK   4.4166215e+10   4096    6104.233
-#  24 OrionS_psr     02:01:47    4 x       30.0s
+#  24 OrionS         02:01:47    4 x       30.0s PSOFF
 #        0    05:15:13.5 -05.24.08.2
 #           12      LSRK   4.3962126e+10   4096   6104.2336
 #           13      LSRK    4.264542e+10   4096   6104.2336
 #           14      LSRK    4.159498e+10   4096   6104.2336
 #           15      LSRK   4.3422823e+10   4096   6104.2336
-#  25 OrionS_ps      02:04:27    4 x       30.0s
+#  25 OrionS         02:04:27    4 x       30.0s PSON
 #        0    05:35:13.5 -05.24.08.2
 #           12      LSRK   4.3962126e+10   4096   6104.2336
 #           13      LSRK    4.264542e+10   4096   6104.2336
 #           14      LSRK    4.159498e+10   4096   6104.2336
 #           15      LSRK   4.3422823e+10   4096   6104.2336
-#  26 OrionS_psr     02:07:10    4 x       30.0s
+#  26 OrionS         02:07:10    4 x       30.0s PSOFF
 #        0    05:15:13.5 -05.24.08.2
 #           12      LSRK   4.3962126e+10   4096   6104.2336
 #           13      LSRK    4.264542e+10   4096   6104.2336
 #           14      LSRK    4.159498e+10   4096   6104.2336
 #           15      LSRK   4.3422823e+10   4096   6104.2336
-#  27 OrionS_ps      02:09:51    4 x       30.0s
+#  27 OrionS         02:09:51    4 x       30.0s PSON
 #        0    05:35:13.5 -05.24.08.2
 #           12      LSRK   4.3962126e+10   4096   6104.2336
 #           13      LSRK    4.264542e+10   4096   6104.2336
@@ -2878,7 +3209,7 @@ sdlist()
 #Obs Date:      2006/01/19/01:45:58
 #Project:       AGBT06A_018_01
 #Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
-#Antenna Name:  GBT
+#Antenna Name:  GBT@GREENBANK
 #Flux Unit:     K
 #Rest Freqs:    [4.5490258e+10] [Hz]
 #Abcissa:       Channel
@@ -2888,7 +3219,7 @@ sdlist()
 #     Beam    Position (J2000)
 #          IF       Frame   RefVal          RefPix    Increment   
 #--------------------------------------------------------------------------------
-#   0 OrionS_ps      01:52:05    1 x    08:00.5 
+#   0 OrionS         01:52:05    1 x    08:00.5 PSON 
 #        0    05:35:13.5 -05.24.08.2
 #            0      LSRK   4.5489354e+10   4096    6104.233
 #
@@ -3416,11 +3747,11 @@ to a MS first via {\tt importasdm} task. Then you can load this MS to ASAP. The
 specify the {\tt antenna} parameter when importing data ({\tt sd.scantable}) or,
  to split the data by antenna using {\tt sd.splitant} for further processing in ASAP 
 since ASAP scantable cannot properly store the data from multiple antennas.
-The method {\tt sd.splitant} splits a measurement set by antenna ID
+The method {\tt sd.splitant} splits a Measurement Set by antenna ID
 and save the tables as scantables containing data from each antenna. 
 The names of output scantables are defined as prefix specified by
 users (with parameter {\tt outprefix}) + '.' + antenna name. For
-example, if you split measurement set, foo.ms, which contains data
+example, if you split Measurement Set, foo.ms, which contains data
 from antA and antB, with {\tt outprefix='splitted'}, i.e., 
 {\tt sd.splitant('foo.ms', outprefix='splitted')}, the names of scantables
 are 'splitted.antA' and 'splitted.antB'.  
@@ -3443,7 +3774,7 @@ Use the {\tt summary} function to examine the data and get basic information:
 
 \small
 \begin{verbatim}
-CASA <8>: scans.summary()
+CASA <8>: print scans.summary()
 --------------------------------------------------------------------------------
  Scan Table Summary
 --------------------------------------------------------------------------------
@@ -3456,7 +3787,7 @@ Observer:      Joseph McMullin
 Obs Date:      2006/01/19/01:45:58
 Project:       AGBT06A_018_01
 Obs. Type:     OffOn:PSWITCHOFF:TPWCAL
-Antenna Name:  GBT
+Antenna Name:  GBT@GREENBANK
 Flux Unit:     Jy
 Rest Freqs:    [4.5490258e+10] [Hz]
 Abcissa:       Channel
@@ -3466,49 +3797,49 @@ Scan Source         Time      Integration
      Beam    Position (J2000)
           IF       Frame   RefVal          RefPix    Increment   
 --------------------------------------------------------------------------------
-  20 OrionS_psr     01:45:58    4 x       30.0s
+  20 OrionS         01:45:58    4 x       30.0s PSOFF
         0    05:15:13.5 -05.24.08.2
             0      LSRK   4.5489354e+10   4096    6104.233
             1      LSRK   4.5300785e+10   4096    6104.233
             2      LSRK   4.4074929e+10   4096    6104.233
             3      LSRK   4.4166215e+10   4096    6104.233
-  21 OrionS_ps      01:48:38    4 x       30.0s
+  21 OrionS         01:48:38    4 x       30.0s PSON
         0    05:35:13.5 -05.24.08.2
             0      LSRK   4.5489354e+10   4096    6104.233
             1      LSRK   4.5300785e+10   4096    6104.233
             2      LSRK   4.4074929e+10   4096    6104.233
             3      LSRK   4.4166215e+10   4096    6104.233
-  22 OrionS_psr     01:51:21    4 x       30.0s
+  22 OrionS         01:51:21    4 x       30.0s PSOFF
         0    05:15:13.5 -05.24.08.2
             0      LSRK   4.5489354e+10   4096    6104.233
             1      LSRK   4.5300785e+10   4096    6104.233
             2      LSRK   4.4074929e+10   4096    6104.233
             3      LSRK   4.4166215e+10   4096    6104.233
-  23 OrionS_ps      01:54:01    4 x       30.0s
+  23 OrionS         01:54:01    4 x       30.0s PSON
         0    05:35:13.5 -05.24.08.2
             0      LSRK   4.5489354e+10   4096    6104.233
             1      LSRK   4.5300785e+10   4096    6104.233
             2      LSRK   4.4074929e+10   4096    6104.233
             3      LSRK   4.4166215e+10   4096    6104.233
-  24 OrionS_psr     02:01:47    4 x       30.0s
+  24 OrionS         02:01:47    4 x       30.0s PSOFF
         0    05:15:13.5 -05.24.08.2
            12      LSRK   4.3962126e+10   4096   6104.2336
            13      LSRK    4.264542e+10   4096   6104.2336
            14      LSRK    4.159498e+10   4096   6104.2336
            15      LSRK   4.3422823e+10   4096   6104.2336
-  25 OrionS_ps      02:04:27    4 x       30.0s
+  25 OrionS         02:04:27    4 x       30.0s PSON
         0    05:35:13.5 -05.24.08.2
            12      LSRK   4.3962126e+10   4096   6104.2336
            13      LSRK    4.264542e+10   4096   6104.2336
            14      LSRK    4.159498e+10   4096   6104.2336
            15      LSRK   4.3422823e+10   4096   6104.2336
-  26 OrionS_psr     02:07:10    4 x       30.0s
+  26 OrionS         02:07:10    4 x       30.0s PSOFF
         0    05:15:13.5 -05.24.08.2
            12      LSRK   4.3962126e+10   4096   6104.2336
            13      LSRK    4.264542e+10   4096   6104.2336
            14      LSRK    4.159498e+10   4096   6104.2336
            15      LSRK   4.3422823e+10   4096   6104.2336
-  27 OrionS_ps      02:09:51    4 x       30.0s
+  27 OrionS         02:09:51    4 x       30.0s PSON
         0    05:35:13.5 -05.24.08.2
            12      LSRK   4.3962126e+10   4096   6104.2336
            13      LSRK    4.264542e+10   4096   6104.2336
@@ -3904,7 +4235,7 @@ $ T_a(\nu) = T_{sys}$ $\times$
 $\frac{sig(\nu) - ref(\nu)}{ref(\nu)}$
 
 where $sig = \frac{1}{2}(sig_{calon} + sig_{caloff})$, 
-      $ref = \frac{1}{2}(sig_{calon} + sig_{caloff}).$
+      $ref = \frac{1}{2}(ref_{calon} + ref_{caloff}).$
 
 
 Each calibration routine may be used as:
@@ -4049,6 +4380,12 @@ Smoothing on data can be done as follows:
 \subsection{Baseline Fitting}
 \label{subsection:sd.asap.BLfitting}
 
+CASA 3.2 offers a variety of functions for baseline fitting: cubic 
+spline function and sinusoid are now available in addition to polynomial. 
+Also three new parameters are added to all the baseline fitting 
+functions in common. They include {\tt getresidual, outlog,} and 
+{\tt blfile} (for detail of these parameters, see below). 
+
 The function {\tt sd.scantable.poly\_baseline} carries out a
 baseline fit, given an mask of channels (if desired):
 \small
@@ -4073,7 +4410,11 @@ mark the band edge as invalid:
   scans.auto_poly_baseline(mask,edge,order,threshold,chan_avg_limit,plot,insitu):
 
     Parameters:
+        insitu:     if False a new scantable is returned.
+                    Otherwise, the scaling is done in-situ
+                    The default is taken from .asaprc (False)
         mask:       an optional mask retrieved from scantable
+        order:      the order of the polynomial (default is 0)
         edge:       an optional number of channel to drop at
                     the edge of spectrum. If only one value is
                     specified, the same number will be dropped from
@@ -4081,7 +4422,6 @@ mark the band edge as invalid:
                     all channels. Nested tuples represent individual
                     edge selection for different IFs (a number of spectral
                     channels can be different)
-        order:      the order of the polynomial (default is 0)
         threshold:  the threshold used by line finder. It is better to
                     keep it large as only strong lines affect the
                     baseline solution.
@@ -4097,14 +4437,69 @@ mark the band edge as invalid:
         plot:       plot the fit and the residual. In this each
                     individual fit has to be approved, by typing 'y'
                     or 'n'
-        insitu:     if False a new scantable is returned.
-                    Otherwise, the scaling is done in-situ
-                    The default is taken from .asaprc (False)
+        getresidual:if False, returns best-fit values instead of 
+                    residual (default is True)
+        outlog:     Output the coefficients of the best-fit 
+                    function to logger (default is False)
+        blfile:     Name of a text file in which the best-fit 
+                    parameter values to be written 
+                    (default is "": no file/logger output)
+
 
     Example:
   scans.auto_poly_baseline(order=2,threshold=5)
 \end{verbatim}
 \normalsize
+
+The parameters {\tt edge, threshold}, and {\tt chan\_avg\_limit} can be used 
+in common for all the baseline fitting functions that use linefinder 
+({\tt auto\_*\_baseline}). 
+
+It should also be noted that the above two functions now run about 30 times 
+faster than in CASA 3.1. 
+
+The functions {\tt cspline\_baseline} and {\tt auto\_cspline\_baseline} 
+are for cubic spline fitting with or without using linefinder, respectively. 
+The unique paramters for these are as follows:
+
+\small
+\begin{verbatim}
+        npiece:     Number of pieces. (default is 2)
+        clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
+        clipniter:  maximum number of iteration of 'clipthresh'-sigma 
+                    clipping (default is 0: no clipping)
+\end{verbatim}
+\normalsize
+
+The functions {\tt sinusoid\_baseline} and {\tt auto\_sinusoid\_baseline} 
+are for sinusoidal fitting with or without using linefinder, respectively. 
+The unique paramters for these are as follows:
+
+\small
+\begin{verbatim}
+        nwave:      the maximum wave number of sinusoids within a range 
+                    of spectral width multiplied by maxwavelength.
+                    The default is 3 (i.e., sinusoids with wave 
+                    number of 0(=constant), 1, 2, and 3 are 
+                    used for fitting). Also it is possible to 
+                    explicitly specify all the wave numbers to 
+                    be used, by giving a list including them 
+                    (e.g., [0, 1, 2, 15, 16]).
+        maxwavelength: the longest sonusoidal wavelength. The 
+                    default is 1.0 (unit: spectral range)
+        clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
+        clipniter:  maximum number of iteration of 'clipthresh-sigma 
+                    clipping (default is 0: no clipping)
+\end{verbatim}
+\normalsize
+
+Note that the parameters {\tt clipthresh} and {\tt clipniter} can be used 
+both for cubic spline and sinusoid. For polynomial fitting functions, 
+iterative clipping is yet to be available (though you can do the equivalent 
+operation by using cubic spline fitting function with npiece=1). 
+
+Also, for cubic spline and sinusoidal fitting, the parameter {\tt plot} is 
+ignored (always set False) and yet to be available. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4332,8 +4727,8 @@ s=sd.scantable('OrionS_rawACSmod',False)#load the data without averaging
 \begin{figure}[h!]
 \pngname{scantable}{5}
 \caption{\label{fig:scantable} Multi-panel display of the
-  scantable. There are two plots per scan indicating the \_psr
-  (reference position data) and the \_ps (source data).} 
+  scantable. Subpanels are displayed per scan. There are two 
+  spectra in each scan indicating two polarization (RR and LL).} 
 \hrulefill
 \end{figure}
  
@@ -4588,10 +4983,10 @@ implemented.  These currently include:
   not always expected, but is a consequence of having {\tt sd.plotter} be
   its own object that is fed data and commands.
 
-  There are known bugs when plotting with the tool-based plotting. 
-  The spectral values won't be displayed on the plotter
-  displayed with {\tt sd.plotter.plot()} even if 'spec value' button is
-  pressed. 
+  There are known bugs in statistic calculation mode.
+  The plotter may raise an error when you specify a region on a panel whose IF is not zero. 
+  The error occures if the specified channel, frequency, or velocity region is out of 
+  range for IF=0.
 
   Eventually we would like the capability to interactively
   set things using the plots, like select frequency ranges,

@@ -929,15 +929,13 @@ class split_test_unorderedpolspw(SplitChecker):
         self.check_subtables('', [(2, 128)])
         #self.__class__.n_tests_passed += 1
 
-class split_test_chanwidth(SplitChecker):
+class split_test_spectral_window(SplitChecker):
     """
-    Check CHAN_WIDTH and RESOLUTION in SPECTRAL_WINDOW with chan selection and averaging.
+    Check SPECTRAL_WINDOW with chan selection and averaging.
     """
     need_to_initialize = True
     inpms = datapath + '/unittest/split/2562.ms'
     records = {}
-    #n_tests = 4
-    #n_tests_passed = 0
 
     # records uses these as keys, so they MUST be tuples, not lists.
     # Each tuple is really (spw, width), but it's called corrsels for
@@ -957,8 +955,15 @@ class split_test_chanwidth(SplitChecker):
                              scan='', array='', uvrange='',
                              correlation='', async=False)
             tb.open(outms + '/SPECTRAL_WINDOW')
-            record['res'] = tb.getcell('RESOLUTION', 0)[0]
-            record['cw']  = tb.getcell('CHAN_WIDTH', 0)[0]
+            cf = tb.getcell('CHAN_FREQ', 0)
+            record['nchan'] = cf.shape[0]
+            record['cf0']   = cf[0]
+            record['cf']    = cf[33]
+            record['cflc']  = cf[-1]
+            record['res']   = tb.getcell('RESOLUTION', 0)
+            record['cw']    = tb.getcell('CHAN_WIDTH', 0)
+            record['eb']    = tb.getcell('EFFECTIVE_BW', 0)
+            record['tb']    = tb.getcell('TOTAL_BANDWIDTH', 0)
             tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
@@ -967,26 +972,122 @@ class split_test_chanwidth(SplitChecker):
         self.__class__.records[spwwidth] = record
         return splitran
 
+    def test_nchan_noavg(self):
+        """# of channels after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['nchan'], 104)
+
     def test_res_noavg(self):
         """RESOLUTION after selection, but no averaging."""
         check_eq(self.records[('1:12~115', '1')]['res'], 14771.10564634, 1e-4)
-        #self.__class__.n_tests_passed += 1
+
+    def test_cf0_noavg(self):
+        """CHAN_FREQ[0] after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['cf0'], 22141747338.809235, 1e-4)
+
+    def test_cf_noavg(self):
+        """CHAN_FREQ[33] after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['cf'], 22142150187.145042, 1e-4)
+
+    def test_cflc_noavg(self):
+        """CHAN_FREQ[-1] after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['cflc'], 22143004713.917973, 1e-4)
 
     def test_cw_noavg(self):
         """CHAN_WIDTH after selection, but no averaging."""
         check_eq(self.records[('1:12~115', '1')]['cw'], 12207.525327551524, 1e-4)
-        #self.__class__.n_tests_passed += 1
+
+    def test_eb_noavg(self):
+        """EFFECTIVE_BW after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['eb'], 14771.10564634, 1e-4)
+
+    def test_tb_wavg(self):
+        """TOTAL_BANDWIDTH after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['tb'], 1272146.2143842829, 1e-4)
+
+    def test_nchan_wavg(self):
+        """# of channels after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['nchan'], 43)
 
     def test_res_wavg(self):
         """RESOLUTION after averaging, but no selection."""
-        check_eq(self.records[('1', '3')]['res'], 44313.316939, 1e-4)
-        #self.__class__.n_tests_passed += 1
+        # The last one really is different (128 % 3 != 0), but the variation
+        # of the rest is numerical jitter.
+        check_eq(self.records[('1', '3')]['res'],
+                 numpy.array([39186.15630552, 39186.1563017, 39186.15630552,
+                              39186.1563017,  39186.1563017, 39186.1563017,
+                              39186.1563017,  39186.1563055, 39186.1563017,
+                              39186.15629789, 39186.1563055, 39186.15629789,
+                              39186.1563017,  39186.1562941, 39186.15629789,
+                              39186.1563017,  39186.1562979, 39186.15629789,
+                              39186.15629789, 39186.1562979, 39186.15630552,
+                              39186.1563017,  39186.1563055, 39186.1563017,
+                              39186.1563017,  39186.1563055, 39186.15629789,
+                              39186.15630552, 39186.1563017, 39186.1563017,
+                              39186.1563017,  39186.1563017, 39186.15630552,
+                              39186.1563017,  39186.1562979, 39186.15630552,
+                              39186.1563017,  39186.1563055, 39186.15629789,
+                              39186.1563017,  39186.1563055, 39186.15629789,
+                              14771.10564634]), 1e-4)
+
+    def test_cf0_wavg(self):
+        """CHAN_FREQ[0] after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['cf0'], 22141613056.030632, 1e-4)
+
+    def test_cf_wavg(self):
+        """CHAN_FREQ[33] after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['cf'], 22142821601.038055, 1e-4)
+
+    def test_cflc_wavg(self):
+        """CHAN_FREQ[-1] after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['cflc'], 22143138996.696575, 1e-4)
 
     def test_cw_wavg(self):
         """CHAN_WIDTH after averaging, but no selection."""
-        check_eq(self.records[('1', '3')]['cw'], 36622.57598, 1e-4)
-        #self.__class__.n_tests_passed += 1
+        # The last one really is different (128 % 3 != 0), but the variation
+        # of the rest is numerical jitter.
+        check_eq(self.records[('1', '3')]['cw'],
+                 numpy.array([36622.57598673, 36622.57598292, 36622.57598673,
+                              36622.57598292, 36622.57598292, 36622.57598292,
+                              36622.57598292, 36622.57598673, 36622.57598292,
+                              36622.5759791,  36622.57598673, 36622.5759791,
+                              36622.57598292, 36622.57597529, 36622.5759791,
+                              36622.57598292, 36622.5759791,  36622.5759791,
+                              36622.5759791,  36622.5759791,  36622.57598673,
+                              36622.57598292, 36622.57598673, 36622.57598292,
+                              36622.57598292, 36622.57598673, 36622.5759791,
+                              36622.57598673, 36622.57598292, 36622.57598292,
+                              36622.57598292, 36622.57598292, 36622.57598673,
+                              36622.57598292, 36622.5759791,  36622.57598673,
+                              36622.57598292, 36622.57598673, 36622.5759791,
+                              36622.57598292, 36622.57598673, 36622.5759791,
+                              12207.52532755]), 1e-3)
 
+    def test_eb_wavg(self):
+        """EFFECTIVE_BW after averaging, but no selection."""
+        # The last one really is different (128 % 3 != 0), but the variation
+        # of the rest is numerical jitter.
+        check_eq(self.records[('1', '3')]['eb'],
+                 numpy.array([39186.15630552, 39186.1563017,  39186.15630552,
+                              39186.1563017,  39186.1563017,  39186.1563017,
+                              39186.1563017,  39186.15630552, 39186.1563017,
+                              39186.15629789, 39186.15630552, 39186.15629789,
+                              39186.1563017,  39186.15629407, 39186.15629789,
+                              39186.1563017,  39186.15629789, 39186.15629789,
+                              39186.15629789, 39186.15629789, 39186.15630552,
+                              39186.1563017,  39186.15630552, 39186.1563017,
+                              39186.1563017,  39186.15630552, 39186.15629789,
+                              39186.15630552, 39186.1563017,  39186.1563017,
+                              39186.1563017,  39186.1563017,  39186.15630552,
+                              39186.1563017,  39186.15629789, 39186.15630552,
+                              39186.1563017,  39186.15630552, 39186.15629789,
+                              39186.1563017,  39186.15630552, 39186.15629789,
+                              14771.10564634]), 1e-3)
+
+    def test_tb_wavg(self):
+        """Is TOTAL_BANDWIDTH conserved after averaging, but no selection?"""
+        # The expected value comes from spw 1 of inpms.
+        check_eq(self.records[('1', '3')]['tb'], 1550355.7165990437, 0.1)
+        
 class split_test_tav_then_cvel(SplitChecker):
     need_to_initialize = True
     # doppler01fine-01.ms was altered by
@@ -1133,5 +1234,5 @@ def suite():
             split_test_state,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
-            split_test_chanwidth, split_test_cavcd, split_test_almapol]
+            split_test_spectral_window, split_test_cavcd, split_test_almapol]
     

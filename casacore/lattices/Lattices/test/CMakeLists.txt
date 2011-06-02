@@ -34,6 +34,7 @@ tLattStatsSpecialize
 tLCComplement
 tLCConcatenation
 tLCDifference
+tLCEllipsoid
 tLCExtension
 tLCIntersection
 tLCLELMask

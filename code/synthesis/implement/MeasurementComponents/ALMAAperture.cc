@@ -42,7 +42,8 @@ namespace casa{
   Bool ALMAAperture::orderMattersInCFKey = False;
 
   ALMAAperture::ALMAAperture(): 
-    ATerm(),
+    //    ATerm(),
+    AzElAperture(),
     polMap_p(),
     antTypeMap_p(),
     respImage_p()

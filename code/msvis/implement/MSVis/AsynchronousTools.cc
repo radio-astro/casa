@@ -158,7 +158,7 @@ Condition::wait (Mutex & mutex, int milliseconds)
 }
 */
 
-Logger::Logger * Logger::singleton_p = NULL;
+Logger* Logger::singleton_p = NULL;
 
 Logger::Logger ()
 : loggingStarted_p (False),
@@ -174,7 +174,7 @@ Logger::~Logger ()
 
 boost::once_flag loggerOnceFlag = BOOST_ONCE_INIT;
 
-Logger::Logger *
+Logger*
 Logger::get()
 {
     boost::call_once (loggerOnceFlag, initialize);

@@ -300,6 +300,7 @@ traceEvent(1,"Entering imager::defaults",25);
   singlePrec_p=False;
   spwchansels_p.resize();
   flatnoise_p=True;
+  freqrange_p.resize();
 #ifdef PABLO_IO
   traceEvent(1,"Exiting imager::defaults",24);
 #endif

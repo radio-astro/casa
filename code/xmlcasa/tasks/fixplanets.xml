@@ -10,9 +10,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="fixplanets" category="editing, maninpulation, calibration" >
 
-<shortdescription>Fixes FIELD and SOURCE table entries based on POINTING table, optionally fixes the UVW coordinates</shortdescription>
+<shortdescription>Changes FIELD and SOURCE table entries based on user given direction or POINTING table, optionally fixes the UVW coordinates</shortdescription>
 <description>
-Fix FIELD, SOURCE, and UVW for given fields based on pointing table information
+Changes FIELD and SOURCE table entries based on user given direction or on POINTING table, optionally fixes the UVW coordinates
 </description>
 
 <input>
@@ -30,19 +30,57 @@ Fix FIELD, SOURCE, and UVW for given fields based on pointing table information
       <description>recalc uvw?</description>
       <value>False</value>
     </param>
+    <param type="any" name="direction">
+      <description>if set, don\'t use pointing table but set direction to this value</description>
+      <any type="variant"/>
+      <value type="string"></value>
+    </param>
+    <param type="any" name="refant">
+      <description>if using pointing table information, use it from this antenna</description>
+      <any type="variant"/>
+      <value>0</value>
+    </param>
+
 </input>
 
 <example>
-Input Parameters
-vis    --- Name of the input visibility set
+    This task's main purpose is to correct observations which were performed
+    with correct pointing and correlation but for which incorrect direction
+    information was entered in the FIELD and SOURCE table of the MS.
+    If you actually want to change the phase center of the visibilties in an MS,
+    you should use task fixvis.
 
-field  --- field selection string
+    Input Parameters
+    vis        -- Name of the input visibility set
+    
+    field      -- field selection string
+    
+    fixuvw     -- recalc uvw coordinates? (default: False)
 
-fixuvw --- recalc uvw coordinate? (default: False)
+    direction  -- if set, don't use pointing table but set direction to this value
+                  default= '' (use pointing table)
+                  example: 'J2000 19h30m00 -40d00m00'
 
-Example:
+    refant     -- if using pointing table information, use it from this antenna
+                  default: 0 (antenna id 0)
+                  examples: 'DV06' (antenna with name DV06)
+                            3 (antenna id 3)
 
- fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
+    Examples:
+
+    fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
+          will look up the pointing direction from antenna 0 for field 'Titan' in 
+          the POINTING table based on the median time in unflagged main table rows for 
+          this field, enter this direction in the FIELD and SOURCE tables, and then 
+          recalculate the UVW coordinates for this field.
+
+    fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', False, 'J2000 12h30m15 -02d12m00')
+          will set the directions for field 'Titan' in the FIELD and SOURCE table to the
+          given direction and not recalculate the UVW coordinates.
+          (This can be useful for several purposes, among them preparing a concatenation
+          of datasets. Only fields with the same direction will be recognised as identical.
+          fixplanets can then be run again after the concatenation using parameters as in
+          the first example above.)
 
 </example>
 

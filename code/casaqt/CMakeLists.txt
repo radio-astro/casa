@@ -187,6 +187,7 @@ casa_add_library( casaqt
   implement/QtUtilities/QtActionGroup.cc
   implement/QtUtilities/QtButtonGroup.cc
   implement/QtUtilities/QtComboCheckBox.cc
+  implement/QtUtilities/QtId.cc
   implement/QtUtilities/QtDBusApp.cc
   implement/QtUtilities/QtDBusXmlApp.cc
   implement/QtUtilities/QtDBusXML.cc

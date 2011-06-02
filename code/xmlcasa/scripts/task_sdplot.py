@@ -211,7 +211,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 			   hasattr(sd.plotter._plotter.figmgr,'casabar'):
 			    del sd.plotter._plotter.figmgr.casabar
 		    sd.plotter._plotter = sd.plotter._newplotter()
-		    sd.plotter._plotter.figmgr.casabar=sd.plotter._newcasabar()
+		    sd.plotter._plotter.figmgr.casabar=sd.plotter._new_custombar()
 
 	    # Set subplot layout
 	    if subplot > -1:

@@ -1,6 +1,6 @@
 import os
 import string
-from taskinit import *
+from taskinit import casalog, mstool, qa
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
           timebin, timerange, scan, array, uvrange, correlation,

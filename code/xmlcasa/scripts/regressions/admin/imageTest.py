@@ -4,6 +4,7 @@ import os
 from time import *
 import numpy as numarray
 import pylab
+import string
 
 #from math import *
 #from Scientific.Functions import LeastSquares
@@ -48,7 +49,7 @@ class ImageTest:
          self.body1=[]
          self.body2=[]
          self.htmlPub=htmlPub(self.html,'Image tests')
-	else:
+        else:
 	 print 'stats-only mode; will not write to html file!'
 
     def changeImage(self, imageName):
@@ -80,7 +81,10 @@ class ImageTest:
 	 header='Channel %d pol %d from image %s'%(chan,plane,self.imageName)
          body1=['The image generated with pylab:']
 	 body2=['maximum: %f'%(max1),'minimum: %f'%(min1),'rms: %f'%(rms1)]
-         saveDir=self.imDir+self.fname[11:-5]+'-channel%d-pol%d.png'%(chan,plane)
+         #saveDir=self.imDir+self.fname[11:-5]+'-channel%d-pol%d.png'%(chan,plane)
+         listnam=string.split(self.imTool.name(strippath=False), '/')
+         imnam=listnam[len(listnam)-2]+'_'+listnam[len(listnam)-1]
+         saveDir=self.imDir+imnam+'-channel%d-pol%d.png'%(chan,plane)
          pylab.savefig(saveDir)
          self.htmlPub.doBlk(body1, body2, saveDir,header)
         returnFlag= 1

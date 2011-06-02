@@ -381,21 +381,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       datadescids_p.resize(0);
       datadescids_p=msDatIndex.matchSpwId(dataspectralwindowids_p);
 
-
+      freqrange_p.resize(nms,2,True);
       if(mode=="none"){
 	//check if we can find channel selection in the spw string
-	//Matrix<Int> chanselmat=thisSelection.getChanList();
-	//if(chanselmat.nrow()==dataspectralwindowids_p.nelements()){
-	if(nselspw==dataspectralwindowids_p.nelements()){
+	//if(nselspw==dataspectralwindowids_p.nelements()){
 	  dataMode_p="channel";
 	  dataStep_p.resize(dataspectralwindowids_p.nelements());
 	  dataStart_p.resize(dataspectralwindowids_p.nelements());
 	  dataNchan_p.resize(dataspectralwindowids_p.nelements());
+          Double fmin=C::dbl_max;
+          Double fmax=-(C::dbl_max);
+
           Cube<Int> spwchansels_tmp=spwchansels_p;
 	  for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
+            Vector<Double> chanFreq=spwc.chanFreq()(k);
+            Vector<Double> freqResolution = spwc.chanWidth()(k);
+
             uInt curspwid=dataspectralwindowids_p[k];
 	    //dataStep_p[k]=chanselmat.row(k)(3);
-	    dataStep_p[k]=chansels.row(k)(3);
+            if (nrow==0) {
+              dataStep_p=step;
+            }
+            else {
+	      dataStep_p[k]=chansels.row(k)(3);
+            }
 	    //if(dataStep_p[k] < 1)
 	    //  dataStep_p[k]=1;
             dataStart_p[k]=0;
@@ -432,9 +441,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                 spwchansels_tmp(numMS_p-1,curspwid,j) = 0;
               }
             }
+            //for mfs mode need to keep fmin,max info for later image setup
+            //Int lastchan=dataStart_p[k]+ dataNchan_p[k]*dataStep_p[k];
+            Int endchanused;
+            if (nrow==0) {
+              // default spw case
+              endchanused=nchanvec(curspwid);
+            }
+            else {
+              endchanused=lastchan;
+            }
+            for(Int j=dataStart_p[k] ; j < endchanused ;  j+=dataStep_p[k]){
+              fmin=min(fmin,chanFreq[j]-abs(freqResolution[j]*(dataStep_p[k]-0.5)));
+              fmax=max(fmax,chanFreq[j]+abs(freqResolution[j]*(dataStep_p[k]-0.5)));
+            }
           }
+          //cerr<<"numMS_p="<<numMS_p<<" fmin="<<fmin<<" fmax="<<fmax<<endl;
+          freqrange_p(numMS_p-1,0)=fmin;
+          freqrange_p(numMS_p-1,1)=fmax;
+
         spwchansels_p=spwchansels_tmp;
-	}
+	//}
       }
 
 

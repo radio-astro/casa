@@ -544,7 +544,10 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         if(parameters.isDefined(PARAM_COLORAXIS) &&
            parameters.dataType(PARAM_COLORAXIS) == TpString)   {
             a = PMS::axis(parameters.asString(PARAM_COLORAXIS), &ok);
-            if (ok)  ppdisp->setColorize(a);
+            if (ok)  
+	      ppdisp->setColorize(True,a);
+	    else
+	      ppdisp->setColorize(False);
         }
 
         
