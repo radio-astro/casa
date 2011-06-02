@@ -125,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //
     template <class T>
     void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
-			  Matrix<Double>& sumwt,const Bool& dopsf, CFStore& cfs=CFStore());
+			  Matrix<Double>& sumwt,const Bool& dopsf, CFStore& cfs);
 
     void sgrid(Vector<Double>& pos, Vector<Int>& loc, Vector<Int>& off, 
     	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 

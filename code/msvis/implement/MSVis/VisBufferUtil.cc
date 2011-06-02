@@ -245,8 +245,9 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
 				  MFrequency::Ref(newMFreqType, mframe_));
 
    // The velocity conversion engine:
-   MDoppler::Convert dopConv(MDoppler::Ref(MDoppler::RELATIVISTIC),
-   			     MDoppler::Ref(veldef));
+   MDoppler::Ref dum1(MDoppler::RELATIVISTIC);
+   MDoppler::Ref dum2(veldef);
+   MDoppler::Convert dopConv(dum1, dum2);
 
    // Cope with unspecified rest freq
    MVFrequency rf=restFreq;
@@ -254,8 +255,11 @@ void VisBufferUtil::convertFrequency(Vector<Double>& outFreq,
      rf=toNewFrame(inFreq(vb.nChannel()/2)).getValue();
 
    // Do the conversions
-   for (uInt k=0; k< inFreq.nelements(); ++k)
-     outVel(k)=dopConv(toNewFrame(inFreq(k)).toDoppler(rf)).getValue().get().getValue();
+   for (uInt k=0; k< inFreq.nelements(); ++k){
+     MDoppler eh = toNewFrame(inFreq(k)).toDoppler(rf);
+     MDoppler eh2 = dopConv(eh);
+     outVel(k)=eh2.getValue().get().getValue();
+   }
 
  }
 

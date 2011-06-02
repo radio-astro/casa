@@ -18,11 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-if( APPLE AND
-    NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
-    NOT _gcc_machine MATCHES x86_64 )
-      set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586 -msse3" )
-endif()
+#if( APPLE AND
+#    NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
+#    NOT _gcc_machine MATCHES x86_64 )
+#      set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586 -msse3" )
+#endif()
 
 
 casa_add_library( flagging

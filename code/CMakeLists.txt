@@ -28,7 +28,7 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 3 )
-set( CASA_MINOR_VERSION 2 )
+set( CASA_MINOR_VERSION 3 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
@@ -209,8 +209,18 @@ if( APPLE )
 			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
 			 OUTPUT_VARIABLE _cxx_version
 			 OUTPUT_STRIP_TRAILING_WHITESPACE )
+	set (INTEL_CXX_COMPILER "false" )
+	if( _cxx_version MATCHES "ICC")
+		set (INTEL_CXX_COMPILER "true" )
+	endif()
+	set (INTEL_FORTRAN_COMPILER "false" )
+	if( _gfortran__version MATCHES "IFORT")
+		set (INTEL_FORTRAN_COMPILER "true" )
+	endif()
+
 	
 	message( STATUS "$_gfortran_version = ${_gfortran_version}" )
+        message( STATUS "cxxversion (${_cxx_version})" )
 	if( NOT _gfortran_version STREQUAL "4.4" AND
 	    NOT _gfortran_version STREQUAL "4.2" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
@@ -227,10 +237,13 @@ if( APPLE )
         message( WARNING "Unsupported Mac: ${CMAKE_SYSTEM}" )
     endif()
 
-    if( _cxx_version STREQUAL "4.4" )
-	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
-    else()
-	set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+    if( NOT INTEL_CXX_COMPILER STREQUAL "true" )
+       if( _cxx_version STREQUAL "4.4" )
+	   set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse" )
+       else()
+	   set( DEFAULT_CXX_FLAGS "${DEFAULT_CXX_FLAGS} -dynamic -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks" )
+       endif()
+	    
     endif()
 
 elseif( CMAKE_SYSTEM_NAME STREQUAL Linux )

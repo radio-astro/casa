@@ -92,15 +92,16 @@ flagger::setdata(
     const std::string& correlation,
     const std::string& intent)
 {
+    bool rstat (false);
     try {
 	if (flagger_p) {
-	    return flagger_p->setdata(
+	    rstat = flagger_p->setdata(
 		String(field),String(spw),String(array),
 		String(feed),String(scan),String(baseline),
 		String(uvrange),String(time),String(correlation), 
                 String(intent));
         }
-	return false;
+	return rstat;
     } catch (AipsError x) {
 	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
@@ -395,12 +396,14 @@ flagger::setextendflag(const std::string& field, const std::string& spw, const s
 ::casac::record*
 flagger::run(const bool trial, const bool reset)
 {
+    casac::record *rstat(0);
     try {
         if(flagger_p){
-            return fromRecord(flagger_p->run(Bool(trial),Bool(reset)));
-        }
-
-        return fromRecord(Record());
+            rstat =  fromRecord(flagger_p->run(Bool(trial),Bool(reset)));
+        } else {
+	    rstat = fromRecord(Record()); 
+	}
+        return rstat;
     } catch (AipsError x) {
         *logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
         RETHROW(x);

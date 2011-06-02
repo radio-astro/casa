@@ -1011,7 +1011,8 @@ bool QPCanvas::plotItem(PlotItemPtr item, PlotCanvasLayer layer) {
             contains = (i < m_usedColors.size());
         }
         
-        QPColor color(QColor(QPPlotter::GLOBAL_COLORS[ri]));
+	QString eh = QPPlotter::GLOBAL_COLORS[ri];
+        QPColor color(eh);
         line.setColor(color);
         symbol.setColor(color);
         sp->setLine(line);
