@@ -55,12 +55,14 @@ namespace casa{
   // Template instantiations for re-sampling onto a double precision
   // or single precision grid.
   //
+	/*
   template
   void VisibilityResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
 					     const Bool& dopsf,  Matrix<Double>& sumwt) __restrict__;
   template
   void VisibilityResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
   					     const Bool& dopsf,  Matrix<Double>& sumwt) __restrict__;
+					     */
 
   // template void VisibilityResampler::addTo4DArray(DComplex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
   // template void VisibilityResampler::addTo4DArray(Complex* store,const Int* iPos, Complex& val, Double& wt) __restrict__;
