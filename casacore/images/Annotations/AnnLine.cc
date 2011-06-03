@@ -43,6 +43,11 @@ AnnLine::AnnLine(
 	_inputPoints(0, 1) = xPoint2;
 	_inputPoints(1, 1) = yPoint2;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+
+	ostringstream os;
+	os << "line [[" << xPoint1 << ", " << yPoint1 << "], ["
+		<< xPoint2 << ", " << yPoint2 << "]]";
+	_stringRep += os.str();
 }
 
 Vector<MDirection> AnnLine::getEndPoints() const {

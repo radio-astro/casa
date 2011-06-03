@@ -73,6 +73,10 @@ public:
 	// returns True unless overridden.
 	virtual Bool isRegion() const;
 
+	void setDifference(const Bool difference);
+
+	Bool isDifference() const;
+
 
 protected:
 	Bool _isAnnotationOnly;
@@ -83,6 +87,7 @@ protected:
 	WCRegion *_wcRegion;
 	MFrequency::Types _freqRefFrame;
 	MDoppler::Types _dopplerType;
+	Bool _isDifference;
 
 	// only to be called by subclasses
 

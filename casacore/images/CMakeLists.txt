@@ -14,6 +14,7 @@ include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 add_library (casa_images
 Annotations/AnnotationBase.cc
+Annotations/AsciiAnnotationList.cc
 Annotations/AnnAnnulus.cc
 Annotations/AnnCenterBox.cc
 Annotations/AnnCircle.cc
@@ -77,8 +78,9 @@ Images/ImageInputProcessor.cc
 Images/ImageReorderer.cc
 Images/ImageFitter.cc
 Images/ImageProfileFitter.cc
+IO/AsciiAnnotationFileParser.cc
+IO/AsciiAnnotationFileLine.cc
 IO/FitterEstimatesFileParser.cc
-IO/AsciiRegionFileParser.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -103,13 +105,14 @@ LIBRARY PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUT
 
 install (FILES
 Annotations/AnnotationBase.h
+Annotations/AsciiAnnotationList.h
 Annotations/AnnAnnulus.h
-Annotations/AnnCenterBox.cc
-Annotations/AnnCircle.cc
+Annotations/AnnCenterBox.h
+Annotations/AnnCircle.h
 Annotations/AnnEllipse.h
 Annotations/AnnLine.h
 Annotations/AnnPolygon.h
-Annotations/AnnRectBox.cc
+Annotations/AnnRectBox.h
 Annotations/AnnRegion.h
 Annotations/AnnRotBox.h
 Annotations/AnnSymbol.h
@@ -226,6 +229,8 @@ DESTINATION include/casacore/images/Regions
 )
 
 install (FILES
+IO/AsciiAnnotationFileParser.h
+IO/AsciiAnnotationFileLine.h
 IO/FitterEstimatesFileParser.h
 DESTINATION include/casacore/images/IO
 )

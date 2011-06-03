@@ -128,6 +128,7 @@ int main () {
 				x, y, dirTypeString,
 				csys, t
 			);
+			cout << text << endl;
 			MDirection point = text.getDirection();
 			AlwaysAssert(
 				near(

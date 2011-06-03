@@ -63,6 +63,11 @@ AnnRectBox::AnnRectBox(
 	WCBox box(qblc, qtrc, _directionAxes, _csys, absrel);
 	_extend(box);
 
+	ostringstream os;
+	os << "box [[" << blcx << ", " << blcy << "], ["
+		<< trcx << ", " << trcy << "]]";
+	_stringRep += os.str();
+
 }
 
 Vector<MDirection> AnnRectBox::getCorners() const {

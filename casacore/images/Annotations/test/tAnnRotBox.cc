@@ -600,7 +600,7 @@ int main () {
 				csys, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
+			cout << box << endl;
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			cout << freqs[0].get("Hz").getValue() << endl;
 			AlwaysAssert(

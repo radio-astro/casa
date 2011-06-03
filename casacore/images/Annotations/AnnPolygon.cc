@@ -63,6 +63,17 @@ AnnPolygon::AnnPolygon(
 
 	WCPolygon wpoly(x, y, IPosition(_directionAxes), _csys, RegionType::Abs);
 	_extend(wpoly);
+
+	ostringstream os;
+	os << "poly [";
+	for (uInt i=0; i<xPositions.size(); i++) {
+		os << "[" << xPositions[i] << ", " << yPositions[i] << "]";
+		if (i < xPositions.size()-1) {
+			os << ", ";
+		}
+	}
+	os << "]";
+	_stringRep += os.str();
 }
 
 

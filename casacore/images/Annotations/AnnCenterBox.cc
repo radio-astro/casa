@@ -75,6 +75,11 @@ AnnCenterBox::AnnCenterBox(
 
 	WCBox box(qblc, qtrc, _directionAxes, _csys, absrel);
 	_extend(box);
+
+	ostringstream os;
+	os << "centerbox [[" << centerx << ", " << centery << "], ["
+		<< xwidth << ", " << ywidth << "]]";
+	_stringRep += os.str();
 }
 
 MDirection AnnCenterBox::getCenter() const {
