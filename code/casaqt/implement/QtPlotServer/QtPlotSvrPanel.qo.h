@@ -123,6 +123,7 @@ namespace casa {
 	protected: 
 
 	    QWidget *loaddock( QString file );
+            QFont defaultfont;
 
 	private:
 

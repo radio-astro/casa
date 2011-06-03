@@ -92,6 +92,7 @@ namespace casa {
 	b->setCentralWidget( c );
 	win_desc *wd = new win_desc( b, c, l );
 	window_ = wd;
+        defaultfont = QFont("sans serif", 12);
     }
 
     QtPlotSvrPanel::QtPlotSvrPanel( const QString &label, const QString &xlabel, const QString &ylabel, const QString &window_title,
@@ -421,15 +422,26 @@ namespace casa {
     }
 
     void QtPlotSvrPanel::setxlabel( const QString &xlabel ) {
-	if ( plot ) plot->setAxisTitle( QwtPlot::xBottom, xlabel );
+	if ( plot ) {
+	    QwtText qxlabel(xlabel);
+	    qxlabel.setFont(defaultfont);
+	    plot->setAxisTitle( QwtPlot::xBottom, qxlabel );
+	  }
     }
 
     void QtPlotSvrPanel::setylabel( const QString &ylabel ) {
-	if ( plot ) plot->setAxisTitle( QwtPlot::yLeft, ylabel );
+      if ( plot ) {
+	    QwtText qylabel(ylabel);
+	    qylabel.setFont(defaultfont);
+	    plot->setAxisTitle( QwtPlot::yLeft, qylabel );
+	  }
     }
 
     void QtPlotSvrPanel::settitle( const QString &title ) {
-	if ( plot ) plot->setTitle( title );
+      if ( plot ) { 
+ 	  plot->setTitle(title);
+	  ((QWidget*) (plot->titleLabel()))->setFont(defaultfont);
+	}
     }
 
     void QtPlotSvrPanel::replot( ) {
