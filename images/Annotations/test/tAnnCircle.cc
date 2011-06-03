@@ -459,6 +459,7 @@ int main () {
 				csys, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			cout << circle << endl;
 
 			Vector<MFrequency> freqs = circle.getFrequencyLimits();
 			cout << freqs[0].get("Hz").getValue() << endl;

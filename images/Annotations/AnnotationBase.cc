@@ -44,7 +44,6 @@ const Bool AnnotationBase::DEFAULT_USETEX = False;
 
 Bool AnnotationBase::_doneUnitInit = False;
 
-
 AnnotationBase::AnnotationBase(
 	const Type type, const String& dirRefFrameString,
 	const CoordinateSystem& csys
@@ -53,8 +52,9 @@ AnnotationBase::AnnotationBase(
   _linestyle(DEFAULT_LINESTYLE), _font(DEFAULT_FONT),
   _fontsize(DEFAULT_FONTSIZE), _fontstyle(DEFAULT_FONTSTYLE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
-  _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX) {
-
+  _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
+  _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
+  _printGlobals(False), _stringRep("") {
 	String preamble = String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		throw AipsError(
@@ -63,7 +63,8 @@ AnnotationBase::AnnotationBase(
 	}
 
 	if (! MDirection::getType(_directionRefFrame, dirRefFrameString)) {
-		throw AipsError(preamble + "Unknown coordinate frame "
+		throw AipsError(
+			preamble + "Unknown coordinate frame "
 			+ dirRefFrameString
 		);
 	}
@@ -71,22 +72,42 @@ AnnotationBase::AnnotationBase(
 		_directionRefFrame != _csys.directionCoordinate().directionType(False)
 		&& _directionRefFrame != MDirection::B1950
 		&& _directionRefFrame != MDirection::B1950_VLA
-		&&  _directionRefFrame != MDirection::BMEAN
-		&&  _directionRefFrame != MDirection::DEFAULT
-		&&  _directionRefFrame != MDirection::ECLIPTIC
-		&&  _directionRefFrame != MDirection::GALACTIC
-		&&  _directionRefFrame != MDirection::J2000
-		&&  _directionRefFrame != MDirection::SUPERGAL
+		&& _directionRefFrame != MDirection::BMEAN
+		&& _directionRefFrame != MDirection::DEFAULT
+		&& _directionRefFrame != MDirection::ECLIPTIC
+		&& _directionRefFrame != MDirection::GALACTIC
+		&& _directionRefFrame != MDirection::J2000
+		&& _directionRefFrame != MDirection::SUPERGAL
 	) {
 		throw AipsError(preamble
 			+ "Unsupported coordinate frame for annotations "
 			+ dirRefFrameString
 		);
 	}
+	_params[COORD] = dirRefFrameString;
 	_directionAxes = IPosition(_csys.directionAxesNumbers());
+	for(uInt i=0; i<N_KEYS; i++) {
+		_globals[(Keyword)i] = False;
+	}
+	_initParams();
 }
 
 AnnotationBase::~AnnotationBase() {}
+
+void AnnotationBase::_initParams() {
+	_params[LINEWIDTH] = String::toString(_linewidth);
+	_params[LINESTYLE] = _linestyle;
+	_params[SYMSIZE] = String::toString(_symbolsize);
+	_params[SYMTHICK] = String::toString(_symbolthickness);
+	_params[COLOR] = _color;
+	_params[FONT] = _font;
+	_params[FONTSIZE] = _fontsize;
+	_params[FONTSTYLE] = _fontstyle;
+	_params[USETEX] = _usetex ? "true" : "false";
+	if (! _label.empty()) {
+		_params[LABEL] = _label;
+	}
+}
 
 void AnnotationBase::unitInit() {
 	if (! _doneUnitInit) {
@@ -143,9 +164,16 @@ AnnotationBase::Type AnnotationBase::typeFromString(
 	}
 }
 
-
 void AnnotationBase::setLabel(const String& s) {
 	_label = s;
+	if (_label.empty()) {
+		if (_params.find(LABEL) == _params.end()) {
+			_params[LABEL] = _label;
+		}
+		else {
+			_params.erase(LABEL);
+		}
+	}
 }
 
 String AnnotationBase::getLabel() const {
@@ -154,6 +182,7 @@ String AnnotationBase::getLabel() const {
 
 void AnnotationBase::setColor(const String& s) {
 	_color = s;
+	_params[COLOR] = _color;
 }
 
 String AnnotationBase::getColor() const {
@@ -162,6 +191,7 @@ String AnnotationBase::getColor() const {
 
 void AnnotationBase::setLineStyle(const String& s) {
 	_linestyle = s;
+	_params[LINESTYLE] = _linestyle;
 }
 
 String AnnotationBase::getLineStyle() const {
@@ -170,6 +200,7 @@ String AnnotationBase::getLineStyle() const {
 
 void AnnotationBase::setLineWidth(const uInt s) {
 	_linewidth = s;
+	_params[LINEWIDTH] = String::toString(_linewidth);
 }
 
 uInt AnnotationBase::getLineWidth() const {
@@ -178,6 +209,8 @@ uInt AnnotationBase::getLineWidth() const {
 
 void AnnotationBase::setSymbolSize(const uInt s) {
 	_symbolsize = s;
+	_params[SYMSIZE] = String::toString(_symbolsize);
+
 }
 
 uInt AnnotationBase::getSymbolSize() const {
@@ -186,6 +219,7 @@ uInt AnnotationBase::getSymbolSize() const {
 
 void AnnotationBase::setSymbolThickness(const uInt s) {
 	_symbolthickness = s;
+	_params[SYMTHICK] = String::toString(_symbolthickness);
 }
 
 uInt AnnotationBase::getSymbolThickness() const {
@@ -194,6 +228,7 @@ uInt AnnotationBase::getSymbolThickness() const {
 
 void AnnotationBase::setFont(const String& s) {
 	_font = s;
+	_params[FONT] = _font;
 }
 
 String AnnotationBase::getFont() const {
@@ -202,6 +237,7 @@ String AnnotationBase::getFont() const {
 
 void AnnotationBase::setFontSize(const String& s) {
 	_fontsize = s;
+	_params[FONTSIZE] = String::toString(_fontsize);
 }
 
 String AnnotationBase::getFontSize() const {
@@ -210,6 +246,7 @@ String AnnotationBase::getFontSize() const {
 
 void AnnotationBase::setFontStyle(const String& s) {
 	_fontstyle = s;
+	_params[FONTSTYLE] = _fontstyle;
 }
 
 String AnnotationBase::getFontStyle() const {
@@ -218,6 +255,7 @@ String AnnotationBase::getFontStyle() const {
 
 void AnnotationBase::setUseTex(const Bool s) {
 	_usetex = s;
+	_params[USETEX] = _usetex ? "true" : "false";
 }
 
 Bool AnnotationBase::isUseTex() const {
@@ -228,6 +266,84 @@ Bool AnnotationBase::isRegion() const {
 	return False;
 }
 
+void AnnotationBase::setGlobals(
+	const Vector<Keyword>& globalKeys
+) {
+	for (
+		Vector<Keyword>::const_iterator iter=globalKeys.begin();
+		iter != globalKeys.end(); iter++) {
+			_globals[*iter] = True;
+	}
+}
+
+String AnnotationBase::keywordToString(
+	const Keyword key
+) {
+	switch(key) {
+	case COORD: return "coord";
+	case RANGE: return "range";
+	case FRAME: return "frame";
+	case CORR: return "corr";
+	case VELTYPE: return "veltype";
+	case RESTFREQ: return "restfreq";
+	case LINEWIDTH: return "linewidth";
+	case LINESTYLE: return "linestyle";
+	case SYMSIZE: return "symsize";
+	case SYMTHICK: return "symthick";
+	case COLOR: return "color";
+	case FONT: return "font";
+	case FONTSIZE: return "fontsize";
+	case FONTSTYLE: return "fontstyle";
+	case USETEX: return "usetex";
+	case LABEL: return "label";
+	case UNKNOWN:
+	case N_KEYS:
+	default:
+		throw AipsError("Not string representation");
+	}
+}
+
+
+ostream& AnnotationBase::print(
+	ostream& os, const map<Keyword, String>& params
+) {
+	if (params.size() == 0) {
+		return os;
+	}
+	map<Keyword, String>::const_iterator bb = params.end();
+	bb--;
+	for (
+		map<Keyword, String>::const_iterator iter=params.begin();
+		iter!=params.end(); iter++
+	) {
+		os << keywordToString((Keyword)iter->first)
+			<< "=" << iter->second;
+		if (iter != bb) {
+			os << ", ";
+		}
+	}
+	return os;
+}
+
+ostream& AnnotationBase::print(ostream &os) const {
+	map<Keyword, String> x = _params;
+	if (! _printGlobals) {
+		for (
+			map<Keyword, String>::const_iterator iter = _params.begin();
+			iter != _params.end(); iter++
+		) {
+			Keyword k = iter->first;
+			if (_globals.find(k) != _globals.end() && _globals.at(k)) {
+				x.erase(k);
+			}
+		}
+	}
+	os << _stringRep;
+	if (x.size() > 0) {
+		os << " " << x;
+	}
+	return os;
+}
 
 void AnnotationBase::_checkMixed(
 	const String& origin, const Array<Quantity>& quantities

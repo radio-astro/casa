@@ -74,12 +74,14 @@ public:
 		UNKOWN
 	};
 
+	/*
 	AnnSymbol(
 		const Quantity& x, const Quantity& y,
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
 		const Symbol symbol
 	);
+	*/
 
 	AnnSymbol(
 		const Quantity& x, const Quantity& y,

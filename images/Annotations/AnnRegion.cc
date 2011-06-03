@@ -41,8 +41,11 @@ AnnRegion::AnnRegion(
 ) : AnnotationBase(shape, dirRefFrameString, csys), _isAnnotationOnly(annotationOnly),
 	_convertedFreqLimits(Vector<MFrequency>(0)),
 	_beginFreq(beginFreq), _endFreq(endFreq), _restFreq(restfreq),
-	_stokes(stokes), _wcRegion(0) {
+	_stokes(stokes), _wcRegion(0), _isDifference(False) {
 	String preamble(String(__FUNCTION__) + ": ");
+	if (annotationOnly) {
+		_stringRep = "ann ";
+	}
 	if (_csys.hasSpectralAxis()) {
 		if (! _beginFreq.getUnit().empty() > 0 && _endFreq.getUnit().empty()) {
 			throw AipsError(
@@ -105,6 +108,15 @@ AnnRegion::~AnnRegion() {}
 Bool AnnRegion::isAnnotationOnly() const {
 	return _isAnnotationOnly;
 }
+
+void AnnRegion::setDifference(const Bool difference) {
+	_isDifference = difference;
+}
+
+Bool AnnRegion::isDifference() const {
+	return _isDifference;
+}
+
 
 Vector<MFrequency> AnnRegion::getFrequencyLimits() const {
 	return _convertedFreqLimits;

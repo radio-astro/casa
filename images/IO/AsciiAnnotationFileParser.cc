@@ -14,7 +14,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include <images/IO/AsciiRegionFileParser.h>
+#include <images/IO/AsciiAnnotationFileParser.h>
 
 #include <casa/IO/RegularFileIO.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -37,23 +37,22 @@
 
 namespace casa {
 
-const String AsciiRegionFileParser::sOnePair = "[[:space:]]*\\[[^\\[,]+,[^\\[,]+\\][[:space:]]*";
-const String AsciiRegionFileParser::bTwoPair = "\\[" + sOnePair
+const String AsciiAnnotationFileParser::sOnePair = "[[:space:]]*\\[[^\\[,]+,[^\\[,]+\\][[:space:]]*";
+const String AsciiAnnotationFileParser::bTwoPair = "\\[" + sOnePair
 		+ "," + sOnePair;
 // explicit onePair at the end because that one should not be followed by a comma
-const String AsciiRegionFileParser::sNPair = "\\[(" + sOnePair
+const String AsciiAnnotationFileParser::sNPair = "\\[(" + sOnePair
 		+ ",)+" + sOnePair + "\\]";
-const Regex AsciiRegionFileParser::startOnePair("^" + sOnePair);
-const Regex AsciiRegionFileParser::startNPair("^" + sNPair);
+const Regex AsciiAnnotationFileParser::startOnePair("^" + sOnePair);
+const Regex AsciiAnnotationFileParser::startNPair("^" + sNPair);
 
-AsciiRegionFileParser::AsciiRegionFileParser(
+AsciiAnnotationFileParser::AsciiAnnotationFileParser(
 	const String& filename, const CoordinateSystem& csys
 ) : _file(RegularFile(filename)), _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
-	_explicitGlobals(Vector<IndexedParamSet>(0)),
-	_annotationParams(Vector<IndexedParamSet>(0)),
-	_annotations()
+	_lines(Vector<AsciiAnnotationFileLine>(0)),
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0))
 	{
 	String preamble = String(__FUNCTION__) + ": ";
 	if (! _file.exists()) {
@@ -78,17 +77,21 @@ AsciiRegionFileParser::AsciiRegionFileParser(
 	_parse();
 }
 
-AsciiRegionFileParser::~AsciiRegionFileParser() {
-	delete _log;
-	_log = 0;
-	for (uInt i=0; i<_annotations.size(); i++) {
-		delete _annotations[i];
-		_annotations[i] = 0;
-	}
+Vector<AsciiAnnotationFileLine> AsciiAnnotationFileParser::getLines() const {
+	return _lines;
 }
 
-void AsciiRegionFileParser::_parse() {
+
+AsciiAnnotationFileParser::~AsciiAnnotationFileParser() {
+	delete _log;
+	_log = 0;
+}
+
+void AsciiAnnotationFileParser::_parse() {
 	_log->origin(LogOrigin("AsciiRegionFileParser", __FUNCTION__));
+	const Regex startAnn("^ann[[:space:]]+");
+	const Regex startDiff("^-[[:space:]]+");
+	const Regex startGlobal("^global[[:space:]]+");
 
 	RegularFileIO fileIO(_file);
 	Int bufSize = 4096;
@@ -107,12 +110,9 @@ void AsciiRegionFileParser::_parse() {
 
 	Vector<String> lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
-	//Vector<MFrequency> currentFreqs(0);
 	Vector<Quantity> qFreqs(2, Quantity(0));
 
-
 	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); iter++) {
-		AnnotationBase *annotation = 0;
 		lineCount++;
 		Bool annOnly = False;
 		ostringstream preambleoss;
@@ -124,51 +124,113 @@ void AsciiRegionFileParser::_parse() {
 			iter->empty() || iter->startsWith("#")
 		) {
 			// ignore comments and blank lines
+			_addLine(AsciiAnnotationFileLine(*iter));
 			*_log << LogIO::NORMAL << preamble << "comment found" << LogIO::POST;
 			continue;
 		}
 		String consumeMe = *iter;
-		if (consumeMe.startsWith("-")) {
+		consumeMe.downcase();
+		Bool spectralParmsUpdated;
+		ParamSet newParams;
+		if (consumeMe.contains(startDiff)) {
 			difference = True;
 			// consume the difference character to allow further processing of string
 			consumeMe.del(0, 1);
 			consumeMe.trim();
 			*_log << LogIO::NORMAL << preamble << "difference found" << LogIO::POST;
 		}
+		else if(consumeMe.contains(startAnn)) {
+			annOnly = True;
+			// consume the annotation chars
+			consumeMe.del(0, 3);
+			consumeMe.trim();
+			*_log << LogIO::NORMAL << preamble << "annotation only found" << LogIO::POST;
+		}
+		else if(consumeMe.contains(startGlobal)) {
+			consumeMe.del(0, 6);
+			_currentGlobals = _getCurrentParamSet(
+				spectralParmsUpdated, newParams,
+				consumeMe, preamble
+			);
+			//_setCurrentGlobalKeys();
+			map<AnnotationBase::Keyword, String> gParms;
+			for (
+				ParamSet::const_iterator iter=newParams.begin();
+				iter != newParams.end(); iter++
+			) {
+				gParms[iter->first] = iter->second.stringVal;
+			}
+			_addLine(AsciiAnnotationFileLine(gParms));
+			if (_csys.hasSpectralAxis() && spectralParmsUpdated) {
+				qFreqs = _quantitiesFromFrequencyString(
+					newParams[AnnotationBase::RANGE].stringVal, preamble
+				);
+			}
+			*_log << LogIO::NORMAL << preamble << "global found" << LogIO::POST;
+			continue;
+		}
 		// now look for shapes and annotations
-		String tmp = consumeMe;
-		tmp.downcase();
-
-		// Vector<MDirection> dirs;
 		Vector<Quantity> qDirs;
 		Vector<Quantity> quantities;
 		String textString;
 		AnnotationBase::Type annType = _getAnnotationType(
 			qDirs, quantities, textString, consumeMe, preamble
 		);
-		Bool spectralParmsUpdated;
 		ParamSet currentParamSet = _getCurrentParamSet(
-			spectralParmsUpdated, consumeMe, preamble
+			spectralParmsUpdated, newParams, consumeMe, preamble
 		);
-
 		if (_csys.hasSpectralAxis() && spectralParmsUpdated) {
 			qFreqs = _quantitiesFromFrequencyString(
-				currentParamSet[RANGE].stringVal, preamble
+				currentParamSet[AnnotationBase::RANGE].stringVal, preamble
 			);
 		}
-
-		annotation = _createAnnotation(
+		ParamSet globalsLessLocal = _currentGlobals;
+		for (
+			ParamSet::const_iterator iter=newParams.begin();
+			iter != newParams.end(); iter++
+		) {
+			AnnotationBase::Keyword key = iter->first;
+			if (globalsLessLocal.find(key) != globalsLessLocal.end()) {
+				globalsLessLocal.erase(key);
+			}
+		}
+		_globalKeysToApply.resize(globalsLessLocal.size(), False);
+		uInt i = 0;
+		for (
+			ParamSet::const_iterator iter=globalsLessLocal.begin();
+			iter != globalsLessLocal.end(); iter++
+		) {
+			_globalKeysToApply[i] = iter->first;
+			i++;
+		}
+		_createAnnotation(
 			annType, qDirs, qFreqs, quantities, textString,
-			currentParamSet, annOnly, preamble
+			currentParamSet, annOnly, difference, preamble
 		);
-
-		_annotations.resize(_annotations.size() + 1);
-		_annotations[_annotations.size() - 1] = annotation;
 	}
 	*_log << LogIO::NORMAL << "end" << LogIO::POST;
 }
 
-AnnotationBase::Type AsciiRegionFileParser::_getAnnotationType(
+void AsciiAnnotationFileParser::_addLine(const AsciiAnnotationFileLine& line) {
+	_lines.resize(_lines.size()+1, True);
+	_lines[_lines.size()-1] = line;
+}
+
+/*
+void AsciiAnnotationFileParser::_setCurrentGlobalKeys() {
+	_currentGlobalKeys.resize(_currentGlobals.size(), False);
+	uInt i=0;
+	for (
+		ParamSet::const_iterator iter=_currentGlobals.begin();
+		iter != _currentGlobals.end(); iter++
+	) {
+		_currentGlobalKeys[i] = iter->first;
+		i++;
+	}
+}
+*/
+
+AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 	//Vector<MDirection>& dirs,
 	Vector<Quantity>& qDirs,
 	Vector<Quantity>& quantities,
@@ -186,7 +248,6 @@ AnnotationBase::Type AsciiRegionFileParser::_getAnnotationType(
 			+ ",[[:space:]]*[^\\[,]+[[:space:]]*\\]";
 	const Regex startTwoPairOneSingle("^" + sTwoPairOneSingle);
 	const Regex startOnePairOneSingle("^" + sOnePairOneSingle);
-
 	consumeMe.trim();
 	String tmp = consumeMe.through(Regex("[[:alpha:]]+"));
 	consumeMe.del(0, (Int)tmp.length() + 1);
@@ -383,9 +444,9 @@ AnnotationBase::Type AsciiRegionFileParser::_getAnnotationType(
 	return annotationType;
 }
 
-AsciiRegionFileParser::ParamSet
-AsciiRegionFileParser::_getCurrentParamSet(
-	Bool& spectralParmsUpdated,
+AsciiAnnotationFileParser::ParamSet
+AsciiAnnotationFileParser::_getCurrentParamSet(
+	Bool& spectralParmsUpdated, ParamSet& newParams,
 	String& consumeMe, const String& preamble
 ) const {
 	ParamSet currentParams = _currentGlobals;
@@ -393,7 +454,7 @@ AsciiRegionFileParser::_getCurrentParamSet(
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
 		ParamValue paramValue;
-		Keyword key = UNKNOWN;
+		AnnotationBase::Keyword key = AnnotationBase::UNKNOWN;
 		consumeMe.trim();
 		consumeMe.ltrim(',');
 		consumeMe.trim();
@@ -410,17 +471,17 @@ AsciiRegionFileParser::_getCurrentParamSet(
 		consumeMe.del(0, (Int)equalPos + 1);
 		consumeMe.trim();
 		if (keyword == "label") {
-			key = LABEL;
+			key = AnnotationBase::LABEL;
 			paramValue.stringVal = _doLabel(consumeMe, preamble);
 		}
 		else {
 			paramValue.stringVal = _getKeyValue(consumeMe, preamble);
 			if (keyword == "coord") {
-				key = COORD;
+				key = AnnotationBase::COORD;
 			}
 			else if (keyword == "corr") {
 				if (_csys.hasPolarizationAxis()) {
-					key = CORR;
+					key = AnnotationBase::CORR;
 					paramValue.stokes = _stokesFromString(
 							paramValue.stringVal, preamble
 					);
@@ -445,16 +506,16 @@ AsciiRegionFileParser::_getCurrentParamSet(
 						<< LogIO::POST;
 				}
 				else if (keyword == "frame") {
-					key = FRAME;
+					key = AnnotationBase::FRAME;
 				}
 				else if (keyword == "range") {
-					key = RANGE;
+					key = AnnotationBase::RANGE;
 				}
 				else if (keyword == "veltype") {
-					key = VELTYPE;
+					key = AnnotationBase::VELTYPE;
 				}
 				else if (keyword == "restfreq") {
-					key = RESTFREQ;
+					key = AnnotationBase::RESTFREQ;
 					Quantity qRestfreq;
 					if (! readQuantity(qRestfreq, paramValue.stringVal)) {
 						*_log << preamble << "Could not convert rest frequency "
@@ -465,7 +526,7 @@ AsciiRegionFileParser::_getCurrentParamSet(
 				}
 			}
 			else if (keyword == "linewidth") {
-				key = LINEWIDTH;
+				key = AnnotationBase::LINEWIDTH;
 				if (! paramValue.stringVal.matches(Regex("^[1-9]+$"))) {
 					*_log << preamble << "linewidth (" << paramValue.stringVal
 						<< ") must be a positive integer but is not." << LogIO::EXCEPTION;
@@ -473,10 +534,10 @@ AsciiRegionFileParser::_getCurrentParamSet(
 				paramValue.intVal = String::toInt(paramValue.stringVal);
 			}
 			else if (keyword == "linestyle") {
-				key = LINESTYLE;
+				key = AnnotationBase::LINESTYLE;
 			}
 			else if (keyword == "symsize") {
-				key = SYMSIZE;
+				key = AnnotationBase::SYMSIZE;
 				if (! paramValue.stringVal.matches(Regex("^[1-9]+$"))) {
 					*_log << preamble << "symsize (" << paramValue.stringVal
 						<< ") must be a positive integer but is not." << LogIO::EXCEPTION;
@@ -484,7 +545,7 @@ AsciiRegionFileParser::_getCurrentParamSet(
 				paramValue.intVal = String::toInt(paramValue.stringVal);
 			}
 			else if (keyword == "symthick") {
-				key = SYMTHICK;
+				key = AnnotationBase::SYMTHICK;
 				if (! paramValue.stringVal.matches(Regex("^[1-9]+$"))) {
 					*_log << preamble << "symthick (" << paramValue.stringVal
 						<< ") must be a positive integer but is not." << LogIO::EXCEPTION;
@@ -492,21 +553,21 @@ AsciiRegionFileParser::_getCurrentParamSet(
 				paramValue.intVal = String::toInt(paramValue.stringVal);
 			}
 			else if (keyword == "color") {
-				key = COLOR;
+				key = AnnotationBase::COLOR;
 			}
 			else if (keyword == "font") {
-				key = FONT;
+				key = AnnotationBase::FONT;
 			}
 			else if (keyword == "fontsize") {
-				key = FONTSIZE;
+				key = AnnotationBase::FONTSIZE;
 			}
 			else if (keyword == "fontstyle") {
-				key = FONTSTYLE;
+				key = AnnotationBase::FONTSTYLE;
 			}
 			else if (keyword == "usetex") {
 				String v = paramValue.stringVal;
 				v.downcase();
-				key = USETEX;
+				key = AnnotationBase::USETEX;
 				if (
 					v != "true"  && v != "t"
 					&& v != "false" && v != "f"
@@ -524,20 +585,22 @@ AsciiRegionFileParser::_getCurrentParamSet(
 		cout << "*** key " << key << " value " << paramValue.stringVal << endl;
 
 		consumeMe.trim();
-		if (key != UNKNOWN) {
+		if (key != AnnotationBase::UNKNOWN) {
 			currentParams[key] = paramValue;
+			newParams[key] = paramValue;
+
 		}
 	}
 	if (
-		currentParams.find(RANGE) == currentParams.end()
-		&& currentParams.find(FRAME) != currentParams.end()
+		currentParams.find(AnnotationBase::RANGE) == currentParams.end()
+		&& currentParams.find(AnnotationBase::FRAME) != currentParams.end()
 	) {
 		*_log << preamble << "Frame specified but frequency range not specified"
 			<< LogIO::EXCEPTION;
 	}
 	if (
-		currentParams.find(RANGE) == currentParams.end()
-		&& currentParams.find(RESTFREQ) != currentParams.end()
+		currentParams.find(AnnotationBase::RANGE) == currentParams.end()
+		&& currentParams.find(AnnotationBase::RESTFREQ) != currentParams.end()
 	) {
 		*_log << preamble << "Rest frequency specified but velocity range not specified"
 			<< LogIO::EXCEPTION;
@@ -545,7 +608,7 @@ AsciiRegionFileParser::_getCurrentParamSet(
 	return currentParams;
 }
 
-Vector<Quantity> AsciiRegionFileParser::_quantitiesFromFrequencyString(
+Vector<Quantity> AsciiAnnotationFileParser::_quantitiesFromFrequencyString(
 	const String& freqString, const String& preamble
 ) const {
 	if (! freqString.matches(sOnePair)) {
@@ -557,38 +620,36 @@ Vector<Quantity> AsciiRegionFileParser::_quantitiesFromFrequencyString(
 	);
 }
 
-AnnotationBase* AsciiRegionFileParser::_createAnnotation(
+void AsciiAnnotationFileParser::_createAnnotation(
 	const AnnotationBase::Type annType,
-	//const Vector<MDirection> dirs,
 	const Vector<Quantity>& qDirs,
 	const Vector<Quantity>& qFreqs,
 	const Vector<Quantity>& quantities,
-	//const Vector<MFrequency>& freqRange,
 	const String& textString,
 	const ParamSet& currentParamSet,
-	const Bool annOnly,
+	const Bool annOnly, const Bool isDifference,
 	const String& preamble
-) const {
+) {
 	AnnotationBase *annotation = 0;
 	Vector<Stokes::StokesTypes> stokes(0);
 	if (
-		currentParamSet.find(CORR) != currentParamSet.end()
+		currentParamSet.find(AnnotationBase::CORR) != currentParamSet.end()
 		&& _csys.hasPolarizationAxis()
 	) {
-		stokes.resize(currentParamSet.at(CORR).stokes.size());
-		stokes = currentParamSet.at(CORR).stokes;
+		stokes.resize(currentParamSet.at(AnnotationBase::CORR).stokes.size());
+		stokes = currentParamSet.at(AnnotationBase::CORR).stokes;
 	}
-	String dirRefFrame = currentParamSet.at(COORD).stringVal;
-	String freqRefFrame = currentParamSet.at(FRAME).stringVal;
-	String doppler = currentParamSet.at(VELTYPE).stringVal;
+	String dirRefFrame = currentParamSet.at(AnnotationBase::COORD).stringVal;
+	String freqRefFrame = currentParamSet.at(AnnotationBase::FRAME).stringVal;
+	String doppler = currentParamSet.at(AnnotationBase::VELTYPE).stringVal;
 	Quantity restfreq;
 	if (
 		! readQuantity(
-			restfreq, currentParamSet.at(RESTFREQ).stringVal
+			restfreq, currentParamSet.at(AnnotationBase::RESTFREQ).stringVal
 		)
 	) {
 		*_log << preamble << "restfreq value "
-			<< currentParamSet.at(RESTFREQ).stringVal << " is not "
+			<< currentParamSet.at(AnnotationBase::RESTFREQ).stringVal << " is not "
 			<< "a valid quantity." << LogIO::EXCEPTION;
 	}
 
@@ -692,19 +753,24 @@ AnnotationBase* AsciiRegionFileParser::_createAnnotation(
 	catch (AipsError x) {
 		*_log << preamble << x.getMesg() << LogIO::EXCEPTION;
 	}
-	annotation->setLineWidth(currentParamSet.at(LINEWIDTH).intVal);
-	annotation->setLineStyle(currentParamSet.at(LINESTYLE).stringVal);
-	annotation->setSymbolSize(currentParamSet.at(SYMSIZE).intVal);
-	annotation->setSymbolThickness(currentParamSet.at(SYMTHICK).intVal);
-	annotation->setColor(currentParamSet.at(COLOR).stringVal);
-	annotation->setFont(currentParamSet.at(FONT).stringVal);
-	annotation->setFontSize(currentParamSet.at(FONTSIZE).stringVal);
-	annotation->setFontStyle(currentParamSet.at(FONTSTYLE).stringVal);
-	annotation->setUseTex(currentParamSet.at(USETEX).boolVal);
-	return annotation;
+	if (annotation->isRegion()) {
+		dynamic_cast<AnnRegion *>(annotation)->setDifference(isDifference);
+	}
+	annotation->setLineWidth(currentParamSet.at(AnnotationBase::LINEWIDTH).intVal);
+	annotation->setLineStyle(currentParamSet.at(AnnotationBase::LINESTYLE).stringVal);
+	annotation->setSymbolSize(currentParamSet.at(AnnotationBase::SYMSIZE).intVal);
+	annotation->setSymbolThickness(currentParamSet.at(AnnotationBase::SYMTHICK).intVal);
+	annotation->setColor(currentParamSet.at(AnnotationBase::COLOR).stringVal);
+	annotation->setFont(currentParamSet.at(AnnotationBase::FONT).stringVal);
+	annotation->setFontSize(currentParamSet.at(AnnotationBase::FONTSIZE).stringVal);
+	annotation->setFontStyle(currentParamSet.at(AnnotationBase::FONTSTYLE).stringVal);
+	annotation->setUseTex(currentParamSet.at(AnnotationBase::USETEX).boolVal);
+	annotation->setGlobals(_globalKeysToApply);
+	AsciiAnnotationFileLine line(annotation);
+	_addLine(line);
 }
 
-Array<String> AsciiRegionFileParser::_extractTwoPairs(uInt& end, const String& string) const {
+Array<String> AsciiAnnotationFileParser::_extractTwoPairs(uInt& end, const String& string) const {
 	end = 0;
 	Int firstBegin = string.find('[', 1);
 	Int firstEnd = string.find(']', firstBegin);
@@ -724,7 +790,7 @@ Array<String> AsciiRegionFileParser::_extractTwoPairs(uInt& end, const String& s
 	return ret;
 }
 
-Vector<String> AsciiRegionFileParser::_extractSinglePair(const String& string) const {
+Vector<String> AsciiAnnotationFileParser::_extractSinglePair(const String& string) const {
 	Char quotes[2];
 	quotes[0] = '\'';
 	quotes[1] = '"';
@@ -744,7 +810,7 @@ Vector<String> AsciiRegionFileParser::_extractSinglePair(const String& string) c
 	return ret;
 }
 
-String AsciiRegionFileParser::_doLabel(
+String AsciiAnnotationFileParser::_doLabel(
 	String& consumeMe, const String& preamble
 ) const {
 	Char firstChar = consumeMe.firstchar();
@@ -763,7 +829,7 @@ String AsciiRegionFileParser::_doLabel(
 	return label;
 }
 
-String AsciiRegionFileParser::_getKeyValue(
+String AsciiAnnotationFileParser::_getKeyValue(
 	String& consumeMe, const String& preamble
 ) const {
 	String value;
@@ -799,7 +865,7 @@ String AsciiRegionFileParser::_getKeyValue(
 	return value;
 }
 
-Vector<Quantity> AsciiRegionFileParser::_extractTwoQuantityPairsAndSingleQuantity(
+Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairsAndSingleQuantity(
 	String& consumeMe, const String& preamble
 ) const {
 	Vector<Quantity> quantities = _extractTwoQuantityPairs(
@@ -826,7 +892,7 @@ Vector<Quantity> AsciiRegionFileParser::_extractTwoQuantityPairsAndSingleQuantit
 	return quantities;
 }
 
-void AsciiRegionFileParser::_extractQuantityPairAndString(
+void AsciiAnnotationFileParser::_extractQuantityPairAndString(
 	Vector<Quantity>& quantities, String& string,
 	String& consumeMe, const String& preamble,
 	const Bool requireQuotesAroundString
@@ -865,7 +931,7 @@ void AsciiRegionFileParser::_extractQuantityPairAndString(
 	string.trim();
 }
 
-Vector<Quantity> AsciiRegionFileParser::_extractQuantityPairAndSingleQuantity(
+Vector<Quantity> AsciiAnnotationFileParser::_extractQuantityPairAndSingleQuantity(
 	String& consumeMe, const String& preamble
 ) const {
 	String qString;
@@ -882,7 +948,7 @@ Vector<Quantity> AsciiRegionFileParser::_extractQuantityPairAndSingleQuantity(
 	return quantities;
 }
 
-Vector<Quantity> AsciiRegionFileParser::_extractTwoQuantityPairs(
+Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairs(
 	String& consumeMe, const String& preamble
 ) const {
 	const Regex startbTwoPair("^" + bTwoPair);
@@ -901,12 +967,11 @@ Vector<Quantity> AsciiRegionFileParser::_extractTwoQuantityPairs(
 				<< " (" << value << ") to quantity." << LogIO::EXCEPTION;
 		}
 	}
-
 	consumeMe.del(0, (Int)end + 1);
 	return quantities;
 }
 
-Vector<Quantity> AsciiRegionFileParser::_extractNQuantityPairs (
+Vector<Quantity> AsciiAnnotationFileParser::_extractNQuantityPairs (
 		String& consumeMe, const String& preamble
 ) const {
 	String pairs = consumeMe.through(startNPair);
@@ -929,7 +994,7 @@ Vector<Quantity> AsciiRegionFileParser::_extractNQuantityPairs (
 	return qs;
 }
 
-Vector<Quantity> AsciiRegionFileParser::_extractSingleQuantityPair(
+Vector<Quantity> AsciiAnnotationFileParser::_extractSingleQuantityPair(
 	const String& pairString, const String& preamble
 ) const {
 	String mySubstring = String(pairString).through(sOnePair, 0);
@@ -947,7 +1012,7 @@ Vector<Quantity> AsciiRegionFileParser::_extractSingleQuantityPair(
 }
 
 Vector<Stokes::StokesTypes>
-AsciiRegionFileParser::_stokesFromString(
+AsciiAnnotationFileParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) const {
 	Int maxn = Stokes::NumberOfTypes;
@@ -968,21 +1033,21 @@ AsciiRegionFileParser::_stokesFromString(
 	return myTypes;
 }
 
-void AsciiRegionFileParser::_setInitialGlobals() {
+void AsciiAnnotationFileParser::_setInitialGlobals() {
 	ParamValue coord;
 	coord.intVal = _csys.directionCoordinate(
 		_csys.findCoordinate(Coordinate::DIRECTION)
 	).directionType(False);
 	coord.stringVal = MDirection::showType(coord.intVal);
-	_currentGlobals[COORD] = coord;
+	_currentGlobals[AnnotationBase::COORD] = coord;
 
 	ParamValue range;
 	range.freqRange = Vector<MFrequency>(0);
-	_currentGlobals[RANGE] = range;
+	_currentGlobals[AnnotationBase::RANGE] = range;
 
 	ParamValue corr;
 	corr.stokes = Vector<Stokes::StokesTypes>(0);
-	_currentGlobals[CORR] = corr;
+	_currentGlobals[AnnotationBase::CORR] = corr;
 
 	if (_csys.hasSpectralAxis()) {
 		SpectralCoordinate spectral = _csys.spectralCoordinate(
@@ -991,53 +1056,53 @@ void AsciiRegionFileParser::_setInitialGlobals() {
 
 		ParamValue frame;
 		frame.intVal = spectral.frequencySystem(False);
-		_currentGlobals[FRAME] = frame;
+		_currentGlobals[AnnotationBase::FRAME] = frame;
 
 		ParamValue veltype;
 		veltype.intVal = spectral.velocityDoppler();
-		_currentGlobals[VELTYPE] = veltype;
+		_currentGlobals[AnnotationBase::VELTYPE] = veltype;
 		cout << "veltype " << MDoppler::showType(veltype.intVal) << endl;
 
 		ParamValue restfreq;
 		restfreq.doubleVal = spectral.restFrequency();
-		_currentGlobals[RESTFREQ] = restfreq;
+		_currentGlobals[AnnotationBase::RESTFREQ] = restfreq;
 		cout << "restfreq " << restfreq.doubleVal << endl;
 	}
 	ParamValue linewidth;
 	linewidth.intVal = AnnotationBase::DEFAULT_LINEWIDTH;
-	_currentGlobals[LINEWIDTH] = linewidth;
+	_currentGlobals[AnnotationBase::LINEWIDTH] = linewidth;
 
 	ParamValue linestyle;
 	linestyle.stringVal = AnnotationBase::DEFAULT_LINESTYLE;
-	_currentGlobals[LINESTYLE] = linestyle;
+	_currentGlobals[AnnotationBase::LINESTYLE] = linestyle;
 
 	ParamValue symsize;
 	symsize.intVal = AnnotationBase::DEFAULT_SYMBOLSIZE;
-	_currentGlobals[SYMSIZE] = symsize;
+	_currentGlobals[AnnotationBase::SYMSIZE] = symsize;
 
 	ParamValue symthick;
 	symthick.intVal = AnnotationBase::DEFAULT_SYMBOLTHICKNESS;
-	_currentGlobals[SYMTHICK] = symthick;
+	_currentGlobals[AnnotationBase::SYMTHICK] = symthick;
 
 	ParamValue color;
 	color.stringVal = AnnotationBase::DEFAULT_COLOR;
-	_currentGlobals[COLOR] = color;
+	_currentGlobals[AnnotationBase::COLOR] = color;
 
 	ParamValue font;
 	font.stringVal = AnnotationBase::DEFAULT_FONT;
-	_currentGlobals[FONT] = font;
+	_currentGlobals[AnnotationBase::FONT] = font;
 
 	ParamValue fontsize;
 	fontsize.stringVal = AnnotationBase::DEFAULT_FONTSIZE;
-	_currentGlobals[FONTSIZE] = fontsize;
+	_currentGlobals[AnnotationBase::FONTSIZE] = fontsize;
 
 	ParamValue fontstyle;
 	fontstyle.stringVal = AnnotationBase::DEFAULT_FONTSTYLE;
-	_currentGlobals[FONTSTYLE] = fontstyle;
+	_currentGlobals[AnnotationBase::FONTSTYLE] = fontstyle;
 
 	ParamValue usetex;
 	usetex.boolVal = AnnotationBase::DEFAULT_USETEX;
-	_currentGlobals[USETEX] = usetex;
+	_currentGlobals[AnnotationBase::USETEX] = usetex;
 }
 
 

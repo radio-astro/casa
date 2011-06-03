@@ -71,6 +71,11 @@ AnnRotBox::AnnRotBox(
 	Quantum<Vector<Double> > y(yv, "rad");
 	WCPolygon box(x, y, _directionAxes, _csys, RegionType::Abs);
 	_extend(box);
+
+	ostringstream os;
+	os << "rotbox [[" << xcenter << ", " << ycenter << "], ["
+		<< xwidth << ", " << ywidth << "], " << positionAngle << "]";
+	_stringRep += os.str();
 }
 
 void AnnRotBox::_doCorners() {

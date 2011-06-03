@@ -160,6 +160,7 @@ int main () {
 				blcx, blcy, trcx, trcy, dirTypeString,
 				csys
 			);
+			cout << line << endl;
 			Vector<MDirection> points = line.getEndPoints();
 			AlwaysAssert(
 				near(

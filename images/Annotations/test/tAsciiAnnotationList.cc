@@ -1,9 +1,9 @@
-//# Copyright (C) 1994,1995,1998,1999,2000,2001,2002
+//# Copyright (C) 2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or(at your option)
+//# Software Foundation; either version 2 of the License, or (at your option)
 //# any later version.
 //#
 //# This program is distributed in the hope that it will be useful, but WITHOUT
@@ -22,36 +22,31 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
 
-#include <images/IO/AsciiRegionFileParser.h>
-#include <casa/Utilities/Assert.h>
+#include <casa/aips.h>
+#include <images/Annotations/AsciiAnnotationList.h>
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
 #include <casa/namespace.h>
 
-
-
-int main() {
+int main () {
+	LogIO log;
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
-		try {
-			AsciiRegionFileParser parser("x", csys);
-			AlwaysAssert(False, AipsError);
-		}
-		catch(AipsError x) {
-			cout << "Caught expected exception: " << x.getMesg() << endl;
-		}
-		String goodFile = "./fixtures/goodAsciiRegionFile.txt";
-		AsciiRegionFileParser parser(goodFile, csys);
+		AnnotationBase::unitInit();
+		AsciiAnnotationList list("fixtures/goodAsciiRegionFile.txt", csys);
+		cout << "here 1" << endl;
+		cout << list << endl;
+		cout << "here 2" << endl;
 
-    }
-    catch (AipsError x) {
-        cerr << "Exception caught: " << x.getMesg() << endl;
-        return 1;
-    }
-    cout << "ok" << endl;
-    return 0;
+	} catch (AipsError x) {
+		log << LogIO::SEVERE
+			<< "Caught exception: " << x.getMesg()
+			<< LogIO::POST;
+		return 1;
+	}
+
+	cout << "OK" << endl;
+	return 0;
 }
-
