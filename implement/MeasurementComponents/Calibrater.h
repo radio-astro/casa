@@ -97,6 +97,15 @@ class Calibrater
 		 const Bool& calwt,
 		 const Vector<Int>& spwmap,
 		 const Float& opacity);
+  Bool setapply (const String& type, 
+		 const Double& t,
+		 const String& table,
+		 const String& spw,
+		 const String& field,
+		 const String& interp,
+		 const Bool& calwt,
+		 const Vector<Int>& spwmap,
+		 const Vector<Double>& opacity);
 
   Bool setapply (const String& type, 
 		 const Record& applypar);

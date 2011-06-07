@@ -2022,15 +2022,28 @@ void TOpac::setApply(const Record& applypar) {
 
   // This version uses user-supplied opacity value for all ants
 
-  //  Double opacity(0.0);
-  if (applypar.isDefined("opacity"))
-    opacity_=applypar.asFloat("opacity");  
- 
+  if (applypar.isDefined("opacity")) {
+    opacity_.resize();
+    opacity_=applypar.asArrayDouble("opacity");
+  }
+  else
+    // Should not reach here
+    throw(AipsError("No opacity info specified."));
+	
+  Int nopac=opacity_.nelements();
+  if (nopac<1) throw(AipsError("No opacity info specified."));
+  if (nopac<nSpw()) {
+    // Resize (with copy) to match nSpw, 
+    //  duplicating last specified entry
+    opacity_.resize(nSpw(),True);
+    opacity_(IPosition(1,nopac),IPosition(1,nSpw()-1))=opacity_(nopac-1);
+  }
+
   Int oldspw; oldspw=currSpw();
   for (Int ispw=0;ispw<nSpw();++ispw) {
     currSpw()=ispw;
     currRPar().resize(1,1,nAnt());
-    currRPar()=opacity_;
+    currRPar()=Float(opacity_(ispw));
     currParOK().resize(1,1,nAnt());
     currParOK()=True;
   }
@@ -2038,6 +2051,7 @@ void TOpac::setApply(const Record& applypar) {
 
   // Resize za()
   za().resize(nAnt());
+  za().set(0.0);
 
 }
 
