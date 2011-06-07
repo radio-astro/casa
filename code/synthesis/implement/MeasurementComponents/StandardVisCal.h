@@ -687,8 +687,10 @@ private:
   // avoid compiler warnings
   using TJones::setApply;  
 
-  Float opacity_;
+  // opacity per spw
+  Vector<Double> opacity_;
 
+  // zenith angle per antenna
   Vector<Double> za_;
   
 };

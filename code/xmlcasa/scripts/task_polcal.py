@@ -78,7 +78,11 @@ def polcal(vis=None,caltable=None,
 		
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
-		if (opacity>0.0): cb.setapply(type='TOPAC',t=-1,opacity=opacity,calwt=True)
+
+		# opacity (if non-trivially specified and any >0.0)
+		if (len(opacity)>0 and sum(opacity)>0.0):
+			cb.setapply(type='TOPAC',t=-1,opacity=opacity,calwt=True)
+
 		if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=True)
 
 

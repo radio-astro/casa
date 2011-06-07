@@ -494,6 +494,52 @@ Bool Calibrater::setapply(const String& type,
   return setapply(upType,applypar);
 
 }
+Bool Calibrater::setapply(const String& type, 
+			  const Double& t,
+			  const String& table,
+			  const String& spw,
+			  const String& field,
+			  const String& interp,
+			  const Bool& calwt,
+			  const Vector<Int>& spwmap,
+			  const Vector<Double>& opacity) 
+{
+
+  logSink() << LogOrigin("Calibrater",
+                         "setapply(type, t, table, spw, field, interp, calwt, spwmap, opacity)")
+            << LogIO::NORMAL;
+   
+  // Set record format for calibration table application information
+  RecordDesc applyparDesc;
+  applyparDesc.addField ("t", TpDouble);
+  applyparDesc.addField ("table", TpString);
+  applyparDesc.addField ("interp", TpString);
+  applyparDesc.addField ("spw", TpArrayInt);
+  applyparDesc.addField ("field", TpArrayInt);
+  applyparDesc.addField ("calwt",TpBool);
+  applyparDesc.addField ("spwmap",TpArrayInt);
+  applyparDesc.addField ("opacity",TpArrayDouble);
+  
+  // Create record with the requisite field values
+  Record applypar(applyparDesc);
+  applypar.define ("t", t);
+  applypar.define ("table", table);
+  applypar.define ("interp", interp);
+  applypar.define ("spw",getSpwIdx(spw));
+  applypar.define ("field",getFieldIdx(field));
+  applypar.define ("calwt",calwt);
+  applypar.define ("spwmap",spwmap);
+  applypar.define ("opacity", opacity);
+  
+  String upType=type;
+  upType.upcase();
+  if (upType=="")
+    // Get type from table
+    upType = calTableType(table);
+
+  return setapply(upType,applypar);
+
+}
 
 Bool Calibrater::setapply (const String& type, 
 			   const Record& applypar)
