@@ -606,8 +606,11 @@ class simple_cluster:
                 else:
                     cpu[2]=(cpu[1]-old[1])/dlt
                     cpu[4]=(cpu[3]-old[3])/dlt
-            cpu[7]=(cpu[5]-cpu[6])/float(cpu[5])
-            cpu[10]=(cpu[8]-cpu[9])/float(cpu[8])
+            try:
+                cpu[7]=(cpu[5]-cpu[6])/float(cpu[5])
+                cpu[10]=(cpu[8]-cpu[9])/float(cpu[8])
+            except:
+                pass
             self._rsrc[self._hosts[i][0]]=cpu 
     
     def start_resource(self): 
