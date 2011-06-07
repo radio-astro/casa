@@ -1328,41 +1328,6 @@ E.g.:
 </seealso> -->
 </method>
 
-<method type="function" name="queryC">
-   <shortdescription>Clone of query.  Will disappear soon!</shortdescription>
-
-   <description>
-     This has been merged with query() and will disappear in the next release.
-     Update your scripts now!
-   </description>
-   <input>
-     <param type="string" name="query">
-       <description>the query expression</description>
-       <value></value>
-     </param>
-     <param type="string" name="resultTable">
-       <description>Name of the results table</description>
-       <value></value>
-     </param>
-     <param type="string" name="sortlist">
-       <description>Sort list of the results table</description>
-       <value></value>
-     </param>
-     <param type="string" name="columns">
-       <description>Columns to return in the sort table, leave blank for all</description>
-       <value></value>
-     </param>
-   </input>
-   <returns type="casatable">
-     <shortdescription>a table tool with the query results
-     </shortdescription>
-   </returns>
-
-<example>
-See tb.query.
-</example>
-</method>
- 
    <method type="function" name="calc">
    <shortdescription>!!!NOT IMPLEMENTED!!! Calculate an expression on a table</shortdescription>
    
