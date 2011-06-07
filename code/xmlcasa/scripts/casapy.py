@@ -231,6 +231,7 @@ if casa['flags'].has_key('--help') :
 	print "   --maclogger"
 	print "   --log2term"
 	print "   --nologger"
+	print "   --nologfile"
 	print "   --nogui"
 	print "   --noipython"
 	print "   -c filename "
