@@ -583,7 +583,7 @@ Bool ImageAnalysis::imagefromascii(const String& outfile, const String& infile,
 				iline += 1;
 			}
 		}
-		delete line2;
+		delete [] line2;
 		Vector<Float> vec(n);
 		for (uInt i = 0; i < n; i++)
 			vec[i] = a[i];
