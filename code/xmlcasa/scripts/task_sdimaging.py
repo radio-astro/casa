@@ -66,11 +66,10 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                     raise Exception, msg
             
             # restfreq
-            if restfreq=='':
+            if mode=='velocity' and restfreq=='':
                 tb.open(srctab)
                 rfcol=tb.getcol('REST_FREQUENCY').transpose()
                 srcidcol=tb.getcol('SOURCE_ID')
-                tb.close()
                 for i in range(tb.nrows()):
                     if sourceid==srcidcol[i]:
                         if len(rfcol[i])==0:
@@ -78,6 +77,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                         else:
                             restfreq=rfcol[i][0]
                         break
+                tb.close()
                 casalog.post("restfreq set to %s"%restfreq, "INFO")
 
             # spw
