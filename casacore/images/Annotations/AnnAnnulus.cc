@@ -73,6 +73,11 @@ AnnAnnulus::AnnAnnulus(
 	WCEllipsoid outer(qCenter, outerRadius, _directionAxes, _csys, RegionType::Abs);
 	WCDifference annulus(outer, inner);
 	_extend(annulus);
+
+	ostringstream os;
+	os << "annulus [[" << xcenter << ", " << ycenter << "], ["
+		<< innerRadius << ", " << outerRadius << "]]";
+	_stringRep += os.str();
 }
 
 MDirection AnnAnnulus::getCenter() const {
@@ -82,5 +87,15 @@ MDirection AnnAnnulus::getCenter() const {
 Vector<Quantity> AnnAnnulus::getRadii() const {
 	return _convertedRadii;
 }
+
+/*
+ostream& AnnAnnulus::print(ostream &os) const {
+	if(_isAnnotationOnly) {
+		os <<
+
+	}
+}
+*/
+
 
 }

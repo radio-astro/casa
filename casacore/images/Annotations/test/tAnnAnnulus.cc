@@ -532,7 +532,7 @@ int main () {
 				csys, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
+			cout << "annulus " << annulus << endl;
 			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
 			cout << freqs[0].get("Hz").getValue() << endl;
 			AlwaysAssert(

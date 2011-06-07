@@ -58,6 +58,11 @@ AnnCircle::AnnCircle(
 		RegionType::Abs
 	);
 	_extend(circle);
+
+	ostringstream os;
+	os << "circle [[" << xcenter << ", "
+		<< ycenter << "], " << radius << "]";
+	_stringRep += os.str();
 }
 
 MDirection AnnCircle::getCenter() const {

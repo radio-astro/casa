@@ -12,7 +12,7 @@ foreach (file ${datafiles})
 endforeach (file)
 
 set (tests
-tAsciiRegionFileParser
+tAsciiAnnotationFileParser
 tFitterEstimatesFileParser
 )
 

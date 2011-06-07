@@ -964,6 +964,7 @@ class split_test_spectral_window(SplitChecker):
             record['cw']    = tb.getcell('CHAN_WIDTH', 0)
             record['eb']    = tb.getcell('EFFECTIVE_BW', 0)
             record['tb']    = tb.getcell('TOTAL_BANDWIDTH', 0)
+            record['rf']    = tb.getcell('REF_FREQUENCY', 0)
             tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
@@ -971,6 +972,10 @@ class split_test_spectral_window(SplitChecker):
             raise e
         self.__class__.records[spwwidth] = record
         return splitran
+
+    def test_rf_noavg(self):
+        """REF_FREQUENCY after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['rf'], 22142369695.726768)
 
     def test_nchan_noavg(self):
         """# of channels after selection, but no averaging."""
@@ -1007,6 +1012,10 @@ class split_test_spectral_window(SplitChecker):
     def test_nchan_wavg(self):
         """# of channels after averaging, but no selection."""
         check_eq(self.records[('1', '3')]['nchan'], 43)
+
+    def test_rf_wavg(self):
+        """REF_FREQUENCY after averaging, but no selection."""
+        check_eq(self.records[('1', '3')]['rf'], 22142369695.726768)
 
     def test_res_wavg(self):
         """RESOLUTION after averaging, but no selection."""

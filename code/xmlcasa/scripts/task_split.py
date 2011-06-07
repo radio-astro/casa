@@ -1,6 +1,7 @@
-import os
+import os, re
 import string
-from taskinit import casalog, mstool, qa
+from taskinit import casalog, mstool, qa, tbtool
+from update_spw import update_spwchan
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
           timebin, timerange, scan, array, uvrange, correlation,
@@ -55,6 +56,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     keepflags -- Keep flagged data, if possible
                  Default True
     """
+    retval = True
     casalog.origin('split')
 
     if not outputvis or outputvis.isspace():
@@ -118,19 +120,19 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         spw = ','.join([str(s) for s in spw])
     elif type(spw) == int:
         spw = str(spw)
-    do_chan_avg = spw.find('^') > -1     # '0:2~11^1' would be pointless.
-    if not do_chan_avg:                  # ...look in width.
+    do_chan_mod = spw.find('^') > -1     # '0:2~11^1' would be pointless.
+    if not do_chan_mod:                  # ...look in width.
         if type(width) == int and width > 1:
-            do_chan_avg = True
+            do_chan_mod = True
         elif hasattr(width, '__iter__'):
             for w in width:
                 if w > 1:
-                    do_chan_avg = True
+                    do_chan_mod = True
                     break
 
-    do_both_chan_and_time_avg = (do_chan_avg and
+    do_both_chan_and_time_mod = (do_chan_mod and
                                  string.atof(timebin[:-1]) > 0.0)
-    if do_both_chan_and_time_avg:
+    if do_both_chan_and_time_mod:
         # Do channel averaging first because it might be included in the spw
         # string.
         import tempfile
@@ -184,23 +186,102 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              taql=taqlstr)
     myms.close()
 
-    if do_both_chan_and_time_avg:
+    if do_both_chan_and_time_mod:
         import shutil
         shutil.rmtree(cavms)
+
+    # Update FLAG_CMD if necessary.
+    if ((spw != '') and (spw != '*')) or do_chan_mod:
+        isopen = False
+        try:
+            mytb = tbtool.create()
+            mytb.open(outputvis + '/FLAG_CMD', nomodify=False)
+            isopen = True
+            #print "is open"
+            nflgcmds = mytb.nrows()
+            #print "nflgcmds =", nflgcmds
+            if nflgcmds > 0:
+                mademod = False
+                cmds = mytb.getcol('COMMAND')
+                for rownum in xrange(nflgcmds):
+                    # Matches a bare number or a string quoted any way.
+                    spwmatch = re.search(r'spw\s*=\s*(\S+)', cmds[rownum])
+                    if spwmatch:
+                        sch1 = spwmatch.groups()[0]
+                        sch1 = re.sub(r"[\'\"]", '', sch1)  # Dequote
+                        # Provide a default in case the split selection excludes
+                        # cmds[rownum].  update_spwchan() will throw an exception
+                        # in that case.
+                        cmd = ''
+                        try:
+                            widths = {}
+                            if hasattr(width, 'has_key'):
+                                widths = width
+                            else:
+                                if hasattr(width, '__iter__'):
+                                    for i in xrange(len(width)):
+                                        widths[i] = width[i]
+                                elif width != 1:
+                                    #print 'using myms.msseltoindex + a scalar width'
+                                    nspw = len(myms.msseltoindex(vis=vis,
+                                                                 spw='*')['spw'])
+                                    for i in xrange(nspw):
+                                        widths[i] = width
+                            #print 'sch1 =', sch1
+                            sch2 = update_spwchan(vis, spw, sch1, truncate=True,
+                                                  widths=widths)
+                            #print 'sch2 =', sch2
+                            #print 'spwmatch.group() =', spwmatch.group()
+                            if sch2:
+                                repl = ''
+                                if sch2 != '*':
+                                    repl = "spw='" + sch2 + "'"
+                                cmd = cmds[rownum].replace(spwmatch.group(), repl)
+                        #except: # cmd[rownum] no longer applies.
+                        except Exception, e:
+                            casalog.post(
+                                "Error %s updating row %d of FLAG_CMD" % (e,
+                                                                          rownum),
+                                         'WARN')
+                            casalog.post('sch1 = ' + sch1, 'DEBUG1')
+                            casalog.post('cmd = ' + cmd, 'DEBUG1')
+                        if cmd != cmds[rownum]:
+                            mademod = True
+                            cmds[rownum] = cmd
+                if mademod:
+                    casalog.post('Updating FLAG_CMD', 'INFO')
+                    mytb.putcol('COMMAND', cmds)
+        except Exception, instance:
+            casalog.post("*** Error \'%s\' updating FLAG_CMD" % (instance),
+                         'SEVERE')
+            retval = False
+        finally:
+            if isopen:
+                casalog.post('Closing FLAG_CMD', 'DEBUG1')
+                mytb.close()
     
     # Write history to output MS, not the input ms.
-    myms.open(outputvis, nomodify=False)
-    myms.writehistory(message='taskname=split', origin='split')
-    # Write the arguments.
-    for arg in split.func_code.co_varnames[:split.func_code.co_argcount]:
-        msg = "%-11s = " % arg
-        val = eval(arg)
-        if type(val) == str:
-            msg += '"'
-        msg += str(val)
-        if type(val) == str:
-            msg += '"'
-        myms.writehistory(message=msg, origin='split')
-    myms.close()
+    isopen = False
+    try:
+        myms.open(outputvis, nomodify=False)
+        isopen = True
+        myms.writehistory(message='taskname=split', origin='split')
+        # Write the arguments.
+        for arg in split.func_code.co_varnames[:split.func_code.co_argcount]:
+            msg = "%-11s = " % arg
+            val = eval(arg)
+            if type(val) == str:
+                msg += '"'
+            msg += str(val)
+            if type(val) == str:
+                msg += '"'
+            myms.writehistory(message=msg, origin='split')
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                     'SEVERE')
+        retval = False
+    finally:
+        if isopen:
+            myms.close()
 
-    return True
+    return retval

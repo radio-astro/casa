@@ -41,6 +41,7 @@ namespace casa{
   // Template instantiations for re-sampling onto a double precision
   // or single precision grid.
   //
+	/*
   template
   void AWVisResampler::DataToGridImpl_p(Array<DComplex>& grid, VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
@@ -49,6 +50,7 @@ namespace casa{
   void AWVisResampler::DataToGridImpl_p(Array<Complex>& grid, VBStore& vbs, 
 					Matrix<Double>& sumwt,const Bool& dopsf,
 					CFStore& cfs) __restrict__;
+					*/
 
   //
   //-----------------------------------------------------------------------------------

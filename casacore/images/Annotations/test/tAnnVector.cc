@@ -155,6 +155,7 @@ int main () {
 				blcx, blcy, trcx, trcy, dirTypeString,
 				csys
 			);
+			cout << vector << endl;
 			Vector<MDirection> points = vector.getEndPoints();
 			AlwaysAssert(
 				near(

@@ -42,6 +42,10 @@ AnnVector::AnnVector(
 	_inputPoints(0, 1) = xEnd;
 	_inputPoints(1, 1) = yEnd;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+	ostringstream os;
+	os << "vector [[" << xStart << ", " << yStart << "], ["
+		<< xEnd << ", " << yEnd << "]]";
+	_stringRep += os.str();
 }
 
 Vector<MDirection> AnnVector::getEndPoints() const {

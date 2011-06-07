@@ -582,7 +582,7 @@ int main () {
 				csys, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
+			cout << ellipse << endl;
 			Vector<MFrequency> freqs = ellipse.getFrequencyLimits();
 			cout << freqs[0].get("Hz").getValue() << endl;
 			AlwaysAssert(

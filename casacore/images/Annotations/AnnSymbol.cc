@@ -28,6 +28,7 @@
 
 namespace casa {
 
+/*
 AnnSymbol::AnnSymbol(
 	const Quantity& x, const Quantity& y,
 	const String& dirRefFrameString,
@@ -37,6 +38,7 @@ AnnSymbol::AnnSymbol(
 	_symbol(symbol) {
 		_init(x, y);
 }
+*/
 
 AnnSymbol::AnnSymbol(
 	const Quantity& x, const Quantity& y,
@@ -50,7 +52,15 @@ AnnSymbol::AnnSymbol(
 				+ " does not correspond to a known symbol"
 		);
 	}
-	_init(x, y);
+	// _init(x, y);
+	_inputDirection.resize(2);
+	_inputDirection[0] = x;
+	_inputDirection[1] = y;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+	ostringstream os;
+	os << "symbol [[" << x << ", " << y << "], " << symbolChar << "]";
+	_stringRep += os.str();
+
 }
 
 MDirection AnnSymbol::getDirection() const {
@@ -91,12 +101,16 @@ AnnSymbol::Symbol AnnSymbol::charToSymbol(
 	}
 }
 
+/*
 void AnnSymbol::_init(const Quantity& x, const Quantity& y) {
 	_inputDirection.resize(2);
 	_inputDirection[0] = x;
 	_inputDirection[1] = y;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+	ostringstream os;
+	os << "symbol [[" << x << ", " << y << "], "
 }
+*/
 
 }
 

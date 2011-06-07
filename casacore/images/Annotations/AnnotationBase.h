@@ -31,7 +31,7 @@
 #include <casa/aips.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
-
+#include <measures/Measures/Stokes.h>
 
 namespace casa {
 
@@ -66,7 +66,6 @@ public:
 	static const String DEFAULT_FONTSTYLE;
 	static const Bool DEFAULT_USETEX;
 
-
 	enum Type {
 		// annotations only
 		LINE,
@@ -83,6 +82,27 @@ public:
 		ELLIPSE
 	};
 
+	enum Keyword {
+		COORD,
+		RANGE,
+		FRAME,
+		CORR,
+		VELTYPE,
+		RESTFREQ,
+		LINEWIDTH,
+		LINESTYLE,
+		SYMSIZE,
+		SYMTHICK,
+		COLOR,
+		FONT,
+		FONTSIZE,
+		FONTSTYLE,
+		USETEX,
+		LABEL,
+		UNKNOWN,
+		N_KEYS
+	};
+
 	virtual ~AnnotationBase();
 
 	Type getType() const;
@@ -90,6 +110,8 @@ public:
 	// Given a string, return the corresponding annotation type or throw
 	// an error if the string does not correspond to an allowed type.
 	static Type typeFromString(const String& type);
+
+	static String keywordToString(const Keyword key);
 
 	void setLabel(const String& label);
 
@@ -137,6 +159,18 @@ public:
 	// before creating quantities which have pixel units.
 	static void unitInit();
 
+	// FIXME to be pure virtual
+	virtual ostream& print(ostream &os) const;
+
+	// These parameters are included at the global scope. Multiple runs
+	// on the same object are cumulative; the previous global settings
+	// remain in tact.
+	void setGlobals(const Vector<Keyword>& globalKeys);
+
+	// print a set of keyword value pairs
+	static ostream& print(
+		ostream& os, const map<Keyword, String>& params
+	);
 
 protected:
 	Type _type;
@@ -147,7 +181,10 @@ protected:
 	uInt _linewidth, _symbolsize, _symbolthickness;
 	Bool _usetex;
 	Vector<MDirection> _convertedDirections;
-
+	map<Keyword, Bool> _globals;
+	map<Keyword, String> _params;
+	Bool _printGlobals;
+	String _stringRep;
 
 	AnnotationBase(
 		const Type type, const String& dirRefFrameString,
@@ -162,10 +199,21 @@ protected:
 
 	void _checkAndConvertDirections(const String& origin, const Matrix<Quantity>& quantities);
 
+	// virtual void _print(ostream &os) const;
+
 private:
 	static Bool _doneUnitInit;
+	void _initParams();
 
 
+};
+
+inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {
+	return annotation.print(os);
+};
+
+inline ostream &operator<<(ostream& os, const map<AnnotationBase::Keyword, String>& x) {
+	return AnnotationBase::print(os, x);
 };
 
 }

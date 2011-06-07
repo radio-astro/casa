@@ -1,5 +1,5 @@
 set (datafiles
-
+fixtures/goodAsciiRegionFile.txt
 )
 
 foreach (file ${datafiles})
@@ -18,7 +18,7 @@ tAnnRotBox
 tAnnSymbol
 tAnnText
 tAnnVector
-
+tAsciiAnnotationList
 )
 
 foreach (test ${tests})

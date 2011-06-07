@@ -44,7 +44,7 @@ int main () {
 			Bool thrown = True;
 			Quantity x(0.01, "pix");
 			Quantity y(0, "deg");
-			AnnSymbol::Symbol s = AnnSymbol::STAR;
+			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -70,7 +70,7 @@ int main () {
 			Bool thrown = True;
 			Quantity x(0.01, "km/s");
 			Quantity y(0, "deg");
-			AnnSymbol::Symbol s = AnnSymbol::STAR;
+			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -119,7 +119,7 @@ int main () {
 				<< LogIO::POST;
 			Quantity x(0.05, "deg");
 			Quantity y(0, "deg");
-			AnnSymbol::Symbol s = AnnSymbol::STAR;
+			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -149,13 +149,14 @@ int main () {
 				<< LogIO::POST;
 			Quantity x(0.05, "deg");
 			Quantity y(0, "deg");
-			AnnSymbol::Symbol s = AnnSymbol::STAR;
+			Char s = 'o';
 
 			String dirTypeString = "B1950";
 			AnnSymbol symbol(
 				x, y, dirTypeString,
 				csys, s
 			);
+			cout << symbol << endl;
 			MDirection point = symbol.getDirection();
 			AlwaysAssert(
 				near(

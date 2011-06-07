@@ -447,7 +447,6 @@ int main () {
 			x[2] = Quantity(0.015, "deg");
 			y[2] = Quantity(0, "deg");
 
-
 			Quantity beginFreq(2013432.1736247784, "m/s");
 			Quantity endFreq(-1986.7458583077, "km/s");
 
@@ -467,6 +466,7 @@ int main () {
 				csys, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			cout << poly << endl;
 
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
 			cout << freqs[0].get("Hz").getValue() << endl;

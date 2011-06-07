@@ -93,7 +93,7 @@ protected:
 // "normal" types defined in the DataType.  StandardValuePanel can also handle
 // values of type "any" (variant) by providing a combo box to allow the user
 // to switch between value types.
-class StandardValuePanel : public ValuePanel, Ui::ValuePanel {
+class StandardValuePanel : public casa::ValuePanel, Ui::ValuePanel {
     Q_OBJECT
     
 public:

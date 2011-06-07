@@ -261,8 +261,7 @@ def simdata(
         if str.upper(antennalist[0:4])=="ALMA":
             tail=antennalist[5:]
             if util.isquantity(tail,halt=False):
-                resl=qa.convert(tail,"arcsec")['value']
-                repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
+                resl=qa.convert(tail,"arcsec")['value']                
                 if os.path.exists(repodir):
                     confnum=(2.867-pl.log10(resl*1000*qa.convert(model_center,"GHz")['value']/672.))/0.0721
                     confnum=max(1,min(28,confnum))
@@ -270,8 +269,16 @@ def simdata(
                     if len(conf)<2: conf='0'+conf
                     antennalist=repodir+"alma.out"+conf+".cfg"
                     msg("converted resolution to antennalist "+antennalist)
+                else:
+                    msg("failed to find antenna configuration repository at "+repodir,priority="warn")
 
         pb=0. # primary beam
+
+        repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
+        if not os.path.exists(antennalist):
+            if os.path.exists(repodir+antennalist):
+                antennalist=repodir+antennalist
+
         if os.path.exists(antennalist):
             stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
             antnames=[]
@@ -284,6 +291,10 @@ def simdata(
             pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
             
+        if not os.path.exists(sdantlist):
+            if os.path.exists(repodir+sdantlist):
+                antennalist=repodir+sdantlist
+
         if os.path.exists(sdantlist):
             tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
             tp_antnames=[]
@@ -341,8 +352,7 @@ def simdata(
 
         if setpointings:
             import re
-            if verbose:
-                util.msg("calculating map pointings centered at "+str(dir0))
+            if verbose: util.msg("calculating map pointings centered at "+str(dir0))
 
             if len(pointingspacing)<1:
                 pointingspacing="0.5PB"
@@ -657,8 +667,7 @@ def simdata(
                 sm.setvp()
 
                 msg("done setting up observations (blank visibilities)")
-                if verbose:
-                    sm.summary()
+                if verbose: sm.summary()
 
                 # do actual calculation of visibilities:
 
@@ -861,7 +870,12 @@ def simdata(
                     # TODO spectral parms
                     if not image:
                         msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
-                    im.defineimage(cellx=qa.tos(model_cell[0]))  
+                    # defineim needs to be larger than synth beam
+                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                    psfsize=200.*klam_m/maxbase/pixsize
+                    if psfsize<32:
+                        psfsize=32
+                    im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(psfsize*8))
                     #im.makeimage(type='psf',image=project+".quick.psf")
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
                         shutil.rmtree(fileroot+"/"+project+".quick.psf")
@@ -872,10 +886,10 @@ def simdata(
                     ia.open(fileroot+"/"+project+".quick.psf")
                     beamcs=ia.coordsys()
                     beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    xextent=128*pixsize*0.5
+                    nn=beam_array.shape
+                    xextent=nn[0]*pixsize*0.5
                     xextent=[xextent,-xextent]
-                    yextent=128*pixsize*0.5
+                    yextent=nn[1]*pixsize*0.5
                     yextent=[-yextent,yextent]
                     flipped_array=beam_array.transpose()
                     ttrans_array=flipped_array.tolist()
@@ -1585,6 +1599,7 @@ def simdata(
                     util.nextfig()
 
                 if showpsf:
+                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
                     if image: 
                         psfim=imagename+".psf"
                     else:
@@ -1592,7 +1607,10 @@ def simdata(
                         if not quickpsf_current:
                             im.open(msfile)  
                             # TODO spectral parms
-                            im.defineimage(cellx=qa.tos(model_cell[0]))  
+                            # defineim needs to be larger than synth beam
+                            psfsize=200.*klam_m/maxbase/pixsize
+                            if psfsize<32: psfsize=32
+                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=psfsize*8)
                             if os.path.exists(psfim):
                                 shutil.rmtree(psfim)
                             im.approximatepsf(psf=psfim)
@@ -1604,7 +1622,6 @@ def simdata(
                     ia.open(psfim)            
                     beamcs=ia.coordsys()
                     beam_array=ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                    pixsize=(qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
                     nn=beam_array.shape
                     xextent=nn[0]*pixsize*0.5
                     xextent=[xextent,-xextent]

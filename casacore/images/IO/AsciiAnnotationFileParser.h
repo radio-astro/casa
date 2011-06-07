@@ -14,17 +14,18 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGES_ASCIIREGIONPARSER_H
-#define IMAGES_ASCIIREGIONPARSER_H
+#ifndef IMAGES_ASCIIANNOTATIONFILEPARSER_H
+#define IMAGES_ASCIIANNOTATIONFILEPARSER_H
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
-//#include <casa/Containers/HashMap.h>
 #include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/Utilities/Regex.h>
-#include <images/Annotations/AnnRectBox.h>
+#include <images/Annotations/AnnotationBase.h>
+#include <images/IO/AsciiAnnotationFileLine.h>
+
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
 
@@ -49,48 +50,31 @@ namespace casa {
 // This class is for parsing and storing regions and annotations from an ascii region file .
 // See the region file format proposal attached to CAS-2285 (https://bugs.nrao.edu/browse/CAS-2285)
 // </synopsis>
+// <note>
+// This class will create AnnotationBase pointers via new(). It is assumed the caller will
+// make use of these pointers so they are not deleted upon deletion of the object. It is
+// the caller's responsibility to delete them. To do so, call getLines() and loop through
+// the returned Vector of AsciiRegionLines. For objects of type AsciiRegionLines::ANNOTATION,
+// get the pointer and delete it.
 
-class AsciiRegionFileParser {
+class AsciiAnnotationFileParser {
 
 public:
 
-
-
-	AsciiRegionFileParser(
+	AsciiAnnotationFileParser(
 		const String& filename, const CoordinateSystem& csys
 	);
 
-	~AsciiRegionFileParser();
+	~AsciiAnnotationFileParser();
 
+	Vector<AsciiAnnotationFileLine> getLines() const;
 
 private:
 
-	enum Keyword {
-		COORD,
-		RANGE,
-		FRAME,
-		CORR,
-		VELTYPE,
-		RESTFREQ,
-		LINEWIDTH,
-		LINESTYLE,
-		SYMSIZE,
-		SYMTHICK,
-		COLOR,
-		FONT,
-		FONTSIZE,
-		FONTSTYLE,
-		USETEX,
-		LABEL,
-		UNKNOWN
-	};
-
-	const static String sOnePair;
-	const static String bTwoPair;
-	const static String sNPair;
-	const static Regex startOnePair;
-	const static Regex startNPair;
-
+	// because of nonstandard access patterns, ParamValue and ParamSet
+	// should be kept private and only used by this class. If it becomes
+	// necessary or desirable to use them in multiple classes, they should
+	// be converted to classes to allow generic access.
 	struct ParamValue {
 		Double doubleVal;
 		Int intVal;
@@ -100,28 +84,33 @@ private:
 		Vector<Stokes::StokesTypes> stokes;
 	};
 
-	typedef std::map<Int, ParamValue> ParamSet;
+	typedef std::map<AnnotationBase::Keyword, ParamValue> ParamSet;
 
-	struct IndexedParamSet {
-		uInt appliesBefore;
-		ParamSet params;
-	};
+
+	const static String sOnePair;
+	const static String bTwoPair;
+	const static String sNPair;
+	const static Regex startOnePair;
+	const static Regex startNPair;
 
 	RegularFile _file;
 	CoordinateSystem _csys;
 	LogIO *_log;
 	ParamSet _currentGlobals;
-	Vector<IndexedParamSet> _explicitGlobals, _annotationParams;
-	PtrBlock<AnnotationBase *> _annotations;
+	Vector<AsciiAnnotationFileLine> _lines;
+	Vector<AnnotationBase::Keyword> _globalKeysToApply;
 
 	void _parse();
+
+	//void _setGlobalKeysToApply();
 
 	Array<String> _extractTwoPairs(uInt& end, const String& string) const;
 
 	Vector<String> _extractSinglePair(const String& string) const;
 
+	void _addLine(const AsciiAnnotationFileLine& line);
+
 	AnnotationBase::Type _getAnnotationType(
-		//Vector<MDirection>& dirs,
 		Vector<Quantity>& qDirs,
 		Vector<Quantity>& qunatities,
 		String& textString,
@@ -129,22 +118,21 @@ private:
 	) const;
 
 	ParamSet _getCurrentParamSet(
-		Bool& spectralParmsUpdated,
+		Bool& spectralParmsUpdated, ParamSet& newParams,
 		String& consumeMe, const String& preamble
 	) const;
 
-	AnnotationBase* _createAnnotation(
+	void _createAnnotation(
 		const AnnotationBase::Type annType,
 		//const Vector<MDirection> dirs,
 		const Vector<Quantity>& qDirs,
 		const Vector<Quantity>& qFreqs,
 		const Vector<Quantity>& quantities,
-		//const Vector<MFrequency>& freqRange,
 		const String& textString,
 		const ParamSet& currentParamSet,
-		const Bool annOnly,
+		const Bool annOnly, const Bool isDifference,
 		const String& preamble
-	) const;
+	);
 
 	Vector<Quantity> _quantitiesFromFrequencyString(
 		const String& freqString,

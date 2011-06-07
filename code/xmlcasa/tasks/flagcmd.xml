@@ -238,6 +238,9 @@
                 Main use is to read flags from internal FLAG_CMD,
                 but by setting flagfile to a different MS you can 
                 use this to copy the flags from one MS to another.
+                If doing that, make sure that there are no flag
+                commands that would refer to different things (e.g.
+                spectral window or channel numbers) in the two MSes.
 
   flagrows -- list of rows of the FLAG_CMD table to read
                 default: [] (read all rows)

@@ -16,8 +16,10 @@ Example:
 """
 
 import copy
+import os
 #from taskinit import mstool
 from casac import homefinder
+from taskinit import ms
 
 def update_spw(spw, spwmap=None):
     """
@@ -155,9 +157,9 @@ def spwchan_to_ranges(vis, spw):
     >>> selranges
     {0: (1,  3,  1), 1: (1,  3,  1), 5: (10, 20,  2), 7: (10, 20,  2)}
     """
-    mstool = homefinder.find_home_by_name('msHome')
-    myms = mstool.create()
-    selarr = myms.msseltoindex(vis, spw=spw)['channel']
+    #mstool = homefinder.find_home_by_name('msHome')
+    #myms = mstool.create()
+    selarr = ms.msseltoindex(vis, spw=spw)['channel']
     nspw = selarr.shape[0]
     selranges = {}
     for s in xrange(nspw):
@@ -166,132 +168,261 @@ def spwchan_to_ranges(vis, spw):
         selranges[selarr[s][0]] = tuple(selarr[s][1:])
     return selranges
 
-def update_spwchan(vis, sch0, sch1):
+def spwchan_to_sets(vis, spw):
+    """
+    Returns the spw:chan selection string spw as a dict of sets of selected
+    channels for vis, keyed by spectral window ID.
+
+    Note that '' returns an empty set!  Use '*' to select everything!
+
+    Example (16.ms has spws 0 and 1 with 16 chans each):
+    >>> from update_spw import spwchan_to_sets
+    >>> vis = casa['dirs']['data'] + '/regression/unittest/split/unordered_polspw.ms'
+    >>> spwchan_to_sets(vis, '0:0')
+    {0: set([0])}
+    >>> selsets = spwchan_to_sets(vis, '1:1~3;5~9^2,9') # 9 is a bogus spw.
+    >>> selsets
+    {1: [1, 2, 3, 5, 7, 9]}
+    >>> spwchan_to_sets(vis, '1:1~3;5~9^2,8')
+    {1: set([1, 2, 3, 5, 7, 9]), 8: set([0])}
+    >>> spwchan_to_sets(vis, '')
+    {}
+    """
+    if not spw:        # ms.msseltoindex(vis, spw='')['channel'] returns a
+        return {}      # different kind of empty array.  Skip it.
+
+    # Currently distinguishing whether or not vis is a valid MS from whether it
+    # just doesn't have all the channels in spw is a bit crude.  Sanjay is
+    # working on adding some flexibility to ms.msseltoindex.
+    if not os.path.isdir(vis):
+        raise ValueError, str(vis) + ' is not a valid MS.'
+        
+#    mstool = homefinder.find_home_by_name('msHome')
+#    myms = mstool.create()
+    sets = {}
+    try:
+        scharr = ms.msseltoindex(vis, spw=spw)['channel']
+        for scr in scharr:
+            if not sets.has_key(scr[0]):
+                sets[scr[0]] = set([])
+
+            # scr[2] is the last selected channel.  Bump it up for range().
+            scr[2] += 1
+            sets[scr[0]].update(range(*scr[1:]))
+    except:
+        # spw includes channels that aren't in vis, so it needs to be trimmed
+        # down to make ms.msseltoindex happy.
+        allrec = ms.msseltoindex(vis, spw='*')
+        #print "Trimming", spw
+        spwd = spw_to_dict(spw, {}, False)
+        for s in spwd:
+            if s in allrec['spw']:
+                endchan = allrec['channel'][s, 2]
+                if not sets.has_key(s):
+                    sets[s] = set([])
+                if spwd[s] == '':
+                    # We need to get the spw's # of channels without using
+                    # ms.msseltoindex.
+                    tbtool = homefinder.find_home_by_name('tableHome')
+                    mytb = tbtool.create()
+                    mytb.open(vis + '/SPECTRAL_WINDOW')
+                    spwd[s] = range(mytb.getcell('NUM_CHAN', s))
+                    mytb.close()
+                sets[s].update([c for c in spwd[s] if c <= endchan])
+    return sets
+        
+def sets_to_spwchan(spwsets, nchans={}):
+    """
+    Returns the spw:chan selection string for a dict of sets of selected
+    channels keyed by spectral window ID.
+
+    nchans is a dict of the total number of channels keyed by spw, used to
+    abbreviate the return string.
+
+    Examples:
+    >>> from update_spw import sets_to_spwchan
+    >>> # Use nchans to get '1' instead of '1:0~3'.
+    >>> sets_to_spwchan({1: [0, 1, 2, 3]}, {1: 4})
+    '1'
+    >>> sets_to_spwchan({1: set([1, 2, 3, 5, 7, 9]), 8: set([0])})
+    '1:1~3;5~9^2,8:0'
+    """
+    # Make a list of spws for each channel selection.
+    csd = {}
+    for s in spwsets:
+        # Convert the set of channels to a string.
+        if spwsets[s]:
+            cstr = ''
+            if (not nchans.has_key(s)) or (len(spwsets[s]) < nchans[s]):
+                clist = list(spwsets[s])
+                clist.sort()
+                nc = len(clist)
+                cgrps = []
+                sc = clist[0]
+                oldstep = 1
+                if nc > 1:
+                    oldstep = clist[1] - clist[0]
+                cind = 1
+                oldc = sc
+                cstr = str(sc)
+                while cind < nc:
+                    cc = clist[cind]
+                    step = cc - oldc
+                    if (step != oldstep) or (cind == nc - 1):
+                        if step != oldstep:
+                            if oldc != sc:
+                                cstr += '~' + str(oldc)
+                            if oldstep != 1:
+                                cstr += '^' + str(oldstep)
+                            cstr += ';' + str(cc)
+                            sc = cc
+                            oldstep = step
+                        else:    # The range has come to an end on the last channel.
+                            cstr += '~' + str(cc)
+                            if step != 1:
+                                cstr += '^' + str(step)
+                    oldc = cc
+                    cind += 1
+
+            if not csd.has_key(cstr):
+                csd[cstr] = []
+            csd[cstr].append(s)
+
+    # Now convert those spw lists into strings, inverting as we go so the final
+    # string can be sorted by spw:
+    scd = {}
+    while csd:
+        cstr, slist = csd.popitem()
+        slist.sort()
+        startspw = slist[0]
+        oldspw = startspw
+        sstr = str(startspw)
+        nselspw = len(slist)
+        for sind in xrange(1, nselspw):
+            currspw = slist[sind]
+            if (currspw > oldspw + 1) or (sind == nselspw - 1):
+                if currspw > oldspw + 1:
+                    if oldspw != startspw:
+                        sstr += '~' + str(oldspw)
+                    sstr += ';' + str(currspw)
+                    startspw = currspw
+                else:               # The range has come to an end on the last spw.
+                    sstr += '~' + str(currspw)
+            oldspw = currspw
+        scd[sstr] = cstr
+    spwgrps = sorted(scd.keys())
+
+    # Finally stitch together the final string.
+    scstr = ''
+    for sstr in spwgrps:
+        scstr += sstr
+        if scd[sstr]:
+            scstr += ':' + scd[sstr]
+        scstr += ','
+    return scstr.rstrip(',')
+
+def update_spwchan(vis, sch0, sch1, truncate=False, widths={}):
     """
     Given an spw:chan selection string sch1, return what it must be changed to
     to get the same result if used with the output of split(vis, spw=sch0).
 
+    '' is taken to mean '*' in the input but NOT the output!  For the output
+    '' means sch0 and sch1 do not intersect.
+
+    truncate: If True and sch0 only partially overlaps sch1, return the update
+              of the intersection.
+              If (False and sch0 does not cover sch1), OR
+                 there is no intersection, raises a ValueError.
+
+    widths is a dictionary of averaging widths (default 1) for each spw.
+
     Examples:
     >>> from update_spw import update_spwchan
-    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2;40~55', '0~1:1~3,5;7:10~20^2;40~55')
+    >>> newspw = update_spwchan('anything.ms', 'anything', 'anything')
     >>> newspw
     ''
-    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2;40~55', '0~1:2,3,5;7:12~18^2')
-    ValueError: update_spwchan(vis, sch0, sch1) does not support multiple channel ranges per spw in sch0.
-    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '0~1:1~3,5;7:10~20^2', '0~1:2~3,5;7:12~18^2')
-    >>> newspw
-    '0~1:1~2,2;3:1~4'
-    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '7', '3')
+    >>> vis = casa['dirs']['data'] + '/regression/unittest/split/unordered_polspw.ms'
+    >>> update_spwchan(vis, '0~1:1~3,5;7:10~20^2', '0~1:2~3,5;7:12~18^2')
+    '0~1:1~2,2~3:1~4'
+    >>> update_spwchan(vis, '7', '3')
     ValueError: '3' is not a subset of '7'.
-    >>> newspw = update_spwchan('uid___A002_X1acc4e_X1e7.ms', '7:10~20^2', '7:12~18^3')
+    >>> update_spwchan(vis, '7:10~20^2', '7:12~18^3')
     ValueError: '7:12~18^3' is not a subset of '7:10~20^2'.
-    
-    # Let's say we want updates of both fitspw and spw, but fitspw and spw
-    # are disjoint (in spws).
-    >>> fitspw = '1~10:5~122,15~22:5~122'
-    >>> spw = '6~14'
-    
-    #  Initialize spwchanmap with the union of them.
-    >>> spwchanmap = update_spwchan(join_spws(fitspw, spw), None)[1]
-    
-    >>> myfitspw = update_spwchan(fitspw, spwchanmap)[0]
-    >>> myfitspw
-    '0~9:5~122,14~21:5~122'
-    >>> myspw = update_spwchan(spw, spwchanmap)[0]
-    >>> myspw
-    '5~13'
-    >>> myspw = update_spwchan('0,1,3;5~8:20~30;44~50^2', None)[0]
-    >>> myspw
-    '0,1,2;3~6:0~10;24~30^2'
+    >>> update_spwchan(vis, '7:10~20^2', '7:12~18^3', truncate=True)
+    '0:1~4^3'
+    >>> update_spwchan(vis, '7:10~20^2', '7:12~18^3', truncate=True, widths={7: 2})
+    '0:0~2^2'
     """
     # Convert '' to 'select everything'.
     if not sch0:
         sch0 = '*'
     if not sch1:
         sch1 = '*'
-        
-    if sch1 == sch0:
-        return ''
-    elif sch0 == '*':
-        return sch1
 
-    sch0ranges = spwchan_to_ranges(vis, sch0)
-    sch1ranges = spwchan_to_ranges(vis, sch1)
+    # Short circuits
+    if sch1 == '*':
+        return '*'
+    elif sch1 in (sch0, '*'):
+        return '*'
 
-    allchans = spwchan_to_ranges(vis, '*')
+    sch0sets = spwchan_to_sets(vis, sch0)
+    sch1sets = spwchan_to_sets(vis, sch1)
 
-    outranges = {}
-    for s in sch1ranges:
-        try:
-            sch0range = sch0ranges[s]
-            sch1range = sch1ranges[s]
-            if (sch1range[0] < sch0range[0]) or (sch1range[1] > sch0range[1]):
-                raise ValueError
-            if sch0range[2] > 1:  # There are gaps, so check more closely.
-                s0list = list(sch0range)
-                s1list = list(sch1range)
-                s0list[1] += 1  # MSSelect is inclusive, but python's
-                s1list[1] += 1  # range() excludes the end value.
-                s0 = set(range(*s0list))
-                s1 = set(range(*s1list))
-                if s1.difference(s0):
-                    raise ValueError
-            outranges[s] = ((sch1range[0] -
-                             sch0range[0]) / sch0range[2],
-                            (sch1range[1] -
-                             sch0range[0]) / sch0range[2],
-                            sch1range[2] / sch0range[2])
-        except:
-            raise ValueError, "'%s' is not a subset of '%s'." % (sch1, sch0)
-        
-    s0spws = sch0ranges.keys()
-    s0spws.sort()
-    s1spws = sch1ranges.keys()
-    s1spws.sort()
-
-    in_to_out_spwmap = {}
+    outsets = {}
     outspw = 0
-    for s in s0spws:
-        in_to_out_spwmap[s] = outspw
-        outspw += 1
+    s0spws = sorted(sch0sets.keys())
+    s1spws = sorted(sch1sets.keys())
+    ns0spw = len(s0spws)
+    nchans = {}
+    for s in s1spws:
+        if s in s0spws:
+            s0 = sch0sets[s]
+            s1 = sch1sets[s]
 
-    def ranges_to_grp(startspw, startchans, s1prevspw):
-        grp = str(in_to_out_spwmap[startspw])
-        if s1prevspw != startspw:
-            grp += ';' + str(in_to_out_spwmap[s1prevspw])
-        if startchans != allchans[startspw]:
-            grp += ':' + str(startchans[0])
-            if startchans[1] > startchans[0]:
-                grp += '~' + str(startchans[1])
-                if startchans[2] != 1:
-                    grp += '^' + str(startchans[2])
-        return grp
+            # Check for and handle (throw or dispose) channels in sch1 that aren't in
+            # sch0.
+            if s1.difference(s0):
+                if truncate:
+                    s1.intersection_update(s0)
+                    if not s1:
+                        raise ValueError, "'%s' does not overlap '%s'." % (sch1, sch0)
+                else:
+                    raise ValueError, "'%s' is not a subset of '%s'." % (sch1, sch0)
 
-    newgroups = []
-    startspw = s1spws[0]
-    startchans = outranges[s1spws[0]]
-    s1prevspw = startspw
-    for s1currspw in s1spws:
-        if (s1currspw == s1spws[-1] or
-            (in_to_out_spwmap[s1currspw] > (in_to_out_spwmap[s1prevspw] + 1)) or
-            (outranges[s1currspw] != startchans)):
-            # Finish the old group.
-            if s1currspw == s1spws[-1]:
-                newgroups.append(ranges_to_grp(startspw, startchans, s1currspw))
-            else:
-                newgroups.append(ranges_to_grp(startspw, startchans, s1prevspw))
+            # Adapt s1 for a post-s0 world.
+            s0list = sorted(list(s0))
+            s1list = sorted(list(s1))
+            outchan = 0
+            nc0 = len(s0list)
+            for s1ind in xrange(len(s1list)):
+                while (outchan < nc0) and (s0list[outchan] < s1list[s1ind]):
+                    outchan += 1
+                if outchan == nc0:  # Shouldn't happen
+                    outchan -= 1
+                s1list[s1ind] = outchan / widths.get(s, 1)
 
-            # Start a new group.
-            startspw = s1currspw
-            startchans = outranges[s1currspw]
-        s1prevspw = s1currspw
+            # Determine outspw.
+            while (outspw < ns0spw) and (s0spws[outspw] < s):
+                outspw += 1
+            if outspw == ns0spw:  # Shouldn't happen
+                outspw -= 1
 
-    return ','.join(newgroups)
+            outsets[outspw] = set(s1list)
 
-def expand_tilde(tstr):
+            # Get the number of channels per spw that are selected by s0.
+            nchans[outspw] = len(s0)
+        elif not truncate:
+            raise ValueError, str(s) + ' is not a selected spw of ' + sch0
+
+    return sets_to_spwchan(outsets, nchans)
+
+def expand_tilde(tstr, conv_multiranges=False):
     """
     Expands a string like '8~11' to [8, 9, 10, 11].
     Returns '*' if tstr is ''!
+
+    conv_multiranges: If True, '*' will be returned if tstr contains ';'.
+                      (split can't yet handle multiple channel ranges per spw.)
 
     Examples:
     >>> from update_spw import expand_tilde
@@ -299,17 +430,36 @@ def expand_tilde(tstr):
     [8, 9, 10, 11]
     >>> expand_tilde(None)
     '*'
+    >>> expand_tilde('3~7^2;9~11')
+    [3, 5, 7, 9, 10, 11]
+    >>> expand_tilde('3~7^2;9~11', True)
+    '*'
     """
-    if not tstr:
+    if (not tstr) or (conv_multiranges and tstr.find(';') > -1):
         return '*'
-    if tstr.find('~') > -1:
-        start, end = map(int, tstr.split('~'))
-    else:
-        start = int(tstr)
-        end = start
-    return range(start, end + 1)
 
-def spw_to_dict(spw, spwdict):
+    tstr = tstr.replace("'", '')  # Dequote
+    tstr = tstr.replace('"', '')
+
+    numset = set([])
+
+    for numrang in tstr.split(';'):
+        step = 1
+        try:
+            if numrang.find('~') > -1:
+                if numrang.find('^') > -1:
+                    numrang, step = numrang.split('^')
+                    step = int(step)
+                start, end = map(int, numrang.split('~'))
+            else:
+                start = int(numrang)
+                end = start
+        except:
+            raise ValueError, 'numrang = ' + numrang + ', tstr = ' + tstr + ', conv_multiranges = ' + str(conv_multiranges)
+        numset.update(range(start, end + 1, step))
+    return sorted(list(numset))
+
+def spw_to_dict(spw, spwdict={}, conv_multiranges=True):
     """
     Expand an spw:chan string to {s0: [s0chans], s1: [s1chans, ...], ...}
     where s0, s1, ... are integers for _each_ selected spw, and s0chans is a
@@ -319,6 +469,11 @@ def spw_to_dict(spw, spwdict):
     The spw:chan dict is unioned with spwdict.
 
     Returning an empty dict means everything should be selected (i.e. spw = '').
+    (split can't yet handle multiple channel ranges per spw.)
+
+    conv_multiranges: If True, any spw with > 1 channel range selected will
+                      have ALL of its channels selected.
+                      (split can't yet handle multiple channel ranges per spw.)
 
     Examples:
     >>> from update_spw import spw_to_dict
@@ -354,13 +509,11 @@ def spw_to_dict(spw, spwdict):
     chagrp = ''
 
     def enter_ranges(spwg, chag):
-        spwrange = expand_tilde(spwgrp)
+        spwrange = expand_tilde(spwg)
         if spwrange == '*':  # This shouldn't happen.
             return {}
-        if chagrp.find(';') > -1:            # split can't yet handle multiple
-            charange = '*'                   # channel ranges, so select everything.
         else:
-            charange = expand_tilde(chagrp)
+            charange = expand_tilde(chag, conv_multiranges)
         for s in spwrange:
             if charange == '*':
                 myspwdict[s] = ''

@@ -623,7 +623,10 @@ void LogViewer::filePrint()
     QPrinter printer(QPrinter::ScreenResolution);
     //printer.setFullPage(true);
     QSettings settings("CASA", "Logger");
+    //qDebug() << settings.value("Print/printer").toString();
+#ifndef Q_WS_MAC
     printer.setPrinterName(settings.value("Print/printer").toString());
+#endif
     printer.setPageSize((QPrinter::PageSize)(settings.value("Print/pagesize").toInt()));
     printer.setOrientation(QPrinter::Landscape);
     QPrintDialog *dlg = new QPrintDialog(&printer, this);
@@ -647,7 +650,13 @@ void LogViewer::filePrint()
           td.setPageSize(QSize(w - 100, h - 80));
       else 
           td.setPageSize(QSize(h - 100, w - 80));
-      td.print(&printer);
+
+      if (!printer.isValid()) {
+         qDebug() << "not a valid printer" ;
+      }
+      else {
+         td.print(&printer);
+      }
 
       settings.setValue("Print/printer", printer.printerName());
       settings.setValue("Print/pagesize", printer.pageSize());
