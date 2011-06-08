@@ -39,7 +39,8 @@ AnnRotBox::AnnRotBox(
 		ROTATED_BOX, dirRefFrameString, csys, beginFreq,
 		endFreq, freqRefFrameString, dopplerString, restfreq,
 		stokes, annotationOnly
-	), _center(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
+	), _inputCenter(Vector<Quantity>(2)),
+	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
 	String preamble(String(__FUNCTION__) + ": ");
 
@@ -53,12 +54,15 @@ AnnRotBox::AnnRotBox(
 			preamble + "y width unit " + ywidth.getUnit() + " is not an angular unit."
 		);
 	}
+	_inputWidths[0] = xwidth;
+	_inputWidths[1] = ywidth;
+
 	_widths[0] = _lengthToAngle(xwidth, _directionAxes[0]);
 	_widths[1] = _lengthToAngle(ywidth, _directionAxes[1]);
 
-	_center[0] = xcenter;
-	_center[1] = ycenter;
-	_checkAndConvertDirections(String(__FUNCTION__), _center);
+	_inputCenter[0] = xcenter;
+	_inputCenter[1] = ycenter;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
 	_doCorners();
 	Vector<Double> xv(4), yv(4);
@@ -71,11 +75,6 @@ AnnRotBox::AnnRotBox(
 	Quantum<Vector<Double> > y(yv, "rad");
 	WCPolygon box(x, y, _directionAxes, _csys, RegionType::Abs);
 	_extend(box);
-
-	ostringstream os;
-	os << "rotbox [[" << xcenter << ", " << ycenter << "], ["
-		<< xwidth << ", " << ywidth << "], " << positionAngle << "]";
-	_stringRep += os.str();
 }
 
 void AnnRotBox::_doCorners() {
@@ -104,4 +103,13 @@ Vector<MDirection> AnnRotBox::getCorners() const {
 	return _corners;
 }
 
+ostream& AnnRotBox::print(ostream &os) const {
+	_printPrefix(os);
+	os << "rotbox [[" << _inputCenter[0] << ", "
+		<< _inputCenter[1] << "], [" << _inputWidths[0]
+		<< ", " << _inputWidths[1] << "], "
+		<< _positionAngle << "]";
+	_printPairs(os);
+	return os;
+}
 }

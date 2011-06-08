@@ -20,8 +20,8 @@
 namespace casa {
 
 AnnCenterBox::AnnCenterBox(
-	const Quantity& centerx,
-	const Quantity& centery,
+	const Quantity& xcenter,
+	const Quantity& ycenter,
 	const Quantity& xwidth,
 	const Quantity& ywidth,
 	const String& dirRefFrameString,
@@ -38,7 +38,8 @@ AnnCenterBox::AnnCenterBox(
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 	), _widths(Vector<Quantity>(2)),
-	_corners(Vector<MDirection>(2)){
+	_corners(Vector<MDirection>(2)), _inpXCenter(xcenter),
+	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth) {
 	if (! xwidth.isConform("rad") && ! xwidth.isConform("pix")) {
 		throw AipsError(
 			"x width unit " + xwidth.getUnit() + " is not an angular unit."
@@ -53,8 +54,8 @@ AnnCenterBox::AnnCenterBox(
 	_widths[1] = _lengthToAngle(ywidth, _directionAxes[1]);
 
 	Vector<Quantity> center(2);
-	center[0] = centerx;
-	center[1] = centery;
+	center[0] = xcenter;
+	center[1] = ycenter;
 	_checkAndConvertDirections(String(__FUNCTION__), center);
 
 	_doCorners();
@@ -75,11 +76,6 @@ AnnCenterBox::AnnCenterBox(
 
 	WCBox box(qblc, qtrc, _directionAxes, _csys, absrel);
 	_extend(box);
-
-	ostringstream os;
-	os << "centerbox [[" << centerx << ", " << centery << "], ["
-		<< xwidth << ", " << ywidth << "]]";
-	_stringRep += os.str();
 }
 
 MDirection AnnCenterBox::getCenter() const {
@@ -111,5 +107,14 @@ void AnnCenterBox::_doCorners() {
 Vector<MDirection> AnnCenterBox::getCorners() const {
 	return _corners;
 }
+
+ostream& AnnCenterBox::print(ostream &os) const {
+	_printPrefix(os);
+	os << "centerbox [[" << _inpXCenter << ", " << _inpYCenter << "], ["
+		<< _inpXWidth << ", " << _inpYWidth << "]]";
+	_printPairs(os);
+	return os;
+}
+
 
 }

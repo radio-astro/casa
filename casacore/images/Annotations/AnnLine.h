@@ -63,6 +63,8 @@ public:
 	// the input coordinate system if necessary
 	Vector<MDirection> getEndPoints() const;
 
+	virtual ostream& print(ostream &os) const;
+
 protected:
 	Matrix<Quantity> _inputPoints;
 

@@ -54,7 +54,7 @@ AnnotationBase::AnnotationBase(
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
-  _printGlobals(False), _stringRep("") {
+  _printGlobals(False) {
 	String preamble = String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		throw AipsError(
@@ -325,7 +325,7 @@ ostream& AnnotationBase::print(
 	return os;
 }
 
-ostream& AnnotationBase::print(ostream &os) const {
+void AnnotationBase::_printPairs(ostream &os) const {
 	map<Keyword, String> x = _params;
 	if (! _printGlobals) {
 		for (
@@ -338,11 +338,9 @@ ostream& AnnotationBase::print(ostream &os) const {
 			}
 		}
 	}
-	os << _stringRep;
 	if (x.size() > 0) {
 		os << " " << x;
 	}
-	return os;
 }
 
 void AnnotationBase::_checkMixed(

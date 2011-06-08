@@ -24,7 +24,7 @@ ellipse [ [ "16h22m22s" , 14d8m2s], [4.5arcmin, 62.3arcsec ] , "45deg" ]
 
     text [ [ "16h22m22s" , 14d8m2s], "16h21m, [] ' \" 18d"  ]
     
-        symbol [ [ "16h22m22s" , 14d8m2s], |  ] usetex="False"
+        symbol [ [ "16h22m22.12363244634s" , 14d8m2s], |  ] usetex="False"
     
 box [ [ 2pix , 2pix], [4pix, 4pix ] ]
 

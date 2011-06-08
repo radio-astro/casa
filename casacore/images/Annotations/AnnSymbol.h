@@ -74,15 +74,6 @@ public:
 		UNKOWN
 	};
 
-	/*
-	AnnSymbol(
-		const Quantity& x, const Quantity& y,
-		const String& dirRefFrameString,
-		const CoordinateSystem& csys,
-		const Symbol symbol
-	);
-	*/
-
 	AnnSymbol(
 		const Quantity& x, const Quantity& y,
 		const String& dirRefFrameString,
@@ -96,12 +87,12 @@ public:
 
 	static Symbol charToSymbol(const Char c);
 
-protected:
-	Vector<Quantity> _inputDirection;
-	Symbol _symbol;
+	virtual ostream& print(ostream &os) const;
 
 private:
-	void _init(const Quantity& x, const Quantity& y);
+	Vector<Quantity> _inputDirection;
+	Symbol _symbol;
+	Char _symbolChar;
 
 };
 

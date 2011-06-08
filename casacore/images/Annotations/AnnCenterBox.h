@@ -75,10 +75,12 @@ public:
 	// when the object was constructed.
 	Vector<MDirection> getCorners() const;
 
+	virtual ostream& print(ostream &os) const;
+
 private:
-	//Vector<Quantity> _center;
 	Vector<Quantity> _widths;
 	Vector<MDirection> _corners;
+	Quantity _inpXCenter, _inpYCenter, _inpXWidth, _inpYWidth;
 
 	void _doCorners();
 };

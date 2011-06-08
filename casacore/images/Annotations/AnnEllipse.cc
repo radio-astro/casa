@@ -81,11 +81,6 @@ _inputMinorAxis(minorAxis),
 		_directionAxes[1], _csys
 	);
 	_extend(ellipse);
-
-	ostringstream os;
-	os << "ellipse [[" << xcenter << ", " << ycenter << "], ["
-		<< majorAxis << ", " << minorAxis << "]]";
-	_stringRep += os.str();
 }
 
 MDirection AnnEllipse::getCenter() const {
@@ -103,5 +98,16 @@ Quantity AnnEllipse::getMinorAxis() const {
 Quantity AnnEllipse::getPositionAngle() const {
 	return _inputPositionAngle;
 }
+
+ostream& AnnEllipse::print(ostream &os) const {
+	_printPrefix(os);
+	os << "ellipse [[" << _inputCenter[0] << ", "
+		<< _inputCenter[1] << "], [" << _inputMajorAxis
+		<< ", " << _inputMinorAxis << "], "
+		<< _inputPositionAngle << "]";
+	_printPairs(os);
+	return os;
+}
+
 
 }

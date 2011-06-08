@@ -21,11 +21,14 @@
 #include <casa/Arrays/Vector.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <images/IO/AsciiAnnotationFileLine.h>
+#include <images/Regions/WCRegion.h>
+#include <images/Regions/WCUnion.h>
+
 
 namespace casa {
 
 // <summary>
-// A list of regions and annotations and comments representing an ascii region file.
+// An ordered list of annotations and comments representing an ascii region file.
 // </summary>
 // <author>Dave Mehringer</author>
 // <use visibility=export>
@@ -36,7 +39,7 @@ namespace casa {
 // </prerequisite>
 
 // <etymology>
-// A list of regions and annotations and comments representing an ascii region file.
+// An order list of annotations and comments representing an ascii region file.
 // </etymology>
 
 // <synopsis>
@@ -49,15 +52,38 @@ class AsciiAnnotationList {
 public:
 
 	// <group>
-	// create an empty list.
+	// create an empty list which can be appended to. This constructor
+	// is used for constructing an annotation list on the fly, possibly
+	// to be written to a file when complete. Do not use this constructor
+	// if you want to determine the final composite region.
 	AsciiAnnotationList(const Bool deletePointersOnDestruct=True);
+
+	// create an empty list which can be appended to. This constructor
+	// is used for constructing an annotation list on the fly, possibly
+	// to be written to a file when complete. It can be used to determine
+	// the composite region as well but it is the caller's responsibility
+	// to ensure the added regions added to this object are constructed
+	// in a consistent manner (eg using the same coordinate system).
+	// <src>shape</src> is the image shape and is only used if
+	// the first region is a difference; in that case, the all pixels in entire
+	// shape are set to good initially.
+	AsciiAnnotationList(
+		const CoordinateSystem& csys,
+		const IPosition shape,
+		const Bool deletePointersOnDestruct=True
+	);
+
 
 	// create a list by reading it from a file.
 	// An exception is thrown if the file is not in the correct
 	// format or does not exist. The coordinate system is used for
 	// setting defaults and reference frames to be used.
+	// <src>shape</src> is the image shape and is only used if
+	// the first region is a difference; in that case, the all pixels in entire
+	// shape are set to good initially.
 	AsciiAnnotationList(
 		const String& filename, const CoordinateSystem& csys,
+		const IPosition shape,
 		const Bool deletePointersOnDestruct=True
 	);
 	//</group>
@@ -70,7 +96,7 @@ public:
 	// number of lines in the list
 	uInt nLines() const;
 
-	// get the line at the specified position
+	// get the line at the specified index
 	AsciiAnnotationFileLine lineAt(const uInt i) const;
 
 	// get all lines in the list
@@ -78,9 +104,19 @@ public:
 
 	ostream& print(ostream& os) const;
 
+	// get the composite region.
+	const WCRegion* getRegion() const;
+
+	// get the composite region as a region record.
+	Record regionAsRecord() const;
+
 private:
 	Vector<AsciiAnnotationFileLine> _lines;
 	Bool _deletePointersOnDestruct;
+	PtrBlock<const WCRegion *> _regions;
+	CoordinateSystem _csys;
+	IPosition _shape;
+	Bool _canGetRegion;
 
 };
 
