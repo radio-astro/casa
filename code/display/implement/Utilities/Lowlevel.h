@@ -33,7 +33,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
     namespace viewer {
 	// ensure that path is a directory
-	int make_it_a_dir( const char *path );
+	int create_dir( const char *path );
+	inline int create_dir( const std::string &s ) { return create_dir(s.c_str( )); }
 	// get the current time
 	std::string time( );
 	// get the current data

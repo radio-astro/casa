@@ -40,7 +40,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//
 	//  helper function to create ~/.casa/ipython/security
 	//
-	int make_it_a_dir( const char *path ) {
+	int create_dir( const char *path ) {
 	    struct stat buf;
 	    if ( stat( path, &buf ) == 0 ) {
 		if ( ! S_ISDIR(buf.st_mode) ) {
@@ -91,15 +91,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Casarc &getrc( ) {
 	    char *home = getenv("HOME");
 	    if ( home ) {
-		char *rcfile = (char*) malloc( sizeof(char)*(strlen(home)+160) );
-		sprintf( rcfile, "%s/.casa", home );
-		make_it_a_dir( rcfile );
-		sprintf( rcfile, "%s/.casa/viewer", home );
-		make_it_a_dir( rcfile );
-		sprintf( rcfile, "%s/.casa/viewer/rc", home );
-		std::string rcf(rcfile);
-		free(rcfile);
-		return Casarc::instance(rcf.c_str());
+		std::string rcf(home);
+		rcf += "/.casa";
+		create_dir( rcf );
+		rcf += "/viewer";
+		create_dir( rcf );
+		rcf += "/rc";
+		return Casarc::instance(rcf);
 	    } else {
 		fprintf( stderr, "HOME is not defined... using current directory to store state...\n" );
 		return Casarc::instance("casaviewerrc");
