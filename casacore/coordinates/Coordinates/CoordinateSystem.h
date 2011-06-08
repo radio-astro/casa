@@ -45,6 +45,7 @@ class DirectionCoordinate;
 class LinearCoordinate;
 class SpectralCoordinate;
 class StokesCoordinate;
+class QualityCoordinate;
 class TabularCoordinate;
 class IPosition;
 class LogIO;
@@ -374,14 +375,15 @@ public:
     // first (or in most cases only) coordinate of the requested type.
     // If no such coordinate exists, an exception is thrown.
     // <group>
-    const LinearCoordinate &linearCoordinate(uInt which) const;
-    const DirectionCoordinate &directionCoordinate(uInt which) const;
+    const LinearCoordinate    &linearCoordinate(uInt which) const;
     const DirectionCoordinate &directionCoordinate() const;
+    const DirectionCoordinate &directionCoordinate(uInt which) const;
 
     const SpectralCoordinate &spectralCoordinate(uInt which) const;
     const SpectralCoordinate &spectralCoordinate() const;
 
-    const StokesCoordinate &stokesCoordinate(uInt which) const;
+    const StokesCoordinate  &stokesCoordinate(uInt which) const;
+    const QualityCoordinate &qualityCoordinate(uInt which) const;
     const TabularCoordinate &tabularCoordinate(uInt which) const;
     // </group>
 
@@ -752,11 +754,10 @@ public:
     //# cf comment in toFITS.
     static Bool fromFITSHeader(Int& stokesFITSValue, 
                                CoordinateSystem &coordsys, 
-			       RecordInterface& recHeader,
-			       const Vector<String>& header,
+                               RecordInterface& recHeader,
+                               const Vector<String>& header,
                                const IPosition& shape,
                                uInt which=0);
-			       
 
 // List all header information.  By default, the reference
 // values and pixel increments are converted to a "nice" unit before 
@@ -799,6 +800,23 @@ public:
    // what is the number of the polarization/stokes axis?
    // Returns -1 if no stokes axis exists.
    Int polarizationAxisNumber() const;
+
+   // Does this coordinate system have a quality axis?
+   Bool hasQualityAxis() const;
+
+   // what number is the quality axis? Returns -1 if no quality axis exists.
+   Int qualityAxisNumber() const;
+
+   // what is the number of the quality coordinate?
+   // Returns -1 if no quality coordinate exists.
+   Int qualityCoordinateNumber() const;
+
+   // Given a quality parameter, find the pixel location.
+   // Note the client is responsible for any boundedness checks
+   // (eg finite number of quality in an image).
+   Int qualityPixelNumber(const String& qualityString) const;
+
+   String qualityAtPixel(const uInt pixel) const;
 
    Int directionCoordinateNumber() const;
 
@@ -891,6 +909,10 @@ private:
     // Do subImage for Stokes
     StokesCoordinate stokesSubImage(const StokesCoordinate& sc, Int originShift, Int pixincFac,
                                     Int newShape) const;
+
+    // Do subImage for Quality
+    QualityCoordinate qualitySubImage(const QualityCoordinate& qc, Int originShift, Int pixincFac,
+    		                        Int newShape) const;
 
     // Strip out coordinates with all world and pixel axes removed
     CoordinateSystem stripRemovedAxes (const CoordinateSystem& cSys) const;

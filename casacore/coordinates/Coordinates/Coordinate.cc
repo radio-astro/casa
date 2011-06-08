@@ -511,6 +511,8 @@ String Coordinate::typeToString (Coordinate::Type type)
       return String("Spectral");
    } else if (type==Coordinate::STOKES) {
       return String("Stokes");
+   } else if (type==Coordinate::QUALITY) {
+      return String("Quality");
    } else if (type==Coordinate::TABULAR) {
       return String("Tabular");
    } else if (type==Coordinate::COORDSYS) {      
@@ -586,6 +588,8 @@ void Coordinate::fourierUnits (String& nameOut, String& unitOut, String& unitInC
       }
    } else if (type==Coordinate::STOKES) {
       throw (AipsError("Cannot provide Fourier coordinate name for Stokes coordinate"));
+   } else if (type==Coordinate::QUALITY) {
+      throw (AipsError("Cannot provide Fourier coordinate name for Quality coordinate"));
    } else if (type==Coordinate::COORDSYS) {
       throw (AipsError("Cannot provide Fourier coordinate name for CoordinateSystem coordinate"));
    } else {

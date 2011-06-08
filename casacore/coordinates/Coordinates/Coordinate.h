@@ -155,6 +155,8 @@ public:
 	// A one-dimensional Cooordinate system, usually created from a table
         // although it can also be purely linear.
 	TABULAR,
+	// to mark DATA and ERROR values
+	QUALITY,
 	// A CoordinateSystem (a collection of Coordinates).
 	COORDSYS };
 
@@ -459,7 +461,7 @@ public:
 
     // Comparison only made for specified axes in this and other Coordinate 
     // The default implementation should be ok for all Coordinate types
-    // except Stokes...
+    // except Stokes and Quality...
     virtual Bool doNearPixel (const Coordinate& other, 
                               const Vector<Bool>&  thisAxes,
                               const Vector<Bool>& otherAxes,
