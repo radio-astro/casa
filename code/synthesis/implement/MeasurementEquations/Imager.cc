@@ -203,6 +203,7 @@ Imager::Imager()
   ms_p=0;
   mssel_p=0;
   lockCounter_p=0;
+  numMS_p=0;
   defaults();
 };
 
@@ -323,6 +324,7 @@ Imager::Imager(MeasurementSet& theMS,  Bool compress, Bool useModel)
     os << LogIO::SEVERE << "Open of MeasurementSet failed" << LogIO::EXCEPTION;
   };
 
+  numMS_p=1;
   defaults();
   latestObsInfo_p=ObsInfo();
 }
@@ -342,6 +344,7 @@ Imager::Imager(MeasurementSet& theMS, Bool compress)
     os << LogIO::SEVERE << "Open of MeasurementSet failed" << LogIO::EXCEPTION;
   };
 
+  numMS_p=1;
   defaults();
 
   latestObsInfo_p=ObsInfo();
@@ -381,6 +384,7 @@ Imager &Imager::operator=(const Imager & other)
     doTrackSource_p=other.doTrackSource_p;
     trackDir_p=other.trackDir_p;
     smallScaleBias_p=other.smallScaleBias_p;
+    numMS_p=other.numMS_p;
     if (!mssel_p.null() && this != &other) {
       *mssel_p = *(other.mssel_p);
     }
@@ -555,6 +559,7 @@ Bool Imager::open(MeasurementSet& theMs, Bool /*compress*/, Bool useModelCol)
 	 << polType(0) << endl
 	 << "Results open to question!" << LogIO::POST;
     }
+    numMS_p=1;
 
     this->unlock();
 
@@ -6824,6 +6829,47 @@ Int Imager::interactivemask(const String& image, const String& mask,
     }
     return rstat;
   }
+
+Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
+		       const Double& freqStep,  const MFrequency::Types& freqframe,
+		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
+			     Vector< Vector<Int> >& nchan){
+
+  LogIO os(LogOrigin("imager", "adviseChanSelex"));
+  spw.resize();
+  start.resize();
+  nchan.resize();
+  try {
+    if(numMS_p < 1 || !rvi_p){
+      os << LogIO::SEVERE << "Data selection incomplete" 
+       << LogIO::POST;
+      return False;
+    }
+    Block<Vector<Int> > bnchan;
+    Block<Vector<Int> > bstart;
+    Block<Vector<Int> > bspw;
+    rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, freqStart, freqEnd, freqStep, freqframe);
+    spw=Vector<Vector<Int> >(bspw, bspw.nelements());
+    start=Vector<Vector<Int> >(bstart, bstart.nelements());
+    nchan=Vector<Vector<Int> >(bnchan, bnchan.nelements());
+        
+  } catch (AipsError x) {
+    os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+       << LogIO::POST;
+    return False;
+  } 
+  catch (...){
+    os << LogIO::SEVERE << "Unknown  exception handled" 
+       << LogIO::POST;
+    return False;
+
+  }
+
+  return True;
+
+}
+
+
 
 } //# NAMESPACE CASA - END
 

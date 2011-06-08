@@ -38,7 +38,7 @@ a new executable is started every time the constructor
 is called. 
 
 This returns a Glish variable containing the tool functions of
-imager.
+imager in an alternate universe that you have to tunnel to with a wormhole
 </description>
 <input>
 
@@ -152,6 +152,51 @@ for the beam size both in the plane of the sky and along the $w$ axis.
 </output>
 <returns type="bool"/>
 </method>
+
+   <method type="function" name="advisechansel">
+   <shortdescription>Advise on spw and chan selection optimal for the image frequency range wanted</shortdescription>
+   
+
+<description>
+ Basically tells you what channels of which spectral window need to be
+ selected for your image spectral parameters.  The freqstep is used to
+ calulate the extra padding needed for data selection at the begining
+ and end of the range.  The freqframe parameter is the frame in which
+ the frequency range is being given. It will be converted to the frame
+ of the data with time to locate which channel match.
+ A record will be returned with an element for each ms  used in selectvis.
+ Each element of the record will have the spwids and channel start and nchan for each spwid.
+
+</description>
+<input>
+
+
+     <param type="double" direction="in" name="freqstart">
+     <description>Begining of frequency range in Hz</description>
+     <value>1.0e6</value>
+     </param>
+
+     <param type="double" direction="in" name="freqend">
+     <description>End of frequency range in Hz</description>
+     <value>1.1e6</value>
+     </param>
+     
+     <param type="double" direction="in" name="freqstep">
+       <description>spectral channel resolution of intended image in Hz</description>
+       <value>100.0</value>
+     </param>
+     
+     <param type="string" direction="in" name="freqframe">
+       <description>frame in which frequency is being expressed in other parameters</description>
+       <value>LSRK</value>
+     </param>
+</input>
+
+<returns type="any">
+  <any type="record"/>
+</returns>
+</method>
+
 
  
    <method type="function" name="approximatepsf">

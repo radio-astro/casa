@@ -37,6 +37,7 @@
 #include <tables/Tables/StandardStManAccessor.h>
 #include <tables/Tables/IncrStManAccessor.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/BasicSL/Constants.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Containers/Record.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -2177,22 +2178,85 @@ ROVisibilityIterator::getSpwInFreqRange(Block<Vector<Int> >& spw,
                                         Block<Vector<Int> >& nchan,
                                         Double freqStart,
                                         Double freqEnd,
-                                        Double freqStep)
+                                        Double freqStep,
+					MFrequency::Types freqframe)
 {
     // This functionality was relocated from MSIter in order to support this operation
     // within the VI to make the ROVisibilityIteratorAsync implementation feasible.
 
-    int nMS = measurementSets_p.size();
+  Int nMS = msIter_p.numMS();
 
-    spw.resize(nMS, True, False);
-    start.resize(nMS, True, False);
-    nchan.resize(nMS, True, False);
+  spw.resize(nMS, True, False);
+  start.resize(nMS, True, False);
+  nchan.resize(nMS, True, False);
+  
+  for (Int k=0; k < nMS; ++k){
+    Vector<Double> t;
+    ROScalarColumn<Double> (msIter_p.ms(k),MS::columnName(MS::TIME)).getColumn(t);
+    Vector<Int> ddId;
+    Vector<Int> fldId;
+    ROScalarColumn<Int> (msIter_p.ms(k),MS::columnName(MS::DATA_DESC_ID)).getColumn(ddId);
+    ROScalarColumn<Int> (msIter_p.ms(k),MS::columnName(MS::FIELD_ID)).getColumn(fldId);
+    ROMSFieldColumns fieldCol(msIter_p.ms(k).field());
+    ROMSDataDescColumns ddCol(msIter_p.ms(k).dataDescription());
+    ROMSSpWindowColumns spwCol(msIter_p.ms(k).spectralWindow());
+    ROScalarMeasColumn<MEpoch> timeCol(msIter_p.ms(k), MS::columnName(MS::TIME));
+    Bool dum;
+    Sort sort( t.getStorage(dum),sizeof(Double) );
+    sort.sortKey((uInt)0,TpDouble);
+    Vector<uInt> sortIndx, uniqIndx;
+    sort.sort(sortIndx, t.nelements());
+    uInt nTimes=sort.unique(uniqIndx, sortIndx);
+    //now need to do the conversion to data frame from requested frame
+    //Get the epoch mesasures of the first row
+    MEpoch ep;
+    timeCol.get(0, ep);
+    MPosition obsPos = msIter_p.telescopePosition();
+    Int oldDD=ddId[0];
+    Int oldFLD=fldId[0];
+    //For now we will assume that the field is not moving very far from polynome 0
+    MDirection dir =fieldCol.phaseDirMeas(fldId[0]);
+    MFrequency::Types obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId[0])));
+    //cout << "nTimes " << nTimes << endl;
+    //cout << " obsframe " << obsMFreqType << " reqFrame " << freqframe << endl; 
+    MeasFrame frame(ep, obsPos, dir);
+    MFrequency::Convert toObs(freqframe,
+                              MFrequency::Ref(obsMFreqType, frame));
 
-    for (Int k=0; k < nMS; ++k){
-        MSSpwIndex spwIn(measurementSets_p[k]->spectralWindow());
-
-        spwIn.matchFrequencyRange(freqStart-0.5*freqStep, freqEnd+0.5*freqStep, spw[k], start[k], nchan[k]);
+    Double freqEndMax=freqEnd;
+    Double freqStartMin=freqStart;
+    if(freqframe != obsMFreqType){
+      freqEndMax=0.0;
+      freqStartMin=C::dbl_max;
     }
+
+    for (uInt j=0; j< nTimes; ++j){
+      timeCol.get(uniqIndx[j], ep);
+      if(oldDD != ddId[uniqIndx[j]]){
+	oldDD=ddId[uniqIndx[j]];
+	if(spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId[uniqIndx[j]])) != obsMFreqType){
+	  obsMFreqType= (MFrequency::Types) (spwCol.measFreqRef()(ddCol.spectralWindowId()(ddId[uniqIndx[j]])));
+	  toObs.setOut(MFrequency::Ref(obsMFreqType, frame));
+	}
+      }
+      if(obsMFreqType != freqframe){
+	frame.resetEpoch(ep);
+	if(oldFLD != fldId[uniqIndx[j]]){
+	  oldFLD=fldId[uniqIndx[j]];
+	  frame.resetDirection(fieldCol.phaseDirMeas(fldId[uniqIndx[j]]));
+	}
+	Double freqTmp=toObs(Quantity(freqStart, "Hz")).get("Hz").getValue();
+	freqStartMin=(freqStartMin > freqTmp) ? freqTmp : freqStartMin;
+	freqTmp=toObs(Quantity(freqEnd, "Hz")).get("Hz").getValue();
+	freqEndMax=(freqEndMax < freqTmp) ? freqTmp : freqEndMax; 
+      }
+    }
+
+    //cout << "freqStartMin " << freqStartMin << " freqEndMax " << freqEndMax << endl;
+    MSSpwIndex spwIn(msIter_p.ms(k).spectralWindow());
+    
+    spwIn.matchFrequencyRange(freqStartMin-0.5*freqStep, freqEndMax+0.5*freqStep, spw[k], start[k], nchan[k]);
+  }
 }
 
 vector<const MeasurementSet *>
@@ -2943,6 +3007,7 @@ ROVisibilityIterator::AsyncEnabler::release ()
 }
 
 } //# NAMESPACE CASA - END
+
 
 
 
