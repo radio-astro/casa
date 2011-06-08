@@ -90,11 +90,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    char *home = getenv("HOME");
 	    if ( home ) {
 		char *rcfile = (char*) malloc( sizeof(char)*(strlen(home)+160) );
+		sprintf( rcfile, "%s/.casa", home );
+		make_it_a_dir( rcfile );
 		sprintf( rcfile, "%s/.casa/viewer", home );
 		make_it_a_dir( rcfile );
 		sprintf( rcfile, "%s/.casa/viewer/rc", home );
 		std::string rcf(rcfile);
-		delete(rcfile);		// let the string destructor clean up
+		free(rcfile);
 		return Casarc::instance(rcf.c_str());
 	    } else {
 		fprintf( stderr, "HOME is not defined... using current directory to store state...\n" );
