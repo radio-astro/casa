@@ -63,6 +63,8 @@ public:
 
 	Vector<MDirection> getCorners() const;
 
+	virtual ostream& print(ostream &os) const;
+
 private:
 	Vector<MDirection> _corners;
 	Vector<Quantity> _origXPos, _origYPos;

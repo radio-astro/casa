@@ -41,12 +41,12 @@ AnnAnnulus::AnnAnnulus(
 		ANNULUS, dirRefFrameString, csys, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
-), _inputCenter(Vector<Quantity>(2)), _inputRadii(Vector<Quantity>(2)),
-	_convertedRadii(Vector<Quantity>(2)) {
+	), _convertedRadii(Vector<Quantity>(2)),
+	_xcenter(xcenter), _ycenter(ycenter),
+	_innerRadius(innerRadius), _outerRadius(outerRadius) {
 
 	_convertedRadii[0] = _lengthToAngle(innerRadius, _directionAxes[0]);
 	_convertedRadii[1] = _lengthToAngle(outerRadius, _directionAxes[0]);
-
 
 	if (
 		_convertedRadii[0].getValue("rad")
@@ -58,10 +58,11 @@ AnnAnnulus::AnnAnnulus(
 			+ "outer radius"
 		);
 	}
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
+	Vector<Quantity> inputCenter(2);
+	inputCenter[0] = xcenter;
+	inputCenter[1] = ycenter;
 
-	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
+	_checkAndConvertDirections(String(__FUNCTION__), inputCenter);
 
 	Vector<Double> coords = _convertedDirections[0].getAngle("rad").getValue();
 
@@ -74,10 +75,6 @@ AnnAnnulus::AnnAnnulus(
 	WCDifference annulus(outer, inner);
 	_extend(annulus);
 
-	ostringstream os;
-	os << "annulus [[" << xcenter << ", " << ycenter << "], ["
-		<< innerRadius << ", " << outerRadius << "]]";
-	_stringRep += os.str();
 }
 
 MDirection AnnAnnulus::getCenter() const {
@@ -88,14 +85,12 @@ Vector<Quantity> AnnAnnulus::getRadii() const {
 	return _convertedRadii;
 }
 
-/*
 ostream& AnnAnnulus::print(ostream &os) const {
-	if(_isAnnotationOnly) {
-		os <<
-
-	}
+	_printPrefix(os);
+	os << "annulus [[" << _xcenter << ", " << _ycenter << "], ["
+		<< _innerRadius << ", " << _outerRadius << "]] ";
+	_printPairs(os);
+	return os;
 }
-*/
-
 
 }

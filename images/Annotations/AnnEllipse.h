@@ -83,6 +83,9 @@ public:
 	// of angular measure
 	Quantity getPositionAngle() const;
 
+	virtual ostream& print(ostream &os) const;
+
+
 private:
 	Vector<Quantity> _inputCenter;
 	Quantity _inputMajorAxis, _inputMinorAxis, _inputPositionAngle,

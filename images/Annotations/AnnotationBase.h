@@ -159,8 +159,7 @@ public:
 	// before creating quantities which have pixel units.
 	static void unitInit();
 
-	// FIXME to be pure virtual
-	virtual ostream& print(ostream &os) const;
+	virtual ostream& print(ostream &os) const = 0;
 
 	// These parameters are included at the global scope. Multiple runs
 	// on the same object are cumulative; the previous global settings
@@ -184,7 +183,6 @@ protected:
 	map<Keyword, Bool> _globals;
 	map<Keyword, String> _params;
 	Bool _printGlobals;
-	String _stringRep;
 
 	AnnotationBase(
 		const Type type, const String& dirRefFrameString,
@@ -199,7 +197,8 @@ protected:
 
 	void _checkAndConvertDirections(const String& origin, const Matrix<Quantity>& quantities);
 
-	// virtual void _print(ostream &os) const;
+	virtual void _printPairs(ostream &os) const;
+
 
 private:
 	static Bool _doneUnitInit;

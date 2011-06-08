@@ -77,7 +77,6 @@ public:
 
 	Bool isDifference() const;
 
-
 protected:
 	Bool _isAnnotationOnly;
 	Vector<MFrequency> _convertedFreqLimits;
@@ -124,6 +123,7 @@ protected:
 		const Quantity& quantity, const uInt pixelAxis
 	) const;
 
+	virtual void _printPrefix(ostream& os) const;
 
 private:
 

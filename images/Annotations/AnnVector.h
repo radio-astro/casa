@@ -63,10 +63,11 @@ public:
 	// the second the ending point.
 	Vector<MDirection> getEndPoints() const;
 
-protected:
-	Matrix<Quantity> _inputPoints;
+	virtual ostream& print(ostream &os) const;
 
 private:
+	Matrix<Quantity> _inputPoints;
+
 	AnnVector();
 
 };

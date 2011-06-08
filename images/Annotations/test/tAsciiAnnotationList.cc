@@ -25,20 +25,58 @@
 
 #include <casa/aips.h>
 #include <images/Annotations/AsciiAnnotationList.h>
+#include <images/Annotations/AnnRegion.h>
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
 #include <casa/namespace.h>
+
+#include <iomanip>
 
 int main () {
 	LogIO log;
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnotationBase::unitInit();
-		AsciiAnnotationList list("fixtures/goodAsciiRegionFile.txt", csys);
-		cout << "here 1" << endl;
-		cout << list << endl;
-		cout << "here 2" << endl;
+		AsciiAnnotationList list(
+			"fixtures/goodAsciiRegionFile.txt", csys,
+			IPosition(0, csys.nPixelAxes())
+		);
+		cout << std::setprecision(9) << list << endl;
+		AlwaysAssert(list.nLines() == 31, AipsError);
+		AsciiAnnotationFileLine line30 = list.lineAt(30);
+		AlwaysAssert(
+			line30.getType() == AsciiAnnotationFileLine::ANNOTATION,
+			AipsError
+		);
+		AlwaysAssert(
+			line30.getAnnotationBase()->getLineWidth() == 9,
+			AipsError
+		);
+		AlwaysAssert(
+			line30.getAnnotationBase()->isRegion(),
+			AipsError
+		);
+		AlwaysAssert(dynamic_cast<const AnnRegion *>(
+			line30.getAnnotationBase())->isAnnotationOnly(),
+			AipsError
+		);
+
+		AsciiAnnotationFileLine line23 = list.lineAt(22);
+		AlwaysAssert(
+			line23.getType() == AsciiAnnotationFileLine::ANNOTATION,
+			AipsError
+		);
+		AlwaysAssert(
+			line23.getAnnotationBase()->getLineWidth() == 22,
+			AipsError
+		);
+		AlwaysAssert(
+			! line23.getAnnotationBase()->isRegion(),
+			AipsError
+		);
+		Quantity k(4.1122334455667778, "km");
+		cout << std::setprecision(10) << k << endl;
 
 	} catch (AipsError x) {
 		log << LogIO::SEVERE

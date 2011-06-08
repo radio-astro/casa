@@ -63,22 +63,25 @@ AnnPolygon::AnnPolygon(
 
 	WCPolygon wpoly(x, y, IPosition(_directionAxes), _csys, RegionType::Abs);
 	_extend(wpoly);
-
-	ostringstream os;
-	os << "poly [";
-	for (uInt i=0; i<xPositions.size(); i++) {
-		os << "[" << xPositions[i] << ", " << yPositions[i] << "]";
-		if (i < xPositions.size()-1) {
-			os << ", ";
-		}
-	}
-	os << "]";
-	_stringRep += os.str();
 }
 
 
 Vector<MDirection> AnnPolygon::getCorners() const {
 	return _convertedDirections;
+}
+
+ostream& AnnPolygon::print(ostream &os) const {
+	_printPrefix(os);
+	os << "poly [";
+	for (uInt i=0; i<_origXPos.size(); i++) {
+		os << "[" << _origXPos[i] << ", " << _origYPos[i] << "]";
+		if (i < _origXPos.size()-1) {
+			os << ", ";
+		}
+	}
+	os << "]";
+	_printPairs(os);
+	return os;
 }
 
 

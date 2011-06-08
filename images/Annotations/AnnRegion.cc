@@ -43,9 +43,6 @@ AnnRegion::AnnRegion(
 	_beginFreq(beginFreq), _endFreq(endFreq), _restFreq(restfreq),
 	_stokes(stokes), _wcRegion(0), _isDifference(False) {
 	String preamble(String(__FUNCTION__) + ": ");
-	if (annotationOnly) {
-		_stringRep = "ann ";
-	}
 	if (_csys.hasSpectralAxis()) {
 		if (! _beginFreq.getUnit().empty() > 0 && _endFreq.getUnit().empty()) {
 			throw AipsError(
@@ -335,6 +332,15 @@ Quantity AnnRegion::_lengthToAngle(
 	}
 	else {
 		return quantity;
+	}
+}
+
+void AnnRegion::_printPrefix(ostream& os) const {
+	if (isAnnotationOnly()) {
+		os << "ann ";
+	}
+	else if (isDifference()) {
+		os << "- ";
 	}
 }
 

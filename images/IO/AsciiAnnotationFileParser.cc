@@ -260,7 +260,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 				<< consumeMe << LogIO::EXCEPTION;
 		}
 		qDirs = _extractNQuantityPairs(consumeMe, preamble);
-		// dirs = _extractNDirections(consumeMe, preamble);
 		if (qDirs.size() != 4) {
 			throw AipsError(preamble
 				+ "rectangle box spec must contain exactly 2 direction pairs but it has "
@@ -791,12 +790,14 @@ Array<String> AsciiAnnotationFileParser::_extractTwoPairs(uInt& end, const Strin
 }
 
 Vector<String> AsciiAnnotationFileParser::_extractSinglePair(const String& string) const {
+	cout << "string " << string << endl;
 	Char quotes[2];
 	quotes[0] = '\'';
 	quotes[1] = '"';
-	Int firstBegin = string.find('[', 1) + 1;
+	Int firstBegin = string.find('[', 0) + 1;
 	Int firstEnd = string.find(',', firstBegin);
-	String first = string.substr(firstBegin + 1, firstEnd - firstBegin - 1);
+	String first = string.substr(firstBegin, firstEnd - firstBegin);
+	cout << "first " << first << endl;
 	first.trim();
 	first.trim(quotes, 2);
 	Int secondBegin = firstEnd + 1;
@@ -980,7 +981,6 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractNQuantityPairs (
 	pairs.ltrim('[');
 	pairs.trim();
 	Vector<Quantity> qs(0);
-	// Vector<MDirection> mdirs(0);
 	while (pairs.length() > 1) {
 		Vector<Quantity> myqs = _extractSingleQuantityPair(pairs, preamble);
 		qs.resize(qs.size() + 2, True);
@@ -999,6 +999,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractSingleQuantityPair(
 ) const {
 	String mySubstring = String(pairString).through(sOnePair, 0);
 	Vector<String> pair = _extractSinglePair(mySubstring);
+	cout << "pair " << pair << endl;
 	Vector<Quantity> quantities(2);
 
 	for (uInt i=0; i<2; i++) {
