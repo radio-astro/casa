@@ -44,6 +44,7 @@ Measures/Precession.cc
 Measures/SofaTest.cc
 Measures/SolarPos.cc
 Measures/Stokes.cc
+Measures/Quality.cc
 Measures/UVWMachine.cc
 Measures/VelocityMachine.cc
 TableMeasures/TableMeasColumn.cc
@@ -115,6 +116,7 @@ Measures/Precession.h
 Measures/SofaTest.h
 Measures/SolarPos.h
 Measures/Stokes.h
+Measures/Quality.h
 Measures/UVWMachine.h
 Measures/VelocityMachine.h
 DESTINATION include/casacore/measures/Measures
