@@ -1540,6 +1540,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         keepShape_p = false;
 
         effBWOut.set(0.0);
+        Double totalBW = 0.0;
         for(uInt rangeNum = 0;
             rangeNum < spwinds_of_uniq_spws[min_k].nelements(); ++rangeNum){
           k = spwinds_of_uniq_spws[min_k][rangeNum];
@@ -1588,13 +1589,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
               chanWidthOut[outChan] = chanWidthIn[inpChan];
               effBWOut[outChan]    = effBWIn[inpChan];
             }
+            totalBW += effBWOut[outChan];
             ++outChan;
           }
         }
         --outChan;
-
-        Double totalBW = abs(chanFreqOut[outChan] - chanFreqOut[0]) +
-          0.5 * (effBWOut[outChan] + effBWOut[0]);
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
         msSpW.resolution().put(min_k, spwResolOut);
