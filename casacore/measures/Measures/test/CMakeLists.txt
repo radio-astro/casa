@@ -14,6 +14,7 @@ tMuvw
 tParAngleMachine
 tRecordTransformable
 tStokes
+tQuality
 tUVWMachine
 tVelocityMachine
 )
