@@ -53,9 +53,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    } while ( stat( savepath, &buf ) == 0 );
 
 		    if ( rename( path, savepath ) != 0 ) {
+			free(savepath);
 			return 1;
 		    }
 		    if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 ) {
+			free(savepath);
 			return 1;
 		    }
 		    free(savepath);
