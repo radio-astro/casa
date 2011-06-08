@@ -191,7 +191,26 @@ for the beam size both in the plane of the sky and along the $w$ axis.
        <value>LSRK</value>
      </param>
 </input>
+<example>
+In this example, we are interested in an image cube which span 20.0682GHz to 20.1982 in LSRK  which will have a channel resolution of 3.9MHz. The field we are interested is field 4 of each of the ms.
 
+
+#######
+im.selectvis(vis='test1.ms', field='4', spw='*')
+im.selectvis(vis='test2.ms', field='4', spw='*')
+selinfo=im.advisechansel(freqstart=2.00682e10, freqend=2.01982e10, freqstep=3.9e3, freqframe="LSRK")
+####The output "selfinfo" will be a record which will look like thus
+{'ms_0': {'nchan': array([109,  23], dtype=int32),
+          'spw': array([4, 5], dtype=int32),
+          'start': array([19,  0], dtype=int32)},
+ 'ms_1': {'nchan': array([109,  23], dtype=int32),
+          'spw': array([4, 5], dtype=int32),
+          'start': array([19,  0], dtype=int32)}}
+###
+Thus from the first ms a spw selection like  '4:19~127, 5:0~22'  is all that is needed. 
+Similarly from the second ms.
+
+</example>
 <returns type="any">
   <any type="record"/>
 </returns>
