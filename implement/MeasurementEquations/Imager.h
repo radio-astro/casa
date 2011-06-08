@@ -543,6 +543,12 @@ class Imager
                    const MEpoch& obsEpoch, const MPosition& obsPosition,
                    const Double& restFreq);
 
+  Bool adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
+		       const Double& freqStep,  const MFrequency::Types& freqframe,
+		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
+		       Vector< Vector<Int> >& nchan);
+
+
   String dQuantitytoString(const Quantity& dq);
 
 protected:
@@ -642,6 +648,8 @@ protected:
   //TT
   Cube<Int> spwchansels_p;
   Matrix<Double> freqrange_p;
+
+  Int numMS_p;
 
   String telescope_p;
   String vpTableStr_p;         // description of voltage patterns for various telescopes

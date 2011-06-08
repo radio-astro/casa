@@ -119,7 +119,6 @@ namespace casa {
 			   const String& spwstring="",
 			   const String& uvdist="",
 			   const String& scan="");
-      Int numMS_p;
       Bool dataSet_p;
 
       
