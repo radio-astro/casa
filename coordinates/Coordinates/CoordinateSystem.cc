@@ -35,6 +35,7 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
+#include <coordinates/Coordinates/QualityCoordinate.h>
 #include <coordinates/Coordinates/FITSCoordinateUtil.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
@@ -626,18 +627,27 @@ void CoordinateSystem::subImageInSitu(const Vector<Float> &originShift,
 
     Int coordinate, axisInCoordinate;
     for (uInt i=0; i<n; i++) {
-        findPixelAxis(coordinate, axisInCoordinate, i);
+    	findPixelAxis(coordinate, axisInCoordinate, i);
         if (type(coordinate)==Coordinate::STOKES) {
 
 // Only integer shift and factor for Stokes
 
-           Int s = -1;
-           if (nShape!=0) s = newShape(i);
-           StokesCoordinate sc = stokesSubImage(stokesCoordinate(coordinate), 
-                                                Int(originShift(i)+0.5),
-                                                Int(pixincFac(i)+0.5), s);
-           replaceCoordinate(sc, coordinate);
-        } else {
+        	Int s = -1;
+        	if (nShape!=0) s = newShape(i);
+        	StokesCoordinate sc = stokesSubImage(stokesCoordinate(coordinate),
+        			Int(originShift(i)+0.5),
+        			Int(pixincFac(i)+0.5), s);
+        	replaceCoordinate(sc, coordinate);
+        }
+        else if (type(coordinate)==Coordinate::QUALITY) {
+
+        	Int s = -1;
+        	if (nShape!=0) s = newShape(i);
+        	QualityCoordinate qc = qualitySubImage(qualityCoordinate(coordinate),
+        			Int(originShift(i)+0.5),
+        			Int(pixincFac(i)+0.5), s);
+        	replaceCoordinate(qc, coordinate);
+        }	else {
            AlwaysAssert(pixincFac(i) > 0, AipsError);
            crpix(i) -= originShift(i);
            crpix(i) /= pixincFac(i);
@@ -731,6 +741,12 @@ const StokesCoordinate& CoordinateSystem::stokesCoordinate(uInt which) const {
     AlwaysAssert(which < nCoordinates() && 
 		 coordinates_p[which]->type() == Coordinate::STOKES, AipsError);
     return dynamic_cast<const StokesCoordinate &>(*(coordinates_p[which]));
+}
+
+const QualityCoordinate& CoordinateSystem::qualityCoordinate(uInt which) const {
+    AlwaysAssert(which < nCoordinates() &&
+		 coordinates_p[which]->type() == Coordinate::QUALITY, AipsError);
+    return dynamic_cast<const QualityCoordinate &>(*(coordinates_p[which]));
 }
 
 const TabularCoordinate& CoordinateSystem::tabularCoordinate(uInt which) const
@@ -989,7 +1005,7 @@ Bool CoordinateSystem::toWorld(Vector<Double> &world,
 	    Int where = pixel_maps_p[i]->operator[](j);
 	    if (where >= 0) {
 
-// cerr << "i j where " << i << " " << j << " " << where <<endl;
+ //cerr << "i j where " << i << " " << j << " " << where <<endl;
 
 		pixel_tmps_p[i]->operator()(j) = pixel(where);
 	    } else {
@@ -998,10 +1014,9 @@ Bool CoordinateSystem::toWorld(Vector<Double> &world,
 	    }
 	}
 
-// cout << "world pixel map: " << *(world_maps_p[i]) << " " <<
-// *(pixel_maps_p[i]) << endl;
-// cout << "toWorld # " << i << "pix=" << *pixel_tmps_p[i] << endl;
+ //cout << "world pixel map: " << *(world_maps_p[i]) << " " << *(pixel_maps_p[i]) << endl;
 
+ //cout << "toWorld # " << i << "pix=" << *pixel_tmps_p[i] << endl;
 	Bool oldok = ok;
 	ok = coordinates_p[i]->toWorld(
 		       *(world_tmps_p[i]), *(pixel_tmps_p[i]));
@@ -2556,7 +2571,8 @@ Bool CoordinateSystem::save(RecordInterface &container,
 	case Coordinate::DIRECTION: basename = "direction"; break;
 	case Coordinate::SPECTRAL:  basename = "spectral"; break;
 	case Coordinate::STOKES:    basename = "stokes"; break;
-	case Coordinate::TABULAR:    basename = "tabular"; break;
+	case Coordinate::QUALITY:   basename = "quality"; break;
+	case Coordinate::TABULAR:   basename = "tabular"; break;
 	case Coordinate::COORDSYS:  basename = "coordsys"; break;
 	}
 	ostringstream onum;
@@ -2602,11 +2618,12 @@ CoordinateSystem* CoordinateSystem::restore(const RecordInterface &container,
     PtrBlock<Coordinate *> tmp;
     Int nc = 0;                         // num coordinates
     PtrBlock<Coordinate *> coords;
-    String linear = "linear";
+    String linear   = "linear";
     String direction = "direction";
     String spectral = "spectral";
-    String stokes = "stokes";
-    String tabular = "tabular";
+    String stokes   = "stokes";
+    String quality  = "quality";
+    String tabular  = "tabular";
     String coordsys = "coordsys";
     while(True) {
 	ostringstream onum;
@@ -2626,6 +2643,9 @@ CoordinateSystem* CoordinateSystem::restore(const RecordInterface &container,
 	} else if (subrec.isDefined(stokes + num)) {
 	    coords.resize(nc);
 	    coords[nc-1] = StokesCoordinate::restore(subrec, stokes+num);
+	} else if (subrec.isDefined(quality + num)) {
+	    coords.resize(nc);
+	    coords[nc-1] = QualityCoordinate::restore(subrec, quality+num);
 	} else if (subrec.isDefined(tabular + num)) {
 	    coords.resize(nc);
 	    coords[nc-1] = TabularCoordinate::restore(subrec, tabular+num);
@@ -3446,6 +3466,43 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
             }
          }
          string = sName;
+      } else if (pc->type() == Coordinate::QUALITY) {
+    	  QualityCoordinate* qc = dynamic_cast<QualityCoordinate*>(pc);
+    //
+    	  Vector<Double> world(1);
+    	  Vector<Double> pixel(1);
+    	  String sName;
+    	  form = Coordinate::DEFAULT;
+
+    	  if (pixelAxis != -1) {
+    		  const uInt nPixels = qc->quality().nelements();
+    		  for (uInt i=0; i<nPixels; i++) {
+    			  pixel(0) = Double(i);
+    			  Bool ok = qc->toWorld(world, pixel);
+    			  String temp;
+    			  if (ok) {
+    				  temp = qc->format(refValListUnits, form, world(0),
+    						  axisInCoordinate, True, True, -1);
+    			  } else {
+    				  temp = "?";
+    			  }
+    			  if (i>0) {
+    				  sName += String(" ") + temp;
+                  } else {
+                	  sName += temp;
+                  }
+    		  }
+    	  } else {
+    		  pixel(0) = (*pixel_replacement_values_p[coordinate])[axisInCoordinate];
+    		  Bool ok = qc->toWorld(world, pixel);
+    		  if (ok) {
+    			  sName = qc->format(refValListUnits, form, world(0),
+    					  axisInCoordinate, True, True, -1);
+    		  } else {
+    			  sName = "?";
+    		  }
+    	  }
+    	  string = sName;
       } else {
          form = Coordinate::DEFAULT;
          pc->getPrecision(prec, form, True, precRefValSci, 
@@ -3472,7 +3529,7 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
 
 // Reference pixel
 
-   if (pc->type() != Coordinate::STOKES) {
+   if (pc->type() != Coordinate::STOKES && (pc->type()!= Coordinate::QUALITY)) {
       ostringstream oss;
       oss.setf(ios::fixed, ios::floatfield);
       oss.precision(precRefPixFloat);
@@ -3494,7 +3551,7 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
 // Increment
 
    String incUnits;
-   if (pc->type() != Coordinate::STOKES) {
+   if (pc->type() != Coordinate::STOKES && (pc->type()!= Coordinate::QUALITY)) {
       if (pixelAxis != -1) {
          Coordinate::formatType form;
          Int prec;
@@ -3517,7 +3574,7 @@ void CoordinateSystem::listHeader (LogIO& os,  Coordinate* pc, uInt& widthAxis, 
 
 // Units
 
-   if (pc->type()!= Coordinate::STOKES) {
+   if ((pc->type()!= Coordinate::STOKES) && (pc->type()!= Coordinate::QUALITY)) {
       if (pixelAxis != -1) {
          string = " " + incUnits;
       } else {
@@ -3884,6 +3941,44 @@ StokesCoordinate CoordinateSystem::stokesSubImage(const StokesCoordinate& sc, In
    StokesCoordinate scOut(sc);
    scOut.setStokes(newStokes);
    return scOut;
+}
+
+QualityCoordinate CoordinateSystem::qualitySubImage(const QualityCoordinate& qc, Int originShift,
+		Int pixincFac,
+		Int newShape) const
+{
+   const Vector<Int>& values = qc.quality();
+   const Int nValues = values.nelements();
+//
+   Int start = originShift;
+   if (start < 0 || start > nValues-1) {
+      throw(AipsError("Illegal origin shift"));
+   }
+//
+   Vector<Int> newQuality(nValues);
+   Int j = start;
+   Int n = 0;
+   while (j <= nValues-1) {
+	   newQuality(n) = values(j);
+      n++;
+      j += pixincFac;
+   }
+
+// If shape given, use it
+
+   if (newShape>0) {
+      if (newShape>n) {
+         throw(AipsError("New shape is invalid"));
+      }
+//
+      newQuality.resize(newShape, True);
+   } else {
+	  newQuality.resize(n, True);
+   }
+//
+   QualityCoordinate qcOut(qc);
+   qcOut.setQuality(newQuality);
+   return qcOut;
 }
 
 
@@ -4325,6 +4420,51 @@ Int CoordinateSystem::polarizationAxisNumber() const {
         return -1;
     }
     return pixelAxes(polarizationCoordinateNumber())[0];
+}
+
+Bool CoordinateSystem::hasQualityAxis() const {
+    Int qualityCoordNum = findCoordinate(Coordinate::QUALITY);
+    return (
+    		qualityCoordNum >= 0
+        && qualityCoordNum < (Int)nCoordinates()
+    );
+}
+
+Int CoordinateSystem::qualityAxisNumber() const {
+    if (! hasQualityAxis()) {
+        return -1;
+    }
+    return pixelAxes(qualityCoordinateNumber())[0];
+}
+
+Int CoordinateSystem::qualityCoordinateNumber() const {
+    // don't do hasQualityAxis check or you will go down an infinite recursion path :)
+    return findCoordinate(Coordinate::QUALITY);
+}
+
+Int CoordinateSystem::qualityPixelNumber(const String& qualityString) const{
+    if (! hasQualityAxis()) {
+        return -1;
+    }
+    Int qualCoordNum = findCoordinate(Coordinate::QUALITY);
+    QualityCoordinate qualityCoord = qualityCoordinate(qualCoordNum);
+    Int qualityPix = -1;
+    qualityCoord.toPixel(qualityPix, Quality::type(qualityString));
+    if (qualityPix < 0) {
+        return -1;
+    }
+    return qualityPix;
+}
+
+String CoordinateSystem::qualityAtPixel(const uInt pixel) const {
+    if (! hasQualityAxis()) {
+         return "";
+    }
+    Int qualCoordNum = qualityCoordinateNumber();
+    QualityCoordinate qualityCoord = qualityCoordinate(qualCoordNum);
+    Int quality = qualityCoord.quality()[pixel];
+    Quality::QualityTypes qualityType = Quality::type(quality);
+    return Quality::name(qualityType);
 }
 
 Int CoordinateSystem::stokesPixelNumber(const String& stokesString) const {
