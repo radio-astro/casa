@@ -63,10 +63,11 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
       msHasWtSp_p(False),
-      lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+      velSelection_p(False)
 {
   initsinglems(ms);
 }
+
 
 
 void ROVisibilityIterator::initsinglems(const MeasurementSet &ms){
@@ -75,6 +76,12 @@ void ROVisibilityIterator::initsinglems(const MeasurementSet &ms){
   asyncEnabled_p = False;
   This = (ROVisibilityIterator*)this;
   isMultiMS_p=False;
+
+  lastazelUT_p = -1;
+  lastfeedpaUT_p = -1;
+  lastParangUT_p = -1;
+  lastParang0UT_p = -1;
+
   msCounter_p=0;
   Block<Vector<Int> > blockNGroup(1);
   Block<Vector<Int> > blockStart(1);
@@ -108,7 +115,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
   floatDataFound_p(False),
   msHasWtSp_p(False),
-  lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+  velSelection_p(False)
 {
   initsinglems(ms);
 }
@@ -122,7 +129,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
   msHasWtSp_p(False),
-  lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+  velSelection_p(False)
 {
   initmultims(mss);
 }
@@ -135,7 +142,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
     floatDataFound_p(False),
     msHasWtSp_p(False),
-    lastfeedpaUT_p(0),lastazelUT_p(0),velSelection_p(False)
+    velSelection_p(False)
 {
   initmultims(mss);
 }
@@ -144,6 +151,11 @@ void ROVisibilityIterator::initmultims(const Block<MeasurementSet> &mss){
 
   asyncEnabled_p = False;
   This = (ROVisibilityIterator*)this; 
+  lastazelUT_p = -1;
+  lastfeedpaUT_p = -1;
+  lastParangUT_p = -1;
+  lastParang0UT_p = -1;
+
   msCounter_p=0;
   isMultiMS_p=True;
   Int numMS=mss.nelements();
@@ -191,101 +203,103 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   if (this==&other) return *this;
   This=(ROVisibilityIterator*)this;
 
-  azel0_p=other.azel0_p;
+  azel0_p = other.azel0_p;
   azel_p.assign(other.azel_p);
   blockChanInc_p = other.blockChanInc_p;
   blockChanStart_p = other.blockChanStart_p;
   blockChanWidth_p = other.blockChanWidth_p;
   blockNumChanGroup_p = other.blockNumChanGroup_p;
   blockSpw_p = other.blockSpw_p;
-  cFromBETA_p=other.cFromBETA_p;
-  chanInc_p=other.chanInc_p;
-  chanStart_p=other.chanStart_p;
-  chanWidth_p=other.chanWidth_p;
-  channelGroupSize_p=other.channelGroupSize_p;
-  curChanGroup_p=other.curChanGroup_p;
-  curEndRow_p=other.curEndRow_p;
-  curNumChanGroup_p=other.curNumChanGroup_p;
-  curNumRow_p=other.curNumRow_p;
-  curStartRow_p=other.curStartRow_p;
-  curTableNumRow_p=other.curTableNumRow_p;
+  cFromBETA_p = other.cFromBETA_p;
+  chanInc_p = other.chanInc_p;
+  chanStart_p = other.chanStart_p;
+  chanWidth_p = other.chanWidth_p;
+  channelGroupSize_p = other.channelGroupSize_p;
+  curChanGroup_p = other.curChanGroup_p;
+  curEndRow_p = other.curEndRow_p;
+  curNumChanGroup_p = other.curNumChanGroup_p;
+  curNumRow_p = other.curNumRow_p;
+  curStartRow_p = other.curStartRow_p;
+  curTableNumRow_p = other.curTableNumRow_p;
   feedpa_p.assign(other.feedpa_p);
   flagCube_p.assign(other.flagCube_p);
   flagOK_p = other.flagOK_p;
-  floatDataFound_p=other.floatDataFound_p;
+  floatDataFound_p = other.floatDataFound_p;
   floatDataCubeOK_p = other.floatDataCubeOK_p;
   floatDataCube_p.assign (other.floatDataCube_p);
-  freqCacheOK_p=other.freqCacheOK_p;
+  freqCacheOK_p = other.freqCacheOK_p;
   frequency_p.assign (frequency_p);
-  hourang_p=other.hourang_p;
-  initialized_p=other.initialized_p;
-  isMultiMS_p=other.isMultiMS_p;
-  lastazelUT_p=other.lastazelUT_p;
-  lastfeedpaUT_p=other.lastfeedpaUT_p;
+  hourang_p = other.hourang_p;
+  initialized_p = other.initialized_p;
+  isMultiMS_p = other.isMultiMS_p;
+  lastazelUT_p = other.lastazelUT_p;
+  lastfeedpaUT_p = other.lastfeedpaUT_p;
+  lastParangUT_p = other.lastParangUT_p;
+  lastParang0UT_p = other.lastParang0UT_p;
   lsrFreq_p.assign (other.lsrFreq_p);
   measurementSets_p = other.measurementSets_p;
-  more_p=other.more_p;
-  msCounter_p=other.msCounter_p;
-  msIterAtOrigin_p=other.msIterAtOrigin_p;
-  msIter_p=other.msIter_p;
-  msd_p=other.msd_p;
-  nAnt_p=other.nAnt_p;
-  nChan_p=other.nChan_p;
-  nPol_p=other.nPol_p;
-  nRowBlocking_p=other.nRowBlocking_p;
-  nVelChan_p=other.nVelChan_p;
-  newChanGroup_p=other.newChanGroup_p;
-  numChanGroup_p=other.numChanGroup_p;
-  parang0_p=other.parang0_p;
+  more_p = other.more_p;
+  msCounter_p = other.msCounter_p;
+  msIterAtOrigin_p = other.msIterAtOrigin_p;
+  msIter_p = other.msIter_p;
+  msd_p = other.msd_p;
+  nAnt_p = other.nAnt_p;
+  nChan_p = other.nChan_p;
+  nPol_p = other.nPol_p;
+  nRowBlocking_p = other.nRowBlocking_p;
+  nVelChan_p = other.nVelChan_p;
+  newChanGroup_p = other.newChanGroup_p;
+  numChanGroup_p = other.numChanGroup_p;
+  parang0_p = other.parang0_p;
   parang_p.assign (other.parang_p);
-  preselectedChanStart_p=other.preselectedChanStart_p;
-  preselectednChan_p=other.preselectednChan_p;
+  preselectedChanStart_p = other.preselectedChanStart_p;
+  preselectednChan_p = other.preselectednChan_p;
   selFreq_p.assign(other.selFreq_p);
-  selRows_p=other.selRows_p;
-  slicer_p=other.slicer_p;
-  stateOk_p=other.stateOk_p;
+  selRows_p = other.selRows_p;
+  slicer_p = other.slicer_p;
+  stateOk_p = other.stateOk_p;
   timeInterval_p.assign (other.timeInterval_p);
   time_p.assign(other.time_p);
-  useSlicer_p=other.useSlicer_p;
+  useSlicer_p = other.useSlicer_p;
   uvwMat_p.assign(other.uvwMat_p);
-  vDef_p=other.vDef_p;
-  vInc_p=other.vInc_p;
-  vPrecise_p=other.vPrecise_p;
-  vStart_p=other.vStart_p;
+  vDef_p = other.vDef_p;
+  vInc_p = other.vInc_p;
+  vPrecise_p = other.vPrecise_p;
+  vStart_p = other.vStart_p;
   velSelection_p = other.velSelection_p;
   visCube_p.assign(other.visCube_p);
   visOK_p = other.visOK_p;
-  weightSlicer_p=other.weightSlicer_p;
+  weightSlicer_p = other.weightSlicer_p;
   msHasWtSp_p = other.msHasWtSp_p;
   weightSpOK_p = other.weightSpOK_p;
 
   // Column access functions
 
-  colAntenna1.reference(other.colAntenna1);
-  colAntenna2.reference(other.colAntenna2);
-  colCorrVis.reference(other.colCorrVis);
-  colExposure.reference(other.colExposure);
-  colFeed1.reference(other.colFeed1);
-  colFeed2.reference(other.colFeed2);
-  colFlag.reference(other.colFlag);
-  colFlagCategory.reference(other.colFlagCategory);
-  colFlagRow.reference(other.colFlagRow);
-  colFloatVis.reference(other.colFloatVis);
-  colModelVis.reference(other.colModelVis);
-  colObservation.reference(other.colObservation);
-  colProcessor.reference(other.colProcessor);
-  colScan.reference(other.colScan);
-  colSigma.reference(other.colSigma);
-  colState.reference(other.colState);
-  colTime.reference(other.colTime);
-  colTimeCentroid.reference(other.colTimeCentroid);
-  colTimeInterval.reference(other.colTimeInterval);
-  colUVW.reference(other.colUVW);
-  colVis.reference(other.colVis);
-  colWeight.reference(other.colWeight);
-  colWeightSpectrum.reference(other.colWeightSpectrum);
+  colAntenna1.reference (other.colAntenna1);
+  colAntenna2.reference (other.colAntenna2);
+  colCorrVis.reference (other.colCorrVis);
+  colExposure.reference (other.colExposure);
+  colFeed1.reference (other.colFeed1);
+  colFeed2.reference (other.colFeed2);
+  colFlag.reference (other.colFlag);
+  colFlagCategory.reference (other.colFlagCategory);
+  colFlagRow.reference (other.colFlagRow);
+  colFloatVis.reference (other.colFloatVis);
+  colModelVis.reference (other.colModelVis);
+  colObservation.reference (other.colObservation);
+  colProcessor.reference (other.colProcessor);
+  colScan.reference (other.colScan);
+  colSigma.reference (other.colSigma);
+  colState.reference (other.colState);
+  colTime.reference (other.colTime);
+  colTimeCentroid.reference (other.colTimeCentroid);
+  colTimeInterval.reference (other.colTimeInterval);
+  colUVW.reference (other.colUVW);
+  colVis.reference (other.colVis);
+  colWeight.reference (other.colWeight);
+  colWeightSpectrum.reference (other.colWeightSpectrum);
 
-  imwgt_p=other.imwgt_p;
+  imwgt_p = other.imwgt_p;
 
   return *this;
 }
@@ -530,9 +544,14 @@ void ROVisibilityIterator::setState()
     This->nAnt_p = msd_p.setAntennas(msIter_p.msColumns().antenna());
     This->feedpa_p.resize(nAnt_p);
     This->feedpa_p.set(0);
+    This->lastfeedpaUT_p = -1;
     This->parang_p.resize(nAnt_p);
     This->parang_p.set(0);
+    This->lastParangUT_p = -1;
+    This->parang0_p = 0;
+    This->lastParang0UT_p = -1;
     This->azel_p.resize(nAnt_p);
+    This->lastazelUT_p = -1;
 
   }	
   if (msIter_p.newField() || msIterAtOrigin_p) { 
@@ -1107,17 +1126,6 @@ ROVisibilityIterator::frequency(Vector<Double>& freq) const
     return freq;
 }
 
-Vector<Double>& ROVisibilityIterator::lsrFrequency(Vector<Double>& freq) const
-{
-  if (velSelection_p) {
-    freq.resize(nVelChan_p);
-    freq=lsrFreq_p;
-  } else {
-    // if there is no vel selection, we just return the observing freqs
-    frequency(freq);
-  }
-  return freq;
-}
 
 Vector<Double>& ROVisibilityIterator::time(Vector<Double>& t) const
 {
@@ -1478,8 +1486,6 @@ ROVisibilityIterator::feed_pa(Double time) const
 
 	if (ut!=lastfeedpaUT_p) {
 
-		This->lastfeedpaUT_p=ut;
-
 		// Set up the Epoch using the absolute MJD in seconds
 		// get the Epoch reference from the column
 
@@ -1493,6 +1499,8 @@ ROVisibilityIterator::feed_pa(Double time) const
 			receptor0Angle [i] = msIter_p.receptorAngle()(0,i);
 
 		This->feedpa_p.assign (feed_paCalculate (time, This->msd_p, nAnt, mEpoch, receptor0Angle));
+
+		This->lastfeedpaUT_p=ut;
 	}
 	return feedpa_p;
 }
@@ -1540,9 +1548,9 @@ ROVisibilityIterator::parang0(Double time) const
 	// Absolute UT
 	Double ut=time;
 
-	if (ut!=lastfeedpaUT_p) {
+	if (ut!=lastParang0UT_p) {
 
-		This->lastfeedpaUT_p=ut;
+		This->lastParang0UT_p=ut;
 
 		// Set up the Epoch using the absolute MJD in seconds
 		// get the Epoch reference from the column
@@ -1581,9 +1589,9 @@ ROVisibilityIterator::parang(Double time) const
 	// Absolute UT
 	Double ut=time;
 
-	if (ut!=lastfeedpaUT_p) {
+	if (ut!=lastParangUT_p) {
 
-		This->lastfeedpaUT_p=ut;
+		This->lastParangUT_p=ut;
 
 		// Set up the Epoch using the absolute MJD in seconds
 		// get the Epoch reference from the column
@@ -2278,6 +2286,20 @@ void ROVisibilityIterator::allSelectedSpectralWindows(Vector<Int>& spws, Vector<
   }
 }
 
+Vector<Double>&
+ROVisibilityIterator::lsrFrequency(Vector<Double>& freq) const
+{
+  if (velSelection_p) {
+    freq.resize(nVelChan_p);
+    freq=lsrFreq_p;
+  } else {
+    // if there is no vel selection, we just return the observing freqs
+    frequency(freq);
+  }
+  return freq;
+}
+
+
 void
 ROVisibilityIterator::lsrFrequency(const Int& spw, Vector<Double>& freq,
                                    Bool& convert)
@@ -2342,9 +2364,11 @@ ROVisibilityIterator::lsrFrequency (const Int& spw,
     MFrequency::Convert tolsr(obsMFreqType,
                               MFrequency::Ref(MFrequency::LSRK, frame));
 
-    if(obsMFreqType != MFrequency::LSRK){
-        convert=True;
-    }
+//    if(obsMFreqType != MFrequency::LSRK){
+//        convert=True;
+//    }
+
+    convert = obsMFreqType != MFrequency::LSRK; // make this parameter write-only
 
     for (Int i=0; i<chanWidth[spw]; i++) {
         Int inc=chanInc[spw] <= 0 ? 1 : chanInc[spw] ;
@@ -2361,12 +2385,10 @@ ROVisibilityIterator::lsrFrequency (const Int& spw,
 }
 
 void
-ROVisibilityIterator::getLsrInfo (Block<Int> & channelStart,
-                                  Block<Int> & channelWidth,
+ROVisibilityIterator::getLsrInfo (Block<Int> & channelGroupNumber,
                                   Block<Int> & channelIncrement,
-                                  Block<Int> & channelGroupNumber,
-                                  const ROArrayColumn <Double> * & chanFreqs,
-                                  const ROScalarColumn<Int> * & obsMFreqTypes,
+                                  Block<Int> & channelStart,
+                                  Block<Int> & channelWidth,
                                   MPosition & observatoryPositon,
                                   MDirection & phaseCenter,
                                   Bool & velocitySelection) const
@@ -2374,9 +2396,7 @@ ROVisibilityIterator::getLsrInfo (Block<Int> & channelStart,
     channelStart = chanStart_p;
     channelWidth = chanWidth_p;
     channelIncrement = chanInc_p;
-    chanFreqs = & msIter_p.msColumns().spectralWindow().chanFreq();
     channelGroupNumber = numChanGroup_p;
-    obsMFreqTypes = & msIter_p.msColumns().spectralWindow().measFreqRef();
     observatoryPositon = msIter_p.telescopePosition();
     phaseCenter = msIter_p.phaseCenter();
     velocitySelection = velSelection_p;

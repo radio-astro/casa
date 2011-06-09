@@ -661,6 +661,40 @@ VLAT::applyModifiers (ROVisibilityIterator * rovi)
 }
 
 void
+VLAT::checkFiller (PrefetchColumnIds fillerId)
+{
+    switch (fillerId){
+
+    case Corrected:
+    case CorrectedCube:
+
+        ThrowIf (visibilityIterator_p ->colCorrVis.isNull(),
+                 utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+                                ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str()));
+        break;
+
+    case Model:
+    case ModelCube:
+
+        ThrowIf (visibilityIterator_p ->colModelVis.isNull(),
+                 utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+                                ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str()));
+        break;
+
+    case Observed:
+    case ObservedCube:
+
+        ThrowIf (visibilityIterator_p ->colVis.isNull() && visibilityIterator_p ->colFloatVis.isNull(),
+                 utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+                                ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str()));
+        break;
+
+    default:
+        ; // do nothing
+    }
+}
+
+void
 VLAT::createFillerDictionary ()
 {
 	// Create a dictionary of all the possible fillers using the
@@ -714,8 +748,6 @@ VLAT::createFillerDictionary ()
 	                       vlatFunctor0 (& VisBuffer::fillFreq));
 	fillerDictionary_p.add(ImagingWeight,
 	                       vlatFunctor0 (& VisBuffer::fillImagingWeight));
-	fillerDictionary_p.add(LSRFreq,
-	                       vlatFunctor0 (& VisBuffer::fillLSRFreq));
 	fillerDictionary_p.add(Model,
 	                       vlatFunctor1(& VisBuffer::fillVis,
 	                                    VisibilityIterator::Model));
@@ -781,7 +813,7 @@ void
 VLAT::fillDatum (VlaDatum * datum)
 {
 
-    Int fillerId = -1;
+    PrefetchColumnIds fillerId = Unknown;
     try{
         VisBufferAsync * vb = datum->getVisBuffer();
 
@@ -796,10 +828,9 @@ VLAT::fillDatum (VlaDatum * datum)
             //Log (2, "Filler id=%d name=%s starting\n", (* filler)->getId(), ROVisibilityIteratorAsync::prefetchColumnName((* filler)->getId()).c_str());
 
             fillerId = (* filler)->getId();
+            checkFiller (fillerId);
             (** filler) (vb);
         }
-
-        fillerId = -1; //
 
         fillDatumMiscellanyAfter (datum);
 
@@ -840,12 +871,6 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
     datum->getVisBuffer()->setSelectedNVisibilityChannels (nvischan);
     datum->getVisBuffer()->setSelectedSpectralWindows (spw);
 
-    Vector<Double> lsrFreq, selFreq;
-    visibilityIterator_p->getTopoFreqs (lsrFreq, selFreq);
-    datum->getVisBuffer()->setTopoFreqs (lsrFreq, selFreq);
-
-    fillLsrInfo (datum);
-
 	datum->getVisBuffer()->setMSD (visibilityIterator_p->getMSD ()); // ought to be last
 }
 
@@ -859,38 +884,40 @@ VLAT::fillDatumMiscellanyBefore (VlaDatum * datum)
 	datum->getVisBuffer()->setNAntennas (visibilityIterator_p->getNAntennas ());
 	datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getMEpoch ());
 	datum->getVisBuffer()->setReceptor0Angle (visibilityIterator_p->getReceptor0Angle());
+
+    fillLsrInfo (datum);
+
+    Vector<Double> lsrFreq, selFreq;
+    visibilityIterator_p->getTopoFreqs (lsrFreq, selFreq);
+    datum->getVisBuffer()->setTopoFreqs (lsrFreq, selFreq);
 }
 
 
 void
 VLAT::fillLsrInfo (VlaDatum * datum)
 {
-    Block<Int> channelStart;
-    Block<Int> channelWidth;
-    Block<Int> channelIncrement;
-    Block<Int> channelGroupNumber;
-    const ROArrayColumn <Double> * chanFreqs;
-    const ROScalarColumn<Int> * obsMFreqTypes;
     MPosition observatoryPositon;
     MDirection phaseCenter;
     Bool velocitySelection;
 
-    visibilityIterator_p->getLsrInfo (channelStart,
-                                      channelWidth,
+
+    Block<Int> channelGroupNumber;
+    Block<Int> channelIncrement;
+    Block<Int> channelStart;
+    Block<Int> channelWidth;
+
+    visibilityIterator_p->getLsrInfo (channelGroupNumber,
                                       channelIncrement,
-                                      channelGroupNumber,
-                                      chanFreqs,
-                                      obsMFreqTypes,
+                                      channelStart,
+                                      channelWidth,
                                       observatoryPositon,
                                       phaseCenter,
                                       velocitySelection);
 
-    datum->getVisBuffer()->setLsrInfo (channelStart,
-                                       channelWidth,
+    datum->getVisBuffer()->setLsrInfo (channelGroupNumber,
                                        channelIncrement,
-                                       channelGroupNumber,
-                                       chanFreqs,
-                                       obsMFreqTypes,
+                                       channelStart,
+                                       channelWidth,
                                        observatoryPositon,
                                        phaseCenter,
                                        velocitySelection);
@@ -1064,7 +1091,7 @@ VLAT::sweepVi ()
 
     applyModifiers (visibilityIterator_p);
 
-    for (visibilityIterator_p->originChunks();
+    for (visibilityIterator_p->originChunks(True);
           visibilityIterator_p->moreChunks();
           visibilityIterator_p->nextChunk()){
 
