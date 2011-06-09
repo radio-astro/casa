@@ -222,6 +222,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_exportuvfits.py
   scripts/task_feather.py
   scripts/task_find.py
+  scripts/task_fixplanets.py
   scripts/task_fixvis.py
   scripts/task_flagautocorr.py
   scripts/task_flagcmd.py
@@ -340,6 +341,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/exportuvfits.xml
   tasks/feather.xml
   tasks/find.xml
+  tasks/fixplanets.xml
   tasks/fixvis.xml
   tasks/flagautocorr.xml
   tasks/flagcmd.xml
