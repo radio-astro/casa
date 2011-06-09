@@ -194,6 +194,7 @@ class simple_cluster:
     
         for i in range(len(self._hosts)):
             if not os.path.exists(self._hosts[i][2]+'/'+proj.strip()):
+                #print self._hosts[i][2]+'/'+self._project
                 cmd='mkdir '+self._hosts[i][2]+'/'+self._project
                 os.system(cmd)
         print 'output directory: '
@@ -1782,9 +1783,10 @@ class simple_cluster:
             (sysname, nodename, release, version, machine)=os.uname()
             homedir = os.path.expanduser('~')
             msg=nodename+', '+str(ncpu)+', '+homedir
-            cdir=os.getcwd()
-            msg=nodename+', '+str(ncpu)+', '+cdir[:cdir.rfind('/')]
-            project=cdir[cdir.rfind('/')+1:]
+            #cdir=os.getcwd()
+            #print cdir, cdir[:cdir.rfind('/')]
+            #msg=nodename+', '+str(ncpu)+', '+cdir[:cdir.rfind('/')]
+            #project=cdir[cdir.rfind('/')+1:]
             clusterfile='/tmp/default_cluster'
             f=open(clusterfile, 'w')
             f.write(msg)
