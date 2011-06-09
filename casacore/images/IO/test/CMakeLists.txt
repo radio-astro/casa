@@ -4,7 +4,6 @@ badFixedFormat.txt
 gaussian_model_with_noise.fits
 goodEstimatesFormat.txt
 jyperbeammap.fits
-fixtures/goodAsciiRegionFile.txt
 )
 
 foreach (file ${datafiles})
@@ -12,7 +11,6 @@ foreach (file ${datafiles})
 endforeach (file)
 
 set (tests
-tAsciiAnnotationFileParser
 tFitterEstimatesFileParser
 )
 
