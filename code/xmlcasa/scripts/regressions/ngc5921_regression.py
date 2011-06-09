@@ -100,7 +100,7 @@ import listing
 
 # Enable benchmarking?
 benchmarking = True
-checklistvis=False
+checklistvis=True
 # 
 # Set up some useful variables
 #
