@@ -618,8 +618,6 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     PrefetchColumns prefetchColumns = ROVIA::prefetchColumns (Ant1,
                                                               Ant2,
                                                               ArrayId,
-                                                              CorrectedCube,
-                                                              CorrType,
                                                               Direction1,
                                                               Direction2,
                                                               Feed1,
@@ -631,16 +629,25 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                                               FlagRow,
                                                               Freq,
                                                               ImagingWeight,
-                                                              LSRFreq,
                                                               NChannel,
                                                               NCorr,
                                                               NRow,
+                                                              ObservedCube,
                                                               PhaseCenter,
                                                               PolFrame,
                                                               SpW,
                                                               casa::asyncio::Time,
                                                               Uvw,
                                                               -1);
+
+        Bool addCorrectedVisCube = !(vb_p->msColumns().correctedData().isNull());
+
+        if (addCorrectedVisCube){
+            prefetchColumns.insert (CorrectedCube);
+            // This can cause an error if a multi-MS has a mixture of MSs with corrected
+            // and without corrected data columns.
+        }
+
 
 //        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
 ////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
