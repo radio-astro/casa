@@ -75,9 +75,12 @@ public:
 	// the outer
 	Vector<Quantity> getRadii() const;
 
+	virtual ostream& print(ostream &os) const;
+
+
 private:
-	Vector<Quantity> _inputCenter;
-	Vector<Quantity> _inputRadii, _convertedRadii;
+	Vector<Quantity> _convertedRadii;
+	Quantity _xcenter, _ycenter, _innerRadius, _outerRadius;
 };
 
 }

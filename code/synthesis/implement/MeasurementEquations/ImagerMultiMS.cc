@@ -41,6 +41,7 @@
 #include <ms/MeasurementSets/MSDataDescColumns.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/SimpleSubMS.h>
+#include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <casa/Arrays/Matrix.h>
@@ -62,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   ImagerMultiMS::ImagerMultiMS() 
     : Imager(), blockNChan_p(0), blockStart_p(0), blockStep_p(0), blockSpw_p(0),
-      blockMSSel_p(0), numMS_p(0), dataSet_p(False)
+      blockMSSel_p(0), dataSet_p(False)
   {
     
     lockCounter_p=0;
@@ -73,6 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ft_p=0;
     cft_p=0;
     rvi_p=wvi_p=0;
+    numMS_p=0;
     
   }
 
@@ -101,6 +103,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
 			      Table::Old);
     SimpleSubMS splitter(thisms);
+    //SubMS splitter(thisms);
     splitter.setmsselect(spwstring, fieldnames, antnames, scan, uvdist, 
 			 msSelect, nchan, start, step, "");
     splitter.selectCorrelations("");
@@ -109,6 +112,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(thisms.tableDesc().isColumn("CORRECTED_DATA"))
       whichCol=MS::CORRECTED_DATA;
     CountedPtr<MeasurementSet> subMS(splitter.makeMemSubMS(whichCol), True);
+    //CountedPtr<MeasurementSet> subMS(splitter.makeScratchSubMS(Vector<MS::PredefinedColumns>(1,whichCol), True), True);
     return setDataOnThisMS(*subMS);
 
   }

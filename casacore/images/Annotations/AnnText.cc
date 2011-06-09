@@ -39,9 +39,6 @@ AnnText::AnnText(
 	_inputDirection[0] = xPos;
 	_inputDirection[1] = yPos;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
-	ostringstream os;
-	os << "text [[" << xPos << ", " << yPos << "], \"" << text << "\"]";
-	_stringRep += os.str();
 }
 
 MDirection AnnText::getDirection() const {
@@ -51,6 +48,15 @@ MDirection AnnText::getDirection() const {
 String AnnText::getText() const {
 	return _text;
 }
+
+ostream& AnnText::print(ostream &os) const {
+	os << "text [[" << _inputDirection[0]
+	   << ", " << _inputDirection[1] << "], \""
+	   << _text << "\"]";
+	_printPairs(os);
+	return os;
+}
+
 
 }
 

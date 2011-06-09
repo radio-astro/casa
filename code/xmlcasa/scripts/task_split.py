@@ -203,6 +203,25 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             if nflgcmds > 0:
                 mademod = False
                 cmds = mytb.getcol('COMMAND')
+                widths = {}
+                #print "width =", width
+                if hasattr(width, 'has_key'):
+                    widths = width
+                else:
+                    if hasattr(width, '__iter__') and len(width) > 1:
+                        for i in xrange(len(width)):
+                            widths[i] = width[i]
+                    elif width != 1:
+                        #print 'using myms.msseltoindex + a scalar width'
+                        nspw = len(myms.msseltoindex(vis=vis,
+                                                     spw='*')['spw'])
+                        if hasattr(width, '__iter__'):
+                            w = width[0]
+                        else:
+                            w = width
+                        for i in xrange(nspw):
+                            widths[i] = w
+                #print 'widths =', widths 
                 for rownum in xrange(nflgcmds):
                     # Matches a bare number or a string quoted any way.
                     spwmatch = re.search(r'spw\s*=\s*(\S+)', cmds[rownum])
@@ -214,24 +233,11 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                         # in that case.
                         cmd = ''
                         try:
-                            widths = {}
-                            if hasattr(width, 'has_key'):
-                                widths = width
-                            else:
-                                if hasattr(width, '__iter__'):
-                                    for i in xrange(len(width)):
-                                        widths[i] = width[i]
-                                elif width != 1:
-                                    #print 'using myms.msseltoindex + a scalar width'
-                                    nspw = len(myms.msseltoindex(vis=vis,
-                                                                 spw='*')['spw'])
-                                    for i in xrange(nspw):
-                                        widths[i] = width
                             #print 'sch1 =', sch1
                             sch2 = update_spwchan(vis, spw, sch1, truncate=True,
                                                   widths=widths)
                             #print 'sch2 =', sch2
-                            #print 'spwmatch.group() =', spwmatch.group()
+                            ##print 'spwmatch.group() =', spwmatch.group()
                             if sch2:
                                 repl = ''
                                 if sch2 != '*':

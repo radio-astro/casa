@@ -105,6 +105,39 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
    return rstat;
 }
 
+
+::casac::record* imager::advisechansel(const double freqstart, const double freqend, const double freqstep, const std::string& freqframe){
+  casac::record* retval=0;
+  if(hasValidMS_p){
+      try {
+	casa::Vector<Vector<Int> > spw;
+	casa::Vector<Vector<Int> > start;
+	casa::Vector<Vector<Int> > nchan;
+	MFrequency::Types tp;
+	if(!MFrequency::getType(tp, freqframe))
+	  throw(AipsError("Invalid frequency frame"));
+	if(itsImager->adviseChanSelex(freqstart, freqend, freqstep, tp, spw, start, nchan)){
+	  Record outRec;
+	  for (uInt k =0; k < spw.nelements(); ++k){
+	    Record subRec;
+	    subRec.define("spw", spw[k]);
+	    subRec.define("start", start[k]);
+	    subRec.define("nchan", nchan[k]);
+	    outRec.defineRecord(String("ms_")+String::toString(k), subRec);
+	  }
+	  retval=fromRecord(outRec);
+	}
+       } catch  (AipsError x) {
+          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	  RETHROW(x);
+       }
+  } else {
+      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open/selectvis." << LogIO::POST;
+  }
+    return retval;
+
+  }
+
 bool
 imager::approximatepsf(const std::string& psf, const bool async)
 {

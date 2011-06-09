@@ -17,7 +17,7 @@ import time                  # We can always use more time.
 
 ## # This seems like overkill just to get me and qa, but it creates local copies.
 from taskinit import gentools, qa, casalog
-im, cb, ms, tb, fg, af, me, ia, po, sm, cl, cs, rg, sl, dc, vp = gentools()
+im, cb, ms, tb, fg, me, ia, po, sm, cl, cs, rg, sl, dc, vp = gentools()
 
 from dict_to_table import dict_to_table
 

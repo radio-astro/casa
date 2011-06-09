@@ -28,38 +28,24 @@
 
 namespace casa {
 
-/*
-AnnSymbol::AnnSymbol(
-	const Quantity& x, const Quantity& y,
-	const String& dirRefFrameString,
-	const CoordinateSystem& csys,
-	const Symbol symbol
-) : AnnotationBase(SYMBOL, dirRefFrameString, csys),
-	_symbol(symbol) {
-		_init(x, y);
-}
-*/
-
 AnnSymbol::AnnSymbol(
 	const Quantity& x, const Quantity& y,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
 	const Char symbolChar
-) : AnnotationBase(SYMBOL, dirRefFrameString, csys) {
+) : AnnotationBase(SYMBOL, dirRefFrameString, csys),
+	_symbolChar(symbolChar) {
 	if ((_symbol = charToSymbol(symbolChar)) == UNKOWN) {
 		throw AipsError(
 			String(symbolChar)
 				+ " does not correspond to a known symbol"
 		);
 	}
-	// _init(x, y);
+
 	_inputDirection.resize(2);
 	_inputDirection[0] = x;
 	_inputDirection[1] = y;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
-	ostringstream os;
-	os << "symbol [[" << x << ", " << y << "], " << symbolChar << "]";
-	_stringRep += os.str();
 
 }
 
@@ -101,16 +87,14 @@ AnnSymbol::Symbol AnnSymbol::charToSymbol(
 	}
 }
 
-/*
-void AnnSymbol::_init(const Quantity& x, const Quantity& y) {
-	_inputDirection.resize(2);
-	_inputDirection[0] = x;
-	_inputDirection[1] = y;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
-	ostringstream os;
-	os << "symbol [[" << x << ", " << y << "], "
+ostream& AnnSymbol::print(ostream &os) const {
+	os << "symbol [[" << _inputDirection[0] << ", "
+		<< _inputDirection[1] << "], "
+		<< _symbolChar << "]";
+	_printPairs(os);
+	return os;
 }
-*/
+
 
 }
 

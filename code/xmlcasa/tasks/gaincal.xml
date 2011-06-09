@@ -191,9 +191,9 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 		<value>False</value>
 	</param>
 
-	<param type="double" name="opacity">
-		<description>Opacity correction to apply on the fly (nepers)</description>
-		<value>0.0</value>
+	<param type="doubleArray" name="opacity">
+		<description>Opacity correction to apply (nepers), per spw</description>
+		<value></value>
 	</param>
 	<param type="bool" name="parang">
 		<description>Apply parallactic angle correction on the fly</description>
@@ -389,9 +389,15 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
       gaincurve -- Apply internal VLA antenna gain curve correction (True/False)
                default: False;
                Use gaincurve=True ONLY for VLA data
-      opacity -- Opacity correction to apply (nepers)
-               default: 0.0 (no opacity correction)
-               example: opacity=0.051
+      opacity -- Opacity correction to apply (nepers), per spw
+               default: [] (no opacity correction for any spw)
+               examples:
+                   A global value for all spws:
+                     opacity=0.051
+                   Different values for spws 0,1,2:
+                     opacity=[0.051, 0.055, 0.057]
+                   (if more than 3 spws, spw 3 and higher will
+                    be assigned the last specified value, or 0.057)
                Typical VLA values are: 5 GHz - 0.013, 8 GHz - 0.013
                15 GHz - 0.016, 23 GHz - 0.051, 43 GHz - 0.07
       preavg -- Pre-averaging interval (sec)

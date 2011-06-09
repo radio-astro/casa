@@ -59,9 +59,9 @@ public:
 
 	String getText() const;
 
+	virtual ostream& print(ostream &os) const;
 
-
-protected:
+private:
 	Vector<Quantity> _inputDirection;
 	String _text;
 

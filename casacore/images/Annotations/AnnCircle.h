@@ -72,6 +72,9 @@ public:
 	// get the radius of the circle with angular units
 	Quantity getRadius() const;
 
+	virtual ostream& print(ostream &os) const;
+
+
 private:
 	Vector<Quantity> _inputCenter;
 	Quantity _inputRadius, _convertedRadius;

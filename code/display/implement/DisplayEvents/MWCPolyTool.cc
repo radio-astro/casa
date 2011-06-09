@@ -84,7 +84,14 @@ void MWCPolyTool::keyPressed(const WCPositionEvent &ev) {
       polygonReady();  }
 	// this callback is unused (and useless?) on glish level (12/01)
 
-    else {	// key pressed elsewhere - add point
+    else {
+	// key pressed elsewhere - add point
+	// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+	// note that points are added as the cursor is moved... thus
+	//   (1) pop to remove the last "move" position
+	//   (2) push to put on the actually "click" position
+	//   (3) push again to provide a dummy to be removed later
+	// I have no idea why the "move" points are pushed...  <drs>
 	popPoint();
 	pushPoint(x, y);
 	pushPoint(x, y);  }

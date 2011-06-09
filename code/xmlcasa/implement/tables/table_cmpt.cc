@@ -580,18 +580,6 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 }
 
 ::casac::table*
-table::queryC(const std::string& query, const std::string& resultTable,
-              const std::string& sortlist, const std::string& columns)
-{
-  *itsLog << LogOrigin(__func__, name());
-  *itsLog << LogIO::WARN
-          << "tb.queryC has been merged with tb.query, and will disappear\n"
-          << "in the next release.  Update your scripts now!"
-          << LogIO::POST;
-  return table::query(query, resultTable, sortlist, columns);
-}
-
-::casac::table*
 table::query(const std::string& query, const std::string& name,
              const std::string& sortlist, const std::string& columns)
 {

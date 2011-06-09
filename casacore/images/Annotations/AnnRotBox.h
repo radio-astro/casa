@@ -76,8 +76,10 @@ public:
 	// from each other.
 	Vector<MDirection> getCorners() const;
 
+	virtual ostream& print(ostream &os) const;
+
 private:
-	Vector<Quantity> _center;
+	Vector<Quantity> _inputCenter, _inputWidths;
 	Vector<Quantity> _widths;
 	Quantity _positionAngle;
 	Vector<MDirection> _corners;

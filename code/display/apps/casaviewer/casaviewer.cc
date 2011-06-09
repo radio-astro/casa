@@ -569,7 +569,7 @@ pid_t launch_xvfb( const char *name, pid_t pid, char *&display, char *&authority
 
     authority = (char*) malloc( sizeof(char)*(strlen(home)+160) );
     sprintf( authority, "%s/.casa", home );
-    viewer::make_it_a_dir( authority );
+    viewer::create_dir( authority );
     sprintf( authority, "%s/.casa/xauthority", home );
 
     const int display_start=6;

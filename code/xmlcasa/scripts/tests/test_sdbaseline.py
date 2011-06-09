@@ -719,7 +719,7 @@ class sdbaseline_functest(unittest.TestCase):
         
         result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.024480 though
+        self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
     def testCSpline02(self):
         """Test CSpline02: Cubic spline fitting with maskmode = 'auto'"""
@@ -731,7 +731,7 @@ class sdbaseline_functest(unittest.TestCase):
         
         result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='cspline',npiece=35)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.024480 though
+        self.checkRms(blparamfile, 1.038696)   #the actual rms should be 1.02407 though
 
     def testSinusoid01(self):
         """Test Sinusoid01: Sinusoidal fitting with maskmode = 'list'"""
@@ -740,11 +740,10 @@ class sdbaseline_functest(unittest.TestCase):
         mode = "list"
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
-        nwave = [0,1,2,3,4,6,8,10,12,14,16,18,20,22]
         
-        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='sinusoid',nwave=nwave,maxwavelength=2.0)
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self.checkRms(blparamfile, 1.055071)   #the actual rms should be 1.00574 though
+        self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
     def testSinusoid02(self):
         """Test Sinusoid02: Sinusoidal fitting with maskmode = 'auto'"""
@@ -753,11 +752,10 @@ class sdbaseline_functest(unittest.TestCase):
         mode = "auto"
         outfile = self.outroot+self.tid+".asap"
         blparamfile = outfile+self.blparamfile_suffix
-        nwave = [0,1,2,3,4,6,8,10,12,14,16,18,20,22]
         
-        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='sinusoid',nwave=nwave,maxwavelength=2.0)
+        result = sdbaseline(sdfile=sdfile,maskmode=mode,outfile=outfile,blfunc='sinusoid')
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
-        self.checkRms(blparamfile, 1.055071)   #the actual rms should be 1.00574 though
+        self.checkRms(blparamfile, 1.10)   #the actual rms should be 1.09705 though
 
     def checkRms(self, blparamfile, max_rms):
         rms = 10000.0

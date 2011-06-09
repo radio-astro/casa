@@ -72,6 +72,7 @@
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/StandardStMan.h>
 #include <tables/Tables/Table.h>
+#include <tables/Tables/PlainTable.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TableInfo.h>
 #include <tables/Tables/TableLock.h>
@@ -784,7 +785,6 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
       combine_p = combine;
 
       msOut_p= *outpointer;
-      msc_p=new MSColumns(msOut_p);
       
       if(!fillAllTables(colNamesTok)){
         delete outpointer;
@@ -884,7 +884,6 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     }
     
     msOut_p = *outpointer;
-    msc_p = new MSColumns(msOut_p);
     
     if(!fillAllTables(whichDataCols)){
       delete outpointer;
@@ -903,20 +902,32 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   LogIO os(LogOrigin("SubMS", "fillAllTables()"));
   Bool success = true;
-    
-  // Should take care of Measures frames for all the time type columns below.
-  // It should be safe to avoid the empty table check (with false) since this
-  // is explicitly a case of a column full of numbers that should be in the
-  // right reference frame, but the column could have, or end up with, the
-  // wrong reference code if nothing is done.  However, the table is still
-  // empty if the reference codes are set up here.
-  msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()));
+
+  // Copy the subtables before doing anything with the main table.  Otherwise
+  // MSColumns won't work.
+
+  // fill or update
+  Timer timer;
+
+  timer.mark();
+  success &= copyPointing();
+  os << LogIO::DEBUG1
+     << "copyPointing took " << timer.real() << "s."
+     << LogIO::POST;
+
+  // Force the Measures frames for all the time type columns to have the same
+  // reference as the TIME column of the main table.
+  // Disable the empty table check (with false) because some of the subtables
+  // (like POINTING) might already have been written.
+  // However, empty tables are still empty after setting up the reference codes
+  // here.
+  msc_p = new MSColumns(msOut_p);
+  msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()),
+                     False);
 
   // UVW is the only other Measures column in the main table.
   msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
-  // fill or update
-  Timer timer;
   timer.mark();
   if(!fillDDTables())
     return False;
@@ -940,23 +951,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     return false;
 
   success &= copyFlag_Cmd();
-
   success &= copyHistory();
-
   success &= copyObservation();
-  timer.mark();
-  success &= copyPointing();
-  os << LogIO::DEBUG1
-     << "copyPointing took " << timer.real() << "s."
-     << LogIO::POST;
-
   success &= copyProcessor();
   success &= copyState();
+
   timer.mark();
   success &= copySyscal();
   os << LogIO::DEBUG1
      << "copySyscal took " << timer.real() << "s."
      << LogIO::POST;
+
   timer.mark();
   success &= copyWeather();
   os << LogIO::DEBUG1
@@ -1310,16 +1315,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     // Set up the subtables for the UVFITS MS
     // we make new tables with 0 rows
     Table::TableOption option=Table::New;
-    ms->createDefaultSubtables(option); 
-    // add the optional Source sub table to allow for 
-    // specification of the rest frequency
-    TableDesc sourceTD=MSSource::requiredTableDesc();
-    SetupNewTable sourceSetup(ms->sourceTableName(),sourceTD,option);
-    ms->rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
-                                   Table(sourceSetup,0));
-    // update the references to the subtable keywords
-    ms->initRefs();
-    
+    createSubtables(*ms, option); 
+
     { // Set the TableInfo
       TableInfo& info(ms->tableInfo());
       info.setType(TableInfo::type(TableInfo::MEASUREMENTSET));
@@ -1543,6 +1540,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         keepShape_p = false;
 
         effBWOut.set(0.0);
+        Double totalBW = 0.0;
         for(uInt rangeNum = 0;
             rangeNum < spwinds_of_uniq_spws[min_k].nelements(); ++rangeNum){
           k = spwinds_of_uniq_spws[min_k][rangeNum];
@@ -1563,9 +1561,20 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
                                       chanFreqIn[lastChan]) / 2;
-              Double sep = abs(chanFreqIn[lastChan] - chanFreqIn[inpChan]);
+
+              Double sep = chanFreqIn[lastChan] - chanFreqIn[inpChan];
+              Bool neginc = sep < 0.0;
+
+              if(neginc)
+                sep = -sep;
+
+              // The internal abs is necessary because the sign of chanWidthIn
+              // may be wrong.
               chanWidthOut[outChan] = sep + 0.5 * abs(chanWidthIn[inpChan] +
                                                       chanWidthIn[lastChan]);
+              if(neginc)
+                chanWidthOut[outChan] = -chanWidthOut[outChan];
+            
               spwResolOut[outChan] = 0.5 * (spwResolIn[inpChan] +
                                             spwResolIn[lastChan])
                                      + sep;
@@ -1580,13 +1589,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
               chanWidthOut[outChan] = chanWidthIn[inpChan];
               effBWOut[outChan]    = effBWIn[inpChan];
             }
+            totalBW += effBWOut[outChan];
             ++outChan;
           }
         }
         --outChan;
-
-        Double totalBW = abs(chanFreqOut[outChan] - chanFreqOut[0]) +
-          0.5 * (effBWOut[outChan] + effBWOut[0]);
 
         msSpW.chanFreq().put(min_k, chanFreqOut);
         msSpW.resolution().put(min_k, spwResolOut);
@@ -1834,7 +1841,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // called there.  The ms argument is unused, but it is there to preserve the
   // signature, even though it causes a compiler warning.
   //
-  void SubMS::verifyColumns(const MeasurementSet& ms,
+  void SubMS::verifyColumns(const MeasurementSet&, // ms,
                             const Vector<MS::PredefinedColumns>& colNames)
   {
     LogIO os(LogOrigin("SubMS", "verifyColumns()"));
@@ -6877,7 +6884,85 @@ Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
   return (corrString_p != "") ? doTimeAverVisIterator(colNames)
                               : doTimeAver(colNames);
 }
+
+uInt SubMS::addOptionalColumns(const Table& inTab, Table& outTab,
+                               const Bool beLazy)
+{
+  uInt nAdded = 0;    
+  const TableDesc& inTD = inTab.actualTableDesc();
+    
+  // Only rely on the # of columns if you are sure that inTab and outTab
+  // can't have the same # of columns without having _different_ columns,
+  // i.e. use beLazy if outTab.actualTableDesc() is in its default state.
+  uInt nInCol = inTD.ncolumn();
+  if(!beLazy || nInCol > outTab.actualTableDesc().ncolumn()){
+    LogIO os(LogOrigin("SubMS", "addOptionalColumns()"));
+
+    Vector<String> oldColNames = inTD.columnNames();
+      
+    for(uInt k = 0; k < nInCol; ++k){
+      if(!outTab.actualTableDesc().isColumn(oldColNames[k])){
+        //TableDesc tabDesc;
+        try{
+          //M::addColumnToDesc(tabDesc, M::columnType(oldColNames[k]));
+          //if(tabDesc.ncolumn())                 // The tabDesc[0] is too 
+          //  outTab.addColumn(tabDesc[0]);       // dangerous otherwise - it 
+          //else                                  // can dump core without
+          //  throw(AipsError("Unknown column")); // throwing an exception.
+          outTab.addColumn(inTD.columnDesc(k), false);
+          ++nAdded;
+        }
+        catch(...){   // NOT AipsError x
+          os << LogIO::WARN 
+             << "Could not add column " << oldColNames[k] << " to "
+             << outTab.tableName()
+             << LogIO::POST;
+        }
+      }
+    }
+  }
+  return nAdded;
+}
   
+Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
+{
+  LogIO os(LogOrigin("SubMS", "copyCols()"));
+  const TableDesc& inTD = in.actualTableDesc();
+  Vector<String> inColNames = inTD.columnNames();
+  uInt nInCol = inTD.ncolumn();
+  Bool retval = True;
+
+  if(in.nrow() > out.nrow())
+    out.addRow(in.nrow() - out.nrow());
+
+  for(uInt k = 0; k < nInCol; ++k){
+    // Add the input column desc to out if necessary.
+    if(!out.actualTableDesc().isColumn(inColNames[k])){
+      try{
+        out.addColumn(inTD.columnDesc(k), false);
+      }
+      catch(...){   // NOT AipsError x
+        os << LogIO::WARN 
+           << "Could not add column " << inColNames[k] << " to "
+           << out.tableName()
+           << LogIO::POST;
+        retval = False;
+      }
+    }
+
+    // I can't see a way to explicitly* avoid constructing these in each
+    // iteration.  (attach() would implicitly construct them.)
+    // * without relying on compiler optimization.
+    ROTableColumn incol(in, inColNames[k]);
+    TableColumn outcol(out, inColNames[k]);
+
+    outcol.putColumn(incol);
+  }
+  if(flush)
+    out.flush();
+  return retval;
+}
+
   Bool SubMS::copyAntenna(){
     const MSAntenna& oldAnt = mssel_p.antenna();
     MSAntenna& newAnt = msOut_p.antenna();
@@ -7239,8 +7324,66 @@ Bool SubMS::copyState()
   }
   return True;
 }
+
+void SubMS::createSubtables(MeasurementSet& ms, Table::TableOption option)
+{
+  SetupNewTable antennaSetup(ms.antennaTableName(),
+                             MSAntenna::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::ANTENNA),
+                             Table(antennaSetup));
+  SetupNewTable dataDescSetup(ms.dataDescriptionTableName(),
+                              MSDataDescription::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::DATA_DESCRIPTION), 
+                             Table(dataDescSetup));
+  SetupNewTable feedSetup(ms.feedTableName(),
+                          MSFeed::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::FEED), Table(feedSetup));
+  SetupNewTable flagCmdSetup(ms.flagCmdTableName(),
+                             MSFlagCmd::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::FLAG_CMD), 
+                             Table(flagCmdSetup));
+  SetupNewTable fieldSetup(ms.fieldTableName(),
+                           MSField::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::FIELD), Table(fieldSetup));
+  SetupNewTable historySetup(ms.historyTableName(),
+                             MSHistory::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::HISTORY), 
+                             Table(historySetup));
+  SetupNewTable observationSetup(ms.observationTableName(),
+                                 MSObservation::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::OBSERVATION), 
+                                Table(observationSetup));
+  SetupNewTable polarizationSetup(ms.polarizationTableName(),
+                                  MSPolarization::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::POLARIZATION),
+                                Table(polarizationSetup));
+  SetupNewTable processorSetup(ms.processorTableName(),
+			       MSProcessor::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::PROCESSOR),
+                                Table(processorSetup));
+  SetupNewTable spectralWindowSetup(ms.spectralWindowTableName(),
+                                    MSSpectralWindow::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::SPECTRAL_WINDOW),  
+                                Table(spectralWindowSetup));
+  SetupNewTable stateSetup(ms.stateTableName(),
+                           MSState::requiredTableDesc(),option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::STATE),  
+                                Table(stateSetup));
+
+  // add the optional Source sub table to allow for specification of the rest
+  // frequency
+  SetupNewTable sourceSetup(ms.sourceTableName(), MSSource::requiredTableDesc(),
+                            option);
+  ms.rwKeywordSet().defineTable(MS::keywordName(MS::SOURCE),
+                                Table(sourceSetup, 0));
+
+  // update the references to the subtable keywords
+  ms.initRefs();
+}
   
   Bool SubMS::copyPointing(){
+    LogIO os(LogOrigin("SubMS", "copyPointing()"));
+
     //Pointing is allowed to not exist
     if(Table::isReadable(mssel_p.pointingTableName())){
       // An attempt to select from POINTING by timerange.  Fails because the
@@ -7259,36 +7402,41 @@ Bool SubMS::copyState()
       //Wconst Table oldPoint(mssel_p.pointingTableName(), Table::Old);
       const MSPointing& oldPoint = mssel_p.pointing();
 
-      if(oldPoint.nrow() > 0){
-	// Could be declared as Table&
-        MSPointing& newPoint = msOut_p.pointing();
+      if(!antennaSel_p && timeRange_p == ""){
+        if(PlainTable::tableCache()(msOut_p.pointingTableName()))
+          PlainTable::tableCache().remove(msOut_p.pointingTableName());
+        oldPoint.deepCopy(msOut_p.pointingTableName(), Table::New, False,
+                          Table::AipsrcEndian);
+        Table newPoint(msOut_p.pointingTableName(), Table::Update);
+        msOut_p.rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
+                                           newPoint);
+        msOut_p.initRefs();
+      }
+      else{
+        setupNewPointing();
 
-        LogIO os(LogOrigin("SubMS", "copyPointing()"));
-
-        // Add optional columns if present in oldPoint.
-        uInt nAddedCols = addOptionalColumns(oldPoint, newPoint, true);
-        os << LogIO::DEBUG1 << "POINTING has " << nAddedCols
-           << " optional columns." << LogIO::POST;
+        if(oldPoint.nrow() > 0){
+          // Could be declared as Table&
+          MSPointing& newPoint = msOut_p.pointing();
+          // Add optional columns if present in oldPoint.
+          uInt nAddedCols = addOptionalColumns(oldPoint, newPoint, true);
+          os << LogIO::DEBUG1 << "POINTING has " << nAddedCols
+             << " optional columns." << LogIO::POST;
 	
-        // W = Works, DW = Doesn't Work
-        //DW  	msOut_p.pointing() = mssel_p.pointing();	
-        //DW  	//TableCopy::copyInfo(newPoint, oldPoint);
-        //W  	TableColumn newTC(newPoint, "DIRECTION");
-        //W  	const ROScalarColumn<MDirection> oldTC(oldPoint, "DIRECTION");
-        //W  	const TableColumn oldTC(oldPoint, "DIRECTION");
-        //W  	newTC.rwKeywordSet() = oldTC.keywordSet();
+          // W = Works, DW = Doesn't Work
+          //DW  	msOut_p.pointing() = mssel_p.pointing();	
+          //DW  	//TableCopy::copyInfo(newPoint, oldPoint);
+          //W  	TableColumn newTC(newPoint, "DIRECTION");
+          //W  	const ROScalarColumn<MDirection> oldTC(oldPoint, "DIRECTION");
+          //W  	const TableColumn oldTC(oldPoint, "DIRECTION");
+          //W  	newTC.rwKeywordSet() = oldTC.keywordSet();
 
-        const ROMSPointingColumns oldPCs(oldPoint);
-        MSPointingColumns newPCs(newPoint);
-        newPCs.setEpochRef(MEpoch::castType(oldPCs.timeMeas().getMeasRef().getType()));
-        newPCs.setDirectionRef(MDirection::castType(oldPCs.directionMeasCol().getMeasRef().getType()));
-        newPCs.setEncoderDirectionRef(MDirection::castType(oldPCs.encoderMeas().getMeasRef().getType()));
+          const ROMSPointingColumns oldPCs(oldPoint);
+          MSPointingColumns newPCs(newPoint);
+          newPCs.setEpochRef(MEpoch::castType(oldPCs.timeMeas().getMeasRef().getType()));
+          newPCs.setDirectionRef(MDirection::castType(oldPCs.directionMeasCol().getMeasRef().getType()));
+          newPCs.setEncoderDirectionRef(MDirection::castType(oldPCs.encoderMeas().getMeasRef().getType()));
 
-	
-        if(!antennaSel_p && timeRange_p == ""){
-          TableCopy::copyRows(newPoint, oldPoint);
-        }
-        else{
           const ROScalarColumn<Int>& antIds  = oldPCs.antennaId();
           const ROScalarColumn<Double>& time = oldPCs.time();
           ScalarColumn<Int>& 	     outants = newPCs.antennaId();
@@ -7320,12 +7468,32 @@ Bool SubMS::copyState()
           }
 	  newPoint.flush();
         }
-        //DW 	//	TableCopy::copySubTables(newPoint, oldPoint);
-        //DW	oldPoint.deepCopy(msOut_p.pointingTableName(), Table::NewNoReplace);
       }
     }
+    else
+      setupNewPointing();       // Make an empty stub for MSColumns.
+
     return True;
   }
+
+void SubMS::setupNewPointing()
+{
+  SetupNewTable pointingSetup(msOut_p.pointingTableName(),
+                              MSPointing::requiredTableDesc(), Table::New);
+  // POINTING can be large, set some sensible defaults for storageMgrs
+  IncrementalStMan ismPointing ("ISMPointing");
+  StandardStMan ssmPointing("SSMPointing", 32768);
+  pointingSetup.bindAll(ismPointing, True);
+  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::DIRECTION),
+                           ssmPointing);
+  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TARGET),
+                           ssmPointing);
+  pointingSetup.bindColumn(MSPointing::columnName(MSPointing::TIME),
+                           ssmPointing);
+  msOut_p.rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
+                                     Table(pointingSetup));
+  msOut_p.initRefs();
+}
   
   Bool SubMS::copyWeather(){
     // Weather is allowed to not exist.

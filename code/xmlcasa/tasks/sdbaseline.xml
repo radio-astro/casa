@@ -14,7 +14,8 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
   <description>ASAP SD calibration task (based on the ALMATST5 recommendations):
         fit/subtract a spectral baseline 
 
-        Modified (add parameters nwave,maxwavelength) 2011-03-29 WK
+        Modified (add parameters applyfft,fftmethod,fftthresh,addwn,rejwn) 2011-06-07 WK
+        Modified (delete parameters nwave,maxwavelength) 2011-06-07 WK
         Modified (rename parameter masking to maskmode) 2011-03-10 WK
         Modified (change parameter order to blfunc's subparam) 2011-02-25 WK
         Modified (add parameters blfunc,npiece,clipthresh,clipniter) 2011-02-25 WK
@@ -148,14 +149,29 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
             <value>2</value>
     </param>
 
-    <param type="any" name="nwave" subparam="true">
-            <description>wave numbers used for fitting (e.g. 3 or [0,1,2])</description>
-	    <value type='int'>3</value>
+    <param type="bool" name="applyfft" subparam="true">
+            <description>automatically set wave numbers of sinusoids</description>
+            <value>True</value>
     </param>
 
-    <param type="double" name="maxwavelength" subparam="true">
-            <description>the longest sinusoidal wavelength in unit of sw width</description>
-            <value>1.0</value>
+    <param type="string" name="fftmethod" subparam="true">
+            <description>method for automatically set wave numbers of sinusoids</description>
+            <value>fft</value>
+    </param>
+
+    <param type="any" name="fftthresh" subparam="true">
+            <description>threshold to select wave numbers of sinusoids</description>
+	    <value type='double'>3.0</value>
+    </param>
+
+    <param type="any" name="addwn" subparam="true">
+            <description>additional wave numbers to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="any" name="rejwn" subparam="true">
+            <description>wave numbers NOT to use</description>
+	    <value type='vector'><value></value></value>
     </param>
 
     <param type="double" name="clipthresh" subparam="true">
@@ -176,6 +192,16 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     <param type="bool" name="verbose">
             <description>output fitting results to logger and a file as well</description>
             <value>True</value>
+    </param>
+
+    <param type="bool" name="showprogress">
+            <description>show progress status for large data</description>
+            <value>True</value>
+    </param>
+
+    <param type="int" name="minnrow" subparam="true">
+            <description>minimum number of input spectra to show progress status</description>
+            <value>1000</value>
     </param>
 
     <param type="string" name="outfile">
@@ -246,10 +272,18 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="clipniter"><value>0</value></default>
 	        </equals>
                 <equals value="sinusoid">
-			<default param="nwave"><value type="int">3</value></default>
-			<default param="maxwavelength"><value>1.0</value></default>
+			<default param="applyfft"><value>True</value></default>
+			<default param="fftmethod"><value type="string">fft</value></default>
+			<default param="fftthresh"><value type="double">3.0</value></default>
+			<default param="addwn"><value type="vector"><value></value></value></default>
+			<default param="rejwn"><value type="vector"><value></value></value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>0</value></default>
+	        </equals>
+	    </when>
+	    <when param="showprogress">
+		<equals type="bool" value="True">
+			<default param="minnrow"><value>1000</value></default>
 	        </equals>
 	    </when>
     </constraints>
@@ -372,16 +406,35 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                  npiece -- number of the element polynomials of cubic spline curve
                          options: (int) (&lt;0 turns off baseline fitting)
                          default: 2
-                 nwave -- wave number(s) of sinusoid for fitting.
-                         both integer (for the maximum one) and list (for all) 
-                         can be used. Zero means constant term. 
-                         default: 3
-                         example: 4 uses sinusoids with wave numbers from 0 to 4,
-                                    i.e. 0, 1, 2, 3, and 4.
-                                  [1,8] uses sinusoids with wave numbers 1 and 8.
-                 maxwavelength -- the longest sinusoidal wavelength in unit of 
-                         spectral window width.
-                         default: 1.0
+                 applyfft -- automatically set wave numbers of sinusoidal functions 
+                         for fitting by applying some method like FFT.
+                         options: (bool) True, False
+                         default: True
+                 fftmethod -- method to be used when applyfft=True. Now only 
+                         'fft' is available and it is the default.
+                 fftthresh -- threshold to select wave numbers to be used for 
+                         sinusoidal fitting. both (float) and (str) accepted.
+                         given a float value, the unit is set to sigma.
+                         for string values, allowed formats include:
+                           'xsigma' or 'x' (= x-sigma level. e.g., '3sigma'), or
+                           'topx' (= the x strongest ones, e.g. 'top5').
+                         default is 3.0 (unit: sigma).
+                 addwn -- additional wave number(s) of sinusoids to be used 
+                         for fitting. 
+                         (list) and (int) are accepted to specify every
+                         wave numbers. also (str) can be used in case
+                         you need to specify wave numbers in a certain range,
+                         e.g., 'a-b' (= a, a+1, a+2, ..., b-1, b),
+                               '&lt;a'  (= 0,1,...,a-2,a-1),
+                               '&gt;=a' (= a, a+1, ... up to the maximum wave
+                                      number corresponding to the Nyquist
+                                      frequency for the case of FFT).
+                         default: []
+                 rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
+                         can be set just as addwn but has higher priority:
+                         wave numbers which are specified both in addwn
+                         and rejwn will NOT be used. 
+                         default: []
                  clipthresh -- clipping threshold for iterative fitting
                          default: 3
                  clipniter -- maximum iteration number
@@ -399,6 +452,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                          logger or a text file (&lt;outfile&gt;_blparam.txt), while 
                          the processing speed gets faster by a factor of about 20 
                          percent
+        showprogress -- show progress status for large data
+                default: True
+        minnrow -- minimum number of input spectra to show progress status
+                default: 1000
         outfile -- Name of output file
                 default: '' (&lt;sdfile&gt;_bs)
         outform -- format of output file

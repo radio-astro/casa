@@ -5,7 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, nwave, maxwavelength, clipthresh, clipniter, verify, verbose, outfile, outform, overwrite, plotlevel):
+def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
@@ -237,8 +237,11 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				header += "  clipThresh: %f\n"%(clipthresh)
 				header += "   clipNIter: %d\n"%(clipniter)
 			elif blfunc == 'sinusoid':
-				header += "       nWave: "+str(nwave)+"\n"
-				header += "  maxWaveLen: %d\n"%(maxwavelength)
+				header += "    applyFFT: "+str(applyfft)+"\n"
+				header += "   fftMethod: "+fftmethod+"\n"
+				header += "   fftThresh: "+str(fftthresh)+"\n"
+				header += "    addWaveN: "+str(addwn)+"\n"
+				header += "    rejWaveN: "+str(rejwn)+"\n"
 				header += "  clipThresh: %f\n"%(clipthresh)
 				header += "   clipNIter: %d\n"%(clipniter)
 			header += "   Mask mode: "+maskmode+"\n"
@@ -304,25 +307,25 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				
 			if (maskmode == 'auto'):
 				if (blfunc == 'poly'):
-					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=blfile)
+					s.auto_poly_baseline(mask=msk,order=order,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 				elif (blfunc == 'cspline'):
-					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=blfile)
+					s.auto_cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 				elif (blfunc == 'sinusoid'):
-					s.auto_sinusoid_baseline(mask=msk,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,outlog=verbose,blfile=blfile)
+					s.auto_sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,edge=edge,threshold=thresh,chan_avg_limit=avg_limit,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 			else:
 				if (blfunc == 'poly'):
-					s.poly_baseline(mask=msk,order=order,plot=verify,outlog=verbose,blfile=blfile)
+					s.poly_baseline(mask=msk,order=order,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 				elif (blfunc == 'cspline'):
-					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=blfile)
+					s.cspline_baseline(mask=msk,npiece=npiece,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 				elif (blfunc == 'sinusoid'):
-					s.sinusoid_baseline(mask=msk,nwave=nwave,maxwavelength=maxwavelength,clipthresh=clipthresh,clipniter=clipniter,plot=verify,outlog=verbose,blfile=blfile)
+					s.sinusoid_baseline(mask=msk,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,clipthresh=clipthresh,clipniter=clipniter,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 				
 			# the above 14 lines will eventually shrink into the following 2 commands:
 			#
-			#sbinfo = s.create_sbinfo(blfunc=blfunc,order=order,npiece=npiece,nwave=nwave,maxwavelength=maxwavelength,\
+			#sbinfo = s.create_sbinfo(blfunc=blfunc,order=order,npiece=npiece,applyfft=applyfft,fftmethod=fftmethod,fftthresh=fftthresh,addwn=addwn,rejwn=rejwn,\
 			#                         masklist=masklist,maskmode=maskmode,edge=edge,threshold=threshold,chan_avg_limit=chan_avg_limit,\
 			#                         clipthresh=clipthresh,clipniter=clipniter)
-			#s.sub_baseline(sbinfo=sbinfo,plot=verify,outlog=verbose,blfile=blfile)
+			#s.sub_baseline(sbinfo=sbinfo,plot=verify,showprogress=showprogress,minnrow=minnrow,outlog=verbose,blfile=blfile)
 			#
 			# where
 			# sbinfo = {'func':funcinfo, 'mask':maskinfo, 'clip':clipinfo}
@@ -331,7 +334,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			#     funcinfo = {'type':'poly', 'params':{'order':order}}
 			#     funcinfo = {'type':'cspline', 'params':{'npiece':npiece}}
 			#     funcinfo = {'type':'sspline', 'params':{'lambda':lambda}}
-			#     funcinfo = {'type':'sinusoid', 'params':{'nwave':nwave, 'maxwavelength':maxwavelength}}
+			#     funcinfo = {'type':'sinusoid', 'params':{'applyfft':applyfft, 'fftmethod':fftmethod, 'fftthresh':fftthresh, 'addwn':addwn, 'rejwn':rejwn}}
 			# maskinfo should be one of the follows:
 			#     maskinfo = {'base':masklist, 'aux':{'type':'auto', 'params':{'edge':edge, 'threshold':thresh, 'chan_avg_limit':avg_limit}}}
 			#     maskinfo = {'base':masklist, 'aux':{'type':'list'}}

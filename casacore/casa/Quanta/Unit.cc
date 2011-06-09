@@ -167,12 +167,15 @@ static inline void pass_one( char *source, char *dest ) {
 
 static inline void pass_two( char *source, char *dest ) {
     while( *source == '.' ) ++source;		/** bp **/
-    for ( char *end = source + strlen(source) - 1; end != source; --end ) {
-	if ( *end == '.' )
-	    *end = '\0';			/** ep **/
-	else
-	    break;
+    if ( *source ) {
+	for ( char *end = source + strlen(source) - 1; end != source; --end ) {
+	    if ( *end == '.' )
+		*end = '\0';			/** ep **/
+	    else
+		break;
+	}
     }
+
     while ( *source ) {				/** f6 **/
 	switch( *source ) {
 	case '.': {
@@ -189,6 +192,7 @@ static inline void pass_two( char *source, char *dest ) {
 		}
 	    }
 	    *dest++ = (found_slash ? '/' : '.');
+	    break;
 	}
 	default:
 	    *dest++ = *source++;

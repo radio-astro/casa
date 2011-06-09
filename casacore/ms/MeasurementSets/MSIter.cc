@@ -338,10 +338,11 @@ void MSIter::setInterval(Double timeInterval)
 void MSIter::origin()
 {
   curMS_p=0;
+  checkFeed_p=True;
   if (!tabIterAtStart_p[curMS_p]) tabIter_p[curMS_p]->reset();
   setState();
   newMS_p=newArray_p=newSpectralWindow_p=newField_p=newPolarizationId_p=
-    newDataDescId_p=more_p=checkFeed_p=True;
+    newDataDescId_p=more_p=True;
 }
 
 MSIter & MSIter::operator++(int)
@@ -376,8 +377,9 @@ void MSIter::advance()
 
 void MSIter::setState()
 {
-  checkFeed_p = newMS_p;
   setMSInfo();
+  if(newMS_p)
+    checkFeed_p=True;
   curTable_p=tabIter_p[curMS_p]->table();
   colArray_p.attach(curTable_p,MS::columnName(MS::ARRAY_ID));
   colDataDesc_p.attach(curTable_p,MS::columnName(MS::DATA_DESC_ID));

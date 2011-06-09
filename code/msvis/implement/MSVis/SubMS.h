@@ -201,12 +201,16 @@ class SubMS
 
   
   // Add optional columns to outTab if present in inTab and possColNames.
-  // M must be derived from a Table.
   // beLazy should only be true if outTab is in its default state.
   // Returns the number of added columns.
-  template<class M>
-  static uInt addOptionalColumns(const M& inTab, M& outTab,
+  static uInt addOptionalColumns(const Table& inTab, Table& outTab,
                                  const Bool beLazy=false);
+
+  // Like TableCopy::copyRows, but by column.
+  static Bool copyCols(Table& out, const Table& in, const Bool flush=True);
+
+  // A customized version of MS::createDefaultSubtables().
+  static void createSubtables(MeasurementSet& ms, Table::TableOption option);
 
   // Declared static because it's used in setupMS().  Therefore it can't use
   // any member variables.  It is also used in MSFixvis.cc.
@@ -513,6 +517,9 @@ class SubMS
 		       std::map<Int, Int>& mapper);
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
+  // Sets up the stub of a POINTING, enough to create an MSColumns.
+  void setupNewPointing();
+
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
@@ -571,10 +578,6 @@ class SubMS
 };
 
 } //# NAMESPACE CASA - END
-
-#ifndef AIPS_NO_TEMPLATE_SRC
-#include <msvis/MSVis/SubMS.tcc>
-#endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
 

@@ -540,12 +540,14 @@ public:
   // Get the spw, start  and nchan for all the ms's is this Visiter that 
   // match the frequecy "freqstart-freqStep" and "freqEnd+freqStep" range
   // Can help in doing channel selection above..
+  // freqFrame is the frame the caller frequency values are in (freqStart and freqEnd)
+  // These will be converted to the frame of the selected spw to match
 
   virtual void getSpwInFreqRange(Block<Vector<Int> >& spw, 
-			 Block<Vector<Int> >& start, 
-			 Block<Vector<Int> >& nchan, 
-			 Double freqStart, Double freqEnd, 
-			 Double freqStep);
+				 Block<Vector<Int> >& start, 
+				 Block<Vector<Int> >& nchan, 
+				 Double freqStart, Double freqEnd, 
+				 Double freqStep, MFrequency::Types freqFrame=MFrequency::LSRK);
 
   // Attach a VisBuffer object.
   // Note that while more than one VisBuffer may be attached, only the

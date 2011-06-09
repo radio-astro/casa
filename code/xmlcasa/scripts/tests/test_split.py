@@ -929,9 +929,9 @@ class split_test_unorderedpolspw(SplitChecker):
         self.check_subtables('', [(2, 128)])
         #self.__class__.n_tests_passed += 1
 
-class split_test_spectral_window(SplitChecker):
+class split_test_sw_and_fc(SplitChecker):
     """
-    Check SPECTRAL_WINDOW with chan selection and averaging.
+    Check SPECTRAL_WINDOW and FLAG_CMD with chan selection and averaging.
     """
     need_to_initialize = True
     inpms = datapath + '/unittest/split/2562.ms'
@@ -948,7 +948,7 @@ class split_test_spectral_window(SplitChecker):
 
         shutil.rmtree(outms, ignore_errors=True)
         try:
-            print "\nProcessing SPECTRAL_WINDOW with width " + spwwidth[1] + '.'
+            print "\nChecking SPECTRAL_WINDOW and FLAG_CMD with width " + spwwidth[1] + '.'
             splitran = split(self.inpms, outms, datacolumn='data',
                              field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
                              timebin='0s', timerange='',
@@ -966,12 +966,28 @@ class split_test_spectral_window(SplitChecker):
             record['tb']    = tb.getcell('TOTAL_BANDWIDTH', 0)
             record['rf']    = tb.getcell('REF_FREQUENCY', 0)
             tb.close()
+            tb.open(outms + '/FLAG_CMD')
+            record['fc'] = []
+            for i in (0, 1, 2, 3, 4, 515, 516):
+                record['fc'].append(tb.getcell('COMMAND', i))
+            tb.close()
             shutil.rmtree(outms, ignore_errors=True)
         except Exception, e:
             print "Error selecting spws 1, 3, and 5 from", self.inpms
             raise e
         self.__class__.records[spwwidth] = record
         return splitran
+
+    def test_fc_noavg(self):
+        """Updating of FLAG_CMD after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['fc'],
+                 ['',
+                  "antenna='ea18' spw='0:28~43' timerange='2010/04/08/20:03:52.502~2010/04/08/20:03:55.504'",
+                  "antenna='ea20' timerange='2010/04/08/20:03:56.804~2010/04/08/20:03:59.936'",
+                  "antenna='ea17' spw='0:1~21' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.259'",
+                  "antenna='ea22' spw='0:0~11' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.829'",
+                  " antenna='ea17' spw='0:1~21' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.259,2010/04/08/20:04:50.917~2010/04/08/20:04:58.403,2010/04/08/20:06:01.627~2010/04/08/20:06:05.527,2010/04/08/20:06:16.444~2010/04/08/20:06:20.656,2010/04/08/20:06:36.308~2010/04/08/20:06:40.113,2010/04/08/20:06:56.059~2010/04/08/20:06:59.095,2010/04/08/20:07:16.302~2010/04/08/20:07:19.909,2010/04/08/20:07:36.027~2010/04/08/20:07:40.325,2010/04/08/20:07:56.374~2010/04/08/20:08:00.534,2010/04/08/20:08:16.436~2010/04/08/20:08:20.406,2010/04/08/20:08:35.928~2010/04/08/20:08:39.026,2010/04/08/20:08:56.301~2010/04/08/20:08:59.788,2010/04/08/20:09:16.035~2010/04/08/20:09:20.368,2010/04/08/20:09:36.382~2010/04/08/20:09:40.741,2010/04/08/20:09:56.591~2010/04/08/20:10:00.388,2010/04/08/20:10:16.083~2010/04/08/20:10:19.120,2010/04/08/20:10:36.085~2010/04/08/20:10:39.700,2010/04/08/20:10:49.701~2010/04/08/20:11:07.582,2010/04/08/20:10:49.900~2010/04/08/20:10:57.482,2010/04/08/20:10:50.401~2010/04/08/20:10:54.665'",
+                  " antenna='ea22' spw='0:0~11' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.829,2010/04/08/20:04:51.020~2010/04/08/20:04:55.716,2010/04/08/20:06:01.661~2010/04/08/20:06:05.692,2010/04/08/20:06:16.392~2010/04/08/20:06:20.699,2010/04/08/20:06:36.403~2010/04/08/20:06:40.312,2010/04/08/20:06:55.903~2010/04/08/20:06:59.121,2010/04/08/20:07:16.181~2010/04/08/20:07:19.702,2010/04/08/20:07:35.915~2010/04/08/20:07:40.438,2010/04/08/20:07:56.297~2010/04/08/20:08:00.638,2010/04/08/20:08:16.445~2010/04/08/20:08:20.458,2010/04/08/20:08:36.006~2010/04/08/20:08:39.129,2010/04/08/20:08:56.129~2010/04/08/20:08:59.736,2010/04/08/20:09:16.044~2010/04/08/20:09:20.549,2010/04/08/20:09:36.374~2010/04/08/20:09:40.793,2010/04/08/20:09:56.479~2010/04/08/20:10:00.579,2010/04/08/20:10:15.781~2010/04/08/20:10:19.085,2010/04/08/20:10:36.093~2010/04/08/20:10:39.597,2010/04/08/20:10:49.805~2010/04/08/20:11:06.294,2010/04/08/20:10:49.995~2010/04/08/20:10:54.000,2010/04/08/20:10:50.298~2010/04/08/20:10:55.417'"])
 
     def test_rf_noavg(self):
         """REF_FREQUENCY after selection, but no averaging."""
@@ -1005,9 +1021,9 @@ class split_test_spectral_window(SplitChecker):
         """EFFECTIVE_BW after selection, but no averaging."""
         check_eq(self.records[('1:12~115', '1')]['eb'], 14771.10564634, 1e-4)
 
-    def test_tb_wavg(self):
+    def test_tb_noavg(self):
         """TOTAL_BANDWIDTH after selection, but no averaging."""
-        check_eq(self.records[('1:12~115', '1')]['tb'], 1272146.2143842829, 1e-4)
+        check_eq(self.records[('1:12~115', '1')]['tb'], 1269582.6340653566, 1e-4)
 
     def test_nchan_wavg(self):
         """# of channels after averaging, but no selection."""
@@ -1018,7 +1034,7 @@ class split_test_spectral_window(SplitChecker):
         check_eq(self.records[('1', '3')]['rf'], 22142369695.726768)
 
     def test_res_wavg(self):
-        """RESOLUTION after averaging, but no selection."""
+        """RESOLUTION after averaging and simple selection."""
         # The last one really is different (128 % 3 != 0), but the variation
         # of the rest is numerical jitter.
         check_eq(self.records[('1', '3')]['res'],
@@ -1096,6 +1112,17 @@ class split_test_spectral_window(SplitChecker):
         """Is TOTAL_BANDWIDTH conserved after averaging, but no selection?"""
         # The expected value comes from spw 1 of inpms.
         check_eq(self.records[('1', '3')]['tb'], 1550355.7165990437, 0.1)
+
+    def test_fc_wavg(self):
+        """Updating of FLAG_CMD after averaging, but simple selection."""
+        check_eq(self.records[('1', '3')]['fc'],
+                 ['',
+                  "antenna='ea18' spw='0:13~18' timerange='2010/04/08/20:03:52.502~2010/04/08/20:03:55.504'",
+                  "antenna='ea20' timerange='2010/04/08/20:03:56.804~2010/04/08/20:03:59.936'",
+                  "antenna='ea17' spw='0:1~2;4^2;5~11' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.259'",
+                  "antenna='ea22' spw='0:3~7' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.829'",
+                  " antenna='ea17' spw='0:1~2;4^2;5~11' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.259,2010/04/08/20:04:50.917~2010/04/08/20:04:58.403,2010/04/08/20:06:01.627~2010/04/08/20:06:05.527,2010/04/08/20:06:16.444~2010/04/08/20:06:20.656,2010/04/08/20:06:36.308~2010/04/08/20:06:40.113,2010/04/08/20:06:56.059~2010/04/08/20:06:59.095,2010/04/08/20:07:16.302~2010/04/08/20:07:19.909,2010/04/08/20:07:36.027~2010/04/08/20:07:40.325,2010/04/08/20:07:56.374~2010/04/08/20:08:00.534,2010/04/08/20:08:16.436~2010/04/08/20:08:20.406,2010/04/08/20:08:35.928~2010/04/08/20:08:39.026,2010/04/08/20:08:56.301~2010/04/08/20:08:59.788,2010/04/08/20:09:16.035~2010/04/08/20:09:20.368,2010/04/08/20:09:36.382~2010/04/08/20:09:40.741,2010/04/08/20:09:56.591~2010/04/08/20:10:00.388,2010/04/08/20:10:16.083~2010/04/08/20:10:19.120,2010/04/08/20:10:36.085~2010/04/08/20:10:39.700,2010/04/08/20:10:49.701~2010/04/08/20:11:07.582,2010/04/08/20:10:49.900~2010/04/08/20:10:57.482,2010/04/08/20:10:50.401~2010/04/08/20:10:54.665'",
+                  " antenna='ea22' spw='0:3~7' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.829,2010/04/08/20:04:51.020~2010/04/08/20:04:55.716,2010/04/08/20:06:01.661~2010/04/08/20:06:05.692,2010/04/08/20:06:16.392~2010/04/08/20:06:20.699,2010/04/08/20:06:36.403~2010/04/08/20:06:40.312,2010/04/08/20:06:55.903~2010/04/08/20:06:59.121,2010/04/08/20:07:16.181~2010/04/08/20:07:19.702,2010/04/08/20:07:35.915~2010/04/08/20:07:40.438,2010/04/08/20:07:56.297~2010/04/08/20:08:00.638,2010/04/08/20:08:16.445~2010/04/08/20:08:20.458,2010/04/08/20:08:36.006~2010/04/08/20:08:39.129,2010/04/08/20:08:56.129~2010/04/08/20:08:59.736,2010/04/08/20:09:16.044~2010/04/08/20:09:20.549,2010/04/08/20:09:36.374~2010/04/08/20:09:40.793,2010/04/08/20:09:56.479~2010/04/08/20:10:00.579,2010/04/08/20:10:15.781~2010/04/08/20:10:19.085,2010/04/08/20:10:36.093~2010/04/08/20:10:39.597,2010/04/08/20:10:49.805~2010/04/08/20:11:06.294,2010/04/08/20:10:49.995~2010/04/08/20:10:54.000,2010/04/08/20:10:50.298~2010/04/08/20:10:55.417'"])
         
 class split_test_tav_then_cvel(SplitChecker):
     need_to_initialize = True
@@ -1243,5 +1270,5 @@ def suite():
             split_test_state,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
-            split_test_spectral_window, split_test_cavcd, split_test_almapol]
+            split_test_sw_and_fc, split_test_cavcd, split_test_almapol]
     
