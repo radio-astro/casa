@@ -1134,6 +1134,51 @@ void VisBuffer::resetWeightMat()
 
 }
 
+
+// Rotate visibility phase for phase center offsets
+void VisBuffer::phaseCenterShift(const Vector<Double>& phase)
+{
+
+  AlwaysAssert(phase.nelements()==nRow(), AipsError);
+
+  // phase is in metres 
+  // phase*(-2*pi*f/c) gives phase for the channel of the given baseline in radian
+  //   sign convention will _correct_ data
+
+  Vector<Double> freq(frequency());
+  Double ph, udx;
+  Complex cph;
+
+  for (Int irow = 0; irow < nRow(); ++irow){
+
+    udx = phase(irow) * -2.0 * C::pi/C::c; // in radian/Hz
+
+    for (Int ichn = 0; ichn < nChannel(); ++ichn) {
+      // Calculate the Complex factor for this row and channel
+      ph = udx * freq(ichn);
+
+      if(ph!=0.){
+	cph = Complex(cos(ph), sin(ph));
+	// Shift each correlation:
+	for (Int icor = 0; icor < nCorr(); ++icor) {
+	  if (visCubeOK_p) {
+	    visCube_p(icor, ichn, irow) *= cph;
+	  }
+	  if (modelVisCubeOK_p) {
+	    modelVisCube_p(icor, ichn, irow) *= cph;
+	  }
+	  if (correctedVisCubeOK_p) {
+	    correctedVisCube_p(icor, ichn, irow) *= cph;
+	  }
+	  // Of course floatDataCube does not have a phase to rotate.
+	}
+      }
+
+    }
+  }
+
+}
+
 // Rotate visibility phase for phase center offsets
 void VisBuffer::phaseCenterShift(Double dx, Double dy)
 {
@@ -1144,9 +1189,8 @@ void VisBuffer::phaseCenterShift(Double dx, Double dy)
   }
 
   // Offsets in radians (input is arcsec)
-  //   sign convention will _correct_ data
-  dx *= (-C::pi / 180.0 / 3600.0);
-  dy *= (-C::pi / 180.0 / 3600.0);
+  dx *= (C::pi / 180.0 / 3600.0);
+  dy *= (C::pi / 180.0 / 3600.0);
 
   // Extra path as fraction of U and V
   Vector<Double> udx;
@@ -1158,33 +1202,9 @@ void VisBuffer::phaseCenterShift(Double dx, Double dy)
 
   // Combine axes
   udx += vdy;
-  udx /= C::c; // in light-seconds
-  udx *= (2.0 * C::pi); // in radian.seconds/cycle
 
-  Vector<Double> freq(frequency());
-  Double ph;
-  Complex cph;
+  phaseCenterShift(udx);
 
-  for (Int irow = 0; irow < nRow(); ++irow){
-    for (Int ichn = 0; ichn < nChannel(); ++ichn) {
-      // Calculate the Complex factor for this row and channel
-      ph = udx(irow) * freq(ichn);
-      cph = Complex(cos(ph), sin(ph));
-      // Shift each correlation:
-      for (Int icor = 0; icor < nCorr(); ++icor) {
-        if (visCubeOK_p) {
-          visCube_p(icor, ichn, irow) *= cph;
-        }
-        if (modelVisCubeOK_p) {
-          modelVisCube_p(icor, ichn, irow) *= cph;
-        }
-        if (correctedVisCubeOK_p) {
-          correctedVisCube_p(icor, ichn, irow) *= cph;
-        }
-        // Of course floatDataCube does not have a phase to rotate.
-      }
-    }
-  }
 }
 
 
