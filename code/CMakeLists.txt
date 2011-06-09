@@ -603,7 +603,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.61
+           VERSION 1.0.62
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -1015,7 +1015,9 @@ casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( spectrallines CASACORE )
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines )
+casa_add_module( imageanalysis CASACORE )
+
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.
