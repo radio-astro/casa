@@ -194,6 +194,16 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
             <value>True</value>
     </param>
 
+    <param type="bool" name="showprogress">
+            <description>show progress status for large data</description>
+            <value>True</value>
+    </param>
+
+    <param type="int" name="minnrow" subparam="true">
+            <description>minimum number of input spectra to show progress status</description>
+            <value>1000</value>
+    </param>
+
     <param type="string" name="outfile">
 	    <description>output file name</description>
 	    <value></value>
@@ -269,6 +279,11 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 			<default param="rejwn"><value type="vector"><value></value></value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>0</value></default>
+	        </equals>
+	    </when>
+	    <when param="showprogress">
+		<equals type="bool" value="True">
+			<default param="minnrow"><value>1000</value></default>
 	        </equals>
 	    </when>
     </constraints>
@@ -437,6 +452,10 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                          logger or a text file (&lt;outfile&gt;_blparam.txt), while 
                          the processing speed gets faster by a factor of about 20 
                          percent
+        showprogress -- show progress status for large data
+                default: True
+        minnrow -- minimum number of input spectra to show progress status
+                default: 1000
         outfile -- Name of output file
                 default: '' (&lt;sdfile&gt;_bs)
         outform -- format of output file
