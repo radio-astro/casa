@@ -100,7 +100,7 @@ import listing
 
 # Enable benchmarking?
 benchmarking = True
-
+checklistvis=False
 # 
 # Set up some useful variables
 #
@@ -734,49 +734,56 @@ if benchmarking:
 #=====================================================================
 # List corrected data in MS
 #
-print '--Listvis--'
-listvisOut = prefix + '.listvis.out'
+passlistvis=True
+listvistime=0
 
-default('listvis')
-vis = msfile
-datacolumn = 'corrected'
-selectdata=True
-antenna='VA03&VA04'
-listfile = listvisOut
-print "Listing corrected data."
-print "Reducing output by selecting only baseline 3&4."
-listvis()
 
-# Record visibility listing time
-if benchmarking:
-    listvistime = time.time()
 
-# Test the listvis output
-print "Comparing listvis corrected data output with repository standard..."
-standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.out'
-passlistvis = True
 
-# Test metadata
-print "  1. Checking that metadata agree."
-if (listing.diffMetadata(listvisOut,standardOut,prefix=prefix+".listvis")):
-    print "  Metadata agree"
-else:
-    print "  Metadata do not agree!"
-    passlistvis = False
+if(checklistvis):
+    print '--Listvis--'
+    listvisOut = prefix + '.listvis.out'
+    
+    default('listvis')
+    vis = msfile
+    datacolumn = 'corrected'
+    selectdata=True
+    antenna='VA03&VA04'
+    listfile = listvisOut
+    print "Listing corrected data."
+    print "Reducing output by selecting only baseline 3&4."
+    listvis()
 
-# Test data (floats)
-print "  2. Checking that data agree to within allowed imprecision..."
-precision = '0.200'
-print "     Allowed visibility imprecision is ", precision
-if ( listing.diffAmpPhsFloat(listvisOut,standardOut,prefix=prefix+".listvis",
+    # Record visibility listing time
+    if benchmarking:
+        listvistime = time.time()
+
+    # Test the listvis output
+    print "Comparing listvis corrected data output with repository standard..."
+    standardOut = pathname+'/data/regression/ngc5921/listvis.ant34.out'
+    passlistvis = True
+
+    # Test metadata
+    print "  1. Checking that metadata agree."
+    if (listing.diffMetadata(listvisOut,standardOut,prefix=prefix+".listvis")):
+        print "  Metadata agree"
+    else:
+        print "  Metadata do not agree!"
+        passlistvis = False
+
+    #Test data (floats)
+    print "  2. Checking that data agree to within allowed imprecision..."
+    precision = '0.200'
+    print "     Allowed visibility imprecision is ", precision
+    if ( listing.diffAmpPhsFloat(listvisOut,standardOut,prefix=prefix+".listvis",
                              precision=precision) ):
-    print "  Data agree"
-else:
-    print "  Data do not agree!"
-    passlistvis = False
+        print "  Data agree"
+    else:
+        print "  Data do not agree!"
+        passlistvis = False
 
-if (passlistvis): print "Passed listvis output test"
-else:             print "FAILED listvis output test"
+    if (passlistvis): print "Passed listvis output test"
+    else:             print "FAILED listvis output test"
 #
 #=====================================================================
 #
