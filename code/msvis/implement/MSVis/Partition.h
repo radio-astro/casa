@@ -35,6 +35,7 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
 //#include <casa/Utilities/CountedPtr.h>
+#include <msvis/MSVis/SubMS.h>
 
 #ifndef MSVIS_PARTITION_H
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -86,7 +87,7 @@ public:
 
   // Select spw and channels for each spw.
   // It returns true on success and false on failure.
-  Bool selectSpw(const String& spwstr, const Vector<Int>& steps);
+  Bool selectSpw(const String& spwstr);
 
   //select Time and time averaging or regridding
   //void selectTime();
@@ -96,14 +97,17 @@ public:
   Bool setmsselect(const String& spw="", const String& field="", 
 		   const String& baseline="", const String& scan="",
                    const String& uvrange="", const String& taql="", 
-		   const Vector<Int>& step=Vector<Int> (1,1),
-		   const String& subarray="", const String& correlation="");
+		   const String& subarray="");
 
   // Select source or field
   Bool selectSource(const Vector<Int>& fieldid);
   
   // Select Antennas to split out  
-  void selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel);
+  void selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel)
+  {
+    antennaSel_p = SubMS::pickAntennas(antennaId_p, antennaSelStr_p,
+				       antennaids, antennaSel);
+  } 
 
   // Select array IDs to use.
   void selectArray(const String& subarray);
@@ -129,29 +133,29 @@ public:
 		     const Vector<Int>& tileShape=Vector<Int>(1, 0),
 		     const String& combine="");
 
-  // //Method to make a scratch partition and even in memory if posssible
-  // //Useful if temporary subselection/averaging is necessary
-  // // It'll be in memory if the basic output ms is less than half of 
-  // // memory reported by HostInfo unless forced to by user...
-  // virtual MeasurementSet* makeScratchPartition(const Vector<MS::PredefinedColumns>& whichDataCols, 
-  // 				   const Bool forceInMemory=False);
-  // // In this form whichDataCol gets passed to parseColumnNames().
-  // virtual MeasurementSet* makeScratchPartition(const String& whichDataCol, 
-  // 				   const Bool forceInMemory=False);
+  //Method to make a scratch partition and even in memory if posssible
+  //Useful if temporary subselection/averaging is necessary
+  // It'll be in memory if the basic output ms is less than half of 
+  // memory reported by HostInfo unless forced to by user...
+  virtual MeasurementSet* makeScratchPartition(const Vector<MS::PredefinedColumns>& whichDataCols, 
+  				   const Bool forceInMemory=False);
+  // In this form whichDataCol gets passed to parseColumnNames().
+  virtual MeasurementSet* makeScratchPartition(const String& whichDataCol, 
+  				   const Bool forceInMemory=False);
 
-  // // This sets up a default new ms
-  // // Declared static as it can be (and is) called directly outside of Partition.
-  // // Therefore it is not dependent on any member variable.
-  // static MeasurementSet* setupMS(const String& msname, const Int nchan,
-  //                                const Int npol, const String& telescop,
-  //                                const Vector<MS::PredefinedColumns>& colNamesTok,
-  // 				 const Int obstype=0);
+  // This sets up a default new ms
+  // Declared static as it can be called directly outside of Partition.
+  // Therefore it is not dependent on any member variable.
+  static MeasurementSet* setupMS(const String& msname, const MeasurementSet& inms,
+				 const Int nchan, const Int npol, const String& telescop,
+                                 const Vector<MS::PredefinedColumns>& colNamesTok,
+  				 const Int obstype=0);
 
-  // // Same as above except allowing manual tileshapes
-  // static MeasurementSet* setupMS(const String& msname, const Int nchan,
-  //                                const Int npol,
-  //                                const Vector<MS::PredefinedColumns>& colNamesTok,
-  // 				 const Vector<Int>& tileShape=Vector<Int>(1,0));
+  // Same as above except allowing manual tileshapes
+  static MeasurementSet* setupMS(const String& msname, const MeasurementSet& inms,
+				 const Int nchan, const Int npol,
+                                 const Vector<MS::PredefinedColumns>& colNamesTok,
+  				 const Vector<Int>& tileShape=Vector<Int>(1,0));
   
   void verifyColumns(const MeasurementSet& ms, const Vector<MS::PredefinedColumns>& colNames);
 private:
@@ -181,12 +185,8 @@ private:
   Bool copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
                          const Bool writeToDataCol);
 
-  // return the number of unique antennas selected
-  //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
-  //                   Bool includeAutoCorr=False);
-
   // Used in a couple of places to estimate how much memory to grab.
-  Double n_bytes() {return mssel_p.nrow() * nchan_p[0] * ncorr_p[0] *
+  Double n_bytes() {return mssel_p.nrow() * maxnchan_p * maxncorr_p *
                            sizeof(Complex);}
 
   // Read the input, time average it to timeBin_p, and write the output.
@@ -211,8 +211,9 @@ private:
   String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?
                              // Must be lowercase at all times.
-  uInt maxnchan_p,    // The maximum # of channels and correlations for each
-       maxncorr_p;    // selected DDID.
+  Int maxnchan_p,    // The maximum # of channels and correlations for each
+      maxncorr_p;    // selected DDID.  (Int because NUM_CHAN and NUM_CORR
+                     // are Int instead of uInt.)
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;

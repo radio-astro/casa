@@ -173,23 +173,13 @@ Bool Partition::selectSpw(const String& spwstr)
   // Each row should have spw, start, stop, step
   Matrix<Int> chansel = mssel.getChanList(&ms_p, 1);
 
-  if(chansel.nrow() > 0) {         // Use myspwstr if it selected anything...
+  if(chansel.nrow() > 0){         // Use myspwstr if it selected anything...
     spw_p   = chansel.column(0);
-    nchan_p = chansel.column(2);
-
-    for(uInt k = 0; k < nchan_p.nelements(); ++k){
-      nchan_p[k] += 1;
-      if(nchan_p[k] < 1)	// Paranoia?
-	nchan_p[k] = 1;
-    }
   }
   else{                            // select everything
     ROMSSpWindowColumns mySpwTab(ms_p.spectralWindow());
-    uInt nspw = mySpwTab.nrow();
 
-    nchan_p = mySpwTab.numChan().getColumn();
-      
-    spw_p.resize(nspw);
+    spw_p.resize(mySpwTab.nrow());
     indgen(spw_p);
   }
     
@@ -208,21 +198,17 @@ Bool Partition::selectSpw(const String& spwstr)
     uInt nSelSpw = spw_p.nelements();
     uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
     Vector<Int> spwc(ngoodSelSpwSlots);
-    Vector<Int> nchanc(ngoodSelSpwSlots);
     std::set<Int>::iterator bsend = badSelSpwSlots.end();
       
     uInt j = 0;
     for(uInt k = 0; k < nSelSpw; ++k){
       if(badSelSpwSlots.find(k) == bsend){
-	spwc[j]       = spw_p[k];
-	nchanc[j]     = nchan_p[k];
+	spwc[j] = spw_p[k];
 	++j;
       }
     }
     spw_p.resize(ngoodSelSpwSlots);
     spw_p = spwc;
-    nchan_p.resize(ngoodSelSpwSlots);
-    nchan_p = nchanc;
   }
   return true;
 }
@@ -230,8 +216,7 @@ Bool Partition::selectSpw(const String& spwstr)
 Bool Partition::setmsselect(const String& spw, const String& field,
 			    const String& baseline, const String& scan,
 			    const String& uvrange, const String& taql,
-			    const Vector<Int>& step, const String& subarray,
-			    const String& correlation)
+			    const String& subarray)
 {
   LogIO os(LogOrigin("Partition", "setmsselect()"));
   Bool  ok;
@@ -247,7 +232,7 @@ Bool Partition::setmsselect(const String& spw, const String& field,
   // (fewer retries).  This is a matter of taste, though.  If the selections
   // turn out to be slow, this function should return on the first false.
 
-  if(!selectSpw(myspwstr, step)){
+  if(!selectSpw(myspwstr)){
     os << LogIO::SEVERE << "No channels selected." << LogIO::POST;
     ok = false;
   }
@@ -263,11 +248,6 @@ Bool Partition::setmsselect(const String& spw, const String& field,
 
   if(subarray != "")
     selectArray(subarray);
-
-  if(!selectCorrelations(correlation)){
-    os << LogIO::SEVERE << "No correlations selected." << LogIO::POST;
-    ok = false;
-  }
 
   return ok;
 }
@@ -305,29 +285,11 @@ Bool Partition::selectSource(const Vector<Int>& fieldid)
   return cando;
 }
   
-  
-void Partition::selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel)
-{
-  if((antennaids.nelements() == 1) && (antennaids[0] = -1) && antennaSel[0]==""){
-    antennaSel_p=False;
-    return;
-  }
-    
-  antennaSel_p=True;
-  if((antennaids.nelements()==1) && (antennaids[0]=-1))
-    antennaId_p.resize();
-  else
-    antennaId_p=antennaids;
-  antennaSelStr_p=antennaSel; 
-}
-  
 void Partition::selectArray(const String& subarray)
 {
   arrayExpr_p = subarray;
-  if(arrayExpr_p == ""){      // Zap any old ones.
+  if(arrayExpr_p == "")      // Zap any old ones.
     arrayId_p.resize();
-    arrayRemapper_p.clear();
-  }
   // else arrayId_p will get set in makeSelection().
 }
   
@@ -354,17 +316,18 @@ Bool Partition::makePartition(String& msname, String& colname,
       
     // Watch out!  This throws an AipsError if ms_p doesn't have the
     // requested columns.
-    const Vector<MS::PredefinedColumns> colNamesTok = parseColumnNames(colname, ms_p);
+    const Vector<MS::PredefinedColumns> colNamesTok = SubMS::parseColumnNames(colname,
+									      ms_p);
 
     if(!makeSelection()){
       os << LogIO::SEVERE 
 	 << "Failed on selection: the combination of spw, field, antenna, correlation, "
 	 << "and timerange may be invalid." 
 	 << LogIO::POST;
-      ms_p=MeasurementSet();
+      ms_p = MeasurementSet();
       return False;
     }
-    mscIn_p=new ROMSColumns(mssel_p);
+    mscIn_p = new ROMSColumns(mssel_p);
     // Note again the parseColumnNames() a few lines back that stops setupMS()
     // from being called if the MS doesn't have the requested columns.
     MeasurementSet* outpointer=0;
@@ -508,7 +471,8 @@ Bool Partition::makePartition(String& msname, String& colname,
 MeasurementSet* Partition::makeScratchPartition(const String& colname,
 						const Bool forceInMemory)
 {
-  return makeScratchPartition(parseColumnNames(colname, ms_p), forceInMemory);
+  return makeScratchPartition(SubMS::parseColumnNames(colname, ms_p),
+			      forceInMemory);
 }
   
 MeasurementSet* Partition::makeScratchPartition(const Vector<MS::PredefinedColumns>& whichDataCols,
@@ -596,13 +560,6 @@ Bool Partition::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // UVW is the only other Measures column in the main table.
   msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
-  timer.mark();
-  if(!fillDDTables())
-    return False;
-  os << LogIO::DEBUG1
-     << "fillDDTables took " << timer.real() << "s."
-     << LogIO::POST;
-
   if(timeBin_p <= 0.0)
     success &= fillMainTable(datacols);
   else
@@ -669,10 +626,10 @@ Bool Partition::makeSelection()
 			      MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
     ROScalarColumn<Int> spwId(elms->dataDescription(), 
 			      MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
-    ROArrayColumn<Int> ncorr(elms->polarization(), 
-			     MSPolarization::columnName(MSPolarization::NUM_CORR));
-    ROArrayColumn<Int> nchan(elms->spectralWindow(), 
-			     MSSpectralWindow::columnName(MSSpectralWindow::NUM_CHAN));
+    ROScalarColumn<Int> ncorr(elms->polarization(), 
+			      MSPolarization::columnName(MSPolarization::NUM_CORR));
+    ROScalarColumn<Int> nchan(elms->spectralWindow(), 
+			      MSSpectralWindow::columnName(MSSpectralWindow::NUM_CHAN));
 
     uInt nddids = polId.nrow();
     uInt nSelSpws = spw_p.nelements();
@@ -904,7 +861,7 @@ MeasurementSet* Partition::setupMS(const String& outFileName, const MeasurementS
   MeasurementSet *ms = new MeasurementSet (newtab,lock);
     
   // Copy the subtables to the output MS.
-  TableCopy::copySubTables(*ms, ); 
+  TableCopy::copySubTables(*ms, inms); 
 
   { // Set the TableInfo
     TableInfo& info(ms->tableInfo());
@@ -935,71 +892,6 @@ void Partition::verifyColumns(const MeasurementSet&, // ms,
   }
 }
 
-uInt Partition::dataColStrToEnums(const String& col, Vector<MS::PredefinedColumns>& colvec)
-{
-  LogIO os(LogOrigin("Partition", "dataColStrToEnums()"));
-  String tmpNames(col);
-  Vector<String> tokens;
-  tmpNames.upcase();
-    
-  // split name string into individual names
-  char * pch;
-  Int i = 0;
-  pch = strtok((char*)tmpNames.c_str(), " ,");
-  while (pch != NULL){
-    tokens.resize(i + 1, True);
-    tokens[i] = String(pch);
-    ++i;
-    pch = strtok(NULL, " ,");
-  }
-
-  uInt nNames = tokens.nelements();
-
-  uInt nFound = 0;
-  for(uInt i = 0; i < nNames; ++i){
-    colvec.resize(nFound + 1, True);
-    colvec[nFound] = MS::UNDEFINED_COLUMN;
-	    
-    if (tokens[i] == "OBSERVED" || 
-        tokens[i] == "DATA" || 
-        tokens[i] == MS::columnName(MS::DATA)){
-      colvec[nFound++] = MS::DATA;
-    }
-    else if(tokens[i] == "FLOAT" || 
-            tokens[i] == "FLOAT_DATA" || 
-            tokens[i] == MS::columnName(MS::FLOAT_DATA)){
-      colvec[nFound++] = MS::FLOAT_DATA;
-    } 
-    else if(tokens[i] == "LAG" || 
-            tokens[i] == "LAG_DATA" || 
-            tokens[i] == MS::columnName(MS::LAG_DATA)){
-      colvec[nFound++] = MS::LAG_DATA;
-    } 
-    else if(tokens[i] == "MODEL" || 
-            tokens[i] == "MODEL_DATA" || 
-            tokens[i] == MS::columnName(MS::MODEL_DATA)){
-      colvec[nFound++] = MS::MODEL_DATA;
-    } 
-    else if(tokens[i] == "CORRECTED" || 
-            tokens[i] == "CORRECTED_DATA" || 
-            tokens[i] == MS::columnName(MS::CORRECTED_DATA)){
-      colvec[nFound++] = MS::CORRECTED_DATA;
-    }
-    else if(tmpNames != "NONE"){  // "NONE" is used by ~Partition().
-      os << LogIO::SEVERE;
-      if(nFound == 0){
-        colvec[0] = MS::DATA;
-        os << "Unrecognized data column " << tokens[i] << "...trying DATA.";
-      }
-      else
-        os << "Skipping unrecognized data column " << tokens[i];
-      os << LogIO::POST;
-    }
-  }
-  return nFound;
-}
-
-
 Bool Partition::fillAccessoryMainCols(){
   LogIO os(LogOrigin("Partition", "fillAccessoryMainCols()"));
   uInt nrows = mssel_p.nrow();
@@ -1010,28 +902,12 @@ Bool Partition::fillAccessoryMainCols(){
   Timer timer;
   timer.mark();
   //#endif
-  if(!antennaSel_p){
-    msc_p->antenna1().putColumn(mscIn_p->antenna1().getColumn());
-    msc_p->antenna2().putColumn(mscIn_p->antenna2().getColumn());
-    os << LogIO::DEBUG1
-       << "Straight copying ANTENNA* took " << timer.real() << "s."
-       << LogIO::POST;
-  }
-  else{
-    Vector<Int> ant1(mscIn_p->antenna1().getColumn());
-    Vector<Int> ant2(mscIn_p->antenna2().getColumn());
-    
-    for(uInt k = 0; k < nrows; ++k){
-      ant1[k] = antNewIndex_p[ant1[k]];
-      ant2[k] = antNewIndex_p[ant2[k]];
-    }
-    msc_p->antenna1().putColumn(ant1);
-    msc_p->antenna2().putColumn(ant2);
-    os << LogIO::DEBUG1
-       << "Selectively copying ANTENNA* took " << timer.real() << "s."
-       << LogIO::POST;
-  }
-  
+  msc_p->antenna1().putColumn(mscIn_p->antenna1().getColumn());
+  msc_p->antenna2().putColumn(mscIn_p->antenna2().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying ANTENNA* took " << timer.real() << "s."
+     << LogIO::POST;
+
   timer.mark();
   msc_p->feed1().putColumn(mscIn_p->feed1().getColumn());
   msc_p->feed2().putColumn(mscIn_p->feed2().getColumn());
@@ -1090,82 +966,72 @@ Bool Partition::fillAccessoryMainCols(){
      << LogIO::POST;
   
   timer.mark();
-  relabelIDs();
-  os << LogIO::DEBUG1
-     << "relabelIDs took " << timer.real() << "s."
-     << LogIO::POST;
-
   return True;
 }
 
-  Bool Partition::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
-  {  
-    LogIO os(LogOrigin("Partition", "fillMainTable()"));
-    Bool success = true;
-    Timer timer;
+Bool Partition::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
+{  
+  LogIO os(LogOrigin("Partition", "fillMainTable()"));
+  Bool success = true;
+  Timer timer;
 
-    fillAccessoryMainCols();
+  fillAccessoryMainCols();
 
-    //Deal with data
-    if(keepShape_p){
-      ROArrayColumn<Complex> data;
-      Vector<MS::PredefinedColumns> complexCols;
-      const Bool doFloat = SubMS::sepFloat(colNames, complexCols);
-      const uInt nDataCols = complexCols.nelements();
-      const Bool writeToDataCol = SubMS::mustConvertToData(nDataCols, complexCols);
+  //Deal with data
+  ROArrayColumn<Complex> data;
+  Vector<MS::PredefinedColumns> complexCols;
+  const Bool doFloat = SubMS::sepFloat(colNames, complexCols);
+  const uInt nDataCols = complexCols.nelements();
+  const Bool writeToDataCol = SubMS::mustConvertToData(nDataCols, complexCols);
 
-      // timer.mark();
-      // msc_p->weight().putColumn(mscIn_p->weight());
-      // os << LogIO::DEBUG1
-      //    << "Copying weight took " << timer.real() << "s."
-      //    << LogIO::POST;
-      // timer.mark();
-      // msc_p->sigma().putColumn(mscIn_p->sigma());
-      // os << LogIO::DEBUG1
-      //    << "Copying SIGMA took " << timer.real() << "s."
-      //    << LogIO::POST;
+  // timer.mark();
+  // msc_p->weight().putColumn(mscIn_p->weight());
+  // os << LogIO::DEBUG1
+  //    << "Copying weight took " << timer.real() << "s."
+  //    << LogIO::POST;
+  // timer.mark();
+  // msc_p->sigma().putColumn(mscIn_p->sigma());
+  // os << LogIO::DEBUG1
+  //    << "Copying SIGMA took " << timer.real() << "s."
+  //    << LogIO::POST;
 
-      // timer.mark();      
-      // msc_p->flag().putColumn(mscIn_p->flag());
-      // os << LogIO::DEBUG1
-      //    << "Copying FLAG took " << timer.real() << "s."
-      //    << LogIO::POST;
+  // timer.mark();      
+  // msc_p->flag().putColumn(mscIn_p->flag());
+  // os << LogIO::DEBUG1
+  //    << "Copying FLAG took " << timer.real() << "s."
+  //    << LogIO::POST;
 
-      os << LogIO::DEBUG1;
-      Bool didFC = false;
-      timer.mark();      
-      if(!mscIn_p->flagCategory().isNull() &&
-         mscIn_p->flagCategory().isDefined(0)){
-        IPosition fcshape(mscIn_p->flagCategory().shape(0));
-        IPosition fshape(mscIn_p->flag().shape(0));
+  os << LogIO::DEBUG1;
+  Bool didFC = false;
+  timer.mark();      
+  if(!mscIn_p->flagCategory().isNull() &&
+     mscIn_p->flagCategory().isDefined(0)){
+    IPosition fcshape(mscIn_p->flagCategory().shape(0));
+    IPosition fshape(mscIn_p->flag().shape(0));
 
-        // I don't know or care how many flag categories there are.
-        if(fcshape(0) == fshape(0) && fcshape(1) == fshape(1)){
-          msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
-          os << "Copying FLAG_CATEGORY took " << timer.real() << "s.";
-          didFC = true;
-        }
-      }
-      if(!didFC)
-        os << "Deciding not to copy FLAG_CATEGORY took " << timer.real() << "s.";
-      os << LogIO::POST;
-          
-      timer.mark();
-      copyDataFlagsWtSp(complexCols, writeToDataCol);
-      if(doFloat)
-        msc_p->floatData().putColumn(mscIn_p->floatData());
+    // I don't know or care how many flag categories there are.
+    if(fcshape(0) == fshape(0) && fcshape(1) == fshape(1)){
+      msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
+      os << "Copying FLAG_CATEGORY took " << timer.real() << "s.";
+      didFC = true;
     }
-    else{
-      timer.mark();
-      doChannelMods(colNames);
-    }
-    os << LogIO::DEBUG1
-       << "Total data read/write time = " << timer.real()
-       << LogIO::POST;
-    
-    return success;
   }
-  
+  if(!didFC)
+    os << "Deciding not to copy FLAG_CATEGORY took " << timer.real() << "s.";
+  os << LogIO::POST;
+          
+  timer.mark();
+  copyDataFlagsWtSp(complexCols, writeToDataCol);
+  if(doFloat)
+    msc_p->floatData().putColumn(mscIn_p->floatData());
+
+  os << LogIO::DEBUG1
+     << "Total data read/write time = " << timer.real()
+     << LogIO::POST;
+    
+  return success;
+}
+
 Bool Partition::getDataColumn(ROArrayColumn<Complex>& data,
 			      const MS::PredefinedColumns colName)
 {
@@ -1383,7 +1249,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
        << LogIO::POST;
 
   ArrayColumn<Complex> outCmplxCols[nCmplx];
-  getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
+  SubMS::getDataColMap(msc_p, outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
   // changes in scan, etc. (CAS-2401).  The old split way would have
