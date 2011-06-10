@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# <MSVis.h>:  a module for MSVis
+//# Copyright (C) 2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,47 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//#! ========================================================================
+//# $Id$
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
 
-#include <string>
+#if !defined (AIPS_MODULE_IMAGEANALYSIS_H)
+#define AIPS_MODULE_IMAGEANALYSIS_H
 
-#define CASACORE_VERSION "1.0.62"
+// <module>
+//
+// <summary>
+// </summary>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+// <prerequisite>
+//   <li> SomeModule
+//   <li> SomeClass
+//   <li> some concept (perhaps with reference)
+// </prerequisite>
+//
 
-  // Get the casacore version.
-  const std::string getVersion();
+// <reviewed reviewer="" date="yyyy/mm/dd" demos="">
+// </reviewed>
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+// <etymology>
+// </etymology>
+//
+// <synopsis>
+// </synopsis>
+//
+// <example>
+// </example>
+//
+// <motivation>
+// </motivation>
 
-} //# NAMESPACE CASA - END
+// <todo asof="yyyy/mm/dd">
+//   <li> add this feature
+//   <li> fix this bug
+//   <li> discuss possible extension
+// </todo>
+
+// </module>
 
 #endif
+

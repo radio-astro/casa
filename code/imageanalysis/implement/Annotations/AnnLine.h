@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# ComponentShape.h: Base class for component shapes
+//# Copyright (C) 1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,53 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ComponentShape.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#ifndef ANNOTATIONS_ANNLINE_H
+#define ANNOTATIONS_ANNLINE_H
 
-#include <string>
+#include <imageanalysis/Annotations/AnnotationBase.h>
 
-#define CASACORE_VERSION "1.0.62"
+#include <casa/Arrays/Vector.h>
+#include <measures/Measures/MDirection.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-  // Get the casacore version.
-  const std::string getVersion();
+// <summary>Represents a line annotation</summary>
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+// <use visibility=export>
 
-} //# NAMESPACE CASA - END
+// <reviewed reviewer="" date="yyyy/mm/dd">
+// </reviewed>
+
+// <synopsis>
+
+// Represents an ascii line annotation
+// </synopsis>
+
+class AnnLine: public AnnotationBase {
+public:
+
+	AnnLine(
+		const Quantity& xPoint1,
+		const Quantity& yPoint1,
+		const Quantity& xPoint2,
+		const Quantity& yPoint2,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys
+	);
+
+	// get the end point directions, transformed to
+	// the input coordinate system if necessary
+	Vector<MDirection> getEndPoints() const;
+
+	virtual ostream& print(ostream &os) const;
+
+protected:
+	Matrix<Quantity> _inputPoints;
+
+};
+
+}
 
 #endif

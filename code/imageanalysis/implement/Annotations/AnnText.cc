@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# GaussianShape.cc:
+//# Copyright (C) 1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,41 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#include <imageanalysis/Annotations/AnnText.h>
 
-#include <string>
+namespace casa {
 
-#define CASACORE_VERSION "1.0.62"
+AnnText::AnnText(
+	const Quantity& xPos, const Quantity& yPos,
+	const String& dirRefFrameString,
+	const CoordinateSystem& csys,
+	const String& text
+) : AnnotationBase(TEXT, dirRefFrameString, csys),
+	_inputDirection(Vector<Quantity>(2)),
+	_text(text) {
+	_inputDirection[0] = xPos;
+	_inputDirection[1] = yPos;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+}
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+MDirection AnnText::getDirection() const {
+	return _convertedDirections[0];
+}
 
-  // Get the casacore version.
-  const std::string getVersion();
+String AnnText::getText() const {
+	return _text;
+}
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+ostream& AnnText::print(ostream &os) const {
+	os << "text [[" << _inputDirection[0]
+	   << ", " << _inputDirection[1] << "], \""
+	   << _text << "\"]";
+	_printPairs(os);
+	return os;
+}
 
-} //# NAMESPACE CASA - END
 
-#endif
+}
+
+

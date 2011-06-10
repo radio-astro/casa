@@ -1,5 +1,4 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 1998,1999,2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +22,56 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#ifndef ANNOTATIONS_ANNVECTOR_H
+#define ANNOTATIONS_ANNVECTOR_H
 
-#include <string>
+#include <imageanalysis/Annotations/AnnotationBase.h>
 
-#define CASACORE_VERSION "1.0.62"
+#include <casa/Arrays/Vector.h>
+#include <measures/Measures/MDirection.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-  // Get the casacore version.
-  const std::string getVersion();
+// <summary>Represents a vector annotation which has a start and ending point.</summary>
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+// <use visibility=export>
 
-} //# NAMESPACE CASA - END
+// <reviewed reviewer="" date="yyyy/mm/dd">
+// </reviewed>
+
+// <synopsis>
+
+// Represents an ascii vector annotation
+// </synopsis>
+
+class AnnVector: public AnnotationBase {
+public:
+
+	AnnVector(
+		const Quantity& xStart,
+		const Quantity& yStart,
+		const Quantity& xEnd,
+		const Quantity& yEnd,
+		const String& dirRefFrameString,
+		const CoordinateSystem& csys
+	);
+
+	// get the end point directions, transformed to
+	// the input coordinate system if necessary.
+	// The first element will be the starting point,
+	// the second the ending point.
+	Vector<MDirection> getEndPoints() const;
+
+	virtual ostream& print(ostream &os) const;
+
+private:
+	Matrix<Quantity> _inputPoints;
+
+	AnnVector();
+
+};
+
+}
 
 #endif

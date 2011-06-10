@@ -1,5 +1,4 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +22,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
+#include <imageanalysis/Annotations/AnnVector.h>
 
-#include <string>
+namespace casa {
 
-#define CASACORE_VERSION "1.0.62"
+AnnVector::AnnVector(
+	const Quantity& xStart,
+	const Quantity& yStart,
+	const Quantity& xEnd,
+	const Quantity& yEnd,
+	const String& dirRefFrameString,
+	const CoordinateSystem& csys
+) : AnnotationBase(VECTOR, dirRefFrameString, csys),
+	_inputPoints(Matrix<Quantity>(2, 2)) {
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+	_inputPoints(0, 0) = xStart;
+	_inputPoints(1, 0) = yStart;
+	_inputPoints(0, 1) = xEnd;
+	_inputPoints(1, 1) = yEnd;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+}
 
-  // Get the casacore version.
-  const std::string getVersion();
+Vector<MDirection> AnnVector::getEndPoints() const {
+	return _convertedDirections;
+}
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+ostream& AnnVector::print(ostream &os) const {
+	os << "vector [[" << _inputPoints(0, 0) << ", "
+		<< _inputPoints(1, 0) << "], ["
+		<< _inputPoints(0, 1) << ", "
+		<< _inputPoints(1, 1) << "]]";
+	_printPairs(os);
+	return os;
+}
 
-} //# NAMESPACE CASA - END
 
-#endif
+}
+
+

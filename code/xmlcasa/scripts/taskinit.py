@@ -83,28 +83,29 @@ casalog.setglobal(True)
 attool = casac.homefinder.find_home_by_name('atmosphereHome')
 at = attool.create()
 
-def gentools():
+def gentools(tools=None):
 	"""
 	Generate a fresh set of tools the ones who's
 	state can be funny
-	im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc.vp=gentools()  
+	im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools() 
+	or if you want specific set of tools
+	im, ia, cb=gentools(['im', 'ia', 'cb'])
+
 	"""
-	im=imager.create()
-	cb = calibrater.create()
-	ms = mstool.create()
-	tb = tbtool.create()
-	fg = fgtool.create()
-	me = metool.create()
-	ia = iatool.create()
-	po = potool.create()
-	sm = smtool.create()
-	cl = cltool.create()
-	cs = coordsystool.create()
-	rg=rgtool.create()
-	sl=sltool.create()
-	dc=dctool.create()
-	vp=vptool.create()
-	return im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp
+	tooldic={'im':'imager.create()', 'cb' :'calibrater.create()', 'ms':'mstool.create()',
+		 'tb':'tbtool.create()', 'fg':'fgtool.create()', 'me' :'metool.create()', 
+		 'ia': 'iatool.create()', 'po':'potool.create()', 'sm' :'smtool.create()', 
+		 'cl': 'cltool.create()', 'cs' :'coordsystool.create()', 'rg':'rgtool.create()',
+		 'sl':'sltool.create()', 'dc':'dctool.create()', 'vp':'vptool.create()'}
+	reqtools=[]
+	retval=[]
+	if((tools==None) or (len(tools)==0) or (type(tools) != list)):
+		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po', 'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp']
+	else:
+		reqtools=tools
+	for k in range(len(reqtools)):
+		retval.append(eval(tooldic[reqtools[k]]))
+	return tuple(retval)
 
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 

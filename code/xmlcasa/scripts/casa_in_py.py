@@ -5,7 +5,9 @@ import sys
 import string
 import commands
 
+print '--------------'
 from get_user import get_user
+print '22222-------'
 
 try:
     import casac

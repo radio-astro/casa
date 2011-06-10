@@ -20,6 +20,7 @@ class imstat_test(unittest.TestCase):
     s0_0015 = '0.0015arcsec_pix.im'
     s0_00015 = '0.00015arcsec_pix.im'
     linear_coords = 'linearCoords.fits'
+    fourdim = '4dim.im'
     res = None
 
     def setUp(self):
@@ -30,7 +31,7 @@ class imstat_test(unittest.TestCase):
     def tearDown(self):
         for dir in [
             self.moment, self.s150, self.s15, self.s0_015, self.s0_0015,
-            self.s0_00015, self.linear_coords
+            self.s0_00015, self.linear_coords, self.fourdim
         ]:
             if os.path.isfile(dir):
                 os.remove(dir)
@@ -141,6 +142,68 @@ class imstat_test(unittest.TestCase):
             stats = code(myim)
             self.assertTrue((stats['maxpos'] == expected_max).all())
             self.assertTrue((stats['minpos'] == expected_min).all())
+            
+    def test009(self):
+        """ Test 9: choose axes works"""
+        def test_statistics(image, axes):
+            ia.open(myim)
+            stats = ia.statistics(axes=axes)
+            ia.done()
+            return stats
+        
+        def test_imstat(image, axes):
+            return imstat(image, axes=axes)
+            
+        myim = self.fourdim
+        shutil.copytree(self.datapath + myim, myim)
+        axes = [-1, [0, 1, 2], [0, 1], 3]
+        expected_mean = [
+                [59.5], [ 57.5,  58.5,  59.5,  60.5,  61.5],
+                [
+                    [50., 51., 52., 53., 54.],
+                    [55., 56., 57., 58., 59.],
+                    [60., 61., 62., 63., 64.],
+                    [65., 66., 67., 68., 69.]
+                ],
+                [
+                    [
+                        [2., 7., 12., 17.],
+                        [22., 27., 32., 37.],
+                        [42., 47., 52., 57.]
+                    ],
+                    [
+                        [62., 67., 72., 77.],
+                        [ 82.,  87.,  92., 97.],
+                        [ 102., 107., 112., 117.]
+                    ]
+                ]
+            ]
+        expected_sumsq = [
+                [568820], [ 108100.,  110884.,  113716.,  116596.,  119524.],
+                [
+                    [ 22000., 22606., 23224., 23854., 24496.],
+                    [ 25150., 25816., 26494., 27184., 27886.],
+                    [ 28600., 29326., 30064., 30814., 31576.],
+                    [ 32350., 33136., 33934., 34744., 35566.]
+                ],
+                [
+                    [
+                        [ 3.00000000e+01, 2.55000000e+02, 7.30000000e+02, 1.45500000e+03],
+                        [ 2.43000000e+03, 3.65500000e+03, 5.13000000e+03, 6.85500000e+03],
+                        [  8.83000000e+03,   1.10550000e+04,   1.35300000e+04, 1.62550000e+04]
+                    ],
+                    [
+                        [  1.92300000e+04,   2.24550000e+04,   2.59300000e+04, 2.96550000e+04],
+                        [  3.36300000e+04,   3.78550000e+04,   4.23300000e+04, 4.70550000e+04],
+                        [  5.20300000e+04,   5.72550000e+04,   6.27300000e+04, 6.84550000e+04]
+                    ]
+                ]
+            ]
+        for i in range(len(axes)):
+            for code in [test_statistics, test_imstat]:
+                stats = code(myim, axes[i])
+                self.assertTrue((stats['mean'] == expected_mean[i]).all())
+                self.assertTrue((stats['sumsq'] == expected_sumsq[i]).all())
             
 def suite():
     return [imstat_test]

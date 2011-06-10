@@ -419,14 +419,14 @@ void MSIter::setState()
   //    5.5    1         2
   //    8      0         3
   //   10.5    0         2
+  //
+  // Resetting the offset with each advance() might be too often, i.e. we might
+  // need different spws to share the same offset.  But in testing resetting
+  // with each advance produces results more consistent with expectations than
+  // either not resetting at all or resetting only
+  // if(colTime_p(0) - 0.02 > timeComp_p->getOffset()).
+  //
   if(timeComp_p != NULL){
-    // Only resetting the offset if the time has advanced past the offset is a
-    // heuristic attempt to distinguish true glitches (i.e. starting a new
-    // field) from a chunklet terminating and time rewinding to start a new
-    // DDID at the same start time as the DDID of the previous rows.  In the
-    // latter common case, we would like the DDIDs to share the same offset.
-    colTime_p.attach(curTable_p, MS::columnName(MS::TIME));
-    if(colTime_p(0) - 0.02 > timeComp_p->getOffset())
       timeComp_p->setOffset(0.0);
   }
 }

@@ -46,13 +46,12 @@ class simplecluster_test(unittest.TestCase):
         f.write(msg)
         f.close()
         self._waitForFile(self.clusterfile, 10)
-        if (sys.platform=='darwin'):
-            pass
-        else:
-            self.cluster.init_cluster(self.clusterfile, self.projectname)
-            print self.cluster._cluster.hello()
-            print "engines:", self.cluster.use_engines()
-            print "hosts:",  self.cluster.get_hosts()
+
+        self.cluster.init_cluster(self.clusterfile, self.projectname)
+
+        print self.cluster._cluster.hello()
+        print "engines:", self.cluster.use_engines()
+        print "hosts:",  self.cluster.get_hosts()
 
     def _checkResultFile(self):
         self.assertTrue(os.path.isfile(self.resultfile))

@@ -100,7 +100,8 @@ class cluster(object):
       ip = socket.gethostbyname(host)
       
       if ip == "127.0.0.1":
-         ip = socket.gethostbyname(socket.gethostname())
+         #ip = socket.gethostbyname(socket.gethostname())
+         ip = socket.gethostbyname(socket.getfqdn())
          
       return ip
 
@@ -604,6 +605,7 @@ class cluster(object):
      self.__client.execute('sys.path.insert(2, scriptdir)', i)
      try:
         #self.__client.execute('from casa_in_py import *')
+        #print '-----', sdir+'casa_in_py.py'
         self.__client.execute("execfile(scriptdir+'casa_in_py.py')", i)
         self.__client.execute('inited=True', i)
      except IOError, e:
