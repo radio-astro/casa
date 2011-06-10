@@ -16,9 +16,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="string" name="imagename" kind="image" mustexist="true" >
     	<description>Name of the input image</description>
     	<value></value>
-        <example>imagenam=ngc5921_task.image</example>
+        <example>imagename=ngc5921_task.image</example>
     </param>
-
+    <param type="any" name="axes">
+        <any type="variant"/>
+        <description>List of axes to evaluate statistics over. Default is all axes.</description>
+        <value>-1</value>
+        <example>[0, 1]</example> 
+    </param>
     <param type="string" name="region">
         <description>Image Region or name. Use Viewer</description>
         <value></value>
@@ -38,7 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="stokes">
-	    <description>Stokes params to image (I,IV,IQU,IQUV)</description>
+	    <description>Stokes params to image (I,IV,IQU,IQUV). Default "" => include all</description>
 	    <value></value>
 	    <example>stokes=&quot;IQ&quot;</example>
 	    <example>stokes=&quot;RR,LL&quot;</example>
@@ -79,7 +84,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	Keyword arguments:
 	imagename -- Name of input image
 		Default: none; Example: imagename='ngc5921_task.im'
-        region -- File path to an ImageRegion file or name.
+    axes -- axes to compute statistics over. -1 => all axes.
+    region -- File path to an ImageRegion file or name.
                 Use the viewer, then region manager to select regions of
                    the image to process.  Similar to box, but graphical
                 Or the name of a region stored with the image, 
@@ -98,7 +104,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   All spectral windows are included
 		Default:''= all;  Example: chans='3~20'    
 	stokes -- Stokes parameters to analyze.
-                Default: none (all); Example: stokes='IQUV';  
+                Default: all; Example: stokes='IQUV';  
                                      Example:stokes='I,Q'
                 Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
     listit   -- Print stats and bounding box to logger? 
