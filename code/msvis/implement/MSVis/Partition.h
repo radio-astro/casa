@@ -160,7 +160,6 @@ private:
 
   // (Sub)table fillers.
   Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillDDTables();		// Includes spw and pol.
   Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
 
   //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
@@ -212,19 +211,16 @@ private:
   String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?
                              // Must be lowercase at all times.
+  uInt maxnchan_p,    // The maximum # of channels and correlations for each
+       maxncorr_p;    // selected DDID.
 
   // Uninitialized by ctors.
   MeasurementSet msOut_p;
-  Vector<Int> spw_p,      // spw numbers
-              nchan_p, // The # of channels for each spw.
-              ncorr_p;    // The # of correlations for each DDID.
+  Vector<Int> spw_p;      // Selected spw numbers
   Vector<Int> fieldid_p;
   Vector<String> antennaSelStr_p;
   Vector<Int> antennaId_p;
-
   Vector<Int> arrayId_p;
-  Vector<uInt> spw2ddid_p;
-
   Matrix<Double> selTimeRanges_p;
 };
 

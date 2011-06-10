@@ -108,7 +108,9 @@ Partition::Partition(String& theMS, Table::TableOption option) :
   taqlString_p(""),
   timeRange_p(""),
   arrayExpr_p(""),
-  combine_p("")
+  combine_p(""),
+  maxnchan_p(1),
+  maxncorr_p(1)
 {
 }
   
@@ -125,7 +127,9 @@ Partition::Partition(MeasurementSet& ms) :
   taqlString_p(""),
   timeRange_p(""),
   arrayExpr_p(""),
-  combine_p("")
+  combine_p(""),
+  maxnchan_p(1),
+  maxncorr_p(1)
 {
 }
   
@@ -365,10 +369,9 @@ Bool Partition::makePartition(String& msname, String& colname,
     // from being called if the MS doesn't have the requested columns.
     MeasurementSet* outpointer=0;
 
-    if(tileShape.nelements() == 3){
-      outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
+    if(tileShape.nelements() == 3)
+      outpointer = setupMS(msname, mssel_p, maxnchan_p, maxncorr_p,  
 			   colNamesTok, tileShape);
-    }
 
     // the following calls MSTileLayout...  disabled for now because it
     // forces tiles to be the full spw bandwidth in width (gmoellen, 2010/11/07)
@@ -442,14 +445,14 @@ Bool Partition::makePartition(String& msname, String& colname,
 	}
 	Vector<Int> dataTileShape = tsm.getTileShape(highestId).asVector();
 
-	outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],  
+	outpointer = setupMS(msname, mssel_p, maxnchan_p, maxncorr_p,  
 			     colNamesTok, dataTileShape);
 
       }
       else
 	//Sweep all other cases of bad tileshape to a default one.
 	//  (this probably never happens)
-	outpointer = setupMS(msname, nchan_p[0], ncorr_p[0],
+	outpointer = setupMS(msname, mssel_p, maxnchan_p, maxncorr_p,
 			     mscIn_p->observation().telescopeName()(0),  
 			     colNamesTok, 0);
 	
@@ -542,10 +545,10 @@ MeasurementSet* Partition::makeScratchPartition(const Vector<MS::PredefinedColum
   Double sizeInMB= 1.5 * n_bytes() / (1024.0 * 1024.0);
   String msname=AppInfo::workFileName(uInt(sizeInMB), "TempPartition");
     
-  MeasurementSet* outpointer=setupMS(msname, nchan_p[0], ncorr_p[0],  
-				     mscIn_p->observation().telescopeName()(0),
-				     whichDataCols);
-    
+  MeasurementSet* outpointer = setupMS(msname, mssel_p, maxnchan_p, maxncorr_p,  
+				       mscIn_p->observation().telescopeName()(0),
+				       whichDataCols);
+
   outpointer->markForDelete();
   //Hmmmmmm....memory...... 
   if(sizeInMB <  (Double)(HostInfo::memoryTotal())/(2048.0) 
@@ -656,63 +659,36 @@ Bool Partition::makeSelection()
   TableExprNode exprNode = thisSelection.toTableExprNode(elms);
   selTimeRanges_p = thisSelection.getTimeList();
 
+  // Find the maximum # of channels and correlations, for setting the
+  // tileshape.  VisIterator is horrible if the tileshape is too large.
+  // Partition does not use VisIterator, so the max # of chans and corrs may
+  // not be optimal.  However, the # of chans and corrs for DDID 0 may be very
+  // misrepresentative of the MS in general.
   {      
-    const MSDataDescription ddtable = elms->dataDescription();
-    ROScalarColumn<Int> polId(ddtable, 
+    ROScalarColumn<Int> polId(elms->dataDescription(), 
 			      MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
-    const MSPolarization poltable = elms->polarization();
-    ROArrayColumn<Int> pols(poltable, 
-			    MSPolarization::columnName(MSPolarization::CORR_TYPE));
-      
-    ROScalarColumn<Int> spwId(ddtable, 
+    ROScalarColumn<Int> spwId(elms->dataDescription(), 
 			      MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
+    ROArrayColumn<Int> ncorr(elms->polarization(), 
+			     MSPolarization::columnName(MSPolarization::NUM_CORR));
+    ROArrayColumn<Int> nchan(elms->spectralWindow(), 
+			     MSSpectralWindow::columnName(MSSpectralWindow::NUM_CHAN));
 
     uInt nddids = polId.nrow();
-    uInt nSpws = spw_p.nelements();
+    uInt nSelSpws = spw_p.nelements();
 
-    Vector<uInt> npols_per_spw;  // # of pol setups per spw, !#pols.
-    Int highestSpw = max(spw_p);
-    if(highestSpw < 0)
-      highestSpw = 0;
-    spw2ddid_p.resize(highestSpw + 1);
-    npols_per_spw.resize(highestSpw + 1);
-    spw2ddid_p.set(0);                 // This is a row #, so must be >= 0.
-    npols_per_spw.set(0);
-    for(uInt j = 0; j < nddids; ++j){
-      Int spw = spwId(j);
-      for(uInt k = 0; k < nSpws; ++k){
-	if(spw == spw_p[k]){
-	  ++npols_per_spw[spw];
-	  spw2ddid_p[spw] = j;
+    maxnchan_p = 1;
+    maxncorr_p = 1;
+    for(uInt ddid = 0; ddid < nddids; ++ddid){
+      Int spw = spwId(ddid);
+      for(uInt k = 0; k < nSelSpws; ++k){
+	if(spw == spw_p[k]){			// If spw is selected...
+	  if(nchan(spw) > maxnchan_p)
+	    maxnchan_p = ncorr(spw);
+	  if(ncorr(polId(ddid)) > maxncorr_p)
+	    maxncorr_p = ncorr(polId(ddid));
 	}
       }
-    }
-
-    Bool ddidprob = false;
-    for(uInt k = 0; k < nSpws; ++k){
-      if(npols_per_spw[spw_p[k]] != 1){
-	ddidprob = true;
-	os << LogIO::SEVERE
-	   << "Selected input spw " << spw_p[k] << " matches "
-	   << npols_per_spw[spw_p[k]] << " POLARIZATION_IDs." << LogIO::POST;
-      }
-    }
-    if(ddidprob){
-      os << LogIO::SEVERE
-	 << "partition currently requires one POLARIZATION_ID per selected "
-	 << "\nSPECTRAL_WINDOW_ID in the DATA_DESCRIPTION table."
-	 << LogIO::POST;
-      return false;
-    }
-
-    Vector<Int> ddids;
-    ddids.resize(nSpws);
-
-    ncorr_p.resize(nSpws);
-    for(uInt k = 0; k < nSpws; ++k){
-      Int ddid = spw2ddid_p[spw_p[k]];
-	
-      ncorr_p[k] = pols(polId(ddid)).nelements();
     }
   }
     
@@ -737,18 +713,18 @@ Bool Partition::makeSelection()
   return True;
 }
 
-MeasurementSet* Partition::setupMS(const String& outFileName, const Int nchan,
-				   const Int nCorr, const String& telescop,
+MeasurementSet* Partition::setupMS(const String& outFileName, const MeasurementSet& inms,
+				   const Int nchan, const Int nCorr, const String& telescop,
 				   const Vector<MS::PredefinedColumns>& colNames,
 				   const Int obstype)
 {
   //Choose an appropriate tileshape
   IPosition dataShape(2, nCorr, nchan);
   IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
-  return setupMS(outFileName, nchan, nCorr, colNames, tileShape.asVector());
+  return setupMS(outFileName, inms, nchan, nCorr, colNames, tileShape.asVector());
 }
-MeasurementSet* Partition::setupMS(const String& outFileName, const Int nchan,
-				   const Int nCorr, 
+MeasurementSet* Partition::setupMS(const String& outFileName, const MeasurementSet& inms,
+				   const Int nchan, const Int nCorr, 
 				   const Vector<MS::PredefinedColumns>& colNamesTok,
 				   const Vector<Int>& tshape)
 {
@@ -940,66 +916,6 @@ MeasurementSet* Partition::setupMS(const String& outFileName, const Int nchan,
   return ms;
 }
   
-Bool Partition::fillDDTables()
-{    
-  LogIO os(LogOrigin("Partition", "fillDDTables()"));
-    
-  MSSpWindowColumns& msSpW(msc_p->spectralWindow());
-  MSDataDescColumns& msDD(msc_p->dataDescription());
-  MSPolarizationColumns& msPol(msc_p->polarization());
-    
-  //DD table
-  const MSDataDescription ddtable= mssel_p.dataDescription();
-  ROScalarColumn<Int> polId(ddtable, 
-			    MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
-    
-  //Fill in matching spw to datadesc in old ms 
-  {
-    ROMSDataDescColumns msOldDD(ddtable);
-    oldDDSpwMatch_p=msOldDD.spectralWindowId().getColumn();
-  }
-
-  //POLARIZATION table    
-  const MSPolarization poltable= mssel_p.polarization();
-  ROScalarColumn<Int> numCorr (poltable, 
-			       MSPolarization::columnName(MSPolarization::NUM_CORR));
-  ROArrayColumn<Int> corrType(poltable, 
-			      MSPolarization::columnName(MSPolarization::CORR_TYPE));
-  ROArrayColumn<Int> corrProd(poltable, MSPolarization::columnName(MSPolarization::CORR_PRODUCT));
-  ROScalarColumn<Bool> polFlagRow(poltable, MSPolarization::columnName(MSPolarization::FLAG_ROW));
-    
-  //SPECTRAL_WINDOW table
-  const MSSpectralWindow spwtable(mssel_p.spectralWindow());
-  spwRelabel_p.resize(mscIn_p->spectralWindow().nrow());
-  spwRelabel_p.set(-1);
-    
-  ROArrayColumn<Double> chanFreq(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::CHAN_FREQ));
-  ROArrayColumn<Double> chanWidth(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::CHAN_WIDTH));
-  ROArrayColumn<Double> effBW(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::EFFECTIVE_BW));
-  ROScalarColumn<Bool> spwFlagRow(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::FLAG_ROW));
-  ROScalarColumn<Int> freqGroup(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::FREQ_GROUP));
-  ROScalarColumn<String> freqGroupName(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::FREQ_GROUP_NAME));
-  ROScalarColumn<Int> ifConvChain(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::IF_CONV_CHAIN));
-  ROScalarColumn<Int> measFreqRef(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
-  ROScalarColumn<String> spwName(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::NAME));
-  ROScalarColumn<Int> netSideband(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::NET_SIDEBAND)); 
-  ROScalarColumn<Int> numChan(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::NUM_CHAN));
-  ROScalarColumn<Double> refFreq(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::REF_FREQUENCY));
-  ROArrayColumn<Double> spwResol(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::RESOLUTION));
-  ROScalarColumn<Double> totBW(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::TOTAL_BANDWIDTH));
-  nchan_p = numChan.getColumn();
-    
-  polID_p = polId.getColumn();
-  Bool dum;
-  Sort sort( polID_p.getStorage(dum),sizeof(Int) );
-  sort.sortKey((uInt)0,TpInt);
-  Vector<uInt> index, uniq;
-  sort.sort(index,polID_p.nelements());
-  uInt nPol = sort.unique(uniq,index);
-    
-  return true;
-}
-    
 // This method is currently not called in Partition.  It should really be called
 // in setupMS, but that has been made into a static method and it cannot be
 // called there.  The ms argument is unused, but it is there to preserve the
