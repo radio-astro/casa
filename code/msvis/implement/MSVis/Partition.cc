@@ -856,13 +856,16 @@ MeasurementSet* Partition::setupMS(const String& outFileName, const MeasurementS
   newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
   newtab.bindColumn(MS::columnName(MS::SIGMA),tiledStMan5);
 
+  // Copy the subtables to the output table BEFORE converting it to an MS or
+  // adding (additional) locking.
+  Table realtab(newtab);
+  TableCopy::copySubTables(realtab, inms);
+  realtab.flush();
+
   // avoid lock overheads by locking the table permanently
   TableLock lock(TableLock::AutoLocking);
-  MeasurementSet *ms = new MeasurementSet (newtab,lock);
+  MeasurementSet *ms = new MeasurementSet(realtab.tableName(), lock, Table::Update);
     
-  // Copy the subtables to the output MS.
-  TableCopy::copySubTables(*ms, inms); 
-
   { // Set the TableInfo
     TableInfo& info(ms->tableInfo());
     info.setType(TableInfo::type(TableInfo::MEASUREMENTSET));

@@ -2712,10 +2712,9 @@ for i in range(len(tcoord)):
     The original MS is overwritten by the sorted one.
   </example>
 </method>
-
  
-   <method type="function" name="split">
-   <shortdescription>make a new ms from a subset of an existing ms</shortdescription>
+<method type="function" name="split">
+   <shortdescription>make a new ms from a subset of an existing ms, adjusting subtables and indices</shortdescription>
    
   <keyword>split</keyword>
   <input>
@@ -2808,41 +2807,34 @@ for i in range(len(tcoord)):
     has its own selection on averaging and number of output
     channels. But the option of using only one value for each of these
     parameters means that it will be replicated for all the spectral
-    windows selected.
-    
+    windows selected.  
+      
   </description>
   <example>
   
-  
-      
   ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
   
-
   In this example we split out data from the 1st field and 1st
   spectral window. The output data will have 10 channels which is
   taken from 50 channels from the input data starting at channel 0 and
   averaging every 5.
 
- 
       
   ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10],
            start=[0], step=[5], whichcol='CORRECTED_DATA') 
  
-
 In this example we split out data from the 1st field and four spectral
 windows. The output data will have 4 spectral windows each of 10
 channels which is taken from 50 channels from the input data starting
 at channel 0 and averaging every 5.
 
-
       
   ms.open("multiwin.ms")
   ms.split('subms.ms', field=[0], spw=[0,1,2,3], nchan=[10,10,30,40],
-           start=[0,4,9,9], step=[1,10,5,2], whichcol='CORRECTED_DATA') 
-
+           start=[0,4,9,9], step=[1,10,5,2], whichcol='CORRECTED_DATA')
 
 In this example we split out data from the 1st field and four spectral
 windows. There will be four spectral windows in the output data,
@@ -2859,19 +2851,132 @@ from spwid 1 of the input data, starting at channel 4, and every
   ms.split('subms.ms', timebin='20s', whichcol='all', combine='scan')
   ms.close()
 
-
-This example averages a WSRT MS into 20s bins, selecting whichever of
-DATA, MODEL_DATA, CORRECTED_DATA, or FLOAT_DATA, or LAG_DATA is present.
-Normally the bins would not cross scans, but in this MS the scan number
-goes up with each integration, making it redundant enough with time that
-it would defeat any time averaging.  Therefore the SCAN column is
-ignored for setting the bins.
+  This example averages a WSRT MS into 20s bins, selecting whichever of DATA,
+  MODEL_DATA, CORRECTED_DATA, or FLOAT_DATA, or LAG_DATA is present.  Normally
+  the bins would not cross scans, but in this MS the scan number goes up with
+  each integration, making it redundant enough with time that it would defeat
+  any time averaging.  Therefore the combine parameter forces the SCAN column
+  to be ignored for setting the bins.
 
   </example>
 </method>
 
+<method type="function" name="partition">
+   <shortdescription>make a new ms from a subset of an existing ms, without changing any subtables</shortdescription>
+   
+  <keyword>partition</keyword>
+  <input>
+     <param type="string" direction="in" name="outputms">
+     <description>The name of the resulting measurement set</description>
+     <value></value>
+     </param>
+    
+     <param type="variant" direction="in" name="field">
+     <description>Fields to include, by names or 0-based ids.  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+    
+     <param type="variant" direction="in" name="spw">
+     <description>Spectral windows (and :channels) to select</description>
+     <value>"*"</value>
+     </param>
+    
+     <param type="variant" direction="in" name="baseline">
+     <description>Antenna names or indices to select  ('' =&gt; all)</description>
+     <value></value>
+     </param>
+
+     <param type="variant" direction="in" name="timebin">
+     <description>Duration for averaging.  Defaults to no averaging.</description>
+     <value>-1s</value>
+     </param>
+    
+     <param type="string" direction="in" name="time">
+     <description>Only use data in the given time range, using the msselection syntax.</description>
+     <value></value>
+     </param>
+
+     <param type="variant" name="scan">
+     <description>Only use the scan numbers requested using the msselection syntax.</description>
+     <value></value>
+     </param>
+     
+     <param type="variant" name="uvrange">
+     <description>Limit data by uv distance using the msselection syntax.</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="taql">
+     <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
+     <value></value>
+     </param>
+      
+     <param type="string" direction="in" name="whichcol">
+     <description>'DATA', 'MODEL_DATA', 'CORRECTED_DATA', 'FLOAT_DATA', 'LAG_DATA', and/or 'all'</description>
+     <value>DATA</value>
+     </param>
+
+     <param type="variant" name="tileshape">
+       <description>Tile shape of the disk data columns, most users should not need to touch this parameter 
+       [0] =&gt; normal tiling, [1] =&gt; fast mosaic style tile 
+       [4,15,351] =&gt; a tile shape of 4 pol 15 chan and 351 rows</description>
+       <value></value>
+     </param>
+
+     <param type="variant" name="subarray">
+     <description>Limit data to specific (sub)array numbers.</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="combine">
+     <description>Ignore changes in these columns (scan, and/or state) when time averaging.</description>
+     <value></value>
+     </param>
+  </input>
+  <returns type="bool"/>
+
+  <description>
+    This function splits out part of the MS into a new MS. Time averaging can
+    be performed in the process.  Unlike split, the subtables and IDs
+    (ANTENNA1, DATA_DESCRIPTION_ID, etc.) are never changed to account for the
+    selection.
+
+    As a side effect of that property, partition cannot select by channel or
+    correlation, or average channels.  It CAN select by spectral window(s).   
+  </description>
+  <example>
+        
+  ms.open("multiwin.ms")
+  ms.partition('partition.ms', field=[0], spw=[1], whichcol='CORRECTED_DATA') 
+  
+  In this example we partition out data from the 1st field and 2nd spectral
+  window.  Only the CORRECTED_DATA data column will be copied, and it will be
+  written to the DATA column of partition.ms.
+      
+
+  ms.open("multiwin.ms")
+  ms.partition('partition.ms', field=[0], spw=[0,1,2,3],
+           start=[0], step=[5], whichcol='CORRECTED_DATA') 
  
-   <method type="function" name="iterinit">
+  In this example we partition out data from the 1st field and four spectral
+  windows.
+      
+
+  ms.open("WSRT.ms")
+  ms.partition('partition.ms', timebin='20s', whichcol='all', combine='scan')
+  ms.close()
+
+  This example averages a WSRT MS into 20s bins, selecting whichever of DATA,
+  MODEL_DATA, CORRECTED_DATA, or FLOAT_DATA, or LAG_DATA is present.  Normally
+  the bins would not cross scans, but in this MS the scan number goes up with
+  each integration, making it redundant enough with time that it would defeat
+  any time averaging.  Therefore combine parameter forces the SCAN column to be
+  ignored for setting the bins.
+
+  </example>
+</method>
+ 
+<method type="function" name="iterinit">
    <shortdescription>Initialize for iteration over an ms</shortdescription>
    
   <keyword>iterinit</keyword>
