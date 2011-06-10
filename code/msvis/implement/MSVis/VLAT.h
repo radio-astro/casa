@@ -348,8 +348,8 @@ public:
 	{}
 	virtual ~VlatFunctor () {}
 
-	virtual void operator() (VisBuffer *) = 0;
-	virtual VlatFunctor * clone () = 0;
+	virtual void operator() (VisBuffer *) { throw AipsError ("Illegal Vlat Functor");}
+	virtual VlatFunctor * clone () { return new VlatFunctor (* this);}
 
 	casa::asyncio::PrefetchColumnIds getId () const { return id_p;}
 	void setId (casa::asyncio::PrefetchColumnIds id) { id_p = id;}
@@ -368,17 +368,17 @@ private:
 
 };
 
-template <typename Ret, typename VbType>
+template <typename Ret>
 class VlatFunctor0 : public VlatFunctor {
 
 public:
 
-	typedef Ret (VbType::* Nullary) ();
+	typedef Ret (VisBuffer::* Nullary) ();
 
 	VlatFunctor0 (Nullary nullary, Int precedence = 0) : VlatFunctor (precedence), f_p (nullary) {}
 	virtual ~VlatFunctor0 () {}
 
-	void operator() (VisBuffer * c) { (dynamic_cast<VbType *> (c)->*f_p)(); }
+	void operator() (VisBuffer * c) { (c->*f_p)(); }
 	virtual VlatFunctor * clone () { return new VlatFunctor0 (* this); }
 
 private:
@@ -386,9 +386,9 @@ private:
 	Nullary f_p;
 };
 
-template <typename Ret, typename VbType>
-VlatFunctor0<Ret, VbType> * vlatFunctor0 (Ret (VbType::* f) ())
-{ return new VlatFunctor0<Ret, VbType> (f);}
+template <typename Ret>
+VlatFunctor0<Ret> * vlatFunctor0 (Ret (VisBuffer::* f) ())
+{ return new VlatFunctor0<Ret> (f);}
 
 template <typename Ret, typename Arg>
 class VlatFunctor1 : public VlatFunctor {
@@ -525,7 +525,6 @@ protected:
 	typedef vector<VlatFunctor *> Fillers;
 
     void applyModifiers (ROVisibilityIterator * rovi);
-    void checkFiller (asyncio::PrefetchColumnIds id);
 	void createFillerDictionary ();
     void fillDatum (VlaDatum * datum);
     void fillDatumMiscellanyAfter (VlaDatum * datum);

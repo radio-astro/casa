@@ -8,23 +8,16 @@
 #ifndef UTILJ_H_
 #define UTILJ_H_
 
-// Casa Includes
-
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
-
-// C++ and System Includes
-
 #include <cassert>
 #include <cstdarg>
 #include <cstdlib>
 #include <sys/time.h>
 #include <sys/resource.h>
-// STL Includes
-
+#include <algorithm> 
 #include <functional>
-#include <iterator>
 #include <map>
 #include <set>
 #include <vector>
@@ -110,32 +103,6 @@ public:
     const F & operator() (const std::pair<F,S> & p) { return p.first; }
 };
 
-template <typename Container, typename Element>
-Container
-fillContainer (Element sentinel, ...)
-{
-    using namespace std;
-
-    Container container;
-
-    va_list vaList;
-    va_start (vaList, sentinel);
-
-    Element e = va_arg (vaList, Element);
-
-    insert_iterator<Container> i = inserter (container, container.begin());
-
-    while (e != sentinel){
-
-        * i ++ = e;
-
-        e = va_arg (vaList, Element);
-    }
-
-    va_end (vaList);
-
-    return container;
-}
 
 template <typename F, typename S>
 FirstFunctor<F,S> firstFunctor () { return FirstFunctor<F,S> ();}

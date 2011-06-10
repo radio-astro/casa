@@ -627,13 +627,15 @@ protected:
   virtual void getTopoFreqs();
   virtual void getTopoFreqs(Vector<Double> & lsrFreq, Vector<Double> & selFreq); // for async i/o
 
-  virtual void getLsrInfo (Block<Int> & channelGroupNumber,
-                           Block<Int> & channelIncrement,
-                           Block<Int> & channelStart,
+  virtual void getLsrInfo (Block<Int> & channelStart,
                            Block<Int> & channelWidth,
+                           Block<Int> & channelIncrement,
+                           Block<Int> & channelGroupNumber,
+                           const ROArrayColumn <Double> * & chanFreqs,
+                           const ROScalarColumn<Int> * & obsMFreqTypes,
                            MPosition & observatoryPositon,
                            MDirection & phaseCenter,
-                           Bool & velocitySelection) const;
+                           Bool & velocitySelecton) const;
 
   vector<const MeasurementSet *> getMeasurementSets () const;
 
@@ -774,10 +776,7 @@ protected:
 
   // for PA/AZEL calculations
   MSDerivedValues msd_p;
-  Double lastazelUT_p;
-  Double lastfeedpaUT_p;
-  Double lastParangUT_p;
-  Double lastParang0UT_p;
+  Double lastfeedpaUT_p, lastazelUT_p;
   Int nAnt_p;
 
   // for velocity selection and conversion

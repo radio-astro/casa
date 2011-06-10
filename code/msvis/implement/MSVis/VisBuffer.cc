@@ -37,8 +37,6 @@
 #include <ms/MeasurementSets/MSColumns.h>
 
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
-#define CheckVisIter1(s) checkVisIter (__func__, __FILE__, __LINE__,s)
-
 
 // For debugging; remove/comment-out when working
 //#include "VLAT.h"
@@ -150,7 +148,7 @@ VisBuffer::copyCache (const VisBuffer & other)
     cacheCopyArray  (floatDataCubeOK_p, other.floatDataCubeOK_p, floatDataCube_p, other.floatDataCube_p);
     cacheCopyArray  (frequencyOK_p, other.frequencyOK_p, frequency_p, other.frequency_p);
     cacheCopyArray  (imagingWeightOK_p, other.imagingWeightOK_p, imagingWeight_p, other.imagingWeight_p);
-    //cacheCopyArray  (lsrFrequencyOK_p, other.lsrFrequencyOK_p, lsrFrequency_p, other.lsrFrequency_p);
+    cacheCopyArray  (lsrFrequencyOK_p, other.lsrFrequencyOK_p, lsrFrequency_p, other.lsrFrequency_p);
     cacheCopyArray  (modelVisCubeOK_p, other.modelVisCubeOK_p, modelVisCube_p, other.modelVisCube_p);
     cacheCopyArray  (modelVisibilityOK_p, other.modelVisibilityOK_p,
                      modelVisibility_p, other.modelVisibility_p);
@@ -278,7 +276,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     floatDataCubeOK_p  = status;
     frequencyOK_p = status;
     imagingWeightOK_p = status;
-    ///////////lsrFrequencyOK_p = status;
+    lsrFrequencyOK_p = status;
     modelVisCubeOK_p = status;
     modelVisibilityOK_p = status;
     msOK_p = status;
@@ -1579,8 +1577,7 @@ Int VisBuffer::numberCoh () const
 }
 
 
-void
-VisBuffer::checkVisIter (const char *, const char * file, int line, const char * /* extra */) const
+void VisBuffer::checkVisIter (const char *, const char * file, int line) const
 {
   if (visIter_p == NULL) {
     throw AipsError ("No VisibilityIterator is attached.", file, line);
@@ -1737,7 +1734,6 @@ Vector<Float>& VisBuffer::fillFeed1_pa()
     // ROVisibilityIterator, if the time doesn't change. Otherwise
     // we should probably fill both buffers for feed1 and feed2
     // simultaneously to speed up things.
-
     DebugAssert((uInt(antenna1_p(row)) < ant_pa.nelements()), AipsError);
     DebugAssert(antenna1_p(row) >= 0, AipsError);
     feed1_pa_p(row) = ant_pa(antenna1_p(row));
@@ -1942,12 +1938,12 @@ Vector<Double>& VisBuffer::fillFreq()
   return visIter_p->frequency(frequency_p);
 }
 
-//Vector<Double>& VisBuffer::fillLSRFreq()
-//{
-//  CheckVisIter ();
-//  lsrFrequencyOK_p = True;
-//  return visIter_p->lsrFrequency(lsrFrequency_p);
-//}
+Vector<Double>& VisBuffer::fillLSRFreq()
+{
+  CheckVisIter ();
+  lsrFrequencyOK_p = True;
+  return visIter_p->lsrFrequency(lsrFrequency_p);
+}
 
 MDirection& VisBuffer::fillPhaseCenter()
 {
@@ -2034,20 +2030,18 @@ Matrix<Double>& VisBuffer::filluvwMat()
 
 Matrix<CStokesVector>& VisBuffer::fillVis(VisibilityIterator::DataColumn whichOne)
 {
+  CheckVisIter ();
   switch (whichOne) {
   case VisibilityIterator::Model:
-    CheckVisIter1 (" (Model)");
     modelVisibilityOK_p = True;
     return visIter_p->visibility(modelVisibility_p, whichOne);
     break;
   case VisibilityIterator::Corrected:
-    CheckVisIter1 (" (Corrected)");
     correctedVisibilityOK_p = True;
     return visIter_p->visibility(correctedVisibility_p, whichOne);
     break;
   case VisibilityIterator::Observed:
   default:
-    CheckVisIter1 (" (Observed)");
     visibilityOK_p = True;
     return visIter_p->visibility(visibility_p, whichOne);
     break;
@@ -2056,20 +2050,18 @@ Matrix<CStokesVector>& VisBuffer::fillVis(VisibilityIterator::DataColumn whichOn
 
 Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 {
+  CheckVisIter ();
   switch (whichOne) {
   case VisibilityIterator::Model:
-    CheckVisIter1 (" (Model)");
     modelVisCubeOK_p = True;
     return visIter_p->visibility(modelVisCube_p, whichOne);
     break;
   case VisibilityIterator::Corrected:
-    CheckVisIter1 (" (Corrected)");
     correctedVisCubeOK_p = True;
     return visIter_p->visibility(correctedVisCube_p, whichOne);
     break;
   case VisibilityIterator::Observed:
   default:
-    CheckVisIter1 (" (Observed)");
     visCubeOK_p = True;
     return visIter_p->visibility(visCube_p, whichOne);
     break;
