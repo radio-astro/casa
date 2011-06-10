@@ -404,7 +404,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             uInt curspwid=dataspectralwindowids_p[k];
 	    //dataStep_p[k]=chanselmat.row(k)(3);
             if (nrow==0) {
-              dataStep_p=step;
+              //dataStep_p=step[0];
+              dataStep_p[k]=step[0];
             }
             else {
 	      dataStep_p[k]=chansels.row(k)(3);
