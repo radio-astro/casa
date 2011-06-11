@@ -617,6 +617,7 @@ void MSIter::setFeedInfo()
     if (maxNumReceptors>2)
         throw AipsError("Can't handle more than 2 receptors");    
     receptorAngles_p.resize(maxNumReceptors,maxAntId+1,maxFeedId+1);
+    receptorAnglesFeed0_p.resize(maxNumReceptors,maxAntId+1);
     beamOffsets_p.resize(maxNumReceptors,maxAntId+1,maxFeedId+1);
     allBeamOffsetsZero_p=True; 
     Vector<Int> spwId=msc_p->feed().spectralWindowId().getColumn();
