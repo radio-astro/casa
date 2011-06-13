@@ -36,6 +36,7 @@
 //#include <tables/Tables/ExprNode.h>
 #include <tables/Tables/RefRows.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSMainColumns.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
@@ -553,7 +554,7 @@ Bool Partition::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // (like POINTING) might already have been written.
   // However, empty tables are still empty after setting up the reference codes
   // here.
-  msc_p = new MSColumns(msOut_p);
+  msc_p = new MSMainColumns(msOut_p);
   msc_p->setEpochRef(MEpoch::castType(mscIn_p->timeMeas().getMeasRef().getType()),
                      False);
 
@@ -1252,7 +1253,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
        << LogIO::POST;
 
   ArrayColumn<Complex> outCmplxCols[nCmplx];
-  SubMS::getDataColMap(msc_p, outCmplxCols, nCmplx, cmplxColLabels);
+  getDataColMap(msc_p, outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
   // changes in scan, etc. (CAS-2401).  The old split way would have
@@ -1393,8 +1394,8 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());
       msc_p->weight().putColumnCells(rowstoadd, avb.weightMat());
       if(doSpWeight)
-        msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
-      
+        msc_p->weightSpectrum().putColumnCells(rowstoadd,
+					       avb.weightSpectrum());
       rowsdone += rowsnow;
     }
     meter.update(inrowsdone);
@@ -1407,7 +1408,8 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   //tacc.showCacheStatistics(cerr);  // A 99.x% hit rate is good.  0% is bad.
 
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
-     << "Post binning memory: " << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
+     << "Post binning memory: "
+     << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
   if(rowsdone < 1){
@@ -1417,6 +1419,32 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     return false;
   }
   return True;
+}
+
+void Partition::getDataColMap(MSMainColumns* msc, ArrayColumn<Complex>* mapper,
+			      uInt ntok,
+			      const Vector<MS::PredefinedColumns>& colEnums)
+{
+  // Set up a map from dataColumn indices to ArrayColumns in the output.
+  // mapper has to be a pointer (gasp!), not a Vector, because
+  // Vector<ArrayColumn<Complex> > mapper(ntok) would implicitly call
+  // .resize(), which uses =, which is banned for ArrayColumn.
+
+  if(SubMS::mustConvertToData(ntok, colEnums)){
+    mapper[0].reference(msc->data());
+  }
+  else{
+    for(uInt i = 0; i < ntok; ++i){
+      if(colEnums[i] == MS::CORRECTED_DATA)
+        mapper[i].reference(msc->correctedData());
+      else if(colEnums[i] == MS::MODEL_DATA)
+        mapper[i].reference(msc->modelData());
+      else if(colEnums[i] == MS::LAG_DATA)
+        mapper[i].reference(msc->lagData());
+      else                                  // The output default !=
+        mapper[i].reference(msc->data()); // the input default.
+    }
+  }
 }
 
 } //#End casa namespace

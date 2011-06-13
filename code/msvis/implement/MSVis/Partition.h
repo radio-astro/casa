@@ -29,6 +29,7 @@
 //# $Id$
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSMainColumns.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 //#include <msvis/MSVis/VisIterator.h>
 #include <casa/aips.h>
@@ -194,15 +195,16 @@ private:
 
   // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
   // the output.  mapper must have ntok slots!
-  void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                     const Vector<MS::PredefinedColumns>& colEnums); 
+  static void getDataColMap(MSMainColumns* msc, ArrayColumn<Complex>* mapper,
+			    uInt ntok,
+			    const Vector<MS::PredefinedColumns>& colEnums);
 
   // *** Member variables ***
 
   // Initialized* by ctors.  (Maintain order both here and in ctors.)
   //  * not necessarily to anything useful.
   MeasurementSet ms_p, mssel_p;
-  MSColumns * msc_p;		// columns of msOut_p
+  MSMainColumns * msc_p;		// columns of msOut_p
   ROMSColumns * mscIn_p;
   Bool   antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
