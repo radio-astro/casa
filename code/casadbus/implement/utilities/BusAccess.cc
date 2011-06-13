@@ -132,12 +132,19 @@ namespace casa {
 	    if ( current_time > (cache_time + double(CACHE_INTERVAL)) || cache_input != name ) {
 
 		casa::DBusSession &session = casa::DBusSession::instance( );
-		std::vector<std::string> name_list(session.listNames( ));
-		std::string prefix( CASA_PREFIX + name );
 		std::vector<std::string> objects;
-		for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
-		    if ( ! iter->compare(0,prefix.size(),prefix) ) {
-			objects.push_back(*iter);
+		std::string prefix( CASA_PREFIX + name );
+		for ( int retries=0; retries < 3; ++retries ) {
+		    std::vector<std::string> name_list(session.listNames( ));
+		    for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
+			if ( ! iter->compare(0,prefix.size(),prefix) ) {
+			    objects.push_back(*iter);
+			}
+		    }
+		    if ( objects.size( ) > 0 ) {
+			break;
+		    } else {
+			sleep(1);
 		    }
 		}
 		if ( objects.size( ) <= 0 ) {

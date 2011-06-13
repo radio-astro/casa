@@ -51,6 +51,7 @@
       <arg direction="in" type="ad" name="matrix" />
       <arg direction="in" type="i" name="sizex" />
       <arg direction="in" type="i" name="sizey" />
+      <arg direction="in" type="s" name="colormap" />
       <arg direction="in" type="i" name="panel" />
       <arg direction="out" type="v" />
     </method>

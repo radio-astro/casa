@@ -217,7 +217,7 @@ namespace casa {
     }
 
 
-    QDBusVariant QtDBusPlotSvrAdaptor::raster( const QList<double> &matrix, int sizex, int sizey, int panel_id ) {
+    QDBusVariant QtDBusPlotSvrAdaptor::raster( const QList<double> &matrix, int sizex, int sizey, const QString &colormap, int panel_id ) {
 	if ( panel_id != 0 && managed_panels.find( panel_id ) == managed_panels.end( ) ) {
 	    char buf[50];
 	    sprintf( buf, "%d", panel_id );
@@ -237,7 +237,7 @@ namespace casa {
 	    paneldesc = managed_panels.find( panel_id )->second;
 	}
 
-	QwtPlotSpectrogram *spect = paneldesc->panel( )->raster(matrix, sizex, sizey);
+	QwtPlotSpectrogram *spect = paneldesc->panel( )->raster(matrix, sizex, sizey, colormap);
 	int data_id = get_id(paneldesc->panel( ),spect);
 	paneldesc->data( ).push_back(data_id);
 	return QDBusVariant(QVariant(data_id));

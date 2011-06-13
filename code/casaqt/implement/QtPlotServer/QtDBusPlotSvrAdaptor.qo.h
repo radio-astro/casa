@@ -67,7 +67,7 @@ namespace casa {
 	QDBusVariant scatter( const QList<double> &x, const QList<double> &y, const QString &color="black",
 			      const QString &label="", const QString &symbol="", int symbol_size=-1, int dot_size=-1, int panel=0 );
 	QDBusVariant histogram( const QList<double> &values, int bins=0, const QString &color="blue", const QString &label="", int panel=0 );
-	QDBusVariant raster( const QList<double> &matrix, int sizex, int sizey, int panel=0 );
+	QDBusVariant raster( const QList<double> &matrix, int sizex, int sizey, const QString &colormap="Rainbow 2", int panel=0 );
 
 	QDBusVariant setlabel( const QString &xlabel="", const QString &ylabel="", const QString &title="", int panel_id=0 );
 

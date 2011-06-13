@@ -25,6 +25,15 @@
 //#
 //# $Id: $
 
+#include <casa/System/Aipsrc.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/TableDesc.h>
+#include <casa/Utilities/Regex.h> 
+#include <tables/Tables/ScaColDesc.h>
+#include <tables/Tables/ArrColDesc.h>
+#include <tables/Tables/SetupNewTab.h>
+#include <tables/Tables/ScalarColumn.h>
+#include <tables/Tables/ArrayColumn.h>
 #include <casaqt/QtPlotServer/QtPlotSvrPanel.qo.h>
 #include <casaqt/QtPlotServer/QtPlotFrame.qo.h>
 #include <casaqt/QtPlotServer/QtRasterData.h>
@@ -74,6 +83,9 @@ namespace casa {
     }
 
     QtPlotSvrPanel::QtPlotSvrPanel( QWidget *parent ) : slider(0), plot(0)  {
+
+	load_colormaps( );
+
         QtPlotSvrMain *b = new QtPlotSvrMain( );
 	connect( b, SIGNAL(closing(bool)), SLOT(emit_closing(bool)) );
 	QWidget *c = new QWidget(b);
@@ -98,6 +110,8 @@ namespace casa {
     QtPlotSvrPanel::QtPlotSvrPanel( const QString &label, const QString &xlabel, const QString &ylabel, const QString &window_title,
 				    const QList<int> &size, const QString &legend, const QString &zoom, QtPlotSvrPanel *with_panel,
 				    bool new_row, QWidget *parent ) : slider(0), plot(0) {
+
+	load_colormaps( );
 
 	bool ztop = (zoom == "top");
 	bool zleft = (ztop ? false : (zoom == "left"));
@@ -397,7 +411,7 @@ namespace casa {
 	return histogram;
     }
 
-    QwtPlotSpectrogram *QtPlotSvrPanel::raster( const QList<double> &matrix, int sizex, int sizey ) {
+    QwtPlotSpectrogram *QtPlotSvrPanel::raster( const QList<double> &matrix, int sizex, int sizey, const QString &colormap ) {
 	QwtPlotSpectrogram *result = new QwtPlotSpectrogram( );
 	QtRasterData data(result);
 	QwtDoubleRect box;
@@ -408,6 +422,10 @@ namespace casa {
 	data.setBoundingRect( box );
 	data.setData( matrix, sizex, sizey );
 	result->setData(data);
+	colormap_map::iterator it = colormaps.find(colormap);
+	if ( it != colormaps.end() ) {
+	    result->setColorMap( *(it->second) );
+	}
 	result->attach(plot);
 	plot->replot( );
 	return result;
@@ -555,4 +573,72 @@ namespace casa {
     void QtPlotSvrPanel::emit_closing( bool v ) {
 	emit closing( this, v );
     }
+
+    void QtPlotSvrPanel::load_colormaps( ) {
+        casa::Table colormap_table;
+
+	casa::String root = Aipsrc::aipsRoot();
+	casa::String defaultpath = root+"/data/gui/colormaps/default.tbl";
+	casa::String useSystemCmap;
+	casa::String altpath,userpath;
+	casa::Aipsrc::find(useSystemCmap,"display.colormaps.usedefault","yes");
+	casa::Aipsrc::find(userpath,"display.colormaps.usertable","");  
+	try {
+	    if (!useSystemCmap.matches(Regex("[ \t]*(([nN]o)|([fF]alse))[ \t\n]*"))) {
+		// default cmaps
+		colormap_table = casa::Table(defaultpath);
+		if (!userpath.empty()) {
+		    // default and user cmaps
+		    colormap_table = casa::Table(userpath);
+		}
+	    } else {      
+		if (!userpath.empty()) {
+		    // user cmaps only
+		    colormap_table = casa::Table(userpath);
+		}
+	    }    
+	} catch (const casa::AipsError &x) {
+	    fprintf( stderr, "could not load default CASA colormaps: %s\n", x.what() );
+	    return;
+	} catch (...) {
+	    fprintf( stderr, "could not load default colormaps...\n" );
+	    return;
+	}
+
+        unsigned int n = colormap_table.nrow();
+
+        casa::ROArrayColumn<casa::String> synonym_col(colormap_table, "SYNONYMS");
+        casa::ROScalarColumn<casa::String> name_col (colormap_table, "CMAP_NAME");
+        casa::ROArrayColumn<casa::Float> red_col (colormap_table, "RED");
+        casa::ROArrayColumn<casa::Float> green_col (colormap_table, "GREEN");
+        casa::ROArrayColumn<casa::Float> blue_col (colormap_table, "BLUE");
+
+        for ( unsigned int i=0; i < n; ++i ) {
+	    memory::cptr<QwtLinearColorMap> cmap(new QwtLinearColorMap(QwtColorMap::RGB));
+            casa::String name = name_col(i);
+            casa::Vector<casa::String> synonyms(synonym_col(i));
+
+            casa::Vector<casa::Float> red(red_col(i));
+            casa::Vector<casa::Float> green(green_col(i));
+            casa::Vector<casa::Float> blue(blue_col(i));
+
+            unsigned int len = red.nelements() < green.nelements() ? red.nelements() : green.nelements();
+            len = len < blue.nelements() ? len : blue.nelements( );
+	    QColor c;
+            for ( unsigned int m=0; m < len; ++m ) {
+		c.setRgbF(red[m],green[m],blue[m]);
+		cmap->addColorStop( (double) m / (double) (len-1), c );
+	    }
+
+            colormaps.insert( std::make_pair(QString::fromStdString(name),cmap) );
+
+            if ( synonyms.nelements( ) > 0 ) {
+		const unsigned int len = synonyms.nelements( );
+                for ( unsigned int s=0; s < len; ++s ) {
+		    colormaps.insert( std::make_pair(QString::fromStdString(synonyms(s)),cmap) );
+                }
+            }
+        }
+    }
+
 }

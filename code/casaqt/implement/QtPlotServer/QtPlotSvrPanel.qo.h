@@ -33,6 +33,7 @@
 #include <QMainWindow>
 #include <QStringList>
 #include <qwt_plot_curve.h>
+#include <qwt_color_map.h>
 #include <casaqt/QtUtilities/QtId.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <casaqt/QtPlotServer/QtPlotHistogram.h>
@@ -85,7 +86,7 @@ namespace casa {
 	    QwtPlotCurve *scatter( const QList<double> &x, const QList<double> &y, const QString &color="black", const QString &label="",
 				   const QString &symbol="", int symbol_size=-1, int dot_size=-1 );
 	    QtPlotHistogram *histogram( const QList<double> &y, int bins=0, const QString &color="blue", const QString &label="" );
-	    QwtPlotSpectrogram *raster( const QList<double> &matrix, int sizex, int sizey );
+	    QwtPlotSpectrogram *raster( const QList<double> &matrix, int sizex, int sizey, const QString &colormap="Rainbow 2" );
 
 	    void replot( );
 
@@ -124,6 +125,10 @@ namespace casa {
 
 	    QWidget *loaddock( QString file );
             QFont defaultfont;
+
+	    typedef std::map<QString,memory::cptr<QwtLinearColorMap> > colormap_map;
+	    void load_colormaps( );
+	    colormap_map colormaps;
 
 	private:
 

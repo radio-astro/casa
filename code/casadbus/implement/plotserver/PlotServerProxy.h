@@ -44,7 +44,7 @@ namespace casa {
     public:
 
 	static const char **execArgs( );
-	static std::string dbusName( ) { return "view_server"; }
+	static std::string dbusName( ) { return "plot_server"; }
 
 	PlotServerProxy( const std::string &name=dbusName( ) );
 
@@ -69,8 +69,8 @@ namespace casa {
 	dbus::variant histogram( const std::vector< double >& values, int bins=0, const std::string& color="blue",
 				 const std::string& label="", const int panel=0 )
 			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::histogram( values, bins, color, label, panel)); }
-	dbus::variant raster( const std::vector<double> &matrix, int sizex, int sizey, int panel=0 )
-			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::raster( matrix, sizex, sizey, panel )); }
+	dbus::variant raster( const std::vector<double> &matrix, int sizex, int sizey, const std::string &colormap="Rainbow 2", int panel=0 )
+			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::raster( matrix, sizex, sizey, colormap, panel )); }
 
 	dbus::variant erase(const int32_t& data_or_panel=0)
 			{ return dbus::toVariant(edu::nrao::casa::plotserver_proxy::erase(data_or_panel)); }
