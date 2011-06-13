@@ -362,8 +362,8 @@ cb.setmodel([1,1,0,0]);
      <value>-1</value>
      </param>
 
-     <param type="double" direction="in" name="opacity">
-     <description>Array-wide zenith opacity (for type='TOPAC')</description>
+     <param type="doubleArray" direction="in" name="opacity">
+     <description>Array-wide zenith opacity per antenna (for type='TOPAC')</description>
      <value>0.0</value>
      </param>
 
