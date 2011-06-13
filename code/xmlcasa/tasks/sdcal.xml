@@ -592,8 +592,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          wave numbers. also (str) can be used in case
                          you need to specify wave numbers in a certain range,
                          e.g., 'a-b' (= a, a+1, a+2, ..., b-1, b),
-                               '<a'  (= 0,1,...,a-2,a-1),
-                               '>=a' (= a, a+1, ... up to the maximum wave
+                               '&lt;a'  (= 0,1,...,a-2,a-1),
+                               '&gt;=a' (= a, a+1, ... up to the maximum wave
                                       number corresponding to the Nyquist
                                       frequency for the case of FFT).
                          default: []
