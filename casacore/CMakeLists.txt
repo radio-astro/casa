@@ -26,7 +26,8 @@ if (NOT CMAKE_CXX_FLAGS)
 endif (NOT CMAKE_CXX_FLAGS)
 if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
 	add_definitions( -DCASA_NOTAPE )
-	set( CMAKE_OSX_ARCHITECTURES x86_64 )
+	#set( CMAKE_OSX_ARCHITECTURES x86_64 )
+	set( CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
 endif(CMAKE_SYSTEM MATCHES ^Darwin-10 )
 
 # Set build type if not given.
@@ -82,6 +83,7 @@ if (NOT ${MODULE} STREQUAL "casa")
 endif (NOT ${MODULE} STREQUAL "casa")
 
 # Determine which external packages to use.
+include (UsePrivatePath)
 include (CTest)
 include (FindDL)
 include (FindReadline)
