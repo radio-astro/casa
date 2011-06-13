@@ -642,7 +642,7 @@ Bool Partition::makeSelection()
       for(uInt k = 0; k < nSelSpws; ++k){
 	if(spw == spw_p[k]){			// If spw is selected...
 	  if(nchan(spw) > maxnchan_p)
-	    maxnchan_p = ncorr(spw);
+	    maxnchan_p = nchan(spw);
 	  if(ncorr(polId(ddid)) > maxncorr_p)
 	    maxncorr_p = ncorr(polId(ddid));
 	}
