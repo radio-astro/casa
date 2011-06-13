@@ -216,7 +216,7 @@ calibrater::setapply(const std::string& type,
 		     const std::string& select,
 		     const bool calwt, 
 		     const std::vector<int>& spwmap,
-		     const double opacity) {
+		     const std::vector<double>& opacity) {
 
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
