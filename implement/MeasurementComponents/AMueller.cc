@@ -376,17 +376,6 @@ void AMueller::corrupt(VisBuffer& vb)
     // Restore user's calWt()
     calWt()=userCalWt; 
   }
-
-  // DEBUGGING
-  //uInt nchan = vb.nChannel();
-  uInt nvbrow = vb.nRow();
-  for(uInt vbrow = 0; vbrow < nvbrow; ++vbrow){
-    if(!vb.flagCube()(0, 0, vbrow) && !vb.flagRow()[vbrow] &&
-       vb.modelVisCube()(0, 0, vbrow).real() > 3.95)
-      os << LogIO::WARN
-         << vbrow << ": " << vb.modelVisCube()(0, 0, vbrow)
-         << LogIO::POST;
-  }
 }
 
 void ANoise::createCorruptor(const VisIter& vi, const Record& simpar, const Int nSim)
