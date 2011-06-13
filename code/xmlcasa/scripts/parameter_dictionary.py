@@ -6,6 +6,22 @@ class par(str):
                 interval upon which to accumulate *if* an input calibration table (tablein)
                 has not been specified. [units=seconds] """
 
+        @staticmethod
+        def addwn():
+                """
+		addwn -- additional wave number(s) of sinusoids to be used
+		         for fitting.
+                         (list) and (int) are accepted to specify every
+                         wave numbers. also (str) can be used in case
+                         you need to specify wave numbers in a certain range,
+                example: 'a-b' (= a, a+1, a+2, ..., b-1, b),
+	                 '<a'  (= 0,1,...,a-2,a-1),
+	                 '>=a' (= a, a+1, ... up to the maximum wave
+                                  number corresponding to the Nyquist
+                                  frequency for the case of FFT).
+	        default: []
+		"""
+
 	@staticmethod
 	def alg():
 		""" 
@@ -89,6 +105,14 @@ class par(str):
                	default: False; (will overwrite if already existing)
                	example: append=True
 
+		"""
+
+	@staticmethod
+	def applyfft():
+		"""
+		Automatically set wave numbers of sinusoids.
+		options: True, False
+		default: True
 		"""
 
 	@staticmethod
@@ -704,6 +728,27 @@ class par(str):
 		"""
 		factor -- scaling factor
 		default: 1.0 (no scaling)
+		"""
+		
+	@staticmethod
+	def fftmethod():
+		"""
+		fftmethod -- ethod to be used when applyfft=True.
+		options: 'fft'
+		default: 'fft'
+		"""
+		
+	@staticmethod
+	def fftthresh():
+		"""
+		fftthresh -- threshold to select wave numbers to be used for
+		             sinusoidal fitting. both (float) and (str) accepted.
+			     given a float value, the unit is set to sigma.
+			     for string values, allowed formats include:
+		example: '3sigma' (= 3-sigma level)
+		         '3' (= 3-sigma level)
+                         'top5' (= the 5 strongest ones)
+	        default: 3.0 (unit: sigma).
 		"""
 		
 	@staticmethod
@@ -1449,14 +1494,6 @@ class par(str):
                 default: 0 = autoscale
                 """
 	
-        @staticmethod
-        def maxwavelength():
-		"""
-		maxwavelength -- the longest sinusoidal wavelength in unit of 
-		spectral window width.
-		default: 1.0
-		"""
-	
 	@staticmethod	
 	def merge():
 		"""
@@ -1465,6 +1502,13 @@ class par(str):
                    mode = 'save'
                 Options: 'or','and' not recommended for now.
 		"""
+
+        @staticmethod
+        def minnrow():
+                """
+                minnrow -- minimum number of input spectra to show progress status
+                default: 1000
+                """
 
         @staticmethod
         def minpix():
@@ -1783,18 +1827,6 @@ class par(str):
 		default: 2
 		"""
 		
-	@staticmethod
-	def nwave():
-		"""
-		nwave -- wave number(s) of sinusoid for fitting.
-		both integer (for the maximum one) and list (for all) 
-		can be used. Zero means constant term. 
-		default: 3
-		example: 4 uses sinusoids with wave numbers from 0 to 4,
-		i.e. 0, 1, 2, 3, and 4.
-		[1,8] uses sinusoids with wave numbers 1 and 8.
-		"""
-
 	@staticmethod
 	def nxpanel():
 		""" Panel number in the x-direction: """
@@ -2189,6 +2221,24 @@ class par(str):
 		example: region='myimage.im.rgn'
 		"""
 
+        @staticmethod
+        def rejwn():
+                """
+		redwn -- wave number(s) of sinusoids NOT to be used for fitting.
+		         can be set just as addwn but has higher priority:
+			 wave numbers which are specified both in addwn and
+			 rejwn will NOT be used. 
+                         (list) and (int) are accepted to specify every
+                         wave numbers. also (str) can be used in case
+                         you need to specify wave numbers in a certain range,
+                example: 'a-b' (= a, a+1, a+2, ..., b-1, b),
+	                 '<a'  (= 0,1,...,a-2,a-1),
+	                 '>=a' (= a, a+1, ... up to the maximum wave
+                                  number corresponding to the Nyquist
+                                  frequency for the case of FFT).
+	        default: []
+		"""
+
 	@staticmethod
 	def relmargin():
 		"""
@@ -2337,6 +2387,13 @@ class par(str):
 		"""
        		showgui -- Turn on/off the displaying of the plotting GUI
                	default: True; example: showgui=False
+		"""
+
+	@staticmethod
+	def showprogress():
+		"""
+       		showprogress -- show progress status for large data
+                default: True
 		"""
 
 	@staticmethod

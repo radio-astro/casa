@@ -174,47 +174,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>5</value>
     </param>
 
-    <param type="string" name="blfunc">
-	    <description>baseline model function</description>
-            <value>none</value>
-	    <allowed kind="enum">
-                <value>none</value>
-	        <value>poly</value>
-	        <value>cspline</value>
-	        <value>sinusoid</value>
-	    </allowed>
-    </param>
-
-    <param type="int" name="order" subparam="true">
-            <description>order of baseline polynomial</description>
-            <value>5</value>
-    </param>
-
-    <param type="int" name="npiece" subparam="true">
-            <description>number of element polynomials of spline</description>
-            <value>2</value>
-    </param>
-
-    <param type="any" name="nwave" subparam="true">
-            <description>wave numbers used for fitting (e.g. 3 or [0,1,2])</description>
-	    <value type="int">3</value>
-    </param>
-
-    <param type="double" name="maxwavelength" subparam="true">
-            <description>the longest sinusoidal wavelength in unit of sw width</description>
-            <value>1.0</value>
-    </param>
-
-    <param type="double" name="clipthresh" subparam="true">
-            <description>clipping threshold for iterative fitting</description>
-            <value>3.0</value>
-    </param>
-
-    <param type="int" name="clipniter" subparam="true">
-            <description>maximum iteration number</description>
-            <value>0</value>
-    </param>
-
     <param type="any" name="masklist">
             <description>list or string of mask regions to INCLUDE in BASELINE fit</description>
             <any type="variant" limittype="string  doubleArray"/>
@@ -246,6 +205,62 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type='vector'><value>0</value></value>
     </param>
 
+    <param type="string" name="blfunc">
+	    <description>baseline model function</description>
+            <value>none</value>
+	    <allowed kind="enum">
+                <value>none</value>
+	        <value>poly</value>
+	        <value>cspline</value>
+	        <value>sinusoid</value>
+	    </allowed>
+    </param>
+
+    <param type="int" name="order" subparam="true">
+            <description>order of baseline polynomial</description>
+            <value>5</value>
+    </param>
+
+    <param type="int" name="npiece" subparam="true">
+            <description>number of element polynomials of spline</description>
+            <value>2</value>
+    </param>
+
+    <param type="bool" name="applyfft" subparam="true">
+            <description>automatically set wave numbers of sinusoids</description>
+            <value>True</value>
+    </param>
+
+    <param type="string" name="fftmethod" subparam="true">
+            <description>method for automatically set wave numbers of sinusoids</description>
+            <value>fft</value>
+    </param>
+
+    <param type="any" name="fftthresh" subparam="true">
+            <description>threshold to select wave numbers of sinusoids</description>
+	    <value type='double'>3.0</value>
+    </param>
+
+    <param type="any" name="addwn" subparam="true">
+            <description>additional wave numbers to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="any" name="rejwn" subparam="true">
+            <description>wave numbers NOT to use</description>
+	    <value type='vector'><value></value></value>
+    </param>
+
+    <param type="double" name="clipthresh" subparam="true">
+            <description>clipping threshold for iterative fitting</description>
+            <value>3.0</value>
+    </param>
+
+    <param type="int" name="clipniter" subparam="true">
+            <description>maximum iteration number</description>
+            <value>0</value>
+    </param>
+
     <param type="bool" name="verifycal">
             <description>verify the results of calibration</description>
             <value>False</value>
@@ -264,6 +279,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="bool" name="verbosebl">
             <description>output baseline fitting results to logger and a file as well</description>
             <value>True</value>
+    </param>
+
+    <param type="bool" name="showprogress">
+            <description>show progress status for large data</description>
+            <value>True</value>
+    </param>
+
+    <param type="int" name="minnrow" subparam="true">
+            <description>minimum number of input spectra to show progress status</description>
+            <value>1000</value>
     </param>
 
     <param type="string" name="outfile">
@@ -335,6 +360,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <default param="kwidth"><value>5</value></default>
                 </equals>
             </when>
+            <when param="maskmode">
+                <equals value="auto">
+                        <default param="thresh"><value>5.0</value></default>
+                        <default param="avg_limit"><value>4</value></default>
+                        <default param="edge"><value type='vector'><value>0</value></value></default>
+                </equals>
+                <equals value="list"/>
+                <equals value="interact"/>
+            </when>
 	    <when param="blfunc">
                 <equals value="none"/>
 		<equals value="poly">
@@ -346,21 +380,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 			<default param="clipniter"><value>0</value></default>
 	        </equals>
                 <equals value="sinusoid">
-			<default param="nwave"><value type="int">3</value></default>
-			<default param="maxwavelength"><value>1.0</value></default>
+			<default param="applyfft"><value>True</value></default>
+			<default param="fftmethod"><value type="string">fft</value></default>
+			<default param="fftthresh"><value type="double">3.0</value></default>
+			<default param="addwn"><value type="vector"><value></value></value></default>
+			<default param="rejwn"><value type="vector"><value></value></value></default>
 			<default param="clipthresh"><value>3.0</value></default>
 			<default param="clipniter"><value>0</value></default>
 	        </equals>
 	    </when>
-            <when param="maskmode">
-                <equals value="auto">
-                        <default param="thresh"><value>5.0</value></default>
-                        <default param="avg_limit"><value>4</value></default>
-                        <default param="edge"><value type='vector'><value>0</value></value></default>
-                </equals>
-                <equals value="list"/>
-                <equals value="interact"/>
-            </when>
+	    <when param="showprogress">
+		<equals type="bool" value="True">
+			<default param="minnrow"><value>1000</value></default>
+	        </equals>
+	    </when>
     </constraints>
 
     </input>
@@ -481,40 +514,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          example: 5 or 10 seem to be popular for boxcar
                                   ignored for hanning (fixed at 5 chans)
                                   (0 will turn off gaussian or boxcar)
-        blfunc -- baseline model function
-                options: (str) 'none','poly','cspline','sinusoid'
-                default: 'none' (no baselining)
-                example: blfunc='poly' uses a single polynomial line of 
-                         any order which should be given as an expandable 
-                         parameter 'order' to fit baseline. 
-                         blfunc='cspline' uses a cubic spline function, a piecewise 
-                         cubic polynomial having C2-continuity (i.e., the second 
-                         derivative is continuous at the joining points).
-                         blfunc='sinusoid' uses a combination of sinusoidal curves. 
-            &gt;&gt;&gt; blfunc expandable parameters
-                 order -- order of baseline polynomial
-                         options: (int) (&lt;0 turns off baseline fitting)
-                         default: 5
-                         example: typically in range 2-9 (higher values
-                                  seem to be needed for GBT)
-                 npiece -- number of the element polynomials of cubic spline curve
-                         options: (int) (&lt;0 turns off baseline fitting)
-                         default: 2
-                 nwave -- wave number(s) of sinusoid for fitting.
-                         both integer (for the maximum one) and list (for all) 
-                         can be used. Zero means constant term. 
-                         default: 3
-                         example: 4 uses sinusoids with wave numbers from 0 to 4,
-                                    i.e. 0, 1, 2, 3, and 4.
-                                  [1,8] uses sinusoids with wave numbers 1 and 8.
-                 maxwavelength -- the longest sinusoidal wavelength in unit of 
-                         spectral window width.
-                         default: 1.0
-                 clipthresh -- clipping threshold for iterative fitting
-                         default: 3
-                 clipniter -- maximum iteration number
-                         default: 0 (no iteration, i.e., no clipping)
-
         masklist -- list or string of mask regions to INCLUDE in BASELINE fit
                     a string masklist allows per IF selection of channels.
                 default: [] (entire spectrum)
@@ -555,6 +554,59 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  setting this parameter to 1) to avoid detecting baseline
                  undulations instead of real lines.
 
+        blfunc -- baseline model function
+                options: (str) 'none','poly','cspline','sinusoid'
+                default: 'none' (no baselining)
+                example: blfunc='poly' uses a single polynomial line of 
+                         any order which should be given as an expandable 
+                         parameter 'order' to fit baseline. 
+                         blfunc='cspline' uses a cubic spline function, a piecewise 
+                         cubic polynomial having C2-continuity (i.e., the second 
+                         derivative is continuous at the joining points).
+                         blfunc='sinusoid' uses a combination of sinusoidal curves. 
+            &gt;&gt;&gt; blfunc expandable parameters
+                 order -- order of baseline polynomial
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 5
+                         example: typically in range 2-9 (higher values
+                                  seem to be needed for GBT)
+                 npiece -- number of the element polynomials of cubic spline curve
+                         options: (int) (&lt;0 turns off baseline fitting)
+                         default: 2
+                 applyfft -- automatically set wave numbers of sinusoidal functions
+                         for fitting by applying some method like FFT.
+                         options: (bool) True, False
+                         default: True
+                 fftmethod -- method to be used when applyfft=True. Now only
+                         'fft' is available and it is the default.
+                 fftthresh -- threshold to select wave numbers to be used for
+                         sinusoidal fitting. both (float) and (str) accepted.
+                         given a float value, the unit is set to sigma.
+                         for string values, allowed formats include:
+                             'xsigma' or 'x' (= x-sigma level. e.g., '3sigma'), or
+                             'topx' (= the x strongest ones, e.g. 'top5').
+                         default is 3.0 (unit: sigma).
+                 addwn -- additional wave number(s) of sinusoids to be used
+                         for fitting.
+                         (list) and (int) are accepted to specify every
+                         wave numbers. also (str) can be used in case
+                         you need to specify wave numbers in a certain range,
+                         e.g., 'a-b' (= a, a+1, a+2, ..., b-1, b),
+                               '<a'  (= 0,1,...,a-2,a-1),
+                               '>=a' (= a, a+1, ... up to the maximum wave
+                                      number corresponding to the Nyquist
+                                      frequency for the case of FFT).
+                         default: []
+                 rejwn -- wave number(s) of sinusoid NOT to be used for fitting.
+                         can be set just as addwn but has higher priority:
+                         wave numbers which are specified both in addwn
+                         and rejwn will NOT be used.
+                         default: []
+                 clipthresh -- clipping threshold for iterative fitting
+                         default: 3
+                 clipniter -- maximum iteration number
+                         default: 0 (no iteration, i.e., no clipping)
+
         verifycal -- verify the results of calibration
                 options: (bool) True,False
                 default: False
@@ -574,6 +626,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          logger or a text file (&lt;outfile&gt;_blparam.txt), while 
                          the processing speed of sdbaseline gets faster by a 
                          factor of about 20 percent
+        showprogress -- show progress status for large data
+                default: True
+        minnrow -- minimum number of input spectra to show progress status
+                default: 1000
         outfile -- Name of output file
                 default: '' (&lt;sdfile&gt;_cal)
         outform -- format of output file
