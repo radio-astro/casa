@@ -30,3 +30,4 @@ casa_add_library( tableplot
   implement/TablePlot/TPPlotter.cc
    )
 
+#casa_add_executable(tableplot projtable  apps/projtable/projtable.cc)
