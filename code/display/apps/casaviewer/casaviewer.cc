@@ -39,7 +39,6 @@
 
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
-#include <display/QtViewer/QtESOPanelGui.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
 
 #include <display/Utilities/Lowlevel.h>
@@ -59,7 +58,7 @@ static pid_t manager_root_pid = 0;
 static bool sigterm_received = false;
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
 			     char *&dbus_name, bool &inital_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start, bool &eso_3d);
+			     bool &without_gui, bool &persistent, bool &casapy_start);
 static void start_manager_root( const char *origname, int numargs, char **args,
 				const char *dbusname, bool without_gui, pid_t root_pid );
 static void launch_server( const char *origname, int numargs, char **args,
@@ -96,6 +95,7 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 	qFatal("exiting...");
 	exit(1);
     }
+    return true;
 }
 
 int main( int argc, const char *argv[] ) {
@@ -104,7 +104,6 @@ int main( int argc, const char *argv[] ) {
     bool without_gui = false;
     bool persistent = false;
     bool casapy_start = false;
-    bool eso_3d = false;
     char *dbus_name = 0;
     bool initial_run = false;
 
@@ -115,7 +114,7 @@ int main( int argc, const char *argv[] ) {
     signal( SIGTERM, exiting_server );
 
     preprocess_args( argc, argv, numargs, args, dbus_name, initial_run,
-		     server_startup, without_gui, persistent, casapy_start , eso_3d);
+    		server_startup, without_gui, persistent, casapy_start);
 
     if ( (server_startup || without_gui) && initial_run ) {
 	launch_server( argv[0], numargs, args, dbus_name, without_gui,
@@ -165,11 +164,7 @@ int main( int argc, const char *argv[] ) {
 		// define the panel
 		QtDisplayPanelGui* dpg;
 
-		// create the correct panel
-		if (eso_3d)
-			dpg = new QtESOPanelGui(v);
-		else
-			dpg = new QtDisplayPanelGui(v);
+		dpg = new QtDisplayPanelGui(v);
 
 	    QtDisplayData* qdd = 0;
 
@@ -285,7 +280,7 @@ int main( int argc, const char *argv[] ) {
 // of args, and the last arg (not included in numargs count) is null (for execvp)
 static void preprocess_args( int argc, const char *argv[], int &numargs, char **&args,
 			     char *&dbus_name, bool &initial_run, bool &server_startup,
-			     bool &without_gui, bool &persistent, bool &casapy_start, bool &eso_3d) {
+			     bool &without_gui, bool &persistent, bool &casapy_start) {
 
     without_gui = false;
     persistent = false;
@@ -330,10 +325,6 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    persistent = true;
 	} else if ( ! strcmp(argv[x],"--casapy") ) {
 	    casapy_start = true;
-	// check for ESO 3D param
-	} else if ( ! strcmp(argv[x],"--eso3d") ) {
-		// set flag true
-		eso_3d = true;
 	}
     }
 
@@ -491,7 +482,7 @@ void launch_server( const char *origname, int numargs, char **args,
 
 char *find_xvfb( const char *paths ) {
 
-    if ( ! paths ) return 0;
+    if ( !paths ) return 0;
 
     const char *pathptr = paths; 
     char buffer[PATH_MAX];		// security: too long paths could result
@@ -504,7 +495,7 @@ char *find_xvfb( const char *paths ) {
 		pathptr = p+1;
 		continue;
 	    }
-	    if ( (p - pathptr + 6) > sizeof(buffer) ) {
+	    if ((p - pathptr + 6) > (int)sizeof(buffer) ) {
 		pathptr = p+1;
 		continue;
 	    }
