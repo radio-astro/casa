@@ -955,6 +955,18 @@ Bool Partition::fillAccessoryMainCols(){
      << "Copying timeCentroid took " << timer.real() << "s."
      << LogIO::POST;
   
+  timer.mark();
+  msc_p->dataDescId().putColumn(mscIn_p->dataDescId().getColumn());
+  msc_p->fieldId().putColumn(mscIn_p->fieldId().getColumn());
+  msc_p->arrayId().putColumn(mscIn_p->arrayId().getColumn());
+  msc_p->stateId().putColumn(mscIn_p->stateId().getColumn());
+  msc_p->processorId().putColumn(mscIn_p->processorId().getColumn());
+  msc_p->observationId().putColumn(mscIn_p->observationId().getColumn());
+  os << LogIO::DEBUG1
+     << "Copying DDID, FIELD, ARRAY_ID, STATE, PROC, and OBS took "
+     << timer.real() << "s."
+     << LogIO::POST;
+  
   // ScalarMeasColumn doesn't have a putColumn() for some reason.
   //msc_p->uvwMeas().putColumn(mscIn_p->uvwMeas());
   timer.mark();
