@@ -1035,6 +1035,8 @@ Constraints
               If antenna string is a non-negative integer, it is assumed an
                 antenna index, otherwise, it is assumed as an antenna name
               antenna='5&amp;6'; baseline between antenna index 5 and index 6.
+	      antenna='!ea02'; exclude EVLA antenna 2.
+	      antenna='ea13;!ea22'; EVLA antenna 13, excluding antenna 22.
               antenna='VA05&amp;VA06'; baseline between VLA antenna 5 and 6.
               antenna='5&amp;6;7&amp;8'; baselines with indices 5-6 and 7-8
               antenna='5'; all baselines with antenna index 5
