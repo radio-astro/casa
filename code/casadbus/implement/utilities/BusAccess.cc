@@ -134,7 +134,7 @@ namespace casa {
 		casa::DBusSession &session = casa::DBusSession::instance( );
 		std::vector<std::string> objects;
 		std::string prefix( CASA_PREFIX + name );
-		for ( int retries=0; retries < 3; ++retries ) {
+		for ( int retries=0; retries < 10; ++retries ) {
 		    std::vector<std::string> name_list(session.listNames( ));
 		    for ( std::vector<std::string>::iterator iter = name_list.begin(); iter != name_list.end( ); ++iter ) {
 			if ( ! iter->compare(0,prefix.size(),prefix) ) {

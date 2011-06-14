@@ -62,6 +62,8 @@
 
 namespace casa {
 
+    QtPlotSvrPanel::colormap_map *QtPlotSvrPanel::colormaps_ = 0;
+
     void QtPlotSvrPanel::hide( ) {
 	window_->base( )->hide( );
     }
@@ -422,8 +424,8 @@ namespace casa {
 	data.setBoundingRect( box );
 	data.setData( matrix, sizex, sizey );
 	result->setData(data);
-	colormap_map::iterator it = colormaps.find(colormap);
-	if ( it != colormaps.end() ) {
+	colormap_map::iterator it = colormaps_->find(colormap);
+	if ( it != colormaps_->end() ) {
 	    result->setColorMap( *(it->second) );
 	}
 	result->attach(plot);
@@ -433,6 +435,15 @@ namespace casa {
 
     QStringList QtPlotSvrPanel::colors( ) {
 	return QtPlotFrame::colors( );
+    }
+
+    QStringList QtPlotSvrPanel::colormaps( ) {
+	load_colormaps( );
+	QStringList result;
+	for ( colormap_map::iterator it=colormaps_->begin(); it != colormaps_->end(); ++it ) {
+	    result.push_back(it->first);
+	}
+	return result;
     }
 
     QStringList QtPlotSvrPanel::symbols( ) {
@@ -575,6 +586,13 @@ namespace casa {
     }
 
     void QtPlotSvrPanel::load_colormaps( ) {
+	static bool loaded = false;
+
+	if ( loaded ) return;
+	loaded = true;
+
+	colormaps_ = new colormap_map( );
+
         casa::Table colormap_table;
 
 	casa::String root = Aipsrc::aipsRoot();
@@ -630,12 +648,12 @@ namespace casa {
 		cmap->addColorStop( (double) m / (double) (len-1), c );
 	    }
 
-            colormaps.insert( std::make_pair(QString::fromStdString(name),cmap) );
+            colormaps_->insert( std::make_pair(QString::fromStdString(name),cmap) );
 
             if ( synonyms.nelements( ) > 0 ) {
 		const unsigned int len = synonyms.nelements( );
                 for ( unsigned int s=0; s < len; ++s ) {
-		    colormaps.insert( std::make_pair(QString::fromStdString(synonyms(s)),cmap) );
+		    colormaps_->insert( std::make_pair(QString::fromStdString(synonyms(s)),cmap) );
                 }
             }
         }

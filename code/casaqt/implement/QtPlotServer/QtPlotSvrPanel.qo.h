@@ -80,6 +80,7 @@ namespace casa {
 			    QtPlotSvrPanel *with_panel=0, bool new_row=false, QWidget *parent=0 );
 
 	    static QStringList colors( );
+	    static QStringList colormaps( );
 	    static QStringList symbols( );
 
 	    QwtPlotCurve *line( const QList<double> &x, const QList<double> &y, const QString &color="black", const QString &label="" );
@@ -127,8 +128,8 @@ namespace casa {
             QFont defaultfont;
 
 	    typedef std::map<QString,memory::cptr<QwtLinearColorMap> > colormap_map;
-	    void load_colormaps( );
-	    colormap_map colormaps;
+	    static void load_colormaps( );
+	    static colormap_map *colormaps_;
 
 	private:
 

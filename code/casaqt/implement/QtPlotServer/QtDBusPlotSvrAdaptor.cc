@@ -69,6 +69,10 @@ namespace casa {
 	return QtPlotSvrPanel::colors( );
     }
 
+    QStringList QtDBusPlotSvrAdaptor::colormaps( ) {
+	return QtPlotSvrPanel::colormaps( );
+    }
+
     QStringList QtDBusPlotSvrAdaptor::symbols( ) {
 	return QtPlotSvrPanel::symbols( );
     }

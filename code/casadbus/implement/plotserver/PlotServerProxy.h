@@ -56,6 +56,8 @@ namespace casa {
 									     legend,zoom,with_panel,new_row,hidden) ); }
 	std::vector< std::string > colors( )
 			{ return edu::nrao::casa::plotserver_proxy::colors( ); }
+	std::vector< std::string > colormaps( )
+			{ return edu::nrao::casa::plotserver_proxy::colormaps( ); }
 	std::vector< std::string > symbols( )
 			{ return edu::nrao::casa::plotserver_proxy::symbols( ); }
 	dbus::variant line( const std::vector< double >& x, const std::vector< double >& y, const std::string& color="black",

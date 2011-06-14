@@ -17,6 +17,9 @@
     <method name="colors">
       <arg direction="out" type="as" />
     </method>
+    <method name="colormaps">
+      <arg direction="out" type="as" />
+    </method>
     <method name="symbols">
       <arg direction="out" type="as" />
     </method>
