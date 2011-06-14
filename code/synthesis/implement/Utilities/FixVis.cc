@@ -45,16 +45,6 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   dataCols_p = SubMS::parseColumnNames(dataColName);
   nDataCols_p = dataCols_p.nelements();
 
-  // To use FTMachine, the image has to be set up with coordinates, even
-  // though no image will be made.
-	  
-  //imageNchan_p = 1;        // for MFS.
-  //imageStart_p = 0
-  //imageStep_p  = 1
-  //destroySkyEquation();    
-  // npol_p = 1;
-
-  // nchan we need to get rid of one of these variables 
   nchan_p = 1; // imageNchan_p;
 
   spectralwindowids_p.resize(ms_p.spectralWindow().nrow());
@@ -62,15 +52,6 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
 
   lockCounter_p = 0;
 }
-  
-// // Assignment (only copies reference to MS, need to reset selection etc)
-// FixVis::FixVis& operator=(FixVis::FixVis& other)
-// {
-//   ms_p = other.ms_p;
-//   DDIds_p = other.DDIds_p;
-//   FieldIds_p = other.FieldIds_p;
-//   nSpw_p = other.nSpw_p;
-// }
   
 // Destructor
 FixVis::~FixVis()
@@ -120,7 +101,6 @@ void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs,
 {
   phaseDirs_p = phaseDirs;
 
-  //TODO
   // Update the FIELD table with the new phase directions.
   // Do not change REFERENCE_DIR since it is supposed to be the original
   // PHASE_DIR.  In particular, if the POINTING table is invalid (i.e. VLA),
@@ -146,13 +126,6 @@ void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs,
   }
 }
 
-// const ROArrayMeasColumn<MDirection>& FixVis::getPhaseDirs() const
-// {
-//   ROMSFieldColumns msField(msc_p->field());
-
-//   return msField.phaseDirMeasCol();
-// }
-
 
 void FixVis::convertFieldDirs(const MDirection::Types outType)
 {
@@ -167,19 +140,10 @@ void FixVis::convertFieldDirs(const MDirection::Types outType)
 
   ready_msc_p();
   
-  // msc_p->setUVWRef(uvwtype) won't work because it requires the column to
-  // be empty, even though we'll be overwriting it.
-  //msc_p->uvwMeas().setDescRefCode(uvwtype, false);
   msc_p->uvw().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", MDirection::showType(outType));
 
   MSFieldColumns& msfcs = msc_p->field();
 
-  // Don't initialize the ArrayMeasCols using this syntax:
-  // ArrayMeasColumn<MDirection> msPhaseDirCol(msfcs.phaseDirMeasCol());
-  // because that creates a copy of msfcs.phaseDirMeasCol(), and the changes
-  // will not propagate.
-  //  ArrayMeasColumn<MDirection> msPhaseDirCol;
-  //msPhaseDirCol.reference(msfcs.phaseDirMeasCol());
   MDirection pd0(msfcs.phaseDirMeas(0));
   logSink() << LogIO::DEBUG1
             << "PHASE_DIR[0] before = " << pd0.tellMe() << " ";
@@ -403,8 +367,6 @@ Bool FixVis::calc_uvw(const String& refcode, const Bool reuse)
         rotateUVW(startDir, outref);
       }
       else{
-        // This is just an enum!  Why can't Muvw just return it instead of
-        // filling out a reference?
         Muvw::Types uvwtype;
         MBaseline::Types bltype;
     
@@ -418,8 +380,7 @@ Bool FixVis::calc_uvw(const String& refcode, const Bool reuse)
                     << LogIO::POST;
           return false;
         }
-      
-       
+             
         MSUVWGenerator uvwgen(*msc_p, bltype, uvwtype);
         retval = uvwgen.make_uvws(FieldIds_p);
       }
@@ -468,8 +429,10 @@ void FixVis::rotateUVW(const MDirection &indir, const MDirection::Ref& newref)
   RotMatrix rm(uvm.rotationUVW());
 
   uInt nRows = UVWcol.nrow();
-  for(uInt row = 0; row < nRows; ++row)
+  for(uInt row = 0; row < nRows; ++row){
     UVWcol(row) = (rm * MVuvw(UVWcol(row))).getVector();
+  }
+  return;
 }
 
 // Don't just calculate the (u, v, w)s, do everything and store them in ms_p.
@@ -478,10 +441,34 @@ Bool FixVis::fixvis(const String& refcode, const String& dataColName)
   logSink() << LogOrigin("FixVis", "fixvis");
 
   Bool retval = false;
+
+  if(!ready_msc_p())
+    return false;
+
   if(nsel_p > 0){
-    if(phaseDirs_p.nelements() == static_cast<uInt>(nsel_p)){
-      // First calculate new UVWs for the selected fields?
-      // calc_uvw(refcode);
+    if(phaseDirs_p.nelements() == static_cast<uInt>(nsel_p)){ 
+
+      String telescop = msc_p->observation().telescopeName()(0);
+      MPosition obsPosition;
+      if(!(MeasTable::Observatory(obsPosition, telescop))){
+	logSink() << LogIO::WARN << "Did not get the position of " << telescop 
+		  << " from data repository" << LogIO::POST;
+	logSink() << LogIO::WARN 
+		  << "Please contact CASA to add it to the repository."
+		  << LogIO::POST;
+	logSink() << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+	freqFrameValid_p = False;
+      }
+      else{
+	mLocation_p = obsPosition;
+	freqFrameValid_p = True;
+      }
+
+      MSFieldColumns& msfcs = msc_p->field();
+
+      mFrame_p = MeasFrame(msfcs.timeMeas()(0), mLocation_p);
+
+      msc_p->uvw().rwKeywordSet().asrwRecord("MEASINFO").define("Ref", refcode);
 
       //**** Adjust the phase tracking centers and distances. ****
       // Loop through each selected field.
@@ -521,33 +508,19 @@ Bool FixVis::fixvis(const String& refcode, const String& dataColName)
   return retval;
 }
 
-// void FixVis::destroySkyEquation() 
-// {
-//   // if(se_p) delete se_p; se_p = 0;
-//   //redoSkyModel_p = True;
-// }
 
 Bool FixVis::setImageField(const Int fieldid,
                            const Bool dotrackDir //, const MDirection& trackDir
                            )
 {
   logSink() << LogOrigin("FixVis", "setImageField()");
-//   ostringstream clicom;
-//   clicom << " phaseCenter='" << phaseCenter;
-//   os << String(clicom) << LogIO::POST;  
+
   try{
-    //this->lock();
 
     doTrackSource_p = dotrackDir;
-    //trackDir_p      = trackDir;
 
     fieldid_p = fieldid;
-    //facets_p = 1;
 
-    //ROMSFieldColumns msfield(ms_p->field());
-    //phaseCenter_p = msfield.phaseDirMeas(fieldid_p);
-
-    //this->unlock();
     return True;
   }
   catch(AipsError x){
@@ -660,240 +633,237 @@ Bool FixVis::ready_msc_p()
 }
 
 
-CoordinateSystem FixVis::getCoords(uInt numInSel)
-{
-  logSink() << LogOrigin("FixVis", "getCoords()");
+// CoordinateSystem FixVis::getCoords(uInt numInSel)
+// {
+//   logSink() << LogOrigin("FixVis", "getCoords()");
 
-  CoordinateSystem coordInfo;
+//   CoordinateSystem coordInfo;
 
-//   if(!mssel_p)
-//     logSink() << LogIO::EXCEPTION
-//               << "Could not set the phase tracking center for field "
-//               << FieldIds_p[numInSel]
+// //   if(!mssel_p)
+// //     logSink() << LogIO::EXCEPTION
+// //               << "Could not set the phase tracking center for field "
+// //               << FieldIds_p[numInSel]
+// //               << LogIO::POST;
+
+//   Vector<Double> deltas(2);
+//   deltas(0) = -1.0e-5; // -mcellx_p.get("rad").getValue();
+//   deltas(1) =  1.0e-5; //  mcelly_p.get("rad").getValue();
+  
+//   MFrequency::Types obsFreqRef = MFrequency::DEFAULT;
+//   ROScalarColumn<Int> measFreqRef(ms_p.spectralWindow(),
+// 				  MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
+//   //using the first frame of reference; TO DO should do the right thing 
+//   //for different frames selected. 
+//   //Int eh = spectralwindowids_p(0);
+//   if(measFreqRef(0) >= 0)
+//      obsFreqRef = (MFrequency::Types)measFreqRef(0);
+
+//   MVDirection mvPhaseCenter(phaseDirs_p[numInSel].getAngle());
+//   // Normalize correctly
+//   MVAngle ra = mvPhaseCenter.get()(0);
+//   ra(0.0);
+//   MVAngle dec = mvPhaseCenter.get()(1);
+//   Vector<Double> refCoord(2);
+//   refCoord(0) = ra.get().getValue();    
+//   refCoord(1) = dec;    
+  
+//   Vector<Double> refPixel(2); 
+//   refPixel(0) = Double(npix_p / 2);
+//   refPixel(1) = Double(npix_p / 2);
+  
+//   ready_msc_p();
+
+//   //defining observatory...needed for position on earth
+//   String telescop = msc_p->observation().telescopeName()(0);
+
+//   // defining epoch as begining time from timerange in OBSERVATION subtable
+//   // Using first observation for now
+//   MEpoch obsEpoch = msc_p->observation().timeRangeMeas()(0)(IPosition(1,0));
+
+//   //Now finding the position of the telescope on Earth...needed for proper
+//   //frequency conversions
+
+//   MPosition obsPosition;
+//   if(!(MeasTable::Observatory(obsPosition, telescop))){
+//     logSink() << LogIO::WARN << "Did not get the position of " << telescop 
+//        << " from data repository" << LogIO::POST;
+//     logSink() << LogIO::WARN 
+//        << "Please contact CASA to add it to the repository."
+//        << LogIO::POST;
+//     logSink() << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
+//     freqFrameValid_p = False;
+//   }
+//   else{
+//     mLocation_p = obsPosition;
+//     freqFrameValid_p = True;
+//   }
+//   // Now find the projection to use: could probably also use
+//   // max(abs(w))=0.0 as a criterion
+//   Projection projection(Projection::SIN);
+//   if(telescop == "ATCASCP") {
+//     logSink() << LogIO::NORMAL << "Using SIN image projection adjusted for SCP" 
 //               << LogIO::POST;
-
-  Vector<Double> deltas(2);
-  deltas(0) = -1.0e-5; // -mcellx_p.get("rad").getValue();
-  deltas(1) =  1.0e-5; //  mcelly_p.get("rad").getValue();
+//     Vector<Double> projectionParameters(2);
+//     projectionParameters(0) = 0.0;
+//     if(sin(dec) != 0.0){
+//       projectionParameters(1) = cos(dec) / sin(dec);
+//       projection = Projection(Projection::SIN, projectionParameters);
+//     }
+//     else{
+//       logSink() << LogIO::WARN
+//                 << "Singular projection for ATCA: using plain SIN"
+//                 << LogIO::POST;
+//       projection = Projection(Projection::SIN);
+//     }
+//   }
+//   else if(telescop == "WSRT"){
+//     logSink() << LogIO::NORMAL << "Using SIN image projection adjusted for NCP" 
+//               << LogIO::POST;
+//     Vector<Double> projectionParameters(2);
+//     projectionParameters(0) = 0.0;
+//     if(sin(dec) != 0.0){
+//       projectionParameters(1) = cos(dec) / sin(dec);
+//       projection = Projection(Projection::SIN, projectionParameters);
+//     }
+//     else{
+//       logSink() << LogIO::WARN << "Singular projection for WSRT: using plain SIN" 
+//                 << LogIO::POST;
+//       projection = Projection(Projection::SIN);
+//     }
+//   }
+//   else{
+//     logSink() << LogIO::DEBUGGING << "Using SIN image projection" << LogIO::POST;
+//   }
+//   logSink() << LogIO::NORMAL;
   
-  MFrequency::Types obsFreqRef = MFrequency::DEFAULT;
-  ROScalarColumn<Int> measFreqRef(ms_p.spectralWindow(),
-				  MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
-  //using the first frame of reference; TO DO should do the right thing 
-  //for different frames selected. 
-  //Int eh = spectralwindowids_p(0);
-  if(measFreqRef(0) >= 0)
-     obsFreqRef = (MFrequency::Types)measFreqRef(0);
-
-  MVDirection mvPhaseCenter(phaseDirs_p[numInSel].getAngle());
-  // Normalize correctly
-  MVAngle ra = mvPhaseCenter.get()(0);
-  ra(0.0);
-  MVAngle dec = mvPhaseCenter.get()(1);
-  Vector<Double> refCoord(2);
-  refCoord(0) = ra.get().getValue();    
-  refCoord(1) = dec;    
+//   Matrix<Double> xform(2, 2);
+//   xform = 0.0;
+//   xform.diagonal() = 1.0;
+//   DirectionCoordinate
+//     myRaDec(MDirection::Types(phaseDirs_p[numInSel].getRefPtr()->getType()),
+// 	    projection,
+// 	    refCoord(0), refCoord(1),
+// 	    deltas(0), deltas(1),
+// 	    xform,
+// 	    refPixel(0), refPixel(1));
   
-  Vector<Double> refPixel(2); 
-  refPixel(0) = Double(npix_p / 2);
-  refPixel(1) = Double(npix_p / 2);
+//   // Now set up spectral coordinate
+//   SpectralCoordinate* mySpectral = 0;
+//   Double refChan = 0.0;
   
-  ready_msc_p();
-
-  //defining observatory...needed for position on earth
-  String telescop = msc_p->observation().telescopeName()(0);
-
-  // defining epoch as begining time from timerange in OBSERVATION subtable
-  // Using first observation for now
-  MEpoch obsEpoch = msc_p->observation().timeRangeMeas()(0)(IPosition(1,0));
-
-  //Now finding the position of the telescope on Earth...needed for proper
-  //frequency conversions
-
-  MPosition obsPosition;
-  if(!(MeasTable::Observatory(obsPosition, telescop))){
-    logSink() << LogIO::WARN << "Did not get the position of " << telescop 
-       << " from data repository" << LogIO::POST;
-    logSink() << LogIO::WARN 
-       << "Please contact CASA to add it to the repository."
-       << LogIO::POST;
-    logSink() << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-    freqFrameValid_p = False;
-  }
-  else{
-    mLocation_p = obsPosition;
-    freqFrameValid_p = True;
-  }
-  // Now find the projection to use: could probably also use
-  // max(abs(w))=0.0 as a criterion
-  Projection projection(Projection::SIN);
-  if(telescop == "ATCASCP") {
-    logSink() << LogIO::NORMAL << "Using SIN image projection adjusted for SCP" 
-              << LogIO::POST;
-    Vector<Double> projectionParameters(2);
-    projectionParameters(0) = 0.0;
-    if(sin(dec) != 0.0){
-      projectionParameters(1) = cos(dec) / sin(dec);
-      projection = Projection(Projection::SIN, projectionParameters);
-    }
-    else{
-      logSink() << LogIO::WARN
-                << "Singular projection for ATCA: using plain SIN"
-                << LogIO::POST;
-      projection = Projection(Projection::SIN);
-    }
-  }
-  else if(telescop == "WSRT"){
-    logSink() << LogIO::NORMAL << "Using SIN image projection adjusted for NCP" 
-              << LogIO::POST;
-    Vector<Double> projectionParameters(2);
-    projectionParameters(0) = 0.0;
-    if(sin(dec) != 0.0){
-      projectionParameters(1) = cos(dec) / sin(dec);
-      projection = Projection(Projection::SIN, projectionParameters);
-    }
-    else{
-      logSink() << LogIO::WARN << "Singular projection for WSRT: using plain SIN" 
-                << LogIO::POST;
-      projection = Projection(Projection::SIN);
-    }
-  }
-  else{
-    logSink() << LogIO::DEBUGGING << "Using SIN image projection" << LogIO::POST;
-  }
-  logSink() << LogIO::NORMAL;
-  
-  Matrix<Double> xform(2, 2);
-  xform = 0.0;
-  xform.diagonal() = 1.0;
-  DirectionCoordinate
-    myRaDec(MDirection::Types(phaseDirs_p[numInSel].getRefPtr()->getType()),
-	    projection,
-	    refCoord(0), refCoord(1),
-	    deltas(0), deltas(1),
-	    xform,
-	    refPixel(0), refPixel(1));
-  
-  // Now set up spectral coordinate
-  SpectralCoordinate* mySpectral = 0;
-  Double refChan = 0.0;
-  
-  // Include all spectral windows a la spectral synthesis.
-  uInt nspw = msc_p->spectralWindow().nrow();
-  {
-    Double fmin = C::dbl_max;
-    Double fmax = -(C::dbl_max);
-    Double fmean = 0.0;
-    for(uInt spw = 0; spw < nspw; ++spw){
-      Vector<Double> chanFreq = msc_p->spectralWindow().chanFreq()(spw); 
-      Vector<Double> freqResolution = msc_p->spectralWindow().chanWidth()(spw); 
+//   // Include all spectral windows a la spectral synthesis.
+//   uInt nspw = msc_p->spectralWindow().nrow();
+//   {
+//     Double fmin = C::dbl_max;
+//     Double fmax = -(C::dbl_max);
+//     Double fmean = 0.0;
+//     for(uInt spw = 0; spw < nspw; ++spw){
+//       Vector<Double> chanFreq = msc_p->spectralWindow().chanFreq()(spw); 
+//       Vector<Double> freqResolution = msc_p->spectralWindow().chanWidth()(spw); 
       
-      if(spw == 0){
-        fmin = min(chanFreq - abs(freqResolution));
-        fmax = max(chanFreq + abs(freqResolution));
-      }
-      else{
-        fmin = min(fmin, min(chanFreq - abs(freqResolution)));
-        fmax = max(fmax, max(chanFreq + abs(freqResolution)));
-      }
-    }
+//       if(spw == 0){
+//         fmin = min(chanFreq - abs(freqResolution)/2.);
+//         fmax = max(chanFreq + abs(freqResolution)/2.);
+//       }
+//       else{
+//         fmin = min(fmin, min(chanFreq - abs(freqResolution)/2.));
+//         fmax = max(fmax, max(chanFreq + abs(freqResolution)/2.));
+//       }
+//     }
 
-    fmean = 0.5 * (fmax + fmin);
-    Vector<Double> restFreqArray;
-    Double restFreq = fmean;
-    if(getRestFreq(restFreqArray, 0, FieldIds_p[numInSel]))
-      restFreq = restFreqArray[0];
+//     fmean = 0.5 * (fmax + fmin);
+//     Vector<Double> restFreqArray;
+//     Double restFreq = fmean;
+//     if(getRestFreq(restFreqArray, 0, FieldIds_p[numInSel]))
+//       restFreq = restFreqArray[0];
 
-    //imageNchan_p = 1;        // for MFS.
-    Double finc = fmax - fmin; 
-    mySpectral = new SpectralCoordinate(obsFreqRef, fmean, finc,
-      					refChan, restFreq);
-    logSink() << "Frequency = "
-       << MFrequency(Quantity(fmean, "Hz")).get("GHz").getValue()
-       << " GHz, synthesized continuum bandwidth = "
-       << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue()
-       << " GHz" << LogIO::POST;
-  }
+//     //imageNchan_p = 1;        // for MFS.
+//     Double finc = fmax - fmin; 
+//     mySpectral = new SpectralCoordinate(obsFreqRef, fmean, finc,
+//       					refChan, restFreq);
+//     logSink() << "Frequency = "
+// 	      << MFrequency(Quantity(fmean, "Hz")).get("GHz").getValue()
+// 	      << " GHz (" << MFrequency::showType(obsFreqRef) 
+// 	      << "), synthesized continuum bandwidth = "
+// 	      << MFrequency(Quantity(finc, "Hz")).get("GHz").getValue()
+// 	      << " GHz" << LogIO::POST;
+//   }
 
-  // In FTMachine lsrk is used for channel matching with data channel hence we
-  // make sure that we convert to lsrk when dealing with the channels.
-  freqFrameValid_p = freqFrameValid_p && (obsFreqRef != MFrequency::REST);
-  if(freqFrameValid_p)
-      mySpectral->setReferenceConversion(MFrequency::LSRK, obsEpoch, 
-					 obsPosition, phaseDirs_p[numInSel]);
+//   // In FTMachine lsrk is used for channel matching with data channel hence we
+//   // make sure that we convert to lsrk when dealing with the channels.
+//   freqFrameValid_p = freqFrameValid_p && (obsFreqRef != MFrequency::REST);
+//   if(freqFrameValid_p)
+//       mySpectral->setReferenceConversion(MFrequency::LSRK, obsEpoch, 
+// 					 obsPosition, phaseDirs_p[numInSel]);
  
-  // Polarization
-  //polRep_p = SkyModel::CIRCULAR;  // Assuming it doesn't matter.
+//   // Polarization
+//   //polRep_p = SkyModel::CIRCULAR;  // Assuming it doesn't matter.
 
-  Vector<Int> whichStokes(1);
-  whichStokes.resize(1);
-  whichStokes(0) = Stokes::I;  
-  StokesCoordinate myStokes(whichStokes);
+//   Vector<Int> whichStokes(1);
+//   whichStokes.resize(1);
+//   whichStokes(0) = Stokes::I;  
+//   StokesCoordinate myStokes(whichStokes);
   
-  //Set Observatory info
-  ObsInfo myobsinfo;
-  myobsinfo.setTelescope(telescop);
-  myobsinfo.setPointingCenter(mvPhaseCenter);
-  myobsinfo.setObsDate(obsEpoch);
-  myobsinfo.setObserver(msc_p->observation().observer()(0));
-  this->setObsInfo(myobsinfo);
+//   //Set Observatory info
+//   ObsInfo myobsinfo;
+//   myobsinfo.setTelescope(telescop);
+//   myobsinfo.setPointingCenter(mvPhaseCenter);
+//   myobsinfo.setObsDate(obsEpoch);
+//   myobsinfo.setObserver(msc_p->observation().observer()(0));
+//   this->setObsInfo(myobsinfo);
 
-  //Adding everything to the coordsystem
-  coordInfo.addCoordinate(myRaDec);
-  coordInfo.addCoordinate(myStokes);
-  coordInfo.addCoordinate(*mySpectral);
-  coordInfo.setObsInfo(myobsinfo);
+//   //Adding everything to the coordsystem
+//   coordInfo.addCoordinate(myRaDec);
+//   coordInfo.addCoordinate(myStokes);
+//   coordInfo.addCoordinate(*mySpectral);
+//   coordInfo.setObsInfo(myobsinfo);
 
-  delete mySpectral;
+//   delete mySpectral;
 
-  return coordInfo;
-}
+//   return coordInfo;
+// }
 
-Bool FixVis::getRestFreq(Vector<Double>& restFreq, const Int spw,
-                           const Int fldID)
-{
-  MSDopplerUtil msdoppler(ms_p);  // MS Doppler tracking utility
+// Bool FixVis::getRestFreq(Vector<Double>& restFreq, const Int spw,
+//                            const Int fldID)
+// {
+//   MSDopplerUtil msdoppler(ms_p);  // MS Doppler tracking utility
 
-  restFreq.resize();
-  try{
-    msdoppler.dopplerInfo(restFreq, spw, fldID);
-  }
-  catch(...){
-    restFreq.resize();
-  }
-  return restFreq.nelements() > 0;
-}
+//   restFreq.resize();
+//   try{
+//     msdoppler.dopplerInfo(restFreq, spw, fldID);
+//   }
+//   catch(...){
+//     restFreq.resize();
+//   }
+//   return restFreq.nelements() > 0;
+// }
 
-void FixVis::setObsInfo(ObsInfo& obsinfo)
-{
-  latestObsInfo_p = obsinfo;
-}
+// void FixVis::setObsInfo(ObsInfo& obsinfo)
+// {
+//   latestObsInfo_p = obsinfo;
+// }
 
 void FixVis::processSelected(uInt numInSel)
 {
   logSink() << LogOrigin("FixVis", "processSelected()");
 
-  PagedImage<Complex> cImageImage(tiledShape_p,
-                                  getCoords(numInSel),
-                                  "should_not_have_been_made");
-  //cImageImage.set(Complex(0.0));  // Should be unnecessary.
+//   PagedImage<Complex> cImageImage(tiledShape_p,
+//                                   getCoords(numInSel),
+//                                   "temp image for CASA fixvis");
 
-  // Should the cache be tiny since cImageImage is and won't be made?
-  cImageImage.setMaximumCacheSize((HostInfo::memoryTotal() / 8) * 1024 / 256);
-  cImageImage.table().markForDelete();
+//   cImageImage.setMaximumCacheSize((HostInfo::memoryTotal() / 8) * 1024 / 256);
+//   cImageImage.table().markForDelete();
 
-  // "Make" the image.
-//   this->lock();
-//   this->makeEmptyImage(coords, modelName, fieldid_p);
-//   this->unlock();
-
-  // Add the distance to the object: this is not nice. We should define the
-  // coordinates properly.
-  Record info(cImageImage.miscInfo());
-  info.define("distance", numInSel < distances_p.nelements() ?
-              distances_p[numInSel] : 0.0);
-  cImageImage.setMiscInfo(info);
+//   // Add the distance to the object: this is not nice. We should define the
+//   // coordinates properly.
+//   Record info(cImageImage.miscInfo());
+//   info.define("distance", numInSel < distances_p.nelements() ?
+//               distances_p[numInSel] : 0.0);
+//   cImageImage.setMiscInfo(info);
   
+
+  mImage_p = phaseDirs_p[numInSel];
+
   Block<Int> sort(0);
   sort.resize(4);
   sort[0] = MS::ARRAY_ID; 		    // use default sort order
@@ -901,30 +871,71 @@ void FixVis::processSelected(uInt numInSel)
   sort[2] = MS::DATA_DESC_ID;
   sort[3] = MS::TIME;
 
-  ROVisibilityIterator vi(mssel_p, sort);	// Initialize the gradients
+  ROVisibilityIterator vi(mssel_p, sort);	
 	  
   // Loop over all visibilities in the selected field.
   VisBuffer vb(vi);
   
   // Initialize put for this model.
   vi.origin();
-  // Loop over the visibilities, putting VisBuffers.  Watch out!  vi gets
-  // initialized and stepped, but vb is the used object (vb ~ *vi).
+  // Loop over the visibilities modifying the UVWs and the visibilities
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
     for(vi.origin(); vi.more(); ++vi){
       for(uInt datacol = 0; datacol < nDataCols_p; ++datacol){
-        if(dataCols_p[datacol] == MS::MODEL_DATA)
+
+	if(dataCols_p[datacol] == MS::MODEL_DATA){
           vb.visCube() = vb.modelVisCube();
-        else if(dataCols_p[datacol] == MS::CORRECTED_DATA)
+	}
+        else if(dataCols_p[datacol] == MS::CORRECTED_DATA){
           vb.visCube() = vb.correctedVisCube();
+	}
 			
-        put(vb, -1);
+// 	//Check if ms has changed then cache new spw and chan selection
+// 	if(vb.newMS())
+// 	  matchAllSpwChans(vb);
+  
+// 	//Here we redo the match or use previous match
+  
+// 	//Channel matching for the actual spectral window of buffer
+// 	if(doConversion_p[vb.spectralWindow()]){
+// 	  matchChannel(vb.spectralWindow(), vb);
+// 	}
+// 	else{
+// 	  chanMap.resize();
+// 	  chanMap = multiChanMap_p[vb.spectralWindow()];
+// 	}
+
+// 	//No point in reading data if it's not matching in frequency
+// 	if(max(chanMap) == -1){
+// 	  continue;
+// 	}
+
+	Matrix<Double> uvw(3, vb.uvw().nelements());
+	uvw=0.0;
+	Vector<Double> dphase(vb.uvw().nelements());
+	dphase=0.0;
+
+	// the following call requires the member variables
+	//   lastFieldId_p
+	//   lastMSId_p
+	//   tangentSpecified_p
+	//   MeasFrame mFrame_p == output ref frame for the UVW coordinates
+	//   MDirection mImage_p == output phase center
+	//      (input phase center is taken from the visbuffer, i.e. from the FIELD table)
+
+	FTMachine::rotateUVW(uvw, dphase, vb);
+
+	// Immediately returns if not needed.
+	refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
+	
+	vb.phaseCenterShift(dphase);
 
         // Correct differential aberration?
       }
     }
+    
+
   }
-  //vs.flush();
 
   // Update HISTORY table
   LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
@@ -933,72 +944,21 @@ void FixVis::processSelected(uInt numInSel)
       
   os << "Processed field " << FieldIds_p[numInSel] << LogIO::POST;
   ms_p.lock();
-  MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
+  MSHistoryHandler mhh(ms_p, "FixVis");
   mhh.addMessage(os);
   ms_p.unlock();
 }
   
-void FixVis::put(const VisBuffer& vb, Int row, Bool dopsf, FTMachine::Type type)
-{
-  //Check if ms has changed then cache new spw and chan selection
-  if(vb.newMS())
-    matchAllSpwChans(vb);
-  
-  //Here we redo the match or use previous match
-  
-  //Channel matching for the actual spectral window of buffer
-  if(doConversion_p[vb.spectralWindow()]){
-    matchChannel(vb.spectralWindow(), vb);
-  }
-  else{
-    chanMap.resize();
-    chanMap = multiChanMap_p[vb.spectralWindow()];
-  }
-
-  //No point in reading data if it's not matching in frequency
-  if(max(chanMap) == -1)
-    return;
-
-  // If row is -1 then we pass through all rows
-  Int startRow, endRow, nRow;
-  if(row == -1){
-    nRow     = vb.nRow();
-    startRow = 0;
-    endRow   = nRow - 1;
-  }
-  else{
-    nRow     = 1;
-    startRow = row;
-    endRow   = row;
-  }
-
-  Matrix<Double> uvw(3, vb.uvw().nelements());
-  uvw=0.0;
-  Vector<Double> dphase(vb.uvw().nelements());
-  dphase=0.0;
-
-  // //NEGATING to correct for an image inversion problem
-//   for(Int i = startRow; i <= endRow; ++i){
-// 	for(uInt idim = 0; idim < 2; ++idim)
-// 	  uvw(idim, i) = -vb.uvw()(i)(idim);
-// 	uvw(2, i) = vb.uvw()(i)(2);
-//   }
-
-  FTMachine::rotateUVW(uvw, dphase, vb);
-
-  // Immediately returns if not needed.
-  refocus(uvw, vb.antenna1(), vb.antenna2(), dphase, vb);
-}
 
 void FixVis::ok() {
-  AlwaysAssert(image, AipsError);
+  //  AlwaysAssert(image, AipsError);
 }
 
 void FixVis::init()
 {
   logSink() << LogOrigin("FixVis", "init")  << LogIO::NORMAL;
 
-  ok();
+  //ok();
 
   //npol  = image->shape()(2);
   //nchan = image->shape()(3);
