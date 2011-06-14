@@ -183,6 +183,7 @@ casa_add_library( display
   implement/DisplayEvents/MWCCrosshairTool.cc
   implement/DisplayEvents/MWCPannerTool.cc
   implement/DisplayEvents/MWCPolylineTool.cc
+  implement/DisplayEvents/MWCRulerlineTool.cc
   implement/DisplayEvents/MWCPolyTool.cc
   implement/DisplayEvents/MWCPTRegion.cc
   implement/DisplayEvents/MWCEllipseTool.cc

@@ -69,8 +69,8 @@ class QtMouseToolButton: public QToolButton {
               (event->button() == Qt::RightButton)?  3 :   0;
     if(btn!=0) emit mouseToolBtnPress(text().toStdString(), btn);  }
 
-  void mouseMoveEvent   (QMouseEvent *event) {  }
-  void mouseReleaseEvent(QMouseEvent *event) {  }
+  void mouseMoveEvent   (QMouseEvent *) {  }
+  void mouseReleaseEvent(QMouseEvent *) {  }
   
   // (Prevents interference with right mouse button).
   void contextMenuEvent(QContextMenuEvent *event) { event->accept();  }

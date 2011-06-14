@@ -58,6 +58,7 @@ class PCITFiddler;
 //class MWCCrosshairTool;
 class MWCPannerTool;
 class MWCPolylineTool;
+class MWCRulerlineTool;
 //class MWCPTRegion;
 class DParameterChoice;
 class RegionShape;
@@ -405,6 +406,7 @@ public:
   //<group>
   virtual void resetRTRegion();
   virtual void resetPTRegion();
+  virtual void resetETRegion();
   virtual void resetZoomer();	//# (NB: != unzoom(); no zoom effect).
   virtual void resetCrosshair();
   virtual void resetPolyline();
@@ -761,6 +763,9 @@ public:
   QtPolyTool* ptregion_;
 
   MWCPolylineTool* polyline_;
+
+  MWCRulerlineTool* rulerline_;
+
   PCITFiddler* snsFidd_;
   PCITFiddler* bncFidd_;
   //</group>

@@ -144,7 +144,7 @@ class MWCCrosshairTool : public MultiWCTool, public DTVisible {
   // handle the crosshair-position-ready 'event'.
   // evtype is "down" "move" or "up" depending on the state of the
   // mouse leading to this event.
-  virtual void crosshairReady(const String& evtype) { };
+  virtual void crosshairReady(const String& ) { };
 
  private:
 
