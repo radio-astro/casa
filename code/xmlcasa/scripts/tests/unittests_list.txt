@@ -11,13 +11,14 @@ test_clearstat                  scastro@eso.org
 test_clean                      scastro@eso.org
 test_cleanhelper                ttsutsum@nrao.edu
 test_componentlist              dmehring@nrao.edu
-#test_concat                     dpetry@eso.org
+test_concat                     dpetry@eso.org
 test_conjugatevis               dpetry@eso.org
 test_coordsys                   dmehring@nrao.edu
 test_csvclean                   scastro@eso.org
 test_cvel                       dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
-test_fixvis                     rreid@nrao.edu
+test_fixvis                     dpetry@nrao.edu
+test_fixplanets                 dpetry@nrao.edu
 test_flagdata                   jkern@nrao.edu
 test_flagdata2                  scastro@eso.org
 test_getchunk                   dmehring@nrao.edu
