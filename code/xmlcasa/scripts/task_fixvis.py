@@ -89,8 +89,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
             for i in xrange(numfields):
                 if (i in fields):
                     fldids.append(i)
-                else:
-                    fldids.append(-1)
 
             im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
             im.calcuvw(fields=fldids, refcode=therefcode, reuse=reuse)
@@ -176,9 +174,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     if (i ==fld):
                         fldids.append(i)
                         phdirs.append(phasecenter)
-                    else:
-                        fldids.append(-1)
-                        phdirs.append("J2000 00h00m00s +0d0m0s") # dummy
 
                 im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
                 im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
@@ -205,14 +200,9 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                         
                         pcol2 = tbt.getcol('DelayDir_Ref')
                         theoldref2 = pcol2[fld]
-                        #pcol2[fld] = thenewref
                         
                         pcol3 = tbt.getcol('RefDir_Ref')
                         theoldref3 = pcol3[fld]
-                        #pcol3[fld] = thenewref
-
-                        # tbt.putcol('DelayDir_Ref', pcol2)
-                        # tbt.putcol('RefDir_Ref', pcol3)
                             
                         if(theoldref != thenewref):
                             tbt.putcol('PhaseDir_Ref', pcol)
@@ -234,9 +224,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                         tmprec = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')
                         tmprec['Ref'] = thenewrefstr
                         tbt.putcolkeyword('PHASE_DIR', 'MEASINFO', tmprec) 
-                        # tbt.putcolkeyword('DELAY_DIR', 'MEASINFO', tmprec) 
-                        # tbt.putcolkeyword('REFERENCE_DIR', 'MEASINFO', tmprec) 
-                        casalog.post("FIELD table phase center direction reference frame "+str(fld)
+                        casalog.post("FIELD table phase center direction reference frame for field "+str(fld)
                                      +" set to "+thenewrefstr, 'NORMAL')
 
                 tbt.close()

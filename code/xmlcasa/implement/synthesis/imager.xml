@@ -1375,16 +1375,16 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
    
    <keyword>fixvis</keyword>
    <description>
-     This corrects visibilities, and/or their (u, v, w) positions, for various
+     Corrects UVW coordinates and optionally the visibilities for various
      effects that can be calculated without fitting a model to the data.
 
      The effects include:
      \begin{itemize}
-       \item changing the phase tracking center(s),  (Not yet implemented)
+       \item changing the phase tracking center(s),
        \item correcting for differential aberration,  (Not yet implemented)
-       \item changing the equinox (i.e. B1950_VLA to J2000 or APP, etc.),
+       \item changing the equinox (i.e. B1950_VLA to J2000 or APP, etc.) of the UVW coordinates,
        \item changing the projection, as in (-)NCP to SIN.  (Not yet implemented),
-       \item refocusing.  (Not yet implemented)
+       \item refocusing.
      \end{itemize}
    </description>
    <input>
@@ -1404,7 +1404,7 @@ Or if one wants to generate a psf from the uv coverage and use that subsequently
      </param>
      <param type="string" direction="in" name="refcode">
        <description>
-         Reference frame to use for the generated (u, v, w)s.  WARNING: clean
+         Reference frame to use for the generated UVWs.  WARNING: clean
          and the im tool ignore the reference frame claimed by the UVW column
          (it is often mislabelled as ITRF when it is really J2000) and instead
          assume the (u, v, w)s are in the same frame as the phase tracking

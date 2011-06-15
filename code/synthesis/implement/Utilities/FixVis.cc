@@ -13,7 +13,6 @@
 #include <images/Images/ImageInfo.h>            // to FTMachine.
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSDopplerUtil.h>
-#include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <msvis/MSVis/VisibilityIterator.h>
@@ -71,58 +70,42 @@ Vector<Int> FixVis::getFieldIdx(const String& fields)
   return mssel.getFieldList(&ms_p);
 }
 
-// Set the required field Ids
-uInt FixVis::setField(const String& field)
-{
-  Vector<Int> fldIndices(getFieldIdx(field));
-  
-  FieldIds_p = getFieldIdx(field);
-  nsel_p = check_fields();
-  logSink() << LogOrigin("FixVis", "setField")
-	    << LogIO::NORMAL
-	    << FieldIds_p << " -> " << nsel_p << " selected fields." 
-	    << LogIO::POST;
-  return nsel_p;
-}
-  
 uInt FixVis::setFields(const Vector<Int>& fieldIds)
 {
-  FieldIds_p = fieldIds;
-  nsel_p = check_fields();
-  logSink() << LogOrigin("FixVis", "setFields")
-	    << LogIO::NORMAL
-	    << "Selected " << nsel_p << " fields: " << FieldIds_p
-	    << LogIO::POST;
+
+  logSink() << LogOrigin("FixVis", "setFields");
+  logSink() << LogIO::NORMAL << "Selecting fields ";
+
+  nsel_p = fieldIds.nelements();
+  nAllFields_p = ms_p.field().nrow();
+  FieldIds_p.resize(nAllFields_p);
+
+  for(uInt i=0; i<nAllFields_p; i++){
+    FieldIds_p(i) = -1;
+    for(uInt j=0; j<nsel_p; j++){
+      if(fieldIds(j)==i){
+	FieldIds_p(i) = i;
+	logSink() << i << " " << LogIO::NORMAL;
+	break;
+      }
+    }
+  }
+  logSink() << LogIO::POST;
+
   return nsel_p;
 }
 
-void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs,
-                          const Vector<Int>& fieldIds)
+void FixVis::setPhaseDirs(const Vector<MDirection>& phaseDirs)
 {
   phaseDirs_p = phaseDirs;
-
-  // Update the FIELD table with the new phase directions.
-  // Do not change REFERENCE_DIR since it is supposed to be the original
-  // PHASE_DIR.  In particular, if the POINTING table is invalid (i.e. VLA),
-  // the REFERENCE_DIR seems like the best substitute for the pointing
-  // direction.  Do not touch DELAY_DIR either.
 
   // Do a consistency check between fieldIds and FieldIds_p.
   logSink() << LogOrigin("FixVis", "setPhaseDirs");
   uInt n2change = phaseDirs.nelements();
-  if(n2change != fieldIds.nelements() || n2change != nsel_p)
-    logSink() << LogIO::EXCEPTION
+  if(n2change != nsel_p){
+    logSink() << LogIO::SEVERE
               << "Mismatch between the number of new directions and the fields to change"
               << LogIO::POST;
-  
-  Int fldId;
-  for(uInt i = 0; i < n2change; ++i){
-    fldId = fieldIds[i];
-    if(fldId < 0 || fldId >= static_cast<Int>(nAllFields_p) || 
-       FieldIds_p[fldId] < 0)
-      logSink() << LogIO::EXCEPTION
-                << "A new phase tracking center was specified for an unselected field"
-                << LogIO::POST;
   }
 }
 
@@ -226,7 +209,7 @@ void FixVis::convertFieldCols(MSFieldColumns& msfcs,
 //                                                            newFrame);
 //   if(!converter)
 //     logSink() << "Cannot make direction conversion machine"
-//               << LogIO::EXCEPTION;
+//               << LogIO::SEVERE;
 
   uInt nrows = msfcs.nrow();
 
@@ -292,32 +275,10 @@ void FixVis::setDistances(const Vector<Double>& distances)
 {
   logSink() << LogOrigin("FixVis", "setDistances");
   if(distances.nelements() != nsel_p)
-    logSink() << LogIO::EXCEPTION
+    logSink() << LogIO::SEVERE
               << "Mismatch between the # of specified distances and selected fields."
               << LogIO::POST;
   distances_p = distances;
-}
-
-uInt FixVis::check_fields()
-{
-  // Make sure FieldIds_p.nelements() == # fields in *ms_p.
-  uInt nFields = FieldIds_p.nelements();
-  nAllFields_p = ms_p.field().nrow();
-  
-  if(nAllFields_p != nFields)
-    return 0;
-
-  // Go through FieldIds_p, make sure the nonnegative entries are in the right
-  // spots, and count them.
-  uInt nsel = 0;
-  for(uInt i = 0; i < nFields; ++i){
-    if(FieldIds_p[i] > -1){
-      if(static_cast<uInt>(FieldIds_p[i]) != i)
-        return 0;
-      ++nsel;
-    }
-  }
-  return nsel;
 }
 
 // Calculate the (u, v, w)s and store them in ms_p.
@@ -330,11 +291,7 @@ Bool FixVis::calc_uvw(const String& refcode, const Bool reuse)
   if(!ready_msc_p())
     return false;
   
-  // Make sure FieldIds_p has a Field ID for each selected field, and -1 for
-  // everything else!  (Should have already been done in imager_cmpt.cc.)
-
-  if(nsel_p > 0 // && static_cast<uInt>(nsel_p) == phaseDirs_p.nelements()
-     ){
+  if(nsel_p > 0){
 
     // Get the PHASE_DIR reference frame type for the input ms.
     MSFieldColumns& msfcs(msc_p->field());
@@ -390,21 +347,6 @@ Bool FixVis::calc_uvw(const String& refcode, const Bool reuse)
       logSink() << LogIO::SEVERE << "Error " << x.getMesg() << LogIO::POST;
     }
 
-    // Update HISTORY table
-    LogSink localLogSink = LogSink(LogMessage::NORMAL, False);
-    localLogSink.clearLocally();
-    LogIO os(LogOrigin("im", "calc_uvw()", WHERE), localLogSink);
-    
-    os << "UVWs " << (reuse ? "converted" : "calculated") << " for field";
-    if(FieldIds_p.nelements() > 1)
-      os << "s";
-    os << " " << FieldIds_p
-      //<< ", proj=" << proj
-       << LogIO::POST;
-    ms_p.lock();
-    MSHistoryHandler mhh(ms_p, "FixVis::calcuvw()");
-    mhh.addMessage(os);
-    ms_p.unlock();
   }
   else{
     logSink() << LogIO::SEVERE
@@ -526,7 +468,7 @@ Bool FixVis::setImageField(const Int fieldid,
   catch(AipsError x){
     this->unlock();
     logSink() << LogIO::SEVERE << "Caught exception: " << x.getMesg()
-       << LogIO::EXCEPTION;
+       << LogIO::POST;
     return False;
   } 
   return True;
@@ -640,7 +582,7 @@ Bool FixVis::ready_msc_p()
 //   CoordinateSystem coordInfo;
 
 // //   if(!mssel_p)
-// //     logSink() << LogIO::EXCEPTION
+// //     logSink() << LogIO::SEVERE
 // //               << "Could not set the phase tracking center for field "
 // //               << FieldIds_p[numInSel]
 // //               << LogIO::POST;
@@ -847,21 +789,6 @@ void FixVis::processSelected(uInt numInSel)
 {
   logSink() << LogOrigin("FixVis", "processSelected()");
 
-//   PagedImage<Complex> cImageImage(tiledShape_p,
-//                                   getCoords(numInSel),
-//                                   "temp image for CASA fixvis");
-
-//   cImageImage.setMaximumCacheSize((HostInfo::memoryTotal() / 8) * 1024 / 256);
-//   cImageImage.table().markForDelete();
-
-//   // Add the distance to the object: this is not nice. We should define the
-//   // coordinates properly.
-//   Record info(cImageImage.miscInfo());
-//   info.define("distance", numInSel < distances_p.nelements() ?
-//               distances_p[numInSel] : 0.0);
-//   cImageImage.setMiscInfo(info);
-  
-
   mImage_p = phaseDirs_p[numInSel];
 
   Block<Int> sort(0);
@@ -876,9 +803,8 @@ void FixVis::processSelected(uInt numInSel)
   // Loop over all visibilities in the selected field.
   VisBuffer vb(vi);
   
-  // Initialize put for this model.
   vi.origin();
-  // Loop over the visibilities modifying the UVWs and the visibilities
+
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
     for(vi.origin(); vi.more(); ++vi){
       for(uInt datacol = 0; datacol < nDataCols_p; ++datacol){
@@ -890,26 +816,6 @@ void FixVis::processSelected(uInt numInSel)
           vb.visCube() = vb.correctedVisCube();
 	}
 			
-// 	//Check if ms has changed then cache new spw and chan selection
-// 	if(vb.newMS())
-// 	  matchAllSpwChans(vb);
-  
-// 	//Here we redo the match or use previous match
-  
-// 	//Channel matching for the actual spectral window of buffer
-// 	if(doConversion_p[vb.spectralWindow()]){
-// 	  matchChannel(vb.spectralWindow(), vb);
-// 	}
-// 	else{
-// 	  chanMap.resize();
-// 	  chanMap = multiChanMap_p[vb.spectralWindow()];
-// 	}
-
-// 	//No point in reading data if it's not matching in frequency
-// 	if(max(chanMap) == -1){
-// 	  continue;
-// 	}
-
 	Matrix<Double> uvw(3, vb.uvw().nelements());
 	uvw=0.0;
 	Vector<Double> dphase(vb.uvw().nelements());
@@ -934,19 +840,8 @@ void FixVis::processSelected(uInt numInSel)
       }
     }
     
-
   }
 
-  // Update HISTORY table
-  LogSink localLogSink = LogSink(LogMessage::NORMAL, False);	  
-  localLogSink.clearLocally();
-  LogIO os(LogOrigin("FixVis", "processSelected()", WHERE), localLogSink);
-      
-  os << "Processed field " << FieldIds_p[numInSel] << LogIO::POST;
-  ms_p.lock();
-  MSHistoryHandler mhh(ms_p, "FixVis");
-  mhh.addMessage(os);
-  ms_p.unlock();
 }
   
 
