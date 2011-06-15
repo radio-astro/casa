@@ -160,7 +160,7 @@ void StandardTsys::setSpecify(const Record& specify) {
 
 }
 
-void StandardTsys::specify(const Record& specify) {
+void StandardTsys::specify(const Record&) {
 
   // Escape if SYSCAL table absent
   if (!Table::isReadable(sysCalTabName_))
@@ -192,10 +192,13 @@ void StandardTsys::specify(const Record& specify) {
     sccol.tsysSpectrum().getColumn(tsys);
     IPosition tsysshape(tsys.shape());
 
-    // Ensure [pol,chan] shapes match
-    //  TBD: relax this, and interpolate?
-    if (!tsysshape.getFirst(2).isEqual(cs().par(ispw).shape().getFirst(2)))
-      throw(AipsError("SYSCAL Tsys Spectrum shape doesn't match data! Cannot proceed."));
+    // Insist only that channel axis matches
+    if (tsysshape(1)!=cs().par(ispw).shape()(1))
+      throw(AipsError("SYSCAL Tsys Spectrum channel axis shape doesn't match data! Cannot proceed."));
+
+    //  ...and that tsys pol axis makes sense
+    if (tsysshape(0)>2)
+      throw(AipsError("Tsys pol axis is implausible"));
 
   /*
     cout << iter << " "
@@ -370,7 +373,7 @@ void EVLAGainTsys::setSpecify(const Record& specify) {
 
 }
 
-void EVLAGainTsys::specify(const Record& specify) {
+void EVLAGainTsys::specify(const Record&) {
 
   // Escape if SYSPOWER or CALDEVICE tables absent
   if (!Table::isReadable(sysPowTabName_))
