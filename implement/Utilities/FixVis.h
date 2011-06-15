@@ -111,12 +111,10 @@ public:
   ~FixVis();
 
 // Set the required field Ids and return the # of selected fields.
-  uInt setField(const String& field);
   uInt setFields(const Vector<Int>& fieldIds);
 
-  // Specifies new phase tracking centers for fields listed in fieldIds.
-  void setPhaseDirs(const Vector<MDirection>& phaseDirs,
-                    const Vector<Int>& fieldIds);
+  // Specifies new phase tracking centers for the selected fields
+  void setPhaseDirs(const Vector<MDirection>& phaseDirs);
 
   // Specifies distances for each selected field according to distances, which
   // must be in m and the same order as the Vector given to setFields.  Throws
@@ -143,15 +141,6 @@ private:
   // Interpret field indices (MSSelection)
   Vector<Int> getFieldIdx(const String& fields);
   
-  // Returns the number of selected fields, or -1 if a nonnegative entry in
-  // FieldIds_p does not match its spot.
-  uInt check_fields();
-
-  //  CoordinateSystem getCoords(uInt numInSel);
-
-  //const ROArrayMeasColumn<MDirection>& getPhaseDirs() const;
-  //ArrayMeasColumn<MDirection>& getPhaseDirs();
-
   // Makes sure msc_p is ready, and returns false if it fails.
   Bool ready_msc_p();
   
