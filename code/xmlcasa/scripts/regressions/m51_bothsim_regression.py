@@ -89,12 +89,12 @@ endProc = time.clock()
 test_name = """simdata observation of M51 (total power+interferometric)"""
 
 ia.open(project+"/"+project + '.image')
-m51sd_stats=ia.statistics(verbose=False,list=False)
+m51both_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 
 ia.open(project+"/"+project + '.diff')
-m51sd_diffstats=ia.statistics(verbose=False,list=False)
+m51both_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # KS - updated 2010-12-17 (13767@active)
@@ -152,21 +152,21 @@ regstate = True
 rskes = refstats.keys()
 rskes.sort()
 for ke in rskes:
-    adiff=abs(m51sd_stats[ke][0] - refstats[ke])/abs(refstats[ke])
+    adiff=abs(m51both_stats[ke][0] - refstats[ke])/abs(refstats[ke])
     if adiff < reftol[ke]:
-        print >> logfile, "* Passed %-5s image test, got % -11.5g expected % -11.5g." % (ke, m51sd_stats[ke][0], refstats[ke])
+        print >> logfile, "* Passed %-5s image test, got % -11.5g expected % -11.5g." % (ke, m51both_stats[ke][0], refstats[ke])
     else:
-        print >> logfile, "* FAILED %-5s image test, got % -11.5g instead of % -11.5g." % (ke, m51sd_stats[ke][0], refstats[ke])
+        print >> logfile, "* FAILED %-5s image test, got % -11.5g instead of % -11.5g." % (ke, m51both_stats[ke][0], refstats[ke])
         regstate = False
 
 rskes = diffstats.keys()
 rskes.sort()
 for ke in rskes:
-    adiff=abs(m51sd_diffstats[ke][0] - diffstats[ke])/abs(diffstats[ke])
+    adiff=abs(m51both_diffstats[ke][0] - diffstats[ke])/abs(diffstats[ke])
     if adiff < reftol[ke]:
-        print >> logfile, "* Passed %-5s  diff test, got % -11.5g expected % -11.5g." % (ke, m51sd_diffstats[ke][0], diffstats[ke])
+        print >> logfile, "* Passed %-5s  diff test, got % -11.5g expected % -11.5g." % (ke, m51both_diffstats[ke][0], diffstats[ke])
     else:
-        print >> logfile, "* FAILED %-5s  diff test, got % -11.5g instead of % -11.5g." % (ke, m51sd_diffstats[ke][0], diffstats[ke])
+        print >> logfile, "* FAILED %-5s  diff test, got % -11.5g instead of % -11.5g." % (ke, m51both_diffstats[ke][0], diffstats[ke])
         regstate = False
 
 # this script doesn't have sensible values yet 20100928

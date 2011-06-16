@@ -90,7 +90,7 @@ endProc = time.clock()
 
 test_name = """simdata observation of M51 (total power)"""
 
-ia.open(project + '.image')
+ia.open(project+"/"+project + '.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -102,7 +102,7 @@ refstats = { 'sum': 15834.,
              'rms': 0.18651,
              'sigma': 0.17646 }
 
-ia.open(project + '.diff')
+ia.open(project+"/"+project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -115,7 +115,6 @@ diffstats = {'sum': 3.5216e4,
              'sigma': 0.27268 }
 
 # v13235
-
 refstats = {'sum':14712,
             'max':1.6276,
             'min':-0.74572,
@@ -138,7 +137,7 @@ reftol   = {'sum':  1e-2,
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = project + '.' + datestring + '.log'
+outfile    = project+"/"+project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
@@ -150,13 +149,13 @@ loghdr = """
 print >> logfile, loghdr
 
 # more info
-ms.open(project+".sd.ms")
+ms.open(project+"/"+project+".sd.ms")
 print >> logfile, "Noiseless MS, amp stats:"
 print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
 print >> logfile, ms.statistics('DATA','phase')
 ms.close()
-#ms.open(project+".noisy.ms")
+#ms.open(project+"/"+project+".noisy.ms")
 #print >> logfile, "Noisy MS, amp stats:"
 #print >> logfile, ms.statistics('DATA','amp')
 #print >> logfile, "Noisy MS, phase stats:"
@@ -204,7 +203,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat(project+'.sd.ms')
+msfstat = os.stat(project+"/"+project+'.sd.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*************************************'

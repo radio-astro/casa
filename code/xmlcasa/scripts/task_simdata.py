@@ -275,7 +275,7 @@ def simdata(
         pb=0. # primary beam
 
         if not os.path.exists(antennalist):
-            if os.path.exists(repodir+antennalist):
+            if len(antennalist) > 0 and os.path.exists(repodir+antennalist):
                 antennalist=repodir+antennalist
 
         if os.path.exists(antennalist):
@@ -291,8 +291,8 @@ def simdata(
 
             
         if not os.path.exists(sdantlist):
-            if os.path.exists(repodir+sdantlist):
-                antennalist=repodir+sdantlist
+            if len(sdantlist) > 0 and os.path.exists(repodir+sdantlist):
+                sdantlist=repodir+sdantlist
 
         if os.path.exists(sdantlist):
             tpx, tpy, tpz, tpd, tp_padnames, tp_nant, tp_telescopename = util.readantenna(sdantlist)
