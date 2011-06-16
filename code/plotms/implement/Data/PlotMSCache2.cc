@@ -30,6 +30,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/Quanta/MVTime.h>
+#include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Sort.h>
 #include <lattices/Lattices/ArrayLattice.h>
 #include <lattices/Lattices/LatticeFFT.h>
@@ -264,25 +265,42 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
   Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
   Double bytesPerPt=Double(totalVol)/Double(totalPoints);  // bytes/pt
 
-  //  cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
-  //  cout << "HostInfo::memoryTotal(true)  = " << HostInfo::memoryTotal(true) << endl;
-  //  cout << "HostInfo::memoryFree()       = " << HostInfo::memoryFree() << endl;
+  // Detect if "free" memory should be considered
+  String arcpmsif("");
+  Bool ignoreFree=(Aipsrc::find(arcpmsif,"plotms.ignorefree") && arcpmsif=="T");
+
+  // Memory info from HostInfo
+  Int hostMemTotalKB=Int(HostInfo::memoryTotal(true));
+  Int hostMemFreeKB=Int(HostInfo::memoryFree());
+
+  /*
+  cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
+  cout << "HostInfo::memoryTotal(true)  = " << hostMemTotalKB << endl;
+  cout << "HostInfo::memoryFree()       = " << hostMemFreeKB << endl;
+  cout << boolalpha;
+  cout << "arcpmsif   = " << arcpmsif << endl;
+  cout << "ignoreFree = " << ignoreFree << endl;
+  */
 
   // Memory available to plotms is the min of user's casarc and free
-  Double hostMemGB=Double(min( Int(HostInfo::memoryTotal(true)),
-			       Int(HostInfo::memoryFree()) )
-			  )/1.0e6; // in GB
-  Double fracMem=100.0*(totalVolGB+0.5)/hostMemGB;  // %
+  Double hostMemGB=Double(min(hostMemTotalKB,
+			      (ignoreFree ? INT_MAX : hostMemFreeKB)))/1.0e6; // in GB
+  Double fracMem=100.0*totalVolGB/hostMemGB;  // fraction require in %
 
   stringstream ss;
+
+  if (ignoreFree)
+    ss << "Use of 'plotms.ignorefree: T' in the .casarc file may cause" << endl
+       << "your machine to swap for very large plots." << endl;
   ss << "Data selection will yield a total of " << totalPoints 
      << " plottable points (flagged and unflagged)." << endl
      << "The plotms cache will require an estimated " 
      << totalVolGB << " GB of memory (" << bytesPerPt << " bytes/point)." << endl
-     << "In total (+0.5 GB overhead), plotms requires " << fracMem 
-     << "% of the memory avail. to CASA (" << hostMemGB << " GB) for this plot.";
+     << "This is " << fracMem << "% of the memory avail. to CASA (" 
+     << ((ignoreFree||(hostMemTotalKB<hostMemFreeKB)) ? "total=" : "free=") 
+     << hostMemGB << " GB).";
 
-  if ((totalVolGB+0.5)>hostMemGB) {
+  if (totalVolGB>hostMemGB) {
     ss << endl << "Insufficient memory!";
     throw(AipsError(ss.str()));
   }
