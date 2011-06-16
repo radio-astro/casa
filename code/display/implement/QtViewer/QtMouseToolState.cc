@@ -42,6 +42,7 @@ namespace QtMouseToolNames {
   const String ELLIPSE = "ellipse";
   const String POLYGON = "polygon";
   const String POLYLINE = "polyline";
+  const String RULERLINE = "rulerline";
   const String MULTICROSSHAIR = "multicrosshair";
   const String ANNOTATIONS = "annotations";
   const String NONE = "";
@@ -50,17 +51,17 @@ namespace QtMouseToolNames {
   //# the final elements stand for "none" (or "invalid");
   
   const String tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST, POSITION,
-    RECTANGLE, ELLIPSE,  POLYGON, POLYLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
+    RECTANGLE, ELLIPSE,  POLYGON, POLYLINE, RULERLINE, MULTICROSSHAIR, ANNOTATIONS, NONE };
 
   const String longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
     "Colormap fiddling - brightness/contrast",
     "Positioning", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
-    "Polyline drawing", "Multipanel crosshair", "Annotations",  "" };
+    "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
     
   const String iconnames[] = { "magnifyb", "handb", "arrowcrossb",
    "brightcontrastb", "crosshairb", "rectregionb", "ellregionb", "polyregionb",
-   "polylineb",  "mpcrosshairb", "dontuseb",  "" };
+   "polylineb", "rulerb",  "mpcrosshairb", "dontuseb",  "" };
     
   const String helptexts[] = {
     "Use the assigned mouse button to drag out a rectangle."
@@ -98,6 +99,8 @@ namespace QtMouseToolNames {
     "\nUse handles to rearrange points."
     "\n<Esc> to cancel",
        
+    "Press assigned mouse button and draw ruler line by dragging."
+
     "Select a shape to draw and then click / drag on screen to place it."
     "\nSelect \"more\" to show more options"
     "\n<Esc> to cancel",
@@ -110,7 +113,7 @@ namespace QtMouseToolNames {
 
 
 
-Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0,  0 };
+Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0,  0 };
 
 
 void QtMouseToolState::chgMouseBtn(String tool, Int mousebtn) {
@@ -150,7 +153,7 @@ void QtMouseToolState::emitBtns() {
   // up-to-date on mouse button settings.
   
   using namespace QtMouseToolNames;
-	// Constants (nTools, tool names, etc.) used by Qt mouse tools
+  // Constants (nTools, tool names, etc.) used by Qt mouse tools
   
   for(Int i=0; i<nTools; i++) emit mouseBtnChg(tools[i], mousebtns_[i]);  }
 

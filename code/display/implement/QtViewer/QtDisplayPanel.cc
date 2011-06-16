@@ -35,6 +35,7 @@
 #include <display/DisplayEvents/PCITFiddler.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/DisplayEvents/MWCPolylineTool.h>
+#include <display/DisplayEvents/MWCRulerlineTool.h>
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/DisplayEvents/MWCPannerTool.h>
 #include <display/Display/AttributeBuffer.h>
@@ -63,8 +64,8 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent) :
 		panel_(panel),
 		pd_(0), pc_(0),
 		qdds_(),
-		zoom_(0), panner_(0), crosshair_(0), rtregion_(0),
-		ptregion_(0), polyline_(0),  snsFidd_(0), bncFidd_(0),
+		zoom_(0), panner_(0), crosshair_(0), rtregion_(0), elregion_(0),
+		ptregion_(0), polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
 		tracking_(True),
 		modeZ_(True),
@@ -198,7 +199,7 @@ void QtDisplayPanel::setupMouseTools_() {
  
   using namespace QtMouseToolNames;	// (See QtMouseToolState.qo.h)
   
-  mouseToolNames_.resize(9);
+  mouseToolNames_.resize(10);
   mouseToolNames_[0] = ZOOM;
   mouseToolNames_[1] = PAN;
   mouseToolNames_[2] = SHIFTSLOPE;
@@ -208,6 +209,7 @@ void QtDisplayPanel::setupMouseTools_() {
   mouseToolNames_[6] = ELLIPSE;
   mouseToolNames_[7] = POLYGON;
   mouseToolNames_[8] = POLYLINE;
+  mouseToolNames_[9] = RULERLINE;
 	// The canonical text-names of the mouse tools on this panel.
 	// These happen to be in QtMouseToolNames::toolIndex order,
 	// but that is not a requirement.  This order is returned by
@@ -230,6 +232,8 @@ void QtDisplayPanel::setupMouseTools_() {
 
   polyline_  = new MWCPolylineTool;   pd_->addTool(POLYLINE, polyline_);
   
+  rulerline_  = new MWCRulerlineTool;   pd_->addTool(RULERLINE, rulerline_);
+
   snsFidd_ = new PCITFiddler(pc_, PCITFiddler::StretchAndShift,
 				  Display::K_None);
   bncFidd_ = new PCITFiddler(pc_, PCITFiddler::BrightnessAndContrast,
@@ -379,6 +383,8 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 
 void QtDisplayPanel::resetRTRegion()  { rtregion_->reset();  }
 
+void QtDisplayPanel::resetETRegion()  { elregion_->reset();  }
+
 void QtDisplayPanel::resetPTRegion()  { ptregion_->reset();  }
 
 void QtDisplayPanel::resetZoomer()    { zoom_->reset();  }
@@ -391,7 +397,7 @@ void QtDisplayPanel::resetPanner()    { panner_->reset();  }
   
 
 void QtDisplayPanel::resetRegionTools() {
-  resetRTRegion();  resetPTRegion();  }
+  resetRTRegion();  resetPTRegion();  resetETRegion();}
 
 void QtDisplayPanel::resetSelectionTools() {
     resetRegionTools();  resetCrosshair();  resetPolyline();  }

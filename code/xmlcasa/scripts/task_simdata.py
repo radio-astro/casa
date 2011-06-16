@@ -248,7 +248,6 @@ def simdata(
 
 
 
-
         ##################################################################
         # read antenna file here to get Primary Beam
         predict_uv=False
@@ -256,6 +255,7 @@ def simdata(
         sd_only=False
         aveant=-1
         stnx=[]  # for later, to know if we read an array in or not
+        repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
 
         # experimental: alma;0.4arcsec  allowed string
         if str.upper(antennalist[0:4])=="ALMA":
@@ -274,7 +274,6 @@ def simdata(
 
         pb=0. # primary beam
 
-        repodir=os.getenv("CASAPATH").split(' ')[0]+"/data/alma/simmos/"
         if not os.path.exists(antennalist):
             if os.path.exists(repodir+antennalist):
                 antennalist=repodir+antennalist
@@ -1204,6 +1203,7 @@ def simdata(
                     tpimage = project+'.sd.image'
                 else:
                     tpimage = project+'.image'
+                tpimage=fileroot+"/"+tpimage
                 #if sd_only:
                 #    # for analysis step -> do it later
                 #    msfile=tpmstoimage

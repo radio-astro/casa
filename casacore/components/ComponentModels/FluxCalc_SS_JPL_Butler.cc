@@ -710,11 +710,16 @@ void FluxCalc_SS_JPL_Butler::compute_jupiter(Vector<Flux<Double> >& values,
     Double freq = mfreqs[f].get(hertz_p).getValue();
     Double lambdacm = 100.0 * C::c / freq;      // Wavelength in cm.
 
-    if(lambdacm < 0.1 || lambdacm > 6.2){
+    if(lambdacm < 0.1){
       outOfFreqRange = true;
-      temps[f] = temperature_p;
+      lambdacm = 0.1;
     }
-    else if(lambdacm < 0.44){
+    else if(lambdacm > 6.2){
+      outOfFreqRange = true;
+      lambdacm = 6.2;
+    }
+
+    if(lambdacm < 0.44){
       temps[f] = 170.0;
     }
     else if(lambdacm < 0.7){
@@ -733,8 +738,8 @@ void FluxCalc_SS_JPL_Butler::compute_jupiter(Vector<Flux<Double> >& values,
   if(outOfFreqRange)
     os << LogIO::WARN
        << "At least one of the wavelengths went outside the nominal range\n"
-       << "of 1mm to 6.2cm, so the ephemeris value ("
-       << temperature_p << ") was used."
+       << "of 1mm to 6.2cm, so the wavelength was clamped to 1mm or 6.2cm for\n"
+       << "calculating the effective temperature of Jupiter."
        << LogIO::POST;
 
   compute_GB(values, errors, angdiam, mfreqs, temps);
@@ -754,11 +759,16 @@ void FluxCalc_SS_JPL_Butler::compute_uranus(Vector<Flux<Double> >& values,
     Double freq = mfreqs[f].get(hertz_p).getValue();
     Double lambdacm = 100.0 * C::c / freq;      // Wavelength in cm.
 
-    if(lambdacm < 0.07 || lambdacm > 6.2){
+    if(lambdacm < 0.07){
       outOfFreqRange = true;
-      temps[f] = temperature_p;
+      lambdacm = 0.07;
     }
-    else if(lambdacm < 0.4){
+    else if(lambdacm > 6.2){
+      outOfFreqRange = true;
+      lambdacm = 6.2;
+    }
+
+    if(lambdacm < 0.4){
       // 32.46063842 = 40.0 / ln(4.0)
       temps[f] = 90.0 + 32.46063842 * log(10.0 * lambdacm);
     }
@@ -772,8 +782,8 @@ void FluxCalc_SS_JPL_Butler::compute_uranus(Vector<Flux<Double> >& values,
   if(outOfFreqRange)
     os << LogIO::WARN
        << "At least one of the wavelengths went outside the nominal range\n"
-       << "of 0.7mm to 6.2cm, so the ephemeris value ("
-       << temperature_p << ") was used."
+       << "of 0.7mm to 6.2cm, so the wavelength was clamped at either 0.7mm or 6.2cm\n"
+       << "for calculating the effective temperature of Uranus."
        << LogIO::POST;
 
   compute_GB(values, errors, angdiam, mfreqs, temps);
@@ -805,11 +815,16 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
     //  Neptune to NH3.  Uranus has barely any, at least while we're looking at
     //  its pole.)
     //
-    if(freq < 4.0 || freq > 1000.0){
+    if(freq < 4.0){
       outOfFreqRange = true;
-      temps[f] = temperature_p;
+      freq = 4.0;
     }
-    else if(freq < 70.0){
+    else if(freq > 1000.0){
+      outOfFreqRange = true;
+      freq = 1000.0;
+    }
+
+    if(freq < 70.0){
       // 30.083556662 = 80.0 / ln(1000.0 / 70.0)
       temps[f] = 140.0 - 30.083556662 * log(freq / 70.0);
     }
@@ -821,8 +836,8 @@ void FluxCalc_SS_JPL_Butler::compute_neptune(Vector<Flux<Double> >& values,
   if(outOfFreqRange)
     os << LogIO::WARN
        << "At least one of the frequencies went outside the nominal range\n"
-       << "of 4 to 1000 GHz, so the ephemeris value ("
-       << temperature_p << ") was used."
+       << "of 4 to 1000 GHz for Neptune, so it was clamped to 4 or 1000 GHz\n"
+       << "for calculating the effective temperature."
        << LogIO::POST;
 
   compute_GB(values, errors, angdiam, mfreqs, temps);

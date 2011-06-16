@@ -55,11 +55,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
-			     const char *name,
-			     QWidget *parent ) :
-	       QWidget(parent),
-               parent_(parent),
-	       panel_(panel) {
+		const char *name,
+		QWidget *parent ) :
+		QWidget(parent),
+		parent_(parent),
+		panel_(panel) {
   
   setWindowTitle(name);
   
@@ -180,7 +180,29 @@ QtDataManager::~QtDataManager(){
 
 
 void QtDataManager::clickItem(QTreeWidgetItem* item){
-  if(item!=0 && item->text(1)=="Directory") updateDirectory(item->text(0));
+	// make sure a directory was clicked
+	if(item!=0 && item->text(1)=="Directory"){
+
+		// get the text
+		QString iText = item->text(0);
+
+		// if there is a text go to that directory
+		if (iText.size()>0){
+			updateDirectory(item->text(0));}
+
+		// if there is no text
+		else if (iText.size()==0){
+
+			// get the top-level index
+			int index = treeWidget_->indexOfTopLevelItem (item );
+
+			// go to "home" or "root"
+			if (index == 0)
+				updateDirectory(QDir::homePath());
+			else if (index == 1)
+				updateDirectory(QDir::rootPath());
+		}
+	}
 }
 
 
@@ -291,31 +313,51 @@ void QtDataManager::buildDirTree() {
   QTreeWidgetItem *dirItem;
   dir_.makeAbsolute();
   QStringList entryList = dir_.entryList();
+
+  // create and add an item for the home directory
+  QString type = "Directory";
+  int dType = uiDataType_[type];
+  dirItem = new QTreeWidgetItem();
+  dirItem->setIcon(0, QIcon(":/icons/home_folder.png"));
+  dirItem->setToolTip(0, QString("Home directory"));
+  dirItem->setText(1, type);
+  dirItem->setTextColor(1, getDirColor(dType));
+  treeWidget_->insertTopLevelItem (0, dirItem );
+
+  // create and add an item for the root directory
+  type = "Directory";
+  dType = uiDataType_[type];
+  dirItem = new QTreeWidgetItem();
+  dirItem->setIcon(0, QIcon(":/icons/root_folder.png"));
+  dirItem->setToolTip(0, QString("Root directory"));
+  dirItem->setText(1, type);
+  dirItem->setTextColor(1, getDirColor(dType));
+  treeWidget_->insertTopLevelItem (1, dirItem );
   
+
   for (int i = 0; i < entryList.size(); i++) {
-    QString it = entryList.at(i);
-    if (it.compare(".") > 0) {
-      QString path = dir_.path() + "/" +  entryList.at(i);
-      QString type = panel_->viewer( )->fileType(path.toStdString()).chars();
-      int dType = uiDataType_[type];
+	  QString it = entryList.at(i);
+	  if (it.compare(".") > 0) {
+		  QString path = dir_.path() + "/" +  entryList.at(i);
+		  type = panel_->viewer( )->fileType(path.toStdString()).chars();
+		  dType = uiDataType_[type];
       //cout << "path=" << path.toStdString()
       //     << "type=" << type.toStdString() << " dType:"<<dType<<endl
 
-      if (dType!=UNKNOWN) {
-        dirItem = new QTreeWidgetItem(treeWidget_);
-        dirItem->setText(0, it);
-        dirItem->setText(1, type);
-        dirItem->setTextColor(1, getDirColor(dType));
-	if ( type == "FITS Image" && findNumberOfFITSImageExt( path ) > 1 ) {
-	  QTreeWidgetItem *childItem = new QTreeWidgetItem(dirItem);
-	  childItem->setText(0, "");
-	  childItem->setText(1, "");
-	  childItem->setTextColor(1, getDirColor(dType));
-	}
-      }
-    }
+		  if (dType!=UNKNOWN) {
+			  dirItem = new QTreeWidgetItem(treeWidget_);
+			  dirItem->setText(0, it);
+			  dirItem->setText(1, type);
+			  dirItem->setTextColor(1, getDirColor(dType));
+			  if ( type == "FITS Image" && findNumberOfFITSImageExt( path ) > 1 ) {
+				  QTreeWidgetItem *childItem = new QTreeWidgetItem(dirItem);
+				  childItem->setText(0, "");
+				  childItem->setText(1, "");
+				  childItem->setTextColor(1, getDirColor(dType));
+			  }
+		  }
+	  }
   }
-
 	    
   // QSettings settings("NRAO", "casa");
   // //cout << "dir_.path()=" << dir_.path().toStdString() << endl;

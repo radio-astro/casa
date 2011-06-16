@@ -25,6 +25,7 @@
 #include <measures/Measures/MeasTable.h>
 #include <casa/Quanta/QuantumHolder.h>
 #include <ms/MeasurementSets.h>
+#include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <casa/Logging/LogIO.h>
 #include <imager_cmpt.h>
 #include <image_cmpt.h>
@@ -192,14 +193,22 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode,
       return false;
     }
 
-    *itsLog << LogIO::NORMAL2 << "calcuvw starting" << LogIO::POST;
-      
     FixVis visfixer(*itsMS);
-    *itsLog << LogIO::NORMAL2 << "FixVis created" << LogIO::POST;
-    //visfixer.setField(m1toBlankCStr_(fields));
     visfixer.setFields(fields);
     rstat = visfixer.calc_uvw(String(refcode), reuse);
-    *itsLog << LogIO::NORMAL2 << "calcuvw finished" << LogIO::POST;
+
+    // Update HISTORY table of modfied MS 
+    ostringstream param;
+    param << "fields =" << Vector<Int>(fields) << ", refcode = " << refcode << ", reuse =" << reuse; 
+    String paramstr=param.str();
+    if(!(Table::isReadable(itsMS->historyTableName()))){
+      TableRecord &kws = itsMS->rwKeywordSet();
+      SetupNewTable historySetup(itsMS->historyTableName(),
+				 MSHistory::requiredTableDesc(),Table::New);
+      kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+    }
+    MSHistoryHandler::addMessage(*itsMS, "UVW and visibilities changed with calcuvw", "im", paramstr, "im::calcuvw()");
+
   }
   catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -435,25 +444,43 @@ bool imager::fixvis(const std::vector<int>& fields,
 	      << LogIO::POST;
       return false;
     }
-    *itsLog << LogIO::NORMAL2 << "fixvis starting" << LogIO::POST;
-      
     casa::FixVis visfixer(*itsMS);
     casa::Vector<casa::Int> cFields(fields);
     int nFields = cFields.nelements();
 	
     visfixer.setFields(cFields);
 
-    casa::Vector<casa::MDirection> phaseCenters;
-    phaseCenters.resize(nFields);
-    for(int i = 0; i < nFields; ++i){
+    int nPhDirs = phaseDirs.size(); 
+    casa::Vector<casa::MDirection> phaseCenters(nPhDirs);
+    for(int i = 0; i < nPhDirs; ++i){
       if(!casaMDirection(phaseDirs[i], phaseCenters[i]))
         throw(AipsError("Could not interpret phaseDirs parameter"));
     }
-    visfixer.setPhaseDirs(phaseCenters, cFields);
-
+    visfixer.setPhaseDirs(phaseCenters);
     visfixer.setDistances(Vector<Double>(distances));
+
     rstat = visfixer.fixvis(refcode, dataCol);
-    *itsLog << LogIO::NORMAL2 << "fixvis finished" << LogIO::POST;  
+
+    // Update HISTORY table of modfied MS 
+    ostringstream param;
+    Vector<String> phasedirsStr(nPhDirs);
+    for(int i = 0;  i < nPhDirs; ++i){
+      phasedirsStr(i) = phaseDirs[i];
+    }
+    param << "fields =" << Vector<Int>(fields) << ", phasedirs = " << phasedirsStr
+	  << ", refcode = " << refcode << ", distances =" << Vector<Double>(distances) 
+	  << ", datacol = " << dataCol ;
+    String paramstr=param.str(); 
+    if(!(Table::isReadable(itsMS->historyTableName()))){
+      TableRecord &kws = itsMS->rwKeywordSet();
+      SetupNewTable historySetup(itsMS->historyTableName(),
+				 MSHistory::requiredTableDesc(),Table::New);
+      kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+    }
+    MSHistoryHandler::addMessage(*itsMS, "UVW and visibilities changed with fixvis", "im", paramstr, "im::fixvis()");
+
+    rstat = True;
+
   }
   catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
