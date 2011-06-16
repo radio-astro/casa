@@ -230,10 +230,84 @@ def spwchan_to_sets(vis, spw):
                     mytb.close()
                 sets[s].update([c for c in spwd[s] if c <= endchan])
     return sets
+
+def set_to_chanstr(chanset, totnchan=None):
+    """
+    Essentially the reverse of expand_tilde.  Given a set or list of integers
+    chanset, returns the corresponding string form.  It will not use non-unity
+    steps (^) if multiple ranges (;) are necessary, but it will use ^ if it
+    helps to eliminate any ;s.
+
+    totnchan: the total number of channels for the input spectral window, used
+              to abbreviate the return string.
+
+    It returns '' for the empty set and '*' if 
+
+    Examples:
+    >>> from update_spw import set_to_chanstr
+    >>> set_to_chanstr(set([0, 1, 2, 4, 5, 6, 7, 9, 11, 13]))
+    '0~2;4~7;9;11;13'
+    >>> set_to_chanstr(set([7, 9, 11, 13]))
+    '7~13^2'
+    >>> set_to_chanstr(set([7, 9]))
+    '7~9^2'
+    >>> set_to_chanstr([0, 1, 2])
+    '0~2'
+    >>> set_to_chanstr([0, 1, 2], 3)
+    '*'
+    >>> set_to_chanstr([0, 1, 2, 6], 3)
+    '*'
+    >>> set_to_chanstr([0, 1, 2, 6])
+    '0~2;6'
+    >>> set_to_chanstr([1, 2, 4, 5, 6, 7, 8, 9, 10, 11], 12)
+    '1~2;4~11'
+    """
+    if totnchan:
+        mylist = [c for c in chanset if c < totnchan]
+    else:
+        mylist = list(chanset)
+
+    if totnchan == len(mylist):
+        return '*'
+
+    mylist.sort()
+
+    retstr = ''
+    if len(mylist) > 1:
+        # Check whether the same step can be used throughout.
+        step = mylist[1] - mylist[0]
+        samestep = True
+        for i in xrange(2, len(mylist)):
+            if mylist[i] - mylist[i - 1] != step:
+                samestep = False
+                break
+        if samestep:
+            retstr = str(mylist[0]) + '~' + str(mylist[-1])
+            if step > 1:
+                retstr += '^' + str(step)
+        else:
+            sc = mylist[0]
+            oldc = sc
+            retstr = str(sc)
+            nc = len(mylist)
+            for i in xrange(1, nc):
+                cc = mylist[i]
+                if (cc > oldc + 1) or (i == nc - 1):
+                    if (i == nc - 1) and (cc == oldc + 1):
+                        retstr += '~' + str(cc)
+                    else:
+                        if oldc != sc:
+                            retstr += '~' + str(oldc)
+                        retstr += ';' + str(cc)
+                        sc = cc
+                oldc = cc
+    else:
+        retstr = str(mylist[0])
+    return retstr
         
 def sets_to_spwchan(spwsets, nchans={}):
     """
-    Returns the spw:chan selection string for a dict of sets of selected
+    Returns a spw:chan selection string for a dict of sets of selected
     channels keyed by spectral window ID.
 
     nchans is a dict of the total number of channels keyed by spw, used to
@@ -245,48 +319,23 @@ def sets_to_spwchan(spwsets, nchans={}):
     >>> sets_to_spwchan({1: [0, 1, 2, 3]}, {1: 4})
     '1'
     >>> sets_to_spwchan({1: set([1, 2, 3, 5, 7, 9]), 8: set([0])})
-    '1:1~3;5~9^2,8:0'
+    '1:1~3;5;7;9,8:0'
+    >>> sets_to_spwchan({0: set([4, 5, 6]), 1: [4, 5, 6], 2: [4, 5, 6]})
+    '0~2:4~6'
+    >>> sets_to_spwchan({0: [4], 1: [4], 3: [0, 1], 4: [0, 1], 7: [0, 1]}, {3: 2, 4: 2, 7: 2})
+    '0~1:4,3~4,7'
     """
     # Make a list of spws for each channel selection.
     csd = {}
     for s in spwsets:
         # Convert the set of channels to a string.
         if spwsets[s]:
-            cstr = ''
-            if (not nchans.has_key(s)) or (len(spwsets[s]) < nchans[s]):
-                clist = list(spwsets[s])
-                clist.sort()
-                nc = len(clist)
-                cgrps = []
-                sc = clist[0]
-                oldstep = 1
-                if nc > 1:
-                    oldstep = clist[1] - clist[0]
-                cind = 1
-                oldc = sc
-                cstr = str(sc)
-                while cind < nc:
-                    cc = clist[cind]
-                    step = cc - oldc
-                    if (step != oldstep) or (cind == nc - 1):
-                        if step != oldstep:
-                            if oldc != sc:
-                                cstr += '~' + str(oldc)
-                            if oldstep != 1:
-                                cstr += '^' + str(oldstep)
-                            cstr += ';' + str(cc)
-                            sc = cc
-                            oldstep = step
-                        else:    # The range has come to an end on the last channel.
-                            cstr += '~' + str(cc)
-                            if step != 1:
-                                cstr += '^' + str(step)
-                    oldc = cc
-                    cind += 1
+            cstr = set_to_chanstr(spwsets[s], nchans.get(s))
 
-            if not csd.has_key(cstr):
-                csd[cstr] = []
-            csd[cstr].append(s)
+            if cstr:
+                if not csd.has_key(cstr):
+                    csd[cstr] = []
+                csd[cstr].append(s)
 
     # Now convert those spw lists into strings, inverting as we go so the final
     # string can be sorted by spw:
@@ -316,7 +365,7 @@ def sets_to_spwchan(spwsets, nchans={}):
     scstr = ''
     for sstr in spwgrps:
         scstr += sstr
-        if scd[sstr]:
+        if scd[sstr] != '*':
             scstr += ':' + scd[sstr]
         scstr += ','
     return scstr.rstrip(',')
@@ -340,7 +389,7 @@ def update_spwchan(vis, sch0, sch1, truncate=False, widths={}):
     >>> from update_spw import update_spwchan
     >>> newspw = update_spwchan('anything.ms', 'anything', 'anything')
     >>> newspw
-    ''
+    '*'
     >>> vis = casa['dirs']['data'] + '/regression/unittest/split/unordered_polspw.ms'
     >>> update_spwchan(vis, '0~1:1~3,5;7:10~20^2', '0~1:2~3,5;7:12~18^2')
     '0~1:1~2,2~3:1~4'
