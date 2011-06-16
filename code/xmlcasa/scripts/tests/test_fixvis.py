@@ -95,14 +95,14 @@ class fixvis_test1(unittest.TestCase):
         self.assertTrue(retValue['success'])
         
     def test2(self):
-        '''Apply trivial phase shift, i.e. none.'''
+        '''Apply trivial phase center shift, i.e. none.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
-        self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.3092s -29d59m29.9987s')
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
 
         mystats = ''
         try:
+            self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.3092s -29d59m29.9987s')
+            retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy', field='0', niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
@@ -116,14 +116,13 @@ class fixvis_test1(unittest.TestCase):
         self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz')
 
     def test3(self):
-        '''Apply positive phase shift along DEC.'''
+        '''Apply positive phase center shift along DEC.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
-        self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.3092s -29d59m26.9987s')
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-
         mystats = ''
         try:
+            self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.3092s -29d59m26.9987s')
+            retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
@@ -137,14 +136,13 @@ class fixvis_test1(unittest.TestCase):
         self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.26.999, I, 2.26e+11Hz')
 
     def test4(self):
-        '''Apply negative phase shift along DEC.'''
+        '''Apply negative phase center shift along DEC using offset syntax.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
-        self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.3092s -29d59m32.9987s')
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-
         mystats = ''
         try:
+            self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='0h -0d0m3s')
+            retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
@@ -158,14 +156,13 @@ class fixvis_test1(unittest.TestCase):
         self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.32.999, I, 2.26e+11Hz')
 
     def test5(self):
-        '''Apply positive phase shift along RA.'''
+        '''Apply positive phase center shift along RA.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
-        self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.5401s -29d59m29.9987s')
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-
         mystats = ''
         try:
+            self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.5401s -29d59m29.9987s')
+            retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
@@ -179,14 +176,13 @@ class fixvis_test1(unittest.TestCase):
         self.assertTrue(mystats['maxposf']=='18:00:02.540, -29.59.29.999, I, 2.26e+11Hz')
 
     def test6(self):
-        '''Apply negative phase shift along RA.'''
+        '''Apply negative phase shift along RA using offset syntax (offset is an angle).'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
-        self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='J2000 18h00m02.0786s -29d59m29.9987s')
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-
         mystats = ''
         try:
+            self.res = fixvis(inpms2, outms2, field='0', refcode=refcode, phasecenter='-0d0m3s 0deg')
+            retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
@@ -200,7 +196,7 @@ class fixvis_test1(unittest.TestCase):
         self.assertTrue(mystats['maxposf']=='18:00:02.078, -29.59.29.999, I, 2.26e+11Hz')
 
     def test7(self):
-        '''Apply negative phase shift along RA in field 1, no shift in field 0.'''
+        '''Apply negative phase shift along RA in field 1 (using offset syntax, offset is a time), no shift in field 0.'''
         refcode = 'J2000'
         shutil.rmtree(outms2, ignore_errors=True)
         os.system('cp -R '+inpms2+' '+outms2)
@@ -208,7 +204,9 @@ class fixvis_test1(unittest.TestCase):
         mystats0 = ''
         mystats1 = ''
         try:
-            self.res = fixvis(vis=outms2, outputvis=outms2, field='1', refcode=refcode, phasecenter='J2000 18h00m02.0997s -30d59m29.9987s')
+            x = qa.div(qa.quantity(-3./3600.,'deg'),qa.cos(qa.quantity(31.,'deg')))['value']*24./360.*3600. # (seconds)
+            phc = str(x)+'s 0deg'
+            self.res = fixvis(vis=outms2, outputvis=outms2, field='1', refcode=refcode, phasecenter=phc)
             retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
             os.system('rm -rf testy* testz*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',

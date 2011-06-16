@@ -14,9 +14,13 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                   example: 'B1950'
     
     reuse      -- base recalculation on existing UVW coordinates? default=True
+                  ignored if parameter 'phasecenter' is set
 
     phasecenter  --  if set to a valid direction: change the phase center for the given field
                      to this value
+                     example: 'J2000 9h25m00s 05d12m00s'
+                     If given without the equinox, e.g. '0h01m00s 00d12m00s', the parameter
+                     is interpreted as a pair of offsets in RA and DEC to the present phasecenter.
 
     Examples:
 
@@ -60,7 +64,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                 therefcode = 'J2000' # always use "J2000"
             else: # not a variable reference column
                 therefcode = ckwdict['Ref']
-                
         else: # a refcode was given, enforce validity
             if not (type(refcode)==str):
                 casalog.post('Invalid refcode '+str(refcode), 'SEVERE')
@@ -80,7 +83,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
             therefcode = refcode
         #end if
 
-        if(phasecenter==''): # we are only modifying the refcode if the UVW coordinates        
+        if(phasecenter==''): # we are only modifying the UVW coordinates        
             casalog.post('Will leave phase centers unchanged.', 'NORMAL')
                 
             casalog.post("Recalculating the UVW coordinates ...", 'NORMAL')
@@ -97,41 +100,92 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
         else: # we are modifying UVWs and visibilities
 
             for fld in fields:
+                viaoffset = False
                 thenewra_rad = 0.
                 thenewdec_rad = 0.
+                thenewphasecenter = phasecenter
                 thenewref = -1
+                theoldref = -1
+                theoldrefstr = ''
                 thenewrefstr = ''
                 isvarref = False
                 tbt.open(outputvis+"/FIELD")
                 ckwdict = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')
                 theolddir = tbt.getcell('PHASE_DIR',fld)
                 fieldname = tbt.getcell('NAME',fld)
-                tbt.close()
-
-                casalog.post( 'field: '+fieldname, 'NORMAL')
-                casalog.post( 'old RA, DEC (rad) '+str(theolddir[0])+" " +str(theolddir[1]), 'NORMAL')
-
                 if(ckwdict.has_key('TabRefTypes') and ckwdict.has_key('TabRefCodes')):
                     isvarref = True
+                    # determine string name of the phase dir reference frame
+                    theoldref = tbt.getcol('PhaseDir_Ref')[fld]
+                    refcodestrlist = ckwdict['TabRefTypes'].tolist()
+                    refcodelist = ckwdict['TabRefCodes'].tolist()
+                    if not (refcodelist.has_key(theoldref)):
+                        casalog.post('Invalid refcode in FIELD column PhaseDir_Ref: '+str(theoldref), 'SEVERE')
+                        return False
+                    tindex = refcodelist.index(theoldref)
+                    theoldrefstr = refcodestrlist[tindex]
+                else:
+                    tmprec = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')
+                    theoldrefstr = tmprec['Ref']
+                tbt.close()
+
+                if not (theoldref<32 and theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
+                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not supported here: '+theoldrefstr, 'SEVERE')
+                    return False                            
+
+                casalog.post( 'field: '+fieldname, 'NORMAL')
+                casalog.post( 'old phasecenter RA, DEC '+theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),10) # 10 digits precision
+                              +" "+ qa.angle(qa.quantity(theolddir[1],'rad'),10), 'NORMAL')
+                casalog.post( '          RA, DEC (rad) '+theoldrefstr+' '+str(theolddir[0])+" " +str(theolddir[1]), 'NORMAL')
+
                 
                 if(therefcode!='J2000'):
                     casalog.post("When changing phase center, can only write new UVW coordinates in J2000.", 'WARN')
                     therefcode='J2000'
                 if(reuse):
-                    casalog.post("When changing phase center, cannot reuse old UVW coordinates.", 'NORMAL')
+                    casalog.post("When changing phase center, UVW coordinates will be recalculated.", 'NORMAL')
                     reuse=False
                 if(type(phasecenter)!=str):
                     casalog.post("Invalid phase center.", 'SEVERE')
                     return False
                 else:
                     dirstr = phasecenter.split(' ')
-                    codes = []
-                    if len(dirstr)==2:
-                        dirstr = ['J2000', dirstr[0], dirstr[1]]
-                        casalog.post('Assuming reference frame J2000 for parameter \'phasecenter\'', 'NORMAL')
+                    if len(dirstr)==2: # interpret phasecenter as an offset
+                        casalog.post("No equinox given in parameter \'phasecenter\': "+phasecenter, 'NORMAL')         
+                        casalog.post("Interpreting it as pair of offsets in (RA,DEC) ...", 'NORMAL')
+
+                        if (isvarref and theoldref>31):
+                            casalog.post('Refcode in FIELD column PhaseDir_Ref is a solar system object: '+theoldrefstr, 'WARN')
+                            casalog.post('Will use the nominal entry in the PHASE_DIR column to calculate new phase center', 'WARN')
+                            
+                        qra = qa.quantity(theolddir[0], 'rad') 
+                        qdec = qa.quantity(theolddir[1], 'rad')
+                        qraoffset = qa.quantity(dirstr[0])
+                        qdecoffset = qa.quantity(dirstr[1])
+                        if not qa.isangle(qdecoffset):
+                            casalog.post("Invalid phasecenter parameter. DEC offset must be an angle.", 'SEVERE')
+                            return False
+                        qnewdec = qa.add(qdec,qdecoffset)
+                        qnewra = qra
+                        if qa.canonical(qraoffset)['unit']=='rad':
+                            casalog.post("RA offset is an angle (not a time). Will divide by cos(DEC) to compute time offset.")
+                            if(qa.cos(qnewdec)['value']==0.):
+                                casalog.post("Resulting DEC is at celestial pole. Will ignore RA offset.", 'WARN')
+                            else:
+                                qraoffset = qa.div(qraoffset, qa.cos(qnewdec))
+                                qnewra = qa.add(qnewra, qraoffset)
+                        else:
+                            if not (qa.canonical(qraoffset)['unit']=='s'):
+                                casalog.post("Invalid phasecenter parameter. RA offset must be an angle or a time.", 'SEVERE')
+                                return False
+                            qraoffset = qa.convert(qraoffset, 'deg')
+                            qnewra = qa.add(qnewra, qraoffset)
+                        dirstr = [theoldrefstr, qa.time(qnewra,12), qa.angle(qnewdec,12)]
+                        thenewphasecenter = dirstr[0]+' '+dirstr[1]+' '+dirstr[2]
                     elif not len(dirstr)==3:
-                        casalog.post('Incorrect format in parameter \'phasecenter\'', 'SEVERE')
+                        casalog.post('Incorrectly formatted parameter \'phasecenter\': '+phasecenter, 'SEVERE')
                         return False
+                    
                     try:
                         thedir = me.direction(dirstr[0], dirstr[1], dirstr[2])
                         thenewra_rad = thedir['m0']['value']
@@ -166,14 +220,16 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                                 
                 #endif
                     
-                casalog.post( 'new RA, DEC (rad) '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
+                casalog.post( 'new phasecenter RA, DEC '+thenewrefstr+' '+qa.time(qa.quantity(thenewra_rad,'rad'),10)
+                              +" "+ qa.angle(qa.quantity(thenewdec_rad,'rad'),10), 'NORMAL')
+                casalog.post( '          RA, DEC (rad) '+thenewrefstr+' '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
 
                 fldids = []
                 phdirs = []
                 for i in xrange(numfields):
                     if (i ==fld):
                         fldids.append(i)
-                        phdirs.append(phasecenter)
+                        phdirs.append(thenewphasecenter)
 
                 im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
                 im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
@@ -190,12 +246,12 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
 
                 if(thenewref!=-1):
                     # modify reference of the phase dir column; check also the other direction columns
-                    theoldref = -1
                     theoldref2 = -1
                     theoldref3 = -1
                     if(isvarref):
                         pcol = tbt.getcol('PhaseDir_Ref')
-                        theoldref = pcol[fld]
+                        #theoldref was already determined further above
+                        #theoldref = pcol[fld]
                         pcol[fld] = thenewref
                         
                         pcol2 = tbt.getcol('DelayDir_Ref')
@@ -222,10 +278,11 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
 
                     else: # not a variable reference column
                         tmprec = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')
-                        tmprec['Ref'] = thenewrefstr
-                        tbt.putcolkeyword('PHASE_DIR', 'MEASINFO', tmprec) 
-                        casalog.post("FIELD table phase center direction reference frame for field "+str(fld)
-                                     +" set to "+thenewrefstr, 'NORMAL')
+                        if(theoldrefstr != thenewrefstr):
+                            tmprec['Ref'] = thenewrefstr
+                            tbt.putcolkeyword('PHASE_DIR', 'MEASINFO', tmprec) 
+                            casalog.post("FIELD table phase center direction reference frame changed from "
+                                         +oldref+" to "+thenewrefstr, 'NORMAL')
 
                 tbt.close()
             
