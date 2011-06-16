@@ -117,7 +117,7 @@ try {
    String error;
    ImageInterface<Float>* pTempImage = 0;
    String imageName;
-   if (!ImageFITSConverter::FITSToImage(pTempImage, error, 
+   if (!ImageFITSConverter::FITSToImage(pTempImage, error,
                                         imageName, in, 0)) {
       os << error << LogIO::EXCEPTION;
    }

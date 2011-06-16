@@ -143,17 +143,27 @@ public:
   virtual void doPutSlice (const Array<Bool>& sourceBuffer,
 			   const IPosition& where,
 			   const IPosition& stride);
-  
-private:
 
+  // Set the switch for filtering 0.0
+  virtual void setFilterZero(Bool filterZero);
+
+private:
   FITSMask();
-//
+
+  // Mask out ONLY NaN's
+  Bool filterNaN(bool* pMask, const float* pData, const uInt nelems);
+
+  // Mask out NaN's and values 0.0
+  Bool filterZeroNaN(Bool* pMask, const Float* pData, const uInt nelems);
+
+  //
   TiledFileAccess* itsTiledFilePtr;
   Array<Float> itsBuffer;
   Float itsScale, itsOffset;
   Short itsShortMagic;
   Int itsLongMagic;
   Bool itsHasIntBlanks;
+  Bool itsFilterZero;
 };
 
 

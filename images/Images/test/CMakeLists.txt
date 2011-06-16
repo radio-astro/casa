@@ -83,6 +83,7 @@ tComponentImager
 tExtendImage
 tFITSImage
 tFITSImgParser
+tFITSErrorImage
 tFITSExtImage
 tFITSExtImageII
 tHDF5Image
