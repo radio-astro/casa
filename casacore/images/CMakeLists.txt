@@ -45,6 +45,7 @@ Images/ImageAnalysis.cc
 Images/ImageCollapser.cc
 Images/ImageInputProcessor.cc
 Images/FITSImage.cc
+Images/FITSErrorImage.cc
 Images/FITSImgParser.cc
 Images/PagedImage2.cc
 Images/ImagePolProxy.cc
@@ -96,6 +97,7 @@ Images/ExtendImage.h
 Images/ExtendImage.tcc
 Images/FITS2Image.tcc
 Images/FITSImage.h
+Images/FITSErrorImage.h
 Images/FITSImgParser.h
 Images/HDF5Image.h
 Images/HDF5Image.tcc

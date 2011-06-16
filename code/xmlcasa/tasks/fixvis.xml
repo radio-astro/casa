@@ -59,10 +59,17 @@ Recalculates (u, v, w) and/or changes Phase Center
                   example: 'B1950'
     
     reuse      -- base recalculation on existing UVW coordinates? default=True
+                  ignored if parameter 'phasecenter' is set
 
     phasecenter  --  if set to a valid direction: change the phase center for the given field
                to this value
-
+	       example: 'J2000 9h25m00s -05d12m00s'
+               If given without the equinox, e.g. '0h01m00s +00d12m00s', the parameter
+               is interpreted as a pair of offsets in RA and DEC to the present phasecenter.
+	       The RA offset can be given in units of time or angle. If given as a time, it
+	       is applied as is. If given as an angle, it is corrected for the cos(DEC) before
+	       it is applied.
+	       
     Examples:
 
     fixvis('NGC3256.ms','NGC3256-fixed.ms')

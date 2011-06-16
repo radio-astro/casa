@@ -65,12 +65,18 @@ class imagecont():
               numchan=conlis(numchan, numms)
               spw=conlis(spw, numms)
               field=conlis(field, numms)
+              numfail=0
               for k  in range(numms):
-                  im.selectvis(vis=msnames[k], field=field[k], spw=spw[k], nchan=numchan[k], start=start[k], step=1, datainmemory=self.visInMem)
+                  try:
+                      im.selectvis(vis=msnames[k], field=field[k], spw=spw[k], nchan=numchan[k], start=start[k], step=1, datainmemory=self.visInMem)
+                  except:
+                      numfail+=1
+              if(numfail==numms):
+                  self.novaliddata=True 
           except Exception, instance:
                 ###failed to selectdata
                 self.novaliddata=True  
-          self.setparamcont(im, freq, band, singleprec=True)
+          self.setparamcont(im, freq, band, singleprec=False)
           if((len(numchan)==0) or (np.sum(numchan)==0)):
               self.novaliddata=True
         self.makecontimage(im, self.novaliddata, imname)
@@ -216,7 +222,7 @@ class imagecont():
         self.imageparamset=False
 
     def cleancont(self, niter=100, alg='clark', thr='0.0mJy', psf='newmodel.psf', dirty='newmodel.dirty', model='newmodel.model', mask='', scales=[0]):
-        dc=self.dc
+        dc=dctool.create()
         dc.open(dirty=dirty, psf=psf)
         if((alg=='hogbom') or (alg == 'msclean')):
             sca=scales if (alg=='msclean') else [0]
@@ -227,6 +233,7 @@ class imagecont():
         else:
             dc.clean(algorithm=alg, niter=niter, threshold=thr, model=model, mask=mask)
         dc.done()
+        del dc
 
     def imagechan(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0]):
         origname=msname
@@ -416,5 +423,8 @@ class imagecont():
                 #casalog.post('Updating '+msname+' imname '+imname)
                 im.updateresidual(model=imname+'.model',  image=imname+'.image', 
                                   residual=imname+'.residual')
+                #im.clean(algorithm='mfclark', niter=0, threshold='0.05mJy', 
+                 #        model=imname+'.model', image=imname+'.image', 
+                 #        residual=imname+'.residual')
                 #casalog.post('CACHE:  '+ str(tb.showcache()))
         
