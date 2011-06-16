@@ -76,6 +76,7 @@ FITSImage::FITSImage (const String& name, uInt whichRep, uInt whichHDU)
   dataType_p  (TpOther),
   fileOffset_p(0),
   isClosed_p  (True),
+  filterZeroMask_p(False),
   whichRep_p(whichRep),
   whichHDU_p(whichHDU)
 {
@@ -97,6 +98,7 @@ FITSImage::FITSImage (const String& name, const MaskSpecifier& maskSpec, uInt wh
   dataType_p  (TpOther),
   fileOffset_p(0),
   isClosed_p  (True),
+  filterZeroMask_p(False),
   whichRep_p(whichRep),
   whichHDU_p(whichHDU)
 {
@@ -119,6 +121,7 @@ FITSImage::FITSImage (const FITSImage& other)
   dataType_p  (other.dataType_p),
   fileOffset_p(other.fileOffset_p),
   isClosed_p  (other.isClosed_p),
+  filterZeroMask_p(other.filterZeroMask_p),
   whichRep_p(other.whichRep_p),
   whichHDU_p(other.whichHDU_p)
 {
@@ -155,6 +158,7 @@ FITSImage& FITSImage::operator=(const FITSImage& other)
       dataType_p  = other.dataType_p;
       fileOffset_p= other.fileOffset_p;
       isClosed_p  = other.isClosed_p;
+      filterZeroMask_p=other.filterZeroMask_p;
       whichRep_p = other.whichRep_p;
       whichHDU_p = other.whichHDU_p;
    }
@@ -429,14 +433,14 @@ Bool FITSImage::ok() const
 
 Bool FITSImage::doGetMaskSlice (Array<Bool>& buffer, const Slicer& section)
 {
-   if (!hasBlanks_p) {
-      buffer.resize (section.length());
-      buffer = True;
-      return False;
-   }
+	if (!hasBlanks_p) {
+		buffer.resize (section.length());
+		buffer = True;
+		return False;
+	}
 //
-   reopenIfNeeded();
-   return pPixelMask_p->getSlice (buffer, section);
+	reopenIfNeeded();
+	return pPixelMask_p->getSlice (buffer, section);
 }
 
 
@@ -655,15 +659,23 @@ void FITSImage::open()
 
    if (hasBlanks_p) {
       if (dataType_p == TpFloat) {
-         pPixelMask_p = new FITSMask(&(*pTiledFile_p));
+    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p));
+    	 tmpMask->setFilterZero(filterZeroMask_p);
+         pPixelMask_p = tmpMask;
       } else if (dataType_p == TpDouble) {
-         pPixelMask_p = new FITSMask(&(*pTiledFile_p));
+    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p));
+     	 tmpMask->setFilterZero(filterZeroMask_p);
+         pPixelMask_p = tmpMask;
       } else if (dataType_p == TpShort) {
-         pPixelMask_p = new FITSMask(&(*pTiledFile_p), scale_p, offset_p, 
-   				      shortMagic_p, hasBlanks_p);
+    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p), scale_p, offset_p,
+    			 shortMagic_p, hasBlanks_p);
+    	 tmpMask->setFilterZero(filterZeroMask_p);
+         pPixelMask_p = tmpMask;
       } else if (dataType_p == TpInt) {
-         pPixelMask_p = new FITSMask(&(*pTiledFile_p), scale_p, offset_p, 
-   				      longMagic_p, hasBlanks_p);
+    	 FITSMask *tmpMask =  new FITSMask(&(*pTiledFile_p), scale_p, offset_p,
+    			 longMagic_p, hasBlanks_p);
+    	 tmpMask->setFilterZero(filterZeroMask_p);
+         pPixelMask_p = tmpMask;
       }
    }
 
@@ -786,6 +798,19 @@ void FITSImage::getImageAttributes (CoordinateSystem& cSys,
 // Get recordnumber 
    
     recordnumber = infile.recno();
+}
+
+void FITSImage::setMaskZero(Bool filterZero)
+{
+	// set the zero masking on the
+	// current mask
+	if (pPixelMask_p)
+		dynamic_cast<FITSMask *>(pPixelMask_p)->setFilterZero(True);
+
+	// set the flag, such that an later
+	// mask created in 'open()' will be OK
+	// as well
+	filterZeroMask_p = filterZero;
 }
 
 } //# NAMESPACE CASA - END
