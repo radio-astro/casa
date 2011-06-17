@@ -1202,6 +1202,8 @@ class pimager():
             bandsel='"%fHz"'%band
             return 'a.imagecontmultims(msnames='+str(msnames)+', start='+str(startsel)+', numchan='+str(nchansel)+', field="'+str(field)+'", spw='+str(spwsel)+', freq='+freqsel+', band='+ bandsel+', imname="'+imname+'")'
         ###major cycle
+        if(numms < self.numcpu):
+            self.numcpu=numms
         out=range(self.numcpu)
         
         for k in range(self.numcpu):
