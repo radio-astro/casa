@@ -270,8 +270,8 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
   Bool ignoreFree=(Aipsrc::find(arcpmsif,"plotms.ignorefree") && arcpmsif=="T");
 
   // Memory info from HostInfo
-  Int hostMemTotalKB=Int(HostInfo::memoryTotal(true));
-  Int hostMemFreeKB=Int(HostInfo::memoryFree());
+  uInt hostMemTotalKB=uInt(HostInfo::memoryTotal(true));
+  uInt hostMemFreeKB=uInt(HostInfo::memoryFree());
 
   /*
   cout << "HostInfo::memoryTotal(false) = " << HostInfo::memoryTotal(false) << endl;
@@ -283,8 +283,11 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
   */
 
   // Memory available to plotms is the min of user's casarc and free
-  Double hostMemGB=Double(min(hostMemTotalKB,
-			      (ignoreFree ? INT_MAX : hostMemFreeKB)))/1.0e6; // in GB
+  Double hostMemGB=Double(min(hostMemTotalKB,hostMemFreeKB))/1.0e6; // in GB
+  // Override usual calculation if ignoreFree
+  if (ignoreFree)
+    hostMemGB=Double(hostMemTotalKB)/1.0e6;
+
   Double fracMem=100.0*totalVolGB/hostMemGB;  // fraction require in %
 
   stringstream ss;
@@ -989,7 +992,7 @@ void PlotMSCache2::setUpVisIter(const String& msname,
 
       
 void PlotMSCache2::countChunks(ROVisibilityIterator& vi,
-			      PlotMSCacheThread* thread) {
+			       PlotMSCacheThread* ) {  // thread) {
 
   /*
   if (thread!=NULL) {
@@ -1034,8 +1037,8 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi,
 
 
 void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAve,
-			      const PlotMSAveraging& averaging,
-			      PlotMSCacheThread* thread) {
+			       const PlotMSAveraging& averaging,
+			       PlotMSCacheThread* ) { //  thread) {
 
   /*
   if (thread!=NULL) {
