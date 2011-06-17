@@ -116,10 +116,6 @@ public:
 			   const IPosition& where,
 			   const IPosition& stride);
 
-  // An alternative implementation overriding the
-  // one in the parent class
-  virtual Bool doGetMaskSliceII (Array<Bool>& buffer, const Slicer& theSlice);
-
   // Return the error type
   virtual ErrorType errorType() const
 		  {return errtype_p;};
