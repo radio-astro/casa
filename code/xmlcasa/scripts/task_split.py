@@ -90,6 +90,13 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     if timebin == '0s':
         timebin = '-1s'
 
+    # MSStateGram is picky ('CALIBRATE_WVR.REFERENCE, OBSERVE_TARGET_ON_SOURCE'
+    # doesn't work, but 'CALIBRATE_WVR.REFERENCE,OBSERVE_TARGET_ON_SOURCE'
+    # does), and I don't want to mess with bison now.  A .upper() might be a
+    # good idea too, but the MS def'n v.2 does not say whether OBS_MODE should
+    # be case-insensitive.
+    intent = intent.replace(' ', '')
+
     if '^' in spw:
         casalog.post("The interpretation of ^n in split's spw strings has changed from 'average n' to 'skip n' channels!", 'WARN')
         casalog.post("Watch for Slicer errors", 'WARN')
