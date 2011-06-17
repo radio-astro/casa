@@ -2045,7 +2045,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
           const ::casac::variant& uvrange,    const std::string&      taql,
           const std::string&      whichcol,   const ::casac::variant& tileShape,
           const ::casac::variant& subarray,   const std::string&      combine,
-          const std::string& correlation)
+          const std::string& correlation,     const std::string&      intent)
 {
   Bool rstat(False);
   try {
@@ -2059,6 +2059,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
 
     String t_antenna = toCasaString(antenna);
     String t_scan    = toCasaString(scan);
+    String t_intent  = toCasaString(intent);
     String t_uvrange = toCasaString(uvrange);
     String t_taql(taql);
     const String t_subarray = toCasaString(subarray);
@@ -2067,7 +2068,8 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
     //  t_correlation = "*";   // * doesn't work.
      
     if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
-			      t_taql, Vector<Int>(step), t_subarray, t_correlation)){
+			      t_taql, Vector<Int>(step), t_subarray, t_correlation,
+                              t_intent)){
       *itsLog << LogIO::SEVERE
 	      << "Error selecting data."
 	      << LogIO::POST;

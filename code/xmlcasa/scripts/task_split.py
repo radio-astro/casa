@@ -4,8 +4,8 @@ from taskinit import casalog, mstool, qa, tbtool
 from update_spw import update_spwchan
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
-          timebin, timerange, scan, array, uvrange, correlation,
-          combine, keepflags):
+          timebin, timerange, scan, intent, array, uvrange,
+          correlation, combine, keepflags):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -43,6 +43,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                  timerange='< ddd/HH:MM:SS.sss'
                  timerange='> ddd/HH:MM:SS.sss'
     scan -- Scan numbers to select.
+            default '' (all).
+    intent -- Scan intents to select.
             default '' (all).
     array -- (Sub)array IDs to select.     
              default '' (all).
@@ -153,7 +155,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                    whichcol=datacolumn,
                    scan=scan,          uvrange=uvrange,
                    combine=combine,
-                   correlation=correlation)
+                   correlation=correlation, intent=intent)
         
         # The selection was already made, so blank them before time averaging.
         field = ''
@@ -164,6 +166,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         timerange = ''
         datacolumn = 'all'
         scan = ''
+        intent = ''
         uvrange = ''
 
         myms.close()
@@ -183,7 +186,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              scan=scan,           uvrange=uvrange,
              combine=combine,
              correlation=correlation,
-             taql=taqlstr)
+             taql=taqlstr, intent=intent)
     myms.close()
 
     if do_both_chan_and_time_mod:

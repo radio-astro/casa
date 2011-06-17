@@ -140,7 +140,8 @@ class SubMS
 		   const String& baseline="", const String& scan="",
                    const String& uvrange="", const String& taql="", 
 		   const Vector<Int>& step=Vector<Int> (1,1),
-		   const String& subarray="", const String& correlation="");
+		   const String& subarray="", const String& correlation="",
+                   const String& intent="");
 
   // This older version does not return a success value, and does need nchan,
   // start, and step.  It is used elsewhere (i.e. ImagerMultiMS).
@@ -555,7 +556,10 @@ class SubMS
        //  			// vary with row number.
        antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
-  String scanString_p, uvrangeString_p, taqlString_p;
+  String scanString_p,          // Selects scans by #number#.  Historically named.
+         intentString_p,        // Selects scans by string.  scanString_p was taken.
+         uvrangeString_p,
+         taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
   String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?

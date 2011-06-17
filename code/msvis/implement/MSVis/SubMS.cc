@@ -110,6 +110,7 @@ namespace casa {
     antennaSel_p(False),
     timeBin_p(-1.0),
     scanString_p(""),
+    intentString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
     timeRange_p(""),
@@ -128,6 +129,7 @@ namespace casa {
     antennaSel_p(False),
     timeBin_p(-1.0),
     scanString_p(""),
+    intentString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
     timeRange_p(""),
@@ -471,7 +473,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
                           const String& baseline, const String& scan,
                           const String& uvrange, const String& taql,
                           const Vector<Int>& step, const String& subarray,
-                          const String& correlation)
+                          const String& correlation, const String& intent)
   {
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
     Bool  ok;
@@ -498,6 +500,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
       selectAntenna(antid, antstr);
     }
     scanString_p    = scan;
+    intentString_p  = intent;
     uvrangeString_p = uvrange;
     taqlString_p    = taql;
 
@@ -1032,6 +1035,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
     thisSelection.setUvDistExpr(uvrangeString_p);
     thisSelection.setScanExpr(scanString_p);
+    thisSelection.setStateExpr(intentString_p);
     if(arrayExpr_p != "")
       thisSelection.setArrayExpr(arrayExpr_p);
     if(corrString_p != "")

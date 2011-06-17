@@ -2794,6 +2794,11 @@ for i in range(len(tcoord)):
      <description>Limit data to specific correlations (LL, XX, LR, XY, etc.).</description>
      <value></value>
      </param>
+
+     <param type="string" direction="in" name="intent">
+     <description>Only use the requested scan intents.</description>
+     <value></value>
+     </param>
   </input>
   <returns type="bool"/>
 
