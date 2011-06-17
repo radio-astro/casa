@@ -136,8 +136,7 @@ Bool FITSErrorImage::doGetSlice(Array<Float>& buffer,
 	buffer.putStorage(pBuffer, deletePtrM);
 
 	return False;                            // Not a reference
-} 
-   
+}
 
 void FITSErrorImage::doPutSlice (const Array<Float>&, const IPosition&,
                             const IPosition&)
@@ -145,35 +144,6 @@ void FITSErrorImage::doPutSlice (const Array<Float>&, const IPosition&,
 	// the image is read-only
 	throw (AipsError ("FITSErrorImage::putSlice - "
 			"is not possible as FITSErrorImage is not writable"));
-}
-
-
-Bool FITSErrorImage::doGetMaskSliceII (Array<Bool>& mask, const Slicer& section)
-{
-   IPosition shp = section.length();
-   if (!mask.shape().isEqual(shp)) mask.resize(shp);
-   if (!buffer_p.shape().isEqual(shp)) buffer_p.resize(shp);
-
-   doGetSlice(buffer_p, section);
-
-   //
-   Bool deletePtrD;
-   const Float* pData = buffer_p.getStorage(deletePtrD);
-   Bool deletePtrM;
-   Bool* pMask = mask.getStorage(deletePtrM);
-   //
-   for (uInt i=0; i<mask.nelements(); i++) {
-
-   // Blanked values are NaNs.
-	   pMask[i] = True;
-	   if (isNaN(pData[i])) pMask[i] = False;
-   }
-   //
-   buffer_p.freeStorage(pData, deletePtrD);
-   mask.putStorage(pMask, deletePtrM);
-   //
-
-   return False;
 }
 
 void FITSErrorImage::setupMask()

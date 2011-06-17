@@ -1,4 +1,4 @@
-//# FITSImgParser.h: Class for parsing multi-extension FITS images
+//# FITSImgParser.cc: Class for parsing multi-extension FITS images
 //# Copyright (C) 2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FITSImage.cc 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: FITSImgParser.cc  mkuemmel $
 
 #include <images/Images/FITSImgParser.h>
 
@@ -41,9 +41,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 FITSImgParser::FITSImgParser (const String& name)
 : name_p      (name),
-  numhdu_p    (0)
+  numhdu_p    (0),
+  hasmeasurement_p(False),
+  dataext_p(-1),
+  errorext_p(-1)
+
 {
    setup();
+   find_measurement();
 }
  
 FITSImgParser::~FITSImgParser()
@@ -93,6 +98,32 @@ String FITSImgParser::get_ext_list(const String &delimiter)
 			bigString += extensions_p[index].get_extexpr() + delimiter;
 	}
 	return bigString;
+}
+
+Bool FITSImgParser::find_measurement(void)
+{
+	Int dataext_num;
+	Int errext_num;
+
+	// define the expected extension
+	FITSExtInfo data_ext(fitsname(True), -1, "SCI", 1, True);
+	FITSExtInfo err_ext(fitsname(True), -1, "ERR", 1, True);
+
+	// find the extension index
+	dataext_num = get_index(data_ext);
+	errext_num  = get_index(err_ext);
+
+	// check for a data and an error extension
+	if (dataext_num > - 1 && errext_num > -1)
+	{
+		// set the flag and store the indices
+		hasmeasurement_p = True;
+		dataext_p        = dataext_num;
+		errorext_p       = errext_num;
+	}
+
+	// always return true
+	return True;
 }
 
 void FITSImgParser::setup(void)
