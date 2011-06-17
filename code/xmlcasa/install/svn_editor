@@ -3,9 +3,18 @@
 # Inspired by the old setsvneditor.sh, a desire to make it less picky about
 # editors, and 8/25/2006 post by Bart Robinson to users@subversion.tigris.org. 
 
-casaroot=`echo $CASAPATH | awk '{print $1}'`
+if [ -n "$CASABRANCH_PATH" ]; then
 
-svntemplate=$casaroot/code/xmlcasa/install/svntemplate
+    svntemplate=$CASABRANCH_PATH
+
+else
+
+    casaroot=`echo $CASAPATH | awk '{print $1}'`
+    svntemplate=$casaroot
+
+fi
+
+svntemplate=$svntemplate/code/xmlcasa/install/svntemplate
 
 if [ ! -f $svntemplate ] ; then
     echo "Could not find ${svntemplate}.  Set CASAPATH."

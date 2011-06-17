@@ -8,16 +8,23 @@
 #ifndef UTILJ_H_
 #define UTILJ_H_
 
+// Casa Includes
+
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
+
+// C++ and System Includes
+
 #include <cassert>
 #include <cstdarg>
 #include <cstdlib>
 #include <sys/time.h>
 #include <sys/resource.h>
-#include <algorithm> 
+// STL Includes
+
 #include <functional>
+#include <iterator>
 #include <map>
 #include <set>
 #include <vector>
@@ -36,7 +43,7 @@
 #if defined (NDEBUG)
 #    define Throw(m) \
     { AipsError anAipsError ((m), __FILE__, __LINE__);\
-      toStdErr (anAipsError.what());\
+      toStdError (anAipsError.what());\
       throw anAipsError; }
 #else
 #    define Throw(m) throw AipsError ((m), __FILE__, __LINE__)
@@ -103,6 +110,32 @@ public:
     const F & operator() (const std::pair<F,S> & p) { return p.first; }
 };
 
+template <typename Container, typename Element>
+Container
+fillContainer (Element sentinel, ...)
+{
+    using namespace std;
+
+    Container container;
+
+    va_list vaList;
+    va_start (vaList, sentinel);
+
+    Element e = va_arg (vaList, Element);
+
+    insert_iterator<Container> i = inserter (container, container.begin());
+
+    while (e != sentinel){
+
+        * i ++ = e;
+
+        e = va_arg (vaList, Element);
+    }
+
+    va_end (vaList);
+
+    return container;
+}
 
 template <typename F, typename S>
 FirstFunctor<F,S> firstFunctor () { return FirstFunctor<F,S> ();}
@@ -305,7 +338,7 @@ public:
         int failed = getrusage (RUSAGE_THREAD, & usage);
         assert (! failed);
 
-        Double cpu = toSeconds (usage.ru_utime) + toSeconds (usage.ru_stime);
+        Double cpu = ! failed ? toSeconds (usage.ru_utime) + toSeconds (usage.ru_stime) : 0;
 #else
         Double cpu = 0;
 #endif

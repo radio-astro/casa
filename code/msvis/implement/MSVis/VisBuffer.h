@@ -321,12 +321,12 @@ public:
         return This->frequency();
     }
 
-    virtual Vector<Double>& lsrFrequency() {
-        return lsrFrequencyOK_p ? lsrFrequency_p : fillLSRFreq();
-    }
-    virtual const Vector<Double>& lsrFrequency() const {
-        return This->lsrFrequency();
-    }
+//    virtual Vector<Double>& lsrFrequency() {
+//        return lsrFrequencyOK_p ? lsrFrequency_p : fillLSRFreq();
+//    }
+//    virtual const Vector<Double>& lsrFrequency() const {
+//        return This->lsrFrequency();
+//    }
 
 
     //the following method is to convert the observed frequencies
@@ -678,7 +678,7 @@ public:
 protected:
 
     virtual Bool checkMSId();
-    virtual void checkVisIter (const char * func, const char * file, int line) const;
+    virtual void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
     virtual void copyCache (const VisBuffer & other);
 
 private:
@@ -689,27 +689,39 @@ private:
     template<typename T>
     static void cacheCopyArray (Bool & newStatus, Bool oldStatus, T & newCache,
                                 const T & oldCache) {
+
+        // Leave things unchanged if the old status is false.  This will often
+        // leave the value with an empty data structure and an OK status which
+        // is needed in many cases.
+        //
         // For copying Array<T> derived objects since the assign operator
         // doesn't work for these.
 
-        newStatus = oldStatus;
-        if (newStatus) {
+        if (oldStatus) {
+
+            newStatus = True;
             newCache.assign (oldCache);
         }
     }
 
     template<typename T>
     static void cacheCopyNormal (Bool & newStatus, Bool oldStatus, T & newCache, const T & oldCache) {
+
+        // Leave things unchanged if the old status is false.  This will often
+        // leave the value with an empty data structure and an OK status which
+        // is needed in many cases.
+        //
         // For copying "normal" cache status and values.  Normal means
         // the assign operator works (which it doesn't for classes based on Array<T>)
-        newStatus = oldStatus;
-        if (newStatus) {
+
+        if (oldStatus) {
+
+            newStatus = True;
             newCache = oldCache;
         }
     }
 
     virtual void setAllCacheStatuses (bool status);
-
 
     virtual Bool nonCanonCorr(); // Are correlations in non-canonical order?
 
@@ -769,7 +781,7 @@ private:
     virtual Cube<Float>& fillFloatDataCube();
     virtual Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
     virtual Matrix<Float>& fillImagingWeight();
-    virtual Vector<Double>& fillLSRFreq();
+    //virtual Vector<Double>& fillLSRFreq();
     virtual Int & fillnChannel();
     virtual Int & fillnCorr();
     virtual Int & fillnRow();
@@ -818,7 +830,7 @@ private:
     Bool floatDataCubeOK_p;
     Bool frequencyOK_p;
     Bool imagingWeightOK_p;
-    Bool lsrFrequencyOK_p;
+    /////Bool lsrFrequencyOK_p;
     Bool modelVisCubeOK_p;
     Bool modelVisibilityOK_p;
     Bool msOK_p;
@@ -873,7 +885,7 @@ private:
     Cube<Float> floatDataCube_p;
     Vector<Double> frequency_p;
     Matrix<Float> imagingWeight_p;
-    Vector<Double> lsrFrequency_p;
+    //Vector<Double> lsrFrequency_p;
     Cube<Complex> modelVisCube_p;
     Matrix<CStokesVector> modelVisibility_p;
     Int nChannel_p;

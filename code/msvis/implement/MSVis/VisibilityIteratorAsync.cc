@@ -137,6 +137,7 @@ ROVisibilityIteratorAsync::~ROVisibilityIteratorAsync ()
     if (! vbaWrapperStack_p.empty()){
         VisBufferAsync * vba = vbaWrapperStack_p.top()->releaseVba ();
         assert (vba == visBufferAsync_p);
+        vba = NULL; // prevent warning when in non425debug build
         delete visBufferAsync_p;
     }
     else if (visBufferAsync_p != NULL){
@@ -424,6 +425,7 @@ ROVisibilityIteratorAsync::detachVisBuffer (VisBuffer & vb0)
 
         VisBufferAsync * vba = vb->releaseVba ();
         Assert (vba == visBufferAsync_p);
+        vba = NULL; // prevent warning in nondebug builds
 
         vbaWrapperStack_p.pop ();
 

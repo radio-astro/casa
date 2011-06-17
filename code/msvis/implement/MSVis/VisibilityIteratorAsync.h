@@ -28,7 +28,8 @@ class VlaDatum;
 namespace asyncio {
 
 
-typedef enum   {Ant1,
+typedef enum   {Unknown=-1,
+                Ant1,
                 Ant2,
                 ArrayId,
                 Channel,
@@ -50,7 +51,6 @@ typedef enum   {Ant1,
                 FlagRow,
                 Freq,
                 ImagingWeight,
-                LSRFreq,
                 Model,
                 ModelCube,
                 NChannel,

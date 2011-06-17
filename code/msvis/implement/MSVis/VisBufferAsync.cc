@@ -199,16 +199,16 @@ VisBufferAsync::azel0(Double time) const
 }
 
 void
-VisBufferAsync::checkVisIter (const char * func, const char * file, int line) const
+VisBufferAsync::checkVisIter (const char * func, const char * file, int line, const char * extra) const
 {
     // This is called from a VisBuffer fill method.  Throw an error if the this is not
     // part of the VLAT filling operation or if there is not visibility iterator attached
 
     if (! isFilling_p || visIter_p == NULL){
-        Log (1, "VisBufferAsync: request for column not in prefetched set (in call to %s)\n)",
-             func);
+        Log (1, "VisBufferAsync: request for column not in prefetched set (in call to %s (%s))\n)",
+             func, extra);
         throw AipsErrorTrace ("VisBufferAsync: request for column not in prefetched set (in call to "
-                              + String (func) + ")", file, line);
+                              + String (func) + String (extra) + ")", file, line);
     }
 }
 
@@ -239,7 +239,7 @@ VisBufferAsync::clear ()
     if (antenna2OK_p)
         antenna2_p.resize();
     chanAveBounds_p.resize();
-    chanFreqs_p = NULL;
+    //chanFreqs_p = NULL;
     if (channelOK_p)
         channel_p.resize();
     if (cjonesOK_p)
@@ -272,8 +272,8 @@ VisBufferAsync::clear ()
         frequency_p.resize();
     if (imagingWeightOK_p)
         imagingWeight_p.resize();
-    if (lsrFrequencyOK_p)
-        lsrFrequency_p.resize();
+//    if (lsrFrequencyOK_p)
+//        lsrFrequency_p.resize();
     measurementSet_p = NULL;
     if (modelVisCubeOK_p)
         modelVisCube_p.resize();
@@ -281,7 +281,6 @@ VisBufferAsync::clear ()
         modelVisibility_p.resize();
     delete msColumns_p;
     msColumns_p = NULL;
-    msID_p = -1;
     nAntennas_p = -1;
     nCoh_p = -1;
     phaseCenter_p = MDirection ();
@@ -357,7 +356,6 @@ void
 VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
 {
 
-    chanFreqs_p = other.chanFreqs_p;
     channelGroupNumber_p = other.channelGroupNumber_p;
     channelIncrement_p = other.channelIncrement_p;
     channelStart_p = other.channelStart_p;
@@ -371,9 +369,8 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     delete msColumns_p; // kill the current one
     msColumns_p = NULL;
 
-    msID_p = other.msID_p;
     nAntennas_p = other.nAntennas_p;
-    obsMFreqTypes_p = other.obsMFreqTypes_p;
+//    obsMFreqTypes_p = other.obsMFreqTypes_p;
     observatoryPosition_p = other.observatoryPosition_p;
     phaseCenter_p = other.phaseCenter_p;
     receptor0Angle_p = other.receptor0Angle_p;
@@ -541,7 +538,7 @@ VisBufferAsync::fillDirection2()
 
     unsharedCopyDirectionVector (direction2_p);
 
-    return direction2 ();
+    return direction2_p;
 }
 
 MDirection &
@@ -557,7 +554,6 @@ VisBufferAsync::fillPhaseCenter()
 
     return phaseCenter_p;
 }
-
 
 Double
 VisBufferAsync::hourang(Double time) const
@@ -587,43 +583,23 @@ VisBufferAsync::invalidateAsync ()
     VisBuffer::invalidate ();
 }
 
-Vector<Double>&
-VisBufferAsync::lsrFrequency ()
-{
-    return VisBuffer::lsrFrequency();
-}
-
-const Vector<Double>&
-VisBufferAsync::lsrFrequency () const
-{
-    return VisBuffer::lsrFrequency();
-}
-
-
 void
-VisBufferAsync::lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const
+VisBufferAsync::lsrFrequency (const Int& spw, Vector<Double>& freq, Bool& convert) const
 {
-
     if (velSelection_p) {
         freq.assign (lsrFrequency_p);
+        convert = False;
         return;
     }
 
-    // Calculate the values using stored information and the static calculation
-    // function provided by ROVI.
+    const ROArrayColumn <Double> & chanFreqs = msColumns().spectralWindow().chanFreq();
+    const ROScalarColumn<Int> & obsMFreqTypes= msColumns().spectralWindow().measFreqRef();
 
-    ROVisibilityIterator::lsrFrequency(spw,
-                                       freq,
-                                       convert,
-                                       channelStart_p,
-                                       channelWidth_p,
-                                       channelIncrement_p,
-                                       channelGroupNumber_p,
-                                       * chanFreqs_p,
-                                       * obsMFreqTypes_p,
-                                       mEpoch_p,
-                                       observatoryPosition_p,
-                                       phaseCenter_p);
+    MPosition obsPos = observatoryPosition_p;
+    MDirection dir = phaseCenter_p;
+
+    ROVisibilityIterator::lsrFrequency (spw, freq, convert, channelStart_p, channelWidth_p, channelIncrement_p,
+                                        channelGroupNumber_p, chanFreqs, obsMFreqTypes, mEpoch_p, obsPos, dir);
 }
 
 const ROMSColumns &
@@ -650,7 +626,7 @@ VisBufferAsync::msColumns() const
 Int
 VisBufferAsync::msId () const
 {
-    return msID_p;
+    return oldMSId_p;
 }
 
 Bool
@@ -743,22 +719,18 @@ VisBufferAsync::setFilling (Bool isFilling)
 }
 
 void
-VisBufferAsync::setLsrInfo (const Block<Int> & channelStart,
-                            const Block<Int> & channelWidth,
-                            const Block<Int> & channelIncrement,
-                            const Block<Int> & channelGroupNumber,
-                            const ROArrayColumn <Double> * chanFreqs,
-                            const ROScalarColumn<Int> * obsMFreqTypes,
+VisBufferAsync::setLsrInfo (const Block <Int> & channelGroupNumber,
+                            const Block <Int> & channelIncrement,
+                            const Block <Int> & channelStart,
+                            const Block <Int> & channelWidth,
                             const MPosition & observatoryPosition,
                             const MDirection & phaseCenter,
                             Bool velocitySelection)
 {
+    channelGroupNumber_p = channelGroupNumber;
+    channelIncrement_p = channelIncrement;
     channelStart_p = channelStart;
     channelWidth_p = channelWidth;
-    channelIncrement_p = channelIncrement;
-    chanFreqs_p = chanFreqs;
-    channelGroupNumber_p = channelGroupNumber;
-    obsMFreqTypes_p = obsMFreqTypes;
     observatoryPosition_p = unsharedCopyPosition (observatoryPosition);
     phaseCenter_p = unsharedCopyDirection (phaseCenter);
     velSelection_p = velocitySelection;
@@ -871,7 +843,6 @@ VisBufferAsync::setTopoFreqs (const Vector<Double> & lsrFreq, const Vector<Doubl
     lsrFrequency_p.assign (lsrFreq);
     selFreq_p.assign (selFreq);
 }
-
 
 void
 VisBufferAsync::setVisCube(Complex c)

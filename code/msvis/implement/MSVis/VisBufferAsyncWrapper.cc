@@ -620,12 +620,12 @@ VisBufferAsyncWrapper::fillImagingWeight ()
   return wrappedVba_p->fillImagingWeight ();
 }
 
-Vector<Double>&
-VisBufferAsyncWrapper::fillLSRFreq ()
-{
-  CheckWrap ();
-  return wrappedVba_p->fillLSRFreq ();
-}
+//Vector<Double>&
+//VisBufferAsyncWrapper::fillLSRFreq ()
+//{
+//  CheckWrap ();
+//  return wrappedVba_p->fillLSRFreq ();
+//}
 
 Int &
 VisBufferAsyncWrapper::fillnChannel ()
@@ -936,19 +936,19 @@ VisBufferAsyncWrapper::invalidate ()
   wrappedVba_p->invalidate ();
 }
 
-Vector<Double>&
-VisBufferAsyncWrapper::lsrFrequency ()
-{
-  CheckWrap ();
-  return wrappedVba_p->lsrFrequency ();
-}
-
-const Vector<Double>&
-VisBufferAsyncWrapper::lsrFrequency () const
-{
-  CheckWrap ();
-  return wrappedVba_p->lsrFrequency ();
-}
+//Vector<Double>&
+//VisBufferAsyncWrapper::lsrFrequency ()
+//{
+//  CheckWrap ();
+//  return wrappedVba_p->lsrFrequency ();
+//}
+//
+//const Vector<Double>&
+//VisBufferAsyncWrapper::lsrFrequency () const
+//{
+//  CheckWrap ();
+//  return wrappedVba_p->lsrFrequency ();
+//}
 
 void
 VisBufferAsyncWrapper::lsrFrequency (const Int & spw, Vector<Double>& freq, Bool & convert) const
