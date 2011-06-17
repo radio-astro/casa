@@ -642,6 +642,23 @@ class split_test_state(unittest.TestCase):
         om = tb.getcol('OBS_MODE')
         tb.close()
         check_eq(om, numpy.array(['OBSERVE_TARGET.UNSPECIFIED']))
+        tb.open(self.outms)
+        rec = {}
+        for c in ('ANTENNA1', 'ANTENNA2', 'DATA_DESC_ID', 'DATA',
+                  'SCAN_NUMBER', 'STATE_ID', 'TIME'):
+            rec[c] = tb.getcell(c, 0)
+        tb.close()
+        # Row 1330 in inpms is the first one with STATE_ID 0.
+        check_eq(rec, {'ANTENNA1': 0,
+                       'ANTENNA2': 1,
+                       'DATA': numpy.array([[287638.+0.j, 287638.+1.j,
+                                             287638.+2.j, 287638.+3.j],
+                                            [287638.+0.j, 287638.+1.j,
+                                             287638.+2.j, 287638.+3.j]]),
+                       'DATA_DESC_ID': 0,
+                       'SCAN_NUMBER': 38,
+                       'STATE_ID': 0,
+                       'TIME': 4785966752.5})
 
 class split_test_cavcd(unittest.TestCase):
     """
