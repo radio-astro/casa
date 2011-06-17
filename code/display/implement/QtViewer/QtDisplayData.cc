@@ -41,6 +41,8 @@
 #include <casa/OS/Path.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/FITSImage.h>
+#include <images/Images/FITSQualityImage.h>
+#include <images/Images/FITSImgParser.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageOpener.h>
@@ -154,7 +156,13 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 
   
 	  case ImageOpener::FITS: {
-	    im_ = new FITSImage(path);
+		  FITSImgParser fip = FITSImgParser(tmp_path);
+		  if (fip.has_measurement() && !tmp_path.compare(path)) {
+			  im_  = new FITSQualityImage(tmp_path, fip.get_dataext(), fip.get_errorext());
+		  }
+		  else {
+			  im_ = new FITSImage(path);
+		  }
 	    break;  }
 
 
@@ -221,7 +229,7 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
         if(im_!=0) {
           if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
           else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2],
-					        fixedPos);  }
+					        fixedPos);}
 	else {
           if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
           else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1],
@@ -266,7 +274,7 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 
       
       if(im_!=0) im_->unlock();
-      else      cim_->unlock();  }
+      else      cim_->unlock(); }
 	// Needed (for unknown reasons) to avoid
 	// blocking other users of the image file....
 	// (11/07 -- locking mode changed; may no longer be necessary...).
@@ -572,7 +580,6 @@ Record QtDisplayData::getOptions() {
       if(fldname.before(5)=="wedge" && fldname!="wedgelabelcharsize") {
         opts.mergeField(cbopts, i, Record::OverwriteDuplicates);
 	opts.rwSubRecord(fldname).define("dlformat", fldname);  }  }  }
-
 
   return opts;  }
 
@@ -974,7 +981,7 @@ Bool QtDisplayData::setCMBrtCont(const Vector<Float>& params) {
 
 
 void QtDisplayData::unlock( ) {
-    if ( im_ != 0 ) im_->unlock( );
+    if ( im_ != 0 )  im_->unlock( );
     if ( cim_ != 0 ) cim_->unlock( );
 }
 
@@ -1792,7 +1799,28 @@ String QtDisplayData::trackingInfo(const WCMotionEvent& ev) {
     
     stringstream ss;
     ss << dd_->showValue(ev.world());
-    
+    /*
+    if (eim_) {
+
+    	PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd_);
+    	if(padd) {
+    		Vector<Double> fullWorld, fullPixel;
+
+    		// determine the full position
+    		if (padd->getFullCoord(fullWorld, fullPixel, ev.world())){
+
+    			// convert to a pixel position
+    			Int length = fullPixel.shape()(0);
+        		IPosition ipos(length);
+        		for (Int i = 0; i < length; i++)
+        			ipos(i) = Int(fullPixel(i) + 0.5);
+
+        	// add the error value
+        	ss << " +- " << eim_->operator()(ipos);
+        	}
+    	}
+    }
+*/
     // if the first string is shorter than a typical value, add spaces...
     if(ss.tellp() < 23) while(ss.tellp() < 23) ss << ' ';
     // ...otherwise add a tab
