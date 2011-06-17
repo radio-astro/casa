@@ -63,7 +63,13 @@ class pimager():
             startsel.append([])
             nchansel.append({})
 
-        tb.open(msname+"/SPECTRAL_WINDOW")
+        tb.open(msname)
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=msname+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         channum=tb.getcol('NUM_CHAN')
         nspw=tb.nrows()
         if(len(spwids)==0):
@@ -164,8 +170,13 @@ class pimager():
             spwsel.append([])
             startsel.append([])
             nchansel.append([])
-
-        tb.open(msname+"/SPECTRAL_WINDOW")
+        tb.open(msname)
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=msname+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         channum=tb.getcol('NUM_CHAN')
         nspw=tb.nrows()
         if(len(spwids)==0):
@@ -435,9 +446,13 @@ class pimager():
         launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'", robust='+str(robust)+ ', stokes="'+stokes+'")'
         print 'launch command', launchcomm
         c.pgc(launchcomm);
-
-
-        tb.open(msname+"/SPECTRAL_WINDOW")
+        tb.open(msname)
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=msname+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         #freqs=tb.getcol('CHAN_FREQ')
         allfreq=tb.getcol('CHAN_FREQ', spwids[0],1)
         for k in range(1, len(spwids)) :
@@ -1194,6 +1209,7 @@ class pimager():
                 self.engineinfo[k]={}
             self.engineinfo[k]['msnames']=[]
         t_msnames=copy.deepcopy(msnames)
+        t_msnames.reverse()
         counter=0
         for k in range(len(msnames)):
             self.engineinfo[counter]['msnames'].append(t_msnames.pop())
@@ -1536,7 +1552,7 @@ class pimager():
                         if(myrec['startsel'][elspw] < channel[elspw][1]):
                             myrec['startsel'][elspw]=channel[elspw][1]
                         if((myrec['nchansel'][elspw] > (channel[elspw][2]- myrec['startsel'][elspw]))):
-                            myrec['nchansel'][elspw]=(channel[elspw][2]- myrec['startsel'][elspw])
+                            myrec['nchansel'][elspw]=(channel[elspw][2]- myrec['startsel'][elspw])+1
                                 
             retfreqmax=freqrange[1] if (freqrange[1] > retfreqmax) else retfreqmax
             retfreqmin=freqrange[0] if (freqrange[0] <  retfreqmin) else retfreqmin
@@ -1687,7 +1703,13 @@ class pimager():
         for msid in range(len(hostnames)): 
             msname=msnames[msid]
             myrec=hostdata.values()[msid]
-            tb.open(msname+"/SPECTRAL_WINDOW")
+            tb.open(msname)
+            spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+            if(len(spectable) ==2):
+                spectable=spectable[1]
+            else:
+                spectable=msname+"/SPECTRAL_WINDOW"
+            tb.open(spectable)
             #freqs=tb.getcol('CHAN_FREQ')
             for k in range(len(myrec['spwids'])) :
                 allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ',myrec['spwids'][k],1))
