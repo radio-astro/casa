@@ -697,9 +697,10 @@ private:
         // For copying Array<T> derived objects since the assign operator
         // doesn't work for these.
 
+        newStatus = oldStatus;
+
         if (oldStatus) {
 
-            newStatus = True;
             newCache.assign (oldCache);
         }
     }
@@ -714,9 +715,10 @@ private:
         // For copying "normal" cache status and values.  Normal means
         // the assign operator works (which it doesn't for classes based on Array<T>)
 
+        newStatus = oldStatus;
+
         if (oldStatus) {
 
-            newStatus = True;
             newCache = oldCache;
         }
     }
