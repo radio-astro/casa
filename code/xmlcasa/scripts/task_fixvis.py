@@ -119,7 +119,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     theoldref = tbt.getcol('PhaseDir_Ref')[fld]
                     refcodestrlist = ckwdict['TabRefTypes'].tolist()
                     refcodelist = ckwdict['TabRefCodes'].tolist()
-                    if not (refcodelist.has_key(theoldref)):
+                    if not (theoldref in refcodelist):
                         casalog.post('Invalid refcode in FIELD column PhaseDir_Ref: '+str(theoldref), 'SEVERE')
                         return False
                     tindex = refcodelist.index(theoldref)
@@ -129,7 +129,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     theoldrefstr = tmprec['Ref']
                 tbt.close()
 
-                if not (theoldref<32 and theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
+                if (theoldref<32 and not theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
                     casalog.post('Refcode for FIELD column PHASE_DIR is valid but not supported here: '+theoldrefstr, 'SEVERE')
                     return False                            
 
@@ -155,8 +155,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                         casalog.post("Interpreting it as pair of offsets in (RA,DEC) ...", 'NORMAL')
 
                         if (isvarref and theoldref>31):
-                            casalog.post('Refcode in FIELD column PhaseDir_Ref is a solar system object: '+theoldrefstr, 'WARN')
-                            casalog.post('Will use the nominal entry in the PHASE_DIR column to calculate new phase center', 'WARN')
+                            casalog.post('*** Refcode in FIELD column PhaseDir_Ref is a solar system object: '+theoldrefstr, 'NORMAL')
+                            casalog.post('*** Will use the nominal entry in the PHASE_DIR column to calculate new phase center', 'NORMAL')
                             
                         qra = qa.quantity(theolddir[0], 'rad') 
                         qdec = qa.quantity(theolddir[1], 'rad')
@@ -265,13 +265,13 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             casalog.post("FIELD table phase center direction reference frame for field "+str(fld)
                                          +" set to "+str(thenewref)+" ("+thenewrefstr+")", 'NORMAL')
                             if not (thenewref==theoldref2 and thenewref==theoldref3):
-                                casalog.post("The three FIELD table direction reference frame entries for field "+str(fld)
+                                casalog.post("*** The three FIELD table direction reference frame entries for field "+str(fld)
                                              +" will not be identical in the output data: "
-                                             +str(thenewref)+", "+str(theoldref2)+", "+str(theoldref3), 'WARN')
+                                             +str(thenewref)+", "+str(theoldref2)+", "+str(theoldref3), 'NORMAL')
                                 if not (theoldref==theoldref2 and theoldref==theoldref3):
-                                    casalog.post("The three FIELD table direction reference frame entries for field "+str(fld)
+                                    casalog.post("*** The three FIELD table direction reference frame entries for field "+str(fld)
                                                  +" were not identical in the input data either: "
-                                                 +str(theoldref)+", "+str(theoldref2)+", "+str(theoldref3), 'WARN')
+                                                 +str(theoldref)+", "+str(theoldref2)+", "+str(theoldref3), 'NORMAL')
                         else:
                             casalog.post("FIELD table direction reference frame entries for field "+str(fld)
                                          +" unchanged.", 'NORMAL')
