@@ -915,7 +915,7 @@ namespace casa { //# name space casa begins
     return rg->tab_p;
   }
 
-  Vector<uInt> RegionManager::_setSpectralRanges(
+  Vector<uInt> RegionManager::setSpectralRanges(
 	String specification, uInt& nSelectedChannels, const uInt nChannels
   ) const {
       LogOrigin origin("ImageInputProcessor", __FUNCTION__);
@@ -930,12 +930,11 @@ namespace casa { //# name space casa begins
 	  specification.trim();
 	  specification.upcase();
 
-	  uInt nchan = nChannels;
 	  if (specification.empty() || specification == ALL) {
 		  ranges.resize(2);
 		  ranges[0] = 0;
-		  ranges[1] = nchan - 1;
-          nSelectedChannels = nchan;
+		  ranges[1] = nChannels - 1;
+          nSelectedChannels = nChannels;
 		  return ranges;
 	  }
 
@@ -1007,14 +1006,14 @@ namespace casa { //# name space casa begins
 						  << " is not an integer in " << parts[i]
 						                                       << LogIO::EXCEPTION;
 			  }
-			  max = nchan - 1;
+			  max = nChannels - 1;
 			  min = String::toInt(mins);
 			  if(! parts[i].matches(regexGTEq)) {
 				  min++;
 			  }
-			  if (min > nchan - 1) {
+			  if (min > nChannels - 1) {
 				  *itsLog << "Min channel cannot be greater than the (zero-based) number of channels ("
-						  << nchan - 1 << ") in the image" << LogIO::EXCEPTION;
+						  << nChannels - 1 << ") in the image" << LogIO::EXCEPTION;
 			  }
 		  }
 		  else {
@@ -1025,14 +1024,13 @@ namespace casa { //# name space casa begins
 			  *itsLog << "Min channel " << min << " cannot be greater than max channel "
 					  << max << " in " << parts[i] << LogIO::EXCEPTION;
 		  }
-		  else if (max >= nchan) {
+		  else if (max >= nChannels) {
 			  *itsLog << "Zero-based max channel " << max
 					  << " must be less than the total number of channels ("
-					  << nchan << ") in the channel specification " << parts[i] << LogIO::EXCEPTION;
+					  << nChannels << ") in the channel specification " << parts[i] << LogIO::EXCEPTION;
 		  }
 		  ranges[2*i] = min;
 		  ranges[2*i + 1] = max;
-
 	  }
 	  Vector<uInt> consolidatedRanges = consolidateAndOrderRanges(ranges);
 	  nSelectedChannels = 0;
@@ -1344,7 +1342,7 @@ namespace casa { //# name space casa begins
   ) const {
 	  Int specAxisNumber = itsCSys->spectralAxisNumber();
 	  uInt nTotalChannels = specAxisNumber >= 0 ? imShape[specAxisNumber] : 0;
-	  Vector<uInt> chanEndPts = _setSpectralRanges(
+	  Vector<uInt> chanEndPts = setSpectralRanges(
 			  chans, nSelectedChannels, nTotalChannels
 	  );
 	  Int polAxisNumber = itsCSys->polarizationAxisNumber();
