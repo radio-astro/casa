@@ -256,6 +256,14 @@ public:
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
   );
 
+  // variant on previous methods where caller doesn't have to worry
+  // about creating pointers it does not need returned.
+  static SubImage<T> createSubImage(
+      ImageInterface<T>& inImage, const Record& region,
+      const String& mask, LogIO *os, Bool writableIfPossible,
+      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
+  );
+
 private:
   // Set the coordinates.
   // It removes world axes if the subimage has axes removed.
