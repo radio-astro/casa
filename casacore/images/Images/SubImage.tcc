@@ -35,6 +35,10 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 
+// debug only
+#include <images/Images/PagedImage.h>
+
+
 #include <casa/Arrays.h>
 
 
@@ -235,10 +239,11 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 	const String& mask, LogIO *os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
 ) {
-// The ImageRegion pointers must be null on entry
-// either pointer may be null on exit
-	SubImage<T> subImage;
+	// The ImageRegion pointers must be null on entry
+	// either pointer may be null on exit
 	outMask = ImageRegion::fromLatticeExpression(mask);
+
+	SubImage<T> subImage;
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
@@ -271,6 +276,21 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 		}
 	}
 	return subImage;
+}
+
+template<class T> SubImage<T> SubImage<T>::createSubImage(
+	ImageInterface<T>& inImage, const Record& region,
+	const String& mask, LogIO *os,
+	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
+) {
+	ImageRegion *pRegion = 0;
+	ImageRegion *pMask = 0;
+	return createSubImage(
+		pRegion, pMask, inImage, region,
+		mask, os, writableIfPossible, axesSpecifier
+	);
+	delete pRegion;
+	delete pMask;
 }
 
 template <class T>
