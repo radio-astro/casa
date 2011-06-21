@@ -1,6 +1,6 @@
 import os, re
 import string
-from taskinit import casalog, mstool, qa, tbtool
+from taskinit import casalog, mstool, qa, tbtool, write_history
 from update_spw import update_spwchan
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
@@ -277,27 +277,9 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                 mytb.close()
     
     # Write history to output MS, not the input ms.
-    isopen = False
-    try:
-        myms.open(outputvis, nomodify=False)
-        isopen = True
-        myms.writehistory(message='taskname=split', origin='split')
-        # Write the arguments.
-        for arg in split.func_code.co_varnames[:split.func_code.co_argcount]:
-            msg = "%-11s = " % arg
-            val = eval(arg)
-            if type(val) == str:
-                msg += '"'
-            msg += str(val)
-            if type(val) == str:
-                msg += '"'
-            myms.writehistory(message=msg, origin='split')
-    except Exception, instance:
-        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
-                     'SEVERE')
-        retval = False
-    finally:
-        if isopen:
-            myms.close()
+    param_names = split.func_code.co_varnames[:split.func_code.co_argcount]
+    param_vals = [eval(p) for p in param_names]   
+    retval &= write_history(myms, outputvis, 'split', param_names, param_vals,
+                            casalog)
 
     return retval
