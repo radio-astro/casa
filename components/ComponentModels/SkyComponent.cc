@@ -285,7 +285,10 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 		delta = fabs(dra.getValue());
 	}
 	else {
-		delta = sqrt(dra.getValue()*dra.getValue() + ddec.getValue()*ddec.getValue() );
+		delta = sqrt(
+			dra.getValue()*dra.getValue()
+			+ ddec.getValue()*ddec.getValue()
+		);
 	}
 
 	// Add error estimates to ra/dec strings if an error is given (either >0)
@@ -311,14 +314,11 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 
 	if (coordinates) {
 		Vector<Double> world(coordinates->nWorldAxes(), 0), pixel(coordinates->nPixelAxes(), 0);
-        coordinates->toWorld(world, pixel);
 		world[0] = longitude.getValue();
 		world[1] = lat.getValue();
 		// TODO do the pixel computations in another method
 		if (coordinates->toPixel(pixel, world)) {
-			const DirectionCoordinate dCoord = coordinates->directionCoordinate(
-				coordinates->findCoordinate(CoordinateSystem::DIRECTION)
-			);
+			const DirectionCoordinate dCoord = coordinates->directionCoordinate();
 			Vector<Double> increment = dCoord.increment();
 			Double raPixErr = dra.getValue("rad")/increment[0];
 			Double decPixErr = ddec.getValue("rad")/increment[1];
@@ -336,10 +336,6 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 	}
 	return position.str();
 }
-
-// Local Variables: 
-// compile-command: "gmake SkyComponent"
-// End: 
 
 } //# NAMESPACE CASA - END
 
