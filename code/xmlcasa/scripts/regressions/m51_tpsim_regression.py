@@ -95,37 +95,24 @@ m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # reference statistic values for simulated image
-#rev.12787
-refstats = { 'sum': 15834.,
-             'max': 1.6246,
-             'min': -0.52885,
-             'rms': 0.18651,
-             'sigma': 0.17646 }
+#rev.15394 (2001-06-16 After Trx update)
+refstats = {'sum':15959,
+            'max':1.6241,
+            'min':-0.50853,
+            'rms':0.18486,
+            'sigma':0.17455}
 
 ia.open(project+"/"+project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # reference statistic values for diff image
-#rev.12787
-diffstats = {'sum': 3.5216e4,
-             'max': 2.7180,
-             'min': -0.49571,
-             'rms': 0.30398,
-             'sigma': 0.27268 }
-
-# v13235
-refstats = {'sum':14712,
-            'max':1.6276,
-            'min':-0.74572,
-            'rms':0.20357,
-            'sigma':0.19568}
-
-diffstats = {'sum':36338,
-             'max':2.7257,
-             'min':-0.70069,
-             'rms':0.31747,
-             'sigma':0.28561}
+#rev.15394 (2001-06-16 After Trx update)
+diffstats = {'sum':35091,
+             'max':2.7172,
+             'min':-0.47044,
+             'rms':0.30265,
+             'sigma':0.27144}
 
 
 # relative tolerances to reference values
