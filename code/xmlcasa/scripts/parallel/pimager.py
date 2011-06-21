@@ -420,8 +420,16 @@ class pimager():
         spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
         timesplit=0
         timeimage=0
-        model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
-        shutil.rmtree('tempmodel', True)
+        elimageroot=imagename
+        elmask=maskimage
+        owd=os.getcwd()
+        fullpath=lambda a: owd+'/'+a if ((len(a) !=0) and a[0] != '/') else a
+        imagename=fullpath(elimageroot)
+        maskimage=fullpath(elmask)
+            
+        model=imagename+'.model' if (len(elimageroot) != 0) else (owd+'/elmodel')
+        tempmodel=owd+'/tempmodel'
+        shutil.rmtree(tempmodel, True)
         if(not contclean):
             print "Removing ", model, 'and', imagename+'.image'
             shutil.rmtree(model, True)
@@ -572,8 +580,8 @@ class pimager():
             if(maj==0):
                 self.averimages(psf, psfs)
             #incremental clean...get rid of tempmodel
-            shutil.rmtree('tempmodel', True)
-            rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+'tempmodel'+'", mask="'+str(maskimage)+'")'
+            shutil.rmtree(tempmodel, True)
+            rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
             print 'Deconvolution command', rundecon
             out[0]=c.odo(rundecon,0)
             over=False
@@ -582,9 +590,9 @@ class pimager():
                 over=c.check_job(out[0],False)
             ###incremental added to total 
             ia.open(model)
-            ia.calc('"'+model+'" +  "tempmodel"')
+            ia.calc('"'+model+'" +  "'+tempmodel+'"')
             ia.done()
-            ia.open('tempmodel')
+            ia.open(tempmodel)
             #arr=ia.getchunk()
             print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
             ia.done()
