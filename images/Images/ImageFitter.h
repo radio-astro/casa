@@ -32,210 +32,193 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
-#include <images/Images/ImageInterface.h>
 #include <images/Images/ImageInputProcessor.h>
+#include <images/Images/SubImage.h>
 
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/namespace.h>
 
 namespace casa {
 
-    class ImageFitter {
-        // <summary>
-        // Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
-        // ultimately call fitsky to do fitting
-        // </summary>
+class ImageFitter {
+	// <summary>
+	// Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
+	// ultimately call fitsky to do fitting
+	// </summary>
 
-        // <reviewed reviewer="" date="" tests="" demos="">
-        // </reviewed>
+	// <reviewed reviewer="" date="" tests="" demos="">
+	// </reviewed>
 
-        // <prerequisite>
-        // </prerequisite>
+	// <prerequisite>
+	// </prerequisite>
 
-        // <etymology>
-        // Fits components to sources in images (ImageSourceComponentFitter was deemed to be to long
-        // of a name)
-        // </etymology>
+	// <etymology>
+	// Fits components to sources in images (ImageSourceComponentFitter was deemed to be to long
+	// of a name)
+	// </etymology>
 
-        // <synopsis>
-        // ImageFitter is the top level interface for fitting image source components. It handles most
-        // of the inputs, bookkeeping etc. It can be instantiated and its one public method, fit,
-        // run from either a C++ app or python.
-        // </synopsis>
+	// <synopsis>
+	// ImageFitter is the top level interface for fitting image source components. It handles most
+	// of the inputs, bookkeeping etc. It can be instantiated and its one public method, fit,
+	// run from either a C++ app or python.
+	// </synopsis>
 
-        // <example>
-        // <srcblock>
-        // ImageFitter fitter(...)
-        // fitter.fit()
-        // </srcblock>
-        // </example>
+	// <example>
+	// <srcblock>
+	// ImageFitter fitter(...)
+	// fitter.fit()
+	// </srcblock>
+	// </example>
 
-        public:
-			enum CompListWriteControl {
-				NO_WRITE,
-				WRITE_NO_REPLACE,
-				OVERWRITE
-			};
+public:
+	enum CompListWriteControl {
+		NO_WRITE,
+		WRITE_NO_REPLACE,
+		OVERWRITE
+	};
 
-            // constructor approprate for API calls.
-            // Parameters:
-            // <ul>
-            // <li>imagename - the name of the input image in which to fit the models</li>
-            // <li>box - A 2-D rectangular box in which to use pixels for the fitting, eg box=100,120,200,230
-            // In cases where both box and region are specified, box, not region, is used.</li>
-            // <li>region - Named region to use for fitting</li>
-			// <li>regionPtr - A pointer to a region. Note there are unfortunately several different types of
-			// region records throughout CASA. In this case, it must be a Record produced by creating a
-			// region via a RegionManager method.
-            // <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
-            // specified.</li>
-            // <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
-            // specified.</li>
-            // <li> maskInp - Mask (as LEL) to use as a way to specify which pixels to use </li>
-            // <li> includepix - Pixel value range to include in the fit. includepix and excludepix
-            // cannot be specified simultaneously. </li>
-            // <li> excludepix - Pixel value range to exclude from fit</li>
-            // <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
-            // <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
+	// constructor approprate for API calls.
+	// Parameters:
+	// <ul>
+	// <li>imagename - the name of the input image in which to fit the models</li>
+	// <li>box - A 2-D rectangular box in which to use pixels for the fitting, eg box=100,120,200,230
+	// In cases where both box and region are specified, box, not region, is used.</li>
+	// <li>region - Named region to use for fitting</li>
+	// <li>regionPtr - A pointer to a region. Note there are unfortunately several different types of
+	// region records throughout CASA. In this case, it must be a Record produced by creating a
+	// region via a RegionManager method.
+	// <li>chanInp - Zero-based channel number on which to do the fit. Only a single channel can be
+	// specified.</li>
+	// <li>stokes - Stokes plane on which to do the fit. Only a single Stokes parameter can be
+	// specified.</li>
+	// <li> maskInp - Mask (as LEL) to use as a way to specify which pixels to use </li>
+	// <li> includepix - Pixel value range to include in the fit. includepix and excludepix
+	// cannot be specified simultaneously. </li>
+	// <li> excludepix - Pixel value range to exclude from fit</li>
+	// <li> residualInp - Name of residual image to save. Blank means do not save residual image</li>
+	// <li> modelInp - Name of the model image to save. Blank means do not save model image</li>
 
-			// DEPRECATED, DO NOT USE FOR NEW CODE AND CHANGE OLD CODE TO USE ONE OF THE CONSTRUCTORS BELOW
-            ImageFitter(
-                const String& imagename, const String& region, const String& box="",
-                const uInt chanInp=0, const String& stokes="I",
-                const String& maskInp="",
-                const Vector<Float>& includepix = Vector<Float>(0),
-                const Vector<Float>& excludepix = Vector<Float>(0),
-                const String& residualInp="", const String& modelInp="",
-                const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp="",
-                const String& compListName="",
-                const CompListWriteControl writeControl=NO_WRITE
-            ); 
+	// use these constructors when you already have a pointer to a valid ImageInterface object
 
-            // DEPRECATED, DO NOT USE FOR NEW CODE AND CHANGE OLD CODE TO USE ONE OF THE CONSTRUCTORS BELOW
-            ImageFitter(
-                const String& imagename, const Record* regionPtr, const String& box="",
-                const uInt chanInp=0, const String& stokes="I",
-                const String& maskInp="",
-                const Vector<Float>& includepix = Vector<Float>(0),
-                const Vector<Float>& excludepix = Vector<Float>(0),
-                const String& residualInp="", const String& modelInp="",
-                const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp="",
-                const String& compListName="",
-                const CompListWriteControl writeControl=NO_WRITE
-            );
+	ImageFitter(
+		const ImageInterface<Float>* const image, const String& region, const String& box="",
+		const String& chanInp="0", const String& stokes="I",
+		const String& maskInp="",
+		const Vector<Float>& includepix = Vector<Float>(0),
+		const Vector<Float>& excludepix = Vector<Float>(0),
+		const String& residualInp="", const String& modelInp="",
+		const String& estiamtesFilename="", const String& logfile="",
+		const Bool& append=True, const String& newEstimatesInp="",
+		const String& compListName="",
+		const CompListWriteControl writeControl=NO_WRITE
+	);
 
-            // use these constructors when you already have a pointer to a valid ImageInterface object
+	ImageFitter(
+		const ImageInterface<Float>* const image, const Record* regionPtr, const String& box="",
+		const String& chanInp="0", const String& stokes="I",
+		const String& maskInp="",
+		const Vector<Float>& includepix = Vector<Float>(0),
+		const Vector<Float>& excludepix = Vector<Float>(0),
+		const String& residualInp="", const String& modelInp="",
+		const String& estiamtesFilename="", const String& logfile="",
+		const Bool& append=True, const String& newEstimatesInp="",
+		const String& compListName="",
+		const CompListWriteControl writeControl=NO_WRITE
+	);
 
-            ImageFitter(
-                const ImageInterface<Float>*& image, const String& region, const String& box="",
-                const uInt chanInp=0, const String& stokes="I",
-                const String& maskInp="",
-                const Vector<Float>& includepix = Vector<Float>(0),
-                const Vector<Float>& excludepix = Vector<Float>(0),
-                const String& residualInp="", const String& modelInp="",
-                const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp="",
-                const String& compListName="",
-                const CompListWriteControl writeControl=NO_WRITE
-            );
+	// destructor
+	~ImageFitter();
 
-            ImageFitter(
-                const ImageInterface<Float>*& image, const Record* regionPtr, const String& box="",
-                const uInt chanInp=0, const String& stokes="I",
-                const String& maskInp="",
-                const Vector<Float>& includepix = Vector<Float>(0),
-                const Vector<Float>& excludepix = Vector<Float>(0),
-                const String& residualInp="", const String& modelInp="",
-                const String& estiamtesFilename="", const String& logfile="",
-                const Bool& append=True, const String& newEstimatesInp="",
-                const String& compListName="",
-                const CompListWriteControl writeControl=NO_WRITE
-            );
+	// Do the fit. If componentList is specified, store the fitted components in
+	// that object.
+	ComponentList fit();
 
-            // destructor
-            ~ImageFitter();
+	// Did the fit converge? Throw AipsError if the fit has not yet been done.
+	// <src>plane</src> is relative to the first plane in the image chosen to be fit.
+	Bool converged(uInt plane=0) const;
 
-            // Do the fit. If componentList is specified, store the fitted components in
-            // that object.
-            ComponentList fit();
+private:
+	LogIO *_log;
+	ImageInterface<Float> *_image;
+	Record _regionRecord;
+	String _chans;
+	String _stokesString, _mask, _residual, _model, _logfileName,
+		regionString, estimatesString, _newEstimatesFileName, _compListName;
+	Vector<Float> _includePixelRange, _excludePixelRange;
+	ComponentList estimates, _curResults;
+	Vector<String> fixed;
+	Bool logfileAppend, fitDone, _noBeam, _deleteImageOnDestruct;
+	Vector<Bool> _fitConverged;
+	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
+		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
+		_positionAngles, _positionAngleErrors;
+	Record _residStats, inputStats;
+	Double chiSquared;
+	String _kludgedStokes;
+	CompListWriteControl _writeControl;
+	Vector<uInt> _chanVec;
+	uInt _curChan;
 
-            // Did the fit converge? Throw AipsError if the fit has not yet been done.
-			Bool converged() const;
+	// does the lion's share of constructing the object, ie checks validity of
+	// inputs, etc.
+	void _construct(
+		const String& imagename, const String& box, const String& regionName,
+		const Record* regionPtr, const String& estimatesFilename
+	);
 
-        private:
-            LogIO *_log;
-            ImageInterface<Float> *_image;
-            Record _regionRecord;
-            uInt _chan;
-            String _stokesString, _mask, _residual, _model, _logfileName,
-				regionString, estimatesString, _newEstimatesFileName, _compListName;
-            Vector<Float> includePixelRange, excludePixelRange;
-            ComponentList estimates, _results;
-            Vector<String> fixed;
-            Bool logfileAppend, _fitConverged, fitDone, _noBeam, _deleteImageOnDestruct;
-            Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
-				_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
-				_positionAngles, _positionAngleErrors;
-            Record _residStats, inputStats;
-            Double chiSquared;
-            String _kludgedStokes;
-            CompListWriteControl _writeControl;
+	void _construct(
+		const ImageInterface<Float> *image, const String& box, const String& regionName,
+		const Record* regionPtr, const String& estimatesFilename
+	);
 
-            // does the lion's share of constructing the object, ie checks validity of
-            // inputs, etc.
-            void _construct(
-                const String& imagename, const String& box, const String& regionName,
-                const Record* regionPtr, const String& estimatesFilename
-            );
+	Vector<ImageInputProcessor::OutputStruct> _getOutputs();
 
-            void _construct(
-                const ImageInterface<Float> *image, const String& box, const String& regionName,
-                const Record* regionPtr, const String& estimatesFilename
-            );
+	void _finishConstruction(const String& estimatesFilename);
 
-            Vector<ImageInputProcessor::OutputStruct> _getOutputs();
-
-            void _finishConstruction(const String& estimatesFilename);
-
-            // summarize the results in a nicely formatted string
-            String _resultsToString();
-
-            //summarize the size details in a nicely formatted string
-            String _sizeToString(const uInt compNumber) const;
-
-            String _fluxToString(uInt compNumber) const;
-
-           // String _fluxToString2(uInt compNumber) const;
+	String _resultsHeadder() const;
 
 
-            String _spectrumToString(uInt compNumber) const;
+	// summarize the results in a nicely formatted string
+	String _resultsToString();
 
-            // write output to log file
-            void _writeLogfile(const String& output) const;
+	//summarize the size details in a nicely formatted string
+	String _sizeToString(const uInt compNumber) const;
 
-            // Write the estimates file using this fit.
-            void _writeNewEstimatesFile() const;
+	String _fluxToString(uInt compNumber) const;
 
-            // Set the flux densities and peak intensities of the fitted components.
-            void _setFluxes();
 
-            // Set the convolved sizes of the fitted components.
-            void _setSizes();
+	String _spectrumToString(uInt compNumber) const;
 
-			void _getStandardDeviations(Double& inputStdDev, Double& residStdDev) const;
+	// write output to log file
+	void _writeLogfile(const String& output) const;
 
-			void _getRMSs(Double& inputRMS, Double& residRMS) const;
+	// Write the estimates file using this fit.
+	void _writeNewEstimatesFile() const;
 
-			Double _getStatistic(const String& type, const Record& stats) const;
+	// Set the flux densities and peak intensities of the fitted components.
+	void _setFluxes();
 
-			String _statisticsToString() const;
+	// Set the convolved sizes of the fitted components.
+	void _setSizes();
 
-			void setErrors(const Record& residStats);
+	void _getStandardDeviations(Double& inputStdDev, Double& residStdDev) const;
 
-			void _writeCompList();
-    };
+	void _getRMSs(Double& inputRMS, Double& residRMS) const;
+
+	Double _getStatistic(const String& type, const uInt index, const Record& stats) const;
+
+	String _statisticsToString() const;
+
+	void setErrors(const Record& residStats);
+
+	SubImage<Float> _createImageTemplate() const;
+
+	void _writeCompList(ComponentList& list) const;
+
+	void _setIncludeExclude(
+	    Fit2D& fitter
+	) const;
+};
 }
 
 #endif

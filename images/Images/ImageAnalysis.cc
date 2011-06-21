@@ -2272,15 +2272,13 @@ ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
 }
 
 ComponentList ImageAnalysis::fitsky(
-    Array<Float>& residPixels, Array<Bool>& residMask,
-    Bool& converged, Record& inputStats, Record& residStats,
-    Double& chiSquared, Record& region, const uInt& chan,
+	Fit2D& fitter, Array<Float>& pixels,
+    Array<Bool>& pixelMask, Bool& converged,
+    Record& region, const uInt& chan,
 	const String& stokesString, const String& mask,
 	const Vector<String>& models, Record& inputEstimate,
-	const Vector<String>& fixed, const Vector<Float>& includepix,
-	const Vector<Float>& excludepix, const Bool fitIt,
-	const Bool deconvolveIt, const Bool list,
-    const String& residImageName, const String& modelImageName
+	const Vector<String>& fixed, const Bool fitIt,
+	const Bool deconvolveIt, const Bool list
 ) {
 	LogOrigin origin("ImageAnalysis", __FUNCTION__);
 	*itsLog << origin;
@@ -2310,95 +2308,76 @@ ComponentList ImageAnalysis::fitsky(
 	if (nModels == 0) {
 		*itsLog << "You have not specified any models" << LogIO::EXCEPTION;
 	}
-	if (nModels > 1) {
-		if (estimate.nelements() < nModels) {
-			*itsLog << "You must specify one estimate for each model component"
-					<< LogIO::EXCEPTION;
-		}
+	if (nModels > 1 && estimate.nelements() < nModels) {
+		*itsLog << "You must specify one estimate for each model component"
+			<< LogIO::EXCEPTION;
 	}
 	if (!fitIt && nModels > 1) {
 		*itsLog << "Parameter estimates are only available for a single model"
-				<< LogIO::EXCEPTION;
+			<< LogIO::EXCEPTION;
+	}
+	SubImage<Float> subImageTmp = SubImage<Float>::createSubImage(
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&region)),
+		mask, (list ? itsLog : 0), False, AxesSpecifier(True)
+	);
+	SubImage<Float> allAxesSubImage;
+	{
+		IPosition imShape = subImageTmp.shape();
+		IPosition startPos(imShape.nelements(), 0);
+		// Pass in an IPosition here to the constructor
+		// this will subtract 1 from each element of the IPosition imShape
+		IPosition endPos(imShape - 1);
+		IPosition stride(imShape.nelements(), 1);
+		//const CoordinateSystem& imcsys = pImage_p->coordinates();
+		const CoordinateSystem& imcsys = subImageTmp.coordinates();
+
+		if (imcsys.hasSpectralAxis()) {
+			uInt spectralAxisNumber = imcsys.spectralAxisNumber();
+			startPos[spectralAxisNumber] = chan;
+			endPos[spectralAxisNumber] = chan;
+		}
+		if (imcsys.hasPolarizationAxis()) {
+			uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
+			startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(stokesString);
+			endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
+		}
+
+		Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
+		// CAS-1966, CAS-2633 keep degenerate axes
+		allAxesSubImage = SubImage<Float>(
+			subImageTmp, slice, False, AxesSpecifier(True)
+		);
 	}
 
-    IPosition imShape = pImage_p->shape();
-    // pass in a Vector here
-	Vector<Int> tmpVector = imShape.asVector();
-	tmpVector.set(0);
-	IPosition startPos(tmpVector);
-	// Pass in an IPosition here to the constructor
-	// this will subtract 1 from each element of the IPosition imShape
-	IPosition endPos(imShape - 1);
-	tmpVector.set(1);
-	IPosition stride(tmpVector);
-
-    ImageMetaData imMetaData(*pImage_p);
-    if (imMetaData.hasSpectralAxis()) {
-        uInt spectralAxisNumber = imMetaData.spectralAxisNumber();
-	    startPos[spectralAxisNumber] = chan;
-	    endPos[spectralAxisNumber] = chan;
-    }
-    if (imMetaData.hasPolarizationAxis()) {
-        uInt stokesAxisNumber = imMetaData.polarizationAxisNumber();
-	    startPos[stokesAxisNumber] = imMetaData.stokesPixelNumber(stokesString);
-	    endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
-    }
-
-    Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
-	SubImage<Float> subImageTmp(*pImage_p, slice, False);
-
-	// Convert mask to ImageRegion and make SubImage.  Drop degenerate axes.
-	ImageRegion* pRegionRegion = 0;
-
-    ImageRegion* pMaskRegion = 0;
-
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)),
-		mask, (list ? itsLog : 0), False, AxesSpecifier(False)
+	// for some things we don't want the degenerate axes,
+	// so make a subimage without them as well
+	SubImage<Float> subImage = SubImage<Float>(
+		allAxesSubImage, AxesSpecifier(False)
 	);
 
-	delete pRegionRegion;
-	delete pMaskRegion;
-    ostringstream oss;
-    region.print(oss);
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
 	Bool xIsLong = CoordinateUtil::isSky(*itsLog, cSys);
 
-	Array<Float> pixels = subImage.get(True);
+	pixels = subImage.get(True);
 	IPosition shape = pixels.shape();
 
-	residMask.resize(IPosition(0));
-	residMask = subImage.getMask(True).copy();
+	pixelMask = subImage.getMask(True).copy();
 
 	// What Stokes type does this plane hold ?
 	Stokes::StokesTypes stokes = Stokes::type(stokesString);
 
 	// Form masked array and find min/max
-	MaskedArray<Float> maskedPixels(pixels, residMask, True);
+	MaskedArray<Float> maskedPixels(pixels, pixelMask, True);
 	Float minVal, maxVal;
 	IPosition minPos(2), maxPos(2);
 	minMax(minVal, maxVal, minPos, maxPos, pixels);
-
-	// Create fitter
-	Fit2D fitter(*itsLog);
-
-    // Set pixel range depending on Stokes type and min/max
-    _setFitSkyIncludeExclude(includepix, excludepix, fitter);
-	*itsLog << origin;
 
     // Recover just single component estimate if desired and bug out
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa
     ComponentList cl;
 
-	// CAS-1966, CAS-2633 keep degenerate axes
-	SubImage<Float> allAxesSubImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		subImageTmp, *(ImageRegion::tweakedRegionRecord(&region)),
-		mask, (list ? itsLog : 0), False
-	);
     if (!fitIt) {
 		Vector<Double> parameters;
 		parameters = singleParameterEstimate(fitter, Fit2D::GAUSSIAN,
@@ -2475,11 +2454,10 @@ ComponentList ImageAnalysis::fitsky(
 		}
 		fitter.addModel(modelType, parameters, parameterMask);
 	}
-
 	// Do fit
 	Array<Float> sigma;
 	// residMask constant so do not recalculate out_pixelmask
-	Fit2D::ErrorTypes status = fitter.fit(pixels, residMask, sigma);
+	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
 
 	if (status == Fit2D::OK) {
 		*itsLog << LogIO::NORMAL << "Number of iterations = "
@@ -2488,16 +2466,10 @@ ComponentList ImageAnalysis::fitsky(
 	}
 	else {
 		converged = False;
-		*itsLog << LogOrigin("ImageAnalysis", "fitsky");
+		*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 		*itsLog << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return cl;
 	}
-
-	// Compute residuals
-	Array<Float> modelPixels;
-	fitter.residual(residPixels, modelPixels, pixels);
-	chiSquared = fitter.chiSquared();
-	// Convert units of solution from pixel units to physical units
 
 	Vector<SkyComponent> result(nModels);
 	Double facToJy;
@@ -2522,66 +2494,8 @@ ComponentList ImageAnalysis::fitsky(
 
 		cl.add(result(i));
 	}
-	*itsLog << LogOrigin("ImageAnalysis", "fitsky");
-
-	delete pRegionRegion;
-	delete pMaskRegion;
-
-	residStats = _fitskyWriteResidualAndGetStats(allAxesSubImage, residPixels, residImageName);
-
-	// PagedImage<Float> residImage(residImageName);
-	ImageMetaData subImageMD(allAxesSubImage);
-	Vector<Int> inputDirectionAxes = subImageMD.directionAxesNumbers();
-	Record reg;
-
-	ImageAnalysis(&allAxesSubImage).statistics(
-		inputStats, inputDirectionAxes, reg, "", Vector<String>(0),
-		Vector<Float>(0), Vector<Float>(0)
-	);
-
-    if (! modelImageName.empty()) {
-        // construct the model image, copying pattern from ImageProxy
-    	ImageUtilities::writeImage(
-    		allAxesSubImage.shape(), allAxesSubImage.coordinates(),
-    		modelImageName, modelPixels, *itsLog
-    	);
-    }
 	return cl;
 }
-
-Record ImageAnalysis::_fitskyWriteResidualAndGetStats(
-	const SubImage<Float>& subImage, const Array<Float>& residPixels, String residImageName
-) const {
-	*itsLog << LogOrigin("ImageAnalysis", "_fitskyWriteResidualAndGetStats");
-	Bool saveResidImage = ! residImageName.empty();
-	// we need to get stats on the resid image, delete it if necessary afterward
-	if (! saveResidImage) {
-		Time now;
-		String nowString = now.toString();
-		residImageName = "/tmp/fitsky_resid_" + nowString + "GMT.im";
-	}
-	// construct the residual image, copying pattern from ImageProxy
-	// we always need to construct this image to get the sigma, if not
-	// required
-	ImageUtilities::writeImage(
-		subImage.shape(), subImage.coordinates(),
-		residImageName, residPixels, *itsLog
-	);
-	Record residStats;
-	PagedImage<Float> residImage(residImageName);
-	ImageMetaData residMD(residImage);
-	Vector<Int> residDirectionAxes = residMD.directionAxesNumbers();
-	Record reg;
-	ImageAnalysis(&residImage).statistics(
-		residStats, residDirectionAxes, reg, "", Vector<String>(0), Vector<Float>(0), Vector<Float>(0)
-	);
-
-	if (! saveResidImage) {
-		Directory(residImageName).removeRecursive();
-	}
-	return residStats;
-}
-
 
 void ImageAnalysis::_fitskyExtractBeam(
 	Vector<Double>& parameters, const ImageInfo& imageInfo,
@@ -2611,59 +2525,14 @@ void ImageAnalysis::_fitskyExtractBeam(
 	}
 	Bool doRef = True;
 	Vector<Double> dParameters;
-	ImageUtilities::worldWidthsToPixel(*itsLog, dParameters,
-			wParameters, cSys, pixelAxes, doRef);
-	//
+	ImageUtilities::worldWidthsToPixel(
+		*itsLog, dParameters,
+		wParameters, cSys, pixelAxes, doRef
+	);
 	parameters.resize(6, True);
 	parameters(3) = dParameters(0);
 	parameters(4) = dParameters(1);
 	parameters(5) = dParameters(2);
-}
-
-void ImageAnalysis::_setFitSkyIncludeExclude(
-    const Vector<Float>& includepix, const Vector<Float>& excludepix,
-    Fit2D& fitter 
-) const {
-    *itsLog << LogOrigin("ImageAnalysis", "_setFitSkyIncludeExclude");
-	Bool doInclude = (includepix.nelements() > 0);
-	Bool doExclude = (excludepix.nelements() > 0);
-	if (doInclude && doExclude) {
-		*itsLog << "You cannot give both an include and an exclude pixel range"
-				<< LogIO::EXCEPTION;
-	}
-	else if (!doInclude && !doExclude) {
-		*itsLog << LogIO::NORMAL << "Selecting all pixel values because neither "
-				<< "includepix nor excludepix was specified" << LogIO::POST;
-	}
-    else {
-		if (doInclude) {
-			if (includepix.nelements() == 1) {
-				fitter.setIncludeRange(-abs(includepix(0)), abs(includepix(0)));
-				*itsLog << LogIO::NORMAL << "Selecting pixels from " << -abs(
-						includepix(0)) << " to " << abs(includepix(0))
-						<< LogIO::POST;
-			} else if (includepix.nelements() > 1) {
-				fitter.setIncludeRange(includepix(0), includepix(1));
-				*itsLog << LogIO::NORMAL << "Selecting pixels from "
-						<< includepix(0) << " to " << includepix(1)
-						<< LogIO::POST;
-			}
-		}
-        else {
-			if (excludepix.nelements() == 1) {
-				fitter.setExcludeRange(-abs(excludepix(0)), abs(excludepix(0)));
-				*itsLog << LogIO::NORMAL << "Excluding pixels from " << -abs(
-						excludepix(0)) << " to " << abs(excludepix(0))
-						<< LogIO::POST;
-			}
-            else if (excludepix.nelements() > 1) {
-				fitter.setExcludeRange(excludepix(0), excludepix(1));
-				*itsLog << LogIO::NORMAL << "Excluding pixels from "
-						<< excludepix(0) << " to " << excludepix(1)
-						<< LogIO::POST;
-			}
-		}
-	}
 }
 
 Bool ImageAnalysis::getchunk(Array<Float>& pixels, Array<Bool>& pixelMask,

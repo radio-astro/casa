@@ -24,6 +24,7 @@ gaussian_model.fits
 gaussian_model_with_noise.fits
 gaussian_model_with_noise_model.fits
 gaussian_model_with_noise_resid.fits
+gauss_multiplane.fits
 gauss_no_pol.fits
 imagetestimage.fits
 input_image_processor_dont_replace_me
