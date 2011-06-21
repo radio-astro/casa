@@ -37,6 +37,7 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageMetaData.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Regions/RegionManager.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/OS/Directory.h>
@@ -70,6 +71,9 @@ void checkImage(
     Array<Double> minArray = stats.asArrayDouble("min");
     Array<Double> maxArray = stats.asArrayDouble("max");
 
+    cout << "minArray " << minArray << endl;
+    cout << "maxArray " << maxArray << endl;
+
     vector<Double> min, max;
     minArray.tovector(min);
     maxArray.tovector(max);
@@ -93,6 +97,7 @@ int main() {
     const ImageInterface<Float> *jykms = new FITSImage("jyperbeamkmpersec.fits");
     const ImageInterface<Float> *gaussNoPol = new FITSImage("gauss_no_pol.fits");
     const ImageInterface<Float> *twoGauss = new FITSImage("two_gaussian_model.fits");
+    const ImageInterface<Float> *multiplane = new FITSImage("gauss_multiplane.fits");
 	const Path compTable(dirName + "/myCompList.cl");
 	// Directory compTableDir(compTable.absoluteName());
 	int returnValue = 0;
@@ -282,7 +287,7 @@ int main() {
                         break;
                 }
                 ImageFitter fitter(
-                	images[i], "", "", 0, "I", mask, includepix, excludepix
+                	images[i], "", "", "0", "I", mask, includepix, excludepix
                 );
                 ComponentList compList = fitter.fit();
 
@@ -321,7 +326,7 @@ int main() {
             String residDiff = dirName + "/residualImage.diff";
             String modelDiff = dirName + "/modelImage.diff";
             ImageFitter fitter(
-            	noisyImage, "", "100,100,200,200", 0, "I", "",
+            	noisyImage, "", "100,100,200,200", "0", "I", "",
             	Vector<Float>(0), Vector<Float>(0), residImage,
             	modelImage
             );
@@ -343,7 +348,7 @@ int main() {
             modelImage = "/modelImage";
  
             ImageFitter fitter2(
-            	noisyImage, "", "100,100,200,200", 0, "I", "",
+            	noisyImage, "", "100,100,200,200", "0", "I", "",
             	Vector<Float>(0), Vector<Float>(0), residImage,
             	modelImage
             );
@@ -395,8 +400,6 @@ int main() {
         	AlwaysAssert(near(gauss->majorAxisError().getValue(), 0.00176932, 1e-5), AipsError);
         	AlwaysAssert(near(gauss->minorAxisError().getValue(), 0.00146756, 1e-5), AipsError);
         	AlwaysAssert(near(gauss->positionAngleError().getValue(), 0.00195128, 1e-5), AipsError);
-
-
         }
         {
         	writeTestString(
@@ -404,7 +407,7 @@ int main() {
         		+ String("the peak intensity to be artificially low")
         	);
             ImageFitter fitter(
-            		convolvedModel, "", "", 0, "I", "",
+            		convolvedModel, "", "", "0", "I", "",
              	Vector<Float>(0), Vector<Float>(0), "",
              	"", "estimates_convolved.txt"
             );
@@ -436,7 +439,7 @@ int main() {
         {
          	writeTestString("Fit two gaussians");
             ImageFitter fitter(
-             		twoGauss, "", "", 0, "I", "",
+             		twoGauss, "", "", "0", "I", "",
               	Vector<Float>(0), Vector<Float>(0), "",
               	"", "estimates_2gauss.txt"
             );
@@ -535,9 +538,11 @@ int main() {
             expectedPositionAngle[1] = 160.083213;
             expectedPositionAngle[2] = 50.082442;
             expectedPositionAngle[3] = 135.08243;
-
+            LogIO log;
+       		ImageInterface<Float> *image;
+       		ImageUtilities::openImage(image, "imfit_stokes.fits", log);
         	for (uInt i=0; i<stokes.size(); i++) {
-        		ImageFitter fitter("imfit_stokes.fits", "", "", 0, stokes[i]);
+        		ImageFitter fitter(image, "", "", "0", stokes[i]);
         		ComponentList compList = fitter.fit();
         		AlwaysAssert(fitter.converged(), AipsError);
         		Vector<Quantity> flux;
@@ -560,7 +565,7 @@ int main() {
         	writeTestString("Test of CAS-2318 fix");
 
             ImageFitter fitter(
-            	gaussNoPol, "", "", 0, "", "",
+            	gaussNoPol, "", "", "0", "", "",
              	Vector<Float>(0), Vector<Float>(0), "",
              	"", ""
             );
@@ -613,7 +618,7 @@ int main() {
         	writeTestString("test writing component list (CAS-2595");
         	{
         		ImageFitter fitter(
-        			noisyImage, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			noisyImage, "", "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
         			"", "", "", "", True, "", compTable.absoluteName(), ImageFitter::WRITE_NO_REPLACE
         		);
         		fitter.fit();
@@ -622,7 +627,7 @@ int main() {
         	}
         	{
         		ImageFitter fitter(
-        			twoGauss, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			twoGauss, "", "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
         			"", "", "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
         			ImageFitter::WRITE_NO_REPLACE
 				);
@@ -632,7 +637,7 @@ int main() {
 			}
         	{
         		ImageFitter fitter(
-        			twoGauss, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			twoGauss, "", "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
         			"", "", "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
         			ImageFitter::OVERWRITE
         		);
@@ -641,17 +646,31 @@ int main() {
         		AlwaysAssert(c1.nelements() == 2, AipsError);
         	}
         }
+        {
+			writeTestString("Test multiplane fitting");
+        	{
+				String residImage = dirName + "/residualImage_multi";
+				String modelImage = dirName + "/modelImage_multi";
+        		String mask = "gauss_multiplane.im<15";
+        		ImageFitter fitter(
+        			multiplane, "", "", "0~3", "I", mask, Vector<Float>(0), Vector<Float>(0),
+        			residImage, modelImage, "estimates_2gauss_multiplane.txt", "", True, "",
+        			compTable.absoluteName(), ImageFitter::OVERWRITE
+        		);
+        		fitter.fit();
+        		ComponentList c1(compTable);
+        		AlwaysAssert(c1.nelements() == 8, AipsError);
+        	}
+        }
         cout << "ok" << endl;
     }
     catch (AipsError x) {
         cerr << "Exception caught: " << x.getMesg() << endl;
         returnValue = 1;
     }
-    /*
 	if(workdir.exists()) {
 		workdir.removeRecursive();
 	}
-	*/
     delete gaussianModel;
     delete noisyImage;
     delete convolvedModel;

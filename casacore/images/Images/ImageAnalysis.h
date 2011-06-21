@@ -250,17 +250,15 @@ class ImageAnalysis
     // adding residImage parameter. If set to blank, do not write residual iamge,
     // else write to the file given.
     ComponentList fitsky(
+    		Fit2D& fitter,
     	Array<Float>& pixels, Array<Bool>& pixelmask,
-        Bool& converged, Record& inputStats, Record& residStats,
-        Double& chiSquared, Record& region, const uInt& chan,
+        Bool& converged,
+        Record& region, const uInt& chan,
         const String& stokesString, const String& mask,
         const Vector<String>& models, Record& inputEstimate,
         const Vector<String>& fixedparams,
-        const Vector<Float>& includepix,
-        const Vector<Float>& excludepix,
         const Bool fit=True,
-        const Bool deconvolve=False, const Bool list=True,
-        const String& residImage="", const String& modelImageName=""
+        const Bool deconvolve=False, const Bool list=True
     );
 
     Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
@@ -728,30 +726,10 @@ class ImageAnalysis
                             const CoordinateSystem& cSys, const String& xunits, 
 			    const String& freqFrame="");
 
-
-    // Set the include and/or exclude pixel range for fitsky(). The algorithm is:
-    // if both includepix and excludepix are set, throw and exception
-    // if neither is set and stokes=="I", all pixels >= 0 are included and all < 0 are excluded
-    // if neither is set and stokes != "I", all pixels <= 0 are included and all pixels > 0 are excluded
-    // if include/exclude has one element then -abs(element(0)) to abs(element(0)) are included/excluded
-    // if include/exclude has two elements, then the range betwenn those elements is included/excluded
-  
-    void _setFitSkyIncludeExclude(
-        const Vector<Float>& includepix, const Vector<Float>& excludepix,
-        Fit2D& fitter
-    ) const;
-
     void _fitskyExtractBeam(
     	Vector<Double>& parameters, const ImageInfo& imageInfo,
     	const Bool xIsLong, const CoordinateSystem& cSys
     ) const;
-
-    // Writes a residual image and gets the stats from that image, and then
-    // deletes the image if the user did not request it be saved.
-    Record _fitskyWriteResidualAndGetStats(
-    	const SubImage<Float>& subImage, const Array<Float>& residPixels, String residImageName
-    ) const;
-
 };
 
 } // casac namespace
