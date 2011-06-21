@@ -1077,22 +1077,30 @@ void ImageUtilities::writeImage(
 		const TiledShape& mapShape,
 		const CoordinateSystem& coordinateInfo,
 		const String& imageName,
-		const Array<Float>& pixels, LogIO& log
+		const Array<Float>& pixels, LogIO& log,
+		const Array<Bool>& maskPixels
 ) {
-
 	// using pattern from ImageProxy
+	if (!maskPixels.empty()) {
+		if (! maskPixels.shape().isEqual(mapShape.shape())) {
+			log << "Requested image shape differs from pixel mask shape"
+				<< LogIO::EXCEPTION;
+		}
+	}
 	PagedImage<Float> *newImage = new PagedImage<Float>(
 			mapShape, coordinateInfo, imageName
 	);
-	newImage->put(pixels);
 	if (newImage == 0) {
 		log << "Failed to create image "
 			 << imageName << LogIO::EXCEPTION;
 	}
-	else {
-		log << LogIO::NORMAL << "Created image "
-			 << imageName << LogIO::POST;
+	newImage->put(pixels);
+	if (! maskPixels.empty()) {
+		newImage->makeMask("mask0", True, True).asMask().put(maskPixels);
 	}
+
+	log << LogIO::NORMAL << "Created image "
+		<< imageName << LogIO::POST;
 	delete newImage;
 }
 
