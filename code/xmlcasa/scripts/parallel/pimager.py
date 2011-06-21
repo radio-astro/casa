@@ -482,9 +482,9 @@ class pimager():
             #   else:
             #        substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
             ####new version to keep filename small
-            substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
+            substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
             while (os.path.exists(substr+'.model')):
-                substr='Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
+                substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
             ###############
             imlist.append(substr)
             cfcachelist.append(cfcache+'_'+str(k));
