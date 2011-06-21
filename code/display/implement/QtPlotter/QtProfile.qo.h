@@ -39,6 +39,7 @@
 #include <display/DisplayEvents/MWCCrosshairTool.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/Display/PanelDisplay.h>
+#include <display/Utilities/Lowlevel.h>
 
 #include <images/Regions/ImageRegion.h>
 #include <images/Images/ImageInterface.h>
@@ -77,9 +78,12 @@ class QtProfile : public QWidget//, public MWCCrosshairTool
     Q_OBJECT
 public:
     QtProfile(ImageInterface<Float>* img, const char *name = 0, 
-	      QWidget *parent = 0);
+	      QWidget *parent = 0, std::string rcstr="prf");
     ~QtProfile();
     MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
+
+    virtual std::string rcid( ) const { return rcid_; }
+
 public slots:
     void zoomIn();
     void zoomOut();
@@ -101,7 +105,7 @@ public slots:
     void changeCoordinateType(const QString &text); 
     void updateZoomer();
     //virtual void crosshairReady(const String& evtype);
-    virtual void closeEvent ( QCloseEvent * event ); 
+    virtual void closeEvent ( QCloseEvent *); 
     void resetProfile(ImageInterface<Float>* img, const char *name = 0);
     void wcChanged( const String,
 		    const Vector<Double>, const Vector<Double>,
@@ -169,6 +173,11 @@ private:
     Vector<Double> last_event_px, last_event_py;
     Vector<Double> last_event_wx, last_event_wy;
 
+
+    // connection to rc file
+    Casarc &rc;
+    // rc id for this panel type
+    std::string rcid_;
 };
 
 }
