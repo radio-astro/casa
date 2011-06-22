@@ -45,6 +45,8 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
+
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageCollapser.h>
@@ -55,7 +57,6 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
-#include <images/Images/ImageFitter.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>

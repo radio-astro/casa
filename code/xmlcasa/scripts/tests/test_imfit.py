@@ -119,7 +119,7 @@ def count_matches(filename, match_string):
 class imfit_test(unittest.TestCase):
     
     def setUp(self):
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/imfit/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/'
         for f in [
             noisy_image, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,

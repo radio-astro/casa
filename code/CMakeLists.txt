@@ -613,7 +613,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.62
+           VERSION 1.0.64
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
