@@ -2320,6 +2320,7 @@ ComponentList ImageAnalysis::fitsky(
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&region)),
 		mask, (list ? itsLog : 0), False, AxesSpecifier(True)
 	);
+
 	SubImage<Float> allAxesSubImage;
 	{
 		IPosition imShape = subImageTmp.shape();

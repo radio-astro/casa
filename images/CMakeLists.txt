@@ -65,7 +65,6 @@ Images/ComponentImager.cc
 Images/ImageCollapser.cc
 Images/ImageInputProcessor.cc
 Images/ImageReorderer.cc
-Images/ImageFitter.cc
 Images/ImageProfileFitter.cc
 IO/FitterEstimatesFileParser.cc
 Wnbt/ComponentUpdate.cc
@@ -122,7 +121,6 @@ Images/ImageExprParse.h
 Images/ImageFFT.h
 Images/ImageFITSConverter.h
 Images/ImageFITSConverter.tcc
-Images/ImageFitter.h
 Images/ImageFit1D.h
 Images/ImageFit1D.tcc
 Images/ImageHistograms.h
