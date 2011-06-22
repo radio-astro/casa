@@ -66,7 +66,6 @@ Images/ImageCollapser.cc
 Images/ImageInputProcessor.cc
 Images/ImageReorderer.cc
 Images/ImageProfileFitter.cc
-IO/FitterEstimatesFileParser.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -198,11 +197,6 @@ DESTINATION include/casacore/images/Regions
 )
 
 install (FILES
-IO/FitterEstimatesFileParser.h
-DESTINATION include/casacore/images/IO
-)
-
-install (FILES
 Regions.h
 Images.h
 DESTINATION include/casacore/images
@@ -210,7 +204,6 @@ DESTINATION include/casacore/images
 
 if (BUILD_TESTING)
     add_subdirectory (Images/test)
-    add_subdirectory (IO/test)
     add_subdirectory (Wnbt/test)
     add_subdirectory (Regions/test)
 endif (BUILD_TESTING)
