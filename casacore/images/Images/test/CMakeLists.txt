@@ -13,19 +13,10 @@ collapse_avg_2.fits
 collapse_in.fits
 collapse_max_0_a.fits
 collapse_sum_1.fits  
-estimates_2gauss.txt
-estimates_convolved.txt
 fwhm_0.fits
 fwhmErr_0.fits
 fwhm_1.fits
 fwhmErr_1.fits
-gaussian_convolved.fits
-gaussian_model.fits
-gaussian_model_with_noise.fits
-gaussian_model_with_noise_model.fits
-gaussian_model_with_noise_resid.fits
-gauss_multiplane.fits
-gauss_no_pol.fits
 imagetestimage.fits
 input_image_processor_dont_replace_me
 image_input_processor.im/mask0/table.info
@@ -43,8 +34,6 @@ image_input_processor.im/table.dat
 image_input_processor.im/table.f0_TSM0
 image_input_processor.im/table.f0
 image_input_processor.im/mybox.rgn
-imfit_stokes.fits
-jyperbeamkmpersec.fits
 jyperpixelimage.fits
 mexinputtest.fits
 ngc5921.clean.fits
@@ -63,7 +52,6 @@ test_image.im/logtable/table.dat
 test_image.im/logtable/table.f0
 test_image.im/logtable/table.info
 test_image.im/logtable/table.lock
-two_gaussian_model.fits
 )
 
 foreach (file ${datafiles})
@@ -100,7 +88,6 @@ tImageExprGram
 tImageExprParse_addDir
 tImageFFT
 tImageFit1D
-tImageFitter
 tImageInfo
 tImageInputProcessor
 tImageMetaData
