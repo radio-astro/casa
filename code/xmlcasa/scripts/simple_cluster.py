@@ -15,6 +15,7 @@ import pylab as pl
 from tasksinfo import *
 import scipy as sp
 import traceback
+from get_user import get_user
 #from casa import *
 
 #im,cb,ms,tb,fg,af,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
@@ -34,6 +35,7 @@ class simple_cluster:
         self._resource_on=True
         self._configdone=False
         self._cluster=cluster()
+        self._cwd=os.getcwd()
     
     ###########################################################################
     ###   cluster verifiction
@@ -541,12 +543,15 @@ class simple_cluster:
         if not self._configdone:
             return
         lg=self._cluster.get_casalogs()
+        cdir=os.getcwd()
+        os.chdir(self._cwd)
         os.system('rm -f engine-*.log')
         for i in lg:
             eng='engine'+i[str.rfind(i,'-'):]
             #if os.path.exists(eng):
             #    os.unlink(eng)
             os.symlink(i, eng)
+        os.chdir(cdir)
     
     ###########################################################################
     ###   resource management
@@ -1803,12 +1808,20 @@ class simple_cluster:
             ncpu=multiprocessing.cpu_count()
             (sysname, nodename, release, version, machine)=os.uname()
             homedir = os.path.expanduser('~')
-            msg=nodename+', '+str(ncpu)+', '+homedir
-            #cdir=os.getcwd()
-            #print cdir, cdir[:cdir.rfind('/')]
-            #msg=nodename+', '+str(ncpu)+', '+cdir[:cdir.rfind('/')]
-            #project=cdir[cdir.rfind('/')+1:]
-            clusterfile='/tmp/default_cluster'
+            cdir=os.getcwd()
+            try:
+                tfile=str(random.random())
+                f = open(tfile, 'w')
+                os.remove(tfile)
+            except IOError:
+                print 'no write permision in current directory "%s"' %  cdir
+                cdir=homedir
+                print 'write to home directory instead'
+
+            msg=nodename+', '+str(ncpu)+', '+cdir
+            self._cwd=cdir
+            _user=get_user()
+            clusterfile='/tmp/'+_user+'-default_cluster'
             f=open(clusterfile, 'w')
             f.write(msg)
             f.close()
