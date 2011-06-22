@@ -45,7 +45,7 @@
 #include <components/ComponentModels/Flux.h>
 #include <components/ComponentModels/SpectralModel.h>
 
-#include <images/IO/FitterEstimatesFileParser.h>
+#include <imageanalysis/IO/FitterEstimatesFileParser.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>

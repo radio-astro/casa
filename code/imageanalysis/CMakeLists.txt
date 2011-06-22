@@ -38,24 +38,25 @@ implement/ImageAnalysis/ImageFitter.cc
 
 implement/IO/AsciiAnnotationFileParser.cc
 implement/IO/AsciiAnnotationFileLine.cc
+implement/IO/FitterEstimatesFileParser.cc
 )
+
 casa_add_executable(imageanalysis imfit apps/imfit.cc )
 
-casa_add_assay( imageanalysis
-implement/Annotations/test/tAnnAnnulus.cc
-implement/Annotations/test/tAnnCenterBox.cc
-implement/Annotations/test/tAnnCircle.cc
-implement/Annotations/test/tAnnEllipse.cc
-implement/Annotations/test/tAnnLine.cc
-implement/Annotations/test/tAnnPolygon.cc
-implement/Annotations/test/tAnnRectBox.cc
-implement/Annotations/test/tAnnRotBox.cc
-implement/Annotations/test/tAnnSymbol.cc
-implement/Annotations/test/tAnnText.cc
-implement/Annotations/test/tAnnVector.cc
-implement/Annotations/test/tAsciiAnnotationList.cc
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnAnnulus.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnCenterBox.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnCircle.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnEllipse.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnLine.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnPolygon.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnRectBox.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnRotBox.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnSymbol.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnText.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAnnVector.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tAsciiAnnotationList.cc )
 
-implement/ImageAnalysis/test/tImageFitter.cc
+casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageFitter.cc)
 
-implement/IO/test/tAsciiAnnotationFileParser.cc
-)
+casa_add_assay( imageanalysis implement/IO/test/tAsciiAnnotationFileParser.cc )
+casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )
