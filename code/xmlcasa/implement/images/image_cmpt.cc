@@ -1401,7 +1401,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
 			fitter = new ImageFitter(
-				image, regionString, box, chan, stokes, mask, includepix, excludepix,
+				image, regionString, box, String::toString(chan), stokes, mask, includepix, excludepix,
 				residual, model, estimates, logfile, append, newestimates, complist,
 				writeControl
 			);
@@ -1410,7 +1410,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 			::casac::variant regionCopy = region;
 			Record *regionRecord = toRecord(regionCopy.asRecord());
 			fitter = new ImageFitter(
-				image, regionRecord, box, chan, stokes, mask, includepix, excludepix,
+				image, regionRecord, box, String::toString(chan), stokes, mask, includepix, excludepix,
 				residual, model, estimates, logfile, append, newestimates, complist,
 				writeControl
 			);
@@ -2811,46 +2811,53 @@ image::topixel(const ::casac::variant& value)
 }
 
 ::casac::record*
-image::toworld(const ::casac::variant& value, const std::string& format)
+ image::toworld(const ::casac::variant& value, const std::string& format)
 {
-  ::casac::record *rstat = 0;
-  try {
-    *itsLog << LogOrigin("image", "toworld");
-    if (detached()) return rstat;
+	::casac::record *rstat = 0;
+	try {
+		*itsLog << LogOrigin("image", "toworld");
+		if (detached()) return rstat;
 
-    Vector<Double> pixel;
-    if (isunset(value)) {
-      pixel.resize(0);
-    } else if (value.type() == ::casac::variant::DOUBLEVEC) {
-      pixel = value.getDoubleVec();
-    } else if (value.type() == ::casac::variant::INTVEC) {
-      Vector<Int> ipixel = value.getIntVec();
-      Int n = ipixel.size();
-      pixel.resize(n);
-      for (int i=0 ; i < n; i++) pixel[i]=ipixel[i];
-    } else if (value.type() == ::casac::variant::RECORD) {
-      ::casac::variant localvar(value);
-      Record *tmp = toRecord(localvar.asRecord());
-      if (tmp->isDefined("numeric")) {
-	pixel = tmp->asArrayDouble("numeric");
-      } else {
-	*itsLog << LogIO::SEVERE << "unsupported record type for value"
-		<< LogIO::EXCEPTION;
+		Vector<Double> pixel;
+		if (isunset(value)) {
+			pixel.resize(0);
+		} else if (value.type() == ::casac::variant::DOUBLEVEC) {
+			cout << "double vec " << endl;
+			pixel = value.getDoubleVec();
+		} else if (value.type() == ::casac::variant::INTVEC) {
+			cout << "int vec " << endl;
+
+			variant vcopy = value;
+			Vector<Int> ipixel = vcopy.asIntVec();
+			cout << "* ipixel " << ipixel << endl;
+			Int n = ipixel.size();
+			pixel.resize(n);
+			for (int i=0 ; i < n; i++) pixel[i]=ipixel[i];
+		} else if (value.type() == ::casac::variant::RECORD) {
+			cout << "record " << endl;
+			::casac::variant localvar(value);
+			Record *tmp = toRecord(localvar.asRecord());
+			if (tmp->isDefined("numeric")) {
+				pixel = tmp->asArrayDouble("numeric");
+			} else {
+				*itsLog << LogIO::SEVERE << "unsupported record type for value"
+						<< LogIO::EXCEPTION;
+				return rstat;
+			}
+			delete tmp;
+		} else {
+			*itsLog << LogIO::SEVERE << "unsupported data type for value"
+					<< LogIO::EXCEPTION;
+			return rstat;
+		}
+		cout << "*** pixel " << pixel << endl;
+		rstat = fromRecord(itsImage->toworld(pixel, format));
+
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
 	return rstat;
-      }
-      delete tmp;
-    } else {
-      *itsLog << LogIO::SEVERE << "unsupported data type for value"
-	      << LogIO::EXCEPTION;
-      return rstat;
-    }
-    rstat = fromRecord(itsImage->toworld(pixel, format));
-
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
 }
 
 bool
