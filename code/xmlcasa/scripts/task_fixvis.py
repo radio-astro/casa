@@ -38,9 +38,10 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
     casalog.origin('fixvis')
     try:
         if(vis==outputvis or outputvis==''):
-            casalog.post('Will overwrite original MS.', 'NORMAL')
+            casalog.post('Will overwrite original MS ...', 'NORMAL')
             outputvis = vis
         else:
+            casalog.post('Copying original MS to outputvis ...', 'NORMAL')
             shutil.rmtree(outputvis, ignore_errors=True)
             shutil.copytree(vis, outputvis)
 
@@ -103,7 +104,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                 viaoffset = False
                 thenewra_rad = 0.
                 thenewdec_rad = 0.
-                thenewphasecenter = phasecenter
                 thenewref = -1
                 theoldref = -1
                 theoldrefstr = ''
@@ -128,6 +128,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     tmprec = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')
                     theoldrefstr = tmprec['Ref']
                 tbt.close()
+
+                theoldphasecenter = theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),14)+' '+qa.angle(qa.quantity(theolddir[1],'rad'),14)
 
                 if (theoldref<32 and not theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
                     casalog.post('Refcode for FIELD column PHASE_DIR is valid but not supported here: '+theoldrefstr, 'SEVERE')
@@ -181,7 +183,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             qraoffset = qa.convert(qraoffset, 'deg')
                             qnewra = qa.add(qnewra, qraoffset)
                         dirstr = [theoldrefstr, qa.time(qnewra,12), qa.angle(qnewdec,12)]
-                        thenewphasecenter = dirstr[0]+' '+dirstr[1]+' '+dirstr[2]
                     elif not len(dirstr)==3:
                         casalog.post('Incorrectly formatted parameter \'phasecenter\': '+phasecenter, 'SEVERE')
                         return False
@@ -223,17 +224,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                 casalog.post( 'new phasecenter RA, DEC '+thenewrefstr+' '+qa.time(qa.quantity(thenewra_rad,'rad'),10)
                               +" "+ qa.angle(qa.quantity(thenewdec_rad,'rad'),10), 'NORMAL')
                 casalog.post( '          RA, DEC (rad) '+thenewrefstr+' '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
-
-                fldids = []
-                phdirs = []
-                for i in xrange(numfields):
-                    if (i ==fld):
-                        fldids.append(i)
-                        phdirs.append(thenewphasecenter)
-
-                im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
-                im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
-                im.close()
 
                 # modify FIELD table                
                 tbt.open(outputvis+'/FIELD', nomodify=False)
@@ -285,7 +275,18 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                                          +oldref+" to "+thenewrefstr, 'NORMAL')
 
                 tbt.close()
-            
+
+                fldids = []
+                phdirs = []
+                for i in xrange(numfields):
+                    if (i==fld):
+                        fldids.append(i)
+                        phdirs.append(theoldphasecenter)
+
+                im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
+                im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
+                im.close()
+
             #end for
 
         #endif change phasecenter
