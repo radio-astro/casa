@@ -1,10 +1,10 @@
 from taskinit import *
 
 def imfit(
-    imagename=None, box=None, region=None, chan=None, stokes=None,
+    imagename=None, box=None, region=None, chans=None, stokes=None,
     mask=None, includepix=None, excludepix=None, residual=None,
-    model=None, estimates=None, logfile=None, append=True,
-    newestimates=None, complist=None, overwrite=False
+    model=None, estimates=None, logfile=None, append=None,
+    newestimates=None, complist=None, overwrite=None, chan=None
 ):
     casalog.origin('imfit')
     myia = iatool.create()
@@ -12,9 +12,11 @@ def imfit(
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
         result_dict = myia.fitcomponents(
-            box, region, chan, stokes, mask, includepix, excludepix,
-            residual, model, estimates, logfile, append, newestimates,
-            complist, overwrite
+            box=box, region=region, chans=chans, stokes=stokes,
+            mask=mask, includepix=includepix, excludepix=excludepix,
+            residual=residual, model=model, estimates=estimates,
+            logfile=logfile, append=append, newestimates=newestimates,
+            complist=complist, overwrite=overwrite, chan=chan
         )
         myia.done()
         return result_dict

@@ -1361,14 +1361,15 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 
 
 ::casac::record* image::fitcomponents(
-	const string& box, const variant& region, const int chan,
+	const string& box, const variant& region, const variant& chans,
 	const string& stokes, const variant& vmask,
 	const vector<double>& in_includepix,
 	const vector<double>& in_excludepix,
 	const string& residual, const string& model,
 	const string& estimates, const string& logfile,
 	const bool append, const string& newestimates,
-	const string& complist, const bool overwrite
+	const string& complist, const bool overwrite,
+	const int chan
 ) {
     if (detached()) {
     	return 0;
@@ -1391,42 +1392,68 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     if(mask == "[]") {
 	    mask = "";
     }
+    cout << "chans " << chans.typeString() << endl;
 	try {
-		ImageFitter *fitter = 0;
+		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = itsImage->getImage();
 		ImageFitter::CompListWriteControl writeControl = complist.empty()
 			? ImageFitter::NO_WRITE
 				: overwrite ? ImageFitter::OVERWRITE
 					: ImageFitter::WRITE_NO_REPLACE;
+		String sChans;
+		if (chans.type() == variant::BOOLVEC) {
+			// for some reason which eludes me, the default variant type is boolvec
+			sChans = "";
+		}
+		else if (chans.type() == variant::STRING) {
+			sChans = chans.toString();
+		}
+		else if (chans.type() == variant::INT) {
+			sChans = String::toString(chans.toInt());
+		}
+		else {
+			*itsLog << "Unsupported type for chans. chans must be either an integer or a string"
+				<< LogIO::EXCEPTION;
+		}
 
+		if (chan >= 0) {
+			*itsLog << LogIO::WARN
+				<< "THE chan PARAMETER HAS BEEN DEPRECATED. PLEASE USE chans INSTEAD."
+				<< LogIO::POST;
+			if (sChans.empty()) {
+				sChans = String::toString(chan);
+			}
+		}
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
-			fitter = new ImageFitter(
-				image, regionString, box, String::toString(chan), stokes, mask, includepix, excludepix,
-				residual, model, estimates, logfile, append, newestimates, complist,
-				writeControl
+			fitter.reset(
+				new ImageFitter(
+					image, regionString, box, sChans, stokes, mask, includepix, excludepix,
+					residual, model, estimates, logfile, append, newestimates, complist,
+					writeControl
+				)
 			);
 		}
 		else if (region.type() == ::casac::variant::RECORD) {
 			::casac::variant regionCopy = region;
 			Record *regionRecord = toRecord(regionCopy.asRecord());
-			fitter = new ImageFitter(
-				image, regionRecord, box, String::toString(chan), stokes, mask, includepix, excludepix,
-				residual, model, estimates, logfile, append, newestimates, complist,
-				writeControl
+			fitter.reset(
+				new ImageFitter(
+					image, regionRecord, box, sChans, stokes, mask, includepix, excludepix,
+					residual, model, estimates, logfile, append, newestimates, complist,
+					writeControl
+				)
 			);
 		}
 		else {
 			*itsLog << "Unsupported type for region " << region.type() << LogIO::EXCEPTION;
 		}
 		ComponentList compList = fitter->fit();
-		bool converged = fitter->converged();
-		delete fitter;
+		Vector<Bool> converged = fitter->converged();
 		Record returnRecord, compListRecord;
 		String error;
 
-		Vector<String> allowFluxUnits(1);
-		allowFluxUnits[0] = "Jy.km/s";
+		Vector<String> allowFluxUnits(1, "Jy.km/s");
 		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 
 	    if (! compList.toRecord(error, compListRecord)) {

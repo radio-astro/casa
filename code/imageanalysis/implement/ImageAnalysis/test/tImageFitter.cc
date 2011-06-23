@@ -29,7 +29,7 @@
 #include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/Flux.h>
-#include <images/Images/ImageFitter.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -123,7 +123,7 @@ int main() {
             	// got here, just continue
             }
             ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -151,7 +151,7 @@ int main() {
             );
             ImageFitter fitter = ImageFitter(noisyImage, 0, "");
             ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -180,7 +180,7 @@ int main() {
             );
             ImageFitter fitter(noisyImage, 0, "130,89,170,129");
             ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -221,7 +221,7 @@ int main() {
         	Record *box = rm.box(blc, trc, inc, "abs", False);
         	ImageFitter fitter(noisyImage, box);
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
 
         	Vector<Quantity> flux;
         	compList.getFlux(flux,0);
@@ -296,7 +296,7 @@ int main() {
                 );
                 ComponentList compList = fitter.fit();
 
-                AlwaysAssert(fitter.converged(), AipsError);
+                AlwaysAssert(fitter.converged(0), AipsError);
                 Vector<Quantity> flux;
                 compList.getFlux(flux,0);
                 // I stokes flux test
@@ -333,7 +333,7 @@ int main() {
             	modelImage
             );
             fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             writeTestString("test residual image correctness");
             checkImage(
             	residImage, datadir + "gaussian_model_with_noise_resid.fits",
@@ -355,13 +355,13 @@ int main() {
             	modelImage
             );
             fitter2.fit();
-            AlwaysAssert(fitter2.converged(), AipsError);
+            AlwaysAssert(fitter2.converged(0), AipsError);
         }
         {
         	writeTestString("test fitting model gaussian that has been convolved with a beam");
         	ImageFitter fitter(convolvedModel, "", "");
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -414,7 +414,7 @@ int main() {
              	"", datadir + "estimates_convolved.txt"
             );
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -446,7 +446,7 @@ int main() {
               	"", datadir + "estimates_2gauss.txt"
             );
          	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             MDirection direction;
             Vector<Double> parameters;
@@ -495,7 +495,7 @@ int main() {
         	writeTestString("Test of nonconvergence");
             ImageFitter fitter(noisyImage, "", "0,0,20,20");
             fitter.fit();
-            AlwaysAssert(! fitter.converged(), AipsError);
+            AlwaysAssert(! fitter.converged(0), AipsError);
         }
         {
         	writeTestString("Test of fitting in a multi-polarization image");
@@ -544,7 +544,7 @@ int main() {
         	for (uInt i=0; i<stokes.size(); i++) {
         		ImageFitter fitter(stokesImage, "", "", "0", stokes[i]);
         		ComponentList compList = fitter.fit();
-        		AlwaysAssert(fitter.converged(), AipsError);
+        		AlwaysAssert(fitter.converged(0), AipsError);
         		Vector<Quantity> flux;
         		MDirection direction = compList.getRefDirection(0);
         		compList.getFlux(flux,0);
@@ -579,7 +579,7 @@ int main() {
         	writeTestString("test fitting image with units of Jy km/s (CAS-1233");
         	ImageFitter fitter(jykms, "", "");
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -660,6 +660,11 @@ int main() {
         		fitter.fit();
         		ComponentList c1(compTable);
         		AlwaysAssert(c1.nelements() == 8, AipsError);
+        		AlwaysAssert(fitter.converged().size() == 4, AipsError);
+        		for (uInt i=0; i<fitter.converged().size(); i++) {
+        			AlwaysAssert(fitter.converged(i), AipsError);
+        			AlwaysAssert(fitter.converged()[i], AipsError);
+        		}
         	}
         }
         cout << "ok" << endl;

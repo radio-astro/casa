@@ -84,6 +84,8 @@ expected_new_estimates = "expected_new_estimates.txt"
 gauss_no_pol = "gauss_no_pol.fits"
 jyperbeamkms = "jyperbeamkmpersec.fits";
 masked_image = 'myout.im'
+multiplane_image = "gauss_multiplane.fits"
+two_gauss_multiplane_estimates="estimates_2gauss_multiplane.txt"
 msgs = ''
 
 # are the two specified numeric values relatively close to each other? 
@@ -124,7 +126,7 @@ class imfit_test(unittest.TestCase):
             noisy_image, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image
+            masked_image, multiplane_image, two_gauss_multiplane_estimates
         ] :
             if (os.path.isdir(datapath + f)):
                 shutil.copytree(datapath + f, f)
@@ -136,7 +138,7 @@ class imfit_test(unittest.TestCase):
             noisy_image, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image
+            masked_image, multiplane_image, two_gauss_multiplane_estimates
         ] :
             if (os.path.isdir(f)):
                 shutil.rmtree(f)
@@ -167,7 +169,7 @@ class imfit_test(unittest.TestCase):
                 method += test + "imfit: "
             res = code()
             clist = res['results']
-            if (not res['converged']):
+            if (not res['converged'][0]):
                 success = False
                 msgs += method + "fit did not converge unexpectedly"
             epsilon = 1e-5
@@ -259,7 +261,7 @@ class imfit_test(unittest.TestCase):
             for code in [run_fitcomponents, run_imfit]:
                 res = code()
                 clist = res['results']
-                if (not res['converged']):
+                if (not res['converged'][0]):
                     success = False
                     msgs += method + " fit did not converge unexpectedly. box=" + box + " region=" + str(region)
                 epsilon = 1e-5
@@ -365,7 +367,7 @@ class imfit_test(unittest.TestCase):
     
         for code in [run_fitcomponents, run_imfit]:
             res = code()
-            if (res['converged']):
+            if (res['converged'][0]):
                 success = False
                 msgs += method + "fit unexpectedly converged\n"
     
@@ -419,7 +421,7 @@ class imfit_test(unittest.TestCase):
             for code in [run_fitcomponents, run_imfit]:
                 res = code()
                 clist = res['results']
-                if (not res['converged']):
+                if (not res['converged'][0]):
                     success = False
                     msgs += method + "fit did not converge unexpectedly"
                 epsilon = 1e-5
@@ -502,7 +504,7 @@ class imfit_test(unittest.TestCase):
             res = code(model, residual)
             clist = res['results']
     
-            if (not res['converged']):
+            if (not res['converged'][0]):
                 success = False
                 msgs + test + "fit did not converge unexpectedly"
             if (not check_image(residual, expected_residual, 'residualDifference.im')):
@@ -537,7 +539,7 @@ class imfit_test(unittest.TestCase):
             res = code()
     
             clist = res['results']
-            if (not res['converged']):
+            if (not res['converged'][0]):
                 success = False
                 msgs += test + "fit did not converge unexpectedly"
             epsilon = 1e-5
@@ -612,7 +614,7 @@ class imfit_test(unittest.TestCase):
             clist = res['results']
             shape = clist['component0']['shape']
 
-            if (not res['converged']):
+            if (not res['converged'][0]):
                 success = False
                 msgs += test + "fit did not converge unexpectedly"
             epsilon = 1e-5
@@ -786,7 +788,7 @@ class imfit_test(unittest.TestCase):
                 res = code(stokes[j])
     
                 clist = res['results']
-                if (not res['converged']):
+                if (not res['converged'][0]):
                     success = False
                     msgs += method + "fit did not converge unexpectedly for stokes " + stokes[j]
                 got = clist['component0']['flux']['value'][j]
@@ -876,7 +878,7 @@ class imfit_test(unittest.TestCase):
                 method += test + "imfit: "
             res = code()
             clist = res['results']
-            if (not res['converged']):
+            if (not res['converged'][0]):
                 success = False
                 msgs += method + "fit did not converge unexpectedly"
             epsilon = 1e-5
@@ -949,7 +951,7 @@ class imfit_test(unittest.TestCase):
                 method += test + "imfit: "
             res = code()
             clist = res['results']
-            if (not res['converged']):
+            if (not res['converged'][0]):
                 success = False
                 msgs += method + "fit did not converge unexpectedly"
             epsilon = 1e-7
@@ -1006,7 +1008,52 @@ class imfit_test(unittest.TestCase):
             mycl.done()
             shutil.rmtree(complist)
  
-
+    def test_CAS_2999(self):
+        """Test multiplane fitting"""
+        
+        method = "test_CAS_2999"
+        test = "test_CAS_2999"
+        imagename = multiplane_image
+        complist = "mycomplist.tbl"
+        estimates = two_gauss_multiplane_estimates
+        chans = "0~3"
+        resid = "residualImage_multi"
+        model = "modelImage_multi"
+        mask = "gauss_multiplane.fits<15";
+        def run_fitcomponents():
+            myia = iatool.create()
+            myia.open(imagename)
+            res = myia.fitcomponents(
+                chans=chans, mask=mask, complist=complist,
+                estimates=estimates, overwrite=True,
+                model=model, residual=resid
+            )
+            myia.done()
+            return res
+        def run_imfit():
+            default('imfit')
+            return imfit(
+                imagename=imagename, chans=chans,
+                mask=mask, complist=complist, estimates=estimates,
+                overwrite=True, model=model, residual=resid
+            )
+        mycl = cltool.create()
+        for code in (run_fitcomponents, run_imfit):
+            res = code()
+            mycl.open(complist)
+            self.assertTrue(
+                mycl.length() == 8,
+                str(code) + " didn't get 8 component as expected from table"
+            )
+            mycl.done()
+            self.assertTrue(
+                res['converged'].size == 4,
+                "Size of converged array is not 4"
+            )
+            self.assertTrue(
+                all(res['converged']),
+                "One or more of the converged elements are False"
+            )
 
 
 def suite():

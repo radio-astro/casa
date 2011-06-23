@@ -133,9 +133,15 @@ public:
 	// that object.
 	ComponentList fit();
 
-	// Did the fit converge? Throw AipsError if the fit has not yet been done.
+	// Did the fit converge for the specified channel?
+	// Throw AipsError if the fit has not yet been done.
 	// <src>plane</src> is relative to the first plane in the image chosen to be fit.
-	Bool converged(uInt plane=0) const;
+	Bool converged(uInt plane) const;
+
+	// Did the fit converge?
+	// Throw AipsError if the fit has not yet been done.
+	// <src>plane</src> is relative to the first plane in the image chosen to be fit.
+	Vector<Bool> converged() const;
 
 private:
 	LogIO *_log;

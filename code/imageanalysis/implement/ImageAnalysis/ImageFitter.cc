@@ -167,6 +167,7 @@ ComponentList ImageFitter::fit() {
 	ComponentList compList;
 	Bool anyConverged = False;
 	Array<Float> residPixels, modelPixels;
+
 	for (_curChan=_chanVec[0]; _curChan<=_chanVec[1]; _curChan++) {
 		Fit2D fitter(*_log);
 		_setIncludeExclude(fitter);
@@ -176,7 +177,7 @@ ComponentList ImageFitter::fit() {
 			_curResults = myImage.fitsky(
 				fitter, pixels,
 				pixelMask, converged,
-				_regionRecord, _curChan, _stokesString,
+				_regionRecord, _curChan, _kludgedStokes,
 				_mask, models, estimatesRecord, fixed,
 				fit, deconvolve, list
 			);
@@ -336,6 +337,10 @@ Bool ImageFitter::converged(uInt plane) const {
 	return _fitConverged[plane];
 }
 
+Vector<Bool> ImageFitter::converged() const {
+	return _fitConverged;
+}
+
 void ImageFitter::_getStandardDeviations(Double& inputStdDev, Double& residStdDev) const {
 	inputStdDev = _getStatistic("sigma", _curChan - _chanVec[0], inputStats);
 	residStdDev = _getStatistic("sigma", 0, _residStats);
@@ -416,7 +421,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 
 	String iquv = "IQUV";
 	_kludgedStokes = (iquv.index(_stokesString) == String::npos) || _stokesString.empty()
-        			? "I" : _stokesString;
+        ? "I" : _stokesString;
 	// </todo>
 
 	if(estimatesFilename.empty()) {
@@ -1004,7 +1009,7 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 	}
 	if (imcsys.hasPolarizationAxis()) {
 		uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
-		startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(_kludgedStokes);
+		startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(_stokesString);
 		endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
 	}
 
