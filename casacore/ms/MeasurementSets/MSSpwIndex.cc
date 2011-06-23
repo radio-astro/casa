@@ -106,16 +106,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int nmatch=0;
     for (Int k=0; k < nspw; ++k){
       Bool locfound=False;
+      Bool dum;
       Vector<Double> chanfreq=msSpwSubTable_p.chanFreq()(k);
-      Vector<Double>chanwidth=msSpwSubTable_p.chanWidth()(k);
+      Sort sort( chanfreq.getStorage(dum),sizeof(Double) );
+      sort.sortKey((uInt)0,TpDouble);
       Int nch=chanfreq.nelements();
+      Vector<uInt> sortIndx;
+      sort.sort(sortIndx, nch);
+      Vector<Double>chanwidth=msSpwSubTable_p.chanWidth()(k);
       begIn=False;
       aftIn=False;
-      if(f0 > chanfreq(0) &&  f0 < chanfreq(nch-1)){
+      if(f0 > chanfreq(sortIndx[0]) &&  f0 < chanfreq(sortIndx[nch-1])){
 	begIn=True;
 	locfound=True;
       }
-      if(f1 > chanfreq(0) &&  f1 < chanfreq(nch-1)){
+      if(f1 > chanfreq(sortIndx[0]) &&  f1 < chanfreq(sortIndx[nch-1])){
 	aftIn=True;
 	locfound=True;
       }
@@ -128,7 +133,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	found=True;
 	if(begIn){
 	  Int counter=0;
-	  while((chanfreq(counter)+0.5*chanwidth(counter)) < f0)
+	  //Use abs as sometimes chanwidth is negative and sometimes not !
+	  while((chanfreq(sortIndx[counter])+0.5*fabs(chanwidth(sortIndx[counter]))) < f0)
 	    ++counter;
 	  start(nmatch-1)= counter > 0 ? counter-1 : 0;
 	}
@@ -137,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	if(aftIn){
 	  Int counter=nch-1;
-	  while((chanfreq(counter)-0.5*chanwidth(counter)) > f1)
+	  while((chanfreq(sortIndx[counter])-0.5*chanwidth(sortIndx[counter])) > f1)
 	    --counter;
 	  if(counter <= start(nmatch-1))
 	    nchan(nmatch-1)=1;
@@ -148,9 +154,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  nchan(nmatch-1)=nch-start(nmatch-1);
 
 	}
+	//if it is reversed sort order reverse start
+	if(sortIndx[0] != 0){
+	  start[nmatch-1] = nch-start[nmatch-1]-nchan(nmatch-1);
+	  if(start[nmatch-1] < 0) start[nmatch-1]=0;
+	  if((start[nmatch-1]+nchan[nmatch-1]) >= nch) nchan[nmatch-1]=nch-start[nmatch-1];	  
+	}
       }
-      //spw is inside region
-      else if((f0 < chanfreq(0)) && (f1 > chanfreq(1))){
+      //spw is fully inside region between f0 and f1
+      else if((f0 < chanfreq(sortIndx[0])) && (f1 > chanfreq(sortIndx[nch-1]))){
 	++nmatch;
 	spw.resize(nmatch, True);
 	spw(nmatch-1)=k;
