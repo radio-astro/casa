@@ -100,6 +100,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
 
         else: # we are modifying UVWs and visibilities
 
+            commonoldrefstr = '' # for the case of a non-variable reference column and several selected fields 
+
             for fld in fields:
                 viaoffset = False
                 thenewra_rad = 0.
@@ -129,11 +131,16 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     theoldrefstr = tmprec['Ref']
                 tbt.close()
 
+                if not isvarref:
+                    if not (commonoldrefstr == ''):
+                        theoldrefstr = commonoldrefstr
+                    else:
+                        commonoldrefstr = theoldrefstr
+
                 theoldphasecenter = theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),14)+' '+qa.angle(qa.quantity(theolddir[1],'rad'),14)
 
                 if (theoldref<32 and not theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
-                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not supported here: '+theoldrefstr, 'SEVERE')
-                    return False                            
+                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not yet tested: '+theoldrefstr, 'WARN')
 
                 casalog.post( 'field: '+fieldname, 'NORMAL')
                 casalog.post( 'old phasecenter RA, DEC '+theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),10) # 10 digits precision
@@ -208,11 +215,13 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             return False
                         if(dirstr[0] != ckwdict['Ref']):
                             allselected = True
-                            for i in range(0, len(refcol)):
+                            for i in range(0, numfields):
                                 if not (i in fields):
                                     allselected = False
-                            if not allselected:
-                                casalog.post("PHASE_DIR is not a variable reference column. Please provide phase dir in "+ckwdict['Ref'], 'SEVERE')
+                            if numfields>1 and not allselected:
+                                casalog.post("You have not selected all "+str(numfields)
+                                             +" fields and PHASE_DIR is not a variable reference column.\n"
+                                             +" Please use split or provide phase dir in "+ckwdict['Ref']+".", 'SEVERE')
                                 return False
                             else:
                                 casalog.post("The direction column reference frame in the FIELD table will be changed from "
@@ -272,7 +281,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             tmprec['Ref'] = thenewrefstr
                             tbt.putcolkeyword('PHASE_DIR', 'MEASINFO', tmprec) 
                             casalog.post("FIELD table phase center direction reference frame changed from "
-                                         +oldref+" to "+thenewrefstr, 'NORMAL')
+                                         +theoldrefstr+" to "+thenewrefstr, 'NORMAL')
 
                 tbt.close()
 
