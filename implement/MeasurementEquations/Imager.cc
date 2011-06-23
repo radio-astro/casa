@@ -6848,7 +6848,14 @@ Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd,
     Block<Vector<Int> > bnchan;
     Block<Vector<Int> > bstart;
     Block<Vector<Int> > bspw;
-    rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, freqStart, freqEnd, freqStep, freqframe);
+    Double fS, fE;
+    fS=freqStart;
+    fE=freqEnd;
+    if(freqEnd < freqStart){
+      fS=freqEnd;
+      fE=freqStart;
+    }
+    rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
     spw=Vector<Vector<Int> >(bspw, bspw.nelements());
     start=Vector<Vector<Int> >(bstart, bstart.nelements());
     nchan=Vector<Vector<Int> >(bnchan, bnchan.nelements());
