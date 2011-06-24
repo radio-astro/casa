@@ -664,10 +664,12 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 		//      << " " << iterations.nelements() 
 		//      << " " << iterations[0].shape()
 		//      << endl;
-		os << LogIO::NORMAL << "Clean used " // Loglevel PROGRESS
-                   << iterations[model](chan*npolcube+ipol) << " iterations" 
-		   << " to approach a threshhold of " << cycleThreshold
-		   << LogIO::POST; 
+		if (iterations[model](chan*npolcube+ipol) > 0) {
+		  os << LogIO::NORMAL << "Clean used " // Loglevel PROGRESS
+                     << iterations[model](chan*npolcube+ipol) << " iterations" 
+		     << " to approach a threshhold of " << cycleThreshold
+		     << LogIO::POST; 
+                  }
 	      }
 	    }
 	  }

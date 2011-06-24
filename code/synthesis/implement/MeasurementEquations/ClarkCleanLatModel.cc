@@ -349,7 +349,8 @@ Bool ClarkCleanLatModel::solve(LatConvEquation & eqn){
   // find its maximum value of the residual
   Float maxRes = maxResidual(*itsResidualPtr);
   Float maxResPrevious=maxRes;
-  itsLog << LogIO::NORMAL << "Initial maximum residual: " << maxRes << LogIO::POST;
+  if (numIterations > 0)
+    itsLog << LogIO::NORMAL << "Initial maximum residual: " << maxRes << LogIO::POST;
   // if flux limit or iteration limit reached then bail out. 
   Bool userHalt = False;
   Int numIt=numberIterations();
