@@ -30,10 +30,10 @@ class regressverify :
 		if suminfo['header']['nfields'] != 3 :
 			rstat = False
 			print 'nfields failed got '+suminfo['header']['nfields']+' expected 3'
-		if suminfo['header']['field_0']['name'] != '1331+305000*2_0' :
+		if suminfo['header']['field_0']['name'] != '1331+30500002_0' :
 			rstat = False
 			print 'nfield_0 failed got '+suminfo['header']['field_0']['name']
-		if suminfo['header']['field_1']['name'] != '1445+099000*2_0' :
+		if suminfo['header']['field_1']['name'] != '1445+09900002_0' :
 			rstat = False
 			print 'nfield_1 failed got '+suminfo['header']['field_1']['name']
 		if suminfo['header']['field_2']['name'] != 'N5921_2' :
