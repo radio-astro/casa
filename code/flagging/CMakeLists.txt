@@ -43,6 +43,10 @@ casa_add_library( flagging
   implement/Flagging/RFRowClipper.cc
   implement/Flagging/RFFloatLattice.cc
   implement/MSPlot/MsPlot.cc
+  implement/Flagging/LightFlagger.cc
+  implement/Flagging/LFTimeFreqCrop.cc
+  implement/Flagging/LFExtendFlags.cc
+  implement/Flagging/LFDisplayFlags.cc
    )
 
 casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
