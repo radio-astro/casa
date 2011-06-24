@@ -1024,8 +1024,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                cell = '1arcsec' is equivalent to ['1arcsec','1arcsec']
                NOTE:cell = 2.0 =&gt; ['2arcsec', '2arcsec']
        phasecenter -- direction measure  or fieldid for the mosaic center
-               default: '' =&gt; first field selected ; example: phasecenter=6
-               or phasecenter='J2000 19h30m00 -40d00m00'
+               default: '' =&gt; first field selected ; 
+               example: phasecenter=6
+                        phasecenter='J2000 19h30m00 -40d00m00'
+                        phasecenter='J2000 292.5deg  -40.0deg'
+                        phasecenter='J2000 5.105rad  -0.698rad'
                If include outlier fields, 
                 e.g. ['J2000 19h30m00 -40d00m00',J2000 19h25m00 -38d40m00']
                or use outlierfile.
