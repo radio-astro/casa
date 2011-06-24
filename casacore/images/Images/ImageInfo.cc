@@ -465,7 +465,7 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
 //   comment        - optional
 //
 {
-    error.resize(2);
+    error.resize(3);
     Bool ok = True;
     ImageInfo tmp;
     (*this) = tmp; // Make sure we are "empty" first;
@@ -481,31 +481,36 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
 	DataType typeMin = subRec1.dataType(0);
 	DataType typePA = subRec2.dataType(0);
 //
-	Bool ok = (typeMaj==TpDouble || typeMaj==TpFloat) &&
-                (typeMin==TpDouble || typeMin==TpFloat) &&
-                (typePA==TpDouble || typePA==TpFloat);
-//
-	if (ok) {
-	    Double bmaj, bmin, bpa;
-	    subRec0.get(0, bmaj);
-	    subRec1.get(0, bmin);
-	    subRec2.get(0, bpa);
-//   
+	if((typeMaj==TpDouble || typeMaj==TpFloat) &&
+	   (typeMin==TpDouble || typeMin==TpFloat) &&
+	   (typePA==TpDouble || typePA==TpFloat)){
+	  Double bmaj, bmin, bpa;
+	  subRec0.get(0, bmaj);
+	  subRec1.get(0, bmin);
+	  subRec2.get(0, bpa);
+	  //   
+	  if(bmaj*bmin>0.){
 	    // Assume FITS standard unit "degrees"
 	    Unit unit(String("deg"));
 	    Quantum<Double> bmajq(max(bmaj,bmin), unit);
-//
 	    Quantum<Double> bminq(min(bmaj,bmin), unit);
-//
 	    Quantum<Double> bpaq(bpa, unit);
-//
+	    
 	    bmajq.convert(Unit("arcsec"));
 	    bminq.convert(Unit("arcsec"));
 	    bpaq.convert(Unit("deg"));
-//
+	    
 	    setRestoringBeam(bmajq, bminq, bpaq);
+	  }
+	  else{
+	    ostringstream oss;
+	    oss << "BMAJ, BMIN ("<< bmaj << ", " << bmin <<") are not positive";
+	    error(0) = oss.str();
+	    ok = False;
+	  }	      
 	} else {
-	    error[0] = "BMAJ, BMIN, BPA fields are not of type Double or Float";
+	  error(0) = "BMAJ, BMIN, BPA fields are not of type Double or Float";
+	  ok = False;
 	}
     }
 //
@@ -542,7 +547,7 @@ Bool ImageInfo::fromFITS(Vector<String>& error, const RecordInterface& header)
 	    subRec.get(0, objectName);
 	    setObjectName(objectName);
 	}  else {
-	    error(1) = "OBJECT field is not of type String";
+	    error(2) = "OBJECT field is not of type String";
 	    ok = False;
 	}
     }
