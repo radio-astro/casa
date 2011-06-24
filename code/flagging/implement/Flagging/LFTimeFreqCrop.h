@@ -51,11 +51,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Run the algorithm
     Bool runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
 		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP);    
+
+    Bool getMonitorSpectrum(Vector<Float> &monspec, uInt pl, uInt bs);
     
   private:
 
     // TFCROP functions
   Float UMean(Vector<Float> vect, Vector<Bool> flag);
+  Float calcVar(Vector<Float> vect, Vector<Bool> flag, Vector<Float> fit);
   Float UStd(Vector<Float> vect, Vector<Bool> flag, Vector<Float> fit);
   Float UStd(Vector<Float> vect, Vector<Bool> flag, Float mean);
     void FitPiecewisePoly(Vector<Float> data,Vector<Bool> flag, Vector<Float> fit);
@@ -67,21 +70,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void AllocateMemory();  
 
+    void FitBaseAndFlag(uInt pl, uInt bs, String fittype, String direction, Cube<Float> &cleanArr);
+    //    void FlagDeviationsFromBase(uInt pl, uInt bs, String direction, Cube<Float> &cleanArr);
+
+    /*
     void FitCleanBandPass(uInt pl, uInt bs, String fittype);
     void FitCleanTimeSeries(uInt pl, uInt bs, String fittype);
 
-    void FlagTimeSeries(uInt pl, uInt bs, String fittype);
     void FlagTimeSeriesAgain(uInt pl, uInt bs);
     void FlagBandPass(uInt pl, uInt bs);
+    */
+
+    //void FlagTimeSeries(uInt pl, uInt bs, String fittype);
+
 
     // Input parameters
     Double ANT_TOL, BASELN_TOL, T_TOL, F_TOL;
-    Int FlagLevel, CorrChoice, NumTime, MaxNPieces;
-    Bool ShowPlots, FreqLineFit, WriteFlagsToMS,StopAndExit;
+    Int CorrChoice, NumTime, MaxNPieces, halfWin_p;
     String Expr, Column;
     Vector<Int> intSelCorr;
 
-    String timeFitType_p, freqFitType_p, flagDimension_p;    
+    String timeFitType_p, freqFitType_p, flagDimension_p, winStats_p;
  
     // Shapes per chunk
 

@@ -60,7 +60,7 @@ namespace casa {
   LFDisplayFlags::~LFDisplayFlags ()
   {
     
-    if(plotter_p!=NULL) plotter_p->done();
+    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
     
   }
   
@@ -96,8 +96,10 @@ namespace casa {
   /* Openmp on baselines... */
   Bool LFDisplayFlags :: runMethod(VisBuffer &inVb, 
 				  Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
-				  uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
+				   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP,
+				   Vector<CountedPtr<LFBase> > &flagmethods)
   {
+    LogIO os = LogIO(LogOrigin("DisplayFlags","runMethod()",WHERE));
     // Initialize all the shape information, and make a references for visc and flagc.
     LFBase::runMethod(inVisc, inFlagc, numT, numAnt, numB, numC, numP);
     preflagc.reference(inPreFlagc);
@@ -148,6 +150,7 @@ namespace casa {
 	//cout << "baseline : " << bs << " ants : " << a1 << "," << a2 << endl;
 	if(a1 != a2) // If only cross-correlations
 	  {
+	    if(ShowPlots) os << LogIO::NORMAL << antnames_p[a1] << "-" << antnames_p[a2] << " : " ;
 	    for(int pl=0;pl<NumP;pl++)  // Start Correlation Loop
 	      {
 		runningsum=0;
@@ -161,7 +164,7 @@ namespace casa {
 		      {       
 			  if(ShowPlots)
 			    {
-			      vecdispdat( ch*NumT + tm) = sqrt(visc(pl,ch,(((tm*NumB)+bs)))) * (!preflagc(pl,ch,(tm*NumB)+bs));
+			      vecdispdat( ch*NumT + tm) = (visc(pl,ch,(((tm*NumB)+bs)))) * (!preflagc(pl,ch,(tm*NumB)+bs));
 			      vecflagdat( ch*NumT + tm) = vecdispdat( ch*NumT + tm)*(!flagc(pl,ch,(tm*NumB)+bs));
 
 			      origspectrum[ch] += visc(pl,ch,(((tm*NumB)+bs))) * (!preflagc(pl,ch,(tm*NumB)+bs));
@@ -182,14 +185,15 @@ namespace casa {
 
 		      }// End Time Loop
 		  }//End Channel Loop
-		
+
+		/*		
                 if(!ShowPlots) 
 		  {
 		cout << " Flagged : " << 100 * runningflag/(NumC*NumT) << " %  of corr " << corrlist_p[pl] << " on baseline " << a1 << "-" << a2;
 		if(!runningsum)	  {    cout << " : No non-zero data !" << endl;  }
 		else  {   cout << endl;  }    
 		  }
-
+		*/
 
 		// Send the Plots			
                 if(ShowPlots)
@@ -197,12 +201,15 @@ namespace casa {
                     stringstream ostr1,ostr2;
 		    ostr1 << "(" << thisfield << ") " << fieldnames_p[thisfield] << "\n[spw:" << thisspw << "] " << antnames_p[a1] << "-" << antnames_p[a2] << "  ( " << corrlist_p[pl] << " )";
                     ostr2 << fixed;
-                    ostr2.precision(2);
+                    ostr2.precision(1);
 		    ostr2 << " flag : " << 100 * runningflag/(NumC*NumT) << "% (pre-flag : " << 100 * runningpreflag/(NumC*NumT) << "%)";
+
+		    os << "[" << corrlist_p[pl] << "]:" << 100 * runningflag/(NumC*NumT) << "%(" << 100 * runningpreflag/(NumC*NumT) << "%) "; 
+
 		    DisplayRaster(NumC,NumT,vecdispdat,panels_p[pl].getInt());
                     plotter_p->setlabel(" ",pl?" ":"Time",ostr1.str(),panels_p[pl].getInt());
-		    DisplayRaster(NumC,NumT,vecflagdat,panels_p[pl+4].getInt());
-		    plotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+4].getInt());
+		    DisplayRaster(NumC,NumT,vecflagdat,panels_p[pl+NumP].getInt());
+		    plotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+NumP].getInt());
 		    
 		    for(uInt ch=0;ch<NumC;ch++)
 		      {
@@ -210,19 +217,33 @@ namespace casa {
 			if(countspec[ch]==0) {flagspectrum[ch]=0.0; countspec[ch]=1.0;}
 		      }
 
-                    origspectrum = origspectrum/precountspec;
-                    flagspectrum = flagspectrum/countspec;
+                    origspectrum = (origspectrum/precountspec);
+                    flagspectrum = (flagspectrum/countspec);
 
                     AlwaysAssert( freqlist_p.nelements()==NumC , AipsError); 
 
                     DisplayLine(NumC, freqlist_p, origspectrum, String("before:")+corrlist_p[pl], 
-                                       String("red"), False, panels_p[pl+8].getInt());
+				String("red"), False, panels_p[pl+(2*NumP)].getInt());
                     DisplayScatter(NumC, freqlist_p, flagspectrum, String("after:")+corrlist_p[pl], 
-                                       String("blue"), True, panels_p[pl+8].getInt());
+				   String("blue"), True, panels_p[pl+(2*NumP)].getInt());
+             
+		    // If available, get a plot from the agents
+		    
+		    for (uInt fmeth=0; fmeth<flagmethods.nelements(); fmeth++)
+		      {
+			if(flagmethods[fmeth]->getMonitorSpectrum(flagspectrum,pl,bs))
+			  {
+			    //		    flagspectrum = log10(flagspectrum);
+			    DisplayLine(NumC, freqlist_p, flagspectrum, flagmethods[fmeth]->methodName(), 
+				String("green"), True, panels_p[pl+(2*NumP)].getInt());
+			  }
+		      }
+		    
 
-		  }
+		  }// if ShowPlots
 	      }//End Correlation Loop
 
+	    if(ShowPlots) os << LogIO::POST;
             
             if(ShowPlots)
 	      {	    
@@ -241,6 +262,7 @@ namespace casa {
 		  {
 		    ShowPlots = False;
 		    cout << "Stopping display. Continuing flagging." << endl;
+		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
 		  }
 		/*
 		else if(choice=='n')
@@ -269,7 +291,7 @@ namespace casa {
       }//End Baseline Loop
 
     AccumulateStats(inVb);
-    
+
     return True;
   }// end runMethod
   
@@ -311,6 +333,10 @@ namespace casa {
   /***************************************************************/
   void LFDisplayFlags::AccumulateStats(VisBuffer &vb)
   {
+   LogIO os = LogIO(LogOrigin("DisplayFlags","Stats()",WHERE));
+
+   if(chunk_count>0)  os << LogIO::NORMAL << " --> Flagged " << 100*chunk_flags/chunk_count << "% ";
+   else os << LogIO::NORMAL << " --> No data to flag" ;
     
     // Read info from the vb.
     Int spw=vb.spectralWindow();
@@ -357,8 +383,12 @@ namespace casa {
 	corrstr << spw << ":" << pl;
 	allflags["correlation"][corrstr.str()] += corr_flags[pl];
 	allcounts["correlation"][corrstr.str()] += corr_count[pl];
+	if(corr_count[pl]>0) 	os << " [" << corrlist_p[pl] << "]:" << 100*corr_flags[pl]/corr_count[pl] ;
+	else os << " [" << corrlist_p[pl] << "]: No data" ;
       }    
-    
+
+    os << LogIO::POST;
+
   }// end of accumulateStats
   /***************************************************************/
   /***************************************************************/
@@ -528,33 +558,42 @@ namespace casa {
 
     plotter_p = dbus::launch<FlagPlotServerProxy>();
     
-    panels_p.resize(12);
+    panels_p.resize(NumP*3);
     string zoomloc="";
     string legendloc="bottom";
     panels_p[0] = plotter_p->panel( "", "", "", "",
 				    std::vector<int>( ),legendloc,zoomloc,0,false,false);
     
-    for(Int i=1;i<4;i++)
+    if(NumP>1)
+      {
+    for(Int i=1;i<NumP;i++)
       {
 	panels_p[i] = plotter_p->panel( "", "", "", "",
 					std::vector<int>( ),legendloc,zoomloc,panels_p[i-1].getInt(),false,false);
       }
-    panels_p[4] = plotter_p->panel( "", "", "", "",
+      }
+    
+      panels_p[NumP] = plotter_p->panel( "", "", "", "",
 				    std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
-    for(int i=5;i<8;i++)
+
+      if(NumP>1)
+	{
+    for(int i=NumP+1;i<2*NumP;i++)
       {
 	panels_p[i] = plotter_p->panel( "", "", "", "",
 					std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
       }
-
-    panels_p[8] = plotter_p->panel( "", "", "", "",
+	}
+    panels_p[2*NumP] = plotter_p->panel( "", "", "", "",
 				    std::vector<int>( ),legendloc,zoomloc, panels_p[0].getInt(),true,false);
-    for(int i=9;i<12;i++)
+    if(NumP>1)
+      {
+    for(int i=2*NumP+1;i<3*NumP;i++)
       {
 	panels_p[i] = plotter_p->panel( "", "", "", "",
 					std::vector<int>( ),legendloc,zoomloc, panels_p[i-1].getInt(),false,false);
       }
-
+      }
     /*
     // Misc panel
    panels_p[8] = plotter_p->panel( "BandPass", "Frequency", "Amp", "",
@@ -605,7 +644,7 @@ namespace casa {
     plotter_p->erase( frame );
     
     //	plotter_p->line(x, y, "blue", "time", panel_p.getInt() );
-    plotter_p->raster(dbus::af(data), xdim,ydim, frame);
+    plotter_p->raster(dbus::af(data), xdim,ydim, "Hot Metal 1", frame);
   }
 
   void LFDisplayFlags::DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
@@ -617,7 +656,7 @@ namespace casa {
   void LFDisplayFlags::DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold, uInt frame)
   {
     if( hold==False ) plotter_p->erase( frame );
-    plotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"",1,4,frame);
+    plotter_p->scatter(dbus::af(xdata), dbus::af(ydata),color,label,"dot",1,4,frame);
   }
   
   

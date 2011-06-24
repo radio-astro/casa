@@ -45,10 +45,9 @@ class FlagPlotServerProxy : public PlotServerProxy {
 	}
 	void closing(const int32_t& panel, const bool &gone) {
 	    casa::DBusSession::instance( ).dispatcher( ).leave( );
-	    std::cout << "closing panel: " << panel << " (" << gone << ")..." << std::endl;
+	    //std::cout << "closing panel: " << panel << " (" << gone << ")..." << std::endl;
             returnvalue = "Quit";
 	}
-
 
 	dbus::variant panel( const std::string& title, const std::string &xlabel="", const std::string &ylabel="",
 			     const std::string &window_title="", const std::vector<int> &size=std::vector<int>( ),
@@ -72,9 +71,9 @@ class FlagPlotServerProxy : public PlotServerProxy {
 	    return v;
 	}
 
- dbus::variant raster(  const std::vector<double> &matrix, int sizex, int sizey, int panel=0 )
+  dbus::variant raster(  const std::vector<double> &matrix, int sizex, int sizey, const std::string& colormap="Greyscale 1", int panel=0 )
 {
-  dbus::variant v = PlotServerProxy::raster( matrix, sizex, sizey, panel );
+  dbus::variant v = PlotServerProxy::raster( matrix, sizex, sizey, colormap, panel );
 	    if ( v.type( ) == dbus::variant::INT ) {
 		l = v.getInt( );
 	    }

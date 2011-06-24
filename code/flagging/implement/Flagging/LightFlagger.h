@@ -176,7 +176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int maxnumthreads_p;  
 
     // Generic input parameters
-    Bool ShowPlots, WriteFlagsToMS, StopAndExit, FlagZeros;
+    Bool ShowPlots, WriteFlagsToMS, StopAndExit, FlagZeros,UsePreFlags;
     Int NumTime, FlagLevel;
     String Expr, Column;
 

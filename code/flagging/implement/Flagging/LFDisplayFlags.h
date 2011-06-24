@@ -70,7 +70,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //             can read misc info from the MS (times, uvw values, etc...)
     virtual Bool runMethod(VisBuffer &inVb, 
                    Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
-		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP);
+			   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP,
+			   Vector<CountedPtr<LFBase> > &flagmethods);
 
     virtual Record getStatistics();
     

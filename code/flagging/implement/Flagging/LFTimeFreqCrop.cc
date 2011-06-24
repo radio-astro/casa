@@ -56,7 +56,7 @@ namespace casa {
   
   LFTimeFreqCrop::~LFTimeFreqCrop ()
   {
-    cout << "TFC destructor" << endl;  
+    //    cout << "TFC destructor" << endl;  
   }
   
  
@@ -67,26 +67,19 @@ namespace casa {
     fullrec = getParameters();
     fullrec.merge(parameters,Record::OverwriteDuplicates);
 
-    cout << fullrec << endl;    
+    //    cout << fullrec << endl;    
 
     /* Read values into local variables */
-    ANT_TOL = fullrec.asDouble("ant_cutoff");
-    BASELN_TOL = fullrec.asDouble("baseline_cutoff");
     T_TOL = fullrec.asDouble("time_amp_cutoff");
     F_TOL = fullrec.asDouble("freq_amp_cutoff");
-    FlagLevel = fullrec.asInt("flag_level");
-    NumTime = fullrec.asInt("ntime_sec");
-    ShowPlots = fullrec.asBool("showplots");
-    FreqLineFit = fullrec.asBool("freqlinefit");
     MaxNPieces = fullrec.asInt("maxnpieces");
-    WriteFlagsToMS = fullrec.asBool("writeflags");
-    Expr = fullrec.asString("expr");
-    Column = fullrec.asString("datacolumn");
     intSelCorr = fullrec.asArrayInt("corrs");
     
     timeFitType_p = fullrec.asString("timefit");
     freqFitType_p = fullrec.asString("freqfit");
     flagDimension_p = fullrec.asString("flagdimension");
+    halfWin_p = fullrec.asInt("halfwin");
+    winStats_p = fullrec.asString("usewindowstats");
     
     return True;
   }
@@ -98,26 +91,15 @@ namespace casa {
     if( !rec.nfields() )
       {
         rec.define("algorithm","tfcrop");
-	rec.define("datacolumn","DATA");
-	rec.define("ant_cutoff",0);
-	rec.define("baseline_cutoff",0);
 	rec.define("time_amp_cutoff",3);
 	rec.define("freq_amp_cutoff",3);
-	rec.define("flag_level",1);
-	rec.define("auto_cross",1);
-	rec.define("ntime_sec",90);
-	rec.define("column","DATA");
-	rec.define("expr","ABS I");
-	rec.define("fignore",False);
-	rec.define("showplots",False);
-	rec.define("freqlinefit",False);
 	rec.define("maxnpieces",6);
 	
-        rec.define("writeflags",False);
-
         rec.define("timefit","line");
         rec.define("freqfit","poly");
-        rec.define("flagdimension","both");
+        rec.define("flagdimension","freqtime");
+        rec.define("halfwin",1);
+	rec.define("usewindowstats","none");
 
         rec.define("corrs",Array<Int>());
       }
@@ -187,7 +169,10 @@ namespace casa {
 
     // Setup the correlation selection
     if(intSelCorr.nelements()==0 || intSelCorr.nelements()!=NumP) 
-      {intSelCorr.resize(NumP); intSelCorr=1; cout << "Selecting All Correlation Pairs" << endl; }
+      {
+	intSelCorr.resize(NumP); intSelCorr=1; 
+	//cout << "Selecting All Correlation Pairs" << endl; 
+      }
 
     uInt a1,a2;
     //    meanBP = 0;
@@ -205,23 +190,33 @@ namespace casa {
 	    Ants(bs,&a1,&a2);
 	    if(a1 != a2) 
 	      {
-		
+		/*		
                 if(flagDimension_p == String("time") || flagDimension_p == String("both") )
 		  {
-		    FlagTimeSeries(pl,bs,"line");    
+		    //		    FlagTimeSeries(pl,bs,"line");    
+		    //	    FitBaseAndFlag(pl,bs,String("line"),String("time"),cleanTS);
 		  }
-		
-   		if(flagDimension_p == String("freq") || flagDimension_p == String("both") )
+		*/
+
+		if(flagDimension_p == String("time"))
 		  {
-		    FitCleanBandPass(pl,bs,freqFitType_p);
-		    FlagBandPass(pl,bs);
+		    FitBaseAndFlag(pl,bs,timeFitType_p,String("time"),cleanTS);
+		  }
+		else if( flagDimension_p == String("freq") )
+		  {
+		    FitBaseAndFlag(pl,bs,freqFitType_p,String("freq"),cleanBP);
+		  }
+		else if( flagDimension_p == String("timefreq") )
+		  {
+		    FitBaseAndFlag(pl,bs,timeFitType_p,String("time"),cleanTS);
+		    FitBaseAndFlag(pl,bs,freqFitType_p,String("freq"),cleanBP);
+		  }
+		else // freqtime
+		  {
+		    FitBaseAndFlag(pl,bs,freqFitType_p,String("freq"),cleanBP);
+		    FitBaseAndFlag(pl,bs,timeFitType_p,String("time"),cleanTS);
 		  }
 
-		if(flagDimension_p == String("time") || flagDimension_p == String("both") )
-		  {
-		    FitCleanTimeSeries(pl,bs,timeFitType_p);
-		    FlagTimeSeriesAgain(pl,bs);    
-		  }
 
 		
 	      }// corrchoice
@@ -230,6 +225,205 @@ namespace casa {
     
     return True;   
   }// End of RunTFCrop()
+  
+  
+  
+  // FitBaseAndFlag
+  // Read data and flags, and fill in cleanBP(pl,bs,ch)  or cleanTS(pl,bs,tm)
+  void LFTimeFreqCrop :: FitBaseAndFlag(uInt pl, uInt bs, String fittype, String direction, Cube<Float> &cleanArr)
+  {    
+    
+    Float mn=0,sd=0,tpsd=0.0,tpsum=0.0;
+    uInt a1,a2;
+    Bool flg=True;
+    Float mval=0.0;
+    Int mcnt=0;
+    
+    IPosition cubeshp = cleanArr.shape();
+    Vector<Float> tempDat,tempFit;
+    Vector<Bool> tempFlag;
+    Vector<Int> mind(2);
+
+    // Decide which direction to fit the base polynomial
+    if(direction==String("freq"))
+      { 
+	AlwaysAssert(cubeshp==IPosition(3,NumP,NumB,NumC), AipsError);
+	mind[0]=NumC;  mind[1]=NumT;
+      }
+    else if(direction==String("time") )
+      { 
+	AlwaysAssert(cubeshp==IPosition(3,NumP,NumB,NumT), AipsError);
+	mind[0]=NumT;  mind[1]=NumC;
+      }
+
+    // Resize temp arrays
+    tempDat.resize(mind[0]); 
+    tempFit.resize(mind[0]); 
+    tempFlag.resize(mind[0]);
+    tempDat=0.0;
+    tempFit=0.0;
+    tempFlag=False;
+
+    // Get a1,a2 indices from the baseline count
+    Ants(bs,&a1,&a2);
+
+    // For each element in the dominant direction (axis0)
+    //   calculate the mean across the other direction (axis1).
+    for(int i0=0;i0<mind[0];i0++)	
+      {
+	// Calc the mean across axes1 (with flags)
+	mval=0.0;mcnt=0;
+	for(uInt i1=0;i1<mind[1];i1++)
+	  {
+	    if(mind[0]==NumC)// if i0 is channel, and i1 is time
+	      {
+		if(!flagc(pl,i0,((i1*NumB)+bs)))
+		  {
+		    mval += visc(pl,i0,((i1*NumB)+bs));
+		    mcnt++;
+		  }
+	      }
+	    else // if i1 is channel, and i0 is time
+	      {
+		if(!flagc(pl,i1,((i0*NumB)+bs)))
+		  {
+		    mval += visc(pl,i1,((i0*NumB)+bs));
+		    mcnt++;
+		  }
+	      }
+	  }//for i1
+	// Fill in the mean value across axis1 for i0
+	tempDat[i0] = mcnt ? mval/mcnt : 0.0;
+	tempFlag[i0] = mcnt ? False : True;
+	if(! tempFlag[i0] ) flg=False;
+      }// for i0
+
+    // Fit a piece-wise polynomial across axis0 (or do a line)
+    if(flg==False)
+      {
+	/* Piecewise Poly Fit*/
+	if(fittype == String("poly"))
+	  {
+	    FitPiecewisePoly(tempDat,tempFlag,tempFit);	
+	  }
+	else
+	  {
+	    /* LineFit to flag off a line fit in frequency */
+	    //flagBP=False;
+	    for(uInt i0=0;i0<mind[0];i0++)
+	      if(tempDat[i0]==0) tempFlag[i0]=True;
+	    LineFit(tempDat,tempFlag,tempFit,0,mind[0]-1);	
+	  }
+      }// fit poly
+
+    // Store the fit for later use.
+    for(int i0=0;i0<mind[0];i0++)
+      {
+	if(flg==False) cleanArr(pl,bs,i0)= tempFit[i0];
+	else cleanArr(pl,bs,i0)=0;
+      }
+
+    //      Float avgsd = sqrt( calcVar(tempDat,tempFlag,tempFit) );
+    //	    if(mind[0]==NumC) cout << "  Stddev : "  << avgsd << endl;
+
+
+
+    // Now, iterate through the data again and flag.
+    // This time, iterate in reverse order : for each i1, get all i0
+    for(uInt i1=0;i1<mind[1];i1++)
+      {
+	/* Divide (or subtract) out the clean bandpass */
+	tempDat=0,tempFlag=0;
+	for(int i0=0;i0<mind[0];i0++)
+	  {
+	    if(mind[0]==NumC)// if i0 is channel, and i1 is time
+	      {
+		tempFlag[i0] = flagc(pl,i0,((i1*NumB)+bs));
+		if(tempFlag[i0]==False) tempDat[i0] = visc(pl,i0,((i1*NumB)+bs))/cleanArr(pl,bs,i0);
+		//if(tempFlag[i0]==False) tempDat[i0] = ( visc(pl,i0,((i1*NumB)+bs)) - cleanArr(pl,bs,i0) );
+		//if(tempFlag[i0]==False) tempDat[i0] = ( visc(pl,i0,((i1*NumB)+bs)) );
+	      }
+	    else // if i1 is channel, i0 is time
+	      {
+		tempFlag[i0] = flagc(pl,i1,((i0*NumB)+bs));
+		if(tempFlag[i0]==False) tempDat[i0] = visc(pl,i1,((i0*NumB)+bs))/cleanArr(pl,bs,i0);
+		//if(tempFlag[i0]==False) tempDat[i0] = ( visc(pl,i1,((i0*NumB)+bs)) -cleanArr(pl,bs,i0) );
+		//if(tempFlag[i0]==False) tempDat[i0] = ( visc(pl,i1,((i0*NumB)+bs)) );
+	      }
+	  }//for i0
+	
+
+	//Flag outliers based on absolute deviation from the model
+	// Do this as a robust fit
+	Float temp=0;
+	for(Int loop=0;loop<5;loop++)
+	  {
+	    mn=1;
+	    //mn=0.0;
+
+	    sd = UStd(tempDat,tempFlag,mn);
+	    // sd = UStd(tempDat,tempFlag,tempFit);
+	    
+	    // Flag if the data differs from 1 by N sd
+	    for(Int i0=0;i0<mind[0];i0++)
+	      {
+		if(tempFlag[i0]==False && fabs(tempDat[i0]-mn) > F_TOL*sd) tempFlag[i0]=True ;
+	      }
+
+
+	if(halfWin_p>0 && (winStats_p != "none") )
+	  {
+	    for(Int i0=halfWin_p;i0<mind[0]-halfWin_p;i0++)
+	      {
+		tpsum=0.0;tpsd=0.0;
+		// Flag if sum of N points crosses a lower threshold
+		if(winStats_p=="sum" || winStats_p=="both")
+		  {
+		    for(Int i=i0-halfWin_p; i<i0+halfWin_p+1; i++) tpsum += fabs(tempDat[i]-mn);
+		    if(tpsum/(2*halfWin_p+1.0) > F_TOL*sd/2.0 ) tempFlag[i0]=True;
+		  }
+		
+		
+		// Flag if the N point std is larger then N sd
+		if(winStats_p=="std" || winStats_p=="both")
+		  {
+		    for(Int i=i0-halfWin_p; i<i0+halfWin_p+1; i++) tpsd += (tempDat[i]-mn) * (tempDat[i]-mn) ;
+		    if(sqrt( tpsd / (2*halfWin_p+1.0) ) > F_TOL*sd/2.0)  tempFlag[i0]=True ;
+		  }
+		
+	      }//for i0
+	  }// if winStatr += none
+	
+
+
+
+	    if(fabs(temp-sd) < 0.1)break;
+	    temp=sd;
+	  }//for loop
+	
+	
+	/* Fill the flags into the visbuffer array */
+	for(Int i0=0;i0<mind[0];i0++)
+	  {
+	    if(mind[0]==NumC)// if i0 is channel, and i1 is time
+	      {
+		flagc(pl,i0,((i1*NumB)+bs))=tempFlag[i0];
+	      }
+	    else //if i1 is channel, and i0 is time
+	      {
+		flagc(pl,i1,((i0*NumB)+bs))=tempFlag[i0];
+	      }
+	  }
+	
+      }//for i1
+    
+    
+    
+  }// end FitBaseAndFlag
+  
+  
+  //////////////////// START UNUSED CODE
+#if 0
   
   
   
@@ -242,11 +436,11 @@ namespace casa {
     Float mn=0,sd=0,temp=0,tol=0;
     uInt a1,a2;
     Bool flg=False;
-
+    
     // Create an average time-series. Average across channels    
-
-
-/* For each Channel - fit lines to 1-D data in time - flag according 
+    
+    
+    /* For each Channel - fit lines to 1-D data in time - flag according 
      * to them and build up the mean bandpass */
     
     Float rmean=0;
@@ -267,13 +461,14 @@ namespace casa {
 	for(int loop=0;loop<5;loop++)
 	  {
 	    
-            if(fittype==String("poly")) FitPiecewisePoly(tempTS,flagTS,fitTS);
-	    else LineFit(tempTS,flagTS,fitTS,0,tempTS.nelements()-1);	
+	    //	    if(fittype==String("poly")) FitPiecewisePoly(tempTS,flagTS,fitTS);
+	    //else 
+	    LineFit(tempTS,flagTS,fitTS,0,tempTS.nelements()-1);	
 	    
 	    sd = UStd(tempTS,flagTS,fitTS);
 	    
 	    for(uInt i=0;i<NumT;i++)
-	      if(flagTS[i]==False && fabs(tempTS[i]-fitTS[i]) > T_TOL*sd)
+	      if(flagTS[i]==False && fabs(tempTS[i]-fitTS[i]) > T_TOL*sd*2.0)
 		{
 		  flagTS[i]=True ;
 		}
@@ -301,25 +496,9 @@ namespace casa {
 	
       }//for ch
     
-    /* Check for completely flagged ants/bs */
-    // UUU : DOES NOT WORK. rmean is often ZERO for no reason.
-    if(0)
-      {
-	if(a1 != a2) 
-	  {
-	    tol=BASELN_TOL;
-	    if(fabs(rmean/float(NumC)) < tol)
-	      {
-		for(int ch=0;ch<NumC;ch++)
-		  for(uInt tm=0;tm<NumT;tm++)
-		    flagc(pl,ch,((tm*NumB)+bs))=True;
-		cout << "Mean : " << rmean/NumC << " : Baseline Flagged : " << a1 << ":" << a2 << endl;
-	      }
-	    
-	  }
-      }///if(0);		
-    
   }    
+  
+  
   
   /* Fit a smooth bandpass to the mean bandpass and store it 
    *  one for each baseline */
@@ -339,7 +518,7 @@ namespace casa {
     for(int ch=0;ch<NumC;ch++)	
       {
 	//tempBP[ch] = meanBP(pl,bs,ch);
-
+	
 	// Calc the mean across time (with flags), and assign to tempBP
 	tempTS=0;flagTS=False;
 	for(uInt tm=0;tm<NumT;tm++)
@@ -348,7 +527,7 @@ namespace casa {
 	    flagTS[tm] = flagc(pl,ch,((tm*NumB)+bs));
 	  }//for tm
 	tempBP[ch] = UMean(tempTS,flagTS) ;
-
+	
 	if(tempBP[ch] != 0) flg=False;
       }
     
@@ -386,7 +565,7 @@ namespace casa {
     Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
     uInt a1,a2;
     Bool flg=False;
-    
+    Float sd1;    
     
     Ants(bs,&a1,&a2);
     
@@ -401,7 +580,8 @@ namespace casa {
 	      tempBP[ch] = visc(pl,ch,((tm*NumB)+bs))/cleanBP(pl,bs,ch);
 	  }//for ch
 	
-	/* Flag outliers */
+	/* Flag outliers based on absolute deviation from the model*/
+	
 	temp=0;
 	for(Int loop=0;loop<5;loop++)
 	  {
@@ -418,6 +598,46 @@ namespace casa {
 	    if(fabs(temp-sd) < 0.1)break;
 	    temp=sd;
 	  }
+	
+	
+	/* Flag outliers based on an stddev from the mean*/
+	/*
+	// Flag point i, if the stddev of points i-N to i+N > nsigma
+	uInt nn = 2;	    
+	temp=0;
+	for(Int loop=0;loop<5;loop++)
+	{
+	mn=1;
+	sd = UStd(tempBP,flagBP,mn);
+	
+	
+	for(Int ch=0;ch<NumC;ch++)
+	{
+	if(ch>=nn || ch<NumC-nn)
+	{
+	sd1=0.0;
+	for(Int ich=ch-nn;ich<ch+nn;ich++)
+	{
+	sd1 += (tempBP[ch]-mn)*(tempBP[ch-mn]);
+	}
+	sd1 /= 2*nn+1;
+	
+	// flag now
+	if( sd1 > F_TOL*sd ) {flagBP[ch]=True; flagcnt++;}
+	}
+	else
+	{
+	if(flagBP[ch]==False && fabs(tempBP[ch]-mn) > F_TOL*sd)
+	{
+	flagBP[ch]=True ;flagcnt++;
+	}
+	}
+	}
+	if(fabs(temp-sd) < 0.1)break;
+	temp=sd;
+	}
+	*/
+	
 	
 	/* If sum of power in two adjacent channels is more than thresh, flag both side chans */
 	/*
@@ -443,8 +663,8 @@ namespace casa {
     
     
   }// end FlagBandPass    
-
-
+  
+  
   void LFTimeFreqCrop :: FitCleanTimeSeries(uInt pl, uInt bs, String fittype)
   {    
     
@@ -465,15 +685,15 @@ namespace casa {
 	    flagBP[ch] = flagc(pl,ch,((tm*NumB)+bs));
 	  }//for tm
 	tempTS[tm] = UMean(tempBP,flagBP) ;
-
+	
 	if(tempTS[tm] != 0) flg=False;
       }
-
+    
     if(flg==False)// if any one datapoint is unflagged..
       {
-	/* Piecewise Poly Fit to the meanTS */
 	if(fittype == String("poly"))
 	  {
+	    /* Piecewise Poly Fit to the meanTS */
 	    FitPiecewisePoly(tempTS,flagTS,fitTS);	
 	  }
 	else
@@ -561,6 +781,9 @@ namespace casa {
   }// end FlagTimeSeriesAgain
   
   
+#endif
+  //////////////////// END UNUSED CODE
+  
   /* Calculate the MEAN of 'vect' ignoring values flagged in 'flag' */
   Float LFTimeFreqCrop :: UMean(Vector<Float> vect, Vector<Bool> flag)
   {
@@ -575,6 +798,52 @@ namespace casa {
     if(cnt==0) cnt=1;
     return mean/cnt;
   }
+  
+  
+  /* Calculate the variance of 'vect' w.r.to a given 'fit' 
+   * ignoring values flagged in 'flag' 
+   * Use  median ( data - median(data) )   as the estimator of variance
+   */
+  Float LFTimeFreqCrop :: calcVar(Vector<Float> vect, Vector<Bool> flag, Vector<Float> fit)
+  {
+    Float var=0;
+    int n=0,cnt=0;
+    n = vect.nelements() < fit.nelements() ? vect.nelements() : fit.nelements();
+    for(int i=0;i<n;i++)
+      {
+	if(flag[i]==False)cnt++;
+      }
+    
+    Vector<Float> validvals(cnt);
+    cnt=0;
+    for(int i=0;i<n;i++)
+      {
+	if(flag[i]==False)
+	  {
+	    validvals[cnt] = fit[i] < 1e-6 ? 0.0 : fabs( (vect[i] - fit[i])/fit[i] );
+	    cnt++;
+	  }
+      }
+    
+    Float med=0.0;
+    
+    if(validvals.nelements())
+      {
+	med = median(validvals,False);
+	
+	//cout << "validvals : " << validvals << endl;
+	//cout << "median : " << med << endl;
+	
+	for(int i=0;i<validvals.nelements();i++)
+	  validvals[i] = fabs( validvals[i]-med );
+	
+	med = median(validvals,False);
+	//cout << "median(data-median(data)) : " << med << endl;
+      }
+    
+    return med;
+  }
+  
   
   
   /* Calculate the STANDARD DEVN. of 'vect' w.r.to a given 'fit' 
@@ -749,8 +1018,8 @@ namespace casa {
   
   
   
-  /* Fit a polynomial to 'data' from lim1 to lim2, of given degree 'deg', 
-   * taking care of flags in 'flag', and returning the fitted values in 'fit' */
+    /* Fit a polynomial to 'data' from lim1 to lim2, of given degree 'deg', 
+     * taking care of flags in 'flag', and returning the fitted values in 'fit' */
   void LFTimeFreqCrop :: PolyFit(Vector<Float> data,Vector<Bool> flag, Vector<Float> fit, uInt lim1, uInt lim2,uInt deg)
   {
     static Vector<Double> x;
@@ -835,5 +1104,37 @@ namespace casa {
     
   }
   
+  Bool LFTimeFreqCrop::getMonitorSpectrum(Vector<Float> &monspec, uInt pl, uInt bs)
+  {
+    AlwaysAssert(monspec.nelements()==NumC, AipsError);
+    Float sd;
+    uInt cnt;
+    sd=0.0; 
+    
+    /*
+      for(uInt tm=0;tm<NumT;tm++)
+      {
+      tempBP=0.0;
+      for(int ch=0;ch<NumC;ch++)
+      {
+      flagBP[ch] = flagc(pl,ch,((tm*NumB)+bs));
+      if(flagBP[ch]==False )
+      {
+      tempBP[ch] = visc(pl,ch,((tm*NumB)+bs))/cleanBP(pl,bs,ch);
+      //tempBP[ch] = fabs( visc(pl,ch,((tm*NumB)+bs)) - cleanBP(pl,bs,ch) );
+      }
+      
+      }
+      sd += UStd(tempBP,flagBP,1);
+      }
+      
+      sd /= NumT;
+    */
+    
+    for(int ch=0;ch<NumC;ch++)
+      monspec[ch] = cleanBP(pl,bs,ch);;
+    
+    return True;
+  }
   
 } //#end casa namespace

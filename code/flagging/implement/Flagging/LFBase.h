@@ -67,6 +67,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       NumT=numT, NumAnt=numAnt; NumB=numB; NumC=numC; NumP=numP;
      };    
 
+    // Extract a diagnostic spectrum vector.
+    virtual Bool getMonitorSpectrum(Vector<Float> &monspec, uInt pl, uInt bs)
+    {return False;};
 
 /* Return antenna numbers from baseline number - upper triangle storage */
  void Ants(uInt bs, uInt *a1, uInt *a2)
