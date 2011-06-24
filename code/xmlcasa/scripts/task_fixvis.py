@@ -76,7 +76,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     casalog.post('Invalid refcode '+refcode, 'SEVERE')
                     return False
             else: # not a variable reference column
-                validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal']
+                validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal'].tolist()\
+                             + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist()
                 if not (refcode in validcodes):
                     casalog.post('Invalid refcode '+refcode, 'SEVERE')
                     return False
@@ -139,8 +140,10 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
 
                 theoldphasecenter = theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),14)+' '+qa.angle(qa.quantity(theolddir[1],'rad'),14)
 
-                if (theoldref<32 and not theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
-                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not yet tested: '+theoldrefstr, 'WARN')
+                if not (theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC', 'ICRS']
+                        + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist() ):
+                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not yet supported: '+theoldrefstr, 'WARN')
+                    casalog.post('Output MS may not be valid.', 'WARN')
 
                 casalog.post( 'field: '+fieldname, 'NORMAL')
                 casalog.post( 'old phasecenter RA, DEC '+theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),10) # 10 digits precision
@@ -194,24 +197,18 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                         casalog.post('Incorrectly formatted parameter \'phasecenter\': '+phasecenter, 'SEVERE')
                         return False
                     
-                    try:
-                        thedir = me.direction(dirstr[0], dirstr[1], dirstr[2])
-                        thenewra_rad = thedir['m0']['value']
-                        thenewdec_rad = thedir['m1']['value']
-                    except Exception, instance:
-                        casalog.post("*** Error \'%s\' when interpreting parameter \'phasecenter\': " % (instance), 'SEVERE')
-                        return False
                     if(isvarref):
                         thenewrefindex = ckwdict['TabRefTypes'].tolist().index(dirstr[0])
                         thenewref = ckwdict['TabRefCodes'][thenewrefindex]
                         thenewrefstr = dirstr[0]
                     else: # not a variable ref col
-                        validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal']
+                        validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal'].tolist()\
+                                     + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist()
                         if(dirstr[0] in validcodes):
-                            thenewref = validcodes.tolist().index(dirstr[0])
+                            thenewref = validcodes.index(dirstr[0])
                             thenewrefstr = dirstr[0]
                         else:
-                            casalog.post('Invalid refcode '+refcode, 'SEVERE')
+                            casalog.post('Invalid refcode '+dirstr[0], 'SEVERE')
                             return False
                         if(dirstr[0] != ckwdict['Ref']):
                             allselected = True
@@ -227,8 +224,21 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                                 casalog.post("The direction column reference frame in the FIELD table will be changed from "
                                              +ckwdict['Ref']+" to "+dirstr[0], 'NORMAL')
                     #endif
+
+                    try:
+                        thedir = me.direction(thenewrefstr, dirstr[1], dirstr[2])
+                        thenewra_rad = thedir['m0']['value']
+                        thenewdec_rad = thedir['m1']['value']
+                    except Exception, instance:
+                        casalog.post("*** Error \'%s\' when interpreting parameter \'phasecenter\': " % (instance), 'SEVERE')
+                        return False
                                 
                 #endif
+
+                if not (thenewrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC', 'ICRS']
+                        + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist() ):
+                    casalog.post('Refcode for the new phase center is valid but not yet supported: '+thenewrefstr, 'WARN')
+                    casalog.post('Output MS may not be valid.', 'WARN')
                     
                 casalog.post( 'new phasecenter RA, DEC '+thenewrefstr+' '+qa.time(qa.quantity(thenewra_rad,'rad'),10)
                               +" "+ qa.angle(qa.quantity(thenewdec_rad,'rad'),10), 'NORMAL')
