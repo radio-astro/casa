@@ -22,6 +22,7 @@ reffile = refpath+'reflistobs'
 
 # Input and output names
 msfile1 = 'ngc5921_ut.ms'
+msfile2 = 'uid___X02_X3d737_X1_01_small.ms'
 
 class listobs_test1(unittest.TestCase):
 
@@ -30,6 +31,9 @@ class listobs_test1(unittest.TestCase):
         datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listobs/'
         if (not os.path.exists(msfile1)):            
             shutil.copytree(datapath+msfile1, msfile1)
+
+        if (not os.path.exists(msfile2)):            
+            shutil.copytree(datapath+msfile2, msfile2)
         
         default(listobs)
         
@@ -57,6 +61,20 @@ class listobs_test1(unittest.TestCase):
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
         name = res['header']['scan_7']['0']['FieldName']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
+        
+    def test4(self):
+        '''Listobs 4: CAS-2751. Check that ALMA MS displays one row per scan'''
+        ms.open(msfile2)
+        res = ms.summary(True)
+        
+        # Begin and end times should be different
+        btime = res['header']['scan_1']['0']['BeginTime']
+        etime = res['header']['scan_1']['0']['EndTime']
+        self.assertNotEqual(btime, etime, "Begin and End times of scan=1 should not be equal")
+        
+        # Only one row of scan=1 should be printed
+        # Once CAS-2398 is implemented, finish this test and compare
+        # with a reference file in the repository
                     
 #    def test3(self):
 #        '''Listobs 3: Save on a file, verbose=False'''
@@ -103,6 +121,7 @@ class listobs_cleanup(unittest.TestCase):
     def tearDown(self):
         # It will ignore errors in case the files don't exist
         shutil.rmtree(msfile1,ignore_errors=True)
+        shutil.rmtree(msfile2,ignore_errors=True)
         os.system('rm -rf ' + 'listobs*.txt')
         
     def test_run(self):
