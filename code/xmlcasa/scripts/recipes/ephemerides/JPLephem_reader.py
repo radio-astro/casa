@@ -16,7 +16,7 @@ import scipy.special
 import time                  # We can always use more time.
 
 from taskinit import gentools, qa, casalog
-me = gentools(['me'])
+me = gentools(['me'])[0]
 
 from dict_to_table import dict_to_table
 
@@ -601,12 +601,9 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
                 collist.remove(c)
                 collist.insert(0, c)
         
-        clashing_cols = []
-        for c in collist:
-            if c in kws:
-                clashing_cols.append(c)
+        clashing_cols = [c for c in collist if c in kws]
         if clashing_cols:
-            raise ValueError, 'The input dictionary lists' + ', '.join(clashing_cols) + 'as both keyword(s) and column(s)'
+            raise ValueError, 'The input dictionary lists ' + ', '.join(clashing_cols) + ' as both keyword(s) and column(s)'
 
         # This promotes the keys in outdict['data'] up one level, and removes
         # 'data' as a key of outdict.

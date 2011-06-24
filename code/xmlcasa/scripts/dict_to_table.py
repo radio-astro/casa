@@ -131,17 +131,16 @@ def dict_to_table(indict, tablepath, kwkeys=[], colkeys=[], info=None):
 
     # Since tables are directories, it saves a lot of grief if we first check
     # whether the table exists and is under svn control.
-    svndir = ''
-    if os.path.isdir(tablepath + '/.svn'):
-        # tempfile is liable to use /tmp, which can be too small and/or slow.
-        # Use the directory that tablepath is in, since we know the user
-        # approves of writing to it.
-        workingdir = os.path.abspath(os.path.dirname(tablepath.rstrip('/')))
-        
-        svndir = tempfile.mkdtemp(dir=workingdir)
-        shutil.move(tablepath + '/.svn', svndir)
+    svndir = None
+    if os.path.isdir(tablepath):
+        if os.path.isdir(tablepath + '/.svn'):
+            # tempfile is liable to use /tmp, which can be too small and/or slow.
+            # Use the directory that tablepath is in, since we know the user
+            # approves of writing to it.
+            workingdir = os.path.abspath(os.path.dirname(tablepath.rstrip('/')))
 
-    if tablepath:
+            svndir = tempfile.mkdtemp(dir=workingdir)
+            shutil.move(tablepath + '/.svn', svndir)
         shutil.rmtree(tablepath)
 
     # Create and fill the table.
