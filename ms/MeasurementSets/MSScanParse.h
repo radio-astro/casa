@@ -96,10 +96,12 @@ public:
   const TableExprNode *selectRangeGTAndLT(const Int& n0, const Int& n1);
   const TableExprNode *selectRangeGEAndLE(const Int& n0, const Int& n1);
   const TableExprNode *selectScanIds(const Vector<Int>& scanids);
+  inline const TableExprNode *selectScanIds() {return selectScanIds(parsedIDList_p);};
   const TableExprNode *selectScanIdsGT(const Vector<Int>& scanids);
   const TableExprNode *selectScanIdsLT(const Vector<Int>& scanids);
   const TableExprNode *selectScanIdsGTEQ(const Vector<Int>& scanids);
   const TableExprNode *selectScanIdsLTEQ(const Vector<Int>& scanids);
+  std::vector<Int>& accumulateIDs(const Int id0, const Int id1=-1);
 
     // Get table expression node object.
   static const TableExprNode* node();
@@ -113,6 +115,7 @@ public:
 private:
   static TableExprNode* node_p;
   static Vector<Int> idList;
+  static std::vector<Int> parsedIDList_p;
   const String colName;
   void appendToIDList(const Vector<Int>& v);
   Int maxScans_p;
