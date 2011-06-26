@@ -1,4 +1,4 @@
-/*
+/* -*- C++ -*-
     MSScanGram.y: Parser for scan expressions
     Copyright (C) 2004
     Associated Universities, Inc. Washington DC, USA.
@@ -42,7 +42,7 @@
   Int ival[2];
   char * str;
   Double dval;
-  Vector<Int>* iv;
+  std::vector<Int>* iv; // std::vectors have push_back, insert, etc.
   Vector<String>* is;
 }
 
@@ -68,9 +68,10 @@
 %token SEMICOLON
 
 %type <node> scanstatement
-%type <node> indexcombexpr
-%type <node> scanidrange
+%type <node> compoundexpr
+%type <node> scanboundsexpr
 %type <node> scanidbounds
+%type <iv> scanids
 
 %nonassoc EQ EQASS GT GE LT LE NE COMMA DASH AMPERSAND
 
@@ -79,22 +80,18 @@
 %}
 
 %%
-scanstatement: indexcombexpr 
-                  {
-                    $$ = $1;
-                  }
-                 | LPAREN indexcombexpr RPAREN //Parenthesis are syntactically 
-		                               // not useful here
-                  {
-		    $$ = $2;
-		  }
-                ;
-indexcombexpr  : scanidrange                       {$$=$1;}
-                | scanidbounds                     {$$=$1;}
-                | scanidrange COMMA indexcombexpr  {$$=$1;}
-                | scanidbounds COMMA indexcombexpr {$$=$1;}
-	       ;
-
+scanstatement: compoundexpr                {$$ = MSScanParse().selectScanIds();}
+             ;
+// Here, for ID-list expressions (INT and INT DASH INT), we only
+// collect the list of IDs generated (accumulated internally in
+// MSScanPrase).  The accumulated IDs are used for selection in the
+// terminal node above.  Bounds expressions are however used for
+// selection as they are parsed.
+compoundexpr: scanids                           {$$ = MSScanParse().node();}
+            | scanboundsexpr                    {$$=$1;}
+            | compoundexpr COMMA scanids        {$$=$1;}
+            | compoundexpr COMMA scanboundsexpr {$$=$1;}
+            ;
 
 scanidbounds: LT INT // <ID
                 {
@@ -102,58 +99,55 @@ scanidbounds: LT INT // <ID
 		  $$ = MSScanParse().selectScanIdsLT(idv);
 		  free($2);
 		}
-              | GT INT // >ID
+            | GT INT // >ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
 		  $$ = MSScanParse().selectScanIdsGT(idv);
 		  free($2);
 		}
-              | LE INT // <=ID
+            | LE INT // <=ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
 		  $$ = MSScanParse().selectScanIdsLTEQ(idv);
 		  free($2);
 		}
-              | GE INT // >=ID
+            | GE INT // >=ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
 		  $$ = MSScanParse().selectScanIdsGTEQ(idv);
 		  free($2);
 		}
-              | GE INT AMPERSAND LE INT // >=ID & <=ID
+            | GE INT AMPERSAND LE INT // >=ID & <=ID
                 {
 		  Int n0=atoi($2), n1=atoi($5);
 		  $$ = MSScanParse().selectRangeGEAndLE(n0,n1);
 
 		  free($2); free($5);
 		}
-              | GT INT AMPERSAND LT INT // >ID & <ID
+            | GT INT AMPERSAND LT INT // >ID & <ID
                 {
 		  Int n0=atoi($2), n1=atoi($5);
 		  $$ = MSScanParse().selectRangeGTAndLT(n0,n1);
 
 		  free($2); free($5);
 		}
-             ;
-
-scanidrange: INT // A single scan index
-            {
-	      const Vector<Int> idv(1,atoi($1));
-	      $$ = MSScanParse().selectScanIds(idv);
-	      free($1);
-	    }
-           | INT DASH INT // A range of integer scan indices
-            {
-              Int start = atoi($1);
-              Int end   = atoi($3);
-              Int len = end - start + 1;
-              Vector<Int> scanids(len);
-              for(Int i = 0; i < len; i++) {
-                scanids[i] = start + i;
-              }
-	      $$ = MSScanParse().selectScanIds(scanids);
-	      free($1); free($3);
-            }
-          ;
+            ;
+scanboundsexpr: scanidbounds {$$=$1;}
+//
+// Build a list of scan IDs.  This can be a single ID or a range of
+// IDs converted to a list.  Actual selection is done at the end of
+// parsing cycle (at the terminal node above).
+//
+scanids: INT
+           {
+	     $$=&MSScanParse().accumulateIDs(atoi($1));
+	     free($1);
+	   }
+       | INT DASH INT
+           {
+	     $$=&MSScanParse().accumulateIDs(atoi($1),atoi($3));
+	     free($1); free($3);
+	   }
+        ;
 %%
 
