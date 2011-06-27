@@ -69,7 +69,7 @@ static Int                   posMSArrayGram = 0;
       strpMSArrayGram = command.chars();     // get pointer to command string
       posMSArrayGram  = 0;                   // initialize string position
       MSArrayParse parser(ms);               // setup measurement set
-      MSArrayParse::thisMSSParser = &parser; // The global pointer to the parser
+      MSArrayParse::thisMSAParser = &parser; // The global pointer to the parser
       parser.reset();
       parser.setMaxArray(maxArrays);
       int ret=MSArrayGramparse();                // parse command string
