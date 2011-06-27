@@ -766,7 +766,14 @@ class simple_cluster:
                     eng=self._jobs[job]['engine']
                     sht=self._jobs[job]['short']
                     try:
-                        x=job.get_result(block=False)
+                        x=1
+                        try:
+                            x=job.get_result(block=False)
+                        except:
+                            if notify and self._jobs[job]['status']=="scheduled":
+                                print 'engine %d job %s broken' % (eng, sht)
+                            self._jobs[job]['status']="broken"
+ 
                         if x==None:
                             cmd=self._jobs[job]['command']
                             if curr.has_key(eng):
@@ -783,9 +790,20 @@ class simple_cluster:
                                 else:
                                     pass
                         else:
-                            if notify and self._jobs[job]['status']=="running":
-                                print 'engine %d job %s finished' % (eng, sht)
-                            self._jobs[job]['status']="done"
+                            #print 'x=', x
+                            if self._jobs[job]['status']=="running":
+                                if notify:
+                                    print 'engine %d job %s finished' % (eng, sht)
+                                self._jobs[job]['status']="done"
+                            if self._jobs[job]['status']=="scheduled":
+                                if isinstance(x, int):
+                                    if notify:
+                                        print 'engine %d job %s broken' % (eng, sht)
+                                    self._jobs[job]['status']="broken"
+                                else:
+                                    if notify:
+                                        print 'engine %d job %s finished' % (eng, sht)
+                                    self._jobs[job]['status']="done"
                     except e:
                         if notify and self._jobs[job]['status']=="running":
                             print 'engine %d job %s broken' % (eng, sht)
@@ -940,7 +958,7 @@ class simple_cluster:
                               else
                                  time.strftime("%H:%M:%S", 
                                         time.localtime(self._jobs[job]['start'])),
-                           self._jobs[job]['short'],
+                           self._jobs[job]['short'].strip()[:9],
                            self._jobs[job]['jobname'])
 
     def get_jobId(self, status):
@@ -1047,7 +1065,10 @@ class simple_cluster:
         self._jobs[job]['start']=''
         self._jobs[job]['time']=0
         self._jobs[job]['command']=cmd
-        self._jobs[job]['short']=cmd[:str.find(cmd, '(')]
+        if len(cmd)<9:
+            self._jobs[job]['short']=cmd
+        else:
+            self._jobs[job]['short']=cmd[:str.find(cmd, '(')]
         self._jobs[job]['status']="scheduled"
         self._jobs[job]['engine']=id
         self._jobs[job]['jobname']=self._job_title

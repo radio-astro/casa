@@ -230,8 +230,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //   if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
       os << "Performing selection on MeasurementSet" << LogIO::POST;
       //if(vs_p) delete vs_p; vs_p=0;
-      if(rvi_p) delete rvi_p;
-      rvi_p=0; wvi_p=0;
       //if(mssel_p) delete mssel_p; 
       mssel_p=0;
       
@@ -490,7 +488,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	blockStart_p.resize(numMS_p, True);
 	blockStep_p.resize(numMS_p, True);
 	blockSpw_p.resize(numMS_p, True);
-	mssel_p=new MeasurementSet(thisms);	
+	//point it back to the previous ms
+	if(numMS_p >0){
+	  mssel_p=new MeasurementSet(blockMSSel_p[numMS_p-1]);
+	}	
 	os << "Selection is empty: you may want to review this MSs selection"
 	   << LogIO::EXCEPTION;
       }

@@ -62,7 +62,7 @@ class listvis_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file'%(output,reference))
     def test2(self):
-        '''Listvis 1: Data column with different selections'''
+        '''Listvis 2: Data column with different selections'''
         output = out+'2'
         comp = 'compare.2'
         reference = reffile+'2'        
@@ -116,7 +116,6 @@ class listvis_test1(unittest.TestCase):
                         'New and reference files are different. %s != %s. '
                         'See the diff file.'%(output,reference))
         
-        
 class listvis_test2(unittest.TestCase):
 
     def setUp(self):
@@ -127,7 +126,7 @@ class listvis_test2(unittest.TestCase):
         shutil.rmtree(msfile1,ignore_errors=True)
         shutil.rmtree(msfile2,ignore_errors=True)
         shutil.rmtree(msfile3,ignore_errors=True)
-        os.system('rm -rf ' + out+'*')
+#        os.system('rm -rf ' + out+'*')
         
     def test1a(self):
         '''Listvis: Cleanup'''

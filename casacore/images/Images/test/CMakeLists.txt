@@ -84,6 +84,7 @@ tFITSImgParser
 tFITSErrorImage
 tFITSExtImage
 tFITSExtImageII
+tFITSQualityImage
 tHDF5Image
 tImageCollapser
 tImageConcat

@@ -30,7 +30,6 @@
 
 #include <casa/Arrays/Vector.h>
 #include <casa/BasicSL/String.h>
-//#include <casa/Utilities/DataType.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -99,21 +98,37 @@ public:
   uInt get_firstdata_index(void);
 
   // Get the number of extensions
-  uInt get_numhdu(void) { return numhdu_p;}
+  uInt get_numhdu(void) { return numhdu_p;};
 
   // Get a string representation of an instance
   String get_ext_list(const String &delimiter);
+
+  // Get the flag for a measurement
+  Bool has_measurement(void) {return hasmeasurement_p;};
+
+  // Get the extension number for the data
+  Int get_dataext(void)  {return dataext_p;};
+
+  // Get the extension number for the error
+  Int get_errorext(void) {return errorext_p;};
 
 private:  
   String         name_p;
   uInt           numhdu_p;
   FITSExtInfo   *extensions_p;
 
+  Bool           hasmeasurement_p;
+  Int            dataext_p;
+  Int            errorext_p;
+
   // Setup the object (used by constructors).
   void setup(void);
 
   // Get the information on an extension
   void process_extension(HeaderDataUnit *h, const uInt &extindex);
+
+  // Find the extensions for a measurement
+  Bool find_measurement(void);
 };
 
 

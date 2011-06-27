@@ -62,6 +62,9 @@ int main (int argc, const char* argv[])
 	   // process the default image
 	   if (isdefinput){
 
+		   // check whether there exists a measurement
+		   AlwaysAssert(fitsImg.has_measurement(), AipsError);
+
 		   // check the name information
 		   AlwaysAssert(fitsImg.fitsname(True) == String("mexinputtest.fits"), AipsError);
 
@@ -91,6 +94,9 @@ int main (int argc, const char* argv[])
 		   // check the non-existing index of "mexinputtest.fits[dq, 3]"
 		   extinfo = FITSExtInfo("mexinputtest.fits", 0, "dq", 3, True);
 		   AlwaysAssert(fitsImg.get_index(extinfo) == -1, AipsError);
+
+		   // check whether there exists a measurement
+		   AlwaysAssert(fitsImg.has_measurement(), AipsError);
 	   }
 	   else {
 		   cerr << "Fits file: " << fitsImg.fitsname(True) << "\n";
