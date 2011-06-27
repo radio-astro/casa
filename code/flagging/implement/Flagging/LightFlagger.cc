@@ -457,8 +457,8 @@ namespace casa {
     else if(upcase(Column)=="RESIDUAL_DATA") viscube.assign(vb.visCube() - vb.modelVisCube());
     else 
       {
-	//os << LogIO::WARN << "Using DATA column" << LogIO::POST;
-	cout << "Cannot recognize " << Column << "  :  Using DATA column : " << endl;
+	os << LogIO::WARN << "Cannot recognize " << Column << "  :  Using DATA column : " << LogIO::POST;
+	Column = String("DATA");
 	viscube.reference(vb.visCube());
       }
     
@@ -466,31 +466,47 @@ namespace casa {
     AlwaysAssert( VisCubeShp[0] == viscube.shape()[0] , AipsError);
     AlwaysAssert( VisCubeShp[1] == viscube.shape()[1] , AipsError);
     AlwaysAssert( viscube.shape()[2] <= NumB , AipsError);
+
+    // Make a copy of the original flags - to compare before/after statistics. Fill this also
+    //preflagc.assign(flagc);
     
     Bool tfl;
     uInt baselineindex = 0, rowindex=0;
     Int countflags=0, countpnts=0;
     for(uInt pl=0;pl<NumP;pl++)
       {
+	// Iterate through rows in the visbuffer, filling data and flags
 	for(uInt row=0;row<nrows;row++)
 	  {
             baselineindex = BaselineIndex(row,ant1[row],ant2[row]);
 	    for(uInt ch=0;ch<NumC;ch++)
 	      {
                 rowindex = (timecnt*NumB)+baselineindex;
+                // Fill data
  	        visc(pl,ch,rowindex) = fabs(viscube(pl,ch,row));
+		// Fill flags
 		flagc(pl,ch,rowindex) = flagcube(pl,ch,row);
-                if(FlagZeros && visc(pl,ch,rowindex)==(Float)0.0) flagc(pl,ch,rowindex)=True;
-		countpnts++;
-		countflags += (Int)( flagc(pl,ch,rowindex)  );
-	      }
-	  }
-      }
-    //    if(countflags>0) cout << "Time : " << timecnt << " Preflags : " << countflags << " out of " << countpnts << endl;
-    
-    if(UsePreFlags==False) flagc=False;
-    
-    // Make a copy of the original flags - to compare before/after statistics
+	      }//for ch
+	  }//for row
+
+	// Re-iterate through rows, this time as NumT and NumB and then NumC
+	// Flag Zeros
+	// Needs to be done here..... to account for visbuffer-rows with no data for only some baselines...
+	for(uInt bs=0;bs<NumB;bs++)
+	  {
+	    for(uInt tm=0;tm<NumT;tm++)
+	      {
+		rowindex = (((tm*NumB)+bs));
+		for(uInt ch=0;ch<NumC;ch++)
+		  {
+		    if(UsePreFlags==False) flagc(pl,ch,rowindex)=False; // Overkill here....
+		    if(FlagZeros && visc(pl,ch,rowindex)<(Float)1e-08) flagc(pl,ch,rowindex)=True;
+		  }// for ch
+	      }//for tm
+	  }//for bs
+      }//for pl
+
+    // Record pre-flags for stats calculations later on.
     preflagc.assign(flagc);
     
     return True;
@@ -550,6 +566,9 @@ namespace casa {
     /* Cube to hold visibility flags : POLZN x CHAN x (IFR*TIME) */
     flagc.resize(NumP,NumC,NumB*NumT);
     flagc=False;
+
+    //preflagc.resize(NumP,NumC,NumB*NumT);
+    //preflagc=False;
     // 	cout << " CubeShape = " << cubepos << endl;
     
   }

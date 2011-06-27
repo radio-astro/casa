@@ -151,6 +151,7 @@ namespace casa {
 	if(a1 != a2) // If only cross-correlations
 	  {
 	    if(ShowPlots) os << LogIO::NORMAL << antnames_p[a1] << "-" << antnames_p[a2] << " : " ;
+	    //cout << "Nants : " << antnames_p.nelements() << "  " << antnames_p[a1] << "-" << antnames_p[a2] << " : for ants : " << a1 << " and " << a2 << endl;
 	    for(int pl=0;pl<NumP;pl++)  // Start Correlation Loop
 	      {
 		runningsum=0;
@@ -174,8 +175,8 @@ namespace casa {
 			      countspec[ch] += (!flagc(pl,ch,(tm*NumB)+bs));
 			    }
 			  runningsum += visc(pl,ch,(((tm*NumB)+bs)));
-			  runningflag += Float(flagc(pl,ch,(tm*NumB)+bs));
-			  runningpreflag += Float(preflagc(pl,ch,(tm*NumB)+bs));
+			  runningflag += (Float)(flagc(pl,ch,(tm*NumB)+bs));
+			  runningpreflag += (Float)(preflagc(pl,ch,(tm*NumB)+bs));
                 
                           chan_count[ch]++;   baseline_count[bs]++;  corr_count[pl]++; chunk_count++;
                           if( flagc(pl,ch,(tm*NumB)+bs) ) 
@@ -202,7 +203,7 @@ namespace casa {
 		    ostr1 << "(" << thisfield << ") " << fieldnames_p[thisfield] << "\n[spw:" << thisspw << "] " << antnames_p[a1] << "-" << antnames_p[a2] << "  ( " << corrlist_p[pl] << " )";
                     ostr2 << fixed;
                     ostr2.precision(1);
-		    ostr2 << " flag : " << 100 * runningflag/(NumC*NumT) << "% (pre-flag : " << 100 * runningpreflag/(NumC*NumT) << "%)";
+		    ostr2 << " flag:" << 100 * runningflag/(NumC*NumT) << "% (pre-flag:" << 100 * runningpreflag/(NumC*NumT) << "%)";
 
 		    os << "[" << corrlist_p[pl] << "]:" << 100 * runningflag/(NumC*NumT) << "%(" << 100 * runningpreflag/(NumC*NumT) << "%) "; 
 
@@ -238,8 +239,6 @@ namespace casa {
 				String("green"), True, panels_p[pl+(2*NumP)].getInt());
 			  }
 		      }
-		    
-
 		  }// if ShowPlots
 	      }//End Correlation Loop
 
@@ -256,6 +255,7 @@ namespace casa {
 		    ShowPlots = False; 
 		    StopAndExit = True;
 		    cout << "Exiting flagger" << endl;
+		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
 		    return False;
 		  }
 		else if(choice=='s')

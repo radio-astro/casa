@@ -184,7 +184,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    <description>Use flags already present in the MS</description>
                    <value>True</value>
             </param>
-            <param type="bool" name="flagzeros" >
+            <param type="bool" name="preflagzeros" >
                    <description>Flag visibilities with values equal to 0.0</description>
                    <value>True</value>
             </param>
@@ -289,10 +289,10 @@ and correlation type, and the following steps are performed on each 2D plane.
      calculate a piece-wise polynomial fit to the average time-series, and find flags
      based on deviations w.r.to this fit.)
 
-(4) Grow flags by checking if points around flagged points collectively cross the 
-     threshold used for the main flagged point. Also, if more than X% of the timerange 
-     is flagged for any channel, flag all timesteps for that channel in the current chunk. 
-     Similarly for the frequency dimension. Optionally also grow flags by one point in time/freq.
+(4) Grow flags based on counts of flagged points around each unflagged-point.
+     Also, if more than X% of the timerange  is flagged for any channel, flag all 
+     timesteps for that channel in the current chunk. Similarly for the frequency 
+     dimension. Optionally also grow flags by one point in time/freq.
 
 Visualization of the data and flags at run-time is possible by setting 'datadisplay'=True.
 The intended usage is to run autoflag with datadisplay=True and writeflags=False on a 
@@ -418,7 +418,7 @@ tfcrop --- Run the TFCrop autoflag algorithm
                             This parameter is used only if 'timefit' or 'freqfit' are chosen as 'poly'.
                             If there is significant broad-band RFI, reduce this number. Using too many
                             pieces could result in the RFI being fitted in the 'clean' bandpass.    
-                            In later stages of the fit, a third-order polynomial is fit per piece. Therefore,
+                            In later stages of the fit, a third-order polynomial is fit per piece, so 
                             for best results, please ensure that nchan/maxnpieces is at-least 10.
 
       flagdimension --- Choose the directions along which to perform flagging
@@ -446,9 +446,9 @@ tfcrop --- Run the TFCrop autoflag algorithm
                                   -- The 'std' option chooses to flag a point, if the 'local' stddev calculated
                                   in a window centered on that point is larger than N-stddev/2.0. 
                                   This option is an attempt to catch noisy RFI that is not excluded in the
-                                  polynomial fits, and which increases the global stddev, and flags fewer
-                                  points (based on the N-stddev threshold). This is an approximation to
-                                  the basic idea used in 'rflag' in AIPS (which E.Greisen is currently refining).
+                                  polynomial fits, and which increases the global stddev, and results in 
+                                  fewer flags (based on the N-stddev threshold). This is an approximation to
+                                  the idea behind 'rflag' in AIPS (which E.Greisen is currently refining).
                                                                 
       halfwin --- Half width of sliding window to use with 'usewindowstats'
                       default = 1  (a 3-point window size)
@@ -535,7 +535,7 @@ usepreflags --- Choose whether or not to use/honour existing flags in the MS
                       default = True
                       options = True/False
 
-flagzeros --- Choose whether or not to preflag visibilities exactly equal to 0.0
+preflagzeros --- Choose whether or not to preflag visibilities exactly equal to 0.0
                   default = True
                   options = True/False
                   Note : If set to True, an elevated floor-level in the 'plotsummary' rfi-spectrum will

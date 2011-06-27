@@ -20,15 +20,30 @@ def autoflag( vis, field, spw,
               datacolumn, ntime,  corrs,
               tfcrop, timecutoff, freqcutoff, timefit, freqfit, maxnpieces, flagdimension, usewindowstats, halfwin,
               extendflags, extendpols, growtime, growfreq, growaround, flagneartime, flagnearfreq,
-              datadisplay, plotsummary, showknownrfi, usepreflags,flagzeros, writeflags, flagbackup):
+              datadisplay, plotsummary, showknownrfi, usepreflags,preflagzeros, writeflags, flagbackup):
 
     lfg = casac.homefinder.find_home_by_name('lightflaggerHome').create();
     flagstats={};
     msname=vis;
 
+    # Check that the MS exists
     if(msname == ''):
         casalog.post(message="Please set the MS name. ",priority="WARN",origin='autoflag');
         return False;
+    
+    #Check that the requested data column exists
+    tb.open(msname);
+    collist = tb.colnames();
+    tb.close();
+    if( ( (datacolumn == 'data') and ( ( 'DATA' in collist )==False) )  \
+         or ( (datacolumn == 'corrected') and ( ( 'CORRECTED_DATA' in collist )==False) ) \
+         or ( (datacolumn == 'model') and ( ( 'MODEL_DATA' in collist )==False) ) \
+         or ( (datacolumn == 'residual') and ( ( 'CORRECTED_DATA' in collist )==False) ) \
+         or ( (datacolumn == 'residual') and ( ( 'MODEL_DATA' in collist )==False) ) \
+         or ( (datacolumn == 'residual_data') and ( ( 'MODEL_DATA' in collist )==False) ) ):
+        casalog.post(message="Data column ["+ datacolumn+"] cannot be found. Please check that the MS has the required data columns.", priority='WARN',origin='autoflag');
+        return False;
+
     
     # Open the flagger tool.
     casalog.post(message="Opening the MS : "+msname, priority='INFO',origin='autoflag');
@@ -73,7 +88,7 @@ def autoflag( vis, field, spw,
     par={};
     par['showplots']=bool(datadisplay);
     par['writeflags']=bool(writeflags);
-    par['flagzeros']=bool(flagzeros);
+    par['flagzeros']=bool(preflagzeros);
     par['usepreflags']=bool(usepreflags);
     par['ntime_sec']=int(ntime);
     par['column']=str(datacolumn);
