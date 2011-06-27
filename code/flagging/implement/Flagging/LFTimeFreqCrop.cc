@@ -188,7 +188,7 @@ namespace casa {
 	for(bs=0;bs<NumB;bs++)
 	  {
 	    Ants(bs,&a1,&a2);
-	    if(a1 != a2) 
+	    if(  (a1 != a2)  &&  (baselineFlag[bs]==True) ) 
 	      {
 		/*		
                 if(flagDimension_p == String("time") || flagDimension_p == String("both") )

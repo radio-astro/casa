@@ -338,10 +338,12 @@ namespace casa {
 	  {
 	    AlwaysAssert(!flagmethods_p[i].null(), AipsError);
 	    //os << "Running method : " << flagmethods_p[i]->methodName() << LogIO::POST;
+	    flagmethods_p[i]->setBaselineFlag(baselineFlag);
 	    flagmethods_p[i]->runMethod(visc, flagc, NumT, NumAnt, NumB, NumC, NumP);
 	  }
 	
         // Display Flags	
+	flagstats.setBaselineFlag(baselineFlag);
         Bool ret = flagstats.runMethod(vb, visc, flagc, preflagc, NumT, NumAnt, NumB, NumC, NumP, flagmethods_p);
         if(ret==False) return Record();
 	
@@ -479,6 +481,7 @@ namespace casa {
 	for(uInt row=0;row<nrows;row++)
 	  {
             baselineindex = BaselineIndex(row,ant1[row],ant2[row]);
+	    baselineFlag[baselineindex]=True;// this baseline is present in the data
 	    for(uInt ch=0;ch<NumC;ch++)
 	      {
                 rowindex = (timecnt*NumB)+baselineindex;
@@ -570,7 +573,9 @@ namespace casa {
     //preflagc.resize(NumP,NumC,NumB*NumT);
     //preflagc=False;
     // 	cout << " CubeShape = " << cubepos << endl;
-    
+
+    baselineFlag.resize(NumB); baselineFlag=False; // all baselines are absent from the data
+
   }
   
   

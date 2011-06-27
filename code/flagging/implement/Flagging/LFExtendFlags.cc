@@ -151,7 +151,7 @@ namespace casa {
 	for(uInt bs=0;bs<NumB;bs++)
 	  {
 	    Ants(bs,&a1,&a2);
-	    if(a1 == a2) continue; // choose cross correlations
+	    if( (a1 == a2) ||  (baselineFlag[bs]==False) ) continue; // choose cross correlations
 	    
 	    // For all channels....
 	    for(int ch=0;ch<NumC;ch++)

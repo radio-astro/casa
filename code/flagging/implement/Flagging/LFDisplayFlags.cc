@@ -139,6 +139,7 @@ namespace casa {
     char choice = 'a';
 
     AlwaysAssert( NumP == corrlist_p.nelements() , AipsError );
+    AlwaysAssert( NumB == baselineFlag.nelements() , AipsError );
 
     // Iterate through the full chunk of data    
     for(Int bs=0;bs<NumB;bs++) // Start Baseline Loop
@@ -148,7 +149,7 @@ namespace casa {
 	AlwaysAssert( a1>=0 && a1<antnames_p.nelements(), AipsError );
 	AlwaysAssert( a2>=0 && a2<antnames_p.nelements(), AipsError );
 	//cout << "baseline : " << bs << " ants : " << a1 << "," << a2 << endl;
-	if(a1 != a2) // If only cross-correlations
+	if( (a1 != a2)  &&  baselineFlag[bs]==True) // If only cross-correlations, and if baseline exists in data
 	  {
 	    if(ShowPlots) os << LogIO::NORMAL << antnames_p[a1] << "-" << antnames_p[a2] << " : " ;
 	    //cout << "Nants : " << antnames_p.nelements() << "  " << antnames_p[a1] << "-" << antnames_p[a2] << " : for ants : " << a1 << " and " << a2 << endl;
