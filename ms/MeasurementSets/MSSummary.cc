@@ -1344,91 +1344,91 @@ void MSSummary::listSource (LogIO& os, Bool verbose) const
 		os << "The SOURCE table is empty: see the FIELD table" << endl;
 	}
 	else {
-		os << "Sources: " << msSC.name().nrow() << endl;
 
-		if (verbose) {}  // null, always same output
+		if (verbose) {  // activated: CAS-3180
+			os << "Sources: " << msSC.name().nrow() << endl;
 
-		//  Line is	Time Name RA Dec SysVel
-		Int widthLead =  2;
-		Int widthSrc  =  5;
-		//      Int widthTime = 15;
-		Int widthName = 20;
-		//      Int widthRA   = 14;
-		//      Int widthDec  = 15;
-		Int widthSpw  =  6;
-		Int widthRF   = 15;
-		Int widthVel  = 13;
-		os.output().setf(ios::left, ios::adjustfield);
-		os.output().width(widthLead);	os << "  ";
-		//      os.output().width(widthTime);	os << "Time MidPt";
-		os.output().width(widthSrc);	os << "ID";
-		os.output().width(widthName);	os << "Name";
-		//      os.output().width(widthRA);	os << "RA";
-		//      os.output().width(widthDec);	os << "Decl";
-		os.output().width(widthSpw);      os << "SpwId";
-		if (restFreqOK) {
-			os.output().width(widthRF);      os << "RestFreq(MHz)";
-		}
-		if (sysVelOK) {
-			os.output().width(widthVel);     os << "SysVel(km/s)";
-		}
-		os << endl;
-
-		os.output().precision(12);
-
-		// Loop through rows
-		for (uInt row=0; row<msSC.direction().nrow(); row++) {
-			MDirection mRaDec=msSC.directionMeas()(row);
-			MVAngle mvRa=mRaDec.getAngle().getValue()(0);
-			MVAngle mvDec=mRaDec.getAngle().getValue()(1);
-			String name=msSC.name()(row);
-			if (name.length()>20) name.replace(19,1,"*");
-
+			//  Line is	Time Name RA Dec SysVel
+			Int widthLead =  2;
+			Int widthSrc  =  5;
+			//      Int widthTime = 15;
+			Int widthName = 20;
+			//      Int widthRA   = 14;
+			//      Int widthDec  = 15;
+			Int widthSpw  =  6;
+			Int widthRF   = 15;
+			Int widthVel  = 13;
 			os.output().setf(ios::left, ios::adjustfield);
-			os.output().width(widthLead);	os<< "  ";
-			//	os.output().width(widthTime);
-			//				os<< MVTime(msSC.time()(row)/86400.0).string();
-			os.output().width(widthSrc);	os<< msSC.sourceId()(row);
-			os.output().width(widthName);	os<< name.at(0,20);
-			//	os.output().width(widthRA);	os<< mvRa(0.0).string(MVAngle::TIME,10);
-			//	os.output().width(widthDec);	os<< mvDec.string(MVAngle::DIG2,10);
-			os.output().width(widthSpw);
-			Int spwid=msSC.spectralWindowId()(row);
-			if (spwid<0) os<< "any";
-			else os<<spwid;
+			os.output().width(widthLead);	os << "  ";
+			//      os.output().width(widthTime);	os << "Time MidPt";
+			os.output().width(widthSrc);	os << "ID";
+			os.output().width(widthName);	os << "Name";
+			//      os.output().width(widthRA);	os << "RA";
+			//      os.output().width(widthDec);	os << "Decl";
+			os.output().width(widthSpw);      os << "SpwId";
 			if (restFreqOK) {
-				os.output().width(widthRF);
-				if (msSC.restFrequency().isDefined(row)) {
-					Vector<Double> restfreq=msSC.restFrequency()(row);
-					if (restfreq.nelements()>0)
-						os<< restfreq(0)/1.0e6;
-					else
-						os<< "-";
-				}
-				else
-					os<<"-";
+				os.output().width(widthRF);      os << "RestFreq(MHz)";
 			}
-
 			if (sysVelOK) {
-				os.output().width(widthVel);
-				if (msSC.sysvel().isDefined(row)) {
-					Vector<Double> sysvel=msSC.sysvel()(row);
-					if (sysvel.nelements()>0)
-						os<< sysvel(0)/1.0e3;
-					else
-						os<< "-";
-				}
-				else
-					os<<"-";
+				os.output().width(widthVel);     os << "SysVel(km/s)";
 			}
 			os << endl;
+
+			os.output().precision(12);
+
+			// Loop through rows
+			for (uInt row=0; row<msSC.direction().nrow(); row++) {
+				MDirection mRaDec=msSC.directionMeas()(row);
+				MVAngle mvRa=mRaDec.getAngle().getValue()(0);
+				MVAngle mvDec=mRaDec.getAngle().getValue()(1);
+				String name=msSC.name()(row);
+				if (name.length()>20) name.replace(19,1,"*");
+
+				os.output().setf(ios::left, ios::adjustfield);
+				os.output().width(widthLead);	os<< "  ";
+				//	os.output().width(widthTime);
+				//				os<< MVTime(msSC.time()(row)/86400.0).string();
+				os.output().width(widthSrc);	os<< msSC.sourceId()(row);
+				os.output().width(widthName);	os<< name.at(0,20);
+				//	os.output().width(widthRA);	os<< mvRa(0.0).string(MVAngle::TIME,10);
+				//	os.output().width(widthDec);	os<< mvDec.string(MVAngle::DIG2,10);
+				os.output().width(widthSpw);
+				Int spwid=msSC.spectralWindowId()(row);
+				if (spwid<0) os<< "any";
+				else os<<spwid;
+				if (restFreqOK) {
+					os.output().width(widthRF);
+					if (msSC.restFrequency().isDefined(row)) {
+						Vector<Double> restfreq=msSC.restFrequency()(row);
+						if (restfreq.nelements()>0)
+							os<< restfreq(0)/1.0e6;
+						else
+							os<< "-";
+					}
+					else
+						os<<"-";
+				}
+
+				if (sysVelOK) {
+					os.output().width(widthVel);
+					if (msSC.sysvel().isDefined(row)) {
+						Vector<Double> sysvel=msSC.sysvel()(row);
+						if (sysvel.nelements()>0)
+							os<< sysvel(0)/1.0e3;
+						else
+							os<< "-";
+					}
+					else
+						os<<"-";
+				}
+				os << endl;
+			}
+
+			if (!restFreqOK)
+				os << "  NB: No rest frequency information found in SOURCE table." << endl;
+			if (!sysVelOK)
+				os << "  NB: No systemic velocity information found in SOURCE table." << endl;
 		}
-
-		if (!restFreqOK)
-			os << "  NB: No rest frequency information found in SOURCE table." << endl;
-		if (!sysVelOK)
-			os << "  NB: No systemic velocity information found in SOURCE table." << endl;
-
 	}
 	os << LogIO::POST;
 }
@@ -1613,10 +1613,10 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().setf(ios::left, ios::adjustfield);
 		os.output().width(widthFrame);      os << "Frame";
 		os.output().width(widthFreq);	os << "Ch1(MHz)";
-		os.output().width(widthFreq);	os << "ChanWid(kHz)";
-		os.output().width(widthFreq);	os << "TotBW(kHz)";
-		os.output().width(widthFreq);	os << "Ref(MHz)";
-		os.output().width(widthCorrTypes);  os << "Corrs";
+		os.output().width(widthFreq);	os << "ChanWid(kHz) ";
+		os.output().width(widthFreq);	os << " TotBW(kHz)";
+//		os.output().width(widthFreq);	os << "Ref(MHz)";
+		os.output().width(widthCorrTypes);  os << " Corrs";
 		os << endl;
 
 		os.output().precision(9);
@@ -1630,26 +1630,26 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 			os.output().width(widthLead);		os << "  ";
 			// 1th column: Spectral Window Id
 			os.output().width(widthSpwId); os << (spw);
-			// 3rd column: number of channels in the spectral window
+			// 2nd column: number of channels in the spectral window
 			os.output().setf(ios::right, ios::adjustfield);
 			os.output().width(widthNumChan);		os << msSWC.numChan()(spw) << " ";
-			// 2nd column: Reference Frame info
+			// 3rd column: Reference Frame info
 			os.output().setf(ios::left, ios::adjustfield);
 			os.output().width(widthFrame);
 			os<< msSWC.refFrequencyMeas()(spw).getRefString();
-			// 2nd column: Chan 1 freq (may be at high freq end of band!)
+			// 4th column: Chan 1 freq (may be at high freq end of band!)
 			os.output().width(widthFrqNum);
 			os<< msSWC.chanFreq()(spw)(IPosition(1,0))/1.0e6;
-			// 4th column: channel resolution
-			os.output().width(widthFrqNum);
+			// 5th column: channel resolution
+			os.output().width(widthFrqNum+2);
 			os << msSWC.chanWidth()(spw)(IPosition(1,0))/1000;
-			// 5th column: total bandwidth of the spectral window
+			// 6th column: total bandwidth of the spectral window
 			os.output().width(widthFrqNum);
 			os<< msSWC.totalBandwidth()(spw)/1000;
 			// 7th column: reference frequency
-			os.output().width(widthFrqNum);
-			os<< msSWC.refFrequency()(spw)/1.0e6;
-			// 8th column: the correlation type(s)
+//			os.output().width(widthFrqNum);
+//			os<< msSWC.refFrequency()(spw)/1.0e6;
+			// 7th column: the correlation type(s)
 			for (uInt j=0; j<msPolC.corrType()(pol).nelements(); j++) {
 				os.output().width(widthCorrType);
 				Int index = msPolC.corrType()(pol)(IPosition(1,j));
