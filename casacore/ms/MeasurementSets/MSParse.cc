@@ -72,6 +72,11 @@ MeasurementSet* MSParse::ms()
     return ms_p;
 }
 
+void MSParse::addCondition(TableExprNode& target, TableExprNode& source)
+{
+  if(target.isNull()) target = source;
+  else                target = target || source;
+}
 //# The AipsIO functions are needed for the list of MSParse, but
 //# we do not support it actually.
 AipsIO& operator<< (AipsIO& ios, const MSParse&)

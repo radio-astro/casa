@@ -87,7 +87,7 @@ scanstatement: compoundexpr                {$$ = MSArrayParse::thisMSAParser->se
 // MSArrayPrase).  The accumulated IDs are used for selection in the
 // terminal node above.  Bounds expressions are however used for
 // selection as they are parsed.
-compoundexpr: scanids                           {$$ = MSArrayParse::thisMSAParser->node();}
+compoundexpr: scanids                           {/*$$ = MSArrayParse::thisMSAParser->node();*/}
             | scanboundsexpr                    {$$=$1;}
             | compoundexpr COMMA scanids        {$$=$1;}
             | compoundexpr COMMA scanboundsexpr {$$=$1;}

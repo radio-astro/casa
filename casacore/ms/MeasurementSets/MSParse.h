@@ -121,6 +121,8 @@ public:
 
   void setMS(MeasurementSet* ms) {ms_p=ms;};
   static MeasurementSet *ms_p;
+  void addCondition(TableExprNode& target, TableExprNode& source);
+
 private:
     String shorthand_p;
 };
