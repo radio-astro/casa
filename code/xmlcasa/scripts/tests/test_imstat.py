@@ -7,6 +7,10 @@ from taskinit import *
 import unittest
 import math
 
+#run using
+# `which casapy` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py --mem test_imstat
+#
+
 '''
 Unit tests for task imstat.
 '''
@@ -45,9 +49,10 @@ class imstat_test(unittest.TestCase):
         mean = stats['mean']
         npts = stats['npts']
 
-        ia.open(self.moment)
-        summary = ia.summary()
-        ia.close()
+        _myia = iatool.create()
+        _myia.open(self.moment)
+        summary = _myia.summary()
+        _myia.close()
         rainc = qa.abs(qa.quantity(summary['header']['incr'][0],'rad'))
         rainc = qa.convert(rainc,'arcsec')
         decinc = qa.abs(qa.quantity(summary['header']['incr'][1],'rad'))
@@ -63,9 +68,10 @@ class imstat_test(unittest.TestCase):
     def test002(self):
         """ Test 2: test position format for 150 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s150, self.s150)
-        ia.open(self.s150)
-        stats = ia.statistics()
-        ia.close()
+        _myia = iatool.create()
+        _myia.open(self.s150)
+        stats = _myia.statistics()
+        _myia.close()
         self.assertTrue(stats['blcf'] == '15:43:21.873, -00.17.47.274, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:40.165, +05.11.29.923, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:43:25.618, +04.22.40.617, I, 1.41332e+09Hz')
@@ -74,9 +80,10 @@ class imstat_test(unittest.TestCase):
     def test003(self):
         """ Test 3: test position format for 15 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s15, self.s15)
-        ia.open(self.s15)
-        stats = ia.statistics()
-        ia.close()
+        _myia = iatool.create()
+        _myia.open(self.s15)
+        stats = _myia.statistics()
+        _myia.close()
         self.assertTrue(stats['blcf'] == '15:24:08.404, +04.31.59.181, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:04.016, +05.04.44.999, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:24:08.491, +04.59.59.208, I, 1.41332e+09Hz')
@@ -85,9 +92,10 @@ class imstat_test(unittest.TestCase):
     def test004(self):
         """ Test 4: test position format for 0.015 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s0_015, self.s0_015)
-        ia.open(self.s0_015)
-        stats = ia.statistics()
-        ia.close()
+        _myia = iatool.create()
+        _myia.open(self.s0_015)
+        stats = _myia.statistics()
+        _myia.close()
         print "*** " + str(stats['blcf'])
         self.assertTrue(stats['blcf'] == '15:22:00.1285, +05.03.58.0800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.0040, +05.04.00.0450, I, 1.41332e+09Hz')
@@ -96,10 +104,11 @@ class imstat_test(unittest.TestCase):
 
     def test005(self):
         """ Test 5: test position format for 0.0015 arcsec pixel image is correct """
+        _myia = iatool.create()
         shutil.copytree(self.datapath+self.s0_0015, self.s0_0015)
-        ia.open(self.s0_0015)
-        stats = ia.statistics()
-        ia.close()
+        _myia.open(self.s0_0015)
+        stats = _myia.statistics()
+        _myia.close()
         self.assertTrue(stats['blcf'] == '15:22:00.01285, +05.03.59.80800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.00040, +05.04.00.00450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.01285, +05.03.59.97600, I, 1.41332e+09Hz')
@@ -108,9 +117,10 @@ class imstat_test(unittest.TestCase):
     def test006(self):
         """ Test 6: test position format for 0.00015 arcsec pixel image is correct """
         shutil.copytree(self.datapath+self.s0_00015, self.s0_00015)
-        ia.open(self.s0_00015)
-        stats = ia.statistics()
-        ia.close()
+        _myia = iatool.create()
+        _myia.open(self.s0_00015)
+        stats = _myia.statistics()
+        _myia.close()
         self.assertTrue(stats['blcf'] == '15:22:00.001285, +05.03.59.980800, I, 1.41332e+09Hz') 
         self.assertTrue(stats['maxposf'] == '15:22:00.000040, +05.04.00.000450, I, 1.41332e+09Hz')
         self.assertTrue(stats['minposf'] == '15:22:00.001285, +05.03.59.997600, I, 1.41332e+09Hz')
@@ -126,9 +136,10 @@ class imstat_test(unittest.TestCase):
     def test008(self):
         """ Test 8: verify fix for CAS-2195"""
         def test_statistics(image):
-            ia.open(myim)
-            stats = ia.statistics()
-            ia.done()
+            _myia = iatool.create()
+            _myia.open(myim)
+            stats = _myia.statistics()
+            _myia.done()
             return stats
         
         def test_imstat(image):
@@ -146,9 +157,10 @@ class imstat_test(unittest.TestCase):
     def test009(self):
         """ Test 9: choose axes works"""
         def test_statistics(image, axes):
-            ia.open(myim)
-            stats = ia.statistics(axes=axes)
-            ia.done()
+            _myia = iatool.create()
+            _myia.open(myim)
+            stats = _myia.statistics(axes=axes)
+            _myia.done()
             return stats
         
         def test_imstat(image, axes):
@@ -205,6 +217,25 @@ class imstat_test(unittest.TestCase):
                 self.assertTrue((stats['mean'] == expected_mean[i]).all())
                 self.assertTrue((stats['sumsq'] == expected_sumsq[i]).all())
             
+    def test_robust(self):
+        """ Confirm robust parameter"""
+        def test_statistics(image, robust):
+            _myia = iatool.create()
+            _myia.open(myim)
+            stats = _myia.statistics(robust=robust)
+            _myia.done()
+            return stats
+        def test_imstat(image, robust):
+            return imstat(image, robust=robust)
+        myim = self.fourdim
+        shutil.copytree(self.datapath + myim, myim)
+        for robust in [True, False]:
+            for code in [test_statistics, test_imstat]:
+                stats = code(myim, robust)
+                self.assertTrue(stats.has_key('median') == robust)
+                self.assertTrue(stats.has_key('medabsdevmed') == robust)
+                self.assertTrue(stats.has_key('quartile') == robust)
+                
 def suite():
     return [imstat_test]
 
