@@ -358,17 +358,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  case SCAN_EXPR:
 	    {
 	      scanIDs_p.resize(0);
-	      if(scanExpr_p != "" && 
-		 msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p) == 0)
-		node = *(msScanGramParseNode());
+	      if(scanExpr_p != "")
+		node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
+		//		node = *(msScanGramParseNode());
 	      break;
 	    }
 	  case ARRAY_EXPR:
 	    {
 	      arrayIDs_p.resize(0);
-	      if(arrayExpr_p != "" &&
-		 msArrayGramParseCommand(ms, arrayExpr_p, arrayIDs_p, maxArray_p) == 0)
-		node = *(msArrayGramParseNode());
+	      if(arrayExpr_p != "")
+		node = msArrayGramParseCommand(ms, arrayExpr_p, arrayIDs_p, maxArray_p);
 	      break;
 	    }
 	    /*
@@ -447,10 +446,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     
     fullTEN_p = condition;
-    msArrayGramParseDeleteNode();
+    //    msArrayGramParseDeleteNode();
     msCorrGramParseDeleteNode();
     msFieldGramParseDeleteNode();
-    msScanGramParseDeleteNode();
+    //    msScanGramParseDeleteNode();
     msSpwGramParseDeleteNode();
     msTimeGramParseDeleteNode();
     msUvDistGramParseDeleteNode();
