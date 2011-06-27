@@ -258,7 +258,7 @@ ComponentList ImageFitter::fit() {
 			residualImage->coordinates(),
 			_residual,
 			residualImage->get(),
-			*_log, completePixelMask.get()->get(False)
+			*_log, completePixelMask->get(False)
 		);
 	}
 	if (modelImage.get() != 0) {
@@ -267,7 +267,7 @@ ComponentList ImageFitter::fit() {
 			modelImage->coordinates(),
 			_model,
 			modelImage->get(),
-			*_log, completePixelMask.get()->get(False)
+			*_log, completePixelMask->get(False)
 		);
 	}
 	FluxRep<Double>::clearAllowedUnits();
