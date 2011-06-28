@@ -438,7 +438,9 @@ Bool ClarkCleanModel::singleSolve(ConvolutionEquation & eqn,
   // find its maximum value of the residual
   Float maxRes = maxResidual(residual);
 
-  theLog << "Initial maximum residual: " << maxRes << LogIO::POST;
+  // move this to later TT
+  //theLog << "Initial maximum residual: " << maxRes << LogIO::POST;
+  //
   // if flux limit or iteration limit reached then bail out. 
   
   // determine the fluxlimit for this major cycle
@@ -470,6 +472,7 @@ Bool ClarkCleanModel::singleSolve(ConvolutionEquation & eqn,
     //       theLog <<"Major cycle has "<< numPix << " active residuals, "
     // 	     << "a Fluxlimit of " << max(fluxLimit,threshold()) << endl;
     // Start of minor cycles
+    theLog << "Initial maximum residual: " << maxRes << LogIO::POST;
     numMinorIterations = min(theMaxNumberMinorIterations,
 			     numberIterations()-numIterations);
     doMinorIterations(theModel, pixelValue, pixelPos, numPix, 

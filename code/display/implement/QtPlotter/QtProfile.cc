@@ -73,7 +73,7 @@ QtProfile::~QtProfile()
 }
 
 QtProfile::QtProfile(ImageInterface<Float>* img, 
-        const char *name, QWidget *parent)
+        const char *name, QWidget *parent, std::string rcstr)
         :QWidget(parent), //MWCCrosshairTool(),
          pc(0), te(0), analysis(0), over(0), 
          coordinate("world"), coordinateType(""),
@@ -82,7 +82,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
 	 lastPX(Vector<Double>()), lastPY(Vector<Double>()),
 	 lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_xval(Vector<Float>()), z_yval(Vector<Float>()),
-         region("") 
+         region(""), rc(viewer::getrc()), rcid_(rcstr)
 {
 
     initPlotterResource();
@@ -228,10 +228,20 @@ QtProfile::QtProfile(ImageInterface<Float>* img,
     //    ctype->addItem("true velocity ("+nativeRefFrameName+")");
     ctype->addItem("radio velocity"); 
     ctype->addItem("optical velocity");
-    ctype->addItem("frequency ");
-    ctype->addItem("wavelength ");
-    ctype->addItem("air wavelength ");
+    ctype->addItem("frequency");
+    ctype->addItem("wavelength");
+    ctype->addItem("air wavelength");
     ctype->addItem("channel");
+
+    // read the preferred ctype from casarc
+    QString pref_ctype = QString(rc.get("viewer." + rcid() + ".freqcoord.type").c_str());
+    if (pref_ctype.size()>0){
+      // change to the preferred ctype
+    	int ctypeindex= ctype->findText(pref_ctype);
+    	if (ctypeindex > -1)
+    		ctype->setCurrentIndex(ctypeindex);
+    }
+
     frameButton_p->addItem("LSRK");
     frameButton_p->addItem("BARY");
     frameButton_p->addItem("GEO");
@@ -391,7 +401,7 @@ void QtProfile::setMultiProfile(int st)
 
 }
 
-void QtProfile::setRelativeProfile(int st)
+void QtProfile::setRelativeProfile(int )
 {
    //qDebug() << "relative profile state change=" << st;  
    if(lastPX.nelements() > 0){
@@ -640,13 +650,15 @@ void QtProfile::changeCoordinateType(const QString &text) {
     leftButton->setVisible(0);
     rightButton->setVisible(0);
 
+    rc.put( "viewer." + rcid() + ".freqcoord.type", text.toStdString());
+
     if(lastPX.nelements() > 0){ // update display with new coord type
 	wcChanged(coordinate, lastPX, lastPY, lastWX, lastWY, UNKNPROF);
     }
 
 }
 
-void QtProfile::closeEvent (QCloseEvent* event) {
+void QtProfile::closeEvent (QCloseEvent *) {
    //qDebug() << "closeEvent";
   lastPX.resize(0);
   lastPY.resize(0);
@@ -905,7 +917,7 @@ void QtProfile::wcChanged( const String c,
     Int ordersOfM = 0;
 
     symax = ymax;
-    while(symax < 0.1 && ymax != 0.0){
+    while(symax < dmin && ymax != 0.0){
 	ordersOfM += 3;
 	symax = ymax * pow(10.,ordersOfM);
     }

@@ -274,6 +274,11 @@ namespace casa {
     		  const Vector<uInt>& ranges
       );
 
+      // <src>nChannels</src> is the total number of spectral channels in the image
+      Vector<uInt> setSpectralRanges(
+    		  String specification, uInt& nSelectedChannels, const uInt nChannels
+      ) const;
+
     private:
 
       // Function to return the internal Table object to the RegionHandler.
@@ -285,10 +290,6 @@ namespace casa {
       Table tab_p;
 
       String _pairsToString(const Vector<uInt>& pairs) const;
-
-      Vector<uInt> _setSpectralRanges(
-    		  String specification, uInt& nSelectedChannels, const uInt nChannels
-      ) const;
 
       Vector<uInt> _setPolarizationRanges(
         	String& specification, const String& firstStokes, const uInt nStokes,

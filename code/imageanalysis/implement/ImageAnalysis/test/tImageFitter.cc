@@ -29,7 +29,7 @@
 #include <casa/BasicMath/Math.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/Flux.h>
-#include <images/Images/ImageFitter.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/SpectralModel.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -37,10 +37,12 @@
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageMetaData.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Regions/RegionManager.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/OS/Directory.h>
 #include <casa/namespace.h>
+#include <casa/OS/EnvVar.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -70,6 +72,9 @@ void checkImage(
     Array<Double> minArray = stats.asArrayDouble("min");
     Array<Double> maxArray = stats.asArrayDouble("max");
 
+    cout << "minArray " << minArray << endl;
+    cout << "maxArray " << maxArray << endl;
+
     vector<Double> min, max;
     minArray.tovector(min);
     maxArray.tovector(max);
@@ -87,14 +92,19 @@ int main() {
   	const Double DEGREES_PER_RADIAN = 180/C::pi;
     Double arcsecsPerRadian = DEGREES_PER_RADIAN*3600;
     String test;
-    const ImageInterface<Float> *gaussianModel = new FITSImage("gaussian_model.fits");
-    const ImageInterface<Float> *noisyImage = new FITSImage("gaussian_model_with_noise.fits");
-    const ImageInterface<Float> *convolvedModel = new FITSImage("gaussian_convolved.fits");
-    const ImageInterface<Float> *jykms = new FITSImage("jyperbeamkmpersec.fits");
-    const ImageInterface<Float> *gaussNoPol = new FITSImage("gauss_no_pol.fits");
-    const ImageInterface<Float> *twoGauss = new FITSImage("two_gaussian_model.fits");
+	String *parts = new String[2];
+	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
+	String datadir = parts[0] + "/data/regression/unittest/imfit/";
+	delete [] parts;
+    const ImageInterface<Float> *gaussianModel = new FITSImage(datadir + "gaussian_model.fits");
+    const ImageInterface<Float> *noisyImage = new FITSImage(datadir + "gaussian_model_with_noise.fits");
+    const ImageInterface<Float> *stokesImage = new FITSImage(datadir + "imfit_stokes.fits");
+    const ImageInterface<Float> *convolvedModel = new FITSImage(datadir + "gaussian_convolved.fits");
+    const ImageInterface<Float> *jykms = new FITSImage(datadir + "jyperbeamkmpersec.fits");
+    const ImageInterface<Float> *gaussNoPol = new FITSImage(datadir + "gauss_no_pol.fits");
+    const ImageInterface<Float> *twoGauss = new FITSImage(datadir + "two_gaussian_model.fits");
+    const ImageInterface<Float> *multiplane = new FITSImage(datadir + "gauss_multiplane.fits");
 	const Path compTable(dirName + "/myCompList.cl");
-	// Directory compTableDir(compTable.absoluteName());
 	int returnValue = 0;
 
     try {
@@ -113,7 +123,7 @@ int main() {
             	// got here, just continue
             }
             ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -141,7 +151,7 @@ int main() {
             );
             ImageFitter fitter = ImageFitter(noisyImage, 0, "");
             ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -170,7 +180,7 @@ int main() {
             );
             ImageFitter fitter(noisyImage, 0, "130,89,170,129");
             ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             compList.getFlux(flux,0);
             // I stokes flux test
@@ -211,7 +221,7 @@ int main() {
         	Record *box = rm.box(blc, trc, inc, "abs", False);
         	ImageFitter fitter(noisyImage, box);
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
 
         	Vector<Quantity> flux;
         	compList.getFlux(flux,0);
@@ -271,7 +281,7 @@ int main() {
                     case 2:
                         includepix.resize(0);
                         excludepix.resize(0);
-                        mask = "\"gaussian_model_with_noise.fits\">40";
+                        mask = noisyImage->name(False) + ">40";
                         writeTestString("test using LEL mask " + mask);
                         break;
                     case 3:
@@ -282,14 +292,11 @@ int main() {
                         break;
                 }
                 ImageFitter fitter(
-                	images[i], "", "", 0, "I", mask, includepix, excludepix
+                	images[i], "", "", "0", "I", mask, includepix, excludepix
                 );
                 ComponentList compList = fitter.fit();
 
-            	//cout << "*** def mask " << outIm->getMask() << endl;
-            	cout << "*** image " << images[i]->name() << endl;
-
-                AlwaysAssert(fitter.converged(), AipsError);
+                AlwaysAssert(fitter.converged(0), AipsError);
                 Vector<Quantity> flux;
                 compList.getFlux(flux,0);
                 // I stokes flux test
@@ -321,20 +328,20 @@ int main() {
             String residDiff = dirName + "/residualImage.diff";
             String modelDiff = dirName + "/modelImage.diff";
             ImageFitter fitter(
-            	noisyImage, "", "100,100,200,200", 0, "I", "",
+            	noisyImage, "", "100,100,200,200", "0", "I", "",
             	Vector<Float>(0), Vector<Float>(0), residImage,
             	modelImage
             );
             fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             writeTestString("test residual image correctness");
             checkImage(
-            	residImage, "gaussian_model_with_noise_resid.fits",
+            	residImage, datadir + "gaussian_model_with_noise_resid.fits",
             	residDiff
             );
             writeTestString("test model image correctness");
             checkImage(
-             	modelImage, "gaussian_model_with_noise_model.fits",
+             	modelImage, datadir + "gaussian_model_with_noise_model.fits",
              	modelDiff
             );
 
@@ -343,18 +350,18 @@ int main() {
             modelImage = "/modelImage";
  
             ImageFitter fitter2(
-            	noisyImage, "", "100,100,200,200", 0, "I", "",
+            	noisyImage, "", "100,100,200,200", "0", "I", "",
             	Vector<Float>(0), Vector<Float>(0), residImage,
             	modelImage
             );
             fitter2.fit();
-            AlwaysAssert(fitter2.converged(), AipsError);
+            AlwaysAssert(fitter2.converged(0), AipsError);
         }
         {
         	writeTestString("test fitting model gaussian that has been convolved with a beam");
         	ImageFitter fitter(convolvedModel, "", "");
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -395,8 +402,6 @@ int main() {
         	AlwaysAssert(near(gauss->majorAxisError().getValue(), 0.00176932, 1e-5), AipsError);
         	AlwaysAssert(near(gauss->minorAxisError().getValue(), 0.00146756, 1e-5), AipsError);
         	AlwaysAssert(near(gauss->positionAngleError().getValue(), 0.00195128, 1e-5), AipsError);
-
-
         }
         {
         	writeTestString(
@@ -404,12 +409,12 @@ int main() {
         		+ String("the peak intensity to be artificially low")
         	);
             ImageFitter fitter(
-            		convolvedModel, "", "", 0, "I", "",
+            		convolvedModel, "", "", "0", "I", "",
              	Vector<Float>(0), Vector<Float>(0), "",
-             	"", "estimates_convolved.txt"
+             	"", datadir + "estimates_convolved.txt"
             );
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -436,12 +441,12 @@ int main() {
         {
          	writeTestString("Fit two gaussians");
             ImageFitter fitter(
-             		twoGauss, "", "", 0, "I", "",
+             		twoGauss, "", "", "0", "I", "",
               	Vector<Float>(0), Vector<Float>(0), "",
-              	"", "estimates_2gauss.txt"
+              	"", datadir + "estimates_2gauss.txt"
             );
          	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
             MDirection direction;
             Vector<Double> parameters;
@@ -490,7 +495,7 @@ int main() {
         	writeTestString("Test of nonconvergence");
             ImageFitter fitter(noisyImage, "", "0,0,20,20");
             fitter.fit();
-            AlwaysAssert(! fitter.converged(), AipsError);
+            AlwaysAssert(! fitter.converged(0), AipsError);
         }
         {
         	writeTestString("Test of fitting in a multi-polarization image");
@@ -535,11 +540,11 @@ int main() {
             expectedPositionAngle[1] = 160.083213;
             expectedPositionAngle[2] = 50.082442;
             expectedPositionAngle[3] = 135.08243;
-
+            LogIO log;
         	for (uInt i=0; i<stokes.size(); i++) {
-        		ImageFitter fitter("imfit_stokes.fits", "", "", 0, stokes[i]);
+        		ImageFitter fitter(stokesImage, "", "", "0", stokes[i]);
         		ComponentList compList = fitter.fit();
-        		AlwaysAssert(fitter.converged(), AipsError);
+        		AlwaysAssert(fitter.converged(0), AipsError);
         		Vector<Quantity> flux;
         		MDirection direction = compList.getRefDirection(0);
         		compList.getFlux(flux,0);
@@ -560,7 +565,7 @@ int main() {
         	writeTestString("Test of CAS-2318 fix");
 
             ImageFitter fitter(
-            	gaussNoPol, "", "", 0, "", "",
+            	gaussNoPol, "", "", "0", "", "",
              	Vector<Float>(0), Vector<Float>(0), "",
              	"", ""
             );
@@ -574,7 +579,7 @@ int main() {
         	writeTestString("test fitting image with units of Jy km/s (CAS-1233");
         	ImageFitter fitter(jykms, "", "");
         	ComponentList compList = fitter.fit();
-            AlwaysAssert(fitter.converged(), AipsError);
+            AlwaysAssert(fitter.converged(0), AipsError);
             Vector<Quantity> flux;
 
         	compList.getFlux(flux,0);
@@ -613,7 +618,7 @@ int main() {
         	writeTestString("test writing component list (CAS-2595");
         	{
         		ImageFitter fitter(
-        			noisyImage, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
+        			noisyImage, "", "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
         			"", "", "", "", True, "", compTable.absoluteName(), ImageFitter::WRITE_NO_REPLACE
         		);
         		fitter.fit();
@@ -622,8 +627,8 @@ int main() {
         	}
         	{
         		ImageFitter fitter(
-        			twoGauss, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
-        			"", "", "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
+        			twoGauss, "", "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
+        			"", "", datadir + "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
         			ImageFitter::WRITE_NO_REPLACE
 				);
         		fitter.fit();
@@ -632,13 +637,34 @@ int main() {
 			}
         	{
         		ImageFitter fitter(
-        			twoGauss, "", "", 0, "I", "", Vector<Float>(0), Vector<Float>(0),
-        			"", "", "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
+        			twoGauss, "", "", "0", "I", "", Vector<Float>(0), Vector<Float>(0),
+        			"", "", datadir + "estimates_2gauss.txt", "", True, "", compTable.absoluteName(),
         			ImageFitter::OVERWRITE
         		);
         		fitter.fit();
         		ComponentList c1(compTable);
         		AlwaysAssert(c1.nelements() == 2, AipsError);
+        	}
+        }
+        {
+			writeTestString("Test multiplane fitting");
+        	{
+				String residImage = dirName + "/residualImage_multi";
+				String modelImage = dirName + "/modelImage_multi";
+        		String mask = datadir + "gauss_multiplane.fits<15";
+        		ImageFitter fitter(
+        			multiplane, "", "", "0~3", "I", mask, Vector<Float>(0), Vector<Float>(0),
+        			residImage, modelImage, datadir + "estimates_2gauss_multiplane.txt",
+        			"", True, "", compTable.absoluteName(), ImageFitter::OVERWRITE
+        		);
+        		fitter.fit();
+        		ComponentList c1(compTable);
+        		AlwaysAssert(c1.nelements() == 8, AipsError);
+        		AlwaysAssert(fitter.converged().size() == 4, AipsError);
+        		for (uInt i=0; i<fitter.converged().size(); i++) {
+        			AlwaysAssert(fitter.converged(i), AipsError);
+        			AlwaysAssert(fitter.converged()[i], AipsError);
+        		}
         	}
         }
         cout << "ok" << endl;
@@ -647,11 +673,9 @@ int main() {
         cerr << "Exception caught: " << x.getMesg() << endl;
         returnValue = 1;
     }
-    /*
 	if(workdir.exists()) {
 		workdir.removeRecursive();
 	}
-	*/
     delete gaussianModel;
     delete noisyImage;
     delete convolvedModel;

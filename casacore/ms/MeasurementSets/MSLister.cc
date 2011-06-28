@@ -865,7 +865,7 @@ void MSLister::listData(const int pageRows,
       if ( precUVDist_p > 0 ) oUVDist_p++;  // add space for decimal
 
       oUVW_p = (uInt)max(1,(Int)rint(log10(max(uvw))+0.5)); // order
-      if ( precUVW_p < 0 ) precUVW_p = 0;
+      if ( precUVW_p < 0 ) precUVW_p = 2;
       if ( precUVW_p > 0 ) oUVW_p++;  // add space for decimal
       oUVW_p++;  // add space for sign
 
@@ -908,7 +908,7 @@ void MSLister::listData(const int pageRows,
       wWeight_p = oWeight_p + precWeight_p;
 
       // Enforce minimum field widths,
-      // add leading space so columns nicely separated,
+      // add leading space so columns nicely separate,
       // and accumulate wTotal_p:
       wTotal_p = 0;  // initialize
       // wAnt_p    = max(wAnt_p,   (uInt)2);
@@ -927,7 +927,7 @@ void MSLister::listData(const int pageRows,
       if (!is_float) {wVis_p = wAmpl_p+wPhase_p+wWeight_p+wFlag_p;}
       else {wVis_p = wAmpl_p+wWeight_p+wFlag_p;}
       wTotal_p+=wTime_p+nIndexPols_p*wVis_p+1;
-      wUVW_p = max(wUVW_p, (uInt)4);               wUVW_p++; wTotal_p+=3*wUVW_p;
+      wUVW_p = max(wUVW_p, (uInt)9);               wUVW_p++; wTotal_p+=3*wUVW_p;
 
       // Make column-ated header rule according to total and field widths
 
@@ -992,7 +992,7 @@ void MSLister::listData(const int pageRows,
 
       // WRITE THE DATA
       /* The data is written by looping through the selected MS. For each row of the
-       * MS, the SPW is determine and each of the channels selected for that SPW
+       * MS, the SPW is determined and each of the channels selected for that SPW
        * is accessed.
        */
 
@@ -1068,7 +1068,7 @@ void MSLister::listData(const int pageRows,
                 myout.setf(ios::right); myout.width(2);
                 if(flag(IPosition(3,indexPols_p(ipol),ichan,tableRow)))
                    myout << flagSym(1);
-                else 
+                else
                    myout << flagSym(0);
                 // Print all loop indices; useful for debugging these loops.
                 // myout << "ipol= " << ipol << " ichan= " << ichan << " rowCL= " << rowCL << " tableRow= " << tableRow;

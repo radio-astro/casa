@@ -251,11 +251,12 @@ Bool ClarkCleanImageSkyModel::solve(SkyEquation& se) {
 	  // clean if there is no mask or if it has mask AND mask is not empty 
 	  cleaner.solve(eqn);
 	  cleaner.setChoose(False);
-	  os << LogIO::NORMAL // Loglevel INFO
-	     << "Clean used " << cleaner.numberIterations() << " iterations" 
-	     << " in this round to get to a max residual of " << cleaner.threshold()
-	     << LogIO::POST;
-	  
+          if (cleaner.numberIterations()>0) {
+	    os << LogIO::NORMAL // Loglevel INFO
+	       << "Clean used " << cleaner.numberIterations() << " iterations" 
+	       << " in this round to get to a max residual of " << cleaner.threshold()
+	       << LogIO::POST;
+	  } 
 	  LatticeExpr<Float> expr= model_sl + localmodel; 
 	  model_sl.copyData(expr);
 	

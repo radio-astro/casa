@@ -320,7 +320,8 @@ public:
    		const TiledShape& mapShape,
    		const CoordinateSystem& coordinateInfo,
    		const String& imageName,
-   		const Array<Float>& pixels, LogIO& log
+   		const Array<Float>& pixels, LogIO& log,
+   		const Array<Bool>& pixelMask = Array<Bool>()
    );
 
    static Vector<Quantity> makeFakeBeam(LogIO& logIO, const CoordinateSystem& csys, Bool suppressWarnings = False);

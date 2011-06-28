@@ -10,7 +10,7 @@ from distutils.dir_util import copy_tree
 from taskinit import *
 from update_spw import *
 
-im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
+mycb, myms, mytb = gentools(['cb', 'ms', 'tb'])
 
 def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
     try:
@@ -24,9 +24,9 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             spwmfitspw = subtract_spws(spw, fitspw)
             if spwmfitspw == 'UNKNOWN':
                 # Rats.  We need to make '' explicit.
-                tb.open(vis + '/SPECTRAL_WINDOW')
-                spwmfitspw = subtract_spws('0~' + str(tb.nrows() - 1), fitspw)
-                tb.close()
+                mytb.open(vis + '/SPECTRAL_WINDOW')
+                spwmfitspw = subtract_spws('0~' + str(mytb.nrows() - 1), fitspw)
+                mytb.close()
             if spwmfitspw:
                 raise Exception, "combine must include 'spw' when the fit is being applied to spws outside fitspw."
         
@@ -63,29 +63,29 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         csvis = tempfile.mkdtemp(prefix=csvis.split('/')[-1], dir=workingdir)
 
         # ms does not have a colnames method, so open vis with tb even though
-        # it is already open with ms.  Note that both use nomodify=True,
+        # it is already open with myms.  Note that both use nomodify=True,
         # however, and no problem was revealed in testing.
-        tb.open(vis, nomodify=True)
-        if 'CORRECTED_DATA' in tb.colnames():
+        mytb.open(vis, nomodify=True)
+        if 'CORRECTED_DATA' in mytb.colnames():
             whichcol = 'CORRECTED_DATA'
         else:
             # DON'T remind the user that split before uvcontsub2 wastes time -
             # scratch columns will eventually go away.
             whichcol = 'DATA'
-        tb.close()
+        mytb.close()
 
-        if whichcol != 'DATA' or field != '' or tempspw != '':
+        if whichcol != 'DATA' or tempspw != '':
             casalog.post('splitting to ' + csvis + ' with tempspw="'
                          + tempspw + '"', 'DEBUG1')
-            ms.open(vis, nomodify=True)
-            ms.split(csvis, field=field, spw=tempspw, whichcol=whichcol)
-            ms.close()       
+            myms.open(vis, nomodify=True)
+            myms.split(csvis, spw=tempspw, whichcol=whichcol)
+            myms.close()
         else:
             casalog.post('cping to ' + csvis, 'DEBUG1')
             copy_tree(vis, csvis)
         
         if (type(csvis) == str) and os.path.isdir(csvis):
-            cb.open(csvis)
+            mycb.open(csvis)
         else:
             raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -94,8 +94,8 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         #    raise Exception, "Sorry, uvcontsub2 currently only supports fitorder=0."
         
         # select the data for continuum subtraction
-        cb.reset()
-        cb.selectvis(spw=myfitspw,field=field)
+        mycb.reset()
+        mycb.selectvis(spw=myfitspw, field=field)
 
         # Arrange apply of existing other calibrations
         # First do the existing cal tables...
@@ -134,88 +134,79 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         #                   interp[igt]=thisinterp
         #               thisinterp=interp[igt]
                     
-        #           cb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+        #           mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
         #               calwt=True,spwmap=thisspwmap,interp=thisinterp)
 
         # ...and now the specialized terms
         # (BTW, interp irrelevant for these, since they are evaluated)
-        #if (opacity>0.0): cb.setapply(type='TOPAC',t=-1,opacity=opacity,calwt=True)
-        #if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=True)
+        #if (opacity>0.0): mycb.setapply(type='TOPAC',t=-1,opacity=opacity,calwt=True)
+        #if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=True)
 
         # Apply parallactic angle, if requested
-        #if parang: cb.setapply(type='P')
+        #if parang: mycb.setapply(type='P')
 
         # Set up the solve
         amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab',
                                        dir=workingdir)
 
-        cb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
+        mycb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
                     fitorder=fitorder)
 
         # solve for the continuum
-        cb.solve()
+        mycb.solve()
 
         # subtract the continuum
-        cb.selectvis(field=field, spw=myspw)
+        mycb.selectvis(field=field, spw=myspw)
         aspwmap=-1
         # if we combined on spw in solve, fanout the result with spwmap=-999;
         if 'spw' in combine:
             aspwmap = -999
-        cb.setapply(table=amuellertab, spwmap=aspwmap)
+        mycb.setapply(table=amuellertab, spwmap=aspwmap)
 
         # Generate CORRECTED_DATA without continuum
-        cb.correct()
+        mycb.correct()
 
         if want_cont:
             # Generate MODEL_DATA with only the continuum model
-            cb.corrupt()
+            mycb.corrupt()
 
-        cb.close()
+        mycb.close()
 
         # Delete the temporary caltable
         shutil.rmtree(amuellertab)
 
         # Move the line data from CORRECTED_DATA to DATA, and do any
         # final filtering by spw.
-        ms.open(csvis)
+        myms.open(csvis)
         # Using ^ in spw is untested here!
-        ms.split(final_csvis, spw=myspw, whichcol='corrected')
-        ms.close()
+        myms.split(final_csvis, spw=myspw, whichcol='corrected')
+        myms.close()
 
-        ms.open(final_csvis, nomodify=False)
-        ms.writehistory('taskname = uvcontsub2', origin='uvcontsub2')
-        ms.writehistory(message='vis       = ' + str(vis),
-                        origin='uvcontsub2')
-        ms.writehistory(message='field     = "' + str(field) + '"',
-                        origin='uvcontsub2')
-        ms.writehistory(message='fitspw    = "' + str(fitspw) + '"',
-                        origin='uvcontsub2')
-        ms.writehistory(message='solint    = ' + str(solint),
-                        origin='uvcontsub2')
-        ms.writehistory(message='fitorder  = ' + str(fitorder),
-                        origin='uvcontsub2')
-        ms.writehistory(message='spw       = "' + str(spw) + '"',
-                        origin='uvcontsub2')
-        ms.writehistory(message='want_cont = ' + str(want_cont),
-                        origin='uvcontsub2')
-        ms.close()
+        # Not a dict, because we want to maintain the order.
+        param_names = uvcontsub2.func_code.co_varnames[:uvcontsub2.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+            
+        write_history(myms, final_csvis, 'uvcontsub2', param_names, param_vals,
+                      casalog)
 
         #casalog.post("\"want_cont\" = \"%s\"" % want_cont, 'WARN')
         #casalog.post("\"csvis\" = \"%s\"" % csvis, 'WARN')
         if want_cont:
-            ms.open(csvis)
+            myms.open(csvis)
             # No channel averaging (== skipping for fitorder == 0) is done
             # here, but it would be a reasonable option.  The user can always
             # do it by running split again.
-            ms.split(final_csvis[:-3],             # .contsub -> .cont
-                     whichcol='MODEL_DATA',
-                     spw=myspw)
-            ms.close()
+            myms.split(final_csvis[:-3],             # .contsub -> .cont
+                       whichcol='MODEL_DATA',
+                       spw=myspw)
+            myms.close()
+            write_history(myms, final_csvis[:-3], 'uvcontsub2', param_names,
+                          param_vals, casalog)
 
         #casalog.post("rming \"%s\"" % csvis, 'WARN')
         shutil.rmtree(csvis)
 
     except Exception, instance:
         casalog.post('Error in uvcontsub2: ' + str(instance), 'SEVERE')
-        cb.close()                        # Harmless if cb is closed.
+        mycb.close()                        # Harmless if cb is closed.
         raise Exception

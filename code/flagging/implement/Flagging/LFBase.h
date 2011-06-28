@@ -67,6 +67,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       NumT=numT, NumAnt=numAnt; NumB=numB; NumC=numC; NumP=numP;
      };    
 
+    // Extract a diagnostic spectrum vector.
+    virtual Bool getMonitorSpectrum(Vector<Float> &monspec, uInt pl, uInt bs)
+    {return False;};
+
+    // Set baselineFlags...
+    virtual Bool setBaselineFlag(Vector<Bool> &inBaselineFlag)
+    {baselineFlag.reference(inBaselineFlag);}
 
 /* Return antenna numbers from baseline number - upper triangle storage */
  void Ants(uInt bs, uInt *a1, uInt *a2)
@@ -103,6 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Cube<Float> visc;
     Cube<Bool> flagc;
     Cube<Bool> preflagc;
+    Vector<Bool> baselineFlag;
 
   // Shapes per chunk
   uInt NumT; // Number of timestamps in one block

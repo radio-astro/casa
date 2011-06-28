@@ -30,6 +30,8 @@ class fixvis_test1(unittest.TestCase):
         if not os.path.exists(inpms2):
             shutil.copytree(datapath2 + inpms2, inpms2)
         default(fixvis)
+        shutil.rmtree(outms, ignore_errors=True)
+        shutil.rmtree(outms2, ignore_errors=True)
         
     def tearDown(self):
         shutil.rmtree(inpms)
@@ -106,14 +108,15 @@ class fixvis_test1(unittest.TestCase):
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy', field='0', niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.30921 -029.59.29.998716',weighting='natural',uvtaper=True,
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
 
             mystats = imstat('testy.image')
         except:
             print "*** Unexpected error ***"
             
-        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz')
+        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos']==[64,64,0,0]).all())
 
     def test3(self):
         '''Apply positive phase center shift along DEC.'''
@@ -126,14 +129,16 @@ class fixvis_test1(unittest.TestCase):
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.30921 -029.59.29.998716',weighting='natural',uvtaper=True,
+                  phasecenter='J2000 18:00:02.30921 -029.59.26.998716',
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
 
             mystats = imstat('testy.image')
         except:
             print "*** Unexpected error ***"
             
-        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.26.999, I, 2.26e+11Hz')
+        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos']==[64,34,0,0]).all())
 
     def test4(self):
         '''Apply negative phase center shift along DEC using offset syntax.'''
@@ -146,14 +151,15 @@ class fixvis_test1(unittest.TestCase):
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.30921 -029.59.29.998716',weighting='natural',uvtaper=True,
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
 
             mystats = imstat('testy.image')
         except:
             print "*** Unexpected error ***"
             
-        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.32.999, I, 2.26e+11Hz')
+        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos']==[64,94,0,0]).all())
 
     def test5(self):
         '''Apply positive phase center shift along RA.'''
@@ -166,14 +172,15 @@ class fixvis_test1(unittest.TestCase):
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.30921 -029.59.29.998716',weighting='natural',uvtaper=True,
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
 
             mystats = imstat('testy.image')
         except:
             print "*** Unexpected error ***"
             
-        self.assertTrue(mystats['maxposf']=='18:00:02.540, -29.59.29.999, I, 2.26e+11Hz')
+        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos']==[94,64,0,0]).all())
 
     def test6(self):
         '''Apply negative phase shift along RA using offset syntax (offset is an angle).'''
@@ -186,14 +193,15 @@ class fixvis_test1(unittest.TestCase):
             os.system('rm -rf testy*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.30921 -029.59.29.998716',weighting='natural',uvtaper=True,
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
 
             mystats = imstat('testy.image')
         except:
             print "*** Unexpected error ***"
             
-        self.assertTrue(mystats['maxposf']=='18:00:02.078, -29.59.29.999, I, 2.26e+11Hz')
+        self.assertTrue(mystats['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos']==[34,64,0,0]).all())
 
     def test7(self):
         '''Apply negative phase shift along RA in field 1 (using offset syntax, offset is a time), no shift in field 0.'''
@@ -211,11 +219,11 @@ class fixvis_test1(unittest.TestCase):
             os.system('rm -rf testy* testz*')
             clean(vis=outms2,imagename='testy',field='0',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.30921 -29.59.30.998716',weighting='natural',uvtaper=True,
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
             clean(vis=outms2,imagename='testz',field='1',niter=10,threshold='0.1mJy',psfmode='clark',imagermode='csclean',
                   ftmachine='ft',mask=True,imsize=[128, 128],cell=['0.100000080arcsec', '0.100000080arcsec'],
-                  phasecenter='J2000 18:00:02.33306 -30.59.29.998665',weighting='natural',uvtaper=True,
+                  weighting='natural',uvtaper=True,
                   outertaper=[''],innertaper=[])
 
             mystats0 = imstat('testy.image')
@@ -223,7 +231,10 @@ class fixvis_test1(unittest.TestCase):
         except:
             print "*** Unexpected error ***"
 
-        self.assertTrue(mystats0['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and mystats1['maxposf']=='18:00:02.100, -30.59.29.999, I, 2.26e+11Hz')
+        self.assertTrue(mystats0['maxposf']=='18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats0['maxpos']==[64,64,0,0]).all() and
+                        mystats1['maxposf']=='18:00:02.333, -30.59.29.999, I, 2.26e+11Hz' and
+                        (mystats1['maxpos']==[34,64,0,0]).all())
 
     
 def suite():

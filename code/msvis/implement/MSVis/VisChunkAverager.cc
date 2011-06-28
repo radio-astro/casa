@@ -433,6 +433,7 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
   // These columns are independently normalized:
   // DATA_DESC_ID, UVW, TIME_CENTROID, WEIGHT,
   // WEIGHT_SPECTRUM, FLAG
+  Double rowwtfac; // Adjusts row weight for channel selection.
 
   // Things that are the same throughout avBuf_p.
   // A short running average (for numerical stability).

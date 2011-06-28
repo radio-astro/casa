@@ -610,48 +610,55 @@ class split_test_cst(unittest.TestCase):
                                       1, 0, 0, 0, 0, 0, 0,
                                       0, 0, 0, 0, 0, 0, 0,
                                       0, 0, 0, 0, 0, 0, 0]))
-        
+
 class split_test_state(unittest.TestCase):
     """
-    Checks a simple copy of the STATE subtable.
+    Checks the STATE subtable after selecting by intent.
     """
-    # rename and make readonly when plotxy goes away.
-    inpms = 'plotxy/testPhase_sdm.ms'
-    
-    outms = 'musthavestate.ms'
+    inpms = datapath + 'unittest/split/doppler01fine-01.ms'
+    locms = inpms.split(os.path.sep)[-1]
+    outms = 'obstar.ms'
 
     def setUp(self):
         try:
             shutil.rmtree(self.outms, ignore_errors=True)
-        
-            if not os.path.exists(self.inpms):
-                # Copying is technically unnecessary for split,
-                # but self.inpms is shared by other tests, so making
-                # it readonly might break them.
-                shutil.copytree(datapath + self.inpms, self.inpms)
-                
-                print "\n\tSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='corrected',
-                             field='', spw=[0, 1], width=1,
-                             antenna='',
-                             timebin='0s', timerange='',
-                             scan='', array='', uvrange='',
-                             correlation='', async=False)
+            os.symlink(self.inpms, self.locms)  # Paranoia
+            splitran = split(self.locms, self.outms, datacolumn='data',
+                             intent='OBSERVE_TARGET.UNSPECIFIED',
+                             async=False)
         except Exception, e:
-            print "Error splitting", self.inpms, "to", self.outms
+            print "Error splitting", self.locms, "to", self.outms
             raise e
 
     def tearDown(self):
-        # Leaves an empty plotxy dir in nosedir.
-        shutil.rmtree(self.inpms, ignore_errors=True)
-        
+        os.unlink(self.locms)
         shutil.rmtree(self.outms, ignore_errors=True)
 
     def test_state(self):
         """
-        Was the STATE subtable copied?
+        Is STATE correct after selecting by intent?
         """
-        compare_tables(self.outms + '/STATE', self.inpms + '/STATE')
+        tb.open(self.outms + '/STATE')
+        om = tb.getcol('OBS_MODE')
+        tb.close()
+        check_eq(om, numpy.array(['OBSERVE_TARGET.UNSPECIFIED']))
+        tb.open(self.outms)
+        rec = {}
+        for c in ('ANTENNA1', 'ANTENNA2', 'DATA_DESC_ID', 'DATA',
+                  'SCAN_NUMBER', 'STATE_ID', 'TIME'):
+            rec[c] = tb.getcell(c, 0)
+        tb.close()
+        # Row 1330 in inpms is the first one with STATE_ID 0.
+        check_eq(rec, {'ANTENNA1': 0,
+                       'ANTENNA2': 1,
+                       'DATA': numpy.array([[287638.+0.j, 287638.+1.j,
+                                             287638.+2.j, 287638.+3.j],
+                                            [287638.+0.j, 287638.+1.j,
+                                             287638.+2.j, 287638.+3.j]]),
+                       'DATA_DESC_ID': 0,
+                       'SCAN_NUMBER': 38,
+                       'STATE_ID': 0,
+                       'TIME': 4785966752.5})
 
 class split_test_cavcd(unittest.TestCase):
     """

@@ -356,10 +356,12 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
                        << "Finished minor cycle of Clean"
 		       << LogIO::POST;
 		    
-		    os << LogIO::NORMAL    // Loglevel INFO
-                       << "Clean used " << cleaner.numberIterations()
-		       << " iterations to approach a threshold of "
-		       << cycleThreshold << LogIO::POST;
+                    if (cleaner.numberIterations()>0) {
+		      os << LogIO::NORMAL    // Loglevel INFO
+                         << "Clean used " << cleaner.numberIterations()
+		         << " iterations to approach a threshold of "
+		         << cycleThreshold << LogIO::POST;
+                    }
 		  }
 		  
 		  iterations[model](chan)=cleaner.numberIterations();

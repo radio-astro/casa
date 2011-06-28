@@ -49,6 +49,7 @@
 
 #include <msvis/MSVis/MSAnalysis.h>
 #include <msvis/MSVis/MSContinuumSubtractor.h>
+#include <msvis/MSVis/Partition.h>
 #include <msvis/MSVis/SubMS.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -232,7 +233,9 @@ ms::reset()
 
 bool
 ms::fromfits(const std::string& msfile, const std::string &fitsfile, const bool nomodify, const bool lock, 
-             const int obstype, const std::string &host, bool forcenewserver, const std::string& antnamescheme)
+             const int obstype, const std::string &,//host,
+	     bool, //forcenewserver,
+	     const std::string& antnamescheme)
 {
 try {
    // bool rstat(False);
@@ -2042,77 +2045,138 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
           const ::casac::variant& uvrange,    const std::string&      taql,
           const std::string&      whichcol,   const ::casac::variant& tileShape,
           const ::casac::variant& subarray,   const std::string&      combine,
-          const std::string& correlation)
+          const std::string& correlation,     const std::string&      intent)
 {
   Bool rstat(False);
   try {
-     *itsLog << LogOrigin("ms", "split");
-     /*if(!ready2write_()){
-       *itsLog << LogIO::SEVERE
-            << "Please open ms with parameter nomodify=false.  Write access to ms is needed by split to store some temporary selection information. "
-            << LogIO::POST;
+    *itsLog << LogOrigin("ms", "split");
+    SubMS *splitter = new SubMS(*itsMS);
+    *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
+    String t_field(m1toBlankCStr_(field));
+    String t_spw(m1toBlankCStr_(spw));
+    if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
+      t_spw = "*";    // at the XML level does not work.
 
-       return False;
-     }
-     */
-     SubMS *splitter = new SubMS(*itsMS);
-     *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
-     String t_field(m1toBlankCStr_(field));
-     String t_spw(m1toBlankCStr_(spw));
-     if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
-       t_spw = "*";    // at the XML level does not work.
-
-     String t_antenna = toCasaString(antenna);
-     String t_scan    = toCasaString(scan);
-     String t_uvrange = toCasaString(uvrange);
-     String t_taql(taql);
-     const String t_subarray = toCasaString(subarray);
-     String t_correlation = upcase(correlation);
-     //if(t_correlation == "")
-     //  t_correlation = "*";   // * doesn't work.
+    String t_antenna = toCasaString(antenna);
+    String t_scan    = toCasaString(scan);
+    String t_intent  = toCasaString(intent);
+    String t_uvrange = toCasaString(uvrange);
+    String t_taql(taql);
+    const String t_subarray = toCasaString(subarray);
+    String t_correlation = upcase(correlation);
+    //if(t_correlation == "")
+    //  t_correlation = "*";   // * doesn't work.
      
-     if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
-                               t_taql, Vector<Int>(step), t_subarray, t_correlation)){
-       *itsLog << LogIO::SEVERE
-               << "Error selecting data."
-               << LogIO::POST;
-       delete splitter;
-       return false;
-     }
+    if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
+			      t_taql, Vector<Int>(step), t_subarray, t_correlation,
+                              t_intent)){
+      *itsLog << LogIO::SEVERE
+	      << "Error selecting data."
+	      << LogIO::POST;
+      delete splitter;
+      return false;
+    }
        
-     Double timeInSec=casaQuantity(timebin).get("s").getValue();
-     splitter->selectTime(timeInSec, String(timerange));
-     String t_outputms(outputms);
-     String t_whichcol(whichcol);
-     Vector<Int> t_tileshape(1,0);
-     if(toCasaString(tileShape) != String("")){
-       t_tileshape.resize();
-       t_tileshape=tileShape.toIntVec();
-     }
-     const String t_combine = downcase(combine);
+    Double timeInSec=casaQuantity(timebin).get("s").getValue();
+    splitter->selectTime(timeInSec, String(timerange));
+    String t_outputms(outputms);
+    String t_whichcol(whichcol);
+    Vector<Int> t_tileshape(1,0);
+    if(toCasaString(tileShape) != String("")){
+      t_tileshape.resize();
+      t_tileshape=tileShape.toIntVec();
+    }
+    const String t_combine = downcase(combine);
 
-     if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
-       *itsLog << LogIO::SEVERE
-               << "Error splitting " << itsMS->tableName() << " to "
-               << t_outputms
-               << LogIO::POST;
-       delete splitter;
-       return false;
-     }
+    if(!splitter->makeSubMS(t_outputms, t_whichcol, t_tileshape, t_combine)){
+      *itsLog << LogIO::SEVERE
+	      << "Error splitting " << itsMS->tableName() << " to "
+	      << t_outputms
+	      << LogIO::POST;
+      delete splitter;
+      return false;
+    }
        
-     *itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
-     delete splitter;
+    *itsLog << LogIO::NORMAL2 << "SubMS made" << LogIO::POST;
+    delete splitter;
    
-     {// Update HISTORY table of newly created MS
-       String message= toCasaString(outputms) + " split from " + itsMS->tableName();
-       ostringstream param;
-       param << "fieldids=" << t_field << " spwids=" << t_spw
-             << " step=" << Vector<Int>(step) << " which='" << whichcol << "'";
-       String paramstr=param.str();
-       writehistory(message, paramstr, "ms::split()", outputms, "ms");
-     }
+    {// Update HISTORY table of newly created MS
+      String message= toCasaString(outputms) + " split from " + itsMS->tableName();
+      ostringstream param;
+      param << "fieldids=" << t_field << " spwids=" << t_spw
+	    << " step=" << Vector<Int>(step) << " which='" << whichcol << "'";
+      String paramstr=param.str();
+      writehistory(message, paramstr, "ms::split()", outputms, "ms");
+    }
 
-     rstat = True;
+    rstat = True;
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rstat;
+}
+
+bool
+ms::partition(const std::string&      outputms,   const ::casac::variant& field, 
+	      const ::casac::variant& spw,        const ::casac::variant& antenna,
+	      const ::casac::variant& timebin,	  const std::string&      timerange,
+	      const ::casac::variant& scan,       const ::casac::variant& uvrange,
+	      const std::string&      taql,       const std::string&      whichcol,
+	      const ::casac::variant& tileShape,  const ::casac::variant& subarray,
+	      const std::string&      combine)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("ms", "partition");
+    Partition *partitioner = new Partition(*itsMS);
+    *itsLog << LogIO::NORMAL2 << "Sub MS created" << LogIO::POST;
+    String t_field(m1toBlankCStr_(field));
+    String t_spw(m1toBlankCStr_(spw));
+    if(t_spw == "")   // MSSelection doesn't respond well to "", and setting it
+      t_spw = "*";    // at the XML level does not work.
+
+    String t_antenna = toCasaString(antenna);
+    String t_scan    = toCasaString(scan);
+    String t_uvrange = toCasaString(uvrange);
+    String t_taql(taql);
+    const String t_subarray = toCasaString(subarray);
+     
+    if(!partitioner->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange,
+				 t_taql, t_subarray)){
+      *itsLog << LogIO::SEVERE
+	      << "Error selecting data."
+	      << LogIO::POST;
+      delete partitioner;
+      return false;
+    }
+       
+    Double timeInSec=casaQuantity(timebin).get("s").getValue();
+    partitioner->selectTime(timeInSec, String(timerange));
+    String t_outputms(outputms);
+    String t_whichcol(whichcol);
+    Vector<Int> t_tileshape(1,0);
+    if(toCasaString(tileShape) != String("")){
+      t_tileshape.resize();
+      t_tileshape=tileShape.toIntVec();
+    }
+    const String t_combine = downcase(combine);
+
+    if(!partitioner->makePartition(t_outputms, t_whichcol, t_tileshape, t_combine)){
+      *itsLog << LogIO::SEVERE
+	      << "Error partitioning " << itsMS->tableName() << " to "
+	      << t_outputms
+	      << LogIO::POST;
+      delete partitioner;
+      return false;
+    }
+       
+    *itsLog << LogIO::NORMAL2 << "Partition made" << LogIO::POST;
+    delete partitioner;
+   
+    rstat = True;
   } catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
@@ -2594,7 +2658,8 @@ ms::moments(const std::vector<int>& moments,
             //const std::string& smoothout, 
             //const std::string& pgdevice,
             //const int nx, const int ny, const bool yind,
-            const bool overwrite, const bool async)
+            const bool overwrite, const bool //async
+	    )
 {
   table *rstat = 0 ;
   try {

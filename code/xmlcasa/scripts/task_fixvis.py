@@ -38,9 +38,10 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
     casalog.origin('fixvis')
     try:
         if(vis==outputvis or outputvis==''):
-            casalog.post('Will overwrite original MS.', 'NORMAL')
+            casalog.post('Will overwrite original MS ...', 'NORMAL')
             outputvis = vis
         else:
+            casalog.post('Copying original MS to outputvis ...', 'NORMAL')
             shutil.rmtree(outputvis, ignore_errors=True)
             shutil.copytree(vis, outputvis)
 
@@ -75,7 +76,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     casalog.post('Invalid refcode '+refcode, 'SEVERE')
                     return False
             else: # not a variable reference column
-                validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal']
+                validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal'].tolist()\
+                             + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist()
                 if not (refcode in validcodes):
                     casalog.post('Invalid refcode '+refcode, 'SEVERE')
                     return False
@@ -99,11 +101,12 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
 
         else: # we are modifying UVWs and visibilities
 
+            commonoldrefstr = '' # for the case of a non-variable reference column and several selected fields 
+
             for fld in fields:
                 viaoffset = False
                 thenewra_rad = 0.
                 thenewdec_rad = 0.
-                thenewphasecenter = phasecenter
                 thenewref = -1
                 theoldref = -1
                 theoldrefstr = ''
@@ -119,7 +122,7 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     theoldref = tbt.getcol('PhaseDir_Ref')[fld]
                     refcodestrlist = ckwdict['TabRefTypes'].tolist()
                     refcodelist = ckwdict['TabRefCodes'].tolist()
-                    if not (refcodelist.has_key(theoldref)):
+                    if not (theoldref in refcodelist):
                         casalog.post('Invalid refcode in FIELD column PhaseDir_Ref: '+str(theoldref), 'SEVERE')
                         return False
                     tindex = refcodelist.index(theoldref)
@@ -129,9 +132,18 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     theoldrefstr = tmprec['Ref']
                 tbt.close()
 
-                if not (theoldref<32 and theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC']):
-                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not supported here: '+theoldrefstr, 'SEVERE')
-                    return False                            
+                if not isvarref:
+                    if not (commonoldrefstr == ''):
+                        theoldrefstr = commonoldrefstr
+                    else:
+                        commonoldrefstr = theoldrefstr
+
+                theoldphasecenter = theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),14)+' '+qa.angle(qa.quantity(theolddir[1],'rad'),14)
+
+                if not (theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC', 'ICRS']
+                        + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist() ):
+                    casalog.post('Refcode for FIELD column PHASE_DIR is valid but not yet supported: '+theoldrefstr, 'WARN')
+                    casalog.post('Output MS may not be valid.', 'WARN')
 
                 casalog.post( 'field: '+fieldname, 'NORMAL')
                 casalog.post( 'old phasecenter RA, DEC '+theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),10) # 10 digits precision
@@ -155,8 +167,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                         casalog.post("Interpreting it as pair of offsets in (RA,DEC) ...", 'NORMAL')
 
                         if (isvarref and theoldref>31):
-                            casalog.post('Refcode in FIELD column PhaseDir_Ref is a solar system object: '+theoldrefstr, 'WARN')
-                            casalog.post('Will use the nominal entry in the PHASE_DIR column to calculate new phase center', 'WARN')
+                            casalog.post('*** Refcode in FIELD column PhaseDir_Ref is a solar system object: '+theoldrefstr, 'NORMAL')
+                            casalog.post('*** Will use the nominal entry in the PHASE_DIR column to calculate new phase center', 'NORMAL')
                             
                         qra = qa.quantity(theolddir[0], 'rad') 
                         qdec = qa.quantity(theolddir[1], 'rad')
@@ -181,59 +193,56 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             qraoffset = qa.convert(qraoffset, 'deg')
                             qnewra = qa.add(qnewra, qraoffset)
                         dirstr = [theoldrefstr, qa.time(qnewra,12), qa.angle(qnewdec,12)]
-                        thenewphasecenter = dirstr[0]+' '+dirstr[1]+' '+dirstr[2]
                     elif not len(dirstr)==3:
                         casalog.post('Incorrectly formatted parameter \'phasecenter\': '+phasecenter, 'SEVERE')
                         return False
                     
-                    try:
-                        thedir = me.direction(dirstr[0], dirstr[1], dirstr[2])
-                        thenewra_rad = thedir['m0']['value']
-                        thenewdec_rad = thedir['m1']['value']
-                    except Exception, instance:
-                        casalog.post("*** Error \'%s\' when interpreting parameter \'phasecenter\': " % (instance), 'SEVERE')
-                        return False
                     if(isvarref):
                         thenewrefindex = ckwdict['TabRefTypes'].tolist().index(dirstr[0])
                         thenewref = ckwdict['TabRefCodes'][thenewrefindex]
                         thenewrefstr = dirstr[0]
                     else: # not a variable ref col
-                        validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal']
+                        validcodes = me.listcodes(me.direction('J2000', '0','0'))['normal'].tolist()\
+                                     + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist()
                         if(dirstr[0] in validcodes):
-                            thenewref = validcodes.tolist().index(dirstr[0])
+                            thenewref = validcodes.index(dirstr[0])
                             thenewrefstr = dirstr[0]
                         else:
-                            casalog.post('Invalid refcode '+refcode, 'SEVERE')
+                            casalog.post('Invalid refcode '+dirstr[0], 'SEVERE')
                             return False
                         if(dirstr[0] != ckwdict['Ref']):
                             allselected = True
-                            for i in range(0, len(refcol)):
+                            for i in range(0, numfields):
                                 if not (i in fields):
                                     allselected = False
-                            if not allselected:
-                                casalog.post("PHASE_DIR is not a variable reference column. Please provide phase dir in "+ckwdict['Ref'], 'SEVERE')
+                            if numfields>1 and not allselected:
+                                casalog.post("You have not selected all "+str(numfields)
+                                             +" fields and PHASE_DIR is not a variable reference column.\n"
+                                             +" Please use split or provide phase dir in "+ckwdict['Ref']+".", 'SEVERE')
                                 return False
                             else:
                                 casalog.post("The direction column reference frame in the FIELD table will be changed from "
                                              +ckwdict['Ref']+" to "+dirstr[0], 'NORMAL')
                     #endif
+
+                    try:
+                        thedir = me.direction(thenewrefstr, dirstr[1], dirstr[2])
+                        thenewra_rad = thedir['m0']['value']
+                        thenewdec_rad = thedir['m1']['value']
+                    except Exception, instance:
+                        casalog.post("*** Error \'%s\' when interpreting parameter \'phasecenter\': " % (instance), 'SEVERE')
+                        return False
                                 
                 #endif
+
+                if not (thenewrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC', 'ICRS']
+                        + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist() ):
+                    casalog.post('Refcode for the new phase center is valid but not yet supported: '+thenewrefstr, 'WARN')
+                    casalog.post('Output MS may not be valid.', 'WARN')
                     
                 casalog.post( 'new phasecenter RA, DEC '+thenewrefstr+' '+qa.time(qa.quantity(thenewra_rad,'rad'),10)
                               +" "+ qa.angle(qa.quantity(thenewdec_rad,'rad'),10), 'NORMAL')
                 casalog.post( '          RA, DEC (rad) '+thenewrefstr+' '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
-
-                fldids = []
-                phdirs = []
-                for i in xrange(numfields):
-                    if (i ==fld):
-                        fldids.append(i)
-                        phdirs.append(thenewphasecenter)
-
-                im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
-                im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
-                im.close()
 
                 # modify FIELD table                
                 tbt.open(outputvis+'/FIELD', nomodify=False)
@@ -265,13 +274,13 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             casalog.post("FIELD table phase center direction reference frame for field "+str(fld)
                                          +" set to "+str(thenewref)+" ("+thenewrefstr+")", 'NORMAL')
                             if not (thenewref==theoldref2 and thenewref==theoldref3):
-                                casalog.post("The three FIELD table direction reference frame entries for field "+str(fld)
+                                casalog.post("*** The three FIELD table direction reference frame entries for field "+str(fld)
                                              +" will not be identical in the output data: "
-                                             +str(thenewref)+", "+str(theoldref2)+", "+str(theoldref3), 'WARN')
+                                             +str(thenewref)+", "+str(theoldref2)+", "+str(theoldref3), 'NORMAL')
                                 if not (theoldref==theoldref2 and theoldref==theoldref3):
-                                    casalog.post("The three FIELD table direction reference frame entries for field "+str(fld)
+                                    casalog.post("*** The three FIELD table direction reference frame entries for field "+str(fld)
                                                  +" were not identical in the input data either: "
-                                                 +str(theoldref)+", "+str(theoldref2)+", "+str(theoldref3), 'WARN')
+                                                 +str(theoldref)+", "+str(theoldref2)+", "+str(theoldref3), 'NORMAL')
                         else:
                             casalog.post("FIELD table direction reference frame entries for field "+str(fld)
                                          +" unchanged.", 'NORMAL')
@@ -282,10 +291,21 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                             tmprec['Ref'] = thenewrefstr
                             tbt.putcolkeyword('PHASE_DIR', 'MEASINFO', tmprec) 
                             casalog.post("FIELD table phase center direction reference frame changed from "
-                                         +oldref+" to "+thenewrefstr, 'NORMAL')
+                                         +theoldrefstr+" to "+thenewrefstr, 'NORMAL')
 
                 tbt.close()
-            
+
+                fldids = []
+                phdirs = []
+                for i in xrange(numfields):
+                    if (i==fld):
+                        fldids.append(i)
+                        phdirs.append(theoldphasecenter)
+
+                im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
+                im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
+                im.close()
+
             #end for
 
         #endif change phasecenter

@@ -25,13 +25,15 @@
 //#
 //# $Id: $
 
-#include <images/IO/FitterEstimatesFileParser.h>
+#include <imageanalysis/IO/FitterEstimatesFileParser.h>
+
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/File.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/ImageMetaData.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <casa/OS/EnvVar.h>
 
 #include <casa/namespace.h>
 
@@ -41,7 +43,12 @@ void writeTestString(const String& test) {
 
 
 int main() {
-	FITSImage fitsImage("gaussian_model_with_noise.fits");
+	String *parts = new String[2];
+	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
+	String datadir = parts[0] + "/data/regression/unittest/imageanalysis/IO/";
+	delete [] parts;
+	FITSImage fitsImage(datadir + "gaussian_model_with_noise.fits");
+
     try {
         {
             writeTestString(
@@ -49,7 +56,7 @@ int main() {
             );
             Bool thrown = False;
             try {
-            	FitterEstimatesFileParser parser("bogusfile.txt", fitsImage);
+            	FitterEstimatesFileParser parser(datadir + "bogusfile.txt", fitsImage);
             }
             catch (AipsError x) {
             	thrown = True;
@@ -65,7 +72,7 @@ int main() {
         	);
         	Bool thrown = False;
             try {
-            	FitterEstimatesFileParser parser("./badEstimatesFormat.txt", fitsImage);
+            	FitterEstimatesFileParser parser(datadir + "badEstimatesFormat.txt", fitsImage);
             }
             catch (AipsError x) {
             	thrown = True;
@@ -82,7 +89,7 @@ int main() {
         	Bool thrown = False;
             try {
             	FitterEstimatesFileParser parser(
-            		"./badFixedFormat.txt", fitsImage
+            		datadir + "badFixedFormat.txt", fitsImage
             	);
             }
             catch (AipsError x) {
@@ -97,7 +104,7 @@ int main() {
         	writeTestString(
         		"test constructor parses correctly formatted file"
         	);
-            FitterEstimatesFileParser parser("./goodEstimatesFormat.txt", fitsImage);
+            FitterEstimatesFileParser parser(datadir + "goodEstimatesFormat.txt", fitsImage);
             ComponentList compList = parser.getEstimates();
             AlwaysAssert(compList.nelements() == 2, AipsError);
             Vector<Double> expectedFlux(2);
@@ -154,7 +161,7 @@ int main() {
            	}
         }
         {
-            FitterEstimatesFileParser parser("./goodEstimatesFormat.txt", FITSImage("jyperbeammap.fits"));
+            FitterEstimatesFileParser parser(datadir + "goodEstimatesFormat.txt", FITSImage(datadir + "jyperbeammap.fits"));
             ComponentList compList = parser.getEstimates();
             Vector<Double> expectedFlux(2);
             expectedFlux[0] = 20.0;

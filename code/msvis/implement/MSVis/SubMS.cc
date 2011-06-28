@@ -110,6 +110,7 @@ namespace casa {
     antennaSel_p(False),
     timeBin_p(-1.0),
     scanString_p(""),
+    intentString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
     timeRange_p(""),
@@ -128,6 +129,7 @@ namespace casa {
     antennaSel_p(False),
     timeBin_p(-1.0),
     scanString_p(""),
+    intentString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
     timeRange_p(""),
@@ -154,6 +156,24 @@ namespace casa {
     parseColumnNames("None");
 
   }
+
+std::set<Int> SubMS::findBadSpws(MeasurementSet& ms, Vector<Int> spwv)
+{
+  ROScalarColumn<Int> spws_in_dd(ms.dataDescription(), 
+				 MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
+  std::set<Int> uniqSpwsInDD;
+  uInt nspwsInDD = spws_in_dd.nrow();
+  for(uInt ddrow = 0; ddrow < nspwsInDD; ++ddrow)
+    uniqSpwsInDD.insert(spws_in_dd(ddrow));
+  std::set<Int>::iterator ddend = uniqSpwsInDD.end();
+  std::set<Int> badSelSpwSlots;
+  for(uInt k = 0; k < spwv.nelements(); ++k){
+    if(uniqSpwsInDD.find(spwv[k]) == ddend){
+      badSelSpwSlots.insert(k);
+    }
+  }
+  return badSelSpwSlots;
+}
   
   // This is the version used by split.
   Bool SubMS::selectSpw(const String& spwstr, const Vector<Int>& steps)
@@ -279,20 +299,7 @@ namespace casa {
     
     // Check for and filter out selected spws that aren't included in
     // DATA_DESCRIPTION.  (See CAS-1673 for an example.)
-    ROScalarColumn<Int> spws_in_dd(ms_p.dataDescription(), 
-	     MSDataDescription::columnName(MSDataDescription::SPECTRAL_WINDOW_ID));
-    std::set<Int> uniqSpwsInDD;
-    uInt nspwsInDD = spws_in_dd.nrow();
-    for(uInt ddrow = 0; ddrow < nspwsInDD; ++ddrow)
-      uniqSpwsInDD.insert(spws_in_dd(ddrow));
-    std::set<Int>::iterator ddend = uniqSpwsInDD.end();
-    std::set<Int> badSelSpwSlots;
-    uInt nSelSpw = spw_p.nelements();
-    for(uInt k = 0; k < nSelSpw; ++k){
-      if(uniqSpwsInDD.find(spw_p[k]) == ddend){
-        badSelSpwSlots.insert(k);
-      }
-    }
+    std::set<Int> badSelSpwSlots(SubMS::findBadSpws(ms_p, spw_p));
     uInt nbadSelSpwSlots = badSelSpwSlots.size();
     if(nbadSelSpwSlots > 0){
       os << LogIO::WARN << "Selected input spw(s)\n";
@@ -302,6 +309,7 @@ namespace casa {
       os << "\nwere not found in DATA_DESCRIPTION and are being excluded."
          << LogIO::POST;
 
+      uInt nSelSpw = spw_p.nelements();
       uInt ngoodSelSpwSlots = nSelSpw - nbadSelSpwSlots;
       Vector<Int> spwc(ngoodSelSpwSlots);
       Vector<Int> chanStartc(ngoodSelSpwSlots);
@@ -465,7 +473,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
                           const String& baseline, const String& scan,
                           const String& uvrange, const String& taql,
                           const Vector<Int>& step, const String& subarray,
-                          const String& correlation)
+                          const String& correlation, const String& intent)
   {
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
     Bool  ok;
@@ -492,6 +500,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
       selectAntenna(antid, antstr);
     }
     scanString_p    = scan;
+    intentString_p  = intent;
     uvrangeString_p = uvrange;
     taqlString_p    = taql;
 
@@ -628,20 +637,23 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     return cando;
   }
   
-  
-  void SubMS::selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel){
-    if((antennaids.nelements()==1) && (antennaids[0]=-1) && antennaSel[0]==""){
-      antennaSel_p=False;
-      return;
-    }
-    
-    antennaSel_p=True;
-    if((antennaids.nelements()==1) && (antennaids[0]=-1))
-      antennaId_p.resize();
+Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
+			 Vector<String>& selected_antenna_strs,
+			 const Vector<Int>& antennaids,
+			 const Vector<String>& antennaSel)
+{
+  Bool didSelect = true;
+  if((antennaids.nelements() == 1) && (antennaids[0] == -1)){
+    if(antennaSel[0] == "")
+      didSelect = false;
     else
-      antennaId_p=antennaids;
-    antennaSelStr_p=antennaSel; 
+      selected_antennaids.resize();
   }
+  else
+    selected_antennaids = antennaids;
+  selected_antenna_strs = antennaSel;
+  return didSelect;
+}
   
   void SubMS::selectArray(const String& subarray)
   {
@@ -1023,6 +1035,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
     thisSelection.setUvDistExpr(uvrangeString_p);
     thisSelection.setScanExpr(scanString_p);
+    thisSelection.setStateExpr(intentString_p);
     if(arrayExpr_p != "")
       thisSelection.setArrayExpr(arrayExpr_p);
     if(corrString_p != "")
@@ -1839,7 +1852,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // This method is currently not called in SubMS.  It should really be called
   // in setupMS, but that has been made into a static method and it cannot be
   // called there.  The ms argument is unused, but it is there to preserve the
-  // signature, even though it causes a compiler warning.
+  // signature, and is commented to prevent a compiler warning.
   //
   void SubMS::verifyColumns(const MeasurementSet&, // ms,
                             const Vector<MS::PredefinedColumns>& colNames)
@@ -8699,7 +8712,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   return True;
 }
 
-void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
+void SubMS::getDataColMap(MSColumns* msc, ArrayColumn<Complex>* mapper,
+			  uInt ntok,
                           const Vector<MS::PredefinedColumns>& colEnums)
 {
   // Set up a map from dataColumn indices to ArrayColumns in the output.
@@ -8708,18 +8722,18 @@ void SubMS::getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
   // .resize(), which uses =, which is banned for ArrayColumn.
 
   if(mustConvertToData(ntok, colEnums)){
-    mapper[0].reference(msc_p->data());
+    mapper[0].reference(msc->data());
   }
   else{
     for(uInt i = 0; i < ntok; ++i){
       if(colEnums[i] == MS::CORRECTED_DATA)
-        mapper[i].reference(msc_p->correctedData());
+        mapper[i].reference(msc->correctedData());
       else if(colEnums[i] == MS::MODEL_DATA)
-        mapper[i].reference(msc_p->modelData());
+        mapper[i].reference(msc->modelData());
       else if(colEnums[i] == MS::LAG_DATA)
-        mapper[i].reference(msc_p->lagData());
+        mapper[i].reference(msc->lagData());
       else                                  // The output default !=
-        mapper[i].reference(msc_p->data()); // the input default.
+        mapper[i].reference(msc->data()); // the input default.
     }
   }
 }

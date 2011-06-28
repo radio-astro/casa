@@ -33,9 +33,15 @@ implement/Annotations/AnnSymbol.cc
 implement/Annotations/AnnText.cc
 implement/Annotations/AnnVector.cc
 implement/Annotations/AsciiAnnotationList.cc
+
+implement/ImageAnalysis/ImageFitter.cc
+
 implement/IO/AsciiAnnotationFileParser.cc
 implement/IO/AsciiAnnotationFileLine.cc
+implement/IO/FitterEstimatesFileParser.cc
 )
+
+casa_add_executable(imageanalysis imfit apps/imfit.cc )
 
 casa_add_assay( imageanalysis implement/Annotations/test/tAnnAnnulus.cc )
 casa_add_assay( imageanalysis implement/Annotations/test/tAnnCenterBox.cc )
@@ -50,4 +56,7 @@ casa_add_assay( imageanalysis implement/Annotations/test/tAnnText.cc )
 casa_add_assay( imageanalysis implement/Annotations/test/tAnnVector.cc )
 casa_add_assay( imageanalysis implement/Annotations/test/tAsciiAnnotationList.cc )
 
+casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageFitter.cc)
+
 casa_add_assay( imageanalysis implement/IO/test/tAsciiAnnotationFileParser.cc )
+casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )

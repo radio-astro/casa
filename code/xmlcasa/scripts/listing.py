@@ -136,12 +136,25 @@ def diffMetadata(testOut, standardOut, prefix=""):
     printDiff('','',[standardOut,testOut]) # Print some header info
 
     countDiff = 0 # Count number of different lines
-    for linenum in range(len(testList)):
+
+    nlines = min(len(testList),len(stndList))
+ 
+    #for linenum in range(len(testList)):
+    for linenum in range(nlines):
         if ( testList[linenum] != stndList[linenum] ):
             countDiff += 1
             print "- (line ", linenum, ") Non-float data differs:" 
             printDiff(stndList[linenum],testList[linenum])
 
+    ndiffl = 0
+    if nlines < len(stndList):
+      ndiffl = len(stndList)-nlines
+      print " missing %s lines" % ndiffl 
+    if nlines == len(stndList):
+      ndiffl = len(testList)-nlines
+      print " extra %s lines" % ndiffl 
+
+    countDiff += ndiffl
     print ""
     print "SUMMARY (diffMetadata): "
     print " %10i = Total number of lines with non-float differences" % countDiff 

@@ -45,6 +45,8 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
+
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
 #include <images/Images/ImageCollapser.h>
@@ -55,7 +57,6 @@
 #include <images/Images/ImageExprParse.h>
 #include <images/Images/ImageFFT.h>
 #include <images/Images/ImageFITSConverter.h>
-#include <images/Images/ImageFitter.h>
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
@@ -1360,14 +1361,15 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 
 
 ::casac::record* image::fitcomponents(
-	const string& box, const variant& region, const int chan,
+	const string& box, const variant& region, const variant& chans,
 	const string& stokes, const variant& vmask,
 	const vector<double>& in_includepix,
 	const vector<double>& in_excludepix,
 	const string& residual, const string& model,
 	const string& estimates, const string& logfile,
 	const bool append, const string& newestimates,
-	const string& complist, const bool overwrite
+	const string& complist, const bool overwrite,
+	const int chan
 ) {
     if (detached()) {
     	return 0;
@@ -1390,42 +1392,68 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     if(mask == "[]") {
 	    mask = "";
     }
+    cout << "chans " << chans.typeString() << endl;
 	try {
-		ImageFitter *fitter = 0;
+		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = itsImage->getImage();
 		ImageFitter::CompListWriteControl writeControl = complist.empty()
 			? ImageFitter::NO_WRITE
 				: overwrite ? ImageFitter::OVERWRITE
 					: ImageFitter::WRITE_NO_REPLACE;
+		String sChans;
+		if (chans.type() == variant::BOOLVEC) {
+			// for some reason which eludes me, the default variant type is boolvec
+			sChans = "";
+		}
+		else if (chans.type() == variant::STRING) {
+			sChans = chans.toString();
+		}
+		else if (chans.type() == variant::INT) {
+			sChans = String::toString(chans.toInt());
+		}
+		else {
+			*itsLog << "Unsupported type for chans. chans must be either an integer or a string"
+				<< LogIO::EXCEPTION;
+		}
 
+		if (chan >= 0) {
+			*itsLog << LogIO::WARN
+				<< "THE chan PARAMETER HAS BEEN DEPRECATED. PLEASE USE chans INSTEAD."
+				<< LogIO::POST;
+			if (sChans.empty()) {
+				sChans = String::toString(chan);
+			}
+		}
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
-			fitter = new ImageFitter(
-				image, regionString, box, chan, stokes, mask, includepix, excludepix,
-				residual, model, estimates, logfile, append, newestimates, complist,
-				writeControl
+			fitter.reset(
+				new ImageFitter(
+					image, regionString, box, sChans, stokes, mask, includepix, excludepix,
+					residual, model, estimates, logfile, append, newestimates, complist,
+					writeControl
+				)
 			);
 		}
 		else if (region.type() == ::casac::variant::RECORD) {
 			::casac::variant regionCopy = region;
 			Record *regionRecord = toRecord(regionCopy.asRecord());
-			fitter = new ImageFitter(
-				image, regionRecord, box, chan, stokes, mask, includepix, excludepix,
-				residual, model, estimates, logfile, append, newestimates, complist,
-				writeControl
+			fitter.reset(
+				new ImageFitter(
+					image, regionRecord, box, sChans, stokes, mask, includepix, excludepix,
+					residual, model, estimates, logfile, append, newestimates, complist,
+					writeControl
+				)
 			);
 		}
 		else {
 			*itsLog << "Unsupported type for region " << region.type() << LogIO::EXCEPTION;
 		}
 		ComponentList compList = fitter->fit();
-		bool converged = fitter->converged();
-		delete fitter;
+		Vector<Bool> converged = fitter->converged();
 		Record returnRecord, compListRecord;
 		String error;
 
-		Vector<String> allowFluxUnits(1);
-		allowFluxUnits[0] = "Jy.km/s";
+		Vector<String> allowFluxUnits(1, "Jy.km/s");
 		FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 
 	    if (! compList.toRecord(error, compListRecord)) {
@@ -2811,46 +2839,53 @@ image::topixel(const ::casac::variant& value)
 }
 
 ::casac::record*
-image::toworld(const ::casac::variant& value, const std::string& format)
+ image::toworld(const ::casac::variant& value, const std::string& format)
 {
-  ::casac::record *rstat = 0;
-  try {
-    *itsLog << LogOrigin("image", "toworld");
-    if (detached()) return rstat;
+	::casac::record *rstat = 0;
+	try {
+		*itsLog << LogOrigin("image", "toworld");
+		if (detached()) return rstat;
 
-    Vector<Double> pixel;
-    if (isunset(value)) {
-      pixel.resize(0);
-    } else if (value.type() == ::casac::variant::DOUBLEVEC) {
-      pixel = value.getDoubleVec();
-    } else if (value.type() == ::casac::variant::INTVEC) {
-      Vector<Int> ipixel = value.getIntVec();
-      Int n = ipixel.size();
-      pixel.resize(n);
-      for (int i=0 ; i < n; i++) pixel[i]=ipixel[i];
-    } else if (value.type() == ::casac::variant::RECORD) {
-      ::casac::variant localvar(value);
-      Record *tmp = toRecord(localvar.asRecord());
-      if (tmp->isDefined("numeric")) {
-	pixel = tmp->asArrayDouble("numeric");
-      } else {
-	*itsLog << LogIO::SEVERE << "unsupported record type for value"
-		<< LogIO::EXCEPTION;
+		Vector<Double> pixel;
+		if (isunset(value)) {
+			pixel.resize(0);
+		} else if (value.type() == ::casac::variant::DOUBLEVEC) {
+			cout << "double vec " << endl;
+			pixel = value.getDoubleVec();
+		} else if (value.type() == ::casac::variant::INTVEC) {
+			cout << "int vec " << endl;
+
+			variant vcopy = value;
+			Vector<Int> ipixel = vcopy.asIntVec();
+			cout << "* ipixel " << ipixel << endl;
+			Int n = ipixel.size();
+			pixel.resize(n);
+			for (int i=0 ; i < n; i++) pixel[i]=ipixel[i];
+		} else if (value.type() == ::casac::variant::RECORD) {
+			cout << "record " << endl;
+			::casac::variant localvar(value);
+			Record *tmp = toRecord(localvar.asRecord());
+			if (tmp->isDefined("numeric")) {
+				pixel = tmp->asArrayDouble("numeric");
+			} else {
+				*itsLog << LogIO::SEVERE << "unsupported record type for value"
+						<< LogIO::EXCEPTION;
+				return rstat;
+			}
+			delete tmp;
+		} else {
+			*itsLog << LogIO::SEVERE << "unsupported data type for value"
+					<< LogIO::EXCEPTION;
+			return rstat;
+		}
+		cout << "*** pixel " << pixel << endl;
+		rstat = fromRecord(itsImage->toworld(pixel, format));
+
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
 	return rstat;
-      }
-      delete tmp;
-    } else {
-      *itsLog << LogIO::SEVERE << "unsupported data type for value"
-	      << LogIO::EXCEPTION;
-      return rstat;
-    }
-    rstat = fromRecord(itsImage->toworld(pixel, format));
-
-  } catch (AipsError x) {
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-    RETHROW(x);
-  }
-  return rstat;
 }
 
 bool

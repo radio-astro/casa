@@ -605,7 +605,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.62
+           VERSION 1.0.64
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK
@@ -1009,7 +1009,7 @@ casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( plotms CASACORE QT4 casaqt msvis Boost )
 casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis Boost )
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
-casa_add_module( flagging CASACORE Boost tableplot msvis )
+casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)
 casa_add_module( calibration CASACORE tableplot msvis Boost )
 casa_add_module( synthesis CASACORE ATM casadbus msvis Boost calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )

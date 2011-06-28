@@ -24,6 +24,8 @@
 //#
 //# $Id:  $
 
+#include <imageanalysis/IO/FitterEstimatesFileParser.h>
+
 #include <casa/aips.h>
 #include <casa/IO/RegularFileIO.h>
 #include <casa/Utilities/Regex.h>
@@ -33,7 +35,6 @@
 #include <components/ComponentModels/GaussianShape.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
-#include <images/IO/FitterEstimatesFileParser.h>
 #include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageStatistics.h>
 

@@ -90,6 +90,10 @@ average over frequency (channels) and time (integrations).
 		<description>Select data by scan numbers</description>
 		<value></value>
 	</param>
+	<param type="string" name="intent" >
+		<description>Select data by scan intents</description>
+		<value></value>
+	</param>
         <param type="string" name="array">
                 <description>Select (sub)array(s) by array ID number</description>
                 <value></value>
@@ -225,6 +229,14 @@ average over frequency (channels) and time (integrations).
             uvrange='0~1000km'; uvrange in kilometers
 	scan -- Scan number range
             default: ''=all
+        intent -- Select by scan intent (state).  Case sensitive.
+            default: '' = all
+            Examples:
+            intent = 'CALIBRATE_ATMOSPHERE_REFERENCE'
+            intent = 'calibrate_atmosphere_reference'.upper() # same as above
+            # Select states that include one or both of CALIBRATE_WVR.REFERENCE
+            # or OBSERVE_TARGET_ON_SOURCE.
+            intent = 'CALIBRATE_WVR.REFERENCE, OBSERVE_TARGET_ON_SOURCE'
         correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
                        default '' (all).
         combine -- Let time bins span changes in scan and/or state.

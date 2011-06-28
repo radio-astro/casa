@@ -114,6 +114,7 @@ casa_add_library( xmlcasa
   implement/casa/TSLogSink.cc
   implement/components/componentlist_cmpt.cc
   implement/flagging/flagger_cmpt.cc
+  implement/flagging/lightflagger_cmpt.cc
   implement/images/coordsys_cmpt.cc
   implement/images/image_cmpt.cc
   implement/images/imagepol_cmpt.cc
@@ -202,6 +203,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_accum.py
   scripts/task_applycal.py
   scripts/task_autoclean.py
+  scripts/task_autoflag.py
   scripts/task_bandpass.py
   scripts/task_blcal.py
   scripts/task_boxit.py
@@ -321,6 +323,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/accum.xml
   tasks/applycal.xml
   tasks/autoclean.xml
+  tasks/autoflag.xml
   tasks/bandpass.xml
   tasks/blcal.xml
   tasks/boxit.xml
@@ -432,6 +435,7 @@ casa_add_tools( tools_idl tools_sources
   implement/casa/quanta.xml
   implement/components/componentlist.xml
   implement/flagging/flagger.xml
+  implement/flagging/lightflagger.xml
   implement/images/coordsys.xml
   implement/images/imagepol.xml
   implement/images/image.xml

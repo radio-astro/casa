@@ -59,8 +59,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void ExtendFlagsAcrossPols();
 
     Int flaglevel_p;
+
     Bool flagcrossfromauto_p;
+    Bool flagbothants_p;
+
     Bool extendacrosspols_p;
+
+    Float grow_in_time_p;
+    Float grow_in_freq_p;
+    Bool grow_around_p;
+
+    Bool flag_prev_next_time_p;
+    Bool flag_prev_next_freq_p;
 
     Vector<Int> ant1,ant2;
     

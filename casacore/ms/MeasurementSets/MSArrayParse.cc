@@ -1,4 +1,4 @@
-//# MSArrayParse.cc: Classes to hold results from scan grammar parser
+//# MSArrayParse.cc: Classes to hold results from array grammar parser
 //# Copyright (C) 1994,1995,1997,1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -31,8 +31,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  MSArrayParse* MSArrayParse::thisMSSParser = 0x0; // Global pointer to the parser object
+  MSArrayParse* MSArrayParse::thisMSAParser = 0x0; // Global pointer to the parser object
   TableExprNode* MSArrayParse::node_p = 0x0;
+  std::vector<Int> MSArrayParse::parsedIDList_p;
   Vector<Int> MSArrayParse::idList;
   
   //# Constructor
@@ -48,8 +49,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(node_p) delete node_p;
     node_p = new TableExprNode();
     idList.resize(0);
+    parsedIDList_p.resize(0);
   }
   
+  std::vector<Int>& MSArrayParse::accumulateIDs(const Int id0, const Int id1)
+  {
+    Vector<Int> theIDs;
+    if (id1 < 0) 
+      {
+	parsedIDList_p.push_back(id0);theIDs.resize(1);theIDs[0]=id0;
+	// Also accumulate IDs in the global ID list which contains IDs
+	// generated from all expressions (INT, INT DASH INT, and bounds
+	// expressions (>ID, <ID, etc.)).
+	//	appendToIDList(theIDs);
+      }
+    else
+      {
+	// Enumerated list of IDs can be treated as a [ID0, ID1]
+	// (range inclusive of the bounds).
+	//	cerr << "Selecting enumerated range: " << id0 << " " << id1 << endl;
+	selectRangeGEAndLE(id0,id1);
+      }
+    return parsedIDList_p;
+  }
+
   void MSArrayParse::appendToIDList(const Vector<Int>& v)
   {
     Int currentSize = idList.nelements();
@@ -106,27 +129,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
   
-  const TableExprNode *MSArrayParse::selectArrayIds(const Vector<Int>& scanids)
+  const TableExprNode *MSArrayParse::selectArrayIds(const Vector<Int>& arrayids)
   {
-    TableExprNode condition = TableExprNode(ms()->col(colName).in(scanids));
+    if (arrayids.size() > 0)
+      {
+	TableExprNode condition = TableExprNode(ms()->col(colName).in(arrayids));
     
-    appendToIDList(scanids);
+	appendToIDList(arrayids);
 
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
-    
+	if(node_p->isNull())
+	  *node_p = condition;
+	else
+	  *node_p = *node_p || condition;
+      }
     return node_p;
   }
   
-  const TableExprNode *MSArrayParse::selectArrayIdsGT(const Vector<Int>& scanids)
+  const TableExprNode *MSArrayParse::selectArrayIdsGT(const Vector<Int>& arrayids)
   {
-    TableExprNode condition = TableExprNode(ms()->col(colName) > scanids[0]);
+    TableExprNode condition = TableExprNode(ms()->col(colName) > arrayids[0]);
     
-    Int n=maxArrays_p-scanids[0]+1,j;
+    Int n=maxArrays_p-arrayids[0]+1,j;
     Vector<Int> tmp(n);
-    j=scanids[0]+1;
+    j=arrayids[0]+1;
     for(Int i=0;i<n;i++) tmp[i]=j++;
     appendToIDList(tmp);
 
@@ -138,11 +163,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
   
-  const TableExprNode *MSArrayParse::selectArrayIdsLT(const Vector<Int>& scanids)
+  const TableExprNode *MSArrayParse::selectArrayIdsLT(const Vector<Int>& arrayids)
   {
-    TableExprNode condition = TableExprNode(ms()->col(colName) < scanids[0]);
-    Vector<Int> tmp(scanids[0]);
-    for(Int i=0;i<scanids[0];i++) tmp[i] = i;
+    TableExprNode condition = TableExprNode(ms()->col(colName) < arrayids[0]);
+    Vector<Int> tmp(arrayids[0]);
+    for(Int i=0;i<arrayids[0];i++) tmp[i] = i;
     appendToIDList(tmp);
 
     if(node_p->isNull())
@@ -153,13 +178,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
 
-  const TableExprNode *MSArrayParse::selectArrayIdsGTEQ(const Vector<Int>& scanids)
+  const TableExprNode *MSArrayParse::selectArrayIdsGTEQ(const Vector<Int>& arrayids)
   {
-    TableExprNode condition = TableExprNode(ms()->col(colName) >= scanids[0]);
+    TableExprNode condition = TableExprNode(ms()->col(colName) >= arrayids[0]);
     
-    Int n=maxArrays_p-scanids[0]+1,j;
+    Int n=maxArrays_p-arrayids[0]+1,j;
     Vector<Int> tmp(n);
-    j=scanids[0];
+    j=arrayids[0];
     for(Int i=0;i<n;i++) tmp[i]=j++;
     appendToIDList(tmp);
 
@@ -171,11 +196,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return node_p;
   }
   
-  const TableExprNode *MSArrayParse::selectArrayIdsLTEQ(const Vector<Int>& scanids)
+  const TableExprNode *MSArrayParse::selectArrayIdsLTEQ(const Vector<Int>& arrayids)
   {
-    TableExprNode condition = TableExprNode(ms()->col(colName) <= scanids[0]);
-    Vector<Int> tmp(scanids[0]+1);
-    for(Int i=0;i<=scanids[0];i++) tmp[i] = i;
+    TableExprNode condition = TableExprNode(ms()->col(colName) <= arrayids[0]);
+    Vector<Int> tmp(arrayids[0]+1);
+    for(Int i=0;i<=arrayids[0];i++) tmp[i] = i;
     appendToIDList(tmp);
 
     if(node_p->isNull())

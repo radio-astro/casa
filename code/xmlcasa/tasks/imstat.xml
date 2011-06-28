@@ -53,12 +53,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Print stats and bounding box to logger?</description>
         <value>True</value>
     </param>
-
+    <param type="bool" name="robust">
+        <description>If T then compute robust statistics as well</description>
+        <value>False</value>
+        <example>robust=True</example>
+     </param>
     <param type="bool" name="verbose">
         <description>Print additional messages to logger?</description>
         <value>True</value>
     </param>
-
     <constraints>
     </constraints>
 </input>
@@ -108,6 +111,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                      Example:stokes='I,Q'
                 Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
     listit   -- Print stats and bounding box to logger? 
+    robust   -- If T then compute robust statistics as well
     verbose  -- Print additional messages to logger?
 
 

@@ -164,27 +164,35 @@ namespace casa {
 
     /* Create an agent record */
     Int nmethods = flagmethods_p.nelements();
-    
+    Bool ret=True;
+
     if(algorithm == "tfcrop")
       {
 	flagmethods_p.resize(nmethods+1,True); 
 	flagmethods_p[nmethods] = new LFTimeFreqCrop();
-	flagmethods_p[nmethods]->setParameters(parameters);
+	ret = flagmethods_p[nmethods]->setParameters(parameters);
       }
     else if(algorithm == "extendflags")
       {
 	flagmethods_p.resize(nmethods+1,True); 
 	flagmethods_p[nmethods] = new LFExtendFlags();
-	flagmethods_p[nmethods]->setParameters(parameters);
+	ret = flagmethods_p[nmethods]->setParameters(parameters);
       }
     else
       {
 	os << LogIO::WARN << "Un-recognized method : " << algorithm << LogIO::POST;
+	return False;
       }
 
-    ostringstream oss (ostringstream::out);
-    parameters.print(oss);
-    os << "Added method : " << algorithm << " with parameters : " << oss.str() <<  LogIO::POST ;
+    if(ret==False)
+      {
+	os << LogIO::WARN << "Input parameters for [" << algorithm << "] are invalid" << LogIO::POST;
+	flagmethods_p.resize(nmethods,True);
+      }
+
+    //ostringstream oss (ostringstream::out);
+    //parameters.print(oss);
+    //os << "Added method : " << algorithm << " with parameters : " << oss.str() <<  LogIO::POST ;
     
     return True;
   }
@@ -238,6 +246,7 @@ namespace casa {
 	rec.define("flag_level",1);
         rec.define("writeflags",False);
         rec.define("flagzeros",False);
+	rec.define("usepreflags",True);
       }
     return rec;
   }
@@ -256,7 +265,8 @@ namespace casa {
     FlagLevel = genpar.asInt("flag_level");
     WriteFlagsToMS = genpar.asBool("writeflags");
     FlagZeros = genpar.asBool("flagzeros");
-    Expr = genpar.asString("expr");
+    UsePreFlags = genpar.asBool("usepreflags");
+    //Expr = genpar.asString("expr");
     Column = genpar.asString("column");
 
     // Initialize other parameters
@@ -308,7 +318,7 @@ namespace casa {
 	
         NumP = Ncorr;
 	
-	os << "Field=" << vi.fieldId() << " Name=" << vi.fieldName() << " Spw=" << vi.spectralWindow() << " nAnt : " << NumAnt << " nRowChk=" << vi.nRowChunk() << " NumT : " << NumT << " NumC : " << NumC << " NumP : " << NumP << LogIO::POST;
+	os << "Field=" << vi.fieldId() << " Name=" << vi.fieldName() << " Spw=" << vi.spectralWindow() << " N_ant=" << NumAnt << " N_timesteps=" << NumT << "  N_chan=" << NumC << "  N_corr=" << NumP << LogIO::POST;
 
         	
         // Resize working arrays : NumP x NumC x NumB x NumT
@@ -327,12 +337,14 @@ namespace casa {
 	for(Int i=0; i<flagmethods_p.nelements(); i++)
 	  {
 	    AlwaysAssert(!flagmethods_p[i].null(), AipsError);
-	    os << "Running method : " << flagmethods_p[i]->methodName() << LogIO::POST;
+	    //os << "Running method : " << flagmethods_p[i]->methodName() << LogIO::POST;
+	    flagmethods_p[i]->setBaselineFlag(baselineFlag);
 	    flagmethods_p[i]->runMethod(visc, flagc, NumT, NumAnt, NumB, NumC, NumP);
 	  }
 	
         // Display Flags	
-        Bool ret = flagstats.runMethod(vb, visc, flagc, preflagc, NumT, NumAnt, NumB, NumC, NumP);
+	flagstats.setBaselineFlag(baselineFlag);
+        Bool ret = flagstats.runMethod(vb, visc, flagc, preflagc, NumT, NumAnt, NumB, NumC, NumP, flagmethods_p);
         if(ret==False) return Record();
 	
         // Write flags into the flagcube.
@@ -352,9 +364,9 @@ namespace casa {
     // Get the statistics record to return...
     Record allcounts = flagstats.getStatistics();    
     
-    ostringstream oss (ostringstream::out);
-    allcounts.print(oss);
-    os << "STATISTICS : " << oss.str() <<  LogIO::POST ;
+    //ostringstream oss (ostringstream::out);
+    //allcounts.print(oss);
+    //os << "STATISTICS : " << oss.str() <<  LogIO::POST ;
     // cout << "STATISTICS : " << oss.str() << endl;
     
     // Clean up the method list
@@ -430,40 +442,74 @@ namespace casa {
   //-----------------------------------------------------------------------  
   Bool LightFlagger:: readVisAndFlags(VisBuffer &vb, uInt timecnt)
   {
+    LogIO os = LogIO(LogOrigin("LightFlagger","readVisAndFlags()",WHERE));
     ant1.resize( (vb.antenna1()).shape() ); ant1 = vb.antenna1();
     ant2.resize( (vb.antenna2()).shape() ); ant2 = vb.antenna2();
     uInt nrows = vb.nRow();
     AlwaysAssert( (nrows==ant1.nelements() && nrows==ant2.nelements()), AipsError );
     Cube<Bool> flagcube(vb.flagCube());
     // replace with a function that returns a Float for the resulting math operation and column.
-    Cube<Complex> viscube(vb.visCube());
+    //Cube<Complex> viscube(vb.visCube());
+    Cube<Complex> viscube;
     
+    if(upcase(Column)=="DATA") viscube.reference(vb.visCube());
+    else if(upcase(Column)=="MODEL") viscube.reference(vb.modelVisCube());
+    else if(upcase(Column)=="CORRECTED") viscube.reference(vb.correctedVisCube());
+    else if(upcase(Column)=="RESIDUAL") viscube.assign(vb.correctedVisCube() - vb.modelVisCube());
+    else if(upcase(Column)=="RESIDUAL_DATA") viscube.assign(vb.visCube() - vb.modelVisCube());
+    else 
+      {
+	os << LogIO::WARN << "Cannot recognize " << Column << "  :  Using DATA column : " << LogIO::POST;
+	Column = String("DATA");
+	viscube.reference(vb.visCube());
+      }
+    
+        
     AlwaysAssert( VisCubeShp[0] == viscube.shape()[0] , AipsError);
     AlwaysAssert( VisCubeShp[1] == viscube.shape()[1] , AipsError);
     AlwaysAssert( viscube.shape()[2] <= NumB , AipsError);
+
+    // Make a copy of the original flags - to compare before/after statistics. Fill this also
+    //preflagc.assign(flagc);
     
     Bool tfl;
     uInt baselineindex = 0, rowindex=0;
     Int countflags=0, countpnts=0;
     for(uInt pl=0;pl<NumP;pl++)
       {
+	// Iterate through rows in the visbuffer, filling data and flags
 	for(uInt row=0;row<nrows;row++)
 	  {
             baselineindex = BaselineIndex(row,ant1[row],ant2[row]);
+	    baselineFlag[baselineindex]=True;// this baseline is present in the data
 	    for(uInt ch=0;ch<NumC;ch++)
 	      {
                 rowindex = (timecnt*NumB)+baselineindex;
-		visc(pl,ch,rowindex) = fabs(viscube(pl,ch,row));
+                // Fill data
+ 	        visc(pl,ch,rowindex) = fabs(viscube(pl,ch,row));
+		// Fill flags
 		flagc(pl,ch,rowindex) = flagcube(pl,ch,row);
-                if(FlagZeros && visc(pl,ch,rowindex)==0.0) flagc(pl,ch,rowindex)=True;
-		countpnts++;
-		countflags += (Int)( flagc(pl,ch,rowindex)  );
-	      }
-	  }
-      }
-    //    if(countflags>0) cout << "Time : " << timecnt << " Preflags : " << countflags << " out of " << countpnts << endl;
-    
-    // Make a copy of the original flags - to compare before/after statistics
+	      }//for ch
+	  }//for row
+
+	// Re-iterate through rows, this time as NumT and NumB and then NumC
+	// Flag Zeros
+	// Needs to be done here..... to account for visbuffer-rows with no data for only some baselines...
+	for(uInt bs=0;bs<NumB;bs++)
+	  {
+	    for(uInt tm=0;tm<NumT;tm++)
+	      {
+		rowindex = (((tm*NumB)+bs));
+		for(uInt ch=0;ch<NumC;ch++)
+		  {
+		    if(UsePreFlags==False) flagc(pl,ch,rowindex)=False; // Overkill here....
+		    if(FlagZeros && visc(pl,ch,rowindex)<(Float)1e-08) flagc(pl,ch,rowindex)=True;
+		  }// for ch
+	      }//for tm
+	  }//for bs
+      }//for pl
+
+    // Record pre-flags for stats calculations later on.
     preflagc.assign(flagc);
     
     return True;
@@ -523,8 +569,13 @@ namespace casa {
     /* Cube to hold visibility flags : POLZN x CHAN x (IFR*TIME) */
     flagc.resize(NumP,NumC,NumB*NumT);
     flagc=False;
+
+    //preflagc.resize(NumP,NumC,NumB*NumT);
+    //preflagc=False;
     // 	cout << " CubeShape = " << cubepos << endl;
-    
+
+    baselineFlag.resize(NumB); baselineFlag=False; // all baselines are absent from the data
+
   }
   
   

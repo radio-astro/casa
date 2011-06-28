@@ -35,6 +35,7 @@
 #include <casa/Arrays/Vector.h>
 //#include <casa/Utilities/CountedPtr.h>
 #include <map>
+#include <set>
 #include <vector>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
@@ -110,6 +111,11 @@ class SubMS
   // Change or Set the MS this MSSelector refers to.
   void setMS(MeasurementSet& ms);
 
+  // Returns the set (possibly empty) of spectral windows that are in spwv but
+  // not listed in ms's DATA_DESCRIPTION subtable.  (This happens with certain
+  // calibration/hardware setups.)
+  static std::set<Int> findBadSpws(MeasurementSet& ms, Vector<Int> spwv);
+
   // Select spw and channels for each spw.
   // This is the version used by split.  It returns true on success and false
   // on failure.
@@ -134,7 +140,8 @@ class SubMS
 		   const String& baseline="", const String& scan="",
                    const String& uvrange="", const String& taql="", 
 		   const Vector<Int>& step=Vector<Int> (1,1),
-		   const String& subarray="", const String& correlation="");
+		   const String& subarray="", const String& correlation="",
+                   const String& intent="");
 
   // This older version does not return a success value, and does need nchan,
   // start, and step.  It is used elsewhere (i.e. ImagerMultiMS).
@@ -148,8 +155,17 @@ class SubMS
   Bool selectSource(const Vector<Int>& fieldid);
   
   // Select Antennas to split out  
-  void selectAntenna(Vector<Int>& antennaids, Vector<String>& antennaSel);
-
+  void selectAntenna(const Vector<Int>& antennaids,
+		     const Vector<String>& antennaSel)
+  {
+    antennaSel_p = pickAntennas(antennaId_p, antennaSelStr_p,
+				antennaids, antennaSel);
+  }
+  static Bool pickAntennas(Vector<Int>& selected_antennaids,
+			   Vector<String>& selected_antenna_strs,
+			   const Vector<Int>& antennaids,
+			   const Vector<String>& antennaSel);
+  
   // Select array IDs to use.
   void selectArray(const String& subarray);
 
@@ -416,6 +432,12 @@ class SubMS
     return combineSpws(spwids, False, temp1, temp2, True);
   }
 
+  // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
+  // the output.  mapper must have ntok slots!
+  static void getDataColMap(MSColumns* msc, ArrayColumn<Complex>* mapper,
+			    uInt ntok,
+			    const Vector<MS::PredefinedColumns>& colEnums); 
+
  protected:
 
   //method that returns the selected ms (?! - but it's Boolean - RR)
@@ -495,10 +517,11 @@ class SubMS
   Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
   Bool doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames);
 
-  // Fills mapper[ntok] with a map from dataColumn indices to ArrayColumns in
-  // the output.  mapper must have ntok slots!
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
-                     const Vector<MS::PredefinedColumns>& colEnums); 
+                     const Vector<MS::PredefinedColumns>& colEnums)
+  {
+    getDataColMap(msc_p, mapper, ntok, colEnums);
+  }
 
   // Returns whether or not the numbers of correlations and channels
   // are independent of DATA_DESCRIPTION_ID, for both the input and output
@@ -533,7 +556,10 @@ class SubMS
        //  			// vary with row number.
        antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
-  String scanString_p, uvrangeString_p, taqlString_p;
+  String scanString_p,          // Selects scans by #number#.  Historically named.
+         intentString_p,        // Selects scans by string.  scanString_p was taken.
+         uvrangeString_p,
+         taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
   String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?
