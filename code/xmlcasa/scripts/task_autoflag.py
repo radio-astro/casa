@@ -61,6 +61,7 @@ def autoflag( vis, field, spw,
     # Get the detault parameters for TFCROP, and modify them with user-input
     if(tfcrop):
         par = lfg.getparameters('tfcrop');
+        par['corrs']=np.array(corrs,'int');
         par['maxnpieces']=int(maxnpieces);
         par['freq_amp_cutoff']=float(freqcutoff);
         par['time_amp_cutoff']=float(timecutoff);
