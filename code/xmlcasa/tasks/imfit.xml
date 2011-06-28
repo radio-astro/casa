@@ -281,6 +281,18 @@ differences of the best fit deconvolved value of the given parameter and the dec
 possible combinations of (FWHM major axis +/- major axis error), (FWHM minor axis +/- minor axis error),
 and (position andle +/- position angle error).
 
+CAUTIONARY NOTES ON ERRORS
+imfit makes the following implicit assumptions:
+
+1. The noise associated with the pixels it is given to fit is perfectly random and gaussian
+2. There is no offset (constant, gradient, or more complex function) in pixel values.
+
+If either or both of these assumptions is not true, the errors reported will in general be lower limits. These
+assumptions do not hold if for example, there is structure in the noise of the image (eg the residual map produced
+by deconvolution has structure), the area being fit lies in a negative bowl, in extended emission, or on an image
+artifact (eg ripple). In short, imfit is not a silver bullet and reported errors should be interpreted
+cautiously. The better the image is the more realistic reported errors will be.
+
 EXAMPLE: 
 
 Here is how one might fit two gaussians to multiple channels of a cube using the fit
