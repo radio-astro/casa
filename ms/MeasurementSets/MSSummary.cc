@@ -1143,7 +1143,7 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		Int widthField =  5;
 		Int widthCode  =  5;
 		Int widthName  = 20;
-		Int widthRA    = 14;
+		Int widthRA    = 15;
 		Int widthDec   = 15;
 		Int widthType  =  8;
 		Int widthSrc   =  6;
@@ -1159,7 +1159,7 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		os.output().width(widthCode);       os << "Code";
 		os.output().width(widthName);	os << "Name";
 		os.output().width(widthRA);	        os << "RA";
-		os.output().width(widthDec);	os << "Decl";
+		os.output().width(widthDec);	os << " Decl";
 		os.output().width(widthType);	os << "Epoch";
 		if (srcok) {os.output().width(widthSrc);	os << "SrcId";}
 		if (nVisPerField_.nelements()>0)
@@ -1180,7 +1180,7 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 				os.output().width(widthField);	os << (fld);
 				os.output().width(widthCode);   os << msFC.code()(fld);
 				os.output().width(widthName);	os << name.at(0,20);
-				os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,10);
+				os.output().width(widthRA);	os << mvRa(0.0).string(MVAngle::TIME,11);
 				os.output().width(widthDec);	os << mvDec.string(MVAngle::DIG2,10);
 				os.output().width(widthType);
 				os << MDirection::showType(mRaDec.getRefPtr()->getType());
