@@ -1,6 +1,7 @@
 import os
 import time
 from taskinit import *
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 def applycal(vis=None,
 	     field=None,
@@ -24,6 +25,14 @@ def applycal(vis=None,
 
 	#Python script
         casalog.origin('applycal')
+
+        # Take care of the trivial parallelization
+        if ParallelTaskHelper.isParallelMS(vis):
+                # To be safe convert file names to absolute paths.
+                gaintable = ParallelTaskHelper.findAbsPath(gaintable)
+                helper = ParallelTaskHelper('applycal', locals())
+                helper.go()
+                return
 
 	try:
 

@@ -2,6 +2,7 @@ from taskinit import *
 from parallel_go import *
 from cleanhelper import *
 from parallel.parallel_cont import imagecont
+from simple_cluster import simple_cluster
 from odict import *
 import numpy as np
 import random
@@ -28,6 +29,9 @@ class pimager():
         self.stokes='I'
         self.visinmem=False
         self.c=cluster
+        if self.c == '':
+            # Until we move to the simple cluster
+            self.c = simple_cluster.getCluster()._cluster
         os.environ['IPYTHONDIR']='./i_serpiante'  
         shutil.rmtree(os.environ['IPYTHONDIR'], True)
     def __del__(self):

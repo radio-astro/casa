@@ -689,7 +689,56 @@ the ms definition itself. -->
   </example>
 </method>
 -->
- 
+   <method type="function" name="createmultims">
+        <shortdescription>
+        </shortdescription>
+        <description>
+        </description>
+        <input>
+                <param name="outputTableName" type ="string"/>
+                <param name="tables" type="stringArray"/>
+                <param name="subtables" type="stringArray"/>
+                <param type="bool" direction="in" name="nomodify">
+                  <description>prevent changes to the measurement set</description>
+                  <value>true</value>
+                </param>
+
+                <param type="bool" direction="in" name="lock">
+                  <description>lock the table for exclusive use by this tool</description>
+                  <value>false</value>
+                </param>
+        </input>
+        <returns type="bool"/>
+        <example>
+        </example>
+</method>
+
+<method type="function" name="ismultims">
+
+        <shortdescription>
+        </shortdescription>
+        <description>
+        </description>
+        <input>
+        </input>
+        <returns type="bool"/>
+        <example>
+        </example>
+</method>
+
+<method type="function" name="getreferencedtables">
+
+        <shortdescription>
+        </shortdescription>
+        <description>
+        </description>
+        <input>
+        </input>
+        <returns type="stringArray"/>
+        <example>
+        </example>
+</method>
+
    <method type="function" name="nrow">
    <shortdescription>Returns the number of rows in the measurement set</shortdescription>
    
@@ -1197,7 +1246,47 @@ the ms definition itself. -->
   </example>
 </method>
 
- 
+  <method type="function" name="getscansummary">
+  <shortdescription>Get the summary of the ms</shortdescription>
+
+  <keyword>getscansummary</keyword>
+  <output>
+     <param type="any" direction="out" name="summary">
+       <any type="record"/>
+       <description>Return information (PARAMETER IGNORED..its an output)</description>
+     </param>
+   </output>
+  <returns type="bool"/>
+  <description>
+    This function will return a summary of the main table as a structure
+  </description>
+  <example>
+    ms.open('3C273XC1.MS')
+    scanInfo = ms.getscansummary()
+  </example>
+</method>
+
+<method type="function" name="getspectralwindowinfo">
+  <shortdescription>Get a summary of the spectral windows</shortdescription>
+  <keyword>getspectralwindowinfo</keyword>
+  <output>
+     <param type="any" direction="out" name="spwInfo">
+       <any type="record"/>
+       <description>Return information (PARAMETER IGNORED..its an output)</description>
+     </param>
+   </output>
+  <returns type="bool"/>
+  <description>
+    This method will get a summary of the spectral window actually
+    used in this ms. To be precise those reference by the data
+    description table.
+  </description>
+  <example>
+    ms.open('3C273XC1.MS')
+    spwInfo = ms.getspectralwindowinfo()
+  </example>
+</method>
+
    <method type="function" name="listhistory">
    <shortdescription>List history of the measurement set</shortdescription>
   <keyword>listhistory</keyword>

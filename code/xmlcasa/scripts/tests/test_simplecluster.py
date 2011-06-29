@@ -62,6 +62,41 @@ class simplecluster_test(unittest.TestCase):
                 return
             time.sleep(1)
 
+class testJobData(unittest.TestCase):
+    '''
+    This class tests the JobData class in the simple_cluster.
+    '''
+
+    def testSimpleJob(self):
+        jd = JobData('myJob')
+        self.assertEqual('myJob()', jd.getCommandLine())
+
+    def testJobWithOneArg(self):
+        jd = JobData('myJob',{'arg1':1})
+        self.assertEqual('myJob(arg1 = 1)', jd.getCommandLine())
+
+    def testJobWithMultipleArg(self):
+        jd = JobData('myJob',{'arg1':1,'arg2':2,'arg3':'three'})
+        self.assertEqual("myJob(arg1 = 1, arg2 = 2, arg3 = 'three')",
+                         jd.getCommandLine())
+
+class testJobQueueManager(unittest.TestCase ):
+    '''
+    This class tests the Job Queue Manager.
+    '''
+    def testInitialization(self):
+        pass
+
+        
+
+
+
 def suite():
-    return [simplecluster_test]
+    return [simplecluster_test, testJobData, testJobQueueManager]
  
+if __name__ == '__main__':
+    testSuite = []
+    for testClass in suite():
+        testSuite.append(unittest.makeSuite(testClass,'test'))
+    allTests = unittest.TestSuite(testSuite)
+    unittest.TextTestRunner(verbosity=2).run(allTests)
