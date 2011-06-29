@@ -4377,12 +4377,16 @@ fitcomponents() makes the following implicit assumptions:
 
 1. The noise associated with the pixels it is given to fit is perfectly random and gaussian
 2. There is no offset (constant, gradient, or more complex function) in pixel values.
+3. The things that are trying to be fit are gaussians.
 
-If either or both of these assumptions is not true, the errors reported will in general be lower limits. These
+If any of these assumptions is not true, the errors reported will in general be lower limits. These
 assumptions do not hold if for example, there is structure in the noise of the image (eg the residual map produced
 by deconvolution has structure), the area being fit lies in a negative bowl, in extended emission, or on an image
-artifact (eg ripple). In short, fitcomponents() is not a silver bullet and reported errors should be interpreted
-cautiously. The better the image is the more realistic reported errors will be.
+artifact (eg ripple), or the source(s) is nongaussian (eg a disk or more complex function convolved with a gaussian;
+just because something looks gaussian to the human image analysis system does not necessarily mean it is).
+In short, fitcomponents() is not a silver bullet for determining parameters in flawed images and reported errors
+should be interpreted cautiously in the vast majority of all "real life" cases. The closer the source being fit is to
+fulfilling these assumptions the more realistic reported errors will be.
 
 EXAMPLE: 
 
