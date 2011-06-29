@@ -678,6 +678,12 @@ class cleanhelper:
         masktext=[]
         maskrecord={}
         tablerecord=[]
+        # clean up any left over temp files from previous clean runs
+        if os.path.exists("__temp_mask"):
+          shutil.rmtree("__temp_mask")
+        if os.path.exists("__temp_mask2"):
+          shutil.rmtree("__temp_mask2")
+  
         # relax to allow list input for imagename 
         if(type(imagename)==list):
            imagename=imagename[0] 
