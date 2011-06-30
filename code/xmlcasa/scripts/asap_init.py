@@ -54,14 +54,14 @@ def asap_init():
     myf['sdtpimaging']=sdtpimaging
 
     print ""
-    print "*** Notice: As announced in the previous version, the following SD task"
-    print "***         parameters have been renamed:"
+    print "*** Notice: The following SD task parameters have been renamed:"
     print "***"
-    print "***         PreviousName   NewName   Task"
+    print "***         OldName       NewName    Task"
     print "***         ----------------------------------------------------------"
-    print "***         sdfile     -> infile     all SD tasks except for sdcoadd"
+    print "***         sdfile     -> infile     all sd* tasks except for sdcoadd"
     print "***         sdfilelist -> infiles    sdcoadd"
     print "***         sdimages   -> infiles    sdimprocess"
+    print "***         msname     -> infile     msmoments"
     print "***         imagename  -> outfile    sdimaging/sdimprocess/sdtpimaging"
     print "***         fitfile    -> outfile    sdfit"
     print "***         listfile   -> outfile    sdlist"
