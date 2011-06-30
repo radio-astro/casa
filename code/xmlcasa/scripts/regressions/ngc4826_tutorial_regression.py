@@ -1126,7 +1126,7 @@ try:
 except:
     pass
 
-momonestat=imstat('ngc4826.tutorial.16apr98.moments.mom1')
+momonestat = imstat('ngc4826.tutorial.16apr98.moments.mom1', robust=True)
 
 try:
     print "Found moment 1 median = "+str(momonestat['median'][0])
@@ -1141,14 +1141,14 @@ vel0=0.0
 vel35=0.0
 
 try:
-    momoneplane0=imstat('ngc4826.tutorial.16apr98.moments.plane0.mom1')
+    momoneplane0=imstat('ngc4826.tutorial.16apr98.moments.plane0.mom1', robust=True)
     print "Found plane 0 moment 1 value = "+str(momoneplane0['median'][0])
 except:
     pass
 
 
 try:
-    momoneplane35=imstat('ngc4826.tutorial.16apr98.moments.plane35.mom1')
+    momoneplane35=imstat('ngc4826.tutorial.16apr98.moments.plane35.mom1', robust=True)
     print "Found plane 35 moment 1 value = "+str(momoneplane35['median'][0])
 except:
     pass

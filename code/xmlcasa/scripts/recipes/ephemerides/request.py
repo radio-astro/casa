@@ -31,6 +31,8 @@ from email.mime.text import MIMEText
 # Use lower case keys.
 # Do not use keys for asteroids that are also in planets_and_moons.  (The IAU
 # might enforce this anyway.)
+#
+# They are numbered by order of discovery, which is not quite the same as size.
 
 asteroids = {'ceres':        1,
              'pallas':       2,
@@ -43,7 +45,12 @@ asteroids = {'ceres':        1,
                                 # fairly oblate and eccentric.
              'parthenope':  11,
              'victoria':    12,
-             'davida':     511,
+             'eunomia':     15,
+             'euphrosyne':  31,
+             '52 europa':   52,
+             'cybele':      65,
+             'sylvia':      87,
+             'davida':     511,             
              'interamnia': 704}
 
 planets_and_moons = {'mercury':    199,
