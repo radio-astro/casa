@@ -41,35 +41,35 @@ class sdfit_test(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdfit/'
     # Input and output names
-    sdfile_gaussian   = 'Artificial_Gaussian.asap'
-    sdfile_lorentzian = 'Artificial_Lorentzian.asap'
+    infile_gaussian   = 'Artificial_Gaussian.asap'
+    infile_lorentzian = 'Artificial_Lorentzian.asap'
 
     def setUp(self):
-        if os.path.exists(self.sdfile_gaussian):
-            shutil.rmtree(self.sdfile_gaussian)
-        shutil.copytree(self.datapath+self.sdfile_gaussian, self.sdfile_gaussian)
-        if os.path.exists(self.sdfile_lorentzian):
-            shutil.rmtree(self.sdfile_lorentzian)
-        shutil.copytree(self.datapath+self.sdfile_lorentzian, self.sdfile_lorentzian)
+        if os.path.exists(self.infile_gaussian):
+            shutil.rmtree(self.infile_gaussian)
+        shutil.copytree(self.datapath+self.infile_gaussian, self.infile_gaussian)
+        if os.path.exists(self.infile_lorentzian):
+            shutil.rmtree(self.infile_lorentzian)
+        shutil.copytree(self.datapath+self.infile_lorentzian, self.infile_lorentzian)
 
         default(sdfit)
 
     def tearDown(self):
-        if os.path.exists(self.sdfile_gaussian):
-            shutil.rmtree(self.sdfile_gaussian)
-        if os.path.exists(self.sdfile_lorentzian):
-            shutil.rmtree(self.sdfile_lorentzian)
+        if os.path.exists(self.infile_gaussian):
+            shutil.rmtree(self.infile_gaussian)
+        if os.path.exists(self.infile_lorentzian):
+            shutil.rmtree(self.infile_lorentzian)
 
     def testGaussian00(self):
         """Test Gaussian00: single broad profile """
-        sdfile = self.sdfile_gaussian
+        infile = self.infile_gaussian
         scanlist = [0]
         fitfunc = "gauss"
         fitmode = "list"
         maskline = []
         nfit = 1
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -87,14 +87,14 @@ class sdfit_test(unittest.TestCase):
 
     def testGaussian01(self):
         """Test Gaussian01: single broad profile on spectral edge"""
-        sdfile = self.sdfile_gaussian
+        infile = self.infile_gaussian
         scanlist = [1]
         fitfunc = "gauss"
         fitmode = "list"
         maskline = [0,2000]
         nfit = 1
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[500.0]],
@@ -112,14 +112,14 @@ class sdfit_test(unittest.TestCase):
 
     def testGaussian02(self):
         """Test Gaussian02: single narrow profile """
-        sdfile = self.sdfile_gaussian
+        infile = self.infile_gaussian
         scanlist = [2]
         fitfunc = "gauss"
         fitmode = "list"
         maskline = []
         nfit = 1
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -137,14 +137,14 @@ class sdfit_test(unittest.TestCase):
 
     def testGaussian03(self):
         """Test Gaussian03: broad/narrow combination : separated """
-        sdfile = self.sdfile_gaussian
+        infile = self.infile_gaussian
         scanlist = [3]
         fitfunc = "gauss"
         fitmode = "list"
         maskline = [[2000,4000],[5500,6500]]
         nfit = [1,1]
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[3000.0, 6000.0]],
@@ -165,14 +165,14 @@ class sdfit_test(unittest.TestCase):
 
     def testGaussian04(self):
         """Test Gaussian04: broad/narrow combination : overlapped """
-        sdfile = self.sdfile_gaussian
+        infile = self.infile_gaussian
         scanlist = [4]
         fitfunc = "gauss"
         fitmode = "list"
         maskline = [[3000,4400],[4500,5000]]
         nfit = [1,1]
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0, 4700.0]],
@@ -193,14 +193,14 @@ class sdfit_test(unittest.TestCase):
 
     def testLorentzian00(self):
         """Test Lorentzian00: single broad profile """
-        sdfile = self.sdfile_lorentzian
+        infile = self.infile_lorentzian
         scanlist = [0]
         fitfunc = "lorentz"
         fitmode = "list"
         maskline = []
         nfit = 1
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -218,14 +218,14 @@ class sdfit_test(unittest.TestCase):
 
     def testLorentzian01(self):
         """Test Lorentzian01: single broad profile on spectral edge"""
-        sdfile = self.sdfile_lorentzian
+        infile = self.infile_lorentzian
         scanlist = [1]
         fitfunc = "lorentz"
         fitmode = "list"
         maskline = [0,2000]
         nfit = 1
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[500.0]],
@@ -243,14 +243,14 @@ class sdfit_test(unittest.TestCase):
 
     def testLorentzian02(self):
         """Test Lorentzian02: single narrow profile """
-        sdfile = self.sdfile_lorentzian
+        infile = self.infile_lorentzian
         scanlist = [2]
         fitfunc = "lorentz"
         fitmode = "list"
         maskline = []
         nfit = 1
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0]],
@@ -268,14 +268,14 @@ class sdfit_test(unittest.TestCase):
 
     def testLorentzian03(self):
         """Test Lorentzian03: broad/narrow combination : separated """
-        sdfile = self.sdfile_lorentzian
+        infile = self.infile_lorentzian
         scanlist = [3]
         fitfunc = "lorentz"
         fitmode = "list"
         maskline = [[2000,4000],[5500,6500]]
         nfit = [1,1]
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[3000.0, 6000.0]],
@@ -296,14 +296,14 @@ class sdfit_test(unittest.TestCase):
 
     def testLorentzian04(self):
         """Test Lorentzian04: broad/narrow combination : overlapped """
-        sdfile = self.sdfile_lorentzian
+        infile = self.infile_lorentzian
         scanlist = [4]
         fitfunc = "lorentz"
         fitmode = "list"
         maskline = [[3000,4400],[4500,5000]]
         nfit = [1,1]
         
-        res = sdfit(sdfile=sdfile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
+        res = sdfit(infile=infile,scanlist=scanlist,fitfunc=fitfunc,fitmode=fitmode,maskline=maskline,nfit=nfit)
         self.assertNotEqual(res, None, msg="The task returned None. Fit failed.")
 
         ans = {'cent': [[4000.0, 4700.0]],

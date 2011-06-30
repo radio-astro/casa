@@ -3,37 +3,37 @@ from taskinit import *
 
 import asap as sd
 
-def sdlist(sdfile, antenna, scanaverage, listfile, overwrite):
+def sdlist(infile, antenna, scanaverage, outfile, overwrite):
 
         casalog.origin('sdlist')
 
         try:
-            if sdfile=='':
-                    raise Exception, 'sdfile is undefined'
-            filename = os.path.expandvars(sdfile)
+            if infile=='':
+                    raise Exception, 'infile is undefined'
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
-            if not overwrite and not listfile=='':
-                listfilename = os.path.expandvars(listfile)
-                listfilename = os.path.expanduser(listfilename)
-                if os.path.exists(listfilename):
-                    s = "Output file '%s' exist." % (listfilename)
+            if not overwrite and not outfile=='':
+                outfilename = os.path.expandvars(outfile)
+                outfilename = os.path.expanduser(outfilename)
+                if os.path.exists(outfilename):
+                    s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
 
             #load the data with or without averaging
-            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
+            s=sd.scantable(infile,average=scanaverage,antenna=antenna)
 
             sum = s._summary()
             
-            #if ( listfile == '' ):
+            #if ( outfile == '' ):
                     #sum = s.summary()
             #else:
-                    #sum = s.summary(listfile)
-            if ( listfile != '' ):
-                    f = open( listfile, 'w' )
+                    #sum = s.summary(outfile)
+            if ( outfile != '' ):
+                    f = open( outfile, 'w' )
                     f.write( sum )
                     f.close()
 

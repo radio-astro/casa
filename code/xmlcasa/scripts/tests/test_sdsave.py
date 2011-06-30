@@ -119,20 +119,20 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
     Test on data selection, data averaging...
     """
     # Input and output names
-    sdfile='OrionS_rawACSmod_cal2123.asap'
+    infile='OrionS_rawACSmod_cal2123.asap'
     prefix=sdsave_unittest_base.taskname+'Test0'
     outfile=prefix+'.asap'
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdsave)
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test000(self):
@@ -142,12 +142,12 @@ class sdsave_test0(unittest.TestCase,sdsave_unittest_base):
         
     def test001(self):
         """Test 001: Time averaging without weight"""
-        self.res=sdsave(sdfile=self.sdfile,timeaverage=True,outfile=self.outfile)
+        self.res=sdsave(infile=self.infile,timeaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
     def test002(self):
         """Test 002: Polarization averaging without weight"""
-        self.res=sdsave(sdfile=self.sdfile,polaverage=True,outfile=self.outfile)
+        self.res=sdsave(infile=self.infile,polaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
 
@@ -159,7 +159,7 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
     Read scantable data, write various types of format.
     """
     # Input and output names
-    sdfile='OrionS_rawACSmod_cal2123.asap'
+    infile='OrionS_rawACSmod_cal2123.asap'
     prefix=sdsave_unittest_base.taskname+'Test1'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
@@ -168,8 +168,8 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
@@ -177,33 +177,33 @@ class sdsave_test1(unittest.TestCase,sdsave_unittest_base):
         self._setAttributes()
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         if (os.path.exists(self.basefile)):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test100(self):
         """Test 100: test to read scantable and to write as scantable"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
     def test101(self):
         """Test 101: test to read scantable and to write as MS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
     def test102(self):
         """Test 102: test to read scantable and to write as SDFITS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
     def test103(self):
         """Test 103: test to read scantable and to write as ASCII"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
         
@@ -216,7 +216,7 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
     Read MS data, write various types of format.
     """
     # Input and output names
-    sdfile='OrionS_rawACSmod_cal2123.ms'
+    infile='OrionS_rawACSmod_cal2123.ms'
     prefix=sdsave_unittest_base.taskname+'Test2'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
@@ -225,8 +225,8 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
@@ -235,33 +235,33 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
         self.scanno=0
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         if (os.path.exists(self.basefile)):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test200(self):
         """Test 200: test to read MS and to write as scantable"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
         
     def test201(self):
         """Test 201: test to read MS and to write as MS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
     def test202(self):
         """Test 202: test to read MS and to write as SDFITS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
     def test203(self):
         """Test 203: test to read MS and to write as ASCII"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
         
@@ -274,7 +274,7 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
     Read ATNF SDFITS data, write various types of format.
     """
     # Input and output names
-    sdfile='OrionS_rawACSmod_cal2123.fits'
+    infile='OrionS_rawACSmod_cal2123.fits'
     prefix=sdsave_unittest_base.taskname+'Test3'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
@@ -283,8 +283,8 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copy(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copy(self.datapath+self.infile, self.infile)
         if (not os.path.exists(self.basefile)):
             shutil.copytree(self.datapath+self.basefile, self.basefile)
 
@@ -293,33 +293,33 @@ class sdsave_test3(unittest.TestCase,sdsave_unittest_base):
         self.scanno=0
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            os.system( 'rm -f '+self.sdfile )
+        if (os.path.exists(self.infile)):
+            os.system( 'rm -f '+self.infile )
         if (os.path.exists(self.basefile)):
             shutil.rmtree(self.basefile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test300(self):
         """Test 300: test to read ATNF SDFITS and to write as scantable"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile0))
 
     def test301(self):
         """Test 301: test to read ATNF SDFITS and to write as MS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile1))
         
     def test302(self):
         """Test 302: test to read ATNF SDFITS and to write as SDFITS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile2))
 
     def test303(self):
         """Test 303: test to read ATNF SDFITS and to write as ASCII"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
         
@@ -332,7 +332,7 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
     Read GBT SDFITS data, write various types of format.
     """
     # Input and output names
-    sdfile='AGBT06A_sliced.fits'
+    infile='AGBT06A_sliced.fits'
     prefix=sdsave_unittest_base.taskname+'Test4'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
@@ -341,39 +341,39 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copy(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copy(self.datapath+self.infile, self.infile)
 
         default(sdsave)
         #self._setAttributes()
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            os.system( 'rm -f '+self.sdfile )
+        if (os.path.exists(self.infile)):
+            os.system( 'rm -f '+self.infile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test400(self):
         """Test 400: test to read GBT SDFITS and to write as scantable"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
     def test401(self):
         """Test 401: test to read GBT SDFITS and to write as MS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
     def test402(self):
         """Test 402: test to read GBT SDFITS and to write as SDFITS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
     def test403(self):
         """Test 403: test to read GBT SDFITS and to write as ASCII"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile3))
 
@@ -381,7 +381,7 @@ class sdsave_test4(unittest.TestCase,sdsave_unittest_base):
         """
         Check a few things for the data.
         """
-        s=sd.scantable(self.sdfile,False)
+        s=sd.scantable(self.infile,False)
         if ( s.nrow() != 48 ):
             return False
         if ( s.nif() != 6 ):
@@ -402,7 +402,7 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
     Read NROFITS data, write various types of format.
     """
     # Input and output names
-    sdfile='B68test.nro'
+    infile='B68test.nro'
     prefix=sdsave_unittest_base.taskname+'Test5'
     outfile0=prefix+'.asap'
     outfile1=prefix+'.ms'
@@ -411,39 +411,39 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copy(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copy(self.datapath+self.infile, self.infile)
 
         default(sdsave)
         #self._setAttributes()
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            os.system( 'rm -f '+self.sdfile )
+        if (os.path.exists(self.infile)):
+            os.system( 'rm -f '+self.infile )
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test500(self):
         """Test 500: test to read NROFITS and to write as scantable"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile0,outform='ASAP')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile0,outform='ASAP')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile0))
         self.assertTrue(self._compare())
 
     def test501(self):
         """Test 501: test to read NROFITS and to write as MS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile1,outform='MS2')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile1,outform='MS2')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile1))
         
     def test502(self):
         """Test 502: test to read NROFITS and to write as SDFITS"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile2,outform='SDFITS')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile2,outform='SDFITS')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile2))
 
     def test503(self):
         """Test 503: test to read NROFITS and to write as ASCII"""
-        self.res=sdsave(sdfile=self.sdfile,outfile=self.outfile3,outform='ASCII')
+        self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         #self.assertTrue(self._compare(self.outfile3))
         
@@ -451,7 +451,7 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
         """
         Check a few things for the data.
         """
-        s=sd.scantable(self.sdfile,False)
+        s=sd.scantable(self.infile,False)
         if ( s.nrow() != 36 ):
             return False
         if ( s.nif() != 4 ):

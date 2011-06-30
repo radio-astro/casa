@@ -3,7 +3,7 @@ from taskinit import *
 
 import asap as sd
 
-def sdsave(sdfile, antenna, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
+def sdsave(infile, antenna, rowlist, scanlist, field, iflist, pollist, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
 
         casalog.origin('sdsave')
 
@@ -14,17 +14,17 @@ def sdsave(sdfile, antenna, rowlist, scanlist, field, iflist, pollist, scanavera
 
         try:
             #load the data with or without averaging
-            if sdfile=='':
+            if infile=='':
                 raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             file2name = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception,s 
 
             if outfile=='':
-                project = sdfile.rstrip('/') + '_saved'
+                project = infile.rstrip('/') + '_saved'
             else:
                 project = outfile
             outfilename = os.path.expandvars(project)
@@ -34,7 +34,7 @@ def sdsave(sdfile, antenna, rowlist, scanlist, field, iflist, pollist, scanavera
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
+            s=sd.scantable(infile,average=scanaverage,antenna=antenna)
 
 	    #Select rows
             sel = sd.selector()

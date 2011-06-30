@@ -6,7 +6,7 @@ from get_user import get_user
 import asap as sd
 import pylab as pl
 
-def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, statfile, format, overwrite):
+def sdstat(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, masklist, invertmask, interactive, outfile, format, overwrite):
 
 
         casalog.origin('sdstat')
@@ -25,17 +25,17 @@ def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
         tmpfile = '/tmp/tmp_'+usr+'_casapy_asap_scantable_stats'
         resultstats = []
         try:
-            if sdfile=='':
-                raise Exception, 'sdfile is undefined'
+            if infile=='':
+                raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
 
             #load the data without averaging
-            s=sd.scantable(sdfile,average=False,antenna=antenna)
+            s=sd.scantable(infile,average=False,antenna=antenna)
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -222,10 +222,10 @@ def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
 		casalog.post( 'Note the same mask(s) are applied to all IFs based on CHANNELS.', priority='WARN' )
 		casalog.post( 'Baseline ranges may be incorrect for all but IF=%d.\n' % (s.getif(0)), priority='WARN' )
 
-            # If statfile is set, sd.rcParams['verbose'] must be True
+            # If outfile is set, sd.rcParams['verbose'] must be True
             verbsave=sd.rcParams['verbose']
-            if ( len(statfile) > 0 ):
-                    if ( not os.path.exists(statfile) or overwrite ):
+            if ( len(outfile) > 0 ):
+                    if ( not os.path.exists(outfile) or overwrite ):
                             sd.rcParams['verbose']=True
 
 	    ### Start mod: 2009/09/03 kana ###
@@ -601,19 +601,19 @@ def sdstat(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, s
 		    retValue['totint']=qa.quantity(integratef,intunit)
 
                     
-            # Output to terminal if statfile is not empty
-            if ( len(statfile) > 0 ):
-                    if ( not os.path.exists(statfile) or overwrite ):
-                            #sys.stdout=open( statfile,'w' )
-                            f=open(statfile,'w')
+            # Output to terminal if outfile is not empty
+            if ( len(outfile) > 0 ):
+                    if ( not os.path.exists(outfile) or overwrite ):
+                            #sys.stdout=open( outfile,'w' )
+                            f=open(outfile,'w')
                             for xx in resultstats:
                                     f.write( xx )
                             f.close()
                             sd.rcParams['verbose']=verbsave
                             #bbb=True
                     else:
-                            #print '\nFile '+statfile+' already exists.\nStatistics results are not written into the file.\n'
-                            casalog.post( 'File '+statfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
+                            #print '\nFile '+outfile+' already exists.\nStatistics results are not written into the file.\n'
+                            casalog.post( 'File '+outfile+' already exists.\nStatistics results are not written into the file.', priority = 'WARN' )
 
             # Final clean up
             del s

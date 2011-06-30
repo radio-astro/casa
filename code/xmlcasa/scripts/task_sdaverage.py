@@ -5,7 +5,7 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
+def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, calmode, scanlist, field, iflist, pollist, channelrange, scanaverage, timeaverage, tweight, averageall, polaverage, pweight, tau, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdaverage')
 
@@ -15,17 +15,17 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
 
         try:
             #load the data with or without averaging
-            if sdfile=='':
-                    raise Exception, 'sdfile is undefined'
+            if infile=='':
+                    raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
 
             if ( outfile == '' ):
-                    project = sdfile.rstrip('/') + '_cal'
+                    project = infile.rstrip('/') + '_cal'
             else:
                     project = outfile
             outfilename = os.path.expandvars(project)
@@ -35,8 +35,8 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            #s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
-            s=sd.scantable(sdfile,average=False,antenna=antenna)
+            #s=sd.scantable(infile,average=scanaverage,antenna=antenna)
+            s=sd.scantable(infile,average=False,antenna=antenna)
 
             if not isinstance(s,Scantable):
                     raise Exception, 'Scantable data %s, is not found'
@@ -51,7 +51,7 @@ def sdaverage(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
 
             # Default file name
             #if ( outfile == '' ):
-            #        project = sdfile + '_cal'
+            #        project = infile + '_cal'
             #else:
             #        project = outfile
 

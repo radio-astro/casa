@@ -783,13 +783,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def fitfile():
-		""" name of output file for fit result
-		    default: ''  (no output fit file)
-		    example: fitfile="myimage.fit"
-		"""
-
-	@staticmethod
 	def fitfunc():
 		"""
 		fitfunc -- function for fitting
@@ -1093,8 +1086,7 @@ class par(str):
 
 		------------------------------------------------------------
 
-		(for feather, importfits, makemask, sdimaging, sdimprocess,
-		     and sdtpimaging)
+		(for feather, importfits, and makemask)
 		imagename -- output image name
 
 		------------------------------------------------------------
@@ -1182,6 +1174,18 @@ class par(str):
 	@staticmethod
 	def incrtable():
 		""" Input (incremental) calibration table (any type): """
+
+	@staticmethod
+	def infile():
+		"""
+		infile -- Input file name
+		"""
+
+	@staticmethod
+	def infiles():
+		"""
+		infiles -- Input file names
+		"""
 
 	@staticmethod
 	def integration():
@@ -1698,14 +1702,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def msname():
-		"""
-                (for msmoments)
-                Name of input MS data
-		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
-		"""
-
-	@staticmethod
 	def multicolor():
 		"""
        		multicolor -- Multi-color plotting of channels and polarizations
@@ -1887,17 +1883,17 @@ class par(str):
 		
 		----------------------------------------------------------------
 
-		(for ASAP tasks (sd*))
+		(for sd*)
 		outfile -- output file name
 		default: ''
 
 		Given default value ('') for outfile, some ASAP tasks set output
-		file name as sdfile (=input file name) with suffix as follows:
-		        <sdfile>_cal             for sdaverage and sdcal,
-			<sdfile>_bs              for sdbaseline,
-			<sdflag>_f               for sdflag,
-			<sdfile>_scaleed<factor> for sdscale, and
-			<sdfile>_sm              for sdsmooth.
+		file name as infile (=input file name) with suffix as follows:
+		        <infile>_cal             for sdaverage and sdcal,
+			<infile>_bs              for sdbaseline,
+			<infile>_f               for sdflag,
+			<infile>_scaleed<factor> for sdscale, and
+			<infile>_sm              for sdsmooth.
 
 		----------------------------------------------------------------
 
@@ -2009,7 +2005,7 @@ class par(str):
 		options: (int) 0(none), 1(some), 2(more), <0(hardcopy)
 		default: 0  (no plotting)
 
-		Given a negative value, hardcopy plot will be named <sdfile>_scans.eps. 
+		Given a negative value, hardcopy plot will be named <infile>_scans.eps. 
 		"""
 		
 	@staticmethod	
@@ -2352,30 +2348,6 @@ class par(str):
 		"""
 
 	@staticmethod
-	def sdfile():
-		"""
-		sdfile -- name of input SD dataset
-		default: ''
-                
-                For sdimaging and sdtpimaging tasks, specified data must be
-                in MS format. 
-		"""
-
-	@staticmethod
-	def sdfilelist():
-		"""
-		sdfilelist -- list of names of input SD dataset
-		default: ''
-		"""
-
-	@staticmethod
-	def sdimages():
-		"""
-		sdimages -- name of input SD (FITS or CASA) image
-		default: ''
-		"""
-		
-	@staticmethod
 	def showflags():
 		"""
        		showflags -- Show the flagged and unflagged data.
@@ -2585,14 +2557,6 @@ class par(str):
                     starttime = '' gives error message
 		"""
 
-	@staticmethod
-	def statfile():
-		"""
-		statfile -- name of output file for line statistics
-                default: '' (no output statistics file)
-                example: 'stat.txt'
-		"""
-		
 	@staticmethod
 	def step():
 		"""

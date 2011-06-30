@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -143,13 +143,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type='vector'><value>0</value></value>
     </param>
 
-    <param type="string" name="fitfile">
+    <param type="string" name="outfile">
 	    <description>name of output file for fit results</description>
 	    <value></value>
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite the fitfile if already exists</description>
+            <description>overwrite the outfile if already exists</description>
             <value>False</value>
     </param>
 
@@ -202,7 +202,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
         Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
                 default: none - must input file name
                 example: 'mysd.asap'
                          See sdcal for allowed formats.
@@ -308,10 +308,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: nfit=[1] for single line in single region,
                          nfit=[2] for two lines in single region,
                          nfit=[1,1] for single lines in each of two regions, etc.
-        fitfile -- name of output file for fit results
+        outfile -- name of output file for fit results
                 default: no output fit file
                 example: 'mysd.fit'
-        overwrite -- overwrite the fitfile if already exists
+        overwrite -- overwrite the outfile if already exists
                 options: (bool) True, False
                 default: False
         plotlevel -- control for plotting of results

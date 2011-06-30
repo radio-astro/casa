@@ -4,17 +4,17 @@ from taskinit import *
 import asap as sd
 from asap._asap import Scantable
 
-def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
+def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, kernel, kwidth, verify, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdsmooth')
 
 
         try:
             #load the data with or without averaging
-            if sdfile=='':
-                    raise Exception, 'sdfile is undefined'
+            if infile=='':
+                    raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
@@ -22,7 +22,7 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
 
             # Default file name
             if ( outfile == '' ):
-                    project = sdfile.rstrip('/') + '_sm'
+                    project = infile.rstrip('/') + '_sm'
             else:
                     project = outfile
             outfilename = os.path.expandvars(project)
@@ -32,9 +32,9 @@ def sdsmooth(sdfile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,average=False,antenna=antenna)
+            s=sd.scantable(infile,average=False,antenna=antenna)
             if not (isinstance(s,Scantable)):
-                    raise Exception, 'sdfile=%s is not found' % sdfile
+                    raise Exception, 'infile=%s is not found' % infile
 
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data

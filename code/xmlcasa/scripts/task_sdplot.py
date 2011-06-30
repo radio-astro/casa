@@ -6,7 +6,7 @@ import pylab as pl
 #import Tkinter as Tk
 from asap import _to_list
 
-def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, plotfile, overwrite):
+def sdplot(infile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, doppler, scanlist, field, iflist, pollist, beamlist, scanaverage, timeaverage, tweight, polaverage, pweight, kernel, kwidth, plottype, stack, panel, flrange, sprange, linecat, linedop, subplot, colormap, linestyles, linewidth, histogram, header, headsize, plotstyle, margin, legendloc, outfile, overwrite):
 
         casalog.origin('sdplot')
 
@@ -14,19 +14,19 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
         ### Now the actual task code
         ###
         try:
-            if sdfile=='':
+            if infile=='':
                 raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
-            if not overwrite and not plotfile=='':
-                plotfilename = os.path.expandvars(plotfile)
-                plotfilename = os.path.expanduser(plotfilename)
-                if os.path.exists(plotfilename):
-                    s = "Output file '%s' exist." % (plotfilename)
+            if not overwrite and not outfile=='':
+                outfilename = os.path.expandvars(outfile)
+                outfilename = os.path.expanduser(outfilename)
+                if os.path.exists(outfilename):
+                    s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
             isScantable=False
@@ -36,7 +36,7 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
                 isScantable=True
 
             #load the data without averaging
-            s=sd.scantable(sdfile,average=scanaverage,antenna=antenna)
+            s=sd.scantable(infile,average=scanaverage,antenna=antenna)
 
             # get telescope name
             #'ATPKSMB', 'ATPKSHOH', 'ATMOPRA', 'DSS-43' (Tid), 'CEDUNA', and 'HOBART'
@@ -229,14 +229,14 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
             # Plotting
 	    asaplot=False
             if plottype=='pointing':
-                    if plotfile != '': 
-                           sd.plotter.plotpointing(s,plotfile)
+                    if outfile != '': 
+                           sd.plotter.plotpointing(s,outfile)
                     else:
                            sd.plotter.plotpointing(s)
                     del s
             elif plottype=='azel':
-                    if plotfile != '': 
-                           sd.plotter.plotazel(s,plotfile)
+                    if outfile != '': 
+                           sd.plotter.plotazel(s,outfile)
                     else:
                            sd.plotter.plotazel(s)
                     del s
@@ -423,15 +423,15 @@ def sdplot(sdfile, antenna, fluxunit, telescopeparm, specunit, restfreq, frame, 
 	    if header and (not plotstyle or margin==[]):
 		    # set margin for the header
 		    sd.plotter._plotter.figure.subplots_adjust(top=0.8)
-	    datname='Data File:     '+sdfile
+	    datname='Data File:     '+infile
 	    sd.plotter.print_header(plot=(header and asaplot),fontsize=headsize,
 	                            logger=True,selstr=ssel,extrastr=datname)
 	    del ssel, datname
 
             # Hardcopy
-            if ( plottype in ['spectra','totalpower'] and plotfile != '' ):
+            if ( plottype in ['spectra','totalpower'] and outfile != '' ):
                     # currently no way w/o screen display first
-                    sd.plotter.save(plotfile)
+                    sd.plotter.save(outfile)
 
             # Do some clean up
             #import gc

@@ -73,7 +73,7 @@ asap_init()                             #load ASAP module
 
 # summary
 #default(sdlist)
-#sdfile='IRC+10216_rawACSmod'
+#infile='IRC+10216_rawACSmod'
 #sdlist()
 
 if doplot:
@@ -84,7 +84,7 @@ else:
 # calibartion and averaging
 # calibrate nod scans for CS line (IF=3)
 default(sdaverage)
-sdfile='IRC+10216_rawACSmod'
+infile='IRC+10216_rawACSmod'
 fluxunit='K'
 calmode='nod'
 scanlist=[229,230]
@@ -99,25 +99,25 @@ overwrite=True
 plotlevel=localplotlevel
 sdaverage()
 # output
-localoutfile=sdfile+'_cal'
+localoutfile=infile+'_cal'
 
 #smoothing
 # do boxcar smoothing with channel width=5
 default(sdsmooth)
-sdfile = localoutfile
+infile = localoutfile
 kernel='boxcar'
 kwidth=5
 overwrite=True
 plotlevel=localplotlevel
 sdsmooth()
-localoutfile=sdfile+'_sm'
+localoutfile=infile+'_sm'
 
 #fit and remove baselines
 # do baseline fit with cubic spline with one knot (npiece=2)
 # 3-sigma clipping plus 1 iteration applied.
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
-sdfile=localoutfile
+infile=localoutfile
 maskmode='auto'
 #edge=[50]
 thresh=5
@@ -131,15 +131,15 @@ clipniter=1
 overwrite=True
 plotlevel=localplotlevel
 sdbaseline()
-localoutfile=sdfile+'_bs'
+localoutfile=infile+'_bs'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
    default(sdplot)
-   sdfile=localoutfile
+   infile=localoutfile
    specunit='GHz'
-   plotfile='irc_cs_reduced.eps'
+   outfile='irc_cs_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
    sdplot()
@@ -149,7 +149,7 @@ else:
 # statistics
 default(sdstat)
 # select line free regions to get rms
-sdfile=localoutfile
+infile=localoutfile
 masklist=[800,1500]
 xstat=sdstat()
 rms=xstat['rms']
@@ -167,7 +167,7 @@ mean=xstat['mean']
 # Save the spectrum
 # in different formats
 default(sdsave)
-sdfile=localoutfile
+infile=localoutfile
 outfile='irc_cs_reduced'
 outform='ASCII'
 overwrite=True

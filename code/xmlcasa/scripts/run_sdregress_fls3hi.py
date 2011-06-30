@@ -37,8 +37,8 @@ sd.rc('scantable',storage='disk')               # Note this enables handling of 
 
 # Set parameters
 default('sdcal')
-#sdfile = 'FLS3_all_newcal_SP'
-sdfile = datapath
+#infile = 'FLS3_all_newcal_SP'
+infile = datapath
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'

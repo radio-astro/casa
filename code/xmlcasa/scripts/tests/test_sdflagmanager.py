@@ -29,31 +29,31 @@ class sdflagmanager_test(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdflagmanager/'
     # Input and output names
-    sdfile = 'OrionS_rawACSmod_cal2123.asap'
-    vdir = sdfile+'.flagversions'
+    infile = 'OrionS_rawACSmod_cal2123.asap'
+    vdir = infile+'.flagversions'
     vdatafileprefix = vdir+'/flags.'
     vlistfile = vdir+'/FLAG_VERSION_LIST'
 
     def setUp(self):
-        if os.path.exists(self.sdfile):
-            shutil.rmtree(self.sdfile)
-        shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
         if os.path.exists(self.vdir):
             shutil.rmtree(self.vdir)
 
         default(sdflagmanager)
 
     def tearDown(self):
-        if os.path.exists(self.sdfile):
-            shutil.rmtree(self.sdfile)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
         if os.path.exists(self.vdir):
             shutil.rmtree(self.vdir)
 
     def test00(self):
         """Test 0: list"""
-        sdfile = self.sdfile
+        infile = self.infile
         mode = "list"
-        result = sdflagmanager(sdfile=sdfile,mode=mode)
+        result = sdflagmanager(infile=infile,mode=mode)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
         items = []
@@ -65,7 +65,7 @@ class sdflagmanager_test(unittest.TestCase):
         """Test 1: save"""
         versionname = "v1"
         comment = "first_version"
-        result = sdflagmanager(sdfile=self.sdfile,mode="save",versionname=versionname,comment=comment,merge="replace")
+        result = sdflagmanager(infile=self.infile,mode="save",versionname=versionname,comment=comment,merge="replace")
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
         vdatafile = self.vdatafileprefix+versionname
@@ -84,19 +84,19 @@ class sdflagmanager_test(unittest.TestCase):
         """Test 2: restore"""
         versionname = "v1"
         comment = "first_version"
-        result = sdflagmanager(sdfile=self.sdfile,mode="save",versionname=versionname,comment=comment,merge="replace")
+        result = sdflagmanager(infile=self.infile,mode="save",versionname=versionname,comment=comment,merge="replace")
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=self.sdfile, average=False)
+        scan = sd.scantable(filename=self.infile, average=False)
         scan.flag(row=2)
         scan.flag_row(rows=[3])
-        scan.save(self.sdfile, overwrite=True)
+        scan.save(self.infile, overwrite=True)
         del scan
 
-        result = sdflagmanager(sdfile=self.sdfile,mode="restore",versionname=versionname,merge="replace")
+        result = sdflagmanager(infile=self.infile,mode="restore",versionname=versionname,merge="replace")
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=self.sdfile, average=False)
+        scan = sd.scantable(filename=self.infile, average=False)
         mask = scan.get_mask(2)
         res = True
         for i in range(len(mask)):
@@ -113,10 +113,10 @@ class sdflagmanager_test(unittest.TestCase):
         versionnames = ["v1", "v2"]
         comments = ["first_version", "second_version"]
         for i in range(len(versionnames)):
-            result = sdflagmanager(sdfile=self.sdfile,mode="save",versionname=versionnames[i],comment=comments[i],merge="replace")
+            result = sdflagmanager(infile=self.infile,mode="save",versionname=versionnames[i],comment=comments[i],merge="replace")
 
         delvername = "v1"
-        result = sdflagmanager(sdfile=self.sdfile,mode="delete",versionname=delvername)
+        result = sdflagmanager(infile=self.infile,mode="delete",versionname=delvername)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
         delvdatafile = self.vdatafileprefix+delvername
@@ -135,12 +135,12 @@ class sdflagmanager_test(unittest.TestCase):
         """Test 4: rename"""
         oldname = "v1"
         oldcomment = "first_version"
-        result = sdflagmanager(sdfile=self.sdfile,mode="save",versionname=oldname,comment=oldcomment,merge="replace")
+        result = sdflagmanager(infile=self.infile,mode="save",versionname=oldname,comment=oldcomment,merge="replace")
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
         newname = "renamed_v1"
         newcomment = "renamed_first_version"
-        result = sdflagmanager(sdfile=self.sdfile,mode="rename",oldname=oldname,versionname=newname,comment=newcomment)
+        result = sdflagmanager(infile=self.infile,mode="rename",oldname=oldname,versionname=newname,comment=newcomment)
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
         
         vdatafile = self.vdatafileprefix+newname

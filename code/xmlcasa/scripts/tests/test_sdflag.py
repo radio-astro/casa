@@ -29,30 +29,30 @@ class sdflag_test(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdflag/'
     # Input and output names
-    sdfile = 'Artificial_Flat.asap'
+    infile = 'Artificial_Flat.asap'
 
     def setUp(self):
-        if os.path.exists(self.sdfile):
-            shutil.rmtree(self.sdfile)
-        shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdflag)
 
     def tearDown(self):
-        if os.path.exists(self.sdfile):
-            shutil.rmtree(self.sdfile)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
 
     def test00(self):
         """Test 0: channel flagging"""
-        sdfile = self.sdfile
+        infile = self.infile
         maskflag = [[1,3],[10,15]]
 
         #flag
-        result = sdflag(sdfile=sdfile,maskflag=maskflag)
+        result = sdflag(infile=infile,maskflag=maskflag)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=sdfile, average=False)
+        scan = sd.scantable(filename=infile, average=False)
         ansmask = scan.create_mask(maskflag, invert=True)
         for i in range (scan.nrow()):
             mask = scan.get_mask(i)
@@ -65,11 +65,11 @@ class sdflag_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = sdflag(sdfile=sdfile,maskflag=maskflag,flagmode="unflag")
+        result = sdflag(infile=infile,maskflag=maskflag,flagmode="unflag")
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=sdfile, average=False)
+        scan = sd.scantable(filename=infile, average=False)
         for i in range (scan.nrow()):
             mask = scan.get_mask(i)
             res = True
@@ -82,15 +82,15 @@ class sdflag_test(unittest.TestCase):
 
     def test01(self):
         """Test 1: row flagging"""
-        sdfile = self.sdfile
+        infile = self.infile
         flagrow = [2,4]
 
         #flag
-        result = sdflag(sdfile=sdfile,flagrow=flagrow)
+        result = sdflag(infile=infile,flagrow=flagrow)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=sdfile, average=False)
+        scan = sd.scantable(filename=infile, average=False)
         for i in range (scan.nrow()):
             resrflag = scan._getflagrow(i)
             ansrflag = False
@@ -103,11 +103,11 @@ class sdflag_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = sdflag(sdfile=sdfile,flagrow=flagrow,flagmode="unflag")
+        result = sdflag(infile=infile,flagrow=flagrow,flagmode="unflag")
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=sdfile, average=False)
+        scan = sd.scantable(filename=infile, average=False)
         for i in range (scan.nrow()):
             resrflag = scan._getflagrow(i)
             res = (resrflag == False)
@@ -116,12 +116,12 @@ class sdflag_test(unittest.TestCase):
 
     def test02(self):
         """Test 2: clipping"""
-        sdfile = self.sdfile
+        infile = self.infile
         clip = True
         clipminmax = [-3.5, 3.5] #clip at 3.5-sigma level, i.e., flag channels at which abs(value) exceeds 3.5.
 
         #flag
-        result = sdflag(sdfile=sdfile,clip=clip,clipminmax=clipminmax)
+        result = sdflag(infile=infile,clip=clip,clipminmax=clipminmax)
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
@@ -134,7 +134,7 @@ class sdflag_test(unittest.TestCase):
             [[0,1708],[1710,7710],[7712,7799],[7801,8191]]
             ]
 
-        scan = sd.scantable(filename=sdfile, average=False)
+        scan = sd.scantable(filename=infile, average=False)
         for i in range (scan.nrow()):
             mask = scan.get_mask(i)
             ansmask = scan.create_mask(ansmlist[i])
@@ -147,11 +147,11 @@ class sdflag_test(unittest.TestCase):
         del scan
 
         #unflag
-        result = sdflag(sdfile=sdfile,clip=clip,clipminmax=clipminmax,flagmode="unflag")
+        result = sdflag(infile=infile,clip=clip,clipminmax=clipminmax,flagmode="unflag")
 
         self.assertEqual(result, None, msg="The task returned '"+str(result)+"' instead of None")
 
-        scan = sd.scantable(filename=sdfile, average=False)
+        scan = sd.scantable(filename=infile, average=False)
         for i in range (scan.nrow()):
             mask = scan.get_mask(i)
             res = True

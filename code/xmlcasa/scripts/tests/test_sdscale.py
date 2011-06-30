@@ -159,19 +159,19 @@ class sdscale_test0(unittest.TestCase,sdscale_unittest_base):
     def test001(self):
         """Test 001: Existing outfile with overwrite=False"""
         os.system('cp -r %s %s'%(self.rawfile,self.outfile))
-        res=sdscale(sdfile=self.rawfile,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,outfile=self.outfile)
         self.assertFalse(res)
 
     def test002(self):
         """Test 002: Bad shaped factor"""
         factor = [2.0,3.0]
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=False,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=False,outfile=self.outfile)
         self.assertFalse(res)
         
     def test003(self):
         """Test 003: Vector factor for scalar Tsys"""
         factor=[1.0,2.0,3.0,4.0]
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=True,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=True,outfile=self.outfile)
         self.assertFalse(res)
 
 ###
@@ -213,7 +213,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 100: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -222,7 +222,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 101: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -231,7 +231,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 102: 1D array factor with Tsys scaling"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -240,7 +240,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 103: 1D array factor without Tsys scaling"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -249,7 +249,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 104: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -258,7 +258,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 105: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -267,7 +267,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 106: 2D array ([nrow,nchan]) factor with Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -276,7 +276,7 @@ class sdscale_test1(unittest.TestCase,sdscale_unittest_base):
         """Test 107: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -321,7 +321,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 200: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -330,7 +330,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 201: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -339,14 +339,14 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 202: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
     def test203(self):
         """Test 203: 1D array factor without Tsys scaling"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -355,7 +355,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 204: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -364,7 +364,7 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 205: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -373,14 +373,14 @@ class sdscale_test2(unittest.TestCase,sdscale_unittest_base):
         """Test 206: 2D array ([nrow,nchan]) factor with Tsys scaling (must fail)"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
     def test207(self):
         """Test 207: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0,5.0,7.0,9.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -424,7 +424,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 300: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -433,7 +433,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 301: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -442,21 +442,21 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 302: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
     def test303(self):
         """Test 303: 1D array factor without Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
     def test304(self):
         """Test 304: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -465,7 +465,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 305: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -474,7 +474,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 306: 2D array ([nrow,nchan]) factor with Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -483,7 +483,7 @@ class sdscale_test3(unittest.TestCase,sdscale_unittest_base):
         """Test 307: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -528,7 +528,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 400: scalar factor with Tsys scaling"""
         factor = 2.0
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -537,7 +537,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 401: scalar factor without Tsys scaling"""
         factor = 2.0
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -546,21 +546,21 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 402: 1D array factor with Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
     def test403(self):
         """Test 403: 1D array factor without Tsys scaling (must fail)"""
         factor = [2.0,3.0,4.0,5.0]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
 
     def test404(self):
         """Test 404: 2D array ([nrow,1]) factor with Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -569,7 +569,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 405: 2D array ([nrow,1]) factor without Tsys scaling"""
         factor = [[2.0],[3.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)
@@ -578,7 +578,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 406: 2D array ([nrow,nchan]) factor with Tsys scaling (must fail)"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=True
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertFalse(res)
         #self.assertEqual(res,None,
         #                 msg='Any error occurred during calibration')
@@ -588,7 +588,7 @@ class sdscale_test4(unittest.TestCase,sdscale_unittest_base):
         """Test 407: 2D array ([nrow,nchan]) factor without Tsys scaling"""
         factor = [[2.0,4.0,6.0,8.0],[3.0]]
         scaletsys=False
-        res=sdscale(sdfile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
+        res=sdscale(infile=self.rawfile,factor=factor,scaletsys=scaletsys,outfile=self.outfile)
         self.assertEqual(res,None,
                          msg='Any error occurred during calibration')
         self._compare(self.outfile,self.rawfile,factor,scaletsys)

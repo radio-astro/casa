@@ -27,31 +27,31 @@ class sdcal_test(unittest.TestCase):
     test04-07 --- do one of calibration, average, baseline, or smooth
     test08-10 --- skip one of of calibration and average, baseline, or smooth
     
-    Note: input data (sdfile0) is generated from a single dish regression data,
+    Note: input data (infile0) is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
       default(sdsave)
-      sdsave(sdfile='OrionS_rawACSmod',outfile=self.sdfile0,outform='ASAP')
+      sdsave(infile='OrionS_rawACSmod',outfile=self.infile0,outform='ASAP')
     -> Just converted to scantable to eliminate errors by data conversion.
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdcal/'
     # Input and output names
     # uncalibrated data
-    sdfile0 = 'OrionS_rawACSmod.asap'
+    infile0 = 'OrionS_rawACSmod.asap'
     # uncalibrated data
-    sdfile1 = 'OrionS_rawACSmod_cal2123.asap'
-    sdfiles = [sdfile0, sdfile1]
+    infile1 = 'OrionS_rawACSmod_cal2123.asap'
+    infiles = [infile0, infile1]
     outroot = 'sdcal_test'
 
     def setUp(self):
-        for file in self.sdfiles:
+        for file in self.infiles:
             if os.path.exists(file):
                 shutil.rmtree(file)
             shutil.copytree(self.datapath+file, file)
         default(sdcal)
 
     def tearDown(self):
-        for file in self.sdfiles:
+        for file in self.infiles:
             if (os.path.exists(file)):
                 shutil.rmtree(file)
 
@@ -89,10 +89,10 @@ class sdcal_test(unittest.TestCase):
     def test01(self):
         """Test 1: Default parameters + valid input filename (do nothing)"""
         self.tid="01"
-        sdfile = self.sdfile0
+        infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile)
+        result = sdcal(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -111,14 +111,14 @@ class sdcal_test(unittest.TestCase):
         """
         # Don't average GBT ps data at the same time of calibration.
         self.tid="02"
-        sdfile = self.sdfile0
+        infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
         kernel = 'hanning'
         blfunc='poly'
 
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
+        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -139,10 +139,10 @@ class sdcal_test(unittest.TestCase):
         testing if parameter names are changed
         """
         self.tid="03"
-        sdfile = self.sdfile0
+        infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
 
-        result = sdcal(sdfile=sdfile,
+        result = sdcal(infile=infile,
                        antenna=0,
                        fluxunit='K',
                        telescopeparm='',
@@ -170,8 +170,6 @@ class sdcal_test(unittest.TestCase):
                        npiece=2,
                        clipthresh=3.0,
                        clipniter=1,
-                       nwave=3,
-                       maxwavelength=1.0,
                        masklist=[],
                        maskmode='auto',
                        thresh=5.0,
@@ -193,11 +191,11 @@ class sdcal_test(unittest.TestCase):
     def test04(self):
         """ Test 4:  operate only calibration step """
         self.tid="04"
-        sdfile = self.sdfile0
+        infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode)
+        result = sdcal(infile=infile,outfile=outfile,calmode=calmode)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -212,13 +210,13 @@ class sdcal_test(unittest.TestCase):
     def test05(self):
         """ Test 5:  operate only averaging step """
         self.tid="05"
-        sdfile = self.sdfile1
+        infile = self.infile1
         outfile = self.outroot+self.tid+'.asap'
         average = True
         # need to run one of average
         scanaverage = True
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,
+        result = sdcal(infile=infile,outfile=outfile,
                        average=average,scanaverage=scanaverage)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -235,11 +233,11 @@ class sdcal_test(unittest.TestCase):
     def test06(self):
         """ Test 6:  operate only smoothing step """
         self.tid="06"
-        sdfile = self.sdfile1
+        infile = self.infile1
         outfile = self.outroot+self.tid+'.asap'
         kernel = 'hanning'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,kernel=kernel)
+        result = sdcal(infile=infile,outfile=outfile,kernel=kernel)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -255,11 +253,11 @@ class sdcal_test(unittest.TestCase):
     def test07(self):
         """ Test 7:  operate only baseline step """
         self.tid="07"
-        sdfile = self.sdfile1
+        infile = self.infile1
         outfile = self.outroot+self.tid+'.asap'
         blfunc = 'poly'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,blfunc=blfunc)
+        result = sdcal(infile=infile,outfile=outfile,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
         self.assertTrue(os.path.exists(outfile),
@@ -275,14 +273,14 @@ class sdcal_test(unittest.TestCase):
     def test08(self):
         """ Test 8:  skip calibration and averaging """
         self.tid="08"
-        sdfile = self.sdfile1
+        infile = self.infile1
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'none'
         average = False
         kernel = 'hanning'
         blfunc = 'poly'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
+        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
                        average=average,kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -298,13 +296,13 @@ class sdcal_test(unittest.TestCase):
     def test09(self):
         """ Test 9:  skip smoothing"""
         self.tid="09"
-        sdfile = self.sdfile0
+        infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
         kernel = 'none'
         blfunc = 'poly'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
+        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
@@ -321,13 +319,13 @@ class sdcal_test(unittest.TestCase):
     def test10(self):
         """ Test 10:  skip baseline"""
         self.tid="10"
-        sdfile = self.sdfile0
+        infile = self.infile0
         outfile = self.outroot+self.tid+'.asap'
         calmode = 'ps'
         kernel = 'hanning'
         blfunc = 'none'
 
-        result = sdcal(sdfile=sdfile,outfile=outfile,calmode=calmode,
+        result = sdcal(infile=infile,outfile=outfile,calmode=calmode,
                        kernel=kernel,blfunc=blfunc)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")

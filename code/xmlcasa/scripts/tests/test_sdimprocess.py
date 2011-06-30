@@ -86,18 +86,18 @@ class sdimprocess_test0(unittest.TestCase,sdimprocess_unittest_base):
     def test001(self):
         """Test 001: only 1 image is given for Basket-Weaving"""
         try:
-            res=sdimprocess(sdimages=[self.rawfiles[0]],mode='basket',direction=[0.])
+            res=sdimprocess(infiles=[self.rawfiles[0]],mode='basket',direction=[0.])
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('sdimages should be a list of input images for Basket-Weaving.')
+            pos=str(e).find('infiles should be a list of input images for Basket-Weaving.')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test002(self):
         """Test 002: direction is not given for Basket-Weaving"""
         try:
-            res=sdimprocess(sdimages=self.rawfiles,mode='basket')
+            res=sdimprocess(infiles=self.rawfiles,mode='basket')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -108,18 +108,18 @@ class sdimprocess_test0(unittest.TestCase,sdimprocess_unittest_base):
     def test003(self):
         """Test 003: Multiple images are given for Press"""
         try:
-            res=sdimprocess(sdimages=self.rawfiles,mode='press')
+            res=sdimprocess(infiles=self.rawfiles,mode='press')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
-            pos=str(e).find('sdimages allows only one input file for pressed-out method.')
+            pos=str(e).find('infiles allows only one input file for pressed-out method.')
             self.assertNotEqual(pos,-1,
                                 msg='Unexpected exception was thrown: %s'%(str(e)))        
 
     def test004(self):
         """Test 004: direction is not given for Press"""
         try:
-            res=sdimprocess(sdimages=[self.rawfiles[0]],mode='press')
+            res=sdimprocess(infiles=[self.rawfiles[0]],mode='press')
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -131,7 +131,7 @@ class sdimprocess_test0(unittest.TestCase,sdimprocess_unittest_base):
         """Test 005: Existing output image file"""
         shutil.copytree(self.datapath+self.rawfiles[0], self.outfile)
         try:
-            res=sdimprocess(sdimages=self.rawfiles,mode='basket',direction=[0.,90.0],imagename=self.outfile,overwrite=False)
+            res=sdimprocess(infiles=self.rawfiles,mode='basket',direction=[0.,90.0],outfile=self.outfile,overwrite=False)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -145,7 +145,7 @@ class sdimprocess_test0(unittest.TestCase,sdimprocess_unittest_base):
     def test006(self):
         """Test 006: Zero beamsize for Press"""
         try:
-            res=sdimprocess(sdimages=[self.rawfiles[0]],mode='press',beamsize=0.0,direction=[0.],imagename=self.outfile,overwrite=True)
+            res=sdimprocess(infiles=[self.rawfiles[0]],mode='press',beamsize=0.0,direction=[0.],outfile=self.outfile,overwrite=True)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -194,7 +194,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
 
     def test100(self):
         """Test 100: Pressed method using whole pixels"""
-        res=sdimprocess(sdimages=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,imagename=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
@@ -220,7 +220,7 @@ class sdimprocess_test1(unittest.TestCase,sdimprocess_unittest_base):
 
     def test101(self):
         """Test 101: Pressed method with certain threshold"""
-        res=sdimprocess(sdimages=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,tmax=0.5,tmin=-0.1,imagename=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfile,mode=self.mode,numpoly=2,beamsize=300.0,smoothsize=2.0,direction=0.0,tmax=0.5,tmin=-0.1,outfile=self.outfile,overwrite=True)
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
@@ -285,7 +285,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
 
     def test2000(self):
         """Test 200: FFT based Basket-Weaving using whole pixels"""
-        res=sdimprocess(sdimages=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,imagename=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
                   'max': numpy.array([ 0.92714936]),
@@ -309,7 +309,7 @@ class sdimprocess_test2(unittest.TestCase,sdimprocess_unittest_base):
 
     def test2001(self):
         """Test 201: FFT based Basket-Weaving with certain threshold"""
-        res=sdimprocess(sdimages=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,tmax=0.5,tmin=-0.1,imagename=self.outfile,overwrite=True)
+        res=sdimprocess(infiles=self.rawfiles,mode=self.mode,direction=[0.0,90.0],masklist=20.0,tmax=0.5,tmin=-0.1,outfile=self.outfile,overwrite=True)
         refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
                   'blcf': '00:00:00.000, +00.00.00.000, I, 1.415e+09Hz',
                   'max': numpy.array([ 0.99387228]),

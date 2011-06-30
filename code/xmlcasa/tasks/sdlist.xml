@@ -15,13 +15,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <description>
         ASAP SD listing task: list summary of the single dish data
 
+        Modified 2011-06-29 WK
         Modified 2008-02-01 TT
         Task Version 2007-03-04 STM
 </description>
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
 
     <description>name of input SD dataset</description>
     <value></value>
@@ -38,7 +39,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
-    <param type="string" name="listfile">
+    <param type="string" name="outfile">
 	    <description>Name of output file for summary list</description>
 	    <value></value>
     </param>
@@ -54,14 +55,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
         Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         scanaverage -- average integrations within scans
                 options: (bool) True,False
                 default: False
                 example: if True, this happens in read-in
                          For GBT, set False!
-        listfile -- Name of output file for summary list
+        outfile -- Name of output file for summary list
                 default: '' (no output file)
                 example: 'mysd_summary.txt'
         overwrite -- overwrite the output file if already exists

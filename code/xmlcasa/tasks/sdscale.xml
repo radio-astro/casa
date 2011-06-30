@@ -18,7 +18,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -56,7 +56,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
   <example>
         Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         factor -- scaling factor. float or one- or two-dimensional float list.
                   default: 1 (no scaling)
@@ -64,7 +64,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
                     default: True
         outfile -- output file name 
                    outfile='' will write the data to a file named,
-                   &lt;sdfile&gt;_scaled&lt;factor&gt;
+                   &lt;infile&gt;_scaled&lt;factor&gt;
                    default: ''
         overwrite -- overwrite the output file if already exists
                 options: (bool) True,False
@@ -77,7 +77,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         By setting scaletsys = True, associated Tsys is also scaled.
         Tsys informations are written in the casalogger and they are 
         automatically stored in 'casapy.log'. 
-        The sdfile can be any of ASAP, MS, SDFITS, or RPFITS format.
+        The infile can be any of ASAP, MS, SDFITS, or RPFITS format.
         If outfile name is given or outfile=''(default), the scaled data 
         is written to a new file with the same format as the input data 
         (Note: in case of the RPFITS format input data, it will be written 

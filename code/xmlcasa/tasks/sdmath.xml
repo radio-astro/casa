@@ -203,7 +203,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 this selection is in addition to scanlist,
                 field, and iflist
         outfile -- Name of output file
-                default: '' (&lt;sdfile&gt;_cal)
+                default: '' (&lt;infile&gt;_cal)
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'

@@ -6,16 +6,16 @@ from asap.flagplotter import flagplotter
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, outfile, outform, overwrite, plotlevel):
+def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow, clip, clipminmax, clipoutside, flagmode, interactive, outfile, outform, overwrite, plotlevel):
 
         casalog.origin('sdflag')
 
         try:
             myp=None
-            if sdfile=='':
-                raise Exception, 'sdfile is undefined'
+            if infile=='':
+                raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
@@ -24,7 +24,7 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 	    if (outfile != ''):
 	        project = outfile
 	    else:
-	        project = sdfile.rstrip('/')
+	        project = infile.rstrip('/')
 	        if not overwrite:
 		    project = project + '_f'
 
@@ -34,11 +34,11 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 		    s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s = sd.scantable(sdfile,average=False,antenna=antenna)
+            s = sd.scantable(infile,average=False,antenna=antenna)
 
 
             #check the format of the infile
-            if isinstance(sdfile, str):
+            if isinstance(infile, str):
               if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
                 if os.path.exists(filename+'/table.f1'):
                   format = 'MS2'
@@ -62,9 +62,9 @@ def sdflag(sdfile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             # Default file name
             #if ( outfile == '' ):
-            #        project = sdfile + '_f'
+            #        project = infile + '_f'
             #elif ( outfile == 'none' ):
-            #        project = sdfile 
+            #        project = infile 
             #        outform = format
             #        overwrite=True
             #else:

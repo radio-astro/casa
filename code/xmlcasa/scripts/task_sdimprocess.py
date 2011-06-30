@@ -7,7 +7,7 @@ import asap as sd
 from taskinit import *
 import time
 
-def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, masklist, tmax, tmin, imagename, overwrite):
+def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklist, tmax, tmin, outfile, overwrite):
 
         casalog.origin('sdimprocess')
 
@@ -19,19 +19,19 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
         # set tempolary filename
         tmprealname = []
         tmpimagname = []
-        if type(sdimages) == str:
+        if type(infiles) == str:
             tmprealname.append( 'fft.'+tmpstr+'.real..0.im' )
             tmpimagname.append( 'fft.'+tmpstr+'.imag.0.im' )
         else:
-            for i in range(len(sdimages)):
+            for i in range(len(infiles)):
                 tmprealname.append( 'fft.%s.%s.real.im' % (tmpstr,i) )
                 tmpimagname.append( 'fft.%s.%s.imag.im' % (tmpstr,i) )
 
         try:
             # default output filename
-            if imagename == '':
-                imagename = 'sdimprocess.out.im'
-                casalog.post( 'imagename=%s' % imagename )
+            if outfile == '':
+                outfile = 'sdimprocess.out.im'
+                casalog.post( 'outfile=%s' % outfile )
 
             # threshold
             nolimit = 'nolimit'
@@ -60,11 +60,11 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 casalog.post( 'Apply Pressed-out method' )
                 
                 # check input file
-                if type(sdimages) == list:
-                    if len(sdimages) != 1:
-                        raise Exception, "sdimages allows only one input file for pressed-out method." 
+                if type(infiles) == list:
+                    if len(infiles) != 1:
+                        raise Exception, "infiles allows only one input file for pressed-out method." 
                     else:
-                        sdimages = sdimages[0]
+                        infiles = infiles[0]
                 if type(direction) == list:
                     if len(direction) != 1:
                         raise Exception, "direction allows only one direction for pressed-out method."
@@ -73,7 +73,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         
 
                 # mask
-                image = ia.newimagefromimage(infile=sdimages,outfile=tmpmskname)
+                image = ia.newimagefromimage(infile=infiles,outfile=tmpmskname)
                 imshape = image.shape()
                 nx = imshape[0]
                 ny = imshape[1]
@@ -169,7 +169,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 polyimage = ia.newimage( tmppolyname )
 
                 # subtract fitted image from original map
-                imageorg = ia.newimage( sdimages )
+                imageorg = ia.newimage( infiles )
                 if len(imshape) == 4:
                     # with polarization axis
                     npol = imshape[3]
@@ -188,8 +188,8 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         polyimage.putchunk( pixsub, [0,0,ichan] )
 
                 # output
-                polyimage.rename( imagename, overwrite=overwrite )
-                #convimage.rename( imagename, overwrite=overwrite )
+                polyimage.rename( outfile, overwrite=overwrite )
+                #convimage.rename( outfile, overwrite=overwrite )
 
                 polyimage.close()
                 convimage.close()
@@ -202,8 +202,8 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 casalog.post( 'Apply Basket-Weaving' )
 
                 # check input file
-                if type(sdimages) == str or (type(sdimages) == list and len(sdimages) <= 1):
-                    raise Exception, "sdimages should be a list of input images for Basket-Weaving."
+                if type(infiles) == str or (type(infiles) == list and len(infiles) <= 1):
+                    raise Exception, "infiles should be a list of input images for Basket-Weaving."
 
                 # check direction
                 if type(direction) == float:
@@ -211,30 +211,30 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 else:
                     if len(direction) == 0:
                         raise Exception, 'direction must have at least two different direction.'
-                    if len(direction) == len(sdimages):
+                    if len(direction) == len(infiles):
                         dirs = direction
                     else:
                         casalog.post( 'direction information is extrapolated.' )
                         dirs = []
-                        for i in range(len(sdimages)):
+                        for i in range(len(infiles)):
                             dirs.append(direction[i%len(direction)])
 
                 # initial setup
-                outimage = ia.newimagefromimage( infile=sdimages[0], outfile=imagename, overwrite=overwrite )
+                outimage = ia.newimagefromimage( infile=infiles[0], outfile=outfile, overwrite=overwrite )
                 imshape = outimage.shape()
                 nx = imshape[0]
                 ny = imshape[1]
                 nchan = imshape[2]
                 tmp=[]
-                for i in xrange(len(sdimages)):
+                for i in xrange(len(infiles)):
                     tmp.append(numpy.zeros(imshape,dtype=float))
                 maskedpixel=numpy.array(tmp)
                 del tmp
 
                 # mask
-                for i in range(len(sdimages)):
-                    realimage = ia.newimagefromimage( infile=sdimages[i], outfile=tmprealname[i] )
-                    imagimage = ia.newimagefromimage( infile=sdimages[i], outfile=tmpimagname[i] )
+                for i in range(len(infiles)):
+                    realimage = ia.newimagefromimage( infile=infiles[i], outfile=tmprealname[i] )
+                    imagimage = ia.newimagefromimage( infile=infiles[i], outfile=tmpimagname[i] )
                     realimage.close()
                     imagimage.close()
                 if len(thresh) == 0:
@@ -243,7 +243,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                     if len(imshape) == 4:
                         # with polarization axis
                         npol = imshape[3]
-                        for i in range(len(sdimages)):
+                        for i in range(len(infiles)):
                             realimage = ia.newimage( tmprealname[i] )
                             for ichan in range(nchan):
                                 for ipol in range(npol):
@@ -266,7 +266,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                             realimage.close()
                     elif len(imshape) == 3:
                         # no polarization axis
-                        for i in range(len(sdimages)):
+                        for i in range(len(infiles)):
                             realimage = ia.newimage( tmprealname[i] )
                             for ichan in range(nchan):
                                 pixmsk = image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan])
@@ -292,19 +292,19 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 del maskedpixel
 
                 # set weight factor
-                weights = numpy.ones( shape=(len(sdimages),nx,ny), dtype=float )
+                weights = numpy.ones( shape=(len(infiles),nx,ny), dtype=float )
                 eps = 1.0e-5
                 dtor = numpy.pi / 180.0
                 masks = []
                 if type(masklist) == float:
-                    for i in range(len(sdimages)):
+                    for i in range(len(infiles)):
                         masks.append( masklist )
-                elif type(masklist) == list and len(sdimages) != len(masklist):
-                    for i in range(len(sdimages)):
+                elif type(masklist) == list and len(infiles) != len(masklist):
+                    for i in range(len(infiles)):
                         masks.append( masklist[i%len(masklist)] )
                 for i in range(len(masks)):
                     masks[i] = 0.01 * masks[i]
-                for i in range(len(sdimages)):
+                for i in range(len(infiles)):
                     if abs(numpy.sin(direction[i]*dtor)) < eps:
                         # direction is around 0 deg
                         maskw = 0.5 * nx * masks[i] 
@@ -355,7 +355,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                 if len(imshape) == 4:
                     # with polarization axis
                     npol = imshape[3]
-                    for i in range(len(sdimages)):
+                    for i in range(len(infiles)):
                         realimage = ia.newimage( tmprealname[i] )
                         imagimage = ia.newimage( tmpimagname[i] )
                         for ichan in range(nchan):
@@ -371,7 +371,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         imagimage.close()
                 elif len(imshape) == 3:
                     # no polarization axis
-                    for i in range(len(sdimages)):
+                    for i in range(len(infiles)):
                         realimage = ia.newimage( tmprealname[i] )
                         imagimage = ia.newimage( tmpimagname[i] )
                         for ichan in range(nchan):
@@ -392,7 +392,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                         for ipol in range(npol):
                             pixout = numpy.zeros( shape=(nx,ny), dtype=complex )
                             denom = numpy.zeros( shape=(nx,ny), dtype=float )
-                            for i in range(len(sdimages)):
+                            for i in range(len(infiles)):
                                 realimage = ia.newimage( tmprealname[i] )
                                 imagimage = ia.newimage( tmpimagname[i] )
                                 pixval = realimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] ) + imagimage.getchunk( [0,0,ichan,ipol], [nx-1,ny-1,ichan,ipol] ) * 1.0j
@@ -413,7 +413,7 @@ def sdimprocess(sdimages, mode, numpoly, beamsize, smoothsize, direction, maskli
                     for ichan in range(nchan):
                         pixout = numpy.zeros( shape=(nx,ny), dtype=complex )
                         denom = numpy.zeros( shape=(nx,ny), dtype=float )
-                        for i in range(len(sdimages)):
+                        for i in range(len(infiles)):
                             realimage = ia.newimage( tmprealname[i] )
                             imagimage = ia.newimage( tmpimagname[i] )
                             pixval = image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )

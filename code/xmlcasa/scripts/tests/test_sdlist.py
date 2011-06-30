@@ -25,25 +25,25 @@ class sdlist_test(unittest.TestCase):
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdlist/'
     # Input and output names
-    sdfile1 = 'OrionS_rawACSmod_cal2123.asap'
-    sdfile2 = 'OrionS_rawACSmod'
-    sdfiles = [sdfile1, sdfile2]
+    infile1 = 'OrionS_rawACSmod_cal2123.asap'
+    infile2 = 'OrionS_rawACSmod'
+    infiles = [infile1, infile2]
     outroot = 'sdlist_test'
     refroot = "refsdlist"
 
     def setUp(self):
-        for sdfile in self.sdfiles:
-            if os.path.exists(sdfile):
-                shutil.rmtree(sdfile)
-            shutil.copytree(self.datapath+sdfile, sdfile)
+        for infile in self.infiles:
+            if os.path.exists(infile):
+                shutil.rmtree(infile)
+            shutil.copytree(self.datapath+infile, infile)
 
         default(sdlist)
 
 
     def tearDown(self):
-        for sdfile in self.sdfiles:
-            if (os.path.exists(sdfile)):
-                shutil.rmtree(sdfile)
+        for infile in self.infiles:
+            if (os.path.exists(infile)):
+                shutil.rmtree(infile)
 
     def _compareOutFile(self,out,reference):
         self.assertTrue(os.path.exists(out))
@@ -62,40 +62,40 @@ class sdlist_test(unittest.TestCase):
     def test01(self):
         """Test 1: Save output to an ascii file"""
         tid = "01"
-        sdfile = self.sdfile1
-        listfile = self.outroot+tid+".out"
-        result = sdlist(sdfile=sdfile,listfile=listfile)
+        infile = self.infile1
+        outfile = self.outroot+tid+".out"
+        result = sdlist(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        self._compareOutFile(listfile,self.datapath+self.refroot+tid+".txt")
+        self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
         
     def test02(self):
         """Test 2: Test scanaverage=True"""
         tid = "02"
-        sdfile = self.sdfile1
-        listfile = self.outroot+tid+".out"
-        result = sdlist(sdfile=sdfile,scanaverage=True,listfile=listfile)
+        infile = self.infile1
+        outfile = self.outroot+tid+".out"
+        result = sdlist(infile=infile,scanaverage=True,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        self._compareOutFile(listfile,self.datapath+self.refroot+tid+".txt")
+        self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
 
     def test03(self):
         """Test 3: Test overwrite=True"""
         tid = "03"
-        sdfile = self.sdfile2
-        listfile = self.outroot+tid+".out"
-        result = sdlist(sdfile=sdfile,listfile=listfile)
+        infile = self.infile2
+        outfile = self.outroot+tid+".out"
+        result = sdlist(infile=infile,outfile=outfile)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        self.assertTrue(os.path.exists(listfile),
+        self.assertTrue(os.path.exists(outfile),
                         msg="Output file doesn't exist after the 1st run.")
-        # overwrite 'listfile'
-        sdfile = self.sdfile1
-        listfile = self.outroot+tid+".out"
-        result = sdlist(sdfile=sdfile,listfile=listfile,overwrite=True)
+        # overwrite 'outfile'
+        infile = self.infile1
+        outfile = self.outroot+tid+".out"
+        result = sdlist(infile=infile,outfile=outfile,overwrite=True)
         self.assertEqual(result,None,
                          msg="The task returned '"+str(result)+"' instead of None")
-        self._compareOutFile(listfile,self.datapath+self.refroot+tid+".txt")
+        self._compareOutFile(outfile,self.datapath+self.refroot+tid+".txt")
         
         
 def suite():

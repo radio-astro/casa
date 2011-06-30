@@ -36,21 +36,21 @@ class sdtpimaging_test0(unittest.TestCase,sdtpimaging_unittest_base):
     Test on bad parameter settings
     """
     # Input and output names
-    sdfile='tpimaging.ms'
+    infile='tpimaging.ms'
     prefix=sdtpimaging_unittest_base.taskname+'Test0'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdtpimaging)
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         os.system( 'rm -rf '+self.prefix+'*' )
 
     def test000(self):
@@ -60,47 +60,47 @@ class sdtpimaging_test0(unittest.TestCase,sdtpimaging_unittest_base):
         
     def test001(self):
         """Test 001: Bad antenna id"""
-        self.res=sdtpimaging(sdfile=self.sdfile,antenna='99')
+        self.res=sdtpimaging(infile=self.infile,antenna='99')
         self.assertFalse(self.res)        
 
     def test002(self):
         """Test 002: Bad stokes string"""
-        self.res=sdtpimaging(sdfile=self.sdfile,stokes='J')
+        self.res=sdtpimaging(infile=self.infile,stokes='J')
         self.assertFalse(self.res)
         
     def test003(self):
         """Test 003: Try to create image without output image name"""
-        self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename='')
+        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile='')
         self.assertFalse(self.res)
 
     def test004(self):
         """Test 004: Negative imsize"""
-        self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,imsize=[-1])
+        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,imsize=[-1])
         self.assertFalse(self.res)
 
     def test005(self):
         """Test 005: Negative cell size"""
-        self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,cell=[-1])
+        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,cell=[-1])
         self.assertFalse(self.res)
 
     def test006(self):
         """Test 006: Bad phase center string"""
-        self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,phasecenter='XXX')
+        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,phasecenter='XXX')
         self.assertFalse(self.res)
 
     def test007(self):
         """Test 007: Bad pointing column name"""
-        self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,pointingcolumn='XXX')
+        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,pointingcolumn='XXX')
         self.assertFalse(self.res)
 
     def test008(self):
         """Test 008: Unexisting grid function"""
-        self.res=sdtpimaging(sdfile=self.sdfile,createimage=True,imagename=self.outimage,gridfunction='XXX')
+        self.res=sdtpimaging(infile=self.infile,createimage=True,outfile=self.outimage,gridfunction='XXX')
         self.assertFalse(self.res)
  
     def test009(self):
         """Test 009: Invalid calmode"""
-        self.res=sdtpimaging(sdfile=self.sdfile,calmode='ps')
+        self.res=sdtpimaging(infile=self.infile,calmode='ps')
         self.assertFalse(self.res)
  
 
@@ -112,7 +112,7 @@ class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
     Test to image data without spatial baseline subtraction
     """
     # Input and output names
-    sdfile='tpimaging.ms'
+    infile='tpimaging.ms'
     prefix=sdtpimaging_unittest_base.taskname+'Test1'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
@@ -120,20 +120,20 @@ class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
         if (not os.path.exists(self.refimage)):
             shutil.copytree(self.datapath+self.refimage, self.refimage)
 
         default(sdtpimaging)
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         if (os.path.exists(self.refimage)):
             shutil.rmtree(self.refimage)
         os.system( 'rm -rf '+self.prefix+'*' )
-        os.system( 'rm -rf '+self.sdfile+'*' )
+        os.system( 'rm -rf '+self.infile+'*' )
 
     def _compare(self):
         self._checkfile(self.outimage)
@@ -149,7 +149,7 @@ class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
 
     def test100(self):
         """Test 100: test to image data without spatial baseline subtraction"""
-        self.res=sdtpimaging(sdfile=self.sdfile,calmode='none',stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
+        self.res=sdtpimaging(infile=self.infile,calmode='none',stokes='XX',createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
         
@@ -167,7 +167,7 @@ class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
     Test to image data with spatial baseline subtraction
     """
     # Input and output names
-    sdfile='tpimaging.ms'
+    infile='tpimaging.ms'
     prefix=sdtpimaging_unittest_base.taskname+'Test2'
     outfile=prefix+'.ms'
     outimage=prefix+'.im'
@@ -175,20 +175,20 @@ class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
 
     def setUp(self):
         self.res=None
-        if (not os.path.exists(self.sdfile)):
-            shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
         if (not os.path.exists(self.refimage)):
             shutil.copytree(self.datapath+self.refimage, self.refimage)
 
         default(sdtpimaging)
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         if (os.path.exists(self.refimage)):
             shutil.rmtree(self.refimage)
         os.system( 'rm -rf '+self.prefix+'*' )
-        os.system( 'rm -rf '+self.sdfile+'*' )
+        os.system( 'rm -rf '+self.infile+'*' )
 
     def _compare(self):
         self._checkfile(self.outimage)
@@ -205,7 +205,7 @@ class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
 
     def test200(self):
         """Test 200: test to image data without spatial baseline subtraction"""
-        self.res=sdtpimaging(sdfile=self.sdfile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',createimage=True,imagename=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
+        self.res=sdtpimaging(infile=self.infile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
         
