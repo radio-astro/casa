@@ -32,10 +32,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
           will set the phase center for field '0925+0512' to the given direction and recalculate
           the UVW coordinates.
     """
-
-    tbt = casac.homefinder.find_home_by_name('tableHome').create()
-
     casalog.origin('fixvis')
+    retval = True
     try:
         if(vis==outputvis or outputvis==''):
             casalog.post('Will overwrite original MS ...', 'NORMAL')
@@ -45,10 +43,13 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
             shutil.rmtree(outputvis, ignore_errors=True)
             shutil.copytree(vis, outputvis)
 
+        # me is also used, but not in a state-altering way.
+        tbt, myms, myim = gentools(['tb', 'ms', 'im'])
+        
         if(field==''):
             field='*'
             
-        fields = ms.msseltoindex(vis=outputvis,field=field)['field']
+        fields = myms.msseltoindex(vis=outputvis,field=field)['field']
 
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
@@ -87,7 +88,6 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
 
         if(phasecenter==''): # we are only modifying the UVW coordinates        
             casalog.post('Will leave phase centers unchanged.', 'NORMAL')
-                
             casalog.post("Recalculating the UVW coordinates ...", 'NORMAL')
 
             fldids = []
@@ -95,12 +95,11 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                 if (i in fields):
                     fldids.append(i)
 
-            im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
-            im.calcuvw(fields=fldids, refcode=therefcode, reuse=reuse)
-            im.close()
-
+            # usescratch=True needed in order to have writable ms
+            myim.open(outputvis, usescratch=True)
+            myim.calcuvw(fields=fldids, refcode=therefcode, reuse=reuse)
+            myim.close()
         else: # we are modifying UVWs and visibilities
-
             commonoldrefstr = '' # for the case of a non-variable reference column and several selected fields 
 
             for fld in fields:
@@ -138,10 +137,13 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                     else:
                         commonoldrefstr = theoldrefstr
 
-                theoldphasecenter = theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),14)+' '+qa.angle(qa.quantity(theolddir[1],'rad'),14)
+                theoldphasecenter = theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],
+                                                                         'rad'), 14)+' '+qa.angle(qa.quantity(theolddir[1],'rad'), 14)
 
-                if not (theoldrefstr in ['J2000', 'B1950', 'B1950_VLA', 'HADEC', 'ICRS']
-                        + me.listcodes(me.direction('J2000', '0','0'))['extra'].tolist() ):
+                if not (theoldrefstr in ['J2000', 'B1950', 'B1950_VLA',
+                                         'HADEC', 'ICRS']
+                        + me.listcodes(me.direction('J2000', '0',
+                                                    '0'))['extra'].tolist()):
                     casalog.post('Refcode for FIELD column PHASE_DIR is valid but not yet supported: '+theoldrefstr, 'WARN')
                     casalog.post('Output MS may not be valid.', 'WARN')
 
@@ -149,9 +151,8 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                 casalog.post( 'old phasecenter RA, DEC '+theoldrefstr+' '+qa.time(qa.quantity(theolddir[0],'rad'),10) # 10 digits precision
                               +" "+ qa.angle(qa.quantity(theolddir[1],'rad'),10), 'NORMAL')
                 casalog.post( '          RA, DEC (rad) '+theoldrefstr+' '+str(theolddir[0])+" " +str(theolddir[1]), 'NORMAL')
-
                 
-                if(therefcode!='J2000'):
+                if(therefcode != 'J2000'):
                     casalog.post("When changing phase center, can only write new UVW coordinates in J2000.", 'WARN')
                     therefcode='J2000'
                 if(reuse):
@@ -302,17 +303,25 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
                         fldids.append(i)
                         phdirs.append(theoldphasecenter)
 
-                im.open(outputvis, usescratch=True) # usescratch=True needed in order to have writable ms
-                im.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
-                im.close()
-
+                # usescratch=True needed in order to have writable ms
+                myim.open(outputvis, usescratch=True)
+                myim.fixvis(fields=fldids, phasedirs=phdirs, refcode=therefcode)
+                myim.close()
             #end for
-
         #endif change phasecenter
 
-        return True
-
+        # Write history to output MS, not the input ms.
+        try:
+            param_names = fixvis.func_code.co_varnames[:fixvis.func_code.co_argcount]
+            param_vals = [eval(p) for p in param_names]   
+            retval &= write_history(myms, outputvis, 'fixvis', param_names, param_vals,
+                                    casalog)
+        except Exception, instance:
+            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                         'WARN')        
     except Exception, instance:
         casalog.post("*** Error \'%s\' " % (instance), 'SEVERE')
-        return False
+        retval = False
+        
+    return retval
 

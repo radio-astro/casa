@@ -49,7 +49,7 @@ asteroids = {'ceres':        1,
              'euphrosyne':  31,
              '52 europa':   52,
              'cybele':      65,
-             'sylvia':      87,
+             'sylvia':      87, # Has two moons.
              'davida':     511,             
              'interamnia': 704}
 
