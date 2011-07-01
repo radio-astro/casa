@@ -267,6 +267,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Unit uS("s");
     Unit uHz("Hz");
 
+    // for the combination INTERNAL + 0 freq, return the row and index for the first freq found
+    Bool matchFreq = !((freq.get(uHz).getValue() == 0.) && requFType==INTERNAL);
+
     // calculate azimuth, elevation, and topo frequency
     // first, get the reference frame 
     MPosition mp;
@@ -286,8 +289,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							      frame)		
 			      )().getAngle("deg").getValue();
 
-    Quantity f = MFrequency::Convert(freq, MFrequency::TOPO)().get(uHz);
-
+    Quantity f(0., uHz);
+    if(matchFreq){
+      f = MFrequency::Convert(freq, MFrequency::TOPO)().get(uHz);
+    }
     
 
     // loop over rows
@@ -309,8 +314,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //     << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
 	  if( (FuncType_p(i)(j) == requFType
 	       || requFType == AntennaResponses::ANY)
-	      && SubbandMinFreq_p(i)(j).get() <= f
-	      && f <= SubbandMaxFreq_p(i)(j).get()
+	      && (
+		  !matchFreq // if matchFreq is False, any frequency is accepted
+		  || (SubbandMinFreq_p(i)(j).get() <= f && f <= SubbandMaxFreq_p(i)(j).get())
+		  )
 	      ){
 	    found = True;
 	    break;
