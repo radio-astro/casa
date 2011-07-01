@@ -447,19 +447,19 @@ int main()
 
 		////////// with ray tracing
 
-// 		cout << "Now using ray tracing ..." << endl;
+		cout << "Now using ray tracing ..." << endl;
 
-// 		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDAray");
-// 		im19.set(Complex(1.0,1.0));
-// 		apB.applySky(im19, vb, True, cfKey4, True);
+		PagedImage<Complex> im19(ts2, coordsys3, "pb2_squintDVDAray");
+		im19.set(Complex(1.0,1.0));
+		apB.applySky(im19, vb, True, cfKey4, True);
 		
-// 		PagedImage<Complex> im21(ts2, coordsys3Big, "pb2_squintDVDABigray");
-// 		im21.set(Complex(1.0,1.0));
-// 		apB.applySky(im21, vb, True, cfKey4, True);
+		PagedImage<Complex> im21(ts2, coordsys3Big, "pb2_squintDVDABigray");
+		im21.set(Complex(1.0,1.0));
+		apB.applySky(im21, vb, True, cfKey4, True);
 		
-// 		PagedImage<Complex> im22(ts2, coordsys3Small, "pb2_squintDVDASmallray");
-// 		im22.set(Complex(1.0,1.0));
-// 		apB.applySky(im22, vb, True, cfKey4, True);
+		PagedImage<Complex> im22(ts2, coordsys3Small, "pb2_squintDVDASmallray");
+		im22.set(Complex(1.0,1.0));
+		apB.applySky(im22, vb, True, cfKey4, True);
 
 		count2++;		
 

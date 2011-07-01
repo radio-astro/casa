@@ -31,38 +31,272 @@
 #include <casa/math.h>
 //#include <stdlib.h>
 //#include <string.h>
-#include <synthesis/MeasurementComponents/BeamCalcConstants.h>
-#include <synthesis/MeasurementComponents/BeamCalc.h>
-#include <synthesis/MeasurementComponents/BeamCalcAntenna.h>
 #include <images/Images/TempImage.h>
+#include <images/Images/AntennaResponses.h>
+#include <tables/Tables/TableProxy.h>
 #include <casa/Exceptions.h>
+#include <casa/Containers/ValueHolder.h>
+#include <casa/Arrays/Array.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
+//#include <synthesis/MeasurementComponents/BeamCalcConstants.h>
+#include <synthesis/MeasurementComponents/BeamCalc.h>
+
 namespace casa{
-  /* normalizes a "vector" of 3 Doubles in the vector sense */
-  
-  static inline void norm3(Double *v)
-  {
-    Double s;
-    s = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    v[0] /= s;
-    v[1] /= s;
-    v[2] /= s;
+
+  const Double BeamCalc::METER_INCH  = 39.37008;
+  const Double BeamCalc::INCH_METER  = (1.0/BeamCalc::METER_INCH);
+  const Double BeamCalc::NS_METER    =  0.299792458;     // Exact 
+  const Double BeamCalc::METER_NS    = (1.0/BeamCalc::NS_METER);
+  const Double BeamCalc::DEG_RAD     = M_PI/180.0;
+  const Double BeamCalc::RAD_DEG     = 180.0/M_PI;
+
+  BeamCalc* BeamCalc::instance_p = 0;
+
+  BeamCalc::BeamCalc():
+    obsName_p(""),
+    antType_p(""),
+    obsTime_p(),
+    BeamCalc_NumBandCodes_p(0),
+    BeamCalcGeometries_p(0),
+    bandMinFreq_p(0),
+    bandMaxFreq_p(0),
+    antRespPath_p(""){
+  }
+
+  BeamCalc* BeamCalc::Instance(){
+    if(instance_p==0){
+      instance_p = new BeamCalc();
+    }
+    return instance_p;
+  }
+
+  // initialise the beam calculation parameters 
+  void BeamCalc::setBeamCalcGeometries(const String& obsName,
+				       const String& antType,
+				       const MEpoch& obsTime){
+    
+    Unit uS("s");
+
+    if(obsName==obsName_p 
+       && antType==antType_p 
+       && obsTime.get(uS).getValue()==obsTime_p.get(uS).getValue()
+       ){
+      return; // nothing to do (assuming the databases haven't changed)
+    }
+
+    cout << "Processing request for geometries from observatory " << obsName << ", antenna type " << antType << endl;
+
+    LogIO os;
+    os << LogOrigin("BeamCalc", "setBeamCalcGeometries()");
+
+    if(obsName!=""){
+      obsName_p = obsName;
+    }
+    if(antType!=""){
+      antType_p = antType;
+    }
+    obsTime_p = obsTime;
+    
+    
+    BeamCalcGeometries_p.resize(0);
+    
+    AntennaResponses aR;
+    String antRespPath;
+    if(!MeasTable::AntennaResponsesPath(antRespPath, obsName_p)) {
+      // unknown observatory
+      const char *sep=" ";
+      char *aipsPath = strtok(getenv("CASAPATH"),sep);
+      if (aipsPath == NULL)
+	throw(SynthesisError("CASAPATH not found."));
+      String fullFileName(aipsPath);
+
+      if(obsName_p=="VLA" && antType_p=="STANDARD"){
+	os <<  LogIO::NORMAL << "Will use default geometries for VLA STANDARD." << LogIO::POST;
+	BeamCalc_NumBandCodes_p = VLABeamCalc_NumBandCodes;
+	BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+	bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+	bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+	for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+	  copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &VLABeamCalcGeometryDefaults[i]);
+	  bandMinFreq_p[i] = VLABandMinFreqDefaults[i]; 
+	  bandMaxFreq_p[i] = VLABandMaxFreqDefaults[i]; 
+	}
+	antRespPath_p = fullFileName + "/data/nrao/VLA";
+	return;
+      }
+      else if(obsName_p=="EVLA" && antType_p=="STANDARD"){
+	os <<  LogIO::NORMAL << "Will use default geometries for EVLA STANDARD." << LogIO::POST;
+	BeamCalc_NumBandCodes_p = EVLABeamCalc_NumBandCodes;
+	BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+	bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+	bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+	for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+	  copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &EVLABeamCalcGeometryDefaults[i]);
+	  bandMinFreq_p[i] = EVLABandMinFreqDefaults[i]; 
+	  bandMaxFreq_p[i] = EVLABandMaxFreqDefaults[i]; 
+	}
+	antRespPath_p = fullFileName + "/data/nrao/VLA";
+	return;
+      }
+      else if(obsName_p=="ALMA" && (antType_p=="DA" || antType_p=="DV" || antType_p=="PM")){
+	os <<  LogIO::NORMAL << "Will use default geometries for ALMA DA, DV, and PM." << LogIO::POST;
+	BeamCalc_NumBandCodes_p = ALMABeamCalc_NumBandCodes;
+	BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+	bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+	bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+	for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+	  copyBeamCalcGeometry(&BeamCalcGeometries_p[i], &ALMABeamCalcGeometryDefaults[i]);
+	  if(antType_p=="DA"){
+	    BeamCalcGeometries_p[i].legwidth *= -1.; // change from + to x shape
+	  } 
+	  bandMinFreq_p[i] = ALMABandMinFreqDefaults[i]; 
+	  bandMaxFreq_p[i] = ALMABandMaxFreqDefaults[i]; 
+	}
+	antRespPath_p = fullFileName + "/data/alma";
+	return;
+      }
+      else{
+	String mesg="We don't have any antenna ray tracing parameters available for observatory "
+	  +obsName_p+", antenna type "+antType_p;
+	SynthesisError err(mesg);
+	throw(err);
+      }
+    }
+    else if(!aR.init(antRespPath)){
+      // init failed
+      String mesg="Initialisation of antenna response parameters for observatory "+obsName_p+" failed using path "+antRespPath;
+      SynthesisError err(mesg);
+      throw(err);
+    }
+    
+    os <<  LogIO::NORMAL << "Initialisation of geometries for observatory " << obsName_p 
+       << ", antenna type " << antType_p << LogIO::POST;
+
+    String antRayPath;
+    uInt respImageChannel;
+    MFrequency respImageNomFreq;
+    AntennaResponses::FuncTypes respImageFType;
+    MVAngle respImageRotOffset;
+    
+    if(!aR.getImageName(antRayPath,
+			respImageChannel,
+			respImageNomFreq,
+			respImageFType,
+			respImageRotOffset,
+			//
+			obsName_p,
+			obsTime_p,
+			MFrequency(Quantity(0.,Unit("Hz")), MFrequency::TOPO), // any frequency
+			AntennaResponses::INTERNAL,
+			antType_p
+			)
+       ){ // no matching response found
+      ostringstream oss;
+      oss << "No matching antenna response found for observatory "
+	  << obsName_p;
+      throw(SynthesisError(oss.str()));
+    }
+    
+    try {
+      // read temp table from ASCII file
+      TableProxy antParTab = TableProxy(antRayPath, String(""), String("tempRayTraceTab.tab"), 
+					False, IPosition(), // autoheader, autoshape 
+					String(" "), // separator 
+					String("#"), // comment marker
+					0,-1, // first and last line 
+					Vector<String>(), Vector<String>());
+
+      antParTab.deleteTable(True); // table will be deleted when it goes out of scope
+      
+      // read the table
+      uInt nRows = antParTab.nrows();
+      BeamCalc_NumBandCodes_p = nRows;
+
+      BeamCalcGeometries_p.resize(BeamCalc_NumBandCodes_p);
+      bandMinFreq_p.resize(BeamCalc_NumBandCodes_p);
+      bandMaxFreq_p.resize(BeamCalc_NumBandCodes_p);
+
+      for(uInt i=0; i<BeamCalc_NumBandCodes_p; i++){
+ 	sprintf(BeamCalcGeometries_p[i].name, antParTab.getCell("NAME", i).asString().c_str());
+	bandMinFreq_p[i] = antParTab.getCell("MINFREQ", i).asDouble() * 1E9; // expect GHz 
+	bandMaxFreq_p[i] = antParTab.getCell("MAXFREQ", i).asDouble() * 1E9;
+	BeamCalcGeometries_p[i].sub_h = antParTab.getCell("SUB_H", i).asDouble();
+	Array<Double> ta1;
+	ta1.assign(antParTab.getCell("FEEDPOS", i).asArrayDouble());
+	for(uInt j=0; j<3;j++){
+	  BeamCalcGeometries_p[i].feedpos[j] = ta1(IPosition(1,j));
+	}
+	BeamCalcGeometries_p[i].subangle = antParTab.getCell("SUBANGLE", i).asDouble();
+	BeamCalcGeometries_p[i].legwidth = antParTab.getCell("LEGWIDTH", i).asDouble();
+	BeamCalcGeometries_p[i].legfoot = antParTab.getCell("LEGFOOT", i).asDouble();
+	BeamCalcGeometries_p[i].legapex = antParTab.getCell("LEGAPEX", i).asDouble();
+	BeamCalcGeometries_p[i].Rhole = antParTab.getCell("RHOLE", i).asDouble();
+	BeamCalcGeometries_p[i].Rant = antParTab.getCell("RANT", i).asDouble();
+	BeamCalcGeometries_p[i].reffreq = antParTab.getCell("REFFREQ", i).asDouble(); // stay in GHz 
+	Array<Double> ta2;
+	ta2.assign(antParTab.getCell("TAPERPOLY", i).asArrayDouble());
+	for(uInt j=0; j<5;j++){
+	  BeamCalcGeometries_p[i].taperpoly[j] = ta2(IPosition(1,j));
+	}
+	BeamCalcGeometries_p[i].ntaperpoly = antParTab.getCell("NTAPERPOLY", i).asInt();
+	cout << "i name bandMinFreq_p bandMaxFreq_p sub_h feedpos feedpos feedpos subangle legwidth legfoot legapex Rhole Rant reffreq taperpoly taperpoly taperpoly taperpoly taperpoly ntaperpoly" << endl; 
+	cout << i << " " << BeamCalcGeometries_p[i].name << " " << bandMinFreq_p[i] << " " << bandMaxFreq_p[i] 
+	     << " " << BeamCalcGeometries_p[i].sub_h 
+	     << " " << BeamCalcGeometries_p[i].feedpos[0] << " " << BeamCalcGeometries_p[i].feedpos[1] 
+	     << " " << BeamCalcGeometries_p[i].feedpos[2] 
+	     << " " << BeamCalcGeometries_p[i].subangle << " " << BeamCalcGeometries_p[i].legwidth 
+	     << " " << BeamCalcGeometries_p[i].legfoot << " " << BeamCalcGeometries_p[i].legapex 
+	     << " " << BeamCalcGeometries_p[i].Rhole << " " << BeamCalcGeometries_p[i].Rant << " " << BeamCalcGeometries_p[i].reffreq 
+	     << " " << BeamCalcGeometries_p[i].taperpoly[0] << " " << BeamCalcGeometries_p[i].taperpoly[1] 
+	     << " " << BeamCalcGeometries_p[i].taperpoly[2] << " " << BeamCalcGeometries_p[i].taperpoly[3] 
+	     << " " << BeamCalcGeometries_p[i].taperpoly[4] << " " << BeamCalcGeometries_p[i].ntaperpoly << endl; 
+      }
+
+    } catch (AipsError x) {
+      String mesg="Initialisation of antenna ray tracing parameters for observatory "+obsName_p
+	+" failed using path "+antRayPath+"\n with message "+x.getMesg();
+      BeamCalcGeometries_p.resize(0);
+      SynthesisError err(mesg);
+      throw(err);
+    }
+
+    antRespPath_p = antRespPath;
+
+    os <<  LogIO::NORMAL << "... successful." << LogIO::POST;
+
+    return;
+
+  }
+
+  Int BeamCalc::getBandID(Double freq, // in Hz 
+			  const String& obsName,
+			  const String& antType,
+			  const MEpoch& obsTime){
+
+    setBeamCalcGeometries(obsName, antType, obsTime); 
+
+    for(Int i=0; i<BeamCalc_NumBandCodes_p; i++){
+      if((bandMinFreq_p[i]<=freq)&&(freq<=bandMaxFreq_p[i])){
+	return i;
+      }
+    }
+    ostringstream mesg;
+    mesg << obsName << "/" << antType << "/" << freq << "(Hz) combination not recognized.";
+    throw(SynthesisError(mesg.str()));
+    
   }
   
-  calcAntenna *newAntenna(Double sub_h, Double feed_x, Double feed_y, Double feed_z,
-		      Double ftaper, Double thmax, const char *geomfile)
+
+
+  calcAntenna* BeamCalc::newAntenna(Double sub_h, Double feed_x, Double feed_y, Double feed_z,
+				    Double ftaper, Double thmax, const char *geomfile)
   {
     calcAntenna *a;
     Int i;
     Double d, r, m, z;
     FILE *in;
-    const char *sep=" ";
-    char *aipsPath = strtok(getenv("CASAPATH"),sep);
-    if (aipsPath == NULL)
-      throw(SynthesisError("CASAPATH not found."));
-
-    String fullFileName(aipsPath);
-    fullFileName = fullFileName + "/data/nrao/VLA/" + geomfile;
+    String fullFileName(antRespPath_p);
+    fullFileName = fullFileName + String("/") + geomfile;
 
     in = fopen(fullFileName.c_str(), "r");
 
@@ -137,14 +371,14 @@ namespace casa{
     return a;
   }
   
-  void deleteAntenna(calcAntenna *a)
+  void BeamCalc::deleteAntenna(calcAntenna *a)
   {
     if(!a) return;
     
     free(a);
   }
   
-  void Antennasetfreq(calcAntenna *a, Double freq)
+  void BeamCalc::Antennasetfreq(calcAntenna *a, Double freq)
   {
     Int i;
     
@@ -153,7 +387,7 @@ namespace casa{
     for(i = 0; i < 3; i++) a->k[i] = -2.0*M_PI*a->dir[i]/a->lambda;
   }
   
-  void Antennasetdir(calcAntenna *a, const Double *dir)
+  void BeamCalc::Antennasetdir(calcAntenna *a, const Double *dir)
   {
     Double hmag;
     Int i;
@@ -190,7 +424,7 @@ namespace casa{
   }
   
   /* sets feeddir after pathology is considered */
-  void alignfeed(calcAntenna *a, const Pathology *p)
+  void BeamCalc::alignfeed(calcAntenna *a, const Pathology *p)
   {
     Int i, j;
     Double f[3], s0[3], s[3], d[3], m=0.0;
@@ -211,7 +445,7 @@ namespace casa{
     for(i = 0; i < 3; i++) a->feeddir[i] = d[i]/m;
   }
   
-  void getfeedbasis(const calcAntenna *a, Double B[3][3])
+  void BeamCalc::getfeedbasis(const calcAntenna *a, Double B[3][3])
   {
     Int i;
     Double *dir, *vhat, *hhat;
@@ -242,7 +476,7 @@ namespace casa{
       }
   }
   
-  void Efield(const calcAntenna *a, const Complex *pol, Complex *E)
+  void BeamCalc::Efield(const calcAntenna *a, const Complex *pol, Complex *E)
   {
     Double B[3][3];
     Double *hhat, *vhat;
@@ -255,7 +489,7 @@ namespace casa{
       E[i] = Complex(hhat[i],0) * pol[0] + Complex(vhat[i],0) * pol[1];
   }
   
-  Int Antennasetfeedpattern(calcAntenna *a, const char *filename, Double scale)
+  Int BeamCalc::Antennasetfeedpattern(calcAntenna *a, const char *filename, Double scale)
   {
 #if 0
     Int i, N, Nmax;
@@ -306,17 +540,23 @@ namespace casa{
     return 1;
   }
   
-  calcAntenna *newAntennafromApertureCalcParams(struct ApertureCalcParams *ap)
+  calcAntenna* BeamCalc::newAntennafromApertureCalcParams(ApertureCalcParams *ap)
   {
     calcAntenna *a;
     Double dir[3] = {0.0, 0.0, 1.0};
     Double sub_h, feed_x, feed_y, feed_z, thmax, ftaper;
     char geomfile[128], *feedfile;
-    struct BeamCalcGeometry *geom;
+    BeamCalcGeometry *geom;
     Int i;
     Double x, freq, df;
     
-    geom = &BeamCalcGeometryDefaults[ap->band];
+    if(0<=ap->band && ap->band<BeamCalcGeometries_p.size()){
+      geom = &(BeamCalcGeometries_p[ap->band]);
+    }
+    else{
+      SynthesisError err(String("Internal Error: attempt to access beam geometry for non-existing band."));
+      throw(err);
+    }
     
     sub_h = geom->sub_h;
     feed_x = geom->feedpos[0]; feed_x = -feed_x;
@@ -373,7 +613,7 @@ namespace casa{
     return a;
   }
   
-  Int dishvalue(const calcAntenna *a, Double r, Double *z, Double *m)
+  Int BeamCalc::dishvalue(const calcAntenna *a, Double r, Double *z, Double *m)
   {
     Double ma, mb, mc, zav, A, B, C, D;
     Double x, d, dd;
@@ -430,7 +670,7 @@ namespace casa{
   /* Returns position of subreflector piece (x, y, z) and
    * its normal (u, v, w)
    */
-  Int subfromdish(const calcAntenna *a, Double x, Double y, Double *subpoint)
+  Int BeamCalc::subfromdish(const calcAntenna *a, Double x, Double y, Double *subpoint)
   {
     Double r, z, m, u, v, w;
     Double dx, dy, dz, dl, t;
@@ -485,7 +725,7 @@ namespace casa{
     return 1;
   }
   
-  Int dishfromsub(const calcAntenna *a, Double x, Double y, Double *dishpoint)
+  Int BeamCalc::dishfromsub(const calcAntenna *a, Double x, Double y, Double *dishpoint)
   {
     Double x1, y1, dx, dy, mx, my, r, d;
     const Double eps = 0.001;
@@ -544,7 +784,7 @@ namespace casa{
     else return 1;
   }
   
-  void printAntenna(const calcAntenna *a)
+  void BeamCalc::printAntenna(const calcAntenna *a)
   {
     printf("Antenna: %s  %p\n", a->name, a);
     printf("  freq    = %f GHz  lambda = %f m\n", a->freq, a->lambda);
@@ -554,7 +794,7 @@ namespace casa{
 	   a->pfeeddir[0], a->pfeeddir[1], a->pfeeddir[2]); 
   }
   
-  Ray *newRay(const Double *sub)
+  Ray * BeamCalc::newRay(const Double *sub)
   {
     Ray *ray;
     Int i;
@@ -565,12 +805,12 @@ namespace casa{
     return ray;
   }
   
-  void deleteRay(Ray *ray)
+  void BeamCalc::deleteRay(Ray *ray)
   {
     if(ray) free(ray);
   }
   
-  Pathology *newPathology()
+  Pathology* BeamCalc::newPathology()
   {
     Pathology *P;
     Int i, j;
@@ -590,7 +830,7 @@ namespace casa{
     return P;
   }
   
-  Pathology *newPathologyfromApertureCalcParams(struct ApertureCalcParams *ap)
+  Pathology* BeamCalc::newPathologyfromApertureCalcParams(ApertureCalcParams *ap)
   {
     Pathology *P;
     
@@ -599,12 +839,12 @@ namespace casa{
     return P;
   }
   
-  void deletePathology(Pathology *P)
+  void BeamCalc::deletePathology(Pathology *P)
   {
     if(P) free(P);
   }
   
-  static void normvec(const Double *a, const Double *b, Double *c)
+  void BeamCalc::normvec(const Double *a, const Double *b, Double *c)
   {
     Int i;
     Double r;
@@ -613,8 +853,8 @@ namespace casa{
     for(i = 0; i < 3; i++) c[i] /= r;
   }
   
-  Double dAdOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
-		  const Ray *ray3, const Pathology *p)
+  Double BeamCalc::dAdOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
+			    const Ray *ray3, const Pathology *p)
   {
     Double A, Omega;
     Double n1[3], n2[3], n3[3], f[3], ci, cj, ck;
@@ -646,8 +886,8 @@ namespace casa{
     return A/Omega;
   }
   
-  Double dOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
-		const Ray *ray3, const Pathology *p)
+  Double BeamCalc::dOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
+			  const Ray *ray3, const Pathology *p)
   {
     Double Omega;
     Double n1[3], n2[3], n3[3], f[3], ci, cj, ck;
@@ -674,7 +914,7 @@ namespace casa{
     return Omega;
   }
   
-  Double Raylen(const Ray *ray)
+  Double BeamCalc::Raylen(const Ray *ray)
   {
     Double len, d[3];
     Int i;
@@ -694,7 +934,7 @@ namespace casa{
     return len;
   }
   
-  void Pathologize(Double *sub, const Pathology *p)
+  void BeamCalc::Pathologize(Double *sub, const Pathology *p)
   {
     Int i;
     Int j;
@@ -716,7 +956,7 @@ namespace casa{
       sub[i] = tmp[i];
   }
   
-  void applyPathology(Pathology *P, calcAntenna *a)
+  void BeamCalc::applyPathology(Pathology *P, calcAntenna *a)
   {
     Double dx[3];
     Int i, j;
@@ -738,8 +978,8 @@ namespace casa{
   }
   
   
-  void intersectdish(const calcAntenna *a, const Double *sub, const Double *unitdir,
-		     Double *dish, Int niter)
+  void BeamCalc::intersectdish(const calcAntenna *a, const Double *sub, const Double *unitdir,
+			       Double *dish, Int niter)
   {
     Double A, B, C, t, m, r;
     Double x[3], n[3];
@@ -780,8 +1020,8 @@ namespace casa{
       }
   }
   
-  void intersectaperture(const calcAntenna *a, const Double *dish, 
-			 const Double *unitdir, Double *aper)
+  void BeamCalc::intersectaperture(const calcAntenna *a, const Double *dish, 
+				   const Double *unitdir, Double *aper)
   {
     Double t;
     Int i;
@@ -794,7 +1034,7 @@ namespace casa{
   }
   
   /* gain in power */
-  Double feedfunc(const calcAntenna *a, Double theta)
+  Double BeamCalc::feedfunc(const calcAntenna *a, Double theta)
   {
     Double stheta;
     
@@ -803,7 +1043,7 @@ namespace casa{
   }
   
   /* gain in power */
-  Double feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p)
+  Double BeamCalc::feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p)
   {
     Double costheta = 0.0;
     Double v[3];
@@ -817,7 +1057,7 @@ namespace casa{
     return exp(2.0*(-0.083)*a->fa2pi*a->fa2pi*(1.0-costheta*costheta));
   }
   
-  Ray *trace(const calcAntenna *a, Double x, Double y, const Pathology *p)
+  Ray* BeamCalc::trace(const calcAntenna *a, Double x, Double y, const Pathology *p)
   {
     Ray *ray;
     Double idealsub[12];
@@ -861,7 +1101,7 @@ namespace casa{
     return ray;
   }
   
-  void tracepol(Complex *E0, const Ray *ray, Complex *E1)
+  void BeamCalc::tracepol(Complex *E0, const Ray *ray, Complex *E1)
   {
     Complex fac;
     Double v1[3], v2[3], v3[3];
@@ -890,7 +1130,7 @@ namespace casa{
     for(i = 0; i < 3; i++) E1[i] = Complex(r[i],0)*fac*2.0 - E1[i];
   }
   
-  Int legplanewaveblock(const calcAntenna *a, Double x, Double y)
+  Int BeamCalc::legplanewaveblock(const calcAntenna *a, Double x, Double y)
   {
     /* outside the leg foot area, the blockage is spherical wave */
     if(x*x + y*y > a->legfoot*a->legfoot) return 0;
@@ -918,7 +1158,7 @@ namespace casa{
     return 0;
   }
   
-  Int legplanewaveblock2(const calcAntenna *a, const Ray *ray)
+  Int BeamCalc::legplanewaveblock2(const calcAntenna *a, const Ray *ray)
   {
     Int i, n;
     Double dr2;
@@ -978,7 +1218,7 @@ namespace casa{
     return 0;
   }
   
-  Int legsphericalwaveblock(const calcAntenna *a, const Ray *ray)
+  Int BeamCalc::legsphericalwaveblock(const calcAntenna *a, const Ray *ray)
   {
     Int i, n;
     Double dr2;
@@ -1038,11 +1278,31 @@ namespace casa{
     return 0;
   }
   
-  
+
+  void BeamCalc::copyBeamCalcGeometry(BeamCalcGeometry* to, BeamCalcGeometry* from){
+    sprintf(to->name, "%s", from->name);
+    to->sub_h = from->sub_h;
+    for(uInt j=0; j<3;j++){
+      to->feedpos[j] = from->feedpos[j];
+    }
+    to->subangle = from->subangle;
+    to->legwidth = from->legwidth;
+    to->legfoot = from->legfoot;
+    to->legapex = from->legapex;
+    to->Rhole = from->Rhole;
+    to->Rant = from->Rant;
+    to->reffreq = from->reffreq;
+    for(uInt j=0; j<5;j++){
+      to->taperpoly[j] = from->taperpoly[j];
+    }
+    to->ntaperpoly = from->ntaperpoly;
+  }
+
+
   /* The meat of the calculation */
   
   
-  Int calculateAperture(struct ApertureCalcParams *ap)
+  Int BeamCalc::calculateAperture(ApertureCalcParams *ap)
   {
     Complex fp, Exr, Eyr, Exl, Eyl;
     Complex Er[3], El[3];
@@ -1073,30 +1333,32 @@ namespace casa{
     pac = cos(ap->pa+M_PI/2);
     pas = sin(ap->pa+M_PI/2);
 
-    /* compute polarization vectors in circular basis */
-    Pr[0] = 1.0/M_SQRT2; Pr[1] =  Iota/M_SQRT2;
-    Pl[0] = 1.0/M_SQRT2; Pl[1] = -Iota/M_SQRT2;
+    if(obsName_p=="EVLA" || obsName_p=="VLA"){
+      /* compute polarization vectors in circular basis */
+      Pr[0] = 1.0/M_SQRT2; Pr[1] =  Iota/M_SQRT2;
+      Pl[0] = 1.0/M_SQRT2; Pl[1] = -Iota/M_SQRT2;
+
+      /* compensate for feed orientation */
+      getfeedbasis(a, B); 
+      phase = atan2(B[0][1], B[0][0]);
+      cp = cos(phase);
+      sp = sin(phase);
+      
+      q[0] = Pr[0];
+      q[1] = Pr[1];
+      Pr[0] =  Complex(cp,0)*q[0] + Complex(sp,0)*q[1];
+      Pr[1] = -Complex(sp,0)*q[0] + Complex(cp,0)*q[1];
+      q[0] = Pl[0];
+      q[1] = Pl[1];
+      Pl[0] =  Complex(cp,0)*q[0] + Complex(sp,0)*q[1];
+      Pl[1] = -Complex(sp,0)*q[0] + Complex(cp,0)*q[1];
+    }
+    else{
+      /* in linear basis */
+      Pr[0] = 1.0; Pr[1] = 0.0;
+      Pl[0] = 0.0; Pl[1] = 1.0;
+    }
     
-#if 0
-    /* in linear basis */
-    Pr[0] = 1.0; Pr[1] = 0.0;
-    Pl[0] = 0.0; Pl[1] = 1.0;
-#endif
-    
-    /* compensate for feed orientation */
-    getfeedbasis(a, B); 
-    phase = atan2(B[0][1], B[0][0]);
-    cp = cos(phase);
-    sp = sin(phase);
-    
-    q[0] = Pr[0];
-    q[1] = Pr[1];
-    Pr[0] =  Complex(cp,0)*q[0] + Complex(sp,0)*q[1];
-    Pr[1] = -Complex(sp,0)*q[0] + Complex(cp,0)*q[1];
-    q[0] = Pl[0];
-    q[1] = Pl[1];
-    Pl[0] =  Complex(cp,0)*q[0] + Complex(sp,0)*q[1];
-    Pl[1] = -Complex(sp,0)*q[0] + Complex(cp,0)*q[1];
     
     
     /* compute 3-vector feed efields for the two polarizations */

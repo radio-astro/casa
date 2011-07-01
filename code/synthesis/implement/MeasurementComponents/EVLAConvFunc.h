@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {};
     ~EVLAConvFunc() {};
     EVLAConvFunc& operator=(const EVLAConvFunc& other);
-    Int getVLABandID(Double& freq,String&telescopeName);
+    //    Int getVLABandID(Double& freq,String&telescopeName);
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
     void makeConvFunction(const ImageInterface<Complex>& image,
 			  const VisBuffer& vb,

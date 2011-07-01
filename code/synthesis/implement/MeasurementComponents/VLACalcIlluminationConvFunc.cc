@@ -53,6 +53,8 @@ namespace casa{
   //
   VLACalcIlluminationConvFunc::VLACalcIlluminationConvFunc():IlluminationConvFunc()
   {
+
+    LogIO logIO(LogOrigin("VLACalcIlluminationConvFunc","ctor"));
     ap.oversamp = 3;
     ap.x0=-13.0; ap.y0=-13.0;
     ap.dx=0.5; ap.dy=0.5;
@@ -66,7 +68,8 @@ namespace casa{
     ap.aperture = new TempImage<Complex>();
     if (maximumCacheSize() > 0) ap.aperture->setMaximumCacheSize(maximumCacheSize());
     ap.aperture->resize(shape);
-   }
+
+  }
 
 
   CoordinateSystem VLACalcIlluminationConvFunc::makeUVCoords(CoordinateSystem& imageCoordSys,
@@ -196,7 +199,7 @@ namespace casa{
     Int index;
     Double timeValue = getCurrentTimeStamp(vb);
     Float pa;
-    if (bandID != -1) ap.band = (BeamCalcBandCode)bandID;
+    if (bandID != -1) ap.band = bandID;
     AlwaysAssert(ap.band>=-1, AipsError);
     // {
     //   Vector<Float> antPA = vb.feed_pa(timeValue);
@@ -277,7 +280,7 @@ namespace casa{
 
 	ap.pa=pa;
 	ap.aperture->set(0.0);
-	calculateAperture(&ap);
+	BeamCalc::Instance()->calculateAperture(&ap);
 	
 	//  Make the aperture function = (1,0) - for testing
 	
@@ -379,7 +382,7 @@ namespace casa{
     CoordinateSystem skyCoords(skyCS);
 
     Float pa, Freq;
-    if (bandID != -1) ap.band = (BeamCalcBandCode)bandID;
+    if (bandID != -1) ap.band = bandID;
     AlwaysAssert(ap.band>=-1, AipsError);
     Vector<Double> chanFreq = vb.frequency();
 
@@ -427,7 +430,7 @@ namespace casa{
 
 	ap.pa=pa;
 	ap.aperture->set(0.0);
-	calculateAperture(&ap);
+	BeamCalc::Instance()->calculateAperture(&ap);
 	//
 	// Set the phase of the aperture function to zero if doSquint==F
 	// Poln. axis indices
@@ -724,48 +727,48 @@ namespace casa{
     skyJones.put(buf);
   }
 
-  Int getVLABandID(Double& freq,String&telescopeName)
-  {
-    if (telescopeName=="VLA")
-      {
-	if ((freq >=1.34E9) && (freq <=1.73E9))
-	  return BeamCalc_VLA_L;
-	else if ((freq >=4.5E9) && (freq <=5.0E9))
-	  return BeamCalc_VLA_C;
-	else if ((freq >=8.0E9) && (freq <=8.8E9))
-	  return BeamCalc_VLA_X;
-	else if ((freq >=14.4E9) && (freq <=15.4E9))
-	  return BeamCalc_VLA_U;
-	else if ((freq >=22.0E9) && (freq <=24.0E9))
-	  return BeamCalc_VLA_K;
-	else if ((freq >=40.0E9) && (freq <=50.0E9))
-	  return BeamCalc_VLA_Q;
-	else if ((freq >=100E6) && (freq <=300E6))
-	  return BeamCalc_VLA_4;
-      }
-    else 
-      if (telescopeName=="EVLA")
-      {
-	if ((freq >=0.6E9) && (freq <=2.0E9))
-	  return BeamCalc_EVLA_L;
-	else if ((freq >=2.0E9) && (freq <=4.0E9))
-	  return BeamCalc_EVLA_S;
-	else if ((freq >=4.0E9) && (freq <=8.0E9))
-	  return BeamCalc_EVLA_C;
-	else if ((freq >=8.0E9) && (freq <=12.0E9))
-	  return BeamCalc_EVLA_X;
-	else if ((freq >=12.0E9) && (freq <=18.0E9))
-	  return BeamCalc_EVLA_U;
-	else if ((freq >=18.0E9) && (freq <=26.5E9))
-	  return BeamCalc_EVLA_K;
-	else if ((freq >=26.5E9) && (freq <=40.8E9))
-	  return BeamCalc_EVLA_A;
-	else if ((freq >=4.0E9) && (freq <=50.0E9))
-	  return BeamCalc_EVLA_Q;
-      }
-    ostringstream mesg;
-    mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
-    throw(SynthesisError(mesg.str()));
-  }
+//   Int getVLABandID(Double& freq,String&telescopeName)
+//   {
+//     if (telescopeName=="VLA")
+//       {
+// 	if ((freq >=1.34E9) && (freq <=1.73E9))
+// 	  return BeamCalc_VLA_L;
+// 	else if ((freq >=4.5E9) && (freq <=5.0E9))
+// 	  return BeamCalc_VLA_C;
+// 	else if ((freq >=8.0E9) && (freq <=8.8E9))
+// 	  return BeamCalc_VLA_X;
+// 	else if ((freq >=14.4E9) && (freq <=15.4E9))
+// 	  return BeamCalc_VLA_U;
+// 	else if ((freq >=22.0E9) && (freq <=24.0E9))
+// 	  return BeamCalc_VLA_K;
+// 	else if ((freq >=40.0E9) && (freq <=50.0E9))
+// 	  return BeamCalc_VLA_Q;
+// 	else if ((freq >=100E6) && (freq <=300E6))
+// 	  return BeamCalc_VLA_4;
+//       }
+//     else 
+//       if (telescopeName=="EVLA")
+//       {
+// 	if ((freq >=0.6E9) && (freq <=2.0E9))
+// 	  return BeamCalc_EVLA_L;
+// 	else if ((freq >=2.0E9) && (freq <=4.0E9))
+// 	  return BeamCalc_EVLA_S;
+// 	else if ((freq >=4.0E9) && (freq <=8.0E9))
+// 	  return BeamCalc_EVLA_C;
+// 	else if ((freq >=8.0E9) && (freq <=12.0E9))
+// 	  return BeamCalc_EVLA_X;
+// 	else if ((freq >=12.0E9) && (freq <=18.0E9))
+// 	  return BeamCalc_EVLA_U;
+// 	else if ((freq >=18.0E9) && (freq <=26.5E9))
+// 	  return BeamCalc_EVLA_K;
+// 	else if ((freq >=26.5E9) && (freq <=40.8E9))
+// 	  return BeamCalc_EVLA_A;
+// 	else if ((freq >=4.0E9) && (freq <=50.0E9))
+// 	  return BeamCalc_EVLA_Q;
+//       }
+//     ostringstream mesg;
+//     mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
+//     throw(SynthesisError(mesg.str()));
+//   }
 
 };

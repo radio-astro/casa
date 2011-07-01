@@ -50,6 +50,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class Matrix;
   class VisBuffer;
   //  class EVLAAperture : public ATerm
+
   class EVLAAperture : public AzElAperture
   {
   public:
@@ -83,7 +84,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem());
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R);
-    Int getVLABandID(Double& freq,String&telescopeName, const CoordinateSystem& skyCoord=CoordinateSystem());
+    //    Int getVLABandID(Double& freq,String&telescopeName, const CoordinateSystem& skyCoord=CoordinateSystem());
     Int makePBPolnCoords(const VisBuffer&vb,
 			 const Int& convSize,
 			 const Int& convSampling,

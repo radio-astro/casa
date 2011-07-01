@@ -1,7 +1,25 @@
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 
 namespace casa{
-  struct BeamCalcGeometry BeamCalcGeometryDefaults[BeamCalc_NumBandCodes] = 
+
+  Double VLABandMinFreqDefaults[VLABeamCalc_NumBandCodes] = // (Hz)
+    {
+      1.34E9, 4.5E9, 8.0E9, 14.4E9, 22.0E9, 40.0E9, 0.1E9  
+    };
+  Double VLABandMaxFreqDefaults[VLABeamCalc_NumBandCodes] = 
+    {
+      1.73E9, 5.0E9, 8.8E9, 15.4E9, 24.0E9, 50.0E9, 0.3E9      
+    };
+  Double EVLABandMinFreqDefaults[EVLABeamCalc_NumBandCodes] = 
+    {
+      1.0E9, 2.0E9, 4.0E9, 8.0E9, 12.0E9, 18.0E9, 26.5E9, 40.0E9 
+    };
+  Double EVLABandMaxFreqDefaults[EVLABeamCalc_NumBandCodes] = 
+    {
+      2.0E9, 4.0E9, 8.0E9, 12.0E9, 18.0E9, 26.5E9, 40.0E9, 50.0E9
+    };
+
+  BeamCalcGeometry VLABeamCalcGeometryDefaults[VLABeamCalc_NumBandCodes] = 
     {
       /* Format of each entry:
 	 
@@ -105,11 +123,16 @@ namespace casa{
 	12.5,
 	45.0,
 	{13.0, 0.0, 0.0, 0.0, 0.0}, 1
-      },
+      }
+      
+    };
+
+  BeamCalcGeometry EVLABeamCalcGeometryDefaults[EVLABeamCalc_NumBandCodes] = 
+    {
       
       /* BeamCalc_EVLA_L */
       {
-	"VLA",
+	"VLA", // use the same surface file as for VLA
 	8.47852,
 	{-0.10026, 0.97019, 1.67640}, 
 	9.26,
@@ -204,4 +227,6 @@ namespace casa{
 	{13.0, 0.0, 0.0, 0.0, 0.0}, 1
       }
     };
+
 };
+

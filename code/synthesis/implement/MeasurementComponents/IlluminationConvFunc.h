@@ -78,13 +78,13 @@ namespace casa{
 			     Double& currentCFPA
 			     //		  ,Double lsigma
 			     );
-    int getVisParams(const casa::VisBuffer&, const CoordinateSystem& skyCoord=CoordinateSystem()) {return 0;};
-    void makeConvFunction(const casa::ImageInterface<std::complex<float> >&, 
-			  const casa::VisBuffer&, casa::Int, casa::Float, 
-			  casa::CFStore&, casa::CFStore&) {};
-    void setPolMap(const casa::Vector<int>&polMap) {(void)polMap;};
-    void setFeedStokes(const casa::Vector<int>&feedStokes) {(void)feedStokes;};
-    void setParams(const casa::Vector<int>& polMap, const casa::Vector<int>& feedStokes)
+    int getVisParams(const VisBuffer&, const CoordinateSystem& skyCoord=CoordinateSystem()) {return 0;};
+    void makeConvFunction(const ImageInterface<std::complex<float> >&, 
+			  const VisBuffer&, Int, Float, 
+			  CFStore&, CFStore&) {};
+    void setPolMap(const Vector<int>&polMap) {(void)polMap;};
+    void setFeedStokes(const Vector<int>&feedStokes) {(void)feedStokes;};
+    void setParams(const Vector<int>& polMap, const Vector<int>& feedStokes)
     {(void)polMap;(void)feedStokes;};
 
     Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R) 
