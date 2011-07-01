@@ -30,9 +30,9 @@
 #define SYNTHESIS_VLACALCILLUMINATIONCONVFUNC_H
 
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
-#include <synthesis/MeasurementComponents/BeamCalcConstants.h>
+//#include <synthesis/MeasurementComponents/BeamCalcConstants.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
-#include <synthesis/MeasurementComponents/BeamCalcAntenna.h>
+//#include <synthesis/MeasurementComponents/BeamCalcAntenna.h>
 #include <synthesis/MeasurementComponents/CExp.new3.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <images/Images/TempImage.h>
@@ -42,7 +42,7 @@
 #include <synthesis/MeasurementComponents/Utils.h>
 namespace casa{
 
-  Int getVLABandID(Double& freq,String&telescopeName);
+  //  Int getVLABandID(Double& freq,String&telescopeName);
   class VLACalcIlluminationConvFunc: public IlluminationConvFunc
   {
   public:
@@ -51,7 +51,7 @@ namespace casa{
     VLACalcIlluminationConvFunc(Int n):IlluminationConvFunc(n)    {pbRead_p=False;};
     ~VLACalcIlluminationConvFunc() {delete ap.aperture;};
 
-    void setBandID(Int bandID) {ap.band=(BeamCalcBandCode)bandID;}
+    void setBandID(Int bandID) {ap.band=bandID;}
     // void storeImg(String &fileName,ImageInterface<Complex>& img);
     // void storeImg(String &fileName,ImageInterface<Float>& img);
     // void store(String &fileName);
@@ -109,7 +109,7 @@ namespace casa{
     Vector<Double> resolution;
     Bool pbRead_p;
     Float freq_p,lastPA;
-    struct ApertureCalcParams ap;
+    ApertureCalcParams ap;
   };
 
 };

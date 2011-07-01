@@ -350,7 +350,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     HPBW = Lambda/(Diameter_p*sqrt(log(2.0)));
     sigma = 1.0/(HPBW*HPBW);
     nwEij.setSigma(sigma);
-    Int bandID = getVLABandID(Freq,telescopeNames(0));
+    Int bandID = BeamCalc::Instance()->getBandID(Freq,telescopeNames(0));
     return bandID;
   }
   //

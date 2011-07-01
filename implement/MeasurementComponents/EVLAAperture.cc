@@ -64,36 +64,37 @@ namespace casa{
       }
     return *this;
   }
-  Int EVLAAperture::getVLABandID(Double& freq,String&telescopeName, const CoordinateSystem& skyCoord)
-  {
-    if (telescopeName=="VLA")
-      {
-	if      ((freq >=1.34E9) && (freq <=1.73E9))   return BeamCalc_VLA_L;
-	else if ((freq >=4.5E9) && (freq <=5.0E9))     return BeamCalc_VLA_C;
-	else if ((freq >=8.0E9) && (freq <=8.8E9))     return BeamCalc_VLA_X;
-	else if ((freq >=14.4E9) && (freq <=15.4E9))   return BeamCalc_VLA_U;
-	else if ((freq >=22.0E9) && (freq <=24.0E9))   return BeamCalc_VLA_K;
-	else if ((freq >=40.0E9) && (freq <=50.0E9))   return BeamCalc_VLA_Q;
-	else if ((freq >=100E6) && (freq <=300E6))     return BeamCalc_VLA_4;
-      }
-    else 
-      if (telescopeName=="EVLA")
-	{
-	  Double refFreq = skyCoord.spectralCoordinate(skyCoord.findCoordinate(Coordinate::SPECTRAL)).referenceValue()(0);
 
-	  if      ((refFreq >= 1.0E9) && (refFreq <= 2.0E9)) return BeamCalc_EVLA_L;
-	  else if ((freq >=2.0E9) && (freq <=4.0E9))         return BeamCalc_EVLA_S;
-	  else if ((freq >=4.0E9) && (freq <=8.0E9))         return BeamCalc_EVLA_C;
-	  else if ((freq >=8.0E9) && (freq <=12.0E9))        return BeamCalc_EVLA_X;
-	  else if ((freq >=12.0E9) && (freq <=18.0E9))       return BeamCalc_EVLA_U;
-	  else if ((freq >=18.0E9) && (freq <=26.5E9))       return BeamCalc_EVLA_K;
-	  else if ((freq >=26.5E9) && (freq <=40.8E9))       return BeamCalc_EVLA_A;
-	  else if ((freq >=40.0E9) && (freq <=50.0E9))       return BeamCalc_EVLA_Q;
-	}
-    ostringstream mesg;
-    mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
-    throw(SynthesisError(mesg.str()));
-  }
+//   Int EVLAAperture::getVLABandID(Double& freq,String&telescopeName, const CoordinateSystem& skyCoord)
+//   {
+//     if (telescopeName=="VLA")
+//       {
+// 	if      ((freq >=1.34E9) && (freq <=1.73E9))   return BeamCalc_VLA_L;
+// 	else if ((freq >=4.5E9) && (freq <=5.0E9))     return BeamCalc_VLA_C;
+// 	else if ((freq >=8.0E9) && (freq <=8.8E9))     return BeamCalc_VLA_X;
+// 	else if ((freq >=14.4E9) && (freq <=15.4E9))   return BeamCalc_VLA_U;
+// 	else if ((freq >=22.0E9) && (freq <=24.0E9))   return BeamCalc_VLA_K;
+// 	else if ((freq >=40.0E9) && (freq <=50.0E9))   return BeamCalc_VLA_Q;
+// 	else if ((freq >=100E6) && (freq <=300E6))     return BeamCalc_VLA_4;
+//       }
+//     else 
+//       if (telescopeName=="EVLA")
+// 	{
+// 	  Double refFreq = skyCoord.spectralCoordinate(skyCoord.findCoordinate(Coordinate::SPECTRAL)).referenceValue()(0);
+
+// 	  if      ((refFreq >= 1.0E9) && (refFreq <= 2.0E9)) return BeamCalc_EVLA_L;
+// 	  else if ((freq >=2.0E9) && (freq <=4.0E9))         return BeamCalc_EVLA_S;
+// 	  else if ((freq >=4.0E9) && (freq <=8.0E9))         return BeamCalc_EVLA_C;
+// 	  else if ((freq >=8.0E9) && (freq <=12.0E9))        return BeamCalc_EVLA_X;
+// 	  else if ((freq >=12.0E9) && (freq <=18.0E9))       return BeamCalc_EVLA_U;
+// 	  else if ((freq >=18.0E9) && (freq <=26.5E9))       return BeamCalc_EVLA_K;
+// 	  else if ((freq >=26.5E9) && (freq <=40.8E9))       return BeamCalc_EVLA_A;
+// 	  else if ((freq >=40.0E9) && (freq <=50.0E9))       return BeamCalc_EVLA_Q;
+// 	}
+//     ostringstream mesg;
+//     mesg << telescopeName << "/" << freq << "(Hz) combination not recognized.";
+//     throw(SynthesisError(mesg.str()));
+//   }
   
   int EVLAAperture::getVisParams(const VisBuffer& vb,const CoordinateSystem& im)
   {
@@ -141,7 +142,11 @@ namespace casa{
     HPBW = Lambda/(Diameter_p*sqrt(log(2.0)));
     sigma = 1.0/(HPBW*HPBW);
     //    awEij.setSigma(sigma);
-    Int bandID = getVLABandID(Freq,telescopeNames(0),im);
+    Double refFreq = Freq;
+    if(telescopeNames(0)=="EVLA"){
+      refFreq = im.spectralCoordinate(im.findCoordinate(Coordinate::SPECTRAL)).referenceValue()(0);
+    }
+    Int bandID = BeamCalc::Instance()->getBandID(refFreq,telescopeNames(0));
     return bandID;
   }
   
@@ -240,6 +245,7 @@ namespace casa{
 			      const Bool doSquint,
 			      const Int& cfKey)
   {
+
     VLACalcIlluminationConvFunc vlaPB;
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);
@@ -252,6 +258,7 @@ namespace casa{
 			      const Bool doSquint,
 			      const Int& cfKey)
   {
+
     VLACalcIlluminationConvFunc vlaPB;
     Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
     vlaPB.setMaximumCacheSize(cachesize);

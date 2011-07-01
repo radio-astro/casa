@@ -1,8 +1,18 @@
 #include <synthesis/MeasurementComponents/BeamCalc.h>
-#include <synthesis/MeasurementComponents/ALMABeamCalc.h>
+//#include <synthesis/MeasurementComponents/ALMABeamCalc.h>
 
 namespace casa{
-  struct BeamCalcGeometry ALMABeamCalcGeometryDefaults[ALMABeamCalc_NumBandCodes] = 
+
+  Double ALMABandMinFreqDefaults[ALMABeamCalc_NumBandCodes] =
+    {
+      31.3E9, 67E9, 84E9, 125E9, 163E9, 211E9, 275E9, 385E9, 602E9, 787E9
+    };
+  Double ALMABandMaxFreqDefaults[ALMABeamCalc_NumBandCodes] =
+    {
+      45E9, 90E9, 116E9, 163E9, 211E9, 275E9, 373E9, 500E9, 720E9, 950E9
+    };
+
+  BeamCalcGeometry ALMABeamCalcGeometryDefaults[ALMABeamCalc_NumBandCodes] = 
     {
       /* Format of each entry:
 	 
