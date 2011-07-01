@@ -205,87 +205,67 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
   // There may be more than one because of overlapping date ranges.
   const String tabpat(Regex::makeCaseInsensitive(name_p +
                                                  "_[-0-9.]+-[-0-9.]+[ydhms].+\\.tab"));
-
-  // Look for tabpat, in order, in '.', user.ephemerides.directory, and
-  // Aipsrc::findDir(horpath, "data/ephemerides/JPL-Horizons").
-  uInt nephdirs = 1;
-  String userpath;
-  Bool foundUserDir = Aipsrc::find(userpath, "user.ephemerides.directory");
-  if(foundUserDir)
-    ++nephdirs;
   String horpath;
   Bool foundStd = Aipsrc::findDir(horpath, "data/ephemerides/JPL-Horizons");
-  if(foundStd)
-    ++nephdirs;
-
-  Vector<String> ephdirs(nephdirs);
-  ephdirs[0] = ".";
-  if(foundUserDir)
-    ephdirs[1] = userpath;
-  if(foundStd)
-    ephdirs[2] = horpath;
-
+  if(!foundStd)
+    horpath = ".";
+  
+  os << LogIO::NORMAL
+     << "Looking for an ephemeris table matching " << tabpat
+     << "\n\tin " << horpath
+     << LogIO::POST;
+  
+  Directory hordir(horpath);
+  DirectoryIterator dirIter(hordir, tabpat);
   Bool foundObj = false;
   Bool found = false;        // = foundObj && right time.
+  uInt firstTimeStart = name_p.length() + 1;  // The + 1 is for the _.
+  Regex timeUnitPat("[ydhms]");
   Path path;
-  String edir(".");
-  for(uInt pathnum = 0; pathnum < nephdirs && !found; ++pathnum){
-    edir = ephdirs[pathnum];
 
-    os << LogIO::NORMAL2
-       << "Looking for an ephemeris table matching " << tabpat
-       << "\n\tin " << edir
+  while(!dirIter.pastEnd()){
+    path = dirIter.name();
+    foundObj = true;
+    String basename(path.baseName());
+
+    // Look for, respectively, the positions of '--', 'd', and '.' in
+    // '-12345--67890dUTC.tab'.  Note that, just to be tricky, the times in
+    // this example are negative. 
+    uInt firstTimeLen = basename.find('-', firstTimeStart + 1) - firstTimeStart;
+    uInt lastTimeLen = basename.find(timeUnitPat,
+                                     firstTimeStart + firstTimeLen + 1)
+                       - firstTimeStart - firstTimeLen - 1;
+    uInt unitPos  = firstTimeStart + firstTimeLen + 1 + lastTimeLen;
+    
+    Double firstTime = String::toDouble(basename.substr(firstTimeStart, firstTimeLen));
+    Double lastTime = String::toDouble(basename.substr(firstTimeStart + firstTimeLen + 1,
+						       lastTimeLen));
+    Unit unit(basename[unitPos]);
+    String ref(basename.substr(unitPos + 1,
+			       basename.find('.', unitPos + 1) - unitPos - 1));
+    
+    os << LogIO::DEBUG1
+       << basename << ": (first, last)time = ("
+       << firstTime << ", " << lastTime << ")" << unit.getName()
+       << " " << ref
        << LogIO::POST;
-  
-    Directory hordir(edir);
-    DirectoryIterator dirIter(hordir, tabpat);
-    uInt firstTimeStart = name_p.length() + 1;  // The + 1 is for the _.
-    Regex timeUnitPat("[ydhms]");
+    
+    MEpoch::Types refEnum;
+    Bool refIsValid = MEpoch::getType(refEnum, ref);
+    
+    if(refIsValid){
+      MEpoch::Convert mtimeToDirFrame(time_p, MEpoch::Ref(refEnum));
+      MEpoch mtimeInDirFrame(mtimeToDirFrame());
+      Double dtime = mtimeInDirFrame.get(unit).getValue();
 
-    while(!dirIter.pastEnd()){
-      path = dirIter.name();
-      foundObj = true;
-      String basename(path.baseName());
-
-      // Look for, respectively, the positions of '--', 'd', and '.' in
-      // '-12345--67890dUTC.tab'.  Note that, just to be tricky, the times in
-      // this example are negative. 
-      uInt firstTimeLen = basename.find('-', firstTimeStart + 1) - firstTimeStart;
-      uInt lastTimeLen = basename.find(timeUnitPat,
-                                       firstTimeStart + firstTimeLen + 1)
-        - firstTimeStart - firstTimeLen - 1;
-      uInt unitPos  = firstTimeStart + firstTimeLen + 1 + lastTimeLen;
-    
-      Double firstTime = String::toDouble(basename.substr(firstTimeStart, firstTimeLen));
-      Double lastTime = String::toDouble(basename.substr(firstTimeStart + firstTimeLen + 1,
-                                                         lastTimeLen));
-      Unit unit(basename[unitPos]);
-      String ref(basename.substr(unitPos + 1,
-                                 basename.find('.', unitPos + 1) - unitPos - 1));
-    
-      os << LogIO::DEBUG1
-         << basename << ": (first, last)time = ("
-         << firstTime << ", " << lastTime << ")" << unit.getName()
-         << " " << ref
-         << LogIO::POST;
-    
-      MEpoch::Types refEnum;
-      Bool refIsValid = MEpoch::getType(refEnum, ref);
-    
-      if(refIsValid){
-        MEpoch::Convert mtimeToDirFrame(time_p, MEpoch::Ref(refEnum));
-        MEpoch mtimeInDirFrame(mtimeToDirFrame());
-        Double dtime = mtimeInDirFrame.get(unit).getValue();
-
-        if(dtime <= lastTime && dtime >= firstTime){
-          found = true;
-          break;
-        }
+      if(dtime <= lastTime && dtime >= firstTime){
+        found = true;
+        break;
       }
-      // else maybe tabpat isn't specific enough.  Don't panic yet.
-
-      ++dirIter;
     }
+    // else maybe tabpat isn't specific enough.  Don't panic yet.
+
+    ++dirIter;
   }
 
   if(!found){
@@ -309,7 +289,7 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
 
   // path.absoluteName() is liable to give something like cwd +
   // path.baseName(), because path was never given horpath.
-  const String abspath(edir + "/" + path.baseName());
+  const String abspath(horpath + "/" + path.baseName());
 
   if(!Table::isReadable(abspath)){
     os << LogIO::SEVERE
