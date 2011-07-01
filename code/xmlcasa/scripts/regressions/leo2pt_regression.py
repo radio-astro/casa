@@ -683,7 +683,7 @@ try:
 except:
     pass
 
-momonestat=imstat('leo2pt_regression.concat_chanbary.taper1600.cleanmosft.moment1')
+momonestat=imstat('leo2pt_regression.concat_chanbary.taper1600.cleanmosft.moment1', robust=T)
 try:
     print "Found moment 1 median = "+str(momonestat['median'][0])
 except:
@@ -715,14 +715,14 @@ vel0=0.0
 vel255=0.0
 
 try:
-    momoneplane0=imstat('leo2pt_regression.concat_chanbary.taper1600.cleanmosft.plane0.mom1')
+    momoneplane0=imstat('leo2pt_regression.concat_chanbary.taper1600.cleanmosft.plane0.mom1', robust=T)
     print "Found plane 0 moment 1 value = "+str(momoneplane0['median'][0])
 except:
     pass
 
 
 try:
-    momoneplane255=imstat('leo2pt_regression.concat_chanbary.taper1600.cleanmosft.plane255.mom1')
+    momoneplane255=imstat('leo2pt_regression.concat_chanbary.taper1600.cleanmosft.plane255.mom1', robust=T)
     print "Found plane 255 moment 1 value = "+str(momoneplane255['median'][0])
 except:
     pass
