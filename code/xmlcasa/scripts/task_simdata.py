@@ -1195,7 +1195,10 @@ def simdata(
                             msg("inconsistent vis name. you have generated a total power MS "+sdmsfile+", but are requesting vis="+ms1+" for imaging",priority="error")
                             return False
                         tpmstoimage = ms1
-                    else: mstoimage.append(ms1)
+                        msg("Found a total power measurement set, %s." % ms1)
+                    else:
+                        mstoimage.append(ms1)
+                        msg("Found a synthesis measurement set, %s." % ms1)
                 else:
                     if verbose:
                         msg("measurement set "+ms1+" not found -- removing from imaging list",priority="warn")
@@ -1314,7 +1317,8 @@ def simdata(
 
             # An image in fileroot/ has priority
             if len(modelimage) > 0 and os.path.exists(fileroot+"/"+modelimage):
-                    modelimage = fileroot + "/" + modelimage
+                modelimage = fileroot + "/" + modelimage
+                msg("Found modelimage, %s." % modelimage)
 
             # use imcenter instead of model_refdir
             util.image(mstoimage,imagename,
