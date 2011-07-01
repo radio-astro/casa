@@ -1,5 +1,6 @@
 import os
 import time
+import numpy as np
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -110,8 +111,10 @@ def applycal(vis=None,
 		# (BTW, interp irrelevant for these, since they are evaluated)
 
 		# opacity (if non-trivially specified and any >0.0)
-		if (len(opacity)>0 and sum(opacity)>0.0):
-			cb.setapply(type='TOPAC',t=-1,opacity=opacity,calwt=calwt)
+		opacarr=np.array(opacity)   # as numpy array for uniformity
+		if (np.sum(opacarr)>0.0):
+			# opacity transmitted as a list in all cases
+			cb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=calwt)
 
 		if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=calwt)
 
