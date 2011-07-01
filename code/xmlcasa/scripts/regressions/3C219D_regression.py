@@ -358,11 +358,11 @@ print "diff:  rms = ",a1['rms'][0],";  minimum= ",a1['min'][0],": maximum= ",a1[
 print "difference between D-1scale.image and D-1scale_mos.image"
 print "diff:  rms = ",a2['rms'][0],";  minimum= ",a2['min'][0],": maximum= ",a2['max'][0]    
     
-if((abs(ref1_rms-a1['rms']) > 0.0001) or (abs(ref2_rms-a2['rms']) > 0.0001)):
+if((abs(ref1_rms-a1['rms']) > 0.001) or (abs(ref2_rms-a2['rms']) > 0.001)):
     print abs(ref1_rms-a1['rms'])
     print abs(ref2_rms-a2['rms'])
     regstate=False
-    raise Exception, 'Regression test failed for 3C219D.\n Absolute differences are larger than 1e-04.'
+    raise Exception, 'Regression test failed for 3C219D. Absolute differences are larger than 1e-03.'
 else:
     print 'Regression tests passed'
         
