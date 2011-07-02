@@ -7,7 +7,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <!-- This is the parameter set for autoflag -->
 
-<task type="function" name="autoflag" category="editing" visibility="experimental">
+<task type="function" name="testautoflag" category="editing" visibility="experimental">
 
   <shortdescription>Task for automatic identification and flagging of RFI</shortdescription>
 
@@ -295,7 +295,7 @@ and correlation type, and the following steps are performed on each 2D plane.
      dimension. Optionally also grow flags by one point in time/freq.
 
 Visualization of the data and flags at run-time is possible by setting 'datadisplay'=True.
-The intended usage is to run autoflag with datadisplay=True and writeflags=False on a 
+The intended usage is to run 'testautoflag' with datadisplay=True and writeflags=False on a 
 small sub-selection of the data, and change parameters until the desired flagging results are
 obtained. Then, turn off the display, set writeflags=True, and run it again. 
 
@@ -303,7 +303,7 @@ A flag summary is generated at the end of the run, to list the percentage of dat
 as a function of frequency channel, spw, field, etc.    If the task is run by turning off
 the tfcrop and extendflag options, it will compute statistics for all existing flags in the MS.
 
-The 'autoflag' task parameters are explained below :
+The 'testautoflag' task parameters are explained below :
 
 DATA SELECTION : 
 ---------------------------
@@ -513,7 +513,7 @@ datadisplay --- Display data and flags at run-time, within an interactive GUI
                       the data with old and new flags, for all correlations per baseline.
                       -- The GUI allows stepping through all baselines (prev/next) in
                       the current chunk (set by 'ntime'), and stepping to the next-chunk.
-                      -- The autoflag task can be quit from the GUI, in case it becomes
+                      -- The 'testautoflag' task can be quit from the GUI, in case it becomes
                       obvious that the current set of parameters is just wrong.
                       -- There is an option to stop the display but continue flagging.
 

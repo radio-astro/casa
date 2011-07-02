@@ -15,7 +15,7 @@ from matplotlib.font_manager import fontManager, FontProperties
 #=====================================================================
 # Task inputs
 
-def autoflag( vis, field, spw, 
+def testautoflag( vis, field, spw, 
               selectdata, antenna, uvrange, timerange, scan, feed, array,
               datacolumn, ntime,  corrs,
               tfcrop, timecutoff, freqcutoff, timefit, freqfit, maxnpieces, flagdimension, usewindowstats, halfwin,
@@ -28,7 +28,7 @@ def autoflag( vis, field, spw,
 
     # Check that the MS exists
     if(msname == ''):
-        casalog.post(message="Please set the MS name. ",priority="WARN",origin='autoflag');
+        casalog.post(message="Please set the MS name. ",priority="WARN",origin='testautoflag');
         return False;
     
     #Check that the requested data column exists
@@ -41,12 +41,12 @@ def autoflag( vis, field, spw,
          or ( (datacolumn == 'residual') and ( ( 'CORRECTED_DATA' in collist )==False) ) \
          or ( (datacolumn == 'residual') and ( ( 'MODEL_DATA' in collist )==False) ) \
          or ( (datacolumn == 'residual_data') and ( ( 'MODEL_DATA' in collist )==False) ) ):
-        casalog.post(message="Data column ["+ datacolumn+"] cannot be found. Please check that the MS has the required data columns.", priority='WARN',origin='autoflag');
+        casalog.post(message="Data column ["+ datacolumn+"] cannot be found. Please check that the MS has the required data columns.", priority='WARN',origin='testautoflag');
         return False;
 
     
     # Open the flagger tool.
-    casalog.post(message="Opening the MS : "+msname, priority='INFO',origin='autoflag');
+    casalog.post(message="Opening the MS : "+msname, priority='INFO',origin='testautoflag');
     lfg.open(msname);
     
     # Select a subset of the data (or not)
@@ -71,7 +71,7 @@ def autoflag( vis, field, spw,
         par['usewindowstats']=str(usewindowstats);
         par['halfwin']=int(halfwin);
         lfg.setparameters('tfcrop',par);
-        casalog.post(message="tfcrop parameters : " +str(par), priority='INFO', origin='autoflag');
+        casalog.post(message="tfcrop parameters : " +str(par), priority='INFO', origin='testautoflag');
  
     # Get the detault parameters for EXTENDFLAGS, and modify them with user-input
     if(extendflags):
@@ -83,7 +83,7 @@ def autoflag( vis, field, spw,
         par['flag_prev_next_time']=bool(flagneartime);
         par['flag_prev_next_freq']=bool(flagnearfreq);
         lfg.setparameters('extendflags',par);
-        casalog.post(message="extendflag parameters : " +str(par), priority='INFO', origin='autoflag');
+        casalog.post(message="extendflag parameters : " +str(par), priority='INFO', origin='testautoflag');
     
     # Set generic user-parameters
     par={};
@@ -93,17 +93,17 @@ def autoflag( vis, field, spw,
     par['usepreflags']=bool(usepreflags);
     par['ntime_sec']=int(ntime);
     par['column']=str(datacolumn);
-    casalog.post(message="generic parameters : " +str(par), priority='INFO', origin='autoflag');
+    casalog.post(message="generic parameters : " +str(par), priority='INFO', origin='testautoflag');
 
     # Take a flag backup if requested.
     if(writeflags and flagbackup):
-        #casalog.post(message="Taking a flag backup",priority='INFO',origin='autoflag');
-        #fvname = 'before_autoflag_'+(time.asctime()).replace(' ', '_');
-        #lfg.saveflagversion(versionname = fvname, comment='Save Flags before running autoflag', merge='replace');
-        backup_flags(lfg,"autoflag_");
+        #casalog.post(message="Taking a flag backup",priority='INFO',origin='testautoflag');
+        #fvname = 'before_testautoflag_'+(time.asctime()).replace(' ', '_');
+        #lfg.saveflagversion(versionname = fvname, comment='Save Flags before running testautoflag', merge='replace');
+        backup_flags(lfg,"testautoflag_");
 
     # Run the flagger
-    casalog.post(message="Starting Flagging", priority='INFO',origin='autoflag');
+    casalog.post(message="Starting Flagging", priority='INFO',origin='testautoflag');
     flagstats = lfg.run(par);
 
     # Close the lightflagger tool. 
@@ -133,7 +133,7 @@ def backup_flags(fglocal, modes):
             i = i + 1
     time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
     casalog.post(message = "Saving current flags to " + versionname + " before applying new flags", 
-                 priority='INFO',origin='autoflag');
+                 priority='INFO',origin='testautoflag');
     fglocal.saveflagversion(versionname=versionname,
                            comment='flagdata autosave before ' + modes + ' on ' + time_string,
                            merge='replace')
@@ -221,7 +221,7 @@ class classFlagSummary:
                     
                    
   # Plot separately for each field and spw.
-            casalog.post(message="\nSummary of Flag Counts",priority='INFO',origin='autoflag');
+            casalog.post(message="\nSummary of Flag Counts",priority='INFO',origin='testautoflag');
             minfreq = 50000.0;
             maxfreq = 900.0;
             self.nfld=Nfld;
@@ -241,7 +241,7 @@ class classFlagSummary:
                         maxfreq = max( maxfreq, np.max(newfreqs) );
                         #print counts to logger
                         labstring = 'Field['+str(fld) + ']:' + allfieldlist[fld] +'  Spw['+str(spw)+']:'+'%6.2fMHz-%6.2fMHz'%(np.min(newfreqs),np.max(newfreqs)) + ' --> Flagged %3.2f'%(np.sum(newflags)/len(newflags)) + '%.'
-                        casalog.post(message=labstring, priority='INFO', origin='autoflag');
+                        casalog.post(message=labstring, priority='INFO', origin='testautoflag');
                                 
             pl.subplot(111);
             pl.xlabel('Frequency (MHz)');
