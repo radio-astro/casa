@@ -733,7 +733,7 @@ class simutil:
         # qa is stupid when it comes to dms vs hms, and assumes hms with colons and dms for periods.  
         decstr=dirl[2]
         # parse with regex to get three numbers and reinstall them as dms
-        q=re.compile('([+-]\d+).(\d+).(\d+\.?\d*)')
+        q=re.compile('([+-]?\d+).(\d+).(\d+\.?\d*)')
         qq=q.match(decstr)
         z=qq.groups()
         decstr=z[0]+'d'
@@ -2542,7 +2542,7 @@ class simutil:
         if in_nax==3:
             arr=arr.reshape([arr.shape[0],arr.shape[1],arr.shape[2],1])
             in_shape=arr.shape
-            in_nax=in_shape.__len__() # which should be 3
+            in_nax=in_shape.__len__() # which should be 4
         if in_nax>4:
             self.msg("model image has more than 4 dimensions.  Not sure how to proceed",priority="error")
             return False
