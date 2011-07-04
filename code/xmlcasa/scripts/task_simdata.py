@@ -613,7 +613,10 @@ def simdata(
                                 sourcedirection=caldirection,calcode='C',
                                 distance='0m')
                 reftime = me.epoch('TAI', refdate)
-                sm.settimes(integrationtime=integration, usehourangle=True, 
+
+                # XXX can turn off usehourangle=T here, but check below
+                usehourangle=True
+                sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=reftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
@@ -634,6 +637,7 @@ def simdata(
                     stoptimes = []
                     dirs = []
 
+                # XXX this only workds for usehourangle=T - need offset
                 for k in xrange(0,nscan) :
                     sttime = -totalsec/2.0 + scansec*k
                     endtime = sttime + scansec
@@ -852,9 +856,9 @@ def simdata(
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
                 if predict_uv:
-                    util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
+                    util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle)
                 if predict_sd:
-                    util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename)
+                    util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename,ms=sdmsfile,usehourangle=usehourangle)
                 casalog.origin('simdata')
                 if predict_uv:
                     util.nextfig()
@@ -1738,8 +1742,8 @@ def simdata(
             shutil.rmtree(absconv)  
 #        if os.path.exists(imagename+".diff"):
 #            shutil.rmtree(imagename+".diff")  
-        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
-            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
+#        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
+#            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
         if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
             shutil.rmtree(imagename+".quick.psf")  
 

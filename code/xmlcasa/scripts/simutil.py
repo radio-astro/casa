@@ -1145,10 +1145,12 @@ class simutil:
     #===================== ephemeris ==========================
 
 
-    def ephemeris(self, date, direction=None, telescope=None):
+    def ephemeris(self, date, usehourangle=True, direction=None, telescope=None, ms=None):
 
         if direction==None: direction=self.direction
         if telescope==None: telescope=self.telescopename
+
+        import pdb
         
         # right now, simdata centers at the transit;  when that changes,
         # or when that becomes optional, then that option needs to be
@@ -1157,6 +1159,10 @@ class simutil:
         #
         # direction="J2000 18h00m00.03s -45d59m59.6s"
         # refdate="2012/06/21/03:25:00"
+
+        # useHourAngle_p means simulate at transit
+        # TODO: put in reftime parameter, parse 2012/05/21, 2012/05/21/transit,
+        # and 2012/05/21/22:05:00 separately.
         
         ds=self.direction_splitter(direction)  # if list, returns average
         src=me.direction(ds[0],ds[1],ds[2])
@@ -1166,7 +1172,19 @@ class simutil:
     
         time=me.epoch('TAI',date)
         me.doframe(time)
+
+        # what is HA of source at refdate? 
+        offset_ha=qa.convert((me.measure(src,'hadec'))['m0'],'h')
+        peak=me.epoch("TAI",qa.add(date,qa.mul(-1,offset_ha)))
+        peaktime_float=peak['m0']['value']
+        if usehourangle:
+            # offset the reftime to be at transit:
+            time=peak
+            me.doframe(time)
+                        
         reftime_float=time['m0']['value']
+        reftime_floor=pl.floor(time['m0']['value'])
+        refdate_str=qa.time(qa.totime(str(reftime_floor)+'d'),form='dmy')
 
         timeinc='15min'  # for plotting
         timeinc=qa.convert(qa.time(timeinc),'d')['value']
@@ -1187,12 +1205,12 @@ class simutil:
         else:
             set=me.measure(set['utc'],'tai')
 
+        # where to start plotting?
         offset=-0.5
         if set < time: offset-=0.5
         if rise > time: offset+=0.5
         time['m0']['value']+=offset
-        starttime_float=round(time['m0']['value'])
-        startdate_str=qa.time(qa.totime(str(round(time['m0']['value']))+'d'),form='dmy')
+
         times=[]
         az=[]
         el=[]
@@ -1205,17 +1223,34 @@ class simutil:
             el.append(qa.convert(azel['m1'],'deg')['value'])
             time['m0']['value']+=timeinc
     
-        self.msg(" ref="+date,origin='ephemeris')
+#        self.msg(" ref="+date,origin='ephemeris')
         self.msg("rise="+qa.time(rise['m0'],form='dmy'),origin='ephemeris')
         self.msg(" set="+qa.time(set['m0'],form='dmy'),origin='ephemeris')
     
-        pl.plot((pl.array(times)-starttime_float)*24,el)
-        peak=(rise['m0']['value']+set['m0']['value'])/2
-        self.msg("peak="+qa.time('%fd' % peak,form='dmy'),origin='ephemeris')
+        pl.plot((pl.array(times)-reftime_floor)*24,el)
+#        peak=(rise['m0']['value']+set['m0']['value'])/2        
+#        self.msg("peak="+qa.time('%fd' % peak,form='dmy'),origin='ephemeris')
+        self.msg("peak="+qa.time('%fd' % reftime_float,form='dmy'),origin='ephemeris')
 
-        relpeak=reftime_float-starttime_float
+        relpeak=peaktime_float-reftime_floor
         pl.plot(pl.array([1,1])*24*relpeak,[0,90])
-        pl.xlabel("hours relative to "+startdate_str,fontsize='x-small')
+
+        # if theres an ms, figure out the entire range of observation
+        if ms:
+            tb.open(ms+"/OBSERVATION")
+            timerange=tb.getcol("TIME_RANGE")
+            tb.done()
+            obsstart=min(timerange.flat)
+            obsend=max(timerange.flat)
+            relstart=me.epoch("UTC",str(obsstart)+"s")['m0']['value']-reftime_floor
+            relend=me.epoch("UTC",str(obsend)+"s")['m0']['value']-reftime_floor
+            pl.plot([relstart*24,relend*24],[89,89],'r',linewidth=3)
+        else:
+            if self.totaltime>0:
+                etimeh=qa.convert(self.totaltime,'h')['value']
+                pl.plot(pl.array([-0.5,0.5])*etimeh+relpeak*24,[80,80],'r')
+
+        pl.xlabel("hours relative to "+refdate_str,fontsize='x-small')
         pl.ylabel("elevation",fontsize='x-small')
         ax=pl.gca()
         l=ax.get_xticklabels()
@@ -1223,11 +1258,9 @@ class simutil:
         l=ax.get_yticklabels()
         pl.setp(l,fontsize="x-small")
 
-        if self.totaltime>0:
-            etimeh=qa.convert(self.totaltime,'h')['value']
-            pl.plot(pl.array([-0.5,0.5])*etimeh+(peak-starttime_float)*24,[80,80],'r')
 
         pl.ylim([0,90])
+        pl.xlim(pl.array([-12,12])+24*(reftime_float-reftime_floor))
 
 
 
