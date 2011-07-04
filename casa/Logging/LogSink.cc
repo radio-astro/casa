@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogSink.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id$
 
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
@@ -53,7 +53,8 @@ String LogSink::id( ) const {
 }
 
 LogSink::LogSink(LogMessage::Priority filter, Bool nullSink)
-: LogSinkInterface(LogFilter(filter))
+  : LogSinkInterface(LogFilter(filter)),
+    useGlobalSink_p (True)
 {
     if ( ! LogSink::global_sink_p )
         LogSink::global_sink_p = new CountedPtr<LogSinkInterface>(new StreamLogSink(LogMessage::NORMAL, &cerr));
@@ -69,7 +70,8 @@ LogSink::LogSink(LogMessage::Priority filter, Bool nullSink)
 }
 
 LogSink::LogSink(const LogFilterInterface &filter, Bool nullSink)
-: LogSinkInterface(filter)
+  : LogSinkInterface(filter),
+    useGlobalSink_p (True)
 {
     if ( ! LogSink::global_sink_p )
         LogSink::global_sink_p = new CountedPtr<LogSinkInterface>(new StreamLogSink(LogMessage::NORMAL, &cerr));
@@ -84,9 +86,11 @@ LogSink::LogSink(const LogFilterInterface &filter, Bool nullSink)
     AlwaysAssert(! local_sink_p.null(), AipsError);
 }
 
-LogSink::LogSink(LogMessage::Priority filter, ostream *os)
+LogSink::LogSink(LogMessage::Priority filter, ostream *os,
+                 Bool useGlobalSink)
   : LogSinkInterface(LogFilter(filter)), 
-    local_sink_p(new StreamLogSink(LogFilter(LogMessage::DEBUGGING), os))
+    local_sink_p(new StreamLogSink(LogFilter(LogMessage::DEBUGGING), os)),
+    useGlobalSink_p (useGlobalSink)
 {
     if ( ! LogSink::global_sink_p )
         LogSink::global_sink_p = new CountedPtr<LogSinkInterface>(new StreamLogSink(LogMessage::NORMAL, &cerr));
@@ -96,9 +100,11 @@ LogSink::LogSink(LogMessage::Priority filter, ostream *os)
     AlwaysAssert(! local_sink_p.null(), AipsError);
 }
 
-LogSink::LogSink(const LogFilterInterface &filter, ostream *os)
+LogSink::LogSink(const LogFilterInterface &filter, ostream *os,
+                 Bool useGlobalSink)
   : LogSinkInterface(filter), 
-    local_sink_p(new StreamLogSink(LogFilter(LogMessage::DEBUGGING), os))
+    local_sink_p(new StreamLogSink(LogFilter(LogMessage::DEBUGGING), os)),
+    useGlobalSink_p (useGlobalSink)
 {
     if ( ! LogSink::global_sink_p )
         LogSink::global_sink_p = new CountedPtr<LogSinkInterface>(new StreamLogSink(LogMessage::NORMAL, &cerr));
@@ -109,9 +115,10 @@ LogSink::LogSink(const LogFilterInterface &filter, ostream *os)
 }
 
 LogSink::LogSink (const LogFilterInterface &filter,
-		  const CountedPtr<LogSinkInterface>& sink)
+                  const CountedPtr<LogSinkInterface>& sink)
   : LogSinkInterface(filter),
-    local_sink_p(sink)
+    local_sink_p(sink),
+    useGlobalSink_p (True)
 {
     if ( ! LogSink::global_sink_p )
         LogSink::global_sink_p = new CountedPtr<LogSinkInterface>(new StreamLogSink(LogMessage::NORMAL, &cerr));
@@ -120,7 +127,8 @@ LogSink::LogSink (const LogFilterInterface &filter,
 }
 
 LogSink::LogSink(const LogSink &other) 
-  : LogSinkInterface(other), local_sink_p(other.local_sink_p)
+  : LogSinkInterface(other), local_sink_p(other.local_sink_p),
+    useGlobalSink_p (other.useGlobalSink_p)
 {
     if ( ! LogSink::global_sink_p )
         LogSink::global_sink_p = new CountedPtr<LogSinkInterface>(new StreamLogSink(LogMessage::NORMAL, &cerr));
@@ -131,10 +139,11 @@ LogSink::LogSink(const LogSink &other)
 LogSink &LogSink::operator=(const LogSink &other)
 {
     if (this != &other) {
-	local_ref_to_global_p = other.local_ref_to_global_p;
+        local_ref_to_global_p = other.local_ref_to_global_p;
         local_sink_p = other.local_sink_p;
-	LogSinkInterface &This = *this;
-	This = other;
+        useGlobalSink_p = other.useGlobalSink_p;
+        LogSinkInterface &This = *this;
+        This = other;
     }
     return *this;
 }
@@ -146,8 +155,11 @@ LogSink::~LogSink()
 
 Bool LogSink::post(const LogMessage &message) 
 {
-    Bool postedLocally =   postLocally(message);
-    Bool postedGlobally =  postGlobally(message);
+    Bool postedLocally  =  postLocally(message);
+    Bool postedGlobally =  False;
+    if (useGlobalSink_p) {
+      postedGlobally = postGlobally(message);
+    }
     return (postedLocally || postedGlobally);
 }
 
@@ -161,19 +173,19 @@ Bool LogSink::postGlobally(const LogMessage &message)
     return posted;
 }
 
-void LogSink::postThenThrow(const LogMessage &message) 
+void LogSink::postThenThrow(const LogMessage &message)
 {
     // Try not to copy message since a severe error might be caused by
     // out of memory
     if (message.priority() == LogMessage::SEVERE) {
         post(message);
-	flush();
-	throw(AipsError(message.toString()));
+        flush();
+        throw(AipsError(message.toString()));
     } else {
         LogMessage messageCopy(message);
-	messageCopy.priority(LogMessage::SEVERE);
-	post(messageCopy);
-	throw(AipsError(messageCopy.toString()));
+        messageCopy.priority(LogMessage::SEVERE);
+        post(messageCopy);
+        throw(AipsError(messageCopy.toString()));
     }
 }
 
@@ -183,14 +195,14 @@ void LogSink::postGloballyThenThrow(const LogMessage &message)
     // out of memory
     if (message.priority() == LogMessage::SEVERE) {
         postGlobally(message);
-	globalSink().flush();
-	throw(AipsError(message.toString()));
+        globalSink().flush();
+        throw(AipsError(message.toString()));
     } else {
         LogMessage messageCopy(message);
-	messageCopy.priority(LogMessage::SEVERE);
-	postGlobally(messageCopy);
-	globalSink().flush();
-	throw(AipsError(messageCopy.toString()));
+        messageCopy.priority(LogMessage::SEVERE);
+        postGlobally(messageCopy);
+        globalSink().flush();
+        throw(AipsError(messageCopy.toString()));
     }
 }
 
@@ -279,8 +291,8 @@ Bool LogSink::postLocally(const LogMessage &message)
 }
 
 void LogSink::writeLocally (Double time, const String& message,
-			    const String& priority, const String& location,
-			    const String& objectID)
+                            const String& priority, const String& location,
+                            const String& objectID)
 {
     local_sink_p->writeLocally (time, message, priority, location, objectID);
 }

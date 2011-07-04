@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogSink.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id$
 
 #ifndef CASA_LOGSINK_H
 #define CASA_LOGSINK_H
@@ -34,6 +34,7 @@
 
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Utilities/PtrHolder.h>
+#include <casa/Exceptions/Error.h>
 #include <casa/iosfwd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -60,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// The LogSink class supplies the destination for 
+// The LogSink class supplies the destination for
 // <linkto class="LogMessage">LogMessage</linkto>s. There are two destinations
 // available through the <src>LogSink</src>
 // <ol>
@@ -77,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <src>postLocally()</src> member functions.
 //
 // The global sink will normally be set by system library code (it defaults to
-// using <src>cerr</src>. The type of local sink is defined at 
+// using <src>cerr</src>. The type of local sink is defined at
 // construction time. Presently you can choose one of:
 // <ol>
 // <li> a <linkto class="NullLogSink">NullLogSink</linkto> which merely
@@ -88,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      the messages to an AIPS++ <linkto class=Table>Table</linkto>.
 // </ol>
 //
-// Every <src>LogSink</src> has an attached 
+// Every <src>LogSink</src> has an attached
 // <linkto class=LogFilterInterface>LogFilterInterface</linkto>
 // which is used to reject or pass messages.
 // The local and global sinks have their own filters, so they can
@@ -124,7 +125,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // LogSink logger2(logger1);  // logger2 references logger1
 // logger2.post(message);     // ends up in "logtable"
 // </srcblock>
-// You can even have different <src>LogFilterInterface</src>'s 
+// You can even have different <src>LogFilterInterface</src>'s
 // attached to the different <src>LogSink</src>s.
 //
 // <motivation>
@@ -146,23 +147,26 @@ public:
   // If a filter isn't defined, default to <src>NORMAL</src>.
   // <group>
   explicit LogSink (LogMessage::Priority filter = LogMessage::NORMAL,
-		    Bool nullSink = True);
+                    Bool nullSink = True);
   explicit LogSink (const LogFilterInterface &filter, Bool nullSink = True);
   // </group>
 
   // Log to an ostream. It is the responsiblity of the caller to ensure that
   // <src>os</src> will last as long as the <src>LogSink</src>s that use it.
   // Normally you would use <src>&cerr</src> as the argument.
+  // Added useGlobalSink to allow posting locally.
   // <group>
-  LogSink (LogMessage::Priority filter, ostream *os);
-  LogSink (const LogFilterInterface &filter, ostream *os);
+  LogSink (LogMessage::Priority filter, ostream *os,
+           Bool useGlobalSink = True);
+  LogSink (const LogFilterInterface &filter, ostream *os,
+           Bool useGlobalSink = True);
   // </group>
 
   // Log to the given sink.
   // It is primarily intended to log to a
   // <linkto class=TableLogSink>TableLogSink</linkto>.
   LogSink (const LogFilterInterface &filter,
-	   const CountedPtr<LogSinkInterface>&);
+           const CountedPtr<LogSinkInterface>&);
 
   // Make a referencing copy of <src>other</src>. That is, if you post a
   // message to the new object, it behaves as if you had posted it to the
@@ -196,8 +200,8 @@ public:
   virtual Bool postLocally (const LogMessage &message);
 
   // Post <src>message</src> and then throw an <src>AipsError</src> exception
-  // containing <src>message.toString()</src>. It is always posted as a 
-  // <src>SEVERE</src> priority message, no matter what 
+  // containing <src>message.toString()</src>. It is always posted as a
+  // <src>SEVERE</src> priority message, no matter what
   // <src>message.priority()</src> says.
   // <group>
   void postThenThrow (const LogMessage &message);
@@ -219,8 +223,8 @@ public:
   // Write a message (usually from another logsink) into the local one.
   // The default implementation does nothing.
   virtual void writeLocally (Double time, const String& message,
-			     const String& priority, const String& location,
-			     const String& objectID);
+                             const String& priority, const String& location,
+                             const String& objectID);
 
   // Clear the local sink (i.e. remove all messages from it).
   virtual void clearLocally();
@@ -266,6 +270,7 @@ private:
   // reference to it is destroyed. This can happen if you have a static
   // LogSink (or LogIO).
   CountedPtr<LogSinkInterface> local_ref_to_global_p;
+  Bool useGlobalSink_p;
 };
 
 
@@ -273,3 +278,4 @@ private:
 } //# NAMESPACE CASA - END
 
 #endif
+
