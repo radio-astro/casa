@@ -61,14 +61,16 @@ sd.rc('scantable',storage='disk')		# Note this enables handling of large dataset
 #s=sd.scantable('FLS3_all_newcal_SP',false)	# the 'false' indicates that no averaging should be done - this is
 s=sd.scantable(datapath,average=false,getpt=false)	# the 'false' indicates that no averaging should be done - this is
 						# always the case for data that hasn't been calibrated
+importproc=time.clock()
 importtime=time.time()
 
-print '--Split--'
+print '--Split & Save--'
 # split out the data for the field of interest
 s0=s.get_scan('FLS3a*')				# get all scans with FLS3a source
 s0.save('FLS3a_HI.asap')			# save this data to an ASAP dataset on disk
 del s						# delete scantables that will not be used any further
 del s0
+splitproc=time.clock()
 splittime=time.time()
 
 print '--Calibrate--'
@@ -80,11 +82,13 @@ sn=list(scanns)
 print "No. scans to be processed:", len(scanns)
 res=sd.calfs(s,sn)				# Do a frequency switched calibration on the scans
 del s
+calproc=time.clock()
 caltime=time.time()
 
 print '--Save calibrated data--'
 res.save('FLS3a_calfs', 'MS2')			# Save the calibrated data to a MeasurementSet (CASA) format
 del res
+saveproc=time.clock()
 savetime=time.time()
 
 print '--Image data--'
@@ -107,10 +111,12 @@ im.close()								# myim.close()
 #ia.open('test.image')							# ia:=image('test.image')
 #ia.setbrightnessunit('K')						# ia.setbrightnessunit('K')
 #ia.close()								# ia.close()
+imageproc=time.clock()
+imagetime = time.time()
 
 #
-endProc = time.clock()
-endTime = time.time()
+endProc = imageproc
+endTime = imagetime
 #
 # -- end of FLS3 HI script
 #
@@ -119,6 +125,7 @@ ia.open('FLS3a_HI.image')
 statistics=ia.statistics()
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]
+
 #
 #hi_max=25.577
 #hi_rms=1.013
@@ -162,11 +169,17 @@ print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
 print >>logfile,'Processing rate MB/s  was: '+str(4100/(endTime - startTime))
 print >>logfile,'* Breakdown: '
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
+print >>logfile,'*            CPU time was: '+str(importproc-startProc)
 print >>logfile,'*   split        time was: '+str(splittime-importtime)
+print >>logfile,'*            CPU time was: '+str(splitproc-importproc)
 print >>logfile,'*   calibration  time was: '+str(caltime-splittime)
+print >>logfile,'*            CPU time was: '+str(calproc-splitproc)
 print >>logfile,'*   save         time was: '+str(savetime-caltime)
+print >>logfile,'*            CPU time was: '+str(saveproc-calproc)
 print >>logfile,'*   image        time was: '+str(imagetime-savetime)
-print >>logfile,'*****************************************'
+print >>logfile,'*            CPU time was: '+str(imageproc-saveproc)
+print >>logfile,'****************************************'
+
 
 logfile.close()
 ### Resore the previous storage setting
