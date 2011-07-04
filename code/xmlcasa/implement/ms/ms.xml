@@ -1215,6 +1215,10 @@ the ms definition itself. -->
      <description>Produce verbose logging output</description>
      <value>false</value>
      </param>
+     <param type="string" direction="in" name="listfile">
+     <description>Output file</description>
+     <value></value>
+     </param>     
   </input>
   <returns type="bool"/>
 
