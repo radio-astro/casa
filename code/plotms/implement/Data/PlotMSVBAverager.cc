@@ -659,7 +659,6 @@ void PlotMSVBAverager::convertToAP(Cube<Complex>& d) {
   Float a;
   for (Int i=0;i<n;++i,++c) {
     a=abs(*c);
-    if (a<0.0);
     *c=Complex(a,arg(*c));
   }
 }
