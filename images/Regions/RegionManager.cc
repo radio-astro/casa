@@ -114,8 +114,12 @@ namespace casa { //# name space casa begins
   }
 
   const CoordinateSystem& RegionManager::getcoordsys() const{
-    return *itsCSys;
+	  if (itsCSys == 0) {
+	      throw(AipsError("CoordinateSystem not set in RegionManager tool"));
+	  }
+	  return *itsCSys;
   }
+
   Bool RegionManager::isPixelRegion(const ImageRegion& reg ){
       return  reg.isLCRegion();
   }
