@@ -30,15 +30,7 @@
 
 
 //# Includes
-//#include <images/Images/FITSImage.h>
-//#include <images/Images/FITSErrorImage.h>
 #include <images/Images/ImageInterface.h>
-//#include <images/Images/MaskSpecifier.h>
-//#include <tables/Tables/TiledFileAccess.h>
-//#include <lattices/Lattices/TiledShape.h>
-//#include <fits/FITS/fits.h>
-//#include <casa/BasicSL/String.h>
-//#include <casa/Utilities/DataType.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -48,12 +40,8 @@ template <class T> class Lattice;
 //
 class FITSImage;
 class FITSErrorImage;
-//class MaskSpecifier;
 class IPosition;
 class Slicer;
-//class CoordinateSystem;
-//class FITSMask;
-//class FitsInput;
 
 // <summary>
 // Class providing native access to FITS Quality Images.
@@ -138,8 +126,6 @@ public:
  
   // Do the actual get of the data.
   // Returns False as the data do not reference another Array
-  //virtual Bool doGetSliceIII (Array<Float>& buffer, const Slicer& theSlice);
-  //virtual Bool doGetSliceII (Array<Float>& buffer, const Slicer& theSlice);
   virtual Bool doGetSlice (Array<Float>& buffer, const Slicer& theSlice);
 
   // The FITSImage is not writable, so this throws an exception.
@@ -149,8 +135,6 @@ public:
 
   // Do the actual get of the mask data.   The return value is always
   // False, thus the buffer does not reference another array.
-  //virtual Bool doGetMaskSliceIII (Array<Bool>& buffer, const Slicer& section);
-  //virtual Bool doGetMaskSliceII (Array<Bool>& buffer, const Slicer& section);
   virtual Bool doGetMaskSlice (Array<Bool>& buffer, const Slicer& section);
 
   //# LatticeBase virtual functions
@@ -242,10 +226,6 @@ private:
 
    // Make sure the input is compatible
    Bool checkInput();
-
-   //void fillData();
-   //void fillMask();
-		     
 };
 
 
