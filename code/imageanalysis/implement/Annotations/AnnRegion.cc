@@ -131,8 +131,8 @@ ImageRegion AnnRegion::asImageRegion() const {
 	return _imageRegion;
 }
 
-const WCRegion* AnnRegion::getRegion() const {
-	return _imageRegion.asWCRegionPtr();
+WCRegion*  AnnRegion::getRegion() const {
+	return _imageRegion.asWCRegionPtr()->cloneRegion();
 }
 
 Bool AnnRegion::isRegion() const {
