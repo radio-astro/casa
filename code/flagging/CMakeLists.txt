@@ -45,6 +45,7 @@ casa_add_library( flagging
   implement/MSPlot/MsPlot.cc
   implement/Flagging/LightFlagger.cc
   implement/Flagging/LFTimeFreqCrop.cc
+  implement/Flagging/LFExamineFlags.cc
   implement/Flagging/LFExtendFlags.cc
   implement/Flagging/LFDisplayFlags.cc
    )
