@@ -58,6 +58,7 @@
 #include <flagging/Flagging/LFTimeFreqCrop.h>
 #include <flagging/Flagging/LFExtendFlags.h>
 #include <flagging/Flagging/LFDisplayFlags.h>
+//#include <flagging/Flagging/LFExamineFlags.h>
 
 #include <sstream>
 
@@ -339,7 +340,7 @@ namespace casa {
 	    AlwaysAssert(!flagmethods_p[i].null(), AipsError);
 	    //os << "Running method : " << flagmethods_p[i]->methodName() << LogIO::POST;
 	    flagmethods_p[i]->setBaselineFlag(baselineFlag);
-	    flagmethods_p[i]->runMethod(visc, flagc, NumT, NumAnt, NumB, NumC, NumP);
+	    flagmethods_p[i]->runMethod(vb, visc, flagc, preflagc, NumT, NumAnt, NumB, NumC, NumP);
 	  }
 	
         // Display Flags	

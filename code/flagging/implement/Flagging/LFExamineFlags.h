@@ -24,36 +24,24 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Jan 28 2011 rurvashi Id$
-#ifndef FLAGGING_LFDISPLAYFLAGS_H
-#define FLAGGING_LFDISPLAYFLAGS_H
+#ifndef FLAGGING_LFEXAMINEFLAGS_H
+#define FLAGGING_LFEXAMINEFLAGS_H
 
-#include <flagging/Flagging/LFExamineFlags.h>
-
-#include <casadbus/viewer/ViewerProxy.h>
-#include <casadbus/plotserver/PlotServerProxy.h>
-#include <casadbus/utilities/BusAccess.h>
-#include <casadbus/session/DBusSession.h>
-
-#include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <ms/MeasurementSets/MSColumns.h>
-
-#include <flagging/Flagging/LFPlotServerProxy.h>
-
+#include <flagging/Flagging/LFBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  class LFDisplayFlags : public LFExamineFlags
+  class LFExamineFlags : public LFBase
   {
   public:  
     // default constructor 
-    LFDisplayFlags  ();
+    LFExamineFlags  ();
 
     // default destructor
-    virtual ~LFDisplayFlags ();
+    virtual ~LFExamineFlags ();
 
     // Return method name
-    virtual String methodName(){return String("displayflags");};
+    virtual String methodName(){return String("examineflags");};
 
     // Set autoflag params
     virtual Bool setParameters(Record &parameters);
@@ -62,36 +50,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Record getParameters();
 
     // Run the algorithm
-    virtual Bool runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
-		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
-    {throw(AipsError("DisplayFlags::runMethod requires more inputs than supplied"));};    
-
-    // Requires list of other flagmethods
     virtual Bool runMethod(const VisBuffer &inVb, 
                    Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
-			   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP,
-			   Vector<CountedPtr<LFBase> > &flagmethods);
+			   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP);
 
+    virtual Record getStatistics();
     
   protected:
 
-    virtual Bool BuildPlotWindow();
-    //    virtual Bool ShowFlagPlots();
+    void ReadMSInfo(const VisBuffer &vb);
 
-     virtual Char GetUserInput();
-     char *dock_xml_p;
-
-     void DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame);
-    void DisplayLine(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
-    void DisplayScatter(Int xdim, Vector<Double> &xdata, Vector<Float> &ydata, String label, String color, Bool hold,  uInt frame);
-
-        // Plotter members
-    FlagPlotServerProxy *plotter_p;
-    Vector<dbus::variant> panels_p;
-
-    Bool ShowPlots, StopAndExit;
+    void AccumulateStats(const VisBuffer &vb);
 
     // Additional private members
+    Record allflagcounts;
+    Vector<String> antnames_p;
+    Vector<String> corrlist_p;
+    Vector<String> fieldnames_p;
+    //Vector<xxx> spwlist_p;
+    Vector<Double> freqlist_p;
+
+
+    // Counters per chunk
+    Vector<Float> chan_count, baseline_count, corr_count;
+    Vector<Float> chan_flags, baseline_flags, corr_flags;
+    Float chunk_count, chunk_flags;
+
+    // Counters across chunks (can be different shapes
+    // Statistics per antenna, baseline, spw, etc.
+    // These maps of maps is used e.g. like:
+    //
+    //        accumflags["baseline"]["2&&7"] == 42
+    //        accumflags["spw"     ]["0"   ] == 17
+    //
+    // which means that there were 42 flags on baseline 2 - 7, etc.
+    std::map<std::string, std::map<std::string, float> > allflags;
+    std::map<std::string, std::map<std::string, float> > allcounts;
+
     uInt a1,a2;
 
   };

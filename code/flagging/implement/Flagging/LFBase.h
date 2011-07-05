@@ -29,11 +29,16 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <ms/MeasurementSets/MSColumns.h>
+
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
 #include <casa/Quanta/Quantum.h>
-#include <msvis/MSVis/VisSet.h>
+
 #include <scimath/Functionals/Polynomial.h>
 #include <scimath/Fitting.h>
 #include <scimath/Fitting/LinearFit.h>
@@ -60,10 +65,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Record getParameters(){return Record();};
 
     // Run the algorithm
-    virtual Bool runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
+    virtual Bool runMethod(const VisBuffer &inVb, 
+			   Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
 			   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
     {
-      visc.reference(inVisc); flagc.reference(inFlagc);
+      vb.assign(inVb,False);
+      visc.reference(inVisc); flagc.reference(inFlagc); preflagc.reference(inPreFlagc);
       NumT=numT, NumAnt=numAnt; NumB=numB; NumC=numC; NumP=numP;
      };    
 
@@ -105,6 +112,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
 
   Bool dbg;
+
+    // Reference to current vb.
+    VisBuffer vb;
 
     // References to input data and flags
     Cube<Float> visc;

@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record getParameters();
 
     // Run the algorithm
-    Bool runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
+    Bool runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
 		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP);    
 
     Bool getMonitorSpectrum(Vector<Float> &monspec, uInt pl, uInt bs);

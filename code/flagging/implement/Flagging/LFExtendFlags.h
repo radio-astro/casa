@@ -27,11 +27,11 @@
 #ifndef FLAGGING_LFEXTENDFLAGS_H
 #define FLAGGING_LFEXTENDFLAGS_H
 
-#include <flagging/Flagging/LFBase.h>
+#include <flagging/Flagging/LFExamineFlags.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  class LFExtendFlags : public LFBase
+  class LFExtendFlags : public LFExamineFlags
   {
   public:  
     // default constructor 
@@ -49,14 +49,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record getParameters();
 
     // Run the algorithm
-    Bool runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
+    Bool runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc, 
 		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP);    
     
   private:
 
     void GrowFlags();
-    void FlagCorrsFromSelfs();
+    void FlagBaselinesFromAntennas();
     void ExtendFlagsAcrossPols();
+    void FlagAntennasFromBaselines();
+    //    void ExtendAcrossBaselines();
+    //    void MakeFlagCmds();
 
     Int flaglevel_p;
 

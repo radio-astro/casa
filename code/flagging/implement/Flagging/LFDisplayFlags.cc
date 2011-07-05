@@ -46,7 +46,7 @@ namespace casa {
   // -----------------------------------------------------------------------
   // Default Constructor
   // -----------------------------------------------------------------------
-  LFDisplayFlags::LFDisplayFlags () : LFBase()
+  LFDisplayFlags::LFDisplayFlags () : LFExamineFlags()
   {
     plotter_p=NULL;
     allflagcounts.define("method","displayflags");
@@ -94,26 +94,24 @@ namespace casa {
   
   /* Extend Flags */
   /* Openmp on baselines... */
-  Bool LFDisplayFlags :: runMethod(VisBuffer &inVb, 
+  Bool LFDisplayFlags :: runMethod(const VisBuffer &inVb, 
 				  Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
 				   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP,
 				   Vector<CountedPtr<LFBase> > &flagmethods)
   {
     LogIO os = LogIO(LogOrigin("DisplayFlags","runMethod()",WHERE));
-    // Initialize all the shape information, and make a references for visc and flagc.
-    LFBase::runMethod(inVisc, inFlagc, numT, numAnt, numB, numC, numP);
-    preflagc.reference(inPreFlagc);
+
+    // Initialize all arrays, count all flags.
+    LFExamineFlags::runMethod(inVb, inVisc, inFlagc, inPreFlagc, numT, numAnt, numB, numC, numP);
     
-    // Read MS info from the vb
-    if(antnames_p.nelements()==0) ReadMSInfo(inVb);
-   
-    // Read info about the current vb.  
+   // Read info about the current vb.  
     uInt thisspw = inVb.spectralWindow();
     uInt thisfield = inVb.fieldId();
     freqlist_p.assign(inVb.frequency());
     freqlist_p = freqlist_p/1e+09;
-    //    cout << "field : " << thisfield << "spw : " << thisspw <<  "Freq list : " << freqlist_p << endl;
+    //    cout << "field : " << thisfield << "spw : " << thisspw_p <<  "Freq list : " << freqlist_p << endl;
     AlwaysAssert(thisfield >=0 && thisfield < fieldnames_p.nelements() , AipsError);
+
 
     // Build and launch the GUI on first entry
     if(ShowPlots && plotter_p==NULL) BuildPlotWindow();   
@@ -122,14 +120,6 @@ namespace casa {
     uInt a1,a2;
     IPosition shp(2),tshp(2); shp(0)=NumC; shp(1)=NumT;
     Float runningsum=0, runningflag=0,runningpreflag=0;
-    chan_count.resize(NumC); chan_count=0;
-    chan_flags.resize(NumC); chan_flags=0;
-    baseline_count.resize(NumB); baseline_count=0;
-    baseline_flags.resize(NumB); baseline_flags=0;
-    corr_count.resize(NumP); corr_count=0;
-    corr_flags.resize(NumP); corr_flags=0;
-    chunk_count=0; chunk_flags=0;
-
      
     // Initialize Plot Arrays
     Vector<Float> vecflagdat(0), vecdispdat(0), origspectrum(0), flagspectrum(0), precountspec(0), countspec(0);
@@ -149,23 +139,21 @@ namespace casa {
 	AlwaysAssert( a1>=0 && a1<antnames_p.nelements(), AipsError );
 	AlwaysAssert( a2>=0 && a2<antnames_p.nelements(), AipsError );
 	//cout << "baseline : " << bs << " ants : " << a1 << "," << a2 << endl;
-	if( (a1 != a2)  &&  baselineFlag[bs]==True) // If only cross-correlations, and if baseline exists in data
+	if( (a1 != a2)  &&  baselineFlag[bs]==True && ShowPlots) // If only cross-correlations, and if baseline exists in data
 	  {
-	    if(ShowPlots) os << LogIO::NORMAL << antnames_p[a1] << "-" << antnames_p[a2] << " : " ;
+	    os << LogIO::NORMAL << antnames_p[a1] << "-" << antnames_p[a2] << " : " ;
 	    //cout << "Nants : " << antnames_p.nelements() << "  " << antnames_p[a1] << "-" << antnames_p[a2] << " : for ants : " << a1 << " and " << a2 << endl;
 	    for(int pl=0;pl<NumP;pl++)  // Start Correlation Loop
 	      {
 		runningsum=0;
 		runningflag=0;
                 runningpreflag=0;
-                if(ShowPlots){origspectrum=0.0; flagspectrum=0.0; precountspec=0.0; countspec=0.0;}
+                origspectrum=0.0; flagspectrum=0.0; precountspec=0.0; countspec=0.0;
 		for(int ch=0;ch<NumC;ch++)  // Start Channel Loop
 		  { 
 		    for(uInt tm=0;tm<NumT;tm++)  // Start Time Loop
 
 		      {       
-			  if(ShowPlots)
-			    {
 			      vecdispdat( ch*NumT + tm) = (visc(pl,ch,(((tm*NumB)+bs)))) * (!preflagc(pl,ch,(tm*NumB)+bs));
 			      vecflagdat( ch*NumT + tm) = vecdispdat( ch*NumT + tm)*(!flagc(pl,ch,(tm*NumB)+bs));
 
@@ -174,32 +162,15 @@ namespace casa {
 
 			      precountspec[ch] += (!preflagc(pl,ch,(tm*NumB)+bs));
 			      countspec[ch] += (!flagc(pl,ch,(tm*NumB)+bs));
-			    }
+
 			  runningsum += visc(pl,ch,(((tm*NumB)+bs)));
 			  runningflag += (Float)(flagc(pl,ch,(tm*NumB)+bs));
 			  runningpreflag += (Float)(preflagc(pl,ch,(tm*NumB)+bs));
                 
-                          chan_count[ch]++;   baseline_count[bs]++;  corr_count[pl]++; chunk_count++;
-                          if( flagc(pl,ch,(tm*NumB)+bs) ) 
-			    {
-			      chan_flags[ch]++; baseline_flags[bs]++; corr_flags[pl]++; chunk_flags++;
-			    }
-
 		      }// End Time Loop
 		  }//End Channel Loop
 
-		/*		
-                if(!ShowPlots) 
-		  {
-		cout << " Flagged : " << 100 * runningflag/(NumC*NumT) << " %  of corr " << corrlist_p[pl] << " on baseline " << a1 << "-" << a2;
-		if(!runningsum)	  {    cout << " : No non-zero data !" << endl;  }
-		else  {   cout << endl;  }    
-		  }
-		*/
-
 		// Send the Plots			
-                if(ShowPlots)
-		  {
                     stringstream ostr1,ostr2;
 		    ostr1 << "(" << thisfield << ") " << fieldnames_p[thisfield] << "\n[spw:" << thisspw << "] " << antnames_p[a1] << "-" << antnames_p[a2] << "  ( " << corrlist_p[pl] << " )";
                     ostr2 << fixed;
@@ -240,13 +211,10 @@ namespace casa {
 				String("green"), True, panels_p[pl+(2*NumP)].getInt());
 			  }
 		      }
-		  }// if ShowPlots
 	      }//End Correlation Loop
 
-	    if(ShowPlots) os << LogIO::POST;
+	    os << LogIO::POST;
             
-            if(ShowPlots)
-	      {	    
 		// Wait for User Input
 		choice = GetUserInput();
 		
@@ -285,206 +253,30 @@ namespace casa {
 		    break; // break out of baseline loop
 		  }
 
-	      }// end if showplots
-	    
-	  }// end if cross-correlations only
+	  }// end if cross-correlations only, and showplots, and baselineexists
 
       }//End Baseline Loop
 
-    AccumulateStats(inVb);
-
-    return True;
-  }// end runMethod
-  
-
-/************************************************************************/
-  // Display final Stat counts on the plotter 
-  // Construct a record of counts by mapping to visbuffer indices...
-  // and return the record of counts.
-  /************************************************************************/
-  Record LFDisplayFlags :: getStatistics()
-  {
-    Record res;
-
-    for (map<string, map<string, float> >::iterator j = allcounts.begin();
-           j != allcounts.end();
-           j++) {
-        
-          Record prop;
-          for (map<string, float>::const_iterator i = j->second.begin();
-               i != j->second.end();
-               i++) {
-            
-              Record tmp;
-
-              tmp.define("flagged", (uInt) allflags[j->first][i->first]);
-              tmp.define("total", (uInt) i->second);
-              
-              prop.defineRecord(i->first, tmp);
-          }
-          
-          res.defineRecord(j->first, prop);
-      }
-
-    return res;
-  }
-
-  /***************************************************************/
-  /***************************************************************/
-  /***************************************************************/
-  void LFDisplayFlags::AccumulateStats(VisBuffer &vb)
-  {
-   LogIO os = LogIO(LogOrigin("DisplayFlags","Stats()",WHERE));
-
-   if(chunk_count>0)  os << LogIO::NORMAL << " --> Flagged " << 100*chunk_flags/chunk_count << "% ";
-   else os << LogIO::NORMAL << " --> No data to flag" ;
-    
-    // Read info from the vb.
-    Int spw=vb.spectralWindow();
-    Int fieldid = vb.fieldId();
-
-    // Accumulate field counts
-    stringstream fieldstr;
-    fieldstr << fieldid ;
-    allflags["field"][fieldstr.str()] += chunk_flags;
-    allcounts["field"][fieldstr.str()] += chunk_count;
-    
-    // Accumulate spw counts
-    stringstream spwstr;
-    spwstr << spw ;
-    allflags["spw"][spwstr.str()] += chunk_flags;
-    allcounts["spw"][spwstr.str()] += chunk_count;
-    
-    // Accumulate channel counts
-    for(int ch=0;ch<NumC;ch++)
-      { 
-	stringstream chanstr;
-	chanstr << fieldid << ":" << spw << ":" << ch;
-	allflags["channel"][chanstr.str()] += chan_flags[ch];
-	allcounts["channel"][chanstr.str()] += chan_count[ch];
-      }
-    
-    // Accumulate baseline counts    
-    for(uInt bs=0;bs<NumB;bs++) 
-      {
-	Ants(bs,&a1,&a2);
-	if(a1 != a2) // If only cross-correlations
-	  {
-	    stringstream baselinestr;
-	    baselinestr << fieldid << "-" << spw << "-" << a1 << "-" << a2;
-	    allflags["baseline"][baselinestr.str()] += baseline_flags[bs];
-	    allcounts["baseline"][baselinestr.str()] += baseline_count[bs];
-	  }
-      }
-    
-    // Accumulate correlation counts    
+    // Print Flag Counts to the logger....
+    if(chunk_count>0)  os << LogIO::NORMAL << " --> Flagged " << 100*chunk_flags/chunk_count << "% ";
+    else os << LogIO::NORMAL << " --> No data to flag" ;
     for(int pl=0;pl<NumP;pl++)  
       {
-	stringstream corrstr;
-	corrstr << spw << ":" << pl;
-	allflags["correlation"][corrstr.str()] += corr_flags[pl];
-	allcounts["correlation"][corrstr.str()] += corr_count[pl];
 	if(corr_count[pl]>0) 	os << " [" << corrlist_p[pl] << "]:" << 100*corr_flags[pl]/corr_count[pl] ;
 	else os << " [" << corrlist_p[pl] << "]: No data" ;
-      }    
-
+      }
     os << LogIO::POST;
 
-  }// end of accumulateStats
-  /***************************************************************/
-  /***************************************************************/
-
-  void LFDisplayFlags::ReadMSInfo(VisBuffer &vb)
-  {
-    // ROMSColumns msc = vb.msColumns();
-    //ROMSAntennaColumns antcol = msc.antenna();
-    //ROScalarColumn antnamecol = antcol.name();
-    //antnames_p = antnamecol.getColumn();
-
-    antnames_p = vb.msColumns().antenna().name().getColumn();
-
-    Vector<Int> corrtypes;
-    vb.msColumns().polarization().corrType().get(0,corrtypes);
-
-    corrlist_p.resize(corrtypes.nelements());
-    for(Int i=0;i<corrtypes.nelements();i++)
-        corrlist_p[i] = Stokes::name((Stokes::StokesTypes)corrtypes[i]);
-
-    fieldnames_p = vb.msColumns().field().name().getColumn();
-
-  }
-
-  /***************************************************************/
-  /***************************************************************/
+     return True;
+  }// end runMethod
   
-  
+ 
   /***********************************************************************/  
   /******************     Plot Functions      ******************************/  
   /***********************************************************************/  
   
   Bool LFDisplayFlags::BuildPlotWindow()
   {
-
-    /*
-    
-    dock_xml_p = "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
-<ui version=\"4.0\">				\
- <class>dock01</class>				\
- <widget class=\"QDockWidget\" name=\"dock01\">	\
-  <property name=\"geometry\">			\
-   <rect>					\
-    <x>0</x>					\
-    <y>0</y>					\
-    <width>645</width>				\
-    <height>83</height>				\
-   </rect>					\
-  </property>					\
-  <property name=\"minimumSize\">		\
-   <size>					\
-    <width>645</width>				\
-    <height>83</height>						\
-   </size>							\
-  </property>							\
-  <property name=\"windowTitle\">				\
-   <string/>							\
-  </property>							\
-  <widget class=\"QWidget\" name=\"dockWidgetContents\">	\
-   <layout class=\"QGridLayout\" name=\"gridLayout\">		\
-    <item row=\"0\" column=\"0\">				\
-     <layout class=\"QHBoxLayout\" name=\"horizontalLayout\">	\
-      <item>							\
-       <widget class=\"QPushButton\" name=\"Continue\">		\
-        <property name=\"text\">				\
-         <string>Continue</string>				\
-        </property>						\
-       </widget>						\
-      </item>							\
-      <item>							\
-       <widget class=\"QPushButton\" name=\"StopDisplay\">	\
-        <property name=\"text\">				\
-         <string>Stop Display</string>				\
-        </property>						\
-       </widget>						\
-      </item>							\
-      <item>							\
-       <widget class=\"QPushButton\" name=\"Quit\">		\
-        <property name=\"text\">				\
-         <string>Quit</string>					\
-        </property>						\
-       </widget>						\
-      </item>							\
-     </layout>							\
-    </item>							\
-   </layout>							\
-  </widget>							\
- </widget>							\
- <resources/>							\
- <connections/>							\
-</ui>								\
-";
-    
-    */
 
     dock_xml_p = "\
 <?xml version=\"1.0\" encoding=\"UTF-8\"?>\

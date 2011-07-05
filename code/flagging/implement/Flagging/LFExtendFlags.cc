@@ -45,7 +45,7 @@ namespace casa {
   // -----------------------------------------------------------------------
   // Default Constructor
   // -----------------------------------------------------------------------
-  LFExtendFlags::LFExtendFlags () : LFBase()
+  LFExtendFlags::LFExtendFlags () : LFExamineFlags()
   {
      dbg=True;
      flaglevel_p=0;
@@ -117,20 +117,24 @@ namespace casa {
   //---------------------------------------------------------------------
   // Run all user-chosen extension methods
   //---------------------------------------------------------------------
-  Bool LFExtendFlags :: runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
+  Bool LFExtendFlags :: runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, 
+				  Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc, 
 				   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
   {
     // Initialize all the shape information, and make a references for visc and flagc.
-    LFBase::runMethod(inVisc, inFlagc, numT, numAnt, numB, numC, numP);
+    LFExamineFlags::runMethod(inVb, inVisc, inFlagc, inPreFlagc, numT, numAnt, numB, numC, numP);
 
     uInt a1,a2;
 
-    //if(flaglevel_p>0) 
-    GrowFlags();
-
-    //    if(flagcrossfromauto_p) FlagCorrsFromSelfs();
+    if(grow_in_time_p || grow_in_freq_p || grow_around_p || 
+       flag_prev_next_freq_p || flag_prev_next_time_p)  GrowFlags();
 
     if(extendacrosspols_p) ExtendFlagsAcrossPols();    
+
+    //    if(flagcrossfromauto_p) FlagBaselinesFromAntennas();
+    //    if(flagbothantennas_p) FlagAntennasFromBaselines();
+
+    //    if(extendfields_p || extendspw_p || extendtime_p) makeFlagCmds();
 
     return True;   
   }// End of runMethod()
@@ -201,17 +205,6 @@ namespace casa {
 			  }
 		      }// end grow_around_p
 
-		    /*		    
-		    if(flaglevel_p>1) // flag level 2 and above
-		      {
-			// If next two channels are flagged, flag it 
-			if(ch < NumC-2)
-			  if( flagc(pl,ch+1,(tm*NumB+bs)) == True 
-			      && flagc(pl,ch+2,(tm*NumB+bs) ) == True  )
-			    flagc(pl,ch,(tm*NumB+bs) ) = True;
-		      }
-		    */
-
 		  }//for tm
 	      }//for ch
 	    
@@ -236,7 +229,7 @@ namespace casa {
 	      {
 		uInt fsum2=0;
 		
-		/* Grow flags in time - if more than 50% of the timerange is flagged*/
+		/* Grow flags in time - if more than X% of the timerange is flagged*/
 		for(int ch=0;ch<NumC;ch++)
 		  { 
 		    fsum2=0;
@@ -253,7 +246,7 @@ namespace casa {
 
 	    if(grow_in_freq_p>0.0)
 	      {
-		/* Grow flags in frequency - if more than 50% of the freq-range is flagged*/
+		/* Grow flags in frequency - if more than X% of the freq-range is flagged*/
 		for(int tm=0;tm<NumT;tm++)
 		  { 
 		    uInt fsum2=0;
@@ -276,11 +269,10 @@ namespace casa {
   //---------------------------------------------------------------------
   // If autocorrelations are used for finding RFI, apply flags to cross-correlations
   //---------------------------------------------------------------------
-  void LFExtendFlags :: FlagCorrsFromSelfs()
+  void LFExtendFlags :: FlagBaselinesFromAntennas()
   {    
     uInt a1,a2;
-    /* FLAG BASELINES FROM THE SELF FLAGS */
-    cout << " Flagging Cross correlations from self correlation flags " << endl;
+    //    cout << " Flagging Cross correlations from self correlation flags " << endl;
     for(int pl=0;pl<NumP;pl++)
       {
 	for(uInt bs=0;bs<NumB;bs++)
