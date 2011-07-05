@@ -77,6 +77,29 @@ def checkMSes(holderdict, dir, files):
     
     mytb = holderdict['mytb']
     incl_ddid = holderdict['incl_ddid']
+
+    def myopen(mytb, whichtab):
+        """
+        A wrapper around (my)tb.open(whichtab) which is smarter about error
+        handling.  It will still throw an exception on an error, but it tries
+        to make the message less misleading.
+        """
+        retval = False
+        if not hasattr(mytb, 'open'):
+            raise ValueError, 'mytb is not a tb tool'
+        try:
+            mytb.open(whichtab)
+            retval = True
+        except Exception, e:
+            # Typically if we are here whichtab is too malformed for
+            # mytb to handle, and e is usually "whichtab does not exist",
+            # which is usually incorrect.
+            if str(e)[-15:] == " does not exist":
+                print "tb could not open", whichtab
+            else:
+                print "Error", e, "from tb.open(", whichtab, ")"
+            mytb.close()  # Just in case.
+        return retval
     
     for currms in mses:
         if currms[:2] == './':  # strip off leading ./, if present.
@@ -87,48 +110,17 @@ def checkMSes(holderdict, dir, files):
         else:
             retval[currms] = set([])
 
-        try:
-            mytb.open(currms + '/POLARIZATION')
-        except Exception, e:
-            # Typically if we are here currms is too malformed for
-            # mytb to handle, and e is usually "currms does not exist",
-            # which is usually incorrect.
-            #print "mses =", ", ".join(mses)
-            if str(e)[-15:] == " does not exist":
-                print "tb could not open", currms
-            else:
-                print "Error", e, "from tb.open(", currms, ")"
-            mytb.close()  # Just in case.
+        if not myopen(mytb, currms + '/POLARIZATION'):
             break
         num_corrs = mytb.getcol('NUM_CORR')
+        mytb.close()
         
-        try:
-            mytb.open(currms + '/SPECTRAL_WINDOW')
-        except Exception, e:
-            # Typically if we are here currms is too malformed for
-            # mytb to handle, and e is usually "currms does not exist",
-            # which is usually incorrect.
-            #print "mses =", ", ".join(mses)
-            if str(e)[-15:] == " does not exist":
-                print "tb could not open", currms
-            else:
-                print "Error", e, "from tb.open(", currms, ")"
-            mytb.close()  # Just in case.
+        if not myopen(mytb, currms + '/SPECTRAL_WINDOW'):
             break
         num_chans = mytb.getcol('NUM_CHAN')
+        mytb.close()
         
-        try:
-            mytb.open(currms + '/DATA_DESCRIPTION')
-        except Exception, e:
-            # Typically if we are here currms is too malformed for
-            # mytb to handle, and e is usually "currms does not exist",
-            # which is usually incorrect.
-            #print "mses =", ", ".join(mses)
-            if str(e)[-15:] == " does not exist":
-                print "tb could not open", currms
-            else:
-                print "Error", e, "from tb.open(", currms, ")"
-            mytb.close()  # Just in case.
+        if not myopen(mytb, currms + '/DATA_DESCRIPTION'):
             break
 
         for row in xrange(mytb.nrows()):
