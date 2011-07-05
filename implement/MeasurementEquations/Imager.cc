@@ -4844,10 +4844,6 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     // Figure out which fields/spws to treat
     Record selrec=ms_p->msseltoindex(spwstring, fieldnames);
     Vector<Int> fldids(selrec.asArrayInt("field"));
-    // MSSelection select;
-    // select.setFieldExpr(fieldnames);
-    // select.setSpwExpr(spwstring);
-    
     Vector<Int> selToRawSpwIds(selrec.asArrayInt("spw"));
 
     expand_blank_sel(selToRawSpwIds, ms_p->spectralWindow().nrow());

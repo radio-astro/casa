@@ -41,7 +41,7 @@
 #include <coordinates/Coordinates/StokesCoordinate.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <casa/Utilities/CompositeNumber.h>
-#include <ostream.h>
+#include <casa/ostream.h>
 namespace casa{
 
   AWConvFunc& AWConvFunc::operator=(const AWConvFunc& other)

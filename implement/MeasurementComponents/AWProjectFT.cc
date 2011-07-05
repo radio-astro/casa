@@ -49,7 +49,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 #include <scimath/Mathematics/MathFunc.h>
 #include <measures/Measures/MeasTable.h>
-#include <iostream.h>
+#include <casa/iostream.h>
 
 #define CONVSIZE (1024*2)
 #define CONVWTSIZEFACTOR 1.0
