@@ -22,7 +22,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 // STL Includes
-
+#include <algorithm>
 #include <functional>
 #include <iterator>
 #include <map>

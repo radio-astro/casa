@@ -17,6 +17,7 @@
 #include <boost/tuple/tuple_comparison.hpp>
 #include <list>
 #include <stdarg.h>
+#include <limits>
 #include <memory>
 #include <numeric>
 
