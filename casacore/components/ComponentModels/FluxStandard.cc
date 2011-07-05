@@ -234,7 +234,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
     for(uInt spw = 0; spw < nspws; ++spw){
       ComponentType::Shape cmpshape = ssobj.compute(values[spw], errors[spw], angdiam,
-                                                    mfreqs[spw]);
+                                                    mfreqs[spw], spw == 0);
     
       switch(cmpshape){
       case ComponentType::DISK:
