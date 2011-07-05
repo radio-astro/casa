@@ -216,7 +216,9 @@
 	       in vis (as shown by listobs).
 
                Flux density calculation with Solar System objects depends on
-               ephemerides, typically in
+               ephemerides.  setjy looks, in order, in
+               '.',
+               user.ephemerides.directory (a ~/.casarc option), and
                os.getenv('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons'.
 
                If no ephemeris for the right object at the right time is
