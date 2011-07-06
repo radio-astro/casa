@@ -1393,7 +1393,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     if(mask == "[]") {
 	    mask = "";
     }
-    cout << "chans " << chans.typeString() << endl;
+    //    cout << "chans " << chans.typeString() << endl;
 	try {
 		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = itsImage->getImage();
@@ -2856,19 +2856,19 @@ image::topixel(const ::casac::variant& value)
 		if (isunset(value)) {
 			pixel.resize(0);
 		} else if (value.type() == ::casac::variant::DOUBLEVEC) {
-			cout << "double vec " << endl;
+		  //cout << "double vec " << endl;
 			pixel = value.getDoubleVec();
 		} else if (value.type() == ::casac::variant::INTVEC) {
-			cout << "int vec " << endl;
+		  //cout << "int vec " << endl;
 
 			variant vcopy = value;
 			Vector<Int> ipixel = vcopy.asIntVec();
-			cout << "* ipixel " << ipixel << endl;
+			//cout << "* ipixel " << ipixel << endl;
 			Int n = ipixel.size();
 			pixel.resize(n);
 			for (int i=0 ; i < n; i++) pixel[i]=ipixel[i];
 		} else if (value.type() == ::casac::variant::RECORD) {
-			cout << "record " << endl;
+		  //cout << "record " << endl;
 			::casac::variant localvar(value);
 			Record *tmp = toRecord(localvar.asRecord());
 			if (tmp->isDefined("numeric")) {
@@ -2884,7 +2884,7 @@ image::topixel(const ::casac::variant& value)
 					<< LogIO::EXCEPTION;
 			return rstat;
 		}
-		cout << "*** pixel " << pixel << endl;
+		//cout << "*** pixel " << pixel << endl;
 		rstat = fromRecord(itsImage->toworld(pixel, format));
 
 	} catch (AipsError x) {
@@ -3244,7 +3244,7 @@ void image::outputvariant(::casac::variant& v)
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  cout << "all is well so far" << endl;
+  //cout << "all is well so far" << endl;
 }
 
 casac::record*
