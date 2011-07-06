@@ -13,7 +13,7 @@ def simdata(
     ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
     predict=None, 
-    refdate=None, complist=None, compwidth=None,
+    refdate=None, reftime=None, complist=None, compwidth=None,
     totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
@@ -612,12 +612,31 @@ def simdata(
                     sm.setfield(sourcename="phase calibrator", 
                                 sourcedirection=caldirection,calcode='C',
                                 distance='0m')
-                reftime = me.epoch('TAI', refdate)
 
-                # XXX can turn off usehourangle=T here, but check below
-                usehourangle=True
+                # what if someone has the old style refdate with time
+                # included?  CATCH XXX 
+  
+                q = re.compile('(\d*/\d+/\d+)([/:\d]*)')
+                qq = q.match(refdate)
+                if not qq:
+                    msg("Invalid reference date "+refdate,priority="error")
+                    return
+                else:
+                    z = qq.groups()
+                    refdate=z[0]
+                    if len(z)>1:
+                        msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
+ 
+                if reftime=="transit":
+                    refdate=refdate+"/00:00:00"
+                    usehourangle=True
+                else:
+                    refdate=refdate+"/"+reftime
+                    usehourangle=False
+
+                mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
-                            referencetime=reftime)
+                            referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
                 scansec = qa.convert(qa.quantity(scantime),'s')['value']
@@ -637,9 +656,11 @@ def simdata(
                     stoptimes = []
                     dirs = []
 
-                # XXX this only workds for usehourangle=T - need offset
                 for k in xrange(0,nscan) :
-                    sttime = -totalsec/2.0 + scansec*k
+                    if usehourangle:
+                        sttime = -totalsec/2.0 + scansec*k
+                    else:
+                        sttime = scansec*k # leave start at the reftime
                     endtime = sttime + scansec
                     src = project + '_%d' % kfld
                     if observemany:
@@ -655,7 +676,10 @@ def simdata(
                     kfld = kfld + 1
                     if kfld == nfld: 
                         if docalibrator:
-                            sttime = -totalsec/2.0 + scansec*k
+                            if usehourangle:
+                                sttime = -totalsec/2.0 + scansec*k
+                            else:
+                                sttime = scansec*k
                             endtime = sttime + scansec
                             if observemany:
                                 # need to observe cal singly to get new row in obs table, so 
@@ -758,9 +782,9 @@ def simdata(
                 #    sm.setfield(sourcename="phase calibrator", 
                 #                sourcedirection=caldirection,calcode='C',
                 #                distance='0m')
-                reftime = me.epoch('TAI', refdate)
+                mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=True, 
-                            referencetime=reftime)
+                            referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
                 scansec = qa.convert(qa.quantity(scantime),'s')['value']
@@ -781,7 +805,10 @@ def simdata(
                 dirs = []
 
                 for k in xrange(0,nscan) :
-                    sttime = -totalsec/2.0 + scansec*k
+                    if usehourangle:
+                        sttime = -totalsec/2.0 + scansec*k
+                    else:
+                        sttime = scansec*k
                     endtime = sttime + scansec
                     src = project + '_%d' % kfld
                     #if observemany:
