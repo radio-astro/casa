@@ -54,6 +54,11 @@
 			<value></value>
 		</param>
 
+		<param type="bool" name="listmodimages">
+		  <description>List the available modimages</description>
+		  <value>False</value>
+		</param>
+
 		<param type="bool" name="scalebychan">
 		  <description>scale the flux density on a per channel basis or else on a per spw basis</description>
 		  <value>False</value>
@@ -156,8 +161,15 @@
               flux density will be used.  If fluxdensity([0]) &gt; 0.0, it will
               be used.  Both the amplitude and phase are calculated.  At the
               AOC or CV, the models are located in
-              /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im (egs)
+              casa['dirs']['data'] + '/nrao/VLA/CalModels/', e.g.
+              /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im
                    lib64
+
+       listmodimages -- If True, do nothing but list candidates for modimage
+              that are present on the system.  It looks for *.im* *.mod* in .,
+              CalModels, and CalModels directories in the casa['dirs']['data']
+              tree.  It does not check whether they are appropriate for the MS!
+
        scalebychan=False
                This determines whether the fluxdensity set in the model is
                calculated on a per channel basis. If False then it only one
