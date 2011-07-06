@@ -68,45 +68,55 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
        try:
          casalog.origin('setjy')
 
+         def findCalModels(target='CalModels',
+                           roots=['.', casa['dirs']['data']],
+                           permexcludes = ['.svn', 'regression', 'ephemerides',
+                                           'geodetic', 'gui'],
+                           exts=['.ms', '.im', '.tab']):
+             """
+             Returns a list of directories ending in target that are in the
+             trees of roots.
+
+             Because casa['dirs']['data'] can contain a lot, and CASA tables
+             are directories,and CASA tables are directories, branches matching
+             permexcludes or exts are excluded for speed.
+             """
+             retlist = []
+             for root in roots:
+                 # Do a walk to find target directories in root.
+                 # 7/5/2011:
+                 # glob('/export/data_1/casa/gnuactive/data/*/CalModels/*') doesn't
+                 # work.
+                 for path, dirs, fnames in os.walk(root, followlinks=True):
+                     excludes = permexcludes[:]
+                     for ext in exts:
+                         excludes += [d for d in dirs if ext in d]
+                     for d in excludes:
+                         if d in dirs:
+                             dirs.remove(d)
+                     if path.split('/')[-1] == target:
+                         retlist.append(path)
+             return retlist             
+
          if listmodimages:
              casalog.post("Listing modimage candidates (listmodimages == True).")
              casalog.post("%s is NOT being modified." % vis)
 
-             def lsmodims(path, doanyway=False, modimdir='CalModels',
-                          modpat='*', header='Candidate modimages'):
+             def lsmodims(path, modpat='*', header='Candidate modimages'):
                  """
-                 Does an ls -d of files or directories in path matching modpat,
-                 but only if path ends in modimdir or doanyway is True.
+                 Does an ls -d of files or directories in path matching modpat.
 
                  header describes what is being listed.
                  """
                  if os.path.isdir(path):
-                     path = path.rstrip('/')
-                     if doanyway or path.split('/')[-1] == modimdir:
-                         print "\n%s (%s) in %s:" % (header, modpat, path)
-                         sys.stdout.flush()
-                         os.system('cd ' + path + ';ls -d ' + modpat)
+                     print "\n%s (%s) in %s:" % (header, modpat, path)
+                     sys.stdout.flush()
+                     os.system('cd ' + path + ';ls -d ' + modpat)
 
-             lsmodims('.', True, modpat='*.im* *.mod*')   
-             lsmodims('CalModels')
-             
-             # Do a walk to find CalModels directories in casa['dirs']['data'].
-             # Because data/ contains a lot, and CASA tables are directories,
-             # heavy filtering is needed for speed.
-             # 7/5/2011:
-             # glob('/export/data_1/casa/gnuactive/data/*/CalModels/*') doesn't
-             # work.
-             permexcludes = ['.svn', 'regression', 'ephemerides', 'geodetic',
-                             'gui']
-             for path, dirs, fnames in os.walk(casa['dirs']['data'],
-                                               followlinks=True):
-                 excludes = permexcludes[:]
-                 for ext in ['.ms', '.im', '.tab']:
-                     excludes += [d for d in dirs if ext in d]
-                 for d in excludes:
-                     if d in dirs:
-                         dirs.remove(d)
-                 lsmodims(path)
+             lsmodims('.', modpat='*.im* *.mod*')
+             calmoddirs = findCalModels()
+             for d in calmoddirs:
+                 lsmodims(d)
          else:
              myim = imtool.create()
              myms = mstool.create()
@@ -115,6 +125,35 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
                     myim.open(vis, usescratch=True)
              else:
                     raise Exception, 'Visibility data set not found - please verify the name'
+
+             # If modimage is not an absolute path, see if we can find exactly
+             # 1 match in the likely places.
+             if modimage and modimage[0] != '/':
+                 cwd = os.path.abspath('.')
+                 calmoddirs = [cwd]
+                 calmoddirs += findCalModels(roots=[cwd,
+                                                    casa['dirs']['data']])
+                 candidates = []
+                 for calmoddir in calmoddirs:
+                     cand = calmoddir + '/' + modimage
+                     if os.path.isdir(cand):
+                         candidates.append(cand)
+                 if not candidates:
+                     casalog.post("%s was not found for modimage in %s." %(modimage,
+                                                                           ', '.join(calmoddirs)),
+                                  'SEVERE')
+                     return False
+                 elif len(candidates) > 1:
+                     casalog.post("More than 1 candidate for modimage was found:",
+                                  'SEVERE')
+                     for c in candidates:
+                         casalog.post("\t" + c, 'SEVERE')
+                     casalog.post("Please pick 1 and use the absolute path (starting with /).",
+                                  'SEVERE')
+                     return False
+                 else:
+                     modimage = candidates[0]
+                     casalog.post("Using %s for modimage." % modimage, 'INFO')
 
              myim.setjy(field=field, spw=spw, modimage=modimage,
                         fluxdensity=fluxdensity, standard=standard,

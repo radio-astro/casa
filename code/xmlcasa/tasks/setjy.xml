@@ -165,6 +165,14 @@
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im
                    lib64
 
+              If modimage does not start with '/', setjy will look for a match
+              in '.', './CalModels', and any CalModels directories within
+              the casa['dirs']['data'] tree (excluding certain branches).
+
+              Note that modimage should be deconvolved, i.e. a set of clean
+              components instead of an image that has been convolved with a
+              clean beam.
+
        listmodimages -- If True, do nothing but list candidates for modimage
               that are present on the system.  It looks for *.im* *.mod* in .,
               CalModels, and CalModels directories in the casa['dirs']['data']
