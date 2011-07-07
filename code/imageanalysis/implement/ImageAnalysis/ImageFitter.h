@@ -32,7 +32,7 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
-#include <images/Images/ImageInputProcessor.h>
+#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <images/Images/SubImage.h>
 
 #include <components/ComponentModels/ComponentType.h>

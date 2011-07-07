@@ -51,7 +51,7 @@
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/MIRIADImage.h>
-#include <images/Regions/RegionManager.h>
+#include <imageanalysis/Regions/CasacRegionManager.h>
 
 #include <images/Regions/WCUnion.h>
 #include <images/Regions/WCBox.h>
@@ -408,7 +408,7 @@ void ImageFitter::_construct(
 			_regionRecord, diagnostics, &outputs,
 			_stokesString, image, regionPtr,
 			regionName, box, _chans,
-			RegionManager::USE_FIRST_STOKES, False,
+			CasacRegionManager::USE_FIRST_STOKES, False,
 			&reqCoordTypes
 	);
 	_finishConstruction(estimatesFilename);
@@ -441,7 +441,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
         	<< " specified, so will attempt to fit that many gaussians "
         	<< LogIO::POST;
 	}
-	RegionManager rm(_image->coordinates());
+	CasacRegionManager rm(_image->coordinates());
 	uInt nSelectedChannels;
 	Int specAxisNumber = _image->coordinates().spectralAxisNumber();
 

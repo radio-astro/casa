@@ -32,7 +32,7 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Regions/ImageRegion.h>
-#include <images/Regions/RegionManager.h>
+#include <imageanalysis/Regions/CasacRegionManager.h>
 #include <imageanalysis/Annotations/AsciiAnnotationList.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/namespace.h>
@@ -69,7 +69,7 @@ void
 regionmanager::setup()
 {
     if ( itsRegMan == NULL )
-	itsRegMan = new casa::RegionManager();
+	itsRegMan = new CasacRegionManager();
 
     if ( itsLog == NULL )
 	itsLog = new LogIO();
@@ -1082,13 +1082,13 @@ record* regionmanager::frombcs(
 
     try {
     	String myControl = stokescontrol;
-    	RegionManager::StokesControl sControl;
+    	CasacRegionManager::StokesControl sControl;
     	myControl.upcase();
     	if (myControl.startsWith("A")) {
-    		sControl = RegionManager::USE_ALL_STOKES;
+    		sControl = CasacRegionManager::USE_ALL_STOKES;
     	}
     	else if (myControl.startsWith("F")) {
-    		sControl = RegionManager::USE_FIRST_STOKES;
+    		sControl = CasacRegionManager::USE_FIRST_STOKES;
     	}
     	else {
     		throw AipsError("Unsupported value for stokescontrol: " + stokescontrol);

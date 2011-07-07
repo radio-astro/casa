@@ -207,7 +207,6 @@ void AsciiAnnotationFileParser::_parse() {
 			currentParamSet, annOnly, difference, preamble
 		);
 	}
-	*_log << LogIO::NORMAL << "end" << LogIO::POST;
 }
 
 void AsciiAnnotationFileParser::_addLine(const AsciiAnnotationFileLine& line) {

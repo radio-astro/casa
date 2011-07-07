@@ -50,7 +50,7 @@
 
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
-#include <images/Images/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -61,7 +61,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
-#include <images/Images/ImageProfileFitter.h>
+#include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageReorderer.h>
 #include <images/Images/ImageSourceFinder.h>
