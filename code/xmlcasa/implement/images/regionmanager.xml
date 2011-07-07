@@ -2211,7 +2211,7 @@ Using private CoordinateSystem from image "quiqui"
      <description>World regions and comment</description>
      <any type="variant"/>
      <value></value>
-     <choice>Region tools or record of region tools, and String</choice>
+     <choice>Record/dict  of regions to be unionized (the key names are immaterial)</choice>
      </param>
 
      <param type="string" direction="in" name="comment">
