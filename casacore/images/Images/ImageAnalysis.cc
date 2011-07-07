@@ -74,7 +74,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
-#include <images/Images/ImageCollapser.h>
+// #include <images/Images/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -1862,6 +1862,7 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 	return listOut;
 }
 
+/*
 Vector<ImageFit1D<Float> > ImageAnalysis::fitallprofiles(
 	Record& region, SubImage<Float>& subImage, String& xUnit, const Int axis,
 	const String& mask, const Int nGauss, const Int poly,
@@ -1937,7 +1938,9 @@ Vector<ImageFit1D<Float> > ImageAnalysis::fitallprofiles(
 	);
 
 }
+*/
 
+/*
 ImageFit1D<Float> ImageAnalysis::fitprofile(
 	Record& regionRecord, SubImage<Float>& subImage,
 	String& xUnit, const uInt axis,
@@ -1947,8 +1950,6 @@ ImageFit1D<Float> ImageAnalysis::fitprofile(
 	const Bool fitIt, const String weightsImageName
 ) {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
-
-	//Int nMax = ngauss; // unset value for ngauss is -1
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -2145,6 +2146,7 @@ ImageFit1D<Float> ImageAnalysis::fitprofile(
 	}
 	return fitter;
 }
+*/
 
 ImageInterface<Float> *
 ImageAnalysis::fitpolynomial(const String& residFile, const String& fitFile,
@@ -5498,8 +5500,8 @@ Bool ImageAnalysis::deleteHistAndStats() {
 }
 
 Bool ImageAnalysis::makeMask(ImageInterface<Float>& out, String& maskName,
-		Bool init, Bool makeDefault, LogIO& os, Bool list) const {
-	*itsLog << LogOrigin("ImageAnalysis", "makeMask");
+		Bool init, Bool makeDefault, LogIO& os, Bool list) {
+	os << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (out.canDefineRegion()) {
 
 		// Generate mask name if not given
@@ -5519,7 +5521,6 @@ Bool ImageAnalysis::makeMask(ImageInterface<Float>& out, String& maskName,
 				}
 			}
 		}
-		//
 		return True;
 	} else {
 		os << LogIO::WARN
@@ -5617,7 +5618,7 @@ Bool ImageAnalysis::make_image(String &error, const String& outfile,
 Bool ImageAnalysis::makeExternalImage(PtrHolder<ImageInterface<Float> >& image,
 		const String& fileName, const CoordinateSystem& cSys,
 		const IPosition& shape, const ImageInterface<Float>& inImage,
-		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask) const
+		LogIO& os, Bool overwrite, Bool allowTemp, Bool copyMask)
 {
 	if (fileName.empty()) {
 		if (allowTemp) {
