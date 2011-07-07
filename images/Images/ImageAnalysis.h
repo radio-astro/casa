@@ -218,6 +218,7 @@ class ImageAnalysis
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
 
+    /*
     // <src>subImage</src> will contain the subimage of the original image
     // on which the fit is performed.
     Vector<ImageFit1D<Float> >  fitallprofiles(
@@ -227,7 +228,9 @@ class ImageAnalysis
         const String& weightsImageName = "", const String& fit = "",
         const String& resid = ""
     ) const;
+    */
 
+    /*
     // <src>subImage</src> will contain the subimage of the original image
     // on which the fit is performed.
     ImageFit1D<Float> fitprofile(
@@ -239,7 +242,7 @@ class ImageAnalysis
         const String& residName = "", const Bool fit = True,
         const String weightsImageName = ""
     );
-
+*/
     ImageInterface<Float>* fitpolynomial(const String& residfile, 
                                          const String& fitfile, 
                                          const String& sigmafile, 
@@ -574,10 +577,25 @@ class ImageAnalysis
     // get the associated ImageInterface object
     const ImageInterface<Float>* getImage() const;
 
+    // If file name empty make TempImage (allowTemp=T) or do nothing.
+    // Otherwise, make a PagedImage from file name and copy mask and
+    // misc from inimage.   Returns T if image made, F if not
+    static Bool
+      makeExternalImage (
+    	casa::PtrHolder<ImageInterface<Float> >& image,
+                         const String& fileName,
+                         const CoordinateSystem& cSys,
+                         const IPosition& shape,
+                         const ImageInterface<Float>& inImage,
+                         LogIO& os, Bool overwrite=False,
+                         Bool allowTemp=False,
+                         Bool copyMask=True);
+
+
  private:
     
-    ImageInterface<Float>* pImage_p;
-    LogIO * itsLog;
+    ImageInterface<Float> *pImage_p;
+    LogIO *itsLog;
 
   
 
@@ -631,24 +649,12 @@ class ImageAnalysis
                           casa::LogIO& os, casa::Bool log=casa::True,
                           casa::Bool overwrite=casa::False);
     
-    // If file name empty make TempImage (allowTemp=T) or do nothing.
-    // Otherwise, make a PagedImage from file name and copy mask and
-    // misc from inimage.   Returns T if image made, F if not
-    casa::Bool
-      makeExternalImage (casa::PtrHolder<casa::ImageInterface<casa::Float> >& image,
-                         const casa::String& fileName,
-                         const casa::CoordinateSystem& cSys,
-                         const casa::IPosition& shape,
-                         const casa::ImageInterface<casa::Float>& inImage,
-                         casa::LogIO& os, casa::Bool overwrite=casa::False,
-                         casa::Bool allowTemp=casa::False,
-                         casa::Bool copyMask=casa::True) const;
-    
+
     // Make a mask and define it in the image.
-    casa::Bool makeMask(casa::ImageInterface<casa::Float>& out,
-                        casa::String& maskName,
-                        casa::Bool init, casa::Bool makeDefault,
-                        casa::LogIO& os, casa::Bool list) const;
+    static Bool makeMask(casa::ImageInterface<Float>& out,
+                        String& maskName,
+                        Bool init, Bool makeDefault,
+                        LogIO& os, Bool list);
     /*
     // Make a SubImage from a region and a WCLELMask string
     SubImage<Float> makeSubImage(

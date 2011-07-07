@@ -42,8 +42,6 @@ Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
 Images/ImageMomentsProgress.cc
 Images/ImageAnalysis.cc
-Images/ImageCollapser.cc
-Images/ImageInputProcessor.cc
 Images/FITSImage.cc
 Images/FITSErrorImage.cc
 Images/FITSImgParser.cc
@@ -62,10 +60,7 @@ Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
 Images/ComponentImager.cc
-Images/ImageCollapser.cc
-Images/ImageInputProcessor.cc
 Images/ImageReorderer.cc
-Images/ImageProfileFitter.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -105,12 +100,10 @@ Images/HDF5Image.tcc
 Images/Image2DConvolver.h
 Images/Image2DConvolver.tcc
 Images/ImageAnalysis.h
-Images/ImageCollapser.h
 Images/ImageConcat.h
 Images/ImageConcat.tcc
 Images/ImageConvolver.h
 Images/ImageConvolver.tcc
-Images/ImageCollapser.h
 Images/ImageDecomposer.h
 Images/ImageDecomposer.tcc
 Images/ImageExpr.h
@@ -125,7 +118,6 @@ Images/ImageFit1D.tcc
 Images/ImageHistograms.h
 Images/ImageHistograms.tcc
 Images/ImageInfo.h
-Images/ImageInputProcessor.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
 Images/ImageMetaData.h
@@ -136,7 +128,6 @@ Images/ImageOpener.h
 Images/ImagePolProxy.h
 Images/ImagePolarimetry.h
 Images/ImageProfileFit.h
-Images/ImageProfileFitter.h
 Images/ImageProxy.h
 Images/ImageRegrid.h
 Images/ImageRegrid.tcc

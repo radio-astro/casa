@@ -1,7 +1,5 @@
 set (datafiles
-imregion.fits
-imregion_dironly.fits
-imregion_nospec.fits
+
 )
 
 foreach (file ${datafiles})
@@ -10,7 +8,6 @@ endforeach (file)
 
 set (tests
 tRegionHandler
-tRegionManager
 tWCBox
 tWCEllipsoid
 tWCExtension
