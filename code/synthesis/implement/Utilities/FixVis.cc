@@ -80,10 +80,10 @@ uInt FixVis::setFields(const Vector<Int>& fieldIds)
   nAllFields_p = ms_p.field().nrow();
   FieldIds_p.resize(nAllFields_p);
 
-  for(uInt i=0; i<nAllFields_p; i++){
+  for(Int i = 0; i < nAllFields_p; ++i){
     FieldIds_p(i) = -1;
-    for(uInt j=0; j<nsel_p; j++){
-      if(fieldIds(j)==i){
+    for(uInt j = 0; j < nsel_p; ++j){
+      if(fieldIds[j] == i){
 	FieldIds_p(i) = i;
 	logSink() << i << " " << LogIO::NORMAL;
 	break;
@@ -378,7 +378,8 @@ void FixVis::rotateUVW(const MDirection &indir, const MDirection::Ref& newref)
 }
 
 // Don't just calculate the (u, v, w)s, do everything and store them in ms_p.
-Bool FixVis::fixvis(const String& refcode, const String& dataColName)
+Bool FixVis::fixvis(const String& refcode, const String& //dataColName
+                    )
 {
   logSink() << LogOrigin("FixVis", "fixvis");
 
@@ -687,7 +688,7 @@ void FixVis::init()
 
 // Initialize FTMachine.
 void FixVis::initializeToVis(ImageInterface<Complex>& iimage,
-			     const VisBuffer& vb)
+			     const VisBuffer&)
 {
   image = &iimage;
 
@@ -706,7 +707,8 @@ void FixVis::finalizeToVis()
 // Initialize the FFT to the Sky. Here we have to setup and initialize the
 // grid. 
 void FixVis::initializeToSky(ImageInterface<Complex>& iimage,
-			     Matrix<Float>& weight, const VisBuffer& vb)
+			     Matrix<Float>&, //weight,
+                             const VisBuffer&)
 {
   // image always points to the image
   image = &iimage;
