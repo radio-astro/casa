@@ -3377,8 +3377,7 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 		const String& smoothout, const String& pgdevice, const Int nx,
 		const Int ny, const Bool yind, const Bool overwrite,
 		const Bool removeAxis) {
-
-	*itsLog << LogOrigin("ImageAnalysis", "moments");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// check that we can write to smoothout if specified
 	if (!smoothout.empty() and !overwrite) {
@@ -3389,25 +3388,18 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 		}
 	}
 
-	//
 	// Note that the user may give the strings (method & kernels)
 	// as either vectors of strings or one string with separators.
 	// Hence the code below that deals with it.   Also in image.g we therefore
 	// give the default value as a blank string rather than a null vector.
-	//
 
 	// Convert region from Glish record to ImageRegion. Convert mask
 	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
-
 	// Create ImageMoments object
 	ImageMoments<Float> momentMaker(subImage, *itsLog, overwrite, True);
 
@@ -3433,7 +3425,6 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 			*itsLog << momentMaker.errorMessage() << LogIO::EXCEPTION;
 		}
 	}
-
 	// Set smoothing
 	if (kernels.nelements() >= 1 && kernels(0) != "" && smoothaxes.size() >= 1
 			&& kernelwidths.nelements() >= 1) {
@@ -3458,7 +3449,6 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	if (!momentMaker.setSnr(peaksnr, stddev)) {
 		*itsLog << momentMaker.errorMessage() << LogIO::EXCEPTION;
 	}
-
 	// Set velocity type
 	if (!velocityType.empty()) {
 		MDoppler::Types velType;
@@ -3474,7 +3464,6 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	if (smoothout != "" && !momentMaker.setSmoothOutName(smoothout)) {
 		*itsLog << momentMaker.errorMessage() << LogIO::EXCEPTION;
 	}
-
 	// Set plotting attributes
 	PGPlotter plotter;
 	if (!pgdevice.empty()) {
@@ -3493,7 +3482,6 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 			*itsLog << momentMaker.errorMessage() << LogIO::EXCEPTION;
 		}
 	}
-
 	// If no file name given for one moment image, make TempImage.
 	// Else PagedImage results
 	Bool doTemp = False;
