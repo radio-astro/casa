@@ -241,7 +241,13 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 ) {
 	// The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
-	outMask = ImageRegion::fromLatticeExpression(mask);
+	try {
+		outMask = ImageRegion::fromLatticeExpression(mask);
+	} catch (AipsError x) {
+		LogIO log;
+		log << LogOrigin("SubImage", __FUNCTION__);
+		log << "Input mask specification is incorrect" << LogIO::EXCEPTION;
+	}
 
 	SubImage<T> subImage;
 	// We can get away with no region processing if the region record
