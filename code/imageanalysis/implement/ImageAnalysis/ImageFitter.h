@@ -224,6 +224,37 @@ private:
 	void _setIncludeExclude(
 	    Fit2D& fitter
 	) const;
+
+	ComponentList _fitsky(
+		Fit2D& fitter, Array<Float>& pixels,
+	    Array<Bool>& pixelMask, Bool& converged,
+	    Record& region, const uInt& chan,
+		const String& stokesString, const String& mask,
+		const Vector<String>& models, Record& inputEstimate,
+		const Vector<String>& fixed, const Bool fitIt,
+		const Bool deconvolveIt, const Bool list
+	);
+
+	Vector<Double> _singleParameterEstimate(
+		Fit2D& fitter, Fit2D::Types model,
+		const MaskedArray<Float>& pixels, Float minVal,
+		Float maxVal, const IPosition& minPos, const IPosition& maxPos
+	) const;
+
+	ComponentType::Shape _convertModelType(Fit2D::Types typeIn) const;
+
+	void _fitskyExtractBeam(
+		Vector<Double>& parameters, const ImageInfo& imageInfo,
+		const Bool xIsLong, const CoordinateSystem& cSys
+	) const;
+
+	void _encodeSkyComponentError(
+		LogIO& os, SkyComponent& sky,
+		Double facToJy, const ImageInterface<Float>& subIm,
+		const Vector<Double>& parameters, const Vector<Double>& errors,
+		Stokes::StokesTypes stokes, Bool xIsLong
+	) const;
+
 };
 }
 

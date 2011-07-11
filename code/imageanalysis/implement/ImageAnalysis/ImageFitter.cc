@@ -174,7 +174,7 @@ ComponentList ImageFitter::fit() {
 		Array<Float> pixels, curResidPixels, curModelPixels;
 		Array<Bool> pixelMask;
 		try {
-			_curResults = myImage.fitsky(
+			_curResults = _fitsky(
 				fitter, pixels,
 				pixelMask, converged,
 				_regionRecord, _curChan, _kludgedStokes,
@@ -1089,5 +1089,465 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 	}
 }
 
+
+// TODO From here until the end of the file is code extracted directly
+// from ImageAnalysis. It is in great need of attention.
+
+ComponentList ImageFitter::_fitsky(
+	Fit2D& fitter, Array<Float>& pixels,
+    Array<Bool>& pixelMask, Bool& converged,
+    Record& region, const uInt& chan,
+	const String& stokesString, const String& mask,
+	const Vector<String>& models, Record& inputEstimate,
+	const Vector<String>& fixed, const Bool fitIt,
+	const Bool deconvolveIt, const Bool list
+) {
+	LogOrigin origin("ImageFitter", __FUNCTION__);
+	*_log << origin;
+
+	String error;
+
+	Vector<SkyComponent> estimate;
+
+	ComponentList compList;
+	if (!compList.fromRecord(error, inputEstimate)) {
+		*_log << LogIO::WARN
+				<< "Can not  convert input parameter to ComponentList "
+				<< error << LogIO::POST;
+	}
+	else {
+		int n = compList.nelements();
+		estimate.resize(n);
+		for (int i = 0; i < n; i++) {
+			estimate(i) = compList.component(i);
+		}
+	}
+
+	converged = False;
+	const uInt nModels = models.nelements();
+	const uInt nMasks = fixed.nelements();
+	const uInt nEstimates = estimate.nelements();
+	if (nModels == 0) {
+		*_log << "You have not specified any models" << LogIO::EXCEPTION;
+	}
+	if (nModels > 1 && estimate.nelements() < nModels) {
+		*_log << "You must specify one estimate for each model component"
+			<< LogIO::EXCEPTION;
+	}
+	if (!fitIt && nModels > 1) {
+		*_log << "Parameter estimates are only available for a single model"
+			<< LogIO::EXCEPTION;
+	}
+	SubImage<Float> subImageTmp = SubImage<Float>::createSubImage(
+		*_image, *(ImageRegion::tweakedRegionRecord(&region)),
+		mask, (list ? _log : 0), False, AxesSpecifier(True)
+	);
+
+	SubImage<Float> allAxesSubImage;
+	{
+		IPosition imShape = subImageTmp.shape();
+		IPosition startPos(imShape.nelements(), 0);
+		// Pass in an IPosition here to the constructor
+		// this will subtract 1 from each element of the IPosition imShape
+		IPosition endPos(imShape - 1);
+		IPosition stride(imShape.nelements(), 1);
+		//const CoordinateSystem& imcsys = pImage_p->coordinates();
+		const CoordinateSystem& imcsys = subImageTmp.coordinates();
+
+		if (imcsys.hasSpectralAxis()) {
+			uInt spectralAxisNumber = imcsys.spectralAxisNumber();
+			startPos[spectralAxisNumber] = chan;
+			endPos[spectralAxisNumber] = chan;
+		}
+		if (imcsys.hasPolarizationAxis()) {
+			uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
+			startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(stokesString);
+			endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
+		}
+
+		Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
+		// CAS-1966, CAS-2633 keep degenerate axes
+		allAxesSubImage = SubImage<Float>(
+			subImageTmp, slice, False, AxesSpecifier(True)
+		);
+	}
+
+	// for some things we don't want the degenerate axes,
+	// so make a subimage without them as well
+	SubImage<Float> subImage = SubImage<Float>(
+		allAxesSubImage, AxesSpecifier(False)
+	);
+
+    // Make sure the region is 2D and that it holds the sky.  Exception if not.
+	const CoordinateSystem& cSys = subImage.coordinates();
+	Bool xIsLong = CoordinateUtil::isSky(*_log, cSys);
+
+	pixels = subImage.get(True);
+	IPosition shape = pixels.shape();
+
+	pixelMask = subImage.getMask(True).copy();
+
+	// What Stokes type does this plane hold ?
+	Stokes::StokesTypes stokes = Stokes::type(stokesString);
+
+	// Form masked array and find min/max
+	MaskedArray<Float> maskedPixels(pixels, pixelMask, True);
+	Float minVal, maxVal;
+	IPosition minPos(2), maxPos(2);
+	minMax(minVal, maxVal, minPos, maxPos, pixels);
+
+    // Recover just single component estimate if desired and bug out
+	// Must use subImage in calls as converting positions to absolute
+	// pixel and vice versa
+    ComponentList cl;
+
+    if (!fitIt) {
+		Vector<Double> parameters;
+		parameters = _singleParameterEstimate(
+			fitter, Fit2D::GAUSSIAN, maskedPixels,
+			minVal, maxVal, minPos, maxPos
+		);
+
+		// Encode as SkyComponent and return
+		Vector<SkyComponent> result(1);
+		Double facToJy;
+		result(0) = ImageUtilities::encodeSkyComponent(
+			*_log, facToJy, allAxesSubImage,
+			_convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
+			deconvolveIt
+		);
+		cl.add(result(0));
+		return cl;
+	}
+
+	// For ease of use, make each model have a mask string
+	Vector<String> fixedParameters(fixed.copy());
+	fixedParameters.resize(nModels, True);
+	for (uInt j = 0; j < nModels; j++) {
+		if (j >= nMasks) {
+			fixedParameters(j) = String("");
+		}
+	}
+	// Add models
+	Vector<String> modelTypes(models.copy());
+
+	for (uInt i = 0; i < nModels; i++) {
+		// If we ask to fit a POINT component, that really means a
+		// Gaussian of shape the restoring beam.  So fix the shape
+		// parameters and make it Gaussian
+		Fit2D::Types modelType;
+		if (ComponentType::shape(models(i)) == ComponentType::POINT) {
+			modelTypes(i) = String("GAUSSIAN");
+			fixedParameters(i) += String("abp");
+		}
+		modelType = Fit2D::type(modelTypes(i));
+
+		Vector<Bool> parameterMask = Fit2D::convertMask(
+			fixedParameters(i),
+			modelType
+		);
+
+		Vector<Double> parameters;
+		if (nModels == 1 && nEstimates == 0) {
+			// Auto estimate
+			parameters = _singleParameterEstimate(
+				fitter, modelType, maskedPixels,
+				minVal, maxVal, minPos, maxPos
+			);
+		}
+		else {
+			// Decode parameters from estimate
+			const CoordinateSystem& cSys = subImage.coordinates();
+			const ImageInfo& imageInfo = subImage.imageInfo();
+
+			parameters = ImageUtilities::decodeSkyComponent(estimate(i),
+					imageInfo, cSys, subImage.units(), stokes, xIsLong);
+			// The estimate SkyComponent may not be the same type as the
+			// model type we are fitting for.  Try and do something about
+			// this if need be by adding or removing component shape parameters
+			ComponentType::Shape estType = estimate(i).shape().type();
+			if (modelType == Fit2D::GAUSSIAN || modelType == Fit2D::DISK) {
+				if (estType == ComponentType::POINT) {
+					_fitskyExtractBeam(parameters, imageInfo, xIsLong, cSys);
+				}
+			}
+			else if (modelType == Fit2D::LEVEL) {
+				*_log << LogIO::EXCEPTION; // Levels not supported yet
+			}
+		}
+		fitter.addModel(modelType, parameters, parameterMask);
+	}
+	// Do fit
+	Array<Float> sigma;
+	// residMask constant so do not recalculate out_pixelmask
+	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
+
+	if (status == Fit2D::OK) {
+		*_log << LogIO::NORMAL << "Number of iterations = "
+				<< fitter.numberIterations() << LogIO::POST;
+		converged = True;
+	}
+	else {
+		converged = False;
+		*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
+		*_log << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
+		return cl;
+	}
+
+	Vector<SkyComponent> result(nModels);
+	Double facToJy;
+
+	for (uInt i = 0; i < models.nelements(); i++) {
+		ComponentType::Shape modelType = _convertModelType(
+			Fit2D::type(modelTypes(i))
+		);
+
+		Vector<Double> solution = fitter.availableSolution(i);
+		Vector<Double> errors = fitter.availableErrors(i);
+
+
+	    result(i) = ImageUtilities::encodeSkyComponent(
+		    *_log, facToJy, allAxesSubImage, modelType,
+			solution, stokes, xIsLong, deconvolveIt
+		);
+		_encodeSkyComponentError(
+			*_log, result(i), facToJy, allAxesSubImage,
+			solution, errors, stokes, xIsLong
+		);
+
+		cl.add(result(i));
+	}
+	return cl;
 }
+
+Vector<Double> ImageFitter::_singleParameterEstimate(
+	Fit2D& fitter, Fit2D::Types model, const MaskedArray<Float>& pixels,
+	Float minVal, Float maxVal, const IPosition& minPos,
+	const IPosition& maxPos
+) const {
+	// position angle +x -> +y
+
+	// Return the initial fit guess as either the model, an auto guess,
+	// or some combination.
+	*_log << LogOrigin("ImageFitter", __FUNCTION__);
+	Vector<Double> parameters;
+	if (model == Fit2D::GAUSSIAN || model == Fit2D::DISK) {
+		//
+		// Auto determine estimate
+		//
+		parameters
+				= fitter.estimate(model, pixels.getArray(), pixels.getMask());
+		//
+		if (parameters.nelements() == 0) {
+			// Fall back parameters
+			*_log << LogIO::WARN
+				<< "The primary initial estimate failed.  Fallback may be poor"
+				<< LogIO::POST;
+			parameters.resize(6);
+			IPosition shape = pixels.shape();
+			if (abs(minVal) > abs(maxVal)) {
+				parameters(0) = minVal; // height
+				parameters(1) = Double(minPos(0)); // x cen
+				parameters(2) = Double(minPos(1)); // y cen
+			} else {
+				parameters(0) = maxVal; // height
+				parameters(1) = Double(maxPos(0)); // x cen
+				parameters(2) = Double(maxPos(1)); // y cen
+			}
+			parameters(3) = Double(std::max(shape(0), shape(1)) / 2); // major axis
+			parameters(4) = 0.9 * parameters(3); // minor axis
+			parameters(5) = 0.0; // position angle
+		} else if (parameters.nelements() != 6) {
+			*_log << "Not enough parameters returned by fitter estimate"
+					<< LogIO::EXCEPTION;
+		}
+	} else {
+		// points, levels etc
+		*_log << "Only Gaussian/Disk auto-single estimates are available"
+				<< LogIO::EXCEPTION;
+	}
+	return parameters;
+}
+
+ComponentType::Shape ImageFitter::_convertModelType(Fit2D::Types typeIn) const {
+	if (typeIn == Fit2D::GAUSSIAN) {
+		return ComponentType::GAUSSIAN;
+	} else if (typeIn == Fit2D::DISK) {
+		return ComponentType::DISK;
+	} else {
+		throw(AipsError("Unrecognized model type"));
+	}
+}
+
+void ImageFitter::_fitskyExtractBeam(
+	Vector<Double>& parameters, const ImageInfo& imageInfo,
+	const Bool xIsLong, const CoordinateSystem& cSys
+) const {
+	// We need the restoring beam shape as well.
+	Vector<Quantum<Double> > beam = imageInfo.restoringBeam();
+	Vector<Quantum<Double> > wParameters(5);
+	// Because we convert at the reference
+	// value for the beam, the position is
+	// irrelevant
+	wParameters(0).setValue(0.0);
+	wParameters(1).setValue(0.0);
+	wParameters(0).setUnit(String("rad"));
+	wParameters(1).setUnit(String("rad"));
+	wParameters(2) = beam(0);
+	wParameters(3) = beam(1);
+	wParameters(4) = beam(2);
+
+	// Convert to pixels for Fit2D
+	IPosition pixelAxes(2);
+	pixelAxes(0) = 0;
+	pixelAxes(1) = 1;
+	if (!xIsLong) {
+		pixelAxes(1) = 0;
+		pixelAxes(0) = 1;
+	}
+	Bool doRef = True;
+	Vector<Double> dParameters;
+	ImageUtilities::worldWidthsToPixel(
+		*_log, dParameters,
+		wParameters, cSys, pixelAxes, doRef
+	);
+	parameters.resize(6, True);
+	parameters(3) = dParameters(0);
+	parameters(4) = dParameters(1);
+	parameters(5) = dParameters(2);
+}
+
+void ImageFitter::_encodeSkyComponentError(
+		LogIO& os, SkyComponent& sky,
+		Double facToJy, const ImageInterface<Float>& subIm,
+		const Vector<Double>& parameters, const Vector<Double>& errors,
+		Stokes::StokesTypes stokes, Bool xIsLong) const
+//
+// Input
+//   facToJy = conversion factor to Jy
+//   pars(0) = peak flux  image units
+//   pars(1) = x cen    abs pix
+//   pars(2) = y cen    abs pix
+//   pars(3) = major    pix
+//   pars(4) = minor    pix
+//   pars(5) = pa radians (pos +x -> +y)
+//
+//   error values will be zero for fixed parameters
+{
+	//
+	// Flux. The fractional error of the integrated and peak flux
+	// is the same.  errorInt = Int * (errorPeak / Peak) * facToJy
+	// TODO it is? why is that? The error in the flux density has not
+	// been propogated correctly, because the (implicit) error in facToJy
+	// is not being caried along. This error arises because the size (major*minor axex)
+	// is not error free.
+	Flux<Double> flux = sky.flux(); // Integral
+	Vector<Double> valueInt;
+	flux.value(valueInt);
+	Vector<Double> tmp(4, 0.0);
+	//
+	if (errors(0) > 0.0) {
+		Double rat = (errors(0) / parameters(0)) * facToJy;
+		if (stokes == Stokes::I) {
+			tmp(0) = valueInt(0) * rat;
+		} else if (stokes == Stokes::Q) {
+			tmp(1) = valueInt(1) * rat;
+		} else if (stokes == Stokes::U) {
+			tmp(2) = valueInt(2) * rat;
+		} else if (stokes == Stokes::V) {
+			tmp(3) = valueInt(3) * rat;
+		} else {
+			// TODO handle stokes in addition to I,Q,U,V. For now, treat other stokes like stokes I.
+			tmp(0) = valueInt(0) * rat;
+		}
+		flux.setErrors(tmp(0), tmp(1), tmp(2), tmp(3));
+	}
+
+	// Shape.  Only TwoSided shapes have something for me to do
+	IPosition pixelAxes(2);
+	pixelAxes(0) = 0;
+	pixelAxes(1) = 1;
+	if (!xIsLong) {
+		pixelAxes(1) = 0;
+		pixelAxes(0) = 1;
+	}
+	//
+	ComponentShape& shape = sky.shape();
+	TwoSidedShape* pS = dynamic_cast<TwoSidedShape*> (&shape);
+	Vector<Double> dParameters(5);
+	Vector<Quantum<Double> > wParameters;
+	const CoordinateSystem& cSys = subIm.coordinates();
+	if (pS) {
+		if (errors(3) > 0.0 || errors(4) > 0.0 || errors(5) > 0.0) {
+			dParameters(0) = parameters(1); // x
+			dParameters(1) = parameters(2); // y
+
+			// Use the pixel to world converter by pretending the width
+			// errors are widths.  The minor error may be greater than major
+			// error so beware as the widths converted will flip them about.
+			// The error in p.a. is just the input error value as its
+			// already angular.
+			if (errors(3) > 0.0) {
+				dParameters(2) = errors(3); // Major
+			} else {
+				dParameters(2) = 0.1 * parameters(3); // Fudge
+			}
+			if (errors(4) > 0.0) {
+				dParameters(3) = errors(4); // Minor
+			} else {
+				dParameters(3) = 0.1 * parameters(4); // Fudge
+			}
+			dParameters(4) = parameters(5); // PA
+
+			// If flipped, it means pixel major axis morphed into world minor
+			// Put back any zero errors as well.
+			Bool flipped = ImageUtilities::pixelWidthsToWorld(os, wParameters,
+					dParameters, cSys, pixelAxes, False);
+			Quantum<Double> paErr(errors(5), Unit(String("rad")));
+			if (flipped) {
+				if (errors(3) <= 0.0)
+					wParameters(1).setValue(0.0);
+				if (errors(4) <= 0.0)
+					wParameters(0).setValue(0.0);
+				pS->setErrors(wParameters(1), wParameters(0), paErr);
+			} else {
+				if (errors(3) <= 0.0)
+					wParameters(0).setValue(0.0);
+				if (errors(4) <= 0.0)
+					wParameters(1).setValue(0.0);
+				pS->setErrors(wParameters(0), wParameters(1), paErr);
+			}
+		}
+	}
+
+	// Position.  Use the pixel to world widths converter again.
+	// Or do something simpler ?
+	{
+		if (errors(1) > 0.0 || errors(2) > 0.0) {
+			// Use arbitrary position error of 1 pixel if none
+			if (errors(1) > 0.0) {
+				dParameters(2) = errors(1); // X
+			} else {
+				dParameters(2) = 1.0;
+			}
+			if (errors(2) > 0.0) {
+				dParameters(3) = errors(2); // Y
+			} else {
+				dParameters(3) = 1.0;
+			}
+			dParameters(4) = 0.0; // Pixel errors are in X/Y directions not along major axis
+			Bool flipped = ImageUtilities::pixelWidthsToWorld(os, wParameters,
+					dParameters, cSys, pixelAxes, False);
+			if (flipped) {
+				pS->setRefDirectionError(wParameters(1), wParameters(0)); // TSS::setRefDirErr interface has lat first
+			} else {
+				pS->setRefDirectionError(wParameters(0), wParameters(1)); // TSS::setRefDirErr interface has lat first
+			}
+		}
+	}
+}
+
+}
+
+
 
