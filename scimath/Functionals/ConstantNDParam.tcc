@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# HyperPlaneParam.cc: Parameters for a hyperplane function
+//# Copyright (C) 2001,2002,2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: HyperPlaneParam.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.69"
+//# Includes
+#include <scimath/Functionals/ConstantNDParam.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+template<class T>
+ConstantNDParam<T>::ConstantNDParam(uInt m) :
+  Function<T>(1), _ndim(m) {}
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+template<class T>
+ConstantNDParam<T>::ConstantNDParam(const ConstantNDParam<T> &other) :
+  Function<T>(other), _ndim(other._ndim) {}
+
+template<class T>
+ConstantNDParam<T>::~ConstantNDParam() {}
+
+template<class T>
+ConstantNDParam<T> &
+ConstantNDParam<T>::operator=(const ConstantNDParam<T> &other) {
+  if (this != &other) {
+	  Function<T>::operator=(other);
+	  _ndim = other._ndim;
+  }
+  return *this;
+}
 
 } //# NAMESPACE CASA - END
 
-#endif
