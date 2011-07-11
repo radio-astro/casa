@@ -137,41 +137,41 @@ Bool checkfreq(const casa::Quantity x) {
 	  );
 }
 
-casa::QuantumHolder
-quantumHolderFromVar(String error, const ::casac::variant& theVar){
-  casa::QuantumHolder qh;
-  try {
-    String error;
-    if(theVar.type()== ::casac::variant::STRING ) {
-      if(!qh.fromString(error, theVar.toString())) {
-	//        *itsLog << LogIO::SEVERE << "Error " << error
-	//      << " in converting quantity "<< LogIO::POST;
-      }
-    }
-    if (theVar.type()== ::casac::variant::STRINGVEC){
-      //      *itsLog << LogIO::WARN << "Only first vector element will be used."
-      //              << LogIO::POST;
-      if(!qh.fromString(error, theVar.toStringVec()[0])) {
-	//        *itsLog << LogIO::SEVERE << "Error " << error
-	//                << " in converting quantity "<< LogIO::POST;
-      }
-    }
-    if(theVar.type()== ::casac::variant::RECORD){
-      ::casac::variant localvar(theVar);
-      Record * ptrRec = toRecord(localvar.asRecord());
-      if(!qh.fromRecord(error, *ptrRec)){
-	//        *itsLog << LogIO::SEVERE << "Error " << error
-	//                << " in converting quantity "<< LogIO::POST;
-      }
-      delete ptrRec;
-    }
-  } catch (AipsError x) {
-    //    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-    //            << LogIO::POST;
-    RETHROW(x);
-  }
-  return qh;
-}
+// casa::QuantumHolder
+// quantumHolderFromVar(String error, const ::casac::variant& theVar){
+//   casa::QuantumHolder qh;
+//   try {
+//     String error;
+//     if(theVar.type()== ::casac::variant::STRING ) {
+//       if(!qh.fromString(error, theVar.toString())) {
+// 	//        *itsLog << LogIO::SEVERE << "Error " << error
+// 	//      << " in converting quantity "<< LogIO::POST;
+//       }
+//     }
+//     if (theVar.type()== ::casac::variant::STRINGVEC){
+//       //      *itsLog << LogIO::WARN << "Only first vector element will be used."
+//       //              << LogIO::POST;
+//       if(!qh.fromString(error, theVar.toStringVec()[0])) {
+// 	//        *itsLog << LogIO::SEVERE << "Error " << error
+// 	//                << " in converting quantity "<< LogIO::POST;
+//       }
+//     }
+//     if(theVar.type()== ::casac::variant::RECORD){
+//       ::casac::variant localvar(theVar);
+//       Record * ptrRec = toRecord(localvar.asRecord());
+//       if(!qh.fromRecord(error, *ptrRec)){
+// 	//        *itsLog << LogIO::SEVERE << "Error " << error
+// 	//                << " in converting quantity "<< LogIO::POST;
+//       }
+//       delete ptrRec;
+//     }
+//   } catch (AipsError x) {
+//     //    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+//     //            << LogIO::POST;
+//     RETHROW(x);
+//   }
+//   return qh;
+// }
   
 ::casac::coordsys * 
 coordsys::newcoordsys(const bool direction, const bool spectral,

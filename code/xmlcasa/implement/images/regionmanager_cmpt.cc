@@ -32,10 +32,12 @@
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Regions/ImageRegion.h>
-#include <images/Regions/RegionManager.h>
+#include <imageanalysis/Regions/CasacRegionManager.h>
+#include <imageanalysis/Annotations/AsciiAnnotationList.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/namespace.h>
-#include <images/Regions/WCUnion.h>-
+#include <images/Regions/WCUnion.h>
+
 using namespace std;
 
 namespace casac {
@@ -67,7 +69,7 @@ void
 regionmanager::setup()
 {
     if ( itsRegMan == NULL )
-	itsRegMan = new casa::RegionManager();
+	itsRegMan = new CasacRegionManager();
 
     if ( itsLog == NULL )
 	itsLog = new LogIO();
@@ -321,8 +323,6 @@ regionmanager::concatenation(const ::casac::variant& box, const ::casac::variant
 	RETHROW(x);
     }
 }
-    
-
 
 bool
 regionmanager::copyregions(const std::string& tableout, const std::string& tablein, const std::string& regionname)
@@ -487,6 +487,45 @@ regionmanager::extractsimpleregions(const ::casac::record& region)
     return false;
 }
 
+record*
+regionmanager::fromtextfile(
+	const string& filename, const vector<int>& shape,
+	const record& csys
+) {
+    if (! itsIsSetup) {
+    	setup();
+    }
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+    try {
+    	CoordinateSystem coordsys;
+    	IPosition myShape(shape);
+    	auto_ptr<Record> csysRec(toRecord(csys));
+    	if((csysRec->nfields()) != 0){
+    	    if(csysRec->nfields() < 2){
+    	    	throw(
+    	    		AipsError(
+    	    			"Given coordsys parameter is not a valid coordsystem record"
+    	    		)
+    	    	);
+    	    }
+    	    coordsys = *(CoordinateSystem::restore(*csysRec, ""));
+    	}
+    	else {
+    	    //user has set csys already
+    	    const CoordinateSystem x = itsRegMan->getcoordsys();
+    	    coordsys = x;
+    	}
+    	AsciiAnnotationList annList(filename, coordsys, myShape);
+		Record regRec = annList.regionAsRecord();
+    	return fromRecord(regRec);
+    }
+    catch (AipsError x) {
+    	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
+}
+
+
 ::casac::record*
 regionmanager::fromfiletorecord(
 	const std::string& filename, const bool verbose,
@@ -506,6 +545,10 @@ regionmanager::fromfiletorecord(
     	RETHROW(x);
     }
 }
+
+
+
+
 bool 
 regionmanager::tofile(const std::string& filename, const ::casac::record& region){
     bool retval=false;
@@ -1039,13 +1082,13 @@ record* regionmanager::frombcs(
 
     try {
     	String myControl = stokescontrol;
-    	RegionManager::StokesControl sControl;
+    	CasacRegionManager::StokesControl sControl;
     	myControl.upcase();
     	if (myControl.startsWith("A")) {
-    		sControl = RegionManager::USE_ALL_STOKES;
+    		sControl = CasacRegionManager::USE_ALL_STOKES;
     	}
     	else if (myControl.startsWith("F")) {
-    		sControl = RegionManager::USE_FIRST_STOKES;
+    		sControl = CasacRegionManager::USE_FIRST_STOKES;
     	}
     	else {
     		throw AipsError("Unsupported value for stokescontrol: " + stokescontrol);

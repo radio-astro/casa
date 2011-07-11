@@ -29,6 +29,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <sstream>
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Exceptions/Error.h>
@@ -457,7 +458,7 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
 
 
 bool
-ms::summary(::casac::record& header, const bool verbose)
+ms::summary(::casac::record& header, const bool verbose, const std::string& listfile)
 {
   Bool rstat(False);
   try {
@@ -465,12 +466,63 @@ ms::summary(::casac::record& header, const bool verbose)
        *itsLog << LogOrigin("ms", "summary");
        MSSummary mss(itsMS);
        casa::Record outRec;
-       mss.list(*itsLog, outRec, verbose, True);
-       casac::record* cOutRec=fromRecord(outRec);
-       header=*cOutRec;
-       if(cOutRec)
-	 delete cOutRec;
-       rstat = True;
+       if (listfile != ""){
+    	   File diskfile(listfile);
+    	   if (diskfile.exists()){
+    		   String errmsg = "File: "+ listfile +
+    		   " already exists; delete it or choose another name.";
+    		   throw(AipsError(errmsg));
+    	   }
+    	   else {
+    		   cout << "Writing output to file: " << listfile << endl;
+    	   }
+
+    	   /* First, save output to a string so that LogMessages
+    	      and time stamps can be removed from it */
+    	   ostringstream ostr;
+    	   streambuf *osbuf, *backup;
+
+    	   // Backup original cout buffer
+    	   backup = cout.rdbuf();
+
+    	   // Redirect cout's buffer to string
+    	   osbuf = ostr.rdbuf();
+    	   cout.rdbuf(osbuf);
+
+    	   // Sink the messages locally to a string
+    	   LogSink sink(LogMessage::NORMAL, &ostr, False);
+    	   LogIO os(sink);
+
+    	   // Call the listing routines
+    	   mss.list(os, outRec, verbose, True);
+    	   casac::record* cOutRec=fromRecord(outRec);
+    	   header=*cOutRec;
+    	   if(cOutRec)
+    		   delete cOutRec;
+
+    	   // Restore cout's buffer
+    	   cout.rdbuf(backup);
+
+    	   // Remove the extra fields (time, severity) from the output string
+    	   String str(ostr.str());
+    	   str.gsub (Regex(".*\tINFO\t[+]?\t"), "");
+//    	   cout << str;
+
+    	   // Write output string to a file
+    	   ofstream file;
+    	   file.open(listfile.data());
+    	   file << str;
+
+    	   file.close();
+       }
+       else {
+    	   mss.list(*itsLog, outRec, verbose, True);
+    	   casac::record* cOutRec=fromRecord(outRec);
+    	   header=*cOutRec;
+    	   if(cOutRec)
+    		   delete cOutRec;
+    	   rstat = True;
+       }
      }
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

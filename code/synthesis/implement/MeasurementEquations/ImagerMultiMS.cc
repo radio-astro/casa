@@ -324,7 +324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         maxnspw=nspw;
       }
       else {
-        for (uInt i=0;i<numMS_p-1;i++) {
+        for (Int i=0;i<numMS_p-1;i++) {
           maxnspw=max(maxnspw,blockSpw_p[i].nelements());
         }
         maxnspw=max(nspw,maxnspw);
@@ -417,7 +417,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             Bool first = True;
             uInt nchn = 0;
             uInt lastchan = 0;
-            for (uInt j=0 ; j < nchanvec(curspwid); j++) {
+            for (Int j=0 ; j < nchanvec(curspwid); j++) {
               if (spwchansels_p(numMS_p-1,curspwid,j)==1) {
                 if(first) {
                   dataStart_p[k]=j;
@@ -436,7 +436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // 
 	    //Since msselet will be applied to the data before flags from spwchansels_p
 	    //are applied to the data in FTMachine, shift spwchansels_p by dataStart_p
-	    for (uInt j=0  ; j < nchanvec(curspwid); j++){
+	    for (Int j=0  ; j < nchanvec(curspwid); j++){
               if (j<nchanvec(curspwid)-dataStart_p[k]) {
                 spwchansels_tmp(numMS_p-1,curspwid,j) = spwchansels_p(numMS_p-1,curspwid,j+dataStart_p[k]);
               }

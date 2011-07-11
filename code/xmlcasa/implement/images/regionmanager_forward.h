@@ -4,7 +4,7 @@
 namespace casa 
 {
 	class LogIO;
-	class RegionManager;
+	class CasacRegionManager;
         class ImageRegion;
 	class LatticeExprNode;
 	template<class T> class PtrHolder;

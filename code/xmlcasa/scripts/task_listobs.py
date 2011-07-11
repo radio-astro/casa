@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def listobs(vis=None,verbose=None):
+def listobs(vis=None,verbose=None,listfile=None):
        """List data set summary in the logger:
 
        Lists following properties of a measurement set:
@@ -14,6 +14,8 @@ def listobs(vis=None,verbose=None):
        verbose -- level of detail
              verbose=True: (default); scan and antenna lists
              verbose=False: less information
+       listfile -- save the output in a file
+             default: none. Example: listfile="mylist.txt"
 
       Additional comments:  The simplest way to obtain a hard copy
       of the output is: 1) Open a file in your favorite editor;
@@ -24,22 +26,19 @@ def listobs(vis=None,verbose=None):
       file in the working directory.
 
        """
-
-       if pCASA.is_mms(vis):
-              pCASA.execute("listobs", locals())
-              return
-
        casalog.origin('listobs')
 
        #Python script
        #parameter_printvalues(arg_names,arg_values,arg_types)
        try:
-               if ((type(vis)==str) & (os.path.exists(vis))):
-                       ms.open(thems=vis)
-               else:
-                       raise Exception, 'Visibility data set not found - please verify the name'
-               ms.summary(verbose=verbose)
-               ms.close()
+           if ((type(vis)==str) & (os.path.exists(vis))):
+                   ms.open(thems=vis)
+           else:
+                   raise Exception, 'Visibility data set not found - please verify the name'
+           ms.summary(verbose=verbose, listfile=listfile)
+#               ms.listobs(verbose,listfile)
+           ms.close()
        except Exception, instance:
-               print '*** Error ***',instance
+           ms.close()
+           print '*** Error ***',instance
 

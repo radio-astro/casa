@@ -1448,6 +1448,38 @@ to plot all of the simple regions that made up a compound region.
 </example>
 </method>
 
+<method type="function" name="fromtextfile">
+    <shortdescription>Create a region dictionary from a region text file.</shortdescription>
+   
+    <input>  
+        <param type="string" direction="in" name="filename">
+            <description>List of text file containing the region description</description>
+            <value></value>
+        </param>
+
+        <param type="intArray" direction="in" name="shape">
+            <description>Image shape, only used if first text description is a difference.</description>
+            <value>1</value>
+        </param>
+
+        <param type="record" direction="in" name="csys">
+          <description>Coordinate system record. Defaults to coordinate system used in rg.setcoordinates()</description>
+           <value/>
+         </param>
+
+    </input>
+
+    <returns type="any"><any type="record"/>Record or fail</returns>
+
+    <description>
+This function reads a text file containing region descriptions and
+converts it to a python dictionary.
+
+    </description>
+
+</method>
+
+
 
    <method type="function" name="fromfiletorecord">
    <shortdescription>Create a region record(s) from a file(s).</shortdescription>
@@ -2179,7 +2211,7 @@ Using private CoordinateSystem from image "quiqui"
      <description>World regions and comment</description>
      <any type="variant"/>
      <value></value>
-     <choice>Region tools or record of region tools, and String</choice>
+     <choice>Record/dict  of regions to be unionized (the key names are immaterial)</choice>
      </param>
 
      <param type="string" direction="in" name="comment">

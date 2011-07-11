@@ -125,11 +125,11 @@ public:
   // Constrain a Stokes Image
   static void Constrain(ImageInterface<Float>& image);
   
-  // Convert to Stokes Image
+  // Convert from Stokes Image to "correlation" image.
   static void From(ImageInterface<Complex>& out,
 		   ImageInterface<Float>& in);
   
-  // Convert to Stokes Image
+  // Convert to Stokes Image from "correlation" image.
   static void To(ImageInterface<Float>& out, ImageInterface<Complex>& in);
 
   // Direct copy from Float to Complex with 

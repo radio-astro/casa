@@ -160,8 +160,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="refdate" subparam="true">
-      <description>time/date of observation *see help</description>
-      <value>2012/05/21/22:05:00</value>
+      <description>date of observation</description>
+      <value>2012/05/21</value>
+    </param>
+
+    <param type="string" name="reftime" subparam="true">
+      <description>time of observation e.g. 22:05:00, or "transit"</description>
+      <value>transit</value>
     </param>
     
     <param type="string" name="complist" subparam="true">
@@ -498,7 +503,8 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  </default>
 	  <default param="compwidth"><value type="string">2GHz</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
-	  <default param="refdate"><value type="string">2012/05/21/22:05:00</value></default>
+	  <default param="refdate"><value type="string">2012/05/21</value></default>
+	  <default param="reftime"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
 	  <default param="caldirection"><value type="string"></value></default>
 	  <default param="calflux"><value type="string">1Jy</value></default>

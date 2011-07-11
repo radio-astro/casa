@@ -20,7 +20,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/StokesCoordinate.h>
-#include <images/Regions/RegionManager.h>
+#include <imageanalysis/Regions/CasacRegionManager.h>
 #include <images/Regions/WCExtension.h>
 #include <images/Regions/WCUnion.h>
 #include <measures/Measures/VelocityMachine.h>
@@ -131,8 +131,8 @@ ImageRegion AnnRegion::asImageRegion() const {
 	return _imageRegion;
 }
 
-const WCRegion* AnnRegion::getRegion() const {
-	return _imageRegion.asWCRegionPtr();
+WCRegion*  AnnRegion::getRegion() const {
+	return _imageRegion.asWCRegionPtr()->cloneRegion();
 }
 
 Bool AnnRegion::isRegion() const {
@@ -163,7 +163,7 @@ void AnnRegion::_extend(const ImageRegion& region) {
 			stokesNumbers[2*i] = (uInt)_stokes[i];
 			stokesNumbers[2*i + 1] = stokesNumbers[2*i];
 		}
-		Vector<uInt> orderedRanges = RegionManager::consolidateAndOrderRanges(
+		Vector<uInt> orderedRanges = CasacRegionManager::consolidateAndOrderRanges(
 			stokesNumbers
 		);
 		stokesRanges.resize(orderedRanges.size());

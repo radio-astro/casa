@@ -58,12 +58,6 @@ namespace casa {
       
       
     public:
-	  const static String ALL;
-
-		enum StokesControl {
-			USE_FIRST_STOKES,
-			USE_ALL_STOKES
-		};
 
       //blank constructor
       RegionManager();
@@ -259,25 +253,10 @@ namespace casa {
       //Remove a region from table...refuse is regionname is ""
       Bool removeRegionInTable(const String& tabName, const String& regName);
 
-      /*
-       * regionName should be of the form imagename:regionname if the region
-       * is a TableDescriptor in an image
-       */
-      Record fromBCS(
-      		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
-      		  const Record  * const regionPtr, const String& regionName,
-      		  const String& chans, const StokesControl stokesControl,
-      		  const String& box, const IPosition& imShape, const String& imageName=""
-        );
 
-      static Vector<uInt> consolidateAndOrderRanges(
-    		  const Vector<uInt>& ranges
-      );
-
-      // <src>nChannels</src> is the total number of spectral channels in the image
-      Vector<uInt> setSpectralRanges(
-    		  String specification, uInt& nSelectedChannels, const uInt nChannels
-      ) const;
+    protected:
+      LogIO *itsLog;
+      CoordinateSystem* itsCSys;
 
     private:
 
@@ -285,45 +264,7 @@ namespace casa {
       static Table& getTable (void* ptr, Bool writable);
       //Convert a string to Quantity
       void toQuantity(Quantity& out, const String& in);
-      LogIO *itsLog;
-      CoordinateSystem* itsCSys;
       Table tab_p;
-
-      String _pairsToString(const Vector<uInt>& pairs) const;
-
-      Vector<uInt> _setPolarizationRanges(
-        	String& specification, const String& firstStokes, const uInt nStokes,
-        	const StokesControl stokesControl
-      ) const;
-
-      Vector<Double> _setBoxCorners(const String& box) const;
-
-      ImageRegion _fromBCS(
-    		  String& diagnostics, uInt& nSelectedChannels, String& stokes,
-      		  const String& chans, const StokesControl stokesControl,
-      		  const String& box, const IPosition& imShape
-      ) const;
-
-      ImageRegion _fromBCS(
-    		  String& diagnostics,
-    		  const Vector<Double>& boxCorners, const Vector<uInt>& chanEndPts,
-    		  const Vector<uInt>& polEndPts, const IPosition imShape
-      ) const;
-
-      static void _setRegion(
-        	Record& regionRecord, String& diagnostics,
-        	const Record* regionPtr
-        );
-
-      String _stokesFromRecord(
-    		  const Record& region, const StokesControl stokesControl, const IPosition& shape
-      ) const;
-
-      void _setRegion(
-      	Record& regionRecord, String& diagnostics,
-      	const String& regionName, const String& imageName
-      );
-
 
     };
 

@@ -189,6 +189,7 @@ if( APPLE )
               endif()
             endif()
         endif()
+	message("I think you've got Darwin-10 and I've decided archflag=" ${archflag})
         #set( archflag ${CMAKE_SYSTEM_PROCESSOR} )
         if( archflag STREQUAL x86_64 )
             set ( casa_packages /opt/casa/darwin10-64b )
@@ -605,7 +606,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.67
+           VERSION 1.0.69
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -1017,8 +1018,8 @@ casa_add_module( alma CASACORE LIBXML2 Boost )
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
-casa_add_module( spectrallines CASACORE )
 casa_add_module( imageanalysis CASACORE )
+casa_add_module( spectrallines CASACORE imageanalysis )
 
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis )
 

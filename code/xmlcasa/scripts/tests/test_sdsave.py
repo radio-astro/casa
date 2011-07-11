@@ -463,6 +463,92 @@ class sdsave_test5(unittest.TestCase,sdsave_unittest_base):
         return True        
 
 
+###
+# Test getpt parameter
+###
+class sdsave_test6( unittest.TestCase, sdsave_unittest_base ):
+    """
+    Test getpt parameter
+
+    1) import MS to Scantable format with getpt=True 
+       1-1) check POINTING table keyword is missing
+       1-2) export Scantable to MS format
+       1-3) compare POINTING table
+    2) import MS to Scantable format with getpt=False
+       1-1) check POINTING table keyword exists
+       1-2) export Scantable to MS format
+       1-3) compare POINTING table
+
+    """
+    # Input and output names
+    infile='OrionS_rawACSmod_cal2123.ms'
+    prefix=sdsave_unittest_base.taskname+'Test6'
+    outfile0=prefix+'.asap'
+    outfile1=prefix+'.ms'
+
+    def setUp(self):
+        self.res=None
+        if (not os.path.exists(self.infile)):
+            shutil.copytree(self.datapath+self.infile, self.infile)
+
+        default(sdsave)
+        #self._setAttributes()
+
+    def tearDown(self):
+        if (os.path.exists(self.infile)):
+            os.system( 'rm -rf '+self.infile )
+        os.system( 'rm -rf '+self.prefix+'*' )
+
+    def test600(self):
+        """Test 600: test getpt=True"""
+        self.res=sdsave(infile=self.infile,getpt=True,outfile=self.outfile0,outform='ASAP')
+        self.assertEqual(self.res,None)
+        self.assertFalse(self._pointingKeywordExists())
+        self.res=sdsave(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
+        self.assertTrue(self._compare())
+
+    def test601(self):
+        """Test 601: test getpt=False"""
+        self.res=sdsave(infile=self.infile,getpt=False,outfile=self.outfile0,outform='ASAP')
+        self.assertEqual(self.res,None)
+        self.assertTrue(self._pointingKeywordExists())
+        self.res=sdsave(infile=self.outfile0,outfile=self.outfile1,outform='MS2')
+        self.assertTrue(self._compare())
+
+    def _pointingKeywordExists(self):
+        _tb=tbtool.create()
+        _tb.open(self.outfile0)
+        keys=_tb.getkeywords()
+        _tb.close()
+        del _tb
+        return 'POINTING' in keys
+
+    def _compare(self):
+        ret = True
+        _tb1=tbtool.create()
+        _tb2=tbtool.create()
+        _tb1.open(self.infile)
+        ptab1=_tb1.getkeyword('POINTING').split()[-1]
+        _tb1.close()
+        _tb1.open(ptab1)
+        _tb2.open(self.outfile1)
+        ptab2=_tb2.getkeyword('POINTING').split()[-1]
+        _tb2.close()
+        _tb2.open(ptab1)
+        badcols = []
+        for col in _tb1.colnames():
+            if not all(_tb1.getcol(col).flatten()==_tb2.getcol(col).flatten()):
+                badcols.append( col )
+        _tb1.close()
+        _tb2.close()
+        del _tb1, _tb2
+        if len(badcols) != 0:
+            print 'Bad column: %s'%(badcols)
+            ret = False
+        return ret
+    
+
 def suite():
     return [sdsave_test0,sdsave_test1,sdsave_test2,
-            sdsave_test3,sdsave_test4,sdsave_test5]
+            sdsave_test3,sdsave_test4,sdsave_test5,
+            sdsave_test6]

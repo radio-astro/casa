@@ -104,7 +104,7 @@ public:
 	ostream& print(ostream& os) const;
 
 	// get the composite region.
-	const WCRegion* getRegion() const;
+	WCRegion* getRegion() const;
 
 	// get the composite region as a region record.
 	Record regionAsRecord() const;
@@ -112,7 +112,7 @@ public:
 private:
 	Vector<AsciiAnnotationFileLine> _lines;
 	Bool _deletePointersOnDestruct;
-	PtrBlock<const WCRegion *> _regions;
+	PtrBlock<WCRegion *> _regions;
 	CoordinateSystem _csys;
 	IPosition _shape;
 	Bool _canGetRegion;

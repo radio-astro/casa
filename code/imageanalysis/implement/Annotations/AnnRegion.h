@@ -24,6 +24,7 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/Stokes.h>
+#include <memory>
 
 namespace casa {
 
@@ -68,7 +69,7 @@ public:
 
 	virtual ImageRegion asImageRegion() const;
 
-	virtual const WCRegion* getRegion() const;
+	virtual WCRegion* getRegion() const;
 
 	// returns True unless overridden.
 	virtual Bool isRegion() const;

@@ -1,7 +1,7 @@
 /* Private parts of image component */
 
 casa::LogIO *itsLog;
-casa::RegionManager *itsRegMan;
+casa::CasacRegionManager *itsRegMan;
 casa::Bool itsIsSetup;
 casa::ImageRegion *unionRegion;
 

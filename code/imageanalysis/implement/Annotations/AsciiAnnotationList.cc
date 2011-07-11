@@ -58,7 +58,13 @@ AsciiAnnotationList::AsciiAnnotationList(
 _deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys), _shape(shape), _canGetRegion(True) {
 	AsciiAnnotationFileParser parser(filename, csys);
-	_lines = parser.getLines();
+	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
+	for (
+		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
+		iter != lines.end(); iter++
+	) {
+		addLine(*iter);
+	}
 }
 
 AsciiAnnotationList::~AsciiAnnotationList() {
@@ -83,9 +89,10 @@ void AsciiAnnotationList::addLine(const AsciiAnnotationFileLine& line) {
 		if (annotation->isRegion()) {
 			const AnnRegion *region = dynamic_cast<const AnnRegion *>(x.getAnnotationBase());
 			if (! region->isAnnotationOnly()) {
-				const WCRegion *wcregion = region->getRegion();
+				_regions.resize(_regions.size() + 1);
+
+				WCRegion *wcregion = region->getRegion();
 				if (region->isDifference()) {
-					_regions.resize(_regions.size() + 1);
 					if (_regions.size() == 1) {
 						Vector<Double> blc, trc;
 						_csys.toWorld(blc, IPosition(_csys.nPixelAxes(), 0));
@@ -124,18 +131,23 @@ void AsciiAnnotationList::addLine(const AsciiAnnotationFileLine& line) {
 }
 
 Record AsciiAnnotationList::regionAsRecord() const {
+	if (_regions.size() == 0) {
+		throw AipsError("No regions found");
+	}
 	return getRegion()->toRecord("");
 }
 
-const WCRegion* AsciiAnnotationList::getRegion() const {
+WCRegion* AsciiAnnotationList::getRegion() const {
 	if (! _canGetRegion) {
 		throw AipsError(
 			"Object constructed with too little information for forming composite region. Use another constructor."
 		);
 	}
+	if (_regions.size() == 0) {
+		return 0;
+	}
 	return _regions[_regions.size() - 1];
 }
-
 
 uInt AsciiAnnotationList::nLines() const {
 	return _lines.size();

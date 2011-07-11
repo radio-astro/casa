@@ -11,6 +11,7 @@
  ***/
 
 #include <iostream>
+#include <memory>
 #include <sys/wait.h>
 #include <image_cmpt.h>
 #include <casa/Arrays/ArrayIO.h>
@@ -49,7 +50,7 @@
 
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
-#include <images/Images/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -60,7 +61,7 @@
 #include <images/Images/ImageHistograms.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
-#include <images/Images/ImageProfileFitter.h>
+#include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <images/Images/ImageRegrid.h>
 #include <images/Images/ImageReorderer.h>
 #include <images/Images/ImageSourceFinder.h>
@@ -1392,7 +1393,7 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
     if(mask == "[]") {
 	    mask = "";
     }
-    cout << "chans " << chans.typeString() << endl;
+    //    cout << "chans " << chans.typeString() << endl;
 	try {
 		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = itsImage->getImage();
@@ -1610,7 +1611,7 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y, cons
 ::casac::image *
 image::hanning(const std::string& outFile, const ::casac::record& region,
 	       const ::casac::variant& vmask, const int axis, const bool drop,
-	       const bool overwrite, const bool async)
+	       const bool overwrite, const bool /* async */)
 {
   ::casac::image *rstat = 0;
   try {
@@ -1651,7 +1652,12 @@ image::haslock()
 }
 
 bool
-image::histograms(::casac::record& histout, const std::vector<int>& axes, const ::casac::record& region, const ::casac::variant& mask, const int nbins, const std::vector<double>& includepix, const bool gauss, const bool cumu, const bool log, const bool list, const std::string& plotter, const int nx, const int ny, const std::vector<int>& size, const bool force, const bool disk, const bool async)
+image::histograms(::casac::record& histout, const std::vector<int>& axes,
+		  const ::casac::record& region, const ::casac::variant& mask,
+		  const int nbins, const std::vector<double>& includepix, const bool gauss,
+		  const bool cumu, const bool log, const bool list, const std::string& plotter,
+		  const int nx, const int ny, const std::vector<int>& size, const bool force,
+		  const bool disk, const bool /* async */)
 {
   bool rstat(false);
   try {
@@ -1849,7 +1855,7 @@ image::miscinfo()
 bool
 image::modify(const ::casac::record& model, const ::casac::record& region,
 	      const ::casac::variant& vmask, const bool subtract,
-	      const bool list, const bool async)
+	      const bool list, const bool /* async */)
 {
   bool rstat(false);
   try {
@@ -1908,7 +1914,7 @@ image::moments(const std::vector<int>& moments, const int axis,
 	       const std::string& velocityType, const std::string& out,
 	       const std::string& smoothout, const std::string& pgdevice,
 	       const int nx, const int ny, const bool yind,
-	       const bool overwrite, const bool removeAxis, const bool async)
+	       const bool overwrite, const bool removeAxis, const bool /* async */)
 {
   ::casac::image *rstat = 0;
     try {
@@ -2198,7 +2204,7 @@ image::putregion(const ::casac::variant& v_pixels,
 }
 
 ::casac::image *
-image::rebin(const std::string& outfile, const std::vector<int>& bin, const ::casac::record& region, const ::casac::variant& vmask, const bool dropdeg, const bool overwrite, const bool async)
+image::rebin(const std::string& outfile, const std::vector<int>& bin, const ::casac::record& region, const ::casac::variant& vmask, const bool dropdeg, const bool overwrite, const bool /* async */)
 {
   ::casac::image *rstat = 0;
   try {
@@ -2233,7 +2239,7 @@ image::regrid(const std::string& outfile, const std::vector<int>& inshape,
 	      const std::string& method, const int decimate,
 	      const bool replicate, const bool doRefChange,
 	      const bool dropDegenerateAxes, const bool overwrite,
-	      const bool forceRegrid, const bool async)
+	      const bool forceRegrid, const bool /* async */)
 {
   ::casac::image *rstat = 0;
   try {
@@ -2277,7 +2283,7 @@ image::rotate(const std::string& outfile, const std::vector<int>& inshape,
 	      const ::casac::variant& inpa, const ::casac::record& region,
 	      const ::casac::variant& vmask, const std::string& method,
 	      const int decimate, const bool replicate, const bool dropdeg,
-	      const bool overwrite, const bool async)
+	      const bool overwrite, const bool /* async */)
 {
   ::casac::image *rstat = 0;
   try {
@@ -2373,7 +2379,7 @@ image::sepconvolve(const std::string& outFile, const std::vector<int>& axes,
 		   const ::casac::variant& widths,
 		   const double Scale, const ::casac::record& region,
 		   const ::casac::variant& vmask, const bool overwrite,
-		   const bool async)
+		   const bool /* async */)
 {
   ::casac::image *rstat = 0;
   try {
@@ -2598,7 +2604,7 @@ image::statistics(const std::vector<int>& axes,
 		  const std::vector<double>& excludepix,
 		  const std::string& plotter, const int nx, const int ny,
 		  const bool list, const bool force, const bool disk,
-		  const bool robust, const bool verbose, const bool async)
+		  const bool robust, const bool verbose, const bool /* async */)
 {
    ::casac::record *rstat = 0;
    try {
@@ -2747,7 +2753,7 @@ image::tofits(const std::string& fitsfile, const bool velocity,
 	      const bool overwrite,
 	      const bool dropdeg, const bool deglast,
 	      const bool dropstokes, const bool stokeslast, 
-	      const bool wavelength, const bool async)
+	      const bool wavelength, const bool /* async */)
 {
   bool rstat(false);
   try {
@@ -2850,19 +2856,19 @@ image::topixel(const ::casac::variant& value)
 		if (isunset(value)) {
 			pixel.resize(0);
 		} else if (value.type() == ::casac::variant::DOUBLEVEC) {
-			cout << "double vec " << endl;
+		  //cout << "double vec " << endl;
 			pixel = value.getDoubleVec();
 		} else if (value.type() == ::casac::variant::INTVEC) {
-			cout << "int vec " << endl;
+		  //cout << "int vec " << endl;
 
 			variant vcopy = value;
 			Vector<Int> ipixel = vcopy.asIntVec();
-			cout << "* ipixel " << ipixel << endl;
+			//cout << "* ipixel " << ipixel << endl;
 			Int n = ipixel.size();
 			pixel.resize(n);
 			for (int i=0 ; i < n; i++) pixel[i]=ipixel[i];
 		} else if (value.type() == ::casac::variant::RECORD) {
-			cout << "record " << endl;
+		  //cout << "record " << endl;
 			::casac::variant localvar(value);
 			Record *tmp = toRecord(localvar.asRecord());
 			if (tmp->isDefined("numeric")) {
@@ -2878,7 +2884,7 @@ image::topixel(const ::casac::variant& value)
 					<< LogIO::EXCEPTION;
 			return rstat;
 		}
-		cout << "*** pixel " << pixel << endl;
+		//cout << "*** pixel " << pixel << endl;
 		rstat = fromRecord(itsImage->toworld(pixel, format));
 
 	} catch (AipsError x) {
@@ -3238,7 +3244,7 @@ void image::outputvariant(::casac::variant& v)
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     RETHROW(x);
   }
-  cout << "all is well so far" << endl;
+  //cout << "all is well so far" << endl;
 }
 
 casac::record*

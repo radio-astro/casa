@@ -136,8 +136,8 @@ void MSUVWGenerator::uvw_an(const MEpoch& timeCentroid, const Int fldID,
 
 // antUVW_p must be set up for the correct timeCentroid and phase direction by
 // uvw_an() before calling this.
-void MSUVWGenerator::uvw_bl(const uInt ant1, const uInt feed1,
-			    const uInt ant2, const uInt feed2,
+void MSUVWGenerator::uvw_bl(const uInt ant1, const uInt,// feed1,
+			    const uInt ant2, const uInt,// feed2,
 			    Array<Double>& uvw)
 {
   //uvw.resize(3);      // Probably redundant.  Does it significantly slow things down?

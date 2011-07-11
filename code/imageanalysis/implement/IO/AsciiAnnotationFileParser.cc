@@ -125,7 +125,6 @@ void AsciiAnnotationFileParser::_parse() {
 		) {
 			// ignore comments and blank lines
 			_addLine(AsciiAnnotationFileLine(*iter));
-			*_log << LogIO::NORMAL << preamble << "comment found" << LogIO::POST;
 			continue;
 		}
 		String consumeMe = *iter;
@@ -208,7 +207,6 @@ void AsciiAnnotationFileParser::_parse() {
 			currentParamSet, annOnly, difference, preamble
 		);
 	}
-	*_log << LogIO::NORMAL << "end" << LogIO::POST;
 }
 
 void AsciiAnnotationFileParser::_addLine(const AsciiAnnotationFileLine& line) {
@@ -266,7 +264,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 				+ String::toString(qDirs.size())
 			);
 		}
-		cout << preamble << "rect box found " << endl;
 		break;
 
 	case AnnotationBase::CENTER_BOX:
@@ -283,7 +280,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 			quantities[0] = qs[2];
 			quantities[1] = qs[3];
 		}
-		cout << preamble << "center box found " << endl;
 		break;
 	case AnnotationBase::ROTATED_BOX:
 		if (! consumeMe.contains(startTwoPairOneSingle)) {
@@ -300,7 +296,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 			quantities[1] = qs[3];
 			quantities[2] = qs[4];
 		}
-		cout << preamble << "rotated box found " << endl;
 		break;
 
 	case AnnotationBase::POLYGON:
@@ -315,7 +310,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 			qDirs.resize(qs.size());
 			qDirs = qs;
 		}
-		cout << preamble << "polygon found " << endl;
 		break;
 	case AnnotationBase::CIRCLE:
 		if (! consumeMe.contains(startOnePairOneSingle)) {
@@ -328,12 +322,10 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 			Vector<Quantity> qs = _extractQuantityPairAndSingleQuantity(
 				consumeMe, preamble
 			);
-			cout << "qs " << qs << endl;
 			qDirs[0] = qs[0];
 			qDirs[1] = qs[1];
 			quantities[0] = qs[2];
 		}
-		cout << preamble << "circle found " << endl;
 		break;
 	case AnnotationBase::ANNULUS:
 		if (! consumeMe.contains(startTwoPair)) {
@@ -351,7 +343,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 			quantities[0] = qs[2];
 			quantities[1] = qs[3];
 		}
-		cout << preamble << "annulus found " << endl;
 		break;
 	case AnnotationBase::ELLIPSE:
 		if (! consumeMe.contains(startTwoPairOneSingle)) {
@@ -370,7 +361,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 			quantities[1] = qs[3];
 			quantities[2] = qs[4];
 		}
-		cout << preamble << "ellipse found " << endl;
 		break;
 	case AnnotationBase::LINE:
 		if (! consumeMe.contains(startTwoPair)) {
@@ -385,7 +375,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 				+ String::toString(qDirs.size())
 			);
 		}
-		cout << preamble << "line found " << endl;
 		break;
 	case AnnotationBase::VECTOR:
 		if (! consumeMe.contains(startTwoPair)) {
@@ -400,7 +389,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 				+ String::toString(qDirs.size())
 			);
 		}
-		cout << preamble << "vector found " << endl;
 		break;
 	case AnnotationBase::TEXT:
 		if (! consumeMe.contains(startOnePairAndText)) {
@@ -411,8 +399,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 		_extractQuantityPairAndString(
 			qDirs, textString, consumeMe, preamble, True
 		);
-		cout << preamble << "text found " << endl;
-		cout << "text string " << textString << endl;
 		break;
 	case AnnotationBase::SYMBOL:
 		if (! consumeMe.contains(startOnePairOneSingle)) {
@@ -423,7 +409,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 		_extractQuantityPairAndString(
 			qDirs, textString, consumeMe, preamble, False
 		);
-		cout << preamble << "symbol found " << endl;
 		textString.trim();
 		if (textString.length() > 1) {
 			throw AipsError(
@@ -433,7 +418,6 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 					+ ") has more than one"
 			);
 		}
-		cout << "symbol string " << textString << endl;
 		break;
 	default:
 		throw AipsError(
@@ -581,13 +565,10 @@ AsciiAnnotationFileParser::_getCurrentParamSet(
 					<< LogIO::EXCEPTION;
 			}
 		}
-		cout << "*** key " << key << " value " << paramValue.stringVal << endl;
-
 		consumeMe.trim();
 		if (key != AnnotationBase::UNKNOWN) {
 			currentParams[key] = paramValue;
 			newParams[key] = paramValue;
-
 		}
 	}
 	if (
@@ -669,7 +650,6 @@ void AsciiAnnotationFileParser::_createAnnotation(
 				freqRefFrame, doppler, restfreq, stokes,
 				annOnly
 			);
-			// cout << dynamic_cast<AnnRegion *>(annotation)->asRecord() << endl;
 			break;
 		case AnnotationBase::ROTATED_BOX:
 			annotation = new AnnRotBox(
@@ -677,7 +657,6 @@ void AsciiAnnotationFileParser::_createAnnotation(
 				quantities[2], dirRefFrame, _csys, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
-			// cout << dynamic_cast<AnnRegion *>(annotation)->asRecord() << endl;
 			break;
 		case AnnotationBase::POLYGON:
 			{
@@ -692,7 +671,6 @@ void AsciiAnnotationFileParser::_createAnnotation(
 					freqRefFrame, doppler, restfreq,  stokes, annOnly
 				);
 			}
-			//cout << dynamic_cast<AnnRegion *>(annotation)->asRecord() << endl;
 			break;
 		case AnnotationBase::CIRCLE:
 			annotation = new AnnCircle(
@@ -700,7 +678,6 @@ void AsciiAnnotationFileParser::_createAnnotation(
 				dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
-			// cout << dynamic_cast<AnnRegion *>(annotation)->asRecord() << endl;
 			break;
 		case AnnotationBase::ANNULUS:
 			annotation = new AnnAnnulus(
@@ -708,7 +685,6 @@ void AsciiAnnotationFileParser::_createAnnotation(
 				dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
-			// cout << dynamic_cast<AnnRegion *>(annotation)->asRecord() << endl;
 			break;
 		case AnnotationBase::ELLIPSE:
 			annotation = new AnnEllipse(
@@ -716,7 +692,6 @@ void AsciiAnnotationFileParser::_createAnnotation(
 				dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
-			// cout << dynamic_cast<AnnRegion *>(annotation)->asRecord() << endl;
 			break;
 		case AnnotationBase::LINE:
 			annotation = new AnnLine(
@@ -790,14 +765,12 @@ Array<String> AsciiAnnotationFileParser::_extractTwoPairs(uInt& end, const Strin
 }
 
 Vector<String> AsciiAnnotationFileParser::_extractSinglePair(const String& string) const {
-	cout << "string " << string << endl;
 	Char quotes[2];
 	quotes[0] = '\'';
 	quotes[1] = '"';
 	Int firstBegin = string.find('[', 0) + 1;
 	Int firstEnd = string.find(',', firstBegin);
 	String first = string.substr(firstBegin, firstEnd - firstBegin);
-	cout << "first " << first << endl;
 	first.trim();
 	first.trim(quotes, 2);
 	Int secondBegin = firstEnd + 1;
@@ -954,10 +927,8 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairs(
 ) const {
 	const Regex startbTwoPair("^" + bTwoPair);
 	String mySubstring = String(consumeMe).through(startbTwoPair);
-	cout << "mySubstring " << mySubstring << endl;
 	uInt end = 0;
 	Array<String> pairs = _extractTwoPairs(end, mySubstring);
-	cout << "pairs " << pairs << endl;
 	Vector<Quantity> quantities(4);
 
 	for (uInt i=0; i<4; i++) {
@@ -999,7 +970,6 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractSingleQuantityPair(
 ) const {
 	String mySubstring = String(pairString).through(sOnePair, 0);
 	Vector<String> pair = _extractSinglePair(mySubstring);
-	cout << "pair " << pair << endl;
 	Vector<Quantity> quantities(2);
 
 	for (uInt i=0; i<2; i++) {
@@ -1018,10 +988,7 @@ AsciiAnnotationFileParser::_stokesFromString(
 ) const {
 	Int maxn = Stokes::NumberOfTypes;
 	string res[maxn];
-	cout << "stokes " << "\"" << stokes << "\"" << endl;
 	Int nStokes = split(stokes, res, maxn, ",");
-	cout << "nStokes " << nStokes << endl;
-	cout << "maxn " << maxn << endl;
 	Vector<Stokes::StokesTypes> myTypes(nStokes);
 	for (Int i=0; i<nStokes; i++) {
 		String x(res[i]);
@@ -1062,12 +1029,10 @@ void AsciiAnnotationFileParser::_setInitialGlobals() {
 		ParamValue veltype;
 		veltype.intVal = spectral.velocityDoppler();
 		_currentGlobals[AnnotationBase::VELTYPE] = veltype;
-		cout << "veltype " << MDoppler::showType(veltype.intVal) << endl;
 
 		ParamValue restfreq;
 		restfreq.doubleVal = spectral.restFrequency();
 		_currentGlobals[AnnotationBase::RESTFREQ] = restfreq;
-		cout << "restfreq " << restfreq.doubleVal << endl;
 	}
 	ParamValue linewidth;
 	linewidth.intVal = AnnotationBase::DEFAULT_LINEWIDTH;

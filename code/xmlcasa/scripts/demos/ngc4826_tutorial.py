@@ -895,7 +895,7 @@ print "Found moment 0 max = "+str(momzerostat['max'][0])
 
 print "Found moment 0 rms = "+str(momzerostat['rms'][0])
 
-momonestat=imstat('ngc4826.tutorial.16apr98.moments.mom1')
+momonestat=imstat('ngc4826.tutorial.16apr98.moments.mom1', robust=True)
 
 print "Found moment 1 median = "+str(momonestat['median'][0])
 

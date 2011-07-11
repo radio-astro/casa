@@ -27,11 +27,10 @@
 #ifndef FLAGGING_LFDISPLAYFLAGS_H
 #define FLAGGING_LFDISPLAYFLAGS_H
 
-#include <flagging/Flagging/LFBase.h>
+#include <flagging/Flagging/LFExamineFlags.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
-#include <casadbus/plotserver/FlagPlotServerProxy.h>
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
 
@@ -39,10 +38,12 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <ms/MeasurementSets/MSColumns.h>
 
+#include <flagging/Flagging/LFPlotServerProxy.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  class LFDisplayFlags : public LFBase
+  class LFDisplayFlags : public LFExamineFlags
   {
   public:  
     // default constructor 
@@ -61,25 +62,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Record getParameters();
 
     // Run the algorithm
-    virtual Bool runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
+    virtual Bool runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
 		   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
     {throw(AipsError("DisplayFlags::runMethod requires more inputs than supplied"));};    
 
-    // TODO : Merge these runMethod functions. 
-    //             Give the base class an input "const VisBuffer &" so that all agents
-    //             can read misc info from the MS (times, uvw values, etc...)
-    virtual Bool runMethod(VisBuffer &inVb, 
+    // Requires list of other flagmethods
+    virtual Bool runMethod(const VisBuffer &inVb, 
                    Cube<Float> &inVisc, Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc,
 			   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP,
 			   Vector<CountedPtr<LFBase> > &flagmethods);
 
-    virtual Record getStatistics();
     
   protected:
-
-    void ReadMSInfo(VisBuffer &vb);
-
-    void AccumulateStats(VisBuffer &vb);
 
     virtual Bool BuildPlotWindow();
     //    virtual Bool ShowFlagPlots();
@@ -98,32 +92,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool ShowPlots, StopAndExit;
 
     // Additional private members
-    Cube<Bool> preflagc;
-    //    VisBuffer vb;
-    Record allflagcounts;
-    Vector<String> antnames_p;
-    Vector<String> corrlist_p;
-    Vector<String> fieldnames_p;
-    //Vector<xxx> spwlist_p;
-    Vector<Double> freqlist_p;
-
-
-    // Counters per chunk
-    Vector<Float> chan_count, baseline_count, corr_count;
-    Vector<Float> chan_flags, baseline_flags, corr_flags;
-    Float chunk_count, chunk_flags;
-
-    // Counters across chunks (can be different shapes
-    // Statistics per antenna, baseline, spw, etc.
-    // These maps of maps is used e.g. like:
-    //
-    //        accumflags["baseline"]["2&&7"] == 42
-    //        accumflags["spw"     ]["0"   ] == 17
-    //
-    // which means that there were 42 flags on baseline 2 - 7, etc.
-    std::map<std::string, std::map<std::string, float> > allflags;
-    std::map<std::string, std::map<std::string, float> > allcounts;
-
     uInt a1,a2;
 
   };

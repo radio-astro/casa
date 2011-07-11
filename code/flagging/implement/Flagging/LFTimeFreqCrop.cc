@@ -111,58 +111,33 @@ namespace casa {
   
   void LFTimeFreqCrop :: AllocateMemory()
   {
-    ///// Only check that all shapes are consistent.
-
     IPosition shpVis = visc.shape();
     //cout << "Shape of visc : " << shpVis << endl;
     
     IPosition shpFlag = flagc.shape();
     //cout << "Shape of flagc : " << shpFlag << endl;
     
-    /* Cube to hold visibility amplitudes : POLZN x CHAN x (IFR*TIME) */
-    //visc.resize(NumP,NumC,NumB*NumT);
-    //visc=0;
-    
-    /* Cube to hold visibility flags : POLZN x CHAN x (IFR*TIME) */
-    //flagc.resize(NumP,NumC,NumB*NumT);
-    //flagc=False;
-    // 	cout << " CubeShape = " << cubepos << endl;
-    
-    /* Cube to hold MEAN bandpasses : POLZN x IFR x CHAN */
     /* Cube to hold CLEAN bandpasses : POLZN x IFR x CHAN */
-    //	meanBP.resize(NumP,NumB,NumC);
-	cleanBP.resize(NumP,NumB,NumC);
-	cleanTS.resize(NumP,NumB,NumT);
-    
-	//    meanBP=0;
-    cleanBP=0;
-    cleanTS=0;
-    
-    /* Matrix to hold Row Flags : POLZX x (IFR*TIME) */
-    // UUU : check - this should also be NumT
-    //	RowFlags.resize((uInt)NumP,(uInt)(NumB*NumT));
-    //	RowFlags=False;
-    //cout << "RowFlags = " << RowFlags.shape() << endl;
-    
+    cleanBP.resize(NumP,NumB,NumC);
+    cleanTS.resize(NumP,NumB,NumT);
+    cleanBP=0; cleanTS=0;
     
     /* Temporary workspace vectors */	
     tempBP.resize(NumC);tempTS.resize(NumT);
     flagBP.resize(NumC);flagTS.resize(NumT);
     fitBP.resize(NumC);fitTS.resize(NumT);
-    
     tempBP=0;tempTS=0;flagBP=False;flagTS=False;fitBP=0;fitTS=0;
-    
-    
   }
   
   
   /* Run the TFCROP algorithm */
   /* Openmp on baselines... */
-  Bool LFTimeFreqCrop :: runMethod(Cube<Float> &inVisc, Cube<Bool> &inFlagc, 
+  Bool LFTimeFreqCrop :: runMethod(const VisBuffer &inVb, Cube<Float> &inVisc, 
+				   Cube<Bool> &inFlagc, Cube<Bool> &inPreFlagc, 
 				   uInt numT, uInt numAnt, uInt numB, uInt numC, uInt numP)
   {
     // Initialize all the shape information, and make a references for visc and flagc.
-    LFBase::runMethod(inVisc, inFlagc, numT, numAnt, numB, numC, numP);
+    LFBase::runMethod(inVb, inVisc, inFlagc, inPreFlagc, numT, numAnt, numB, numC, numP);
 
     // Allocate some temp buffers (all 1D)
     AllocateMemory();

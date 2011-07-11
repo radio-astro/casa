@@ -22,11 +22,49 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		viso = ''
 		visoc = '' # for the wvr corrected version, if needed
                 if singledish:
-                   ocorr_mode = 'ao'
-                   corr_mode = 'ao'
-                   casalog.post('corr_mode and ocorr_mode is forcibly set to ao.')
-                   if compression:
-                      casalog.post('compression=True has no effect for single-dish format.')
+                        if compression:
+                                casalog.post('compression=True has no effect for single-dish format.')
+                        cmd = 'which asdm2ASAP > /dev/null 2>&1'
+                        ret = os.system( cmd )
+                        if ret == 0:
+                                import commands
+                                casalog.post( 'found asdm2ASAP' )
+                                casapath_split = os.environ['CASAPATH'].split()
+                                casaroot = casapath_split[0]
+                                if ( len(casapath_split) > 1 ):
+                                        casaarch = casapath_split[1]
+                                else:
+                                        casaarch = 'none'
+                                if os.path.exists( casaroot+'/'+casaarch ):
+                                        cmd = 'find %s -name asap'%(casaroot+'/'+casaarch)
+                                else:
+                                        cmd = 'find %s -name asap'%(casaroot)
+                                lpath = commands.getoutput( cmd )
+                                if lpath.find('\n') != -1:
+                                        paths = lpath.split('\n')
+                                        for p in paths:
+                                                if p.find('python') != -1:
+                                                        lpath = p
+                                                        break
+                                casalog.post( 'path to asap library is %s'%(lpath) )
+                                if lpath not in os.environ['LD_LIBRARY_PATH'].split(':'):
+                                        casalog.post( 'appending %s to LD_LIBRARY_PATH'%(lpath) )
+                                        os.environ['LD_LIBRARY_PATH'] += ':%s'%(lpath)
+                                execute_string = 'asdm2ASAP -asdm ' + asdm 
+                                if ( len(vis) != 0 ):
+                                        execute_string += ' -asap ' + vis.rstrip('/')
+                                execute_string += ' -antenna ' + str(antenna) + ' -apc ' + wvr_corrected_data + ' -time-sampling ' + time_sampling.lower() + ' -overwrite ' + str(overwrite) 
+                                if ( corr_mode == 'all' ):
+                                        execute_string += ' -corr-mode ao+ca -ocorr-mode ao'
+                                else:
+                                        execute_string += ' -corr-mode ' + string.join( corr_mode.split(), '+' ) + ' -ocorr-mode ao'
+                                execute_string += ' -logfile ' + casalog.logfile()
+                                casalog.post( 'execute_string is' )
+                                casalog.post( '   '+execute_string )
+                                ret = os.system( execute_string )  
+                        else:
+                                casalog.post( 'You should build ASAP to be able to create single-dish data.','SEVERE' )
+                        return 
 		if(len(vis) > 0) :
 		   viso = vis
 		   tmps = vis.rstrip('.ms')
@@ -97,27 +135,6 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 			   fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='save')
 			   fg.done();			
 
-                if singledish:
-                   casalog.post('temporary MS file: %s'%viso)
-                   casalog.post('        ASAP file: %s'%vis)
-                   casalog.post(' selected antenna: %s'%antenna)
-                   try:
-                      from asap import scantable
-                      s = scantable(viso,average=False,getpt=True,antenna=antenna)
-                      s.save(vis,format='ASAP',overwrite=overwrite)
-                      # remove intermediate products
-                      if os.path.exists(viso):
-                         os.system('rm -rf %s'%viso)
-                         os.system('rm -rf %s.flagversions'%viso)
-                   except Exception, instance:
-                      if os.path.exists(viso):
-                         os.system('rm -rf %s'%viso)
-                         os.system('rm -rf %s.flagversions'%viso)  
-                      if type(instance) == ImportError and (str(instance)).find('asap') != -1:
-                         casalog.post(str(instance),'SEVERE')
-                         casalog.post('You should build ASAP to be able to create single-dish data.','SEVERE')
-                      else:
-                         raise Exception, instance
 	except Exception, instance:
 		print '*** Error ***',instance
 

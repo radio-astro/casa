@@ -32,7 +32,7 @@
 #include <casa/IO/FiledesIO.h>
 
 #include <casa/OS/File.h>
-#include <images/Images/ImageInputProcessor.h>
+#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableParse.h>
 #include <fcntl.h>

@@ -32,6 +32,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="int">0</value>
     </param> 
 
+    <param type="bool" name="getpt">
+            <description>fill DIRECTION column properly, or reuse POINTING table in original MS (only effective for MS input)</description>
+            <value>True</value>
+    </param>
+
     <param type="intArray" name="rowlist">
 	    <description>list of row numbers to process (e.g. [0,2,4,6])</description>
 	    <value></value>
@@ -138,6 +143,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   Keyword arguments:
         infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
+        getpt -- fill DIRECTION column properly, or reuse POINTING table 
+                 in original MS (only effective for MS input)
+                 default: True
+                 options: True (fill DIRECTION column properly)
+                          False (reuse POINTING table in original MS)
         rowlist -- list of row numbers to process
                 default: [] (use all rows)
                 example: [0,2,4,6]
@@ -209,6 +219,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         IF ids, polarization ids and field names. The ASAP (scantable) format 
         is recommended for further analysis using Sd tool. For further 
         imaging using imager, save the data to the Measurement Set (MS2).
+
+        Note that setting getpt=False needs a lot of attention.
+        If you set getpt=False, the task retrieves pointing direction from 
+        MS's FIELD table, which might not be correct for single dish 
+        observation, instead to check MS's POINTING table, which is the 
+        default behavior of the task (getpt=True). To compensate this, 
+        absolute path to MS's POINTING table is stored, and it will be used 
+        for POINTING table when the data is converted back to MS format. 
+        In general, getpt=False is faster especially for large data. However, 
+        MS created from Scantable cannot have correct POINTING table if 
+        original MS's POINTING table doesn't exist. Such situation will 
+        happen when original MS is removed or renamed, or imported Scantable 
+        is moved to other computer alone.
 
         WARNING for the GBT raw SDFITS format data as input:
         SDtasks are able to handle GBT raw SDFITS format data since the 

@@ -13,7 +13,7 @@ def simdata(
     ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
     predict=None, 
-    refdate=None, complist=None, compwidth=None,
+    refdate=None, reftime=None, complist=None, compwidth=None,
     totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
@@ -612,9 +612,31 @@ def simdata(
                     sm.setfield(sourcename="phase calibrator", 
                                 sourcedirection=caldirection,calcode='C',
                                 distance='0m')
-                reftime = me.epoch('TAI', refdate)
-                sm.settimes(integrationtime=integration, usehourangle=True, 
-                            referencetime=reftime)
+
+                # what if someone has the old style refdate with time
+                # included?  CATCH XXX 
+  
+                q = re.compile('(\d*/\d+/\d+)([/:\d]*)')
+                qq = q.match(refdate)
+                if not qq:
+                    msg("Invalid reference date "+refdate,priority="error")
+                    return
+                else:
+                    z = qq.groups()
+                    refdate=z[0]
+                    if len(z)>1:
+                        msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
+ 
+                if reftime=="transit":
+                    refdate=refdate+"/00:00:00"
+                    usehourangle=True
+                else:
+                    refdate=refdate+"/"+reftime
+                    usehourangle=False
+
+                mereftime = me.epoch('TAI', refdate)
+                sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
+                            referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
                 scansec = qa.convert(qa.quantity(scantime),'s')['value']
@@ -635,7 +657,10 @@ def simdata(
                     dirs = []
 
                 for k in xrange(0,nscan) :
-                    sttime = -totalsec/2.0 + scansec*k
+                    if usehourangle:
+                        sttime = -totalsec/2.0 + scansec*k
+                    else:
+                        sttime = scansec*k # leave start at the reftime
                     endtime = sttime + scansec
                     src = project + '_%d' % kfld
                     if observemany:
@@ -651,7 +676,10 @@ def simdata(
                     kfld = kfld + 1
                     if kfld == nfld: 
                         if docalibrator:
-                            sttime = -totalsec/2.0 + scansec*k
+                            if usehourangle:
+                                sttime = -totalsec/2.0 + scansec*k
+                            else:
+                                sttime = scansec*k
                             endtime = sttime + scansec
                             if observemany:
                                 # need to observe cal singly to get new row in obs table, so 
@@ -754,9 +782,9 @@ def simdata(
                 #    sm.setfield(sourcename="phase calibrator", 
                 #                sourcedirection=caldirection,calcode='C',
                 #                distance='0m')
-                reftime = me.epoch('TAI', refdate)
+                mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=True, 
-                            referencetime=reftime)
+                            referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
                 scansec = qa.convert(qa.quantity(scantime),'s')['value']
@@ -777,7 +805,10 @@ def simdata(
                 dirs = []
 
                 for k in xrange(0,nscan) :
-                    sttime = -totalsec/2.0 + scansec*k
+                    if usehourangle:
+                        sttime = -totalsec/2.0 + scansec*k
+                    else:
+                        sttime = scansec*k
                     endtime = sttime + scansec
                     src = project + '_%d' % kfld
                     #if observemany:
@@ -852,9 +883,9 @@ def simdata(
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
                 if predict_uv:
-                    util.ephemeris(refdate,direction=util.direction,telescope=telescopename)
+                    util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle)
                 if predict_sd:
-                    util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename)
+                    util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename,ms=sdmsfile,usehourangle=usehourangle)
                 casalog.origin('simdata')
                 if predict_uv:
                     util.nextfig()
@@ -1738,8 +1769,8 @@ def simdata(
             shutil.rmtree(absconv)  
 #        if os.path.exists(imagename+".diff"):
 #            shutil.rmtree(imagename+".diff")  
-        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
-            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
+#        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
+#            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
         if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
             shutil.rmtree(imagename+".quick.psf")  
 

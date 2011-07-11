@@ -927,6 +927,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
      << "copyPointing took " << timer.real() << "s."
      << LogIO::POST;
 
+  // Optional columns should be set up before msc_p.
+  addOptionalColumns(mssel_p.spectralWindow(), msOut_p.spectralWindow(), true);
+
   // Force the Measures frames for all the time type columns to have the same
   // reference as the TIME column of the main table.
   // Disable the empty table check (with false) because some of the subtables
@@ -1341,16 +1344,27 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   }
   
   
-  Bool SubMS::fillDDTables(){
-    
+  Bool SubMS::fillDDTables()
+  {  
     LogIO os(LogOrigin("SubMS", "fillDDTables()"));
     
+    ROMSSpWindowColumns inSpWCols(mssel_p.spectralWindow());
     MSSpWindowColumns& msSpW(msc_p->spectralWindow());
+    // Detect which optional columns of SPECTRAL_WINDOW are present.
+    // inSpWCols and msSpW should agree because addOptionalColumns() was done
+    // for SPECTRAL_WINDOW in fillAllTables() before making msc_p or calling
+    // fillDDTables.
+    Bool haveSpwAN  = !msSpW.assocNature().isNull();
+    Bool haveSpwASI = !msSpW.assocSpwId().isNull();
+    Bool haveSpwBN  = !msSpW.bbcNo().isNull();
+    Bool haveSpwBS  = !msSpW.bbcSideband().isNull();
+    Bool haveSpwDI  = !msSpW.dopplerId().isNull();
+
     MSDataDescColumns& msDD(msc_p->dataDescription());
     MSPolarizationColumns& msPol(msc_p->polarization());
     
     //DD table
-    const MSDataDescription ddtable= mssel_p.dataDescription();
+    const MSDataDescription ddtable = mssel_p.dataDescription();
     ROScalarColumn<Int> polId(ddtable, 
 			      MSDataDescription::columnName(MSDataDescription::POLARIZATION_ID));
     
@@ -1359,9 +1373,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       ROMSDataDescColumns msOldDD(ddtable);
       oldDDSpwMatch_p=msOldDD.spectralWindowId().getColumn();
     }
-    //POLARIZATION table 
-    
-    
+
+    //POLARIZATION table    
     const MSPolarization poltable= mssel_p.polarization();
     ROScalarColumn<Int> numCorr (poltable, 
 				 MSPolarization::columnName(MSPolarization::NUM_CORR));
@@ -1370,25 +1383,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     ROArrayColumn<Int> corrProd(poltable, MSPolarization::columnName(MSPolarization::CORR_PRODUCT));
     ROScalarColumn<Bool> polFlagRow(poltable, MSPolarization::columnName(MSPolarization::FLAG_ROW));
     
-    //SPECTRAL_WINDOW table
-    const MSSpectralWindow spwtable(mssel_p.spectralWindow());
     spwRelabel_p.resize(mscIn_p->spectralWindow().nrow());
     spwRelabel_p.set(-1);
     
-    ROArrayColumn<Double> chanFreq(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::CHAN_FREQ));
-    ROArrayColumn<Double> chanWidth(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::CHAN_WIDTH));
-    ROArrayColumn<Double> effBW(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::EFFECTIVE_BW));
-    ROScalarColumn<Bool> spwFlagRow(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::FLAG_ROW));
-    ROScalarColumn<Int> freqGroup(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::FREQ_GROUP));
-    ROScalarColumn<String> freqGroupName(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::FREQ_GROUP_NAME));
-    ROScalarColumn<Int> ifConvChain(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::IF_CONV_CHAIN));
-    ROScalarColumn<Int> measFreqRef(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::MEAS_FREQ_REF));
-    ROScalarColumn<String> spwName(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::NAME));
-    ROScalarColumn<Int> netSideband(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::NET_SIDEBAND)); 
-    ROScalarColumn<Int> numChan(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::NUM_CHAN));
-    ROScalarColumn<Double> refFreq(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::REF_FREQUENCY));
-    ROArrayColumn<Double> spwResol(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::RESOLUTION));
-    ROScalarColumn<Double> totBW(spwtable, MSSpectralWindow::columnName(MSSpectralWindow::TOTAL_BANDWIDTH));
     inNumChan_p.resize(spw_p.nelements()); 
     
     polID_p = polId.getColumn();
@@ -1490,7 +1487,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }
 
     for(uInt k = 0; k < spw_p.nelements(); ++k)
-      inNumChan_p[k] = numChan(spw_p[k]);
+      inNumChan_p[k] = inSpWCols.numChan()(spw_p[k]);
     
     Vector<Vector<Int> > spwinds_of_uniq_spws(nuniqSpws);
 
@@ -1524,7 +1521,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
           ++j;
         }
       }
-      if(maxchan > numChan(spw_uniq_p[k])){
+      if(maxchan > inSpWCols.numChan()(spw_uniq_p[k])){
         os << LogIO::SEVERE
            << " Channel settings wrong; exceeding number of channels in spw "
            << spw_uniq_p[k] << LogIO::POST;
@@ -1538,15 +1535,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt k = spwinds_of_uniq_spws[min_k][0];
 
       if(spwinds_of_uniq_spws[min_k].nelements() > 1 ||
-         nchan_p[k] != numChan(spw_p[k])){
-        Vector<Double> effBWIn = effBW(spw_uniq_p[min_k]);
+         nchan_p[k] != inSpWCols.numChan()(spw_p[k])){
+        Vector<Double> effBWIn = inSpWCols.effectiveBW()(spw_uniq_p[min_k]);
 	Int nOutChan = totnchan_p[min_k];
         Vector<Double> chanFreqOut(nOutChan);
-        Vector<Double> chanFreqIn = chanFreq(spw_uniq_p[min_k]);
+        Vector<Double> chanFreqIn = inSpWCols.chanFreq()(spw_uniq_p[min_k]);
         Vector<Double> chanWidthOut(nOutChan);
-        Vector<Double> chanWidthIn = chanWidth(spw_uniq_p[min_k]);
+        Vector<Double> chanWidthIn = inSpWCols.chanWidth()(spw_uniq_p[min_k]);
         Vector<Double> spwResolOut(nOutChan);
-        Vector<Double> spwResolIn = spwResol(spw_uniq_p[min_k]);
+        Vector<Double> spwResolIn = inSpWCols.resolution()(spw_uniq_p[min_k]);
         Vector<Double> effBWOut(nOutChan);
         Int outChan = 0;
 
@@ -1616,30 +1613,39 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
         msSpW.totalBandwidth().put(min_k, totalBW);
       }
       else{
-	msSpW.chanFreq().put(min_k, chanFreq(spw_p[k]));
-	msSpW.resolution().put(min_k, spwResol(spw_p[k]));
-	msSpW.numChan().put(min_k, numChan(spw_p[k]));    
-	msSpW.chanWidth().put(min_k, chanWidth(spw_p[k]));
-	msSpW.effectiveBW().put(min_k, effBW(spw_p[k]));
-	msSpW.totalBandwidth().put(min_k, totBW(spw_p[k]));
+	msSpW.chanFreq().put(min_k, inSpWCols.chanFreq()(spw_p[k]));
+	msSpW.resolution().put(min_k, inSpWCols.resolution()(spw_p[k]));
+	msSpW.numChan().put(min_k, inSpWCols.numChan()(spw_p[k]));    
+	msSpW.chanWidth().put(min_k, inSpWCols.chanWidth()(spw_p[k]));
+	msSpW.effectiveBW().put(min_k, inSpWCols.effectiveBW()(spw_p[k]));
+	msSpW.totalBandwidth().put(min_k, inSpWCols.totalBandwidth()(spw_p[k]));
       }
       
-      msSpW.flagRow().put(min_k, spwFlagRow(spw_p[k]));
-      msSpW.freqGroup().put(min_k, freqGroup(spw_p[k]));
-      msSpW.freqGroupName().put(min_k, freqGroupName(spw_p[k]));
-      msSpW.ifConvChain().put(min_k, ifConvChain(spw_p[k]));
-      msSpW.refFrequency().put(min_k, refFreq(spw_p[k]));
-      msSpW.measFreqRef().put(min_k, measFreqRef(spw_p[k]));
-      msSpW.name().put(min_k, spwName(spw_p[k]));
-      msSpW.netSideband().put(min_k, netSideband(spw_p[k])); 
-      
+      msSpW.flagRow().put(min_k, inSpWCols.flagRow()(spw_p[k]));
+      msSpW.freqGroup().put(min_k, inSpWCols.freqGroup()(spw_p[k]));
+      msSpW.freqGroupName().put(min_k, inSpWCols.freqGroupName()(spw_p[k]));
+      msSpW.ifConvChain().put(min_k, inSpWCols.ifConvChain()(spw_p[k]));
+      msSpW.refFrequency().put(min_k, inSpWCols.refFrequency()(spw_p[k]));
+      msSpW.measFreqRef().put(min_k, inSpWCols.measFreqRef()(spw_p[k]));
+      msSpW.name().put(min_k, inSpWCols.name()(spw_p[k]));
+      msSpW.netSideband().put(min_k, inSpWCols.netSideband()(spw_p[k]));
+      if(haveSpwAN)
+        msSpW.assocNature().put(min_k, inSpWCols.assocNature()(spw_p[k]));
+      if(haveSpwASI)
+        msSpW.assocSpwId().put(min_k, inSpWCols.assocSpwId()(spw_p[k]));
+      if(haveSpwBN)
+        msSpW.bbcNo().put(min_k, inSpWCols.bbcNo()(spw_p[k]));
+      if(haveSpwBS)
+        msSpW.bbcSideband().put(min_k, inSpWCols.bbcSideband()(spw_p[k]));
+      if(haveSpwDI)
+        msSpW.dopplerId().put(min_k, inSpWCols.dopplerId()(spw_p[k]));
+
       msDD.flagRow().put(min_k, False);
       msDD.polarizationId().put(min_k, newPolId[min_k]);
       msDD.spectralWindowId().put(min_k, min_k);
     }
     return true;
   }
-  
   
   Bool SubMS::fillFieldTable() 
   {  

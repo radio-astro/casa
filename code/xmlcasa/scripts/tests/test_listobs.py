@@ -53,7 +53,6 @@ class listobs_test1(unittest.TestCase):
 
     def test3(self):
         '''Listobs 3: CSV-591. Check if long field names are fully displayed'''
-        # NOTE: it needs the ability to save on a file first, in order to use listobs.
         ms.open(msfile1)
         res = ms.summary(True)
         ms.close()
@@ -66,51 +65,65 @@ class listobs_test1(unittest.TestCase):
         '''Listobs 4: CAS-2751. Check that ALMA MS displays one row per scan'''
         ms.open(msfile2)
         res = ms.summary(True)
-        
+        ms.close()
         # Begin and end times should be different
         btime = res['header']['scan_1']['0']['BeginTime']
         etime = res['header']['scan_1']['0']['EndTime']
         self.assertNotEqual(btime, etime, "Begin and End times of scan=1 should not be equal")
         
         # Only one row of scan=1 should be printed
-        # Once CAS-2398 is implemented, finish this test and compare
-        # with a reference file in the repository
-                    
-#    def test3(self):
-#        '''Listobs 3: Save on a file, verbose=False'''
-#        output = 'listobs3.txt'
-#        out = "newobs3.txt"
-#        reference = reffile+'3'
-#        diff1 = "diff1listobs3"
-#        diff2 = "diff2listobs3"
-#        
-#        # Run it twice to check for the precision change
-#        self.res = listobs(vis=msfile1, verbose = False, listfile=output)
-#        # Remove the name of the MS from output before comparison
-#        os.system("sed '1,3d' "+ output+ ' > '+ out)    
-#        os.system("diff "+reference+" "+out+" > "+diff1)    
-#        self.assertTrue(lt.compare(out,reference),
-#                        'New and reference files are different in first run. %s != %s. '
-#                        'See the diff file %s.'%(out,reference, diff1))
-#        
-#        os.system('rm -rf '+output+ " "+out)
-#        self.res = listobs(vis=msfile1, verbose = False, listfile=output)
-#        # Remove the name of the MS from output before comparison
-#        os.system("sed '1,3d' "+ output+ ' > '+ out)        
-#        os.system("diff "+reference+" "+out+" > "+diff2)    
-#        self.assertTrue(lt.compare(out,reference),
-#                        'New and reference files are different in second run. %s != %s. '
-#                        'See the diff file %s.'%(out,reference,diff2))
+        output = 'listobs4.txt'
+        out = "newobs4.txt"
+        reference = reffile+'4'
+        diff = "difflistobs4"
         
-#    def test4(self):
-#        '''Listobs 4: Save on a file, verbose=True'''
-#        output = 'listobs4.txt'
-#        comp = 'compare.4'
-#        reference = reffile+'4'
-#        self.res = listobs(vis=msfile1, listfile=output, verbose = True)
-#        self.assertTrue(lt.compare(output,reference),
-#                        'New and reference files are different. %s != %s. '
-#                        'See the diff file.'%(output,reference))
+        listobs(vis=msfile2, verbose=True, listfile=output)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)    
+        os.system("diff "+reference+" "+out+" > "+diff)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file %s.'%(out,reference, diff))
+                    
+    def test5(self):
+        '''Listobs 5: Save on a file, verbose=False'''
+        output = 'listobs5.txt'
+        out = "newobs5.txt"
+        reference = reffile+'5'
+        diff1 = "diff1listobs5"
+        diff2 = "diff2listobs5"
+        
+#        # Run it twice to check for the precision change
+        self.res = listobs(vis=msfile1, verbose = False, listfile=output)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)    
+        os.system("diff "+reference+" "+out+" > "+diff1)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different in first run. %s != %s. '
+                        'See the diff file %s.'%(out,reference, diff1))
+        
+        os.system('rm -rf '+output+ " "+out)
+        self.res = listobs(vis=msfile1, verbose = False, listfile=output)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)        
+        os.system("diff "+reference+" "+out+" > "+diff2)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different in second run. %s != %s. '
+                        'See the diff file %s.'%(out,reference,diff2))
+        
+    def test6(self):
+        '''Listobs 6: Save on a file, verbose=True'''
+        output = 'listobs6.txt'
+        out = "newobs6.txt"
+        diff = "diff1listobs6"
+        reference = reffile+'6'
+        self.res = listobs(vis=msfile1, listfile=output, verbose = True)
+#        # Remove the name of the MS from output before comparison
+        os.system("sed '1,3d' "+ output+ ' > '+ out)        
+        os.system("diff "+reference+" "+out+" > "+diff)    
+        self.assertTrue(lt.compare(out,reference),
+                        'New and reference files are different. %s != %s. '
+                        'See the diff file %s.'%(out,reference,diff))
         
 
 class listobs_cleanup(unittest.TestCase):
