@@ -464,6 +464,10 @@ class cleanhelper:
         else:
             self.maskimages={}
 
+        # clean up temp mask image 
+        if os.path.exists('__tmp_mask'):
+           shutil.rmtree('__tmp_mask')
+ 
         #print "makemultifieldmask2: intial self.imagelist=",self.imagelist
         if (not hasattr(maskobject, '__len__')) \
            or (len(maskobject) == 0) or (maskobject == ['']):
@@ -678,6 +682,12 @@ class cleanhelper:
         masktext=[]
         maskrecord={}
         tablerecord=[]
+        # clean up any left over temp files from previous clean runs
+        if os.path.exists("__temp_mask"):
+          shutil.rmtree("__temp_mask")
+        if os.path.exists("__temp_mask2"):
+          shutil.rmtree("__temp_mask2")
+  
         # relax to allow list input for imagename 
         if(type(imagename)==list):
            imagename=imagename[0] 

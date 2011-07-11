@@ -605,7 +605,8 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.64
+           VERSION 1.0.67
+           PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
                     scimath/Mathematics/MatrixMathLA.h  # declares symbols defined in LAPACK

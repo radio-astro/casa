@@ -33,13 +33,13 @@ class sdplot_test_plot(unittest.TestCase):
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
       default(sdaverage)
-      sdaverage(sdfile='OrionS_rawACSmod',scanlist=[20,21,22,23],
-                calmode='ps',tau=0.09,outfile=self.sdfile)
+      sdaverage(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+                calmode='ps',tau=0.09,outfile=self.infile)
     """
     # Data path of input/output
     datapath=os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/sdplot/'
     # Input and output names
-    sdfile = 'OrionS_rawACSmod_cal2123.asap'
+    infile = 'OrionS_rawACSmod_cal2123.asap'
     figroot = 'sdplot_test'
     figpost = '.png'
     fig=None
@@ -59,9 +59,9 @@ class sdplot_test_plot(unittest.TestCase):
         if self.nogui:
             sd.rcParams['plotter.gui'] = False
             sd.plotter.__init__()
-        if os.path.exists(self.sdfile):
-            shutil.rmtree(self.sdfile)
-        shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
         if not (os.path.exists(self.currdir)):
             os.makedirs(self.currdir)
         # Create a directory to save the figure for future comparison
@@ -75,15 +75,15 @@ class sdplot_test_plot(unittest.TestCase):
         default(sdplot)
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
         #if self.fig and (os.path.exists(self.fig)):
         #    os.remove(self.fig)
         if self.oldgui:
             sd.rcParams['plotter.gui'] = True
             sd.plotter.__init__()
 
-    def _checkPlotFile(self,compare=True):
+    def _checkOutFile(self,compare=True):
         self.assertTrue(os.path.exists(self.fig))
         self.assertTrue(os.path.isfile(self.fig))
         self.assertTrue(os.path.getsize(self.fig) > self.fig_minsize)
@@ -95,8 +95,7 @@ class sdplot_test_plot(unittest.TestCase):
             msg = "Compareing with previous plot:\n"
             msg += " (prev) %s\n (new) %s" % (prevfig,os.path.abspath(self.fig))
             casalog.post(msg,'INFO')
-            self.assertTrue(filecmp.cmp(prevfig,os.path.abspath(self.fig),
-                                        shallow=False))
+            self.assertTrue(filecmp.cmp(prevfig,os.path.abspath(self.fig),shallow=False))
         shutil.move(self.fig,currfig)
 
         # Save the figure for future comparison if possible.
@@ -118,27 +117,26 @@ class sdplot_test_plot(unittest.TestCase):
     def testplot01(self):
         """Test 1: test plot type --- az/el"""
         tid = "01"
-        sdfile=self.sdfile
+        infile=self.infile
         self.fig = self.figroot+tid+self.figpost
         plottype='azel'
         header=False
-        result=sdplot(sdfile=self.sdfile,plottype=plottype,header=header,
-                        plotfile=self.fig)
+        result=sdplot(infile=self.infile,plottype=plottype,header=header,
+                        outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
-        
+        self._checkOutFile()
 
     def testplot02(self):
         """Test 2: test plot type --- pointing"""
         tid = "02"
-        sdfile=self.sdfile
+        infile=self.infile
         self.fig = self.figroot+tid+self.figpost
         plottype='pointing'
         header=False
-        result=sdplot(sdfile=self.sdfile,plottype=plottype,header=header,
-                        plotfile=self.fig)
+        result=sdplot(infile=self.infile,plottype=plottype,header=header,
+                        outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot03(self):
         """
@@ -146,21 +144,21 @@ class sdplot_test_plot(unittest.TestCase):
         """
         #pl.ion()
         tid = "03"        
-        sdfile=self.sdfile
+        infile=self.infile
         self.fig = self.figroot+tid+self.figpost
         plottype='totalpower'
         header=False
-        result=sdplot(sdfile=sdfile,plottype=plottype,header=header,
-                        plotfile=self.fig)
+        result=sdplot(infile=infile,plottype=plottype,header=header,
+                        outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot04(self):
         """
         Test 4: test possible axes for spectral plotting --- specunit='channel'
         """
         tid = "04"
-        sdfile=self.sdfile
+        infile=self.infile
         self.fig = self.figroot+tid+self.figpost
         specunit='channel'
         fluxunit='K'
@@ -168,18 +166,18 @@ class sdplot_test_plot(unittest.TestCase):
         panel='i'
         iflist=[0,2]
         header=False
-        result=sdplot(sdfile=sdfile,specunit=specunit,fluxunit=fluxunit,
+        result=sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
-                        header=header,plotfile=self.fig)
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot05(self):
         """
         Test 5: test possible axes for spectral plotting --- specunit='GHz'
         """
         tid = "05"
-        sdfile=self.sdfile
+        infile=self.infile
         self.fig = self.figroot+tid+self.figpost
         specunit='GHz'
         fluxunit='K'
@@ -187,18 +185,18 @@ class sdplot_test_plot(unittest.TestCase):
         panel='i'
         iflist=[0,2]
         header=False
-        result=sdplot(sdfile=sdfile,specunit=specunit,fluxunit=fluxunit,
+        result=sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
-                        header=header,plotfile=self.fig)
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot06(self):
         """
         Test 6: test possible axes for spectral plotting --- specunit='km/s'
         """
         tid = "06"
-        sdfile=self.sdfile
+        infile=self.infile
         self.fig = self.figroot+tid+self.figpost
         specunit='km/s'
         fluxunit='K'
@@ -206,11 +204,11 @@ class sdplot_test_plot(unittest.TestCase):
         panel='i'
         iflist=[0,2]
         header=False
-        result=sdplot(sdfile=sdfile,specunit=specunit,fluxunit=fluxunit,
+        result=sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
-                        header=header,plotfile=self.fig)
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot07(self):
         """
@@ -218,18 +216,18 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "07"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         specunit='channel'
         fluxunit='Jy'
         stack='p'
         panel='i'
         iflist=[0,2]
         header=False
-        result=sdplot(sdfile=sdfile,specunit=specunit,fluxunit=fluxunit,
+        result=sdplot(infile=infile,specunit=specunit,fluxunit=fluxunit,
                         stack=stack,panel=panel,iflist=iflist,
-                        header=header,plotfile=self.fig)
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot08(self):
         """
@@ -237,14 +235,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "08"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         panel='pol'
         stack='scan'
         header=False
-        result=sdplot(sdfile=sdfile,stack=stack,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,stack=stack,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot09(self):
         """
@@ -252,14 +250,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "09"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         panel='scan'
         stack='if'
         header=False
-        result=sdplot(sdfile=sdfile,stack=stack,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,stack=stack,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot10(self):
         """
@@ -267,14 +265,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "10"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         panel='if'
         stack='time'
         header=False
-        result=sdplot(sdfile=sdfile,stack=stack,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,stack=stack,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot11(self):
         """
@@ -282,14 +280,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "11"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         panel='time'
         stack='beam'
         header=False
-        result=sdplot(sdfile=sdfile,stack=stack,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,stack=stack,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot12(self):
         """
@@ -297,14 +295,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "12"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         panel='beam'
         stack='pol'
         header=False
-        result=sdplot(sdfile=sdfile,stack=stack,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,stack=stack,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot13(self):
         """
@@ -312,14 +310,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "13"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         sprange=[3500,5000]
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,sprange=sprange,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,sprange=sprange,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot14(self):
         """
@@ -327,14 +325,14 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "14"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         flrange=[0.,6.]
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,flrange=flrange,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,flrange=flrange,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot15(self):
         """
@@ -342,15 +340,15 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "15"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         sprange=[3500,5000]
         flrange=[0.,6.]
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,sprange=sprange,
-                        header=header,flrange=flrange,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,sprange=sprange,
+                        header=header,flrange=flrange,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot16(self):
         """
@@ -358,15 +356,15 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "16"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         sprange=[3900,4300]
         histogram=True
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,sprange=sprange,
-                        header=header,histogram=histogram,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,sprange=sprange,
+                        header=header,histogram=histogram,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot17(self):
         """
@@ -374,15 +372,15 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "17"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         sprange=[3900,4300]
         colormap="pink orange"
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,sprange=sprange,
-                        header=header,colormap=colormap,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,sprange=sprange,
+                        header=header,colormap=colormap,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot18(self):
         """
@@ -390,15 +388,15 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "18"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         sprange=[3900,4300]
         linewidth=3
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,sprange=sprange,
-                        header=header,linewidth=linewidth,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,sprange=sprange,
+                        header=header,linewidth=linewidth,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot19(self):
         """
@@ -406,17 +404,17 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "19"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0]
         sprange=[3900,4300]
         linewidth=2
         linestyles="dotted dashdot"
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,sprange=sprange,
+        result=sdplot(infile=infile,iflist=iflist,sprange=sprange,
                         linewidth=linewidth,linestyles=linestyles,
-                        header=header,plotfile=self.fig)
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot21(self):
         """
@@ -424,12 +422,12 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "21"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0,2]
-        result=sdplot(sdfile=sdfile,iflist=iflist,
-                        plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,
+                        outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile(compare=False)
+        self._checkOutFile(compare=False)
 
     def testplot20(self):
         """
@@ -437,13 +435,13 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "20"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0,2]
         headsize=11
-        result=sdplot(sdfile=sdfile,iflist=iflist,headsize=headsize,
-                        plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,headsize=headsize,
+                        outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile(compare=False)
+        self._checkOutFile(compare=False)
 
     def testplot22(self):
         """
@@ -451,15 +449,15 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "22"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0,2]
         plotstyle=True
         margin=[0.15,0.3,0.85,0.7,0.25,0.25]
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
-                        margin=margin,header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
+                        margin=margin,header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot23(self):
         """
@@ -467,15 +465,15 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "23"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         iflist=[0,2]
         plotstyle=True
         legendloc=3
         header=False
-        result=sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
-                        legendloc=legendloc,header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
+                        legendloc=legendloc,header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot24(self):
         """
@@ -483,13 +481,13 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "24"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         panel='row'
         header=False
-        result=sdplot(sdfile=sdfile,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot25(self):
         """
@@ -497,13 +495,13 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "25"
         self.fig = self.figroot+tid+self.figpost
-        sdfile=self.sdfile
+        infile=self.infile
         stack='row'
         header=False
-        result=sdplot(sdfile=sdfile,stack=stack,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,stack=stack,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot26(self):
         """
@@ -513,18 +511,18 @@ class sdplot_test_plot(unittest.TestCase):
         tid = "26"
         self.fig = self.figroot+tid+self.figpost
         ### flag rows=[0,3,6,9,12,15]
-        sdfile = "orion_flagrow.asap"
-        scan = scantable(filename=self.sdfile,average=False)
+        infile = "orion_flagrow.asap"
+        scan = scantable(filename=self.infile,average=False)
         scan.flag_row(rows=[0,3,6,9,12,15])
-        scan.save(name=sdfile,format='ASAP')
+        scan.save(name=infile,format='ASAP')
         #
         panel='row'
         stack='scan'
         header=False
-        result=sdplot(sdfile=sdfile,panel=panel,stack=stack,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,panel=panel,stack=stack,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot27(self):
         """
@@ -534,19 +532,19 @@ class sdplot_test_plot(unittest.TestCase):
         tid = "27"
         self.fig = self.figroot+tid+self.figpost
         ### flag channels [7168,8191]
-        sdfile = "orion_flagchan7168to8191.asap"
-        scan = scantable(filename=self.sdfile,average=False)
+        infile = "orion_flagchan7168to8191.asap"
+        scan = scantable(filename=self.infile,average=False)
         scan.set_unit('channel')
         msk = scan.create_mask([7168,8191])
         scan.flag(mask=msk)
-        scan.save(name=sdfile,format='ASAP')
+        scan.save(name=infile,format='ASAP')
         #
         panel='row'
         header=False
-        result=sdplot(sdfile=sdfile,panel=panel,
-                        header=header,plotfile=self.fig)
+        result=sdplot(infile=infile,panel=panel,
+                        header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
     def testplot28(self):
         """
@@ -554,16 +552,16 @@ class sdplot_test_plot(unittest.TestCase):
         """
         tid = "28"
         self.fig = self.figroot+tid+self.figpost
-        sdfile = self.sdfile
+        infile = self.infile
         iflist = [0,2]
         panel = 'r'
         plotstyle = True
         subplot = 24
         header = False
-        result = sdplot(sdfile=sdfile,iflist=iflist,plotstyle=plotstyle,
-                        subplot=subplot,header=header,plotfile=self.fig)
+        result = sdplot(infile=infile,iflist=iflist,plotstyle=plotstyle,
+                        subplot=subplot,header=header,outfile=self.fig)
         self.assertEqual(result,None)
-        self._checkPlotFile()
+        self._checkOutFile()
 
 def suite():
     return [sdplot_test_plot]

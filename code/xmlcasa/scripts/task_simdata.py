@@ -93,6 +93,16 @@ def simdata(
         skymodel = skymodel[0]
     skymodel = skymodel.replace('$project',project)
 
+    # check for people re-imaging only, in case they've turned modifymodel 
+    # off without changing their imagename to project.skymodel
+    if image and not predict and not modifymodel:
+        if len(skymodel) < 9 or skymodel[-8:] != "skymodel":
+            if os.path.exists(skymodel):
+                msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
+                msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
+                skymodel = fileroot + "/" + project + ".skymodel"
+
+
     if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
@@ -124,17 +134,17 @@ def simdata(
         ##################################################################
         # set up skymodelimage
 
-        # check for people re-imaging only, in case they've turned modifymodel 
-        # off without changing their imagename to project.skymodel
-        if image and not predict and not modifymodel:
-            if len(skymodel) < 9 or skymodel[-8:] != "skymodel":
-                if os.path.exists(skymodel):
-                    msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
-                    msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
-                    skymodel = fileroot + "/" + project + ".skymodel"
-                else:
-                    msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="error")
-                    return False
+#         # check for people re-imaging only, in case they've turned modifymodel 
+#         # off without changing their imagename to project.skymodel
+#         if image and not predict and not modifymodel:
+#             if len(skymodel) < 9 or skymodel[-8:] != "skymodel":
+#                 if os.path.exists(skymodel):
+#                     msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
+#                     msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
+#                     skymodel = fileroot + "/" + project + ".skymodel"
+#                 else:
+#                     msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="error")
+#                     return False
 
         if os.path.exists(skymodel):
             components_only = False
@@ -274,8 +284,12 @@ def simdata(
 
         pb = 0. # primary beam
 
-        if len(antennalist) > 0 and not os.path.exists(antennalist):
-            if os.path.exists(repodir+antennalist):
+        # Search order is fileroot/ -> specified path -> repository
+        if len(antennalist) > 0:
+            if os.path.exists(fileroot+"/"+antennalist):
+                antennalist = fileroot + "/" + antennalist
+            elif not os.path.exists(antennalist) and \
+                     os.path.exists(repodir+antennalist):
                 antennalist = repodir + antennalist
 
         if os.path.exists(antennalist):
@@ -289,9 +303,13 @@ def simdata(
             predict_uv = True
             pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
-            
-        if len(sdantlist) > 0 and not os.path.exists(sdantlist):
-            if os.path.exists(repodir+sdantlist):
+
+        # Search order is fileroot/ -> specified path -> repository
+        if len(sdantlist) > 0:
+            if os.path.exists(fileroot+"/"+sdantlist):
+                sdantlist = fileroot + "/" + sdantlist
+            elif not os.path.exists(sdantlist) and \
+                     os.path.exists(repodir+sdantlist):
                 sdantlist = repodir + sdantlist
 
         if os.path.exists(sdantlist):
@@ -1177,7 +1195,10 @@ def simdata(
                             msg("inconsistent vis name. you have generated a total power MS "+sdmsfile+", but are requesting vis="+ms1+" for imaging",priority="error")
                             return False
                         tpmstoimage = ms1
-                    else: mstoimage.append(ms1)
+                        msg("Found a total power measurement set, %s." % ms1)
+                    else:
+                        mstoimage.append(ms1)
+                        msg("Found a synthesis measurement set, %s." % ms1)
                 else:
                     if verbose:
                         msg("measurement set "+ms1+" not found -- removing from imaging list",priority="warn")
@@ -1213,7 +1234,8 @@ def simdata(
                 #else:
                 # check for modelimage
                 if len(mstoimage):
-                    if len(modelimage) and modelimage != tpimage:
+                    if len(modelimage) and tpimage != modelimage and \
+                           tpimage != fileroot+"/"+modelimage:
                         msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
                         msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
                     else:
@@ -1292,6 +1314,11 @@ def simdata(
             # clean insists on using an existing model if its present
             if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
             if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
+
+            # An image in fileroot/ has priority
+            if len(modelimage) > 0 and os.path.exists(fileroot+"/"+modelimage):
+                modelimage = fileroot + "/" + modelimage
+                msg("Found modelimage, %s." % modelimage)
 
             # use imcenter instead of model_refdir
             util.image(mstoimage,imagename,

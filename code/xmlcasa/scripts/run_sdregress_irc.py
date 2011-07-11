@@ -29,7 +29,7 @@ startProc=time.clock()
 
 # Set parameters
 default('sdcal')
-sdfile = 'IRC+10216_rawACSmod'
+infile = 'IRC+10216_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'
@@ -64,7 +64,7 @@ sdcal()
 # First the line-free region
 # Set parameters
 default('sdstat')
-sdfile = 'sdregress_irc_sio.asap'
+infile = 'sdregress_irc_sio.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[800,1500]]
@@ -77,7 +77,7 @@ off_stat = xstat
 
 # Then the line region
 # Set parameters
-sdfile = 'sdregress_irc_sio.asap'
+infile = 'sdregress_irc_sio.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[1850,2300]]
@@ -174,7 +174,7 @@ startProc=time.clock()
 
 # Set parameters
 default('sdcal')
-sdfile = 'IRC+10216_rawACSmod'
+infile = 'IRC+10216_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'
@@ -209,7 +209,7 @@ sdcal()
 # First the line-free region
 # Set parameters
 default('sdstat')
-sdfile = 'sdregress_irc_hc3n.asap'
+infile = 'sdregress_irc_hc3n.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[200,1500]]
@@ -222,7 +222,7 @@ off_stat = xstat
 
 # Then the line region
 # Set parameters
-sdfile = 'sdregress_irc_hc3n.asap'
+infile = 'sdregress_irc_hc3n.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[1800,2400]]
@@ -320,7 +320,7 @@ startProc=time.clock()
 
 # Set parameters
 default('sdcal')
-sdfile = 'IRC+10216_rawACSmod'
+infile = 'IRC+10216_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'
@@ -355,7 +355,7 @@ sdcal()
 # First the line-free region
 # Set parameters
 default('sdstat')
-sdfile = 'sdregress_irc_cs.asap'
+infile = 'sdregress_irc_cs.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[800,1500]]
@@ -368,7 +368,7 @@ off_stat = xstat
 
 # Then the line region
 # Set parameters
-sdfile = 'sdregress_irc_cs.asap'
+infile = 'sdregress_irc_cs.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[1850,2300]]

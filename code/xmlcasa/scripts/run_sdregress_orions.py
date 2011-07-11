@@ -29,7 +29,7 @@ startProc=time.clock()
 
 # Set parameters
 default('sdcal')
-sdfile = 'OrionS_rawACSmod'
+infile = 'OrionS_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'
@@ -58,7 +58,7 @@ sdcal()
 # First the line-free region
 # Set parameters
 default('sdstat')
-sdfile = 'sdregress_orions_sio.asap'
+infile = 'sdregress_orions_sio.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[1000,3000]]
@@ -71,7 +71,7 @@ off_stat = xstat
 
 # Then the line region
 # Set parameters
-sdfile = 'sdregress_orions_sio.asap'
+infile = 'sdregress_orions_sio.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[3900,4300]]
@@ -85,13 +85,13 @@ line_stat = xstat
 # Now do some line fitting
 # Set parameters
 default('sdfit')
-sdfile = 'sdregress_orions_sio.asap'
+infile = 'sdregress_orions_sio.asap'
 fluxunit = 'K'
 specunit = 'channel'
 fitmode = 'list'
 maskline = [[3900,4300]]
 nfit = [1]
-fitfile = 'sdregress_orions_sio.fit'
+outfile = 'sdregress_orions_sio.fit'
 plotlevel = 0
 xstat = {}
 
@@ -243,7 +243,7 @@ startProc=time.clock()
 
 # Set parameters
 default('sdcal')
-sdfile = 'OrionS_rawACSmod'
+infile = 'OrionS_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'
@@ -276,7 +276,7 @@ sdcal()
 # First the line-free region
 # Set parameters
 default('sdstat')
-sdfile = 'sdregress_orions_hc3n.asap'
+infile = 'sdregress_orions_hc3n.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[5000,7000]]
@@ -289,7 +289,7 @@ off_stat = xstat
 
 # Then the line region
 # Set parameters
-sdfile = 'sdregress_orions_hc3n.asap'
+infile = 'sdregress_orions_hc3n.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[3900,4200]]
@@ -303,13 +303,13 @@ line_stat = xstat
 # Now do some line fitting
 # Set parameters
 default('sdfit')
-sdfile = 'sdregress_orions_hc3n.asap'
+infile = 'sdregress_orions_hc3n.asap'
 fluxunit = 'K'
 specunit = 'channel'
 fitmode = 'list'
 maskline = [[3928,4255]]
 nfit = [1]
-fitfile = 'sdregress_orions_hc3n.fit'
+outfile = 'sdregress_orions_hc3n.fit'
 plotlevel = 0
 xstat = {}
 
@@ -461,7 +461,7 @@ startProc=time.clock()
 
 # Set parameters
 default('sdcal')
-sdfile = 'OrionS_rawACSmod'
+infile = 'OrionS_rawACSmod'
 telescope = 'FIX'
 fluxunit = 'K'
 specunit = 'channel'
@@ -491,7 +491,7 @@ sdcal()
 # First the line-free region
 # Set parameters
 default('sdstat')
-sdfile = 'sdregress_orions_ch3oh.asap'
+infile = 'sdregress_orions_ch3oh.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[4000,6000]]
@@ -504,7 +504,7 @@ off_stat = xstat
 
 # Then the line region
 # Set parameters
-sdfile = 'sdregress_orions_ch3oh.asap'
+infile = 'sdregress_orions_ch3oh.asap'
 fluxunit = 'K'
 specunit = 'channel'
 masklist = [[2900,3150]]
@@ -518,13 +518,13 @@ line_stat = xstat
 # Now do some line fitting
 # Set parameters
 default('sdfit')
-sdfile = 'sdregress_orions_ch3oh.asap'
+infile = 'sdregress_orions_ch3oh.asap'
 fluxunit = 'K'
 specunit = 'channel'
 fitmode = 'list'
 maskline = [[2900,3150]]
 nfit = [1]
-fitfile = 'sdregress_orions_ch3oh.fit'
+outfile = 'sdregress_orions_ch3oh.fit'
 plotlevel = 0
 xstat = {}
 

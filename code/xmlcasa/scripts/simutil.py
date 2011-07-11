@@ -1253,6 +1253,7 @@ class simutil:
     def readantenna(self, antab=None):
     ###Helper function to read 4 columns text antenna table X, Y, Z, Diam
         f=open(antab)
+        self.msg("Reading antenna positions from '%s'" % antab,origin="readantenna")
         line= '  '
         inx=[]
         iny=[]

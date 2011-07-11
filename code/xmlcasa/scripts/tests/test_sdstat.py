@@ -42,11 +42,11 @@ class sdstat_test(unittest.TestCase):
     Note: input data is generated from a single dish regression data,
     'OrionS_rawACSmod', as follows:
       default(sdaverage)
-      sdaverage(sdfile='OrionS_rawACSmod',scanlist=[20,21,22,23],
+      sdaverage(infile='OrionS_rawACSmod',scanlist=[20,21,22,23],
                 calmode='ps',tau=0.09,outfile='temp.asap')
       default(sdaverage)
-      sdaverage(sdfile='temp.asap',timeaverage=True,tweight='tintsys',
-                polaverage=True,pweight='tsys',outfile=self.sdfile)
+      sdaverage(infile='temp.asap',timeaverage=True,tweight='tintsys',
+                polaverage=True,pweight='tsys',outfile=self.infile)
     """
     ### TODO:
     ### - need checking for flag application
@@ -56,7 +56,7 @@ class sdstat_test(unittest.TestCase):
     datapath = os.environ.get('CASAPATH').split()[0] + \
                '/data/regression/unittest/sdstat/'
     # Input and output names
-    sdfile = 'OrionS_rawACSmod_calTPave.asap'
+    infile = 'OrionS_rawACSmod_calTPave.asap'
     outroot = 'sdstat_test'
     outsuff = ".out"
     #strefroot = datapath+'refstats'
@@ -259,15 +259,15 @@ class sdstat_test(unittest.TestCase):
 
     ### Actual test scripts ###
     def setUp(self):
-        if os.path.exists(self.sdfile):
-            shutil.rmtree(self.sdfile)
-        shutil.copytree(self.datapath+self.sdfile, self.sdfile)
+        if os.path.exists(self.infile):
+            shutil.rmtree(self.infile)
+        shutil.copytree(self.datapath+self.infile, self.infile)
 
         default(sdstat)
 
     def tearDown(self):
-        if (os.path.exists(self.sdfile)):
-            shutil.rmtree(self.sdfile)
+        if (os.path.exists(self.infile)):
+            shutil.rmtree(self.infile)
 
     def test00(self):
         """Test 0: Default parameters"""
@@ -277,10 +277,10 @@ class sdstat_test(unittest.TestCase):
     def test01(self):
         """Test 1: Default parameters + valid input filename """
         self.tid="01"
-        sdfile = self.sdfile
-        statfile = self.outroot+self.tid+self.outsuff
+        infile = self.infile
+        outfile = self.outroot+self.tid+self.outsuff
 
-        currstat = sdstat(sdfile=sdfile,statfile=statfile)
+        currstat = sdstat(infile=infile,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -293,13 +293,13 @@ class sdstat_test(unittest.TestCase):
     def test02(self):
         """Test 2: fluxunit='K' """
         self.tid="02"
-        sdfile = self.sdfile
+        infile = self.infile
         fluxunit = 'K'
         # automatic conversion for GBT data
         telescopeparm = ""
-        statfile = self.outroot+self.tid+self.outsuff
+        outfile = self.outroot+self.tid+self.outsuff
 
-        currstat = sdstat(sdfile=sdfile,fluxunit=fluxunit,telescopeparm=telescopeparm,statfile=statfile)
+        currstat = sdstat(infile=infile,fluxunit=fluxunit,telescopeparm=telescopeparm,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -312,13 +312,13 @@ class sdstat_test(unittest.TestCase):
     def test03(self):
         """Test 3: fluxunit='Jy' """
         self.tid="03"
-        sdfile = self.sdfile
+        infile = self.infile
         fluxunit = 'Jy'
         # automatic conversion for GBT data
         telescopeparm = ""
-        statfile = self.outroot+self.tid+self.outsuff
+        outfile = self.outroot+self.tid+self.outsuff
 
-        currstat = sdstat(sdfile=sdfile,fluxunit=fluxunit,telescopeparm=telescopeparm,statfile=statfile)
+        currstat = sdstat(infile=infile,fluxunit=fluxunit,telescopeparm=telescopeparm,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -331,11 +331,11 @@ class sdstat_test(unittest.TestCase):
     def test04(self):
         """Test 4: specunit='channel' """
         self.tid="04"
-        sdfile = self.sdfile
+        infile = self.infile
         specunit = 'channel'
-        statfile = self.outroot+self.tid+self.outsuff
+        outfile = self.outroot+self.tid+self.outsuff
 
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile)
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -348,11 +348,11 @@ class sdstat_test(unittest.TestCase):
     def test05(self):
         """Test 5: specunit='GHz' """
         self.tid="05"
-        sdfile = self.sdfile
+        infile = self.infile
         specunit = 'GHz'
-        statfile = self.outroot+self.tid+self.outsuff
+        outfile = self.outroot+self.tid+self.outsuff
 
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile)
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -365,11 +365,11 @@ class sdstat_test(unittest.TestCase):
     def test06(self):
         """Test 6: specunit='km/s' """
         self.tid="06"
-        sdfile = self.sdfile
+        infile = self.infile
         specunit = 'km/s'
-        statfile = self.outroot+self.tid+self.outsuff
+        outfile = self.outroot+self.tid+self.outsuff
 
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile)
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
@@ -382,14 +382,14 @@ class sdstat_test(unittest.TestCase):
     def test07(self):
         """Test 7: maskllist (line) in specunit='channel' """
         self.tid="07"
-        sdfile = self.sdfile
-        statfile = self.outroot+self.tid+self.outsuff
+        infile = self.infile
+        outfile = self.outroot+self.tid+self.outsuff
         iflist = [2]
         specunit = 'channel'
 
         masklist = self.linechan2
 
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile,
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile,
                           iflist=iflist,masklist=masklist)
         print "Statistics out of the current run:\n",currstat
 
@@ -403,13 +403,13 @@ class sdstat_test(unittest.TestCase):
     def test08(self):
         """Test 8: maskllist (line) in specunit='GHz' """
         self.tid="08"
-        sdfile = self.sdfile
-        statfile = self.outroot+self.tid+self.outsuff
+        infile = self.infile
+        outfile = self.outroot+self.tid+self.outsuff
         iflist = [2]
         specunit = 'GHz'
 
-        masklist = _get_chanval(sdfile,self.linechan2,specunit,spw=iflist[0])
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile,
+        masklist = _get_chanval(infile,self.linechan2,specunit,spw=iflist[0])
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile,
                           iflist=iflist,masklist=masklist)
         print "Statistics out of the current run:\n",currstat
 
@@ -422,13 +422,13 @@ class sdstat_test(unittest.TestCase):
     def test09(self):
         """Test 9: maskllist (line) in specunit='km/s' """
         self.tid="09"
-        sdfile = self.sdfile
-        statfile = self.outroot+self.tid+self.outsuff
+        infile = self.infile
+        outfile = self.outroot+self.tid+self.outsuff
         iflist = [2]
         specunit = 'km/s'
 
-        masklist = _get_chanval(sdfile,self.linechan2,specunit,spw=iflist[0])
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile,
+        masklist = _get_chanval(infile,self.linechan2,specunit,spw=iflist[0])
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile,
                           iflist=iflist,masklist=masklist)
         print "Statistics out of the current run:\n",currstat
 
@@ -441,15 +441,15 @@ class sdstat_test(unittest.TestCase):
     def test10(self):
         """Test 10: invert = True"""
         self.tid="07"
-        sdfile = self.sdfile
-        statfile = self.outroot+self.tid+self.outsuff
+        infile = self.infile
+        outfile = self.outroot+self.tid+self.outsuff
         iflist = [0]
         specunit = 'channel'
 
         masklist = self.linechan0
         invert = True
 
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,statfile=statfile,
+        currstat = sdstat(infile=infile,specunit=specunit,outfile=outfile,
                           iflist=iflist,masklist=masklist,invertmask=invert)
         print "Statistics out of the current run:\n",currstat
 
@@ -464,18 +464,18 @@ class sdstat_test(unittest.TestCase):
         self.tid="11"
         reference = self.datapath+"refstat"+self.tid
         
-        sdfile = self.sdfile
+        infile = self.infile
         specunit = 'channel'
-        statfile = self.outroot+self.tid+self.outsuff
+        outfile = self.outroot+self.tid+self.outsuff
         format = '3.5f'
 
-        currstat = sdstat(sdfile=sdfile,specunit=specunit,format=format,statfile=statfile)
+        currstat = sdstat(infile=infile,specunit=specunit,format=format,outfile=outfile)
         print "Statistics out of the current run:\n",currstat
 
         # Task sdstat returns a dictionary of statistic values
         self.assertTrue(isinstance(currstat,dict),
                          msg="The returned statistics are not a dictionary")
-        self._compareFiles(statfile, reference)
+        self._compareFiles(outfile, reference)
         #self._compareVstats(currstat,self.ref_allK)
         #self._compareQstats(currstat,self.minmaxchan_all)
 

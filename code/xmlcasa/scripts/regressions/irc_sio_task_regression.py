@@ -71,7 +71,7 @@ asap_init()                             #load ASAP module
 
 # summary
 #default(sdlist)
-#sdfile='IRC+10216_rawACSmod'
+#infile='IRC+10216_rawACSmod'
 #sdlist()
 
 if doplot:
@@ -82,7 +82,7 @@ else:
 # calibartion,averaging, smoothing, and baseline removal
 # calibrate nod scans for SiO line (IF=30)
 default(sdcal)
-sdfile='IRC+10216_rawACSmod'
+infile='IRC+10216_rawACSmod'
 fluxunit='K'
 calmode='nod'
 scanlist=[240,241,242,243,244,245,246,247]
@@ -107,15 +107,15 @@ order=1
 overwrite=True
 plotlevel=localplotlevel
 sdcal()
-localoutfile=sdfile+'_cal'
+localoutfile=infile+'_cal'
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file
 if doplot:
    default(sdplot)
-   sdfile=localoutfile
+   infile=localoutfile
    specunit='GHz'
-   plotfile='irc_sio_reduced.eps'
+   outfile='irc_sio_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
    sdplot()
@@ -125,7 +125,7 @@ else:
 # statistics
 default(sdstat)
 # select line free regions to get rms
-sdfile=localoutfile
+infile=localoutfile
 masklist=[800, 1500]
 xstat=sdstat()
 rms=xstat['rms']
@@ -143,7 +143,7 @@ mean=xstat['mean']
 # Save the spectrum
 # in different formats
 default(sdsave)
-sdfile=localoutfile
+infile=localoutfile
 outfile='irc_sio_reduced'
 outform='ASCII'
 overwrite=True

@@ -195,7 +195,7 @@ public:
   Bool getRowAndIndex(uInt& row, uInt& subBand,
 		      const String& obsName,
 		      const MEpoch& obsTime,
-		      const MFrequency& freq,
+		      const MFrequency& freq, // if requFType==INTERNAL, a frequency value of 0 (zero) will return the first row and band found
 		      const FuncTypes& requFType = ANY, // the requested function type
 		      const String& antennaType = "",
 		      const MDirection& center = MDirection(Quantity( 0., "deg"), // the center to be matched with the CENTER column,

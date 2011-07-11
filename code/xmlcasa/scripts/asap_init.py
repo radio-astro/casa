@@ -18,42 +18,53 @@ def asap_init():
     print '*** ... ASAP (%s rev#%s) import complete ***' % (sd.__version__,sd.__revision__)
     os.environ['CASAPATH']=casapath
     from sdaverage_cli import sdaverage_cli as sdaverage
-    from sdsmooth_cli import sdsmooth_cli as sdsmooth
     from sdbaseline_cli import sdbaseline_cli as sdbaseline
     from sdcal_cli import sdcal_cli as sdcal
     from sdcoadd_cli import sdcoadd_cli as sdcoadd
-    from sdsave_cli import sdsave_cli as sdsave
-    from sdscale_cli import sdscale_cli as sdscale
     from sdfit_cli import sdfit_cli as sdfit
-    from sdplot_cli import sdplot_cli as sdplot
-    from sdstat_cli import sdstat_cli as sdstat
-    from sdlist_cli import sdlist_cli as sdlist
     from sdflag_cli import sdflag_cli as sdflag
     from sdflagmanager_cli import sdflagmanager_cli as sdflagmanager
-    from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
-    from sdmath_cli import sdmath_cli as sdmath
     from sdimaging_cli import sdimaging_cli as sdimaging
     from sdimprocess_cli import sdimprocess_cli as sdimprocess
+    from sdlist_cli import sdlist_cli as sdlist
+    from sdmath_cli import sdmath_cli as sdmath
+    from sdplot_cli import sdplot_cli as sdplot
+    from sdsave_cli import sdsave_cli as sdsave
+    from sdscale_cli import sdscale_cli as sdscale
+    from sdsmooth_cli import sdsmooth_cli as sdsmooth
+    from sdstat_cli import sdstat_cli as sdstat
+    from sdtpimaging_cli import sdtpimaging_cli as sdtpimaging
     myf['sd']=sd
     myf['sdaverage']=sdaverage
-    myf['sdsmooth']=sdsmooth
     myf['sdbaseline']=sdbaseline
     myf['sdcal']=sdcal
     myf['sdcoadd']=sdcoadd
-    myf['sdsave']=sdsave
-    myf['sdscale']=sdscale
     myf['sdfit']=sdfit
-    myf['sdplot']=sdplot
-    myf['sdstat']=sdstat
-    myf['sdlist']=sdlist
     myf['sdflag']=sdflag
     myf['sdflagmanager']=sdflagmanager
-    myf['sdtpimaging']=sdtpimaging
-    myf['sdmath']=sdmath
     myf['sdimaging']=sdimaging
     myf['sdimprocess']=sdimprocess
+    myf['sdlist']=sdlist
+    myf['sdmath']=sdmath
+    myf['sdplot']=sdplot
+    myf['sdsave']=sdsave
+    myf['sdscale']=sdscale
+    myf['sdsmooth']=sdsmooth
+    myf['sdstat']=sdstat
+    myf['sdtpimaging']=sdtpimaging
 
     print ""
-    print "*** Notice: Name changes of some major SD task parameters, "
-    print "***         including 'sdfile' to 'infile', will become effective "
-    print "***         on and after the next release of casapy-test."
+    print "*** Notice: The following SD task parameters have been renamed:"
+    print "***"
+    print "***         OldName       NewName    Task"
+    print "***         ----------------------------------------------------------"
+    print "***         sdfile     -> infile     all sd* tasks except for sdcoadd"
+    print "***         sdfilelist -> infiles    sdcoadd"
+    print "***         sdimages   -> infiles    sdimprocess"
+    print "***         msname     -> infile     msmoments"
+    print "***         imagename  -> outfile    sdimaging/sdimprocess/sdtpimaging"
+    print "***         fitfile    -> outfile    sdfit"
+    print "***         listfile   -> outfile    sdlist"
+    print "***         plotfile   -> outfile    sdplot"
+    print "***         statfile   -> outfile    sdstat"
+    print ""

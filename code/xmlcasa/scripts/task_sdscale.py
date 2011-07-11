@@ -4,24 +4,24 @@ from taskinit import *
 
 import asap as sd
 
-def sdscale(sdfile, antenna, factor, scaletsys, outfile, overwrite):
+def sdscale(infile, antenna, factor, scaletsys, outfile, overwrite):
 
         casalog.origin('sdscale')
 
 
         try:
             #load the data with or without averaging
-            if sdfile=='':
-                raise Exception, 'sdfile is undefined'
+            if infile=='':
+                raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
 
             if outfile == '':
-                    outfile = sdfile.rstrip('/')+'_scaled'+str(factor)
+                    outfile = infile.rstrip('/')+'_scaled'+str(factor)
             if not overwrite and not outfile=='':
                 outfilename = os.path.expandvars(outfile)
                 outfilename = os.path.expanduser(outfilename)
@@ -29,15 +29,15 @@ def sdscale(sdfile, antenna, factor, scaletsys, outfile, overwrite):
                     s = "Output file '%s' exist." % (outfilename)
                     raise Exception, s
 
-            s=sd.scantable(sdfile,average=False,antenna=antenna)
+            s=sd.scantable(infile,average=False,antenna=antenna)
 
-            #check the format of the sdfile
-            if isinstance(sdfile, str):
+            #check the format of the infile
+            if isinstance(infile, str):
               #import os.path
-              #sdfile = os.path.expandvars(sdfile)
-              #sdfile = os.path.expanduser(sdfile)
-              #if os.path.isdir(sdfile) and os.path.exists(sdfile+'/table.info'):
-              #  if os.path.exists(sdfile+'/table.f1'):
+              #infile = os.path.expandvars(infile)
+              #infile = os.path.expanduser(infile)
+              #if os.path.isdir(infile) and os.path.exists(infile+'/table.info'):
+              #  if os.path.exists(infile+'/table.f1'):
               if os.path.isdir(filename) and os.path.exists(filename+'/table.info'):
                 if os.path.exists(filename+'/table.f1'):
                   format = 'MS2'
@@ -64,7 +64,7 @@ def sdscale(sdfile, antenna, factor, scaletsys, outfile, overwrite):
                   factor = lines
             #if outfile == 'none':
             #  s.scale(factor, scaletsys, True)
-            #  s.save(sdfile, format, True)
+            #  s.save(infile, format, True)
             #  if scaletsys:
             #    print "Scaled spectra and Tsys by "+str(factor)
             #  else:

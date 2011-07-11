@@ -95,6 +95,7 @@ int main() {
       funcNameB(1) = "tAntennaResponses2B.in";
       funcNameB(2) = "tAntennaResponses3B.in";
 
+      Vector<AntennaResponses::FuncTypes> fTypC(3, AntennaResponses::INTERNAL);
 
       AntennaResponses aR(""); // empty table in memory
 
@@ -177,6 +178,20 @@ int main() {
 			     ), AipsError);
 
       AlwaysAssert(ui==1, AipsError); // ui should have been reset to 1
+
+      AlwaysAssert(aR.putRow(ui,"ACA", 1, bName, minFreq, maxFreq, fTypC, funcNameB, funcChannel, nomFreq,
+			     rotAngOffset, "PM", MEpoch(MVEpoch(Quantity(50000., "d")), MEpoch::UTC),
+			     MDirection(Quantity( 0., "deg"),
+					Quantity(45., "deg"), 
+					MDirection::AZEL),
+			     MDirection(Quantity( -10., "deg"), 
+					Quantity(40., "deg"), 
+					MDirection::AZEL),
+			     MDirection(Quantity( 10., "deg"),
+					Quantity(50., "deg"), 
+					MDirection::AZEL)
+			     ), AipsError);
+
 
       aR.create("testAntennaResponsesACA_tmp.dat"); // write second table to disk
 
@@ -376,6 +391,7 @@ int main() {
 				 ),
 		 AipsError);
 
+
     AlwaysAssert(aR.append("testAntennaResponsesACA_tmp.dat"), AipsError);
 
 
@@ -394,6 +410,18 @@ int main() {
 				  MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), 
 				  MFrequency( Quantity(160., "GHz"), MFrequency::TOPO),
 				  requFType, "DV",
+				  MDirection(Quantity( 0., "deg"),
+					     Quantity(80., "deg"), 
+					     MDirection::AZEL)), 
+		 AipsError);
+
+    cout << "access 13b" << endl;
+    AlwaysAssert(!aR.getImageName(theImageName, theImageChannel, theNomFreq, theFType,
+				  theRotAngOffset,
+				  "ALMA", 
+				  MEpoch(MVEpoch(Quantity(50001., "d")), MEpoch::UTC), 
+				  MFrequency( Quantity(0., "GHz"), MFrequency::TOPO), // combination 0 freq + INTERNAL
+				  AntennaResponses::INTERNAL, "PM",                   // returns first freq found
 				  MDirection(Quantity( 0., "deg"),
 					     Quantity(80., "deg"), 
 					     MDirection::AZEL)), 

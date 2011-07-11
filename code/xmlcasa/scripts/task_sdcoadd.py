@@ -4,7 +4,7 @@ from taskinit import *
 import asap as sd
 import pylab as pl
 
-def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
+def sdcoadd(infiles, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanaverage, timeaverage, tweight, polaverage, pweight, outfile, outform, overwrite):
 
         casalog.origin('sdcoadd')
 
@@ -17,12 +17,12 @@ def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppl
             import os.path
             scanlist = []
             nrow=0
-            if len(sdfilelist)<2:
+            if len(infiles)<2:
                  raise Exception, 'Need at least two data file names'
 
             # check output file name
             if outfile=='':
-                outfile=sdfilelist[0].rstrip('/')+'_coadd'
+                outfile=infiles[0].rstrip('/')+'_coadd'
             outfilename = os.path.expandvars(outfile)
             outfilename = os.path.expanduser(outfilename)
             if not overwrite and (outform!='ascii' and outform!='ASCII'):
@@ -32,14 +32,14 @@ def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppl
 
 
             #load each the data in the list with or without averaging
-            for i in range(len(sdfilelist)):
-                filename = os.path.expandvars(sdfilelist[i])
+            for i in range(len(infiles)):
+                filename = os.path.expandvars(infiles[i])
                 filename = os.path.expanduser(filename)
                 if not os.path.exists(filename):
                     s = "File '%s' not found." % (filename)
                     raise Exception, s
                 else:
-                    scanlist.append(sd.scantable(sdfilelist[i],average=scanaverage,antenna=antenna))
+                    scanlist.append(sd.scantable(infiles[i],average=scanaverage,antenna=antenna))
                     nrow+=scanlist[i].nrow()
 
                     # get telescope name
@@ -162,8 +162,8 @@ def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppl
                             casalog.post( "Unknown telescope - cannot convert", priority = 'WARN' )
 
             merged=sd.merge(scanlist)
-            #print "Coadded %s" % sdfilelist
-            casalog.post( "Coadded %s" % sdfilelist )
+            #print "Coadded %s" % infiles
+            casalog.post( "Coadded %s" % infiles )
             if (nrow>merged.nrow()): 
                 #print "WARNING: Actual number of rows is less than the number of rows expected in merged data."
                 #print "         Possibly, there are conformance error among the input data."
@@ -222,7 +222,7 @@ def sdcoadd(sdfilelist, antenna, fluxunit, telescopeparm, specunit, frame, doppl
                 del stave
             
             #if outfile=='':
-            #    outfile=sdfilelist[0]+'_coadd'
+            #    outfile=infiles[0]+'_coadd'
             # save
             if ( (outform == 'ASCII') or (outform == 'ascii') ):
                     outform = 'ASCII'

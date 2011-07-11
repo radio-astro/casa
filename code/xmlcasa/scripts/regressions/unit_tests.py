@@ -1,1 +1,1 @@
-./admin/runUnitTest.py
+admin/runUnitTest.py

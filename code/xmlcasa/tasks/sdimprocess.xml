@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 
   <input>
-    <param type="any" name="sdimages"  mustexist="true">
+    <param type="any" name="infiles"  mustexist="true">
             <description>name of input SD image (FITS or CASA image)</description>
             <any type="variant" limittype="string stringArray"/>
             <value type="stringArray">''</value>
@@ -71,13 +71,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>0.0</value>
     </param>
 
-    <param type="string" name="imagename">
+    <param type="string" name="outfile">
 	    <description>output CASA image name</description>
 	    <value></value>
     </param>
 
     <param type="bool" name="overwrite">
-            <description>overwrite option for imagename</description>
+            <description>overwrite option for outfile</description>
             <value>False</value>
     </param>
 
@@ -102,7 +102,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        sdimages -- name of input SD (FITS or CASA) image
+        infiles -- name of input SD (FITS or CASA) image
         mode -- processing mode
                 default: 'basket'
                 options: 'basket', 'press'
@@ -125,10 +125,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         tmin -- minimum value used for process
                 default: 0.0 (no threshold in minimum)
                 example: -10.0 (mask data smaller value than -10.0)
-        imagename -- output CASA image name
+        outfile -- output CASA image name
                 default: '' (use default name)
                 example: 'output.im'
-        overwrite -- overwrite option for imagename
+        overwrite -- overwrite option for outfile
                 default: False (not overwrite)
                 options: True, False
                 example: if True, existing file will be overwritten
@@ -167,7 +167,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         possible to set the beamsize as string consisting of the numerical 
         value and the unit. The smoothsize must be float value.
 
-        The sdimages only allows an image data (CASA or FITS), and not does
+        The infiles only allows an image data (CASA or FITS), and not does
         not work with MS or Scantable. The direction is an angle with respect 
         to the horizontal direction, and its unit is degree. Any value may be 
         interpreted properly, but the value ranging from 0.0 to 180.0 will be 
@@ -175,8 +175,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         defines a range of spectral values used for processing. The data point 
         that has the value larger than tmax or smaller than tmin will be 
         excluded from the processing. The default (0.0) is no threshold. 
-        The imagename specifies an output CASA image name. If the imagename 
-        is empty, the default name ('sdimprocess.out.im') will be used. 
+        The outfile specifies an output CASA image name. If the outfile is 
+        empty, the default name ('sdimprocess.out.im') will be used. 
   </example>
 
 </task>

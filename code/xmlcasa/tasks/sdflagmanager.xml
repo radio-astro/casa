@@ -11,10 +11,10 @@
         ASAP SD task to list, save, restore, delete and rename flag version files. 
         </description>
         <input>
-                <param type="string" name="sdfile" mustexist="true">
+                <param type="string" name="infile" mustexist="true">
                         <description>Name of input SD dataset (ASAP scantable)</description>
                         <value></value>
-                        <example>sdfile='ngc5921.asap'</example>
+                        <example>infile='ngc5921.asap'</example>
                 </param>
 
                 <param type="string" name="mode">
@@ -78,12 +78,12 @@
         save a flagversion at the beginning or after serious editing.    
 
         Keyword arguments:
-        sdfile -- Name of input SD dataset
-                default: ''. example: sdfile='ngc5921.asap'
+        infile -- Name of input SD dataset
+                default: ''. example: infile='ngc5921.asap'
         mode -- Flag version operation
                 default: 'list'; to list existing flagtables
-                'save' will save flag column from sdfile to a specified flag file
-                'restore' will place the specified flag file into sdfile
+                'save' will save flag column from infile to a specified flag file
+                'restore' will place the specified flag file into infile
                 'delete' will delete specified flag file
                 'rename' will rename a specified flag file
         versionname -- Flag version name

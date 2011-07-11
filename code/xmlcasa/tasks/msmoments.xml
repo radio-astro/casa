@@ -16,10 +16,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 
 <input>
-    <param type="string" name="msname" kind="ms" mustexist="true" >
+    <param type="string" name="infile" kind="ms" mustexist="true" >
     	<description>Name of the input MS data</description>
     	<value></value>
-        <example>msname='OrionS_rawACSmod'</example>
+        <example>infile='OrionS_rawACSmod'</example>
     </param>
 
     <param type="intArray" name="moments">
@@ -112,8 +112,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Note that includemask and excludemask cannot set simultaneously. 
 
 	Keyword arguments:
-	msname -- Name of input MS data
-		default: none; example: msname=&quot;OrionS_rawACSmod&quot;
+	infile -- Name of input MS data
+		default: none; example: infile=&quot;OrionS_rawACSmod&quot;
 	moments -- List of moments you would like to compute
 		default: 0 (integrated spectrum);example: moments=[0,1]
 		see list above
@@ -146,7 +146,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         Example for finding the 1-momment, intensity-weighted
         coordinate, often used for finding velocity fields.
-        msmoments( msname='mydata', moment=1, outfile='velocityfields' )
+        msmoments( infile='mydata', moment=1, outfile='velocityfields' )
 
 </example>
 

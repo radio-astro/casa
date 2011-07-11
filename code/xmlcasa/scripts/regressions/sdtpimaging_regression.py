@@ -22,7 +22,8 @@
 # regression log, images in CASA image format, 
 # summary.html(images and image statistics summary in HTML)
 #
-# last modified 2008-10-08 T. Tsutsumi
+# last modified 2011-06-29 W. Kawasaki
+# modified 2008-10-08 T. Tsutsumi
 ########################################################################
 import os
 import sys
@@ -59,7 +60,7 @@ antids=['0','1']
 tol=0.05
 description='Description\nProcess ATF raster scan data, %s \n step1: run sdtpimaging to do baseline subtraction only\n separate run for each antenna.\n step2: run sdtpimaging to do imaging only for each antenna\n' % testdata
 ##############################################
-def compare(thisStatslist, logfile=None, imagenames=[], tol=0.05):
+def compare(thisStatslist, logfile=None, outfiles=[], tol=0.05):
     refstats=[]
     statslist=['rms', 'max']
     diff_max=[]
@@ -97,11 +98,11 @@ def compare(thisStatslist, logfile=None, imagenames=[], tol=0.05):
 
 
     # difference, fidelity like measure..
-    #if len(imagenames) > 0:
+    #if len(outfiles) > 0:
     #   default(immath)
     #   outfile='diffim'
     #   mode='evalexpr'
-    #   expr='"%s"-"%s"' % (refim[0],imagenames[0])    
+    #   expr='"%s"-"%s"' % (refim[0],outfiles[0])    
     #   immath()  
     #   imagename=outfile
     #   stats=imstats()
@@ -118,9 +119,9 @@ def compare(thisStatslist, logfile=None, imagenames=[], tol=0.05):
         return False 
 ################################################################################ 
 try: 
-    imagenames=[]
+    outfiles=[]
     for i in antids:
-        imagenames.append(dataname+'Ant'+i+'.im')
+        outfiles.append(dataname+'Ant'+i+'.im')
 
     casapath=os.environ['CASAPATH'].split()[0]
     #host=os.environ['CASAPATH'].split()[3]
@@ -151,7 +152,7 @@ try:
 
     # Do baseline subtraction first
     default(sdtpimaging)
-    sdfile=testdata
+    infile=testdata
     calmode='baseline'
     stokes='XX'
     createimage=False
@@ -165,7 +166,7 @@ try:
     #imaging
     #skip baseline subtraction
     default(sdtpimaging)
-    sdfile=testdata
+    infile=testdata
     calmode='none' 
     createimage=True
     imsize=[200,200]
@@ -178,7 +179,7 @@ try:
     gridfunction='SF'
     for i in antids:
         print "create an image for", i
-	imagename=imagenames[int(i)]
+	outfile=outfiles[int(i)]
         antenna=i
 	sdtpimaging()
 
@@ -199,7 +200,7 @@ try:
 
     thisStats=[]
     for i in antids:
-        imagename=imagenames[int(i)]
+        imagename=outfiles[int(i)]
         stats=imstat()
         #stats=ia.statistics()
         thisStats.append(stats)
@@ -213,11 +214,11 @@ try:
     htmlbody='<body><h2>sdtpimaging regression summary</h2>'
     htmlbody+='<body><h3>data set:%s (ATF total power raster scans of Moon)</h3>' % testdata
     htmlbody+='<body><h4>regression run at %s</h4>' % datestring
-    for i in range(len(imagenames)):
-        ia.open(imagenames[i])
+    for i in range(len(outfiles)):
+        ia.open(outfiles[i])
         data=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],1,-1,True,True,False)
         ia.close()
-        pngimg=imagenames[i]+'.png'
+        pngimg=outfiles[i]+'.png'
         tdata=data.transpose()
         tdatalist=tdata.tolist()
         tdatalist.reverse()
@@ -225,7 +226,7 @@ try:
         pl.imshow(tdatalist, interpolation='bilinear',cmap=pl.cm.hot,extent=(0,200,0,200)) 
         pl.savefig(pngimg)
         htmlbody+='<img src=%s />\n' % pngimg
-        htmlbody+='<table><tr><th colspan=2>%s (antenna:%s)</th><tr>' % (imagenames[i], antnames[i])
+        htmlbody+='<table><tr><th colspan=2>%s (antenna:%s)</th><tr>' % (outfiles[i], antnames[i])
         htmlbody+='<td><tr><td>max</td><td>%s</td><tr>' % thisStats[i]['max'][0] 
         htmlbody+='<tr><td>maxpos</td><td>%s</td><tr>' % thisStats[i]['maxpos'].tolist()
         htmlbody+='<tr><td>min</td><td>%s</td><tr>' % thisStats[i]['min'][0]

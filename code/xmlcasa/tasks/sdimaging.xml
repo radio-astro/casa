@@ -18,7 +18,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 
   <input>
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset(only MS is allowed for this task)</description>
     <value></value>
     </param>
@@ -80,7 +80,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </allowed>
     </param>
    
-    <param type="string" name="imagename">
+    <param type="string" name="outfile">
 	    <description>output image name</description>
 	    <value></value>
     </param>
@@ -172,7 +172,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        sdfile -- name of input SD (MS) dataset
+        infile -- name of input SD (MS) dataset
         specunit -- units for spectral axis
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
                 default: 'channel'
@@ -203,10 +203,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
                 default: 'BOX'
                 example: 'SF'
-        imagename -- output image name
+        outfile -- output image name
                 default: none
                 example: 'mySDimage.im'
-        overwrite -- overwrite option for imagename
+        overwrite -- overwrite option for outfile
                 default: False (not overwrite)
                 options: True, False
                 example: if True, existing file will be overwritten

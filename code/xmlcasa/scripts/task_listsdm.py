@@ -348,10 +348,12 @@ def listsdm(sdm=None):
     casalog.post("Scan listing:")
     casalog.post("  Timerange (UTC)           Scan FldID  FieldName       SpwIDs         Intent(s)")
 
-    for i in range (0, len(scandict)):
-        SPWs = np.array(scandict[i+1]['spws']).flatten()
+    i = 0
+    for scan in scandict:
+        SPWs = np.array(scandict[scan]['spws']).flatten()
         printSPWs = sorted(list(SPWs))
-        casalog.post("  %s - %s %s %s  %s %s  %s" % (startTimeShort[i], endTimeShort[i], str(scandict.keys()[i]).rjust(4), str(scandict[i+1]['field']).rjust(5), scandict[i+1]['source'].ljust(15), str(printSPWs), scandict[i+1]['intent']))
+        casalog.post("  %s - %s %s %s  %s %s  %s" % (startTimeShort[i], endTimeShort[i], str(scandict.keys()[i]).rjust(4), str(scandict[scan]['field']).rjust(5), scandict[scan]['source'].ljust(15), str(printSPWs), scandict[scan]['intent']))
+        i = i + 1
 
     casalog.post(" ")
     casalog.post("Spectral window information:")

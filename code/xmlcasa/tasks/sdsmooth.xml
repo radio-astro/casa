@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -129,7 +129,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
 
 	Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         scanaverage -- average integrations within scans
                 options: (bool) True,False
@@ -175,7 +175,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          the displayed smoothing and if not, continues
                          without smoothing.
 	outfile -- Name of output ASAP format(scantable) file
-	        default: '' (&lt;sdfile&gt;_sm)
+	        default: '' (&lt;infile&gt;_sm)
 	outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'

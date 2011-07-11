@@ -5,17 +5,17 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, imagename, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
+def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
 
         casalog.origin('sdimaging')
         try:
             # file check
-            sdfile=sdfile.rstrip('/')+'/'
+            infile=infile.rstrip('/')+'/'
             ftab=''
             spwtab=''
             srctab=''
-            if os.path.isdir(sdfile):
-                tb.open(sdfile)
+            if os.path.isdir(infile):
+                tb.open(infile)
                 tbkeys=tb.getkeywords()
                 ftab=tbkeys['FIELD'].split()[-1]
                 spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
@@ -24,10 +24,10 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                 if any(key=='MS_VERSION' for key in tbkeys):
                     casalog.post( 'MS format' )
                 else:
-                    msg='sdfile must be in MS format'
+                    msg='infile must be in MS format'
                     raise Exception, msg
             else:
-                msg='sdfile must be in MS format'
+                msg='infile must be in MS format'
                 raise Exception, msg
 
             # spectral unit
@@ -104,9 +104,9 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
 
             # gridfunction
 
-            # imagename
-            if os.path.exists(imagename) and not overwrite:
-                msg='file %s exists' % (imagename)
+            # outfile
+            if os.path.exists(outfile) and not overwrite:
+                msg='file %s exists' % (outfile)
                 raise Exception, msg
 
             # imsize
@@ -158,7 +158,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # Imaging #
             ###########
             casalog.post("Start imaging...", "INFO")
-            im.open(sdfile)
+            im.open(infile)
             im.selectvis(field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
             if dochannelmap:
                 im.defineimage(mode=mode, nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=nchan, start=startval, step=stepval, restfreq=restfreq, phasecenter=phasecenter, spw=spwid, stokes=stokes, movingsource=ephemsrcname)
@@ -168,7 +168,7 @@ def sdimaging(sdfile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                 im.defineimage(mode='channel', nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             im.setsdoptions(pointingcolumntouse=pointingcolumn)
-            im.makeimage(type='singledish', image=imagename)
+            im.makeimage(type='singledish', image=outfile)
             im.close()
             
         except Exception, instance:

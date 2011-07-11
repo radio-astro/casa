@@ -20,7 +20,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset(only MS is allowed for this task)</description>
     <value></value>
     </param>
@@ -69,7 +69,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
 <!-- imaging paramters -->
-    <param type="string" name="imagename" subparam="true">
+    <param type="string" name="outfile" subparam="true">
 	    <description>output image name</description>
 	    <value></value>
     </param>
@@ -137,7 +137,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <when param="createimage">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">
-                        <default param="imagename"><value type="string"></value></default>
+                        <default param="outfile"><value type="string"></value></default>
                         <default param="imsize"><value type="vector"><value>256</value><value>256</value></value></default>
 			<default param="cell"><value type="vector"><value>1</value><value>1</value></value></default>
                         <default param="phasecenter"><value type="string"></value></default>
@@ -154,7 +154,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        sdfile -- name of input SD (MS) dataset
+        infile -- name of input SD (MS) dataset
         calmode -- calibration mode (currently only baseline subtraction)
                 options: 'baseline','none'
                 default: 'none'
@@ -187,7 +187,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         createimage -- do imaging? 
                 default: False 
   &gt;&gt;&gt; createimage=True expandable parameters
-               imagename -- output image name
+               outfile -- output image name
                  default: none
                  example: 'mySDimage.im'
                imsize -- x and y image size in pixels, symmetric for single 
@@ -222,7 +222,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: 0 (no plotting)
                 example: plotlevel&lt;0 as abs(plotlevel), e.g.
                          -1: hardcopy plot 
-                             (will be named &lt;sdfile&gt;_scans.eps)
+                             (will be named &lt;infile&gt;_scans.eps)
                           1: plot raw data, calibrated data 
                              (for calmode='baseline)
                              plot raw or if exist calibrated data 
@@ -259,8 +259,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         SCAN_NUMBER in MS.) By default, baseline subtraction stage overwrites 
         (FLOAT_)DATA column of input data. You can keep original data by 
         setting backup parameter to True. In this case, the task make a copy 
-        of input data specified by sdfile parameter. Name of backup file is 
-        &lt;sdfile&gt;.sdtpimaging.bak.&lt;timestamp&gt;.  
+        of input data specified by infile parameter. Name of backup file is 
+        &lt;infile&gt;.sdtpimaging.bak.&lt;timestamp&gt;.  
 
         The selection of polarizations can be made by specifying the 
         polarization name in stokes, such as 'XX' or 'YY' for linear 

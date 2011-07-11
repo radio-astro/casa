@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -136,7 +136,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         rowlist -- list of row numbers to process
                 default: [] (use all rows)

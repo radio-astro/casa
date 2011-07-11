@@ -100,7 +100,7 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
         """Test 001: Undefined moment"""
         moments=[-2]
         try:
-            msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+            msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -115,10 +115,10 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
         """Test 002: Illegal antenna id"""
         antenna=-2
         #def call():
-        #    msmoments(msname=self.rawfile,antenna=antnna,outfile=self.outfile)
+        #    msmoments(infile=self.rawfile,antenna=antnna,outfile=self.outfile)
         #self.assertRaises(StandardError, call)
         try:
-            msmoments(msname=self.rawfile,antenna=antenna,outfile=self.outfile)
+            msmoments(infile=self.rawfile,antenna=antenna,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -133,10 +133,10 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
         """Test 003: Illegal field name"""
         field='SOMEWHARE'
         #def call():
-        #    msmoments(msname=self.rawfile,field=field,outfile=self.outfile)
+        #    msmoments(infile=self.rawfile,field=field,outfile=self.outfile)
         #self.assertRaises(StandardError, call)
         try:
-            msmoments(msname=self.rawfile,field=field,outfile=self.outfile)
+            msmoments(infile=self.rawfile,field=field,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -151,10 +151,10 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
         """Test 004: Illegal spw id"""
         id=99
         #def call():
-        #    msmoments(msname=self.rawfile,spw=id,outfile=self.outfile)
+        #    msmoments(infile=self.rawfile,spw=id,outfile=self.outfile)
         #self.assertRaises(StandardError, call)
         try:
-            msmoments(msname=self.rawfile,spw=id,outfile=self.outfile)
+            msmoments(infile=self.rawfile,spw=id,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -169,7 +169,7 @@ class msmoments_test0(unittest.TestCase,msmoments_unittest_base):
         """Test 005: Existing output file"""
         shutil.copytree(self.datapath+self.rawfile, self.outfile)
         try:
-            msmoments(msname=self.rawfile,outfile=self.outfile)
+            msmoments(infile=self.rawfile,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except Exception, e:
@@ -210,7 +210,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[-1]
         postfix='.average'
         refval=[2.8974850177764893,2.6505289077758789]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -223,7 +223,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[0]
         postfix='.integrated'
         refval=[954.87066650390625,873.48583984375]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -236,7 +236,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[1]
         postfix='.weighted_coord'
         refval=[6.8671870231628418,7.6601519584655762]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -249,7 +249,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[2]
         postfix='.weighted_dispersion_coord'
         refval=[95.011787414550781,95.257194519042969]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -262,7 +262,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[3]
         postfix='.median'
         refval=[2.8934342861175537,2.6451926231384277]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -276,7 +276,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix='.median_coordinate'
         refval=[]
         try:
-            msmoments(msname=self.rawfile,spw=id,outfile=self.outfile)
+            msmoments(infile=self.rawfile,spw=id,outfile=self.outfile)
             self.assertTrue(False,
                             msg='The task must throw exception')
         except StandardError, e:
@@ -288,7 +288,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
             self.assertTrue(False,
                             msg='Unexpected exception was thrown: %s'%(str(e)))
 
-        #res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        #res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         #self.assertEqual(type(res),type(tb),
         #                 msg='Any error occurred during task execution')
@@ -301,7 +301,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[5]
         postfix='.standard_deviation'
         refval=[0.13466399908065796,0.13539622724056244]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -314,7 +314,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[6]
         postfix='.rms'
         refval=[2.9006123542785645, 2.6539843082427979]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -327,7 +327,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[7]
         postfix='.abs_mean_dev'
         refval=[0.09538549929857254, 0.10068970918655396]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -340,7 +340,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[8]
         postfix='.maximum'
         refval=[3.9766585826873779, 3.7296187877655029]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -353,7 +353,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[9]
         postfix='.maximum_Coord'
         refval=[45489389568.0, 45489410048.0]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -366,7 +366,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[10]
         postfix='.minimum'
         refval=[1.7176277637481689, 1.4913345575332642]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -379,7 +379,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         moments=[11]
         postfix='.minimum_coord'
         refval=[45514190848.0, 45464350720.0]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')
@@ -393,7 +393,7 @@ class msmoments_test1(unittest.TestCase,msmoments_unittest_base):
         postfix=['.average','.weighted_coord']
         refval0=[2.8974850177764893,2.6505289077758789]
         refval1=[6.8671870231628418,7.6601519584655762]
-        res=msmoments(msname=self.rawfile,moments=moments,outfile=self.outfile)
+        res=msmoments(infile=self.rawfile,moments=moments,outfile=self.outfile)
         # the task must return table object
         self.assertEqual(type(res),type(tb),
                          msg='Any error occurred during task execution')

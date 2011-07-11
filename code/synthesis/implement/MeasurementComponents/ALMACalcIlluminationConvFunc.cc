@@ -98,7 +98,7 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     MVFrequency freqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
-    Int bandID = getALMABandId(freqQ.getValue());
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", "DV");
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage);
@@ -114,7 +114,7 @@ namespace casa{
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
 
     MVFrequency freqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
-    Int bandID = getALMABandId(freqQ.getValue());
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", "DV");
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     pbImage.setCoordinateInfo(skyCS);
@@ -136,7 +136,7 @@ namespace casa{
     Int index;
     Double timeValue = getCurrentTimeStamp(vb);
     Float pa;
-    if (bandID != -1) ap.band = (ALMABeamCalcBandCode)bandID;
+    if (bandID != -1) ap.band = bandID;
     AlwaysAssert(ap.band>=-1, AipsError);
 
     pa = getPA(vb);
@@ -202,7 +202,7 @@ namespace casa{
 
 	ap.pa=pa;
 	ap.aperture->set(0.0);
-	ALMACalculateAperture(&ap);
+	BeamCalc::Instance()->calculateAperture(&ap);
 	
 	//  Make the aperture function = (1,0) - for testing
 	
@@ -304,7 +304,7 @@ namespace casa{
     CoordinateSystem skyCoords(skyCS);
 
     Float pa, Freq;
-    if (bandID != -1) ap.band = (ALMABeamCalcBandCode)bandID;
+    if (bandID != -1) ap.band = bandID;
     AlwaysAssert(ap.band>=-1, AipsError);
     Vector<Double> chanFreq = vb.frequency();
 
@@ -352,7 +352,7 @@ namespace casa{
 
 	ap.pa=pa;
 	ap.aperture->set(0.0);
-	ALMACalculateAperture(&ap);
+	BeamCalc::Instance()->calculateAperture(&ap);
 	//
 	// Set the phase of the aperture function to zero if doSquint==F
 	// Poln. axis indices
@@ -615,30 +615,30 @@ namespace casa{
   }
 
 
-  Int ALMACalcIlluminationConvFunc::getALMABandId(const Double& freq){
-    if ((     31.3E9 <=freq) && (freq <=45E9))
-      return BeamCalc_ALMA_1;
-    else if ((  67E9 <=freq) && (freq <84E9))
-      return BeamCalc_ALMA_2;
-    else if ((  84E9 <=freq) && (freq <=116E9))
-      return BeamCalc_ALMA_3;
-    else if (( 125E9 <=freq) && (freq <163E9))
-      return BeamCalc_ALMA_4;
-    else if (( 163E9 <=freq) && (freq <211E9))
-      return BeamCalc_ALMA_5;
-    else if (( 211E9 <=freq) && (freq <275E9))
-      return BeamCalc_ALMA_6;
-    else if (( 275E9 <=freq) && (freq <=373E9))
-      return BeamCalc_ALMA_7;
-    else if (( 385E9<=freq) && (freq <=500E9))
-      return BeamCalc_ALMA_8;
-    else if (( 602E9<=freq) && (freq <=720E9))
-      return BeamCalc_ALMA_9;
-    else if (( 787E9<=freq) && (freq <=950E9))
-      return BeamCalc_ALMA_10;
-    ostringstream mesg;
-    mesg << freq << " Hz is outside the ALMA frequency bands.";
-    throw(SynthesisError(mesg.str()));
-  }
+//   Int ALMACalcIlluminationConvFunc::getALMABandId(const Double& freq){
+//     if ((     31.3E9 <=freq) && (freq <=45E9))
+//       return BeamCalc_ALMA_1;
+//     else if ((  67E9 <=freq) && (freq <84E9))
+//       return BeamCalc_ALMA_2;
+//     else if ((  84E9 <=freq) && (freq <=116E9))
+//       return BeamCalc_ALMA_3;
+//     else if (( 125E9 <=freq) && (freq <163E9))
+//       return BeamCalc_ALMA_4;
+//     else if (( 163E9 <=freq) && (freq <211E9))
+//       return BeamCalc_ALMA_5;
+//     else if (( 211E9 <=freq) && (freq <275E9))
+//       return BeamCalc_ALMA_6;
+//     else if (( 275E9 <=freq) && (freq <=373E9))
+//       return BeamCalc_ALMA_7;
+//     else if (( 385E9<=freq) && (freq <=500E9))
+//       return BeamCalc_ALMA_8;
+//     else if (( 602E9<=freq) && (freq <=720E9))
+//       return BeamCalc_ALMA_9;
+//     else if (( 787E9<=freq) && (freq <=950E9))
+//       return BeamCalc_ALMA_10;
+//     ostringstream mesg;
+//     mesg << freq << " Hz is outside the ALMA frequency bands.";
+//     throw(SynthesisError(mesg.str()));
+//   }
 
 };

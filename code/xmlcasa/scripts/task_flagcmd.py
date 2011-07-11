@@ -24,6 +24,8 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
         # v3.4 Updated STM 2011-02-14 (3.2.0) bug fix mode online from xml
         # v3.5 Updated STM 2011-03-21 (3.2.0) go to fglocal and mslocal
         # v3.5 Updated STM 2011-03-23 (3.2.0) bug fix casalog.post long lines
+        # v3.6 Updated STM 2011-05-31 (3.3.0) optype extract, bug fix plotting
+        # v3.6 Updated STM 2011-06-28 (3.3.0) version for replacement in test
 	#
 	try:
 		from xml.dom import minidom
@@ -31,7 +33,7 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 		raise Exception, 'Failed to load xml.dom.minidom into python'
 
         casalog.origin('flagcmd')
-	casalog.post('You are using flagcmd v3.5 Updated STM 2011-03-23')
+	casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
         mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -39,6 +41,29 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
         try: 
                 if not os.path.exists(vis):
                         raise Exception, 'Visibility data set not found - please verify the name'
+
+		# Get overall MS time range for later use (if needed)
+		try:
+			# this might take too long for large MS
+			mslocal.open(vis)
+			timd = mslocal.range(["time"])
+			mslocal.close()
+		except:
+			raise Exception, "Error opening MS "+vis 
+		ms_startmjds = timd['time'][0]
+		ms_endmjds = timd['time'][1]
+		t = qa.quantity(ms_startmjds,'s')
+		t1sdata = t['value']
+		ms_starttime = qa.time(t,form="ymd",prec=9)
+		ms_startdate = qa.time(t,form=["ymd","no_time"])
+		t0 = qa.totime(ms_startdate+'/00:00:00.00')
+		t0d = qa.convert(t0,'d')
+		t0s = qa.convert(t0,'s')
+		t = qa.quantity(ms_endmjds,'s')
+		t2sdata = t['value']
+		ms_endtime = qa.time(t,form="ymd",prec=9)
+		# NOTE: could also use values from OBSERVATION table col TIME_RANGE
+		casalog.post('MS spans timerange '+ms_starttime+' to '+ms_endtime)
 
 		myflagcmd = {}
 		cmdlist = []
@@ -58,27 +83,6 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 			listmode = 'cmd'
 			
                 elif flagmode == 'file':
-			# Get overall MS time range for later use (if needed)
-			try:
-				# this might take too long for large MS
-				mslocal.open(vis)
-				timd = mslocal.range(["time"])
-				mslocal.close()
-			except:
-				raise Exception, "Error opening MS "+vis 
-		        ms_startmjds = timd['time'][0]
-			ms_endmjds = timd['time'][1]
-			t = qa.quantity(ms_startmjds,'s')
-			ms_starttime = qa.time(t,form="ymd",prec=9)
-			ms_startdate = qa.time(t,form=["ymd","no_time"])
-			t0 = qa.totime(ms_startdate+'/00:00:00.00')
-			t0d = qa.convert(t0,'d')
-			t0s = qa.convert(t0,'s')
-			t = qa.quantity(ms_endmjds,'s')
-			ms_endtime = qa.time(t,form="ymd",prec=9)
-			# NOTE: could also use values from OBSERVATION table col TIME_RANGE
-			casalog.post('MS spans timerange '+ms_starttime+' to '+ms_endtime)
-
 			print 'Reading from ASCII flag table'
                         # Read ASCII file into command list
 			if flagfile=='': 
@@ -129,27 +133,6 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 
 		else:
 			# command strings
-			# Get overall MS time range for later use (if needed)
-			try:
-				# this might take too long for large MS
-				mslocal.open(vis)
-				timd = mslocal.range(["time"])
-				mslocal.close()
-			except:
-				raise Exception, "Error opening MS "+vis 
-		        ms_startmjds = timd['time'][0]
-			ms_endmjds = timd['time'][1]
-			t = qa.quantity(ms_startmjds,'s')
-			ms_starttime = qa.time(t,form="ymd",prec=9)
-			ms_startdate = qa.time(t,form=["ymd","no_time"])
-			t0 = qa.totime(ms_startdate+'/00:00:00.00')
-			t0d = qa.convert(t0,'d')
-			t0s = qa.convert(t0,'s')
-			t = qa.quantity(ms_endmjds,'s')
-			ms_endtime = qa.time(t,form="ymd",prec=9)
-			# NOTE: could also use values from OBSERVATION table col TIME_RANGE
-			casalog.post('MS spans timerange '+ms_starttime+' to '+ms_endtime)
-
 			print 'Reading from input list'
 			cmdlist = command
 			print 'Input '+str(cmdlist.__len__())+' lines from input list'
@@ -170,7 +153,10 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 					cmdstr += " reason='"+myflagcmd[key]['reason']+"'"
 				mycmdlist.append(cmdstr)
 		casalog.post('Extracted '+str(mycmdlist.__len__())+' flag command strings')
-			
+
+		print 'Executing optype = '+optype
+		casalog.post('Executing optype = '+optype)
+		
 		# Now have list of commands - do something with them
 		if optype == 'apply':
 			# Possibly resort flags before application
@@ -307,10 +293,16 @@ def flagcmd(vis=None,flagmode=None,flagfile=None,flagrows=None,command=None,tbuf
 				# Plot flag commands from FLAG_CMD or xml
 				print 'Warning: will only reliably plot individual per-antenna flags'
 				casalog.post('Warning: will only reliably plot individual per-antenna flags')
-				plotflags(myflagcmd,outfile)
+				plotflags(myflagcmd,outfile,t1sdata,t2sdata)
 			else:
 				print 'Warning: empty flagcmd dictionary, nothing to plot'
 				casalog.post('Warning: empty flag dictionary, nothing to plot')
+		elif optype=='extract':
+			# Output flag dictionary
+			print 'Secret mode extract : Returning flag dictionary'
+			casalog.post('Secret mode extract : Returning flag dictionary')
+			return myflagcmd
+				
         except Exception, instance:
                 #fglocal.done()
                 print '*** Error ***', instance
@@ -1668,7 +1660,7 @@ def updateflagcmd(msfile,mycol='',myval=None,myrowlist=[]):
 # currently only works from individual online flags from xml or FLAG_CMD
 #
 #===============================================================================
-def plotflags(myflags, plotname):
+def plotflags(myflags, plotname, t1sdata, t2sdata):
     try: 
         import casac 
     except ImportError, e: 
@@ -1717,9 +1709,13 @@ def plotflags(myflags, plotname):
 		elif thisReason=='ANTENNA_NOT_IN_SUBARRAY': thisColor='black'; thisOffset=-.15
 		else: thisColor='orange'; thisOffset=0.3
 		mytimerange=myflags[thisflag]['timerange']
-		t1=mytimerange[:mytimerange.find('~')]
-		t2=mytimerange[mytimerange.find('~')+1:]
-		t1s, t2s=qa.convert(t1,'s')['value'], qa.convert(t2,'s')['value']
+		if mytimerange!='':
+		    t1=mytimerange[:mytimerange.find('~')]
+		    t2=mytimerange[mytimerange.find('~')+1:]
+		    t1s, t2s=qa.convert(t1,'s')['value'], qa.convert(t2,'s')['value']
+		else:
+		    t1s=t1sdata
+		    t2s=t2sdata
                 myTimeSpan=t2s-t1s
 		if myTimeSpan < 10000: ax1.plot([t1s,t2s],[antind+thisOffset,antind+thisOffset], color=thisColor, lw=2, alpha=.7)
 		else: badflags.append((thisant, myTimeSpan, thisReason))

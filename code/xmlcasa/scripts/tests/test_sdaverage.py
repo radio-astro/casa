@@ -193,17 +193,17 @@ class sdaverage_test0(sdaverage_unittest_base,unittest.TestCase):
         
     def test001(self):
         """Test 001: Time averaging without weight"""
-        self.res=sdaverage(sdfile=self.rawfile,timeaverage=True,outfile=self.outfile)
+        self.res=sdaverage(infile=self.rawfile,timeaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
     def test002(self):
         """Test 002: Polarization averaging without weight"""
-        self.res=sdaverage(sdfile=self.rawfile,polaverage=True,outfile=self.outfile)
+        self.res=sdaverage(infile=self.rawfile,polaverage=True,outfile=self.outfile)
         self.assertFalse(self.res)        
 
     def test003(self):
         """Test 003: Invalid calibration mode"""
-        self.res=sdaverage(sdfile=self.rawfile,calmode='invalid',outfile=self.outfile)
+        self.res=sdaverage(infile=self.rawfile,calmode='invalid',outfile=self.outfile)
         self.assertFalse(self.res)
 
     def test004(self):
@@ -211,7 +211,7 @@ class sdaverage_test0(sdaverage_unittest_base,unittest.TestCase):
         outfile='calpsGBT.cal.asap'
         if (not os.path.exists(outfile)):
             shutil.copytree(self.datapath+outfile, outfile)
-        self.res=sdaverage(sdfile=self.rawfile,outfile=outfile,overwrite=False)
+        self.res=sdaverage(infile=self.rawfile,outfile=outfile,overwrite=False)
         os.system( 'rm -rf %s'%outfile )        
         self.assertFalse(self.res)
 
@@ -261,7 +261,7 @@ class sdaverage_test1(sdaverage_caltest_base,unittest.TestCase):
     def test100(self):
         """Test 100: test to calibrate data (GBT position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -312,7 +312,7 @@ class sdaverage_test2(sdaverage_caltest_base,unittest.TestCase):
     def test200(self):
         """Test 200: test to calibrate data (GBT nod)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode=self.calmode,tau=0.09,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -363,7 +363,7 @@ class sdaverage_test3(sdaverage_caltest_base,unittest.TestCase):
     def test300(self):
         """Test 300: test to calibrate data (GBT frequency switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -411,7 +411,7 @@ class sdaverage_test4(sdaverage_caltest_base,unittest.TestCase):
     def test400(self):
         """Test 400: test to calibrate data (quotient)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -461,7 +461,7 @@ class sdaverage_test5(sdaverage_caltest_base,unittest.TestCase):
     def test500(self):
         """Test 500: test to calibrate data (ALMA position switch)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode=self.calmode,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration')
         self._comparecal(outname)
@@ -508,7 +508,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test600(self):
         """Test 600: test polarization average with pweight='var' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[0])
@@ -516,7 +516,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test601(self):
         """Test 601: test polarization average with pweight='var' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,polaverage=True,pweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[1])
@@ -524,7 +524,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test602(self):
         """Test 602: test polarization average with pweight='tsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[2])
@@ -532,7 +532,7 @@ class sdaverage_test6(sdaverage_avetest_base,unittest.TestCase):
     def test603(self):
         """Test 603: test polarization average with pweight='tsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during polarization averaging')
         self._compare(outname,self.reffiles[3])
@@ -582,7 +582,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test700(self):
         """Test 700: test time average with tweight='var' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[0])
@@ -590,7 +590,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test701(self):
         """Test 701: test time average with tweight='var' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='var',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[1])
@@ -598,7 +598,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test702(self):
         """Test 702: test time average with tweight='tsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[2])
@@ -606,7 +606,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test703(self):
         """Test 703: test time average with tweight='tsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[3])
@@ -614,7 +614,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test704(self):
         """Test 704: test time average with tweight='tint' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[4])
@@ -622,7 +622,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test705(self):
         """Test 705: test time average with tweight='tint' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tint',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[5])
@@ -630,7 +630,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test706(self):
         """Test 706: test time average with tweight='tintsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[6])
@@ -638,7 +638,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test707(self):
         """Test 707: test time average with tweight='tintsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[7])
@@ -646,7 +646,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test708(self):
         """Test 708: test time average with tweight='median' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=True,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=True,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[8])
@@ -654,7 +654,7 @@ class sdaverage_test7(sdaverage_avetest_base,unittest.TestCase):
     def test709(self):
         """Test 709: test time average with tweight='median' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='median',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during time averaging')
         self._compare(outname,self.reffiles[9])
@@ -707,7 +707,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
     def test800(self):
         """Test 800: test calibration + polarization average with pweight='tsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode='ps',scanaverage=True,polaverage=True,pweight='tsys',tau=0.09,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode='ps',scanaverage=True,polaverage=True,pweight='tsys',tau=0.09,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration and averaging')
         self._compare(outname,self.reffiles[0])
@@ -715,7 +715,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
     def test801(self):
         """Test 801: test calibration + time average with tweight='tintsys' (scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,calmode='ps',scanaverage=True,timeaverage=True,tweight='tintsys',tau=0.09,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,calmode='ps',scanaverage=True,timeaverage=True,tweight='tintsys',tau=0.09,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during calibration and averaging')
         self._compare(outname,self.reffiles[1])
@@ -723,7 +723,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
     def test802(self):
         """Test 802: test polarization average with pweight='tsys' + time average with tweight='tintsys' (no scan average)"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.calfile,scanaverage=False,timeaverage=True,tweight='tintsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.calfile,scanaverage=False,timeaverage=True,tweight='tintsys',polaverage=True,pweight='tsys',outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during averaging')
         self._compare(outname,self.reffiles[2])
@@ -732,7 +732,7 @@ class sdaverage_test8(sdaverage_avetest_base,unittest.TestCase):
         """Test 803: test channelrange selection"""
         chrange=[1000,8000]
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.calfile,channelrange=chrange,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.calfile,channelrange=chrange,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during channel range selection')
 
@@ -798,7 +798,7 @@ class sdaverage_test9(sdaverage_avetest_base,unittest.TestCase):
     def test900(self):
         """Test 900: test averageall parameter"""
         outname=self.prefix+self.postfix
-        self.res=sdaverage(sdfile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
+        self.res=sdaverage(infile=self.rawfile,scanaverage=False,timeaverage=True,tweight='tintsys',averageall=True,polaverage=False,outfile=outname,outform='ASAP')
         self.assertEqual(self.res,None,
                          msg='Any error occurred during averaging')
         self._compare(outname,self.reffiles[0])

@@ -10,20 +10,20 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
-def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, stokes, createimage, imagename, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
+def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, stokes, createimage, outfile, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
     # put implementation here....
     casalog.origin('sdtpimaging')
     try:
         ### Parameter checking #############################################
         # checks performed     					       # 	
-        # sdfile - must be an MS                                           # 
+        # infile - must be an MS                                           # 
         # if calmode=baseline, masklist must exist, do calib               # 
         # antenna mapped to antenna ID/name in the MS                      #
         # stokes                                                           # 
         ####################################################################
-        if os.path.isdir(sdfile):
-            tb.open(sdfile)
+        if os.path.isdir(infile):
+            tb.open(infile)
             tbkeys=tb.getkeywords()
             colnames=tb.colnames()
             fdataexist = False
@@ -36,13 +36,13 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 else:
                     casalog.post( "No FLOAT_DATA, DATA is used" )
             else:
-                msg='sdfile must be in MS format'
+                msg='infile must be in MS format'
                 raise Exception, msg
                 
         else:
-            msg='sdfile must be in MS format'
+            msg='infile must be in MS format'
             raise Exception, msg
-        sdfile=sdfile.rstrip('/')
+        infile=infile.rstrip('/')
 
         if calmode == 'baseline':
             if masklist is None:
@@ -65,7 +65,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                     raise Exception, msg
         # antenna parameter handling
         #print "antenna parameter handling..."
-        tb.open(sdfile+'/ANTENNA')
+        tb.open(infile+'/ANTENNA')
         antnames=tb.getcol('NAME')
         nant=tb.nrows()
         tb.close()
@@ -109,13 +109,13 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
         # check if the data contain multiple polarizations
         # define stokestypes (only up to 'YL') based on enumerated stokes type in CASA
         stokestypes=['undef','I','Q','U','V','RR','RL','LR','LL','XX','XY','YX','YY','RX','RY','LX','LY','XR','XL','YR','YL']
-        tb.open(sdfile)
+        tb.open(infile)
         ddids=numpy.unique(tb.getcol('DATA_DESC_ID'))
         tb.close()
-        tb.open(sdfile+'/DATA_DESCRIPTION')
+        tb.open(infile+'/DATA_DESCRIPTION')
         polids=tb.getcol('POLARIZATION_ID').take(ddids)
         tb.close()
-        tb.open(sdfile+'/POLARIZATION')
+        tb.open(infile+'/POLARIZATION')
         #only use first line of POLARIZATION table
         #npol=tb.getcol('NUM_CORR')[0]
         npol=tb.getcol('NUM_CORR')[polids[0]]
@@ -191,7 +191,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             if ephemsrcname=='':
                 # assume single source/field
                 # try determine if it is a known ephemeris source 
-                tb.open(sdfile+'/SOURCE')
+                tb.open(infile+'/SOURCE')
                 src=tb.getcol('NAME')
                 tb.close()
                 src = src[0]
@@ -199,7 +199,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 if src.upper() in ephemobjs:
                     ephemsrcname=src
 
-            if imagename=='':
+            if outfile=='':
                 msg='Please specify out image name'
                 raise Exception, msg
             # imsize
@@ -257,27 +257,27 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 if pointingcolumn.upper() =='POINTING_OFFSET':
                     phasecenter='AZELGEO 0d0m 0d0m'
                 else:
-                    tb.open(sdfile+'/OBSERVATION')
+                    tb.open(infile+'/OBSERVATION')
                     telname=tb.getcol('TELESCOPE_NAME')
                     tb.close()
-                    tb.open(sdfile+'/POINTING')
+                    tb.open(infile+'/POINTING')
                     t = tb.getcol('TIME')
                     tb.close()
                     me.doframe(me.observatory(telname[0]))
                     me.doframe(me.epoch('utc',str(t[0])+'s'))
                     phasecenter = me.measure(me.direction(ephemsrcname),'AZELGEO')
         # get number of scans and subscans
-        tb.open(sdfile)
+        tb.open(infile)
         if calmode != 'none':
             # back up original file if backup == True
             if fdataexist:
                 colname = 'FLOAT_DATA'
             else:
                 colname = 'DATA'
-            casalog.post('%s column in %s will be overwritten.'%(colname,sdfile))
+            casalog.post('%s column in %s will be overwritten.'%(colname,infile))
             if backup:
                 import time
-                backupname = sdfile.rstrip('/')+'.sdtpimaging.bak.'+time.asctime(time.gmtime()).replace(' ','_')
+                backupname = infile.rstrip('/')+'.sdtpimaging.bak.'+time.asctime(time.gmtime()).replace(' ','_')
                 casalog.post('The task will create a back up named %s'%backupname)
                 backuptb = tb.copy( backupname, deep=True, valuecopy=True )
                 backuptb.close()
@@ -310,7 +310,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             #    if docalib=='n':
             #        return 
             #data=[]
-            tb.open(sdfile)
+            tb.open(infile)
             ndat=0
             if fdataexist: 
                 datalab='FLOAT_DATA'
@@ -330,7 +330,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 pl.figure(np+1)
                 pl.clf()
                 pl.subplot(311)
-                #pl.title(sdfile+' Ant:'+str(antlist.values()))
+                #pl.title(infile+' Ant:'+str(antlist.values()))
                 pl.ylabel(datalab,fontsize='smaller')
                 symbols=['b.','c.']
                 
@@ -341,7 +341,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 ndat0 = 0
                 ndat = 0
                 if selnpol==1: np = selpol
-                pl.title(sdfile+' Ant:'+antnameused+' '+corrtypestr[np])
+                pl.title(infile+' Ant:'+antnameused+' '+corrtypestr[np])
                 casalog.post( "select %s data..." % corrtypestr[np] )
                 for i in xrange(nscan):
                     idata = []
@@ -439,7 +439,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                 del data
             subtb.close()
             tb.close()
-            tb.open(sdfile,nomodify=False)
+            tb.open(infile,nomodify=False)
             # put the corrected data to CORRECTED_DATA column in MS
             # assuming the data for the vertex are stored in every other
             # row starting from 2nd row for the vertex antenna....
@@ -459,7 +459,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             # calibration end
             #
             # plot corrected data
-            tb.open(sdfile)
+            tb.open(infile)
             subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
             cdatcol=subt.getcol(datalab)
             (l,m,n)=cdatcol.shape
@@ -471,10 +471,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             for np in range(selnpol):
                 pl.figure(np+1)
                 if selnpol==1:
-                    #pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
+                    #pl.title(infile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
                     cdatcol2=cdatcol[selpol].reshape(n)
                 else:
-                    #pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
+                    #pl.title(infile+' Ant:'+ antnameused+' '+corrtypestr[np])
                     cdatcol2=cdatcol[np].reshape(n)
                     #cdatcol2=cdatcol.reshape(n)
                 if abs(plotlevel) > 0:
@@ -490,12 +490,12 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                     pl.xlabel('[row #]',fontsize='smaller')
                     pl.draw()
                 if plotlevel < 0:
-                    outplfile=sdfile+'_scans_'+corrtypestr[selcorrtypeind[np]]+'.eps'
+                    outplfile=infile+'_scans_'+corrtypestr[selcorrtypeind[np]]+'.eps'
                     pl.savefig(outplfile,format='eps')
                     casalog.post( "Plot was written to %s" % outplfile ) 
         else: # no calib, if requested plot raw/calibrated data 
             if abs(plotlevel) > 0:
-                tb.open(sdfile)
+                tb.open(infile)
                 subt=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid, antid))
                 nrow=subt.nrows()
                 for np in range(selnpol):
@@ -510,10 +510,10 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                     pl.clf()
                     (l,m,n)=datcol.shape
                     if selnpol==1:
-                        pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
+                        pl.title(infile+' Ant:'+ antnameused+' '+corrtypestr[selpol])
                         datcol2=datcol[selpol].reshape(n)
                     else:
-                        pl.title(sdfile+' Ant:'+ antnameused+' '+corrtypestr[np])
+                        pl.title(infile+' Ant:'+ antnameused+' '+corrtypestr[np])
                         datcol2=datcol[np].reshape(n)
                     pl.subplot(111)
                     if plotlevel>0:
@@ -528,13 +528,13 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                     pl.xlabel('row #')
                     pl.draw()
                     if plotlevel<0:
-                        outplfile=sdfile+'_scans_'+corrtypestr[selcorrtypeind[np]]+'.eps'
+                        outplfile=infile+'_scans_'+corrtypestr[selcorrtypeind[np]]+'.eps'
                         pl.savefig(outplfile,format='eps')
                         casalog.post( "Plot  was written to %s" % outplfile )
                    
         #flag scans
         if len(flaglist) > 0:
-            tb.open(sdfile)
+            tb.open(infile)
             subtb=tb.query('any(ANTENNA1==%s && ANTENNA2==%s)' % (antid,antid))
             fdatcol = subtb.getcol('FLAG')
             (l,m,n) = fdatcol.shape
@@ -547,7 +547,7 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             else:
                 startrow=0
                 rowincr=1
-            tb.open(sdfile, nomodify=False)
+            tb.open(infile, nomodify=False)
             for flag in flaglist:
                 if type(flag) == list:
                     flagscanlist.extend(range(flag[0],(flag[1]+1)))
@@ -595,14 +595,14 @@ def sdtpimaging(sdfile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             #print "Imaging...."
             casalog.post( "pointingcolumn used: %s" % pointingcolumn )
             casalog.post( "Imaging...." )
-            im.open(sdfile)
+            im.open(infile)
             im.selectvis(field=0, spw='', baseline=antsel)
             im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
             #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname,restfreq=1.14e11)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             #im.setsdoptions(convsupport=5)
             im.setsdoptions(pointingcolumntouse=pointingcolumn)
-            im.makeimage(type='singledish', image=imagename)
+            im.makeimage(type='singledish', image=outfile)
             im.close()
 
     except Exception, instance:

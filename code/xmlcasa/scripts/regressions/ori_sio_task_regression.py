@@ -72,7 +72,7 @@ asap_init()                             #load ASAP module
 
 # summary
 #default(sdlist)
-#sdfile='OrionS_rawACSmod'
+#infile='OrionS_rawACSmod'
 #sdlist()
 
 if doplot:
@@ -83,7 +83,7 @@ else:
 # calibartion and averaging
 # calibrate position-switched CH3OH scans (IF=15) 
 default(sdaverage)
-sdfile='OrionS_rawACSmod'
+infile='OrionS_rawACSmod'
 fluxunit='K' 
 calmode='ps'
 scanlist=[24,25,26,27]
@@ -98,24 +98,24 @@ overwrite=True
 plotlevel=localplotlevel  
 sdaverage() 
 # output
-localoutfile=sdfile+'_cal'
+localoutfile=infile+'_cal'
 
 #smoothing
 # do boxcar smoothing with channel width=5
 default(sdsmooth)
-sdfile = localoutfile
+infile = localoutfile
 kernel='boxcar'
 kwidth=10
 overwrite=True
 plotlevel=localplotlevel
 sdsmooth()
-localoutfile=sdfile+'_sm'
+localoutfile=infile+'_sm'
 
 #fit and remove baselines
 # do baseline fit with polynomial order of 2
 # automatically detect lines to exclude from fitting
 default(sdbaseline)
-sdfile=localoutfile
+infile=localoutfile
 maskmode='list'
 masklist=[[500,3500],[5000,7500]]
 blfunc='poly'
@@ -123,16 +123,16 @@ order=5
 overwrite=True
 plotlevel=localplotlevel
 sdbaseline()
-localoutfile=sdfile+'_bs'
+localoutfile=infile+'_bs'
 #sd.plotter.plot(spave)			# plot						# baseline
 
 #plotting the reslut
 #plot the spectrum and save to a postscript file 
 if doplot:
    default(sdplot)
-   sdfile=localoutfile
+   infile=localoutfile
    specunit='GHz'
-   plotfile='orions_sio_reduced.eps'
+   outfile='orions_sio_reduced.eps'
    #sd.plotter.set_histogram(hist=True)     # draw spectrum using histogram                 # histogram
    #sd.plotter.axhline(color='r',linewidth=2) # zline                                       # zline
    sdplot()
@@ -142,7 +142,7 @@ else:
 # statistics
 default(sdstat)
 # select line free regions to get rms
-sdfile=localoutfile
+infile=localoutfile
 masklist=[1000,3000]
 xstat=sdstat()
 rms=xstat['rms']
@@ -159,20 +159,20 @@ mean=xstat['mean']
 
 # fitting
 default(sdfit)
-sdfile=localoutfile
+infile=localoutfile
 #sd.plotter.plot(spave)			# plot spectrum
 fitmode='list'
 maskline=[3900,4300]	# create region around line
 nfit=1
 plotlevel=localplotlevel
-fitfile='orions_sio_fit.txt'
+outfile='orions_sio_fit.txt'
 xstat=sdfit()
 xstat  # print fit statistics 
 
 # Save the spectrum
 # in different formats
 default(sdsave)
-sdfile=localoutfile
+infile=localoutfile
 outfile='orions_sio_reduced'
 outform='ASCII'
 overwrite=True

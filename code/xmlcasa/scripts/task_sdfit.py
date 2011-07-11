@@ -5,7 +5,7 @@ import asap as sd
 import pylab as pl
 from numpy import ma, array, logical_not, logical_and
 
-def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, fitfile, overwrite, plotlevel):
+def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, fitfunc, fitmode, maskline, invertmask, nfit, thresh, min_nchan, avg_limit, box_size, edge, outfile, overwrite, plotlevel):
 
 
         casalog.origin('sdfit')
@@ -16,17 +16,17 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
         retValue={}
 
         try:
-            if sdfile=='':
-                    raise Exception, 'sdfile is undefined'
+            if infile=='':
+                    raise Exception, 'infile is undefined'
 
-            filename = os.path.expandvars(sdfile)
+            filename = os.path.expandvars(infile)
             filename = os.path.expanduser(filename)
             if not os.path.exists(filename):
                 s = "File '%s' not found." % (filename)
                 raise Exception, s
 
             #load the data  without averaging
-            s=sd.scantable(sdfile,average=False,antenna=antenna)
+            s=sd.scantable(infile,average=False,antenna=antenna)
 
 
             # get telescope name
@@ -576,10 +576,10 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                                 plot( f, irow, fitted, residual )
                 
             # Store fit
-            if ( fitfile != '' ):
-                    #f.store_fit(fitfile)
+            if ( outfile != '' ):
+                    #f.store_fit(outfile)
                     #print fitparams
-                    store_fit(fitfunc, fitfile, fitparams, s, overwrite)
+                    store_fit(fitfunc, outfile, fitparams, s, overwrite)
                 
             # Final clean up
             del f
@@ -599,15 +599,15 @@ def sdfit(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                 
 
 ### store_fit
-def store_fit(func, fitfile, value, scan, overwrite):
-        outname=os.path.expandvars(fitfile)
+def store_fit(func, in_outname, value, scan, overwrite):
+        outname=os.path.expandvars(in_outname)
         outname=os.path.expanduser(outname)
         if os.path.exists(outname):
                 if overwrite:
                         os.system('rm '+outname)
                 else:
-                        #print fitfile+' already exists.'
-                        casalog.post( fitfile+' already exists.' )
+                        #print in_outname+' already exists.'
+                        casalog.post( in_outname+' already exists.' )
                         return
                 
         outfile=file(outname, 'w')

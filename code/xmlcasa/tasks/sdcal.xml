@@ -23,7 +23,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -402,7 +402,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
   Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
@@ -631,7 +631,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         minnrow -- minimum number of input spectra to show progress status
                 default: 1000
         outfile -- Name of output file
-                default: '' (&lt;sdfile&gt;_cal)
+                default: '' (&lt;infile&gt;_cal)
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'
@@ -682,7 +682,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         Note that sdcal assumes that the fluxunit is set correctly in
         the data already.  If not, then set telescopeparm='FIX' and it
         will set the default units to fluxunit without conversion.
-        NOTE: If the data in sdfile is an ms from GBT and the default flux
+        NOTE: If the data in infile is an ms from GBT and the default flux
         unit is missing and this task automatically fixes the default fluxunit
         to 'K' before the conversion.
 

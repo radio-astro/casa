@@ -28,7 +28,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -294,7 +294,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
 
   <example>
         Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         fluxunit -- units for line flux
                 options: 'K','Jy',''
@@ -457,7 +457,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         minnrow -- minimum number of input spectra to show progress status
                 default: 1000
         outfile -- Name of output file
-                default: '' (&lt;sdfile&gt;_bs)
+                default: '' (&lt;infile&gt;_bs)
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'
@@ -500,7 +500,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         Note that sdbaseline assumes that the fluxunit is set correctly in
         the data already.  If not, then set telescopeparm='FIX' and it
         will set the default units to fluxunit without conversion.
-        NOTE: If the data in sdfile is an ms from GBT and the default flux
+        NOTE: If the data in infile is an ms from GBT and the default flux
         unit is missing and this task automatically fixes the default fluxunit
         to 'K' before the conversion.
 

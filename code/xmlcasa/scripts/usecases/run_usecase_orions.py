@@ -2,6 +2,7 @@
 #
 # ORION-S SDtasks Use Case
 # Position-Switched data
+# Version WK 2011-06-29 (updated)
 # Version TT 2008-10-14 (updated)
 # Version STM 2007-03-04
 #
@@ -89,7 +90,7 @@ sdfile = 'OrionS_rawACSmod'
 
 # Set an output file in case we want to
 # refer back to it
-listfile = 'sdusecase_orions_summary.txt'
+outfile = 'sdusecase_orions_summary.txt'
 sdlist()
 
 # You could also just type
@@ -279,7 +280,7 @@ sdcal()
 # List the contents of the calibrated dataset
 # Set the input to the just created file
 sdfile = outfile
-listfile = ''
+outfile = ''
 sdlist()
 
 # You should see:
@@ -363,7 +364,7 @@ telescopeparm=''
 sdplot()
 
 # Lets save this plot
-plotfile='sdusecase_orions_hc3n.eps'
+outfile='sdusecase_orions_hc3n.eps'
 sdplot()
 
 ##########################
@@ -481,7 +482,7 @@ edge = [1000]
 plotlevel = 1
 
 # Save the fit output in a file
-fitfile = 'sdusecase_orions_hc3n.fit'
+outfile = 'sdusecase_orions_hc3n.fit'
 
 # Go ahead and do the fit
 fit_stat=sdfit()
@@ -518,7 +519,7 @@ specunit = 'km/s'
 # For some reason we need to help it along with a mask
 maskline = [-50,0]
 
-fitfile = 'sdusecase_orions_hc3n_kms.fit'
+outfile = 'sdusecase_orions_hc3n_kms.fit'
 fit_stat_kms=sdfit()
 # Should give (if in verbose mode)
 #   0: peak = 0.811 K , centre = -27.134 km/s, FWHM = 2.933 km/s

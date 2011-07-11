@@ -24,7 +24,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -106,7 +106,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
     </param>
 
-    <param type="string" name="statfile">
+    <param type="string" name="outfile">
             <description>name of output file for line statistics</description>
             <value></value>
     </param>
@@ -154,7 +154,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
         Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
                 default: none - must input file name
                 example: 'mysd.asap'
                          See sdcal for allowed formats.
@@ -223,7 +223,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          regions by drawing rectangles on the plot with mouse. 
                          Draw a rectangle with LEFT-mouse to ADD the region to 
                          the mask and with RIGHT-mouse to DELETE the region. 
-        statfile -- name of output file for line statistics
+        outfile -- name of output file for line statistics
                 default: '' (no output statistics file)
                 example: 'stat.txt'
         format -- format string to print statistic values

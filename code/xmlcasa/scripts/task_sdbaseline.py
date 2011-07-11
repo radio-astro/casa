@@ -5,16 +5,16 @@ import asap as sd
 from asap._asap import Scantable
 import pylab as pl
 
-def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
+def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, scanlist, field, iflist, pollist, tau, masklist, maskmode, thresh, avg_limit, edge, blfunc, order, npiece, applyfft, fftmethod, fftthresh, addwn, rejwn, clipthresh, clipniter, verify, verbose, showprogress, minnrow, outfile, outform, overwrite, plotlevel):
 	
 	casalog.origin('sdbaseline')
 
 	try:
 		#load the data with or without averaging
-		if sdfile=='':
-			raise Exception, 'sdfile is undefined'
+		if infile=='':
+			raise Exception, 'infile is undefined'
 		
-		filename = os.path.expandvars(sdfile)
+		filename = os.path.expandvars(infile)
 		filename = os.path.expanduser(filename)
 		if not os.path.exists(filename):
 			s = "File '%s' not found." % (filename)
@@ -22,7 +22,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		
 		# Default file name
 		if ( outfile == '' ):
-			project = sdfile.rstrip('/') + '_bs'
+			project = infile.rstrip('/') + '_bs'
 		else:
 			project = outfile
 		outfilename = os.path.expandvars(project)
@@ -32,7 +32,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 				s = "Output file '%s' exist." % (outfilename)
 				raise Exception, s
 		
-		s=sd.scantable(sdfile,average=False,antenna=antenna)
+		s=sd.scantable(infile,average=False,antenna=antenna)
 		
 		if ( abs(plotlevel) > 1 ):
 			casalog.post( "Initial Raw Scantable:" )
@@ -225,7 +225,7 @@ def sdbaseline(sdfile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 			blf = open(blfile, "w")
 			
 			# Header data for saving parameters of baseline fit
-			header =  "Source Table: "+sdfile+"\n"
+			header =  "Source Table: "+infile+"\n"
 			header += " Output File: "+project+"\n"
 			header += "   Flux Unit: "+s.get_fluxunit()+"\n"
 			header += "    Abscissa: "+s.get_unit()+"\n"

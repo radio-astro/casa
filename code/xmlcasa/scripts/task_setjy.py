@@ -61,9 +61,8 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
                default: 'Perley-Taylor 99'; example: standard='Baars'
                Options: 'Baars','Perley 90','Perley-Taylor 95',
                   'Perley-Taylor 99'
-
        """
-
+       retval = True
        try:
          casalog.origin('setjy')
 
@@ -75,22 +74,20 @@ def setjy(vis=None,field=None,spw=None,modimage=None,scalebychan=None,fluxdensit
          else:
                 raise Exception, 'Visibility data set not found - please verify the name'
 
-
          myim.setjy(field=field, spw=spw, modimage=modimage, fluxdensity=fluxdensity,
                     standard=standard, scalebychan=scalebychan)
          myim.close()
 
-         #write history
-         myms.open(vis,nomodify=False)
-         myms.writehistory(message='taskname = setjy',origin='setjy')
-         myms.writehistory(message='vis         = "'+str(vis)+'"',origin='setjy')
-         myms.writehistory(message='field       = "'+str(field)+'"',origin='setjy')
-         myms.writehistory(message='spw       = '+str(spw),origin='setjy')
-         myms.writehistory(message='modimage = '+str(modimage),origin='setjy')
-         myms.writehistory(message='fluxdensity = '+str(fluxdensity),origin='setjy')
-         myms.writehistory(message='standard    = "'+str(standard)+'"',origin='setjy')
-         myms.close()
-
+         # Write history
+         try:
+                param_names = setjy.func_code.co_varnames[:setjy.func_code.co_argcount]
+                param_vals = [eval(p) for p in param_names]   
+                retval &= write_history(myms, vis, 'setjy', param_names,
+                                        param_vals, casalog)
+         except Exception, instance:
+                casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                             'WARN')
        except Exception, instance:
               print '*** Error ***',instance
+       return retval
 

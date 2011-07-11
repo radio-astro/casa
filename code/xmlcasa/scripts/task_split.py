@@ -267,6 +267,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                 if mademod:
                     casalog.post('Updating FLAG_CMD', 'INFO')
                     mytb.putcol('COMMAND', cmds)
+
+            
         except Exception, instance:
             casalog.post("*** Error \'%s\' updating FLAG_CMD" % (instance),
                          'SEVERE')
@@ -277,9 +279,13 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                 mytb.close()
     
     # Write history to output MS, not the input ms.
-    param_names = split.func_code.co_varnames[:split.func_code.co_argcount]
-    param_vals = [eval(p) for p in param_names]   
-    retval &= write_history(myms, outputvis, 'split', param_names, param_vals,
+    try:
+        param_names = split.func_code.co_varnames[:split.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]   
+        retval &= write_history(myms, outputvis, 'split', param_names, param_vals,
                             casalog)
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                     'WARN')
 
     return retval

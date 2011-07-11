@@ -21,7 +21,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <input>
 
-    <param type="string" name="sdfile"  mustexist="true">
+    <param type="string" name="infile"  mustexist="true">
     <description>name of input SD dataset</description>
     <value></value>
     </param>
@@ -139,7 +139,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
         Keyword arguments:
-        sdfile -- name of input SD dataset
+        infile -- name of input SD dataset
         antenna -- antenna name or id (only effective for MS input). 
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
@@ -191,10 +191,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         outfile -- Name of output file
                 default: ''
                 Note: by default (outfile=''), actual output file name is set as follows: 
-                      (1) if overwrite=True (default), sdfile (input) will be overwritten.
+                      (1) if overwrite=True (default), infile (input) will be overwritten.
                       WARNING: If the formats of input and ouput files are different, 
                                this causes complete loss of input file.
-                      (2) if overwrite=False, outfile will be &lt;sdfile&gt;_f. 
+                      (2) if overwrite=False, outfile will be &lt;infile&gt;_f. 
         outform -- format of output file
                 options: 'ASCII','SDFITS','MS','ASAP'
                 default: 'ASAP'
@@ -248,10 +248,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         WARNING for overwrite option:
         Be sure 'outform' is the same as data format of input file when you
         overwrite it. Since CASA 3.1, the default value of the option 'overwrite'
-        has been changed to True, thereby the current dataset (sdfile) is 
+        has been changed to True, thereby the current dataset (infile) is 
         overwritten unless a different file name is set to outfile. 
-        There is a known issue in overwriting sdfile. If 'outform' differs to the
-        data format of sdfile, the data is overwritten with the new data format 
+        There is a known issue in overwriting infile. If 'outform' differs to the
+        data format of infile, the data is overwritten with the new data format 
         (specified by 'outform') and the data in the original format will be lost.
 
         WARNING for the GBT raw SDFITS format data as input:
