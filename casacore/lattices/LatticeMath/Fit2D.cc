@@ -35,6 +35,7 @@
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Exceptions/Error.h>
 #include <scimath/Functionals/Gaussian2D.h>
+#include <scimath/Functionals/ConstantND.h>
 #include <lattices/Lattices/Lattice.h>
 #include <lattices/Lattices/MaskedLattice.h>
 #include <casa/Logging/LogIO.h>
@@ -126,11 +127,27 @@ uInt Fit2D::addModel (Fit2D::Types type,
    itsTypeList.resize(nModels,True);
 //
    if (type==Fit2D::LEVEL) {
+	   ConstantND<AutoDiff<Double> > myconst(2);
+	   myconst[0] = AutoDiff<Double>(parameters(0), 1, 0);
+	   myconst.mask(0) = parameterMask(0);
+
+	   itsFunction.addFunction(myconst);
+	   itsTypeList(nModels-1) = Fit2D::LEVEL;
+
+	   /*
       itsLogger <<  "Fit2D - Level fitting not yet implemented" <<
 	LogIO::EXCEPTION;
+	*/
    } else if (type==Fit2D::DISK) {
       itsLogger << "Fit2D - Disk fitting not yet implemented" <<
 	LogIO::EXCEPTION;
+   } else if (type==Fit2D::PLANE) {
+	   HyperPlane<AutoDiff<Double> > plane(3);
+	   if (parameters.nelements() != 3) {
+		   itsLogger << "Fit2D - illegal number of parameters in addModel" <<
+		   LogIO::EXCEPTION;
+	   }
+
    } else if (type==Fit2D::GAUSSIAN) {
 // 
 // Create functional

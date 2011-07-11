@@ -218,51 +218,12 @@ class ImageAnalysis
                         const String& mask, const Bool point = True, 
                         const Int width = 5, const Bool negfind = False);
 
-    /*
-    // <src>subImage</src> will contain the subimage of the original image
-    // on which the fit is performed.
-    Vector<ImageFit1D<Float> >  fitallprofiles(
-    	Record& region, SubImage<Float>& subImage, String& xUnit,
-    	const Int axis, const String& mask,
-        const Int ngauss, const Int poly,
-        const String& weightsImageName = "", const String& fit = "",
-        const String& resid = ""
-    ) const;
-    */
-
-    /*
-    // <src>subImage</src> will contain the subimage of the original image
-    // on which the fit is performed.
-    ImageFit1D<Float> fitprofile(
-        Record& regionRecord, SubImage<Float>& subImage,
-        String& xUnit,
-        const uInt axis, const String& mask,
-        const Record& estimate, const uInt ngauss = 0,
-        const Int poly = -1, const String& modelName = "",
-        const String& residName = "", const Bool fit = True,
-        const String weightsImageName = ""
-    );
-*/
     ImageInterface<Float>* fitpolynomial(const String& residfile, 
                                          const String& fitfile, 
                                          const String& sigmafile, 
                                          const Int axis, const Int order, 
                                          Record& region, const String& mask, 
                                          const bool overwrite = false);
-
-    // adding residImage parameter. If set to blank, do not write residual iamge,
-    // else write to the file given.
-    ComponentList fitsky(
-    		Fit2D& fitter,
-    	Array<Float>& pixels, Array<Bool>& pixelmask,
-        Bool& converged,
-        Record& region, const uInt& chan,
-        const String& stokesString, const String& mask,
-        const Vector<String>& models, Record& inputEstimate,
-        const Vector<String>& fixedparams,
-        const Bool fit=True,
-        const Bool deconvolve=False, const Bool list=True
-    );
 
     Bool getchunk(Array<Float>& pixel, Array<Bool>& pixmask, 
                   const Vector<Int>& blc, const Vector<Int>& trc, 
@@ -624,16 +585,7 @@ class ImageAnalysis
     // Delete private ImageStatistics and ImageHistograms objects
     bool deleteHistAndStats();
    
-    // Convert error parameters from pixel to world and insert in SkyComponent
-    void encodeSkyComponentError (casa::LogIO& os,
-                                  casa::SkyComponent& sky,
-                                  casa::Double fluxRatio,
-                                  const casa::ImageInterface<casa::Float>& subIm,
-                                  const casa::Vector<casa::Double>& parameters,
-                                  const casa::Vector<casa::Double>& errors,
-                                  casa::Stokes::StokesTypes stokes,
-                                  casa::Bool xIsLong) const;
-    
+
     // Hanning smooth a vector
     void hanning_smooth (casa::Array<casa::Float>& out,
                          casa::Array<casa::Bool>& maskOut,
@@ -655,15 +607,7 @@ class ImageAnalysis
                         String& maskName,
                         Bool init, Bool makeDefault,
                         LogIO& os, Bool list);
-    /*
-    // Make a SubImage from a region and a WCLELMask string
-    SubImage<Float> makeSubImage(
-    	ImageRegion*& pRegionRegion, ImageRegion*& pMaskRegion,
-        ImageInterface<Float>& inImage, const Record& theRegion,
-        const String& mask, LogIO *os, Bool writableIfPossible,
-        const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
-    );
-*/
+
 // See if the combination of the 'region' and 'mask' ImageRegions have changed
     casa::Bool haveRegionsChanged (casa::ImageRegion* pNewRegionRegion,
                                    casa::ImageRegion* pNewMaskRegion,
@@ -683,18 +627,6 @@ class ImageAnalysis
     // Set the cache
     void set_cache(const casa::IPosition& chunk_shape) const;
     
-    // Make an estimate for single parameter fit models
-    casa::Vector<casa::Double>
-      singleParameterEstimate (casa::Fit2D& fitter,
-                               casa::Fit2D::Types modelType,
-                               const casa::MaskedArray<casa::Float>& pixels,
-                               casa::Float minVal, casa::Float maxVal,
-                               const casa::IPosition& minPos,
-                               const casa::IPosition& maxPos,
-                               casa::Stokes::StokesTypes stokes,
-                               const casa::ImageInterface<casa::Float>& im,
-                               casa::Bool xIsLong,
-                               casa::LogIO& os) const;
 
     // Prints an error message if the image DO is detached and returns True.
     //bool detached() const;
@@ -732,10 +664,6 @@ class ImageAnalysis
                             const CoordinateSystem& cSys, const String& xunits, 
 			    const String& freqFrame="");
 
-    void _fitskyExtractBeam(
-    	Vector<Double>& parameters, const ImageInfo& imageInfo,
-    	const Bool xIsLong, const CoordinateSystem& cSys
-    ) const;
 };
 
 } // casac namespace

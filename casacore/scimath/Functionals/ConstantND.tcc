@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# HyperPlane.cc: Defines HyperPlane 
+//# Copyright (C) 2001,2002,2004
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +23,32 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: HyperPlane.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.69"
+//# Includes
+#include <scimath/Functionals/ConstantND.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+//# Constructors
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+//# Operators
+template<class T>
+T ConstantND<T>::eval(typename Function<T>::FunctionArg) const {
+	return param_p[0];
+}
+
+template<class T>
+AutoDiff<T> ConstantND<AutoDiff<T> >::
+eval(typename Function<AutoDiff<T> >::FunctionArg) const {
+  AutoDiff<T> tmp = param_p[0];
+
+  tmp.deriv(0) = param_p.mask(0) ? 1 : 0;
+  return tmp;
+}
+
+
+//# Member functions
 
 } //# NAMESPACE CASA - END
 
-#endif

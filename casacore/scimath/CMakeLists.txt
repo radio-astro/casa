@@ -88,6 +88,10 @@ Functionals/CompoundFunction.h
 Functionals/CompoundFunction.tcc
 Functionals/CompoundParam.h
 Functionals/CompoundParam.tcc
+Functionals/ConstantNDParam.h
+Functionals/ConstantNDParam.tcc
+Functionals/ConstantND.h
+Functionals/ConstantND.tcc
 Functionals/DiracDFunction.h
 Functionals/DiracDFunction.tcc
 Functionals/DiracDParam.h
