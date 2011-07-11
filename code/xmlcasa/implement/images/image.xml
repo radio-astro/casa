@@ -2506,6 +2506,10 @@ If the image (that associated with the tool) has a \pixelmask, then only
 pixels for which that mask is good will be changed.  See the function
 <link anchor="images:image.maskhandler.function">maskhandler</link> for managing image \pixelmasks. 
 
+Note that when multiple image are used in the expression, there is no garauntee about which of
+those images will be used to create the header of the output image. Therefore, one may have
+to modify the output header as needed if the input headers differ.
+
 See the related functions <link anchor="images:image.set.function">set</link> and
 <link anchor="images:image.putregion.function">putregion</link>.
 
