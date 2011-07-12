@@ -656,7 +656,14 @@ public:
         visIter_p->allSelectedSpectralWindows(spws, nvischan);
     }
 
-    virtual void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan) const {
+  virtual void getChannelSelection(Block< Vector<Int> >& blockNGroup,
+				   Block< Vector<Int> >& blockStart,
+				   Block< Vector<Int> >& blockWidth,
+				   Block< Vector<Int> >& blockIncr,
+				   Block< Vector<Int> >& blockSpw) const {
+    visIter_p->getChannelSelection(blockNGroup, blockStart, blockWidth, blockIncr, blockSpw);
+  };
+    void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan) const {
         This->allSelectedSpectralWindows(spws, nvischan);
     }
 
