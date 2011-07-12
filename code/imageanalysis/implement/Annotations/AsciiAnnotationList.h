@@ -85,6 +85,19 @@ public:
 		const IPosition shape,
 		const Bool deletePointersOnDestruct=True
 	);
+
+	// create a list by reading it from a text string.
+	// An exception is thrown if the text is not in the correct
+	// format. The coordinate system is used for
+	// setting defaults and reference frames to be used.
+	// <src>shape</src> is the image shape and is only used if
+	// the first region is a difference; in that case, the all pixels in entire
+	// shape are set to good initially.
+	AsciiAnnotationList(
+		const CoordinateSystem& csys, const String& text,
+		const IPosition shape,
+		const Bool deletePointersOnDestruct=True
+	);
 	//</group>
 
 	~AsciiAnnotationList();

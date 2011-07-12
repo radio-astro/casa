@@ -14,7 +14,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include <imageanalysis/IO/AsciiAnnotationFileParser.h>
+#include <imageanalysis/IO/RegionTextParser.h>
 
 #include <casa/IO/RegularFileIO.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -37,31 +37,31 @@
 
 namespace casa {
 
-const String AsciiAnnotationFileParser::sOnePair = "[[:space:]]*\\[[^\\[,]+,[^\\[,]+\\][[:space:]]*";
-const String AsciiAnnotationFileParser::bTwoPair = "\\[" + sOnePair
+const String RegionTextParser::sOnePair = "[[:space:]]*\\[[^\\[,]+,[^\\[,]+\\][[:space:]]*";
+const String RegionTextParser::bTwoPair = "\\[" + sOnePair
 		+ "," + sOnePair;
 // explicit onePair at the end because that one should not be followed by a comma
-const String AsciiAnnotationFileParser::sNPair = "\\[(" + sOnePair
+const String RegionTextParser::sNPair = "\\[(" + sOnePair
 		+ ",)+" + sOnePair + "\\]";
-const Regex AsciiAnnotationFileParser::startOnePair("^" + sOnePair);
-const Regex AsciiAnnotationFileParser::startNPair("^" + sNPair);
+const Regex RegionTextParser::startOnePair("^" + sOnePair);
+const Regex RegionTextParser::startNPair("^" + sNPair);
 
-AsciiAnnotationFileParser::AsciiAnnotationFileParser(
+RegionTextParser::RegionTextParser(
 	const String& filename, const CoordinateSystem& csys
-) : _file(RegularFile(filename)), _csys(csys),
+) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0))
-	{
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)) {
 	String preamble = String(__FUNCTION__) + ": ";
-	if (! _file.exists()) {
+	RegularFile file(filename);
+	if (! file.exists()) {
 		throw AipsError(
 			preamble + "File "
 			+ filename + " does not exist."
 		);
 	}
-	if (! _file.isReadable()) {
+	if (! file.isReadable()) {
 		throw AipsError(
 			preamble + "File "
 			+ filename + " is not readable."
@@ -74,26 +74,7 @@ AsciiAnnotationFileParser::AsciiAnnotationFileParser(
 		);
 	}
 	_setInitialGlobals();
-	_parse();
-}
-
-Vector<AsciiAnnotationFileLine> AsciiAnnotationFileParser::getLines() const {
-	return _lines;
-}
-
-
-AsciiAnnotationFileParser::~AsciiAnnotationFileParser() {
-	delete _log;
-	_log = 0;
-}
-
-void AsciiAnnotationFileParser::_parse() {
-	_log->origin(LogOrigin("AsciiRegionFileParser", __FUNCTION__));
-	const Regex startAnn("^ann[[:space:]]+");
-	const Regex startDiff("^-[[:space:]]+");
-	const Regex startGlobal("^global[[:space:]]+");
-
-	RegularFileIO fileIO(_file);
+	RegularFileIO fileIO(file);
 	Int bufSize = 4096;
 	char *buffer = new char[bufSize];
 	int nRead;
@@ -107,6 +88,45 @@ void AsciiAnnotationFileParser::_parse() {
 	// get the last chunk
 	String chunk(buffer, nRead);
 	contents += chunk;
+	_parse(contents, filename);
+}
+
+RegionTextParser::RegionTextParser(
+	const CoordinateSystem& csys, const String& text
+) : _csys(csys),
+	_log(new LogIO()),
+	_currentGlobals(ParamSet()),
+	_lines(Vector<AsciiAnnotationFileLine>(0)),
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)) {
+	String preamble = String(__FUNCTION__) + ": ";
+
+	if (! _csys.hasDirectionCoordinate()) {
+		throw AipsError(
+			preamble
+			+ "Coordinate system has not direction coordintate"
+		);
+	}
+	_setInitialGlobals();
+	_parse(text, "");
+}
+
+Vector<AsciiAnnotationFileLine> RegionTextParser::getLines() const {
+	return _lines;
+}
+
+
+RegionTextParser::~RegionTextParser() {
+	delete _log;
+	_log = 0;
+}
+
+void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
+	_log->origin(LogOrigin("AsciiRegionFileParser", __FUNCTION__));
+	const Regex startAnn("^ann[[:space:]]+");
+	const Regex startDiff("^-[[:space:]]+");
+	const Regex startGlobal("^global[[:space:]]+");
+
+
 
 	Vector<String> lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
@@ -116,7 +136,7 @@ void AsciiAnnotationFileParser::_parse() {
 		lineCount++;
 		Bool annOnly = False;
 		ostringstream preambleoss;
-		preambleoss << _file.path().baseName() + " line# " << lineCount << ": ";
+		preambleoss << fileDesc + " line# " << lineCount << ": ";
 		String preamble = preambleoss.str();
 		Bool difference = False;
 		iter->trim();
@@ -208,12 +228,12 @@ void AsciiAnnotationFileParser::_parse() {
 	}
 }
 
-void AsciiAnnotationFileParser::_addLine(const AsciiAnnotationFileLine& line) {
+void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {
 	_lines.resize(_lines.size()+1, True);
 	_lines[_lines.size()-1] = line;
 }
 
-AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
+AnnotationBase::Type RegionTextParser::_getAnnotationType(
 	Vector<Quantity>& qDirs,
 	Vector<Quantity>& quantities,
 	String& textString,
@@ -412,8 +432,8 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 	return annotationType;
 }
 
-AsciiAnnotationFileParser::ParamSet
-AsciiAnnotationFileParser::_getCurrentParamSet(
+RegionTextParser::ParamSet
+RegionTextParser::_getCurrentParamSet(
 	Bool& spectralParmsUpdated, ParamSet& newParams,
 	String& consumeMe, const String& preamble
 ) const {
@@ -573,7 +593,7 @@ AsciiAnnotationFileParser::_getCurrentParamSet(
 	return currentParams;
 }
 
-Vector<Quantity> AsciiAnnotationFileParser::_quantitiesFromFrequencyString(
+Vector<Quantity> RegionTextParser::_quantitiesFromFrequencyString(
 	const String& freqString, const String& preamble
 ) const {
 	if (! freqString.matches(sOnePair)) {
@@ -585,7 +605,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_quantitiesFromFrequencyString(
 	);
 }
 
-void AsciiAnnotationFileParser::_createAnnotation(
+void RegionTextParser::_createAnnotation(
 	const AnnotationBase::Type annType,
 	const Vector<Quantity>& qDirs,
 	const Vector<Quantity>& qFreqs,
@@ -732,7 +752,7 @@ void AsciiAnnotationFileParser::_createAnnotation(
 	_addLine(line);
 }
 
-Array<String> AsciiAnnotationFileParser::_extractTwoPairs(uInt& end, const String& string) const {
+Array<String> RegionTextParser::_extractTwoPairs(uInt& end, const String& string) const {
 	end = 0;
 	Int firstBegin = string.find('[', 1);
 	Int firstEnd = string.find(']', firstBegin);
@@ -752,7 +772,7 @@ Array<String> AsciiAnnotationFileParser::_extractTwoPairs(uInt& end, const Strin
 	return ret;
 }
 
-Vector<String> AsciiAnnotationFileParser::_extractSinglePair(const String& string) const {
+Vector<String> RegionTextParser::_extractSinglePair(const String& string) const {
 	Char quotes[2];
 	quotes[0] = '\'';
 	quotes[1] = '"';
@@ -772,7 +792,7 @@ Vector<String> AsciiAnnotationFileParser::_extractSinglePair(const String& strin
 	return ret;
 }
 
-String AsciiAnnotationFileParser::_doLabel(
+String RegionTextParser::_doLabel(
 	String& consumeMe, const String& preamble
 ) const {
 	Char firstChar = consumeMe.firstchar();
@@ -791,7 +811,7 @@ String AsciiAnnotationFileParser::_doLabel(
 	return label;
 }
 
-String AsciiAnnotationFileParser::_getKeyValue(
+String RegionTextParser::_getKeyValue(
 	String& consumeMe, const String& preamble
 ) const {
 	String value;
@@ -827,7 +847,7 @@ String AsciiAnnotationFileParser::_getKeyValue(
 	return value;
 }
 
-Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairsAndSingleQuantity(
+Vector<Quantity> RegionTextParser::_extractTwoQuantityPairsAndSingleQuantity(
 	String& consumeMe, const String& preamble
 ) const {
 	Vector<Quantity> quantities = _extractTwoQuantityPairs(
@@ -854,7 +874,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairsAndSingleQua
 	return quantities;
 }
 
-void AsciiAnnotationFileParser::_extractQuantityPairAndString(
+void RegionTextParser::_extractQuantityPairAndString(
 	Vector<Quantity>& quantities, String& string,
 	String& consumeMe, const String& preamble,
 	const Bool requireQuotesAroundString
@@ -893,7 +913,7 @@ void AsciiAnnotationFileParser::_extractQuantityPairAndString(
 	string.trim();
 }
 
-Vector<Quantity> AsciiAnnotationFileParser::_extractQuantityPairAndSingleQuantity(
+Vector<Quantity> RegionTextParser::_extractQuantityPairAndSingleQuantity(
 	String& consumeMe, const String& preamble
 ) const {
 	String qString;
@@ -909,7 +929,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractQuantityPairAndSingleQuantit
 	return quantities;
 }
 
-Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairs(
+Vector<Quantity> RegionTextParser::_extractTwoQuantityPairs(
 	String& consumeMe, const String& preamble
 ) const {
 	const Regex startbTwoPair("^" + bTwoPair);
@@ -930,7 +950,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractTwoQuantityPairs(
 	return quantities;
 }
 
-Vector<Quantity> AsciiAnnotationFileParser::_extractNQuantityPairs (
+Vector<Quantity> RegionTextParser::_extractNQuantityPairs (
 		String& consumeMe, const String& preamble
 ) const {
 	String pairs = consumeMe.through(startNPair);
@@ -953,7 +973,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractNQuantityPairs (
 	return qs;
 }
 
-Vector<Quantity> AsciiAnnotationFileParser::_extractSingleQuantityPair(
+Vector<Quantity> RegionTextParser::_extractSingleQuantityPair(
 	const String& pairString, const String& preamble
 ) const {
 	String mySubstring = String(pairString).through(sOnePair, 0);
@@ -971,7 +991,7 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractSingleQuantityPair(
 }
 
 Vector<Stokes::StokesTypes>
-AsciiAnnotationFileParser::_stokesFromString(
+RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) const {
 	Int maxn = Stokes::NumberOfTypes;
@@ -989,7 +1009,7 @@ AsciiAnnotationFileParser::_stokesFromString(
 	return myTypes;
 }
 
-void AsciiAnnotationFileParser::_setInitialGlobals() {
+void RegionTextParser::_setInitialGlobals() {
 	ParamValue coord;
 	coord.intVal = _csys.directionCoordinate(
 		_csys.findCoordinate(Coordinate::DIRECTION)

@@ -57,15 +57,20 @@ namespace casa {
 // the returned Vector of AsciiRegionLines. For objects of type AsciiRegionLines::ANNOTATION,
 // get the pointer and delete it.
 
-class AsciiAnnotationFileParser {
+class RegionTextParser {
 
 public:
 
-	AsciiAnnotationFileParser(
+	// differentiating between the filename and simple text constructors
+	RegionTextParser(
 		const String& filename, const CoordinateSystem& csys
 	);
 
-	~AsciiAnnotationFileParser();
+	RegionTextParser(
+		const CoordinateSystem& csys, const String& text
+	);
+
+	~RegionTextParser();
 
 	Vector<AsciiAnnotationFileLine> getLines() const;
 
@@ -93,14 +98,13 @@ private:
 	const static Regex startOnePair;
 	const static Regex startNPair;
 
-	RegularFile _file;
 	CoordinateSystem _csys;
 	LogIO *_log;
 	ParamSet _currentGlobals;
 	Vector<AsciiAnnotationFileLine> _lines;
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;
 
-	void _parse();
+	void _parse(const String& contents, const String& fileDesc);
 
 	//void _setGlobalKeysToApply();
 

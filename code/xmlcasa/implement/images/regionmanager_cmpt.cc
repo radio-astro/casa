@@ -324,6 +324,7 @@ regionmanager::concatenation(const ::casac::variant& box, const ::casac::variant
     }
 }
 
+/*
 bool
 regionmanager::copyregions(const std::string& tableout, const std::string& tablein, const std::string& regionname)
 {
@@ -337,8 +338,9 @@ regionmanager::copyregions(const std::string& tableout, const std::string& table
 	    << LogIO::EXCEPTION;
     return false;
 }
-    
+    */
 
+/*
 int
 regionmanager::dflt()
 {
@@ -353,6 +355,7 @@ regionmanager::dflt()
 	    << LogIO::EXCEPTION;
   return retval;
 }
+*/
 
 bool
 regionmanager::deletefromtable(const std::string& tablename, const std::string& regionname)
@@ -458,6 +461,7 @@ regionmanager::done()
     return true;
 }
 
+/*
 bool
 regionmanager::extension(const ::casac::record& box, const ::casac::record& region, const std::string& comment)
 {
@@ -472,6 +476,9 @@ regionmanager::extension(const ::casac::record& box, const ::casac::record& regi
 	    << LogIO::EXCEPTION;
     return false;
 }
+*/
+
+/*
 
 ::casac::record*
 regionmanager::extractsimpleregions(const ::casac::record& region)
@@ -487,6 +494,7 @@ regionmanager::extractsimpleregions(const ::casac::record& region)
     return false;
 }
 
+*/
 record*
 regionmanager::fromtextfile(
 	const string& filename, const vector<int>& shape,
@@ -525,10 +533,48 @@ regionmanager::fromtextfile(
     }
 }
 
+record*
+regionmanager::fromtext(
+	const string& text, const vector<int>& shape,
+	const record& csys
+) {
+    if (! itsIsSetup) {
+    	setup();
+    }
+    *itsLog << LogOrigin("regionmanager", __FUNCTION__);
+    try {
+    	CoordinateSystem coordsys;
+    	IPosition myShape(shape);
+    	auto_ptr<Record> csysRec(toRecord(csys));
+    	if((csysRec->nfields()) != 0){
+    	    if(csysRec->nfields() < 2){
+    	    	throw(
+    	    		AipsError(
+    	    			"Given coordsys parameter is not a valid coordsystem record"
+    	    		)
+    	    	);
+    	    }
+    	    coordsys = *(CoordinateSystem::restore(*csysRec, ""));
+    	}
+    	else {
+    	    //user has set csys already
+    	    const CoordinateSystem x = itsRegMan->getcoordsys();
+    	    coordsys = x;
+    	}
+    	AsciiAnnotationList annList(coordsys, text, myShape);
+		Record regRec = annList.regionAsRecord();
+    	return fromRecord(regRec);
+    }
+    catch (AipsError x) {
+    	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
+}
+
 
 ::casac::record*
 regionmanager::fromfiletorecord(
-	const std::string& filename, const bool verbose,
+	const std::string& filename, const bool,
 	const string& regionName
 ) {
 
@@ -571,6 +617,7 @@ regionmanager::tofile(const std::string& filename, const ::casac::record& region
 
   }
     
+/*
 bool
 regionmanager::fromglobaltotable(const std::string& tablename, const bool confirm, const bool verbose, const ::casac::variant& regionname, const ::casac::record& regions)
 {
@@ -584,12 +631,13 @@ regionmanager::fromglobaltotable(const std::string& tablename, const bool confir
 	    << LogIO::EXCEPTION;
     return false;
 }
+*/
 
 std::string
 regionmanager::fromrecordtotable(const std::string& tablename, 
 				 const ::casac::variant& regionname, 
 				 const ::casac::record& regionrec, 
-				 const bool verbose)
+				 const bool)
 {
     if ( !itsIsSetup )
 	setup();
@@ -615,7 +663,7 @@ regionmanager::fromrecordtotable(const std::string& tablename,
 }
 
 ::casac::record*
-regionmanager::fromtabletorecord(const std::string& tablename, const ::casac::variant& regionname, const bool verbose)
+regionmanager::fromtabletorecord(const std::string& tablename, const ::casac::variant& regionname, const bool)
 {
     if ( !itsIsSetup )
 	setup();
@@ -780,6 +828,7 @@ regionmanager::namesintable(const std::string& tablename)
     return retval;
 }
 
+/*
 ::casac::record*
 regionmanager::pixeltoworldregion(const ::casac::record& csys, const std::vector<int>& shape, const ::casac::record& region)
 {
@@ -793,7 +842,8 @@ regionmanager::pixeltoworldregion(const ::casac::record& csys, const std::vector
 	    << LogIO::EXCEPTION;
     return false;
 }
-
+*/
+/*
 ::casac::record*
 regionmanager::quarter(const std::string& comment)
 {
@@ -808,6 +858,7 @@ regionmanager::quarter(const std::string& comment)
 	    << LogIO::EXCEPTION;
     return false;
 }
+*/
 
 bool
 regionmanager::setcoordinates(const ::casac::record& csys)
@@ -1033,6 +1084,7 @@ regionmanager::wpolygon(const ::casac::variant& x, const ::casac::variant& y,
     return retval;
 }
 
+/*
 ::casac::record*
 regionmanager::wmask(const std::string& expr)
 {
@@ -1047,6 +1099,7 @@ regionmanager::wmask(const std::string& expr)
 	    << LogIO::EXCEPTION;
     return false;
 }
+*/
 
 record* regionmanager::frombcs(
 	const record& csys, const vector<int>& shape,

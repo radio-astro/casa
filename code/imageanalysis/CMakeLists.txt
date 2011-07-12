@@ -39,7 +39,7 @@ implement/ImageAnalysis/ImageFitter.cc
 implement/ImageAnalysis/ImageInputProcessor.cc
 implement/ImageAnalysis/ImageProfileFitter.cc
 
-implement/IO/AsciiAnnotationFileParser.cc
+implement/IO/RegionTextParser.cc
 implement/IO/AsciiAnnotationFileLine.cc
 implement/IO/FitterEstimatesFileParser.cc
 

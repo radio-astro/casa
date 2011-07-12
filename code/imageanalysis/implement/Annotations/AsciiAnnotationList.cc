@@ -28,7 +28,7 @@
 
 #include <casa/OS/File.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
-#include <imageanalysis/IO/AsciiAnnotationFileParser.h>
+#include <imageanalysis/IO/RegionTextParser.h>
 #include <images/Regions/WCDifference.h>
 
 namespace casa {
@@ -57,7 +57,24 @@ AsciiAnnotationList::AsciiAnnotationList(
 ) : _lines(Vector<AsciiAnnotationFileLine>(0)),
 _deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys), _shape(shape), _canGetRegion(True) {
-	AsciiAnnotationFileParser parser(filename, csys);
+	RegionTextParser parser(filename, csys);
+	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
+	for (
+		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
+		iter != lines.end(); iter++
+	) {
+		addLine(*iter);
+	}
+}
+
+AsciiAnnotationList::AsciiAnnotationList(
+	const CoordinateSystem& csys, const String& text,
+	const IPosition shape,
+	const Bool deletePointersOnDestruct
+) : _lines(Vector<AsciiAnnotationFileLine>(0)),
+_deletePointersOnDestruct(deletePointersOnDestruct),
+	_csys(csys), _shape(shape), _canGetRegion(True) {
+	RegionTextParser parser(csys, text);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();

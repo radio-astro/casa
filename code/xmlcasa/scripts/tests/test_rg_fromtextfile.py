@@ -135,6 +135,11 @@ class rg_fromtextfile_test(unittest.TestCase):
         expected = self.rg.fromfiletorecord(rgn)
         expected['comment'] = ""
         self.assertTrue(deep_equality(got, expected))
+        
+        f = open(text, 'r')
+        text = f.read()
+        got = self.rg.fromtext(text, shape, csys)
+        self.assertTrue(deep_equality(got, expected))
 
     def test_exceptions(self):
         """test exception cases"""
