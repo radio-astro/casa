@@ -3325,4 +3325,43 @@ image::casaQuantityFromVar(const ::casac::variant& theVar){
   return retval;
 }
 
+bool image::isconform(const string& other) {
+	*itsLog << LogOrigin("image", __FUNCTION__);
+
+	if (detached()) {
+		return False;
+	}
+	try {
+
+		ImageInterface<Float> *oth = 0;
+		ImageUtilities::openImage(oth, String(other), *itsLog);
+		if (oth == 0) {
+			throw AipsError("Unable to open image " + other);
+		}
+		std::auto_ptr<ImageInterface<Float> > x(oth);
+		const ImageInterface<Float> *mine = itsImage->getImage();
+		if (
+			mine->shape().isEqual(x->shape())
+			&& mine->coordinates().near(x->coordinates())
+		) {
+			Vector<String> mc = mine->coordinates().worldAxisNames();
+			Vector<String> oc = x->coordinates().worldAxisNames();
+			if (mc.size() != oc.size()) {
+				return False;
+			}
+			for (uInt i=0; i<mc.size(); i++) {
+				if (mc[i] != oc[i]) {
+					return False;
+				}
+			}
+			return True;
+		}
+		return False;
+	} catch (AipsError x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+
 } // casac namespace
