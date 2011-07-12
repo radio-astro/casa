@@ -151,7 +151,6 @@ void AsciiAnnotationFileParser::_parse() {
 				spectralParmsUpdated, newParams,
 				consumeMe, preamble
 			);
-			//_setCurrentGlobalKeys();
 			map<AnnotationBase::Keyword, String> gParms;
 			for (
 				ParamSet::const_iterator iter=newParams.begin();
@@ -214,41 +213,26 @@ void AsciiAnnotationFileParser::_addLine(const AsciiAnnotationFileLine& line) {
 	_lines[_lines.size()-1] = line;
 }
 
-/*
-void AsciiAnnotationFileParser::_setCurrentGlobalKeys() {
-	_currentGlobalKeys.resize(_currentGlobals.size(), False);
-	uInt i=0;
-	for (
-		ParamSet::const_iterator iter=_currentGlobals.begin();
-		iter != _currentGlobals.end(); iter++
-	) {
-		_currentGlobalKeys[i] = iter->first;
-		i++;
-	}
-}
-*/
-
 AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
-	//Vector<MDirection>& dirs,
 	Vector<Quantity>& qDirs,
 	Vector<Quantity>& quantities,
 	String& textString,
 	String& consumeMe, const String& preamble
 ) const {
-	const String sOnePairOneSingle =
+	const static String sOnePairOneSingle =
 		"\\[" + sOnePair + ",[^\\[,]+\\]";
-	const String sOnePairAndText =
+	const static String sOnePairAndText =
 		"\\[" + sOnePair + ",[[:space:]]*[\"\'].*[\"\'][[:space:]]*\\]";
-	const String sTwoPair = bTwoPair + "\\]";
-	const Regex startTwoPair("^" + sTwoPair);
-	const Regex startOnePairAndText("^" + sOnePairAndText);
-	const String sTwoPairOneSingle = bTwoPair
+	const static String sTwoPair = bTwoPair + "\\]";
+	const static Regex startTwoPair("^" + sTwoPair);
+	const static Regex startOnePairAndText("^" + sOnePairAndText);
+	const static String sTwoPairOneSingle = bTwoPair
 			+ ",[[:space:]]*[^\\[,]+[[:space:]]*\\]";
-	const Regex startTwoPairOneSingle("^" + sTwoPairOneSingle);
-	const Regex startOnePairOneSingle("^" + sOnePairOneSingle);
+	const static Regex startTwoPairOneSingle("^" + sTwoPairOneSingle);
+	const static Regex startOnePairOneSingle("^" + sOnePairOneSingle);
 	consumeMe.trim();
 	String tmp = consumeMe.through(Regex("[[:alpha:]]+"));
-	consumeMe.del(0, (Int)tmp.length() + 1);
+	consumeMe.del(0, (Int)tmp.length());
 	consumeMe.trim();
 	AnnotationBase::Type annotationType = AnnotationBase::typeFromString(tmp);
 	switch(annotationType) {
@@ -258,6 +242,7 @@ AnnotationBase::Type AsciiAnnotationFileParser::_getAnnotationType(
 				<< consumeMe << LogIO::EXCEPTION;
 		}
 		qDirs = _extractNQuantityPairs(consumeMe, preamble);
+
 		if (qDirs.size() != 4) {
 			throw AipsError(preamble
 				+ "rectangle box spec must contain exactly 2 direction pairs but it has "
@@ -620,11 +605,14 @@ void AsciiAnnotationFileParser::_createAnnotation(
 		stokes = currentParamSet.at(AnnotationBase::CORR).stokes;
 	}
 	String dirRefFrame = currentParamSet.at(AnnotationBase::COORD).stringVal;
-	String freqRefFrame = currentParamSet.at(AnnotationBase::FRAME).stringVal;
-	String doppler = currentParamSet.at(AnnotationBase::VELTYPE).stringVal;
+	String freqRefFrame = currentParamSet.find(AnnotationBase::FRAME) == currentParamSet.end()
+		? "" : currentParamSet.at(AnnotationBase::FRAME).stringVal;
+	String doppler = currentParamSet.find(AnnotationBase::VELTYPE) == currentParamSet.end()
+		? "" :	currentParamSet.at(AnnotationBase::VELTYPE).stringVal;
 	Quantity restfreq;
 	if (
-		! readQuantity(
+		currentParamSet.find(AnnotationBase::RESTFREQ) != currentParamSet.end()
+		&& ! readQuantity(
 			restfreq, currentParamSet.at(AnnotationBase::RESTFREQ).stringVal
 		)
 	) {

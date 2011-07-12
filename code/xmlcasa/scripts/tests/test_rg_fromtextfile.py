@@ -77,6 +77,8 @@ import numpy
 image = "imregion.fits"
 text1 = "goodfile1.txt"
 res1 = "res1.rgn"
+cas_3258t = "CAS-3258.txt"
+cas_3258r = "CAS-3258.rgn"
 
 def deep_equality(a, b):
     print "types " + str(type(a)) + " " + str(type(b))
@@ -109,39 +111,48 @@ def deep_equality(a, b):
 
 class rg_fromtextfile_test(unittest.TestCase):
     
-    _fixtures = [image, text1, res1]
+    _fixtures = [image, text1, res1, cas_3258t, cas_3258r]
     
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/rg.fromtextfile/'
         for im in self._fixtures:
             shutil.copy(datapath + im, im)
+        self.ia = iatool.create()
+        self.rg = rgtool.create()
     
     def tearDown(self):
         for im in self._fixtures:
             os.remove(im)
+        self.ia.done()
+        del self.ia
+        self.rg.done()
+        del self.rg
+
+    def _testit(self, text, rgn):
+        csys = self.ia.coordsys().torecord()
+        shape = self.ia.shape()
+        got = self.rg.fromtextfile(text, shape, csys)
+        expected = self.rg.fromfiletorecord(rgn)
+        expected['comment'] = ""
+        self.assertTrue(deep_equality(got, expected))
 
     def test_exceptions(self):
         """test exception cases"""
 
-        myrg = rgtool.create()
         # bad file
-        self.assertRaises(Exception, myrg.fromtextfile, "blah", {}, [1,1])
+        self.assertRaises(Exception, self.rg.fromtextfile, "blah", {}, [1,1])
         # coordsys not set
-        self.assertRaises(Exception, myrg.fromtextfile, text1, {}, [1,1])
+        self.assertRaises(Exception, self.rg.fromtextfile, text1, {}, [1,1])
 
     def test_read(self):
         """Read test"""
-        myia = iatool.create()
-        ia.open(image)
-        csys = ia.coordsys().torecord()
-        shape = ia.shape()
-        myrg = rgtool.create()
-        got = rg.fromtextfile(text1, shape, csys)
-        expected = rg.fromfiletorecord(res1)
-        expected['comment'] = ""
-        self.assertTrue(deep_equality(got, expected))
-
-
+        self.ia.open(image)
+        self._testit(text1, res1)
+        
+    def test_CAS_3258(self):
+        """Verify fix to CAS-3258"""
+        self.ia.maketestimage()
+        self._testit(cas_3258t, cas_3258r)
         
 
 def suite():
