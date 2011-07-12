@@ -58,6 +58,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         execute_string += ' -corr-mode ao+ca -ocorr-mode ao'
                                 else:
                                         execute_string += ' -corr-mode ' + string.join( corr_mode.split(), '+' ) + ' -ocorr-mode ao'
+                                execute_string += ' -srt ' + srt
                                 execute_string += ' -logfile ' + casalog.logfile()
                                 casalog.post( 'execute_string is' )
                                 casalog.post( '   '+execute_string )
