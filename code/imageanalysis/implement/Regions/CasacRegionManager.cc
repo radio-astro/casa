@@ -297,7 +297,11 @@ void CasacRegionManager::_setRegion(
 	const String& imageName
 ) {
 	// region name provided
-	Regex image("(.*)+:(.*)+");
+	const static Regex image("(.*)+:(.*)+");
+	const static Regex regionText(
+		"^[[:space:]]*[[:alpha:]]+[[:space:]]*\\[(.*)+,(.*)+\\]"
+	);
+
 	File myFile(regionName);
 	if (myFile.exists()) {
 		if (! myFile.isReadable()) {
@@ -315,10 +319,11 @@ void CasacRegionManager::_setRegion(
 		try {
 			AsciiAnnotationList annList(regionName, *itsCSys, imShape);
 			regionRecord = annList.regionAsRecord();
+			diagnostics = "Region read from region text file " + regionName;
 		}
 		catch (AipsError x) {
-			*itsLog << LogIO::SEVERE << "File " + regionName
-				+ " is neither a valid binary region file nor a valid text region file.";
+			*itsLog << LogIO::SEVERE << regionName
+				+ " is neither a valid binary region file, or a valid region text file.";
 		}
 	}
 	else if (regionName.matches(image) || ! imageName.empty()) {
@@ -356,12 +361,23 @@ void CasacRegionManager::_setRegion(
 					<< region << " in image " << imagename << LogIO::EXCEPTION;
 		}
 	}
+	else if (regionName.contains(regionText)) {
+		try {
+			AsciiAnnotationList annList(*itsCSys, regionName, imShape);
+			regionRecord = annList.regionAsRecord();
+			diagnostics = "Region read from text string " + regionName;
+		}
+		catch (AipsError x) {
+			*itsLog << x.getMesg() << LogIO::EXCEPTION;
+		}
+	}
 	else {
 		*itsLog << "Unable to open region file or region table description "
-				<< regionName << LogIO::EXCEPTION;
+			<< regionName << "." << endl
+			<< "If it is supposed to be a text string its format is incorrect"
+			<< LogIO::EXCEPTION;
 	}
 }
-
 
 ImageRegion CasacRegionManager::_fromBCS(
 		String& diagnostics, uInt& nSelectedChannels, String& stokes,

@@ -783,7 +783,7 @@ Vector<String> RegionTextParser::_extractSinglePair(const String& string) const 
 	first.trim(quotes, 2);
 	Int secondBegin = firstEnd + 1;
 	Int secondEnd = string.find(']', secondBegin);
-	String second = string.substr(secondBegin + 1, secondEnd - secondBegin - 1);
+	String second = string.substr(secondBegin, secondEnd - secondBegin);
 	second.trim();
 	second.trim(quotes, 2);
 	Vector<String> ret(2);

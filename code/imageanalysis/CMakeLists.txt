@@ -68,7 +68,7 @@ casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageProfileFitter.cc )
 
-casa_add_assay( imageanalysis implement/IO/test/tAsciiAnnotationFileParser.cc )
+casa_add_assay( imageanalysis implement/IO/test/tRegionTextParser.cc )
 casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )
 
 casa_add_assay( imageanalysis implement/Regions/test/tCasacRegionManager.cc )
