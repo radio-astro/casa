@@ -859,10 +859,10 @@ void AsciiAnnotationFileParser::_extractQuantityPairAndString(
 	String& consumeMe, const String& preamble,
 	const Bool requireQuotesAroundString
 ) const {
-	consumeMe.ltrim('[');
+	// erase the left '['
+	consumeMe.del(0, 1);
 	SubString pairString = consumeMe.through(startOnePair);
 	quantities = _extractSingleQuantityPair(pairString, preamble);
-	//mdir = _directionFromPair(dirString, preamble);
 	consumeMe.del(0, (Int)pairString.length() + 1);
 	consumeMe.trim();
 	consumeMe.ltrim(',');
@@ -898,7 +898,6 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractQuantityPairAndSingleQuantit
 ) const {
 	String qString;
 	Vector<Quantity> quantities(2);
-
 	_extractQuantityPairAndString(
 		quantities, qString, consumeMe, preamble, False
 	);

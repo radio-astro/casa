@@ -79,9 +79,10 @@ text1 = "goodfile1.txt"
 res1 = "res1.rgn"
 cas_3258t = "CAS-3258.txt"
 cas_3258r = "CAS-3258.rgn"
+cas_3259t = "CAS-3259.txt"
+cas_3259r = "CAS-3259.rgn"
 
 def deep_equality(a, b):
-    print "types " + str(type(a)) + " " + str(type(b))
     if (type(a) != type(b)):
         return False
     if (type(a) == dict):
@@ -100,18 +101,12 @@ def deep_equality(a, b):
         for i in range(len(x)):
             return deep_equality(x[i], y[i])
     if (a != b):
-        print "string values " + str(a) + " " + str(b)
         return False
     return True
-            
-        
-        
-
-
 
 class rg_fromtextfile_test(unittest.TestCase):
     
-    _fixtures = [image, text1, res1, cas_3258t, cas_3258r]
+    _fixtures = [image, text1, res1, cas_3258t, cas_3258r, cas_3259t, cas_3259r]
     
     def setUp(self):
         datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/rg.fromtextfile/'
@@ -153,6 +148,11 @@ class rg_fromtextfile_test(unittest.TestCase):
         """Verify fix to CAS-3258"""
         self.ia.maketestimage()
         self._testit(cas_3258t, cas_3258r)
+        
+    def test_CAS_3259(self):
+        """Verify fix to CAS-3259"""
+        self.ia.maketestimage()
+        self._testit(cas_3259t, cas_3259r)
         
 
 def suite():
