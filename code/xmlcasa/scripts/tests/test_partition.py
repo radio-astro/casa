@@ -284,15 +284,20 @@ class PartitionHelperTest(unittest.TestCase,
         for expJob in commandList:
             matchFound = False
             for job in self._executionList:
-                if expJob.commandName != job.commandName:
+
+                if expJob.getCommandNames() != job.getCommandNames():
                     continue
 
+
                 try:
-                    if [expJob.jobInfo[key] for key in expJob.jobInfo] != \
-                       [job.jobInfo[key] for key in expJob.jobInfo]:
-                        break
+                    for cmdName in expJob.getCommandNames():
+                        expArgs = expJob.getCommandArguments(cmdName)
+                        jobArgs = job.getCommandArguments(cmdName)
+                        if [expArgs[key] for key in expArgs] != \
+                               [jobArgs[key] for key in expArgs]:
+                            raise KeyError
                 except KeyError:
-                    # This means that they don't match missing key
+                    # This means that they don't match; missing key
                     continue
 
                 self._executionList.remove(job)

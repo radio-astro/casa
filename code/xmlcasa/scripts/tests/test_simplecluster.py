@@ -69,31 +69,195 @@ class testJobData(unittest.TestCase):
 
     def testSimpleJob(self):
         jd = JobData('myJob')
-        self.assertEqual('myJob()', jd.getCommandLine())
+        self.assertEqual('returnVar0 = myJob()', jd.getCommandLine())
+        self.assertEqual(['returnVar0'], jd.getReturnVariableList())
 
     def testJobWithOneArg(self):
         jd = JobData('myJob',{'arg1':1})
-        self.assertEqual('myJob(arg1 = 1)', jd.getCommandLine())
+        self.assertEqual('returnVar0 = myJob(arg1 = 1)', jd.getCommandLine())
+        self.assertEqual(['returnVar0'], jd.getReturnVariableList())
 
     def testJobWithMultipleArg(self):
         jd = JobData('myJob',{'arg1':1,'arg2':2,'arg3':'three'})
-        self.assertEqual("myJob(arg1 = 1, arg2 = 2, arg3 = 'three')",
-                         jd.getCommandLine())
+        self.assertEqual\
+             ("returnVar0 = myJob(arg1 = 1, arg2 = 2, arg3 = 'three')",
+              jd.getCommandLine())
+        self.assertEqual(['returnVar0'], jd.getReturnVariableList())
 
-class testJobQueueManager(unittest.TestCase ):
+    def testJobWithMultipleCommands(self):
+        jd = JobData('myJob1')
+        jd.addCommand('myJob2',{'arg1':1})
+        self.assertEqual('returnVar0 = myJob1(); '+\
+                         'returnVar1 = myJob2(arg1 = 1)',
+                         jd.getCommandLine())
+        self.assertEqual(['returnVar0', 'returnVar1'],
+                         jd.getReturnVariableList())
+
+    def testGetCommandArguments(self):
+        # Test with a single command
+        jd = JobData('myCommand1',{'arg1':1})
+        resp = jd.getCommandArguments()
+        self.assertTrue(isinstance(resp,dict))
+        self.assertEqual(len(resp),1)
+        self.assertEqual(resp['arg1'],1)
+
+        # Now handle the cases of multiple commands
+        jd.addCommand('myCommand2',{'arg2':2})
+        resp = jd.getCommandArguments()
+        self.assertTrue(isinstance(resp,dict))
+        self.assertEqual(len(resp),2)
+        self.assertTrue(isinstance(resp['myCommand1'],dict))
+        self.assertTrue(isinstance(resp['myCommand2'],dict))
+        self.assertEqual(resp['myCommand1']['arg1'],1)
+        self.assertEqual(resp['myCommand2']['arg2'],2)
+
+        # Now get just a single commands response
+        resp = jd.getCommandArguments('myCommand1')
+        self.assertTrue(isinstance(resp,dict))
+        self.assertEqual(len(resp),1)
+        self.assertEqual(resp['arg1'],1)
+
+
+class testJobQueueManager(unittest.TestCase):
     '''
     This class tests the Job Queue Manager.
     '''
-    def testInitialization(self):
-        pass
+    def __init__(self, methodName = 'runTest'):
+        self.setUpCluster()
+        unittest.TestCase.__init__(self, methodName)
+
+    
+    def testJobExecutionSingleReturn(self):
+        # Test a single job with a single return
+        queue = JobQueueManager()
+        queue.addJob(JobData('echoFunction', {'input':'inputVar'}))
+        queue.executeQueue()
+
+        jobList = queue.getOutputJobs('done')
+        self.assertEqual(len(jobList),1)
+        self.assertEqual(jobList[0].getReturnValues(),'inputVar')
+        
+        queue.clearJobs()
+        for idx in xrange(16):
+            queue.addJob(JobData('echoFunction',
+                                 {'input':'inputVar%d' % idx}))
+        queue.executeQueue()
+
+        jobList = queue.getOutputJobs('done')
+        self.assertEqual(len(jobList),16)
+        for job in jobList:
+            self.assertEqual(job.getReturnValues(),
+                             job._commandList[0].commandInfo['input'])
+
+    def testJobExectionWithoutReturn(self):
+        queue = JobQueueManager()
+        queue.addJob(JobData('noReturn'))
+        queue.executeQueue()
+
+        jobList = queue.getOutputJobs('done')
+        self.assertEqual(len(jobList),1)
+        self.assertEqual(jobList[0].getReturnValues(),None)
+
+        # Test a mixed return case
+        queue.clearJobs()
+        for idx in xrange(16):
+            if idx % 2:
+                queue.addJob(JobData('echoFunction',
+                                     {'input':'inputVar%d' % idx}))
+            else:
+                queue.addJob(JobData('noReturn'))
+        queue.executeQueue()
+
+        jobList = queue.getOutputJobs('done')
+        self.assertEqual(len(jobList),16)
+        for job in jobList:
+            if job._commandList[0].commandName == 'echoFunction':
+                self.assertEqual(job.getReturnValues(),
+                                 job._commandList[0].commandInfo['input'])
+            else:
+                self.assertEqual(job.getReturnValues(), None)
+  
+    def testFailedJobs(self):
+        queue = JobQueueManager()
+        queue.addJob(JobData('setErrror',{'setError':True,
+                                          'returnValue':1}))
+        queue.executeQueue()
+
+        jobList = queue.getOutputJobs()
+        self.assertEqual(len(jobList),1)
+        self.assertEqual(jobList[0].status,'broken')
+
+        # Test a mixed return case
+        queue.clearJobs()
+        for idx in xrange(16):
+            queue.addJob(JobData('setError', {'setError': idx %2,
+                                              'returnValue': idx}))
+        queue.executeQueue()
+        jobList = queue.getOutputJobs('done')
+        self.assertEqual(len(jobList),8)
+
+        jobList = queue.getOutputJobs()
+        self.assertEqual(len(jobList),16)
+        for job in jobList:
+            if job._commandList[0].commandInfo['setError']:
+                self.assertEqual(job.getReturnValues(), None)
+                self.assertEqual(job.status, 'broken')
+            else:
+                self.assertEqual(job.getReturnValues(),
+                         job._commandList[0].commandInfo['returnValue'])
+                self.assertEqual(job.status, 'done')
+
+          
+    def setUpCluster(self):
+        '''
+        This method defines three methods on the cluster:
+        echoFunction - returns whatever is sent
+        noReturn - has no return value
+        errorMethod - which will raise an exception if the argument is true
+        '''
+        cluster = simple_cluster.getCluster()
+            
+        command = '''
+        def echoFunction(input = ''):
+            return input
+        '''
+        for engine in cluster.use_engines():
+            cluster.do_and_record(command, engine)
+
+
+        command = '''
+        def noReturn():
+            pass
+        '''
+        
+        for engine in cluster.use_engines():
+            cluster.do_and_record(command, engine)
+
+        command = '''
+        def setError(setError, returnValue):
+            if setError:
+                raise Exception, "Error Condition"
+            return returnValue
+        '''
+
+        for engine in cluster.use_engines():
+            cluster.do_and_record(command, engine)
+
+        # Wait for all of the engines to return
+        counter = 30
+        while counter > 0 and (len(cluster.get_status(True)) <
+                               len(cluster.use_engines())):
+            time.sleep(1)
+            counter -= 1
+        cluster.remove_record()
 
         
 
 
-
 def suite():
+    return [testJobData]
     return [simplecluster_test, testJobData, testJobQueueManager]
- 
+     
 if __name__ == '__main__':
     testSuite = []
     for testClass in suite():

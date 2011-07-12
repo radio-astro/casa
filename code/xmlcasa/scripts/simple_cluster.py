@@ -1004,21 +1004,25 @@ class simple_cluster:
                 if self._jobs[job]['status']==status:
                     jobId.append(self._jobs[job]['jobname'])
             return jobId
-    
-    def remove_record(self, jobname):
+
+    def remove_record(self, jobname=None):
         '''Remove job execution status of a job.
 
         Keyword arguments:
         jobname -- the jobname or status of job(s) to be removed from display
 
+        if jobName is not specified or is None all jobs are removed.
         '''
 
         if not self._configdone:
             return
+        
         for job in self._jobs.keys():
-            if type(jobname)==int and self._jobs[job]['jobname']==jobname:
+            if jobname is None:
+                del self._jobs[job]
+            elif type(jobname)==int and self._jobs[job]['jobname']==jobname:
                del self._jobs[job]
-            if type(jobname)==str and self._jobs[job]['status']==jobname:
+            elif type(jobname)==str and self._jobs[job]['status']==jobname:
                del self._jobs[job]
     
     ###########################################################################
@@ -1262,6 +1266,23 @@ class simple_cluster:
                 if a>=0 and b>=0:
                     vec.append(i[a+2:b-1])
         return vec
+
+    def getVariables(self, varList, engine):
+        '''
+        This method will return a list corresponding to all variables
+        in the varList for the specified engine. This is a
+        very thin wrapper around the pull method in the cluster.
+        '''
+        if not isinstance(varList, list):
+            varList = [varList]
+
+        rtnVal = []
+        for var in varList:
+            pulled = self._cluster.pull(var, engine)
+            rtnVal.append(pulled[engine])
+
+        return rtnVal
+        
     
     ###########################################################################
     ###   engine selection functions
@@ -2030,33 +2051,113 @@ class JobData:
     of the task to be executed.  The jobInfo is a dictionary of all
     parameters that need to be handled.
     '''
-    def __init__(self, commandName, jobInfo = {}):
-        self.commandName = commandName
-        self.jobInfo = jobInfo
-        self.status  = 'new'
+    class CommandInfo:
 
+        def __init__(self, commandName, commandInfo, returnVariable):
+            self.commandName = commandName
+            self.commandInfo = commandInfo
+            self.returnVariable = returnVariable
+
+        def getReturnVariable(self):
+            return self.returnVariable
+        
+        def getCommandLine(self):
+            firstArgument = True
+            output = "%s = %s(" % (self.returnVariable, self.commandName)
+            for (arg,value) in self.commandInfo.items():
+                if firstArgument:
+                    firstArgument = False
+                else:
+                    output += ', '
+                if isinstance(value, str):
+                    output += ("%s = '%s'" % (arg, value))
+                else:
+                    output += ("%s = " % arg) + str(value)
+            output += ')'
+            return output
+    
+    
+    def __init__(self, commandName, commandInfo = {}):
+        self._commandList = []
+        self.status  = 'new'
+        self.addCommand(commandName, commandInfo)
+        self._returnValues = None
+            
+
+    def addCommand(self, commandName, commandInfo):
+        '''
+        Add an additional command to this Job to be exectued after
+        previous Jobs.
+        '''
+        rtnVar = "returnVar%d" % len(self._commandList)
+        self._commandList.append(JobData.CommandInfo(commandName,
+                                                     commandInfo,
+                                                     rtnVar))
     def getCommandLine(self):
-        firstArgument = True
-        output = self.commandName + '('
-        for (arg,value) in self.jobInfo.items():
-            if firstArgument:
-                firstArgument = False
-            else:
-                output += ', '
-            if isinstance(value, str):
-                output += ("%s = '%s'" % (arg, value))
-            else:
-                output += ("%s = " % arg) + str(value)
-        output += ')'
+        '''
+        This method will return the command line(s) to be executed on the
+        remote engine.  It is usually only needed for debugging or for
+        the JobQueueManager.
+        '''
+        output = ''
+        for idx in xrange(len(self._commandList)):
+            if idx > 0:
+                output += '; '
+            output += self._commandList[idx].getCommandLine()
         return output
 
+    def getCommandNames(self):
+        '''
+        This method will return a list of command names that are associated
+        with this job.
+        '''
+        return [command.commandName for command in self._commandList]
+    
+
+    def getCommandArguments(self, commandName = None):
+        '''
+        This method will return the command arguments associated with a
+        particular job.
+           * If commandName is not none the arguments for the command with
+             that name are returned.
+           * Otherwise a dictionary (with keys being the commandName and
+             the value being the dictionary of arguments) is returned.
+           * If there is only a single command the arguments for that
+             command are returned as a dictionary.
+        '''
+        returnValue = {}
+        for command in self._commandList:
+            if commandName is None or commandName == command.commandName:
+                returnValue[command.commandName] = command.commandInfo
+                                                   
+        if len(returnValue) == 1:
+            return returnValue.values()[0]
+        return returnValue
+    
+    def getReturnVariableList(self):
+        return [ci.returnVariable for ci in self._commandList]
+
+    def setReturnValues(self, valueList):
+        self._returnValues = valueList
+
+    def getReturnValues(self):
+        if self._returnValues is not None:
+            if len(self._returnValues) == 1:
+                return self._returnValues[0]
+        return self._returnValues
+
 class JobQueueManager:
-    def __init__(self, cluster):
+    def __init__(self, cluster = None):
         self.__cluster=cluster
+        if self.__cluster is None:
+            self.__cluster = simple_cluster.getCluster()
         self.__inputQueue = []
         self.__outputQueue = {}
 
     def addJob(self, jobData):
+        '''
+        Add another JobData object to the queue of jobs to be executed.
+        '''
         # TODO Check the type of jobData
         if not isinstance(jobData,list):
             jobData = [jobData]
@@ -2064,6 +2165,14 @@ class JobQueueManager:
             job.status='pending'
             self.__inputQueue.append(job)
 
+    def clearJobs(self):
+        '''
+        Remove all jobs from the queue, this is usually a good idea
+        before reusing a JobQueueManager.
+        '''
+        self.__inputQueue = []
+        self.__outputQueue = {}
+        
     def getOutputJobs(self, status = None):
         '''
         This returns all jobs in the output queue which
@@ -2083,6 +2192,13 @@ class JobQueueManager:
         return self.__outputQueue.values()
 
     def executeQueue(self):
+        '''
+        This method causes all jobs to be executed on the available engines
+        It will block until the jobs are complete.
+        '''
+        # Clear the queue of any existing results
+        self.__cluster.remove_record()
+        
         engineList = self.__cluster.use_engines()
 
         casalog.post("Executing %d jobs on %d engines" %
@@ -2124,7 +2240,13 @@ class JobQueueManager:
             self.__outputQueue[job['jobname']].status = job['status']
             
             if job['status'] == 'done' or job['status'] == 'broken':
-                print "Job end status: ", job['status']
+                if job['status'] == 'done':
+                    # Get the return values is we're successful
+                    self.__outputQueue[job['jobname']].setReturnValues \
+                       (self.__cluster.getVariables\
+                        (self.__outputQueue[job['jobname']].\
+                         getReturnVariableList(),job['engine']))
+                    
                 engineList.append(job['engine'])
                 self.__cluster.remove_record(job['jobname'])
         return True

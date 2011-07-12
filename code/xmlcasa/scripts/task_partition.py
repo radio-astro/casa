@@ -304,11 +304,7 @@ class PartitionHelper(ParallelTaskHelper):
             subMSList = []
             for job in outputList:
                 if job.status == 'done':
-#                     # Since we're still using split rather than partition
-#                     # we cannot include the calMS.
-#                     if job.jobInfo['outputvis'] != \
-#                        self.dataDir +'/%s.cal.ms'%self.outputBase:
-                  subMSList.append(job.jobInfo['outputvis'])
+                    subMSList.append(job.getCommandArguments()['outputvis'])
 
             if len(subMSList) == 0:
                 print "Error, no subMSs were created."
