@@ -936,7 +936,8 @@ Vector<Quantity> AsciiAnnotationFileParser::_extractNQuantityPairs (
 	String pairs = consumeMe.through(startNPair);
 	consumeMe.del(0, (Int)pairs.length() + 1);
 	pairs.trim();
-	pairs.ltrim('[');
+	// remove the left most [
+	pairs.del(0, 1);
 	pairs.trim();
 	Vector<Quantity> qs(0);
 	while (pairs.length() > 1) {
