@@ -104,6 +104,8 @@ class WCCSAxisLabeller : public WCAxisLabeller {
   
   virtual String zLabelType() const { return itsZLabelType; };
 
+  virtual String zLabelPos() const { return itsZLabelPos; };
+
   virtual void setZIndex(Int zindex) { itsZIndex = zindex; };
 
   // DD 'Absolute Pixel Coordinates', e.g. channel numbers, are internally
@@ -146,6 +148,7 @@ class WCCSAxisLabeller : public WCAxisLabeller {
   String itsDirectionSystem;
   String itsFrequencySystem;
   String itsZLabelType;
+  String itsZLabelPos;
 
   Int uiBase_;		// (initialized to 1; see uiBase(), above).
   

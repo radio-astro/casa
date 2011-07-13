@@ -322,7 +322,7 @@ Record WCAxisLabeller::getOptions() const
 
   Record labelposition;
   labelposition.define("dlformat", "labelposition");
-  labelposition.define("listname", "Label Position");
+  labelposition.define("listname", "Label position");
   labelposition.define("ptype", "choice");
   Vector<String> lblencod(5);
   lblencod(0) = "Auto"; lblencod(1) = "bottom-left";

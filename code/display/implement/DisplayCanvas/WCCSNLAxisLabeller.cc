@@ -142,7 +142,8 @@ extern "C" {
 
     // ASSUME everything has been set up correctly, ie.
     // (WCCSNLAxisLabellerCoordinateSystem != NULL)
-
+//cout << " in nlfunc, contr: " << *contrl << " opcode: " << *opcode;
+//cout << "pixel in: " << pixel[0] << "," << pixel[1] << " world in: " << world[0] << "," << world[1]<< endl;
     int err;
     err = 0;
 //
@@ -159,28 +160,29 @@ extern "C" {
       break;
     case 1:		// Compute pixel coordinates.
     case 2:		// Similar.
-      {
+    {
 
 // Do NOT modify the input argument 'world'
 
 
-        if (!WCCSNLAxisLabellerWorldLabels) {
+   	 if (!WCCSNLAxisLabellerWorldLabels) {
 
 // The world value is a pixel coordinate.  May be relative or absolute.
 // If absolute, deal with 0/1-relness, otherwise, make it absolute
 
-           if (WCCSNLAxisLabellerAbsolute) {
-              pixel[0] = world[0] - WCCSNLAxisLabellerUIBase;
-              pixel[1] = world[1] - WCCSNLAxisLabellerUIBase;
-           } else {
+   		 if (WCCSNLAxisLabellerAbsolute) {
+   			 pixel[0] = world[0] - WCCSNLAxisLabellerUIBase;
+   			 pixel[1] = world[1] - WCCSNLAxisLabellerUIBase;
+           }
+   		 else {
 
 // abs = rel + ref
 
-              pixel[0] = world[0] + WCCSNLAxisLabellerRefPix[0];
-              pixel[1] = world[1] + WCCSNLAxisLabellerRefPix[1];
-           }
-           break;
-        }
+   			 pixel[0] = world[0] + WCCSNLAxisLabellerRefPix[0];
+   			 pixel[1] = world[1] + WCCSNLAxisLabellerRefPix[1];
+   		 }
+   		 break;
+   	 }
 
 // What comes in is the last vector of world values.  We may need 
 // to convert these from velocity back to frequency before
@@ -188,44 +190,44 @@ extern "C" {
 // can be called.  We may also need to convert them from relative
 // back to absolute so toMix can do its thing.
 //
-	vWorldIn = 0.0;
-        vWorldIn[0] = world[0]; 
-        vWorldIn[1] = world[1];
+   	 vWorldIn = 0.0;
+   	 vWorldIn[0] = world[0];
+   	 vWorldIn[1] = world[1];
 
 // If we are doing relative labels, first convert to absolute world
 // If we are showing velocity labels, use a relative world 
 // coordinate of 0, and then handle velocity afterwards
 
-        if (WCCSNLAxisLabellerVelAxis != -1) {
-           vWorldIn[WCCSNLAxisLabellerVelAxis] = 0.0;
-        }
-        if (!WCCSNLAxisLabellerAbsolute) {
-           WCCSNLAxisLabellerCoordinateSystem->makeWorldAbsolute(vWorldIn);
-        }
+   	 if (WCCSNLAxisLabellerVelAxis != -1) {
+   		 vWorldIn[WCCSNLAxisLabellerVelAxis] = 0.0;
+   	 }
+   	 if (!WCCSNLAxisLabellerAbsolute) {
+   		 WCCSNLAxisLabellerCoordinateSystem->makeWorldAbsolute(vWorldIn);
+   	 }
 
 // Now we must overwrite the velocity value with the absolute frequency
 
-        if (WCCSNLAxisLabellerVelAxis != -1) {
-           velocity = world[WCCSNLAxisLabellerVelAxis];
-           if (!WCCSNLAxisLabellerAbsolute) {
+   	 if (WCCSNLAxisLabellerVelAxis != -1) {
+   		 velocity = world[WCCSNLAxisLabellerVelAxis];
+   		 if (!WCCSNLAxisLabellerAbsolute) {
 
 // Convert relative to absolute velocity ; rel = abs - ref
 
-              velocity += WCCSNLAxisLabellerVelRef;
-           }
+   			 velocity += WCCSNLAxisLabellerVelRef;
+   		 }
 
 // Convert absolute velocity to absolute frequency
 
-           if (!WCCSNLAxisLabellerSpecCoord.velocityToFrequency(frequency, velocity)) {
-              err = 2;
-              break;
-           } else {
-             vWorldIn[WCCSNLAxisLabellerVelAxis] = frequency;
-           }
-        }
+   		 if (!WCCSNLAxisLabellerSpecCoord.velocityToFrequency(frequency, velocity)) {
+   			 err = 2;
+   			 break;
+   		 } else {
+   			 vWorldIn[WCCSNLAxisLabellerVelAxis] = frequency;
+   		 }
+   	 }
 
 //
-	if (*contrl == 0) {
+   	 if (*contrl == 0) {
 
 // contrl == 0 : normal operation + check for discontinuities
 
@@ -240,25 +242,26 @@ extern "C" {
 // set to the pixel coordinate.  This will be used in the toMix
 // conversions.  
 //
-/*
-cerr << "Calling toMix with" << endl;
-cerr << "  pixel, world in = " << vPixelIn << vWorldIn << endl;
-cerr << "  pixel, world axes = " << WCCSNLAxisLabellerPixelAxes << WCCSNLAxisLabellerWorldAxes << endl;
-*/
-	  vPixelIn = 0.0;
-          if (!WCCSNLAxisLabellerCoordinateSystem->toMix(vWorldOut, vPixelOut, vWorldIn, vPixelIn,
-                        WCCSNLAxisLabellerWorldAxes, WCCSNLAxisLabellerPixelAxes,
-                        WCCSNLAxisLabellerWorldMin, WCCSNLAxisLabellerWorldMax)) {
-             err = 2;
+
+//cerr << "Calling toMix with" << endl;
+//cerr << "  pixel, world in = " << vPixelIn << " , " << vWorldIn << endl;
+//cerr << "  pixel, world axes = " << WCCSNLAxisLabellerPixelAxes << " , " << WCCSNLAxisLabellerWorldAxes << endl;
+
+   		 vPixelIn = 0.0;
+   		 if (!WCCSNLAxisLabellerCoordinateSystem->toMix(vWorldOut, vPixelOut, vWorldIn, vPixelIn,
+   				 WCCSNLAxisLabellerWorldAxes, WCCSNLAxisLabellerPixelAxes,
+   				 WCCSNLAxisLabellerWorldMin, WCCSNLAxisLabellerWorldMax)) {
+					 err = 2;
              break;
-	  }
-//cerr << "  pixel, world out = " << vPixelOut << vWorldOut << endl;
+   		 }
+//cerr << "  pixel, world out = " << vPixelOut << " , " << vWorldOut << endl;
+//cerr << "  WCCSNLAxisLabellerVelAxis = " << WCCSNLAxisLabellerVelAxis << endl;
 
 
 
 // Fill output pixel coordinates returned by nlfunc
 
-          pixel[0] = vPixelOut[0];
+   		 pixel[0] = vPixelOut[0];
           pixel[1] = vPixelOut[1];
 	 
 /* COMMENTED OUT UNTIL SPHERICAL PROJECTIONS AVAILABLE
@@ -296,33 +299,33 @@ cerr << "  pixel, world axes = " << WCCSNLAxisLabellerPixelAxes << WCCSNLAxisLab
 	  pixel[1] = contxt[6];
 	  *contrl = 0;
 */
-	}
-	break;
-      }
+   	 }
+   	 break;
+    }
     case -1:	// Compute pure world coordinates
-      {
-        if (!WCCSNLAxisLabellerWorldLabels) {
+    {//cout << "pixel in: " << pixel[0] << "," << pixel[1] << " world in: " << world[0] << "," << world[1]<< endl;
+   	 if (!WCCSNLAxisLabellerWorldLabels) {
 
 // Pixel coordinates
 
-           if (WCCSNLAxisLabellerAbsolute) {
+   		 if (WCCSNLAxisLabellerAbsolute) {
 
 // abs
 
-              world[0] = pixel[0] + WCCSNLAxisLabellerUIBase;
-              world[1] = pixel[1] + WCCSNLAxisLabellerUIBase;
-           } else {
+   			 world[0] = pixel[0] + WCCSNLAxisLabellerUIBase;
+   			 world[1] = pixel[1] + WCCSNLAxisLabellerUIBase;
+   		 } else {
 
 // rel = abs - ref
 
-              world[0] = pixel[0] - WCCSNLAxisLabellerRefPix[0];
-              world[1] = pixel[1] - WCCSNLAxisLabellerRefPix[1];
-           }
-           break;
-        }
+   			 world[0] = pixel[0] - WCCSNLAxisLabellerRefPix[0];
+   			 world[1] = pixel[1] - WCCSNLAxisLabellerRefPix[1];
+   		 }
+   		 break;
+   	 }
 //
-	vPixelIn[0] = pixel[0];
-	vPixelIn[1] = pixel[1];
+   	 vPixelIn[0] = pixel[0];
+   	 vPixelIn[1] = pixel[1];
 
 // Convert absolute pixel to absolute world in native units of CS
 
@@ -330,55 +333,56 @@ cerr << "  pixel, world axes = " << WCCSNLAxisLabellerPixelAxes << WCCSNLAxisLab
 cerr << "Calling toWorld with " << endl;
 cerr << "  pixel, world = " << vPixelIn;
 */
-	if (WCCSNLAxisLabellerCoordinateSystem->toWorld(vWorldOut, vPixelIn)) { 
-//cerr << vWorldOut << endl;
-           if (WCCSNLAxisLabellerVelAxis != -1) {
-              frequency = vWorldOut[WCCSNLAxisLabellerVelAxis];
-           }
+   	 if (WCCSNLAxisLabellerCoordinateSystem->toWorld(vWorldOut, vPixelIn)) {
+//cerr << "vWorldOut: " <<vWorldOut << " WCCSNLAxisLabellerVelAxis: "<< WCCSNLAxisLabellerVelAxis << endl;
+   		 if (WCCSNLAxisLabellerVelAxis != -1) {
+   			 frequency = vWorldOut[WCCSNLAxisLabellerVelAxis];
+   		 }
 
 // Now if needed, make relative.  We use the reference value
 // for the spectral axis if velocity conversions are happening
 
-           if (!WCCSNLAxisLabellerAbsolute) {
-              if (WCCSNLAxisLabellerVelAxis != -1) {
-                 vWorldOut[WCCSNLAxisLabellerVelAxis] = WCCSNLAxisLabellerFreqRef;
-              }
-              WCCSNLAxisLabellerCoordinateSystem->makeWorldRelative(vWorldOut);
-           }
+   		 if (!WCCSNLAxisLabellerAbsolute) {
+   			 if (WCCSNLAxisLabellerVelAxis != -1) {
+   				 vWorldOut[WCCSNLAxisLabellerVelAxis] = WCCSNLAxisLabellerFreqRef;
+   			 }
+   			 WCCSNLAxisLabellerCoordinateSystem->makeWorldRelative(vWorldOut);
+   		 }
 
 // Assign output returned by nlfunc. 
 
-           world[0] = vWorldOut[0];
-           world[1] = vWorldOut[1];
+   		 world[0] = vWorldOut[0];
+   		 world[1] = vWorldOut[1];
 
 // Overwrite the value for the spectral axis if doing velocity conversions
 
-           if (WCCSNLAxisLabellerVelAxis != -1) {
+   		 if (WCCSNLAxisLabellerVelAxis != -1) {
 
 // Convert absolute frequency to absolute velocity
 
-              if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velocity, frequency)) {
-                 err = 3;
-              } else {
-                 world[WCCSNLAxisLabellerVelAxis] = velocity;
-              }
+   			 if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velocity, frequency)) {
+   				 err = 3;
+   			 } else {
+   				 world[WCCSNLAxisLabellerVelAxis] = velocity;
+   			 }
 
 // Now make relative if required; rel = abs - ref
 
-              if (!WCCSNLAxisLabellerAbsolute) {
-                 world[WCCSNLAxisLabellerVelAxis] -= WCCSNLAxisLabellerVelRef;
-              }
-           }
-   	} else {
-	  err = 3;
-	}
-	break;
-      }
+   			 if (!WCCSNLAxisLabellerAbsolute) {
+   				 world[WCCSNLAxisLabellerVelAxis] -= WCCSNLAxisLabellerVelRef;
+   			 }
+   		 }
+   	 } else {
+   		 err = 3;
+   	 }//cout << "pixel ou: " << pixel[0] << "," << pixel[1] << " world ou: " << world[0] << "," << world[1]<< endl;
+   	 break;
+    }
     default:
       err = 1;
     }
 //
     *ierr = err;
+    //cout << "pixel ou: " << pixel[0] << "," << pixel[1] << " world ou: " << world[0] << "," << world[1]<< endl;
   }
 }	// extern "C"
 
@@ -405,48 +409,48 @@ static void cpgsbox(float* blc, float* trc, char *idents, char *opt,
 
 Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev) 
 {
-  WorldCanvas *wc = ev.worldCanvas();
-  Bool dolist = wc->pixelCanvas()->supportsLists();
-  //wc->verifyPGFilterAlignment();
-  PixelCanvas *pc = wc->pixelCanvas();
+	WorldCanvas *wc = ev.worldCanvas();
+	Bool dolist = wc->pixelCanvas()->supportsLists();
+	//wc->verifyPGFilterAlignment();
+	PixelCanvas *pc = wc->pixelCanvas();
 
-  AttributeBuffer worldCanvasState;
-  if (dolist) {
+	AttributeBuffer worldCanvasState;
+	if (dolist) {
 
-// figure out if we can draw the cached list
+		// figure out if we can draw the cached list
 
-    Double linMinX = wc->linXMin();
-    Double linMaxX = wc->linXMax();
-    Double linMinY = wc->linYMin();
-    Double linMaxY = wc->linYMax();
-    uInt canvasDrawXSize = wc->canvasDrawXSize();
-    uInt canvasDrawYSize = wc->canvasDrawYSize();
-    uInt canvasDrawXOffset = wc->canvasDrawXOffset();
-    uInt canvasDrawYOffset = wc->canvasDrawYOffset();
-    uInt canvasXOffset = wc->canvasXOffset();
-    uInt canvasYOffset = wc->canvasYOffset();
-    uInt canvasXSize = wc->canvasXSize();
-    uInt canvasYSize = wc->canvasYSize(); 
+		Double linMinX = wc->linXMin();
+		Double linMaxX = wc->linXMax();
+		Double linMinY = wc->linYMin();
+		Double linMaxY = wc->linYMax();
+		uInt canvasDrawXSize = wc->canvasDrawXSize();
+		uInt canvasDrawYSize = wc->canvasDrawYSize();
+		uInt canvasDrawXOffset = wc->canvasDrawXOffset();
+		uInt canvasDrawYOffset = wc->canvasDrawYOffset();
+		uInt canvasXOffset = wc->canvasXOffset();
+		uInt canvasYOffset = wc->canvasYOffset();
+		uInt canvasXSize = wc->canvasXSize();
+		uInt canvasYSize = wc->canvasYSize();
     
 // store the parameters of this images
 
-    worldCanvasState.set("canvasDrawXSize", canvasDrawXSize);
-    worldCanvasState.set("canvasDrawYSize", canvasDrawYSize);
-    worldCanvasState.set("canvasDrawXOffset", canvasDrawXOffset);
-    worldCanvasState.set("canvasDrawYOffset", canvasDrawYOffset);
-    worldCanvasState.set("linXMin", linMinX);
-    worldCanvasState.set("linXMax", linMaxX);
-    worldCanvasState.set("linYMin", linMinY);
-    worldCanvasState.set("linYMax", linMaxY);
-    worldCanvasState.set("canvasXOffset", canvasXOffset);
-    worldCanvasState.set("canvasYOffset", canvasYOffset);
-    worldCanvasState.set("canvasXSize", canvasXSize);
-    worldCanvasState.set("canvasYSize", canvasYSize);
+		worldCanvasState.set("canvasDrawXSize", canvasDrawXSize);
+		worldCanvasState.set("canvasDrawYSize", canvasDrawYSize);
+		worldCanvasState.set("canvasDrawXOffset", canvasDrawXOffset);
+		worldCanvasState.set("canvasDrawYOffset", canvasDrawYOffset);
+		worldCanvasState.set("linXMin", linMinX);
+		worldCanvasState.set("linXMax", linMaxX);
+		worldCanvasState.set("linYMin", linMinY);
+		worldCanvasState.set("linYMax", linMaxY);
+		worldCanvasState.set("canvasXOffset", canvasXOffset);
+		worldCanvasState.set("canvasYOffset", canvasYOffset);
+		worldCanvasState.set("canvasXSize", canvasXSize);
+		worldCanvasState.set("canvasYSize", canvasYSize);
     
-    worldCanvasState.set("deviceBackgroundColor", 
-			 wc->pixelCanvas()->deviceBackgroundColor());
-    worldCanvasState.set("deviceForegroundColor",
-			 wc->pixelCanvas()->deviceForegroundColor());
+		worldCanvasState.set("deviceBackgroundColor",
+				wc->pixelCanvas()->deviceBackgroundColor());
+		worldCanvasState.set("deviceForegroundColor",
+				wc->pixelCanvas()->deviceForegroundColor());
 
     // dk note (12/03): DDs using this object and calling draw()
     // on it normally invoke invalidate() in their notifyUnregister(wch),
@@ -455,39 +459,39 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
     // caller of draw() to assure this object is invalidated before
     // the corresponding wc is destroyed.
 
-    if (itsValid && itsLastWorldCanvas->validList(itsDrawListNumber)) {
+		if (itsValid && itsLastWorldCanvas->validList(itsDrawListNumber)) {
 
-      if(itsLastWorldCanvas==wc &&
-         itsDrawStateBuffer.matches(worldCanvasState)) {
+			if(itsLastWorldCanvas==wc &&
+					itsDrawStateBuffer.matches(worldCanvasState)) {
 
-        // reuse applicable drawlist.
+				// reuse applicable drawlist.
 
-        wc->drawList(itsDrawListNumber);
-        return True;
-      }
+				wc->drawList(itsDrawListNumber);
+				return True;
+			}
 
-      // otherwise, delete the old drawlist.
+			// otherwise, delete the old drawlist.
 
-      invalidate();
-    }
+			invalidate();
+		}
 
-    // start a new list; save the new draw state.
+		// start a new list; save the new draw state.
 
-    itsDrawListNumber = wc->newList();
-    itsLastWorldCanvas = wc;
-    itsDrawStateBuffer = worldCanvasState;
-    itsValid = True;
-  }
+		itsDrawListNumber = wc->newList();
+		itsLastWorldCanvas = wc;
+		itsDrawStateBuffer = worldCanvasState;
+		itsValid = True;
+	}
 
- try {
+	try {
 
-// Get a copy of the CS
+		// Get a copy of the CS
   
-  CoordinateSystem cSys;
+		CoordinateSystem cSys;
   
-  if(useWCCS && wc->hasCS()) {
+		if(useWCCS && wc->hasCS()) {
   
-    // dk note:
+	 // dk note:
     // As of 9/07, the preferred usage for this class is to set useWCCS True.
     // If this is done, the labeller will use the CS of the WC on which it is
     // to draw for creating labels (modified as always according to user
@@ -502,118 +506,118 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
     // labelling features of this class have been ported there yet).
     
     
-    cSys = wc->coordinateSystem();
+			cSys = wc->coordinateSystem();
     
-    // Set proper formatting, etc. onto the labelling cSys
+			// Set proper formatting, etc. onto the labelling cSys
     
-    CoordinateUtil::setNiceAxisLabelUnits(cSys);  // (overkill?)
+			CoordinateUtil::setNiceAxisLabelUnits(cSys);  // (overkill?)
 
-    setSpectralState(cSys);
-    setDirectionState(cSys);  }
+			setSpectralState(cSys);
+			setDirectionState(cSys);
+		}
 
-  else {	// (the old-fashioned way: use externally-set CS for all).
+		else {	// (the old-fashioned way: use externally-set CS for all).
   
-    if(!hasCoordinateSystem()) return False;	// No CS set: can't draw.
+			if(!hasCoordinateSystem()) return False;	// No CS set: can't draw.
 
-    cSys = coordinateSystem();  }
+			cSys = coordinateSystem();
+		}
 
-
-    
 // We use the specAxis variable to trigger velocity conversions
 
-  Int specAxis = -1;
-  for (uInt i = 0; i < cSys.nCoordinates(); i++) {
-    switch(cSys.type(i)) {
-    case Coordinate::SPECTRAL:
-      {
+		Int specAxis = -1;
+		for (uInt i = 0; i < cSys.nCoordinates(); i++) {
+			switch(cSys.type(i)) {
+			case Coordinate::SPECTRAL: {
 
-// itsDoVelocity just tells us that the user has asked for
-// a km/s conformant spectral unit in the labeller (the CS state
-// is already set).  We now need to see if either of the first two display axes are
-// in fact Spectral.   specAxis = 0 or 1 will then 
-// trigger velocity conversions
+				// itsDoVelocity just tells us that the user has asked for
+				// a km/s conformant spectral unit in the labeller (the CS state
+				// is already set).  We now need to see if either of the first two display axes are
+				// in fact Spectral.   specAxis = 0 or 1 will then
+				// trigger velocity conversions
+				if (itsDoVelocity) {
+					specAxis = cSys.worldAxes(i)[0];
+					if (specAxis>1) {
+						specAxis = -1;     // Neither of display axes is spectral
+					}
+				}
 
-        if (itsDoVelocity) {
-           specAxis = cSys.worldAxes(i)[0];
-           if (specAxis>1) {
-              specAxis = -1;     // Neither of display axes is spectral
-           }
-        }
+// nlfunc needs these
 
-// nlfunc needs thse
-
-        WCCSNLAxisLabellerSpecCoordIdx = i;
-        WCCSNLAxisLabellerSpecCoord = cSys.spectralCoordinate(i);
+				WCCSNLAxisLabellerSpecCoordIdx = i;
+				WCCSNLAxisLabellerSpecCoord = cSys.spectralCoordinate(i);
 
 // We are going to need the velocity at the reference value
 // so we can convert relative velocity back to frequency
 
-        if (specAxis != -1) {
-           Double velRef;
-           if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velRef, 
-                       WCCSNLAxisLabellerSpecCoord.referenceValue()[0])) {
-              return False;
-           }
-           WCCSNLAxisLabellerVelRef = velRef;
-           WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
-        }
-      }
-      break;
-    default:
-      break;
-    }
-  }
+				if (specAxis != -1) {
+					Double velRef;
+					if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velRef,
+							WCCSNLAxisLabellerSpecCoord.referenceValue()[0])) {
+						return False;
+					}
+					WCCSNLAxisLabellerVelRef = velRef;
+					WCCSNLAxisLabellerFreqRef = WCCSNLAxisLabellerSpecCoord.referenceValue()(0);
+				}
+			}
+			break;
+			default:
+				break;
+			}
+		}
 //
-  WCCSNLAxisLabellerVelAxis = specAxis;  
-  WCCSNLAxisLabellerAbsolute = itsAbsolute;      // From WCCSAxisLabeller
-  WCCSNLAxisLabellerWorldLabels = itsWorldAxisLabels;
-  WCCSNLAxisLabellerUIBase = uiBase();
-	// Determines whether 'Absolute Pixel' labelling is from 0 or 1.
+		WCCSNLAxisLabellerVelAxis = specAxis;
+		WCCSNLAxisLabellerAbsolute = itsAbsolute;      // From WCCSAxisLabeller
+		WCCSNLAxisLabellerWorldLabels = itsWorldAxisLabels;
+		WCCSNLAxisLabellerUIBase = uiBase();
+		// Determines whether 'Absolute Pixel' labelling is from 0 or 1.
 
 // Set up the toMix world ranges
 
-  const uInt nWorld = cSys.nWorldAxes();
-  WCCSNLAxisLabellerWorldMin.resize(nWorld);
-  WCCSNLAxisLabellerWorldMax.resize(nWorld);
-  WCCSNLAxisLabellerWorldMin = cSys.worldMixMin();
-  WCCSNLAxisLabellerWorldMax = cSys.worldMixMax();
+		const uInt nWorld = cSys.nWorldAxes();
+		WCCSNLAxisLabellerWorldMin.resize(nWorld);
+		WCCSNLAxisLabellerWorldMax.resize(nWorld);
+		WCCSNLAxisLabellerWorldMin = cSys.worldMixMin();
+		WCCSNLAxisLabellerWorldMax = cSys.worldMixMax();
 
 // Get some other bits and pieces
 
-  Vector<Double> refPixel = cSys.referencePixel();
-  WCCSNLAxisLabellerRefPix[0] = refPixel[0];
-  WCCSNLAxisLabellerRefPix[1] = refPixel[1];
+		Vector<Double> refPixel = cSys.referencePixel();
+		WCCSNLAxisLabellerRefPix[0] = refPixel[0];
+		WCCSNLAxisLabellerRefPix[1] = refPixel[1];
 
 // Set first two axes as having a world coordinate specified.
 // The rest have a pixel coordinate given by the removed pixel 
 // axes replacement value
 
-  WCCSNLAxisLabellerWorldAxes.resize(nWorld);
-  WCCSNLAxisLabellerWorldAxes = False;
-  WCCSNLAxisLabellerWorldAxes[0] = WCCSNLAxisLabellerWorldAxes[1] = True;
+		WCCSNLAxisLabellerWorldAxes.resize(nWorld);
+		WCCSNLAxisLabellerWorldAxes = False;
+		WCCSNLAxisLabellerWorldAxes[0] = WCCSNLAxisLabellerWorldAxes[1] = True;
 
 // Assign reference to CS for nlfunc
 
-  WCCSNLAxisLabellerCoordinateSystem = &cSys;
+		WCCSNLAxisLabellerCoordinateSystem = &cSys;
 //
-  float blc[2];
-  float trc[2];
-  char opt[] = "  ";
-  int labctl = 0, labden=0, ci[7] = {16, 17, 18, 19, 20, 21, 22};
-  int gcode[2] = {0, 0};
-  double tiklen = 0.00;
-  int ng1 = 0;
-  double grid1[1] = {0};
-  int ng2 = 0;
-  double grid2[1] = {0};
-  int doeq = 0;
-  static const int NLC=10, NLI=10, NLD=10, NCACHE=100;
-  int nlc=NLC, nli=NLI, nld=NLD, nc=NCACHE, ic=-1;
-  char nlcprm[NLC+1];
-  int nliprm[NLI];
-  double nldprm[NLD];
-  double cache[4*(NCACHE+1)];	// cache indexes go from 0 to NCACHE.
-  int ierr;
+		float blc[2];
+		float trc[2];
+		char opt[] = "  ";
+		int labctl = 0, labden=0, ci[7] = {16, 17, 18, 19, 20, 21, 22};
+		int gcode[2] = {0, 0};
+		double tiklen = 0.00;
+		int ng1 = 0;
+		double grid1[1] = {0};
+		int ng2 = 0;
+		double grid2[1] = {0};
+		int doeq = 0;
+		static const int NLC=10, NLI=10, NLD=10, NCACHE=100;
+		int nlc=NLC, nli=NLI, nld=NLD, nc=NCACHE, ic=-1;
+		char nlcprm[NLC+1];
+		int nliprm[NLI];
+		double nldprm[NLD];
+		double cache[4*(NCACHE+1)];	// cache indexes go from 0 to NCACHE.
+		int ierr;
+		float cpgp_disp, cpgp_coord, cpgp_fjust;
+		char cpgp_side[1];
 
 // Set up the cartesian coordinate corners.  These are in
 // reality image pixel coordinates because the coordinate
@@ -621,244 +625,285 @@ Bool WCCSNLAxisLabeller::draw(const WCRefreshEvent &ev)
 // For "edge"    min = -0.5, max = n + 0.5
 // For "center"  min =  0.0, max = n
 
-  blc[0] = wc->linXMin();
-  blc[1] = wc->linYMin();
-  trc[0] = wc->linXMax();
-  trc[1] = wc->linYMax();
-  labctl = 0;
-  nlcprm[0] = '\0';
+		blc[0] = wc->linXMin();
+		blc[1] = wc->linYMin();
+		trc[0] = wc->linXMax();
+		trc[1] = wc->linYMax();
+		labctl = 0;
+		nlcprm[0] = '\0';
   
 // Figure out reasonable default for opt to indicate labelling
 
-  for (uInt i = 0; i < 2; i++) {
-    WCCSNLAxisLabellerLongAxis = -1;
-    WCCSNLAxisLabellerLatAxis = -1;
-    Int coordinate, axisInCoord;
-    cSys.findPixelAxis(coordinate, axisInCoord, i);
+		for (uInt i = 0; i < 2; i++) {
+			WCCSNLAxisLabellerLongAxis = -1;
+			WCCSNLAxisLabellerLatAxis = -1;
+			Int coordinate, axisInCoord;
+			cSys.findPixelAxis(coordinate, axisInCoord, i);
 //
-    opt[i] = ' ';
+			opt[i] = ' ';
 //
-    Coordinate::Type cType = cSys.type(coordinate);
-    if (cType==Coordinate::DIRECTION) {
-	DirectionCoordinate dcoord = cSys.directionCoordinate(coordinate);
-	MDirection::Types mdirtype;
-        dcoord.getReferenceConversion(mdirtype);
-	MDirection::GlobalTypes globtype = MDirection::globalType(mdirtype);
-	if (axisInCoord==0) {
-	  WCCSNLAxisLabellerLongAxis = i;
-	  if (globtype==MDirection::GRADEC) {
-             if (itsAbsolute) {
-                opt[i] = 'G'; // hms [0, 24)
-             } else {
-                opt[i] = ' '; // plain numeric
-             }
-             if (!itsWorldAxisLabels) opt[i] = ' ';
-	  } else if (globtype==MDirection::GHADEC) {
-             opt[i] = ' '; // decimal - needs to be 'T' after fixing units
-             if (!itsWorldAxisLabels) opt[i] = ' ';
-	  } else if (globtype==MDirection::GAZEL || 
-	             globtype==MDirection::GLONGLAT) {
-             if (itsAbsolute) {
-                opt[i] = 'A'; // decimal degrees [0, 360)
-             } else {
-                opt[i] = 'B'; // (-180,180]
-             }
-             if (!itsWorldAxisLabels) opt[i] = ' ';
-          }
-	} else if (axisInCoord==1) {
-	  WCCSNLAxisLabellerLatAxis = i;
-	  if (globtype==MDirection::GRADEC || globtype==MDirection::GHADEC) {
-             if (itsAbsolute) {
-                opt[i] = 'E'; // sexigesimal degrees (-180, 180]
-             } else {
-                opt[i] = ' '; // plain numeric
-             }
-             if (!itsWorldAxisLabels) opt[i] = ' ';
-	  } else if (globtype==MDirection::GAZEL || 
-	             globtype==MDirection::GLONGLAT) {
-             opt[i] = 'B'; // decimal degrees (-180, 180]
-             if (!itsWorldAxisLabels) opt[i] = ' ';
-	  }
-	}
-    }
-  }
+			Coordinate::Type cType = cSys.type(coordinate);
+			if (cType==Coordinate::DIRECTION) {
+				DirectionCoordinate dcoord = cSys.directionCoordinate(coordinate);
+				MDirection::Types mdirtype;
+				dcoord.getReferenceConversion(mdirtype);
+				MDirection::GlobalTypes globtype = MDirection::globalType(mdirtype);
+				if (axisInCoord==0) {
+					WCCSNLAxisLabellerLongAxis = i;
+					if (globtype==MDirection::GRADEC) {
+						if (itsAbsolute) {
+							opt[i] = 'G'; // hms [0, 24)
+						} else {
+							opt[i] = ' '; // plain numeric
+						}
+						if (!itsWorldAxisLabels) opt[i] = ' ';
+					} else if (globtype==MDirection::GHADEC) {
+						opt[i] = ' '; // decimal - needs to be 'T' after fixing units
+						if (!itsWorldAxisLabels) opt[i] = ' ';
+					} else if (globtype==MDirection::GAZEL ||
+							globtype==MDirection::GLONGLAT) {
+						if (itsAbsolute) {
+							opt[i] = 'A'; // decimal degrees [0, 360)
+						} else {
+							opt[i] = 'B'; // (-180,180]
+						}
+						if (!itsWorldAxisLabels) opt[i] = ' ';
+					}
+				} else if (axisInCoord==1) {
+					WCCSNLAxisLabellerLatAxis = i;
+					if (globtype==MDirection::GRADEC || globtype==MDirection::GHADEC) {
+						if (itsAbsolute) {
+							opt[i] = 'E'; // sexigesimal degrees (-180, 180]
+						} else {
+							opt[i] = ' '; // plain numeric
+						}
+						if (!itsWorldAxisLabels) opt[i] = ' ';
+					} else if (globtype==MDirection::GAZEL ||
+							globtype==MDirection::GLONGLAT) {
+						opt[i] = 'B'; // decimal degrees (-180, 180]
+						if (!itsWorldAxisLabels) opt[i] = ' ';
+					}
+				}
+			}
+		}
 //
-  wc->setColor(wc->getWorldForegroundColor());
-  wc->pixelCanvas()->setCapStyle(Display::CSButt);
-  wc->pixelCanvas()->setJoinStyle(Display::JSMiter);
+		wc->setColor(wc->getWorldForegroundColor());
+		wc->pixelCanvas()->setCapStyle(Display::CSButt);
+		wc->pixelCanvas()->setJoinStyle(Display::JSMiter);
 
-  // grid type options
-  String stemp = xGridType();
-  if (stemp == "Tick marks") {
-    gcode[0] = 1;
-  } else if (stemp == "Full grid") {
-    gcode[0] = 2;
-  } 
-  stemp = yGridType();
-  if (stemp == "Tick marks") {
-    gcode[1] = 1;
-  } else if (stemp == "Full grid") {
-    gcode[1] = 2;
-  }
+		// grid type options
+		String stemp = xGridType();
+		if (stemp == "Tick marks") {
+			gcode[0] = 1;
+		} else if (stemp == "Full grid") {
+			gcode[0] = 2;
+		}
+		stemp = yGridType();
+		if (stemp == "Tick marks") {
+			gcode[1] = 1;
+		} else if (stemp == "Full grid") {
+			gcode[1] = 2;
+		}
 
-  // tick length
-  tiklen = (Double)tickLength();
+		// tick length
+		tiklen = (Double)tickLength();
   
-  // colors
-  Float r, g, b;
-  pc->getColorComponents(xGridColor(), r, g, b);
-  cpgscr(16, r, g, b);
-  pc->getColorComponents(yGridColor(), r, g, b);
-  cpgscr(17, r, g, b);
-  pc->getColorComponents(xAxisTextColor(), r, g, b);
-  cpgscr(18, r, g, b);
-  pc->getColorComponents(yAxisTextColor(), r, g, b);
-  cpgscr(19, r, g, b);
-  pc->getColorComponents(xAxisTextColor(), r, g, b);
-  cpgscr(20, r, g, b);
-  pc->getColorComponents(yAxisTextColor(), r, g, b);
-  cpgscr(21, r, g, b);
-  pc->getColorComponents(titleTextColor(), r, g, b);
-  cpgscr(22, r, g, b);
-  pc->getColorComponents(plotOutlineColor(), r, g, b);
-  cpgscr(23, r, g, b);
-  pc->getColorComponents("background", r, g, b);
-  cpgscr(24, r, g, b);
+		// colors
+		Float r, g, b;
+		pc->getColorComponents(xGridColor(), r, g, b);
+		cpgscr(16, r, g, b);
+		pc->getColorComponents(yGridColor(), r, g, b);
+		cpgscr(17, r, g, b);
+		pc->getColorComponents(xAxisTextColor(), r, g, b);
+		cpgscr(18, r, g, b);
+		pc->getColorComponents(yAxisTextColor(), r, g, b);
+		cpgscr(19, r, g, b);
+		pc->getColorComponents(xAxisTextColor(), r, g, b);
+		cpgscr(20, r, g, b);
+		pc->getColorComponents(yAxisTextColor(), r, g, b);
+		cpgscr(21, r, g, b);
+		pc->getColorComponents(titleTextColor(), r, g, b);
+		cpgscr(22, r, g, b);
+		pc->getColorComponents(plotOutlineColor(), r, g, b);
+		cpgscr(23, r, g, b);
+		pc->getColorComponents("background", r, g, b);
+		cpgscr(24, r, g, b);
 
-  // width
-  pc->setLineWidth(lineWidth());
-  uInt nl = 80;
-  char *idents = new Char[nl * 3];
-  uInt ididx;
+		// width
+		pc->setLineWidth(lineWidth());
+		uInt nl = 80;
+		char *idents = new Char[nl * 3];
+		uInt ididx;
   
-  String xAxTxt=xAxisText(wc),
-         yAxTxt=yAxisText(wc);
+		String xAxTxt=xAxisText(wc),
+				 yAxTxt=yAxisText(wc);
   
-  strncpy(idents + 0, xAxTxt.chars(), nl);
-  for (ididx = xAxTxt.length(); ididx < nl; ididx++) {
-    idents[0 + ididx] = 32;
-  }
-  strncpy(idents + nl, yAxTxt.chars(), nl);
-  for (ididx = yAxTxt.length(); ididx < nl; ididx++) {
-    idents[nl + ididx] = 32;
-  }
-  strncpy(idents + 2*nl, titleText().chars(), nl);
-  for (ididx = titleText().length(); ididx < nl; ididx++) {
-    idents[2*nl + ididx] = 32;
-  }
+		strncpy(idents + 0, xAxTxt.chars(), nl);
+		for (ididx = xAxTxt.length(); ididx < nl; ididx++) {
+			idents[0 + ididx] = 32;
+		}
+		strncpy(idents + nl, yAxTxt.chars(), nl);
+		for (ididx = yAxTxt.length(); ididx < nl; ididx++) {
+			idents[nl + ididx] = 32;
+		}
+		strncpy(idents + 2*nl, titleText().chars(), nl);
+		for (ididx = titleText().length(); ididx < nl; ididx++) {
+			idents[2*nl + ididx] = 32;
+		}
 //
-  cpgsch(charSize());
-  stemp = charFont();
-  if (stemp == "roman") {
-      cpgscf(2);
-  } else if (stemp == "italic") {
-    cpgscf(3);
-  } else if (stemp == "script") {
-    cpgscf(4);
-  } else { // "normal" or anything else
-    cpgscf(1);
-  }
-  stemp = labelPosition();
-  if (stemp == "Auto") {
-    labctl = 0;
-  } else if (stemp == "bottom-left") {
-    labctl = 21;
-  } else if (stemp == "bottom-right") {
-    labctl = 2001;
-  } else if (stemp == "top-right") {
-    labctl = 2100;
-  } else if (stemp == "top-left") {
-    labctl = 120;
-  } else {
-    labctl = 0;
-  }
+		cpgsch(charSize());
+		stemp = charFont();
+		if (stemp == "roman") {
+			cpgscf(2);
+		} else if (stemp == "italic") {
+			cpgscf(3);
+		} else if (stemp == "script") {
+			cpgscf(4);
+		} else { // "normal" or anything else
+			cpgscf(1);
+		}
 
+		// define the x-label position and the y-label position
+		// also define the z-label position for "outside"
+		stemp = labelPosition();
+		if (stemp == "Auto") {
+			labctl = 0;
+			cpgp_side[0]='B'; cpgp_disp=3.0; cpgp_coord=0.0; cpgp_fjust=0.5; // BL position for z-axis
+		} else if (stemp == "bottom-left") {                                // label "outside"
+			labctl = 21;
+			cpgp_side[0]='B'; cpgp_disp=3.0; cpgp_coord=0.0; cpgp_fjust=0.5; // BL position for z-axis
+		} else if (stemp == "bottom-right") {                               // label "outside"
+			labctl = 2001;
+			cpgp_side[0]='B'; cpgp_disp=3.0; cpgp_coord=1.0; cpgp_fjust=0.5; // BR position for z-axis
+		} else if (stemp == "top-right") {                                  // label "outside"
+			labctl = 2100;
+			cpgp_side[0]='T'; cpgp_disp=2.0; cpgp_coord=1.0; cpgp_fjust=0.5; // TR position for z-axis
+		} else if (stemp == "top-left") {                                   // label "outside"
+			labctl = 120;
+			cpgp_side[0]='T'; cpgp_disp=2.0; cpgp_coord=0.0; cpgp_fjust=0.5; // TL position for z-axis
+		} else {                                                            // label "outside"
+			labctl = 0;
+			cpgp_side[0]='B'; cpgp_disp=3.0; cpgp_coord=0.0; cpgp_fjust=0.5; // default=BL position for z-axis
+		}                                                                   // label "outside"
 
-  
+		stemp = zLabelPos();
+		if (stemp=="inside-bl"){
+			cpgp_side[0]='B'; cpgp_disp=-1.75; cpgp_coord=0.05; cpgp_fjust=0.0;
+		}
+		else if (stemp=="inside-br"){
+			cpgp_side[0]='B'; cpgp_disp=-1.75; cpgp_coord=0.95; cpgp_fjust=1.0;
+		}
+		else if (stemp=="inside-tl"){
+			cpgp_side[0]='T'; cpgp_disp=-1.75; cpgp_coord=0.05; cpgp_fjust=0.0;
+		}
+		else if (stemp=="inside-tr"){
+			cpgp_side[0]='T'; cpgp_disp=-1.75; cpgp_coord=0.95; cpgp_fjust=1.0;
+		}
+		else if (stemp=="outside-bl"){
+			cpgp_side[0]='B'; cpgp_disp=3.0; cpgp_coord=0.0; cpgp_fjust=0.5;
+		}
+		else if (stemp=="outside-br"){
+			cpgp_side[0]='B'; cpgp_disp=3.0; cpgp_coord=1.0; cpgp_fjust=0.5;
+		}
+		else if (stemp=="outside-tl"){
+			cpgp_side[0]='T'; cpgp_disp=2.0; cpgp_coord=0.0; cpgp_fjust=0.5;
+		}
+		else if (stemp=="outside-tr"){
+			cpgp_side[0]='T'; cpgp_disp=2.0; cpgp_coord=1.0; cpgp_fjust=0.5;
+		}
+		else if (stemp=="inside"){
+			cpgp_side[0]='T'; cpgp_disp=-1.75; cpgp_coord=0.95; cpgp_fjust=1.0;
+		}
+
 // Do the real work
-  cpgsbox(blc, trc, idents, opt, labctl, labden, ci, gcode,
-	  tiklen, ng1, grid1, ng2, grid2, doeq, nlfunc, 
-	  nlc, nli, nld, nlcprm, nliprm, nldprm,
-	  nc, ic, cache, ierr);
+		cpgsbox(blc, trc, idents, opt, labctl, labden, ci, gcode,
+				tiklen, ng1, grid1, ng2, grid2, doeq, nlfunc,
+				nlc, nli, nld, nlcprm, nliprm, nldprm,
+				nc, ic, cache, ierr);
 //  
-  if (plotOutline()) {
-    cpgsci(23);
-    cpgbox("BC", 0.0, 0, "BC", 0.0, 0);
-  }
+		if (plotOutline()) {
+			cpgsci(23);
+			cpgbox("BC", 0.0, 0, "BC", 0.0, 0);
+		}
 //
 
-  if ( zLabelType() != "none" && ! display::state::instance().fileOutputMode( ) ) {
+		if ( zLabelType() != "none" && ! display::state::instance().fileOutputMode( ) ) {
+			// store bgcolor
+			Int bgcol;
+			cpgqtbg(&bgcol);
+			cpgstbg(24);
 
-    // store bgcolor
-    Int bgcol;
-    cpgqtbg(&bgcol);
-    cpgstbg(24);
+			String zLabel;
+			if (zLabelType() == "pixel") {
+				if (itsZIndex > -1) {
+					ostringstream oss;
+					oss << "Channel " << (itsZIndex+uiBase());
+					zLabel = String(oss);
 
-    String zLabel;    
-    if (zLabelType() == "pixel") {
-      if (itsZIndex > -1) {
-	ostringstream oss;
-	oss << "Channel " << (itsZIndex+uiBase());
-	String zlab(oss);
-	cpgmtxt("T",-1.75,0.95,1.0,zlab.chars());
-      }
-    } else if (zLabelType() == "world") {
-      CoordinateSystem cs = coordinateSystem();
-	// itsCoordinateSystem used advisedly here even when useWCCS==True:
-	// itsCoordinateSystem may have better information about our owner's
-	// 'movie axis' than the WC CS (esp. in the case where our 'owner'
-	// is an Image PADD with a spectral axis, but the 'CS master' (which
-	// sets the WC CS) does _not_ have a spectral axis).
-      if (cs.nWorldAxes() > 2) {
-	Vector<Double> tPix,tWrld;
+					// plot the z-axis label
+					cpgmtxt(cpgp_side, cpgp_disp, cpgp_coord, cpgp_fjust, zLabel.chars());
 
-// We have a removed pixel axis for the movie axis....
-// The formatter for any SpectralCoordinate has already been
-// set up to use km/s or Hz conformant units according to
-// itsSpectralUnit
+				}
+			} else if (zLabelType() == "world") {
+				CoordinateSystem cs = coordinateSystem();
+		  // itsCoordinateSystem used advisedly here even when useWCCS==True:
+		  // itsCoordinateSystem may have better information about our owner's
+		  // 'movie axis' than the WC CS (esp. in the case where our 'owner'
+		  // is an Image PADD with a spectral axis, but the 'CS master' (which
+		  // sets the WC CS) does _not_ have a spectral axis).
+				if (cs.nWorldAxes() > 2) {
+					Vector<Double> tPix,tWrld;
 
-        tPix = cs.referencePixel();
-	String tStr;
-        if (!cs.toWorld(tWrld,tPix)) {
-        } else {
-           zLabel = cs.format(tStr, Coordinate::DEFAULT, tWrld(2), 2);
-           //cout << "zlabel: " << zLabel << " tStr: "<<tStr<< " World value: "<< tWrld(2)<<endl;
-        }
-//
-	zLabel += " ";
-	zLabel += tStr;
-	cpgmtxt("T",-1.75,0.95,1.0,zLabel.chars());
-      }
-    }
-    cpgstbg(bgcol);
-  }
+			  // We have a removed pixel axis for the movie axis....
+			  // The formatter for any SpectralCoordinate has already been
+			  // set up to use km/s or Hz conformant units according to
+			  // itsSpectralUnit
+
+					tPix = cs.referencePixel();
+					String tStr;
+					if (!cs.toWorld(tWrld,tPix)) {
+					} else {
+						zLabel = cs.format(tStr, Coordinate::DEFAULT, tWrld(2), 2);
+						//cout << "zlabel: " << zLabel << " tStr: "<<tStr<< " World value: "<< tWrld(2)<<endl;
+					}
+					//
+					zLabel += " ";
+					zLabel += tStr;
+
+					// plot the z-axis label
+					cpgmtxt(cpgp_side, cpgp_disp, cpgp_coord, cpgp_fjust, zLabel.chars());
+
+				}
+			}
+			cpgstbg(bgcol);
+		}
 
 
-  delete [] idents;
+		delete [] idents;
  
- }	// try
+	}	// try
  
- catch (const casa::AipsError& err) {
-   //cerr<<"WCN Err:"<<err.getMesg()<<endl;	//#diag
-   if (dolist) {
-     wc->endList();	// At least clean up drawlist state...
-     invalidate();  }
-   throw;  }		//  ...before passing exception on.
+	catch (const casa::AipsError& err) {
+		//cerr<<"WCN Err:"<<err.getMesg()<<endl;	//#diag
+		if (dolist) {
+			wc->endList();	// At least clean up drawlist state...
+			invalidate();  }
+		throw;  }		//  ...before passing exception on.
 
- catch (...) {
-   //cerr<<"WCN Err"<<endl;			//#diag
-   if (dolist) {
-     wc->endList();
-     invalidate();  }
-   throw;  }
+	catch (...) {
+		//cerr<<"WCN Err"<<endl;			//#diag
+		if (dolist) {
+			wc->endList();
+			invalidate();  }
+		throw;  }
 
 
- if (dolist) {
-   wc->endList();                      // finish the drawlist
-   wc->drawList(itsDrawListNumber);    // draw the new drawlist
- }
+	if (dolist) {
+		wc->endList();                      // finish the drawlist
+		wc->drawList(itsDrawListNumber);    // draw the new drawlist
+	}
 
- return True;
+	return True;
 }
 
 
