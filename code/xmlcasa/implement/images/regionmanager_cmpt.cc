@@ -33,7 +33,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Regions/ImageRegion.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
-#include <imageanalysis/Annotations/AsciiAnnotationList.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/namespace.h>
 #include <images/Regions/WCUnion.h>
@@ -523,7 +523,7 @@ regionmanager::fromtextfile(
     	    const CoordinateSystem x = itsRegMan->getcoordsys();
     	    coordsys = x;
     	}
-    	AsciiAnnotationList annList(filename, coordsys, myShape);
+    	RegionTextList annList(filename, coordsys, myShape);
 		Record regRec = annList.regionAsRecord();
     	return fromRecord(regRec);
     }
@@ -561,7 +561,7 @@ regionmanager::fromtext(
     	    const CoordinateSystem x = itsRegMan->getcoordsys();
     	    coordsys = x;
     	}
-    	AsciiAnnotationList annList(coordsys, text, myShape);
+    	RegionTextList annList(coordsys, text, myShape);
 		Record regRec = annList.regionAsRecord();
     	return fromRecord(regRec);
     }

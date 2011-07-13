@@ -24,7 +24,7 @@
 //#
 
 #include <casa/aips.h>
-#include <imageanalysis/Annotations/AsciiAnnotationList.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <casa/OS/EnvVar.h>
 
@@ -45,7 +45,7 @@ int main () {
 		    + "/data/regression/unittest/imageanalysis/Annotations/goodAsciiAnnotationsFile.txt";
 		delete [] parts;
 
-		AsciiAnnotationList list(
+		RegionTextList list(
 			goodFile, csys,
 			IPosition(0, csys.nPixelAxes())
 		);

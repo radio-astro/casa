@@ -34,7 +34,7 @@
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/TableRecord.h>
 
-#include <imageanalysis/Annotations/AsciiAnnotationList.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 
 #include <casa/namespace.h>
 
@@ -317,13 +317,23 @@ void CasacRegionManager::_setRegion(
 		catch(AipsError x) {
 		}
 		try {
-			AsciiAnnotationList annList(regionName, *itsCSys, imShape);
+			RegionTextList annList(regionName, *itsCSys, imShape);
 			regionRecord = annList.regionAsRecord();
 			diagnostics = "Region read from region text file " + regionName;
 		}
 		catch (AipsError x) {
 			*itsLog << LogIO::SEVERE << regionName
 				+ " is neither a valid binary region file, or a valid region text file.";
+		}
+	}
+	else if (regionName.contains(regionText)) {
+		try {
+			RegionTextList annList(*itsCSys, regionName, imShape);
+			regionRecord = annList.regionAsRecord();
+			diagnostics = "Region read from text string " + regionName;
+		}
+		catch (AipsError x) {
+			*itsLog << x.getMesg() << LogIO::EXCEPTION;
 		}
 	}
 	else if (regionName.matches(image) || ! imageName.empty()) {
@@ -359,16 +369,6 @@ void CasacRegionManager::_setRegion(
 		catch (AipsError) {
 			*itsLog << "Unable to open region file or region table description "
 					<< region << " in image " << imagename << LogIO::EXCEPTION;
-		}
-	}
-	else if (regionName.contains(regionText)) {
-		try {
-			AsciiAnnotationList annList(*itsCSys, regionName, imShape);
-			regionRecord = annList.regionAsRecord();
-			diagnostics = "Region read from text string " + regionName;
-		}
-		catch (AipsError x) {
-			*itsLog << x.getMesg() << LogIO::EXCEPTION;
 		}
 	}
 	else {

@@ -18,7 +18,7 @@ tAnnRotBox
 tAnnSymbol
 tAnnText
 tAnnVector
-tAsciiAnnotationList
+tRegionTextList
 )
 
 foreach (test ${tests})
