@@ -168,18 +168,26 @@
                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
 
        modimage -- Model image (I only) for setting the model visibilities.
-              It is recommended to use modimage for sources that are resolved
-              by the observation, but the Butler-JPL-Horizons standard supplies
-              a basic model of what several Solar System objects look like.
-              default: '' means use fluxdensity instead of modimage.  Each
-              field must be done separately.  The flux density of the image
-              will be scaled from the frequency in the model to that actually
-              used (ignoring fluxdensity), unless fluxdensity &gt;= 0 (or
-              fluxdensity[0] &gt;= 0).  If fluxdensity([0]) is 0.0, the image's
-              flux density will be used.  If fluxdensity([0]) &gt; 0.0, it will
-              be used.  Both the amplitude and phase are calculated.  At the
-              AOC or CV, the models are located in
-              casa['dirs']['data'] + '/nrao/VLA/CalModels/', e.g.
+              modimage can be a cube, and its channels do not have to exactly
+              match those of vis.  It is recommended to use modimage for
+              sources that are resolved by the observation, but the
+              Butler-JPL-Horizons standard supplies a basic model of what
+              several Solar System objects look like.  default: '': do not use
+              a model image.
+       
+              Each field must be done separately when using a model image.  The
+              flux density of the image will be scaled from the frequency in
+              the model to that actually used (ignoring fluxdensity), unless
+              fluxdensity &gt;= 0 (or fluxdensity[0] &gt;= 0).  If
+              fluxdensity([0]) is 0.0, the image's flux density will be used.
+              If fluxdensity([0]) &gt; 0.0, it will be used (and spix and
+              reffreq if modimage is not a cube).  Since the spectral index
+              usually varies with direction, applying a single spectral index
+              to a 2D modimage is typically not as good as using a cube.
+
+              Both the amplitude and phase are calculated.  At the AOC or CV,
+              the models are located in casa['dirs']['data']
+              + '/nrao/VLA/CalModels/', e.g.
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im
                    lib64
 
