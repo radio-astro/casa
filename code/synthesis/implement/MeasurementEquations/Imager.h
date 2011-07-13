@@ -59,6 +59,7 @@ class PBMath;
 class MeasurementSet;
 class MFrequency;
 class File;
+class FluxStandard;
 class VPSkyJones;
 class EPJones;
 class ViewerProxy;
@@ -458,7 +459,8 @@ class Imager
 		    const Vector<String>& images,
 		    const Vector<Int>& fieldids);
   
-  // Fourier transform the model and componentlist
+  // Fourier transform the model and componentlist.
+  // Returns its nominal success value.
   Bool ft(const Vector<String>& model, const String& complist,
 	  Bool incremental=False);
 
@@ -468,7 +470,6 @@ class Imager
   Bool setjy(const Vector<Int>& fieldid, const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
-
   
   //Setjy with model image. If chanDep=True then the scaling is calulated on a 
   //per channel basis for the model image...otherwise the whole spw get the same scaling
@@ -477,7 +478,9 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const String& model,
 	     const Vector<Double>& fluxDensity, const String& standard, 
-	     const Bool chanDep=False);
+	     const Bool chanDep=False, const Double spix=0.0,
+             const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
+                                                  MFrequency::LSRK));
 
   // Make an empty image
   Bool make(const String& model);
@@ -715,6 +718,42 @@ protected:
 
   // names of flux scale images
   Bool writeFluxScales(const Vector<String>& fluxScaleNames);
+
+  // Helper functions to hide some setjy code.
+  Unit sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
+                      Vector<Vector<Flux<Double> > >& returnFluxErrs,
+                      Vector<String>& tempCLs,
+                      Vector<Vector<MFrequency> >& mfreqs,
+                      const ROMSSpWindowColumns& spwcols, const uInt nspws,
+                      const Vector<Int>& selToRawSpwIds, const Bool chanDep);
+  // Returns whether it might have made any visibilities.
+  Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
+                             const Int rawspwid, const Int fldid,
+                             const String& clname);
+  // Returns whether it found a source.
+  Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
+                       Vector<Vector<Flux<Double> > >& returnFluxes,
+                       Vector<Vector<Flux<Double> > >& returnFluxErrs,
+                       Vector<String>& tempCLs, Vector<Double>& fluxUsed,
+                       String& fluxScaleName,
+                       const Vector<Vector<MFrequency> >& mfreqs,
+                       const String& model, const String& fieldName, 
+                       const ROMSColumns& msc, const Int fldid,
+                       const MDirection& fieldDir, const String& standard);
+  // Returns NULL if no image is prepared.
+  TempImage<Float>* sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
+                                  Vector<Double>& fluxUsed, const String& model,
+                                  const ROMSSpWindowColumns& spwcols,
+                                  const Int rawspwid, const Bool chanDep,
+                                  const Vector<Vector<MFrequency> >& mfreqs,
+                                  const uInt selspw, const String& fieldName,
+                                  const MDirection& fieldDir, const Unit& freqUnit,
+                                  const Vector<Double>& fluxdens,
+                                  const Bool precompute, const Double spix,
+                                  const MFrequency& reffreq);
+  // Returns True or throws up.
+  Bool sjy_regridCubeChans(TempImage<Float>* tmodimage,
+                           PagedImage<Float>& modimage, Int freqAxis);
 
   String imageName();
 
