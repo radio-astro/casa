@@ -25,7 +25,6 @@ set( CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/install )
 include( config )
 include( ui )
 include( target )
-include( UsePrivatePath )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 3 )
@@ -55,9 +54,7 @@ else()
     set( SO so )
 endif()
 
-#message("before project CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 project( CASA C CXX Fortran )
-#message("after project CMAKE_INSTALL_PREFIX=" ${CMAKE_INSTALL_PREFIX})
 
 # C is enabled because 
 # - FindQt4.cmake requires it (bug)
@@ -87,6 +84,7 @@ if( CMAKE_BUILD_TYPE STREQUAL Debug )
   set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
 endif()
 
+include( UsePrivatePath )
 if( NOT RE_CMAKE )
     string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
 endif()
@@ -194,8 +192,6 @@ if( APPLE )
               endif()
             endif()
         endif()
-	message("I think you've got Darwin-10 and I've decided archflag=" ${archflag})
-        #set( archflag ${CMAKE_SYSTEM_PROCESSOR} )
         if( archflag STREQUAL x86_64 )
             set ( casa_packages /opt/casa/darwin10-64b )
             add_definitions( -DAIPS_64B )
@@ -517,6 +513,7 @@ if( NOT SKIP_PGPLOT )
   endif()
   casa_find( PGPLOT
     VERSION 5.3.1
+    PREFIX_HINTS ${PGPLOT_ROOT_DIR}
     INCLUDES cpgplot.h
     LIBS pgplot${pgplot_ext} cpgplot${pgplot_ext}
     DEPENDS ${_deps} )
@@ -800,6 +797,7 @@ casa_find( ATM
 # XML2
 casa_find( LIBXML2
   VERSION 2.6.16
+  PREFIX_HINTS ${LIBXML2_ROOT_DIR}
   INCLUDES libxml/xmlversion.h
   INCLUDES_SUFFIXES libxml2
   LIBS xml2
