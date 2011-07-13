@@ -82,6 +82,7 @@ SpectralCoordinate::SpectralCoordinate()
    makeWCS(wcs_p, String("FREQ"), 0.0, 0.0, 1.0, 1.0, restfreqs_p(0));
    to_hz_p = 1.0;
    to_m_p = 0.001;
+   nativeType_p = SpectralCoordinate::FREQ;
 //
    setDefaultWorldMixRanges();
 }
@@ -116,6 +117,10 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    makeWCS(wcs_p, String("FREQ"), refPix, refVal, inc, 1.0, restfreqs_p(0));
    to_hz_p = 1.0;
    to_m_p = 0.001;
+   if (restfreqs_p(0) > 0.0)
+   	nativeType_p = SpectralCoordinate::VRAD;
+   else
+   	nativeType_p = SpectralCoordinate::FREQ;
 //
    setDefaultWorldMixRanges();
 }
@@ -167,6 +172,10 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
            1.0, restfreqs_p(0));
    to_hz_p = 1.0;
    to_m_p = 0.001;
+   if (restfreqs_p(0) > 0.0)
+   	nativeType_p = SpectralCoordinate::VRAD;
+   else
+   	nativeType_p = SpectralCoordinate::FREQ;
 //
    setDefaultWorldMixRanges();
 }
@@ -201,6 +210,10 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    pTabular_p = new TabularCoordinate(channels, freqs, "Hz", "Frequency");
    to_hz_p = 1.0;
    to_m_p = 0.001;
+   if (restfreqs_p(0) > 0.0)
+   	nativeType_p = SpectralCoordinate::VRAD;
+   else
+   	nativeType_p = SpectralCoordinate::FREQ;
 //
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
@@ -248,6 +261,10 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    pTabular_p = new TabularCoordinate(channels, freqs2, "Hz", "Frequency");
    to_hz_p = 1.0;
    to_m_p = 0.001;
+   if (restfreqs_p(0) > 0.0)
+   	nativeType_p = SpectralCoordinate::VRAD;
+   else
+   	nativeType_p = SpectralCoordinate::FREQ;
 //
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
@@ -294,6 +311,10 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    pTabular_p = new TabularCoordinate(channels, frequencies.getValue(), "Hz", "Frequency");
    to_hz_p = 1.0;
    to_m_p = 0.001;
+   if (velType == MDoppler::OPTICAL)
+   	nativeType_p = SpectralCoordinate::VOPT;
+   else
+   	nativeType_p = SpectralCoordinate::VRAD;
 
 // make velocity machine
 
@@ -343,9 +364,11 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    Vector<Double> frequencies;
    if(inAir){
      airWavelengthToFrequency(frequencies, wavelengths);
+     nativeType_p = SpectralCoordinate::AWAV;
    }
    else{
      wavelengthToFrequency(frequencies, wavelengths);
+     nativeType_p = SpectralCoordinate::WAVE;
    }
 
    //for(uInt i=0; i<frequencies.nelements(); i++){
@@ -414,6 +437,10 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
 
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, wcs.restfrq);
+   if (restfreqs_p(0) > 0.0)
+   	nativeType_p = SpectralCoordinate::VRAD;
+   else
+   	nativeType_p = SpectralCoordinate::FREQ;
 
 // Velocity machine
 
@@ -823,6 +850,86 @@ Bool SpectralCoordinate::setWavelengthUnit(const String& waveUnit)
    return True;
 }
 
+Bool SpectralCoordinate::setSpectralType(const SpectralCoordinate::SpecType spcType)
+{
+	// just copy that over
+	nativeType_p = spcType;
+
+	//
+	return True;
+}
+
+//static Bool stringtoSpecType(SpecType &specType, const String &stypeString) const;
+//String SpectralCoordinate::specTypetoString(SpecType specType)
+Bool SpectralCoordinate::specTypetoString(String &stypeString, const SpecType &specType)
+{
+	Bool rvalue=True;
+
+	switch (specType)
+	{
+	case FREQ:
+		stypeString = String("frequency");
+		break;
+	case VRAD:
+		stypeString = String("radio");
+		break;
+	case VOPT:
+		stypeString = String("optical");
+		break;
+	case BETA:
+		stypeString = String("true");
+		break;
+	case WAVE:
+		stypeString = String("wavelength");
+		break;
+	case AWAV:
+		stypeString = String("air wavelength");
+		break;
+	default:
+		rvalue=False;
+	}
+
+	return rvalue;
+}
+
+//static Bool stringtoSpecType(SpecType &specType, const String &stypeString) const;
+//SpectralCoordinate::SpecType SpectralCoordinate::stringtoSpecType(String stypeString)
+Bool SpectralCoordinate::stringtoSpecType(SpecType &specType, const String &stypeString)
+{
+
+	if (!stypeString.compare("frequency")){
+		specType = FREQ;
+		return True;
+	}
+	else if (!stypeString.compare("radio")){
+		specType = VRAD;
+		return True;
+	}
+	else if (!stypeString.compare("optical")){
+		specType = VOPT;
+		return True;
+	}
+	else if (!stypeString.compare("true")){
+		specType = BETA;
+		return True;
+	}
+	else if (!stypeString.compare("wavelength")){
+		specType = WAVE;
+		return True;
+	}
+	else if (!stypeString.compare("air wavelength")){
+		specType = AWAV;
+		return True;
+	}
+	else
+	{
+		return False;
+	}
+
+	// should never get to here
+	return False;
+}
+
 Bool SpectralCoordinate::setReferenceConversion (MFrequency::Types conversionType,
                                                  const MEpoch& epoch, const MPosition& position,
                                                  const MDirection& direction)
@@ -1222,6 +1329,15 @@ Bool SpectralCoordinate::near(const Coordinate& other,
       return False;
    }
 //
+
+// Spectral type
+
+   if (nativeType_p != sCoord.nativeType_p) {
+      set_error("The SpectralCoordinates have differing native types");
+      return False;
+
+   }
+//
    return True;
 }
 
@@ -1235,52 +1351,53 @@ Bool SpectralCoordinate::save(RecordInterface &container,
         String system = MFrequency::showType(type_p);
 //
 	Record subrec;
-        subrec.define ("version", 2);            // Original unversioned was v 1 !
-	subrec.define("system", system);
-	subrec.define("restfreq", restFrequency());
-        subrec.define("restfreqs", restFrequencies());
-        subrec.define("velType", Int(velType_p));
-        subrec.define("velUnit", velUnit_p);
-        subrec.define("waveUnit", waveUnit_p);
-        subrec.define("formatUnit", formatUnit_p);
+	subrec.define ("version",   2);            // Original unversioned was v 1 !
+	subrec.define("system",     system);
+	subrec.define("restfreq",   restFrequency());
+	subrec.define("restfreqs",  restFrequencies());
+	subrec.define("velType",    Int(velType_p));
+	subrec.define("nativeType", Int(nativeType_p));
+	subrec.define("velUnit",    velUnit_p);
+	subrec.define("waveUnit",   waveUnit_p);
+	subrec.define("formatUnit", formatUnit_p);
 
 // We may have TC (for tabular coordinates) or not.
 
-        if (pTabular_p) {
-           ok = (pTabular_p->save(subrec, "tabular"));   // Always Hz
-        } else {
-           ok = wcsSave (subrec, wcs_p, "wcs");          // Always Hz
-        }
-        if (!ok) return False;
+	if (pTabular_p) {
+		ok = (pTabular_p->save(subrec, "tabular"));   // Always Hz
+	} else {
+		ok = wcsSave (subrec, wcs_p, "wcs");          // Always Hz
+	}
+	if (!ok) return False;
 //
-        subrec.define("unit", worldAxisUnits()(0));
-        subrec.define("name", axisName_p);
+	subrec.define("unit", worldAxisUnits()(0));
+	subrec.define("name", axisName_p);
 
 // Conversion machine state
 
-        String error;
-        Record subrec2;
-        {
-           MeasureHolder mh(direction_p);
-           Record subrec3;
-           mh.toRecord (error, subrec3);
-           subrec2.defineRecord("direction", subrec3);
-        }
-        {
-           MeasureHolder mh(position_p);
-           Record subrec3;
-           mh.toRecord (error, subrec3);
-           subrec2.defineRecord("position", subrec3);
-        }
-        {
-           MeasureHolder mh(epoch_p);
-           Record subrec3;
-           mh.toRecord (error, subrec3);
-           subrec2.defineRecord("epoch", subrec3);
-        }
-        String conversionType = MFrequency::showType(conversionType_p);
-        subrec2.define("system", conversionType);
-        subrec.defineRecord("conversion", subrec2);
+	String error;
+	Record subrec2;
+	{
+		MeasureHolder mh(direction_p);
+		Record subrec3;
+		mh.toRecord (error, subrec3);
+		subrec2.defineRecord("direction", subrec3);
+	}
+	{
+		MeasureHolder mh(position_p);
+		Record subrec3;
+		mh.toRecord (error, subrec3);
+		subrec2.defineRecord("position", subrec3);
+	}
+	{
+		MeasureHolder mh(epoch_p);
+		Record subrec3;
+		mh.toRecord (error, subrec3);
+		subrec2.defineRecord("epoch", subrec3);
+	}
+	String conversionType = MFrequency::showType(conversionType_p);
+	subrec2.define("system", conversionType);
+	subrec.defineRecord("conversion", subrec2);
 //
 	container.defineRecord(fieldName, subrec);
     }
@@ -1482,7 +1599,7 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
        TabularCoordinate* pTabular = TabularCoordinate::restore(subrec, "tabular");
        if (pTabular == 0) return 0;
 
-// Create SC (will be in Hz regarldess of units)
+// Create SC (will be in Hz regardless of units)
 
        Quantum<Vector<Double> > qWorlds(pTabular->worldValues(), 
                                         Unit(pTabular->worldAxisUnits()(0)));
@@ -1558,6 +1675,12 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
        formatUnit = subrec.asString("waveUnit");
     }
     pSpectral->setWavelengthUnit(waveUnit);
+
+    SpectralCoordinate::SpecType spcType = SpectralCoordinate::FREQ;
+    if (subrec.isDefined("nativeType")) {                    // optional
+   	 spcType = static_cast<SpectralCoordinate::SpecType>(subrec.asInt("nativeType"));
+    }
+    pSpectral->setSpectralType(spcType);
 
 
     return pSpectral;
@@ -2001,6 +2124,8 @@ String SpectralCoordinate::format (String& units,
                                    Bool showAsAbsolute,
                                    Int precision) const
 {
+	//cout << "Using SpectralCoordinate::format()" << endl;
+
    AlwaysAssert(worldAxis < nWorldAxes(), AipsError);
     
 // Check format
@@ -2044,75 +2169,97 @@ String SpectralCoordinate::format (String& units,
    } 
    else { // unit not frequency
 
-     if (unit == unitsKMS_c) { // unit consistent with velocty
+   	if (unit == unitsKMS_c) { // unit consistent with velocty
 
-       world.resize(nWorldAxes());
+   		world.resize(nWorldAxes());
 
 // We must convert to absolute first (regardless of how we want
 // to see the value) as we are formatting in velocity units
 
-       if (!isAbsolute) {
-         world = 0.0;
-         world(worldAxis) = worldValue; 
-         makeWorldAbsolute(world);
-         worldValue = world(worldAxis);
-       }
+   		if (!isAbsolute) {
+   			world = 0.0;
+   			world(worldAxis) = worldValue;
+   			makeWorldAbsolute(world);
+   			worldValue = world(worldAxis);
+   		}
 //
-       if (showAsAbsolute) {
-	 if (!frequencyToVelocity (qVel, worldValue)) {
-	   theString = "Fail";
-	   return theString;
-         }
+   		if (showAsAbsolute) {
+   			if (!frequencyToVelocity (qVel, worldValue)) {
+   				theString = "Fail";
+   				return theString;
+   			}
 
 // Convert from velUnit_p (used in f2v) to desired unit
 
-         worldValue = qVel.getValue(unit);
-       } else {
+   			worldValue = qVel.getValue(unit);
+   		} else {
 
 // Find relative coordinate in km/s consistent units
 
-         static Vector<Double> vel(2), freq2(2);
-         freq2(0) = referenceValue()(worldAxis);
-         freq2(1) = worldValue;
-         if (!frequencyToVelocity(vel, freq2)) {
-	   theString = "Fail";
-	   return theString;
-         }
+   			static Vector<Double> vel(2), freq2(2);
+   			freq2(0) = referenceValue()(worldAxis);
+   			freq2(1) = worldValue;
+   			if (!frequencyToVelocity(vel, freq2)) {
+   				theString = "Fail";
+   				return theString;
+   			}
 	 
 // Convert from velUnit_p (used in f2v) to desired unit
 	 
-         Quantum<Double> t(vel[1]-vel[0], Unit(velUnit_p)); // rel=abs-ref
-         worldValue = t.getValue(unit);
-       }
+   			Quantum<Double> t(vel[1]-vel[0], Unit(velUnit_p)); // rel=abs-ref
+   			worldValue = t.getValue(unit);
+   		}
 
-     }  
-     else{ // unit should be wavelength
+   	}
+   	else{ // unit should be wavelength
 
-       if (unit != unitsM_c) {
-	 throw(AipsError("Requested units must be consistent with km/s, m, or Hz for a SpectralCoordinate"));
-       }
+   		if (unit != unitsM_c) {
+   			throw(AipsError("Requested units must be consistent with km/s, m, or Hz for a SpectralCoordinate"));
+   		}
        
 // Requested unit is consistent with m
 
-       world.resize(nWorldAxes());
+   		world.resize(nWorldAxes());
+   		// new start
+   		vWave.resize(nWorldAxes());
+   		// new end
 
 // We must convert to absolute first (regardless of how we want
 // to see the value) as we are formatting in wavelength units
 
-       if (!isAbsolute) {
-	 world = 0.0;
-	 world(worldAxis) = worldValue; 
-	 makeWorldAbsolute(world);
-	 worldValue = world(worldAxis);
-       }
-//
-       MVFrequency mvFreq(worldValue*to_hz_p);
-       worldValue = mvFreq.get(unit).getValue();
-       if (!showAsAbsolute) {
-// Find relative coordinate in m consistent units
-	 mvFreq = MVFrequency(referenceValue()(worldAxis)*to_hz_p);
-	 worldValue = worldValue - mvFreq.get(unit).getValue(); // subtract reference
-       }
+   		if (!isAbsolute) {
+   			world = 0.0;
+   			world(worldAxis) = worldValue;
+   			makeWorldAbsolute(world);
+   			worldValue = world(worldAxis);
+   		}
+
+   		// new start
+			world = 0.0;
+			vWave = 0.0;
+			world(worldAxis) = worldValue;
+			if (nativeType_p == SpectralCoordinate::AWAV)
+				frequencyToAirWavelength(vWave, world);
+			else
+				frequencyToWavelength(vWave, world);
+			Quantity tmpI=Quantity(vWave(worldAxis), waveUnit_p);
+			worldValue = tmpI.get(unit).getValue();
+   		// new end
+
+   		if (!showAsAbsolute) {
+
+   			// new start
+   			// Find relative coordinate in m consistent units
+   			world(worldAxis) = referenceValue()(worldAxis);
+   			if (nativeType_p == SpectralCoordinate::AWAV)
+   				frequencyToAirWavelength(vWave, world);
+   			else
+   				frequencyToWavelength(vWave, world);
+   			Quantity tmpI=Quantity(vWave(worldAxis), waveUnit_p);
+      		worldValue = worldValue - tmpI.get(unit).getValue(); // subtract reference
+      		// new end
+
+   		}
 
      } // end if
 //
@@ -2359,6 +2506,7 @@ void SpectralCoordinate::copy (const SpectralCoordinate &other)
     velType_p = other.velType_p;
     velUnit_p = other.velUnit_p;
     waveUnit_p = other.waveUnit_p;
+    nativeType_p = other.nativeType_p;
     unit_p = other.unit_p;
     axisName_p = other.axisName_p;
     formatUnit_p = other.formatUnit_p;
