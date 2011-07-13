@@ -37,6 +37,7 @@
 #include <imageanalysis/Annotations/RegionTextList.h>
 
 #include <casa/namespace.h>
+#include <memory>
 
 namespace casa { //# name space casa begins
 

@@ -1288,7 +1288,6 @@ void MosaicFT::getFluxImage(ImageInterface<Float>& fluxImage) {
     //Should not reach here but the we're getting old
     cout << "Bad case of shape mismatch in flux image shape" << endl;
   }
-
 }
 
 CountedPtr<TempImage<Float> >& MosaicFT::getConvWeightImage(){
@@ -1296,9 +1295,10 @@ CountedPtr<TempImage<Float> >& MosaicFT::getConvWeightImage(){
     finalizeToSky();
   return skyCoverage_p;
 }
-Bool MosaicFT::toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage) {
-  
+
+Bool MosaicFT::toRecord(String&, // error,
+			RecordInterface& outRec, Bool withImage)
+{  
   // Save the current MosaicFT object to an output state record
   Bool retval = True;
   Double cacheVal=(Double) cachesize;
@@ -1339,7 +1339,8 @@ Bool MosaicFT::toRecord(String& error, RecordInterface& outRec,
   return retval;
 }
 
-Bool MosaicFT::fromRecord(String& error, const RecordInterface& inRec)
+Bool MosaicFT::fromRecord(String&,// error,
+			  const RecordInterface& inRec)
 {
   Bool retval = True;
   imageCache=0; lattice=0; arrayLattice=0;

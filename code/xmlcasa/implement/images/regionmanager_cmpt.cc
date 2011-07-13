@@ -10,6 +10,7 @@
  ***/
 
 #include <iostream>
+#include <memory>
 #include <math.h>
 
 #include <regionmanager_cmpt.h>
