@@ -991,6 +991,16 @@ class par(str):
 	def gaintable():
 		""" Gain calibration solutions table: """
 
+        @staticmethod
+        def getpt():
+                """
+                getpt -- fill DIRECTION column properly, or reuse POINTING table in original MS 
+                         (only effective for MS input)
+                         default: True
+                         options: True (fill DIRECTION column properly)
+                                  False (reuse POINTING table in original MS)
+                """
+
 	@staticmethod
 	def gridfunction():
 		"""
