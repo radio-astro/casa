@@ -27,7 +27,7 @@
 //----------------------------------------------------------------------------
 
 #include <calibration/CalTables/NewCalMainRecord.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <calibration/CalTables/NewCalTableEnums.h>
 #include <casa/Arrays.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -91,7 +91,7 @@ void NewCalMainRecord::defineTime (const Double& time)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::TIME), time);
+  newRec.define (NCT::fieldName (NCT::TIME), time);
   addRec (newRec);
 };
 
@@ -106,7 +106,7 @@ void NewCalMainRecord::defineTime (const MEpoch& time)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::TIME), time.getValue().get());
+  newRec.define (NCT::fieldName (NCT::TIME), time.getValue().get());
   addRec (newRec);
 };
 
@@ -121,7 +121,7 @@ void NewCalMainRecord::defineInterval (const Double& interval)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::INTERVAL), interval);
+  newRec.define (NCT::fieldName (NCT::INTERVAL), interval);
   addRec (newRec);
 };
 
@@ -136,7 +136,7 @@ void NewCalMainRecord::defineAntenna1 (const Int& antenna1)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::ANTENNA1), antenna1);
+  newRec.define (NCT::fieldName (NCT::ANTENNA1), antenna1);
   addRec (newRec);
 };
 
@@ -151,7 +151,7 @@ void NewCalMainRecord::defineAntenna2 (const Int& antenna2)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::ANTENNA2), antenna2);
+  newRec.define (NCT::fieldName (NCT::ANTENNA2), antenna2);
   addRec (newRec);
 };
 
@@ -166,7 +166,7 @@ void NewCalMainRecord::defineFieldId (const Int& fieldId)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::FIELD_ID), fieldId);
+  newRec.define (NCT::fieldName (NCT::FIELD_ID), fieldId);
   addRec (newRec);
 };
 
@@ -181,7 +181,7 @@ void NewCalMainRecord::defineSpwId (const Int& spwId)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::SPECTRAL_WINDOW_ID), spwId);
+  newRec.define (NCT::fieldName (NCT::SPECTRAL_WINDOW_ID), spwId);
       addRec (newRec);
 };
 
@@ -196,7 +196,7 @@ void NewCalMainRecord::defineScanNo (const Int& scanNo)
 //    itsRecord        Record                Underlying record object
 //
   Record newRec;
-  newRec.define (MSC::fieldName (MSC::SCAN_NUMBER), scanNo);
+  newRec.define (NCT::fieldName (NCT::SCAN_NUMBER), scanNo);
   addRec (newRec);
 };
 
@@ -285,7 +285,7 @@ void NewCalMainRecord::getTime (Double& time)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::TIME), time);
+  record().get (NCT::fieldName (NCT::TIME), time);
 };
 
 //----------------------------------------------------------------------------
@@ -298,7 +298,7 @@ void NewCalMainRecord::getInterval (Double& interval)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::INTERVAL), interval);
+  record().get (NCT::fieldName (NCT::INTERVAL), interval);
 };
 
 //----------------------------------------------------------------------------
@@ -311,7 +311,7 @@ void NewCalMainRecord::getAntenna1 (Int& antenna1)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::ANTENNA1), antenna1);
+  record().get (NCT::fieldName (NCT::ANTENNA1), antenna1);
 };
 
 //----------------------------------------------------------------------------
@@ -324,7 +324,7 @@ void NewCalMainRecord::getAntenna2 (Int& antenna2)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::ANTENNA2), antenna2);
+  record().get (NCT::fieldName (NCT::ANTENNA2), antenna2);
 };
 
 //----------------------------------------------------------------------------
@@ -337,7 +337,7 @@ void NewCalMainRecord::getFieldId (Int& fieldId)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::FIELD_ID), fieldId);
+  record().get (NCT::fieldName (NCT::FIELD_ID), fieldId);
 };
 
 //----------------------------------------------------------------------------
@@ -350,7 +350,7 @@ void NewCalMainRecord::getSpwId (Int& spwId)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::SPECTRAL_WINDOW_ID), spwId);
+  record().get (NCT::fieldName (NCT::SPECTRAL_WINDOW_ID), spwId);
 };
 
 //----------------------------------------------------------------------------
@@ -363,7 +363,7 @@ void NewCalMainRecord::getScanNo (Int& scanNo)
 // Input from private data:
 //    itsRecord        Record                Underlying record object
 //
-  record().get (MSC::fieldName (MSC::SCAN_NUMBER), scanNo);
+  record().get (NCT::fieldName (NCT::SCAN_NUMBER), scanNo);
 };
 
 //----------------------------------------------------------------------------

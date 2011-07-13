@@ -28,7 +28,7 @@
 
 #include <calibration/CalTables/NewCalTableDesc.h>
 #include <calibration/CalTables/VisCalEnum.h>
-#include <msvis/MSVis/MSCalEnums.h>
+#include <calibration/CalTables/NewCalTableEnums.h>
 #include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -80,13 +80,13 @@ TableDesc CalTableDesc::defaultCalHistory()
 //
   TableDesc td ("Cal History", "2.0", TableDesc::Scratch);
   td.comment() = "Calibration history sub-table";
-  td.addColumn (ScalarColumnDesc <String> (MSC::fieldName (MSC::CAL_PARMS),
+  td.addColumn (ScalarColumnDesc <String> (NCT::fieldName (NCT::CAL_PARMS),
 					   ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <String> (MSC::fieldName (MSC::CAL_TABLES),
+  td.addColumn (ScalarColumnDesc <String> (NCT::fieldName (NCT::CAL_TABLES),
 					   ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <String> (MSC::fieldName (MSC::CAL_SELECT),
+  td.addColumn (ScalarColumnDesc <String> (NCT::fieldName (NCT::CAL_SELECT),
 					   ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <String> (MSC::fieldName (MSC::CAL_NOTES),
+  td.addColumn (ScalarColumnDesc <String> (NCT::fieldName (NCT::CAL_NOTES),
 					   ColumnDesc::Direct));
   return td;
 };
@@ -117,44 +117,44 @@ TableDesc NewCalTableDesc::defaultCalMain (const String& type)
 
   // Cal Main columns (MS Main indices)
   // keys
-  td.addColumn (ScalarColumnDesc <Double> (MSC::fieldName (MSC::TIME),
+  td.addColumn (ScalarColumnDesc <Double> (NCT::fieldName (NCT::TIME),
 					   ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <Int> (MSC::fieldName (MSC::FIELD_ID),
+  td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::FIELD_ID),
 					ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <Int> (MSC::fieldName (MSC::SPECTRAL_WINDOW_ID),
+  td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::SPECTRAL_WINDOW_ID),
 					ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <Int> (MSC::fieldName (MSC::ANTENNA1),
+  td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::ANTENNA1),
 					ColumnDesc::Direct));
   // optical? ANTENNA2
-  td.addColumn (ScalarColumnDesc <Int> (MSC::fieldName (MSC::ANTENNA2),
+  td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::ANTENNA2),
 					ColumnDesc::Direct));
   //non keys
-  td.addColumn (ScalarColumnDesc <Double> (MSC::fieldName (MSC::INTERVAL),
+  td.addColumn (ScalarColumnDesc <Double> (NCT::fieldName (NCT::INTERVAL),
 					   ColumnDesc::Direct));
-  td.addColumn (ScalarColumnDesc <Int> (MSC::fieldName (MSC::SCAN_NUMBER),
+  td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::SCAN_NUMBER),
 					ColumnDesc::Direct));
 
   //Parameter columns
-  td.addColumn (ArrayColumnDesc <Float>  ("PARAM"));
-  td.addColumn (ArrayColumnDesc <Float>  ("PARAMERR"));
-  td.addColumn (ArrayColumnDesc <Bool>  (MSC::fieldName (MSC::FLAG)));
-  td.addColumn (ArrayColumnDesc <Float>  (MSC::fieldName (MSC::SNR)));
-  td.addColumn (ArrayColumnDesc <Float>  ("WEIGHT"));
+  td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::PARAM)));
+  td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::PARAMERR)));
+  td.addColumn (ArrayColumnDesc <Bool>  (NCT::fieldName (NCT::FLAG)));
+  td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::SNR)));
+  td.addColumn (ArrayColumnDesc <Float>  (NCT::fieldName (NCT::WEIGHT)));
 
   // Add TableMeasures information for designated Measures/Quanta columns
   // 
   // TIME
-  TableMeasValueDesc timeMeasVal (td, MSC::fieldName (MSC::TIME));
+  TableMeasValueDesc timeMeasVal (td, NCT::fieldName (NCT::TIME));
   TableMeasRefDesc timeMeasRef (MEpoch::DEFAULT);
   TableMeasDesc<MEpoch> timeMeasCol (timeMeasVal, timeMeasRef);
   timeMeasCol.write (td);
 
   // TIME fix Unit
-  TableQuantumDesc timeQuantDesc (td, MSC::fieldName (MSC::TIME),
+  TableQuantumDesc timeQuantDesc (td, NCT::fieldName (NCT::TIME),
                                   Unit ("s"));
   timeQuantDesc.write (td);
   // INTERVAL
-  TableQuantumDesc intervalQuantDesc (td, MSC::fieldName(MSC::INTERVAL),
+  TableQuantumDesc intervalQuantDesc (td, NCT::fieldName(NCT::INTERVAL),
 				      Unit ("s"));
   intervalQuantDesc.write (td);
 
