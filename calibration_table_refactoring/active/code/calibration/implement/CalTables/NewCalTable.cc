@@ -56,7 +56,7 @@ NewCalTable::~NewCalTable()
 //----------------------------------------------------------------------------
 NewCalTable::NewCalTable (const String& tableName, NewCalTableDesc& ctableDesc,
 		    Table::TableOption access, Table::TableType ttype):
-              Table() 
+              Table()
 {
 // Construct from a cal table name, descriptor and access option.
 // Used for creating new tables.
@@ -66,11 +66,13 @@ NewCalTable::NewCalTable (const String& tableName, NewCalTableDesc& ctableDesc,
 //    access           Table::TableOption    Access mode
 //    ttype            Table::TableType      Memory or Plain
 //
+  //cerr<<" ctor: new cal table from name, tabledesc"<<endl;
   ttype_p = ttype;
   if (access == Table::New || access == Table::NewNoReplace ||
       access == Table::Scratch) {
       SetupNewTable calMainTab(tableName,ctableDesc.calMainDesc(),access);
-      NewCalTable tab(calMainTab, 0);
+      //NewCalTable tab(calMainTab, 0);
+      Table tab(calMainTab, 0, False); 
       *this = tab;
       
       // subtables
@@ -125,10 +127,12 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
 //    access           Table::TableOption    Access mode
 //    ttype            Table::TableType      Memory or Plain
 //
+  //cerr<<"ctor: from existing cal table with name, option"<<endl;
+  initSubtables();
+
   if (ttype==Table::Memory) {
     *this = this->copyToMemoryTable("tempcaltable");
   }
-
 //  else {
 //    *this = tab;
 //  }
@@ -139,6 +143,8 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
 NewCalTable::NewCalTable (const Table& table): Table(table)
 {
 // Construct from an existing table object
+  //cerr<<"constructed from an existing newcaltable as table"<<endl;
+  initSubtables();
 };
 
 //----------------------------------------------------------------------------
@@ -149,6 +155,8 @@ NewCalTable::NewCalTable (const NewCalTable& other): Table(other)
 // Input:
 //    other            const NewCalTable&       Existing NewCalTable object
 //
+   //cerr<<"copy constructor ...."<<endl;
+   initSubtables();
 };
 
 //----------------------------------------------------------------------------
@@ -159,15 +167,33 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
 // Input:
 //    other            const CalTable&       RHS CalTable object
 //
+  //cerr<<"assignment operator..."<<endl;
   if (this != &other) {
     Table::operator=(other);
     if (!conformant(this->tableDesc()))
         throw (AipsError("NewCalTable( const NewCalTable&) - "
                          "table is not a valid caltable"));
+    initSubtables();
   }
   return *this;
 };
 
+//----------------------------------------------------------------------------
+void NewCalTable::initSubtables()
+{
+  if (this->keywordSet().isDefined("ANTENNA")){
+    antenna_p = CalAntenna(this->keywordSet().asTable("ANTENNA"));
+  }
+  if (this->keywordSet().isDefined("FIELD")){
+    field_p = CalField(this->keywordSet().asTable("FIELD"));
+  }
+  if (this->keywordSet().isDefined("SPECTRAL_WINOW")){
+    spectralWindow_p = CalSpectralWindow(this->keywordSet().asTable("SPECTRAL_WINOW"));
+  }
+  if (this->keywordSet().isDefined("HISTORY")){
+    history_p = CalHistory(this->keywordSet().asTable("HISTORY"));
+  }
+}
 //----------------------------------------------------------------------------
 //Int NewCalTable::nRowMain() const 
 //{

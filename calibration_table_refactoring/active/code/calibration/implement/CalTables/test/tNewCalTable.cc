@@ -164,6 +164,22 @@ void doTest4 ()
   ROScalarColumn<String> antnames=antcols.name();
 
   cout<<"antnames="<<antnames(0)<<endl;
+  
+  //from disk to mem table
+  //NewCalTable testcaltab2("testDiskCal.Tab", Table::Old, Table::Memory);
+  //
+  //copy constructor 
+  //NewCalTable testcaltab2(testcaltab);
+  //
+  // from table obj
+  cout <<"*** subtable access test for new caltable constructed from a table object"<<endl;
+  Table tabnew("testDiskCal.Tab");
+  NewCalTable testcaltab2(tabnew);
+  NewCalTable::CalAntenna calantab2 = testcaltab2.antenna(); 
+  //
+  ROMSAntennaColumns antcols2(calantab2);
+  ROScalarColumn<String> antnames2=antcols2.name();
+  cout<<"antnames2="<<antnames2(0)<<endl;
 }
 
 void doTest5 ()

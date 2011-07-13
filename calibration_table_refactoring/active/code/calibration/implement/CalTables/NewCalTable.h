@@ -112,6 +112,9 @@ class NewCalTable : public Table
    // Assignment operator
    NewCalTable& operator= (const NewCalTable& other);
 
+   // initialize reference to subtables
+   void initSubtables();
+
    // get number of rows in cal main table, and subtables  
    //Int nRowMain() const;
    //Int nRowHistory() const;
