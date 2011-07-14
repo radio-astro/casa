@@ -51,12 +51,12 @@ ImageInputProcessor::~ImageInputProcessor() {
 
 void ImageInputProcessor::process(
 	ImageInterface<Float>*& image, Record& regionRecord,
-	String& diagnostics, Vector<OutputStruct> *outputStruct,
+	String& diagnostics, vector<OutputStruct> *outputStruct,
 	String& stokes, const String& imagename, const Record* regionPtr,
 	const String& regionName, const String& box,
 	const String& chans,
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
-	const Vector<Coordinate::Type> *requiredCoordinateTypes
+	const vector<Coordinate::Type> *const &requiredCoordinateTypes
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
@@ -81,12 +81,12 @@ void ImageInputProcessor::process(
 
 void ImageInputProcessor::process(
 	Record& regionRecord, String& diagnostics,
-	Vector<OutputStruct> *outputStruct, String& stokes,
-	const ImageInterface<Float>*& image,
+	vector<OutputStruct> * const outputStruct, String& stokes,
+	const ImageInterface<Float> *const &image,
 	const Record* regionPtr, const String& regionName,
 	const String& box, const String& chans,
 	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
-	const Vector<Coordinate::Type> *requiredCoordinateTypes
+	const vector<Coordinate::Type> *const &requiredCoordinateTypes
 ) {
 	_process(
 		regionRecord, diagnostics, outputStruct, stokes,
@@ -97,13 +97,13 @@ void ImageInputProcessor::process(
 
 void ImageInputProcessor::_process(
     Record& regionRecord,
-    String& diagnostics, Vector<OutputStruct>* outputStruct,
-    String& stokes, const ImageInterface<Float>* image,
-    const Record*& regionPtr,
+    String& diagnostics, std::vector<OutputStruct> * const outputStruct,
+    String& stokes, const ImageInterface<Float> *const &image,
+    const Record *const &regionPtr,
     const String& regionName, const String& box,
     const String& chans, const CasacRegionManager::StokesControl& stokesControl,
     const Bool& allowMultipleBoxes,
-    const Vector<Coordinate::Type>* requiredCoordinateTypes
+    const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
 ) {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
@@ -113,7 +113,7 @@ void ImageInputProcessor::_process(
     *_log << origin;
     if (requiredCoordinateTypes) {
     	for (
-    		Vector<Coordinate::Type>::const_iterator iter = requiredCoordinateTypes->begin();
+    		vector<Coordinate::Type>::const_iterator iter = requiredCoordinateTypes->begin();
     		iter != requiredCoordinateTypes->end(); iter++
     	) {
     		if (image->coordinates().findCoordinate(*iter) < 0) {
@@ -248,7 +248,7 @@ void ImageInputProcessor::_setRegion(
 	}
 }
 
-String ImageInputProcessor::_pairsToString(const Vector<uInt>& pairs) const {
+String ImageInputProcessor::_pairsToString(const std::vector<uInt>& pairs) const {
 	ostringstream os;
 	uInt nPairs = pairs.size()/2;
 	for (uInt i=0; i<nPairs; i++) {
@@ -261,10 +261,10 @@ String ImageInputProcessor::_pairsToString(const Vector<uInt>& pairs) const {
 }
 
 void ImageInputProcessor::checkOutputs(
-	Vector<OutputStruct> *output, LogIO& log
+	std::vector<OutputStruct> * const output, LogIO& log
 ) {
 	for (
-		Vector<OutputStruct>::iterator iter = output->begin();
+		std::vector<OutputStruct>::iterator iter = output->begin();
 		iter != output->end();
 		iter++
 	) {

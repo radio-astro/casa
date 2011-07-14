@@ -96,13 +96,13 @@ public:
 	// rectangular region.
     void process(
     	ImageInterface<Float>*& image, Record& regionRecord,
-    	String& diagnostics, Vector<OutputStruct> *outputStruct,
+    	String& diagnostics, std::vector<OutputStruct> *const outputStruct,
     	String& stokes,
     	const String& imagename, const Record* regionPtr,
     	const String& regionName, const String& box,
     	const String& chans,
     	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
-    	const Vector<Coordinate::Type> *requiredCoordinateTypes
+    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
     );
 
 	// Process the inputs. Use this version if the associated image already exists.
@@ -119,18 +119,18 @@ public:
 	// rectangular region.
     void process(
     	Record& regionRecord,
-    	String& diagnostics, Vector<OutputStruct> *outputStruct,
+    	String& diagnostics, std::vector<OutputStruct> *const outputStruct,
     	String& stokes,
-    	const ImageInterface<Float>*& image,
+    	const ImageInterface<Float> *const &image,
     	const Record* regionPtr,
     	const String& regionName, const String& box,
     	const String& chans,
     	const CasacRegionManager::StokesControl& stokesControl,
     	const Bool& allowMultipleBoxes,
-    	const Vector<Coordinate::Type> *requiredCoordinateTypes
+    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
     );
 
-    static void checkOutputs(Vector<OutputStruct> *output, LogIO& log);
+    static void checkOutputs(std::vector<OutputStruct> *const output, LogIO& log);
 
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
@@ -142,31 +142,31 @@ private:
     uInt _nSelectedChannels;
 
     void _process(
-    	Record& regionRecord,
-    	String& diagnostics, Vector<OutputStruct>* outputStruct,
-    	String& stokes, const ImageInterface<Float>* image,
-    	const Record*& regionPtr,
+    	Record& regionRecord, String& diagnostics,
+    	std::vector<OutputStruct>* outputStruct,
+    	String& stokes, const ImageInterface<Float> *const &image,
+    	const Record *const &regionPtr,
     	const String& regionName, const String& box,
     	const String& chans, const CasacRegionManager::StokesControl& stokesControl,
         const Bool& allowMultipleBoxes,
-    	const Vector<Coordinate::Type>* requiredCoordinateTypes
+    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
     );
 
     // set region given a pointer to a region record.
     void _setRegion(
     	Record& regionRecord, String& diagnostics,
-    	const Record* regionPtr
+    	const Record *const regionPtr
     ) const;
 
     void _setRegion(Record& regionRecord, String& diagnostics,
-    	const ImageInterface<Float> *image, const String& regionName
+    	const ImageInterface<Float> *const image, const String& regionName
     ) const;
 
     String _stokesFromRecord(
     	const Record& region, const CoordinateSystem& csys
     ) const;
 
-    String _pairsToString(const Vector<uInt>& pairs) const;
+    String _pairsToString(const std::vector<uInt>& pairs) const;
 
 };
 

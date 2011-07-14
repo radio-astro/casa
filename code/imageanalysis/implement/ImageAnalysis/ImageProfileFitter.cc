@@ -141,9 +141,9 @@ void ImageProfileFitter::_construct(const String& imagename) {
 
     _checkNGaussAndPolyOrder();
     ImageInputProcessor inputProcessor;
-    Vector<ImageInputProcessor::OutputStruct>  outputStruct;
+    vector<ImageInputProcessor::OutputStruct>  outputStruct;
     _getOutputStruct(outputStruct);
-    Vector<ImageInputProcessor::OutputStruct>* outputPtr = outputStruct.size() == 0
+    vector<ImageInputProcessor::OutputStruct>* outputPtr = outputStruct.size() == 0
         ? 0
         : &outputStruct;
     String diagnostics;
@@ -162,9 +162,9 @@ void ImageProfileFitter::_construct(const ImageInterface<Float>* image) {
     *_log << logOrigin;
     _checkNGaussAndPolyOrder();
     ImageInputProcessor inputProcessor;
-    Vector<ImageInputProcessor::OutputStruct>  outputStruct;
+    vector<ImageInputProcessor::OutputStruct>  outputStruct;
     _getOutputStruct(outputStruct);
-    Vector<ImageInputProcessor::OutputStruct>* outputPtr = outputStruct.size() == 0
+    vector<ImageInputProcessor::OutputStruct>* outputPtr = outputStruct.size() == 0
         ? 0
         : &outputStruct;
     String diagnostics;
@@ -179,7 +179,7 @@ void ImageProfileFitter::_construct(const ImageInterface<Float>* image) {
 }
 
 void ImageProfileFitter::_getOutputStruct(
-    Vector<ImageInputProcessor::OutputStruct>& outputs
+    vector<ImageInputProcessor::OutputStruct>& outputs
 ) {
 	outputs.resize(0);
     if (! _model.empty()) {
@@ -188,8 +188,8 @@ void ImageProfileFitter::_getOutputStruct(
     	modelImage.outputFile = &_model;
     	modelImage.required = True;
     	modelImage.replaceable = False;
-    	outputs.resize(1);
-    	outputs[0] = modelImage;
+    	outputs.push_back(modelImage);
+
     }
     if (! _residual.empty()) {
     	ImageInputProcessor::OutputStruct residImage;
@@ -197,8 +197,7 @@ void ImageProfileFitter::_getOutputStruct(
     	residImage.outputFile = &_residual;
     	residImage.required = True;
     	residImage.replaceable = False;
-    	outputs.resize(outputs.size() + 1, True);
-    	outputs[outputs.size() - 1] = residImage;
+    	outputs.push_back(residImage);
     }
 }
 

@@ -284,8 +284,8 @@ namespace casa {
     	return _minMatchMap;
     }
 
-    Vector<ImageInputProcessor::OutputStruct> ImageCollapser::_getOutputStruct() {
-    	Vector<ImageInputProcessor::OutputStruct> outputs(0);
+    std::vector<ImageInputProcessor::OutputStruct> ImageCollapser::_getOutputStruct() {
+    	std::vector<ImageInputProcessor::OutputStruct> outputs(0);
         _outname.trim();
         if (! _outname.empty()) {
         	ImageInputProcessor::OutputStruct outputImage;
@@ -293,8 +293,7 @@ namespace casa {
         	outputImage.outputFile = &_outname;
         	outputImage.required = True;
         	outputImage.replaceable = _overwrite;
-        	outputs.resize(1);
-        	outputs[0] = outputImage;
+        	outputs.push_back(outputImage);
         }
         return outputs;
     }
@@ -322,8 +321,8 @@ namespace casa {
         *_log << logOrigin;
 
         String diagnostics;
-        Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-        Vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
+        vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
+        vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
         	? &outputs
         	: 0;
         ImageInputProcessor inputProcessor;
@@ -346,8 +345,8 @@ namespace casa {
         *_log << logOrigin;
 
         String diagnostics;
-        Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-        Vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
+        vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
+        vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
         	? &outputs
         	: 0;
         ImageInputProcessor inputProcessor;

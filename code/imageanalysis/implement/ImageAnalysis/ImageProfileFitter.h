@@ -139,7 +139,7 @@ private:
     void _construct(const ImageInterface<Float>* image);
 
     void _getOutputStruct(
-        Vector<ImageInputProcessor::OutputStruct>& outputs
+        vector<ImageInputProcessor::OutputStruct>& outputs
     );
 
     void _checkNGaussAndPolyOrder() const;
