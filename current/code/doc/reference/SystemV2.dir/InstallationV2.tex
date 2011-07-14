@@ -1,0 +1,256 @@
+\chapter{Installation}
+\label{Installation}
+\index{system!installation}
+\index{installation|see{system, installation}}
+
+This chapter \footnote{Last change:
+$ $Id: InstallationV2.tex 5063 2008-05-01 14:46:46Z wes.young $ $}
+describes how to install \aipspp.
+
+\section{Installation from Packages}
+\index{installation|see{system, installation}}
+\casa\ is available via binary down loads for Mac OSX and Red Hat
+Enterprise compatible machines.
+For the latest information about installation and supported packages
+please visit \htmladdnormallink{https://wikio.nrao.edu/bin/view/Software/ObtainingCASA}{https://wikio.nrao.edu/bin/view/Software/ObtainingCASA}. Whether you are an end-user or
+developer, we recommend using the a variation of our load-casapy scripts,
+which can be gotten from \htmladdnormallink{need our ftp site}{ftp://ftp.nrao.edu/casa/}
+
+\subsection{The Astronomer User}
+\label{End-user installation}
+\label{Astronomer installation}
+\index{system!installation!end-user}
+\index{system!installation!astronomer}
+\index{system!installation!production-line}
+
+Instructions for downloading load-casapy, run load-casapy.
+
+\subsection{The Astronomer Developer}
+\label{developers-release}
+\index{developers release}
+\index{system!installation!developer}
+
+Instructions for downloading load-casapy, run load-casapy to install headers.
+
+% ----------------------------------------------------------------------------
+
+\section{Source \casa installations}
+\label{Source installation}
+\index{system!installation!consortium}
+\index{system!installation!code-development}
+\index{code!configuration}
+\index{code!management!configuration}
+
+Source installations differ from end-user installations in having a local
+copy the executables built from source.
+The local code tree is updated regularly by the \aipspp\ code
+distribution system via a procedure called \exeref{inhale.svn}.  Source
+installations also have a mechanism for checking sources out of, and in to,
+the master \svn repositories.
+
+\subsection*{Step 1. Create \casa accounts}
+
+If more than one person or machine is going to use a \casa\ installation, we recommend that
+an aips2mgr account be created to be the focus of
+\casa builds.
+
+\noindent
+The home directory for the account should be set to the root
+directory of the \aipspp\ tree.  This can be anything but \file{/home/casa} is
+preferred and is assumed in the following examples.
+
+The following groups should be created with the matching membership
+(in \file{/etc/group}):
+
+\begin{verbatim}
+   aips2mgr   
+   aips2prg  aips2mgr
+   aips2usr  aips2mgr
+\end{verbatim}
+
+\noindent
+You should also add your account name and the names of any other local
+\aipspp\ managers to the \acct{aips2mgr} group membership list.  Do not add
+everyone to the \acct{aips2mgr} group, it grants permission to directly
+manipulate the source code tree.  You should also add the names of all local
+\aipspp\ programmers to the \acct{aips2prg} group.  This will allow them to
+check out and modify the \aipspp\ sources.  The \acct{aips2mgr} account and the
+\acct{aips2mgr} \acct{aips2prg} groups will be used during the installation.
+
+Now create the \aipspp\ root directory:
+
+\begin{verbatim}
+   yourhost% mkdir /home/casa
+   yourhost% chown aips2mgr /home/casa
+   yourhost% chgrp aips2prg /home/casa
+   yourhost% chmod ug=rwx,o=rx,g+s /home/casa
+\end{verbatim}
+
+\noindent
+In practice \file{/home/casa} will often be a self-contained filesystem, usually
+on a separate disk.  Allow 1\,Gbyte of disk space for the \aipspp\ system; any
+short-term surplus may be used for programmer workspaces.
+
+This is as much as needs doing by the system administrator at this stage.  The
+remainder of the initial part of the installation can be done by
+\acct{aips2mgr}.
+
+\subsection*{Step 2. Fetch the Source Code}
+\label{fetch source code}
+\index{system!installation!svncheckout}
+
+First fetch the source code via SVN:
+
+\begin{verbatim}
+   yourhost% cd /home/casa
+   yourhost% svn co https:svn.cv.nrao.edu:/svn/casa/casa.v2/branches/active/code 
+\end{verbatim}
+
+\noindent
+This will fetch the main development branch of \casa. After the checkout completes you will
+need to configure the source installation
+
+\begin{verbatim}
+   yourhost% cd code
+   yourhost% chmod 544 install/configure
+   yourhost% install/configure
+\end{verbatim}
+
+\noindent
+You will be asked a series of questions, most of which have sensible defaults,
+aimed at constructing the \aipspp\ \filref{aipshosts} file.  You then have to
+edit your site-specific \filref{aipsrc} and \filref{makedefs} files.  Template
+versions of these files are supplied by \exeref{configure} and you should read
+the instructions carefully.  After making your site-specific definitions
+\aipsexe{configure} will run some tests to check whether your \file{makedefs}
+definitions look sensible.  Your \file{install} directory will then be made.
+This consists of a few \textsc{c} compilations and installation of some shell
+scripts, the most important of which is \exeref{inhale.svn} itself.  Ignore any
+error message from \exeref{gmake} concerning the non-existence of various
+subdirectories of \file{/home/casa/code}.
+
+\subsection*{Step 3. Run sneeze}
+
+At this point your \aipspp\ installation has been bootstrapped to a state
+where \exeref{sneeze} can be run.
+
+You should also have a \cplusplus\ compiler, and a \TeX\ installation which
+includes \LaTeX, \unixexe{dvips}, \textsc{MetaFont}, \textsc{htlatex} and \textsc{pdflatex}.
+Unset the \code{DOCSYS} variable in \file{makedefs} if you
+don't have \TeX, it will prevent compilation of the \aipspp\ documentation.
+The documentation may be downloaded using the \aipsexe{rsync} command.
+(Note: On macs check the htlatex driver as \\dirchar may need to be replaced by -f/).
+
+Users of SysV based systems such as Solaris should be warned that
+\exeref{inhale.svn} requires the BSD version of \unixexe{sum} for computing
+checksums.  You must ensure that the BSD version will be found ahead of the
+SysV version in \acct{aips2mgr}'s \code{PATH}.  The \gnu\ version of
+\unixexe{sum} (in the \gnu\ ``fileutils'' kit) provides both algorithms and
+uses BSD by default.  Less salubrious possibilities are to put \file{/usr/ucb}
+(Solaris) or \file{/usr/bsd} (IRIX) ahead of \file{/usr/bin} in
+\acct{aips2mgr}'s \code{PATH}, or to create a symlink to the BSD version of
+\unixexe{sum} in the \aipspp\ \file{bin} area.  
+
+First invoke \exeref{casainit} to add the \aipspp\ \file{bin} directory to
+your \code{PATH}.  If your interactive shell is a C-like shell (\unixexe{csh},
+\unixexe{tcsh}) you would use
+
+\begin{verbatim}
+   yourhost% source /home/casa/casainit.csh
+\end{verbatim}
+
+\noindent
+whereas for Bourne-like shells (\unixexe{sh}, \unixexe{bash}, \unixexe{ksh})
+you would use
+
+\begin{verbatim}
+   yourhost% . /home/casa/casainit.sh
+\end{verbatim}
+
+\noindent
+If you use some other shell you'll have to revert to one of the above for the
+remainder of the installation.  Now invoke \exeref{sneeze}
+
+\begin{verbatim}
+   yourhost% sneeze -l -m cumulative&
+\end{verbatim}
+
+\noindent
+This will build and install
+the latest version of the sources which are under active development.  If you
+made any mistakes in your \file{aipsrc} or \file{makedefs} definitions some of
+these may become apparent during the installations.  After fixing them you can
+recover via
+
+\begin{verbatim}
+   yourhost% gmake -C /home/casa/code allsys
+\end{verbatim}
+
+\noindent
+The \code{allsys} target will compile all \aipspp\ sources, including
+documentation (assuming of course that you have the compilers).  If you just
+wanted to compile the documentation alone you could use
+
+\begin{verbatim}
+   yourhost% gmake -C /home/casa/code docsys
+\end{verbatim}
+
+If everything has gone properly you should now have an up-to-date \aipspp\ 
+installation.  However, in order to keep it up-to-date you must define a
+\unixexe{cron} job to run \exeref{inhale.svn} on a regular basis.  The normal
+procedure is to do a cumulative update every Saturday evening.  However, you
+may wish to maintain a (possibly separate) system which is updated on a daily
+basis. 
+
+The exact timing depends on your timezone with respect to the master.  A new
+VERSION is marked every day at 1930 Socorro time (MST or MDT).
+An example \file{crontab} file might resemble the following:
+
+\begin{verbatim}
+   # Cumulative update of the CASA directories each Saturday evening.
+   00 22 * * 6   (. $HOME/.profile ; inhale.svn -c) 2>&1 | \
+      mail aips2mgr aips2-inhale@nrao.edu
+\end{verbatim}
+
+\noindent
+(Note that all \unixexe{cron} entries must be one-liners but they are broken
+here for clarity.)  You may need to add the \exe{-n} option to \exeref{inhale.svn}
+accordingly.  Note that, as in the above example, the log produced by
+\aipsexe{inhale.svn} is generally forwarded to \acct{aips2-inhale@nrao.edu}.
+These logs are archived for about 10 days and are accessible via the \aipspp\ 
+home page \url{http://casa.nrao.edu/casa/docs/html/casa.html}.  This is
+particularly useful for verifying code portability, especially on platforms
+that a programmer doesn't have ready access to.  You should also add the email
+address of a local person who will monitor the \aipsexe{inhale.svn} logs
+(\acct{aips2mgr} in the above example).
+
+\subsection*{Step 4. Update the Data Repository}
+The data repository contains ancillary data that are necessary for proper data
+reduction and analysis of astronomical data. While load-casapy downloads a snapshot
+of the data repository, you may find it necessary from time-to-time to update the
+repository or obtain data from the repository that is not included from running the
+load-casapy script.  This can be done via rysnc.  More details may be found in the
+Data Repository chapter \sref{Data Repository}.
+
+\begin{verbatim}
+cd /home/casa/data
+rsync -avz rsync.aoc.nrao.edu::casadata-core .
+\end{verbatim}
+
+\subsection*{Step 5. SVN access to the development tree}
+\index{nfs@\textsc{nfs}}
+\index{automount, \textsc{nfs}}
+
+For active developers, you will need a SVN account on the main SVN repository server.
+Please send a request to aips2mgr@aoc.nrao.edu for your subversion account. For more information
+about SVN visit the webpage at \htmladdnormallink{http://svnbook.red-bean.com}{http://svnbook.red-bean.com}.
+If all you want to do is update the source code from time-to-time and rebuild, just do either
+\begin{verbatim}
+inhale.svn -c
+
+or
+
+cd code
+svn update
+sneeze -l -m cumulative
+\end{verbatim}

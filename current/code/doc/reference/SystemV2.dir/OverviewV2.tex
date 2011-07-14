@@ -1,0 +1,488 @@
+\chapter{Overview}
+\pagenumbering{arabic}
+\label{Overview}
+\index{overview}
+
+
+This chapter \footnote{Last change:
+$ $Id: OverviewV2.tex 6675 2008-11-25 17:36:38Z wes.young $ $}
+provides an overview of the \casa\ system.
+
+% ----------------------------------------------------------------------------
+\section{Introduction}
+\casa V2 is the result of some very hard work by a dedicated group of programmers
+and scientists who would not let all the good work that went into \casa fade into
+oblivion. While the name is changed, \casa is at the heart \casa V2, especially the
+build system.  Libraries are now structured for functionality and hopefully layered
+such that the developer can pick what they need.  Different packages may be easily
+added to the code tree.
+
+
+% ----------------------------------------------------------------------------
+
+\section{The CASA directory hierarchy}
+\label{Directories}
+\index{directory!hierarchy}
+
+In the following discussion of the \casa\ directory hierarchy we will
+assume that \casa\ has been installed in directory \file{/home/casa}.  This
+is the preferred location, but in practice the \casa\ ``root'' directory
+can reside anywhere.  The root directory is generally referred to as
+\file{\$AIPSROOT}.  Many other \casa\ directories have standard variable
+names as listed in \sref{variables}.
+
+The major subdirectories of \file{/home/casa} are \file{code} (\file{\$AIPSCODE}),
+\file{docs} (\file{\$AIPSDOCS}), and one or more architecture-specific
+subdirectories with names such as \file{darwin} and \file{linux\_gnu}
+which contain the \casa\ system - that is, everything needed to run \casa,
+including executables and sharable objects.  These architecture-specific
+subdirectories are referred to collectively as \file{\$AIPSARCH}.
+
+% ----------------------------------------------------------------------------
+
+\subsection{Code directories}
+\label{Code directories}
+\index{directory!code}
+
+The directory hierarchy beneath \file{/home/casa/code}, or \file{\$AIPSCODE},
+consists of a collection of ``packages'' which are contained in separate
+subdirectories.
+
+There are a core set of \casa libraries, casa, scimath, components, coordinates, fits, flagging,
+graphics, images, lattices, measures, ms, msfits, msvis, synthesis, and tables. In addition there
+is display, casajni and java, which contain stand-alone applications for viewing images and for
+browsing tables. The java directory contains jar files that are needed by the table browser.
+
+There are two main application directories appspython and xmlcasa. Appspython is a lightweight limited
+set of python bindins for tables, measures, quanta and functionals. Xmlcasa is a tool/tasked based system
+similar to the old glish based \casa.
+
+Anyone is entitled to download and build the \casa libraries. Write access to the core set of
+libraries on the trunk in the repository is strictly controlled.
+
+Each \casa\ consortium member is also entitled to maintain a package for
+data processing applications specific to its telescope(s).  The sources for
+these classes and applications reside in the consortium-specific packages:
+\file{atnf}, \file{bima}, \file{drao}, \file{nfra}, \file{nral}, \file{nrao},
+and \file{tifr}.  These may or may not use the standard \file{dish},
+\file{synthesis}, and \file{vlbi} packages, and their installation is also
+optional.
+
+The \file{implement} and \file{fortran} subdirectories may contain module
+subdirectories which serve to collect software ``modules'' in one place.  For
+example, the \file{Tables} module contains all class header and implementation
+files pertaining to the \file{Table} class, and classes derived from, and
+related to it.  The \file{implement} directory and all module subdirectories
+may also contain a \file{test} subdirectory which contains one or more
+self-contained test programs specifically for the module.
+
+All files associated with an \casa\ application reside in a subdirectory of
+the \file{apps} directory of the same name as the application.  Each
+application must reside in its own subdirectory.
+
+The substructure of the consortium-specific packages is left entirely to
+\casa\ consortium members to determine.
+
+There are a number of other subdirectories of \file{/home/casa/code} which are
+unrelated to packages.  The \file{install} subdirectory contains all of the
+utilities required to install and maintain \casa\ as discussed in this
+document.  \file{doc} contains \casa\ documentation sources, including the
+\casa\ ``specs'', ``memos'', and ``notes'' series, and reference and design
+documentation in the corresponding subdirectories.
+
+Also below \file{/home/casa/code} is an \file{include} subdirectory which
+contains symbolic links to the \file{implement} subdirectories for each
+package.  The purpose of these symlinks is to allow \casa\ includes to be
+specified as ``\code{\#include <package/Header.h>}'' by adding
+\mbox{\file{-I/home/casa/code/include}} to the include path.
+
+On \casa\ consortium installations an additional \file{admin} subdirectory
+of \file{/home/casa/code} contains files relating to the administration of the
+\casa\ project.
+
+The \file{/home/casa/code} directory hierarchy appears as follows:
+
+\begin{verbatim}
+            |                            
+            |                                         +-- Module1 --+--- test ----
+            |                           +- implement -+-- Module2 --+--- test ----
+            |                           |             +--- .... ----
+            |                           |             +--- test ----
+            |                           |
+            |             +--- casa ----+-- mirlib  --+...
+            |             |             +-- wcslib  --+...
+            |             |             
+            |             |
+            |             |               +- fortran  --+...
+            |             +- scimath -----+- implement -+...
+            |             +- tables ------+...
+            |             +- measures ----+...
+            |             +- fits --------+...
+            |             +- lattices ----+...
+            |             +- coordinates -+...
+            |             +- components --+...
+            |             +- images ------+...
+            |             +- ms ----------+...
+            |             +- msfits ------+...
+            |             +- msvis -------+...
+            |             +- calibration -+...
+            |             +- ionosphere --+...
+            |             +- flagging ----+...
+            |             +- synthesis ---+...
+            |             +--- dish ------+...
+            |             +- atmosphere --+...
+            |             |
+            |             +- graphics ----+...
+            |             +- casajni -----+...
+            |             +- display -----+...
+            |             |
+            |             +- simulators --+...
+            |             +- singledish --+...
+            |             +- vlbi --------+...
+            |             +- vo ----------+...
+            |             |
+            |             |                +- implement
+            |             +--- appspython -+- apps
+            |             |                
+            |             |                +- install
+            |             |                +- apps
+            |             |                +- implement
+            |             +--- xmlcasa ----+-install
+            |             |                +- scripts
+            |             |                +- xml
+            |             |                +- idl
+            |             |
+            |             +--- atnf ----+...
+            |             +--- alma ----+...
+            |             +--- drao ----+...
+            |             +--- nfra ----+...
+            |             +--- nral ----+...
+            |             +--- nrao ----+...
+            |             +--- tifr ----+...
+/home/casa -+--- code ----+
+            |             |             +- codedevl --
+            |             |             +- codemgmt --
+            |             +-- install --+- docutils --
+            |             |             +- printer ---
+            |             |             +-- <arch> ---
+            |             |
+            |             |             +-- design ---+...
+            |             |             +--- html ----
+            |             |             +--- memos ---
+            |             |             +--- notes ---
+            |             +---- doc ----+-- papers ---
+            |             |             +-- project --
+            |             |             +- reference -
+            |             |             +--- specs ---
+            |             |             +--- .... ----
+            |             |
+            |             +-- include --
+            |             |
+            |             |             +- personnel -
+            :             +--- admin ---+- projects --
+            :                           +-- system ---
+\end{verbatim}
+
+% ----------------------------------------------------------------------------
+
+\subsection{Documentation directories}
+\label{Documentation directories}
+\index{directory!documentation}
+
+The \file{/home/casa/docs} subdirectory, or \file{\$AIPSDOCS} (\sref{variables})
+contains \textsc{ascii}, \textsc{html} and \textsc{PostScript} documents
+compiled from the sources in \file{/home/casa/code/doc} whose directory structure
+it shadows:
+
+\begin{verbatim}
+            :             +--- casa ----+...
+            :             +--- scimath -+...
+            |             +--- .... ----+...
+            |             |
+            |             +-- design ---+...
+            |             +--- html ----
+            |             +--- memos ---
+/home/casa -+--- docs ----+--- notes ---
+            |             +-- papers ---
+            |             +-- project --
+            |             +- reference -
+            :             +--- specs ---
+            :             +--- .... ----
+\end{verbatim}
+
+\noindent
+\file{html} files compiled from inline comments in the \cplusplus\ source code
+are deposited in the various package-specific subdirectories.
+
+% ----------------------------------------------------------------------------
+
+\subsection{System directories}
+\label{System directories}
+\index{directory!system}
+
+The \casa\ system directory hierarchy is created in the first instance when
+\casa\ is installed (see \sref{Installation}), and maintained thereafter by
+the \code{sysdirs} target which is invoked by \code{allsys} in the top level
+\filreff{makefile}{makefiles}.
+
+Except for the \filref{casainit} files in \file{\$AIPSROOT}, the \casa\ 
+system is completely self-contained within the architecture-specific
+subdirectory, referred to as \file{\$AIPSARCH} (\sref{variables}).  In this
+context ``architecture'' should be interpreted to include variants in the
+operating system version and compiler.
+
+In practical terms, the fact that the \casa\ system does not rely on
+anything in the \file{\$AIPSCODE} directories allows the source code to be
+deleted after the \casa\ installation is complete in a production-line
+system.
+
+At an \casa\ development site with machines of several architectures where
+the source code must be retained, the strict separation of code from system
+provides for the \file{\$AIPSARCH} tree to reside on a machine of the
+corresponding architecture without duplication of the \file{code} directories.
+With thoughtful unix filesystem management it also allows that the \casa\ 
+system for one architecture may remain available even if the server for any
+other architecture has crashed.
+
+The system directories have the following structure:
+
+\begin{verbatim}
+            :             +---- lib ----+...
+            :             +---- bin ----
+            |             |
+            |             +-- libdbg ---+...
+            |             +-- bindbg ---
+            |             |
+            |             +-- bintest --
+            |             |
+            |             +-- libexec --
+            |             |
+            |             +---- aux ----
+            |             +---- tmp ----+...
+            |             |
+            |             |             +--- info ----
+/home/casa -+-- (arch1) --+---- doc ----+--- man1 ----
+            |             |             +--- cat1 ----
+            |             |             +---  :
+            |             |
+            |             |             +-- (host1) --
+            |             +-- (site1) --+-- (host2) --
+            |             |             +--   :
+            |             |
+            :             +-- (site2) --+...
+            :             +---   :
+\end{verbatim}
+
+\noindent
+The \file{lib} directory contains optimized static object libraries and
+possibly sharable objects.  It sometimes also contains a subdirectory which
+serves as a \cplusplus\ template repository.  The \file{bin} directory
+contains \casa\ system scripts and optimized applications.  It is added to
+the \code{PATH} environment variable by the \exeref{casainit} scripts.
+
+The \file{libdbg} and \file{bindbg} directories contain debug versions of the
+libraries and executables.  The \file{bindbg} directory is not usually
+populated but serves as the temporary residence for executables which are in
+the process of being debugged.
+
+The \file{bintest} directory is used temporarily to store test executables and
+test results, and \file{libexec} contains scripts of various kinds which are
+not meant to be executed directly but are instead included by other scripts.
+
+Files which are produced as intermediaries of system generation are cached in
+the \file{aux} directory.  In particular, it includes dependency lists
+generated by the makefiles.  Temporary storage is provided during a rebuild
+beneath the \file{tmp} directory.  The structure and usage of the \file{tmp}
+directory hierarchy is soley the concern of the \casa\ makefiles.  It
+contains subdirectories specific to each \casa\ package (see
+\sref{Code directories}).
+
+Online documentation is contained in the \file{doc} subdirectory.  This
+includes unix manual pages and help files.  The \exeref{casainit} scripts add
+this directory to the \code{MANPATH} environment variable if it is defined at
+the time that \aipsexe{casainit} is invoked.
+
+Finally, the \file{\$AIPSARCH} directory contains site subdirectories which
+contain site-specific \file{aipsrc} and \file{makedefs} files (see
+\sref{Configuration files}), and possibly host-specific subdirectories which
+in turn contain host-specific \file{aipsrc} files.  Multiple site-, and
+host-specific directories were provided to make it easier for a central site
+to administer \casa\ for a collection of remote sites.  If properly
+configured, it should allow a verbatim copy of the \casa\ system at the
+central site to be downloaded at the remote site with only a minimum of
+reconfiguration required.
+
+% ----------------------------------------------------------------------------
+
+\subsection{SVN directories}
+\label{svn directories}
+\index{directory!.svn@\rcs}
+\index{svn@\rcs!directories|see{directory, \rcs}}
+\index{repository!svn@\rcs|see{directory, \rcs}}
+
+Subversion directories (.svn) are found in the code tree. These directories
+contain information needed by subversion for code management. For more details
+on subversion visit the subversion site at
+\htmladdnormallink{https://subversion.tigris.com}{https://subversion.tigris.com}
+
+% ----------------------------------------------------------------------------
+
+\section{CASA variable names}
+\label{variables}
+\index{variables}
+\index{variables!environment}
+\index{variables!makefile}
+\index{environment variables}
+\index{makefile!variables}
+\index{CASAPATH@\code{CASAPATH}|see{variables}}
+\index{AIPSROOT@\code{AIPSROOT}|see{variables}}
+\index{AIPSARCH@\code{AIPSARCH}|see{variables}}
+\index{AIPSSITE@\code{AIPSSITE}|see{variables}}
+\index{AIPSHOST@\code{AIPSHOST}|see{variables}}
+\index{AIPSMSTR@\code{AIPSMSTR}|see{variables}}
+\index{AIPSLAVE@\code{AIPSLAVE}|see{variables}}
+\index{AIPSRCS@\code{AIPSRCS}|see{variables}}
+\index{AIPSCODE@\code{AIPSCODE}|see{variables}}
+\index{AIPSDOCS@\code{AIPSDOCS}|see{variables}}
+\index{MSTRETCD@\code{MSTRETCD}|see{variables}}
+\index{CODEINSD@\code{CODEINSD}|see{variables}}
+\index{CODEINCD@\code{CODEINCD}|see{variables}}
+\index{LIBDBGD@\code{LIBDBGD}|see{variables}}
+\index{LIBOPTD@\code{LIBOPTD}|see{variables}}
+\index{BINDBGD@\code{BINDBGD}|see{variables}}
+\index{BINOPTD@\code{BINOPTD}|see{variables}}
+\index{BINTESTD@\code{BINTESTD}|see{variables}}
+\index{ARCHTMPD@\code{ARCHTMPD}|see{variables}}
+\index{ARCHAUXD@\code{ARCHAUXD}|see{variables}}
+\index{ARCHBIND@\code{ARCHBIND}|see{variables}}
+\index{ARCHDOCD@\code{ARCHDOCD}|see{variables}}
+\index{ARCHMAN1@\code{ARCHMAN1}|see{variables}}
+ 
+A standard set of variable names is used in \casa\ scripts, makefiles and
+elsewhere to refer to \casa\ directories (\sref{Directories}).  Except for
+\code{\$CASAPATH}, these are not stored in the environment but instead are
+rederived from \code{\$CASAPATH} whenever needed.  
+
+These variable names are freely used in this manual with the following
+typographic conventions:
+
+\begin{description}
+   \item{\code{CASAPATH}}       ...the name of the variable.
+   \item{\code{\$CASAPATH}}     ...the value of the \code{CASAPATH} variable,
+      whether used as an environment variable or makefile variable.
+   \item{\code{\$(CASAPATH)}}   ...the value of the \code{CASAPATH} variable
+      used as a makefile variable.
+\end{description}
+ 
+Additional variables used by the \casa\ makefiles are described in the
+entries for \filref{makedefs} and \filref{makefiles}.
+ 
+\noindent
+\verb+   ROOT = +the \casa\ home directory, also referred to as
+                 \verb+~+\file{home/casa}\\
+\verb+   ARCH = +the machine architecture, e.g. \code{sun4}, \code{convex},
+                 etc.\\
+\verb+   SITE = +the local site name\\
+\verb+   HOST = +the host name
+ 
+\begin{verbatim}
+   CASAPATH = $ROOT $ARCH $SITE $HOST
+ 
+   AIPSROOT = $ROOT
+   AIPSARCH = $ROOT/$ARCH
+   AIPSSITE = $ROOT/$ARCH/$SITE
+   AIPSHOST = $ROOT/$ARCH/$SITE/$HOST
+ 
+   AIPSMSTR = $AIPSROOT/master
+   AIPSLAVE = $AIPSROOT/slave
+   AIPSRCS  = $AIPSROOT/rcs
+   AIPSCODE = $AIPSROOT/code
+   AIPSDOCS = $AIPSROOT/docs
+ 
+   MSTRETCD = $AIPSMSTR/etc
+ 
+   CODEINSD = $AIPSCODE/install
+   CODEINCD = $AIPSCODE/include
+
+   INSTARCH = $CODEINSD/$ARCH
+ 
+   LIBDBGD  = $AIPSARCH/libdbg
+   LIBOPTD  = $AIPSARCH/lib
+   BINDBGD  = $AIPSARCH/bindbg
+   BINOPTD  = $AIPSARCH/bin
+   BINTESTD = $AIPSARCH/bintest
+ 
+   ARCHTMPD = $AIPSARCH/tmp
+   ARCHAUXD = $AIPSARCH/aux
+   ARCHBIND = $AIPSARCH/bin
+   ARCHDOCD = $AIPSARCH/doc
+   ARCHMAN1 = $ARCHDOCD/man1
+\end{verbatim}
+
+% ----------------------------------------------------------------------------
+
+\section{Configuration files}
+\label{Configuration files}
+\index{system!configuration}
+\index{configuration|see{system, configuration}}
+
+Two sets of configuration files are used in \casa, the \file{aipsrc} and
+\file{makedefs} files.
+
+The \file{aipsrc} files store \code{keyword:value} entries used by \casa\ 
+scripts and programs.  The mechanism is superficially similar to that of
+\file{.Xdefaults} on which it is modelled.  The \file{aipsrc} files are
+hierarchical - a user's \file{.aipsrc} is usually the one first consulted, if
+no keyword definition is found therein the search continues to host-specific,
+site-specific, and default \filref{aipsrc} files.
+
+The \file{makedefs} files are \gnu\ makefiles which define
+installation-specific variables.  All \casa\ \filref{makefiles} begin by
+including \file{\$AIPSARCH/}\filref{makedefs} (\sref{variables}) which
+contains default definitions and also some generally applicable rules and
+targets.  This ``default'' \file{makedefs} in turn includes
+\file{\$AIPSSITE/makedefs} which allows the default definitions to be
+overridden.
+
+% ----------------------------------------------------------------------------
+
+\section{CASA accounts and groups}
+\label{Accounts and groups}
+\index{aips2adm@\acct{aips2adm}}
+\index{aips2mgr@\acct{aips2mgr}}
+\index{aips2prg@\acct{aips2prg}}
+\index{aips2usr@\acct{aips2usr}}
+\index{code!management!accounts}
+\index{code!management!uid}
+\index{code!management!groups}
+\index{code!management!gid}
+\index{master host}
+\index{accounts|see{code, management}}
+\index{groups|see{code, management}}
+\index{uid|see{code, management}}
+\index{gid|see{code, management}}
+
+Historically there were two main adminstration accounts aips2adm and aips2mgr.
+With the switch to CVS and SVN, the aips2adm account is greatly dimished
+in importance. Neither account is necessary outside of the NRAO environment.
+The aips2mgr account is handy in shared development environment for providing
+a common \casa environment for multiple developers.
+
+A set of \casa\ accounts and groups have been defined to perform particular
+functions.  The following descriptions include the standard names, user ids,
+and group ids, but different names may be defined via the \filref{aipsrc}
+mechanism:
+
+\begin{itemize}
+\item
+    \acct{aips2adm} (uid=31414, gid=31414): An obsolete account in Socorro,
+    mostly used now for managing the data repository.
+
+\item
+    \acct{aips2mgr} (uid=31415, gid=31415): Owns the \casa\ installation,
+    including directories, source files and binaries.  
+    \acct{aips2mgr} runs the daily
+    \exeref{inhale} \unixexe{cron} job.
+
+\end{itemize}
+

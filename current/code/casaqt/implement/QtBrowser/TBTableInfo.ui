@@ -1,0 +1,244 @@
+<ui version="4.0" >
+ <class>TableInfo</class>
+ <widget class="QWidget" name="TableInfo" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Table Information</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <property name="margin" >
+    <number>3</number>
+   </property>
+   <property name="spacing" >
+    <number>3</number>
+   </property>
+   <item>
+    <layout class="QHBoxLayout" >
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <property name="spacing" >
+      <number>0</number>
+     </property>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="nameLabel" >
+       <property name="text" >
+        <string>table</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QGridLayout" >
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <property name="spacing" >
+      <number>3</number>
+     </property>
+     <item row="2" column="2" >
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="3" column="1" >
+      <widget class="QLabel" name="deleteLabel" >
+       <property name="text" >
+        <string>yes</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" >
+      <widget class="QLabel" name="label_4" >
+       <property name="text" >
+        <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal; text-decoration:none;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Delete Rows?:&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2" >
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="1" >
+      <widget class="QLabel" name="rowsLabel" >
+       <property name="text" >
+        <string>rows</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2" >
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="0" column="1" >
+      <widget class="QLabel" name="locationLabel" >
+       <property name="text" >
+        <string>location</string>
+       </property>
+       <property name="wordWrap" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="label_2" >
+       <property name="text" >
+        <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal; text-decoration:none;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Total Rows:&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" >
+      <widget class="QLabel" name="insertLabel" >
+       <property name="text" >
+        <string>yes</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" >
+      <widget class="QLabel" name="label_3" >
+       <property name="text" >
+        <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal; text-decoration:none;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Insert Rows?:&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" >
+      <widget class="QLabel" name="locTaqlLabel" >
+       <property name="text" >
+        <string>&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal; text-decoration:none;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Location:&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2" >
+      <spacer>
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" >
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTableWidget" name="tableWidget" >
+     <property name="selectionBehavior" >
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <column>
+      <property name="text" >
+       <string>Field</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Type</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Unit</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>UCD</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Ref</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Precision</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Width</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
