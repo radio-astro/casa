@@ -62,8 +62,10 @@ casa_add_library( calibration
   implement/CalTables/NewCalTable.cc
   implement/CalTables/NewCalTableDesc.cc
   implement/CalTables/NewCalTableEnums.cc
+  implement/CalTables/NewCalMainColumns.cc
   implement/CalTables/NewCalMainRecord.cc
   implement/CalTables/PlotCal.cc
+  implement/CalTables/RONewCalMainColumns.cc
   implement/CalTables/SolvableMJDesc.cc
   implement/CalTables/SolvableMJMRec.cc
   implement/CalTables/SolvableVJDesc.cc

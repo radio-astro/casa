@@ -28,6 +28,8 @@
 #include <calibration/CalTables/NewCalTable.h>
 #include <calibration/CalTables/NewCalTableDesc.h>
 #include <calibration/CalTables/NewCalMainRecord.h>
+#include <calibration/CalTables/NewCalMainColumns.h>
+#include <calibration/CalTables/NewCalColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Containers/RecordField.h>
@@ -175,11 +177,20 @@ void doTest4 ()
   cout <<"*** subtable access test for new caltable constructed from a table object"<<endl;
   Table tabnew("testDiskCal.Tab");
   NewCalTable testcaltab2(tabnew);
+  //NewCalColumns nctc(testcaltab2);
+  //cerr<<"done newcalcolumns"<<endl;
   NewCalTable::CalAntenna calantab2 = testcaltab2.antenna(); 
   //
-  ROMSAntennaColumns antcols2(calantab2);
+  NewCalTable::ROCalAntennaColumns antcols2(calantab2);
   ROScalarColumn<String> antnames2=antcols2.name();
   cout<<"antnames2="<<antnames2(0)<<endl;
+  //cout<<"antnames2="<<nctc.antenna().nrow()<<endl;
+
+  //test main col access
+  NewCalMainColumns newcalmcals(testcaltab2);
+  ScalarColumn<Double> outtime=newcalmcals.time(); 
+  cerr<<"outtime(0)="<<outtime(0)<<endl;
+  //cerr<<"outtime(0)="<<nctc.time()(0)<<endl;
 }
 
 void doTest5 ()

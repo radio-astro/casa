@@ -26,8 +26,8 @@
 //#
 //# $Id$
 
-#ifndef CALIBRATION_CALTABLE_H
-#define CALIBRATION_CALTABLE_H
+#ifndef CALIBRATION_NEWCALTABLE_H
+#define CALIBRATION_NEWCALTABLE_H
 
 #include <casa/aips.h>
 #include <tables/Tables/Table.h>
@@ -39,11 +39,16 @@
 #include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSHistory.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSHistoryColumns.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
+#include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSHistoryColumns.h>
 #include <calibration/CalTables/NewCalTableDesc.h>
 #include <calibration/CalTables/NewCalMainRecord.h>
-//#include <calibration/CalTables/CalMainRecord.h>
-#include <calibration/CalTables/CalDescRecord.h>
-#include <calibration/CalTables/CalHistRecord.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -147,11 +152,23 @@ class NewCalTable : public Table
    typedef MSAntenna CalAntenna;
    typedef MSSpectralWindow CalSpectralWindow;
    typedef MSHistory CalHistory;
+   typedef MSFieldColumns CalFieldColumns;
+   typedef MSAntennaColumns CalAntennaColumns;
+   typedef MSSpWindowColumns CalSpWindowColumns;
+   typedef MSHistoryColumns CalHistoryColumns;
+   typedef ROMSFieldColumns ROCalFieldColumns;
+   typedef ROMSAntennaColumns ROCalAntennaColumns;
+   typedef ROMSSpWindowColumns ROCalSpWindowColumns;
+   typedef ROMSHistoryColumns ROCalHistoryColumns;
    
    CalAntenna& antenna() {return antenna_p;}
    CalField& field() {return field_p;}
    CalSpectralWindow& spectralWindow() {return spectralWindow_p;}
-   CalHistory& histroy() {return history_p;}
+   CalHistory& history() {return history_p;}
+   const CalAntenna& antenna() const {return antenna_p;}
+   const CalField& field() const {return field_p;}
+   const CalSpectralWindow& spectralWindow() const {return spectralWindow_p;}
+   const CalHistory& history() const {return history_p;}
 
 
  protected:
@@ -164,8 +181,7 @@ class NewCalTable : public Table
    const Table& calDescAsTable() const {return *itsDescTable;};
    const Table& calHistoryAsTable() const {return *itsHistoryTable;};
 ***/
-   //friend class MSAntenna;
-   
+ 
  private:
    //cal_main Table object
    //Table caltable_;
