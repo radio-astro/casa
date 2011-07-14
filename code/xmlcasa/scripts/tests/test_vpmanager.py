@@ -72,7 +72,7 @@ class vpmanager_test(unittest.TestCase):
 
     def test5(self):
         '''Test 5: get image name (fails if AntennaResponses table not in repository)'''
-        self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","EFP","DV","0deg","0deg","",0)
+        self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","DV","0deg","0deg","",0)
         self.assertTrue(self.res)
 
 def suite():
