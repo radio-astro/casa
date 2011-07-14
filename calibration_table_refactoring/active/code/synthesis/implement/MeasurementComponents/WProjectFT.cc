@@ -1040,9 +1040,9 @@ void WProjectFT::getWeightImage(ImageInterface<Float>& weightImage,
   }
 }
 
-Bool WProjectFT::toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage) {
-  
+Bool WProjectFT::toRecord(String&, //error,
+			  RecordInterface& outRec, Bool withImage)
+{  
   // Save the current WProjectFT object to an output state record
   Bool retval = True;
   Double cacheVal=(Double) cachesize;
@@ -1084,7 +1084,8 @@ Bool WProjectFT::toRecord(String& error, RecordInterface& outRec,
   return retval;
 }
 
-Bool WProjectFT::fromRecord(String& error, const RecordInterface& inRec)
+Bool WProjectFT::fromRecord(String&, //error,
+			    const RecordInterface& inRec)
 {
   Bool retval = True;
   imageCache=0; lattice=0; arrayLattice=0;

@@ -31,10 +31,8 @@
 #define SYNTHESIS_ALMACALCILLUMINATIONCONVFUNC_H
 
 #include <synthesis/MeasurementComponents/IlluminationConvFunc.h>
-//#include <synthesis/MeasurementComponents/BeamCalcConstants.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
-//#include <synthesis/MeasurementComponents/ALMABeamCalc.h>
-//#include <synthesis/MeasurementComponents/BeamCalcAntenna.h>
+#include <synthesis/MeasurementComponents/ALMAAperture.h>
 #include <synthesis/MeasurementComponents/CExp.new3.h>
 #include <synthesis/MeasurementComponents/ExpCache.h>
 #include <images/Images/TempImage.h>
@@ -77,8 +75,8 @@ namespace casa{
 			const VisBuffer &vb,
 			const Vector<Float>& paList,
 			Bool doSquint, Int bandID);
-    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Bool doSquint=False);
-    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint=True);
+    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Bool doSquint=False, Int cfKey=0);
+    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint=True, Int cfKey=0);
     void skyMuller(ImageInterface<Complex>& skyJones);
 
     //    Int getALMABandId(const Double& freq);

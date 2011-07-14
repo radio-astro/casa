@@ -180,7 +180,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   };
   
   //----------------------------------------------------------------------
-  Bool FTMachine::changed(const VisBuffer& vb) {
+  Bool FTMachine::changed(const VisBuffer&) {
     return False;
   }
   
@@ -962,7 +962,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return False;
   };
   
-  Bool FTMachine::fromRecord(String& error, const RecordInterface& inRecord) {
+  Bool FTMachine::fromRecord(String&, //error,
+			     const RecordInterface&// inRecord
+			     ) {
     // Restore an FTMachine from a Record; currently undefined for the 
     // base FTMachine class
     //

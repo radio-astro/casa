@@ -89,8 +89,9 @@ namespace casa{
   // Write PB to the pbImage
   //
   void ALMACalcIlluminationConvFunc::applyPB(ImageInterface<Float>& pbImage,
-					    const VisBuffer& vb,
-					    Bool doSquint)
+					     const VisBuffer& vb,
+					     Bool doSquint,
+					     Int cfKey)
   {
     CoordinateSystem skyCS(pbImage.coordinates());
     IPosition skyShape(pbImage.shape());
@@ -98,14 +99,17 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
     MVFrequency freqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", "DV");
+    MEpoch obsTime(vb.msColumns().timeQuant()(0));
+    String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage);
   }
   void ALMACalcIlluminationConvFunc::applyPB(ImageInterface<Complex>& pbImage, 
-					    const VisBuffer& vb,
-					    Bool doSquint)
+					     const VisBuffer& vb,
+					     Bool doSquint,
+					     Int cfKey)
   {
     CoordinateSystem skyCS(pbImage.coordinates());
     IPosition skyShape(pbImage.shape());
@@ -114,7 +118,11 @@ namespace casa{
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
 
     MVFrequency freqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", "DV");
+    MEpoch obsTime(vb.msColumns().timeQuant()(0));
+    String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
+    String antType2 = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[1]); // take the first antenna
+    cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     pbImage.setCoordinateInfo(skyCS);
@@ -613,32 +621,5 @@ namespace casa{
 	*/
     skyJones.put(buf);
   }
-
-
-//   Int ALMACalcIlluminationConvFunc::getALMABandId(const Double& freq){
-//     if ((     31.3E9 <=freq) && (freq <=45E9))
-//       return BeamCalc_ALMA_1;
-//     else if ((  67E9 <=freq) && (freq <84E9))
-//       return BeamCalc_ALMA_2;
-//     else if ((  84E9 <=freq) && (freq <=116E9))
-//       return BeamCalc_ALMA_3;
-//     else if (( 125E9 <=freq) && (freq <163E9))
-//       return BeamCalc_ALMA_4;
-//     else if (( 163E9 <=freq) && (freq <211E9))
-//       return BeamCalc_ALMA_5;
-//     else if (( 211E9 <=freq) && (freq <275E9))
-//       return BeamCalc_ALMA_6;
-//     else if (( 275E9 <=freq) && (freq <=373E9))
-//       return BeamCalc_ALMA_7;
-//     else if (( 385E9<=freq) && (freq <=500E9))
-//       return BeamCalc_ALMA_8;
-//     else if (( 602E9<=freq) && (freq <=720E9))
-//       return BeamCalc_ALMA_9;
-//     else if (( 787E9<=freq) && (freq <=950E9))
-//       return BeamCalc_ALMA_10;
-//     ostringstream mesg;
-//     mesg << freq << " Hz is outside the ALMA frequency bands.";
-//     throw(SynthesisError(mesg.str()));
-//   }
 
 };
