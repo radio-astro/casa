@@ -69,25 +69,25 @@ public:
 			const String& box, const IPosition& imShape, const String& imageName=""
 	);
 
-	static Vector<uInt> consolidateAndOrderRanges(
-			const Vector<uInt>& ranges
+	static vector<uInt> consolidateAndOrderRanges(
+		const vector<uInt>& ranges
 	);
 
 	// <src>nChannels</src> is the total number of spectral channels in the image
-	Vector<uInt> setSpectralRanges(
-			String specification, uInt& nSelectedChannels, const uInt nChannels
+	vector<uInt> setSpectralRanges(
+		String specification, uInt& nSelectedChannels, const uInt nChannels
 	) const;
 
 private:
 
-	String _pairsToString(const Vector<uInt>& pairs) const;
+	String _pairsToString(const vector<uInt>& pairs) const;
 
-	Vector<uInt> _setPolarizationRanges(
-			String& specification, const String& firstStokes, const uInt nStokes,
-			const StokesControl stokesControl
+	vector<uInt> _setPolarizationRanges(
+		String& specification, const String& firstStokes, const uInt nStokes,
+		const StokesControl stokesControl
 	) const;
 
-	Vector<Double> _setBoxCorners(const String& box) const;
+	vector<Double> _setBoxCorners(const String& box) const;
 
 	ImageRegion _fromBCS(
 			String& diagnostics, uInt& nSelectedChannels, String& stokes,
@@ -97,8 +97,8 @@ private:
 
 	ImageRegion _fromBCS(
 			String& diagnostics,
-			const Vector<Double>& boxCorners, const Vector<uInt>& chanEndPts,
-			const Vector<uInt>& polEndPts, const IPosition imShape
+			const vector<Double>& boxCorners, const vector<uInt>& chanEndPts,
+			const vector<uInt>& polEndPts, const IPosition imShape
 	) const;
 
 	static void _setRegion(

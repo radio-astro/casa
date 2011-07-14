@@ -153,22 +153,22 @@ void AnnRegion::_extend(const ImageRegion& region) {
 		spectralAxis = _csys.spectralAxisNumber();
 		nBoxes = 1;
 	}
-	Vector<Stokes::StokesTypes> stokesRanges;
+	vector<Stokes::StokesTypes> stokesRanges;
 	if (_csys.hasPolarizationAxis() && _stokes.size() > 0) {
 		StokesCoordinate stokesCoord = _csys.stokesCoordinate(
 			_csys.polarizationCoordinateNumber()
 		);
-		Vector<uInt> stokesNumbers(2*_stokes.size());
+		vector<uInt> stokesNumbers(2*_stokes.size());
 		for (uInt i=0; i<_stokes.size(); i++) {
 			stokesNumbers[2*i] = (uInt)_stokes[i];
 			stokesNumbers[2*i + 1] = stokesNumbers[2*i];
 		}
-		Vector<uInt> orderedRanges = CasacRegionManager::consolidateAndOrderRanges(
+		vector<uInt> orderedRanges = CasacRegionManager::consolidateAndOrderRanges(
 			stokesNumbers
 		);
-		stokesRanges.resize(orderedRanges.size());
+		// stokesRanges.resize(orderedRanges.size());
 		for (uInt i=0; i<orderedRanges.size(); i++) {
-			stokesRanges[i] = Stokes::type(orderedRanges[i]);
+			stokesRanges.push_back(Stokes::type(orderedRanges[i]));
 		}
 		stokesAxis = _csys.polarizationAxisNumber();
 		nBoxes = stokesRanges.size()/2;
