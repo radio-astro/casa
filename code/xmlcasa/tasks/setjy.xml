@@ -156,16 +156,11 @@
               field='0,4,5~7'; field ids 0,4,5,6,7
               field='3C286,3C295'; field named 3C286 and 3C295
               field = '3,4C*'; field id 3, all names starting with 4C
-       spw -- Select spectral window/channels
-              default: ''=all spectral windows and channels
-              spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
-              spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
-              spw='0:5~61'; spw 0, channels 5 to 61
-              spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
-              spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-              spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-              spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
-                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
+       spw -- Spectral window selection string.
+              default: '' = all spectral windows
+              Note that setjy only selects by spectral window, and ignores
+              channel selections.  Fine-grained control could be achieved using
+              (and possibly constructing) a cube for modimage.
 
        modimage -- Model image (I only) for setting the model visibilities.
               modimage can be a cube, and its channels do not have to exactly
@@ -207,8 +202,9 @@
        scalebychan=False
                This determines whether the fluxdensity set in the model is
                calculated on a per channel basis. If False then it only one
-               fluxdensity value is calculated per spw.  It is effectively True
-               if fluxdensity[0] &gt; 0.0.
+               fluxdensity value is calculated per spw.  (Either way, all channels
+               in spw are modified.)  It is effectively True if fluxdensity[0] &gt;
+               0.0.
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for unrecognized sources,
