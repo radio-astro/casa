@@ -99,6 +99,8 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <tables/LogTables/NewFile.h>
 
+#include <xmlcasa/version.h>
+
 #include <casa/namespace.h>
 
 using namespace std;
@@ -2766,11 +2768,20 @@ image::tofits(const std::string& fitsfile, const bool velocity,
       mask = "";
     }
 
+    String origin;
+    {
+      ostringstream buffer;
+      buffer << "CASA ";
+      VersionInfo::report(buffer);
+      origin = String(buffer);
+    }
+
+
     rstat=itsImage->tofits(fitsfile, velocity, optical, bitpix, minpix,
 			   maxpix, *pRegion, mask, overwrite,
 			   dropdeg, deglast,
 			   dropstokes, stokeslast,
-			   wavelength);
+			   wavelength, origin);
     delete pRegion;
     //
   } catch (AipsError x) {
