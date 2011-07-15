@@ -7221,13 +7221,21 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
       uInt outrn = 0; 		   	   		// row number in output.
       uInt nInputRows = inSId.nrow();
       Int maxSId = sourceRelabel_p.nelements();  // inSidVal is Int.
+      Int maxSPWId = spwRelabel_p.nelements();
       for(uInt inrn = 0; inrn < nInputRows; ++inrn){
 	Int inSidVal = inSId(inrn);
 	Int inSPWVal = inSPW(inrn);  // -1 means the source is valid for any SPW.
 	
-	if(inSidVal > -1 && inSidVal < maxSId &&
-           sourceRelabel_p[inSidVal] > -1
-           && (inSPWVal == -1 || spwRelabel_p[inSPWVal] > -1)){
+        if(inSidVal >= maxSId)
+	  os << LogIO::WARN
+             << "Invalid SOURCE ID in SOURCE table row " << inrn << LogIO::POST;
+	if(inSPWVal >= maxSPWId)
+	  os << LogIO::WARN
+             << "Invalid SPW ID in SOURCE table row " << inrn << LogIO::POST;
+
+	if((inSidVal > -1) && (inSidVal < maxSId) &&
+           (sourceRelabel_p[inSidVal] > -1) && 
+           ((inSPWVal == -1) || (inSPWVal < maxSPWId && spwRelabel_p[inSPWVal] > -1))){
 	  // Copy inrn to outrn.
 	  TableCopy::copyRows(newSource, oldSource, outrn, inrn, 1);
 	  outSId.put(outrn, sourceRelabel_p[inSidVal]);
