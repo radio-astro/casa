@@ -2,6 +2,7 @@ from taskinit import *
 import time
 import os
 import sys
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 debug = False
 def flagdata(vis = None,
@@ -39,11 +40,15 @@ def flagdata(vis = None,
              minabs = None,
              maxabs = None):
 
-        if pCASA.is_mms(vis):
-                pCASA.execute("flagdata", locals())
+        casalog.origin('flagdata')
+
+        # Take care of the trivial parallelization
+        if ParallelTaskHelper.isParallelMS(vis):
+                # To be safe convert file names to absolute paths.
+                helper = ParallelTaskHelper('flagdata', locals())
+                helper.go()
                 return
 
-        casalog.origin('flagdata')
 
         fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
         mslocal = casac.homefinder.find_home_by_name('msHome').create()
