@@ -24,9 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ImageFITS2Converter.cc 20881 2010-04-26 12:42:44Z gervandiepen $
-
-//#include <casa/version.h>
+//# $Id: ImageFITS2Converter.cc 21104 2011-07-15 08:06:21Z gervandiepen $
 
 #include <images/Images/ImageFITSConverter.h>
 #include <images/Images/PagedImage.h>
@@ -62,6 +60,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/System/ProgressMeter.h>
+#include <casa/version.h>
 
 #include <casa/sstream.h>
 #include <casa/iomanip.h>
@@ -219,7 +218,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 				     Int BITPIX, Float minPix, Float maxPix,
 				     Bool allowOverwrite, Bool degenerateLast,
                                      Bool verbose, Bool stokesLast,
-				     Bool preferWavelength)
+				     Bool preferWavelength,
+                                     const String& origin)
 {
 //
 // Make a logger
@@ -621,8 +621,12 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 	    case TpArrayBool:
 		header.define(miscname, image.miscInfo().asArrayBool(i));
 		break;
+	    case TpArrayChar:
+	    case TpArrayUShort:
 	    case TpArrayInt:
-		header.define(miscname, image.miscInfo().asArrayInt(i));
+	    case TpArrayUInt:
+	    case TpArrayInt64:
+		header.define(miscname, image.miscInfo().toArrayInt(i));
 		break;
 	    case TpArrayFloat:
 		header.define(miscname, image.miscInfo().asArrayfloat(i));
@@ -665,11 +669,11 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
 //
 // ORIGIN
 //
-    ostringstream buffer;
-    buffer << "CASA casacore alma-evla ";
-    // VersionInfo::report(buffer);
-    header.define("ORIGIN", String(buffer));
-
+    if (origin.empty()) {
+      header.define("ORIGIN", "casacore-" + getVersion());
+    } else {
+      header.define("ORIGIN", origin);
+    }
     // Set up the FITS header
     FitsKeywordList kw = FITSKeywordUtil::makeKeywordList();
     ok = FITSKeywordUtil::addKeywords(kw, header);
