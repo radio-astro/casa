@@ -48,8 +48,10 @@ casa_add_library( flagging
   implement/Flagging/LFExamineFlags.cc
   implement/Flagging/LFExtendFlags.cc
   implement/Flagging/LFDisplayFlags.cc
+  implement/Flagging/FlagDataHandler.cc
    )
 
+casa_add_test( flagging implement/Flagging/test/tFlagDataHandler.cc )
 casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
 casa_add_test( flagging implement/Flagging/test/tRFASelector.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagger.cc )
