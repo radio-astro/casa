@@ -230,16 +230,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    const DirectionCoordinate& dCoord = coordsys.directionCoordinate(skyCoord);
 	    MDirection::Types radecsys = dCoord.directionType();
 	    Double equinox = -1.0;
+	    String radesys = "";
 	    switch(radecsys) {
 	    case MDirection::J2000:
 		equinox = 2000.0;
+		radesys = "FK5";
 		break;
 	    case MDirection::B1950:
 		equinox = 1950.0;
+		radesys = "FK4";
 		break;
 	    case MDirection::B1950_VLA:
 		equinox = 1979.9;
+		radesys = "FK4";
 		break;
+	    case MDirection::ICRS:
+	      radesys = "ICRS";
+	      break;
 	    default:
 		; // Nothing
 	    }
@@ -249,6 +256,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 		    header.define("epoch", equinox);
 		}
+	    }
+	    if (radesys!=""){
+	      header.define("radesys", radesys);
 	    }
 //
 	    header.define("lonpole", longPole);
