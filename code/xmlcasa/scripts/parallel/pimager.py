@@ -58,7 +58,7 @@ class pimager():
 
     @staticmethod
     def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, freqrange=[0, 1e12]):
-        numproc=numaprtition
+        numproc=numpartition
         spwsel=[]
         startsel=[]
         nchansel=[]
@@ -1610,7 +1610,7 @@ class pimager():
             wdrec=self.c.pull('wd')
             self.workingdirs=['']*len(wdrec)
             for k in range(len(wdrec)):
-                print 'WORKING DIR for proc ', k , ' is ' , wdrec[k]
+                #print 'WORKING DIR for proc ', k , ' is ' , wdrec[k]
                 self.workingdirs[k]=wdrec[k]            
         ###do the common stuff to all child
         self.c.pgc('casalog.filter()')
