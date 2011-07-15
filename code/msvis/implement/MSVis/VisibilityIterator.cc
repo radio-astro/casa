@@ -2209,12 +2209,8 @@ ROVisibilityIterator::getSpwInFreqRange(Block<Vector<Int> >& spw,
     ROMSDataDescColumns ddCol(msIter_p.ms(k).dataDescription());
     ROMSSpWindowColumns spwCol(msIter_p.ms(k).spectralWindow());
     ROScalarMeasColumn<MEpoch> timeCol(msIter_p.ms(k), MS::columnName(MS::TIME));
-    Bool dum;
-    Sort sort( t.getStorage(dum),sizeof(Double) );
-    sort.sortKey((uInt)0,TpDouble);
-    Vector<uInt> sortIndx, uniqIndx;
-    sort.sort(sortIndx, t.nelements());
-    uInt nTimes=sort.unique(uniqIndx, sortIndx);
+    Vector<uInt>  uniqIndx;
+    uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
     //now need to do the conversion to data frame from requested frame
     //Get the epoch mesasures of the first row
     MEpoch ep;
