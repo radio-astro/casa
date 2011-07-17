@@ -103,7 +103,6 @@ atmosphere = __atmospherehome__.create( )
 from accum import  accum
 from applycal import  applycal
 from autoclean import  autoclean
-from autoflag import autoflag
 from bandpass import  bandpass
 from blcal import  blcal
 from boxit import  boxit
