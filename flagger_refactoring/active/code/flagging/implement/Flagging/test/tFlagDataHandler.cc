@@ -32,6 +32,7 @@ int main(unsigned char argc, char **argv)
 	string input_file, observation, array, scan, field, spw;
 	unsigned short iteration_mode = 0;
 	unsigned short logLevel = 0;
+	bool fillBuffer=false;
 
 
 	// Retrieve log level
@@ -105,73 +106,120 @@ int main(unsigned char argc, char **argv)
 	// Iterates over chunks (constant values)
 	while (dh->nextChunk())
 	{
+
 		// Iterates over buffers (time steps)
 		while (dh->nextBuffer())
 		{
+			if (fillBuffer)
+			{
+				dh->visibilityBuffer_p->antenna1();
+				dh->visibilityBuffer_p->antenna2();
+				dh->visibilityBuffer_p->arrayId();
+				dh->visibilityBuffer_p->channel();
+				dh->visibilityBuffer_p->CJones();
+				dh->visibilityBuffer_p->corrType();
+				dh->visibilityBuffer_p->direction1();
+				dh->visibilityBuffer_p->direction2();
+				dh->visibilityBuffer_p->exposure();
+				dh->visibilityBuffer_p->feed1();
+				dh->visibilityBuffer_p->feed1_pa();
+				dh->visibilityBuffer_p->feed2();
+				dh->visibilityBuffer_p->feed2_pa();
+				dh->visibilityBuffer_p->fieldId();
+				dh->visibilityBuffer_p->flag();
+				dh->visibilityBuffer_p->flagCategory();
+				dh->visibilityBuffer_p->flagCube();
+				dh->visibilityBuffer_p->flagRow();
+				dh->visibilityBuffer_p->floatDataCube();
+				dh->visibilityBuffer_p->frequency();
+				dh->visibilityBuffer_p->nChannel();
+				dh->visibilityBuffer_p->nCorr();
+				dh->visibilityBuffer_p->nRow();
+				dh->visibilityBuffer_p->observationId();
+				dh->visibilityBuffer_p->phaseCenter();
+				dh->visibilityBuffer_p->polFrame();
+				dh->visibilityBuffer_p->processorId();
+				dh->visibilityBuffer_p->scan();
+				dh->visibilityBuffer_p->sigma();
+				dh->visibilityBuffer_p->sigmaMat();
+				dh->visibilityBuffer_p->spectralWindow();
+				dh->visibilityBuffer_p->stateId();
+				dh->visibilityBuffer_p->time();
+				dh->visibilityBuffer_p->timeCentroid();
+				dh->visibilityBuffer_p->timeInterval();
+				dh->visibilityBuffer_p->uvw();
+				dh->visibilityBuffer_p->uvwMat();
+				dh->visibilityBuffer_p->visibility();
+				dh->visibilityBuffer_p->visCube();
+				dh->visibilityBuffer_p->weight();
+				dh->visibilityBuffer_p->weightMat();
+				dh->visibilityBuffer_p->weightSpectrum();
+			}
+
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 
-			if (dh->visibilityBuffer_p.observationId().nelements() > 1)
+			if (dh->visibilityBuffer_p->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
-					 << dh->visibilityBuffer_p.observationId()[0] << "~"
-					 << dh->visibilityBuffer_p.observationId()[dh->visibilityBuffer_p.observationId().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->observationId()[0] << "~"
+					 << dh->visibilityBuffer_p->observationId()[dh->visibilityBuffer_p->observationId().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Observation:" << dh->visibilityBuffer_p.observationId()[0] << " ";
+				cout << "Observation:" << dh->visibilityBuffer_p->observationId()[0] << " ";
 			}
 
-			cout << "Array:" << dh->visibilityBuffer_p.arrayId() << " ";
+			cout << "Array:" << dh->visibilityBuffer_p->arrayId() << " ";
 
-			if (dh->visibilityBuffer_p.scan().nelements() > 1)
+			if (dh->visibilityBuffer_p->scan().nelements() > 1)
 			{
 				cout << "Scan:"
-					 << dh->visibilityBuffer_p.scan()[0] << "~"
-					 << dh->visibilityBuffer_p.scan()[dh->visibilityBuffer_p.scan().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->scan()[0] << "~"
+					 << dh->visibilityBuffer_p->scan()[dh->visibilityBuffer_p->scan().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Scan:" << dh->visibilityBuffer_p.scan()[0] << " ";
+				cout << "Scan:" << dh->visibilityBuffer_p->scan()[0] << " ";
 			}
 
-			cout << "Field:" << dh->visibilityBuffer_p.fieldId() << " " ;
+			cout << "Field:" << dh->visibilityBuffer_p->fieldId() << " " ;
 
-			cout << "Spw:" << dh->visibilityBuffer_p.spectralWindow() << " ";
+			cout << "Spw:" << dh->visibilityBuffer_p->spectralWindow() << " ";
 
-			if (dh->visibilityBuffer_p.time().nelements() > 1)
+			if (dh->visibilityBuffer_p->time().nelements() > 1)
 			{
 				cout << "Time:"
-					 << dh->visibilityBuffer_p.time()[0] << "~"
-					 << dh->visibilityBuffer_p.time()[dh->visibilityBuffer_p.time().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->time()[0] << "~"
+					 << dh->visibilityBuffer_p->time()[dh->visibilityBuffer_p->time().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Time:" << dh->visibilityBuffer_p.time()[0] << " ";
+				cout << "Time:" << dh->visibilityBuffer_p->time()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p.antenna1().nelements() > 1)
+			if (dh->visibilityBuffer_p->antenna1().nelements() > 1)
 			{
 				cout << "Antenna1:"
-					 << dh->visibilityBuffer_p.antenna1()[0] << "~"
-					 << dh->visibilityBuffer_p.antenna1()[dh->visibilityBuffer_p.antenna1().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->antenna1()[0] << "~"
+					 << dh->visibilityBuffer_p->antenna1()[dh->visibilityBuffer_p->antenna1().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna1:" << dh->visibilityBuffer_p.antenna1()[0] << " ";
+				cout << "Antenna1:" << dh->visibilityBuffer_p->antenna1()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p.antenna2().nelements() > 1)
+			if (dh->visibilityBuffer_p->antenna2().nelements() > 1)
 			{
 				cout << "Antenna2:"
-					 << dh->visibilityBuffer_p.antenna2()[0] << "~"
-					 << dh->visibilityBuffer_p.antenna2()[dh->visibilityBuffer_p.antenna2().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->antenna2()[0] << "~"
+					 << dh->visibilityBuffer_p->antenna2()[dh->visibilityBuffer_p->antenna2().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna2:" << dh->visibilityBuffer_p.antenna2()[0] << " ";
+				cout << "Antenna2:" << dh->visibilityBuffer_p->antenna2()[0] << " ";
 			}
 
-			cout << "nRows:" << dh->visibilityBuffer_p.nRow() << endl;
+			cout << "nRows:" << dh->visibilityBuffer_p->nRow() << endl;
 		}
 	}
 
