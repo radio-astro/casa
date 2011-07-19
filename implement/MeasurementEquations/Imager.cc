@@ -4919,6 +4919,10 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       if(precompute){
         // Pre-compute flux density for standard sources if not specified
         // using the specified flux scale standard or catalog.
+        //
+        // The flux densities are calculated for all spws at once to avoid
+        // repeatedly digging up the flux model (and possibly the ephemeris).
+        //
         foundSrc = sjy_computeFlux(os, fluxStd, returnFluxes, returnFluxErrs, tempCLs,
                                    fluxUsed, fluxScaleName, mfreqs, model, fieldName,
                                    msc, fldid, fieldDir, standard);
@@ -4976,7 +4980,10 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
                                                             mfreqs[selspw][0],
                                                             mtime, fluxval, point,
-                                                            siModel, "_setjy_");
+                                                            siModel,
+                                                            "_setjy_spw" +
+                                                            String::toString(selspw) +
+                                                            "_");
         }
 
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw]);
@@ -4985,17 +4992,17 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           delete tmodimage;
         tmodimage = NULL;
         //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
-      }
 
-      // Delete the temporary component lists.  Do it after ft() has been run
-      // for all the spws because some spws with the same center frequency may
-      // be sharing component lists.
-      for(uInt selspw = 0; selspw < nspws; ++selspw){
 	if(tempCLs[selspw] != ""){
-          Bool cdt = Table::canDeleteTable(tempCLs[selspw]);
+          String errmsg;
 
-          if(cdt)
+          if(Table::canDeleteTable(errmsg, tempCLs[selspw]))
             Table::deleteTable(tempCLs[selspw]);
+          else
+            os << LogIO::WARN
+               << "Could not rm " << tempCLs[selspw]
+               << " because the " << errmsg << "."
+               << LogIO::POST;
         }
       }
     }   // End of loop over fields.
