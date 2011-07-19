@@ -3078,10 +3078,8 @@ im.selectvis(vis='myms3.ms', field=range(0,10), time='> 2002/10/15/20:30:45')
 <returns type="bool"/>
 </method>
 
-  
 <method type="function" name="setjy">
    <shortdescription>Compute the model visibility for a specified source flux density</shortdescription>
-   
 <description>
 Compute the model visibility for a specified source flux density, and
 insert into the MODEL\_DATA column. The source flux density for
@@ -3100,7 +3098,6 @@ one field, and will currently only process Stokes I.
 
 </description>
 <input>
-
      <param type="any" name="field">
      <description>Field Id (0-relative) or name</description>
      <any type="variant"/>
@@ -3117,7 +3114,6 @@ one field, and will currently only process Stokes I.
      <description>A model image</description>
      <value></value>
      </param>
-
 
      <param type="doubleArray" name="fluxdensity">
      <description>Specified flux density (I,Q,U,V) in Jy
@@ -3158,9 +3154,7 @@ one field, and will currently only process Stokes I.
        <any type="variant"/>
        <value>1GHz</value>
      </param>
-
 </input>
-
 <returns type="bool"/>
 <example>
 
