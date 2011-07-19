@@ -67,7 +67,11 @@ public:
 	bool nextBuffer();
 
 	// Visibility Buffer
-	VisBuffer visibilityBuffer_p;
+	// WARNING: The attach mechanism only works with pointers or
+	// referenced variables. Otherwise the VisBuffer is created
+	// and attached, but when it is assigned to the member it is
+	// detached because of the dynamically called destructor
+	VisBuffer *visibilityBuffer_p;
 
 	// Visibility Iterator
 	VisibilityIterator *visibilityIterator_p;

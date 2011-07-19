@@ -29,7 +29,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(iterationApproach)
 {
-    // Default verbosity
+	// Default verbosity
 	profiling_p = false;
 	debug_p = false;
 
@@ -93,7 +93,14 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 		}
 		default:
 		{
-		    break;
+			sortOrder_p = Block<int>(4);
+			sortOrder_p[0] = MS::ARRAY_ID;
+			sortOrder_p[1] = MS::FIELD_ID;
+			sortOrder_p[2] = MS::DATA_DESC_ID;
+			sortOrder_p[3] = MS::TIME;
+			timeInterval_p = 0;
+			groupTimeSteps_p = false;
+			break;
 		}
 	}
 
@@ -115,6 +122,13 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	// Initialize logger
 	logger_p = new LogIO();
 
+	// Set all the initialized pointers to NULL
+	visibilityIterator_p = NULL;
+        selectedMeasurementSet_p = NULL;
+        measurementSetSelection_p = NULL;
+        originalMeasurementSet_p = NULL;
+	visibilityBuffer_p = NULL;
+
 	return;
 }
 
@@ -124,6 +138,7 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 FlagDataHandler::~FlagDataHandler()
 {
 	// Destroy members
+	if (visibilityBuffer_p) delete visibilityBuffer_p;
 	if (visibilityIterator_p) delete visibilityIterator_p;
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
@@ -214,10 +229,14 @@ FlagDataHandler::generateIterator()
 	visibilityIterator_p = new VisIter(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
 	// Set the table data manager (ISM and SSM) cache size to the full column size, for the columns
-	// ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
- 	visibilityIterator_p->slurp();
+	// ANTENNA1, ANTENNA2, FvisibilityBuffer_p = VisBuffer(*visibilityIterator_p);
+	visibilityIterator_p->slurp();
 
-	STOPCLOCK
+	// Attach Visibility Buffer to Visibility Iterator
+	if (visibilityBuffer_p) delete visibilityBuffer_p;
+	visibilityBuffer_p = new VisBuffer(*visibilityIterator_p);
+
+	STOPCLOCK	
 	return true;
 }
 
@@ -266,19 +285,15 @@ FlagDataHandler::nextBuffer()
 	bool moreBuffers = false;
 	if (!buffersInitialized_p)
 	{
-	    // Group all the time stamps in one single buffer
+		// Group all the time stamps in one single buffer
 		// NOTE: Otherwise we have to iterate over Visibility Buffers
 		// that contain all the rows with the same time step.
 		if (groupTimeSteps_p)
 		{
 			Int nRowChunk = visibilityIterator_p->nRowChunk();
-	    	visibilityIterator_p->setRowBlocking(nRowChunk);
+	    		visibilityIterator_p->setRowBlocking(nRowChunk);
 		}
-		// WARNING: The "origin" function defined in VisibilityIterator class invalidates
-		// the top attached Visibility Buffers. It is very strange that this is working in
-		// the Flagger class.
 		visibilityIterator_p->origin();
-		visibilityBuffer_p = VisBuffer(*visibilityIterator_p);
 		buffersInitialized_p = true;
 		moreBuffers = true;
 		bufferNo++;
@@ -293,9 +308,6 @@ FlagDataHandler::nextBuffer()
 		// WARNING: We iterate and afterwards check if the iterator is valid
 		if (visibilityIterator_p->more())
 		{
-			// WARNING: The "advance" function (++ iterator) invalidates the top attached
-			// Visibility Buffers. It is very strange that this is working in the Flagger class.
-			visibilityBuffer_p = VisBuffer(*visibilityIterator_p);
 			moreBuffers = true;
 			bufferNo++;
 		}
