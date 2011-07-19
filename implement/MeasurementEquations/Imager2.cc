@@ -3141,6 +3141,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	 << " not readable" << LogIO::POST;
       return False;
     }
+    delete componentList_p;
     componentList_p=new ComponentList(complist, True);
     if(componentList_p==0) {
       os << LogIO::SEVERE << "Cannot create ComponentList from " << complist
@@ -3156,6 +3157,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
        << "Processing after subtracting componentlist " << complist << LogIO::POST;
   }
   else {
+    delete componentList_p;
     componentList_p=0;
   }
  

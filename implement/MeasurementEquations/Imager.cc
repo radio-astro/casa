@@ -4814,7 +4814,6 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
   return True;
 }
 
-
 // This is the one used by im.setjy() (because it has a model arg).
 Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const Vector<Int>& /*spectralwindowid*/,
@@ -4977,7 +4976,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
                                                             mfreqs[selspw][0],
                                                             mtime, fluxval, point,
-                                                            siModel, ".setjy_");
+                                                            siModel, "_setjy_");
         }
 
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw]);
@@ -4991,9 +4990,14 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       // Delete the temporary component lists.  Do it after ft() has been run
       // for all the spws because some spws with the same center frequency may
       // be sharing component lists.
-      for(uInt selspw = 0; selspw < nspws; ++selspw)
-	if(tempCLs[selspw] != "" && Table::canDeleteTable(tempCLs[selspw]))
-	  Table::deleteTable(tempCLs[selspw]);
+      for(uInt selspw = 0; selspw < nspws; ++selspw){
+	if(tempCLs[selspw] != ""){
+          Bool cdt = Table::canDeleteTable(tempCLs[selspw]);
+
+          if(cdt)
+            Table::deleteTable(tempCLs[selspw]);
+        }
+      }
     }   // End of loop over fields.
 
     this->writeHistory(os);
@@ -5093,8 +5097,10 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
 
       made_visibilities = True;
     }
-    else if(clname != "")
+    else if(clname != ""){
       made_visibilities = ft(modelv, clname, False);
+      destroySkyEquation();
+    }
     else
       os << LogIO::NORMAL
          << "Skipping an empty component list for spw " << rawspwid
@@ -5136,7 +5142,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
             
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                  returnFluxes, returnFluxErrs,
-                                 tempCLs, ".setjy_");
+                                 tempCLs, "_setjy_");
   }
 
   if(!foundSrc){
