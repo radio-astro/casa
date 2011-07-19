@@ -74,7 +74,7 @@ for mysource in scriptlist:
 			scriptrate=ratedict[mysource]/(endTime-startTime)
 			print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
 		except:
-			print 'Test failed:', sys.exec_info()[0]
+			print 'Test failed:', sys.exc_info()[0]
 
 regfile.close()
 
