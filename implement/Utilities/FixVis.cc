@@ -79,7 +79,7 @@ uInt FixVis::setFields(const Vector<Int>& fieldIds)
   nAllFields_p = ms_p.field().nrow();
   FieldIds_p.resize(nAllFields_p);
 
-  for(uInt i = 0; i < nAllFields_p; ++i){
+  for(Int i = 0; i < static_cast<Int>(nAllFields_p); ++i){
     FieldIds_p(i) = -1;
     for(uInt j = 0; j < nsel_p; ++j){
       if(fieldIds[j] == i){
@@ -609,7 +609,7 @@ void FixVis::processSelected(uInt numInSel)
       Vector<Double> dphase(numRows);
       dphase=0.0;
 
-      for (Int i=0;i<numRows;i++) {
+      for(uInt i = 0; i < numRows; ++i){
  	for (Int idim=0;idim<3;idim++){
  	  uvw(idim,i)=vb.uvw()(i)(idim);
  	}
