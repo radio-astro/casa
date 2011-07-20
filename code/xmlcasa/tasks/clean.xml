@@ -984,16 +984,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        multiscale -- set of scales to use in deconvolution.  If set,
                cleans with several resolutions using Hogbom clean. The
                scale sizes are in units of cellsize.  So if
-               cell='2arcsec', a multiscale scale=10 = 20arcsec.  The
-               first scale should always be 0 (point), we suggest the
+               cell='2arcsec', a multiscale scale=10 =&gt; 20arcsec.  The
+               first scale is recommended to  be 0 (point), we suggest the
                second be on the order of synthesized beam, the third 3-5
                times the synthesized beam, etc..  Avoid making the largest
                scale too large relative to the image width or the scale of
                the lowest measured spatial frequency.  For example, if the
                synthesized beam is 10" FWHM and cell=2", try
                multiscale = [0,5,15].
-               Note, multiscale is currently a bit slow, and will likely
-               require you to raise cyclefactor to 4 or 5.
+               
  	       default: multiscale=[] (standard CLEAN with psfmode algorithm,
                no multi-scale).
                Example: multiscale = [0,5,15] 
