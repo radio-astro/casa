@@ -140,7 +140,6 @@ def flagcmd(
             if cmdlist.__len__() > 0:
                 myflagcmd = getflagcmds(cmdlist, ms_startmjds,
                         ms_endmjds)
-            print myflagcmd
 
             listmode = ''
         elif flagmode == 'xml':
