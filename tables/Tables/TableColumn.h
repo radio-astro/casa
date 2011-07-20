@@ -204,6 +204,10 @@ public:
     Bool isDefined (uInt rownr) const
 	{ TABLECOLUMNCHECKROW(rownr); return baseColPtr_p->isDefined (rownr); }
 
+    // Tests whether the column is not null and that the first cell is
+    // defined and not a degenerate Array.
+    Bool hasContent() const;
+
     // Get the #dimensions of an array in a particular cell.
     uInt ndim (uInt rownr) const
 	{ TABLECOLUMNCHECKROW(rownr); return baseColPtr_p->ndim (rownr); }
