@@ -1810,10 +1810,7 @@ Bool ROVisibilityIterator::existsWeightSpectrum()
 {
   if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
     try{
-      msHasWtSp_p = (!colWeightSpectrum.isNull() &&
-                     colWeightSpectrum.isDefined(0) &&
-                     colWeightSpectrum.shape(0)[0] > 0 &&
-                     colWeightSpectrum.shape(0)[1] > 0);
+      msHasWtSp_p = colWeightSpectrum.hasContent();
       // Comparing colWeightSpectrum.shape(0) to
       // IPosition(2, nPol_p, channelGroupSize()) is too strict
       // when channel averaging might have changed

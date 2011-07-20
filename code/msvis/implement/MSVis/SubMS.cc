@@ -1375,11 +1375,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     // inSpWCols and msSpW should agree because addOptionalColumns() was done
     // for SPECTRAL_WINDOW in fillAllTables() before making msc_p or calling
     // fillDDTables.
-    Bool haveSpwAN  = !msSpW.assocNature().isNull();
-    Bool haveSpwASI = !msSpW.assocSpwId().isNull();
-    Bool haveSpwBN  = !msSpW.bbcNo().isNull();
-    Bool haveSpwBS  = !msSpW.bbcSideband().isNull();
-    Bool haveSpwDI  = !msSpW.dopplerId().isNull();
+    Bool haveSpwAN  = inSpWCols.assocNature().hasContent();
+    Bool haveSpwASI = inSpWCols.assocSpwId().hasContent();
+    Bool haveSpwBN  = inSpWCols.bbcNo().hasContent();
+    Bool haveSpwBS  = inSpWCols.bbcSideband().hasContent();
+    Bool haveSpwDI  = inSpWCols.dopplerId().hasContent();
 
     MSDataDescColumns& msDD(msc_p->dataDescription());
     MSPolarizationColumns& msPol(msc_p->polarization());
@@ -1791,7 +1791,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       if(nAddedCols > 0){
 
         ROScalarColumn<Int> eID(fieldIn.ephemerisId());
-	if(!eID.isNull()){
+	if(eID.hasContent()){
 	  for(uInt k = 0; k < fieldid_p.nelements(); ++k)
 	    msField.ephemerisId().put(k, eID(fieldid_p[k]));
 	}
