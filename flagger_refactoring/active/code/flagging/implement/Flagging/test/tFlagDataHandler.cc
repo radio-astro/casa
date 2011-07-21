@@ -32,7 +32,10 @@ int main(unsigned char argc, char **argv)
 	string input_file, observation, array, scan, field, spw;
 	unsigned short iteration_mode = 0;
 	unsigned short logLevel = 0;
-	bool fillBuffer=false;
+	bool fillBuffer = true;
+	double elapsedTime, cumElapsedTime = 0;
+	unsigned long nBuffers = 0;
+	timeval start,stop;
 
 
 	// Retrieve log level
@@ -112,51 +115,59 @@ int main(unsigned char argc, char **argv)
 		{
 			if (fillBuffer)
 			{
-				dh->visibilityBuffer_p->antenna1();
-				dh->visibilityBuffer_p->antenna2();
-				dh->visibilityBuffer_p->arrayId();
-				dh->visibilityBuffer_p->channel();
-				dh->visibilityBuffer_p->CJones();
-				dh->visibilityBuffer_p->corrType();
-				dh->visibilityBuffer_p->direction1();
-				dh->visibilityBuffer_p->direction2();
-				dh->visibilityBuffer_p->exposure();
-				dh->visibilityBuffer_p->feed1();
-				dh->visibilityBuffer_p->feed1_pa();
-				dh->visibilityBuffer_p->feed2();
-				dh->visibilityBuffer_p->feed2_pa();
-				dh->visibilityBuffer_p->fieldId();
-				dh->visibilityBuffer_p->flag();
-				dh->visibilityBuffer_p->flagCategory();
-				dh->visibilityBuffer_p->flagCube();
-				dh->visibilityBuffer_p->flagRow();
-				dh->visibilityBuffer_p->floatDataCube();
-				dh->visibilityBuffer_p->frequency();
-				dh->visibilityBuffer_p->nChannel();
-				dh->visibilityBuffer_p->nCorr();
-				dh->visibilityBuffer_p->nRow();
-				dh->visibilityBuffer_p->observationId();
-				dh->visibilityBuffer_p->phaseCenter();
-				dh->visibilityBuffer_p->polFrame();
-				dh->visibilityBuffer_p->processorId();
-				dh->visibilityBuffer_p->scan();
-				dh->visibilityBuffer_p->sigma();
-				dh->visibilityBuffer_p->sigmaMat();
-				dh->visibilityBuffer_p->spectralWindow();
-				dh->visibilityBuffer_p->stateId();
-				dh->visibilityBuffer_p->time();
-				dh->visibilityBuffer_p->timeCentroid();
-				dh->visibilityBuffer_p->timeInterval();
-				dh->visibilityBuffer_p->uvw();
-				dh->visibilityBuffer_p->uvwMat();
-				dh->visibilityBuffer_p->visibility();
-				dh->visibilityBuffer_p->visCube();
-				dh->visibilityBuffer_p->weight();
-				dh->visibilityBuffer_p->weightMat();
-				dh->visibilityBuffer_p->weightSpectrum();
+				gettimeofday(&start,0);
+
+                                dh->visibilityBuffer_p->antenna1();
+                                dh->visibilityBuffer_p->antenna2();
+                                dh->visibilityBuffer_p->arrayId();
+                                //dh->visibilityBuffer_p->channel();
+                                //dh->visibilityBuffer_p->CJones();
+                                dh->visibilityBuffer_p->corrType();
+                                //dh->visibilityBuffer_p->direction1();
+                                //dh->visibilityBuffer_p->direction2();
+                                //dh->visibilityBuffer_p->exposure();
+                                dh->visibilityBuffer_p->feed1();
+                                //dh->visibilityBuffer_p->feed1_pa();
+                                dh->visibilityBuffer_p->feed2();
+                                //dh->visibilityBuffer_p->feed2_pa();
+                                dh->visibilityBuffer_p->fieldId();
+                                dh->visibilityBuffer_p->flag();
+                                //dh->visibilityBuffer_p->flagCategory();
+                                dh->visibilityBuffer_p->flagCube();
+                                dh->visibilityBuffer_p->flagRow();
+                                //dh->visibilityBuffer_p->floatDataCube();
+                                dh->visibilityBuffer_p->frequency();
+                                dh->visibilityBuffer_p->nChannel();
+                                dh->visibilityBuffer_p->nCorr();
+                                dh->visibilityBuffer_p->nRow();
+                                //dh->visibilityBuffer_p->observationId();
+                                dh->visibilityBuffer_p->phaseCenter();
+                                //dh->visibilityBuffer_p->polFrame();
+                                //dh->visibilityBuffer_p->processorId();
+                                dh->visibilityBuffer_p->scan();
+                                //dh->visibilityBuffer_p->sigma();
+                                //dh->visibilityBuffer_p->sigmaMat();
+                                dh->visibilityBuffer_p->spectralWindow();
+                                dh->visibilityBuffer_p->stateId();
+                                dh->visibilityBuffer_p->time();
+                                //dh->visibilityBuffer_p->timeCentroid();
+                                dh->visibilityBuffer_p->timeInterval();
+                                dh->visibilityBuffer_p->uvw();
+                                //dh->visibilityBuffer_p->uvwMat();
+                                //dh->visibilityBuffer_p->visibility();
+                                dh->visibilityBuffer_p->visCube();
+                                //dh->visibilityBuffer_p->weight();
+                                //dh->visibilityBuffer_p->weightMat();
+                                //dh->visibilityBuffer_p->weightSpectrum();
+
+                                gettimeofday(&stop,0);
+                                elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;
+				cumElapsedTime += elapsedTime;
+
 			}
 
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
+			nBuffers += 1;
 
 			if (dh->visibilityBuffer_p->observationId().nelements() > 1)
 			{
@@ -219,9 +230,11 @@ int main(unsigned char argc, char **argv)
 				cout << "Antenna2:" << dh->visibilityBuffer_p->antenna2()[0] << " ";
 			}
 
-			cout << "nRows:" << dh->visibilityBuffer_p->nRow() << endl;
+			cout << "nRows:" << dh->visibilityBuffer_p->nRow() << " Reading Time [ms]:" << elapsedTime <<endl;
 		}
 	}
+
+	cout << "Total Reading Time [s]:" << cumElapsedTime/1000.0 << " Total number of Buffers:" << nBuffers <<endl;
 
 	exit(-1);
 }
