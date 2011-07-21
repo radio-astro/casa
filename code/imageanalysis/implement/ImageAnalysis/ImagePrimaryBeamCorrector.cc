@@ -292,6 +292,8 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 				mask
 			);
 		}
+		ImageUtilities::copyMiscellaneous(*outImage, subImage);
+
 	}
 	else {
 		File out(_outname);
