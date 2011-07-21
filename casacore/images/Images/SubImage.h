@@ -252,7 +252,7 @@ public:
   static SubImage<T> createSubImage(
 	  ImageRegion*& outRegion, ImageRegion*& outMask,
       ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *os, Bool writableIfPossible,
+      const String& mask, LogIO *const &os, Bool writableIfPossible,
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
   );
 
@@ -260,7 +260,7 @@ public:
   // about creating pointers it does not need returned.
   static SubImage<T> createSubImage(
       ImageInterface<T>& inImage, const Record& region,
-      const String& mask, LogIO *os, Bool writableIfPossible,
+      const String& mask, LogIO *const &os, Bool writableIfPossible,
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
   );
 

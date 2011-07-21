@@ -236,7 +236,7 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords)
 template<class T> SubImage<T> SubImage<T>::createSubImage(
 	ImageRegion*& outRegion, ImageRegion*& outMask,
 	ImageInterface<T>& inImage, const Record& region,
-	const String& mask, LogIO *os,
+	const String& mask, LogIO *const &os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
 ) {
 	// The ImageRegion pointers must be null on entry
@@ -248,7 +248,6 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 		log << LogOrigin("SubImage", __FUNCTION__);
 		log << "Input mask specification is incorrect" << LogIO::EXCEPTION;
 	}
-
 	SubImage<T> subImage;
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
@@ -286,7 +285,7 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 
 template<class T> SubImage<T> SubImage<T>::createSubImage(
 	ImageInterface<T>& inImage, const Record& region,
-	const String& mask, LogIO *os,
+	const String& mask, LogIO *const &os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
 ) {
 	ImageRegion *pRegion = 0;
