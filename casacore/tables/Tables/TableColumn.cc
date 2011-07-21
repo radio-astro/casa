@@ -95,6 +95,35 @@ void ROTableColumn::throwIfNull() const
     }
 }
 
+Bool ROTableColumn::hasContent() const
+{
+  Bool retval = !isNull() && isDefined(0);
+
+  if(retval){
+    // The first cell seems to have something, but check for
+    // degenerate Arrays.
+    try{
+      uInt nDim = ndim(0);
+
+      if(nDim > 0){
+	IPosition shp(shape(0));
+
+	for(uInt i = 0; i < nDim; ++i){
+	  if(shp[i] == 0){
+	    retval = False;
+	    break;
+	  }
+	}
+      }
+    }
+    catch(AipsError x){
+      // ndim(0) will throw an exception if the column is scalar.
+      // This seems like a kludgy way of distinguishing between the 2.
+      retval = True;
+    }
+  }
+  return retval;
+}
 
 const ColumnDesc& ROTableColumn::columnDesc() const
     { return baseColPtr_p->columnDesc(); }

@@ -61,6 +61,7 @@ WCCSAxisLabeller::WCCSAxisLabeller() :
   itsDirectionSystem("J2000"),
   itsFrequencySystem("LSRK"),
   itsZLabelType("world"),
+  itsZLabelPos("inside"),
   uiBase_(1) {
   String worldorpix;
   Aipsrc::find(worldorpix,"display.axislabels.world","on");
@@ -88,7 +89,7 @@ void WCCSAxisLabeller::setDefaultOptions() {
   Int iS = itsCoordinateSystem.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
      const SpectralCoordinate coord = itsCoordinateSystem.spectralCoordinate(iS);
-     Double restFreq = coord.restFrequency(); 
+     Double restFreq = coord.restFrequency();
      Vector<String> vunits;
      if (restFreq > 0) {
         itsSpectralUnit = String("km/s");
@@ -127,6 +128,7 @@ void WCCSAxisLabeller::setDefaultOptions() {
 //
   setAbsRelState();
   itsZLabelType = String("world");
+  itsZLabelPos  = String("inside");
 }
 
 
@@ -146,7 +148,6 @@ Bool WCCSAxisLabeller::setOptions(const Record &rec, Record &updatedOptions)
   if(sChg) {
     setSpectralState();
     localchange = True;  } 
-  
   
   Bool dChg = readOptionRecord(itsDirectionUnit, error, rec,
                                "axislabeldirectionunit");
@@ -185,6 +186,10 @@ Bool WCCSAxisLabeller::setOptions(const Record &rec, Record &updatedOptions)
      localchange = True;
   } 
 //  
+  if (readOptionRecord(itsZLabelPos, error, rec, "axislabelzlabelpos")) {
+	  localchange = True;
+  }
+//
   if (localchange) {
     // invalidate existing draw lists, etc.
     invalidate();
@@ -242,7 +247,7 @@ Record WCCSAxisLabeller::getOptions() const
         Record directionSystem;
         directionSystem.define("context", "Axis_label_properties");
         directionSystem.define("dlformat", "axislabeldirectionsystem");
-        directionSystem.define("listname", "Direction Reference");
+        directionSystem.define("listname", "Direction reference");
         directionSystem.define("ptype", "choice");
         Vector<String> vunits(5);
         vunits(0) = "J2000";
@@ -294,7 +299,7 @@ Record WCCSAxisLabeller::getOptions() const
         Record frequencySystem;
         frequencySystem.define("context", "Axis_label_properties");
         frequencySystem.define("dlformat", "axislabelfrequencysystem");
-        frequencySystem.define("listname", "Spectral Reference");
+        frequencySystem.define("listname", "Spectral reference");
         frequencySystem.define("ptype", "choice");
         Vector<String> vunits(5);
         vunits(0) = "LSRK";
@@ -381,7 +386,7 @@ Record WCCSAxisLabeller::getOptions() const
     Record zlabeltype;
     zlabeltype.define("context", "Axis_label_properties");
     zlabeltype.define("dlformat", "axislabelzlabeltype");
-    zlabeltype.define("listname", "Movie Axis label type");
+    zlabeltype.define("listname", "Movie axis label type");
     zlabeltype.define("ptype", "choice");
     Vector<String> vztype(3);
     vztype(0) = "world";
@@ -392,6 +397,28 @@ Record WCCSAxisLabeller::getOptions() const
     zlabeltype.define("value", itsZLabelType);
     zlabeltype.define("allowunset", False);
     rec.defineRecord("axislabelzlabeltype", zlabeltype);
+
+    Record zlabelpos;
+    zlabelpos.define("context", "Axis_label_properties");
+    zlabelpos.define("dlformat", "axislabelzlabelpos");
+    zlabelpos.define("listname", "Movie axis label position");
+    zlabelpos.define("ptype", "choice");
+    Vector<String> vzpos(10);
+    vzpos(0) = "inside";
+    vzpos(1) = "outside";
+    vzpos(2) = "inside-bl";
+    vzpos(3) = "inside-br";
+    vzpos(4) = "inside-tl";
+    vzpos(5) = "inside-tr";
+    vzpos(6) = "outside-bl";
+    vzpos(7) = "outside-br";
+    vzpos(8) = "outside-tl";
+    vzpos(9) = "outside-tr";
+    zlabelpos.define("popt", vzpos);
+    zlabelpos.define("default", vzpos(0));
+    zlabelpos.define("value", itsZLabelPos);
+    zlabelpos.define("allowunset", False);
+    rec.defineRecord("axislabelzlabelpos", zlabelpos);
 
   }
   
@@ -578,8 +605,6 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
 
 // Set velocity and/or world unit state in SpectralCoordinate
 
-   //cout << "I am in WCCSAxisLabeller::setSpectralState!" << endl;
-   //cout << "itsSpectralUnit: " << itsSpectralUnit << " itsDoppler: " << itsDoppler << endl;
    String errorMsg;
    if (!CoordinateUtil::setSpectralState (errorMsg, cs,
                                           itsSpectralUnit, itsDoppler)) {

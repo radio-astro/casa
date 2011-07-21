@@ -171,7 +171,7 @@ namespace casa {
 
         void _invert();
 
-        Vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+        std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
 
         void _finishConstruction();
     };

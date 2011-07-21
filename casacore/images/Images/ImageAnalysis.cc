@@ -4706,7 +4706,8 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 			   const Bool optical, const Int bitpix, const Double minpix,
 			   const Double maxpix, Record& pRegion, const String& mask,
 			   const Bool overwrite, const Bool dropDeg, const Bool,
-			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength) {
+			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
+			   const String& origin) {
 
 	*itsLog << LogOrigin("ImageAnalysis", "tofits");
 
@@ -4771,6 +4772,8 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	);
 	delete pRegionRegion;
 	delete pMaskRegion;
+
+
 	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,
 						  HostInfo::memoryFree() / 1024, 
 						  velocity, optical, 
@@ -4778,7 +4781,9 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 						  False, //  deglast default
 						  False, //  verbose default
 						  stokesLast, 
-						  wavelength);
+						  wavelength,
+						  origin
+						  );
 	if (!ok)
 		*itsLog << error << LogIO::EXCEPTION;
 

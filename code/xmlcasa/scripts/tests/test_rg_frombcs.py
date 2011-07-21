@@ -85,6 +85,10 @@ box5 = 1.24794206
 box6 = 0.782558727
 box7 = 1.24793797
 box8 = 0.782561641
+box9 = 1.2479338718038551
+box10 = 0.78256455381109313
+box11 = 1.2479297756405987
+box12 = 0.78256746696533663
 chan0 = 4.73510000e+09
 chan4 = 6.33510000e+09
 chan15 = 1.07351000e+10
@@ -533,6 +537,36 @@ class rg_frombcs_test(unittest.TestCase):
         gottrc = recToList(myreg["regions"]["*1"]["trc"])
         exptrc = [box3, box4]
         self.compLists(gottrc, exptrc)
+
+    def test_region_text_string(self):
+        """Test setting a region text string"""
+        
+        region = "box[[1pix,2pix],[3pix,4pix]]\nbox[[5pix,6pix],[7pix,8pix]]\nbox[[9pix,10pix],[11pix,12pix]]"
+        myreg = run_frombcs(
+            image, "", "", "", "a", region
+        )
+
+        gotblc = recToList(myreg["regions"]["*2"]["blc"])
+        expblc = [box9, box10]
+        self.compLists(gotblc, expblc);
+        gottrc = recToList(myreg["regions"]["*2"]["trc"])
+        exptrc = [box11, box12]
+        self.compLists(gottrc, exptrc)
+
+        gotblc = recToList(myreg["regions"]["*1"]["regions"]["*1"]["blc"])
+        expblc = [box1, box2]
+        self.compLists(gotblc, expblc);
+        gottrc = recToList(myreg["regions"]["*1"]["regions"]["*1"]["trc"])
+        exptrc = [box3, box4]
+        self.compLists(gottrc, exptrc);
+         
+        gotblc = recToList(myreg["regions"]["*1"]["regions"]["*2"]["blc"])
+        expblc = [box5, box6]
+        self.compLists(gotblc, expblc);
+        gottrc = recToList(myreg["regions"]["*1"]["regions"]["*2"]["trc"])
+        exptrc = [box7, box8]
+        self.compLists(gottrc, exptrc);
+        
 
 def suite():
     return [rg_frombcs_test]

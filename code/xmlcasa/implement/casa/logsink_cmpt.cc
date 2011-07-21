@@ -231,18 +231,14 @@ bool logsink::setglobal(const bool isglobal)
    bool rstat(true);
    
    if(isglobal){
-      //cout << "isglobal=" << isglobal << endl;
-      //cout << "thelogsink=" << thelogsink << endl;
+      if (globalsink==isglobal && thelogsink)
+         return rstat;
       LogSink().globalSink(thelogsink);
       globalsink = isglobal;
-      //cout << "setglobal(True) ok" << endl;
-   } else {
-      //cout << "isglobal=" << isglobal << endl;
-      LogSinkInterface *dummy = new StreamLogSink(LogMessage::NORMAL, &cerr);
-      //cout << "dummy==" << dummy << endl;
-      //LogSink().globalSink(dummy);
-      //cout << "setglobal(True) ok" << endl;
-   }
+   } //else {
+   //   LogSinkInterface *dummy = new StreamLogSink(LogMessage::NORMAL, &cerr);
+   //   LogSink().globalSink(dummy);
+   //}
    return rstat;
 }
 //

@@ -196,7 +196,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/run_sdregress_fls3hi.py
   scripts/run_sdregress_irc.py
   scripts/run_sdregress_orions.py
-  scripts/scopeit.py
   scripts/simutil.py
   scripts/TablePlotQt4Agg.py
   scripts/TablePlotTkAgg.py

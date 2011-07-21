@@ -446,7 +446,7 @@ bool imager::fixvis(const std::vector<int>& fields,
     }
     casa::FixVis visfixer(*itsMS);
     casa::Vector<casa::Int> cFields(fields);
-    int nFields = cFields.nelements();
+    //int nFields = cFields.nelements();
 	
     visfixer.setFields(cFields);
 
@@ -465,11 +465,11 @@ bool imager::fixvis(const std::vector<int>& fields,
     ostringstream param;
     Vector<String> phasedirsStr(nPhDirs);
     for(int i = 0;  i < nPhDirs; ++i){
-      phasedirsStr(i) = phaseDirs[i];
+      phasedirsStr[i] = phaseDirs[i];
     }
     param << "fields =" << Vector<Int>(fields) << ", phasedirs = " << phasedirsStr
 	  << ", refcode = " << refcode << ", distances =" << Vector<Double>(distances) 
-	  << ", datacol = " << dataCol ;
+	  << ", datacol = " << dataCol;
     String paramstr=param.str(); 
     if(!(Table::isReadable(itsMS->historyTableName()))){
       TableRecord &kws = itsMS->rwKeywordSet();
@@ -477,10 +477,10 @@ bool imager::fixvis(const std::vector<int>& fields,
 				 MSHistory::requiredTableDesc(),Table::New);
       kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
     }
-    MSHistoryHandler::addMessage(*itsMS, "UVW and visibilities changed with fixvis", "im", paramstr, "im::fixvis()");
+    MSHistoryHandler::addMessage(*itsMS, "UVW and visibilities changed with fixvis",
+                                 "im", paramstr, "im::fixvis()");
 
     rstat = True;
-
   }
   catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -1285,14 +1285,14 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
       //qstep=casac::image::casaQuantityFromVar(step, *itsLog);
       if(lamoda.contains(String("VEL"))){
 	if(!casaMRadialVelocity(start, mvel)){
-	  *itsLog << LogIO::SEVERE << "Could not interprete velocity value " 
+	  *itsLog << LogIO::SEVERE << "Could not interpret velocity value " 
 		  << LogIO::POST;	
 	}
 	qstep=casaQuantity(step);
       }
       else if(lamoda.contains(String("FREQ"))){
 	if(!casaMFrequency(start, mfreq)){
-	  *itsLog << LogIO::SEVERE << "Could not interprete frequency value " 
+	  *itsLog << LogIO::SEVERE << "Could not interpret frequency value " 
 		  << LogIO::POST;	
 	}
 	
@@ -1350,79 +1350,66 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 bool
 imager::setjy(const ::casac::variant& field, const ::casac::variant& spw, 
 	      const std::string& modimage,
-	      const std::vector<double>& fluxdensity, const std::string& standard, const bool scalebychan)
+	      const std::vector<double>& fluxdensity, const std::string& standard,
+              const bool scalebychan, const double spix,
+              const ::casac::variant& reffreq)
 {
-   Bool rstat(False);
-   if(hasValidMS_p){
-      try {
-	casa::String fieldnames="";
-	casa::Vector<Int> fieldIndex;
-	fieldnames=toCasaString(field);
-	if(fieldnames.contains(String("-"), -1)){
-	  fieldnames="";
-	  fieldIndex=Vector<Int>(1,-1);
-	}
-	casa::String spwstring="";
-	casa::Vector<Int> spwid;
-	spwstring=toCasaString(spw);
-	if(spwstring.contains(String("-"), -1)){
-	  spwstring="";
-	  spwid=Vector<Int>(1,-1);
-	}
+  Bool rstat = False;
 
-	rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
-				 modimage,fluxdensity, standard, scalebychan);
-       } catch  (AipsError x) {
-          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-	  RETHROW(x);
-       }
-    } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+  if(hasValidMS_p){
+    try{
+      casa::String fieldnames="";
+      casa::Vector<Int> fieldIndex;
+      fieldnames=toCasaString(field);
+      if(fieldnames.contains(String("-"), -1)){
+        fieldnames="";
+        fieldIndex=Vector<Int>(1,-1);
+      }
+      casa::String spwstring="";
+      casa::Vector<Int> spwid;
+      spwstring=toCasaString(spw);
+      if(spwstring.contains(String("-"), -1)){
+        spwstring="";
+        spwid=Vector<Int>(1,-1);
+      }
+      casa::MFrequency mfreqref;
+      // Unfortunately the default c'tor for mfreqref sets it to 0.
+      // SpectralIndex divides by it, so we really want to get a nonzero value
+      // in even if we do not think it will be used.  However, don't complain
+      // about a bogus reffreq if it's clearly irrelevant.
+      if(!casaMFrequency(reffreq, mfreqref) && fluxdensity[0] >= 0.0){
+        *itsLog << LogIO::SEVERE
+                << "Could not interpret the reference frequency"
+                << LogIO::POST;
+        return False;
+      }
+
+      rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
+                               modimage, fluxdensity, standard, scalebychan,
+                               spix, mfreqref);
+    } 
+    catch(AipsError x){
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
     }
-    return rstat;
+  }
+  else{
+    *itsLog << LogIO::SEVERE
+            << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+  }
+  return rstat;
 }
 
-// temporary copy of setjy while flux calibration with Solar System objects is
-// being tested.
+// This was a temporary copy of setjy while flux calibration with Solar System
+// objects was being tested.
 bool
-imager::ssoflux(const ::casac::variant& field, const ::casac::variant& spw, 
-                const std::string& modimage,
-                const std::vector<double>& fluxdensity,
-                const std::string& standard)
+imager::ssoflux()
 {
-   Bool rstat(False);
-
    *itsLog << LogIO::SEVERE
            << "ssoflux is no longer supported.  Use setjy."
            << LogIO::POST;
 
-   // if(hasValidMS_p){
-   //    try {
-   //      casa::String fieldnames="";
-   //      casa::Vector<Int> fieldIndex;
-   //      fieldnames=toCasaString(field);
-   //      if(fieldnames.contains(String("-"), -1)){
-   //        fieldnames="";
-   //        fieldIndex=Vector<Int>(1,-1);
-   //      }
-   //      casa::String spwstring="";
-   //      casa::Vector<Int> spwid;
-   //      spwstring=toCasaString(spw);
-   //      if(spwstring.contains(String("-"), -1)){
-   //        spwstring="";
-   //        spwid=Vector<Int>(1,-1);
-   //      }
-
-   //      rstat = itsImager->ssoflux(fieldIndex, spwid, fieldnames, spwstring, 
-   //                                 modimage,fluxdensity, standard);
-   //     } catch  (AipsError x) {
-   //        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
-   //        RETHROW(x);
-   //     }
-   //  } else {
-   //    *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
-   //  }
-    return rstat;
+    return False;
 }
 
 bool

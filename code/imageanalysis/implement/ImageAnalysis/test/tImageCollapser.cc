@@ -118,7 +118,7 @@ int main() {
     dirName = os.str();
 	Directory workdir(dirName);
     String goodImage(datadir + "collapse_in.fits");
-    const String ALL = RegionManager::ALL;
+    const String ALL = CasacRegionManager::ALL;
 	workdir.create();
 	uInt retVal = 0;
     try {

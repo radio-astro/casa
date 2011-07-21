@@ -38,7 +38,6 @@
 #include <casa/Containers/ValueHolder.h>
 #include <casa/Arrays/Array.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
-//#include <synthesis/MeasurementComponents/BeamCalcConstants.h>
 #include <synthesis/MeasurementComponents/BeamCalc.h>
 
 namespace casa{

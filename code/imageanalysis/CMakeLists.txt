@@ -32,14 +32,14 @@ implement/Annotations/AnnRotBox.cc
 implement/Annotations/AnnSymbol.cc
 implement/Annotations/AnnText.cc
 implement/Annotations/AnnVector.cc
-implement/Annotations/AsciiAnnotationList.cc
+implement/Annotations/RegionTextList.cc
 
 implement/ImageAnalysis/ImageCollapser.cc
 implement/ImageAnalysis/ImageFitter.cc
 implement/ImageAnalysis/ImageInputProcessor.cc
 implement/ImageAnalysis/ImageProfileFitter.cc
 
-implement/IO/AsciiAnnotationFileParser.cc
+implement/IO/RegionTextParser.cc
 implement/IO/AsciiAnnotationFileLine.cc
 implement/IO/FitterEstimatesFileParser.cc
 
@@ -61,14 +61,14 @@ casa_add_assay( imageanalysis implement/Annotations/test/tAnnRotBox.cc )
 casa_add_assay( imageanalysis implement/Annotations/test/tAnnSymbol.cc )
 casa_add_assay( imageanalysis implement/Annotations/test/tAnnText.cc )
 casa_add_assay( imageanalysis implement/Annotations/test/tAnnVector.cc )
-casa_add_assay( imageanalysis implement/Annotations/test/tAsciiAnnotationList.cc )
+casa_add_assay( imageanalysis implement/Annotations/test/tRegionTextList.cc )
 
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageCollapser.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageFitter.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageProfileFitter.cc )
 
-casa_add_assay( imageanalysis implement/IO/test/tAsciiAnnotationFileParser.cc )
+casa_add_assay( imageanalysis implement/IO/test/tRegionTextParser.cc )
 casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )
 
 casa_add_assay( imageanalysis implement/Regions/test/tCasacRegionManager.cc )

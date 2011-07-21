@@ -796,9 +796,9 @@ void rGridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& 
   }
 }
 
-Bool rGridFT::toRecord(String& error, RecordInterface& outRec, 
-			Bool withImage) {
-
+Bool rGridFT::toRecord(String&,// error,
+		       RecordInterface& outRec, Bool withImage)
+{
   // Save the current rGridFT object to an output state record
   Bool retval = True;
 
@@ -842,7 +842,8 @@ Bool rGridFT::toRecord(String& error, RecordInterface& outRec,
 return retval;
 }
 
-Bool rGridFT::fromRecord(String& error, const RecordInterface& inRec)
+Bool rGridFT::fromRecord(String&,// error,
+			 const RecordInterface& inRec)
 {
   Bool retval = True;
   gridder=0; imageCache=0; lattice=0; arrayLattice=0;

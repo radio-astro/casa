@@ -2506,6 +2506,10 @@ If the image (that associated with the tool) has a \pixelmask, then only
 pixels for which that mask is good will be changed.  See the function
 <link anchor="images:image.maskhandler.function">maskhandler</link> for managing image \pixelmasks. 
 
+Note that when multiple image are used in the expression, there is no garauntee about which of
+those images will be used to create the header of the output image. Therefore, one may have
+to modify the output header as needed if the input headers differ.
+
 See the related functions <link anchor="images:image.set.function">set</link> and
 <link anchor="images:image.putregion.function">putregion</link>.
 
@@ -9623,6 +9627,29 @@ exit() # This is last example so lets exit().
 </example>
 </method>
 
+<method type="function" name="isconform">
+    <shortdescription>Returns true of the shape, coordinate system, and axes order of the specified image matches this image.</shortdescription>
+
+<input>
+     <param type="string" direction="in" name="other">
+        <description>name of image to test</description>
+     </param>
+</input>
+<returns type="bool">
+<shortdescription>input measure</shortdescription>
+<any type="record"/>
+</returns>
+<description>
+Returns True if the shape, coordinate system, and axes order of the specified image
+matches the current image.
+</description>
+<example>
+
+ia.isconform("my_mystery.image")
+
+</example>
+</method>
+ 
  
 </tool>
 </casaxml>

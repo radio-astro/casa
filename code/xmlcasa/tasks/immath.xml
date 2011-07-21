@@ -245,6 +245,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     NOTE: where indexing and axis numbering are used in the above
     functions they are 1-based, ie. numbering starts at 1.
 
+    CAUTION: Note that when multiple image are used in the expression, there is
+    no garauntee about which of those images will be used to create the header
+    of the output image. Therefore, one may have to modify the output header as
+    needed if the input headers differ.
+
     Examples:
     # Double all values in an image.
     immath( imagesname='myimage.im', expr='IM0*2', outfile='double.im' )

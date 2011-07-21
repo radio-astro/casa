@@ -3716,10 +3716,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  Bool nPBWProjectFT::toRecord(String& error, RecordInterface& outRec, 
-			      Bool withImage) 
-  {
-    
+Bool nPBWProjectFT::toRecord(String&, //error,
+			     RecordInterface& outRec, Bool withImage) 
+{    
     // Save the current nPBWProjectFT object to an output state record
     Bool retval = True;
     Double cacheVal=(Double) cachesize;
@@ -3765,8 +3764,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //---------------------------------------------------------------
   //
-  Bool nPBWProjectFT::fromRecord(String& error, const RecordInterface& inRec)
-  {
+Bool nPBWProjectFT::fromRecord(String&, //error,
+			       const RecordInterface& inRec)
+{
     Bool retval = True;
     imageCache=0; lattice=0; arrayLattice=0;
     Double cacheVal;

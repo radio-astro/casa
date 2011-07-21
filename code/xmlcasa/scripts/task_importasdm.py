@@ -55,9 +55,13 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         execute_string += ' -asap ' + vis.rstrip('/')
                                 execute_string += ' -antenna ' + str(antenna) + ' -apc ' + wvr_corrected_data + ' -time-sampling ' + time_sampling.lower() + ' -overwrite ' + str(overwrite) 
                                 if ( corr_mode == 'all' ):
-                                        execute_string += ' -corr-mode ao+ca -ocorr-mode ao'
+                                        execute_string += ' -corr-mode ao,ca -ocorr-mode ao'
                                 else:
-                                        execute_string += ' -corr-mode ' + string.join( corr_mode.split(), '+' ) + ' -ocorr-mode ao'
+                                        execute_string += ' -corr-mode ' + corr_mode.replace(' ',',') + ' -ocorr-mode ao'
+                                if ( srt == 'all' ):
+                                        execute_string += ' -srt ' + srt
+                                else:
+                                        execute_string += ' -srt ' + srt.replace(' ',',')
                                 execute_string += ' -logfile ' + casalog.logfile()
                                 casalog.post( 'execute_string is' )
                                 casalog.post( '   '+execute_string )

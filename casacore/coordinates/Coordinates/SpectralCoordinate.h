@@ -136,7 +136,16 @@ template<class T> class Quantum;
 class SpectralCoordinate : public Coordinate
 {
 public:
-    // Default constructor.    It is equivalent to doing
+	 enum SpecType { // taken from the FITS spectral coordinate type codes
+		 FREQ,
+		 VRAD,
+		 VOPT,
+		 BETA,
+		 WAVE,
+		 AWAV
+	 };
+
+	 // Default constructor.    It is equivalent to doing
     // SpectralCoordinate(MFrequency::TOPO, 0.0, 1.0, 0.0)
     SpectralCoordinate();
 
@@ -327,6 +336,9 @@ public:
     //
     Bool setWavelengthUnit (const String& waveUnit=String("mm"));
     String wavelengthUnit () const {return waveUnit_p;};
+    //
+    Bool setSpectralType (const SpectralCoordinate::SpecType spcType);
+    SpectralCoordinate::SpecType spectralType() const {return nativeType_p;}
 
     // </group>
     // Functions to convert to velocity (uses the current active
@@ -555,6 +567,10 @@ public:
     static SpectralCoordinate* restore(const RecordInterface &container,
                                        const String &fieldName);
 
+    // Convert from String to spectral type and vice versa.
+    static Bool specTypetoString(String &stypeString, const SpecType &specType);
+    static Bool stringtoSpecType(SpecType &specType, const String &stypeString);
+
     // Make a copy of the SpectralCoordinate using new. The caller is responsible for calling
     // delete.
     virtual Coordinate* clone() const;
@@ -579,6 +595,7 @@ private:
     String velUnit_p;                              // Velocity unit
 //
     String waveUnit_p;                             // Wavelength unit for conversions between world & wavelength
+    SpectralCoordinate::SpecType nativeType_p;
 //
     Unit unit_p;                                   // World axis unit
     String axisName_p;                             // The axis name

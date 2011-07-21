@@ -119,7 +119,61 @@ int main()
                throw(AipsError(String("Failed wavelength construction consistency test comparison")));
             }
          }
+         // check the spectral type
+         if (lc2.spectralType() != SpectralCoordinate::WAVE)
+         	throw(AipsError(String("The spectral type of the coordinate is NOT WAVE!")));
+
+         // create the cSys as air wavelength and check the spectral type
+         lc2 = SpectralCoordinate(MFrequency::TOPO, wavelengths, String("m"), 0.0, True);
+         if (lc2.spectralType() != SpectralCoordinate::AWAV)
+         	throw(AipsError(String("The spectral type of the coordinate is NOT AWAV!")));
       }
+
+// Test the conversions to and from spectral type
+      {
+			String sType;
+			SpectralCoordinate::SpecType spcType;
+			Bool rval;
+
+			//sType = SpectralCoordinate::specTypetoString(SpectralCoordinate::FREQ);
+			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::FREQ);
+			if (sType.compare("frequency") || !rval)
+				throw(AipsError(String("Can not convert spectral type to string 'frequency'!")));
+			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::VRAD);
+			if (sType.compare("radio") || !rval)
+				throw(AipsError(String("Can not convert spectral type to string 'radio'!")));
+			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::VOPT);
+			if (sType.compare("optical") || !rval)
+				throw(AipsError(String("Can not convert spectral type to string 'optical'!")));
+			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::BETA);
+			if (sType.compare("true") || !rval)
+				throw(AipsError(String("Can not convert spectral type to string 'true'!")));
+			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::AWAV);
+			if (sType.compare("air wavelength") || !rval)
+				throw(AipsError(String("Can not convert spectral type to string 'air wavelength'!")));
+			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::WAVE);
+			if (sType.compare("wavelength") || !rval)
+				throw(AipsError(String("Can not convert spectral type to string 'wavelength'!")));
+
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("frequency"));
+			if (spcType != SpectralCoordinate::FREQ || !rval)
+				throw(AipsError(String("Can not convert string 'frequency ' to the correct spectral type!")));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("radio"));
+			if (spcType != SpectralCoordinate::VRAD || !rval)
+				throw(AipsError(String("Can not convert string 'radio' to the correct spectral type!")));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("optical"));
+			if (spcType != SpectralCoordinate::VOPT || !rval)
+				throw(AipsError(String("Can not convert string 'optical' to the correct spectral type!")));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("true"));
+			if (spcType != SpectralCoordinate::BETA || !rval)
+				throw(AipsError(String("Can not convert string 'true' to the correct spectral type!")));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("wavelength"));
+			if (spcType != SpectralCoordinate::WAVE || !rval)
+				throw(AipsError(String("Can not convert string 'wavelength' to the correct spectral type!")));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("air wavelength"));
+			if (spcType != SpectralCoordinate::AWAV || !rval)
+				throw(AipsError(String("Can not convert string 'air wavelength' to the correct spectral type!")));
+		}
 
 // Test near function
 

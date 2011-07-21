@@ -14,8 +14,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef ANNOTATIONS_ASCIIANNOTATIONLIST_H
-#define ANNOTATIONS_ASCIIANNOTATIONLIST_H
+#ifndef ANNOTATIONS_REGIONTEXTLIST_H
+#define ANNOTATIONS_REGIONTEXTLIST_H
 
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
@@ -46,7 +46,7 @@ namespace casa {
 // See the region file format proposal attached to CAS-2285 (https://bugs.nrao.edu/browse/CAS-2285)
 // </synopsis>
 
-class AsciiAnnotationList {
+class RegionTextList {
 
 public:
 
@@ -55,7 +55,7 @@ public:
 	// is used for constructing an annotation list on the fly, possibly
 	// to be written to a file when complete. Do not use this constructor
 	// if you want to determine the final composite region.
-	AsciiAnnotationList(const Bool deletePointersOnDestruct=True);
+	RegionTextList(const Bool deletePointersOnDestruct=True);
 
 	// create an empty list which can be appended to. This constructor
 	// is used for constructing an annotation list on the fly, possibly
@@ -66,7 +66,7 @@ public:
 	// <src>shape</src> is the image shape and is only used if
 	// the first region is a difference; in that case, the all pixels in entire
 	// shape are set to good initially.
-	AsciiAnnotationList(
+	RegionTextList(
 		const CoordinateSystem& csys,
 		const IPosition shape,
 		const Bool deletePointersOnDestruct=True
@@ -80,14 +80,27 @@ public:
 	// <src>shape</src> is the image shape and is only used if
 	// the first region is a difference; in that case, the all pixels in entire
 	// shape are set to good initially.
-	AsciiAnnotationList(
+	RegionTextList(
 		const String& filename, const CoordinateSystem& csys,
+		const IPosition shape,
+		const Bool deletePointersOnDestruct=True
+	);
+
+	// create a list by reading it from a text string.
+	// An exception is thrown if the text is not in the correct
+	// format. The coordinate system is used for
+	// setting defaults and reference frames to be used.
+	// <src>shape</src> is the image shape and is only used if
+	// the first region is a difference; in that case, the all pixels in entire
+	// shape are set to good initially.
+	RegionTextList(
+		const CoordinateSystem& csys, const String& text,
 		const IPosition shape,
 		const Bool deletePointersOnDestruct=True
 	);
 	//</group>
 
-	~AsciiAnnotationList();
+	~RegionTextList();
 
 	// add a line to the end of the list
 	void addLine(const AsciiAnnotationFileLine& line);
@@ -119,7 +132,7 @@ private:
 
 };
 
-inline ostream &operator<<(ostream& os, const AsciiAnnotationList& list) {
+inline ostream &operator<<(ostream& os, const RegionTextList& list) {
 	return list.print(os);
 };
 

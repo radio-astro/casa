@@ -24,17 +24,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include <imageanalysis/Annotations/AsciiAnnotationList.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 
 #include <casa/OS/File.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
-#include <imageanalysis/IO/AsciiAnnotationFileParser.h>
+#include <imageanalysis/IO/RegionTextParser.h>
 #include <images/Regions/WCDifference.h>
 
 namespace casa {
 
 
-AsciiAnnotationList::AsciiAnnotationList(
+RegionTextList::RegionTextList(
 	const Bool deletePointersOnDestruct
 ) : _lines(Vector<AsciiAnnotationFileLine>(0)),
 	_deletePointersOnDestruct(deletePointersOnDestruct),
@@ -42,7 +42,7 @@ AsciiAnnotationList::AsciiAnnotationList(
 	_canGetRegion(False) {}
 
 
-AsciiAnnotationList::AsciiAnnotationList(
+RegionTextList::RegionTextList(
 	const CoordinateSystem& csys,
 	const IPosition shape,
 	const Bool deletePointersOnDestruct
@@ -50,14 +50,14 @@ AsciiAnnotationList::AsciiAnnotationList(
 	_deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys),_shape(shape), _canGetRegion(True) {}
 
-AsciiAnnotationList::AsciiAnnotationList(
+RegionTextList::RegionTextList(
 	const String& filename, const CoordinateSystem& csys,
 	const IPosition shape,
 	const Bool deletePointersOnDestruct
 ) : _lines(Vector<AsciiAnnotationFileLine>(0)),
 _deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys), _shape(shape), _canGetRegion(True) {
-	AsciiAnnotationFileParser parser(filename, csys);
+	RegionTextParser parser(filename, csys);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
@@ -67,7 +67,24 @@ _deletePointersOnDestruct(deletePointersOnDestruct),
 	}
 }
 
-AsciiAnnotationList::~AsciiAnnotationList() {
+RegionTextList::RegionTextList(
+	const CoordinateSystem& csys, const String& text,
+	const IPosition shape,
+	const Bool deletePointersOnDestruct
+) : _lines(Vector<AsciiAnnotationFileLine>(0)),
+_deletePointersOnDestruct(deletePointersOnDestruct),
+	_csys(csys), _shape(shape), _canGetRegion(True) {
+	RegionTextParser parser(csys, text);
+	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
+	for (
+		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
+		iter != lines.end(); iter++
+	) {
+		addLine(*iter);
+	}
+}
+
+RegionTextList::~RegionTextList() {
 	if (_deletePointersOnDestruct) {
 		for (
 			Vector<AsciiAnnotationFileLine>::const_iterator iter = _lines.begin();
@@ -80,7 +97,7 @@ AsciiAnnotationList::~AsciiAnnotationList() {
 	}
 }
 
-void AsciiAnnotationList::addLine(const AsciiAnnotationFileLine& line) {
+void RegionTextList::addLine(const AsciiAnnotationFileLine& line) {
 	AsciiAnnotationFileLine x = line;
 	_lines.resize(_lines.size()+1, True);
 	_lines[_lines.size()-1] = x;
@@ -130,14 +147,14 @@ void AsciiAnnotationList::addLine(const AsciiAnnotationFileLine& line) {
 	}
 }
 
-Record AsciiAnnotationList::regionAsRecord() const {
+Record RegionTextList::regionAsRecord() const {
 	if (_regions.size() == 0) {
 		throw AipsError("No regions found");
 	}
 	return getRegion()->toRecord("");
 }
 
-WCRegion* AsciiAnnotationList::getRegion() const {
+WCRegion* RegionTextList::getRegion() const {
 	if (! _canGetRegion) {
 		throw AipsError(
 			"Object constructed with too little information for forming composite region. Use another constructor."
@@ -149,11 +166,11 @@ WCRegion* AsciiAnnotationList::getRegion() const {
 	return _regions[_regions.size() - 1];
 }
 
-uInt AsciiAnnotationList::nLines() const {
+uInt RegionTextList::nLines() const {
 	return _lines.size();
 }
 
-AsciiAnnotationFileLine AsciiAnnotationList::lineAt(
+AsciiAnnotationFileLine RegionTextList::lineAt(
 	const uInt i
 ) const {
 	if (i >= _lines.size()) {
@@ -163,7 +180,7 @@ AsciiAnnotationFileLine AsciiAnnotationList::lineAt(
 }
 
 
-ostream& AsciiAnnotationList::print(ostream& os) const {
+ostream& RegionTextList::print(ostream& os) const {
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=_lines.begin();
 		iter != _lines.end(); iter++

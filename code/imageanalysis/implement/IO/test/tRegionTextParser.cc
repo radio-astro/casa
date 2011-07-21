@@ -24,7 +24,7 @@
 //#
 //# $Id: $
 
-#include <imageanalysis/IO/AsciiAnnotationFileParser.h>
+#include <imageanalysis/IO/RegionTextParser.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/EnvVar.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -35,7 +35,7 @@ int main() {
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		try {
-			AsciiAnnotationFileParser parser("x", csys);
+			RegionTextParser parser("x", csys);
 			AlwaysAssert(False, AipsError);
 		}
 		catch(AipsError x) {
@@ -47,7 +47,7 @@ int main() {
 		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile.txt";
 		delete [] parts;
 
-		AsciiAnnotationFileParser parser(goodFile, csys);
+		RegionTextParser parser(goodFile, csys);
 		cout << parser.getLines() << endl;
 
     }

@@ -586,10 +586,10 @@ class cleanhelper:
             if(len(tablerecord) > 0 ):
                 reg={}
                 try:
-                  for tabl in tablerecord:
-                    reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
+                   for tabl in tablerecord:
+                      reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
                 except:
-		  raise Exception,'Region-file format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
+                   raise Exception,'Region-file format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
                 if(len(reg)==1):
                     reg=reg[reg.keys()[0]]
                 else:
@@ -679,6 +679,7 @@ class cleanhelper:
             return
         maskimage=[]
         masklist=[]
+        textreglist=[]
         masktext=[]
         maskrecord={}
         tablerecord=[]
@@ -708,7 +709,7 @@ class cleanhelper:
             masklist.append(maskobject_tmp)
         else:
             for masklets in maskobject:
-                if(type(masklets)==str):
+                if(type(masklets)==str): ## Can be a file name, or an explicit region-string
                     if(os.path.exists(masklets)):
                         if(commands.getoutput('file '+masklets).count('directory')):
                             maskimage.append(masklets)
@@ -717,7 +718,8 @@ class cleanhelper:
                         else:
                             tablerecord.append(masklets)
                     else:
-                       raise TypeError, masklets+' seems to be non-existant' 
+                       textreglist.append(masklets);
+                       #raise TypeError, masklets+' seems to be non-existant' 
                 if(type(masklets)==list):
                     masklets_tmp = convert_numpydtype(masklets)
                     masklist.append(masklets_tmp)
@@ -776,28 +778,61 @@ class cleanhelper:
                                                                   outputmask)
         #pdb.set_trace()
         #### This goes when those tablerecord goes
+        ### Make masks from tablerecords
         if(len(tablerecord) > 0):
             reg={}
             for tabl in tablerecord:
-                reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
+                try:
+                    reg.update({tabl:rg.fromfiletorecord(filename=tabl, verbose=False)})
+                except:
+                    raise Exception,'Region-file (binary) format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line';
             if(len(reg)==1):
                 reg=reg[reg.keys()[0]]
             else:
                 reg=rg.makeunion(reg)
             self.im.regiontoimagemask(mask=outputmask, region=reg)
         ###############
+        ### Make masks from region dictionaries
         if((type(maskrecord)==dict) and (len(maskrecord) > 0)):
             self.im.regiontoimagemask(mask=outputmask, region=maskrecord)
+        ### Make masks from text files
         if(len(masktext) >0):
             for textfile in masktext :
-                polydic,listbox=self.readboxfile(textfile)
+                # Read a box file
+                polydic,listbox=self.readboxfile(textfile);
                 masklist.extend(listbox)
                 if(len(polydic) > 0):
                     ia.open(outputmask)
                     ia.close()
                     self.im.regiontoimagemask(mask=outputmask, region=polydic)
+                # If box lists are empty, it may be a region format
+                if(len(polydic)==0 and len(listbox)==0):
+                    # Read in a region file
+                    try:
+                        ia.open(outputmask);
+                        mcsys = ia.coordsys();
+                        mshp = ia.shape();
+                        ia.close();
+                        mreg = rg.fromtextfile(filename=textfile,shape=mshp,csys=mcsys.torecord());
+                        self.im.regiontoimagemask(mask=outputmask, region=mreg);
+                    except:
+                        raise Exception,'Region-file (text) format not recognized. Please check. If box-file, please start the file with \'#boxfile\' on the first line, and have at-least one valid box in it';
+        ### Make masks from inline lists of pixel coordinates
         if((type(masklist)==list) and (len(masklist) > 0)):
             self.im.regiontoimagemask(mask=outputmask, boxes=masklist)
+        ### Make masks from inline region-strings
+        if((type(textreglist)==list) and (len(textreglist)>0)):
+             ia.open(outputmask);
+             mcsys = ia.coordsys();
+             mshp = ia.shape();
+             ia.close();
+             for textlet in textreglist:
+                try:
+                    mreg = rg.fromtext(text=textlet,shape=mshp,csys=mcsys.torecord());
+                    self.im.regiontoimagemask(mask=outputmask, region=mreg);
+                except:
+                    raise Exception,'\''+textlet+'\' is not recognized as a text file on disk or as a region string';
+        ### Make mask from an image-mask
         if(os.path.exists(imagename) and (len(rg.namesintable(imagename)) !=0)):
             regs=rg.namesintable(imagename)
             if(type(regs)==str):

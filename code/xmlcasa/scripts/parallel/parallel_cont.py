@@ -235,22 +235,30 @@ class imagecont():
         dc.done()
         del dc
 
-    def imagechan(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0]):
+    def imagechan(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0], fstart='1GHz', width='10MHz', chanchunk=1):
         origname=msname
 #        a=cleanhelper()
         imname=imroot+str(imchan)
+        maskname=''
+        if(mask != ''):
+            maskname=imname+'.mask'
+            if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
+                maskname=''
  #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
         im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
+        im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=fstart, step=width)
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
-        im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets)
+       
         im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
         im.setscales(scalemethod='uservector', uservector=scales)
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
-            im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', psfimage='')
+            im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
         im.done()
+        if(maskname != ''):
+            shutil.rmtree(maskname, True)
   #      a.putchanimage(cubimage=imroot+'.model', inim=imname+'.model', 
   #                     chan=imchan)
   #     a.putchanimage(cubimage=imroot+'.residual', inim=imname+'.residual', 
@@ -264,6 +272,11 @@ class imagecont():
         origname=msname
 #        a=cleanhelper()
         imname=imroot+str(imchan)
+        maskname=''
+        if(mask != ''):
+            maskname=imname+'.mask'
+            if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
+                maskname=''
         self.getchanimage(inimage=cubeim+'.model', outimage=imname+'.model', chan=imchan*chanchunk, nchan=chanchunk)
         im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem)
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
@@ -274,8 +287,11 @@ class imagecont():
         im.setmfcontrol(cyclefactor=0.0)  
         majcycle = majcycle if (niter/majcycle) >0 else 1
         for kk in range(majcycle):
-            im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', psfimage='')
+            im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', 
+                     mask=maskname, psfimage='')
         im.done()
+        if(maskname != ''):
+            shutil.rmtree(maskname, True)
         #self.putchanimage(cubeim+'.model', imname+'.model', imchan*chanchunk)
         #self.putchanimage(cubeim+'.residual', imname+'.residual', imchan*chanchunk)
         #self.putchanimage(cubeim+'.image', imname+'.image', imchan*chanchunk)
@@ -361,13 +377,18 @@ class imagecont():
                 self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, True) 
                 
     @staticmethod
-    def putchanimage(cubimage,inim,chan, removeinfile=True):
+    def putchanimage(cubimage,inim,chans, removeinfile=True):
         """
-        put channel image back to a pre-exisiting cubeimage
+        put channels image back to a pre-exisiting cubeimage 
         """
-        if( not os.path.exists(inim)):
+        #pdb.set_trace()
+        if(type(chans) != list):
+            chans=[chans]
+        if(type(inim) != list):
+            inim=[inim]
+        if( not os.path.exists(inim[0])):
             return False
-        ia.open(inim)
+        ia.open(inim[0])
         inimshape=ia.shape()
         ############
         #imdata=ia.getchunk()
@@ -376,27 +397,108 @@ class imagecont():
         ia.done()
         ia.open(cubimage)
         cubeshape=ia.shape()
-        blc=[0,0,0,chan]
-        trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
-        if( not (cubeshape[3] > (chan+inimshape[3]-1))):
-            return False
-
-        ############
-        #rg0=ia.setboxregion(blc=blc,trc=trc)
-        ###########
         if inimshape[0:3]!=cubeshape[0:3]: 
-            return False
-        ########
-        #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
-        ###########
-        ia.insert(infile=inim, locate=blc)
+                return False
+        k=0
+        for chan in chans:
+            blc=[0,0,0,chan]
+            trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
+            if( not (cubeshape[3] > (chan+inimshape[3]-1))):
+                return False
+
+            ############
+            #rg0=ia.setboxregion(blc=blc,trc=trc)
+            ###########
+            
+            ########
+            #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+            ###########
+            ia.insert(infile=inim[k], locate=blc)
+            if(removeinfile):
+                ia.removefile(inim[k])
+            k+=1
         ia.close()
         tb.clearlocks()
         #casalog.post('putLOCKS:  '+ str(inim)+ ' ---  ' + str(tb.listlocks()))
         
-        if(removeinfile):
-            ia.removefile(inim)
+        
         return True
+    @staticmethod
+    def putchanimage2(cubimage,inim,chans, notprocesschan, removeinfile=True):
+        """
+        put channels image back to a pre-exisiting cubeimage 
+        """
+        if(type(chans) != list):
+            chans=[chans]
+        if(type(inim) != list):
+            inin=[inim]
+        if(type(notprocesschan) != list):
+            notprocesschan=[notprocesschan]
+        #if( not os.path.exists(inim[0])):
+        #   return False
+        ibig, = gentools(['ia'])
+        #ia.open(inim[0])
+        #inimshape=ia.shape()
+        ############
+        #imdata=ia.getchunk()
+        #immask=ia.getchunk(getmask=True)
+        ##############
+        #ia.done()
+        ibig.open(cubimage)
+        cubeshape=ibig.shape()
+        #if inimshape[0:3]!=cubeshape[0:3]: 
+        #        return False
+        arr=ibig.getchunk()
+        k=0
+        for chan in chans:
+            if(not notprocesschan[k] and os.path.exists(inim[k])):
+                ia.open(inim[k])
+                inimshape=ia.shape()
+                arrsub=ia.getchunk()
+                ia.done()
+               #blc=[0,0,0,chan]
+               #trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
+               #if( not (cubeshape[3] > (chan+inimshape[3]-1))):
+               #   return False
+                arr[:,:,:,chan:chan+inimshape[3]]=arrsub
+
+            ############
+            #rg0=ia.setboxregion(blc=blc,trc=trc)
+            ###########
+            
+            ########
+            #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
+            ###########
+            #ia.insert(infile=inim[k], locate=blc)
+            if(removeinfile):
+                shutil.rmtree(inim[k], True)
+            k+=1
+        ibig.putchunk(arr)
+        ibig.close()
+        tb.clearlocks()
+        #casalog.post('putLOCKS:  '+ str(inim)+ ' ---  ' + str(tb.listlocks()))
+        
+        
+        return True
+    @staticmethod
+    def makemask(inmask='', outmask='' , imchan=0, chanchunk=1):
+        if(not os.path.exists(inmask)):
+            return False
+        ia,rg=gentools(['ia', 'rg'])
+        ia.open(inmask)
+        shp=ia.shape()
+        if(shp[3]==1):
+            shutil.rmtree(outmask, True)
+            shutil.copytree(inmask, outmask)
+            ia.done()
+            return True
+        if(shp[3] > ((imchan+1)*chanchunk-1)):
+            mybox=rg.box(blc=[0, 0, 0, imchan*chanchunk], trc=[shp[0]-1, shp[1]-1, shp[2]-1, imchan*chanchunk+chanchunk-1])
+            ia.subimage(outfile=outmask, region=mybox, overwrite=True)
+            ia.done()
+            return True
+        return False
+        
     #putchanimage=staticmethod(putchanimage)
     def makecontimage(self, im, novaliddata, imname):
         if(novaliddata==True):

@@ -177,7 +177,7 @@ private:
 		const Record* regionPtr, const String& estimatesFilename
 	);
 
-	Vector<ImageInputProcessor::OutputStruct> _getOutputs();
+	vector<ImageInputProcessor::OutputStruct> _getOutputs();
 
 	void _finishConstruction(const String& estimatesFilename);
 

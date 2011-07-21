@@ -149,11 +149,11 @@ namespace casa{
 			      const Bool raytrace)
   {
 
-    if(getVisParams(vb)==-1 || raytrace){ // need to use ray tracing, cfKey is ignored
+    if(getVisParams(vb)==-1 || raytrace){ // need to use ray tracing
       ALMACalcIlluminationConvFunc almaPB;
       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
       almaPB.setMaximumCacheSize(cachesize);
-      almaPB.applyPB(outImage, vb, doSquint);
+      almaPB.applyPB(outImage, vb, doSquint, cfKey);
     }
     else{ // use canned antenna responses
 
@@ -186,7 +186,7 @@ namespace casa{
 			       "ALMA",
 			       obsTime,
 			       refFreq,
-			       AntennaResponses::ANY, // accept all at this stage
+			       AntennaResponses::EFP, 
 			       antTypeStrFromType(aTypes(i)),
 			       obsDir,
 			       "", // receiver type
@@ -506,7 +506,7 @@ namespace casa{
       ALMACalcIlluminationConvFunc almaPB;
       Long cachesize=(HostInfo::memoryTotal(true)/8)*1024;
       almaPB.setMaximumCacheSize(cachesize);
-      almaPB.applyPB(outImage, vb, doSquint);
+      almaPB.applyPB(outImage, vb, doSquint, cfKey);
     }
     else{ // use canned antenna responses
       TempImage<Complex> tI(outImage.shape(), outImage.coordinates());

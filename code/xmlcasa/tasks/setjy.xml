@@ -68,6 +68,14 @@
 			<description>Specified flux density [I,Q,U,V]; -1 will lookup values</description>
 			<value type="int">-1</value>
 		</param>
+                <param type="double" name="spix" subparam="true">
+			<description>Spectral index of fluxdensity</description>
+			<value type="double">0.0</value>
+		</param>
+		<param type="string" name="reffreq" subparam="true">
+			<description>Reference frequency for spix</description>
+			<value>1GHz</value>
+		</param>
 
 		<param type="string" name="standard">
 			<description>Flux density standard</description>
@@ -81,6 +89,16 @@
                         <value>Butler-JPL-Horizons 2010</value>
 			</allowed>
 		</param>
+                
+                <constraints>
+                  <when param="fluxdensity">
+                    <notequals type="int" value="-1">
+                      <default param="spix"><value type="int">0</value></default>
+                      <default param="reffreq"><value type="string">1GHz</value>
+                      </default>
+                    </notequals>
+                  </when>
+                </constraints>
 	</input>
 <returns type="void"/>
 
@@ -138,30 +156,33 @@
               field='0,4,5~7'; field ids 0,4,5,6,7
               field='3C286,3C295'; field named 3C286 and 3C295
               field = '3,4C*'; field id 3, all names starting with 4C
-       spw -- Select spectral window/channels
-              default: ''=all spectral windows and channels
-              spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
-              spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
-              spw='0:5~61'; spw 0, channels 5 to 61
-              spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
-              spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
-              spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-              spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
-                       spw 1, channels 20-30, and spw 2, channels, 1,2 and 4
+       spw -- Spectral window selection string.
+              default: '' = all spectral windows
+              Note that setjy only selects by spectral window, and ignores
+              channel selections.  Fine-grained control could be achieved using
+              (and possibly constructing) a cube for modimage.
 
        modimage -- Model image (I only) for setting the model visibilities.
-              It is recommended to use modimage for sources that are resolved
-              by the observation, but the Butler-JPL-Horizons standard supplies
-              a basic model of what several Solar System objects look like.
-              default: '' means use fluxdensity instead of modimage.  Each
-              field must be done separately.  The flux density of the image
-              will be scaled from the frequency in the model to that actually
-              used (ignoring fluxdensity), unless fluxdensity &gt;= 0 (or
-              fluxdensity[0] &gt;= 0).  If fluxdensity([0]) is 0.0, the image's
-              flux density will be used.  If fluxdensity([0]) &gt; 0.0, it will
-              be used.  Both the amplitude and phase are calculated.  At the
-              AOC or CV, the models are located in
-              casa['dirs']['data'] + '/nrao/VLA/CalModels/', e.g.
+              modimage can be a cube, and its channels do not have to exactly
+              match those of vis.  It is recommended to use modimage for
+              sources that are resolved by the observation, but the
+              Butler-JPL-Horizons standard supplies a basic model of what
+              several Solar System objects look like.  default: '': do not use
+              a model image.
+       
+              Each field must be done separately when using a model image.  The
+              flux density of the image will be scaled from the frequency in
+              the model to that actually used (ignoring fluxdensity), unless
+              fluxdensity &gt;= 0 (or fluxdensity[0] &gt;= 0).  If
+              fluxdensity([0]) is 0.0, the image's flux density will be used.
+              If fluxdensity([0]) &gt; 0.0, it will be used (and spix and
+              reffreq if modimage is not a cube).  Since the spectral index
+              usually varies with direction, applying a single spectral index
+              to a 2D modimage is typically not as good as using a cube.
+
+              Both the amplitude and phase are calculated.  At the AOC or CV,
+              the models are located in casa['dirs']['data']
+              + '/nrao/VLA/CalModels/', e.g.
               /usr/lib/casapy/data/nrao/VLA/CalModels/3C286_L.im
                    lib64
 
@@ -181,8 +202,9 @@
        scalebychan=False
                This determines whether the fluxdensity set in the model is
                calculated on a per channel basis. If False then it only one
-               fluxdensity value is given per spw.  Not used if fluxdensity[0]
-               &gt;= 0.0.
+               fluxdensity value is calculated per spw.  (Either way, all channels
+               in spw are modified.)  It is effectively True if fluxdensity[0] &gt;
+               0.0.
 
        fluxdensity -- Specified flux density [I,Q,U,V] in Jy
                default: -1, uses [1,0,0,0] flux density for unrecognized sources,
@@ -201,6 +223,14 @@
                example:  fluxdensity=[2.63,0.21,-0.33,0.02]
                          will put in I,Q,U,V flux densities of 2.63,0.21,-0.33,
                          and 0.02, respectively, in the model column.
+
+       spix -- Spectral index for fluxdensity: S = fluxdensity * (freq/reffreq)**spix
+               Default: 0
+               Only used if fluxdensity is being used.
+               N.B.: It is applied in the same way to all polarizations, and does
+                     not account for Faraday rotation or depolarization.
+
+       reffreq -- The reference frequency for spix.  Default: '1GHz'
 
        standard -- Flux density standard, used if fluxdensity[0] &lt; 0.0
                default: 'Perley-Butler 2010'; example: standard='Baars'

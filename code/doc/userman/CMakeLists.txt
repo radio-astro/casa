@@ -34,7 +34,7 @@ set( CASAGOOGLESEARCH 006707099318971825654:vqush9mvpes )
       set( _html ${prefix}/UserMan/${_base}.html )
 
 #set ( LATEX2HTML_CONVERTER echo )
-#set( LATEX2HTML_OPTIONS htcasa,section+,next,p-width,5 )
+set( LATEX2HTML_OPTIONS htcasa,section+,next,p-width,5 )
 
 #execute_process( COMMAND sed -e "s/CASADOCUMENT/CASA Toolkit Reference Manual/" -e "s/CASAGOOGLESEARCH/${CASAGOOGLESEARCH}/" ${casaroot}/code/doc/texinputs.dir/nraoheader.4ht
 #OUTPUT_FILE  ${prefix}/nraoheader.4ht

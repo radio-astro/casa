@@ -1055,7 +1055,7 @@ as each polygon is different.
 </example>
 </method>
 
- 
+ <!--
    <method type="function" name="copyregions">
    <shortdescription>Copy regions from one Table to another</shortdescription>
    
@@ -1107,6 +1107,9 @@ housed by the image {\sff hcn} via the Image \tool\ {\stf im}.
 </example>
 
 </method>
+-->
+
+<!--
 
  
    <method type="function" name="dflt">
@@ -1162,6 +1165,7 @@ THIS EXAMPLE IS NOT VALID YET
 </example>
 </method>
 
+ -->
  
    <method type="function" name="deletefromtable">
    <shortdescription>Delete regions from a Table</shortdescription>
@@ -1320,7 +1324,7 @@ function.
 </method>
 
 
- 
+ <!--
    <method type="function" name="extension">
    <shortdescription>Extend a world region to extra dimensions</shortdescription>
    
@@ -1404,7 +1408,9 @@ image (the region {\stfaf ext}) that no auto-extension occurs.
 
 </example>
 </method>
+-->
 
+<!--
  
    <method type="function" name="extractsimpleregions">
    <shortdescription>Extract all simple regions into a record</shortdescription>
@@ -1448,6 +1454,8 @@ to plot all of the simple regions that made up a compound region.
 </example>
 </method>
 
+-->
+
 <method type="function" name="fromtextfile">
     <shortdescription>Create a region dictionary from a region text file.</shortdescription>
    
@@ -1479,6 +1487,36 @@ converts it to a python dictionary.
 
 </method>
 
+<method type="function" name="fromtext">
+    <shortdescription>Create a region dictionary from a region text string.</shortdescription>
+   
+    <input>  
+        <param type="string" direction="in" name="text">
+            <description>region description</description>
+            <value></value>
+        </param>
+
+        <param type="intArray" direction="in" name="shape">
+            <description>Image shape, only used if first region is a difference.</description>
+            <value>1</value>
+        </param>
+
+        <param type="record" direction="in" name="csys">
+          <description>Coordinate system record. Defaults to coordinate system used in rg.setcoordinates()</description>
+           <value/>
+         </param>
+
+    </input>
+
+    <returns type="any"><any type="record"/>Record or fail</returns>
+
+    <description>
+This function reads a region region text descriptions and
+converts it to a python region dictionary.
+
+    </description>
+
+</method>
 
 
    <method type="function" name="fromfiletorecord">
@@ -1597,6 +1635,7 @@ identical.
 
 </method>
  
+ <!--
    <method type="function" name="fromglobaltotable">
    <shortdescription>Save regions into a Table</shortdescription>
    
@@ -1687,7 +1726,7 @@ of strings (else \glish\ will take the empty string as a region).
 
 </example>
 </method>
-
+-->
  
    <method type="function" name="fromrecordtotable">
    <shortdescription>Save regions stored in a record into a Table</shortdescription>
@@ -2055,7 +2094,7 @@ r1 poly2 int0
 </example>
 </method>
 
- 
+ <!--
    <method type="function" name="pixeltoworldregion">
    <shortdescription>Convert a simple pixel region to a world region</shortdescription>
    
@@ -2117,8 +2156,8 @@ regionShape=[41 41 41] , imageShape=[155 178 256] ]
 
 </example>
 </method>
-
- 
+-->
+ <!--
    <method type="function" name="quarter">
    <shortdescription>Create a quarter pixel region</shortdescription>
    
@@ -2155,7 +2194,7 @@ You can see that auto extension to the third axis is occurring.
 
 </example>
 </method>
-
+-->
  
    <method type="function" name="setcoordinates">
    <shortdescription>Set new default Coordinate System</shortdescription>
@@ -2639,7 +2678,7 @@ automatically extended to the whole image.
 </method>
 
 
- 
+ <!--
    <method type="function" name="wmask">
    <shortdescription>Create a world mask region</shortdescription>
    
@@ -2692,7 +2731,7 @@ the pixels fall in the specified box.
 
 </example>
 </method>
-
+-->
  
 </tool>
 </casaxml>

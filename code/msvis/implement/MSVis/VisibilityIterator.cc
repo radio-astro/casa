@@ -1802,10 +1802,7 @@ Bool ROVisibilityIterator::existsWeightSpectrum()
 {
   if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
     try{
-      msHasWtSp_p = (!colWeightSpectrum.isNull() &&
-                     colWeightSpectrum.isDefined(0) &&
-                     colWeightSpectrum.shape(0)[0] > 0 &&
-                     colWeightSpectrum.shape(0)[1] > 0);
+      msHasWtSp_p = colWeightSpectrum.hasContent();
       // Comparing colWeightSpectrum.shape(0) to
       // IPosition(2, nPol_p, channelGroupSize()) is too strict
       // when channel averaging might have changed
@@ -2201,12 +2198,8 @@ ROVisibilityIterator::getSpwInFreqRange(Block<Vector<Int> >& spw,
     ROMSDataDescColumns ddCol(msIter_p.ms(k).dataDescription());
     ROMSSpWindowColumns spwCol(msIter_p.ms(k).spectralWindow());
     ROScalarMeasColumn<MEpoch> timeCol(msIter_p.ms(k), MS::columnName(MS::TIME));
-    Bool dum;
-    Sort sort( t.getStorage(dum),sizeof(Double) );
-    sort.sortKey((uInt)0,TpDouble);
-    Vector<uInt> sortIndx, uniqIndx;
-    sort.sort(sortIndx, t.nelements());
-    uInt nTimes=sort.unique(uniqIndx, sortIndx);
+    Vector<uInt>  uniqIndx;
+    uInt nTimes=GenSortIndirect<Double>::sort (uniqIndx, t, Sort::Ascending, Sort::QuickSort|Sort::NoDuplicates);
     //now need to do the conversion to data frame from requested frame
     //Get the epoch mesasures of the first row
     MEpoch ep;

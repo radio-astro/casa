@@ -357,7 +357,7 @@ Double ImageFitter::_getStatistic(const String& type, const uInt index, const Re
 	return statVec[index];
 }
 
-Vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
+vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
 	*_log << logOrigin;
 
@@ -382,7 +382,7 @@ Vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	logFile.required = False;
 	logFile.replaceable = True;
 
-	Vector<ImageInputProcessor::OutputStruct> outputs(4);
+	vector<ImageInputProcessor::OutputStruct> outputs(4);
 	outputs[0] = residualIm;
 	outputs[1] = modelIm;
 	outputs[2] = newEstFile;
@@ -397,11 +397,10 @@ void ImageFitter::_construct(
 ) {
 	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
 	*_log << logOrigin;
-	Vector<ImageInputProcessor::OutputStruct> outputs = _getOutputs();
-	//ImageInputProcessor inputProcessor = _beginConstruction();
+	vector<ImageInputProcessor::OutputStruct> outputs = _getOutputs();
 
 	String diagnostics;
-	Vector<Coordinate::Type> reqCoordTypes(1, Coordinate::DIRECTION);
+	vector<Coordinate::Type> reqCoordTypes(1, Coordinate::DIRECTION);
 	ImageInputProcessor inputProcessor;
 
 	inputProcessor.process(

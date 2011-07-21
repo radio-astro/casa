@@ -4,7 +4,7 @@ from taskinit import *
 
 def imregrid(imagename, template, output):
     casalog.origin('imregrid')
-    if (not template.lower() == "get"):
+    if hasattr(template, 'lower') and not template.lower() == "get":
         # First check to see if the output file exists.  If it
         # does then we abort.  CASA doesn't allow files to be
         # over-written, just a policy.
@@ -15,7 +15,7 @@ def imregrid(imagename, template, output):
         if os.path.exists(output):
             raise Exception, 'Output destination ' + output + \
               " exists.\nPlease remove it or change the output file name."
-    
+
     try:
         if not os.path.isdir(imagename) or not os.access(imagename, os.R_OK):
             raise TypeError, 'Cannot read source image ' + imagename

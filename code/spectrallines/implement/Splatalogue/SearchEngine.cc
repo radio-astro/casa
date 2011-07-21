@@ -50,7 +50,7 @@ SearchEngine::SearchEngine(
         logfile.outputFile = &_logfile;
         logfile.required = True;
         logfile.replaceable = True;
-        Vector<ImageInputProcessor::OutputStruct> output(1);
+        vector<ImageInputProcessor::OutputStruct> output(1);
         output[0] = logfile;
         ImageInputProcessor::checkOutputs(&output, *_log);
 	}

@@ -34,9 +34,10 @@
 #include <measures/Measures/Stokes.h>
 #include <tables/Tables/TableRecord.h>
 
-#include <imageanalysis/Annotations/AsciiAnnotationList.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 
 #include <casa/namespace.h>
+#include <memory>
 
 namespace casa { //# name space casa begins
 
@@ -51,8 +52,8 @@ CasacRegionManager::CasacRegionManager(
 CasacRegionManager::~CasacRegionManager() {}
 
 
-Vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
-		const Vector<uInt>& ranges
+vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
+	const vector<uInt>& ranges
 ) {
 	uInt arrSize = ranges.size()/2;
 	uInt arrMin[arrSize];
@@ -65,7 +66,7 @@ Vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
 	sort.sortKey (arrMin, TpUInt);
 	sort.sortKey (arrMax, TpUInt, 0, Sort::Descending);
 	Vector<uInt> inxvec;
-	Vector<uInt> consol(0);
+	vector<uInt> consol(0);
 	sort.sort(inxvec, arrSize);
 	for (uInt i=0; i<arrSize; i++) {
 		uInt idx = inxvec(i);
@@ -74,9 +75,11 @@ Vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
 		uInt max = arrMax[idx];
 		uInt lastMax = (i == 0) ? 0 : consol[size-1];
 		if (i==0) {
-			consol.resize(2, True);
-			consol[0] = min;
-			consol[1] = max;
+			// consol.resize(2, True);
+			// consol[0] = min;
+			// consol[1] = max;
+			consol.push_back(min);
+			consol.push_back(max);
 		}
 		else if (
 			// overlaps previous range, so extend
@@ -84,50 +87,61 @@ Vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
 			// or contiguous with previous range, so extend
 			|| min == lastMax + 1
 		) {
+			// overwriting the end value, so do not resize
 			consol[size-1] = max;
 		}
 
 		else if (min > lastMax + 1) {
 			// non overlap of and not contiguous with previous range,
 			// so create new end point pair
+			/*
 			uInt newSize = consol.size()+2;
 			consol.resize(newSize, True);
 			consol[newSize-2] = min;
 			consol[newSize-1] = max;
+			*/
+			consol.push_back(min);
+			consol.push_back(max);
+
 		}
 	}
 	return consol;
 }
 
-Vector<uInt> CasacRegionManager::_setPolarizationRanges(
-		String& specification, const String& firstStokes, const uInt nStokes,
-		const StokesControl stokesControl
+vector<uInt> CasacRegionManager::_setPolarizationRanges(
+	String& specification, const String& firstStokes, const uInt nStokes,
+	const StokesControl stokesControl
 ) const {
 	LogOrigin origin("CasacRegionManager", __FUNCTION__);
 	*itsLog << origin;
 
-	Vector<uInt> ranges(0);
+	vector<uInt> ranges(0);
 	if (! itsCSys->hasPolarizationAxis()) {
 		return ranges;
 	}
 	specification.trim();
 	specification.upcase();
 	if (specification == ALL) {
+		/*
 		ranges.resize(2);
 		ranges[0] = 0;
 		ranges[1] = nStokes - 1;
+		*/
+		ranges.push_back(0);
+		ranges.push_back(nStokes - 1);
 		return ranges;
 	}
 	if (specification.empty()) {
-		ranges.resize(2);
-		ranges[0] = 0;
+		// ranges.resize(2);
+		// ranges[0] = 0;
+		ranges.push_back(0);
 		switch (stokesControl) {
 		case USE_FIRST_STOKES:
-			ranges[1] = 0;
+			ranges.push_back(0);
 			specification = firstStokes;
 			break;
 		case USE_ALL_STOKES:
-			ranges[1] = nStokes - 1;
+			ranges.push_back(nStokes - 1);
 			specification = ALL;
 			break;
 		default:
@@ -170,10 +184,10 @@ Vector<uInt> CasacRegionManager::_setPolarizationRanges(
 					stokesPix = -1;
 				}
 				if (stokesPix >= 0) {
-					uInt newSize = ranges.size() + 2;
-					ranges.resize(newSize, True);
-					ranges[newSize-2] = stokesPix;
-					ranges[newSize-1] = stokesPix;
+					//uInt newSize = ranges.size() + 2;
+					//ranges.resize(newSize, True);
+					ranges.push_back(stokesPix);
+					ranges.push_back(stokesPix);
 					// consume the string
 					part = part.substr(iter->length());
 					if (! part.empty()) {
@@ -184,9 +198,9 @@ Vector<uInt> CasacRegionManager::_setPolarizationRanges(
 				}
 				else {
 					*itsLog << "Polarization " << *iter << " specified in "
-							<< parts[i] << " does not exist in the specified "
-							<< "coordinate system for the specified number of "
-							<< "polarization parameters" << LogIO::EXCEPTION;
+						<< parts[i] << " does not exist in the specified "
+						<< "coordinate system for the specified number of "
+						<< "polarization parameters" << LogIO::EXCEPTION;
 				}
 			}
 			else {
@@ -195,16 +209,16 @@ Vector<uInt> CasacRegionManager::_setPolarizationRanges(
 		}
 		if (! part.empty()) {
 			*itsLog << "(Sub)String " << part << " in stokes specification part " << parts[i]
-			                                                                               << " does not match a known polarization." << LogIO::EXCEPTION;
+			    << " does not match a known polarization." << LogIO::EXCEPTION;
 		}
 	}
 	return consolidateAndOrderRanges(ranges);
 }
 
-Vector<Double> CasacRegionManager::_setBoxCorners(const String& box) const {
+vector<Double> CasacRegionManager::_setBoxCorners(const String& box) const {
 	Vector<String> boxParts = stringToVector(box);
 	AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
-	Vector<Double> corners(boxParts.size());
+	vector<Double> corners(boxParts.size());
 	for(uInt i=0; i<boxParts.size()/4; i++) {
 		uInt index = 4*i;
 		for (uInt j=0; j<4; j++) {
@@ -246,7 +260,6 @@ Record CasacRegionManager::fromBCS(
 				<< LogIO::POST;
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
-
 	else if (! regionName.empty()) {
 		_setRegion(regionRecord, diagnostics, regionName, imShape, imageName);
 		*itsLog << origin;
@@ -254,28 +267,41 @@ Record CasacRegionManager::fromBCS(
 		stokes = _stokesFromRecord(regionRecord, stokesControl, imShape);
 	}
 	else {
-		Vector<uInt> chanEndPts, polEndPts;
+		vector<uInt> chanEndPts, polEndPts;
 		regionRecord = _fromBCS(
-				diagnostics, nSelectedChannels, stokes,
-				chans, stokesControl, box, imShape
+			diagnostics, nSelectedChannels, stokes,
+			chans, stokesControl, box, imShape
 		).toRecord("");
 		*itsLog << origin;
 		*itsLog << LogIO::NORMAL << "No region specified. Using full positional plane."
 				<< LogIO::POST;
-		if (chans.empty()) {
-			*itsLog << LogIO::NORMAL << "Using all spectral channels."
+		if (itsCSys->hasSpectralAxis()) {
+			if (chans.empty()) {
+				*itsLog << LogIO::NORMAL << "Using all spectral channels."
 					<< LogIO::POST;
-		}
-		else {
-			*itsLog << LogIO::NORMAL << "Using channel range(s) "
+			}
+			else {
+				*itsLog << LogIO::NORMAL << "Using channel range(s) "
 					<< _pairsToString(chanEndPts) << LogIO::POST;
+			}
 		}
-		if (!stokes.empty()) {
-			*itsLog << LogIO::NORMAL << "Using polarizations " << stokes << LogIO::POST;
-		}
-		else {
-			*itsLog << LogIO::NORMAL << "Using polarization range(s) "
-					<< _pairsToString(polEndPts) << LogIO::POST;
+		if (itsCSys->hasPolarizationAxis()) {
+			if (stokes.empty()) {
+				switch (stokesControl) {
+				case USE_ALL_STOKES:
+					*itsLog << LogIO::NORMAL << "Using all polarizations " << LogIO::POST;
+					break;
+				case USE_FIRST_STOKES:
+					*itsLog << LogIO::NORMAL << "polarization "
+					<< itsCSys->stokesAtPixel(0) << LogIO::POST;
+					break;
+				default:
+					break;
+				}
+			}
+			else {
+				*itsLog << LogIO::NORMAL << "Using polarizations " << stokes << LogIO::POST;
+			}
 		}
 	}
 	return regionRecord;
@@ -297,7 +323,11 @@ void CasacRegionManager::_setRegion(
 	const String& imageName
 ) {
 	// region name provided
-	Regex image("(.*)+:(.*)+");
+	const static Regex image("(.*)+:(.*)+");
+	const static Regex regionText(
+		"^[[:space:]]*[[:alpha:]]+[[:space:]]*\\[(.*)+,(.*)+\\]"
+	);
+
 	File myFile(regionName);
 	if (myFile.exists()) {
 		if (! myFile.isReadable()) {
@@ -313,12 +343,23 @@ void CasacRegionManager::_setRegion(
 		catch(AipsError x) {
 		}
 		try {
-			AsciiAnnotationList annList(regionName, *itsCSys, imShape);
+			RegionTextList annList(regionName, *itsCSys, imShape);
 			regionRecord = annList.regionAsRecord();
+			diagnostics = "Region read from region text file " + regionName;
 		}
 		catch (AipsError x) {
-			*itsLog << LogIO::SEVERE << "File " + regionName
-				+ " is neither a valid binary region file nor a valid text region file.";
+			*itsLog << LogIO::SEVERE << regionName
+				+ " is neither a valid binary region file, or a valid region text file.";
+		}
+	}
+	else if (regionName.contains(regionText)) {
+		try {
+			RegionTextList annList(*itsCSys, regionName, imShape);
+			regionRecord = annList.regionAsRecord();
+			diagnostics = "Region read from text string " + regionName;
+		}
+		catch (AipsError x) {
+			*itsLog << x.getMesg() << LogIO::EXCEPTION;
 		}
 	}
 	else if (regionName.matches(image) || ! imageName.empty()) {
@@ -358,10 +399,11 @@ void CasacRegionManager::_setRegion(
 	}
 	else {
 		*itsLog << "Unable to open region file or region table description "
-				<< regionName << LogIO::EXCEPTION;
+			<< regionName << "." << endl
+			<< "If it is supposed to be a text string its format is incorrect"
+			<< LogIO::EXCEPTION;
 	}
 }
-
 
 ImageRegion CasacRegionManager::_fromBCS(
 		String& diagnostics, uInt& nSelectedChannels, String& stokes,
@@ -371,21 +413,21 @@ ImageRegion CasacRegionManager::_fromBCS(
 ) const {
 	Int specAxisNumber = itsCSys->spectralAxisNumber();
 	uInt nTotalChannels = specAxisNumber >= 0 ? imShape[specAxisNumber] : 0;
-	Vector<uInt> chanEndPts = setSpectralRanges(
-			chans, nSelectedChannels, nTotalChannels
+	vector<uInt> chanEndPts = setSpectralRanges(
+		chans, nSelectedChannels, nTotalChannels
 	);
 	Int polAxisNumber = itsCSys->polarizationAxisNumber();
 	uInt nTotalPolarizations = polAxisNumber >= 0 ? imShape[polAxisNumber] : 0;
 	String firstStokes = polAxisNumber >= 0 ? itsCSys->stokesAtPixel(0) : "";
-	Vector<uInt> polEndPts = _setPolarizationRanges(
-			stokes, firstStokes,
-			nTotalPolarizations, stokesControl
+	vector<uInt> polEndPts = _setPolarizationRanges(
+		stokes, firstStokes,
+		nTotalPolarizations, stokesControl
 	);
-	Vector<Double> boxCorners;
+	vector<Double> boxCorners;
 	if (box.empty()) {
 		if (
-				itsCSys->hasDirectionCoordinate()
-				|| itsCSys->hasLinearCoordinate()
+			itsCSys->hasDirectionCoordinate()
+			|| itsCSys->hasLinearCoordinate()
 		) {
 			Vector<Int> dirAxesNumbers;
 			if (itsCSys->hasDirectionCoordinate()) {
@@ -409,14 +451,14 @@ ImageRegion CasacRegionManager::_fromBCS(
 		boxCorners = _setBoxCorners(box);
 	}
 	return _fromBCS(
-			diagnostics, boxCorners,
-			chanEndPts, polEndPts, imShape
+		diagnostics, boxCorners,
+		chanEndPts, polEndPts, imShape
 	);
 }
 
 ImageRegion CasacRegionManager::_fromBCS(
-		String& diagnostics, const Vector<Double>& boxCorners,
-		const Vector<uInt>& chanEndPts, const Vector<uInt>& polEndPts,
+		String& diagnostics, const vector<Double>& boxCorners,
+		const vector<uInt>& chanEndPts, const vector<uInt>& polEndPts,
 		const IPosition imShape
 ) const {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
@@ -561,8 +603,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 		WCBox wcBox(lcBox, *itsCSys);
 		ImageRegion thisRegion(wcBox);
 		imRegion = (i == 0)
-  						? thisRegion
-  								: imRegion = *(doUnion(imRegion, thisRegion));
+  			? thisRegion
+  			: imRegion = *(doUnion(imRegion, thisRegion));
 	}
 	ostringstream os;
 	os << "Used image region from " << endl;
@@ -570,7 +612,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 		os << "    position box corners: ";
 		for (uInt i=0; i<boxCorners.size()/4; i++) {
 			os << boxCorners[4*i] << ", " << boxCorners[4*i + 1]
-			                                            << ", " << boxCorners[4*i + 2] << ", " << boxCorners[4*i + 3];
+			    << ", " << boxCorners[4*i + 2] << ", " << boxCorners[4*i + 3];
 			if (i < boxCorners.size()/4 - 1) {
 				os << "; ";
 			}
@@ -586,7 +628,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 	return imRegion;
 }
 
-String CasacRegionManager::_pairsToString(const Vector<uInt>& pairs) const {
+String CasacRegionManager::_pairsToString(const vector<uInt>& pairs) const {
 	ostringstream os;
 	uInt nPairs = pairs.size()/2;
 	for (uInt i=0; i<nPairs; i++) {
@@ -666,13 +708,13 @@ String CasacRegionManager::_stokesFromRecord(
 	return stokes;
 }
 
-Vector<uInt> CasacRegionManager::setSpectralRanges(
-		String specification, uInt& nSelectedChannels, const uInt nChannels
+vector<uInt> CasacRegionManager::setSpectralRanges(
+	String specification, uInt& nSelectedChannels, const uInt nChannels
 ) const {
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
 	*itsLog << origin;
 
-	Vector<uInt> ranges(0);
+	vector<uInt> ranges(0);
 	if (! itsCSys->hasSpectralAxis()) {
 		nSelectedChannels = 0;
 		return ranges;
@@ -682,9 +724,8 @@ Vector<uInt> CasacRegionManager::setSpectralRanges(
 	specification.upcase();
 
 	if (specification.empty() || specification == ALL) {
-		ranges.resize(2);
-		ranges[0] = 0;
-		ranges[1] = nChannels - 1;
+		ranges.push_back(0);
+		ranges.push_back(nChannels - 1);
 		nSelectedChannels = nChannels;
 		return ranges;
 	}
@@ -713,15 +754,15 @@ Vector<uInt> CasacRegionManager::setSpectralRanges(
 			Vector<String> values = stringToVector(parts[i], '~');
 			if (values.size() != 2) {
 				*itsLog << "Incorrect specification for channel range "
-						<< parts[i] << LogIO::EXCEPTION;
+					<< parts[i] << LogIO::EXCEPTION;
 			}
 			values[0].trim();
 			values[1].trim();
 			for(uInt j=0; j < 2; j++) {
 				if (! values[j].matches(regexuInt)) {
 					*itsLog << "For channel specification " << values[j]
-					                                                  << " is not a non-negative integer in "
-					                                                  << parts[i] << LogIO::EXCEPTION;
+					    << " is not a non-negative integer in "
+					    << parts[i] << LogIO::EXCEPTION;
 				}
 			}
 			min = String::toInt(values[0]);
@@ -732,15 +773,15 @@ Vector<uInt> CasacRegionManager::setSpectralRanges(
 			maxs.trim();
 			if (! maxs.matches(regexuInt)) {
 				*itsLog << "In channel specification, " << maxs
-						<< " is not a non-negative integer in " << parts[i]
-						                                                 << LogIO::EXCEPTION;
+					<< " is not a non-negative integer in " << parts[i]
+					<< LogIO::EXCEPTION;
 			}
 			min = 0;
 			max = String::toInt(maxs);
 			if (! parts[i].matches(regexLTEq)) {
 				if (max == 0) {
 					*itsLog << "In channel specification, max channel cannot "
-							<< "be less than zero in " + parts[i];
+						<< "be less than zero in " + parts[i];
 				}
 				else {
 					max--;
@@ -749,13 +790,13 @@ Vector<uInt> CasacRegionManager::setSpectralRanges(
 		}
 		else if (parts[i].matches(regexGT)) {
 			String mins = parts[i].matches(regexGTEq)
-         									? parts[i].substr(2)
-         											: parts[i].substr(1);
+         		? parts[i].substr(2)
+         		: parts[i].substr(1);
 			mins.trim();
 			if (! mins.matches(regexuInt)) {
 				*itsLog << " In channel specification, " << mins
-						<< " is not an integer in " << parts[i]
-						                                     << LogIO::EXCEPTION;
+					<< " is not an integer in " << parts[i]
+					<< LogIO::EXCEPTION;
 			}
 			max = nChannels - 1;
 			min = String::toInt(mins);
@@ -764,26 +805,30 @@ Vector<uInt> CasacRegionManager::setSpectralRanges(
 			}
 			if (min > nChannels - 1) {
 				*itsLog << "Min channel cannot be greater than the (zero-based) number of channels ("
-						<< nChannels - 1 << ") in the image" << LogIO::EXCEPTION;
+					<< nChannels - 1 << ") in the image" << LogIO::EXCEPTION;
 			}
 		}
 		else {
 			*itsLog << "Invalid channel specification in " << parts[i]
-			                                                        << " of spec " << specification << LogIO::EXCEPTION;
+			    << " of spec " << specification << LogIO::EXCEPTION;
 		}
 		if (min > max) {
 			*itsLog << "Min channel " << min << " cannot be greater than max channel "
-					<< max << " in " << parts[i] << LogIO::EXCEPTION;
+				<< max << " in " << parts[i] << LogIO::EXCEPTION;
 		}
 		else if (max >= nChannels) {
 			*itsLog << "Zero-based max channel " << max
-					<< " must be less than the total number of channels ("
-					<< nChannels << ") in the channel specification " << parts[i] << LogIO::EXCEPTION;
+				<< " must be less than the total number of channels ("
+				<< nChannels << ") in the channel specification " << parts[i] << LogIO::EXCEPTION;
 		}
+		/*
 		ranges[2*i] = min;
 		ranges[2*i + 1] = max;
+		*/
+		ranges.push_back(min);
+		ranges.push_back(max);
 	}
-	Vector<uInt> consolidatedRanges = consolidateAndOrderRanges(ranges);
+	vector<uInt> consolidatedRanges = consolidateAndOrderRanges(ranges);
 	nSelectedChannels = 0;
 	for (uInt i=0; i<consolidatedRanges.size()/2; i++) {
 		nSelectedChannels += consolidatedRanges[2*i + 1] - consolidatedRanges[2*i] + 1;
