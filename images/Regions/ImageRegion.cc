@@ -164,7 +164,7 @@ ImageRegion* ImageRegion::fromLatticeExpression(const String& latticeExpression)
 }
 
 ImageRegion* ImageRegion::fromRecord(
-	LogIO *logger, const CoordinateSystem& coords,
+	LogIO *const &logger, const CoordinateSystem& coords,
 	const IPosition& imShape, const Record& regionRecord
 ) {
 	if (logger != 0) {

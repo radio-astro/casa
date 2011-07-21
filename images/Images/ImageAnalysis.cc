@@ -74,7 +74,6 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
-// #include <images/Images/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -125,6 +124,8 @@
 #include <images/Images/MIRIADImage.h>
 
 #include <casa/namespace.h>
+
+#include <memory>
 
 namespace casa { //# name space casa begins
 
@@ -4598,43 +4599,47 @@ ImageAnalysis::subimage(const String& outfile, Record& Region,
 
 	// Convert region from Glish record to ImageRegion. Convert mask
 	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpecifier;
 	if (dropDegenerateAxes) {
 		axesSpecifier = AxesSpecifier(False);
 	}
-	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
-		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, True, axesSpecifier
+	std::auto_ptr<SubImage<Float> >subImage(
+		new SubImage<Float>(
+			SubImage<Float>::createSubImage(
+				*pImage_p,
+				*(ImageRegion::tweakedRegionRecord(&Region)),
+				mask, itsLog, True, axesSpecifier
+			)
+		)
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	if (outfile.empty()) {
-		return new SubImage<Float> (subImage);
+		return subImage.release();
 	} else {
 		// Make the output image
 		if (list) {
 			*itsLog << LogIO::NORMAL << "Creating image '" << outfile
-					<< "' of shape " << subImage.shape() << LogIO::POST;
+					<< "' of shape " << subImage->shape() << LogIO::POST;
 		}
-		PagedImage<Float> *outImage = new PagedImage<Float> (subImage.shape(),
-				subImage.coordinates(), outfile);
+		std::auto_ptr<PagedImage<Float> > outImage(
+			new PagedImage<Float> (
+				subImage->shape(),
+				subImage->coordinates(), outfile
+			)
+		);
 		ImageUtilities::copyMiscellaneous(*outImage, *pImage_p);
 
 		// Make output mask if required
-		if (subImage.isMasked()) {
+		if (subImage->isMasked()) {
 			String maskName("");
 			makeMask(*outImage, maskName, False, True, *itsLog, list);
 		}
 
 		// Copy data and mask
-		LatticeUtilities::copyDataAndMask(*itsLog, *outImage, subImage);
+		LatticeUtilities::copyDataAndMask(*itsLog, *outImage, *subImage);
 
 		// Return handle
-		return outImage;
+		return outImage.release();
 	}
 }
 

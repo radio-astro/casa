@@ -131,7 +131,7 @@ public:
     // messages regarding bounding boxes are emitted to the <src>logger</src> object.
     // Moved from ImageAnalysis.
     static ImageRegion* fromRecord(
-    	LogIO *logger, const CoordinateSystem& coords,
+    	LogIO *const &logger, const CoordinateSystem& coords,
     	const IPosition& imShape, const Record& regionRecord
     );
 
