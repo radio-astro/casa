@@ -35,6 +35,7 @@ int main(unsigned char argc, char **argv)
 	bool fillBuffer = true;
 	double elapsedTime, cumElapsedTime = 0;
 	unsigned long nBuffers = 0;
+	unsigned long cumRows = 0;
 	timeval start,stop;
 
 
@@ -231,10 +232,11 @@ int main(unsigned char argc, char **argv)
 			}
 
 			cout << "nRows:" << dh->visibilityBuffer_p->nRow() << " Reading Time [ms]:" << elapsedTime <<endl;
+			cumRows += dh->visibilityBuffer_p->nRow();
 		}
 	}
 
-	cout << "Total Reading Time [s]:" << cumElapsedTime/1000.0 << " Total number of Buffers:" << nBuffers <<endl;
+	cout << "Total Reading Time [s]:" << cumElapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 
 	exit(-1);
 }
