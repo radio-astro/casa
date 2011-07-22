@@ -85,6 +85,14 @@ def run_reorder(imagename, outfile, order):
     myia.close()
     return res
 
+def run_transpose(imagename, outfile, order):
+    myia = iatool.create()
+    myia.open(imagename)
+    print "*** order " + str(order)
+    res = myia.transpose(outfile=outfile, order=order)
+    myia.close()
+    return res
+
 def run_imtrans(imagename, outfile, order):
     return imtrans(imagename=imagename, outfile=outfile, order=order)
 
@@ -137,7 +145,7 @@ class imtrans_test(unittest.TestCase):
         myia.close()
         count = 0
         for order in ["012", 12, ['r', 'd', 'f'], ["righ", "declin", "freq"]]:
-            for code in [run_reorder, run_imtrans]:
+            for code in [run_reorder, run_transpose, run_imtrans]:
                 newim = code(imagename, "straight_copy_" + str(count), order)
                 gotdata = newim.getchunk()
                 gotnames = newim.coordsys().names()
@@ -156,7 +164,7 @@ class imtrans_test(unittest.TestCase):
         myia.done()
         count = 0
         for order in ["120", 120, ['d', 'f', 'r'], ["declin", "freq", "righ"]]:
-            for code in [run_reorder, run_imtrans]:
+            for code in [run_reorder, run_transpose, run_imtrans]:
                 for outname in ["transpose_" + str(count), ""]:
                     newim = code(imagename, outname, order)
                     gotdata = newim.getchunk()

@@ -35,7 +35,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>order=["d", "f", "r"]</example>
     </param>
     <param type="bool" name="wantreturn">
-        <description>Return the transposed image tool?</description>
+        <description>Return an image tool referencing the transposed image</description>
         <value>True</value>
         <example>wantreturn=False</example>
     </param>
@@ -47,6 +47,7 @@ PARAMETER SUMMARY
 imagename        Name of the input image
 outfile          Name of output CASA image. If blank, no disk image is written.
 order            Output axes mapping
+wantreturn       Return an image tool referencing the transposed image?
 
 This task reorders (transposes) the axes in the input image to the specified
 order. The associated pixel values and coordinate system are transposed.

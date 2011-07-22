@@ -76,9 +76,11 @@ def imtrans(imagename=None, outfile=None, order=None, wantreturn=None):
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
         newim = None
     myia.done()
+    del myia
     if (wantreturn):
         return newim
     else:
         if (newim):
             newim.done()
+            del newim
         return False

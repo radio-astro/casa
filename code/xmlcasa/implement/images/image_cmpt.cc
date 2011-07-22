@@ -46,11 +46,9 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/GaussianConvert.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
-#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 
 #include <images/Images/ComponentImager.h>
 #include <images/Images/Image2DConvolver.h>
-#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <images/Images/ImageConcat.h>
 #include <images/Images/ImageConvolver.h>
 #include <images/Images/ImageDecomposer.h>
@@ -62,7 +60,6 @@
 #include <images/Images/ImageInterface.h>
 #include <images/Images/ImageMoments.h>
 #include <images/Images/ImageRegrid.h>
-#include <images/Images/ImageReorderer.h>
 #include <images/Images/ImageSourceFinder.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/ImageSummary.h>
@@ -98,8 +95,11 @@
 #include <scimath/Mathematics/VectorKernel.h>
 #include <tables/LogTables/NewFile.h>
 
+#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
+#include <imageanalysis/ImageAnalysis/ImageReorderer.h>
 
 #include <xmlcasa/version.h>
 
@@ -230,7 +230,7 @@ casac::image * image::collapse(const string& function, const variant& axes,
 		const string& chans, const string& stokes, const string& mask,
 		const bool overwrite) {
 	image *newImageTool = 0;
-	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
 		return NULL;
 	}
@@ -251,8 +251,9 @@ casac::image * image::collapse(const string& function, const variant& axes,
 					String> (1, axes.getString()) : toVectorString(
 					axes.toStringVec());
 			Vector<Int> holdAxes =
-					_image->getImage()->coordinates().getWorldAxisOrder(axVec,
-							False);
+				_image->getImage()->coordinates().getWorldAxesOrder(
+					axVec, False
+				);
 			myAxes.resize(holdAxes.size());
 			Vector<Int>::const_iterator jiter = holdAxes.begin();
 			for (Vector<uInt>::iterator iter = myAxes.begin(); iter
@@ -265,11 +266,13 @@ casac::image * image::collapse(const string& function, const variant& axes,
 				jiter++;
 			}
 		} else {
-			throw AipsError("Unsupported type for parameter axes");
+			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
 		}
 		String aggString = function;
-		ImageCollapser collapser(aggString, _image->getImage(), region, box,
-				chans, stokes, mask, myAxes, outfile, overwrite);
+		ImageCollapser collapser(
+			aggString, _image->getImage(), region, box,
+			chans, stokes, mask, myAxes, outfile, overwrite
+		);
 		newImageTool = new image(collapser.collapse(True), False);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -1196,41 +1199,66 @@ image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 	return rstat;
 }
 
-::casac::image * image::reorder(const std::string& outfile,
-		const variant& order) {
-	::casac::image *outImage = 0;
-	ImageReorderer *reorderer = 0;
+image* image::reorder(
+	const std::string& outfile,
+	const variant& order
+) {
 	try {
 		*_log << LogOrigin("image", "reorder");
 		if (detached()) {
 			return 0;
 		}
-		if (order.type() == variant::INT) {
-			reorderer = new ImageReorderer(_image->getImage(), order.toInt(),
-					outfile);
-		} else if (order.type() == variant::STRING) {
-			reorderer = new ImageReorderer(_image->getImage(),
-					order.toString(), outfile);
-		} else if (order.type() == variant::STRINGVEC) {
-			Vector<String> orderVec = toVectorString(order.toStringVec());
-			reorderer = new ImageReorderer(_image->getImage(), orderVec,
-					outfile);
-		} else {
+		std::auto_ptr<ImageReorderer> transposer(0);
+		switch(order.type()) {
+		case variant::INT:
+			transposer.reset(
+				new ImageReorderer(
+					_image->getImage(),
+					order.toInt(), outfile
+				)
+			);
+			break;
+		case variant::STRING:
+			transposer.reset(
+				new ImageReorderer(
+					_image->getImage(),
+					order.toString(), outfile
+				)
+			);
+			break;
+		case variant::STRINGVEC:
+			{
+				Vector<String> orderVec = toVectorString(order.toStringVec());
+				transposer.reset(
+					new ImageReorderer(
+						_image->getImage(), orderVec,
+						outfile
+					)
+				);
+			}
+			break;
+		default:
 			*_log << "Unsupported type for order parameter " << order.type()
-					<< ". Supported types are a non-negative integer or a single "
+					<< ". Supported types are a non-negative integer,a single "
 					<< "string containing all digits or a list of strings which "
 					<< "unambiguously match the image axis names"
 					<< LogIO::EXCEPTION;
 		}
-		outImage = new ::casac::image(reorderer->reorder(), False);
+		return new image(
+			transposer->transpose(), False
+		);
 	} catch (AipsError x) {
-		delete reorderer;
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	delete reorderer;
-	return outImage;
+}
+
+image* image::transpose(
+	const std::string& outfile,
+	const variant& order
+) {
+	return reorder(outfile, order);
 }
 
 ::casac::record* image::fitcomponents(const string& box, const variant& region,

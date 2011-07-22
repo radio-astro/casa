@@ -116,7 +116,10 @@ and write out the fitted and residual images (see also the
 \item <link anchor="images:image.regrid.function">regrid</link> - regrid the image to the
 specified Coordinate System 
 
-\item <link anchor="images:image.reorder.function">reorder</link> - reorder the image axes
+\item <link anchor="images:image.reorder.function">reorder</link> - transpose the image (same as transpose())
+
+\item <link anchor="images:image.transpose.function">transpose</link> - transpose the image (same as reorder())
+
 
 \item <link anchor="images:image.rotate.function">rotate</link> - rotate the coordinate system
 and regrid the image to the rotated Coordinate System 
@@ -6999,29 +7002,43 @@ ia.close()
 </method>
 
 
-   <method type="function" name="reorder">
-   <shortdescription>Reorder the image axes.</shortdescription>
-   
-<input>
-  
-     <param type="string" direction="in" name="outfile">
-     <description>Output image file name.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="any" direction="in" name="order">
-     <any type="variant"/>
-     <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
-     <value></value>
-     </param>
-  
-</input>
-<returns type="casaimage"/>
 
-<description>
+<method type="function" name="reorder">
+    <shortdescription>Transpose the image.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image file name.  Default is unset.</description>
+            <value/>
+        </param>
+        <param type="any" direction="in" name="order">
+            <any type="variant"/>
+            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+        See help for ia.transpose() for details.
+    </description>
+</method>
 
-This method reorders (transposes) the axes in the input image to the specified
-order. The associated pixel values and coordinate system are transposed.
+<method type="function" name="transpose">
+    <shortdescription>Transpose the image.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image file name.  Default is unset.</description>
+            <value/>
+        </param>
+        <param type="any" direction="in" name="order">
+            <any type="variant"/>
+            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+This method transposes the axes in the input image to the specified
+order. The associated pixel and mask values and coordinate system are transposed.
 
 If the outfile parameter is empty, only a temporary image is created; no output image
 is written to disk.
@@ -7044,21 +7061,15 @@ So to reorder an image with right ascension, declination, and frequency axes, on
 specify order=["d", "f", "r"] or equivalently ["decl", "frequ", "right a"]. Note that
 specifying "ra" for the right ascension axis will result in an error because "ra" does
 not match the first two characters of right ascension.
-
-</description>
-
-<example>
-
+    </description>
+    <example>
 """
 # swap stokes (axis 2) and spectral (axis 3) axes in a 4 dimensional image
 ia.open("myimage.fits")
-reordim = ia.reorder(outfile="my_reordered_image.im", order="0132")
+reordim = ia.transpose(outfile="my_reordered_image.im", order="0132")
 ia.done()
 """
-
-
-</example>
-
+    </example>
 </method>
 
    <method type="function" name="rotate">
