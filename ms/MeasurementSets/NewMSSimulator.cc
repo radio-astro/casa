@@ -880,10 +880,12 @@ void NewMSSimulator::initFeeds(const String& mode,
   }
   
   Int nFeed=x.nelements();
+
+  //  cout << "nFeed = " << nFeed << endl;
   
   String feedPol0="R", feedPol1="L";
   Bool isList=False;
-  if(nFeed>0) {
+  if(nFeed>1) {
     isList=True;
     if(x.nelements()!=y.nelements()) {
       os << "Feed x and y must be the same length" << LogIO::EXCEPTION;
@@ -901,6 +903,9 @@ void NewMSSimulator::initFeeds(const String& mode,
       feedPol1 = "Y";
     }
   }
+
+  //cout << "Mode in initFeeds = " << mode << endl;
+  //cout << "feedPol0,1 = " << feedPol0 << " " << feedPol1 << endl;
   
   Int nRow=nFeed*nAnt;
   Vector<Int> feedAntId(nRow);
