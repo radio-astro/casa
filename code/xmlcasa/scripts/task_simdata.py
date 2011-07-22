@@ -1,6 +1,7 @@
-import os
 from taskinit import *
 from simutil import *
+import os
+import re
 import pylab as pl
 import pdb
 
@@ -30,8 +31,10 @@ def simdata(
     overwrite=None,
     async=False):
 
+    import re
 
     # RI TODO for inbright=unchanged, need to scale input image to jy/pix
+    # according to actual units in the input image
 
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
@@ -257,7 +260,6 @@ def simdata(
 
 
 
-
         ##################################################################
         # read antenna file here to get Primary Beam
         predict_uv = False
@@ -368,7 +370,6 @@ def simdata(
         util.direction = dir0
 
         if setpointings:
-            import re
             if verbose: util.msg("calculating map pointings centered at "+str(dir0))
 
             if len(pointingspacing) < 1:
@@ -389,15 +390,17 @@ def simdata(
         else:
             if type(ptgfile) == type([]):
                 ptgfile = ptgfile[0]
-#            ptgfile = ptgfile.replace('$project',fileroot+"/"+project)
             ptgfile = ptgfile.replace('$project',project)
-            if not os.path.exists(fileroot+"/"+ptgfile):
+            if os.path.exists(fileroot+"/"+ptgfile):
+                ptgfile = fileroot + "/" + ptgfile
+            else:
                 if os.path.exists(ptgfile):
-                    shutil.copyfile(ptgfile,fileroot+"/"+ptgfile)
+                    shutil.copyfile(ptgfile,fileroot+"/"+project + ".ptg.txt")
+                    ptgfile = fileroot + "/" + project + ".ptg.txt"
                 else:
                     util.msg("Can't find pointing file "+ptgfile,priority="error")
                     return False
-            ptgfile = fileroot + "/" + ptgfile
+
             nfld, pointings, etime = util.read_pointings(ptgfile)
             # a string of different integrations doesn't work below yet
 #            integration = [str(s)+"s" for s in etime]
@@ -565,6 +568,27 @@ def simdata(
 
             ############################################
             # predict interferometry observation
+
+            # if someone has the old style refdate with the included, discard
+            q = re.compile('(\d*/\d+/\d+)([/:\d]*)')
+            qq = q.match(refdate)
+            if not qq:
+                msg("Invalid reference date "+refdate,priority="error")
+                return
+            else:
+                z = qq.groups()
+                refdate=z[0]
+                if len(z)>1:
+                    msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
+
+            if reftime=="transit":
+                refdate=refdate+"/00:00:00"
+                usehourangle=True
+            else:
+                refdate=refdate+"/"+reftime
+                usehourangle=False
+
+
             if predict_uv: 
                 if os.path.exists(msfile):
                     if not overwrite:
@@ -612,27 +636,6 @@ def simdata(
                     sm.setfield(sourcename="phase calibrator", 
                                 sourcedirection=caldirection,calcode='C',
                                 distance='0m')
-
-                # what if someone has the old style refdate with time
-                # included?  CATCH XXX 
-  
-                q = re.compile('(\d*/\d+/\d+)([/:\d]*)')
-                qq = q.match(refdate)
-                if not qq:
-                    msg("Invalid reference date "+refdate,priority="error")
-                    return
-                else:
-                    z = qq.groups()
-                    refdate=z[0]
-                    if len(z)>1:
-                        msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
- 
-                if reftime=="transit":
-                    refdate=refdate+"/00:00:00"
-                    usehourangle=True
-                else:
-                    refdate=refdate+"/"+reftime
-                    usehourangle=False
 
                 mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
@@ -783,7 +786,7 @@ def simdata(
                 #                sourcedirection=caldirection,calcode='C',
                 #                distance='0m')
                 mereftime = me.epoch('TAI', refdate)
-                sm.settimes(integrationtime=integration, usehourangle=True, 
+                sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
