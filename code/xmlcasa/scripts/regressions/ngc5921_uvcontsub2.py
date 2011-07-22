@@ -156,7 +156,7 @@ def reportresults(redi):
         if not tup[0]:
             ok = False
             if len(tup) > 2:
-                tstutl.note('  ' + t + " difference: " + tup[2],
+                tstutl.note('  ' + t + " difference: " + str(tup[2]),
                             normalsevere[tup[0]])
     return ok
 
