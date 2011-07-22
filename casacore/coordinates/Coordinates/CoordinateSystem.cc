@@ -64,6 +64,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String CoordinateSystem::_class = "CoordinateSystem";
 
 CoordinateSystem::CoordinateSystem()
 : coordinates_p(0), 
@@ -2853,7 +2854,7 @@ void CoordinateSystem::makePixelAbsRelMany (Matrix<Double>& pixel, Bool toAbs) c
 Coordinate* CoordinateSystem::makeFourierCoordinate (const Vector<Bool>& axes,
                                                      const Vector<Int>& shape) const
 {
-   LogIO os(LogOrigin("CoordinateSystem", "makeFourierCoordinate", WHERE));
+   LogIO os(LogOrigin(_class, __FUNCTION__, WHERE));
 //
    if (axes.nelements() != nPixelAxes()) {  
       throw (AipsError("Invalid number of specified pixel axes"));
@@ -2920,7 +2921,7 @@ Bool CoordinateSystem::checkAxesInThisCoordinate(const Vector<Bool>& axes, uInt 
 // 2) Make sure they are all good.
 //
 {
-   LogIO os(LogOrigin("CoordinateSystem", "checkAxesInThisCoordinate", WHERE));
+   LogIO os(LogOrigin(_class, __FUNCTION__, WHERE));
 //
    Bool wantIt = False;
 
@@ -4532,14 +4533,14 @@ Vector<Int> CoordinateSystem::linearAxesNumbers() const {
     return pixelAxes(linearCoordinateNumber());
 }
 
-Vector<Int> CoordinateSystem::getWorldAxisOrder(Vector<String>& myNames, const Bool requireAll) const {
+Vector<Int> CoordinateSystem::getWorldAxesOrder(Vector<String>& myNames, const Bool requireAll) const {
+	LogIO os(LogOrigin(_class, __FUNCTION__, WHERE));
 	uInt naxes = nWorldAxes();
 	uInt raxes = myNames.size();
 	if (requireAll && raxes != naxes) {
-		ostringstream oss;
-		oss << "Image has " << naxes << " axes but " << raxes
-				<< " were given for reordering. Number of axes to reorder must match the number of image axes";
-		throw AipsError(oss.str());
+		os << "Image has " << naxes << " axes but " << raxes
+			<< " were given. Number of given axes must match the number of image axes"
+			<< LogIO::EXCEPTION;
 	}
 	Vector<String> axisNames = worldAxisNames();
 	_downcase(axisNames);
@@ -4562,16 +4563,13 @@ Vector<Int> CoordinateSystem::getWorldAxisOrder(Vector<String>& myNames, const B
 			}
 		}
 		if(matchedNames.size() == 0) {
-			ostringstream oss;
-			oss << "No axis matches requested axis " << spec
-				<< ". Image axis names are " << axisNames;
-			throw AipsError(oss.str());
+			os << "No axis matches requested axis " << spec
+				<< ". Image axis names are " << axisNames
+				<< LogIO::EXCEPTION;
 		}
 		else if (matchedNames.size() > 1) {
-			ostringstream oss;
-			oss << "Multiple axes " << matchedNames << " match requested axis "
-				<< spec;
-			throw AipsError(oss.str());
+			os << "Multiple axes " << matchedNames << " match requested axis "
+				<< spec << LogIO::EXCEPTION;
 		}
 		uInt axisIndex = matchedNumbers[0];
 		if (matchMap[axisIndex].empty()) {
@@ -4579,10 +4577,9 @@ Vector<Int> CoordinateSystem::getWorldAxisOrder(Vector<String>& myNames, const B
 			matchMap[axisIndex] = spec;
 		}
 		else {
-			ostringstream oss;
-			oss << "Ambiguous axis specification. Both " << matchMap[axisIndex]
-			    << " and " << spec << " match image axis name " << matchedNames[0];
-			throw AipsError(oss.str());
+			os << "Ambiguous axis specification. Both " << matchMap[axisIndex]
+			    << " and " << spec << " match image axis name "
+			    << matchedNames[0] << LogIO::EXCEPTION;
 		}
 	}
 	return myorder;
