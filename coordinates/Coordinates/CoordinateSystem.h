@@ -835,7 +835,7 @@ public:
    // Get the 0 based order of the minimal match strings specified in <src>order</src>.
    // If <src>requireAll</src> is True, checks are done to ensure that all axes in
    // the coordinate system are uniquely specified in <src>order</src>.
-   Vector<Int> getWorldAxisOrder(Vector<String>& myNames, const Bool requireAll) const;
+   Vector<Int> getWorldAxesOrder(Vector<String>& myNames, const Bool requireAll) const;
 
 
 private:
@@ -868,6 +868,8 @@ private:
     // Miscellaneous information about the observation associated with this
     // Coordinate System.
     ObsInfo obsinfo_p;
+
+    const static String _class;
 
     // Helper functions to group common code.
     Bool mapOne(Vector<Int>& worldAxisMap, 
