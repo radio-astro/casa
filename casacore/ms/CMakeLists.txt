@@ -121,7 +121,6 @@ MeasurementSets/MSFreqOffColumns.cc
 MeasurementSets/MSFieldColumns.cc
 MeasurementSets/MSCorrParse.cc
 MeasurementSets/MSSpectralWindow.cc
-MeasurementSets/MSSimulator.cc
 MeasurementSets/MSTableIndex.cc
 MeasurementSets/MSPolarization.cc
 MeasurementSets/MSSpWindowColumns.cc
@@ -240,7 +239,6 @@ MeasurementSets/MSSelectionError.h
 MeasurementSets/MSSelectionKeywords.h
 MeasurementSets/MSSelectionTools.h
 MeasurementSets/MSSelector.h
-MeasurementSets/MSSimulator.h
 MeasurementSets/MSSource.h
 MeasurementSets/MSSourceColumns.h
 MeasurementSets/MSSourceEnums.h
