@@ -30,7 +30,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(iterationApproach)
 {
 	// Default verbosity
-	profiling_p = false;
+	profiling_p = true;
 	debug_p = false;
 
 	// WARNING: By default the visibility iterator adds the following
@@ -229,7 +229,7 @@ FlagDataHandler::generateIterator()
 	visibilityIterator_p = new VisIter(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
 	// Set the table data manager (ISM and SSM) cache size to the full column size, for the columns
-	// ANTENNA1, ANTENNA2, FvisibilityBuffer_p = VisBuffer(*visibilityIterator_p);
+	// ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW 
 	visibilityIterator_p->slurp();
 
 	// Attach Visibility Buffer to Visibility Iterator
@@ -260,13 +260,18 @@ FlagDataHandler::nextChunk()
 		chunkNo++;
 		bufferNo = 0;
 	}
-	else if (visibilityIterator_p->moreChunks())
+	else
 	{
 		visibilityIterator_p->nextChunk();
-		buffersInitialized_p = false;
-		moreChunks = true;
-		chunkNo++;
-		bufferNo = 0;
+
+		// WARNING: We iterate and afterwards check if the iterator is valid
+		if (visibilityIterator_p->moreChunks())
+		{
+			buffersInitialized_p = false;
+			moreChunks = true;
+			chunkNo++;
+			bufferNo = 0;
+		}
 	}
 
 	STOPCLOCK
