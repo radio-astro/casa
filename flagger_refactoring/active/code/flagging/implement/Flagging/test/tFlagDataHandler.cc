@@ -25,7 +25,7 @@
 
 using namespace casa;
 
-int main(unsigned char argc, char **argv)
+int main(int argc, char **argv)
 {
 	// Variables declaration
 	string parameter, value;
@@ -33,7 +33,7 @@ int main(unsigned char argc, char **argv)
 	unsigned short iteration_mode = 0;
 	unsigned short logLevel = 0;
 	bool fillBuffer = true;
-	double elapsedTime, cumElapsedTime = 0;
+	double elapsedTime = 0;
 	unsigned long nBuffers = 0;
 	unsigned long cumRows = 0;
 	timeval start,stop;
@@ -107,6 +107,9 @@ int main(unsigned char argc, char **argv)
 	// Set cout precision
 	cout.precision(20);
 
+	// Start clock
+	gettimeofday(&start,0);
+
 	// Iterates over chunks (constant values)
 	while (dh->nextChunk())
 	{
@@ -116,8 +119,6 @@ int main(unsigned char argc, char **argv)
 		{
 			if (fillBuffer)
 			{
-				gettimeofday(&start,0);
-
                                 dh->visibilityBuffer_p->antenna1();
                                 dh->visibilityBuffer_p->antenna2();
                                 dh->visibilityBuffer_p->arrayId();
@@ -163,8 +164,6 @@ int main(unsigned char argc, char **argv)
 
                                 gettimeofday(&stop,0);
                                 elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;
-				cumElapsedTime += elapsedTime;
-
 			}
 
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
@@ -231,12 +230,16 @@ int main(unsigned char argc, char **argv)
 				cout << "Antenna2:" << dh->visibilityBuffer_p->antenna2()[0] << " ";
 			}
 
-			cout << "nRows:" << dh->visibilityBuffer_p->nRow() << " Reading Time [ms]:" << elapsedTime <<endl;
+			cout << "nRows:" << dh->visibilityBuffer_p->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->nRow();
 		}
 	}
 
-	cout << "Total Reading Time [s]:" << cumElapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
+	// Stop clock
+	gettimeofday(&stop,0);
+	elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;
+
+	cout << "Total Reading Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 
 	exit(-1);
 }
