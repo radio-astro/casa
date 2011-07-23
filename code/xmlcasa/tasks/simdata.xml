@@ -234,6 +234,9 @@ it'll do them for the same amount of time -->
     <param type="double" name="tau0" subparam="true">
       <description>zenith opacity</description><value>0.1</value>
     </param>
+    <param type="int" name="seed" subparam="true">
+      <description>random number seed</description><value>11111</value>
+    </param>
     
     <param type="double" name="leakage">
       <description>cross polarization</description>
@@ -526,11 +529,13 @@ modifying the description doesn't work yet but its an improvement ticket.
 	<equals type="string" value="tsys-atm">
 	  <default param="user_pwv"><value>1.</value></default>
 	  <default param="t_ground"><value>269.</value></default>
-	</equals>
+	  <default param="seed"><value>11111</value></default>
+	</equals>	
 	<equals type="string" value="tsys-manual">
 	  <default param="t_ground"><value>269.</value></default>
 	  <default param="t_sky"><value>263.</value></default>
 	  <default param="tau0"><value>0.1</value></default>
+	  <default param="seed"><value>11111</value></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->

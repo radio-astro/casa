@@ -295,7 +295,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_setjy.py
   scripts/task_ssoflux.py
   scripts/task_simdata.py
-  scripts/task_oldsimdata.py
   scripts/task_slsearch.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
@@ -414,7 +413,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/setjy.xml
   tasks/ssoflux.xml
   tasks/simdata.xml
-  tasks/oldsimdata.xml
   tasks/slsearch.xml
   tasks/smoothcal.xml
   tasks/specfit.xml

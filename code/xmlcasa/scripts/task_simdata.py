@@ -18,7 +18,8 @@ def simdata(
     totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
-    user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
+    user_pwv=None, t_ground=None, t_sky=None, tau0=None, seed=None,
+    leakage=None,
     image=None,
     vis=None, modelimage=None, cell=None, imsize=None, niter=None, threshold=None,
     weighting=None, mask=None, outertaper=None, stokes=None,     
@@ -1031,6 +1032,7 @@ def simdata(
 
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
+                sm.setseed(seed)
                 if thermalnoise == "tsys-manual":
                     if verbose:
                         msg("sm.setnoise(spillefficiency="+str(eta_s)+
