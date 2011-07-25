@@ -29,7 +29,7 @@
 #define IMAGEANALYSIS_IMAGEPRIMARYBEAMCORRECTOR_H
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
-
+#include <memory>
 
 #include <casa/namespace.h>
 
