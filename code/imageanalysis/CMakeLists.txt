@@ -40,14 +40,13 @@ implement/ImageAnalysis/ImageInputProcessor.cc
 implement/ImageAnalysis/ImagePrimaryBeamCorrector.cc
 implement/ImageAnalysis/ImageProfileFitter.cc
 implement/ImageAnalysis/ImageReorderer.cc
-
+implement/ImageAnalysis/ImageTask.cc
 
 implement/IO/RegionTextParser.cc
 implement/IO/AsciiAnnotationFileLine.cc
 implement/IO/FitterEstimatesFileParser.cc
 
 implement/Regions/CasacRegionManager.cc
-
 )
 
 casa_add_executable(imageanalysis imfit apps/imfit.cc )
