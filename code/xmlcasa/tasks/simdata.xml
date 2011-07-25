@@ -258,7 +258,7 @@ it'll do them for the same amount of time -->
 
     <param type="string" name="vis" subparam='true'>
       <description>Measurement Set(s) to image</description>
-      <value>$project.ms,$project.sd.ms</value>
+      <value>default</value>
     </param>
 
     <param type="string" name="modelimage" subparam='true'>
@@ -541,7 +541,7 @@ modifying the description doesn't work yet but its an improvement ticket.
       <!-- **********************************************************  -->
       <when param="image">
 	<equals type="bool" value="True">
-	  <default param="vis"><value type="string">$project.ms</value></default>
+	  <default param="vis"><value type="string">default</value></default>
 	  <default param="modelimage"><value type="string"></value></default>
 	  <default param="imsize">
 	    <value>0</value>
@@ -722,7 +722,10 @@ mosaic simulation task:
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
     vis -- the simulated interferometric MS, or total-power one, or both
-       ** use $project.noisy.ms if you have corrupted the MS
+       * NOTE: vis='default' will automatically set proper MS name(s) ONLY
+         when either predicting or applying any noise in the same run.
+       * you can use '$project' to let the task automatically replace it to
+         the project name, e.g., vis='$project.noisy.ms,$project.nosisy.sd.ms'.
     modelimage -- prior (e.g. SD) image to be used in clean
     cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
     imsize -- image size in spatial pixels (x,y)

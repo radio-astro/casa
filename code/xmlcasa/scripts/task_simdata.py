@@ -1203,6 +1203,21 @@ def simdata(
             #    tpimage=modelimage # KS-don't think this is necessary
             #    tpset=True
 
+            # Set proper MS name(s) automatically if vis='default'
+            if vis == "default":
+                vis = ""
+                msg("Parameter vis is set to 'default'. Trying to set MS name(s) to image automatically.")
+                if noise_any:
+                    if sd_any: vis = noisymsroot+".sd.ms"
+                    if antennalist != "": vis += min(1,len(vis))*"," + noisymsroot+".ms"
+                elif predict:
+                    if predict_sd: vis = "$project.sd.ms"
+                    if predict_uv: vis += min(1,len(vis))*"," + "$project.ms"
+                else:
+                    # neither predict nor any_noise
+                    msg("Cannot resolve MS name(s) for 'vis'. You should specify 'vis' explicitly when are neither predicting nor corrupting.",priority="error")
+                msg("Automatic resolution of MS name(s): vis='%s'" % vis)
+
             # parse ms parameter and check for existance;
             # if noise_any
             #     mstoimage = noisymsfile
@@ -1604,7 +1619,7 @@ def simdata(
                 showarray = False
             # need MS for showuv and showpsf
             if not (predict or image):
-                msfile = filerot + "/" + project + ".ms"
+                msfile = fileroot + "/" + project + ".ms"
             if sd_only and os.path.exists(sdmsfile):
                 # use TP ms for UV plot if only SD sim, i.e.,
                 # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
