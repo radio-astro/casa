@@ -819,6 +819,9 @@ protected:
   VisImagingWeight imwgt_p;
 
   Bool asyncEnabled_p; // Allows lower-level code to make an async "copy" of this VI.
+
+  Vector<Bool> tileCacheIsSet_p;
+
 };
 
 inline Bool ROVisibilityIterator::more() const { return more_p;}

@@ -50,7 +50,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 ROVisibilityIterator::ROVisibilityIterator() 
- : selRows_p(0, 0) 
+  : selRows_p(0, 0),  tileCacheIsSet_p(0)
 {}
 
 // const of MS is cast away, but we don't actually change it.
@@ -63,7 +63,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
       msHasWtSp_p(False),
-      velSelection_p(False)
+      velSelection_p(False), tileCacheIsSet_p(0)
 {
   initsinglems(ms);
 }
@@ -115,7 +115,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
   floatDataFound_p(False),
   msHasWtSp_p(False),
-  velSelection_p(False)
+  velSelection_p(False), tileCacheIsSet_p(0)
 {
   initsinglems(ms);
 }
@@ -129,7 +129,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
 floatDataFound_p(False),
   msHasWtSp_p(False),
-  velSelection_p(False)
+  velSelection_p(False), tileCacheIsSet_p(0)
 {
   initmultims(mss);
 }
@@ -142,7 +142,7 @@ curChanGroup_p(0),nChan_p(0),nRowBlocking_p(0),initialized_p(False),
 msIterAtOrigin_p(False),stateOk_p(False),freqCacheOK_p(False),
     floatDataFound_p(False),
     msHasWtSp_p(False),
-    velSelection_p(False)
+    velSelection_p(False), tileCacheIsSet_p(0)
 {
   initmultims(mss);
 }
@@ -300,7 +300,7 @@ ROVisibilityIterator::operator=(const ROVisibilityIterator& other)
   colWeightSpectrum.reference (other.colWeightSpectrum);
 
   imwgt_p = other.imwgt_p;
-
+  tileCacheIsSet_p.resize();
   return *this;
 }
 
@@ -631,6 +631,10 @@ void ROVisibilityIterator::setTileCache(){
     uInt startrow = msIter_p.table().rowNumbers()(0);
 
     Vector<String> columns(8);
+    if(tileCacheIsSet_p.nelements() != 8){
+      tileCacheIsSet_p.resize(8);
+      tileCacheIsSet_p.set(False);
+    } 
     // complex
     columns(0)=MS::columnName(MS::DATA);
     columns(1)=MS::columnName(MS::CORRECTED_DATA);
@@ -677,8 +681,25 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	
 	if(dataManType.contains("Tiled") ){
 	  try {
-	    
-	    ROTiledStManAccessor tacc(thems, columns[k], True);
+	    //////////////////
+	    //////Temporary fix for virtual ms of multiple real ms's ...miracle of statics
+	    //////setting the cache size of hypercube at row 0 of each ms.
+	    ///will not work if each subms of a virtual ms has multi hypecube being
+	    ///accessed.
+	    if((thems.tableInfo().subType() == "CONCATENATED") && msIterAtOrigin_p && !tileCacheIsSet_p[k]){
+	      Block<String> refTables = thems.getPartNames(True);
+	      for (uInt kk=0; kk < refTables.nelements(); ++kk){
+		MeasurementSet elms(refTables[kk]);
+		ROTiledStManAccessor tacc(elms, columns[k], True);
+		//tacc.clearCaches();
+		tacc.setCacheSize (0, 1);
+		tileCacheIsSet_p[k]=True;
+		//cerr << "set cache on kk " << kk << " vol " << columns[k] << "  " << refTables[kk] << endl;
+	      }
+	    }
+	    //////////////////////////////
+	    else{
+	      ROTiledStManAccessor tacc(thems, columns[k], True);
 	    
 
 	    /*
@@ -691,27 +712,27 @@ for (uInt k=0; k< columns.nelements(); ++k){
 	    }
 	    */
 	    //One tile only for now ...seems to work faster
-	    tacc.clearCaches();
-	    Bool setCache=True;
-	    for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
-	      if (tacc.getBucketSize(jj)==0){
-	    	setCache=False;
+	      tacc.clearCaches();
+	      Bool setCache=True;
+	      for (uInt jj=0 ; jj <  tacc.nhypercubes(); ++jj){
+		if (tacc.getBucketSize(jj)==0){
+		  setCache=False;
+		}
+	      }
+	      if(useSlicer_p)
+		setCache=True;
+	      ///If some bucketSize is 0...there is trouble in setting cache
+	      ///but if slicer is used it gushes anyways if one does not set cache
+	      ///need to fix the 0 bucket size in the filler anyways...then this is not needed
+	      if(setCache){
+		if(tacc.nhypercubes() ==1){
+		  tacc.setCacheSize (0, 1);
+		}
+		else{
+		  tacc.setCacheSize (startrow, 1);
+		}
 	      }
 	    }
-	    if(useSlicer_p)
-	      setCache=True;
-	    ///If some bucketSize is 0...there is trouble in setting cache
-	    ///but if slicer is used it gushes anyways if one does not set cache
-	    ///need to fix the 0 bucket size in the filler anyways...then this is not needed
-	    if(setCache){
-	      if(tacc.nhypercubes() ==1){
-		tacc.setCacheSize (0, 1);
-	      }
-	      else{
-		tacc.setCacheSize (startrow, 1);
-	      }
-	    }
-	    
 	  } catch (AipsError x) {
 	    //  cerr << "Data man type " << dataManType << "  " << dataManType.contains("Tiled") << "  && " << (!String(cdesc.dataManagerGroup()).empty()) << endl;
 	    //  cerr << "Failed to set settilecache due to " << x.getMesg() << " column " << columns[k]  <<endl;
