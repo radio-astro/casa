@@ -140,10 +140,10 @@ int main()
 			if (sType.compare("frequency") || !rval)
 				throw(AipsError(String("Can not convert spectral type to string 'frequency'!")));
 			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::VRAD);
-			if (sType.compare("radio") || !rval)
+			if (sType.compare("radio velocity") || !rval)
 				throw(AipsError(String("Can not convert spectral type to string 'radio'!")));
 			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::VOPT);
-			if (sType.compare("optical") || !rval)
+			if (sType.compare("optical velocity") || !rval)
 				throw(AipsError(String("Can not convert spectral type to string 'optical'!")));
 			rval = SpectralCoordinate::specTypetoString(sType, SpectralCoordinate::BETA);
 			if (sType.compare("true") || !rval)
@@ -158,10 +158,10 @@ int main()
 			rval = SpectralCoordinate::stringtoSpecType(spcType, String("frequency"));
 			if (spcType != SpectralCoordinate::FREQ || !rval)
 				throw(AipsError(String("Can not convert string 'frequency ' to the correct spectral type!")));
-			rval = SpectralCoordinate::stringtoSpecType(spcType, String("radio"));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("radio velocity"));
 			if (spcType != SpectralCoordinate::VRAD || !rval)
 				throw(AipsError(String("Can not convert string 'radio' to the correct spectral type!")));
-			rval = SpectralCoordinate::stringtoSpecType(spcType, String("optical"));
+			rval = SpectralCoordinate::stringtoSpecType(spcType, String("optical velocity"));
 			if (spcType != SpectralCoordinate::VOPT || !rval)
 				throw(AipsError(String("Can not convert string 'optical' to the correct spectral type!")));
 			rval = SpectralCoordinate::stringtoSpecType(spcType, String("true"));
