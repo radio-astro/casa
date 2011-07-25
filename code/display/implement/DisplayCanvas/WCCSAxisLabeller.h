@@ -143,12 +143,14 @@ class WCCSAxisLabeller : public WCAxisLabeller {
   CoordinateSystem itsCoordinateSystem;
   Bool itsHasCoordinateSystem;
   String itsSpectralUnit;
-  String itsDoppler;
+  String itsSpectralQuantity;
   String itsDirectionUnit;
   String itsDirectionSystem;
   String itsFrequencySystem;
   String itsZLabelType;
   String itsZLabelPos;
+  String itsRestValue;      // rest frequency or wavelength (value and unit)
+  String itsRestUnit;       // unit for rest frequency or wavelength
 
   Int uiBase_;		// (initialized to 1; see uiBase(), above).
   

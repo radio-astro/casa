@@ -70,8 +70,9 @@ PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis,
 : iAmRubbish(True),
   itsNotation(Coordinate::MIXED),
   itsNumImages(0),
-  //itsSpectralUnit("km/s"),
-  itsDoppler("radio"),
+  itsSpectralUnit(""),
+  //itsSpectralUnit("GHz"),
+  itsSpectralQuantity("radio"),
   itsAbsolute(True),
   itsFractionalPixels(False),
   itsUsesAxisLabels(axisLabels)
@@ -356,14 +357,15 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
      if(i < n - 1) retval += "  ";
 
      if (itsPosTrackCoordSys.type(coordNum) == Coordinate::SPECTRAL) {
-	SpectralCoordinate spec_coord = itsPosTrackCoordSys.spectralCoordinate(coordNum);
-	MFrequency::Types freq_type = spec_coord.frequencySystem(true);		// effective type (passing false would return the native type)
-	String frequency = MFrequency::showType(freq_type);
-	std::transform(frequency.begin(), frequency.end(), frequency.begin(), tolower);
-	MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
-	String velocity = MDoppler::showType(velocity_type);
-	std::transform(velocity.begin(), velocity.end(), velocity.begin(), tolower);
-	retval += " (" + frequency + "/" + velocity + ") ";
+   	  SpectralCoordinate spec_coord = itsPosTrackCoordSys.spectralCoordinate(coordNum);
+   	  MFrequency::Types freq_type = spec_coord.frequencySystem(true);		// effective type (passing false would return the native type)
+   	  String frequency = MFrequency::showType(freq_type);
+   	  std::transform(frequency.begin(), frequency.end(), frequency.begin(), tolower);
+   	  MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
+   	  //String velocity = MDoppler::showType(velocity_type);
+   	  String velocity = itsSpectralQuantity;
+   	  std::transform(velocity.begin(), velocity.end(), velocity.begin(), tolower);
+   	  retval += " (" + frequency + "/" + velocity + ") ";
      }
 
   }
@@ -1154,7 +1156,7 @@ void PrincipalAxesDD::setCoordinateSystem(const CoordinateSystem& coordsys)
 
   itsOrigCoordSys = itsCoordSys;
   itsPosTrackCoordSys = itsOrigCoordSys;
-  setSpectralFormatting(itsPosTrackCoordSys,  itsDoppler, itsSpectralUnit);
+  setSpectralFormatting(itsPosTrackCoordSys,  itsSpectralQuantity, itsSpectralUnit);
 }
 
 
@@ -1162,7 +1164,7 @@ void PrincipalAxesDD::restoreCoordinateSystem()
 {
   itsCoordSys = itsOrigCoordSys;
   itsPosTrackCoordSys = itsOrigCoordSys;
-  setSpectralFormatting(itsPosTrackCoordSys,  itsDoppler, itsSpectralUnit);
+  setSpectralFormatting(itsPosTrackCoordSys,  itsSpectralQuantity, itsSpectralUnit);
 }
 
 void PrincipalAxesDD::installFakeCoordinateSystem() 
@@ -1716,33 +1718,52 @@ void PrincipalAxesDD::setDefaultOptions()
 // As the user interacts with the Adjust GUIs etc this equality
 // of state will diverge
 
-  setVelocityState (itsCoordSys, itsDoppler, itsSpectralUnit);
-  setVelocityState (itsOrigCoordSys, itsDoppler, itsSpectralUnit);
+  setVelocityState (itsCoordSys, itsSpectralQuantity, itsSpectralUnit);
+  setVelocityState (itsOrigCoordSys, itsSpectralQuantity, itsSpectralUnit);
 
-// Improve the default unit accorind to the
-// domain the data is located in.
+// Set the default unit and the spectral quantity
+// according to the spectral coordinate system
 
   Int after = -1;
   Int iS = itsCoordSys.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
-	// separate at 10 micron
-	Quantity q;
-	q.setValue(itsOrigCoordSys.spectralCoordinate(iS).referenceValue()(0));
-	q.setUnit(itsOrigCoordSys.spectralCoordinate(iS).worldAxisUnits()(0));
-	MVFrequency mvFreq(q);
-  	// separate at 10 micron
-   	if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
-		  itsSpectralUnit="nm";
-	  }
-       	else {
-  		  itsSpectralUnit="km/s";
-       	}
+     const SpectralCoordinate coord = itsCoordSys.spectralCoordinate(iS);
+     Double restFreq = coord.restFrequency();
+     SpectralCoordinate::SpecType spcType = coord.spectralType();
+
+     if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("km/s");
+     }
+     else if (spcType == SpectralCoordinate::VRAD && restFreq > 0){
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("km/s");
+     }
+     else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
+   	  itsSpectralQuantity = String("optical velocity");
+   	  itsSpectralUnit = String("km/s");
+     }
+     else if (spcType == SpectralCoordinate::WAVE){
+   	  itsSpectralQuantity = String("wavelength");
+   	  itsSpectralUnit = String("nm");
+     }
+     else if (spcType == SpectralCoordinate::AWAV){
+   	  itsSpectralQuantity = String("air wavelength");
+   	  itsSpectralUnit = String("nm");
+     }
+     else if (spcType == SpectralCoordinate::FREQ){
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("GHz");
+     }
+     else{
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("GHz");
+     }
   }
 
 // Set up the default formatting for the SpectralCoordinate (handles km/s or Hz)
 
-  setSpectralFormatting (itsPosTrackCoordSys, 
-                         itsDoppler, itsSpectralUnit);
+  setSpectralFormatting (itsPosTrackCoordSys, itsSpectralQuantity, itsSpectralUnit);
 }
 
 Bool PrincipalAxesDD::setLabellerOptions(Record &rec, Record &recout)
@@ -1771,12 +1792,12 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 // in the CS used for position tracking
 
   String frequency_system("");
-  Bool vtchg = readOptionRecord(itsDoppler, error, rec, "velocitytype");
+  Bool vtchg = readOptionRecord(itsSpectralQuantity, error, rec, "spectraltype");
   Bool spchg = readOptionRecord(itsSpectralUnit, error, rec, "spectralunit");
   Bool refframechg = readOptionRecord(frequency_system, error, rec, "axislabelfrequencysystem");
   if(vtchg || spchg || refframechg ) {
-	setSpectralFormatting(itsPosTrackCoordSys, itsDoppler, itsSpectralUnit, frequency_system);
-	setSpectralFormatting(itsCoordSys, itsDoppler, itsSpectralUnit, frequency_system);
+	setSpectralFormatting(itsPosTrackCoordSys, itsSpectralQuantity, itsSpectralUnit, frequency_system);
+	setSpectralFormatting(itsCoordSys, itsSpectralQuantity, itsSpectralUnit, frequency_system);
   }
 
 //
@@ -2140,69 +2161,93 @@ Record PrincipalAxesDD::getLabellerOptions(){
   Int after = -1;
   Int iS = itsOrigCoordSys.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
-     Record spectralunit;
-     spectralunit.define("context", "Position_tracking");
-     spectralunit.define("dlformat", "spectralunit");
-     spectralunit.define("listname", "Spectral unit");   
-     spectralunit.define("ptype", "userchoice");
-//
-     Vector<String> vunits;
-     if (canHaveVelocityUnit (itsOrigCoordSys)) {
-        vunits.resize(5);
-        vunits(0) = "km/s";
-        vunits(1) = "m/s";
-        vunits(2) = "GHz";
-        vunits(3) = "MHz";
-        vunits(4) = "Hz";
-        spectralunit.define("default", vunits(0));
-     } else {
-         Quantity q;
-         q.setValue(itsOrigCoordSys.spectralCoordinate(iS).referenceValue()(0));
-         q.setUnit(itsOrigCoordSys.spectralCoordinate(iS).worldAxisUnits()(0));
-         MVFrequency mvFreq(q);
-     	// separate at 10 micron
-      	if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
-     		// optical domain
-     		vunits.resize(7);
-     		vunits(0) = "GHz";
-     		vunits(1) = "MHz";
-     		vunits(2) = "Hz";
-     		vunits(3) = "mm";
-     		vunits(4) = "um";
-     		vunits(5) = "nm";
-     		vunits(6) = "Angstrom";
-     		spectralunit.define("default", vunits(2));
-     	}
-     	else {
-     		// radio domain
-     		vunits.resize(3);
-     		vunits(0) = "GHz";
-     		vunits(1) = "MHz";
-     		vunits(2) = "Hz";
-     		spectralunit.define("default", vunits(0));
-     	}
+     {
+        const SpectralCoordinate sc = itsOrigCoordSys.spectralCoordinate(iS);
+        Double restFreq = sc.restFrequency();
+        SpectralCoordinate::SpecType spcType = sc.spectralType();
+        Int unitSet=0;
+
+        Record veltype;
+        veltype.define("context", "Position_tracking");
+        veltype.define("dlformat", "spectraltype");
+        veltype.define("listname", "Spectral quantity");
+        veltype.define("ptype", "choice");
+        Vector<String> stunits;
+
+        stunits.resize(4);
+        stunits(0) = "optical velocity";
+        stunits(1) = "radio velocity";
+        stunits(2) = "wavelength";
+        stunits(3) = "air wavelength";
+
+        if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
+      	  veltype.define("default", stunits(1));
+           unitSet = 1;
+        }
+        else if (spcType == SpectralCoordinate::VRAD && restFreq > 0){
+           veltype.define("default", stunits(1));
+           unitSet = 1;
+        }
+       else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
+           veltype.define("default", stunits(0));
+           unitSet = 1;
+        }
+        else if (spcType == SpectralCoordinate::WAVE){
+           veltype.define("default", stunits(2));
+           unitSet = 2;
+        }
+        else if (spcType == SpectralCoordinate::AWAV){
+           veltype.define("default", stunits(3));
+           unitSet = 2;
+        }
+        else if (spcType == SpectralCoordinate::FREQ){
+           veltype.define("default", stunits(1));
+           unitSet = 0;
+        }
+        else{
+           veltype.define("default", stunits(1));
+           unitSet = 0;
+        }
+
+        veltype.define("popt", stunits);
+        veltype.define("value", itsSpectralQuantity);
+        veltype.define("allowunset", False);
+        rec.defineRecord("spectraltype", veltype);
+
+        Record spectralunit;
+        spectralunit.define("context", "Position_tracking");
+        spectralunit.define("dlformat", "spectralunit");
+        spectralunit.define("listname", "Spectral unit");
+        spectralunit.define("ptype", "userchoice");
+        Vector<String> specunits;
+
+        //
+        specunits.resize(9);
+        specunits(0) = "km/s";
+        specunits(1) = "m/s";
+        specunits(2) = "GHz";
+        specunits(3) = "MHz";
+        specunits(4) = "Hz";
+        specunits(5) = "mm";
+        specunits(6) = "um";
+        specunits(7) = "nm";
+        specunits(8) = "Angstrom";
+
+        if (unitSet == 2) {
+           spectralunit.define("default", specunits(7));
+        }
+        else if (unitSet == 1) {
+           spectralunit.define("default", specunits(0));
+        }
+        else {
+            spectralunit.define("default", specunits(2));
+        }
+        spectralunit.define("popt", specunits);
+        spectralunit.define("value", itsSpectralUnit);
+        spectralunit.define("allowunset", False);
+        rec.defineRecord("spectralunit", spectralunit);
      }
-//
-     spectralunit.define("popt", vunits);
-     spectralunit.define("value", itsSpectralUnit);
-     spectralunit.define("allowunset", False);
-     rec.defineRecord("spectralunit", spectralunit);
-//
-     Record veltype;
-     veltype.define("context", "Position_tracking");
-     veltype.define("dlformat", "velocitytype");
-     veltype.define("listname", "Velocity type");   
-     veltype.define("ptype", "choice");
-     vunits.resize(3);
-     vunits(0) = "optical";
-     vunits(1) = "radio";
-     vunits(2) = "true";
-     veltype.define("popt", vunits);
-     veltype.define("default", "radio");
-     veltype.define("value", itsDoppler);
-     veltype.define("allowunset", False);
-     rec.defineRecord("velocitytype", veltype);
-//
+
      Record spectralnotation;
      spectralnotation.define("context", "Position_tracking");
      spectralnotation.define("dlformat", "spectralnotation");
@@ -2235,7 +2280,7 @@ void PrincipalAxesDD::setSpectralFormatting  (CoordinateSystem& cSys,
 {
    static LogIO os(LogOrigin("PrincipleAxesDD", "setSpectralFormatting", WHERE));
    String errorMsg;
-   //cout << "I am in PrincipalAxesDD::setSpectralFormatting!" << endl;
+
    if( doppler.length() > 0 && unit.length( ) > 0 &&
        ! CoordinateUtil::setSpectralFormatting(errorMsg, cSys, unit, doppler) ) {
       os << LogIO::WARN 
@@ -2247,7 +2292,6 @@ void PrincipalAxesDD::setSpectralFormatting  (CoordinateSystem& cSys,
          << "Failed to update SpectralCoordinate reference frame because"
          << errorMsg << LogIO::POST;
    }
-   //cout << endl;
 }
 
 
