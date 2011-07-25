@@ -379,7 +379,7 @@ class PrincipalAxesDD : public DisplayData {
 
   CoordinateSystem itsPosTrackCoordSys;
   String itsSpectralUnit;
-  String itsDoppler;
+  String itsSpectralQuantity;
   Bool itsAbsolute;
   Bool itsFractionalPixels;
 

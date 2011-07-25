@@ -58,7 +58,7 @@ endProc = time.clock()
 # Regression
 
 test_name = """simdata observation of test cube"""
-ms.open(project+".ms")
+ms.open(project+"/"+project+".ms")
 newdata= ms.getdata(items="data")['data']
 
 

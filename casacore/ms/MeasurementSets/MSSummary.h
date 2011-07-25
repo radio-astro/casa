@@ -144,6 +144,7 @@ public:
    void listPolarization (LogIO& os, Bool verbose=False) const;
    void listSource (LogIO& os, Bool verbose=False) const;
    void listSpectralWindow (LogIO& os, Bool verbose=False) const;
+   void getSpectralWindowInfo(Record& outRec) const;
    void listSpectralAndPolInfo (LogIO& os, Bool verbose=False) const;
    void listSysCal (LogIO& os, Bool verbose=False) const;
    void listWeather (LogIO& os, Bool verbose=False) const;

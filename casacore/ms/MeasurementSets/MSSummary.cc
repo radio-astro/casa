@@ -1513,6 +1513,55 @@ void MSSummary::listSpectralWindow (LogIO& os, Bool verbose) const
 	os << LogIO::POST;
 }
 
+  void MSSummary::getSpectralWindowInfo(Record& outRec) const
+{
+  /* This method will return information about the spectral windows 
+     in a MS that are used */
+
+  // Create a MS-spwin-columns object
+  ROMSSpWindowColumns msSWC(pMS->spectralWindow());
+  // Create a MS-data_desc-columns object
+  ROMSDataDescColumns msDDC(pMS->dataDescription());
+
+  if (msDDC.nrow()<=0 or msSWC.nrow()<=0) {
+    //The DATA_DESCRIPTION or SPECTRAL_WINDOW table is empty
+    return;
+  }
+  
+  // Determine the data_desc_ids present in the main table
+  MSRange msr(*pMS);
+
+  Vector<Int> ddId = msr.range(MSS::DATA_DESC_ID).asArrayInt(RecordFieldId(0));
+  Vector<uInt> uddId(ddId.nelements());
+
+  for (uInt i=0; i<ddId.nelements(); i++) uddId(i)=ddId(i);
+  // now get the corresponding spectral windows and pol setups
+  Vector<Int> spwIds = msDDC.spectralWindowId().getColumnCells(uddId);
+  //const Int option=Sort::HeapSort | Sort::NoDuplicates;
+  //const Sort::Order order=Sort::Ascending;
+  //Int nSpw=GenSort<Int>::sort (spwIds, order, option);
+
+  if (ddId.nelements()>0) {
+    // For each row of the DataDesc subtable, write the info
+    for (uInt i=0; i<ddId.nelements(); i++) {
+      Int dd=ddId(i);
+      Int spw = msDDC.spectralWindowId()(dd);
+      
+      Record ddRec;
+      ddRec.define("SpectralWindowId",spw);
+      ddRec.define("NumChan",msSWC.numChan()(spw));
+      ddRec.define("Frame", msSWC.refFrequencyMeas()(spw).getRefString());
+      ddRec.define("Chan1Freq", msSWC.chanFreq()(spw)(IPosition(1,0)));
+      ddRec.define("ChanWidth", msSWC.chanWidth()(spw)(IPosition(1,0)));
+      ddRec.define("TotalWidth", msSWC.totalBandwidth()(spw));
+      ddRec.define("RefFreq", msSWC.refFrequency()(spw));
+
+      outRec.defineRecord(String::toString(dd), ddRec);
+    }
+  }
+}
+
+
 void MSSummary::listPolarization (LogIO& os, Bool verbose) const
 {
 	// Create a MS-pol-columns object

@@ -116,7 +116,10 @@ and write out the fitted and residual images (see also the
 \item <link anchor="images:image.regrid.function">regrid</link> - regrid the image to the
 specified Coordinate System 
 
-\item <link anchor="images:image.reorder.function">reorder</link> - reorder the image axes
+\item <link anchor="images:image.reorder.function">reorder</link> - transpose the image (same as transpose())
+
+\item <link anchor="images:image.transpose.function">transpose</link> - transpose the image (same as reorder())
+
 
 \item <link anchor="images:image.rotate.function">rotate</link> - rotate the coordinate system
 and regrid the image to the rotated Coordinate System 
@@ -6999,29 +7002,43 @@ ia.close()
 </method>
 
 
-   <method type="function" name="reorder">
-   <shortdescription>Reorder the image axes.</shortdescription>
-   
-<input>
-  
-     <param type="string" direction="in" name="outfile">
-     <description>Output image file name.  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="any" direction="in" name="order">
-     <any type="variant"/>
-     <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
-     <value></value>
-     </param>
-  
-</input>
-<returns type="casaimage"/>
 
-<description>
+<method type="function" name="reorder">
+    <shortdescription>Transpose the image.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image file name.  Default is unset.</description>
+            <value/>
+        </param>
+        <param type="any" direction="in" name="order">
+            <any type="variant"/>
+            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+        See help for ia.transpose() for details.
+    </description>
+</method>
 
-This method reorders (transposes) the axes in the input image to the specified
-order. The associated pixel values and coordinate system are transposed.
+<method type="function" name="transpose">
+    <shortdescription>Transpose the image.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image file name.  Default is unset.</description>
+            <value/>
+        </param>
+        <param type="any" direction="in" name="order">
+            <any type="variant"/>
+            <description>Zero-based order of axes in output image (eg "120" => input->output 0->2, 1->0, 2->1))</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+This method transposes the axes in the input image to the specified
+order. The associated pixel and mask values and coordinate system are transposed.
 
 If the outfile parameter is empty, only a temporary image is created; no output image
 is written to disk.
@@ -7044,21 +7061,15 @@ So to reorder an image with right ascension, declination, and frequency axes, on
 specify order=["d", "f", "r"] or equivalently ["decl", "frequ", "right a"]. Note that
 specifying "ra" for the right ascension axis will result in an error because "ra" does
 not match the first two characters of right ascension.
-
-</description>
-
-<example>
-
+    </description>
+    <example>
 """
 # swap stokes (axis 2) and spectral (axis 3) axes in a 4 dimensional image
 ia.open("myimage.fits")
-reordim = ia.reorder(outfile="my_reordered_image.im", order="0132")
+reordim = ia.transpose(outfile="my_reordered_image.im", order="0132")
 ia.done()
 """
-
-
-</example>
-
+    </example>
 </method>
 
    <method type="function" name="rotate">
@@ -9474,6 +9485,82 @@ used to create a 2D temporary image.
 </example>
 </method>
 
+<method type="function" name="pbcor">
+    <shortdescription>
+        Construct a primary beam corrected image from an image and a primary beam
+    </shortdescription>
+    <input>
+        <param type="any" direction="in" name="pbimage">
+            <any type="variant"/>
+            <description>Name of the primary beam image which must exist or array of values for the pb response. Default ""</description>
+            <value>""</value>
+        </param>
+        <param type="string" direction="in" name="outfile">
+            <description>Output image name. If empty, no image is written. Default ""</description>
+            <value/>
+        </param>
+        <param type="bool" direction="in" name="overwrite">
+            <description>Overwrite the output if it exists? Default False</description>
+            <value>false</value>
+        </param>
+        <param type="string" direction="in" name="box">
+            <value></value>
+            <description>One or more boxes to use for fit region(s). Default is to use the entire directional plane.</description>
+        </param>
+        <param type="any" direction="in" name="region">
+            <any type="variant"/>
+            <description>The region to correct. Default is entire image. If both box and region are specified, box is used and region is not.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="chans">
+            <description>The frequency planes to correct. Default is all frequencies.</description>
+            <value></value>
+        </param>
+        
+        <param type="string" direction="in" name="stokes">
+            <description>The correlations to correct. Default is all.</description>
+            <value/>
+        </param>
+        <param type="string" direction="in" name="mask">
+            <any type="variant"/>
+            <description>Boolean LEL expression or mask region.  Default is none.</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="mode">
+            <description>Divide or multiply the image by the primary beam image. Minimal match supported. Default "divide"</description>
+            <value>divide</value>
+        </param>
+        <param type="float" direction="in" name="cutoff">
+            <description>PB cutoff. If mode is "d", all values less than this will be masked. If "m", all values greater will be masked. Less than 0, no cutoff. Default no cutoff</description>
+            <value>-1.0</value>
+        </param>
+    </input>
+    <returns type="casaimage"/>
+    <description>
+        Correct an image for primary beam attenuation using an image of the primary beam pattern.
+        The primary beam pattern can be provided as an image, in which case 1. it must have the same
+        shape as the input image and its coordinate system must be the same, or 2. it must
+        be a 2-D image in which case its coordinate system must consist of a (2-D) direction
+        coordinate which is the same as the direction coordinate in the input image and
+        its direction plane must be the same shape as that of the input image. Alternatively,
+        pbimage can be an array of pixel values in which case the same dimensionality and
+        shape constraints apply.
+        An image tool referencing the corrected image is returned. The corrected image will also
+        be written to disk if outfile is not empty (and overwrite=True if outfile already exists).
+        One can choose between dividing the image by the primary beam pattern (mode="divide") or
+        multiplying the image by the primary beam pattern (mode="multiply"). One can also choose
+        to specify a cutoff limit for the primary beam pattern. For mode="divide", for all pixels
+        below this cutoff in the primary beam pattern, the output image will be masked. In the
+        case of mode="multiply", all pixels in the output will be masked corresponding to pixels
+        with values greater than the cutoff in the primary beam pattern. A negative value for
+        cutoff means that no cutoff will be applied, which is the default.
+    </description>
+    <example>
+        ia.open("attenuated.im")
+        ia.pbcor(pbimage="mypb.im", outname="pbcorred.im", mode="divide", cutoff=0.1)
+    </example>
+</method>
+  
   
    <method type="function" name="makearray">
    <shortdescription>Construct an initialized multi-dimensional array.

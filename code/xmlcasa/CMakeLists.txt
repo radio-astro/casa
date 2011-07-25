@@ -242,6 +242,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_imhead.py
   scripts/task_immath.py
   scripts/task_immoments.py
+  scripts/task_impbcor.py
   scripts/task_importaipscaltable.py
   scripts/task_importasdm.py
   scripts/task_importevla.py
@@ -269,6 +270,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_plotcal.py
   scripts/task_plotms.py
   scripts/task_plotxy.py
+  scripts/task_partition.py
   scripts/task_polcal.py
   scripts/task_rmtables.py
   scripts/task_sdaverage.py
@@ -291,7 +293,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_setjy.py
   scripts/task_ssoflux.py
   scripts/task_simdata.py
-  scripts/task_oldsimdata.py
   scripts/task_slsearch.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
@@ -361,6 +362,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/imhead.xml
   tasks/immath.xml
   tasks/immoments.xml
+  tasks/impbcor.xml
   tasks/importaipscaltable.xml
   tasks/importasdm.xml
   tasks/importevla.xml
@@ -386,6 +388,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/plotcal.xml
   tasks/plotms.xml
   tasks/plotxy.xml
+  tasks/partition.xml
   tasks/polcal.xml
   tasks/rmtables.xml
   tasks/sdaverage.xml
@@ -408,7 +411,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/setjy.xml
   tasks/ssoflux.xml
   tasks/simdata.xml
-  tasks/oldsimdata.xml
   tasks/slsearch.xml
   tasks/smoothcal.xml
   tasks/specfit.xml

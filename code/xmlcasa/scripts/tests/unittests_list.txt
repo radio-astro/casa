@@ -30,6 +30,7 @@ test_imfit                      dmehring@nrao.edu
 test_imhead                     dmehring@nrao.edu
 test_immath                     dmehring@nrao.edu
 test_immoments                  dmehring@nrao.edu
+test_impbcor                    dmehring@nrao.edu
 test_importasdm                 dpetry@eso.org
 test_importfitsidi              dpetry@eso.org
 test_importoldasdm              dpetry@eso.org
@@ -42,6 +43,7 @@ test_listhistory                scastro@eso.org
 #test_listvis                    scastro@eso.org
 test_measures			rreid@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp
+test_partition                  jkern@nrao.edu
 test_pcasa                      jkern@nrao.edu
 test_plotants                   scastro@eso.org
 #test_plotms                     dmehring@nrao.edu
@@ -63,6 +65,7 @@ test_sdsmooth                   kana.sugi@nao.ac.jp
 test_sdstat                     kana.sugi@nao.ac.jp
 test_sdtpimaging                takeshi.nakazato@nao.ac.jp
 test_setjy			rreid@nrao.edu
+test_simplecluster              hye@nrao.edu
 test_smoothcal                  scastro@eso.org
 test_specfit                    dmehring@nrao.edu
 test_splattotable               dmehring@nrao.edu
@@ -72,4 +75,3 @@ test_uvcontsub2			rreid@nrao.edu
 test_vishead                    jkern@nrao.edu
 test_visstat                    jkern@nrao.edu
 test_vpmanager                  dpetry@eso.org
-test_simplecluster              hye@nrao.edu

@@ -595,7 +595,7 @@ private:
     String velUnit_p;                              // Velocity unit
 //
     String waveUnit_p;                             // Wavelength unit for conversions between world & wavelength
-    SpectralCoordinate::SpecType nativeType_p;
+    SpectralCoordinate::SpecType nativeType_p;     // The native spectral type
 //
     Unit unit_p;                                   // World axis unit
     String axisName_p;                             // The axis name

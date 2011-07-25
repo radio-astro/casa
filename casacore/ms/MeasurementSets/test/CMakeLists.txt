@@ -25,7 +25,6 @@ tMSMainBuffer
 tMSPolBuffer
 tMSReader
 tMSScanGram
-tMSSimulator
 tMSSpwGram
 tMSSummary
 tMSTimeGram

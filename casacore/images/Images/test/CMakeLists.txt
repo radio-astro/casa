@@ -4,8 +4,6 @@ jyperpixelimage.fits
 mexinputtest.fits
 ngc5921.clean.fits
 ngc5921.clean.no_freq.no_stokes.fits
-reorder_exists.im
-reorder_in.fits
 test_image.fits
 test_image.im/table.dat
 test_image.im/table.f0
@@ -55,7 +53,6 @@ tImageInfo
 tImageMetaData
 tImagePolarimetry
 tImageRegrid
-tImageReorderer
 tImageSourceFinder
 tImageUtilities
 tLELSpectralIndex

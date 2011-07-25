@@ -25,14 +25,16 @@
 //#
 //# $Id: $
 
+#include <imageanalysis/ImageAnalysis/ImageReorderer.h>
 
 #include <casa/OS/Directory.h>
-#include <images/Images/ImageReorderer.h>
+#include <casa/OS/EnvVar.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/PagedImage.h>
 
 #include <casa/namespace.h>
 
+#include <memory>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -41,61 +43,65 @@ void writeTestString(const String& test) {
 }
 
 void testException(
-	const String& test, const String& imagename, const String& order,
-	const String outname
+	const String& test, const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& order, const String outname
 ) {
 	writeTestString(test);
-	Bool exceptionThrown = true;
 	try {
-		ImageReorderer reorderer(imagename, order, outname);
+		ImageReorderer reorderer(image.get(), order, outname);
 		// should not get here, fail if we do.
-		exceptionThrown = false;
 		AlwaysAssert(false, AipsError);
 	}
-	catch (AipsError x) {
-		AlwaysAssert(exceptionThrown, AipsError);
-	}
+	catch (AipsError x) {}
 }
 
 void testException(
-	const String& test, const String& imagename,
+	const String& test, const std::auto_ptr<ImageInterface<Float> > &image,
 	const Vector<String>& order, const String outname
 ) {
 	writeTestString(test);
-	Bool exceptionThrown = true;
 	try {
-		ImageReorderer reorderer(imagename, order, outname);
+		ImageReorderer reorderer(image.get(), order, outname);
 		// should not get here, fail if we do.
-		exceptionThrown = false;
 		AlwaysAssert(false, AipsError);
 	}
-	catch (AipsError x) {
-		AlwaysAssert(exceptionThrown, AipsError);
-	}
+	catch (AipsError x) {}
 }
 
 void testException(
-	const String& test, const String& imagename,
+	const String& test, const std::auto_ptr<ImageInterface<Float> > &image,
 	uInt order, const String outname
 ) {
 	writeTestString(test);
-	Bool exceptionThrown = true;
 	try {
-		ImageReorderer reorderer(imagename, order, outname);
+		ImageReorderer reorderer(image.get(), order, outname);
 		// should not get here, fail if we do.
-		exceptionThrown = false;
 		AlwaysAssert(false, AipsError);
 	}
-	catch (AipsError x) {
-		AlwaysAssert(exceptionThrown, AipsError);
+	catch (AipsError x) {}
+}
+
+void testBeam(
+	const std::auto_ptr<ImageInterface<Float> > &in,
+	ImageInterface<Float>& out
+) {
+	Vector<Quantity> inBeam = in->imageInfo().restoringBeam();
+	Vector<Quantity> outBeam = out.imageInfo().restoringBeam();
+	AlwaysAssert(inBeam.size() == 3, AipsError);
+	AlwaysAssert(outBeam.size() == 3, AipsError);
+	for (uInt i=0; i<3; i++) {
+		Double out = outBeam[i].getValue(inBeam[i].getUnit());
+		AlwaysAssert(near(out, inBeam[i].getValue()), AipsError);
 	}
 }
 
-void testNoReorder(const String& imagename, const String& outname) {
-	FITSImage inImage(imagename);
+void testNoReorder(
+	const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& outname
+) {
 	PagedImage<Float> outImage(outname);
-	AlwaysAssert(inImage.shape() == outImage.shape(), AipsError);
-	Array<Float> inData = inImage.get();
+	AlwaysAssert(image->shape() == outImage.shape(), AipsError);
+	Array<Float> inData = image->get();
 	Array<Float> outData = outImage.get();
 	vector<Float> inVec, outVec;
 	inData.tovector(inVec);
@@ -103,26 +109,32 @@ void testNoReorder(const String& imagename, const String& outname) {
 	for(uInt i=0; i<inVec.size(); i++) {
 		AlwaysAssert(inVec[i] == outVec[i], AipsError);
 	}
-	Vector<Double> inRefPix = inImage.coordinates().referencePixel();
+	AlwaysAssert(outImage.coordinates().near(image->coordinates()), AipsError);
+	/*
+	Vector<Double> inRefPix = image->coordinates().referencePixel();
 	Vector<Double> outRefPix = outImage.coordinates().referencePixel();
-	Vector<Double> inRefVal = inImage.coordinates().referenceValue();
+	Vector<Double> inRefVal = image->coordinates().referenceValue();
 	Vector<Double> outRefVal = outImage.coordinates().referenceValue();
 
 	for (uInt i=0; i<inRefPix.size(); i++) {
 		AlwaysAssert(inRefPix[i] == outRefPix[i], AipsError);
 		AlwaysAssert(inRefVal[i] == outRefVal[i], AipsError);
 	}
+	*/
+	testBeam(image, outImage);
 }
 
-void test201Reordering(const String& imagename, const String& outname) {
-	FITSImage inImage(imagename);
+void test201Reordering(
+	const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& outname
+) {
 	PagedImage<Float> outImage(outname);
-	IPosition inShape = inImage.shape();
+	IPosition inShape = image->shape();
 
 	IPosition outShape = outImage.shape();
 	IPosition outMap(3,2,0,1);
 
-	Array<Float> inData = inImage.get();
+	Array<Float> inData = image->get();
 	Array<Float> outData = outImage.get();
 	Cube<Float> inCube;
 	inCube.reference(inData);
@@ -139,9 +151,9 @@ void test201Reordering(const String& imagename, const String& outname) {
 			}
 		}
 	}
-	Vector<Double> inRefPix = inImage.coordinates().referencePixel();
+	Vector<Double> inRefPix = image->coordinates().referencePixel();
 	Vector<Double> outRefPix = outImage.coordinates().referencePixel();
-	Vector<Double> inRefVal = inImage.coordinates().referenceValue();
+	Vector<Double> inRefVal = image->coordinates().referenceValue();
 	Vector<Double> outRefVal = outImage.coordinates().referenceValue();
 
 	for(uInt i=0; i<inShape.size(); i++) {
@@ -149,6 +161,7 @@ void test201Reordering(const String& imagename, const String& outname) {
 		AlwaysAssert(outRefPix[i] == inRefPix[outMap[i]], AipsError);
 		AlwaysAssert(outRefVal[i] == inRefVal[outMap[i]], AipsError);
 	}
+	testBeam(image, outImage);
 }
 
 int main() {
@@ -157,14 +170,17 @@ int main() {
     os << "tImageReorderer_tmp_" << pid;
     String dirName = os.str();
 	Directory workdir(dirName);
-	String goodInputImage = "reorder_in.fits";
+	String *parts = new String[2];
+	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
+	String datadir = parts[0] + "/data/regression/unittest/imtrans/";
+	delete [] parts;
+	std::auto_ptr<ImageInterface<Float> > goodInputImage(
+		new FITSImage(datadir + "reorder_in.fits")
+	);
 	Bool ok = True;
 	try {
 		testException(
-			"test no specified input image will throw an exception", "", "", ""
-		);
-		testException(
-			"test no specified output image will throw an exception", "x", "", ""
+			"test no specified output image will throw an exception", goodInputImage, "", ""
 		);
 		testException(
 			"test non-writable output image will throw an exception",
@@ -172,11 +188,7 @@ int main() {
 		);
 		testException(
 			"test file exists with specified output image will throw an exception",
-			goodInputImage, "012", "reorder_exists.im"
-		);
-		testException(
-			"test non-existent input image name will throw an exception",
-			"blah", "012", "out.im"
+			goodInputImage, "012", datadir + "reorder_exists.im"
 		);
 		testException(
 			"test more specified axes in order string than correct will throw an exception",
@@ -241,32 +253,32 @@ int main() {
 		{
 			writeTestString("test no reordering using string of digits");
 			String outname = dirName + "/reorder_012_out.im";
-			ImageReorderer reorderer(goodInputImage, "012", outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), "012", outname);
+			reorderer.transpose();
 			testNoReorder(goodInputImage, outname);
 		}
 
 		{
 			writeTestString("test \"201\" reordering using order string");
 			String outname = dirName +  "/reorder_201_out.im";
-			ImageReorderer reorderer(goodInputImage, "201", outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), "201", outname);
+			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
 
 		{
 			writeTestString("test no reordering using order int");
 			String outname = dirName + "/reorder_12_out.im";
-			ImageReorderer reorderer(goodInputImage, 12, outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), 12, outname);
+			reorderer.transpose();
 			testNoReorder(goodInputImage, outname);
 		}
 
 		{
 			writeTestString("test reordering using order int");
 			String outname = dirName +  "/reorder_201_x_out.im";
-			ImageReorderer reorderer(goodInputImage, "201", outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), "201", outname);
+			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
 
@@ -277,8 +289,8 @@ int main() {
 			order[0] = "r";
 			order[1] = "d";
 			order[2] = "f";
-			ImageReorderer reorderer(goodInputImage, order, outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), order, outname);
+			reorderer.transpose();
 			testNoReorder(goodInputImage, outname);
 		}
 
@@ -293,8 +305,8 @@ int main() {
 			ostream.str("");
 			ostream << "test " << order << " reordering";
 			writeTestString(ostream.str());
-			ImageReorderer reorderer(goodInputImage, order, outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), order, outname);
+			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
 
@@ -309,8 +321,8 @@ int main() {
 			ostream.str("");
 			ostream << "test " << order << " reordering";
 			writeTestString(ostream.str());
-			ImageReorderer reorderer(goodInputImage, order, outname);
-			reorderer.reorder();
+			ImageReorderer reorderer(goodInputImage.get(), order, outname);
+			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
 

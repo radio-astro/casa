@@ -5,39 +5,26 @@
  *      Author: dmehring
  */
 
-#include <casa/Containers/HashMap.h>
-#include <images/Images/FITSImage.h>
-#include <images/Images/ImageReorderer.h>
+#include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
-#include <images/Images/MIRIADImage.h>
+#include <images/Images/PagedImage.h>
+#include <images/Images/TempImage.h>
+
+#include <imageanalysis/ImageAnalysis/ImageReorderer.h>
+
+#include <memory>
 
 namespace casa {
 
-ImageReorderer::ImageReorderer(
-	const String& imagename, const String& order, const String& outputImage
-)
-: _log(new LogIO), _image(0), _order(Vector<Int>(0)), _outputImage(outputImage) {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_1");
-	*_log << origin;
-	_construct(imagename);
-	*_log << origin;
-	Regex intRegex("^[0-9]+$");
-	if (order.matches(intRegex)) {
-		_order = _getOrder(order);
-	}
-	else {
-		*_log << "Incorrect order specification " << order
-			<< ". All characters must be digits." << LogIO::EXCEPTION;
-	}
-}
+const String ImageReorderer::_class = "ImageReorderer";
 
 ImageReorderer::ImageReorderer(
-	const ImageInterface<Float> * const image, const String& order, const String& outputImage
+	const ImageInterface<Float> *const &image, const String& order, const String& outputImage
 )
 : _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>(0)), _outputImage(outputImage) {
 	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_1");
 	*_log << origin;
-	_construct("");
+	_construct();
 	*_log << origin;
 	Regex intRegex("^[0-9]+$");
 	if (order.matches(intRegex)) {
@@ -49,63 +36,35 @@ ImageReorderer::ImageReorderer(
 	}
 }
 
-
 ImageReorderer::ImageReorderer(
-	const String& imagename, const Vector<String> order, const String& outputImage
+	const ImageInterface<Float> *const &image, const Vector<String> order, const String& outputImage
 )
-: _log(new LogIO), _image(0), _order(Vector<Int>()), _outputImage(outputImage) {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_2");
+: _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
+	LogOrigin origin(_class, String(__FUNCTION__) + "_2");
 	*_log << origin;
-	_construct(imagename);
+	_construct();
 	*_log << origin;
 	Vector<String> orderCopy = order;
-	_order = _image->coordinates().getWorldAxisOrder(orderCopy, True);
+	_order = _image->coordinates().getWorldAxesOrder(orderCopy, True);
 	*_log << "Old to new axis mapping is " << _order << LogIO::NORMAL;
 }
 
 ImageReorderer::ImageReorderer(
-	const ImageInterface<Float> * const image, const Vector<String> order, const String& outputImage
+	const ImageInterface<Float> *const &image, uInt order, const String& outputImage
 )
 : _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_2");
+	LogOrigin origin(_class, String(__FUNCTION__) + "_3");
 	*_log << origin;
-	_construct("");
-	*_log << origin;
-	Vector<String> orderCopy = order;
-	_order = _image->coordinates().getWorldAxisOrder(orderCopy, True);
-	*_log << "Old to new axis mapping is " << _order << LogIO::NORMAL;
-}
-
-ImageReorderer::ImageReorderer(
-	const String& imagename, uInt order, const String& outputImage
-)
-: _log(new LogIO), _image(0), _order(Vector<Int>()), _outputImage(outputImage) {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_3");
-	*_log << origin;
-	_construct(imagename);
+	_construct();
 	*_log << origin;
 	_order = _getOrder(order);
 }
 
-ImageReorderer::ImageReorderer(
-	const ImageInterface<Float> * const image, uInt order, const String& outputImage
-)
-: _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_3");
-	*_log << origin;
-	_construct("");
-	*_log << origin;
-	_order = _getOrder(order);
-}
-
-
-ImageInterface<Float>* ImageReorderer::reorder() const {
-	LogOrigin origin("ImageReorderer", __FUNCTION__);
-	*_log << origin;
+ImageInterface<Float>* ImageReorderer::transpose() const {
+	*_log << LogOrigin(_class, __FUNCTION__);
 	// get the image data
-	Array<Float> dataCopy;
-	_image->get(dataCopy);
-	reorderArray(dataCopy, IPosition(_order));
+	Array<Float> dataCopy = _image->get();
+
 	CoordinateSystem csys = _image->coordinates();
 	CoordinateSystem newCsys = csys;
 	newCsys.transpose(_order, _order);
@@ -114,48 +73,34 @@ ImageInterface<Float>* ImageReorderer::reorder() const {
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
-	ImageInterface<Float>* output = 0;
-	if (_outputImage.empty()) {
-		output = new TempImage<Float>(TiledShape(newShape), newCsys);
-	}
-	else {
-		output = new PagedImage<Float>(TiledShape(newShape), newCsys, _outputImage);
-	}
+	std::auto_ptr<ImageInterface<Float> > output(
+		new TempImage<Float>(TiledShape(newShape), newCsys)
+	);
 	output->put(reorderArray(dataCopy, _order));
+	if (_image->hasPixelMask()) {
+		std::auto_ptr<Lattice<Bool> > maskLattice(
+			_image->pixelMask().clone()
+		);
+		Array<Bool> maskCopy = maskLattice->get();
+		dynamic_cast<TempImage<Float> *>(output.get())->attachMask(
+			ArrayLattice<Bool>(reorderArray(maskCopy, _order))
+		);
+	}
+	ImageUtilities::copyMiscellaneous(*output, *_image);
 	if (! _outputImage.empty()) {
-		output->flush();
+		ImageAnalysis ia(output.get());
+		Record empty;
+		output.reset(
+			ia.subimage(_outputImage, empty, "", False, False)
+		);
 	}
-	return output;
+	return output.release();
 }
 
-ImageReorderer::~ImageReorderer() {
-	delete _image;
-	delete _log;
-}
+ImageReorderer::~ImageReorderer() {}
 
-void ImageReorderer::_construct(const String& imagename) {
-	LogOrigin origin("ImageReorderer", __FUNCTION__);
-	*_log << origin;
-	if (_image != 0) {
-		// image specified in constructor, do nothing
-	}
-	else if (imagename.empty()) {
-		*_log << "imagename cannot be blank" << LogIO::EXCEPTION;
-	}
-	else {
-		// Register the functions to create a FITSImage or MIRIADImage object.
-		FITSImage::registerOpenFunction();
-		MIRIADImage::registerOpenFunction();
-		try {
-			ImageUtilities::openImage(_image, imagename, *_log);
-		}
-		catch(AipsError err) {
-			if (_image == 0) {
-				*_log << "Unable to open image '" + imagename + "'" << LogIO::EXCEPTION;
-			}
-			RETHROW(err);
-		}
-	}
+void ImageReorderer::_construct() {
+	*_log << LogOrigin(_class, __FUNCTION__);
 	if (! _outputImage.empty()) {
 		File outputImageFile(_outputImage);
 		switch(outputImageFile.getWriteStatus()) {
@@ -176,8 +121,7 @@ void ImageReorderer::_construct(const String& imagename) {
 }
 
 Vector<Int> ImageReorderer::_getOrder(uInt order) const {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_1");
-	*_log << origin;
+	*_log << LogOrigin(_class, String(__FUNCTION__));
 	uInt naxes = _image->ndim();
 	uInt raxes = uInt(log10(order)) + 1;
 	if (naxes != raxes) {
@@ -213,6 +157,7 @@ Vector<Int> ImageReorderer::_getOrder(uInt order) const {
 		}
 		for (uInt j=0; j<i; j++) {
 			if ((Int)index == myorder[j]) {
+				cout << "*** blah!" << endl;
 				*_log << "Axis number " << index
 						<< " specified multiple times in order parameter "
 						<< order << " . It can only be specified once."
@@ -227,8 +172,6 @@ Vector<Int> ImageReorderer::_getOrder(uInt order) const {
 }
 
 Vector<Int> ImageReorderer::_getOrder(const String& order) const {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_2");
-	*_log << origin;
 	return _getOrder(String::toInt(order));
 }
 

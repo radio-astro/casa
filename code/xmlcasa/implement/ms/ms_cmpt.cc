@@ -59,6 +59,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableParse.h>
+#include <tables/Tables/ConcatTable.h>
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
 #include <msvis/MSVis/VisSet.h>
@@ -127,6 +128,86 @@ inline Bool ms::ready2write_()
   return (!detached() && itsMS->isWritable());
 }
 ////// End of helper functions //////
+bool
+ms::createmultims(const std::string &outputTableName,
+                  const std::vector<std::string> &tableNames,
+                  const std::vector<std::string> &subtableNames,
+                  const bool nomodify,
+                  const bool lock)
+{
+  *itsLog << LogOrigin(__func__, this->name());
+
+  try {
+    Block<String> tableNameVector(tableNames.size());
+    Block<String> subtableVector(subtableNames.size());
+
+    /* Copy the input vectors into Block */
+    for (uInt idx=0; idx<tableNameVector.nelements(); idx++)
+       tableNameVector[idx] = tableNames[idx];
+
+    for (uInt idx=0; idx<subtableVector.nelements(); idx++)
+      subtableVector[idx] = subtableNames[idx];
+
+    TableLock tlock(TableLock::AutoNoReadLocking);
+
+    {
+      ConcatTable concatTable(tableNameVector,
+                              subtableVector,
+                              Table::New,
+                              tlock,
+                              TSMOption::Default);
+      concatTable.tableInfo().setSubType("CONCATENATED");
+      concatTable.rename(outputTableName, Table::New);
+    }
+  } catch (AipsError ex) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << ex.getMesg()
+            << LogIO::POST;
+    return false;
+  }
+  /* Now open our new MS so it is referred to by the tool */
+  return open(outputTableName, nomodify, lock);
+}
+
+bool ms::ismultims()
+{
+  bool rstat(False);
+  try {
+    if(!detached()){
+      rstat = (itsMS->tableInfo().subType() == "CONCATENATED");
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+            << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rstat;
+}
+
+std::vector<std::string> ms::getreferencedtables()
+{
+
+  std::vector<std::string> rvalue(0);
+  try {
+    if (!detached()) {
+      Block<String> refTables = itsMS->getPartNames();
+      rvalue.resize(refTables.nelements());
+
+      /* Copy the return block to an output vector */
+      for (uInt idx=0; idx<rvalue.size(); idx++)
+        rvalue[idx] = refTables[idx];
+
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: "
+            << x.getMesg() << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rvalue;
+}
 
 int
 ms::nrow(const bool selected)
@@ -532,6 +613,59 @@ ms::summary(::casac::record& header, const bool verbose, const std::string& list
    Table::relinquishAutoLocks(True);
    return rstat;
 }
+
+bool
+ms::getscansummary(::casac::record& scansummary)
+{
+  Bool rstat(False);
+  try {
+    if(!detached()){
+      //*itsLog << LogOrigin("ms", "summary");
+      MSSummary mss(itsMS);
+      casa::Record outRec;
+      mss.getScanSummary(outRec);
+      casac::record* cOutRec=fromRecord(outRec);
+      scansummary=*cOutRec;
+      if(cOutRec)
+        delete cOutRec;
+      rstat = True;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rstat;
+}
+
+bool
+ms::getspectralwindowinfo(::casac::record& spwSummary)
+{
+  Bool rstat(False);
+  try {
+    if(!detached()){
+      //*itsLog << LogOrigin("ms", "summary");
+      MSSummary mss(itsMS);
+      casa::Record outRec;
+      mss.getSpectralWindowInfo(outRec);
+      casac::record* cOutRec=fromRecord(outRec);
+      spwSummary=*cOutRec;
+      if(cOutRec)
+        delete cOutRec;
+      rstat = True;
+    }
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    Table::relinquishAutoLocks(True);
+    RETHROW(x);
+  }
+  Table::relinquishAutoLocks(True);
+  return rstat;
+}
+
 
 bool
 ms::listhistory()

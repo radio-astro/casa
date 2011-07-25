@@ -43,7 +43,6 @@ namespace casa { //# name space casa begins
 
 const String CasacRegionManager::ALL = "ALL";
 
-
 CasacRegionManager::CasacRegionManager() : RegionManager() {}
 
 CasacRegionManager::CasacRegionManager(
@@ -94,12 +93,7 @@ vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
 		else if (min > lastMax + 1) {
 			// non overlap of and not contiguous with previous range,
 			// so create new end point pair
-			/*
-			uInt newSize = consol.size()+2;
-			consol.resize(newSize, True);
-			consol[newSize-2] = min;
-			consol[newSize-1] = max;
-			*/
+
 			consol.push_back(min);
 			consol.push_back(max);
 
@@ -122,11 +116,6 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 	specification.trim();
 	specification.upcase();
 	if (specification == ALL) {
-		/*
-		ranges.resize(2);
-		ranges[0] = 0;
-		ranges[1] = nStokes - 1;
-		*/
 		ranges.push_back(0);
 		ranges.push_back(nStokes - 1);
 		return ranges;
@@ -481,20 +470,20 @@ ImageRegion CasacRegionManager::_fromBCS(
 			*itsLog << "blc in box spec is less than 0" << LogIO::EXCEPTION;
 		}
 		if (
-				(
-						itsCSys->hasDirectionCoordinate()
-						&& (
-								x >= imShape[directionAxisNumbers[0]]
-								             || y >= imShape[directionAxisNumbers[1]]
-						)
+			(
+				itsCSys->hasDirectionCoordinate()
+				&& (
+					x >= imShape[directionAxisNumbers[0]]
+					|| y >= imShape[directionAxisNumbers[1]]
 				)
-				|| (
-						itsCSys->hasLinearCoordinate()
-						&& (
-								x >= imShape[linearAxisNumbers[0]]
-								             || y >= imShape[linearAxisNumbers[1]]
-						)
+			)
+			|| (
+				itsCSys->hasLinearCoordinate()
+				&& (
+					x >= imShape[linearAxisNumbers[0]]
+			        || y >= imShape[linearAxisNumbers[1]]
 				)
+			)
 		) {
 			*itsLog << "trc in box spec is greater than or equal to number "
 					<< "of direction pixels in the image" << LogIO::EXCEPTION;
@@ -534,8 +523,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 		for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
 			for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
 				if (
-						itsCSys->hasDirectionCoordinate()
-						|| itsCSys->hasLinearCoordinate()
+					itsCSys->hasDirectionCoordinate()
+					|| itsCSys->hasLinearCoordinate()
 				) {
 					extXCorners[2*count] = xCorners[2*i];
 					extXCorners[2*count + 1] = xCorners[2*i + 1];
@@ -558,26 +547,26 @@ ImageRegion CasacRegionManager::_fromBCS(
 	for (uInt i=0; i<nRegions; i++) {
 		for (uInt axisNumber=0; axisNumber<itsCSys->nPixelAxes(); axisNumber++) {
 			if (
-					(
-							directionAxisNumbers.size() > 1
-							&& (Int)axisNumber == directionAxisNumbers[0]
-					)
-					|| (
-							linearAxisNumbers.size() > 1
-							&& (Int)axisNumber == linearAxisNumbers[0]
-					)
+				(
+					directionAxisNumbers.size() > 1
+					&& (Int)axisNumber == directionAxisNumbers[0]
+				)
+				|| (
+					linearAxisNumbers.size() > 1
+					&& (Int)axisNumber == linearAxisNumbers[0]
+				)
 			) {
 				axisCornerMap[axisNumber] = extXCorners;
 			}
 			else if (
-					(
-							directionAxisNumbers.size() > 1
-							&& (Int)axisNumber == directionAxisNumbers[1]
-					)
-					|| (
-							linearAxisNumbers.size() > 1
-							&& (Int)axisNumber == linearAxisNumbers[1]
-					)
+				(
+					directionAxisNumbers.size() > 1
+					&& (Int)axisNumber == directionAxisNumbers[1]
+				)
+				|| (
+					linearAxisNumbers.size() > 1
+					&& (Int)axisNumber == linearAxisNumbers[1]
+				)
 			) {
 				axisCornerMap[axisNumber] = extYCorners;
 			}
@@ -589,7 +578,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 			}
 			else {
 				*itsLog << "Unhandled image axis number " << axisNumber
-						<< LogIO::EXCEPTION;
+					<< LogIO::EXCEPTION;
 			}
 		}
 	}
@@ -821,10 +810,6 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 				<< " must be less than the total number of channels ("
 				<< nChannels << ") in the channel specification " << parts[i] << LogIO::EXCEPTION;
 		}
-		/*
-		ranges[2*i] = min;
-		ranges[2*i + 1] = max;
-		*/
 		ranges.push_back(min);
 		ranges.push_back(max);
 	}
@@ -835,7 +820,5 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 	}
 	return consolidatedRanges;
 }
-
-
 
 } // end of  casa namespace

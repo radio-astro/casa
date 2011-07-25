@@ -965,9 +965,9 @@ Bool Simulator::setfeed(const String& mode,
        << LogIO::POST;
     return False;
   }
+  feedMode_p = mode;
   sim_p->initFeeds(feedMode_p, x, y, pol);
 
-  feedMode_p = mode;
   nFeeds_p = x.nelements();
   feedsHaveBeenSet = True;
 
@@ -1093,6 +1093,8 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("altitude"	  ,TpDouble);
     simparDesc.addField ("waterheight"	  ,TpDouble);
 
+    simparDesc.addField ("seed"	  ,TpInt);
+
     // RI todo setnoise2 if tau0 is not defined, use freqdep
 
     String caltbl=caltable;
@@ -1116,6 +1118,7 @@ Bool Simulator::setnoise(const String& mode,
       }
     
     Record simpar(simparDesc,RecordInterface::Variable);
+    simpar.define ("seed", seed_p);
     simpar.define ("type", "A Noise");
     if (strlen>1) 
       simpar.define ("caltable", caltbl+".A.cal");      
@@ -1268,6 +1271,7 @@ Bool Simulator::setgain(const String& mode,
 	simparDesc.addField ("combine", TpString);
 	simparDesc.addField ("startTime", TpDouble);
 	simparDesc.addField ("stopTime", TpDouble);
+	simparDesc.addField ("seed", TpInt);
 	
 	// Create record with the requisite field values
 	Record simpar(simparDesc,RecordInterface::Variable);
@@ -1285,6 +1289,7 @@ Bool Simulator::setgain(const String& mode,
 	//simpar.define ("amplitude", amplitude);
 	simpar.define ("caltable", caltable);
 	simpar.define ("combine", "");
+	simpar.define ("seed", seed_p);
 	
 	// create the G
 	if (!create_corrupt(simpar)) 
@@ -1347,6 +1352,8 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("relhum"	  ,TpFloat);
       simparDesc.addField ("altitude"	  ,TpDouble);
       simparDesc.addField ("waterheight"	  ,TpDouble);
+
+      simparDesc.addField ("seed"	  ,TpInt);
     
       // create record with the requisite field values
       Record simpar(simparDesc,RecordInterface::Variable);
@@ -1358,6 +1365,8 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("beta", beta);
       simpar.define ("windspeed", windspeed);
       simpar.define ("combine", "");
+
+      simpar.define ("seed", seed_p);
 
 //      if (tground>100.)
 //	simpar.define ("tground", tground);
@@ -1438,6 +1447,8 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simparDesc.addField ("simint", TpString);
     simparDesc.addField ("startTime", TpDouble);
     simparDesc.addField ("stopTime", TpDouble);
+
+    simparDesc.addField ("seed", TpInt);
             
     // create record with the requisite field values
     Record simpar(simparDesc,RecordInterface::Variable);
@@ -1462,6 +1473,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simpar.define ("simint", "infinite");
 
     simpar.define ("combine", "");
+    simpar.define ("seed", seed_p);
 
     
     // create the D

@@ -234,6 +234,9 @@ it'll do them for the same amount of time -->
     <param type="double" name="tau0" subparam="true">
       <description>zenith opacity</description><value>0.1</value>
     </param>
+    <param type="int" name="seed" subparam="true">
+      <description>random number seed</description><value>11111</value>
+    </param>
     
     <param type="double" name="leakage">
       <description>cross polarization</description>
@@ -255,7 +258,7 @@ it'll do them for the same amount of time -->
 
     <param type="string" name="vis" subparam='true'>
       <description>Measurement Set(s) to image</description>
-      <value>$project.ms,$project.sd.ms</value>
+      <value>default</value>
     </param>
 
     <param type="string" name="modelimage" subparam='true'>
@@ -312,7 +315,7 @@ it'll do them for the same amount of time -->
       <description>clean mask -- see help clean</description>
       <any type="variant"/>
       <!-- <value type="stringArray"></value> -->
-      <value type="bool">True</value>
+      <value type="vector"><value></value></value>
     </param>
 
     <param type="stringArray" name="outertaper" subparam="true">
@@ -526,17 +529,19 @@ modifying the description doesn't work yet but its an improvement ticket.
 	<equals type="string" value="tsys-atm">
 	  <default param="user_pwv"><value>1.</value></default>
 	  <default param="t_ground"><value>269.</value></default>
-	</equals>
+	  <default param="seed"><value>11111</value></default>
+	</equals>	
 	<equals type="string" value="tsys-manual">
 	  <default param="t_ground"><value>269.</value></default>
 	  <default param="t_sky"><value>263.</value></default>
 	  <default param="tau0"><value>0.1</value></default>
+	  <default param="seed"><value>11111</value></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
       <when param="image">
 	<equals type="bool" value="True">
-	  <default param="vis"><value type="string">$project.ms</value></default>
+	  <default param="vis"><value type="string">default</value></default>
 	  <default param="modelimage"><value type="string"></value></default>
 	  <default param="imsize">
 	    <value>0</value>
@@ -545,7 +550,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="niter"><value>500</value></default>
 	  <default param="threshold"><value type="string">0.1mJy</value></default>
 	  <default param="weighting"><value type="string">natural</value></default>
-	  <default param="mask">      <value type="bool">True</value></default>
+	  <default param="mask">      <value type="vector"><value></value></value></default>
 	  <default param="outertaper"><value type="vector"><value></value></value></default>
 	  <default param="stokes"><value type="string">I</value></default>
 	</equals>
@@ -717,7 +722,10 @@ mosaic simulation task:
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
     vis -- the simulated interferometric MS, or total-power one, or both
-       ** use $project.noisy.ms if you have corrupted the MS
+       * NOTE: vis='default' will automatically set proper MS name(s) ONLY
+         when either predicting or applying any noise in the same run.
+       * you can use '$project' to let the task automatically replace it to
+         the project name, e.g., vis='$project.noisy.ms,$project.nosisy.sd.ms'.
     modelimage -- prior (e.g. SD) image to be used in clean
     cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
     imsize -- image size in spatial pixels (x,y)

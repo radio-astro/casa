@@ -7,9 +7,10 @@ bool open(const casa::ImageInterface<casa::Float>* inImage);
 private:
 
 
-casa::LogIO *itsLog;
-casa::ImageAnalysis *itsImage;
+std::auto_ptr<casa::LogIO> _log;
+std::auto_ptr<casa::ImageAnalysis> _image;
 
+static const casa::String _class;
 
 // Private ImageInterface constructor to make components on the fly
 image(const casa::ImageInterface<casa::Float>* inImage);

@@ -89,8 +89,8 @@ SpectralCoordinate::SpectralCoordinate()
 
 
 SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
-				       Double refVal, Double inc, 
-                                       Double refPix, Double restFrequency)
+		                                 Double refVal, Double inc,
+		                                 Double refPix, Double restFrequency)
 : Coordinate(),
   pTabular_p(0),
   type_p(type), 
@@ -107,7 +107,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
   axisName_p("Frequency"),
   formatUnit_p("")
 {
-  ///   AlwaysAssert(restFrequency>=0.0, AipsError);
+//
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, restFrequency);
 //
@@ -117,10 +117,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    makeWCS(wcs_p, String("FREQ"), refPix, refVal, inc, 1.0, restfreqs_p(0));
    to_hz_p = 1.0;
    to_m_p = 0.001;
-   if (restfreqs_p(0) > 0.0)
-   	nativeType_p = SpectralCoordinate::VRAD;
-   else
-   	nativeType_p = SpectralCoordinate::FREQ;
+   nativeType_p = SpectralCoordinate::FREQ;
 //
    setDefaultWorldMixRanges();
 }
@@ -168,14 +165,12 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
 //
+
    makeWCS(wcs_p, String("FREQ"), refPix, refVal.getValue(hz), inc.getValue(hz), 
            1.0, restfreqs_p(0));
    to_hz_p = 1.0;
    to_m_p = 0.001;
-   if (restfreqs_p(0) > 0.0)
-   	nativeType_p = SpectralCoordinate::VRAD;
-   else
-   	nativeType_p = SpectralCoordinate::FREQ;
+   nativeType_p = SpectralCoordinate::FREQ;
 //
    setDefaultWorldMixRanges();
 }
@@ -205,15 +200,13 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, restFrequency);
 //
+
    Vector<Double> channels(freqs.nelements());
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, freqs, "Hz", "Frequency");
    to_hz_p = 1.0;
    to_m_p = 0.001;
-   if (restfreqs_p(0) > 0.0)
-   	nativeType_p = SpectralCoordinate::VRAD;
-   else
-   	nativeType_p = SpectralCoordinate::FREQ;
+   nativeType_p = SpectralCoordinate::FREQ;
 //
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
@@ -255,16 +248,14 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, restFrequency.getValue(hz));
 //
+
    Vector<Double> freqs2 = freqs.getValue(hz);
    Vector<Double> channels(freqs2.nelements());
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, freqs2, "Hz", "Frequency");
    to_hz_p = 1.0;
    to_m_p = 0.001;
-   if (restfreqs_p(0) > 0.0)
-   	nativeType_p = SpectralCoordinate::VRAD;
-   else
-   	nativeType_p = SpectralCoordinate::FREQ;
+   nativeType_p = SpectralCoordinate::FREQ;
 //
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
@@ -289,7 +280,8 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
   pConversionMachineTo_p(0),
   pConversionMachineFrom_p(0),
   pVelocityMachine_p(0),
-  velType_p(MDoppler::RADIO),
+  //velType_p(MDoppler::RADIO),
+  velType_p(velType),
   velUnit_p("km/s"),
   waveUnit_p("mm"),
   unit_p("Hz"),
@@ -359,8 +351,6 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
       throw(AipsError("Wavelength unit is not consistent with m"));
    }
      
-   //cout << "waveUnit " << waveUnit << " waveUnit_p " << waveUnit_p << " to_m_p " << to_m_p << " to_hz_p " << to_hz_p << endl;
-
    Vector<Double> frequencies;
    if(inAir){
      airWavelengthToFrequency(frequencies, wavelengths);
@@ -370,10 +360,6 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
      wavelengthToFrequency(frequencies, wavelengths);
      nativeType_p = SpectralCoordinate::WAVE;
    }
-
-   //for(uInt i=0; i<frequencies.nelements(); i++){
-   //    cout << "freq i " << i << " " << frequencies(i) << endl;
-   //}
 
 // Make Tabular spectral coordinate
 
@@ -438,7 +424,12 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, wcs.restfrq);
    if (restfreqs_p(0) > 0.0)
-   	nativeType_p = SpectralCoordinate::VRAD;
+   	if (wcs.velref && wcs.velref < 256){
+   		nativeType_p = SpectralCoordinate::VOPT;}
+   	else if (wcs.velref && wcs.velref > 256)
+      	nativeType_p = SpectralCoordinate::VRAD;
+   	else
+      	nativeType_p = SpectralCoordinate::VRAD;
    else
    	nativeType_p = SpectralCoordinate::FREQ;
 
@@ -871,10 +862,10 @@ Bool SpectralCoordinate::specTypetoString(String &stypeString, const SpecType &s
 		stypeString = String("frequency");
 		break;
 	case VRAD:
-		stypeString = String("radio");
+		stypeString = String("radio velocity");
 		break;
 	case VOPT:
-		stypeString = String("optical");
+		stypeString = String("optical velocity");
 		break;
 	case BETA:
 		stypeString = String("true");
@@ -901,11 +892,11 @@ Bool SpectralCoordinate::stringtoSpecType(SpecType &specType, const String &styp
 		specType = FREQ;
 		return True;
 	}
-	else if (!stypeString.compare("radio")){
+	else if (!stypeString.compare("radio velocity")){
 		specType = VRAD;
 		return True;
 	}
-	else if (!stypeString.compare("optical")){
+	else if (!stypeString.compare("optical velocity")){
 		specType = VOPT;
 		return True;
 	}
@@ -1333,10 +1324,9 @@ Bool SpectralCoordinate::near(const Coordinate& other,
 // Spectral type
 
    if (nativeType_p != sCoord.nativeType_p) {
-      set_error("The SpectralCoordinates have differing native types");
+     set_error("The SpectralCoordinates have differing native types");
       return False;
-
-   }
+	}
 //
    return True;
 }

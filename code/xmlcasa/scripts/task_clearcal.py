@@ -1,9 +1,17 @@
 import os
 from taskinit import *
+from parallel.parallel_task_helper import ParallelTaskHelper
 
 def clearcal(vis=None,field=None,spw=None,intent=None):
 
         casalog.origin('clearcal')
+
+        # Do the trivial parallelization
+        if ParallelTaskHelper.isParallelMS(vis):
+                helper = ParallelTaskHelper('clearcal', locals())
+                helper.go()
+                return
+
 
 	#Python script
 	try:

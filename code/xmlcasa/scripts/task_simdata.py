@@ -1,6 +1,7 @@
-import os
 from taskinit import *
 from simutil import *
+import os
+import re
 import pylab as pl
 import pdb
 
@@ -17,7 +18,8 @@ def simdata(
     totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
-    user_pwv=None, t_ground=None, t_sky=None, tau0=None, leakage=None,
+    user_pwv=None, t_ground=None, t_sky=None, tau0=None, seed=None,
+    leakage=None,
     image=None,
     vis=None, modelimage=None, cell=None, imsize=None, niter=None, threshold=None,
     weighting=None, mask=None, outertaper=None, stokes=None,     
@@ -30,8 +32,10 @@ def simdata(
     overwrite=None,
     async=False):
 
+    import re
 
     # RI TODO for inbright=unchanged, need to scale input image to jy/pix
+    # according to actual units in the input image
 
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
@@ -257,7 +261,6 @@ def simdata(
 
 
 
-
         ##################################################################
         # read antenna file here to get Primary Beam
         predict_uv = False
@@ -368,7 +371,6 @@ def simdata(
         util.direction = dir0
 
         if setpointings:
-            import re
             if verbose: util.msg("calculating map pointings centered at "+str(dir0))
 
             if len(pointingspacing) < 1:
@@ -389,15 +391,17 @@ def simdata(
         else:
             if type(ptgfile) == type([]):
                 ptgfile = ptgfile[0]
-#            ptgfile = ptgfile.replace('$project',fileroot+"/"+project)
             ptgfile = ptgfile.replace('$project',project)
-            if not os.path.exists(fileroot+"/"+ptgfile):
+            if os.path.exists(fileroot+"/"+ptgfile):
+                ptgfile = fileroot + "/" + ptgfile
+            else:
                 if os.path.exists(ptgfile):
-                    shutil.copyfile(ptgfile,fileroot+"/"+ptgfile)
+                    shutil.copyfile(ptgfile,fileroot+"/"+project + ".ptg.txt")
+                    ptgfile = fileroot + "/" + project + ".ptg.txt"
                 else:
                     util.msg("Can't find pointing file "+ptgfile,priority="error")
                     return False
-            ptgfile = fileroot + "/" + ptgfile
+
             nfld, pointings, etime = util.read_pointings(ptgfile)
             # a string of different integrations doesn't work below yet
 #            integration = [str(s)+"s" for s in etime]
@@ -565,6 +569,27 @@ def simdata(
 
             ############################################
             # predict interferometry observation
+
+            # if someone has the old style refdate with the included, discard
+            q = re.compile('(\d*/\d+/\d+)([/:\d]*)')
+            qq = q.match(refdate)
+            if not qq:
+                msg("Invalid reference date "+refdate,priority="error")
+                return
+            else:
+                z = qq.groups()
+                refdate=z[0]
+                if len(z)>1:
+                    msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
+
+            if reftime=="transit":
+                refdate=refdate+"/00:00:00"
+                usehourangle=True
+            else:
+                refdate=refdate+"/"+reftime
+                usehourangle=False
+
+
             if predict_uv: 
                 if os.path.exists(msfile):
                     if not overwrite:
@@ -612,27 +637,6 @@ def simdata(
                     sm.setfield(sourcename="phase calibrator", 
                                 sourcedirection=caldirection,calcode='C',
                                 distance='0m')
-
-                # what if someone has the old style refdate with time
-                # included?  CATCH XXX 
-  
-                q = re.compile('(\d*/\d+/\d+)([/:\d]*)')
-                qq = q.match(refdate)
-                if not qq:
-                    msg("Invalid reference date "+refdate,priority="error")
-                    return
-                else:
-                    z = qq.groups()
-                    refdate=z[0]
-                    if len(z)>1:
-                        msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
- 
-                if reftime=="transit":
-                    refdate=refdate+"/00:00:00"
-                    usehourangle=True
-                else:
-                    refdate=refdate+"/"+reftime
-                    usehourangle=False
 
                 mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
@@ -783,7 +787,7 @@ def simdata(
                 #                sourcedirection=caldirection,calcode='C',
                 #                distance='0m')
                 mereftime = me.epoch('TAI', refdate)
-                sm.settimes(integrationtime=integration, usehourangle=True, 
+                sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 scantime = qa.mul(qa.quantity(integration),str(scanlength))
@@ -1028,6 +1032,7 @@ def simdata(
 
                 sm.openfromms(noisymsroot+".ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
+                sm.setseed(seed)
                 if thermalnoise == "tsys-manual":
                     if verbose:
                         msg("sm.setnoise(spillefficiency="+str(eta_s)+
@@ -1197,6 +1202,21 @@ def simdata(
             #    # should be CASA image so far. 
             #    tpimage=modelimage # KS-don't think this is necessary
             #    tpset=True
+
+            # Set proper MS name(s) automatically if vis='default'
+            if vis == "default":
+                vis = ""
+                msg("Parameter vis is set to 'default'. Trying to set MS name(s) to image automatically.")
+                if noise_any:
+                    if sd_any: vis = noisymsroot+".sd.ms"
+                    if antennalist != "": vis += min(1,len(vis))*"," + noisymsroot+".ms"
+                elif predict:
+                    if predict_sd: vis = "$project.sd.ms"
+                    if predict_uv: vis += min(1,len(vis))*"," + "$project.ms"
+                else:
+                    # neither predict nor any_noise
+                    msg("Cannot resolve MS name(s) for 'vis'. You should specify 'vis' explicitly when are neither predicting nor corrupting.",priority="error")
+                msg("Automatic resolution of MS name(s): vis='%s'" % vis)
 
             # parse ms parameter and check for existance;
             # if noise_any
@@ -1599,7 +1619,7 @@ def simdata(
                 showarray = False
             # need MS for showuv and showpsf
             if not (predict or image):
-                msfile = filerot + "/" + project + ".ms"
+                msfile = fileroot + "/" + project + ".ms"
             if sd_only and os.path.exists(sdmsfile):
                 # use TP ms for UV plot if only SD sim, i.e.,
                 # image=sd_only=T or (image=F=predict_uv and predict_sd=T)

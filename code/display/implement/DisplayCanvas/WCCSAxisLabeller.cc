@@ -24,6 +24,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
+//#include <iostream.h>
+#include <iomanip.h>
 
 #include <casa/aips.h>
 #include <casa/Exceptions.h>
@@ -56,7 +58,7 @@ WCCSAxisLabeller::WCCSAxisLabeller() :
   itsZIndex(-1),
   itsHasCoordinateSystem(False),
   itsSpectralUnit("km/s"),
-  itsDoppler("radio"),
+  itsSpectralQuantity("radio velocity"),
   itsDirectionUnit("arcsec"),
   itsDirectionSystem("J2000"),
   itsFrequencySystem("LSRK"),
@@ -83,27 +85,56 @@ void WCCSAxisLabeller::setDefaultOptions() {
   WCAxisLabeller::setDefaultOptions();
 //
   itsAbsolute = True;
-  //itsWorldAxisLabels = True;
 //
   Int after = -1;
   Int iS = itsCoordinateSystem.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
      const SpectralCoordinate coord = itsCoordinateSystem.spectralCoordinate(iS);
      Double restFreq = coord.restFrequency();
-     Vector<String> vunits;
-     if (restFreq > 0) {
-        itsSpectralUnit = String("km/s");
-     } else {
-         Quantity q;
-         q.setValue(coord.referenceValue()(0));
-         q.setUnit(coord.worldAxisUnits()(0));
-         MVFrequency mvFreq(q);
-         if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
-     		itsSpectralUnit = String("nm");
-     	} else{
-     		itsSpectralUnit = String("GHz");
-     	}
+     String restString = coord.worldAxisUnits()(0);
+     SpectralCoordinate::SpecType spcType = coord.spectralType();
+
+     if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("km/s");
      }
+     else if (spcType == SpectralCoordinate::VRAD && restFreq > 0){
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("km/s");
+     }
+     else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
+   	  itsSpectralQuantity = String("optical velocity");
+   	  itsSpectralUnit = String("km/s");
+     }
+     else if (spcType == SpectralCoordinate::WAVE){
+   	  itsSpectralQuantity = String("wavelength");
+   	  itsSpectralUnit = String("nm");
+     }
+     else if (spcType == SpectralCoordinate::AWAV){
+   	  itsSpectralQuantity = String("air wavelength");
+   	  itsSpectralUnit = String("nm");
+     }
+     else if (spcType == SpectralCoordinate::FREQ){
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("GHz");
+     }
+     else{
+   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralUnit = String("GHz");
+     }
+
+// store the unit of the rest frequency
+
+     itsRestUnit       = coord.worldAxisUnits()(0);
+
+// the simple way (String::toString(coord.restFrequency()))
+// does not work with high enough precision...
+
+     ostringstream os;
+  	  os << setprecision(8) << scientific << double(coord.restFrequency()) << itsRestUnit;
+	  string rfstring = os.str();
+     itsRestValue      = String(rfstring);
+
 //
      MFrequency::Types ctype;
      MEpoch epoch;
@@ -111,7 +142,6 @@ void WCCSAxisLabeller::setDefaultOptions() {
      MDirection direction;
      coord.getReferenceConversion(ctype, epoch, position, direction);
      itsFrequencySystem = MFrequency::showType(ctype);
-     itsDoppler = String("radio");
      setSpectralState();
   }
 //
@@ -139,16 +169,20 @@ Bool WCCSAxisLabeller::setOptions(const Record &rec, Record &updatedOptions)
   Bool localchange = False;
   Bool error;
   
-  Bool sChg = readOptionRecord(itsDoppler, error, rec,
-                               "axislabelvelocitytype");
+  Bool sChg = readOptionRecord(itsSpectralQuantity, error, rec,
+                               "axislabelspectraltype");
        sChg = readOptionRecord(itsSpectralUnit, error, rec,
                                "axislabelspectralunit")      || sChg;
        sChg = readOptionRecord(itsFrequencySystem, error, rec,
                                "axislabelfrequencysystem")   || sChg;
+       sChg = readOptionRecord(itsRestValue, error, rec,
+                               "axislabelrestvalue")         || sChg;
+
   if(sChg) {
     setSpectralState();
-    localchange = True;  } 
-  
+    localchange = True;
+  }
+
   Bool dChg = readOptionRecord(itsDirectionUnit, error, rec,
                                "axislabeldirectionunit");
   
@@ -291,7 +325,8 @@ Record WCCSAxisLabeller::getOptions() const
         rec.defineRecord("axislabeldirectionunit", directionunit);
      }
   }
-//
+
+// identify the spectral coordinates, if existing
   after = -1;
   Int iS = itsCoordinateSystem.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
@@ -313,72 +348,116 @@ Record WCCSAxisLabeller::getOptions() const
         frequencySystem.define("allowunset", False);
         rec.defineRecord("axislabelfrequencysystem", frequencySystem);
      }
-     {    
+     {
+
+// get some quantities from the spectral coordinate
+
+   	  const SpectralCoordinate sc = itsCoordinateSystem.spectralCoordinate(iS);
+        Double restFreq = sc.restFrequency();
+        String restUnit = sc.worldAxisUnits()(0);
+        SpectralCoordinate::SpecType spcType = sc.spectralType();
+        Int unitSet=0;
+
+        Record veltype;
+        veltype.define("context", "Axis_label_properties");
+        veltype.define("dlformat", "axislabelspectraltype");
+        veltype.define("listname", "Spectral quantity");
+        veltype.define("ptype", "choice");
+        Vector<String> stunits;
+        stunits.resize(4);
+        stunits(0) = "optical velocity";
+        stunits(1) = "radio velocity";
+        stunits(2) = "wavelength";
+        stunits(3) = "air wavelength";
+
+//  depending on the spectral coordinate, set the default "quantity"
+
+        if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
+      	  veltype.define("default", stunits(1));
+           unitSet = 1;
+        }
+        else if (spcType == SpectralCoordinate::VRAD && restFreq > 0){
+           veltype.define("default", stunits(1));
+           unitSet = 1;
+        }
+       else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
+           veltype.define("default", stunits(0));
+           unitSet = 1;
+        }
+        else if (spcType == SpectralCoordinate::WAVE){
+           veltype.define("default", stunits(2));
+           unitSet = 2;
+        }
+        else if (spcType == SpectralCoordinate::AWAV){
+           veltype.define("default", stunits(3));
+           unitSet = 2;
+        }
+        else if (spcType == SpectralCoordinate::FREQ){
+           veltype.define("default", stunits(1));
+           unitSet = 0;
+        }
+        else{
+           veltype.define("default", stunits(1));
+           unitSet = 0;
+        }
+        veltype.define("popt", stunits);
+        veltype.define("value", itsSpectralQuantity);
+        veltype.define("allowunset", False);
+        rec.defineRecord("axislabelspectraltype", veltype);
+
         Record spectralunit;
         spectralunit.define("context", "Axis_label_properties");
         spectralunit.define("dlformat", "axislabelspectralunit");
         spectralunit.define("listname", "Spectral unit");
         spectralunit.define("ptype", "userchoice");
-//
-        const SpectralCoordinate sc = itsCoordinateSystem.spectralCoordinate(iS);
-        Double restFreq = sc.restFrequency(); 
-        Vector<String> vunits;
-        if (restFreq > 0) {
-           vunits.resize(5);        
-           vunits(0) = "km/s";
-           vunits(1) = "m/s";
-           vunits(2) = "GHz";
-           vunits(3) = "MHz";
-           vunits(4) = "Hz";
-           spectralunit.define("default", vunits(0));
-        } else {
-            Quantity q;
-            q.setValue(sc.referenceValue()(0));
-            q.setUnit(sc.worldAxisUnits()(0));
-            MVFrequency mvFreq(q);
-            if (mvFreq.get(Unit("Hz")).getValue() > 1.0e+13) {
-        		// optical domain
-        		vunits.resize(7);
-        		vunits(0) = "GHz";
-        		vunits(1) = "MHz";
-        		vunits(2) = "Hz";
-        		vunits(3) = "mm";
-        		vunits(4) = "um";
-        		vunits(5) = "nm";
-        		vunits(6) = "Angstrom";
-                spectralunit.define("default", vunits(5));
-        	}
-        	else {
-        		// radio domain
-        		vunits.resize(3);
-        		vunits(0) = "GHz";
-        		vunits(1) = "MHz";
-        		vunits(2) = "Hz";
-        		// does not seem to have any influence
-                spectralunit.define("default", vunits(0));
-        	}
+        Vector<String> specunits;
+        specunits.resize(9);
+        specunits(0) = "km/s";
+        specunits(1) = "m/s";
+        specunits(2) = "GHz";
+        specunits(3) = "MHz";
+        specunits(4) = "Hz";
+        specunits(5) = "mm";
+        specunits(6) = "um";
+        specunits(7) = "nm";
+        specunits(8) = "Angstrom";
+
+//  depending on the spectral coordinate, set the default "quantity"
+
+        if (unitSet == 2) {
+           spectralunit.define("default", specunits(7));
         }
-//
-        spectralunit.define("popt", vunits);
+        else if (unitSet == 1) {
+           spectralunit.define("default", specunits(0));
+        }
+        else {
+            spectralunit.define("default", specunits(2));
+        }
+        spectralunit.define("popt", specunits);
         spectralunit.define("value", itsSpectralUnit);
         spectralunit.define("allowunset", False);
         rec.defineRecord("axislabelspectralunit", spectralunit);
-     }
-     {
-        Record veltype;
-        veltype.define("context", "Axis_label_properties");
-        veltype.define("dlformat", "axislabelvelocitytype");
-        veltype.define("listname", "Velocity type");
-        veltype.define("ptype", "choice");
-        Vector<String> vunits(3);
-        vunits(0) = "optical";
-        vunits(1) = "radio";
-        vunits(2) = "true";
-        veltype.define("popt", vunits);
-        veltype.define("default", "radio");
-        veltype.define("value", itsDoppler);
-        veltype.define("allowunset", False);
-        rec.defineRecord("axislabelvelocitytype", veltype);
+
+        Record restvalue;
+        restvalue.define("context", "Axis_label_properties");
+        restvalue.define("dlformat", "axislabelrestvalue");
+        restvalue.define("listname", "Rest value");
+        restvalue.define("ptype", "string");
+        if (restFreq>0){
+      	  Unit outUnit(itsRestUnit);
+      	  Quantity inQuant=Quantity(restFreq, Unit(restUnit));
+      	  // unfortunately, the shot way "String::toString(restFreq)"
+      	  // does not deliver enough decimal points
+      	  ostringstream os;
+        	  os << setprecision(8) << scientific << double(inQuant.get(outUnit).getValue()) << outUnit.getName();
+      	  string rfstring = os.str();
+      	  restvalue.define("default", String(rfstring));
+        }
+        else{
+      	  restvalue.define("default", String(""));}
+        restvalue.define("value", itsRestValue);
+        restvalue.define("allowunset", False);
+        rec.defineRecord("axislabelrestvalue", restvalue);
      }
   }
   if (itsCoordinateSystem.nWorldAxes() > 2) {
@@ -421,7 +500,7 @@ Record WCCSAxisLabeller::getOptions() const
     rec.defineRecord("axislabelzlabelpos", zlabelpos);
 
   }
-  
+
   return rec;
 }
 
@@ -568,7 +647,7 @@ String WCCSAxisLabeller::axisText(Int worldAxis, WorldCanvas* wc) const
           prefUnit = itsSpectralUnit;
           unitString = " (" + prefUnit + ")";
           if (prefUnit=="" || prefUnit==" " || prefUnit=="_") unitString = " ";
-          base = freqType + " " + itsDoppler + " velocity" + unitString;
+          base = freqType + " " + itsSpectralQuantity + " velocity" + unitString;
        } else if (pVU==HZ) {
           base = freqType + String(" ") + base0 + unitString;
        } else {
@@ -603,12 +682,37 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
 {
    static LogIO os(LogOrigin("WCCSAxisLabeller", "setSpectralState", WHERE));
 
-// Set velocity and/or world unit state in SpectralCoordinate
+// Set rest wavelength in SpectralCoordinate
 
    String errorMsg;
-   if (!CoordinateUtil::setSpectralState (errorMsg, cs,
-                                          itsSpectralUnit, itsDoppler)) {
+   Bool ok;
+   Quantity restQuant;
+
+// Convert the value to a quantity;
+// Check that the quantity is usable
+
+   ok = Quantity::read(restQuant, itsRestValue);
+   if (!ok) {
+   	errorMsg = "Can not convert value to rest wavelength/frequency: " + itsRestValue;
       os << errorMsg << LogIO::EXCEPTION;
+   }
+   else if (restQuant.getUnit().empty()){
+   	errorMsg = "Can not retrieve unit for rest wavelength/frequency in: " + itsRestValue;
+      os << errorMsg << LogIO::EXCEPTION;
+   }
+
+// Set the new rest frequency
+
+   if (!CoordinateUtil::setRestFrequency (errorMsg, cs,
+   	                                    restQuant.getUnit(), restQuant.getValue())) {
+   	os << errorMsg << LogIO::EXCEPTION;
+   }
+
+// Set velocity and/or world unit state in SpectralCoordinate
+
+   if (!CoordinateUtil::setSpectralState (errorMsg, cs,
+   		                                 itsSpectralUnit, itsSpectralQuantity)) {
+   	os << errorMsg << LogIO::EXCEPTION;
    }
 
 // Set Spectral Conversion Layer
@@ -621,7 +725,7 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
    // Set Spectral formatting (for movie axis labelling done via formatter)
 
    if (!CoordinateUtil::setSpectralFormatting (errorMsg, cs,
-                                               itsSpectralUnit, itsDoppler)) {
+                                               itsSpectralUnit, itsSpectralQuantity)) {
       os << errorMsg << LogIO::EXCEPTION;
    }
 

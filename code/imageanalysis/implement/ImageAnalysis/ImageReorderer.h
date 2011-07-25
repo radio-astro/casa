@@ -29,8 +29,8 @@
 #ifndef IMAGEREORDERER_H_
 #define IMAGEREORDERER_H_
 
-#include <images/Images/PagedImage.h>
 #include <casa/Logging/LogIO.h>
+#include <images/Images/ImageInterface.h>
 
 namespace casa {
 class ImageReorderer {
@@ -59,41 +59,41 @@ class ImageReorderer {
       // </srcblock>
       // </example>
 public:
-	ImageReorderer(const String& imagename, uInt order, const String& outputImage);
+	ImageReorderer(
+		const ImageInterface<Float> *const &image,
+		uInt order, const String& outputImage
+	);
 
-	ImageReorderer(const String& imagename, const String& order, const String& outputImage);
+	ImageReorderer(
+		const ImageInterface<Float> *const &image,
+		const String& order, const String& outputImage
+	);
 
-	ImageReorderer(const String& imagename, const Vector<String> order, const String& outputImage);
-
-	ImageReorderer(const ImageInterface<Float> * const image, uInt order, const String& outputImage);
-
-	ImageReorderer(const ImageInterface<Float> * const image, const String& order, const String& outputImage);
-
-	ImageReorderer(const ImageInterface<Float> * const image, const Vector<String> order, const String& outputImage);
+	ImageReorderer(
+		const ImageInterface<Float> *const &image,
+		const Vector<String> order, const String& outputImage
+	);
 	// destructor
 	~ImageReorderer();
 
 	// reorder the axes and write the output image. Returns the associated PagedImage object.
-	ImageInterface<Float>* reorder() const;
+	ImageInterface<Float>* transpose() const;
 
 private:
-	LogIO *_log;
-	ImageInterface<Float> *_image;
+	std::auto_ptr<LogIO>_log;
+	const ImageInterface<Float> *const _image;
 	Vector<Int> _order;
 	String _outputImage;
+	static const String _class;
+
 	// Do not allow use of default constuctor
 	ImageReorderer();
 
-	void _construct(const String& imagename);
+	void _construct();
 
 	Vector<Int> _getOrder(uInt order) const;
 
 	Vector<Int> _getOrder(const String& order) const;
-/*
-	Vector<Int> _getOrder(Vector<String>& order) const;
-
-	void _downcase(Vector<String>& vec) const;
-	*/
 };
 }
 

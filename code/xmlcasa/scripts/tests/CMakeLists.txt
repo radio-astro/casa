@@ -45,6 +45,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_imhead.py
   test_immath.py
   test_immoments.py
+  test_impbcor.py
   test_importasdm.py
   test_importevla.py
   test_importfitsidi.py
@@ -58,6 +59,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_listvis.py
   test_measures.py
   test_msmoments.py
+  test_partition.py
   test_pcasa.py
   test_plotants.py
   test_plotms.py

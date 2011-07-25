@@ -1,8 +1,8 @@
 
 ##########################################################################
-# task_imtrans.py
+# task_imcollapse.py
 #
-# Copyright (C) 2008, 2009
+# Copyright (C) 2008, 2009, 2010
 # Associated Universities, Inc. Washington DC, USA.
 #
 # This script is free software; you can redistribute it and/or modify it
@@ -31,7 +31,7 @@
 # </author>
 #
 # <summary>
-# Task to transpose an image
+# Task correct an image for primary beam attenuation.
 # </summary>
 #
 # <reviewed reviwer="" date="" tests="" demos="">
@@ -44,43 +44,50 @@
 # </prerequisite>
 #
 # <etymology>
-# imtrans => im(age) trans(pose)
+# impbcor => im(age) pb(primary beam) cor(rect)
 # </etymology>
 #
 # <synopsis>
-# imtrans transposes an image. It is built on top of ia.reorder()
+# impbcor corrects and image for primary beam attenuation. It is built on top of ia.pbcor()
 # </synopsis> 
 #
 # <example>
-# imtrans(imagename="myim.im", outfile="transposed.im", order="102")
+# pbcorrected_image_tool = impbcor(imagename="myim.im", pbimage="mypb.im", outfile="corrected.im", wantreturn=true)
 #
 # </example>
 #
 # <motivation>
-# To make users happy, cf https://bugs.aoc.nrao.edu/browse/CAS-607
+# https://bugs.aoc.nrao.edu/browse/CAS-3256
 # </motivation>
 #
 
 ###########################################################################
 from taskinit import *
 
-def imtrans(imagename=None, outfile=None, order=None, wantreturn=None):
-    casalog.origin('imtrans')
+def impbcor(
+    imagename=None, pbimage=None, outfile=None, overwrite=None,
+    box=None, region=None, chans=None, stokes=None, mask=None,
+    mode=None, cutoff=None, wantreturn=None
+):
+    casalog.origin('impbcor')
+    retval = None
     myia = iatool.create()
-    newim = None
     try:
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
-        newim = myia.reorder(outfile=outfile, order=order)
+        ia_tool = myia.pbcor(
+            pbimage=pbimage, outfile=outfile, overwrite=overwrite,
+            box=box, region=region, chans=chans, stokes=stokes,
+            mask=mask, mode=mode, cutoff=cutoff
+        )
+        if wantreturn:
+            retval = ia_tool
+        else:
+            ia_tool.done()
+            del ia_tool
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        newim = None
-    myia.done()
-    del myia
-    if (wantreturn):
-        return newim
-    else:
-        if (newim):
-            newim.done()
-            del newim
-        return False
+    if (myia):
+        myia.done()
+        del myia
+    return retval

@@ -60,7 +60,6 @@ Images/MIRIADImage.cc
 Images/HDF5Image2.cc
 Images/ImageProxy.cc
 Images/ComponentImager.cc
-Images/ImageReorderer.cc
 Wnbt/ComponentUpdate.cc
 ${BISON_ImageExprGram_OUTPUTS}
 ${FLEX_ImageExprGram_OUTPUTS}
@@ -131,7 +130,6 @@ Images/ImageProfileFit.h
 Images/ImageProxy.h
 Images/ImageRegrid.h
 Images/ImageRegrid.tcc
-Images/ImageReorderer.h
 Images/ImageSourceFinder.h
 Images/ImageSourceFinder.tcc
 Images/ImageStatistics.h
