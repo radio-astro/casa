@@ -72,7 +72,6 @@ Vector<Int> FixVis::getFieldIdx(const String& fields)
 
 uInt FixVis::setFields(const Vector<Int>& fieldIds)
 {
-
   logSink() << LogOrigin("FixVis", "setFields");
   logSink() << LogIO::NORMAL << "Selecting fields ";
 
@@ -80,7 +79,7 @@ uInt FixVis::setFields(const Vector<Int>& fieldIds)
   nAllFields_p = ms_p.field().nrow();
   FieldIds_p.resize(nAllFields_p);
 
-  for(Int i = 0; i < nAllFields_p; ++i){
+  for(uInt i = 0; i < nAllFields_p; ++i){
     FieldIds_p(i) = -1;
     for(uInt j = 0; j < nsel_p; ++j){
       if(fieldIds[j] == i){

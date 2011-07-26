@@ -3,7 +3,8 @@ import sys
 from taskinit import *
 
 def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
-          scalebychan=None, fluxdensity=None, standard=None):
+          scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
+          standard=None):
        """ Fills the model column for flux density calibrators:
 
        The task places the model visibility amp and phase associated
@@ -59,6 +60,12 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
                is the only way to insert a polarized flux density model at the
                present time (March 2008).
                example:  fluxdensity=[2.63,0.21,-0.33,0.02]
+       spix -- Spectral index for fluxdensity: S = fluxdensity * (freq/reffreq)**spix
+               Default: 0
+               Only used if fluxdensity is being used.
+               N.B.: It is applied in the same way to all polarizations, and does
+                     not account for Faraday rotation or depolarization.
+       reffreq -- The reference frequency for spix.  Default: '1GHz'
        standard -- Flux density standard, used if fluxdensity<0
                default: 'Perley-Taylor 99'; example: standard='Baars'
                Options: 'Baars','Perley 90','Perley-Taylor 95',
@@ -122,9 +129,9 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
              myms = mstool.create()
 
              if type(vis) == str and os.path.isdir(vis):
-                    myim.open(vis, usescratch=True)
+                 myim.open(vis, usescratch=True)
              else:
-                    raise Exception, 'Visibility data set not found - please verify the name'
+                 raise Exception, 'Visibility data set not found - please verify the name'
 
              # If modimage is not an absolute path, see if we can find exactly
              # 1 match in the likely places.
@@ -156,8 +163,8 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
                      casalog.post("Using %s for modimage." % modimage, 'INFO')
 
              myim.setjy(field=field, spw=spw, modimage=modimage,
-                        fluxdensity=fluxdensity, standard=standard,
-                        scalebychan=scalebychan)
+                        fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
+                        standard=standard, scalebychan=scalebychan)
              myim.close()
 
              # Write history

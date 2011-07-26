@@ -1048,6 +1048,27 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     TableExprNode exprNode=thisSelection.toTableExprNode(elms);
     selTimeRanges_p = thisSelection.getTimeList();
 
+    // Setup antNewIndex_p.
+    if(antennaSel_p){
+      Vector<Int> selAnt1s(thisSelection.getAntenna1List());
+      Vector<Int> selAnt2s(thisSelection.getAntenna2List());
+      uInt nAnt1 = selAnt1s.nelements();
+      uInt nAnt2 = selAnt2s.nelements();
+
+      selAnt1s.resize(nAnt1 + nAnt2, True);
+      selAnt1s(Slice(nAnt1, nAnt2)) = selAnt2s;
+      nAnt1 = GenSort<Int>::sort(selAnt1s, Sort::Ascending, Sort::NoDuplicates);
+      selAnt1s.resize(nAnt1, True);
+
+      Int maxAnt = max(selAnt1s);
+
+      antNewIndex_p.resize(maxAnt + 1);
+      antNewIndex_p.set(-1); //So if you see -1 in the main, feed, or pointing
+			     //tables, fix it
+      for(uInt k = 0; k < nAnt1; ++k)
+	antNewIndex_p[selAnt1s[k]] = k;
+    }
+
     {      
       const MSDataDescription ddtable = elms->dataDescription();
       ROScalarColumn<Int> polId(ddtable, 
@@ -6997,23 +7018,13 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
       retval = True;
     }
     else{
-      //Now we try to re-index the antenna list;
-      Vector<Int> ant1 = mscIn_p->antenna1().getColumn();
-      Int nAnt1=GenSort<Int>::sort(ant1,Sort::Ascending, Sort::NoDuplicates);
-      ant1.resize(nAnt1, True);
-      Vector<Int> ant2 = mscIn_p->antenna2().getColumn();
-      Int nAnt2=GenSort<Int>::sort(ant2,Sort::Ascending, Sort::NoDuplicates);
-      ant2.resize(nAnt2, True);
-      ant1.resize(nAnt2+nAnt1, True);
-      ant1(Slice(nAnt1,nAnt2))=ant2;
-      nAnt1 = GenSort<Int>::sort(ant1,Sort::Ascending, Sort::NoDuplicates);
-      ant1.resize(nAnt1, True);
-      antNewIndex_p.resize(oldAnt.nrow());
-      antNewIndex_p.set(-1); //So if you see -1 in the main, feed, or pointing
-			     //tables, fix it
-      for (Int k=0; k < nAnt1; ++k){
-	antNewIndex_p[ant1[k]]=k;
-	TableCopy::copyRows(newAnt, oldAnt, k, ant1[k], 1, false);
+      uInt nAnt = antNewIndex_p.nelements();
+      if(nAnt > oldAnt.nrow())                  // Don't use min() here,
+        nAnt = oldAnt.nrow();                   // it's too overloaded.
+
+      for(uInt k = 0; k < nAnt; ++k){
+        if(antNewIndex_p[k] > -1)
+          TableCopy::copyRows(newAnt, oldAnt, antNewIndex_p[k], k, 1, false);
       }
       newAnt.flush();
       retval = True;
@@ -7051,9 +7062,10 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
       // Copy selected rows.
       uInt totNFeeds = antIds.nelements();
       uInt totalSelFeeds = 0;
+      Int maxSelAntp1 = antNewIndex_p.nelements();
       for (uInt k = 0; k < totNFeeds; ++k){
         // antenna must be selected, and spwId must be -1 (any) or selected.
-	if(antNewIndex_p[antIds[k]] > -1 &&
+	if(antIds[k] < maxSelAntp1 && antNewIndex_p[antIds[k]] > -1 &&
            (spwIds[k] < 0 || spwRelabel_p[spwIds[k]] > -1)){
           //                  outtab   intab    outrow       inrow nrows
 	  TableCopy::copyRows(newFeed, oldFeed, totalSelFeeds, k, 1, false);
@@ -7209,13 +7221,21 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
       uInt outrn = 0; 		   	   		// row number in output.
       uInt nInputRows = inSId.nrow();
       Int maxSId = sourceRelabel_p.nelements();  // inSidVal is Int.
+      Int maxSPWId = spwRelabel_p.nelements();
       for(uInt inrn = 0; inrn < nInputRows; ++inrn){
 	Int inSidVal = inSId(inrn);
 	Int inSPWVal = inSPW(inrn);  // -1 means the source is valid for any SPW.
 	
-	if(inSidVal > -1 && inSidVal < maxSId &&
-           sourceRelabel_p[inSidVal] > -1
-           && (inSPWVal == -1 || spwRelabel_p[inSPWVal] > -1)){
+        if(inSidVal >= maxSId)
+	  os << LogIO::WARN
+             << "Invalid SOURCE ID in SOURCE table row " << inrn << LogIO::POST;
+	if(inSPWVal >= maxSPWId)
+	  os << LogIO::WARN
+             << "Invalid SPW ID in SOURCE table row " << inrn << LogIO::POST;
+
+	if((inSidVal > -1) && (inSidVal < maxSId) &&
+           (sourceRelabel_p[inSidVal] > -1) && 
+           ((inSPWVal == -1) || (inSPWVal < maxSPWId && spwRelabel_p[inSPWVal] > -1))){
 	  // Copy inrn to outrn.
 	  TableCopy::copyRows(newSource, oldSource, outrn, inrn, 1);
 	  outSId.put(outrn, sourceRelabel_p[inSidVal]);
@@ -7463,10 +7483,12 @@ void SubMS::createSubtables(MeasurementSet& ms, Table::TableOption option)
 	  uInt nTRanges = selTimeRanges_p.ncolumn();
 
 	  uInt outRow = 0;
+          Int maxSelAntp1 = antNewIndex_p.nelements();  // Int for comparison
+                                                        // with newAntInd.
           for (uInt inRow = 0; inRow < antIds.nrow(); ++inRow){
             Int newAntInd = antIds(inRow);
 	    if(antennaSel_p)
-	      newAntInd = antNewIndex_p[newAntInd];
+	      newAntInd = newAntInd < maxSelAntp1 ? antNewIndex_p[newAntInd] : -1;
 	    Double t = time(inRow);
 	    
             if(newAntInd > -1){
@@ -7547,18 +7569,22 @@ void SubMS::setupNewPointing()
 	  TableCopy::copyRows(newWeath, oldWeath);
 	}
 	else{
-	  const ROScalarColumn<Int>& antIds  = oldWCs.antennaId();
-	  ScalarColumn<Int>& 	     outants = newWCs.antennaId();
+	  const Vector<Int>& antIds(oldWCs.antennaId().getColumn());
+	  ScalarColumn<Int>& outants = newWCs.antennaId();
 
 	  uInt selRow = 0;
-	  for(uInt k = 0; k < antIds.nrow(); ++k){	    
-            if(antIds(k) > -1){         // Weather station is on antenna?
-              Int newAntInd = antNewIndex_p[antIds(k)]; // remap ant num
+          Int maxSelAntp1 = antNewIndex_p.nelements();
+
+	  for(uInt k = 0; k < antIds.nelements(); ++k){	    
+            if(antIds[k] > -1){         // Weather station is on antenna?
+              if(antIds[k] < maxSelAntp1){
+                Int newAntInd = antNewIndex_p[antIds[k]]; // remap ant num
               
-              if(newAntInd > -1){                       // Ant selected?
-                TableCopy::copyRows(newWeath, oldWeath, selRow, k, 1);
-                outants.put(selRow, newAntInd);
-                ++selRow;
+                if(newAntInd > -1){                       // Ant selected?
+                  TableCopy::copyRows(newWeath, oldWeath, selRow, k, 1);
+                  outants.put(selRow, newAntInd);
+                  ++selRow;
+                }
               }
             }
             else{
@@ -7618,9 +7644,10 @@ Bool SubMS::copySyscal()
         // Copy selected rows.
         uInt totNSyscals = antIds.nelements();
         uInt totalSelSyscals = 0;
+        Int maxSelAntp1 = antNewIndex_p.nelements(); // Int for comparison with antIds.
         for(uInt k = 0; k < totNSyscals; ++k){
           // antenna must be selected, and spwId must be -1 (any) or selected.
-          if(antNewIndex_p[antIds[k]] > -1 &&
+          if(antIds[k] < maxSelAntp1 && antNewIndex_p[antIds[k]] > -1 &&
              (spwIds[k] < 0 || spwRelabel_p[spwIds[k]] > -1)){
             //                  outtab   intab    outrow       inrow nrows
             TableCopy::copyRows(newSysc, oldSysc, totalSelSyscals, k, 1, false);
