@@ -150,6 +150,8 @@ public:
         return This->nRow();
     }
 
+    virtual Int nRowChunk() const;
+
     virtual Vector<Int>& antenna1() {
         return antenna1OK_p ? antenna1_p : fillAnt1();
     }

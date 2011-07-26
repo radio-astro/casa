@@ -1571,6 +1571,14 @@ void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
 
 }
 
+Int
+VisBuffer::nRowChunk() const
+{
+    CheckVisIter ();
+    return visIter_p->nRowChunk ();
+}
+
+
 Int VisBuffer::numberCoh () const
 {
   CheckVisIter ();
@@ -1580,10 +1588,11 @@ Int VisBuffer::numberCoh () const
 
 
 void
-VisBuffer::checkVisIter (const char *, const char * file, int line, const char * /* extra */) const
+VisBuffer::checkVisIter (const char * func, const char * file, int line, const char * extra) const
 {
   if (visIter_p == NULL) {
-    throw AipsError ("No VisibilityIterator is attached.", file, line);
+    throw AipsError (String ("No VisibilityIterator is available to fill this field in (") +
+                     func + extra + ")", file, line);
   }
 }
 

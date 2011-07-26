@@ -46,6 +46,10 @@ public:
     virtual const ROMSColumns& msColumns() const;
     Int msId () const;
     Bool newMS() const;
+    Int nRowChunk() const{
+      return nRowChunk_p;
+    }
+
     Int numberAnt () const;
     Int numberCoh () const;
     virtual Vector<Float> parang(Double time) const;
@@ -97,6 +101,7 @@ protected:
     void setMSD (const MSDerivedValues & msd);
     void setNAntennas (Int);
     void setNCoh (Int);
+    void setNRowChunk (Int);
     void setReceptor0Angle (const Vector<Float> & receptor0Angle);
     void setRowIds (const Vector<uInt> & rowIds);
     void setSelectedNVisibilityChannels (const Vector<Int> & nVisibilityChannels);
@@ -125,6 +130,7 @@ private:
     MSDerivedValues *              msd_p; // [own]
     Int                            nAntennas_p;
     Int                            nCoh_p;
+    Int                            nRowChunk_p;
     //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
     Vector<Float>                  receptor0Angle_p;

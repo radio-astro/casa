@@ -370,6 +370,7 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     msColumns_p = NULL;
 
     nAntennas_p = other.nAntennas_p;
+    nRowChunk_p = other.nRowChunk_p;
 //    obsMFreqTypes_p = other.obsMFreqTypes_p;
     observatoryPosition_p = other.observatoryPosition_p;
     phaseCenter_p = other.phaseCenter_p;
@@ -709,6 +710,12 @@ void
 VisBufferAsync::setModelVisCube (const Vector<Float> & stokes)
 {
     VisBuffer::setModelVisCube (stokes);
+}
+
+void
+VisBufferAsync::setNRowChunk (Int nRowChunk)
+{
+    nRowChunk_p = nRowChunk;
 }
 
 
