@@ -1133,6 +1133,67 @@ class split_test_sw_and_fc(SplitChecker):
                   "antenna='ea22' spw='0:3~7' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.829'",
                   " antenna='ea17' spw='0:1~2;4~11' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.259,2010/04/08/20:04:50.917~2010/04/08/20:04:58.403,2010/04/08/20:06:01.627~2010/04/08/20:06:05.527,2010/04/08/20:06:16.444~2010/04/08/20:06:20.656,2010/04/08/20:06:36.308~2010/04/08/20:06:40.113,2010/04/08/20:06:56.059~2010/04/08/20:06:59.095,2010/04/08/20:07:16.302~2010/04/08/20:07:19.909,2010/04/08/20:07:36.027~2010/04/08/20:07:40.325,2010/04/08/20:07:56.374~2010/04/08/20:08:00.534,2010/04/08/20:08:16.436~2010/04/08/20:08:20.406,2010/04/08/20:08:35.928~2010/04/08/20:08:39.026,2010/04/08/20:08:56.301~2010/04/08/20:08:59.788,2010/04/08/20:09:16.035~2010/04/08/20:09:20.368,2010/04/08/20:09:36.382~2010/04/08/20:09:40.741,2010/04/08/20:09:56.591~2010/04/08/20:10:00.388,2010/04/08/20:10:16.083~2010/04/08/20:10:19.120,2010/04/08/20:10:36.085~2010/04/08/20:10:39.700,2010/04/08/20:10:49.701~2010/04/08/20:11:07.582,2010/04/08/20:10:49.900~2010/04/08/20:10:57.482,2010/04/08/20:10:50.401~2010/04/08/20:10:54.665'",
                   " antenna='ea22' spw='0:3~7' timerange='2010/04/08/20:04:50.614~2010/04/08/20:05:07.829,2010/04/08/20:04:51.020~2010/04/08/20:04:55.716,2010/04/08/20:06:01.661~2010/04/08/20:06:05.692,2010/04/08/20:06:16.392~2010/04/08/20:06:20.699,2010/04/08/20:06:36.403~2010/04/08/20:06:40.312,2010/04/08/20:06:55.903~2010/04/08/20:06:59.121,2010/04/08/20:07:16.181~2010/04/08/20:07:19.702,2010/04/08/20:07:35.915~2010/04/08/20:07:40.438,2010/04/08/20:07:56.297~2010/04/08/20:08:00.638,2010/04/08/20:08:16.445~2010/04/08/20:08:20.458,2010/04/08/20:08:36.006~2010/04/08/20:08:39.129,2010/04/08/20:08:56.129~2010/04/08/20:08:59.736,2010/04/08/20:09:16.044~2010/04/08/20:09:20.549,2010/04/08/20:09:36.374~2010/04/08/20:09:40.793,2010/04/08/20:09:56.479~2010/04/08/20:10:00.579,2010/04/08/20:10:15.781~2010/04/08/20:10:19.085,2010/04/08/20:10:36.093~2010/04/08/20:10:39.597,2010/04/08/20:10:49.805~2010/04/08/20:11:06.294,2010/04/08/20:10:49.995~2010/04/08/20:10:54.000,2010/04/08/20:10:50.298~2010/04/08/20:10:55.417'"])
+
+class split_test_optswc(SplitChecker):
+    """
+    Check propagation of SPECTRAL_WINDOW's optional columns
+    """
+    need_to_initialize = True
+    inpms = datapath + '/unittest/split/optswc.ms'
+    records = {}
+    expcols = set(['MEAS_FREQ_REF', 'CHAN_FREQ',       'REF_FREQUENCY',
+                   'CHAN_WIDTH',    'EFFECTIVE_BW',    'RESOLUTION',
+                   'FLAG_ROW',      'FREQ_GROUP',      'FREQ_GROUP_NAME',
+                   'IF_CONV_CHAIN', 'NAME',            'NET_SIDEBAND',
+                   'NUM_CHAN',      'TOTAL_BANDWIDTH', 'BBC_NO',
+                   'ASSOC_SPW_ID',  'ASSOC_NATURE'])
+
+    # records uses these as keys, so they MUST be tuples, not lists.
+    # Each tuple is really (spw, width), but it's called corrsels for
+    # compatibility with SplitChecker.
+    corrsels = (('1:12~115', '1'), ('', '3'))
+
+    def do_split(self, spwwidth):
+        outms = 'optswc_' + spwwidth[1] + '.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nChecking SPECTRAL_WINDOW's opt cols with width " + spwwidth[1] + '.'
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
+                             timebin='0s', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+            tb.open(outms + '/SPECTRAL_WINDOW')
+            record['colnames'] = set(tb.colnames())
+            record['bbc_no']   = tb.getcell('BBC_NO', 0)
+            tb.close()
+            shutil.rmtree(outms, ignore_errors=True)
+        except Exception, e:
+            print "Error selecting spws 1, 3, and 5 from", self.inpms
+            raise e
+        self.__class__.records[spwwidth] = record
+        return splitran
+
+    def test_rightcols_noavg(self):
+        """List of SW cols after selection, but no averaging."""
+        check_eq(self.records[('1:12~115', '1')]['colnames'],
+                 self.expcols)
+
+    def test_rightcols_wavg(self):
+        """List of SW cols after averaging, but no selection."""
+        check_eq(self.records[('', '3')]['colnames'],
+                 self.expcols)
+        
+    def test_bbcno_noavg(self):
+        """Can we get BBC1?"""
+        check_eq(self.records[('1:12~115', '1')]['bbc_no'], 1)
+
+    def test_bbcno_wavg(self):
+        """Can we get any BBC if we average?"""
+        check_eq(self.records[('', '3')]['bbc_no'], 0)
+
         
 class split_test_tav_then_cvel(SplitChecker):
     need_to_initialize = True
@@ -1277,7 +1338,7 @@ class split_test_tav_then_cvel(SplitChecker):
 
 def suite():
     return [split_test_tav, split_test_cav, split_test_cav5, split_test_cst,
-            split_test_state,
+            split_test_state, split_test_optswc,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
             split_test_sw_and_fc, split_test_cavcd, split_test_almapol]
