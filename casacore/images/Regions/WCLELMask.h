@@ -164,7 +164,8 @@ public:
 
   // Return region type.  Returns the class name 
   virtual String type() const;
- 
+
+  const ImageExpr<Bool> *const getImageExpr() const {return itsImageExpr;}
 
 private:
   // Process the command.

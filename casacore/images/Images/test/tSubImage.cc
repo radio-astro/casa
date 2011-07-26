@@ -27,12 +27,14 @@
 
 #include <images/Images/SubImage.h>
 #include <images/Images/PagedImage.h>
+#include <images/Images/ImageAnalysis.h>
 #include <images/Regions/ImageRegion.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <lattices/Lattices/LatticeIterator.h>
 #include <lattices/Lattices/LatticeStepper.h>
 #include <lattices/Lattices/LCBox.h>
+#include <lattices/Lattices/LCLELMask.h>
 #include <lattices/Lattices/LCPixelSet.h>
 #include <lattices/Lattices/LCPagedMask.h>
 #include <casa/Arrays/AxesSpecifier.h>
@@ -291,6 +293,37 @@ void testAxes()
 			     msubsub));
 }
 
+void testExtend() {
+    CoordinateSystem cSys = CoordinateUtil::defaultCoords4D();
+    PagedImage<Float> pa(IPosition(4,10,11,4, 13), cSys, "tSubImage_tmp.pa");
+    CoordinateSystem maskCsys = CoordinateUtil::defaultCoords3D();
+    PagedImage<Float> maskImage(IPosition(3, 10, 11, 1), maskCsys, "mask_tmp.pa");
+    maskImage.flush();
+    Array<Float> arr(pa.shape());
+    indgen(arr);
+    pa.put (arr);
+    Array<Float> maskarr(maskImage.shape());
+    indgen(maskarr);
+    maskImage.put (maskarr);
+    Record empty;
+    String maskExpr = "mask_tmp.pa > 10";
+    SubImage<Float> myim2 = SubImage<Float>::createSubImage(
+    	pa, empty, maskExpr, new LogIO(), False,
+    	AxesSpecifier(), True
+    );
+    Array<Bool> got = myim2.getMask();
+    LatticeExprNode x(ArrayLattice<Float>(maskImage.get()) > 10);
+    LatticeExpr<Bool> kk(x);
+    LCLELMask lel(kk);
+    ExtendLattice<Bool> z(lel, pa.shape(), IPosition(1, 2), IPosition(1, 3));
+    AlwaysAssert(got.shape().isEqual(z.shape()), AipsError);
+    for (uInt i=0; i<z.shape().product(); i++) {
+    	AlwaysAssert(z.get().data()[i] == got.data()[i], AipsError);
+    }
+}
+
+
+
 
 int main ()
 {
@@ -324,6 +357,8 @@ int main ()
     testRest();
     // Test the axes removal..
     testAxes();
+    // test extending mask
+    testExtend();
   } catch (AipsError x) {
     cerr << "Caught exception: " << x.getMesg() << endl;
     cout << "FAIL" << endl;

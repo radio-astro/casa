@@ -248,12 +248,16 @@ public:
   // <src>writableIfPossible</src> make the subimage writable. If input image is not writable, this
   // will always be False.
   // <src>axesSpecifier</src> Specifier for output axes (duh).
+  // <src>extendMask</src> If the mask has one
+  // or more of degenerate axes whereas the corresponding axes of <src>inImage</src> are
+  // not, extend the mask to match the shape of the input image.
 
   static SubImage<T> createSubImage(
 	  ImageRegion*& outRegion, ImageRegion*& outMask,
       ImageInterface<T>& inImage, const Record& region,
       const String& mask, LogIO *const &os, Bool writableIfPossible,
-      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
+      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),
+      const Bool extendMask=False
   );
 
   // variant on previous methods where caller doesn't have to worry
@@ -261,7 +265,8 @@ public:
   static SubImage<T> createSubImage(
       ImageInterface<T>& inImage, const Record& region,
       const String& mask, LogIO *const &os, Bool writableIfPossible,
-      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier()
+      const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),
+      const Bool extendMask=False
   );
 
 private:

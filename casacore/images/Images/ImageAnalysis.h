@@ -410,7 +410,7 @@ class ImageAnalysis
                                      const String& mask, 
                                      const Bool dropdeg = False, 
                                      const Bool overwrite = False, 
-                                     const Bool list = True);
+                                     const Bool list = True, const Bool extendMask=False);
 
     Vector<String> summary(Record& header, const String& doppler = "RADIO", 
                             const Bool list = True, 
