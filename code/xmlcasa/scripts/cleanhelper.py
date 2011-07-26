@@ -113,7 +113,13 @@ class cleanhelper:
               # empty string = select all (='*', for msselectindex)
               inspw='*'
             mssel=ms.msseltoindex(vis=visname,spw=inspw)
-            tb.open(visname+'/SPECTRAL_WINDOW')
+            tb.open(visname)
+            spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+            if(len(spectable) ==2):
+                spectable=spectable[1]
+            else:
+                spectable=visname+"/SPECTRAL_WINDOW"
+            tb.open(spectable)
             chanfreqs=tb.getvarcol('CHAN_FREQ')
             kys = chanfreqs.keys()
             selspws=mssel['spw']
@@ -1722,7 +1728,13 @@ class cleanhelper:
         else:
             spw0=spwinds[0]
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]])
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
@@ -1818,7 +1830,13 @@ class cleanhelper:
         """
         #pdb.set_trace()
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]])
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
@@ -2185,7 +2203,13 @@ class cleanhelper:
         ###############
         debug=False
         ###############
-        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]])
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
         spwframe=tb.getcol('MEAS_FREQ_REF');
@@ -2512,8 +2536,13 @@ class cleanhelper:
                 except:
                     wset[i][j]=-1
         #print wset
-    
-        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]])
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         nr=tb.nrows()
         for i in range(len(wset)):
             if wset[i][0]==-1:
@@ -2694,7 +2723,13 @@ class cleanhelper:
         (part copied from setChannelization)
         """
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        tb.open(self.vis[self.sortedvisindx[0]]+'/SPECTRAL_WINDOW')
+        tb.open(self.vis[self.sortedvisindx[0]])
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
 
