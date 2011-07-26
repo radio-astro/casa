@@ -405,7 +405,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 	vector<uInt> chanEndPts = setSpectralRanges(
 		chans, nSelectedChannels, nTotalChannels
 	);
-	Int polAxisNumber = itsCSys->polarizationAxisNumber();
+    Int polAxisNumber = itsCSys->polarizationAxisNumber();
 	uInt nTotalPolarizations = polAxisNumber >= 0 ? imShape[polAxisNumber] : 0;
 	String firstStokes = polAxisNumber >= 0 ? itsCSys->stokesAtPixel(0) : "";
 	vector<uInt> polEndPts = _setPolarizationRanges(
@@ -700,7 +700,7 @@ String CasacRegionManager::_stokesFromRecord(
 vector<uInt> CasacRegionManager::setSpectralRanges(
 	String specification, uInt& nSelectedChannels, const uInt nChannels
 ) const {
-	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
+	LogOrigin origin("CasacRegionManager", __FUNCTION__);
 	*itsLog << origin;
 
 	vector<uInt> ranges(0);
@@ -721,7 +721,6 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 
 	// First split on commas
 	Vector<String> parts = stringToVector(specification, Regex("[,;]"));
-	ranges.resize(2*parts.size());
 	Regex regexuInt("^[0-9]+$");
 	Regex regexRange("^[0-9]+[ \n\t\r\v\f]*~[ \n\t\r\v\f]*[0-9]+$");
 	Regex regexLT("^<.*$");
