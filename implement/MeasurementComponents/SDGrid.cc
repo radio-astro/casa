@@ -121,6 +121,7 @@ SDGrid::SDGrid(MPosition &mLocation, Int icachesize, Int itilesize,
   lastIndex_p=0;
 }
 
+
 //---------------------------------------------------------------------- 
 SDGrid& SDGrid::operator=(const SDGrid& other)
 {
@@ -148,9 +149,13 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
   return *this;
 };
 
+String SDGrid::name(){
+    return String("SDGrid");
+}
+
 //----------------------------------------------------------------------
 // Odds are that it changed.....
-Bool SDGrid::changed(const VisBuffer& vb) {
+Bool SDGrid::changed(const VisBuffer& /*vb*/) {
   return False;
 }
 
@@ -299,10 +304,11 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
   {
     uInt row=0;
     const ROMSPointingColumns& act_mspc = vb.msColumns().pointing();
+    Bool nullPointingTable=(act_mspc.nrow() < 1);
     // uInt pointIndex=getIndex(*mspc, vb.time()(row), vb.timeInterval()(row));
-    uInt pointIndex=getIndex(act_mspc, vb.time()(row), 
+    Int pointIndex=getIndex(act_mspc, vb.time()(row), 
 			     vb.timeInterval()(row));
-    if((pointIndex<0)||(pointIndex>=act_mspc.time().nrow())) {
+    if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
       ostringstream o;
       o << "Failed to find pointing information for time " <<
 	MVTime(vb.time()(row)/86400.0);
@@ -311,7 +317,12 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     MEpoch epoch(Quantity(vb.time()(row), "s"));
     if(!pointingToImage) {
       mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
-      worldPosMeas=directionMeas(act_mspc, pointIndex);
+      if(!nullPointingTable){
+	worldPosMeas=directionMeas(act_mspc, pointIndex);
+      }
+      else{
+	worldPosMeas=vb.direction1()(row);
+      }
       // Make a machine to convert from the worldPosMeas to the output
       // Direction Measure type for the relevant frame
       MDirection::Ref outRef(dc.directionType(), mFrame_p);
@@ -325,7 +336,12 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
       mFrame_p.resetEpoch(epoch);
       mFrame_p.resetPosition(FTMachine::mLocation_p);
     }
-    worldPosMeas=(*pointingToImage)(directionMeas(act_mspc,pointIndex));
+    if(!nullPointingTable){
+      worldPosMeas=(*pointingToImage)(directionMeas(act_mspc,pointIndex));
+    }
+    else{
+      worldPosMeas=(*pointingToImage)(vb.direction1()(row));
+    }
     delete pointingToImage;
     pointingToImage=0;
   }
@@ -841,7 +857,10 @@ void SDGrid::get(VisBuffer& vb, Int row)
   rowFlags=0;
   for (Int rownr=startRow; rownr<=endRow; rownr++) {
     if(vb.flagRow()(rownr)) rowFlags(rownr)=1;
+    //single dish yes ?
+    if(max(vb.uvw()(rownr).vector()) > 0.0) rowFlags(rownr)=1;
   }
+
 
   if(isTiled) {
     
@@ -993,7 +1012,7 @@ void SDGrid::ok() {
 // One could cure this by searching but it would be considerably
 // costlier.
 Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
-		     const Double& interval) {
+		     const Double& /*interval*/) {
   Int start=lastIndex_p;
   // Search forwards
   Int nrows=mspc.time().nrow();
@@ -1040,9 +1059,12 @@ Int SDGrid::getIndex(const ROMSPointingColumns& mspc, const Double& time,
 Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
 
   Bool dointerp;
+  Bool nullPointingTable=False;
   const ROMSPointingColumns& act_mspc=vb.msColumns().pointing();
-  uInt pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
-  if((pointIndex<0)||(pointIndex>=act_mspc.time().nrow())) {
+  nullPointingTable=(act_mspc.nrow() < 1);
+
+  Int pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+  if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
     ostringstream o;
     o << "Failed to find pointing information for time " <<
       MVTime(vb.time()(row)/86400.0) << ": Omitting this point";
@@ -1052,19 +1074,24 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   }
 
   dointerp = False;
-  if (vb.timeInterval()(row)<act_mspc.interval()(pointIndex)) {
+  
+  if (!nullPointingTable && (vb.timeInterval()(row)<act_mspc.interval()(pointIndex))) {
      dointerp=True;
   }
   MEpoch epoch(Quantity(vb.time()(row), "s"));
   if(!pointingToImage) {
-    // Set the frame 
-    MPosition nullPos;
+    // Set the frame
     mFrame_p=MeasFrame(epoch, FTMachine::mLocation_p);
-    if(dointerp) {
-       worldPosMeas=directionMeas(act_mspc, pointIndex, vb.time()(row));
+    if(!nullPointingTable){
+      if(dointerp) {
+	worldPosMeas=directionMeas(act_mspc, pointIndex, vb.time()(row));
+      }
+      else {
+	worldPosMeas=directionMeas(act_mspc, pointIndex);
+      }
     }
-    else {
-       worldPosMeas=directionMeas(act_mspc, pointIndex);
+    else{
+      worldPosMeas=vb.direction1()(row);
     }
 
     //worldPosMeas=directionMeas(act_mspc, pointIndex);
@@ -1081,17 +1108,22 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
     mFrame_p.resetEpoch(epoch);
     mFrame_p.resetPosition(FTMachine::mLocation_p);
   }
-  if(dointerp) {
-    worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex, vb.time()(row)));
-    MDirection newdir = directionMeas(act_mspc, pointIndex, vb.time()(row));
-    Vector<Double> newdirv = newdir.getAngle("rad").getValue();
-    //cerr<<"dir0="<<newdirv(0)<<endl;
+  if(!nullPointingTable){
+    if(dointerp) {
+      worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex, vb.time()(row)));
+      MDirection newdir = directionMeas(act_mspc, pointIndex, vb.time()(row));
+      Vector<Double> newdirv = newdir.getAngle("rad").getValue();
+      //cerr<<"dir0="<<newdirv(0)<<endl;
    
     //fprintf(pfile,"%.8f %.8f \n", newdirv(0), newdirv(1));
     //printf("%lf %lf \n", newdirv(0), newdirv(1));
+    }
+    else {
+      worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex));
+    }
   }
-  else {
-    worldPosMeas=(*pointingToImage)(directionMeas(act_mspc, pointIndex));
+  else{
+    worldPosMeas=(*pointingToImage)(vb.direction1()(row));
   }
   Bool result=directionCoord.toPixel(xyPos, worldPosMeas);
   
@@ -1173,11 +1205,11 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
       }
     }
     else {
-      if(index < (mspc.nrow()-1)) {
+      if(index < Int(mspc.nrow()-1)) {
         index1 = index;
         index2 = index+1;
       }
-      else if(index == (mspc.nrow()-1) || (mspc.time()(index)-mspc.time()(index+1))>2*mspc.interval()(index)) {
+      else if(index == Int(mspc.nrow()-1) || (mspc.time()(index)-mspc.time()(index+1))>2*mspc.interval()(index)) {
         index1 = index-1;
         index2 = index;
       }

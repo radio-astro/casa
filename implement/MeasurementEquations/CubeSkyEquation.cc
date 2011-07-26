@@ -249,6 +249,16 @@ void CubeSkyEquation::init(FTMachine& ft){
       iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
     }
   }
+  else if (ft.name() == "SDGrid") {
+    ft_=new SDGrid(static_cast<SDGrid &>(ft));
+    ift_=new SDGrid(static_cast<SDGrid &>(ft));
+    ftm_p[0]=ft_;
+    iftm_p[0]=ift_;
+    for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new SDGrid(static_cast<SDGrid &>(*ft_));
+      iftm_p[k]=new SDGrid(static_cast<SDGrid &>(*ift_));
+    }
+  }
   else {
     ft_=new GridFT(static_cast<GridFT &>(ft));
     ift_=new GridFT(static_cast<GridFT &>(ft));
