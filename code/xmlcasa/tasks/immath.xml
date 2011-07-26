@@ -77,11 +77,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value type="string"/>
         </param>
 
-   	<param type="string" name="mask">
+        <param type="string" name="mask">
         	<description>Mask to be applied to the images</description>
         	<value></value>
     	</param>
-
     	<param type="string" name="region">
         	<description>File path which contains an Image Region</description>
         	<value></value>
@@ -95,8 +94,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	<param type="string" name="chans" >
 		<description>Select the channel(spectral) range</description>
     		<value></value>
-		<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
-		<example>1.4km/s             # above the given velocity</example>
         	<example>!1~5                # Select all but the ange of channel numbers</example>
     	</param >
 
@@ -106,7 +103,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <example>stokes='IQ'</example>
 	    <example>stokes='RR,LL'</example>
     	</param>
-
+        <param type="bool" direction="in" name="stretch" subparam="true">
+            <description>Stretch the mask if necessary and possible? </description>
+             <value>False</value>
+        </param>
 	<constraints>
         <when param="mode">
             <equals value="evalexpr">
@@ -122,6 +122,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 </default>
             </equals>
 		    <equals value="spix"/>
+        </when>
+        <when param="mask">
+            <notequals type="string" value="">
+                <default param="stretch"><value type="bool">False</value></default>
+            </notequals>
         </when>
 	</constraints>
 </input>
@@ -145,91 +150,75 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     
 
     Keyword arguments:
-    imagename -- input image name(s)
-            Default: none;
-            Examples: mode='evalexpr'; imagename=['image1.im', 'image2.im' ]
-                       The text 'IM0' is replaced by 'image1.im' in the
-                       expression and 'IM1' is repalced with 'image2.im'
+    imagename  input image name(s)
+               Default: none;
+               Examples: mode='evalexpr'; imagename=['image1.im', 'image2.im' ]
+               The text 'IM0' is replaced by 'image1.im' in the
+               expression and 'IM1' is repalced with 'image2.im'
                mode='spix'; imagename=['image1.im','image2.im'] will calculate 
-                       an image of log(S1/S2)/log(f1/f2), where S1 and S2 are fluxes and 
-                       f1 and f2 are frequencies
+               an image of log(S1/S2)/log(f1/f2), where S1 and S2 are fluxes and 
+               f1 and f2 are frequencies
                mode='pola'; imagename='multistokes.im' (where that image contains both Q and U
-                       stokes planes) or imagename=['imageQ.im','imageU.im'] will calculate 
-                       an image of polarization angle distribution, where imageQ.im and 
-                       imageU.im are Stokes Q and U images, respectively. Calculate 0.5*arctan(U/Q).
+               stokes planes) or imagename=['imageQ.im','imageU.im'] will calculate 
+               an image of polarization angle distribution, where imageQ.im and 
+               imageU.im are Stokes Q and U images, respectively. Calculate 0.5*arctan(U/Q).
                mode='poli'; imagename=['imageQ.im','imageU.im','imageV.im'] will calculate
-                       total polarization intensity image, where imageQ.im, imageU.im, imageV.im
-                       are Stokes Q, U, and V images, respectively. Alternatively, with
-                       imagename = ['imageQ.im','imageU.im'] the linear polarization intensity
-                       image will be calculated. In the case where imagename is a single multi-stokes
-                       image, the total polarization image will be calculated if all of the Q, U, and
-                       V stokes planes are present, and the linear polarization intensity image will
-                       be calculated if the Q and U (but not V) planes are present. 
+               total polarization intensity image, where imageQ.im, imageU.im, imageV.im
+               are Stokes Q, U, and V images, respectively. Alternatively, with
+               imagename = ['imageQ.im','imageU.im'] the linear polarization intensity
+               image will be calculated. In the case where imagename is a single multi-stokes
+               image, the total polarization image will be calculated if all of the Q, U, and
+               V stokes planes are present, and the linear polarization intensity image will
+               be calculated if the Q and U (but not V) planes are present. 
 
-    mode -- mode for mathematical operation
-            Default: evalexpr
-            Options: 'evalexpr' : evalulate a mathematical expression defined in 'expr' 
-                     'spix' : spectalindex image 
-                     'pola' : polarization position angle image 
-                     'poli' : polarization intesity image 
-      &gt;&gt;&gt; mode expandable parameters
-            sigma - (for mode='poli') standard deviation of noise of Stokes images with unit such as
-                    Jy/beam to correct for bias 
-              Default: '0.0Jy/beam' (= no debiasing)
-            polithresh - (for mode='pola') Quantity (eg '30uJy/beam') describing the linear (not total;
-                    the stokes V contribution is not included) polarization threshold. A mask ('mask0')
-                    is written to the output image and is False for all corresponding linear polarization
-                    values below this threshold. This parameter overrides the mask input parameter
-                    (below). Default ('') means use the value given in mask, or no masking if that
-                    value is empty as well.
-
-            expr -- (for mode='evalexpr') A mathematical expression with images.
-	      Image file names are specified in the imagenames paramter, and
-                   the variables IM0, IM1, ... are used to represent these files
-                   in the expression. Explicit notations of file names in the 
-                   expression are also supported, in which cases the file names must
-                   be enclosed in double quotes (") and imagename is ignored.
-	      Default: none 
-	      Examples:
-                 Make an image that is image1.im - image2.im
-                   expr=' (IM0 - IM1 )'
-                   or with an explicit notation, 
-                   expr='("image1.im" - "image2.im")'
-                 Clip an image below a value (0.5 in this case)
-                   expr = ' iif( IM0 >=0.5, IM0, 0.0) '
-                         Note: iif (a, b, c)   a is the boolian expression
-                                               b is the value if true
-                                               c is the value if false
-                 Take the rms value of two images
-                   expr = ' sqrt(IM0 * IM0 + IM1 * IM1) '
-                         Note: No exponentiaion available?
-                 Build an image pixel by pixel from the minimum of (image2.im, 2*image1.im)
-                   expr='min(IM1,2*max(IM0))'
-    outfile -- The file where the results of the image calculations 
-		are stored.  Overwriting an existing outfile is not permitted.
-	    Default: immath_results.im;  Example: outfile='results.im'
-    mask -- Name of mask applied to each image in the calculation
-            Default '' means no mask;  Example: mask='orion.mask'. This parameter is not used
-            in the case of mode='pola' and polithresh not empty.  
-    region -- File path to an ImageRegion file.
-            An ImageRegion file can be created with the CASA
-            viewer's region manager.  Typically ImageRegion files
-            will have the suffix '.rgn'.  If a region file is given
-            then the box, chans, and stokes selections whill be 
-            ignored.
-            Default: none
-            Example: region='myimage.im.rgn'
-    box --  A box region on the directional plane
-	    Only pixel values acceptable at this time.
-	    Default: none (whole 2-D plane);  Example: box='10,10,50,50'
-    chans -- channel numbers, velocity, and/or frequency
-	    Only channel numbers acceptable at this time.
-	    Default: none (all);  Example: chans='3~20'   
-    stokes -- Stokes parameters to image, may or may not be separated
-            by commas but best if you use commas.
-            Default: none (all); Example: stokes='IQUV';
-            Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
-            Not used in for cases of mode='poli' or mode='pola'
+    mode       mode for mathematical operation
+               Default: evalexpr
+               Options: 'evalexpr' : evalulate a mathematical expression defined in 'expr' 
+                        'spix' : spectalindex image 
+                        'pola' : polarization position angle image 
+                        'poli' : polarization intesity image 
+              &gt;&gt;&gt; mode expandable parameters
+              sigma       (for mode='poli') standard deviation of noise of Stokes images with unit such as
+                          Jy/beam to correct for bias 
+                          Default: '0.0Jy/beam' (= no debiasing)
+              polithresh  (for mode='pola') Quantity (eg '30uJy/beam') describing the linear (not total;
+                          the stokes V contribution is not included) polarization threshold. A mask ('mask0')
+                          is written to the output image and is False for all corresponding linear polarization
+                          values below this threshold. This parameter overrides the mask input parameter
+                          (below). Default ('') means use the value given in mask, or no masking if that
+                          value is empty as well.
+              expr        (for mode='evalexpr') A LEL expression with images.
+	                      Image file names are specified in the imagenames paramter, and
+                          the variables IM0, IM1, ... are used to represent these files
+                          in the expression. Explicit notations of file names in the 
+                          expression are also supported, in which cases the file names must
+                          be enclosed in double quotes (") and imagename is ignored.
+	                      Examples:
+                          Make an image that is image1.im - image2.im
+                          expr=' (IM0 - IM1 )'
+                          or with an explicit notation, 
+                          expr='("image1.im" - "image2.im")'
+                          Clip an image below a value (0.5 in this case)
+                          expr = ' iif( IM0 >=0.5, IM0, 0.0) '
+                          Note: iif (a, b, c)   a is the boolean expression
+                                                b is the value if true
+                                                c is the value if false
+                          Take the rms value of two images
+                          expr = ' sqrt(IM0 * IM0 + IM1 * IM1) '
+                          Note: No exponentiaion available?
+                          Build an image pixel by pixel from the minimum of (image2.im, 2*image1.im)
+                          expr='min(IM1,2*max(IM0))'
+    outfile    The output image. Overwriting an existing outfile is not permitted.
+	           Default: immath_results.im;  Example: outfile='results.im'
+    mask       Mask to apply. Also see polithresh.
+    stretch    Stretch the input mask if necessary and possible. See below.
+    region     Name of region file, region text description, or region dictionary.
+    box        A rectangular region on the directional plane expressed in pixels.
+               Example: box='10,10,50,50'
+    chans      Channel ranges to use, expressed in pixels. Example: chans='3~20'   
+    stokes     Stokes parameters. Example: stokes='IQUV';
+               Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+               Not used in for cases of mode='poli' or mode='pola'
 
     Available functions in the <i>expr</i> and <i>mask</i> paramters:
     pi(), e(), sin(), sinh(), asinh(), cos(), cosh(), tan(), tanh(),
@@ -237,6 +226,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     real(), imag(), abs(), arg(), phase(), aplitude(), min(), max()
     round(), isgn(), floor(), ceil(), rebin(), spectralindex(), pa(), 
     iif(), indexin(), replace(), ...
+
+    If the mask has fewer dimensions than the image and if the shape
+    of the dimensions the mask and image have in common are the same,
+    the mask will automatically have the missing dimensions added so
+    it conforms to the image.
+
+    If stretch is true and if the number of mask dimensions is less than
+    or equal to the number of image dimensions and     some axes in the
+    mask are degenerate while the corresponding axes in the image are not,
+    the mask will be stetched in the degenerate dimensions. For example,
+    if the input image has shape [100, 200, 10] and the input
+    mask has shape [100, 200, 1] and stretch is true, the mask will be
+    stretched along the third dimension to shape [100, 200, 10]. However if
+    the mask is shape [100, 200, 2], stretching is not possible and an
+    error will result.
 
     For a full description of the allowed syntax see the 
     Lattice Expression Language (LEL) documentation on the at:

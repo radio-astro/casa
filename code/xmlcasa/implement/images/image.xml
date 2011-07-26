@@ -8498,6 +8498,10 @@ ia.twopointcorrelation()   # Output image is virtual
      <description>List informative messages to the logger</description>
      <value>true</value>
      </param>
+     <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? </description>
+     <value>false</value>
+     </param>
 </input>
 <returns type="casaimage"/>
 
@@ -8524,6 +8528,23 @@ The output mask is the combination (logical OR) of the default input
 will not be copied.  Use function <link
 anchor="images:image.maskhandler.function">maskhandler</link> if you
 need to copy other masks too.
+
+If the mask has fewer dimensions than the image and if the shape
+of the dimensions the mask and image have in common are the same,
+the mask will automatically have the missing dimensions added so
+it conforms to the image.
+
+If stretch is true and if the number of mask dimensions is less than
+or equal to the number of image dimensions and     some axes in the
+mask are degenerate while the corresponding axes in the image are not,
+the mask will be stetched in the degenerate dimensions. For example,
+if the input image has shape [100, 200, 10] and the input
+mask has shape [100, 200, 1] and stretch is true, the mask will be
+stretched along the third dimension to shape [100, 200, 10]. However if
+the mask is shape [100, 200, 2], stretching is not possible and an
+error will result.
+
+
 
 </description>
 

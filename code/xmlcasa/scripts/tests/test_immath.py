@@ -1355,6 +1355,48 @@ class immath_test3(unittest.TestCase):
         except:
             self.assertFalse(os.path.exists(outfile))
 
+    def test_CAS2943(self):
+        """Test the stretch parameter"""
+        myia = iatool.create()
+        myia.fromshape("myim.im", [10, 20, 4, 40])
+        myia.done()
+        myia.fromshape("mask1.im", [10, 20, 4, 40])
+        myia.done()
+        myia.fromshape("mask2.im", [10, 20, 1, 1])
+        myia.done()
+        myia.fromshape("mask3.im", [10, 20, 4, 2])
+        myia.done()
+        outfile = "out1.im"
+        immath(
+            imagename="myim.im", outfile=outfile, mode="evalexpr",
+            expr="1*IM0", mask="mask1.im > 5", stretch=False
+        )
+        myia.open(outfile)
+        self.assertTrue(myia.shape() == [10, 20, 4, 40])
+        myia.done()
+        outfile = "out2.im"
+        self.assertFalse(
+            immath(
+                imagename="myim.im", outfile=outfile, mode="evalexpr",
+                expr="1*IM0", mask="mask2.im > 5", stretch=False
+            )
+        )
+        outfile = "out3.im"
+        immath(
+            imagename="myim.im", outfile=outfile, mode="evalexpr",
+            expr="1*IM0", mask="mask2.im > 5", stretch=True
+        )
+        myia.open(outfile)
+        self.assertTrue(myia.shape() == [10, 20, 4, 40])
+        myia.done()
+        outfile = "out4.im"
+        self.assertFalse(
+            immath(
+                imagename="myim.im", outfile=outfile, mode="evalexpr",
+                expr="1*IM0", mask="mask3.im > 5", stretch=False
+            )
+        )
+
 def suite():
     return [immath_test1, immath_test2, immath_test3]
     
