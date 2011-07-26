@@ -4584,7 +4584,7 @@ Bool ImageAnalysis::twopointcorrelation(const String& outFile,
 ImageInterface<Float> *
 ImageAnalysis::subimage(const String& outfile, Record& Region,
 		const String& mask, const Bool dropDegenerateAxes,
-		const Bool overwrite, const Bool list) {
+		const Bool overwrite, const Bool list, const Bool extendMask) {
 
 	*itsLog << LogOrigin("ImageAnalysis", "subimage");
 	// Copy a portion of the image
@@ -4608,7 +4608,7 @@ ImageAnalysis::subimage(const String& outfile, Record& Region,
 			SubImage<Float>::createSubImage(
 				*pImage_p,
 				*(ImageRegion::tweakedRegionRecord(&Region)),
-				mask, itsLog, True, axesSpecifier
+				mask, itsLog, True, axesSpecifier, extendMask
 			)
 		)
 	);

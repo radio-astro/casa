@@ -26,14 +26,22 @@
 //# $Id: SubImage.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
 
 #include <images/Images/SubImage.h>
+
+#include <images/Images/ImageExpr.h>
+#include <images/Images/ExtendImage.h>
+#include <images/Regions/WCBox.h>
+#include <images/Regions/WCLELMask.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <lattices/Lattices/LattRegionHolder.h>
+#include <lattices/Lattices/LCMask.h>
 #include <lattices/Lattices/SubLattice.h>
 #include <lattices/Lattices/LatticeRegion.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
+
+#include <memory>
 
 // debug only
 #include <images/Images/PagedImage.h>
@@ -82,11 +90,11 @@ SubImage<T>::SubImage (const ImageInterface<T>& image,
 							   image.shape()),
 				    axesSpec);
   const Slicer& slicer = itsSubLatPtr->getRegionPtr()->slicer();
-//
+
   Vector<Float> blc, inc;
   convertIPosition(blc, slicer.start());
   convertIPosition(inc, slicer.stride());
-//
+
   setCoords (image.coordinates().subImage (blc, inc, slicer.length().asVector()));
   setMembers (*itsImagePtr);
 }
@@ -102,7 +110,6 @@ SubImage<T>::SubImage (ImageInterface<T>& image,
 				 image.coordinates(),
 				 image.shape()
     );
-
         itsSubLatPtr = new SubLattice<T> (
 		  image,
           latReg,
@@ -237,62 +244,87 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 	ImageRegion*& outRegion, ImageRegion*& outMask,
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
-	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
+	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
+	const Bool extendMask
 ) {
 	// The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
+	std::auto_ptr<ImageRegion> outMaskMgr(0);
 	try {
-		outMask = ImageRegion::fromLatticeExpression(mask);
+		outMaskMgr.reset(ImageRegion::fromLatticeExpression(mask));
 	} catch (AipsError x) {
-		LogIO log;
-		log << LogOrigin("SubImage", __FUNCTION__);
-		log << "Input mask specification is incorrect" << LogIO::EXCEPTION;
+		*os << LogOrigin("SubImage", __FUNCTION__);
+		*os << "Input mask specification is incorrect: " << x.getMesg() << LogIO::EXCEPTION;
+	}
+	if (
+		extendMask
+		&& outMaskMgr->asWCRegionPtr()->type() == "WCLELMask"
+		&& ! dynamic_cast<const WCLELMask *>(
+			outMaskMgr->asWCRegionPtr()
+		)->getImageExpr()->shape().isEqual(inImage.shape())
+	) {
+		try {
+			const WCRegion *wcptr = outMaskMgr->asWCRegionPtr();
+			const WCLELMask *mymask = dynamic_cast<const WCLELMask *>(wcptr);
+			const ImageExpr<Bool> *const imEx = mymask->getImageExpr();
+			ExtendImage<Bool> exIm(*imEx, inImage.shape(), inImage.coordinates());
+			outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
+		}
+		catch (AipsError x) {
+			*os << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
+		}
 	}
 	SubImage<T> subImage;
 	// We can get away with no region processing if the region record
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
-		subImage = (outMask == 0)
+		subImage = (outMaskMgr.get() == 0)
 			? SubImage<T>(inImage, True)
 			: SubImage<T>(
-				inImage, *outMask,
+				inImage, *outMaskMgr,
 				writableIfPossible
 			);
 	}
 	else {
-		outRegion = ImageRegion::fromRecord(
-			os, inImage.coordinates(),
-			inImage.shape(), region
+		std::auto_ptr<ImageRegion> outRegionMgr(
+			ImageRegion::fromRecord(
+				os, inImage.coordinates(),
+				inImage.shape(), region
+			)
 		);
-		if (outMask == 0) {
+		if (outMaskMgr.get() == 0) {
             subImage = SubImage<T>(
-				inImage, *outRegion,
+				inImage, *outRegionMgr,
 				writableIfPossible, axesSpecifier
 			);
 		}
 		else {
-			SubImage<T> subImage0(
-				inImage, *outMask, writableIfPossible
+            SubImage<T> subImage0(
+				inImage, *outMaskMgr, writableIfPossible
 			);
 			subImage = SubImage<T>(
-				subImage0, *outRegion,
+				subImage0, *outRegionMgr,
 				writableIfPossible, axesSpecifier
 			);
 		}
+		outRegion = outRegionMgr.release();
 	}
+	outMask = outMaskMgr.release();
 	return subImage;
 }
 
 template<class T> SubImage<T> SubImage<T>::createSubImage(
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
-	Bool writableIfPossible, const AxesSpecifier& axesSpecifier
+	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
+	const Bool extendMask
 ) {
 	ImageRegion *pRegion = 0;
 	ImageRegion *pMask = 0;
 	return createSubImage(
 		pRegion, pMask, inImage, region,
-		mask, os, writableIfPossible, axesSpecifier
+		mask, os, writableIfPossible, axesSpecifier,
+		extendMask
 	);
 	delete pRegion;
 	delete pMask;
