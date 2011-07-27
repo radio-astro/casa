@@ -165,7 +165,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
 //
-
+   //cout << "constructor 6" << endl;
    makeWCS(wcs_p, String("FREQ"), refPix, refVal.getValue(hz), inc.getValue(hz), 
            1.0, restfreqs_p(0));
    to_hz_p = 1.0;
@@ -200,7 +200,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, restFrequency);
 //
-
+   //cout << "constructor 5" << endl;
    Vector<Double> channels(freqs.nelements());
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, freqs, "Hz", "Frequency");
@@ -248,6 +248,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types type,
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, restFrequency.getValue(hz));
 //
+   //cout << "constructor 4" << endl;
 
    Vector<Double> freqs2 = freqs.getValue(hz);
    Vector<Double> channels(freqs2.nelements());
@@ -309,7 +310,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    	nativeType_p = SpectralCoordinate::VRAD;
 
 // make velocity machine
-
+   //cout << "constructor 3" << endl;
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
                         type_p, restfreqs_p(restfreqIdx_p));
 //
@@ -366,7 +367,7 @@ SpectralCoordinate::SpectralCoordinate(MFrequency::Types freqType,
    Vector<Double> channels(frequencies.nelements());
    indgen(channels);
    pTabular_p = new TabularCoordinate(channels, frequencies, "Hz", "Frequency");
-
+   //cout << "constructor 2" << endl;
 // Now remake Velocity Machine to be consistent with state
 
    delete pVelocityMachine_p;
@@ -424,15 +425,17 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, wcs.restfrq);
    if (restfreqs_p(0) > 0.0)
-   	if (wcs.velref && wcs.velref < 256){
-   		nativeType_p = SpectralCoordinate::VOPT;}
-   	else if (wcs.velref && wcs.velref > 256)
-      	nativeType_p = SpectralCoordinate::VRAD;
-   	else
-      	nativeType_p = SpectralCoordinate::VRAD;
+   	// the next lines seem to create problems
+   	// with 32bit system
+   	//if (wcs.velref && wcs.velref < 256){
+   	//	nativeType_p = SpectralCoordinate::VOPT;}
+   	//else if (wcs.velref && wcs.velref > 256)
+      //	nativeType_p = SpectralCoordinate::VRAD;
+   	//else
+      nativeType_p = SpectralCoordinate::VRAD;
    else
    	nativeType_p = SpectralCoordinate::FREQ;
-
+//cout << "constructor 1" << endl;
 // Velocity machine
 
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
