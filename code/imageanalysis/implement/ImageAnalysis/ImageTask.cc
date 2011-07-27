@@ -121,5 +121,19 @@ void ImageTask::_removeExistingOutfileIfNecessary() const {
 	}
 }
 
+String ImageTask::_summaryHeader() const {
+	String region = _box.empty() ? _region : "";
+	ostringstream os;
+	os << "Input parameters ---" << endl;
+	os << "       --- imagename:           " << _image->name() << endl;
+	os << "       --- region:              " << region << endl;
+	os << "       --- box:                 " << _box << endl;
+	os << "       --- channels:            " << _chan << endl;
+	os << "       --- stokes:              " << _stokesString << endl;
+	os << "       --- mask:                " << _mask << endl;
+	return os.str();
+}
+
+
 }
 

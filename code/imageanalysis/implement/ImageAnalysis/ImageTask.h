@@ -67,7 +67,6 @@ public:
 
     virtual String getClass() const = 0;
 
-
 protected:
 
     std::auto_ptr<LogIO> _log;
@@ -93,8 +92,6 @@ protected:
 
     virtual void _construct();
 
-    // inline std::auto_ptr<LogIO> _getLog() const {return _log;}
-
     inline const ImageInterface<Float> *const _getImage() const {return _image;}
 
     inline const String _getMask() const {return _mask;}
@@ -107,6 +104,7 @@ protected:
 
     void _removeExistingOutfileIfNecessary() const;
 
+    String _summaryHeader() const;
 
 private:
     const ImageInterface<Float> *const _image;

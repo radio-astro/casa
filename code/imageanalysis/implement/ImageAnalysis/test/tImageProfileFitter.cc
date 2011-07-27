@@ -88,7 +88,7 @@ void checkImage(
 
 void testException(
 	const String& test,
-    const String& imagename, const String& region,
+    const ImageInterface<Float>& image, const String& region,
     const String& box, const String& chans,
     const String& stokes, const String& mask,
     const uInt axis, const Bool multiFit,
@@ -99,7 +99,7 @@ void testException(
 	Bool exceptionThrown = true;
 	try {
 		ImageProfileFitter fitter(
-			imagename, region, box,
+			&image, region, 0, box,
 		    chans, stokes,
 		    mask, axis, multiFit,
 		    residual, model, ngauss,
@@ -125,19 +125,11 @@ int main() {
 	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
 	String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
 	delete [] parts;
-    String goodImage = datadir + "specfit_multipix_2gauss.fits";
-    String goodPolyImage = datadir + "specfit_multipix_poly_2gauss.fits";
+    FITSImage goodImage(datadir + "specfit_multipix_2gauss.fits");
+    FITSImage goodPolyImage(datadir + "specfit_multipix_poly_2gauss.fits");
 	workdir.create();
 	uInt retVal = 0;
     try {
-    	testException(
-    		"Exception if no image name given", "", "",
-    		"", "", "", "", 2, False, "", "", 1, -1
-    	);
-    	testException(
-    	    "Exception if bogus image name given", "my bad", "",
-    	    "", "", "", "", 2, False, "", "", 1, -1
-    	);
     	testException(
     	    "Exception if given axis is out of range", goodImage, "",
     	    "", "", "", "", 5, False, "", "", 1, -1
@@ -177,24 +169,12 @@ int main() {
     	{
     		writeTestString("test results of non-multi-pixel two gaussian fit");
             ImageProfileFitter *fitter;
-            ImageInterface<Float> *image;
             LogIO log;
-            ImageUtilities::openImage(image, goodImage, log);
-            for (uInt i=0; i<1; i++) {
-                if (i == 0) {
-                   fitter =  new ImageProfileFitter(
-    				    goodImage, "", "", "", "", "", 2, False,
-    				    "", "", 2, -1
-                      );
-                }
-                else { 
-                    new ImageProfileFitter(
-    				    image, "", "", "", "", "", 2, False,
-    				    "", "", 2, -1
-                     );
-                }
- 
-            }
+            fitter =  new ImageProfileFitter(
+            	&goodImage, "", 0, "", "", "", "", 2, False,
+            	"", "", 2, -1
+            );
+
     		Record results = fitter->fit();
             delete fitter;
             Vector<Bool> converged = results.asArrayBool("converged");
@@ -226,7 +206,7 @@ int main() {
     	{
     		writeTestString("test results of multi-pixel two gaussian fit");
     		ImageProfileFitter fitter(
-    				goodImage, "", "", "", "", "", 2, True,
+    				&goodImage, "", 0, "", "", "", "", 2, True,
     				"", "", 2, -1
     		);
     		Record results = fitter.fit();
@@ -272,7 +252,7 @@ int main() {
     		String ampErr = dirName + "/ampErr";
 
     		ImageProfileFitter fitter(
-    			goodImage, "", "", "", "", "", 2, True,
+    			&goodImage, "", 0, "", "", "", "", 2, True,
     			"", "", 2, -1, amp, ampErr, center, centerErr,
     			fwhm, fwhmErr
     		);
@@ -300,7 +280,7 @@ int main() {
     	{
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit");
     		ImageProfileFitter fitter(
-    				goodPolyImage, "", "", "", "", "", 2, True,
+    				&goodPolyImage, "", 0, "", "", "", "", 2, True,
     				"", "", 2, 3
     		);
     		Record results = fitter.fit();
