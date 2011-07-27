@@ -306,8 +306,10 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     const ROMSPointingColumns& act_mspc = vb.msColumns().pointing();
     Bool nullPointingTable=(act_mspc.nrow() < 1);
     // uInt pointIndex=getIndex(*mspc, vb.time()(row), vb.timeInterval()(row));
-    Int pointIndex=getIndex(act_mspc, vb.time()(row), 
-			     vb.timeInterval()(row));
+    Int pointIndex=-1;
+    if(!nullPointingTable)
+      pointIndex=getIndex(act_mspc, vb.time()(row), 
+			  vb.timeInterval()(row));
     if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
       ostringstream o;
       o << "Failed to find pointing information for time " <<
@@ -1062,8 +1064,9 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   Bool nullPointingTable=False;
   const ROMSPointingColumns& act_mspc=vb.msColumns().pointing();
   nullPointingTable=(act_mspc.nrow() < 1);
-
-  Int pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+  Int pointIndex=-1;
+  if(!nullPointingTable)
+    pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
   if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
     ostringstream o;
     o << "Failed to find pointing information for time " <<
