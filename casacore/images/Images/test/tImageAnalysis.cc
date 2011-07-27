@@ -142,6 +142,25 @@ int main() {
             AlwaysAssert(fabs(1-z_yval[6]/-0.0924785) < 1e-5, AipsError); 
             AlwaysAssert(fabs(1-z_yval[7]/-0.131597) < 1e-5, AipsError); 
         }
+        {
+        	writeTestString("CAS-2359 verification");
+        	CoordinateSystem csys = CoordinateUtil::defaultCoords3D();
+        	TempImage<Float> x(TiledShape(IPosition(3,10,10,1)), csys);
+        	Array<Float> data(IPosition(3,10,10,1));
+        	data.set(0);
+        	ImageAnalysis ia(&x);
+        	Vector<Double> xy;
+        	Vector<Float> zxaxis, zyaxis;
+        	try {
+        		// should throw exception, xy.size() != 2
+        		ia.getFreqProfile(xy, zxaxis, zyaxis);
+        		AlwaysAssert(False, AipsError);
+        	}
+        	catch (AipsError) {}
+        	xy.resize(2);
+        	xy.set(1.0);
+    		AlwaysAssert(! ia.getFreqProfile(xy, zxaxis, zyaxis),AipsError);
+        }
         cout << "ok" << endl;
 	}
     catch (AipsError x) {
