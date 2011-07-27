@@ -65,7 +65,7 @@ class ImageProfileFitter : public ImageTask {
 public:
 	// constructor appropriate for API calls.
 	// Parameters:
-	// <src>imagename</src> - the name of the input image in which to fit the models
+	// <src>image</src> - the input image in which to fit the models
 	// <src>box</src> - A 2-D rectangular box in direction space in which to use pixels for the fitting, eg box=100,120,200,230
 	// In cases where both box and region are specified, box, not region, is used.
 	// <src>region</src> - Named region to use for fitting
@@ -80,18 +80,6 @@ public:
 	// <src>residual</src> - Name of residual image to save. Blank means do not save residual image.
 	// <src>model</src> - Name of the model image to save. Blank means do not save model image.
 	// The output solution images are only written if multiFit is true.
-
-	/*
-	ImageProfileFitter(
-		const String& imagename, const String& region, const String& box,
-		const String& chans, const String& stokes, const String& mask,
-		const Int axis, const Bool multiFit, const String& residual,
-		const String& model, const uInt ngauss, const Int polyOrder,
-		const String& ampName = "", const String& ampErrName = "",
-		const String& centerName = "", const String& centerErrName = "",
-		const String& fwhmName = "", const String& fwhmErrName = ""
-	);
-*/
 
 	ImageProfileFitter(
 		const ImageInterface<Float> *const &image, const String& region,
@@ -120,7 +108,7 @@ public:
    	}
 
     inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>(1, Coordinate::DIRECTION);
+    	return vector<Coordinate::Type>(0);
     }
 
 private:
@@ -132,6 +120,8 @@ private:
 	Int _polyOrder, _fitAxis;
 	uInt _ngauss;
 	Vector<ImageFit1D<Float> > _fitters;
+    // subimage contains the region of the original image
+	// on which the fit is performed.
 	SubImage<Float> _subImage;
 	Record _results;
 
@@ -139,13 +129,6 @@ private:
 
 	// disallow default constructor
 	ImageProfileFitter();
-
-	// does the lion's share of constructing the object, ie checks validity of
-	// inputs, etc.
-
-    //void _construct(const String& imagename);
-    
-    //void _construct(const ImageInterface<Float>* image);
 
     void _getOutputStruct(
         vector<ImageInputProcessor::OutputStruct>& outputs
@@ -180,29 +163,16 @@ private:
     	const Vector<Double>& values, const String& unit
     );
 
-    // <src>subImage</src> will contain the subimage of the original image
-    // on which the fit is performed.
     // moved from ImageAnalysis
     ImageFit1D<Float> _fitProfile(
-        const Record& regionRecord, SubImage<Float>& subImage,
-        String& xUnit,
-        const uInt axis, const String& mask,
-        const Record& estimate, const uInt ngauss = 0,
-        const Int poly = -1, const String& modelName = "",
-        const String& residName = "", const Bool fit = True,
-        const String weightsImageName = ""
+        const Record& estimate, const Bool fitIt=True,
+        const String weightsImageName=""
     );
 
-    // <src>subImage</src> will contain the subimage of the original image
-    // on which the fit is performed.
     // moved from ImageAnalysis
     Vector<ImageFit1D<Float> > _fitallprofiles(
-    	const Record& region, SubImage<Float>& subImage, String& xUnit,
-    	const Int axis, const String& mask,
-        const Int ngauss, const Int poly,
-        const String& weightsImageName = "", const String& fit = "",
-        const String& resid = ""
-    ) const;
+        const String& weightsImageName = ""
+    );
 
 };
 }
