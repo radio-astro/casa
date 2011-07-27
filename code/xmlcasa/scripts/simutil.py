@@ -646,7 +646,7 @@ class simutil:
         npos=len(pointings)
         if type(time)!=type([]):
             time=[time]
-        if len(time)!=npos:
+        if len(time)==1:
             time=list(time[0] for x in range(npos))
 
         for i in range(npos):
