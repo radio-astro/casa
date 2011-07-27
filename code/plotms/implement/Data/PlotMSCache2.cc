@@ -118,6 +118,16 @@ PMSCacheVolMeter::PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveragi
 
 PMSCacheVolMeter::~PMSCacheVolMeter() {}
 
+
+void PMSCacheVolMeter::reset() {
+  nDDID_=0;
+  nPerDDID_.resize();
+  nRowsPerDDID_.resize();
+  nChanPerDDID_.resize();
+  nCorrPerDDID_.resize();
+  nAnt_=0;
+}
+
   
 void PMSCacheVolMeter::add(Int DDID,Int nRows) {
   ++nPerDDID_(DDID);
@@ -413,9 +423,11 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
     fldnames_.resize();
     antnames_=msCol.antenna().name().getColumn(); 	 
     fldnames_=msCol.field().name().getColumn(); 	 
-    vm_=PMSCacheVolMeter(ms,averaging_);
+    
+    vm_.reset(); // ensures assign will work!
+    vm_= PMSCacheVolMeter(ms,averaging_);
   } 	 
-  
+
   if (averaging_.anyAveraging()) {
     if (axes[0] == (PMS::WT) |
 	axes[1] == (PMS::WT)) {
