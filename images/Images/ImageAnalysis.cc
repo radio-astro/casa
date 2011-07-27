@@ -5781,17 +5781,21 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 				   const Int& , const Int& ,
 				   const String& xunits, const String& specFrame) {
 
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
+	if (xy.size() != 2) {
+		*itsLog << "input xy vector must have exactly two elements. It has "
+			<< xy.size() << "." << LogIO::EXCEPTION;
+	}
 	String whatXY = xytype;
-	Vector<Double> xypix(2);
-	xypix = 0.0;
+	Vector<Double> xypix(2, 0);
 	whatXY.downcase();
 	CoordinateSystem cSys = pImage_p->coordinates();
 	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
-
 	if (whatXY.contains("wor")) {
 		const DirectionCoordinate& dirCoor = cSys.directionCoordinate(which);
-		if (!dirCoor.toPixel(xypix, xy))
+		if (!dirCoor.toPixel(xypix, xy)) {
 			return False;
+		}
 	}
 	else {
 		if (xy.nelements() != 2)
@@ -5807,7 +5811,6 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	) {
 		return False;
 	}
-
 	blc[dirPixelAxis(0)] = Int(xypix(0) + 0.5); // note: pixel _center_ is at integer values
 	trc[dirPixelAxis(0)] = Int(xypix(0) + 0.5);
 	blc[dirPixelAxis(1)] = Int(xypix(1) + 0.5);
@@ -5819,7 +5822,6 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	zyaxisval.resize();
 	zyaxisval = pImage_p->getSlice(blc, trc - blc + 1, True);
 	zyaxismask = pImage_p->getMaskSlice(blc, trc - blc + 1, True);
-
 	//   if(pImage_p->units().getName().contains("Jy")){   // convert to mJy
 	//     for (uInt kk=0; kk < zyaxisval.nelements() ; ++kk){
 	//       zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
@@ -5832,7 +5834,6 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 			zyaxisval[kk] = 0.;
 		}
 	}
-
 	zxaxisval.resize(zyaxisval.nelements());
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }
