@@ -30,7 +30,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-#include <casa/Containers/HashMap.h>
 #include <casa/Logging/LogIO.h>
 #include <images/Images/ImageInterface.h>
 
@@ -116,9 +115,9 @@ public:
 
 	static ImageCollapser::AggregateType aggregateType(String& aggString);
 
-	static const HashMap<uInt, Float (*)(const Array<Float>&)>* funcMap();
-	static const HashMap<uInt, String>* funcNameMap();
-	static const HashMap<uInt, String>* minMatchMap();
+	static const map<uInt, Float (*)(const Array<Float>&)>* funcMap();
+	static const map<uInt, String>* funcNameMap();
+	static const map<uInt, String>* minMatchMap();
 
 	inline String getClass() const { return _class; }
 
@@ -128,9 +127,8 @@ private:
 	AggregateType _aggType;
 	static const String _class;
 
-	static HashMap<uInt, Float (*)(const Array<Float>&)> *_funcMap;
-	static HashMap<uInt, String> *_funcNameMap;
-	static HashMap<uInt, String> *_minMatchMap;
+	static map<uInt, Float (*)(const Array<Float>&)> *_funcMap;
+	static map<uInt, String> *_funcNameMap, *_minMatchMap;
 
 	// disallow default constructor
 	ImageCollapser();

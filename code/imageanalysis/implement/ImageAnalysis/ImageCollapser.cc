@@ -28,8 +28,6 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/Containers/HashMap.h>
-#include <casa/Containers/HashMapIter.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
@@ -41,9 +39,9 @@
 
 namespace casa {
 
-HashMap<uInt, String> *ImageCollapser::_funcNameMap = 0;
-HashMap<uInt, String> *ImageCollapser::_minMatchMap = 0;
-HashMap<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
+map<uInt, String> *ImageCollapser::_funcNameMap = 0;
+map<uInt, String> *ImageCollapser::_minMatchMap = 0;
+map<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
 
 const String ImageCollapser::_class = "ImageCollapser";
 
@@ -144,7 +142,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		outImage->put(zeros);
 	}
 	else {
-		Float (*function)(const Array<Float>&) = (*funcMap())(_aggType);
+		Float (*function)(const Array<Float>&) = funcMap()->at(_aggType);
 		Array<Float> data = subImage.get(False);
 		for (uInt i=0; i<outShape.product(); i++) {
 			IPosition start = toIPositionInArray(i, outShape);
@@ -162,52 +160,56 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	return outImage.release();
 }
 
-const HashMap<uInt, Float (*)(const Array<Float>&)>* ImageCollapser::funcMap() {
+const map<uInt, Float (*)(const Array<Float>&)>* ImageCollapser::funcMap() {
 	if (! _funcMap) {
-		_funcMap = new HashMap<uInt, Float (*)(const Array<Float>&)>(casa::mean<Float>);
-		_funcMap->define((uInt)AVDEV, casa::avdev);
-		_funcMap->define((uInt)MAX, casa::max);
-		_funcMap->define((uInt)MEAN, casa::mean);
-		_funcMap->define((uInt)MEDIAN, casa::median);
-		_funcMap->define((uInt)MIN, casa::min);
-		_funcMap->define((uInt)RMS, casa::rms);
-		_funcMap->define((uInt)STDDEV, casa::stddev);
-		_funcMap->define((uInt)SUM, casa::sum);
-		_funcMap->define((uInt)VARIANCE, casa::variance);
+		map<uInt, Float (*)(const Array<Float>&)> ref;
+		ref[(uInt)AVDEV] = casa::avdev;
+		ref[(uInt)MAX] = casa::max;
+		ref[(uInt)MEAN] = casa::mean;
+		ref[(uInt)MEDIAN] = casa::median;
+		ref[(uInt)MIN] = casa::min;
+		ref[(uInt)RMS] = casa::rms;
+		ref[(uInt)STDDEV] = casa::stddev;
+		ref[(uInt)SUM] = casa::sum;
+		ref[(uInt)VARIANCE] = casa::variance;
+		_funcMap = new map<uInt, Float (*)(const Array<Float>&)>(ref);
 	}
 	return _funcMap;
 }
 
-const HashMap<uInt, String>* ImageCollapser::funcNameMap() {
+const map<uInt, String>* ImageCollapser::funcNameMap() {
 	if (! _funcNameMap) {
-		_funcNameMap = new HashMap<uInt, String>;
-		_funcNameMap->define((uInt)AVDEV, "avdev");
-		_funcNameMap->define((uInt)MAX, "max");
-		_funcNameMap->define((uInt)MEAN, "mean");
-		_funcNameMap->define((uInt)MEDIAN, "median");
-		_funcNameMap->define((uInt)MIN, "min");
-		_funcNameMap->define((uInt)RMS, "rms");
-		_funcNameMap->define((uInt)STDDEV, "stddev");
-		_funcNameMap->define((uInt)SUM, "sum");
-		_funcNameMap->define((uInt)VARIANCE, "variance");
-		_funcNameMap->define((uInt)ZERO, "zero");
+		map<uInt, String> ref;
+		ref[(uInt)AVDEV] = "avdev";
+		ref[(uInt)MAX] = "max";
+		ref[(uInt)MEAN] = "mean";
+		ref[(uInt)MEDIAN] = "median";
+		ref[(uInt)MIN] = "min";
+		ref[(uInt)RMS] = "rms";
+		ref[(uInt)STDDEV] = "stddev";
+		ref[(uInt)SUM] = "sum";
+		ref[(uInt)VARIANCE] = "variance";
+		ref[(uInt)ZERO] = "zero";
+		_funcNameMap = new map<uInt, String>(ref);
 	}
 	return _funcNameMap;
 }
 
-const HashMap<uInt, String>* ImageCollapser::minMatchMap() {
+const map<uInt, String>* ImageCollapser::minMatchMap() {
 	if (! _minMatchMap) {
-		_minMatchMap = new HashMap<uInt, String>;
-		_minMatchMap->define((uInt)AVDEV, "a");
-		_minMatchMap->define((uInt)MAX, "ma");
-		_minMatchMap->define((uInt)MEAN, "mea");
-		_minMatchMap->define((uInt)MEDIAN, "med");
-		_minMatchMap->define((uInt)MIN, "mi");
-		_minMatchMap->define((uInt)RMS, "r");
-		_minMatchMap->define((uInt)STDDEV, "st");
-		_minMatchMap->define((uInt)SUM, "su");
-		_minMatchMap->define((uInt)VARIANCE, "v");
-		_minMatchMap->define((uInt)ZERO, "z");
+		map<uInt, String> ref;
+		ref[(uInt)AVDEV] = "a";
+		ref[(uInt)MAX] = "ma";
+		ref[(uInt)MEAN] = "mea";
+		ref[(uInt)MEDIAN] = "med";
+		ref[(uInt)MIN] = "mi";
+		ref[(uInt)RMS] = "r";
+		ref[(uInt)STDDEV] = "st";
+		ref[(uInt)SUM] = "su";
+		ref[(uInt)VARIANCE] = "v";
+		ref[(uInt)ZERO] = "z";
+		_minMatchMap = new map<uInt, String>(ref);
+
 	}
 	return _minMatchMap;
 }
@@ -230,6 +232,8 @@ void ImageCollapser::_finishConstruction() {
 ImageCollapser::AggregateType ImageCollapser::aggregateType(
 	String& aggString
 ) {
+	cout << __FILE__ << " " << __LINE__ << endl;
+
 	LogIO log;
 	log << LogOrigin(_class, __FUNCTION__);
 	if (aggString.empty()) {
@@ -237,12 +241,16 @@ ImageCollapser::AggregateType ImageCollapser::aggregateType(
 			<< LogIO::EXCEPTION;
 	}
 	aggString.downcase();
-	const HashMap<uInt, String> *funcNamePtr = funcNameMap();
-	ConstHashMapIter<uInt, String> iter = *minMatchMap();
-	for (iter.toStart(); ! iter.atEnd(); iter++) {
-		uInt key = iter.getKey();
-		String minMatch = iter.getVal();
-		String funcName = (*funcNamePtr)(key);
+	const map<uInt, String> *funcNamePtr = funcNameMap();
+	map<uInt, String>::const_iterator iter;
+	const map<uInt, String> *minMatch = minMatchMap();
+	cout << "min mathc " << minMatch->at(MEAN) << endl;
+	cout << __FILE__ << " " << __LINE__ << endl;
+	for (iter = minMatch->begin(); iter != minMatch->end(); iter++) {
+		uInt key = iter->first;
+		String minMatch = iter->second;
+		cout << "key " << key << " minMatch " << minMatch << endl;
+		String funcName = (*funcNamePtr).at(key);
 		if (
 			aggString.startsWith(minMatch)
 			&& funcName.startsWith(aggString)
