@@ -158,6 +158,9 @@ FlagDataHandler::open(const std::string& msname)
 
 	originalMeasurementSet_p = new MeasurementSet(String(msname),Table::Update);
 
+	// Activate Memory Resident Subtables for everything but Pointing, Syscal and History
+	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
+
 	STOPCLOCK
 	return true;
 }
