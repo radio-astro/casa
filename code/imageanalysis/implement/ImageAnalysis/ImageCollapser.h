@@ -28,16 +28,17 @@
 #ifndef IMAGES_IMAGECOLLAPSER_H
 #define IMAGES_IMAGECOLLAPSER_H
 
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
 #include <casa/Containers/HashMap.h>
 #include <casa/Logging/LogIO.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <images/Images/ImageInterface.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
-    class ImageCollapser {
+    class ImageCollapser : public ImageTask {
         // <summary>
         // Top level interface which allows collapsing of images along a single axis. An aggregate method
     	// (average, sum, etc) is applied to the collapsed pixels.
@@ -86,33 +87,11 @@ namespace casa {
     	// if <src>overwrite</src> is False, if image already exists exception will be thrown
     	//
     	// <group>
-    	ImageCollapser(
-    	    String aggString,const String& imagename,
-    	    const String& region, const String& box,
-    	    const String& chanInp, const String& stokes,
-    	    const String& maskInp, const uInt axis,
-            const String& outname, const Bool overwrite
-    	);
 
     	ImageCollapser(
-    	    String aggString,const String& imagename,
-    	    const String& region, const String& box,
-    	    const String& chanInp, const String& stokes,
-    	    const String& maskInp, const Vector<uInt>& axes,
-            const String& outname, const Bool overwrite
-    	);
-
-    	ImageCollapser(
-    	    String aggString, const ImageInterface<Float> * const image,
-    	    const String& region, const String& box,
-    	    const String& chanInp, const String& stokes,
-    	    const String& maskInp, const uInt axis,
-            const String& outname, const Bool overwrite
-    	);
-
-    	ImageCollapser(
-    	    String aggString, const ImageInterface<Float> * const image,
-    	    const String& region, const String& box,
+    	    String aggString, const ImageInterface<Float> *const image,
+    	    const String& region, const Record *const regionRec,
+    	    const String& box,
     	    const String& chanInp, const String& stokes,
     	    const String& maskInp, const Vector<uInt> axes,
             const String& outname, const Bool overwrite
@@ -135,18 +114,19 @@ namespace casa {
         // a NULL pointer is returned and pointer deletion is performed internally.
         ImageInterface<Float>* collapse(const Bool wantReturn) const;
 
+        static ImageCollapser::AggregateType aggregateType(String& aggString);
+
         static const HashMap<uInt, Float (*)(const Array<Float>&)>* funcMap();
         static const HashMap<uInt, String>* funcNameMap();
         static const HashMap<uInt, String>* minMatchMap();
 
+        inline String getClass() const { return _class; }
+
     private:
-        LogIO *_log;
-        ImageInterface<Float> * _image;
-        Record _regionRecord;
-        String _chan, _stokesString, _mask, _outname;
-        Bool _overwrite, _destructImage, _invertAxesSelection;
+        Bool _invertAxesSelection;
         Vector<uInt> _axes;
         AggregateType _aggType;
+        static const String _class;
 
         static HashMap<uInt, Float (*)(const Array<Float>&)> *_funcMap;
         static HashMap<uInt, String> *_funcNameMap;
@@ -155,25 +135,19 @@ namespace casa {
         // disallow default constructor
         ImageCollapser();
 
-        // does the lion's share of constructing the object, ie checks validity of
-        // inputs, etc.
-        void _construct(
-        	String& aggString, const String& imagename,
-        	const String& box, const String& regionName
-        );
-
-        void _construct(
-        	String& aggString, const ImageInterface<Float> *image,
-        	const String& box, const String& regionName
-        );
-
-        void _setAggregateType(String& aggString);
-
         void _invert();
 
-        std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+        //std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
 
         void _finishConstruction();
+
+        inline  CasacRegionManager::StokesControl _getStokesControl() const {
+        	return CasacRegionManager::USE_ALL_STOKES;
+        }
+
+        inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+        	return vector<Coordinate::Type>(0);
+        }
     };
 }
 

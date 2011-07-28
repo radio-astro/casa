@@ -45,106 +45,58 @@ namespace casa {
 	HashMap<uInt, String> *ImageCollapser::_minMatchMap = 0;
 	HashMap<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
 
-    ImageCollapser::ImageCollapser(
-    	String aggString, const String& imagename,
-    	const String& region, const String& box,
-    	const String& chanInp, const String& stokes,
-    	const String& maskInp, const uInt axis,
-        const String& outname, const Bool overwrite
-    ) : _log(new LogIO()), _image(0),
-		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-		_outname(outname),
-		_overwrite(overwrite), _destructImage(True),
-		_invertAxesSelection(False),
-		_axes(Vector<uInt>(1, axis)), _aggType(UNKNOWN) {
-        _construct(aggString, imagename, box, region);
-    }
+	const String ImageCollapser::_class = "ImageCollapser";
 
     ImageCollapser::ImageCollapser(
-    	String aggString, const String& imagename,
-    	const String& region, const String& box,
-    	const String& chanInp, const String& stokes,
-    	const String& maskInp, const Vector<uInt>& axes,
-        const String& outname, const Bool overwrite
-    ) : _log(new LogIO()), _image(0),
-		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-		_outname(outname),
-		_overwrite(overwrite), _destructImage(True),
-		_invertAxesSelection(False),
-		_axes(axes), _aggType(UNKNOWN) {
-        _construct(aggString, imagename, box, region);
-    }
-
-    ImageCollapser::ImageCollapser(
-    	String aggString, const ImageInterface<Float> * const image,
-    	const String& region, const String& box,
-    	const String& chanInp, const String& stokes,
-    	const String& maskInp, const uInt axis,
-        const String& outname, const Bool overwrite
-    ) : _log(new LogIO()), _image(image->cloneII()),
-		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-		_outname(outname),
-		_overwrite(overwrite), _destructImage(True),
-		_invertAxesSelection(False),
-		_axes(Vector<uInt>(1, axis)), _aggType(UNKNOWN) {
-        _construct(aggString, _image, box, region);
-    }
-
-    ImageCollapser::ImageCollapser(
-    	String aggString, const ImageInterface<Float> * const image,
-    	const String& region, const String& box,
+    	String aggString, const ImageInterface<Float> *const image,
+    	const String& region, const Record *const regionRec,
+    	const String& box,
     	const String& chanInp, const String& stokes,
     	const String& maskInp, const Vector<uInt> axes,
         const String& outname, const Bool overwrite
-    ) : _log(new LogIO()), _image(image->cloneII()),
-		_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-		_outname(outname),
-		_overwrite(overwrite), _destructImage(True),
+    ) : ImageTask(
+    		image, region, regionRec, box, chanInp, stokes,
+    		maskInp, outname, overwrite
+    	),
 		_invertAxesSelection(False),
 		_axes(axes), _aggType(UNKNOWN) {
-        _construct(aggString, _image, box, region);
+    	_aggType = aggregateType(aggString);
+        _construct();
+        _finishConstruction();
     }
 
     ImageCollapser::ImageCollapser(
-	    const ImageInterface<Float> * const image,
+	    const ImageInterface<Float> *const image,
 	    const Vector<uInt>& axes, const Bool invertAxesSelection,
 	    const AggregateType aggregateType,
 	    const String& outname, const Bool overwrite
-	) : _log(new LogIO()), _image(image->cloneII()), _regionRecord(Record()),
-		_mask(""), _outname(outname),
-		_overwrite(overwrite), _destructImage(False),
+	) : ImageTask(
+    		image, "", 0, "", "", "",
+    		"", outname, overwrite
+    	),
 		_invertAxesSelection(invertAxesSelection),
 		_axes(axes), _aggType(aggregateType) {
-    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
-        *_log << logOrigin;
+    	*_log << LogOrigin(_class, __FUNCTION__);
         if (_aggType == UNKNOWN) {
         	*_log << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
         }
-        if (! _image) {
+        if (! image) {
         	*_log << "Cannot use a null image pointer with this constructor"
         		<< LogIO::EXCEPTION;
         }
-        _invert();
-        *_log << logOrigin;
+        _construct();
+        _finishConstruction();
     }
 
-    ImageCollapser::~ImageCollapser() {
-        delete _log;
-        if (_destructImage) {
-        	delete _image;
-        }
-    }
+    ImageCollapser::~ImageCollapser() {}
 
     ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
-        *_log << LogOrigin("ImageCollapser", __FUNCTION__);
-    	ImageRegion *imageRegion = 0;
-    	ImageRegion *maskRegion = 0;
+        *_log << LogOrigin(_class, __FUNCTION__);
+        std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
         SubImage<Float> subImage = SubImage<Float>::createSubImage(
-    		imageRegion, maskRegion, *_image,
-    		_regionRecord, _mask, _log, False
-    	);
-    	delete imageRegion;
-    	delete maskRegion;
+        	*clone, *_getRegion(), _getMask(), _log.get(), False
+        );
+        clone.reset(0);
     	IPosition inShape = subImage.shape();
     	// Set the compressed axis reference pixel and reference value
     	CoordinateSystem outCoords(subImage.coordinates());
@@ -177,38 +129,15 @@ namespace casa {
     		*_log << "Unable to set reference pixel" << LogIO::EXCEPTION;
     	}
 
-    	ImageInterface<Float> *outImage = 0;
-    	if (_outname.empty()) {
-    		outImage = new TempImage<Float>(outShape, outCoords);
+    	std::auto_ptr<ImageInterface<Float> > outImage(0);
+    	if (_getOutname().empty()) {
+    		outImage.reset(new TempImage<Float>(outShape, outCoords));
     	}
     	else {
-    		File out(_outname);
-    		if (out.exists()) {
-    			// remove file if it exists which prevents emission of
-    			// file is already open in table cache exceptions
-    			if (_overwrite) {
-    				if (out.isDirectory()) {
-    					Directory dir(_outname);
-    					dir.removeRecursive();
-    				}
-    				else if (out.isRegular()) {
-    					RegularFile reg(_outname);
-    					reg.remove();
-    				}
-    				else if (out.isSymLink()) {
-    					SymLink link(_outname);
-    					link.remove();
-    				}
-    			}
-    			else {
-    				// The only way this block can be entered is if a file by this name
-    				// has been written between the checking of inputs in the constructor
-    				// call and the call of this method.
-    				*_log << "File " << _outname << " exists but overwrite is false so it cannot be overwritten"
-    					<< LogIO::EXCEPTION;
-    			}
-    		}
-    		outImage = new PagedImage<Float>(outShape, outCoords, _outname);
+    		_removeExistingOutfileIfNecessary();
+    		outImage.reset(
+    			new PagedImage<Float>(outShape, outCoords, _getOutname())
+    		);
     	}
     	if (_aggType == ZERO) {
     		Array<Float> zeros(outShape, 0.0);
@@ -224,14 +153,13 @@ namespace casa {
     			outImage->putAt(function(data(s)), start);
     		}
     	}
-    	if (! _outname.empty()) {
+    	if (! _getOutname().empty()) {
     		outImage->flush();
     	}
     	if (! wantReturn) {
-    		delete outImage;
-    		outImage = 0;
+    		outImage.reset(0);
     	}
-    	return outImage;
+    	return outImage.release();
     }
 
     const HashMap<uInt, Float (*)(const Array<Float>&)>* ImageCollapser::funcMap() {
@@ -284,87 +212,28 @@ namespace casa {
     	return _minMatchMap;
     }
 
-    std::vector<ImageInputProcessor::OutputStruct> ImageCollapser::_getOutputStruct() {
-    	std::vector<ImageInputProcessor::OutputStruct> outputs(0);
-        _outname.trim();
-        if (! _outname.empty()) {
-        	ImageInputProcessor::OutputStruct outputImage;
-        	outputImage.label = "output image";
-        	outputImage.outputFile = &_outname;
-        	outputImage.required = True;
-        	outputImage.replaceable = _overwrite;
-        	outputs.push_back(outputImage);
-        }
-        return outputs;
-    }
-
     void ImageCollapser::_finishConstruction() {
         for (
         	Vector<uInt>::const_iterator iter=_axes.begin();
         		iter != _axes.end(); iter++
         	) {
-        	if (*iter >= _image->ndim()) {
+        	if (*iter >= _getImage()->ndim()) {
         		*_log << "Specified zero-based axis (" << *iter
-        			<< ") must be less than the number of axes in " << _image->name()
-        			<< "(" << _image->ndim() << LogIO::EXCEPTION;
+        			<< ") must be less than the number of axes in " << _getImage()->name()
+        			<< "(" << _getImage()->ndim() << LogIO::EXCEPTION;
         	}
         }
         _invert();
     }
 
-    void ImageCollapser::_construct(
-        String& aggString, const String& imagename,
-        const String& box, const String& regionName
+
+    ImageCollapser::AggregateType ImageCollapser::aggregateType(
+    	String& aggString
     ) {
-    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
-        _setAggregateType(aggString);
-        *_log << logOrigin;
-
-        String diagnostics;
-        vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-        vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
-        	? &outputs
-        	: 0;
-        ImageInputProcessor inputProcessor;
-        inputProcessor.process(
-        	_image, _regionRecord, diagnostics,
-        	outputPtr, _stokesString, imagename,
-        	0, regionName, box, _chan,
-        	CasacRegionManager::USE_ALL_STOKES,
-        	False, 0
-        );
-        _finishConstruction();
-    }
-
-    void ImageCollapser::_construct(
-        String& aggString, const ImageInterface<Float> *image,
-        const String& box, const String& regionName
-    ) {
-    	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
-        _setAggregateType(aggString);
-        *_log << logOrigin;
-
-        String diagnostics;
-        vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-        vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
-        	? &outputs
-        	: 0;
-        ImageInputProcessor inputProcessor;
-        inputProcessor.process(
-        	_regionRecord, diagnostics,
-        	outputPtr, _stokesString, image,
-        	0, regionName, box, _chan,
-        	CasacRegionManager::USE_ALL_STOKES,
-        	False, 0
-        );
-        _finishConstruction();
-    }
-
-    void ImageCollapser::_setAggregateType(String& aggString) {
-       	LogOrigin logOrigin("ImageCollapser", __FUNCTION__);
-        *_log << logOrigin;
+    	LogIO log;
+       	log << LogOrigin(_class, __FUNCTION__);
         if (aggString.empty()) {
-        	*_log << "Aggregate function name is not specified and it must be."
+        	log << "Aggregate function name is not specified and it must be."
         		<< LogIO::EXCEPTION;
         }
     	aggString.downcase();
@@ -378,18 +247,17 @@ namespace casa {
     			aggString.startsWith(minMatch)
     			&& funcName.startsWith(aggString)
     		) {
-				_aggType = (AggregateType)key;
-				return;
+				return (AggregateType)key;
     		}
     	}
-    	*_log << "Unknown aggregate function specified by " << aggString << LogIO::EXCEPTION;
+    	log << "Unknown aggregate function specified by " << aggString << LogIO::EXCEPTION;
     }
 
     void ImageCollapser::_invert() {
     	if (_invertAxesSelection) {
-    		Vector<uInt> newAxes(_image->ndim() - _axes.size(), 0);
+    		Vector<uInt> newAxes(_getImage()->ndim() - _axes.size(), 0);
     		uInt index=0;
-    		for (uInt i=0; i<_image->ndim(); i++) {
+    		for (uInt i=0; i<_getImage()->ndim(); i++) {
 				Bool found = False;
     			for (uInt j=0; j<_axes.size(); j++) {
     				if (i == _axes[j]) {

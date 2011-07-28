@@ -225,6 +225,7 @@ bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 	return rstat;
 }
 
+// FIXME need to support region records as input
 casac::image * image::collapse(const string& function, const variant& axes,
 		const string& outfile, const string& region, const string& box,
 		const string& chans, const string& stokes, const string& mask,
@@ -270,7 +271,7 @@ casac::image * image::collapse(const string& function, const variant& axes,
 		}
 		String aggString = function;
 		ImageCollapser collapser(
-			aggString, _image->getImage(), region, box,
+			aggString, _image->getImage(), region, 0, box,
 			chans, stokes, mask, myAxes, outfile, overwrite
 		);
 		newImageTool = new image(collapser.collapse(True), False);
