@@ -38,117 +38,117 @@
 
 namespace casa {
 
-    class ImageCollapser : public ImageTask {
-        // <summary>
-        // Top level interface which allows collapsing of images along a single axis. An aggregate method
-    	// (average, sum, etc) is applied to the collapsed pixels.
-        // </summary>
+class ImageCollapser : public ImageTask {
+	// <summary>
+	// Top level interface which allows collapsing of images along a single axis. An aggregate method
+	// (average, sum, etc) is applied to the collapsed pixels.
+	// </summary>
 
-        // <reviewed reviewer="" date="" tests="" demos="">
-        // </reviewed>
+	// <reviewed reviewer="" date="" tests="" demos="">
+	// </reviewed>
 
-        // <prerequisite>
-        // </prerequisite>
+	// <prerequisite>
+	// </prerequisite>
 
-        // <etymology>
-        // Collapses image.
-        // </etymology>
+	// <etymology>
+	// Collapses image.
+	// </etymology>
 
-        // <synopsis>
-        // High level interface for collapsing an image along a single axis.
-        // </synopsis>
+	// <synopsis>
+	// High level interface for collapsing an image along a single axis.
+	// </synopsis>
 
-        // <example>
-        // <srcblock>
-        // ImageCollapser collapser();
-        // collapser.collapse();
-        // </srcblock>
-        // </example>
+	// <example>
+	// <srcblock>
+	// ImageCollapser collapser();
+	// collapser.collapse();
+	// </srcblock>
+	// </example>
 
-    public:
+public:
 
-    	enum AggregateType {
-    		AVDEV,
-    		MAX,
-    		MEAN,
-    		MEDIAN,
-    		MIN,
-    		RMS,
-    		STDDEV,
-    		SUM,
-    		VARIANCE,
-    		// set all pixels in output image to 0
-    		ZERO,
-    		UNKNOWN
-    	};
+	enum AggregateType {
+		AVDEV,
+		MAX,
+		MEAN,
+		MEDIAN,
+		MIN,
+		RMS,
+		STDDEV,
+		SUM,
+		VARIANCE,
+		// set all pixels in output image to 0
+		ZERO,
+		UNKNOWN
+	};
 
-    	// if <src>outname</src> is empty, no image will be written
-    	// if <src>overwrite</src> is True, if image already exists it will be removed
-    	// if <src>overwrite</src> is False, if image already exists exception will be thrown
-    	//
-    	// <group>
+	// if <src>outname</src> is empty, no image will be written
+	// if <src>overwrite</src> is True, if image already exists it will be removed
+	// if <src>overwrite</src> is False, if image already exists exception will be thrown
+	//
+	// <group>
 
-    	ImageCollapser(
-    	    String aggString, const ImageInterface<Float> *const image,
-    	    const String& region, const Record *const regionRec,
-    	    const String& box,
-    	    const String& chanInp, const String& stokes,
-    	    const String& maskInp, const Vector<uInt> axes,
-            const String& outname, const Bool overwrite
-    	);
+	ImageCollapser(
+		String aggString, const ImageInterface<Float> *const image,
+		const String& region, const Record *const regionRec,
+		const String& box,
+		const String& chanInp, const String& stokes,
+		const String& maskInp, const Vector<uInt> axes,
+		const String& outname, const Bool overwrite
+	);
 
-    	ImageCollapser(
-            const ImageInterface<Float> * const image,
-    	    const Vector<uInt>& axes, const Bool invertAxesSelection,
-    	    const AggregateType aggregateType,
-    	    const String& outname, const Bool overwrite
-    	);
-    	// </group>
+	ImageCollapser(
+		const ImageInterface<Float> * const image,
+		const Vector<uInt>& axes, const Bool invertAxesSelection,
+		const AggregateType aggregateType,
+		const String& outname, const Bool overwrite
+	);
+	// </group>
 
-        // destructor
-        ~ImageCollapser();
+	// destructor
+	~ImageCollapser();
 
-        // perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
-        // collapsed image. The returned pointer is created via new(); it is the caller's
-        // responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
-        // a NULL pointer is returned and pointer deletion is performed internally.
-        ImageInterface<Float>* collapse(const Bool wantReturn) const;
+	// perform the collapse. If <src>wantReturn</src> is True, return a pointer to the
+	// collapsed image. The returned pointer is created via new(); it is the caller's
+	// responsibility to delete the returned pointer. If <src>wantReturn</src> is False,
+	// a NULL pointer is returned and pointer deletion is performed internally.
+	ImageInterface<Float>* collapse(const Bool wantReturn) const;
 
-        static ImageCollapser::AggregateType aggregateType(String& aggString);
+	static ImageCollapser::AggregateType aggregateType(String& aggString);
 
-        static const HashMap<uInt, Float (*)(const Array<Float>&)>* funcMap();
-        static const HashMap<uInt, String>* funcNameMap();
-        static const HashMap<uInt, String>* minMatchMap();
+	static const HashMap<uInt, Float (*)(const Array<Float>&)>* funcMap();
+	static const HashMap<uInt, String>* funcNameMap();
+	static const HashMap<uInt, String>* minMatchMap();
 
-        inline String getClass() const { return _class; }
+	inline String getClass() const { return _class; }
 
-    private:
-        Bool _invertAxesSelection;
-        Vector<uInt> _axes;
-        AggregateType _aggType;
-        static const String _class;
+private:
+	Bool _invertAxesSelection;
+	Vector<uInt> _axes;
+	AggregateType _aggType;
+	static const String _class;
 
-        static HashMap<uInt, Float (*)(const Array<Float>&)> *_funcMap;
-        static HashMap<uInt, String> *_funcNameMap;
-        static HashMap<uInt, String> *_minMatchMap;
+	static HashMap<uInt, Float (*)(const Array<Float>&)> *_funcMap;
+	static HashMap<uInt, String> *_funcNameMap;
+	static HashMap<uInt, String> *_minMatchMap;
 
-        // disallow default constructor
-        ImageCollapser();
+	// disallow default constructor
+	ImageCollapser();
 
-        void _invert();
+	void _invert();
 
-        //std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+	//std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
 
-        void _finishConstruction();
+	void _finishConstruction();
 
-        inline  CasacRegionManager::StokesControl _getStokesControl() const {
-        	return CasacRegionManager::USE_ALL_STOKES;
-        }
+	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+		return CasacRegionManager::USE_ALL_STOKES;
+	}
 
-        inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-        	return vector<Coordinate::Type>(0);
-        }
-    };
+	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<Coordinate::Type>(0);
+	}
+};
 }
 
 #endif
