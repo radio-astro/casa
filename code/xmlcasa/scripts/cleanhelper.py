@@ -5,6 +5,7 @@ import math
 import pdb
 import numpy
 import shutil
+import string
 from numpy import unique
 
 ###some helper tools
@@ -50,7 +51,15 @@ class cleanhelper:
             #casalog.setglobal(True)
         self._casalog = casalog
         
-        
+    @staticmethod
+    def getspwtable(visname=''):
+        tb.open(visname)
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=visname+"/SPECTRAL_WINDOW"
+        return spectable
     def initsinglems(self, imtool, vis, usescratch):
         self.im=imtool
         # modified for self.vis to be a list for handling multims
@@ -113,12 +122,7 @@ class cleanhelper:
               # empty string = select all (='*', for msselectindex)
               inspw='*'
             mssel=ms.msseltoindex(vis=visname,spw=inspw)
-            tb.open(visname)
-            spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-            if(len(spectable) ==2):
-                spectable=spectable[1]
-            else:
-                spectable=visname+"/SPECTRAL_WINDOW"
+            spectable=self.getspwtable(visname)
             tb.open(spectable)
             chanfreqs=tb.getvarcol('CHAN_FREQ')
             kys = chanfreqs.keys()
@@ -1728,12 +1732,7 @@ class cleanhelper:
         else:
             spw0=spwinds[0]
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        tb.open(self.vis[self.sortedvisindx[0]])
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-        if(len(spectable) ==2):
-            spectable=spectable[1]
-        else:
-            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -1830,12 +1829,7 @@ class cleanhelper:
         """
         #pdb.set_trace()
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        tb.open(self.vis[self.sortedvisindx[0]])
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-        if(len(spectable) ==2):
-            spectable=spectable[1]
-        else:
-            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -2203,12 +2197,7 @@ class cleanhelper:
         ###############
         debug=False
         ###############
-        tb.open(self.vis[self.sortedvisindx[0]])
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-        if(len(spectable) ==2):
-            spectable=spectable[1]
-        else:
-            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         chanfreqscol=tb.getvarcol('CHAN_FREQ')
         chanwidcol=tb.getvarcol('CHAN_WIDTH')
@@ -2536,12 +2525,7 @@ class cleanhelper:
                 except:
                     wset[i][j]=-1
         #print wset
-        tb.open(self.vis[self.sortedvisindx[0]])
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-        if(len(spectable) ==2):
-            spectable=spectable[1]
-        else:
-            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         nr=tb.nrows()
         for i in range(len(wset)):
@@ -2723,12 +2707,7 @@ class cleanhelper:
         (part copied from setChannelization)
         """
         #tb.open(self.vis+'/SPECTRAL_WINDOW')
-        tb.open(self.vis[self.sortedvisindx[0]])
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-        if(len(spectable) ==2):
-            spectable=spectable[1]
-        else:
-            spectable=self.vis[self.sortedvisindx[0]]+"/SPECTRAL_WINDOW"
+        spectable=self.getspwtable(self.vis[self.sortedvisindx[0]])
         tb.open(spectable)
         spwframe=tb.getcol('MEAS_FREQ_REF');
         tb.close()
