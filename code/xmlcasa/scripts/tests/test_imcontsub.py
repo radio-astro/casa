@@ -96,7 +96,7 @@
 # returns an image tool upon success.
 # </todo>
 
-import random
+#import random
 import os
 import shutil
 import casac
@@ -278,86 +278,86 @@ class imcontsub_test(unittest.TestCase):
 
 
     
-    ####################################################################
-    # Continuum subtraction correctness test.
-    #
-    # This test subtacts the continuum from the g192 data file
-    # and compares the results (both continuum and spectral line
-    # with subtracted continuum files) with pervious results.
-    #
-    # Random values are selected in the files and compared.
-    # FIXME compare the entire arrays, not bloody random values
-    #
-    # Returns True if successful, and False if it has failed.
-    ####################################################################
+    ## ####################################################################
+    ## # Continuum subtraction correctness test.
+    ## #
+    ## # This test subtacts the continuum from the g192 data file
+    ## # and compares the results (both continuum and spectral line
+    ## # with subtracted continuum files) with pervious results.
+    ## #
+    ## # Random values are selected in the files and compared.
+    ## # FIXME compare the entire arrays, not bloody random values
+    ## #
+    ## # Returns True if successful, and False if it has failed.
+    ## ####################################################################
     
-    def test_continuum(self):
-        '''Imcontsub: Testing continuum sub correctness'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        casalog.post( "Starting imcontsub CONTINUUM SUB CORRECTNESS tests.", 'NORMAL2' )
+    ## def test_continuum(self):
+    ##     '''Imcontsub: Testing continuum sub correctness'''
+    ##     retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    ##     casalog.post( "Starting imcontsub CONTINUUM SUB CORRECTNESS tests.", 'NORMAL2' )
     
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=0, contfile='cont_test_cont1', linefile='cont_test_line1' )
-        except Exception, err:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to subtract continuum with a fit order of 0 "\
-                     +"\n\t REULTS: "+str(results)
-        else:
-            if ( not os.path.exists( 'cont_test_cont1' ) or not os.path.exists( 'cont_test_line1' ) or not results ): 
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: continuum 3 output files were NOT created."
-            else:
-                # Now that we know something has been done lets check some values
-                # with previously created files to see if the values are the same.
-                # We randomly pick 50 points (almost 10%)
-                # FIXME lovely, yes let's pick random values to make sure any failures 
-                # cannot easily be reproduced, ugh
-                for count in range(0,50):
-                    x = random.randint(0,511)
-                    y = random.randint(0,511)
-                    box=str(x)+','+str(y)+','+str(x)+','+str(y)
-                    chan = str(random.randint(0,39))
+    ##     try:
+    ##         results=imcontsub( 'g192_a2.image', fitorder=0, contfile='cont_test_cont1', linefile='cont_test_line1' )
+    ##     except Exception, err:
+    ##         retValue['success']=False
+    ##         retValue['error_msgs']=retValue['error_msgs']\
+    ##                  +"\nError: Unable to subtract continuum with a fit order of 0 "\
+    ##                  +"\n\t REULTS: "+str(results)
+    ##     else:
+    ##         if ( not os.path.exists( 'cont_test_cont1' ) or not os.path.exists( 'cont_test_line1' ) or not results ): 
+    ##             retValue['success']=False
+    ##             retValue['error_msgs']=retValue['error_msgs']\
+    ##                    +"\nError: continuum 3 output files were NOT created."
+    ##         else:
+    ##             # Now that we know something has been done lets check some values
+    ##             # with previously created files to see if the values are the same.
+    ##             # We randomly pick 50 points (almost 10%)
+    ##             # FIXME lovely, yes let's pick random values to make sure any failures 
+    ##             # cannot easily be reproduced, ugh
+    ##             for count in range(0,50):
+    ##                 x = random.randint(0,511)
+    ##                 y = random.randint(0,511)
+    ##                 box=str(x)+','+str(y)+','+str(x)+','+str(y)
+    ##                 chan = str(random.randint(0,39))
     
-                    line_prev_value={}
-                    line_cur_value={'empty':''}
-                    try: 
-                        line_prev_value = imval( 'g192_a2.contfree', box=box, chans=chan, stokes='I' )
-                        line_cur_value  = imval( 'cont_test_line1', box=box, chans=chan, stokes='I' )
-                    except:
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                            +"\nError: Unable to compare spectral line files."
-                    else:
-                       #print "Spec line prev value: ", line_prev_value
-                       #print "spec line current value: ", line_cur_value  
-                       casalog.post( "*** line_prev_value " + str(line_prev_value), 'WARN')
-                       casalog.post( "*** line_cur_value " + str(line_cur_value), 'WARN')      
-                       if ( (line_prev_value['data'] != line_cur_value['data']).any() ):
-                        retValue['success']    = False
-                        retValue['error_msgs'] = '\nError: spectral line value differs with '\
-                              + "previously calculated value at: "\
-                              + "\t["+str(x)+','+str(y)+','+chan+',I].'\
-                              + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
-                    try:
-                        cont_prev_value = imval( 'g192_a2.cont', box=box, chans=chan, stokes='I' )
-                        cont_cur_value  = imval( 'cont_test_cont1', box=box, chans=chan, stokes='I' )
-                    except:
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                            +"\nError: Unable to compare continuum files."
-                    else:
-                       #print "Continuum prev value: ", cont_prev_value
-                       #print "Continuum current value: ", cont_cur_value        
-                       if ( (cont_prev_value['data'] != cont_cur_value['data']).any() ):
-                        retValue['success']    = False
-                        retValue['error_msgs'] = '\nError: continuum value differs with '\
-                            + "previously calculated value at: "\
-                            + "\t["+str(x)+','+str(y)+','+chan+',I].'
-                            #+ "\tvalues are "+str(cont_prev_value)+" and "+str(cont_cur_value)
+    ##                 line_prev_value={}
+    ##                 line_cur_value={'empty':''}
+    ##                 try: 
+    ##                     line_prev_value = imval( 'g192_a2.contfree', box=box, chans=chan, stokes='I' )
+    ##                     line_cur_value  = imval( 'cont_test_line1', box=box, chans=chan, stokes='I' )
+    ##                 except:
+    ##                     retValue['success']=False
+    ##                     retValue['error_msgs']=retValue['error_msgs']\
+    ##                         +"\nError: Unable to compare spectral line files."
+    ##                 else:
+    ##                    #print "Spec line prev value: ", line_prev_value
+    ##                    #print "spec line current value: ", line_cur_value  
+    ##                    casalog.post( "*** line_prev_value " + str(line_prev_value), 'WARN')
+    ##                    casalog.post( "*** line_cur_value " + str(line_cur_value), 'WARN')      
+    ##                    if ( (line_prev_value['data'] != line_cur_value['data']).any() ):
+    ##                     retValue['success']    = False
+    ##                     retValue['error_msgs'] = '\nError: spectral line value differs with '\
+    ##                           + "previously calculated value at: "\
+    ##                           + "\t["+str(x)+','+str(y)+','+chan+',I].'\
+    ##                           + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
+    ##                 try:
+    ##                     cont_prev_value = imval( 'g192_a2.cont', box=box, chans=chan, stokes='I' )
+    ##                     cont_cur_value  = imval( 'cont_test_cont1', box=box, chans=chan, stokes='I' )
+    ##                 except:
+    ##                     retValue['success']=False
+    ##                     retValue['error_msgs']=retValue['error_msgs']\
+    ##                         +"\nError: Unable to compare continuum files."
+    ##                 else:
+    ##                    #print "Continuum prev value: ", cont_prev_value
+    ##                    #print "Continuum current value: ", cont_cur_value        
+    ##                    if ( (cont_prev_value['data'] != cont_cur_value['data']).any() ):
+    ##                     retValue['success']    = False
+    ##                     retValue['error_msgs'] = '\nError: continuum value differs with '\
+    ##                         + "previously calculated value at: "\
+    ##                         + "\t["+str(x)+','+str(y)+','+chan+',I].'
+    ##                         #+ "\tvalues are "+str(cont_prev_value)+" and "+str(cont_cur_value)
     
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
+    ##     self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
     ####################################################################
@@ -415,12 +415,17 @@ class imcontsub_test(unittest.TestCase):
         # edits). This whole test file probably needs to be reviewed but of course time is tight so
         # I cannot do that now.
     
-        for order in [1,2]:
+        for order in xrange(2):
             contfile='fit_test_cont'+str(order)
             linefile='fit_test_line'+str(order)
-    
-            oldcontfile='g192_a2.cont.order'+str(order)
-            oldlinefile='g192_a2.contfree.order'+str(order)
+
+            if order > 0:
+                oldcontfile='g192_a2.cont.order'+str(order)
+                oldlinefile='g192_a2.contfree.order'+str(order)
+            else:
+                oldcontfile = 'g192_a2.cont'
+                oldlinefile = 'g192_a2.contfree'
+                
             try:
                 results = imcontsub('g192_a2.image', fitorder=order, contfile=contfile, linefile=linefile)
             except Exception, err:

@@ -2710,7 +2710,7 @@ ia.close()
   
      <param type="any" direction="in" name="region">
      <any type="record"/>
-     <description>Region over which continuum subtraction is desired.  Deafault is whole image.</description>
+     <description>Region over which output is desired.  Default is whole image.</description>
      <value></value>
      </param>
   
@@ -2748,7 +2748,7 @@ ia.close()
 This function packages the relevant image tool functionality for simple
 specification and application of image plane continuum subtraction.  All
 that is required of the input image is that it have a non-degenerate
-Spectral axis.  
+spectral axis.  
 
 The user specifies region, the region of the input image over which
 continuum subtraction is desired (otherwise the whole image will be

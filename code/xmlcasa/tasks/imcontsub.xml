@@ -11,13 +11,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!-- step 1: construct region with the region manger tool, rg               -->
 <!-- step 2: do the subtraction, with ia.continuumsub (image analysis tool) -->
 <!--                                                                        -->
-<!-- TODO: Add polarization selection                                       -->
-<!--       Add fitorder option value                                        -->
-<!--       Verify that region selection with region manager works           -->
-<!--       Expand region selection                                          -->
+<!-- TODO: Expand region selection                                          -->
 
 <task type="function" name="imcontsub" category="analysis, imaging">
-<shortdescription>Subtracts specified continuum channels from a spectral line data set</shortdescription>
+<shortdescription>Estimates and subtracts continuum emission from an image cube</shortdescription>
 
 <input>
     <param type="string" name="imagename" mustexist="true" >
@@ -27,7 +24,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="linefile" >
-    	<description>Output line-cont image file name</description>
+    	<description>Output continuum-subtracted image file name</description>
     	<value></value>
         <example>outline=ngc5921_line.image</example>
     </param>
@@ -38,7 +35,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>outcont=ngc5921_cont.image</example>
     </param>
 
-
     <param type="int" name="fitorder" >
     	<description>Polynomial order for the continuum estimation</description>
     	<value>0</value>
@@ -47,17 +43,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="region">
-        <description>Image region used for continuum area</description>
+        <description>Image region used for output selection</description>
         <value></value>
     </param>
 
-    <param type="string" name="box">
-        <description>Box pixels regions for continuum area</description>
-        <value></value>
+    <param type="any" name="box">
+        <description>[blcx, blcy, trcx, trcy] for output selection</description>
+        <any type="variant" limittypes="string intArray stringArray"/>
+        <value type="string"></value>
     </param>
 
     <param type="string" name="chans" >
-	<description>Channel ranges for continuum</description>
+	<description>Channel range(s) for continuum fitting</description>
     	<value></value>
     </param>
 
@@ -75,52 +72,57 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
 
-        For a spectral line image, the regions to determine the continuum
-        regions are first defined.  A graphical interface 'regions' is
-        the most versatile method of selecting the line-free regions.  For
-        a multi-spw image, the chanellization must be the same for all.
+  For each (x, y) column in imagename (or a subset selected by region and/or
+  box), this estimates the continuum by fitting a polynomial to one or more
+  subsets of the channels.  The continuum estimate is saved in contfile, and
+  subtracted from imagename (or its subset) to make a spectral line estimate,
+  which is saved in linefile.
 
-        The continuum channels are specified and two output images are made: a
-        continuum image and a continuum-subtracted spectral line image.
+  <!-- I can't find any evidence of this 'regions' method of selecting the
+       continuum pixels ever being implemented end-to-end. -->
+  <!-- A graphical interface 'regions' is the most versatile method of
+       selecting the line-free regions.  -->
 
-	The continuum subtraction can be applied to either the whole image 
-	(default) or a selected regions.  Regions are specified via 
-	the box,chans, and stokes parameters or with a region file 
-        given by the region parameter.
-
-	Keyword arguments:
-	imagename -- Input spectral line image
-		Default: none; Example: imagename='ngc5921_task.im'
-	linefile -- Name of output line image
-		Default: none; Example: outline='ngc5921_line.im'
-	contfile -- Name of output continuum image
-		Default: none; Example: contfile='ngc5921_cont.im'
-        fitorder -- Polynomial order for the continuum estimation.
-                Default: 0; Example fitorder=2
-        region -- ImageRegion file to define continuum
-                Default: ''; none
-                Example: region='myimage.im.rgn'
-                         region='region1'
-                Use the viewer on the image cube to define the continuum,
-                   regions.  More general than box/chans.  Still experimental
-                to retrieve the list of names.
-	box --  A box region on the directional plane
-	        ONLY pixel values acceptable at this time.
-		Default: none (whole 2-D plane); Example: box='10,10,50,50'
-	chans -- channel numbers go select for the continuum,
-	        ONLY channel numbers accepted at this time.
-		Default: none (all); 
-                  Example: chans='3~6;>40'
-	stokes -- Stokes parameters to image, may or may not be separated
-                by commas but best if you use commas.
-                Default: none (all); Example: stokes='IQUV';
-                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
+  Keyword arguments:
+  imagename -- Input image cube
+    Default: none; Example: imagename='ngc5921_task.im'
+  linefile -- Name of output spectral line cube
+    Default: none; Example: outline='ngc5921_line.im'
+  contfile -- Name of output continuum cube
+    Default: none; Example: contfile='ngc5921_cont.im'
+  fitorder -- Polynomial order for the continuum estimation.
+    Default: 0; Example fitorder=2
+  region -- ImageRegion file to select a portion of the cube for output.
+    Default: '' (= everything)
+    Example: region='myimage.im.rgn'
+             region='region1'
+    Use the viewer on the image cube to define the continuum
+    regions.  This is more general than box but still experimental.
+    N.B. This is NOT for selecting a subset of the input for
+         fitting the continuum!  Only pixels that are in region
+         will be considered, however.
+<!--                to retrieve the list of names. -->
+  box --  A [blcx, blcy, trcx, trcy] region on the directional plane for
+          selecting a subset for output.
+          ONLY pixel values are acceptable at this time.
+          Default: none (whole 2-D plane); Example: box='10,10,50,50'
+          N.B. This is NOT for selecting a subset of the input for
+               fitting the continuum!  Only pixels that are in region
+               will be considered, however.
+  chans -- line-free channel numbers to fit the continuum to.
+           N.B.: This is currently the _only_ way to specify what is
+                 continuum vs. line emission.
+           ONLY channel numbers accepted at this time, i.e. there is no
+           'spw:' as in the spw parameter of other tasks.  For
+           a multi-spw image, the channelization must be the same for all.
+           Default: '' (all)
+           Example: chans='3~6;>40'
+  stokes -- Stokes parameters to image, may or may not be separated
+            by commas but best if you use commas.
+            Default: none (all); Example: stokes='IQUV';
+            Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
 
 
 </example>
-
-
 </task>
-
 </casaxml>
-
