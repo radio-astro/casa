@@ -162,8 +162,6 @@ int main(int argc, char **argv)
                                 //dh->visibilityBuffer_p->weightMat();
                                 //dh->visibilityBuffer_p->weightSpectrum();
 
-                                gettimeofday(&stop,0);
-                                elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;
 			}
 
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
