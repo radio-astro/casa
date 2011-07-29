@@ -108,7 +108,8 @@ import unittest
 list = ['g192_a2.image', 'g192_a2.image-2.rgn', 
         'g192_a2.contfree', 'g192_a2.cont', 
         'g192_a2.contfree.order1', 'g192_a2.cont.order1', 
-        'g192_a2.contfree.order2', 'g192_a2.cont.order2']
+        'g192_a2.contfree.order2', 'g192_a2.cont.order2',
+        'boxychans_cont.im', 'boxychans_line.im']
 
 # Tests the correctness of the imcontsub task in CASA including:
 #   1. Incorrect input for each paramter.  Incorrect input includes
@@ -287,6 +288,8 @@ class imcontsub_test(unittest.TestCase):
     ## #
     ## # Random values are selected in the files and compared.
     ## # FIXME compare the entire arrays, not bloody random values
+    ## # FIXED - replacing it with the equivalent but better test_fitorder(0)
+    ## # sped the suite up from 1847s to 1194s on faraday.cv.nrao.edu.
     ## #
     ## # Returns True if successful, and False if it has failed.
     ## ####################################################################
@@ -394,8 +397,7 @@ class imcontsub_test(unittest.TestCase):
     # the fitorder paramter are tested in the input test.
     #
     # The results, image file contents, are compared with previously
-    # created image files. 50 values are compared in each of the
-    # continuum file and the spectral line file, about 10% of the image.
+    # created image files.
     #
     # Returns True if successful, and False if it has failed.
     ####################################################################
@@ -434,49 +436,13 @@ class imcontsub_test(unittest.TestCase):
                     +"\nError: Unable to subtract continuum with a fit order="+str(order)\
                     +"\n\t REULTS: "+str(results)
             else:
-                if ( os.path.exists( contfile ) and os.path.exists( linefile ) and results ):
-                    try:
-                        # check the subtracted line image matches expectations
-                        subtract_expr = '(\"' + linefile + '\"-\"' + oldlinefile + '\")'
-                        output_image = "line_diff" + str(order) + ".im"
-                        immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
-                        ia.open(output_image)
-                        stats = ia.statistics()
-                        ia.close()
-                        absmax = max(abs(stats['min']), abs(stats['max']))
-                        # in an infinite precision utopia, the difference image would be 0, but
-                        # alas, we do not live in such a world yet.
-                        if (absmax > 1e-8):
-                            retValue['success'] = False
-                            retValue['error_msgs'] = retValue['error_msgs']\
-                                + "line image different from expected on order " + str(order)\
-                                + " fit. Max resid is " + str(absmax)
-                    except Exception, err:
-                        retValue['success'] = False
-                        retValue['error_msgs'] = retValue['error_msgs']\
-                            + "Exception thrown when differencing line images on order " + str(order)\
-                            + " fit " + str(err)
-                    try:
-                        # check continuum image matches expectations
-                        subtract_expr = '(\"' + contfile + '\"-\"' + oldcontfile + '\")'
-                        output_image = "cont_diff" + str(order) + ".im"
-                        immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
-                        ia.open(output_image)
-                        stats = ia.statistics()
-                        ia.close()
-                        absmax = max(abs(stats['min']), abs(stats['max']))
-                        # in an infinite precision utopia, the difference image would be 0, but
-                        # alas, we do not live in such a world yet.
-                        if (absmax > 1e-8):
-                            retValue['success'] = False
-                            retValue['error_msgs'] = retValue['error_msgs']\
-                                + "continuum image different from expected on order " + str(order)\
-                                + " fit. Max residual is " + str(absmax)
-                    except Exception, err:
-                        retValue['success'] = False
-                        retValue['error_msgs'] = retValue['error_msgs']\
-                            + "Exception thrown when differencing continuum images using order " + str(order)\
-                            + " fit " + str(err)
+                if os.path.isdir(contfile) and os.path.isdir(linefile) and results:
+                    retValue = self.cmp_images(linefile, oldlinefile,
+                                               "Order " + str(order) + " line image",
+                                               retValue)
+                    retValue = self.cmp_images(contfile, oldcontfile,
+                                               "Order " + str(order) + " continuum image",
+                                               retValue)
                 else:  
                     retValue['success']=False
                     retValue['error_msgs']=retValue['error_msgs']\
@@ -484,7 +450,64 @@ class imcontsub_test(unittest.TestCase):
                        +str(order)+" test."
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+    def cmp_images(self, newimg, oldimg, errmsg, retval, tol=1.0e-8):
+        """
+        Check that newimg matches oldimg to within tol.
+        errmsg is a descriptive label in case there is an error.
+        retval is updated with the results and returned.
+        """
+        try:
+            subtract_expr = '(\"' + newimg + '\"-\"' + oldimg + '\")'
+            output_image = newimg + '.diff'
+            immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
+            ia.open(output_image)
+            stats = ia.statistics()
+            ia.close()
+            absmax = max(abs(stats['min']), abs(stats['max']))
+            # in an infinite precision utopia, the difference image would be 0, but
+            # alas, we do not live in such a world yet.
+            if (absmax > tol):
+                retval['success'] = False
+                retval['error_msgs'] += errmsg + ' error: Max residual is ' + str(absmax)
+        except Exception, err:
+            retval['success'] = False
+            retval['error_msgs'] += errmsg + " error: Exception thrown: " + str(err)
+        return retval
+        
+
+    def test_box_and_chans(self):
+        '''Imcontsub: Testing box and chans'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        #casalog.post("Starting imcontsub box and chans tests.", 'NORMAL2')
+
+        oldcfil = 'boxychans_cont.im'
+        cfil = 'test_' + oldcfil
+        oldlfil = 'boxychans_line.im'
+        lfil = 'test_' + oldlfil
+        bx   = [400, 420, 490, 470]
     
+        try:
+            results = imcontsub('g192_a2.image', fitorder=0, contfile=cfil,
+                                linefile=lfil, box=bx,
+                                chans='32~37')  # Purposely one-sided.  
+        except Exception, err:
+            retValue['success']=False
+            retValue['error_msgs'] += "\nError: Unable to subtract continuum with box and chans "\
+                                      +"\n\t RESULTS: "+str(results)
+        else:
+            if os.path.isdir(cfil) and os.path.isdir(lfil) and results:
+                retValue = self.cmp_images(lfil, oldlfil,
+                                           "box and chans line image", retValue)
+                retValue = self.cmp_images(cfil, oldcfil,
+                                           "box and chans continuum image",
+                                           retValue)
+            else:
+                retValue['success']=False
+                retValue['error_msgs'] += "\nError: box and chans output files were NOT created."
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        
 def suite():
     return [imcontsub_test]
 
