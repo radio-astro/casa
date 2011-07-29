@@ -99,14 +99,19 @@ Record ImageProfileFitter::fit() {
 		}
 		else {
 			ImageFit1D<Float> fitter = _fitProfile(estimate);
-			Vector<uInt> axes(1, _fitAxis);
+			IPosition axes(1, _fitAxis);
 			ImageCollapser collapser(
 				&_subImage, axes, True,
 				ImageCollapser::MEAN, "", True
 			);
-			ImageInterface<Float> *x = static_cast<SubImage<Float>*>(collapser.collapse(True));
-            _subImage = (SubImage<Float>)(*x);
-			delete x;
+			// FIXME is all this casting necessary?
+			std::auto_ptr<ImageInterface<Float> > x(
+				collapser.collapse(True)
+			);
+			_subImage = SubImage<Float>::createSubImage(
+				*x, Record(), "",  _log.get(),
+				False, AxesSpecifier(), False
+			);
 			_fitters.resize(1);
 			_fitters[0] = fitter;
 		}
@@ -229,7 +234,7 @@ void ImageProfileFitter::_setResults() {
 
 	String key;
 	TempImage<Float> *tmp = static_cast<TempImage<Float>* >(_getImage()->cloneII());
-	Vector<uInt> axes(1, _fitAxis);
+	IPosition axes(1, _fitAxis);
 	ImageCollapser collapser(
 		tmp, axes, False, ImageCollapser::ZERO, String(""), False
 	);
@@ -693,8 +698,6 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	const Bool fitIt, const String weightsImageName
 ) {
 	*_log << LogOrigin(_class, __FUNCTION__);
-	IPosition imageShape = _subImage.shape();
-
 	PtrHolder<ImageInterface<Float> > weightsImagePtrHolder;
 	ImageInterface<Float> *pWeights = 0;
 	if (! weightsImageName.empty()) {
@@ -766,9 +769,9 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	// ImageRegion from that passed in to this function rather than making
 	// a SubImage. But the way I have done it, the 'mask' keyword is
 	// handled automatically there.
-	Slicer sl(IPosition(nDim, 0), imageShape, Slicer::endIsLength);
-	LCSlicer sl2(sl);
-	ImageRegion region(sl2);
+	Slicer sl(IPosition(nDim, 0), _subImage.shape(), Slicer::endIsLength);
+	LCSlicer lslice(sl);
+	ImageRegion region(lslice);
 	if (! fitter.setData(region, abcissaType, xAbs)) {
 		*_log << fitter.errorMessage() << LogIO::EXCEPTION;
 	}
@@ -833,7 +836,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 		if (! _model.empty()) {
 			model = fitter.getFit();
 			ImageCollapser collapser(
-				&_subImage, Vector<uInt>(1, _fitAxis), True,
+				&_subImage, IPosition(1, _fitAxis), True,
 				ImageCollapser::ZERO, _model, True
 			);
 			std::auto_ptr<PagedImage<Float> > modelImage(
@@ -847,7 +850,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 		if (! _residual.empty()) {
 			residual = fitter.getResidual(-1, True);
             ImageCollapser collapser(
-				&_subImage, Vector<uInt>(1, _fitAxis), True,
+				&_subImage, IPosition(1, _fitAxis), True,
 				ImageCollapser::ZERO, _residual, True
 			);
 			std::auto_ptr<PagedImage<Float> > residualImage(
