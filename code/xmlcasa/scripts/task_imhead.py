@@ -431,15 +431,21 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
     #print "GETTING COORD INFO"
     hd_coordtypes=[]
     for i in range(hd_dict['ndim']):
-        hd_values['ctype'+str(i+1)]=    hd_dict['axisnames'][i]
-        hd_values['crpix'+str(i+1)]=     hd_dict['refpix'][i]
-        if ( (hd_dict['axisnames'][i]).lower() == 'stokes' ):
-            hd_values['crval'+str(i+1)]= stokes
+        hd_values['ctype'+str(i+1)] = hd_dict['axisnames'][i]
+        hd_values['crpix'+str(i+1)] = hd_dict['refpix'][i]
+        if ((hd_dict['axisnames'][i]).lower() == 'stokes' ):
+            hd_values['crval'+str(i+1)] = stokes
+            hd_units['crval'+str(i+1)] = hd_dict['axisunits'][i]
         else:
-            hd_values['crval'+str(i+1)]=str(hd_dict['refval'][i])
+            hd_values['crval'+str(i+1)] = (hd_dict['refval'][i])
+            hd_units['crval'+str(i+1)] = hd_dict['axisunits'][i]
+            hd_types['crval'+str(i+1)] = 'float'
 
-        hd_values['cdelt'+str(i+1)]=str(hd_dict['incr'][i])
-        hd_values['cunit'+str(i+1)]=hd_dict['axisunits'][i]
+        hd_values['cdelt'+str(i+1)] = (hd_dict['incr'][i])
+        hd_units['cdelt'+str(i+1)] = (hd_dict['axisunits'][i])
+        hd_types['cdelt'+str(i+1)] = 'float'
+        hd_values['cunit'+str(i+1)] = hd_dict['axisunits'][i]
+
     #print "HD_VALUES ctype3: ", hd_values['ctype3']
 
     # Add the miscellaneous info/keywords
