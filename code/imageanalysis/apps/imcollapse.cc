@@ -51,11 +51,10 @@ Int main(Int argc, char *argv[]) {
 	String chans = input.getString("chans");
 	String stokes = input.getString("stokes");
 	String mask = input.getString("mask");
-	uInt axis = input.getInt("axis");
+	IPosition axes(1, input.getInt("axis"));
 	String function = input.getString("function");
 	String outname = input.getString("outname");
 	Bool overwrite = input.getBool("overwrite");
-	Vector<uInt> axes(1,axis);
 	ImageInterface<Float> *myim = 0;
 	LogIO mylog;
 	ImageUtilities::openImage(myim, imagename, mylog);

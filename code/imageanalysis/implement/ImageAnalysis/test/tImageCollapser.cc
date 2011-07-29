@@ -73,6 +73,13 @@ void checkImage(
 			gotCsys.referenceValue() - expectedCsys.referenceValue()
 		)/expectedCsys.referenceValue();
 	AlwaysAssert(max(abs(fracDiffRef)) <= 1.5e-6, AipsError);
+	Vector<Quantity> beam = gotImage->imageInfo().restoringBeam();
+	AlwaysAssert(beam.size() == 3, AipsError);
+	cout << "out beam " << beam << endl;
+	AlwaysAssert(near(beam[0].getValue("arcsec"), 1.0), AipsError);
+	AlwaysAssert(near(beam[1].getValue("arcsec"), 1.0), AipsError);
+	AlwaysAssert(near(beam[2].getValue("deg"), 40.0), AipsError);
+
 }
 
 void checkImage(
@@ -92,7 +99,7 @@ void testException(
 ) {
 	writeTestString(test);
 	Bool exceptionThrown = true;
-	Vector<uInt> axes(1, compressionAxis);
+	IPosition axes(1, compressionAxis);
 	try {
 		ImageCollapser collapser(
 			aggString, &image, region, 0, box,
@@ -147,7 +154,7 @@ int main() {
     		writeTestString("average full image collapse along axis 0");
     		ImageCollapser collapser(
     			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", Vector<uInt>(1, 0), outname(), False
+    			ALL, "", IPosition(1, 0), outname(), False
     		);
     		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_avg_0.fits");
@@ -156,7 +163,7 @@ int main() {
     		writeTestString("average full image collapse along axis 2");
     		ImageCollapser collapser(
     			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", Vector<uInt>(1, 2), outname(), False
+    			ALL, "", IPosition(1, 2), outname(), False
     		);
     		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_avg_2.fits");
@@ -165,14 +172,14 @@ int main() {
     		writeTestString("sum subimage collapse along axis 1");
     		ImageCollapser *collapser = new ImageCollapser(
     			"sum", &goodImage, "", 0, "1,1,2,2", "1~2",
-    			"qu", "", Vector<uInt>(1, 2), outname(), False
+    			"qu", "", IPosition(1, 2), outname(), False
     		);
     		collapser->collapse(False);
     		delete collapser;
     		// and check that we can overwrite the previous output
     		collapser = new ImageCollapser(
         		"sum", &goodImage, "", 0, "1,1,2,2", "1~2",
-        		"qu", "", Vector<uInt>(1, 1), outname(), True
+        		"qu", "", IPosition(1, 1), outname(), True
         	);
     		collapser->collapse(False);
     		delete collapser;
@@ -182,7 +189,7 @@ int main() {
     		writeTestString("Check not specifying out file is ok");
     		ImageCollapser collapser(
     			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", Vector<uInt>(1, 2), "", False
+    			ALL, "", IPosition(1, 2), "", False
     		);
     		ImageInterface<Float> *collapsed = collapser.collapse(True);
     		checkImage(collapsed, datadir + "collapse_avg_2.fits");
@@ -192,17 +199,14 @@ int main() {
     		writeTestString("Check not wanting return pointer results in a NULL pointer being returned");
     		ImageCollapser collapser(
     			"mean", &goodImage, "", 0, "", ALL,
-    			ALL, "", Vector<uInt>(1, 2), "", False
+    			ALL, "", IPosition(1, 2), "", False
     		);
     		ImageInterface<Float> *collapsed = collapser.collapse(False);
     		AlwaysAssert(collapsed == NULL, AipsError);
     	}
     	{
     		writeTestString("average full image collapse along all axes but 0");
-    		Vector<uInt> axes(3);
-    		axes[0] = 1;
-    		axes[1] = 2;
-    		axes[2] = 3;
+    		IPosition axes(3, 1, 2, 3);
 
     		ImageCollapser collapser(
     			"max", &goodImage, "", 0, "", ALL,
@@ -216,23 +220,24 @@ int main() {
         	ImageInterface<Float> *pIm;
         	LogIO log;
         	ImageUtilities::openImage(pIm, goodImage.name(), log);
+        	cout << "pIm beam " << pIm->imageInfo().restoringBeam() << endl;
         	IPosition shape = pIm->shape();
         	CoordinateSystem csys = pIm->coordinates();
         	Array<Float> vals = pIm->get();
-        	delete pIm;
         	TempImage<Float> tIm(shape, csys);
+        	ImageUtilities::copyMiscellaneous(tIm, *pIm);
+        	delete pIm;
         	tIm.put(vals);
         	ImageCollapser collapser(
         		"mean", &tIm, "", 0, "", ALL,
-        		ALL, "", vector<uInt>(1, 0), outname(), False
+        		ALL, "", IPosition(1, 0), outname(), False
         	);
         	collapser.collapse(False);
         	checkImage(outname(), datadir + "collapse_avg_0.fits");
         }
        	{
         	writeTestString("full image collapse along axes 0, 1");
-        	Vector<uInt> axes(2, 0);
-        	axes[1] = 1;
+        	IPosition axes(2, 0, 1);
         	ImageCollapser collapser(
         		"mean", &goodImage, "", 0, "", ALL,
         		ALL, "", axes, outname(), False

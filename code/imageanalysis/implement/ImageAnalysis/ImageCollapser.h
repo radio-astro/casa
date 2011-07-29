@@ -92,13 +92,13 @@ public:
 		const String& region, const Record *const regionRec,
 		const String& box,
 		const String& chanInp, const String& stokes,
-		const String& maskInp, const Vector<uInt> axes,
+		const String& maskInp, const IPosition& axes,
 		const String& outname, const Bool overwrite
 	);
 
 	ImageCollapser(
 		const ImageInterface<Float> * const image,
-		const Vector<uInt>& axes, const Bool invertAxesSelection,
+		const IPosition& axes, const Bool invertAxesSelection,
 		const AggregateType aggregateType,
 		const String& outname, const Bool overwrite
 	);
@@ -123,7 +123,7 @@ public:
 
 private:
 	Bool _invertAxesSelection;
-	Vector<uInt> _axes;
+	IPosition _axes;
 	AggregateType _aggType;
 	static const String _class;
 

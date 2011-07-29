@@ -28,12 +28,11 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/SymLink.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
+#include <lattices/Lattices/LatticeUtilities.h>
 
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 
@@ -50,7 +49,7 @@ ImageCollapser::ImageCollapser(
 	const String& region, const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
-	const String& maskInp, const Vector<uInt> axes,
+	const String& maskInp, const IPosition& axes,
 	const String& outname, const Bool overwrite
 ) : ImageTask(
 		image, region, regionRec, box, chanInp, stokes,
@@ -65,7 +64,7 @@ ImageCollapser::ImageCollapser(
 
 ImageCollapser::ImageCollapser(
 	const ImageInterface<Float> *const image,
-	const Vector<uInt>& axes, const Bool invertAxesSelection,
+	const IPosition& axes, const Bool invertAxesSelection,
 	const AggregateType aggregateType,
 	const String& outname, const Bool overwrite
 ) : ImageTask(
@@ -112,7 +111,10 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	IPosition outShape = inShape;
 	IPosition shape(outShape.nelements(), 1);
 
-	for (Vector<uInt>::const_iterator iter=_axes.begin(); iter != _axes.end(); iter++) {
+	for (
+		IPosition::const_iterator iter=_axes.begin();
+		iter != _axes.end(); iter++
+	) {
 		uInt i = *iter;
 		refValues[i] = (blc[i] + trc[i])/2;
 		refPixels[i] = 0;
@@ -141,6 +143,41 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		Array<Float> zeros(outShape, 0.0);
 		outImage->put(zeros);
 	}
+	else if (_aggType == MEAN) {
+		Array<Float> data;
+		Array<Bool> mask;
+		IPosition x;
+		LatticeUtilities::collapse(
+			data, mask, _axes, subImage ,False, True, True
+		);
+		// Array<Float> dataCopy = data;
+		// dataCopy.resize(outImage->shape(), False);
+		/*
+		Bool deleteit = True;
+		Float *myd = data.getStorage(deleteit);
+		dataCopy.putStorage(myd, deleteit);
+		*/
+		Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
+		IPosition newOrder(outImage->ndim(), -1);
+		uInt nAltered = _axes.size();
+		uInt nUnaltered = outImage->ndim() - nAltered;
+		uInt alteredCount = nUnaltered;
+		uInt unAlteredCount = 0;
+		for (uInt i=0; i<outImage->ndim(); i++) {
+			for (uInt j=0; j<_axes.size(); j++) {
+				if (i == _axes[j]) {
+					newOrder[i] = alteredCount;
+					alteredCount++;
+					break;
+				}
+			}
+			if (newOrder[i] < 0) {
+				newOrder[i] = unAlteredCount;
+				unAlteredCount++;
+			}
+		}
+		outImage->put(reorderArray(dataCopy, newOrder));
+	}
 	else {
 		Float (*function)(const Array<Float>&) = funcMap()->at(_aggType);
 		Array<Float> data = subImage.get(False);
@@ -150,6 +187,9 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			Slicer s(start, end, Slicer::endIsLast);
 			outImage->putAt(function(data(s)), start);
 		}
+	}
+	if (wantReturn || ! _getOutname().empty()) {
+		ImageUtilities::copyMiscellaneous(*outImage, subImage);
 	}
 	if (! _getOutname().empty()) {
 		outImage->flush();
@@ -216,7 +256,7 @@ const map<uInt, String>* ImageCollapser::minMatchMap() {
 
 void ImageCollapser::_finishConstruction() {
 	for (
-		Vector<uInt>::const_iterator iter=_axes.begin();
+		IPosition::const_iterator iter=_axes.begin();
 			iter != _axes.end(); iter++
 		) {
 		if (*iter >= _getImage()->ndim()) {
@@ -232,8 +272,6 @@ void ImageCollapser::_finishConstruction() {
 ImageCollapser::AggregateType ImageCollapser::aggregateType(
 	String& aggString
 ) {
-	cout << __FILE__ << " " << __LINE__ << endl;
-
 	LogIO log;
 	log << LogOrigin(_class, __FUNCTION__);
 	if (aggString.empty()) {
@@ -244,12 +282,9 @@ ImageCollapser::AggregateType ImageCollapser::aggregateType(
 	const map<uInt, String> *funcNamePtr = funcNameMap();
 	map<uInt, String>::const_iterator iter;
 	const map<uInt, String> *minMatch = minMatchMap();
-	cout << "min mathc " << minMatch->at(MEAN) << endl;
-	cout << __FILE__ << " " << __LINE__ << endl;
 	for (iter = minMatch->begin(); iter != minMatch->end(); iter++) {
 		uInt key = iter->first;
 		String minMatch = iter->second;
-		cout << "key " << key << " minMatch " << minMatch << endl;
 		String funcName = (*funcNamePtr).at(key);
 		if (
 			aggString.startsWith(minMatch)
@@ -263,23 +298,9 @@ ImageCollapser::AggregateType ImageCollapser::aggregateType(
 
 void ImageCollapser::_invert() {
 	if (_invertAxesSelection) {
-		Vector<uInt> newAxes(_getImage()->ndim() - _axes.size(), 0);
-		uInt index=0;
-		for (uInt i=0; i<_getImage()->ndim(); i++) {
-			Bool found = False;
-			for (uInt j=0; j<_axes.size(); j++) {
-				if (i == _axes[j]) {
-					found = True;
-					break;
-				}
-			}
-			if (! found) {
-				newAxes[index] = i;
-				index++;
-			}
-		}
-		_axes.resize(newAxes.size());
-		_axes = newAxes;
+		IPosition x = IPosition::otherAxes(_getImage()->ndim(), _axes);
+		_axes.resize(x.size());
+		_axes = x;
 	}
 }
 }

@@ -236,35 +236,31 @@ casac::image * image::collapse(const string& function, const variant& axes,
 		return NULL;
 	}
 	try {
-		Vector<uInt> myAxes;
+		IPosition myAxes;
 		if (axes.type() == variant::INT) {
-			myAxes.resize(1);
-			myAxes[0] = (uInt) axes.toInt();
+			myAxes = IPosition(1, axes.toInt());
 		} else if (axes.type() == variant::INTVEC) {
-			vector<int> tmp = axes.getIntVec();
-			myAxes.resize(tmp.size());
-			for (uInt i = 0; i < tmp.size(); i++) {
-				myAxes[i] = tmp[i];
-			}
-		} else if (axes.type() == variant::STRINGVEC || axes.type()
-				== variant::STRING) {
-			Vector<String> axVec = (axes.type() == variant::STRING) ? Vector<
-					String> (1, axes.getString()) : toVectorString(
-					axes.toStringVec());
-			Vector<Int> holdAxes =
+			myAxes = IPosition(axes.getIntVec());
+		} else if (
+			axes.type() == variant::STRINGVEC
+			|| axes.type() == variant::STRING
+		) {
+			Vector<String> axVec = (axes.type() == variant::STRING)
+				? Vector<String> (1, axes.getString())
+				: toVectorString(axes.toStringVec());
+			myAxes = IPosition(
 				_image->getImage()->coordinates().getWorldAxesOrder(
 					axVec, False
-				);
-			myAxes.resize(holdAxes.size());
-			Vector<Int>::const_iterator jiter = holdAxes.begin();
-			for (Vector<uInt>::iterator iter = myAxes.begin(); iter
-					!= myAxes.end(); iter++) {
-				if (*jiter < 0) {
+				)
+			);
+			for (
+					IPosition::iterator iter = myAxes.begin();
+					iter != myAxes.end(); iter++
+				) {
+				if (*iter < 0) {
 					throw AipsError(
 							"At least one specified axis does not exist");
 				}
-				*iter = (uInt) *jiter;
-				jiter++;
 			}
 		} else {
 			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;

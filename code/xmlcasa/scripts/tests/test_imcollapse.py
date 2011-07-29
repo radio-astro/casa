@@ -121,6 +121,7 @@ class imcollapse_test(unittest.TestCase):
             got = gotImage
         self.assertTrue(got.shape() == expected.shape())
         diffData = got.getchunk() - expected.getchunk()
+        print "diff data" + str(abs(diffData).max())
         self.assertTrue(abs(diffData).max() == 0)
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
@@ -130,6 +131,11 @@ class imcollapse_test(unittest.TestCase):
             gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
         )/expectedCsys.referencevalue()['numeric'];
         self.assertTrue(abs(fracDiffRef).max() <= 1.5e-6)
+        beam = got.restoringbeam()
+        self.assertTrue(len(beam) == 3)
+        self.assertTrue(abs(beam["major"]["value"] - 1) < 1.5e-6)
+        self.assertTrue(abs(beam["minor"]["value"] - 1) < 1.5e-6)
+        self.assertTrue(abs(beam["positionangle"]["value"] - 40) < 1.5e-6)
         got.close()
         got.done()
         expected.close()
