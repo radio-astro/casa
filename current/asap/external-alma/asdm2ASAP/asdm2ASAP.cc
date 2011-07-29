@@ -9,7 +9,7 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/StreamLogSink.h>
 #include <casa/Logging/LogFilter.h>
-#include <Scantable.h>
+#include "../../src/Scantable.h"
 #include "ASDMFiller.h"
 
 using namespace std ;
