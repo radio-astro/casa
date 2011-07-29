@@ -35,7 +35,9 @@ set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
 if( APPLE )
     set( SO dylib )
-    if( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
+    if( EXISTS ${CMAKE_Fortran_COMPILER}) 
+        message(STATUS "Use " ${CMAKE_Fortran_COMPILER})
+    elseif( EXISTS            /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
         set( CMAKE_Fortran_COMPILER /opt/casa/core2-apple-darwin8/3rd-party/bin/gfortran )
 	set( CMAKE_CXX_COMPILER     /opt/casa/core2-apple-darwin8/3rd-party/bin/g++ )
     elseif( EXISTS        /opt/local/bin/gfortran )
@@ -53,6 +55,7 @@ else()
 endif()
 
 project( CASA C CXX Fortran )
+
 # C is enabled because 
 # - FindQt4.cmake requires it (bug)
 # - ccmtools uses the C preprocessor
@@ -81,6 +84,7 @@ if( CMAKE_BUILD_TYPE STREQUAL Debug )
   set( CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0 -fno-omit-frame-pointer" )
 endif()
 
+include( UsePrivatePath )
 if( NOT RE_CMAKE )
     string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
 endif()
@@ -156,8 +160,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${SO}\" ) { print
-		     \"$d/libgfortran.${SO}\"; break;} if ( -e \"$d/libgfortran.a\" ) { print \"$d/libgfortran.a\"; break;}}}}"
+                     COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;} if ( -e \"$d/libgfortran.${CMAKE_STATIC_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_STATIC_LIBRARY_SUFFIX}\"; $found = 1; break;}}} break if $found; }"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
@@ -189,8 +192,6 @@ if( APPLE )
               endif()
             endif()
         endif()
-	message("I think you've got Darwin-10 and I've decided archflag=" ${archflag})
-        #set( archflag ${CMAKE_SYSTEM_PROCESSOR} )
         if( archflag STREQUAL x86_64 )
             set ( casa_packages /opt/casa/darwin10-64b )
             add_definitions( -DAIPS_64B )
@@ -445,6 +446,7 @@ casa_find( CFITSIO
   INCLUDES fitsio.h fitsio2.h
   INCLUDES_SUFFIXES cfitsio
   LIBS cfitsio
+  PREFIX_HINTS ${CFITSIO_ROOT_DIR}
   CPP_VERSION CFITSIO_VERSION
   RUN_VERSION "(ffvers(&v), v)" )
 
@@ -511,6 +513,7 @@ if( NOT SKIP_PGPLOT )
   endif()
   casa_find( PGPLOT
     VERSION 5.3.1
+    PREFIX_HINTS ${PGPLOT_ROOT_DIR}
     INCLUDES cpgplot.h
     LIBS pgplot${pgplot_ext} cpgplot${pgplot_ext}
     DEPENDS ${_deps} )
@@ -520,6 +523,7 @@ endif()
 if( NOT SKIP_PGPLOT )
   casa_find( WCSLIB
     VERSION 4.3
+    PREFIX_HINTS ${WCSLIB_ROOT_DIR}
     INCLUDES wcslib/wcsconfig.h
     LIBS wcs
          pgsbox${pgplot_ext}
@@ -553,6 +557,7 @@ endif()
 # in the library, which is a pity because CASACore needs
 # version >= 3.2.2 and is subject to a bug in fftw 3.2.1
 casa_find( FFTW3
+           PREFIX_HINTS ${FFTW3_ROOT_DIR}
            INCLUDES fftw3.h
            LIBS fftw3_threads fftw3f_threads fftw3f fftw3 )
 
@@ -643,7 +648,7 @@ endif()
 if( NOT PYTHON_FOUND )
 
   if ( NOT PYTHON_LIBNAME )
-    set( _names 2.7 2.6 2.5.2 2.5 )
+    set( _names 2.6 2.7 2.5.2 2.5 )
     # (The library named libpython.2.5.2.dylib seems to exist only in the CASA world.)
   else()
     set( _names ${PYTHON_LIBNAME} )
@@ -654,6 +659,7 @@ if( NOT PYTHON_FOUND )
 
     casa_find( 
       PYTHON${_v} 
+      PREFIX_HINTS ${PYTHON_ROOT_DIR}
       LIBS python${_v} 
       NO_REQUIRE 
       )
@@ -703,6 +709,7 @@ casa_find( PYTHON
      numpy/npy_interrupt.h   # for numpy
   INCLUDES_SUFFIXES python${PYTHONV}
   PREFIX_HINTS 
+     ${NUMPY_ROOT_DIR}     
      ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
@@ -758,7 +765,7 @@ endforeach()
 
 casa_find( DBUSARCH
   INCLUDES dbus/dbus-arch-deps.h
-  PREFIX_HINTS ${dbus_prefix}
+  PREFIX_HINTS ${DBUS_ARCH_DIR} ${dbus_prefix}
   NO_CHECK   # This header does not compile if included directly
   NO_REQUIRE
 )
@@ -770,7 +777,7 @@ casa_find( DBUS
   INCLUDES dbus/dbus.h
            dbus-c++/dbus.h
   INCLUDES_SUFFIXES dbus-1.0 dbus-c++-1
-  PREFIX_HINTS ${dbus_prefix}
+  PREFIX_HINTS ${DBUS_ROOT_DIR} ${dbus_prefix}
   LIBS dbus-c++-1
   PROGRAMS dbusxx-xml2cpp
   DEPENDS ${dbus_depends}
@@ -784,11 +791,13 @@ casa_find( ATM
   LIBS aatm
   CPP_VERSION ATM_VERSION
   RUN_VERSION "atm::getVersion()" 
+  PREFIX_HINTS ${ATM_ROOT_DIR}
 )
 
 # XML2
 casa_find( LIBXML2
   VERSION 2.6.16
+  PREFIX_HINTS ${LIBXML2_ROOT_DIR}
   INCLUDES libxml/xmlversion.h
   INCLUDES_SUFFIXES libxml2
   LIBS xml2
@@ -846,6 +855,7 @@ casa_find( CCMTOOLS
     /* This code is not reached, if IPython was launched */
     return 1;
     "
+  PREFIX_HINTS ${CCMTOOLS_ROOT_DIR}
   DEPENDS PYTHON
 )
 
@@ -888,6 +898,7 @@ casa_find( QWT
   INCLUDES qwt_global.h
   INCLUDES_SUFFIXES qwt qwt-qt4
   PREFIX_HINTS 
+    ${QWT_ROOT_DIR}
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
   LIBS qwt
@@ -897,6 +908,7 @@ casa_find( QWT
 # Xerces
 casa_find( XERCES
   VERSION 2.7.0
+  PREFIX_HINTS ${XERCES_ROOT_DIR}
   INCLUDES xercesc/util/XercesVersion.hpp
   LIBS xerces-c
   CPP_VERSION XERCES_FULLVERSIONDOT 
@@ -955,7 +967,8 @@ casa_find( RPFITS
   VERSION 2.11
   INCLUDES RPFITS.h
   LIBS rpfits
-  RUN_VERSION names_.rpfitsversion
+  #RUN_VERSION names_.rpfitsversion
+  PREFIX_HINTS ${RPFITS_ROOT_DIR}
   DEPENDS FORTRAN 
 )
 
@@ -964,6 +977,7 @@ casa_find( READLINE
   VERSION 4.3
   INCLUDES readline/readline.h #depends on <cstdio> to compile
   LIBS readline ncurses
+  PREFIX_HINTS ${READLINE_ROOT_DIR}
   CPP_VERSION "RL_VERSION_MAJOR << '.' << RL_VERSION_MINOR"
   RUN_VERSION rl_library_version
 )

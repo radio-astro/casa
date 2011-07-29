@@ -105,12 +105,12 @@ if( LIBXML2_INCLUDE_DIR MATCHES "NOTFOUND$" )
    message( FATAL_ERROR "libxml/xmlversion.h could not be found. Please check!" )
 endif()
 message( STATUS "LIBXML2_INCLUDE_DIR = " ${LIBXML2_INCLUDE_DIR} )
-find_path( LIBXML2_LIBRARY libxml2.so
+find_path( LIBXML2_LIBRARY libxml2${CMAKE_SHARED_LIBRARY_SUFFIX}
            PATHS /usr
            PATH_SUFFIXES lib64 lib )
 #find_path( LIBXML2_LIBRARY libxml2.so )
 if ( LIBXML2_LIBRARY MATCHES "NOTFOUND$" )
-   message( FATAL_ERROR "libxml2.so could not be found. Please check!" ) 
+   message( FATAL_ERROR "libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} could not be found. Please check!" )
 endif()
 message( STATUS "LIBXML2_LIBRARY = " ${LIBXML2_LIBRARY} ) 
 set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma/implement/ASDM
@@ -118,8 +118,8 @@ set( ASDM_INCLUDE_DIR ${CASA_CODE_PATH}/alma/implement/ASDM
                       ${CASA_CODE_PATH}/alma/implement/ASDMBinaries
                       ${CASA_CODE_PATH}/alma/implement/Enumtcl
                       ${LIBXML2_INCLUDE_DIR} )
-set( ASDM_LIBRARY ${casaroot}/${arch}/lib/libalma.so
-                  ${LIBXML2_LIBRARY}/libxml2.so )
+set( ASDM_LIBRARY ${casaroot}/${arch}/lib/libalma${CMAKE_SHARED_LIBRARY_SUFFIX}
+ ${LIBXML2_LIBRARY}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX} )
 add_definitions( -DWITHOUT_ACS )
 
 #
