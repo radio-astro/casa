@@ -1054,7 +1054,46 @@ class imhead_test(unittest.TestCase):
         #print "beginning of the test"
         
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+    def test_types(self):
+        '''Imhead: CAS-3285 Test types of keys'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+        ima = input_file
+        for i in range(4):
+            cdelt = imhead(imagename=ima, mode='get', hdkey='cdelt'+str(i+1))
+            if (type(cdelt['value']) == str):
+                retValue['success'] = False
+                retValue['error_msgs'] = retValue['error_msgs']\
+                    +"Error: CDELT"+str(i+1)+" type should not be a string."
+                    
+                self.assertTrue(retValue['success'], retValue['error_msgs']) 
     
+
+    def test_units(self):
+        '''Imhead: CAS-3285 Test if units are printed'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+        ima = input_file
+        cdelt1 = imhead(imagename=ima, mode='get', hdkey='cdelt1')
+        if (cdelt1['unit'] == ''):
+            retValue['success'] = False
+            retValue['error_msgs'] = retValue['error_msgs']\
+                +"Error: CDELT1"+" has no units."
+            
+        cdelt2 = imhead(imagename=ima, mode='get', hdkey='cdelt2')
+        if (cdelt2['unit'] == ''):
+            retValue['success'] = False
+            retValue['error_msgs'] = retValue['error_msgs']\
+                +"Error: CDELT2"+" has no units."
+                
+        cdelt4 = imhead(imagename=ima, mode='get', hdkey='cdelt4')
+        if (cdelt4['unit'] == ''):
+            retValue['success'] = False
+            retValue['error_msgs'] = retValue['error_msgs']\
+                +"Error: CDELT4"+" has no units."
+            
+        self.assertTrue(retValue['success'], retValue['error_msgs'])
+        
+        
 def suite():
     return [imhead_test]    
     
