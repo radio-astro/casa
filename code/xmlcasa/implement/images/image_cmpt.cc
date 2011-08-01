@@ -266,6 +266,12 @@ casac::image * image::collapse(const string& function, const variant& axes,
 			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
 		}
 		String aggString = function;
+		aggString.trim();
+		aggString.downcase();
+		if (aggString == "avdev") {
+			*_log << "avdev currently not supported. Let us know if you have a need for it"
+				<< LogIO::EXCEPTION;
+		}
 		ImageCollapser collapser(
 			aggString, _image->getImage(), region, 0, box,
 			chans, stokes, mask, myAxes, outfile, overwrite

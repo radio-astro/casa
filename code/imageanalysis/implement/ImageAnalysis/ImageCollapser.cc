@@ -34,13 +34,11 @@
 #include <images/Images/TempImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
-
 namespace casa {
 
 map<uInt, String> *ImageCollapser::_funcNameMap = 0;
 map<uInt, String> *ImageCollapser::_minMatchMap = 0;
-map<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
+//map<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
 
 const String ImageCollapser::_class = "ImageCollapser";
 
@@ -139,24 +137,51 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			new PagedImage<Float>(outShape, outCoords, _getOutname())
 		);
 	}
+	Bool isPaged = ! _getOutname().empty();
 	if (_aggType == ZERO) {
 		Array<Float> zeros(outShape, 0.0);
 		outImage->put(zeros);
 	}
-	else if (_aggType == MEAN) {
+	else {
+		LatticeStatsBase::StatisticsTypes lattStatType;
+		switch(_aggType) {
+		case MAX:
+			lattStatType = LatticeStatsBase::MAX;
+			break;
+		case MEAN:
+			lattStatType = LatticeStatsBase::MEAN;
+			break;
+		case MEDIAN:
+			lattStatType = LatticeStatsBase::MEDIAN;
+			break;
+		case MIN:
+			lattStatType = LatticeStatsBase::MIN;
+			break;
+		case RMS:
+			lattStatType = LatticeStatsBase::RMS;
+			break;
+		case STDDEV:
+			lattStatType = LatticeStatsBase::SIGMA;
+			break;
+		case SUM:
+			lattStatType = LatticeStatsBase::SUM;
+			break;
+		case VARIANCE:
+			lattStatType = LatticeStatsBase::VARIANCE;
+			break;
+		case ZERO:
+		case UNKNOWN:
+		default:
+			*_log << "Logic error. Should never have gotten the the bottom of the switch statement"
+			<< LogIO::EXCEPTION;
+		}
 		Array<Float> data;
 		Array<Bool> mask;
 		IPosition x;
 		LatticeUtilities::collapse(
-			data, mask, _axes, subImage ,False, True, True
+			data, mask, _axes, subImage ,False,
+			True, True, lattStatType
 		);
-		// Array<Float> dataCopy = data;
-		// dataCopy.resize(outImage->shape(), False);
-		/*
-		Bool deleteit = True;
-		Float *myd = data.getStorage(deleteit);
-		dataCopy.putStorage(myd, deleteit);
-		*/
 		Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
 		IPosition newOrder(outImage->ndim(), -1);
 		uInt nAltered = _axes.size();
@@ -177,7 +202,30 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			}
 		}
 		outImage->put(reorderArray(dataCopy, newOrder));
+		Bool needsMask = False;
+		for (
+			Array<Bool>::const_iterator iter = mask.begin();
+			iter != mask.end(); iter++
+		) {
+			if (! *iter) {
+				needsMask = True;
+				break;
+			}
+		}
+		if (needsMask) {
+			if (isPaged) {
+				String maskName = outImage->makeUniqueRegionName(String("mask"), 0);
+				outImage->makeMask(maskName, True, True, False);
+				(&outImage->pixelMask())->put(mask);
+			}
+			else {
+				dynamic_cast<TempImage<Float> *>(
+						outImage.get()
+				)->attachMask(ArrayLattice<Bool>(mask));
+			}
+		}
 	}
+	/*
 	else {
 		Float (*function)(const Array<Float>&) = funcMap()->at(_aggType);
 		Array<Float> data = subImage.get(False);
@@ -188,9 +236,9 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			outImage->putAt(function(data(s)), start);
 		}
 	}
-	if (wantReturn || ! _getOutname().empty()) {
-		ImageUtilities::copyMiscellaneous(*outImage, subImage);
-	}
+	*/
+	ImageUtilities::copyMiscellaneous(*outImage, subImage);
+
 	if (! _getOutname().empty()) {
 		outImage->flush();
 	}
@@ -200,27 +248,10 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	return outImage.release();
 }
 
-const map<uInt, Float (*)(const Array<Float>&)>* ImageCollapser::funcMap() {
-	if (! _funcMap) {
-		map<uInt, Float (*)(const Array<Float>&)> ref;
-		ref[(uInt)AVDEV] = casa::avdev;
-		ref[(uInt)MAX] = casa::max;
-		ref[(uInt)MEAN] = casa::mean;
-		ref[(uInt)MEDIAN] = casa::median;
-		ref[(uInt)MIN] = casa::min;
-		ref[(uInt)RMS] = casa::rms;
-		ref[(uInt)STDDEV] = casa::stddev;
-		ref[(uInt)SUM] = casa::sum;
-		ref[(uInt)VARIANCE] = casa::variance;
-		_funcMap = new map<uInt, Float (*)(const Array<Float>&)>(ref);
-	}
-	return _funcMap;
-}
-
 const map<uInt, String>* ImageCollapser::funcNameMap() {
 	if (! _funcNameMap) {
 		map<uInt, String> ref;
-		ref[(uInt)AVDEV] = "avdev";
+		//ref[(uInt)AVDEV] = "avdev";
 		ref[(uInt)MAX] = "max";
 		ref[(uInt)MEAN] = "mean";
 		ref[(uInt)MEDIAN] = "median";
@@ -238,7 +269,7 @@ const map<uInt, String>* ImageCollapser::funcNameMap() {
 const map<uInt, String>* ImageCollapser::minMatchMap() {
 	if (! _minMatchMap) {
 		map<uInt, String> ref;
-		ref[(uInt)AVDEV] = "a";
+		//ref[(uInt)AVDEV] = "a";
 		ref[(uInt)MAX] = "ma";
 		ref[(uInt)MEAN] = "mea";
 		ref[(uInt)MEDIAN] = "med";
@@ -267,7 +298,6 @@ void ImageCollapser::_finishConstruction() {
 	}
 	_invert();
 }
-
 
 ImageCollapser::AggregateType ImageCollapser::aggregateType(
 	String& aggString

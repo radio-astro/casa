@@ -28,16 +28,9 @@
 #ifndef IMAGEANALYSIS_IMAGETASK_H
 #define IMAGEANALYSIS_IMAGETASK_H
 
-#include <casa/Logging/LogIO.h>
-#include <coordinates/Coordinates/Coordinate.h>
-#include <images/Images/ImageInterface.h>
-
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
-#include <imageanalysis/Regions/CasacRegionManager.h>
 
 #include <casa/namespace.h>
-
-#include <memory>
 
 namespace casa {
 

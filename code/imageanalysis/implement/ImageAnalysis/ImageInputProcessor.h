@@ -27,7 +27,7 @@
 #define IMAGES_IMAGEINPUTPROCESSOR_H
 
 #include <images/Images/ImageInterface.h>
-#include <images/Images/ImageMetaData.h>
+
 #include <imageanalysis/Regions/CasacRegionManager.h>
 
 #include <casa/namespace.h>
@@ -54,15 +54,6 @@ class ImageInputProcessor {
 	// </synopsis>
 
 public:
-	// instruction if input stokes is blank
-	/*
-	enum StokesControl {
-		USE_FIRST_STOKES,
-		USE_ALL_STOKES
-	};
-	*/
-
-	// const static String ALL;
 
 	// struct for checking output file writability
 	struct OutputStruct {

@@ -1279,7 +1279,7 @@ in this case.  It is evaluated each time it is needed.
     <shortdescription>Collapse image along specified axis, computing aggregate function of pixels along that axis.</shortdescription>
     <input>
         <param type="string" direction="in" name="function">
-            <description>Aggregate function to apply: avdev, max, mean, median, min, rms, stdev, sum, variance.</description>
+            <description>Aggregate function to apply: max, mean, median, min, rms, stdev, sum, variance.</description>
             <value></value>
         </param>
         <param type="any" direction="in" name="axes">
@@ -1322,7 +1322,7 @@ in this case.  It is evaluated each time it is needed.
         the specified aggregate function of pixels along that axis and places those values in the
         single remaining plane of this axis in the output image. The method returns an image analysis
         tool containing the newly created collapsed image. Choices of aggregate functions are:
-        avdev, max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
+        max, mean, median, min, rms, stdev, sum, variance. Minimum match is supported for
         the function parameter (eg, function="r" will compute the rms of the pixel values).
         
         Axes can be specified as a single integer or array of integers indicating the zero-based axes along

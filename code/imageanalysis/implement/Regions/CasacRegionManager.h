@@ -29,7 +29,6 @@
 
 #include <images/Regions/RegionManager.h>
 
-
 namespace casa {
 
 /**
@@ -41,7 +40,6 @@ namespace casa {
  * @author
  * @version 
  **/
-
 
 class CasacRegionManager: public RegionManager {
 

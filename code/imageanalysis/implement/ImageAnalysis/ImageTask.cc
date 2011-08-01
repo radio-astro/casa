@@ -27,7 +27,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-#include <casa/Arrays/ArrayMath.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
@@ -37,7 +36,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
+#include <memory>
 
 namespace casa {
 
@@ -133,7 +132,6 @@ String ImageTask::_summaryHeader() const {
 	os << "       --- mask:                " << _mask << endl;
 	return os.str();
 }
-
 
 }
 
