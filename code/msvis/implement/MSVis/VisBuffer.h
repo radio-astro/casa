@@ -688,7 +688,7 @@ protected:
 
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
-    virtual void copyCache (const VisBuffer & other);
+    virtual void copyCache (const VisBuffer & other, Bool force);
 
 private:
 
@@ -697,7 +697,7 @@ private:
 
     template<typename T>
     static void cacheCopyArray (Bool & newStatus, Bool oldStatus, T & newCache,
-                                const T & oldCache) {
+                                const T & oldCache, Bool force) {
 
         // Leave things unchanged if the old status is false.  This will often
         // leave the value with an empty data structure and an OK status which
@@ -706,16 +706,17 @@ private:
         // For copying Array<T> derived objects since the assign operator
         // doesn't work for these.
 
-        newStatus = oldStatus;
+        newStatus = force || oldStatus;
 
-        if (oldStatus) {
+        if (newStatus) {
 
             newCache.assign (oldCache);
         }
     }
 
     template<typename T>
-    static void cacheCopyNormal (Bool & newStatus, Bool oldStatus, T & newCache, const T & oldCache) {
+    static void cacheCopyNormal (Bool & newStatus, Bool oldStatus, T & newCache, const T & oldCache,
+                                 Bool force) {
 
         // Leave things unchanged if the old status is false.  This will often
         // leave the value with an empty data structure and an OK status which
@@ -724,9 +725,9 @@ private:
         // For copying "normal" cache status and values.  Normal means
         // the assign operator works (which it doesn't for classes based on Array<T>)
 
-        newStatus = oldStatus;
+        newStatus = force || oldStatus;
 
-        if (oldStatus) {
+        if (newStatus) {
 
             newCache = oldCache;
         }

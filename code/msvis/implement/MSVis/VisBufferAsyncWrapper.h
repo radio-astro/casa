@@ -451,7 +451,7 @@ protected:
 
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line) const;
-    void copyCache (const VisBuffer & other);
+    void copyCache (const VisBuffer & other, Bool force);
     VisBufferAsync * releaseVba ();
 
 private:

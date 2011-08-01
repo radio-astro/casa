@@ -260,10 +260,12 @@ VisBufferAsyncWrapper::CJones () const
 }
 
 void
-VisBufferAsyncWrapper::copyCache (const VisBuffer & other)
+VisBufferAsyncWrapper::copyCache (const VisBuffer & other, Bool force)
 {
+  assert (! force);
+
   CheckWrap ();
-  wrappedVba_p->copyCache (other);
+  wrappedVba_p->copyCache (other, force);
 }
 
 Vector<Int>&

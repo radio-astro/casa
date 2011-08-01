@@ -80,7 +80,7 @@ protected:
     void clear ();
     void construct ();
     virtual void copyAsyncValues (const VisBufferAsync & other);
-    virtual void copyCache (const VisBuffer & other);
+    virtual void copyCache (const VisBuffer & other, Bool force);
     template<typename T> void copyVector (const Vector<T> & from, Vector<T> & to);
     Vector<MDirection>& fillDirection1();
     Vector<MDirection>& fillDirection2();

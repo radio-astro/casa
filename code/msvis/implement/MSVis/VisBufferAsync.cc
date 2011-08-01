@@ -146,7 +146,7 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
             // Let the standard VisBuffer to the copying of values
             // from the old VisBuffer
 
-            copyCache (other);
+            copyCache (other, False);
 
             // Copy over the async values
 
@@ -346,9 +346,11 @@ VisBufferAsync::construct ()
 }
 
 void
-VisBufferAsync::copyCache (const VisBuffer & other)
+VisBufferAsync::copyCache (const VisBuffer & other, Bool force)
 {
-    VisBuffer::copyCache (other);
+    assert (! force);
+
+    VisBuffer::copyCache (other, False);
 }
 
 
@@ -507,7 +509,7 @@ VisBufferAsync::fillFrom (const VisBufferAsync & other)
 
     Log (2, "Fill from VisBufferAsync @ 0x%08x to VisBufferAsync @ 0x%08x\n", & other, this);
 
-    copyCache (other);
+    copyCache (other, False);
     copyAsyncValues (other);
 
 }
