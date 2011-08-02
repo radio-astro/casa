@@ -34,6 +34,8 @@
 #include <images/Images/TempImage.h>
 #include <lattices/Lattices/LatticeUtilities.h>
 
+#include <memory>
+
 namespace casa {
 
 map<uInt, String> *ImageCollapser::_funcNameMap = 0;
