@@ -491,35 +491,49 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
 
             user_key_count = 0
             for field in hd_keys+user_keys:
-                if ( field == 'ctype1' ):
-                    casalog.post( 'axes --' )
-                elif ( field == 'crpix1' ):
-                    casalog.post( 'crpix --' )
-                elif ( field == 'crval1' ):
-                    casalog.post( 'crval --' )                            
-                elif ( field == 'cdelt1' ):
-                    casalog.post( 'cdelt --' )
-                elif ( field == 'cunit1' ):
-                    casalog.post( 'units --' )
-                        
-                elif ( field.startswith( 'cdelt' ) or field.startswith('crval' ) ):
+                if (field.startswith('ctype')):
+                    if field == 'ctype1':
+                        casalog.post( 'axes --' )
+                    casalog.post( str( '        -- ' )+field+str(': ')+str(hd_values[field]))
+
+                elif (field.startswith('crpix')):
+                    if field == 'crpix1':
+                        casalog.post( 'crpix --' )
+                    casalog.post( str( '        -- ' )+field+str(': ')+str(hd_values[field]))
+
+                elif (field.startswith('crval')):
+                    if field == 'crval1':
+                        casalog.post( 'crval --' )
                     index=int(field[5:])
                     printVal=str(hd_values[field])+str(hd_values['cunit'+str(index)])
                     if ( hd_values['cunit'+str(index)]== 'rad' ):
                         printVal=qa.formxxx(printVal, 'dms')+str("deg.min.sec")
                     casalog.post( str( '        -- ' )+field+str(': ')+printVal )
-                elif ( field.startswith( 'cunit' ) ):
-                    # Output the displayed unit, not the stored unit value.
+
+                elif (field.startswith('cdelt')):
+                    if field == 'cdelt1':
+                        casalog.post( 'cdelt --' )
+                    index=int(field[5:])
+                    printVal=str(hd_values[field])+str(hd_values['cunit'+str(index)])
+                    if ( hd_values['cunit'+str(index)]== 'rad' ):
+                        printVal=qa.formxxx(printVal, 'dms')+str("deg.min.sec")
+                    casalog.post( str( '        -- ' )+field+str(': ')+printVal )
+
+                elif (field.startswith('cunit')):
+                    if field == 'cunit1':
+                        casalog.post( 'units --' )
                     outUnit=hd_values[field]
                     if ( outUnit == 'rad' ):
                         outUnit='deg.min.sec'
                     casalog.post( str( '        -- ' )+field+str(': ')+outUnit )
-                elif ( hd_keys.count( field ) < 1 ):
+                        
+                elif (hd_keys.count(field) < 1):
                     # This is a user defined keyword
-                    if ( user_key_count < 1 ):
+                    if (user_key_count < 1):
                         casalog.post( 'User Defined --' )
                     user_key_count = user_key_count + 1
                     casalog.post( str( '        -- ' )+field+str(': ')+str(hd_values[field]))
+
                 else:
                     casalog.post( str( '        -- ' )+field+str(': ')+str(hd_values[field]))
             if ( csys!=None ):
@@ -527,6 +541,7 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
                 del csys
             #print "List information displayed in the logger"
             return hd_values
+
         except Exception, instance:
             casalog.post( str('*** Error ***')+str(instance), 'SEVERE' )
             casalog.post( str('              Python error: ')+str(instance),'SEVERE' )
