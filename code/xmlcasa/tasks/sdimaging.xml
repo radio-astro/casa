@@ -37,7 +37,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </allowed>
     </param>
 
-    <param type="any" name="restfreq" subparam="true">
+    <param type="any" name="restfreq">
             <description>rest frequency</description>
             <any type="variant" limittype="string double"/>
             <value type="string"/>
@@ -146,17 +146,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <constraints>
-            <when param="specunit">
-                <equals type="string" value=""/>
-                <equals type="string" value="channel"/>
-                <equals type="string" value="GHz"/>
-                <equals type="string" value="MHz"/>
-                <equals type="string" value="kHz"/>
-                <equals type="string" value="Hz"/>
-                <equals type="string" value="km/s">
-                    <default param="restfreq"><value type="string"></value></default>
-                </equals>
-            </when>
             <when param="dochannelmap">
                 <equals type="bool" value="False"/>
                 <equals type="bool" value="True">

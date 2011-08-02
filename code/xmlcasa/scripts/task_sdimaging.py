@@ -66,7 +66,7 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                     raise Exception, msg
             
             # restfreq
-            if mode=='velocity' and restfreq=='':
+            if restfreq=='':
                 tb.open(srctab)
                 rfcol=tb.getcol('REST_FREQUENCY').transpose()
                 srcidcol=tb.getcol('SOURCE_ID')
@@ -105,9 +105,12 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # gridfunction
 
             # outfile
-            if os.path.exists(outfile) and not overwrite:
-                msg='file %s exists' % (outfile)
-                raise Exception, msg
+            if os.path.exists(outfile):
+                if overwrite:
+                    os.system( 'rm -rf %s'%(outfile) )
+                else:
+                    msg='file %s exists' % (outfile)
+                    raise Exception, msg
 
             # imsize
             nx=''
