@@ -1373,7 +1373,11 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
         spwid=Vector<Int>(1,-1);
       }
       casa::MFrequency mfreqref;
-      if(spix != 0 && !casaMFrequency(reffreq, mfreqref)){
+      // Unfortunately the default c'tor for mfreqref sets it to 0.
+      // SpectralIndex divides by it, so we really want to get a nonzero value
+      // in even if we do not think it will be used.  However, don't complain
+      // about a bogus reffreq if it's clearly irrelevant.
+      if(!casaMFrequency(reffreq, mfreqref) && fluxdensity[0] >= 0.0){
         *itsLog << LogIO::SEVERE
                 << "Could not interpret the reference frequency"
                 << LogIO::POST;

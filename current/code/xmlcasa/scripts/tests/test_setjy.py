@@ -83,19 +83,23 @@ class setjy_test_modimage(CheckAfterImportuvfits):
     records = {}
     
     def do_initial_setup(self):
-        for do_scaling in [False, True]:
-            self.__class__.records[do_scaling] = self.run_setjy(do_scaling)
+        for use_standard in [False, True]:
+            self.__class__.records[use_standard] = self.run_setjy(use_standard)
         self.__class__.records['fluxdens'] = self.run_setjy(False, 1234.0)
+        self.__class__.records['spix'] = self.run_setjy(False,
+                                                        1234.0 * (43.42064/35.0)**0.7,
+                                                        -0.7,
+                                                        "35.0GHz")
         shutil.rmtree(self.inpms)
         # setjy returns None :-P
         #return self.__class__.records[False]['setjyran'] and \
         #       self.__class__.records[True]['setjyran']
         return True
 
-    def run_setjy(self, do_scaling, fluxdens=0):
+    def run_setjy(self, use_standard, fluxdens=0, spix=0, reffreq="1GHz"):
         record = {'setjyran': False}
         try:
-            if do_scaling:
+            if use_standard:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
                                            standard='Perley-Taylor 99',
@@ -104,6 +108,7 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
                                            modimage=self.modelim,
                                            fluxdensity=fluxdens,
+                                           spix=spix, reffreq=reffreq,
                                            async=False)
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
@@ -147,6 +152,15 @@ class setjy_test_modimage(CheckAfterImportuvfits):
         try:
             check_eq(self.records['fluxdens']['short'], 1233.7, 0.05)
             check_eq(self.records['fluxdens']['long'],  1095.2, 0.05)
+        except Exception, e:
+            print "results with modimage and fluxdensity", self.records['fluxdens']
+            raise e    
+
+    def test_spix(self):
+        """modimage != '', fluxdensity > 0, and spix = -0.7"""
+        try:
+            check_eq(self.records['spix']['short'], 1233.7, 0.5)
+            check_eq(self.records['spix']['long'],  1095.2, 0.5)
         except Exception, e:
             print "results with modimage and fluxdensity", self.records['fluxdens']
             raise e    
