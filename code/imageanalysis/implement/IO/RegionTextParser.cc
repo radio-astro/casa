@@ -37,6 +37,9 @@
 
 namespace casa {
 
+const Int RegionTextParser::CURRENT_VERSION = 1;
+const Regex RegionTextParser::MAGIC("^#CRTF[0-9]+");
+
 const String RegionTextParser::sOnePair = "[[:space:]]*\\[[^\\[,]+,[^\\[,]+\\][[:space:]]*";
 const String RegionTextParser::bTwoPair = "\\[" + sOnePair
 		+ "," + sOnePair;
@@ -47,12 +50,14 @@ const Regex RegionTextParser::startOnePair("^" + sOnePair);
 const Regex RegionTextParser::startNPair("^" + sNPair);
 
 RegionTextParser::RegionTextParser(
-	const String& filename, const CoordinateSystem& csys
+	const String& filename, const CoordinateSystem& csys,
+	const Int requireAtLeastThisVersion
 ) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)) {
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
+	_fileVersion(-1) {
 	String preamble = String(__FUNCTION__) + ": ";
 	RegularFile file(filename);
 	if (! file.exists()) {
@@ -79,15 +84,20 @@ RegionTextParser::RegionTextParser(
 	char *buffer = new char[bufSize];
 	int nRead;
 	String contents;
-
 	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
-		*_log << LogIO::NORMAL << "read: " << nRead << LogIO::POST;
 		String chunk(buffer, bufSize);
+		if (_fileVersion < 0) {
+			_determineVersion(chunk, filename, requireAtLeastThisVersion);
+		}
 		contents += chunk;
 	}
 	// get the last chunk
 	String chunk(buffer, nRead);
+	if (_fileVersion < 0) {
+		_determineVersion(chunk, filename, requireAtLeastThisVersion);
+	}
 	contents += chunk;
+	delete [] buffer;
 	_parse(contents, filename);
 }
 
@@ -97,7 +107,8 @@ RegionTextParser::RegionTextParser(
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)) {
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
+	_fileVersion(-1) {
 	String preamble = String(__FUNCTION__) + ": ";
 
 	if (! _csys.hasDirectionCoordinate()) {
@@ -110,14 +121,65 @@ RegionTextParser::RegionTextParser(
 	_parse(text, "");
 }
 
+RegionTextParser::~RegionTextParser() {
+	delete _log;
+	_log = 0;
+}
+
+Int RegionTextParser::getFileVersion() const {
+	if (_fileVersion < 0) {
+		*_log << "File version not associated with simple text strings"
+			<< LogIO::EXCEPTION;
+	}
+	return _fileVersion;
+}
+
 Vector<AsciiAnnotationFileLine> RegionTextParser::getLines() const {
 	return _lines;
 }
 
-
-RegionTextParser::~RegionTextParser() {
-	delete _log;
-	_log = 0;
+void RegionTextParser::_determineVersion(
+	const String& chunk, const String& filename,
+	const Int requireAtLeastThisVersion
+) {
+	if (_fileVersion >= 0) {
+		// already determined
+		return;
+	}
+	if (! chunk.contains(MAGIC)) {
+		*_log << "File " << filename
+			<< " does not contain CASA region text file magic value"
+			<< LogIO::EXCEPTION;
+	}
+	String vString = chunk.substr(5);
+	Bool done = False;
+	Int count = 1;
+	Int oldVersion = -2000;
+	while (! done) {
+		try {
+			_fileVersion = String::toInt(vString.substr(0, count));
+			count++;
+			if (_fileVersion == oldVersion) {
+				done = True;
+			}
+			else {
+				oldVersion = _fileVersion;
+			}
+		}
+		catch (AipsError) {
+			done = True;
+		}
+	}
+	if (_fileVersion < 1) {
+		*_log << "Incorrect file version found" << LogIO::EXCEPTION;
+	}
+	if (_fileVersion < requireAtLeastThisVersion) {
+		*_log << "File version " << _fileVersion
+			<< " is less than required version "
+			<< requireAtLeastThisVersion << LogIO::EXCEPTION;
+	}
+	*_log << LogIO::NORMAL << "File version is "
+		<< _fileVersion << LogIO::POST;
 }
 
 void RegionTextParser::_parse(const String& contents, const String& fileDesc) {

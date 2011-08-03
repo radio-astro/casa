@@ -80,7 +80,7 @@ map<AnnotationBase::Keyword, String> AsciiAnnotationFileLine::getGloabalParams()
 	return _globals;
 }
 
-const AnnotationBase* const AsciiAnnotationFileLine::getAnnotationBase() const {
+const AnnotationBase* AsciiAnnotationFileLine::getAnnotationBase() const {
 	return _annotationBase;
 }
 

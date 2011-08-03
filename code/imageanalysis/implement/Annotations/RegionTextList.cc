@@ -28,7 +28,6 @@
 
 #include <casa/OS/File.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
-#include <imageanalysis/IO/RegionTextParser.h>
 #include <images/Regions/WCDifference.h>
 
 namespace casa {
@@ -53,11 +52,12 @@ RegionTextList::RegionTextList(
 RegionTextList::RegionTextList(
 	const String& filename, const CoordinateSystem& csys,
 	const IPosition shape,
+	const Int requireAtLeastThisVersion,
 	const Bool deletePointersOnDestruct
 ) : _lines(Vector<AsciiAnnotationFileLine>(0)),
 _deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys), _shape(shape), _canGetRegion(True) {
-	RegionTextParser parser(filename, csys);
+	RegionTextParser parser(filename, csys, requireAtLeastThisVersion);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
@@ -179,8 +179,18 @@ AsciiAnnotationFileLine RegionTextList::lineAt(
 	return _lines[i];
 }
 
-
 ostream& RegionTextList::print(ostream& os) const {
+	if (
+		_lines[0].getType() != AsciiAnnotationFileLine::COMMENT
+		|| (
+			_lines[0].getType() == AsciiAnnotationFileLine::COMMENT
+			&& ! _lines[0].getComment().contains(RegionTextParser::MAGIC)
+		)
+	) {
+		os << "#CRTF" << RegionTextParser::CURRENT_VERSION
+			<< " CASA Region Text Format Version "
+			<< RegionTextParser::CURRENT_VERSION << endl;
+	}
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=_lines.begin();
 		iter != _lines.end(); iter++

@@ -50,26 +50,26 @@ int main () {
 			IPosition(0, csys.nPixelAxes())
 		);
 		cout << std::setprecision(9) << list << endl;
-		AlwaysAssert(list.nLines() == 31, AipsError);
-		AsciiAnnotationFileLine line30 = list.lineAt(30);
+		AlwaysAssert(list.nLines() == 33, AipsError);
+		AsciiAnnotationFileLine line31 = list.lineAt(31);
 		AlwaysAssert(
-			line30.getType() == AsciiAnnotationFileLine::ANNOTATION,
+			line31.getType() == AsciiAnnotationFileLine::ANNOTATION,
 			AipsError
 		);
 		AlwaysAssert(
-			line30.getAnnotationBase()->getLineWidth() == 9,
+			line31.getAnnotationBase()->getLineWidth() == 9,
 			AipsError
 		);
 		AlwaysAssert(
-			line30.getAnnotationBase()->isRegion(),
+			line31.getAnnotationBase()->isRegion(),
 			AipsError
 		);
 		AlwaysAssert(dynamic_cast<const AnnRegion *>(
-			line30.getAnnotationBase())->isAnnotationOnly(),
+			line31.getAnnotationBase())->isAnnotationOnly(),
 			AipsError
 		);
 
-		AsciiAnnotationFileLine line23 = list.lineAt(22);
+		AsciiAnnotationFileLine line23 = list.lineAt(23);
 		AlwaysAssert(
 			line23.getType() == AsciiAnnotationFileLine::ANNOTATION,
 			AipsError
