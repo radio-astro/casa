@@ -178,6 +178,14 @@ void RegionTextParser::_determineVersion(
 			<< " is less than required version "
 			<< requireAtLeastThisVersion << LogIO::EXCEPTION;
 	}
+	if (_fileVersion > CURRENT_VERSION) {
+		*_log << "File version " << _fileVersion
+			<< " is greater than the most recent version of the spec ("
+			<< CURRENT_VERSION
+			<< "). Did you bring this file with you when you traveled "
+			<< "here from the future perhaps? Unfortunately we don't support such possibilities yet."
+			<< LogIO::EXCEPTION;
+	}
 	*_log << LogIO::NORMAL << "File version is "
 		<< _fileVersion << LogIO::POST;
 }

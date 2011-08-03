@@ -180,21 +180,23 @@ AsciiAnnotationFileLine RegionTextList::lineAt(
 }
 
 ostream& RegionTextList::print(ostream& os) const {
-	if (
-		_lines[0].getType() != AsciiAnnotationFileLine::COMMENT
-		|| (
-			_lines[0].getType() == AsciiAnnotationFileLine::COMMENT
-			&& ! _lines[0].getComment().contains(RegionTextParser::MAGIC)
-		)
-	) {
-		os << "#CRTF" << RegionTextParser::CURRENT_VERSION
-			<< " CASA Region Text Format Version "
-			<< RegionTextParser::CURRENT_VERSION << endl;
-	}
+	String vString = String::toString(RegionTextParser::CURRENT_VERSION);
+	os << "#CRTF" + vString
+		<<" CASA Region Text Format Version "
+		<< vString << endl;
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=_lines.begin();
 		iter != _lines.end(); iter++
 	) {
+		if (
+			iter == _lines.begin()
+			&& iter->getType() == AsciiAnnotationFileLine::COMMENT
+			&& iter->getComment().contains(RegionTextParser::MAGIC)
+		) {
+			// skip writing header line if it already exists, we write
+			// our own here to avoid clashes with previous spec versions
+			continue;
+		}
 		os << *iter << endl;
 	}
 	return os;
