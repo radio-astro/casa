@@ -1,6 +1,14 @@
 #
 # Casacore
 #
+
+#
+# Note: The set statements that select the GCC 4.4 compiler MUST be at the beginning 
+# of this file, before the project statement.
+set (CMAKE_C_COMPILER gcc44)
+set (CMAKE_CXX_COMPILER g++44)
+set (CMAKE_Fortran_COMPILER gfortran44)
+
 project(casacore)
 
 cmake_minimum_required (VERSION 2.6)
