@@ -29,6 +29,7 @@
 #define IMAGEANALYSIS_IMAGETASK_H
 
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
+#include <memory>
 
 #include <casa/namespace.h>
 
