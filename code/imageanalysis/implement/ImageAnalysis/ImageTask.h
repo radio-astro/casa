@@ -86,11 +86,11 @@ protected:
 
     virtual void _construct();
 
-    inline const ImageInterface<Float> *const _getImage() const {return _image;}
+    inline const ImageInterface<Float>* _getImage() const {return _image;}
 
     inline const String _getMask() const {return _mask;}
 
-    inline const Record *const _getRegion() const {return &_regionRecord;}
+    inline const Record* _getRegion() const {return &_regionRecord;}
 
     inline const String _getOutname() const {return _outname; }
 
