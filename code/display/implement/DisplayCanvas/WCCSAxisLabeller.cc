@@ -25,7 +25,7 @@
 //#
 //# $Id$
 //#include <iostream.h>
-#include <iomanip.h>
+#include <casa/iomanip.h>
 
 #include <casa/aips.h>
 #include <casa/Exceptions.h>

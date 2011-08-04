@@ -31,6 +31,7 @@
 #include <casa/Logging/LogIO.h>
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <images/Images/ImageInterface.h>
+#include <memory>
 
 #include <casa/namespace.h>
 

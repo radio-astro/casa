@@ -31,6 +31,7 @@
 
 #include <casa/Logging/LogIO.h>
 #include <images/Images/ImageInterface.h>
+#include <memory>
 
 namespace casa {
 class ImageReorderer {
