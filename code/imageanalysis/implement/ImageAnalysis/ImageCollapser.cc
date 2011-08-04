@@ -215,15 +215,23 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			}
 		}
 		if (needsMask) {
+			Array<Bool> maskCopy = (
+				_axes.size() <= 1)
+					? mask
+					: mask.addDegenerate(_axes.size() - 1
+			);
+			Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
 			if (isPaged) {
-				String maskName = outImage->makeUniqueRegionName(String("mask"), 0);
+				String maskName = outImage->makeUniqueRegionName(
+					String("mask"), 0
+				);
 				outImage->makeMask(maskName, True, True, False);
-				(&outImage->pixelMask())->put(mask);
+				(&outImage->pixelMask())->put(mCopy);
 			}
 			else {
 				dynamic_cast<TempImage<Float> *>(
-						outImage.get()
-				)->attachMask(ArrayLattice<Bool>(mask));
+					outImage.get()
+				)->attachMask(ArrayLattice<Bool>(mCopy));
 			}
 		}
 	}
@@ -326,6 +334,8 @@ ImageCollapser::AggregateType ImageCollapser::aggregateType(
 		}
 	}
 	log << "Unknown aggregate function specified by " << aggString << LogIO::EXCEPTION;
+	// not necessary since we've thrown an exception by now but avoids compiler warning
+	return UNKNOWN;
 }
 
 void ImageCollapser::_invert() {
