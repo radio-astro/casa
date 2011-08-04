@@ -518,7 +518,7 @@ imagepol::sigmafractotpol(const double clip, const double sigma, const std::stri
 }
 
 double
-imagepol::sigmalinpolint(const double clip, const double sigma, const std::string& outfile)
+imagepol::sigmalinpolint(const double clip, const double , const std::string& )
 {
   double rvalue(-1.0);
   try{
