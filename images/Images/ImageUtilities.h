@@ -158,7 +158,8 @@ public:
        ImageInterface<T>* &pResid, String& xUnit,
        const ImageInterface<T>& inImage,
        const uInt axis, const uInt nGauss=1,
-       const Int poly=-1, const Bool showProgress=False
+       const Int poly=-1, const ImageInterface<T> *const &weightsImage=0,
+       const Bool showProgress=False, const uInt minPoints=0
    );
 
 // This function converts pixel coordinates to world coordinates. You
