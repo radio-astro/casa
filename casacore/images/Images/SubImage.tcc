@@ -253,8 +253,11 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 	try {
 		outMaskMgr.reset(ImageRegion::fromLatticeExpression(mask));
 	} catch (AipsError x) {
-		*os << LogOrigin("SubImage", __FUNCTION__);
-		*os << "Input mask specification is incorrect: " << x.getMesg() << LogIO::EXCEPTION;
+		if (os) {
+			*os << LogOrigin("SubImage", __FUNCTION__);
+			*os << "Input mask specification is incorrect: "
+				<< x.getMesg() << LogIO::EXCEPTION;
+		}
 	}
 	if (
 		extendMask
@@ -271,7 +274,9 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 			outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
 		}
 		catch (AipsError x) {
-			*os << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
+			if (os) {
+				*os << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
+			}
 		}
 	}
 	SubImage<T> subImage;
