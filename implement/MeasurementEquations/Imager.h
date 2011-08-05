@@ -546,10 +546,19 @@ class Imager
                    const MEpoch& obsEpoch, const MPosition& obsPosition,
                    const Double& restFreq);
 
+  // Advise the chanselection needed for the frequency range
+  // if the parameter msname is used then the MSs associated associated with
+  // this object (that have been either 'open'ed or 'selectvis'ed) are ignored
+  // In this mode it is a helper function to the general world ...no need to
+  // open or selectvis. You need to specify the field_id for which this calculation is 
+  // being done for in the helper mode. 
+  // If you have already set MS's and selected data and msname="" then 
+  // the calulation is done for the field(s) selected in selectvis.
   Bool adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
 		       const Double& freqStep,  const MFrequency::Types& freqframe,
 		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
-		       Vector< Vector<Int> >& nchan);
+		       Vector< Vector<Int> >& nchan, const String& msname="", 
+		       const Int fieldid=0);
 
 
   String dQuantitytoString(const Quantity& dq);
