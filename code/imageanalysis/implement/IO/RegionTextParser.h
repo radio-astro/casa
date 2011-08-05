@@ -61,14 +61,9 @@ class RegionTextParser {
 
 public:
 
-	static const Int CURRENT_VERSION;
-	static const Regex MAGIC;
-
-
 	// differentiating between the filename and simple text constructors
 	RegionTextParser(
-		const String& filename, const CoordinateSystem& csys,
-		const Int requireAtLeastThisVersion
+		const String& filename, const CoordinateSystem& csys
 	);
 
 	RegionTextParser(
@@ -77,11 +72,10 @@ public:
 
 	~RegionTextParser();
 
-	Int getFileVersion() const;
-
 	Vector<AsciiAnnotationFileLine> getLines() const;
 
 private:
+
 	// because of nonstandard access patterns, ParamValue and ParamSet
 	// should be kept private and only used by this class. If it becomes
 	// necessary or desirable to use them in multiple classes, they should
@@ -109,9 +103,10 @@ private:
 	ParamSet _currentGlobals;
 	Vector<AsciiAnnotationFileLine> _lines;
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;
-	Int _fileVersion;
 
 	void _parse(const String& contents, const String& fileDesc);
+
+	//void _setGlobalKeysToApply();
 
 	Array<String> _extractTwoPairs(uInt& end, const String& string) const;
 
@@ -187,11 +182,6 @@ private:
 	Vector<Quantity> _extractQuantitiesFromPair(
 		const String& pair, const String& preamble
 	) const;
-
-	void _determineVersion(
-		const String& chunk, const String& filename,
-		const Int requireAtLeastThisVersion
-	);
 
 
 };

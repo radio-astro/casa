@@ -79,7 +79,7 @@ public:
 
 	map<AnnotationBase::Keyword, String> getGloabalParams() const;
 
-	const AnnotationBase * getAnnotationBase() const;
+	const AnnotationBase* getAnnotationBase() const;
 
 	Type getType() const;
 

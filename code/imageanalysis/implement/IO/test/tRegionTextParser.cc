@@ -35,7 +35,7 @@ int main() {
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		try {
-			RegionTextParser parser("x", csys, RegionTextParser::CURRENT_VERSION);
+			RegionTextParser parser("x", csys);
 			AlwaysAssert(False, AipsError);
 		}
 		catch(AipsError x) {
@@ -47,7 +47,7 @@ int main() {
 		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile.txt";
 		delete [] parts;
 
-		RegionTextParser parser(goodFile, csys, RegionTextParser::CURRENT_VERSION);
+		RegionTextParser parser(goodFile, csys);
 		cout << parser.getLines() << endl;
 
     }
