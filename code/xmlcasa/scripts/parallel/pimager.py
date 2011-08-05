@@ -165,23 +165,6 @@ class pimager():
         return spwsel, startsel, retchan
 
     @staticmethod
-    def findchanselLSRK(msname='', field='*', spw='*', numpartition=1, beginfreq=0.0, endfreq=1e12, chanwidth=0.0):
-        im,=gentools(['im'])
-        im.selectvis(vis=msname, field=field, spw=spw)
-        partwidth=(endfreq-beginfreq)/float(numpartition)
-        spwsel=[]
-        nchansel=[]
-        startsel=[]
-        for k in range(numpartition):
-            a=im.advisechansel(freqstart=(beginfreq+float(k)*partwidth), freqend=(beginfreq+float(k+1)*partwidth), freqstep=chanwidth, freqframe='LSRK')
-            spwsel.append(a['ms_0']['spw'].tolist())
-            nchansel.append(a['ms_0']['nchan'].tolist())
-            startsel.append(a['ms_0']['start'].tolist())
-            #print k, 'fstart',  (beginfreq+float(k)*partwidth), 'fend' , (beginfreq+float(k+1)*partwidth)
-        im.done()
-        del im
-        return spwsel, startsel, nchansel
-    @staticmethod
     def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, continuum=True):
         numproc=numpartition
         spwsel=[]
@@ -561,6 +544,8 @@ class pimager():
                 residuals[k]=imlist[k]+'.residual'
                 restoreds[k]=imlist[k]+'.image'
             self.averimages(residual, residuals)
+            if(maskimage == ''):
+                maskimage='lala.mask'
             if (interactive and (intmask==0)):
                 if(maj==0):
                     ia.removefile(maskimage)
@@ -577,6 +562,7 @@ class pimager():
                         shutil.rmtree(maskimage, True)
                         shutil.move('__lala.mask', maskimage)
                     else:
+                        print 'DOING a full image mask'
                         self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
             if(maj==0):
     #            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
@@ -615,8 +601,13 @@ class pimager():
             ia.done()
             ia.open(tempmodel)
             #arr=ia.getchunk()
+            imminmax= abs(ia.statistics()['min'])
+            imminmax=max(imminmax, ia.statistics()['max'])
             print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
             ia.done()
+            if(imminmax == 0.0):
+                print 'Threshold reached'
+                break
             ia.open(model)
             #arr=ia.getchunk()
             print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
@@ -793,7 +784,7 @@ class pimager():
         nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
         ###spw and channel selection
         spwselnew,startselnew,nchanselnew=self.findchansel(msname, spwids, nchanchunk, beginfreq=fstart, endfreq=fend, continuum=True)
-        spwsel,startsel, nchansel=self.findchanselLSRK(msname=msname, spw=spwids, 
+        spwsel,startsel, nchansel=imagecont.findchanselLSRK(msname=msname, spw=spwids, 
                                                       field=field, 
                                                       numpartition=nchanchunk, 
                                                       beginfreq=fstart, endfreq=fend, chanwidth=fstep)
@@ -968,6 +959,7 @@ class pimager():
             print 'model image (', model, ') made'
             im.done()
         #print 'LOCKS ', tb.listlocks()
+        
         ia.open(model)
         elshape=ia.shape()
         csys=ia.coordsys()
@@ -1011,15 +1003,18 @@ class pimager():
         if(contclean):
             imagecont.getallchanmodel(imagename , chanchunk)
         #####
+        timemake=time.time()
+        print 'time to get make cubes', timemake - time1 
         nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
         ###spw and channel selection
-        spwsel,startsel, nchansel=self.findchanselLSRK(msname=msname, spw=spwids, 
-                                                      field=field, 
-                                                      numpartition=nchanchunk, 
-                                                      beginfreq=fstart, endfreq=fend, chanwidth=fstep)
+        #spwsel,startsel, nchansel=imagecont.findchanselLSRK(msname=msname, spw=spwids, 
+        #                                             field=field, 
+        #                                             numpartition=nchanchunk, 
+        #                                             beginfreq=fstart, endfreq=fend, chanwidth=fstep)
+        #print 'time to calc selection ', time.time()-timemake
         #print 'spwsel', spwsel, 'startsel', startsel,'nchansel', nchansel
-        #print 'startsel', startsel
-        #print  'nchansel', nchansel
+        ##print 'startsel', startsel
+        ##print  'nchansel', nchansel
         imnam='"%s"'%(imagename)
         donegetchan=np.array(range(nchanchunk),dtype=bool)
         doneputchan=np.array(range(nchanchunk),dtype=bool)
@@ -1037,20 +1032,27 @@ class pimager():
                 imnchan=nchan%chanchunk
                 
             return 'a.imagechan(msname='+'"'+msname+'", start='+str(startsel[ccounter])+', numchan='+str(nchansel[ccounter])+', field="'+str(field)+'", spw='+str(spwsel[ccounter])+', imroot='+imnam+',imchan='+str(ccounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'", fstart="'+startfreq+'", width="'+widthfreq+'", chanchunk='+str(imnchan)+', mask="'+maskimage+'")'
-
+        def gen_command2(ccounter):
+            imnchan=chanchunk
+            if((ccounter == (nchanchunk-1)) and ((nchan%chanchunk) != 0)):
+                imnchan=nchan%chanchunk
+            return 'a.imagechan_selfselect(msname='+'"'+msname+'", field="'+str(field)+'", spwids='+str(spwids.tolist())+', imroot='+imnam+',imchan='+str(ccounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'", chanchunk='+str(imnchan)+', mask="'+maskimage+'")'
         #while(chancounter < nchanchunk):
         chanind.setfield(-1, int)
         for k in range(numcpu):
             if(chancounter < nchanchunk):
-                if((len(nchansel[chancounter])==0) or (len(spwsel[chancounter])==0) or  (len(startsel[chancounter])==0)):
+                #if((len(nchansel[chancounter])==0) or (len(spwsel[chancounter])==0) or  (len(startsel[chancounter])==0)):
                     ###no need to process this channel
-                    doneputchan[chancounter]=True
-                else:
-                    runcomm=gen_command(chancounter)
-                    print 'command is ', runcomm
-                    out[k]=self.c.odo(runcomm,k)
+                #    doneputchan[chancounter]=True
+                #else:
+##need to retab this 
+                runcomm=gen_command2(chancounter)
+                print 'command is ', runcomm
+                out[k]=self.c.odo(runcomm,k)
+##############
                 chanind[k]=chancounter
                 chancounter=chancounter+1
+###############
         #print 'numcpuused', chancounter, nchanchunk
         ##reset numcpu in case less than available is used
         numcpu=copy.deepcopy(chancounter)
@@ -1068,14 +1070,16 @@ class pimager():
                     if((chanind[k] > -1) and (not readyputchan[chanind[k]]) and ((type(out[k])==int) or self.c.check_job(out[k],False)) ):
                         readyputchan[chanind[k]]=True      
                         if(chancounter < nchanchunk):
-                            if((len(nchansel[chancounter])==0) or (len(spwsel[chancounter])==0) or  (len(startsel[chancounter])==0)):
+                            #if((len(nchansel[chancounter])==0) or (len(spwsel[chancounter])==0) or  (len(startsel[chancounter])==0)):
                                 ###no need to process this channel
-                                doneputchan[chancounter]=True
-                            else:
-                                runcomm=gen_command(chancounter)
-                                print 'command is ', runcomm
-                                print 'processor ', k
-                                out[k]=self.c.odo(runcomm,k)
+                             #   doneputchan[chancounter]=True
+                            #else:
+##########to be retabbed
+                            runcomm=gen_command2(chancounter)
+                            print 'command is ', runcomm
+                            print 'processor ', k
+                            out[k]=self.c.odo(runcomm,k)
+###################
                             chanind[k]=chancounter
                             chancounter+=1
                         overone=(overone and ((type(out[k])==int) or self.c.check_job(out[k],False)))
