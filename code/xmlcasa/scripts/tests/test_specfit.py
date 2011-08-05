@@ -72,6 +72,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import numpy
 
 twogauss = "specfit_multipix_2gauss.fits"
 polyim = "specfit_multipix_poly_2gauss.fits"
@@ -80,6 +81,8 @@ solims = [
     "center_0", "centerErr_0", "center_1", "centerErr_1",
     "fwhm_0", "fwhmErr_0", "fwhm_1", "fwhmErr_1"
 ]
+
+nanvalue = 4.53345345
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/specfit/'
 
@@ -127,14 +130,10 @@ class specfit_test(unittest.TestCase):
     def setUp(self):
         shutil.copy(datapath + twogauss, twogauss)
         shutil.copy(datapath + polyim, polyim)
-        for im in solims:
-            shutil.copy(datapath + im + ".fits", im + ".fits")
 
     def tearDown(self):
         os.remove(twogauss)
         os.remove(polyim)
-        for im in solims:
-            os.remove(im + ".fits")
 
     def checkImage(self, gotImage, expectedName):
         expected = iatool.create()                                
@@ -145,12 +144,30 @@ class specfit_test(unittest.TestCase):
         else:
             got = gotImage
         self.assertTrue(got.shape() == expected.shape())
-        diffData = got.getchunk() - expected.getchunk()
+        gotchunk = got.getchunk()
+        expchunk = expected.getchunk()
+        if (numpy.isnan(gotchunk).any()):
+            gotchunk = gotchunk.ravel()
+            for i in range(len(gotchunk)):
+                if isnan(gotchunk[i]):
+                    gotchunk[i] = nanvalue
+        if (numpy.isnan(expchunk).any()):
+            expchunk = expchunk.ravel()
+            for i in range(len(expchunk)):
+                if isnan(expchunk[i]):
+                    expchunk[i] = nanvalue
+        diffData = gotchunk - expchunk
         self.assertTrue(abs(diffData).max() < 4e-13)
+        self.assertTrue(
+            (
+                got.getchunk(getmask=T) == expected.getchunk(getmask=T)
+            ).all()
+        )
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
         diffPixels = gotCsys.referencepixel()['numeric'] - expectedCsys.referencepixel()['numeric']
         self.assertTrue(abs(diffPixels).max() == 0)
+        
         fracDiffRef = (
             gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
         )/expectedCsys.referencevalue()['numeric'];
@@ -245,17 +262,17 @@ class specfit_test(unittest.TestCase):
                 multifit, model, residual
             )
             self.assertTrue(len(res["converged"]) == 1)
-            self.assertTrue(res["converged"][0])
+            self.assertTrue(res["converged"][0,0,0,0])
             # even though two components given, only one is fit
-            self.assertTrue(res["ncomps"][0] == 1)
+            self.assertTrue(res["ncomps"][0,0,0,0] == 1)
             # the fit component is a gaussian
-            self.assertTrue(res["type0"][0] == "GAUSSIAN")
-            self.assertAlmostEqual(res["amp0"][0], 49.7, 1, "amplitude determination failure")
-            self.assertAlmostEqual(res["ampErr0"][0], 4.0, 1, "amplitude error determination failure")
-            self.assertAlmostEqual(res["center0"][0], -237.7, 1, "center determination failure")
-            self.assertAlmostEqual(res["centerErr0"][0], 1.7, 1, "center error determination failure")
-            self.assertAlmostEqual(res["fwhm0"][0], 42.4, 1, "fwhm determination failure")
-            self.assertAlmostEqual(res["fwhmErr0"][0], 4.0, 1, "fwhm error determination failure")
+            self.assertTrue(res["type0"][0,0,0,0] == "GAUSSIAN")
+            self.assertAlmostEqual(res["amp0"][0,0,0,0], 49.7, 1, "amplitude determination failure")
+            self.assertAlmostEqual(res["ampErr0"][0,0,0,0], 4.0, 1, "amplitude error determination failure")
+            self.assertAlmostEqual(res["center0"][0,0,0,0], -237.7, 1, "center determination failure")
+            self.assertAlmostEqual(res["centerErr0"][0,0,0,0], 1.7, 1, "center error determination failure")
+            self.assertAlmostEqual(res["fwhm0"][0,0,0,0], 42.4, 1, "fwhm determination failure")
+            self.assertAlmostEqual(res["fwhmErr0"][0,0,0,0], 4.0, 1, "fwhm error determination failure")
 
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
@@ -280,12 +297,15 @@ class specfit_test(unittest.TestCase):
                 stokes, axis, mask, ngauss, poly,
                 multifit, model, residual
             )
-            self.assertTrue(len(res["converged"]) == 81)
+            self.assertTrue(len(res["converged"].ravel()) == 81)
             self.assertTrue(res["converged"].all())
-            self.assertTrue(res["ncomps"][0] == 1)
-            self.assertTrue((res["ncomps"][1:80] == 2).all())
+            self.assertTrue(res["ncomps"][0, 0, 0, 0] == 1)
+            self.assertTrue((res["ncomps"][:, 1:, 0, 0] == 2).all())
+            self.assertTrue((res["ncomps"][1:, 0, 0, 0] == 2).all())
             self.assertTrue((res["type0"] == "GAUSSIAN").all())
-            self.assertTrue((res["type1"][1:80] == "GAUSSIAN").all())
+            self.assertTrue(res["type1"][0, 0, 0, 0] == "UNDEF")
+            self.assertTrue((res["type1"][:, 1:, 0, 0] == "GAUSSIAN").all())
+            self.assertTrue((res["type1"][1:, 0, 0, 0] == "GAUSSIAN").all())
 
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
@@ -310,11 +330,11 @@ class specfit_test(unittest.TestCase):
                 stokes, axis, mask, ngauss, poly,
                 multifit, model, residual
             )
-        self.assertTrue(len(res["converged"]) == 81)
+        self.assertTrue(len(res["converged"].ravel()) == 81)
         # fit #72 did not converge
-        self.assertTrue(res["converged"][:71].all())
-        self.assertTrue(res["converged"][73:].all())
-        self.assertFalse(res["converged"][72])
+        self.assertTrue(res["converged"][:, :7, 0, 0].all())
+        self.assertTrue(res["converged"][1:,8,0,0].all())
+        self.assertFalse(res["converged"][0, 8, 0, 0])
 
         self.assertTrue(res["xUnit"] == "km/s")
         self.assertTrue(res["yUnit"] == "Jy")
@@ -347,7 +367,7 @@ class specfit_test(unittest.TestCase):
                 amperr, center, centererr, fwhm, fwhmerr
             )
             for im in solims:
-                self.checkImage(im, im + ".fits")
+                self.checkImage(im, datapath + im)
                 
         for im in solims:
             shutil.rmtree(im)

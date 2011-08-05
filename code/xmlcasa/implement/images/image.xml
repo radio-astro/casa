@@ -96,11 +96,6 @@ to profiles and subtract (see also the <link anchor="images:imageprofilefitter">
 \item <link anchor="images:image.fitprofile.function">fitprofile</link> - fit a 1-d profile with varying
 combinations of functional forms (see also the <link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
 
-\item <link anchor="images:image.fitallprofiles.function">fitallprofile</link> - fit all the
-1-d profiles in a region with varying combinations of functional forms 
-and write out the fitted and residual images (see also the
-<link anchor="images:imageprofilefitter">imageprofilefitter</link> \tool.
-
 \item <link anchor="images:image.histograms.function">histograms</link> - compute histograms from the image
 
 \item <link anchor="images:image.insert.function">insert</link> - insert specified image into this image 
@@ -3861,90 +3856,6 @@ We use the Componentlist GUI to look at the strongest component.
 </example>
 </method>
 
- 
-   <method type="function" name="fitallprofiles">
-   <shortdescription>DEPRECATED USE fitprofile() with multi=true INSTEAD. Fit gaussians and/or polynomial to all pixels in the specified region.</shortdescription>
-   
-<input>
-        <param type="string" direction="in" name="box">
-            <description>Rectangular box in direction coordinate blc, trc. Default: entire image ("").</description>
-            <value></value>
-        </param>
-        <param type="string" direction="in" name="region">
-            <description>Region name, Default: no region ("").</description>
-            <value></value>
-        </param>
-        <param type="string" direction="in" name="chans">
-            <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
-            <value></value>
-        </param>
-        <param type="string" direction="in" name="stokes">
-            <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
-            <value></value>
-        </param>
-        <param type="int" direction="in" name="axis">
-            <description>The profile axis. Default: use the spectral axis if one exists, axis 0 otherwise (&lt;0).</description>
-            <value>-1</value>
-        </param>
-        <param type="any" direction="in" name="mask">
-            <any type="variant"/>
-            <description>OTF mask, Boolean LEL expression or mask region.  Default: no mask ("").</description>
-            <value></value>
-        </param>
-        <param type="int" direction="in" name="ngauss">
-            <description>Number of Gaussian elements.  Default: 1.</description>
-            <value>1</value>
-        </param>
-        <param type="int" direction="in" name="poly">
-            <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
-            <value>-1</value>
-        </param>
-        <param type="string" direction="in" name="model">
-            <description>Name of model image. Default: do not write the model image ("").</description>
-            <value></value>
-        </param>
-        <param type="string" direction="in" name="residual">
-            <description>Name of residual image. Default: do not write the residual image ("").</description>
-            <value></value>
-        </param>
-  
-
-</input>
-<returns type="any"><any type="record"/>Dectionary</returns>
-
-<description>
-This function fits all of the 1-dimensional profiles in the
-specified region with a given combination of Gaussians and a polynomial.
-It makes a separate automatic estimate for each profile before making
-the fit.
-
-Any masked input pixels do not contribute to the fit. The output mask is
-a copy of the default input \pixelmask\ (if any); the OTF mask does not
-contribute. Any other input \pixelmasks\ will not be copied.  Use
-function <link anchor="images:image.maskhandler.function">maskhandler</link> if you need to
-copy other masks too.  Use function
-<link anchor="images:image.calcmask.function">calcmask</link> if you need to  apply the OTF
-mask to the output.
-
-</description>
-
-<example>
-
-"""
-#
-print "\t----\t fitallprofiles Ex 1 \t----"
-ia.fromshape('gc.small', [64,64,128], overwrite=true)
-ia.fitallprofiles (axis=2, fit='gc.fit')
-ia.close()
-ia.removefile('gc.fit')
-ia.removefile('gc.small')
-#
-"""
-
-</example>
-
-</method>
-
 <method type="function" name="fitprofile">
     <shortdescription>Fit gaussians and/or polynomials to a 1-dimensional profile.</shortdescription>
     <input>
@@ -3980,6 +3891,10 @@ ia.removefile('gc.small')
         <param type="int" direction="in" name="poly">
             <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
             <value>-1</value>
+        </param>
+        <param type="int" direction="in" name="minpts">
+            <description>Minimum number of unmasked points necessary to attempt fit.</description>
+            <value>0</value>
         </param>
         <param type="bool" direction="in" name="multifit">
             <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
@@ -4031,20 +3946,26 @@ The ngauss parameter indicates the maximum number of gaussians that should be fi
 fit; a value &lt;0 indicates that no polynomial should be fit. An error will occur if ngauss=0 and poly&lt;0, as this indicates there
 is nothing to fit. 
 
+The minpts parameter indicates the minimum number of unmasked points that must be present in order for a fit
+to be attempted. When multifit=T, positions with too few good points will have 
+
 The multifit parameter indicates if profiles should be fit at each pixel in the selected region (true), or if the profiles in that region should be
 averaged and the fit done to that average profile (false).
 
 The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
 should not be written.
 
-The return value is a dictionary containing the following keys and values:
-converged: an array indicating if the fits converged (true) or not (false).
-niter: an array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps: the number of components (gaussians + polynomial) fit for the profile, 0 if the fit did not converge
+The return value is a dictionary containing the following keys and values. Arrays have the shape of the specified region
+collapsed along the fit axis with the fit axis having dimension of 1.
+attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
+converged: a boolean array indicating which fits converged. False if the fit was not attempted.
+niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps: the number of components (gaussians + polynomial) fit for the profile, &lt;0 if the fit did not converge
 xUnit: the abscissa unit
 yUnit: the ordinate unit
 
-In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc
+In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc.
+At pixels where fits were not attempted or did not converge, numerical arrays will have values of NaN.
 type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
 center[0,1,...] The fitted center value for the nth component which is a gaussian.
 fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
@@ -4053,7 +3974,10 @@ centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for 
 
 One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
 fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
-component number. Writing analogous images for polynomial coefficients is not yet supported.
+component number. Writing analogous images for polynomial coefficients is not yet supported. Pixels for which fits were not attempted
+or did not converge will be masked as bad.
+
+Currently, the polynomial coefficients and their errors are not returned, although they are logged.
 
 It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
 will determine initial estimates.

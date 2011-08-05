@@ -62,6 +62,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>-1</value>
             <example>poly=4</example>
         </param>
+        <param type="int" direction="in" name="minpts">
+            <description>Minimum number of unmasked points necessary to attempt fit.</description>
+            <value>0</value>
+        </param>
         <param type="bool" direction="in" name="multifit">
             <description>If true, fit a profile along the desired axis at each pixel in the specified region. If false, average the non-fit axis pixels and do a single fit to that average profile. Default False.</description>
             <value>False</value>
@@ -146,32 +150,32 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 This task simultaneously fits one or more gaussians and/or a polynomial to one dimensional profiles.
 
 ARAMETER SUMMARY
-imagename        Name of the input (CASA, FITS, MIRIAD) image
-box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-                 may be specified. If not specified, region is used if specified. If region
-                 is also not specified, entire directional plane unioned with any chans and
-                 stokes specification determines the region.
-region           Optional region file to use.
-chans            Optional contiguous frequency channel number specification. Not used if
-                 region is specified. Default is all channels.
-stokes           Contiguous stokes planes specification. Not used if region is specified.
-                 Default is all stokes.     
-axis             Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
-                 zeroth axis if a spectral axis is not present.
-mask             Optional mask specification.
-ngauss           Maximum number of gaussians to fit.
-poly             Order of polynomial to fit. &lt;0 means do not fit a polynomial.
-multifit         Fit models at each pixel in region (true) or average profiles and fit a single model (false).
-model            Name of model image to write.
-residual         Name of residual image to write.
-amp              Name of amplitude solution image. Default: do not write the image ("")
-amperr           Name of amplitude solution error image. Default: do not write the image ("")
-center           Name of center solution image. Default: do not write the image ("")
-centererr        Name of center solution error image. Default: do not write the image ("")
-fwhm             Name of fwhm solution image. Default: do not write the image ("")
-fwhmerr           Name of fwhm solution error image. Default: do not write the image ("")
-
-wantreturn       If true, return a record summarizing the fit results, if false, return false.
+imagename   Name of the input (CASA, FITS, MIRIAD) image
+box         Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+            may be specified. If not specified, region is used if specified. If region
+            is also not specified, entire directional plane unioned with any chans and
+            stokes specification determines the region.
+region      Optional region file to use.
+chans       Optional contiguous frequency channel number specification. Not used if
+            region is specified. Default is all channels.
+stokes      Contiguous stokes planes specification. Not used if region is specified.
+            Default is all stokes.     
+axis        Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
+            zeroth axis if a spectral axis is not present.
+mask        Optional mask specification.
+ngauss      Maximum number of gaussians to fit.
+poly        Order of polynomial to fit. &lt;0 means do not fit a polynomial.
+minpts      Minimum number of points necessary to attempt a fit.
+multifit    Fit models at each pixel in region (true) or average profiles and fit a single model (false).
+model       Name of model image to write.
+residual    Name of residual image to write.
+amp         Name of amplitude solution image. Default: do not write the image ("")
+amperr      Name of amplitude solution error image. Default: do not write the image ("")
+center      Name of center solution image. Default: do not write the image ("")
+centererr   Name of center solution error image. Default: do not write the image ("")
+fwhm        Name of fwhm solution image. Default: do not write the image ("")
+fwhmerr     Name of fwhm solution error image. Default: do not write the image ("")
+wantreturn  If true, return a record summarizing the fit results, if false, return false.
 
 The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.
@@ -180,32 +184,38 @@ The ngauss parameter indicates the maximum number of gaussians that should be fi
 fit; a value &lt;0 indicates that no polynomial should be fit. An error will occur if ngauss=0 and poly&lt;0, as this indicates there
 is nothing to fit. 
 
+The minpts parameter indicates the minimum number of unmasked points that must be present in order for a fit
+to be attempted. When multifit=T, positions with too few good points will have 
+
 The multifit parameter indicates if profiles should be fit at each pixel in the selected region (true), or if the profiles in that region should be
 averaged and the fit done to that average profile (false).
 
 The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
 should not be written.
 
-If wantreturn=true, the return value is a dictionary containing the following keys and values:
-converged: an array indicating if the fits converged (true) or not (false).
-niter: an array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
-ncomps: the number of components (gaussians + polynomial) fit for the profile, 0 if the fit did not converge
+If wantreturn=true, the return value is a dictionary containing the following keys and values.  Arrays have the shape of the specified region
+collapsed along the fit axis with the fit axis having dimension of 1.
+attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
+converged: a boolean array indicating which fits converged. False if the fit was not attempted.
+niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
+ncomps: the number of components (gaussians + polynomial) fit for the profile, &lt;0 if the fit did not converge
 xUnit: the abscissa unit
 yUnit: the ordinate unit
 
-In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc
+In addition, the following keys are appended by the component number to indicate which component they correspond to, eg, fwhm0, fwhm1, etc.
+At pixels where fits were not attempted or did not converge, numerical arrays will have values of NaN.
 type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
 center[0,1,...] The fitted center value for the nth component which is a gaussian.
 fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
 amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
 centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for the nth component which is a gaussian.
 
-Currently, the polynomial coefficients and their errors are not returned, although they are logged.
-
 One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
 fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
-component number. Writing analogous images for polynomial coefficients is not yet supported.
+component number. Writing analogous images for polynomial coefficients is not yet supported. Pixels for which fits were not attempted
+or did not converge will be masked as bad.
 
+Currently, the polynomial coefficients and their errors are not returned, although they are logged.
 
 It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
 will determine initial estimates.

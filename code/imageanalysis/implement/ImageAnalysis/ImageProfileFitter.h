@@ -89,7 +89,8 @@ public:
 		const String& model, const uInt ngauss, const Int polyOrder,
 		const String& ampName = "", const String& ampErrName = "",
 		const String& centerName = "", const String& centerErrName = "",
-		const String& fwhmName = "", const String& fwhmErrName = ""
+		const String& fwhmName = "", const String& fwhmErrName = "",
+		uInt minGoodPoints=0
 	);
 
 	// destructor
@@ -118,7 +119,7 @@ private:
 		_fwhmErrName, _ampName, _ampErrName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit, _deleteImageOnDestruct;
 	Int _polyOrder, _fitAxis;
-	uInt _ngauss;
+	uInt _ngauss, _minGoodPoints;
 	Vector<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
@@ -159,8 +160,9 @@ private:
     ) const;
 
     static void _makeSolutionImage(
-    	const String& name, const IPosition& shape, const CoordinateSystem& csys,
-    	const Vector<Double>& values, const String& unit
+    	const String& name, const CoordinateSystem& csys,
+    	const Array<Double>& values, const String& unit,
+    	const Array<Bool>& mask
     );
 
     // moved from ImageAnalysis

@@ -1111,39 +1111,15 @@ image::findsources(const int nMax, const double cutoff,
 	return rstat;
 }
 
-record* image::fitallprofiles(const string& box, const string& region,
-		const string& chans, const string& stokes, const int axis,
-		const variant& vmask, const int ngauss, const int poly,
-		const string& model, const string& residual) {
-	*_log << LogOrigin("image", __FUNCTION__);
-
-	*_log << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
-			<< " will be removed in an upcoming release. "
-			<< "Use fitprofile instead with multi=True." << LogIO::POST;
-	if (detached()) {
-		return 0;
-	}
-	record *rstat = 0;
-	try {
-
-		return fitprofile(box, region, chans, stokes, axis, vmask, ngauss,
-				poly, true, model, residual);
-
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return rstat;
-}
-
 // FIXME need to support region records as input
 record* image::fitprofile(const string& box, const string& region,
-		const string& chans, const string& stokes, const int axis,
-		const variant& vmask, int ngauss, const int poly, const bool multifit,
-		const string& model, const string& residual, const string& amp,
-		const string& amperr, const string& center, const string& centererr,
-		const string& fwhm, const string& fwhmerr) {
+	const string& chans, const string& stokes, const int axis,
+	const variant& vmask, int ngauss, const int poly,
+	const int minpts, const bool multifit,	const string& model,
+	const string& residual, const string& amp,
+	const string& amperr, const string& center, const string& centererr,
+	const string& fwhm, const string& fwhmerr
+) {
 	*_log << LogOrigin("image", __FUNCTION__);
 	if (detached()) {
 		return 0;
@@ -1160,9 +1136,12 @@ record* image::fitprofile(const string& box, const string& region,
 		if (mask == "[]") {
 			mask = "";
 		}
-		ImageProfileFitter fitter(_image->getImage(), region, 0, box, chans,
-				stokes, mask, axis, multifit, residual, model, ngauss, poly,
-				amp, amperr, center, centererr, fwhm, fwhmerr);
+		ImageProfileFitter fitter(
+			_image->getImage(), region, 0,
+			box, chans, stokes, mask, axis,
+			multifit, residual, model, ngauss, poly,
+			amp, amperr, center, centererr, fwhm, fwhmerr, minpts
+		);
 		rstat = fromRecord(fitter.fit());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -1461,12 +1440,11 @@ image* image::pbcor(
 		String modecopy = mode;
 		modecopy.downcase();
 		modecopy.trim();
-		ImagePrimaryBeamCorrector::Mode myMode;
+		ImagePrimaryBeamCorrector::Mode myMode = ImagePrimaryBeamCorrector::MULTIPLY;
 		if (modecopy.startsWith("d")) {
 			myMode = ImagePrimaryBeamCorrector::DIVIDE;
-		} else if (modecopy.startsWith("m")) {
-			myMode = ImagePrimaryBeamCorrector::MULTIPLY;
-		} else {
+		}
+		else {
 			*_log << "Unrecognized value for mode :'"
 				<< mode << "'" << LogIO::EXCEPTION;
 		}
