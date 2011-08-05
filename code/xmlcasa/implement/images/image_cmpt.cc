@@ -2267,31 +2267,33 @@ bool image::rename(const std::string& name, const bool overwrite) {
 	return rstat;
 }
 
-bool image::replacemaskedpixels(const ::casac::variant& vpixels,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const bool updateMask, const bool list) {
-	bool rstat(false);
+bool image::replacemaskedpixels(
+	const variant& vpixels,
+	const record& region, const variant& vmask,
+	const bool updateMask, const bool list
+) {
 	try {
-		*_log << LogOrigin("image", "replacemaskedpixels");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return False;
+		}
 
 		String pixels = vpixels.toString();
-		Record *pRegion = toRecord(region);
+		std::auto_ptr<Record> pRegion(toRecord(region));
 		String maskRegion = vmask.toString();
-		if (maskRegion == "[]")
+		if (maskRegion == "[]") {
 			maskRegion = "";
-
-		rstat = _image->replacemaskedpixels(pixels, *pRegion, maskRegion,
-				updateMask, list);
-		delete pRegion;
-
-	} catch (AipsError x) {
+		}
+		return _image->replacemaskedpixels(
+			pixels, *pRegion, maskRegion,
+			updateMask, list
+		);
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*
