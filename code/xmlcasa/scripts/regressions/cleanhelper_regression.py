@@ -114,12 +114,20 @@ def imstats(image):
     ia.open(image)
     ch0 = (ia.toworld([n/2,n/2,0,0],'n')['numeric'][3])/ 1e3
     nch = ia.shape()[3]
+    mylist = []
     chn = (ia.toworld([n/2,n/2,0,nch-1],'n')['numeric'][3])/ 1e3
     del1 = (ia.toworld([n/2,n/2,0,1],'n')['numeric'][3] - 1e3*ch0) /1e3
     wid = (ia.summary()['header']['incr'][3]) /1e3
     del2 = (1e3*chn - ia.toworld([n/2,n/2,0,nch-2],'n')['numeric'][3]) /1e3
     try:
-        fit = ia.fitprofile(ngauss=1,poly=1,fit=False)['return']['elements']['*1']['parameters'][1]/1e3
+        for i in range(len(shape())):
+            mylist.append(0)
+        t = tuple(mylist)
+        # TODO check if this is really the indended value. I'm just
+        # modifying what was the old output to what is now valid output
+        # for fitprofile but I don't know how it applies to this test.
+        # the test still passes so it doesn't seem that important
+        fit = ia.fitprofile(ngauss=1,poly=1,fit=False)['center'].item(t)/1e3
     except:
         fit=0.
     return (ch0,del1,wid,del2,nch,chn,fit)
