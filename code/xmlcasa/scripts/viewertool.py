@@ -170,7 +170,7 @@ class viewertool(object):
                     error = RuntimeError('DBus Viewer service failed to start...')
                     continue
                 else:
-                    raise RuntimeError('Unexpected DBus problem: ' + e.get_dbus_name( ) + "(" + e.message + ")")
+                    raise RuntimeError('Unexpected DBus problem: ' + e.get_dbus_name( ) + "(" + e.args[0] + ")")
             except Exception, e:
                 error = e
                 continue
@@ -187,7 +187,7 @@ class viewertool(object):
             elif e.get_dbus_name() == 'org.freedesktop.DBus.Error.ServiceUnknown' :
                 raise RuntimeError('DBus Viewer service has exited....')
             else:
-                raise RuntimeError('Unexpected DBus problem: ' + e.get_dbus_name( ) + "(" + e.message + ")")
+                raise RuntimeError('Unexpected DBus problem: ' + e.get_dbus_name( ) + "(" + e.args[0] + ")")
 
         if type(result) == dbus.Dictionary and result.has_key('*error*') :
             raise RuntimeError(str(result['*error*']))
