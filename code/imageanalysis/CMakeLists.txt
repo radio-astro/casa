@@ -45,6 +45,7 @@ implement/ImageAnalysis/ImageTask.cc
 implement/IO/RegionTextParser.cc
 implement/IO/AsciiAnnotationFileLine.cc
 implement/IO/FitterEstimatesFileParser.cc
+implement/IO/ProfileFitterEstimatesFileParser.cc
 
 implement/Regions/CasacRegionManager.cc
 )
@@ -72,8 +73,9 @@ casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImagePrimaryBeamCorr
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageProfileFitter.cc )
 casa_add_assay( imageanalysis implement/ImageAnalysis/test/tImageReorderer.cc )
 
-casa_add_assay( imageanalysis implement/IO/test/tRegionTextParser.cc )
 casa_add_assay( imageanalysis implement/IO/test/tFitterEstimatesFileParser.cc )
+casa_add_assay( imageanalysis implement/IO/test/tProfileFitterEstimatesFileParser.cc )
+casa_add_assay( imageanalysis implement/IO/test/tRegionTextParser.cc )
 
 casa_add_assay( imageanalysis implement/Regions/test/tCasacRegionManager.cc )
 
