@@ -278,6 +278,9 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	<< " rows to the feed subtable" << endl;
   }
 
+  //for(uint ii=0; ii<newAntIndices.size(); ii++){
+  //  cout << "i, newAntIndices(i)" << ii << " " << newAntIndices[ii] << endl;
+  //}
 
   // FIELD
   oldRows = itsMS.field().nrow();
@@ -473,11 +476,31 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   for (uInt r = 0; r < newRows; r++, curRow++) {
 
     thisTime.put(curRow, otherTime, r);
-    thisAnt1.put(curRow, newAntIndices[otherAnt1(r)]);
-    thisAnt2.put(curRow, newAntIndices[otherAnt2(r)]);
-    thisFeed1.put(curRow, otherFeed1, r);
-    thisFeed2.put(curRow, otherFeed2, r);
-    
+    Int newA1 = newAntIndices[otherAnt1(r)];
+    Int newA2 = newAntIndices[otherAnt2(r)];
+    Bool doConjugateVis = False;
+    if(newA1>newA2){ // swap indices and multiply UVW by -1
+      //cout << "   corrected order r: " << r << " " << newA2 << " " << newA1 << endl;
+      thisAnt1.put(curRow, newA2);
+      thisAnt2.put(curRow, newA1);
+      thisFeed1.put(curRow, otherFeed2, r);
+      thisFeed2.put(curRow, otherFeed1, r);
+      Array<Double> newUvw;
+      newUvw.assign(otherUvw(r));
+      //cout << "   old UVW " << newUvw;
+      newUvw *= -1.;
+      //cout << ", new UVW " << newUvw << endl;
+      thisUvw.put(curRow, newUvw);
+      doConjugateVis = True;
+    }
+    else{
+      thisAnt1.put(curRow, newA1);
+      thisAnt2.put(curRow, newA2);
+      thisFeed1.put(curRow, otherFeed1, r);
+      thisFeed2.put(curRow, otherFeed2, r);
+      thisUvw.put(curRow, otherUvw, r);
+    }    
+
     thisDDId.put(curRow, newDDIndices[otherDDId(r)]);
     thisFieldId.put(curRow, newFldIndices[otherFieldId(r)]);
     thisInterval.put(curRow, otherInterval, r);
@@ -523,7 +546,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       thisStateId.put(curRow, otherStateId, r);
     }
 
-    thisUvw.put(curRow, otherUvw, r);
     
     if(itsChanReversed[otherDDId(r)]){
       Vector<Int> datShape;
@@ -564,27 +586,60 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	thisFloatData.put(curRow, reversedFloatData);
       }
       else{
-	thisData.put(curRow, reversedData);
+	if(doConjugateVis){
+	  thisData.put(curRow, conj(reversedData));	  
+	}
+	else{
+	  thisData.put(curRow, reversedData);
+	}
       }
       if(doCorrectedData){
-	thisCorrectedData.put(curRow, reversedCorrData);
+	if(doConjugateVis){
+	  thisCorrectedData.put(curRow, conj(reversedCorrData));
+	}
+	else{
+	  thisCorrectedData.put(curRow, reversedCorrData);
+	}
       }
       if(doModelData){
-	thisModelData.put(curRow, reversedModData);
+	if(doConjugateVis){
+	  thisModelData.put(curRow, conj(reversedModData));
+	}
+	else{
+	  thisModelData.put(curRow, reversedModData);
+	}
       }
     }
-    else{
+    else{ // no reversal
       if(doFloatData){
 	thisFloatData.put(curRow, otherFloatData, r);
       }
       else{
-	thisData.put(curRow, otherData, r);
+	if(doConjugateVis){ // conjugate because order of antennas was reversed
+	  thisData.put(curRow, conj(otherData(r)));
+	}
+	else{
+	  thisData.put(curRow, otherData, r);
+	}
       }
-      if(doModelData)
-	thisModelData.put(curRow, otherModelData, r);
-      if(doCorrectedData)
-	thisCorrectedData.put(curRow, otherCorrectedData, r);
-    }
+      if(doModelData){
+	if(doConjugateVis){
+	  thisModelData.put(curRow, conj(otherModelData(r)));
+	}
+	else{
+	  thisModelData.put(curRow, otherModelData, r);
+	}
+      } 
+      if(doCorrectedData){
+	if(doConjugateVis){
+	  thisCorrectedData.put(curRow, conj(otherCorrectedData(r)));
+	}
+	else{
+	  thisCorrectedData.put(curRow, otherCorrectedData, r);
+	}
+      }
+    } // end if itsChanReversed
+
     thisSigma.put(curRow, otherSigma, r);
     thisWeight.put(curRow, otherWeight, r);
     thisFlag.put(curRow, otherFlag, r);
