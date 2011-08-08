@@ -274,16 +274,11 @@ Bool ImageAnalysis::addnoise(const String& type, const Vector<Double>& pars,
 
 	// Make SubImage
 	String mask;
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(pRegion)),
 		mask, itsLog, True
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
-	//delete pRegion;
 
 	// Zero subimage if requested
 	if (zeroIt)
@@ -652,18 +647,14 @@ Bool ImageAnalysis::imagefromimage(const String& outfile, const String& infile,
 		// Convert region from Glish record to ImageRegion.
 		// Convert mask to ImageRegion and make SubImage.
 		//
-		ImageRegion* pRegionRegion = 0;
-		ImageRegion* pMaskRegion = 0;
 		AxesSpecifier axesSpecifier;
-		if (dropdeg)
+		if (dropdeg) {
 			axesSpecifier = AxesSpecifier(False);
+		}
 		SubImage<Float> subImage = SubImage<Float>::createSubImage(
-			pRegionRegion, pMaskRegion,
 			*pInImage, *(ImageRegion::tweakedRegionRecord(&region)),
 			Mask, itsLog, True, axesSpecifier
 		);
-		delete pRegionRegion;
-		delete pMaskRegion;
 
 		// Create output image
 
@@ -799,17 +790,11 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 		}
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&region)),
 		mask, itsLog, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Create output image
 	IPosition outShape = subImage.shape();
@@ -1112,11 +1097,12 @@ Bool ImageAnalysis::calcmask(const String& mask, Record& regions,
 
 }
 
-ImageInterface<Float> *
-ImageAnalysis::continuumsub(const String& outline, const String& outcont,
-		Record& region, const Vector<Int>& channels, const String& pol,
-		const Int in_fitorder, const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "continuumsub");
+ImageInterface<Float>* ImageAnalysis::continuumsub(
+	const String& outline, const String& outcont,
+	Record& region, const Vector<Int>& channels, const String& pol,
+	const Int in_fitorder, const Bool overwrite
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Form virtual image according to region argument and find
 	// coordinate system
@@ -1125,9 +1111,11 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 	Bool ledropdeg(False);
 	Bool leoverwrite(False);
 	Bool lelist(False);
-	ImageInterface<Float> *subim = subimage(leoutfile, region, lemask,
-			ledropdeg, leoverwrite, lelist);
-	if (!subim) {
+	std::auto_ptr<ImageInterface<Float> > subim(
+		subimage(leoutfile, region, lemask,
+		ledropdeg, leoverwrite, lelist)
+	);
+	if (!subim.get()) {
 		*itsLog << LogIO::SEVERE
 				<< "Could not form subimage in specified region."
 				<< LogIO::POST;
@@ -1140,7 +1128,6 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 	Vector<Int> spectralPixelAxis;
 	Int foundSpectral = cSys.findCoordinate(Coordinate::SPECTRAL);
 	if (!foundSpectral) {
-		delete subim;
 		*itsLog << LogIO::SEVERE << "No Spectral axis in this image"
 				<< LogIO::POST;
 		return 0;
@@ -1149,7 +1136,6 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 	// Check non-degeneracy of spectral axis
 	IPosition imshape = subim->shape();
 	if (imshape[spectralPixelAxis[0]] == 1) {
-		delete subim;
 		*itsLog << LogIO::WARN
 				<< "There is only one channel in the selected region."
 				<< LogIO::POST;
@@ -1164,7 +1150,6 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 		const CoordinateSystem& cSys = pImage_p->coordinates();
 		Int stokesIndex = cSys.findCoordinate(Coordinate::STOKES);
 		if ((stokesIndex < 0)) {
-			delete subim;
 			*itsLog << LogIO::SEVERE << "No Stokes axis in this image"
 					<< LogIO::POST;
 			return 0;
@@ -1172,11 +1157,9 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 		StokesCoordinate stokesCoord = cSys.stokesCoordinate(stokesIndex);
 		Int whichPolPix;
 		if (!stokesCoord.toPixel(whichPolPix, Stokes::type(pol))) {
-			delete subim;
 			*itsLog << LogIO::SEVERE << "Selected polarization " << pol
 					<< " not in image" << LogIO::POST;
 			return 0;
-
 		}
 
 		Vector<Int> stokesPixelAxis = cSys.pixelAxes(stokesIndex);
@@ -1245,18 +1228,16 @@ ImageAnalysis::continuumsub(const String& outline, const String& outcont,
 	// Do fit and subtraction
 	std::string sigmafile = "";
 	//Now lets keep this pImage and put the subImage as the pImage
-	ImageInterface<Float> * tempIm = pImage_p;
-	pImage_p = subim;
-	ImageInterface<Float>* rstat = this->fitpolynomial(outline, outcont,
-			sigmafile, spectralPixelAxis[0], fitorder, fitregion, mask,
-			overwrite);
+	ImageAnalysis ia(subim.get());
+	ImageInterface<Float>* rstat = ia.fitpolynomial(
+		outline, outcont,
+		sigmafile, spectralPixelAxis[0], fitorder, fitregion, mask,
+		overwrite
+	);
 	//revert this object back to its original image
-	pImage_p = tempIm;
 	if (!rstat) {
 		*itsLog << LogIO::SEVERE << "fitpolynomial failed" << LogIO::POST;
 	}
-	// Clean up intermediate products
-	delete subim;
 
 	// Return Image tool to fitted image
 
@@ -1345,18 +1326,10 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 		}
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Convert inputs
 	Vector<Int> axes2(axes);
@@ -1553,18 +1526,11 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 
 	Float threshold(Threshold);
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.  Drop degenerate axes.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, itsLog,
-		False, axesSpec
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
+		itsLog, False, axesSpec
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Make finder
 	ImageDecomposer<Float> decomposer(subImage);
@@ -1759,17 +1725,10 @@ Bool ImageAnalysis::fft(const String& realOut, const String& imagOut,
 		}
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Do the FFT
 	ImageFFT fft;
@@ -1834,18 +1793,11 @@ Record ImageAnalysis::findsources(const int nMax, const double cutoff,
 
 	*itsLog << LogOrigin("ImageAnalysis", "findsources");
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.  Drop degenerate axes.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False, axesSpec
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Make finder
 	ImageSourceFinder<Float> sf(subImage);
@@ -2045,15 +1997,10 @@ Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 	// Drop degenerate axes
 	IPosition iAxes = IPosition(Vector<Int> (axes));
 
-    ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
     SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
 		Mask, (list ? itsLog : 0), False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 	if (getmask) {
         LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
 	} else {
@@ -2139,14 +2086,12 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 		}
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
-		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask, itsLog,
-		False
+		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
+		itsLog, False
 	);
 	IPosition blc(subImage.ndim(), 0);
 	if (pRegionRegion) {
@@ -2154,7 +2099,6 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 				pImage_p->coordinates(), pImage_p->shape());
 		blc = latRegion.slicer().start();
 	}
-	delete pRegionRegion;
 	delete pRegionRegion;
 	delete pMaskRegion;
 
@@ -2274,8 +2218,6 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 
 	*itsLog << LogOrigin("ImageAnalysis", "histograms");
 
-	// Convert region from Glish record to ImageRegion.
-	// Convert mask to ImageRegion and make SubImage.
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 
@@ -2545,25 +2487,17 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 		*itsLog << "Image Coordinate systems are not conformant" << LogIO::POST;
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	String mask;
 	SubImage<Float> subRealImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 	SubImage<Float> subImagImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, imagImage,
+		imagImage,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, 0, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// LEL node
 	LatticeExprNode node(formComplex(subRealImage, subImagImage));
@@ -2714,17 +2648,11 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 				<< LogIO::EXCEPTION;
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.  Drop degenerate axes.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, (list ? itsLog : 0), True
+		mask,  (list ? itsLog : 0), True
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Allow for subtraction/addition
 	ComponentList cl;
@@ -2843,8 +2771,6 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	// Hence the code below that deals with it.   Also in image.g we therefore
 	// give the default value as a blank string rather than a null vector.
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
@@ -3383,15 +3309,11 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 	AxesSpecifier axesSpecifier;
 	if (dropdeg)
 		axesSpecifier = AxesSpecifier(False);
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False, axesSpecifier
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Convert binning factors
 	IPosition factors2(subImage.ndim());
@@ -3480,15 +3402,11 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 	AxesSpecifier axesSpecifier;
 	if (dropDegenerateAxes)
 		axesSpecifier = AxesSpecifier(False);
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False, axesSpecifier
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Deal with axes
 	Vector<Int> axes(inaxes);
@@ -3638,15 +3556,11 @@ ImageAnalysis::rotate(const String& outFile, const Vector<Int>& shape,
 	// Convert region from Glish record to ImageRegion. Convert mask
 	// to ImageRegion and make SubImage.
 	AxesSpecifier axesSpecifier;
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
 		mask, itsLog, False, axesSpecifier
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Get image coordinate system
 	CoordinateSystem cSysFrom = subImage.coordinates();
@@ -3850,35 +3764,27 @@ Bool ImageAnalysis::rename(const String& name, const Bool overwrite) {
 
 }
 
-Bool ImageAnalysis::replacemaskedpixels(const String& pixels, Record& pRegion,
-		const String& maskRegion, const Bool updateMask, const Bool list) {
-
-	*itsLog << LogOrigin("ImageAnalysis", "replacemaskedpixels");
-
-	//
+Bool ImageAnalysis::replacemaskedpixels(
+	const String& pixels, Record& pRegion,
+	const String& maskRegion, const Bool updateMask,
+	const Bool list
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (pixels.empty()) {
 		*itsLog << "You must specify an expression" << LogIO::EXCEPTION
 				<< LogIO::POST;
 	}
-
 	// Whine about no mask if appropriate.
 	if (maskRegion.empty() && !pImage_p->isMasked()) {
 		*itsLog << "This image does not have a mask - no action taken"
 				<< LogIO::WARN << LogIO::POST;
 		return False;
 	}
-
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		maskRegion, (list ? itsLog : 0), True
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// See if we can write to ourselves
 	if (!subImage.isWritable()) {
@@ -3897,14 +3803,11 @@ Bool ImageAnalysis::replacemaskedpixels(const String& pixels, Record& pRegion,
 	PtrBlock<const ImageRegion*> tempRegs;
 	makeRegionBlock(tempRegs, tempRegions, *itsLog);
 	LatticeExprNode node = ImageExprParse::command(newexpr, temps, tempRegs);
-
 	// Delete the ImageRegions (by using an empty GlishRecord).
 	makeRegionBlock(tempRegs, Record(), *itsLog);
-
 	// Create the LEL expression we need.  It's like  replace(lattice, pixels)
 	// where pixels is an expression itself.
 	LatticeExprNode node2 = replace(subImage, node);
-
 	// Do it
 	subImage.copyData(LatticeExpr<Float> (node2));
 
@@ -3915,7 +3818,6 @@ Bool ImageAnalysis::replacemaskedpixels(const String& pixels, Record& pRegion,
 		LatticeExpr<Bool> expr(node);
 		mask.copyData(expr);
 	}
-
 	// Ensure that we reconstruct the statistics and histograms objects
 	// now that the data/mask have changed
 	deleteHistAndStats();
@@ -3967,17 +3869,11 @@ ImageAnalysis::sepconvolve(const String& outFile,
 				<< LogIO::EXCEPTION;
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		mask, itsLog, False
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Create convolver
 	SepImageConvolver<Float> sic(subImage, *itsLog, True);
@@ -4269,7 +4165,7 @@ Bool ImageAnalysis::statistics(
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
-		mtmp, (verbose ? itsLog : 0), False
+		mtmp,  (verbose ? itsLog : 0), False
 	);
 
 	// Reset who is logging stuff.
@@ -4535,18 +4431,12 @@ Bool ImageAnalysis::twopointcorrelation(const String& outFile,
 		}
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
 	AxesSpecifier axesSpecifier;
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&theRegion)),
 		mask, itsLog, False, axesSpecifier
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
 
 	// Deal with axes and shape
 	Vector<Int> axes2(axes1);
@@ -4597,8 +4487,6 @@ ImageAnalysis::subimage(const String& outfile, Record& Region,
 		}
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
 	AxesSpecifier axesSpecifier;
 	if (dropDegenerateAxes) {
 		axesSpecifier = AxesSpecifier(False);
@@ -4737,11 +4625,6 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 				<< pImage_p->getDefaultMask() << "'" << LogIO::POST;
 	}
 
-	// Convert region from Glish record to ImageRegion. Convert mask
-	// to ImageRegion and make SubImage.
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-
 	IPosition keepAxes;
 	if (!dropDeg) {
 		if (dropStokes) {
@@ -4771,13 +4654,10 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 	}
 
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion, *pImage_p,
+		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&pRegion)),
 		mask, itsLog, False, axesSpecifier
 	);
-	delete pRegionRegion;
-	delete pMaskRegion;
-
 
 	Bool ok = ImageFITSConverter::ImageToFITS(error, subImage, fitsfile,
 						  HostInfo::memoryFree() / 1024, 
@@ -5386,22 +5266,15 @@ ImageAnalysis::newimage(const String& infile, const String& outfile,
 		PtrHolder<ImageInterface<Float> > inImage;
 		ImageUtilities::openImage(inImage, infile, *itsLog);
 		ImageInterface<Float>* pInImage = inImage.ptr();
-		//
-		// Convert region from Glish record to ImageRegion.
-		// Convert mask to ImageRegion and make SubImage.
-		//
-		ImageRegion* pRegionRegion = 0;
-		ImageRegion* pMaskRegion = 0;
+
 		AxesSpecifier axesSpecifier;
 		if (dropdeg)
 			axesSpecifier = AxesSpecifier(False);
 		SubImage<Float> subImage = SubImage<Float>::createSubImage(
-			pRegionRegion, pMaskRegion, *pInImage,
+			*pInImage,
 			*(ImageRegion::tweakedRegionRecord(&region)),
 			Mask, itsLog, True, axesSpecifier
 		);
-		delete pRegionRegion;
-		delete pMaskRegion;
 
 		// Create output image
 		if (outfile.empty()) {
