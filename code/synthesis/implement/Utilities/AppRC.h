@@ -34,6 +34,7 @@
 #include <iostream.h>
 
 using namespace std;
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   class AppRC
   {
