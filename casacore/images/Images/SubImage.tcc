@@ -253,11 +253,17 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 	try {
 		outMaskMgr.reset(ImageRegion::fromLatticeExpression(mask));
 	} catch (AipsError x) {
-		if (os) {
-			*os << LogOrigin("SubImage", __FUNCTION__);
-			*os << "Input mask specification is incorrect: "
-				<< x.getMesg() << LogIO::EXCEPTION;
+		LogIO *myos = os;
+		std::auto_ptr<LogIO> localLogMgr(0);
+
+		if (! myos) {
+			cout << __FILE__ << " " << __LINE__ << endl;
+			myos = new LogIO();
+			localLogMgr.reset(myos);
 		}
+		*myos << LogOrigin("SubImage", __FUNCTION__);
+		*myos << "Input mask specification is incorrect: "
+			<< x.getMesg() << LogIO::EXCEPTION;
 	}
 	if (
 		extendMask
@@ -274,9 +280,14 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 			outMaskMgr.reset(new ImageRegion(LCMask(exIm)));
 		}
 		catch (AipsError x) {
-			if (os) {
-				*os << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
+			LogIO *myos = os;
+			std::auto_ptr<LogIO> localLogMgr(0);
+			if (! myos) {
+				myos = new LogIO();
+				localLogMgr.reset(myos);
 			}
+			*myos << LogOrigin("SubImage", __FUNCTION__);
+			*myos << "Unable to extend mask: " << x.getMesg() << LogIO::EXCEPTION;
 		}
 	}
 	SubImage<T> subImage;
