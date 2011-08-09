@@ -1116,6 +1116,18 @@ class imhead_test(unittest.TestCase):
         cmd = 'grep cunit1 imhead.log'
         out = commands.getoutput(cmd)
         self.assertNotEqual(out,'','The keyword cunit1 is not listed')
+        cmd = 'grep shape imhead.log'
+        out = commands.getoutput(cmd)
+        self.assertNotEqual(out,'','The keyword shape is not listed')
+        
+    def test_shape(self):
+        '''Imhead: CAS-3301: Keyword shape should be included in the output'''
+        shape = imhead(imagename=input_file,mode='get',hdkey='shape')
+        self.assertTrue(shape,'Keyword shape is missing')
+        self.assertTrue(shape['value'].all(), 'Not all values of shape exist.')
+        self.assertEqual(shape['value'][0],256, 'Value of shape[0] should be 256 and it is %s instead.'
+                         %shape['value'][0])
+        
         
         
         

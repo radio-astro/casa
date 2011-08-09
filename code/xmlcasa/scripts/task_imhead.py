@@ -177,7 +177,7 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
     tbkeys   = [ 'imtype', 'object', 'equinox']
     csyskeys = [ 'date-obs', 'equinox', 'observer', 'projection',
                  'restfreq', 'reffreqtype', 'telescope' ]
-    imkeys   = [ 'beammajor', 'beamminor', 'beampa', 'bunit', 'masks' ]
+    imkeys   = [ 'beammajor', 'beamminor', 'beampa', 'bunit', 'masks', 'shape' ]
     crdkeys  = [ 'ctype', 'crpix', 'crval', 'cdelt', 'cunit']
     statkeys = [ 'datamin', 'datamax', 'minpos', 'minpixpos', 'maxpos', 'maxpixpos'  ]
                
@@ -423,6 +423,9 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
         hd_units['masks']    = ''
         hd_comments['masks'] = ''
 
+    if (hd_dict.has_key('shape')):
+        hd_values['shape'] = hd_dict['shape']
+        hd_types['shape'] = 'list'
             
     # The COORDINATE keywords
     stokes = 'Not Known'
@@ -614,9 +617,12 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
             if ( hdkey == 'masks' ):
                 casalog.post( 'imhead does not add masks to images, this is to complex a task\n use the "makemask" task to add masks', 'WARN' )
                 return False
+                
+            # CAS-3301. I guess shape is always present in an image,
+            # therefore it is enough to change its value using put.
             casalog.post( hdkey+' switching to "put" mode to add the '+hdkey+' to the header.', 'WARN' )
             mode = 'put'
-
+            
         else:
             # Handle a User defined keyword
             try:
@@ -676,7 +682,7 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
     #############################################################
     #                     Del MODE
     #
-    # Remove a keyword to the image table.
+    # Remove a keyword from the image table.
     #############################################################
     if ( mode=='del' and ( key_list.count( hdkey ) < 0 \
                            or  hd_values[ hdkey ] == not_known ) ):
@@ -686,7 +692,7 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
     if ( mode == 'del' ):    
         if ( hdkey in tbkeys ):
             try:
-                # We are dealing with having to add to the table columns.
+                # We are dealing with having to delete from the table columns.
                 tb.open(imagename, nomodify=False)
                 key=''
                 if ( hdkey=='object' ):
@@ -715,7 +721,7 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
             return False
 
         elif ( hdkey in imkeys or hdkey  in csyskeys ):
-            # We need to use an image analysis function to add this
+            # We need to use an image analysis function to delete this
             # keyword.
             try:
                 if ( hdkey.startswith( 'beam' ) ):
@@ -824,10 +830,10 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
     # If we made it here the user is putting something into
     # the header.
     #############################################################
-    if ( mode!='put' ):
+    if (mode != 'put'):
         return False
     casalog.post( "Putting (changing): "+hdkey+" to  "+str(hdvalue), 'DEBUG2' )
-    if ( hdkey in tbkeys ):
+    if (hdkey in tbkeys):
         try:
             tb.open(imagename,nomodify=False)
             if (hdkey == 'equinox'):
@@ -915,8 +921,46 @@ def imhead(imagename=None,mode=None,hdkey=None,hdvalue=None,hdtype=None,hdcommen
                     pa['value'] = float( pa['value'] )
                 else:
                     casalog.post( '*** Error *** Unrecognized beam keyword '+hdkey, 'SEVERE' )
+                    ia.done()
                     return False
                 ia.setrestoringbeam( beam = {'major': major, 'minor':minor, 'positionangle': pa}, log=True )
+
+
+            # CAS-3301
+            elif (hdkey == 'shape'):
+                casalog.post('*** Error *** imhead does not support changing the shape of'\
+                             ' the image body. Use the ia tool instead', 'SEVERE')
+                ia.done()
+                return False
+            
+            # CAS-3301, initial try
+#            elif (hdkey == 'shape'):
+#                # Can only change the shape header key if it equals the data shape
+#                # Note that the shape is a tuple not a list
+#                datashape = ia.shape()
+#                if (hdvalue != datashape):
+#                    casalog.post('*** Error *** imhead does not support changing the shape of'\
+#                                 ' the image body. Use the ia tool instead','SEVERE')
+#                    ia.done()
+#                    return False
+#                else:
+#                    # change the header keyword
+#                    # Check if we can get the shape keyword using the tb tool
+#                    ia.done()
+#                    tb.open(imagename, nomodify=False)
+#                    masks = tb.getkeyword('masks')
+#                    if masks:
+#                        if masks['mask0']['box']['shape']:
+#                            # Change it
+#                            masks['mask0']['box']['shape'] = hdvalue
+#                            tb.putkeyword(keyword='masks', value=masks)
+#                            print "changed the value of shape"
+#                    else:
+#                        tb.close()
+#                        casalog.post('*** Error *** Unable to update keyword '+hdkey+' from image file '+imagename+'\n'+str(instance), 'SEVERE' )
+#                        return False
+#                    
+#                    tb.close()
                 
             ia.done()
             casalog.post( hdkey+" keyword has been UPDATED to "+imagename+"'s header", "NORMAL" )                                                
