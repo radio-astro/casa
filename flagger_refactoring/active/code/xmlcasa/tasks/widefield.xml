@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+
+<task type="function" name="widefield" category="imaging" visibility="deprecated">
+
+  <shortdescription>Wide-field imaging and deconvolution with selected algorithm</shortdescription>
+
+  <description>
+This is the main wide-field imaging/deconvolution task.  It
+uses the wprojection method for a large field of view, can
+make many facets, and can include outlier fields.  Several
+deconvolution algorithms are supported.  Interactive cleaning
+is also supported
+  </description>
+
+  <input>
+
+    <param type="stringArray" name="vis" kind="ms" mustexist="true">
+      <description>name of input visibility file</description>
+      <value></value>
+    </param>
+
+    <param type="any" name="imagename">
+      <description>Pre-name of output images</description>
+      <any type="variant"/>
+      <value type="string"></value>
+      <value></value>
+    </param>
+
+    <param type="string" name="outlierfile">
+      <description>Text file with image names, sizes, centers</description>
+      <value></value>
+    </param>
+
+    <param type="string" name="field">
+      <description>Field Name</description>
+      <value></value>
+    </param>
+
+    <param type="any" name="spw">
+	    <description>Spectral windows:channels: \'\' is all </description>
+	    <any type="variant"/>
+	    <value type="string"></value>
+    </param>
+    <param type="bool" name="selectdata">
+	    <description>Other data selection parameters</description>
+	    <value>False</value>
+    </param>
+    
+    <param type="string" name="timerange" subparam="true">
+	    <description>Range of time to select from data</description>
+	    <value></value>
+    </param>
+    <param type="string" name="uvrange" subparam="true">
+	    <description>Select data within uvrange </description>
+	    <value></value>
+    </param>
+    <param type="string" name="antenna" subparam="true">
+	    <description>Select data based on antenna/baseline</description>
+	    <value></value>
+    </param>
+    <param type="string" name="scan" subparam="true">
+	    <description>scan number range</description>
+	    <value></value>
+    </param>
+
+
+    <param type="string" name="mode">
+	    <description>Type of selection (mfs, channel, velocity, frequency)</description>
+	    <value>mfs</value>
+	    <allowed kind="enum">
+	    <value>mfs</value>
+	    <value>channel</value>
+	    <value>velocity</value>
+	    <value>frequency</value>
+    </allowed>
+    </param>
+
+    <param type="int" name="niter">
+    <description>Maximum number of iterations</description>
+    <value>500</value>
+    </param>
+
+    <param type="double" name="gain">
+      <description>Loop gain for cleaning</description>
+      <value>0.1</value>
+    </param>
+
+    <param type="any" name="threshold">
+      <description>Flux level to stop cleaning.  Must include units</description>
+      <any type="variant"/>
+      <value type="string">0.0Jy</value>
+    </param>
+
+
+    <param type="string" name="psfmode">
+    <description>Algorithm to use (clark, hogbom) </description>
+    <value>clark</value>
+    <allowed kind="enum">
+	    <value>clark</value>
+	    <value>hogbom</value>
+    </allowed>
+    </param>
+	  
+
+    <param type="string" name="ftmachine">
+	    <description>Gridding method for the image (wproject, ft)</description>
+	    <allowed kind="enum">
+		    <value>ft</value>
+		    <value>wproject</value>
+	    </allowed>
+    </param>
+
+    <param type="int" name="facets" subparam="yes">
+      <description>Number of facets along each axis in main image only</description>
+	    <value>3</value>
+    </param>
+
+    <param type="int" name="wprojplanes" subparam="yes">
+      <description>Number of planes to use in wprojection convolutiuon function</description>
+      <value>64</value>
+    </param>
+    <param type="intArray" name="multiscale">
+      <description>set deconvolution scales (pixels), default: multiscale=[]</description>
+      <value type="vector">
+	<value></value>
+      </value>
+
+    </param>
+    <param type="int" name="negcomponent" subparam="true">
+      <description>Stop cleaning if the largest scale finds this number of neg components</description>
+      
+      <value>0</value>
+     
+    </param>
+
+
+    <param type="bool" name="interactive">
+      <description>use interactive clean (with GUI viewer)</description>
+      <value>False</value>
+    </param>
+    
+    <param type="any" name="mask">
+      <description>cleanbox(es), mask image(s), and/or region(s) </description>
+      <any type="variant"/>
+      <value type="stringArray"></value>
+    </param>
+
+
+    <param type="int" name="nchan" subparam="true">
+      <description>Number of channels (planes) in output image</description>
+      <value>1</value>
+    </param>
+
+    <param type="any" name="start" subparam="true">
+      <description>First channel in input to use</description>
+      <any type="variant"/>
+      <value type="int">0</value>
+    </param>
+
+    <param type="any" name="width" subparam="true">
+      <description>Number of input channels to average</description>
+      <any type="variant"/>
+      <value type="int">1</value>
+    </param>
+    
+    <param type="intArray" name="imsize">
+	    <description>Image size in pixels (nx,ny), single value okay</description>
+	    <value type="vector">
+    <value>256</value><value>256</value>
+	    </value>
+    </param>
+
+    <param type="doubleArray" name="cell" units="arcsec">
+    <description>The image cell size in arcseconds [x,y], single value okay. </description>
+    <value type="vector"><value>1.0</value><value>1.0</value></value>
+    </param>
+
+    <param type="any" name="phasecenter">
+	    <description>Field Identififier or direction of the image phase center</description>
+	    <any type="variant"/>
+	    <value type="string"></value>
+    </param>
+
+    <param type="string" name="restfreq">
+	    <description>rest frequency to assign to image (see help)</description>
+	    <value></value>
+    </param>
+
+    <param type="string" name="stokes">
+	    <description>Stokes params to image (I,IV,QU,IQUV,RR,LL,XX,YY,RRLL,XXYY)</description>
+	    <value>I</value>
+    <allowed kind="enum">
+	    <value>I</value>
+	    <value>IV</value>
+	    <value>QU</value>
+	    <value>IQUV</value>
+	    <value>RR</value>
+	    <value>LL</value>
+	    <value>RRLL</value>
+	    <value>XX</value>
+	    <value>YY</value>
+	    <value>XXYY</value>
+    </allowed>
+    </param>
+
+
+
+    <param type="string" name="weighting">
+    <description>Weighting to apply to visibilities</description>
+    <value>natural</value>
+    <allowed kind="enum">
+	    <value>natural</value>
+	    <value>uniform</value>
+	    <value>briggs</value>
+	    <value>briggsabs</value>
+	    <value>radial</value>
+	    <value>superuniform</value>
+    </allowed>
+    </param>
+
+
+    <param type="double" name="robust" subparam='yes'>
+	    <description>Briggs robustness parameter</description>
+	    <value>0.0</value>
+	    <allowed kind="range">
+	    <value range="min">-2.0</value>
+	    <value range="max">2.0</value>
+    </allowed>
+    </param>
+
+    <param type="int" name="npixels" subparam='yes'>
+	    <description>number of pixels to determine cell size for superuniform or briggs weighting</description>
+	    <value>0</value>
+    </param>
+
+    <param type="any" name="noise" subparam='true'>
+      <description>noise parameter for briggs abs mode weighting</description>
+      <any type="variant"/>
+      <value type="string">1.0Jy</value>
+    </param>
+    
+    <param type="double" name="cyclefactor">
+	    <description>Threshold for minor/major cycles (see pdoc)</description>
+	    <value>1.5</value>
+    </param>
+
+    <param type="int" name="cyclespeedup">
+	    <description>Cycle threshold doubles in this number of iterations</description>
+	    <value>-1</value>
+    </param>
+
+
+
+    <param type="int" name="npercycle" subparam='yes'>
+	    <description>Number of iterations before interactive masking prompt</description>
+	    <value>100</value>
+    </param>
+
+    <param type="bool" name="uvtaper">
+	    <description>Apply additional uv tapering of  visibilities.</description>
+	    <value>False</value>
+    </param>
+
+    <param type="stringArray" name="outertaper" subparam="true">
+	    <description>uv-taper on outer baselines in uv-plane</description>
+	    <value type="vector">
+	      <value></value>
+	    </value>
+    </param>
+
+    <param type="stringArray" name="innertaper" subparam="true">
+	    <description>uv-taper in center of uv-plane</description>
+	    <value>1.0</value>
+    </param>
+
+    <param type="stringArray" name="restoringbeam">
+      <description>Output Gaussian restoring beam for CLEAN image</description>
+      <value></value>
+    </param>
+
+    <param type="bool" name="calready">
+	    <description>Create scratch columns and store model visibilities so that selfcal can be run after clean</description>
+	    <value>False</value>
+    </param>
+
+
+    <constraints>
+      <when param="selectdata">
+	<equals type="bool" value="False"/>
+	<equals type="bool" value="True">
+	  <default param="timerange"><value type="string"></value>
+	  </default>
+	  <default param="uvrange"><value type="string"></value>
+	  </default>
+	  <default param="antenna"><value type="string"></value>
+	  </default>
+	  <default param="scan"><value type="string"></value>
+	  </default>
+	</equals>
+      </when>
+      <when param="multiscale">
+	<notequals type="vector" value="[]" > 
+	  <default param="negcomponent"><value>-1</value>
+	  </default>
+	</notequals>
+      </when>
+      <when param="mode">
+		<equals value="mfs"/>
+		<equals value="channel">
+		  <default param="nchan"><value>-11</value></default>
+		  <default param="start"><value>0</value>
+		  <description>first channel in image relative to data channels</description>
+		  </default>
+		  <default param="width"><value>1</value></default>
+		</equals>
+		<equals value="velocity">
+		  <default param="nchan"><value>1</value></default>
+		  <default param="start"><value type="string">0.0km/s</value>
+		  <description>Velocity of first image channel: e.g \'0.0km/s\'</description>
+		  </default>
+		  <default param="width"><value type="string">1km/s</value>
+		         <description>image channel width in velocity units: e.g \'-1.0km/s\'</description>
+		  </default>
+		</equals>
+		<equals value="frequency">
+			<default param="nchan"><value>1</value></default>
+			<default param="start"><value type="string">1.4GHz</value>
+			    <description>Frequency of first image channel: e.q. \'1.4GHz\'</description>
+		    </default>
+		    <default param="width"><value type="string">10kHz</value>
+			    <description>Image channel width in frequency units: e.g \'10kHz\'</description>
+		    </default>
+	        </equals>
+	    </when>
+	    <when param="weighting">
+		<equals value="natural"/>
+	        <equals value="uniform"/>
+	        <equals value="briggs">
+			<default param="robust"><value type="double">0.0</value></default>
+			<default param="npixels"><value>0</value>
+			    <description>number of pixels to determine uv-cell size 0=&gt; field of view</description>
+		    </default>
+	        </equals>
+		<equals value="briggsabs">
+		  <default param="robust"><value>0.0</value></default>
+		  <default param="noise"><value type="string">1.0Jy</value></default>
+		  <default param="npixels"><value>0</value>
+		  <description>number of pixels to determine uv-cell size 0=&gt; field of view</description>
+		  </default>
+		</equals>
+	        <equals value="superuniform">
+			<default param="npixels"><value>0</value>
+			    <description>number of pixels to determine uv-cell size 0=&gt; +/-3pixels</description>
+		    </default>
+	        </equals>
+            </when>
+	    <when param="uvtaper">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+			<default param="outertaper"><value type="vector"></value></default>
+			<default param="innertaper"><value type="vector"></value></default>
+	        </equals>
+            </when>
+	    <when param="interactive">
+		<equals type="bool" value="False"/>
+		<equals type="bool" value="True">
+		      <default param="npercycle"><value>100</value></default>
+	        </equals>
+            </when>
+	    <when param="ftmachine">
+		    <equals value="wproject">
+			    <default param="wprojplanes"><value>256</value></default>
+			    <default param="facets"><value>1</value></default>
+		    </equals>
+		    <equals value="ft">
+			    <default param="facets"><value>1</value></default>
+		    </equals>
+	    </when>
+    </constraints>
+
+    </input>
+
+  <returns type="void"/>
+
+  <example>
+
+        Wide-field imaging and deconvolution with selected algorithm:
+
+        This is the main wide-field imaging/deconvolution task.  It
+        uses the wprojection method for a large field of view, can
+        make many facets, and can include outlier fields.  Several
+        deconvolution algorithms are supported.  Interactive cleaning
+        is also supported.
+
+	For making large images (>2000 on a size), see hints at the
+        end of the descriptions.  For making images larger than about
+        5000x5000, the available memory must be larger than 2 Gbytes. For such 
+        images therefore  a computer with a 64-bit operating system may be
+        needed.
+
+
+        Keyword arguments:
+        vis -- Name of all input visibility files
+                default: none; example: vis='ngc5921.ms'
+                example: vis=['data01.ms', 'data02.ms']
+        imagename -- Pre-name of output images:
+                default: none; example: imagename='n5921'
+                if outlier fields are included, then
+                   imagename=['n5921', 'outlier1', outlier2']
+                   and the first imagename is the wide-field image
+                output images names are: n5921.clean, n5921.residual,
+                n5921.model, n5921.interactive.mask
+        mode -- Type of selection
+                default: 'mfs'; example: mode='channel';
+                Options: 'mfs', channel, velocity, frequency'
+        alg -- Algorithm to use
+                default: 'clark';
+                Options: 'clark', 'hogbom','multiscale','entropy'
+                    Strongly advise 'clark'.  multiscale and entropy
+                    well-tested.
+        imsize -- Image pixel size (x,y)
+                default = [256,256]; example: imsize=[500,500], or imsize=500
+                example for multiple fields: imsize=[(1000, 1000), (100, 100)]
+        cell -- Cell size (x,y)
+                default=['1arcsec,'1arcsec']
+                example: cell=['0.5arcsec,'0.5arcsec'], or cell='0.5arcsec'
+        phasecenter -- direction position or the field for the image center
+                A list of the above is needed for multiple-fields
+                default: '' --&gt;field='0' as center; example: phasecenter='6'
+                   phasecenter='J2000 19h30m00 -40d00m00'
+                   phasecenter=['J2000 19h30m00 -40d00m00', 'J2000 19h57m00 40d00m00']
+                      for wide-field, plus one outlier field.
+        stokes -- Stokes parameters to image
+                default='I'; example: stokes='IQUV';
+                Options: 'I','IV','IQU','IQUV'
+        niter -- Number iterations, set to zero for no CLEANing
+                default: 500; example: niter=500
+        gain -- Loop gain for CLEANing
+                default: 0.1; example: gain=0.1
+        threshold -- Flux level at which to stop CLEANing (units=mJy)
+                default: 0.0; example: threshold=0.0
+        mask -- Name(s) of mask image(s) used for CLEANing
+                default: ''  example: mask='orion.mask'
+                Number of mask fields must equal number of imaged fields
+        cleanbox -- List of [blc-x,blc-y,trc-x,trc-y] values
+                default: []; example: cleanbox=[110,110,150,145]
+                Note: This can also be a filename with clean values:
+                fieldindex blc-x blc-y trc-x trc-y
+                cleanbox = 'interactive' is very useful.
+        --- Data Selection
+        nchan -- Number of channels to select
+                default: 1; example: nchan=45
+        start -- Start channel, 0-relative
+                default=0; example: start=5
+                if mode='frequency' then a frequency value e.g start='1.4GHz'
+        width -- Channel width (value &gt; 1 indicates channel averaging)
+                default=1; example: width=5
+                if mode='frequency' then a frequency value e.g  width='10kHz'
+        step -- Step in channel number
+                default=1; example: step=2
+        field -- Select field using field id(s) or field name(s).
+                  [run listobs to obtain the list id's or names]
+               default: ''=all fields
+               If field string is a non-negative integer, it is assumed a field index
+                 otherwise, it is assumed a field name
+               field='0~2'; field ids 0,1,2
+               field='0,4,5~7'; field ids 0,4,5,6,7
+               field='3C286,3C295'; field named 3C286 adn 3C295
+               field = '3,4C*'; field id 3, all names starting with 4C
+               example for multiple ms in vis parameter:
+               field=['0~2', '1,2']
+        spw -- Select spectral window/channels
+               default: ''=all spectral windows and channels
+               spw='0~2,4'; spectral windows 0,1,2,4 (all channels)
+               spw='&lt;2';  spectral windows less than 2 (i.e. 0,1)
+               spw='0:5~61'; spw 0, channels 5 to 61
+               spw='0,10,3:3~45'; spw 0,10 all channels, spw 3, channels 3 to 45.
+               spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
+               spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
+               spw='0:0~10,1:20~30,2:1;2;3'; spw 0, channels 0-10,
+                        spw 1, channels 20-30, and spw 2, channels, 1,2 and 3
+               For multiple ms in vis parameter:
+               spw=['0,10,3:3~45', '&lt;2']
+        timerange -- Select time range subset of data (not implemented yet)
+            default='' meaning no time selection
+            example: timerange='YYYY/MM/DD/HH:MM:SS.sss'
+            timerange='&lt; YYYY/MM/DD/HH:MM:SS.sss'
+            timerange='&gt; YYYY/MM/DD/HH:MM:SS.sss'
+            timerange='ddd/HH:MM:SS.sss'
+            timerange='&lt; ddd/HH:MM:SS.sss'
+            timerange='&gt; ddd/HH:MM:SS.sss'
+        restfreq -- Specify rest frequency to use for image
+            default='' (i.e., try to use the restfreq specified in the visibility data)
+
+        --- Weighting
+        weighting -- Weighting to apply to visibilities
+                default='natural'; example: weighting='uniform';
+                Options: 'natural','uniform','briggs','briggsabs','radial', 'superuniform'
+        robust -- 'briggs' and 'brigssabs' robustness parameter
+                default=0.0; example: robust=0.5;
+                Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
+        npixels -- number of pixels to determine uv-cell size for weight calculation
+                 -- Used with superuniform or briggs weighting schemes
+                  example: npixels=3
+
+        --- widefield controls
+        ftmachine -- Gridding method for the image;
+                ft (standard interferometric gridding).
+                wproject (wprojection algorithm for gridding)
+                default: wproject
+        wprojplanes -- Number w-projection planes to use for gridding
+                default: 256
+                example: wprojplanes=64
+		   Good value = BMAX(klambda) * Map width(arcmin)^2 / 600
+        facets   -- Number of facets along one axis on central image
+                image is divided in facets x facets rectangles.
+                default: 1
+                example: facets=3 makes 3x3 images to cover the field
+		if ftmachine = 'ft', only faceting is used
+                if ftmachine = 'wproject', both wplanes and faceting  
+                         can be used  (see below).
+
+        cyclefactor -- Change the threshold at which the deconvolution cycle will
+                stop and degrid and subtract from the visibilities. For bad PSFs,
+                reconcile often (cyclefactor=4 or 5); For good PSFs, use
+                cyclefactor 1.5 to 2.0.
+                default: 2.5; example: cyclefactor=4, but decreases speed considerably.
+                &lt;cycle threshold = cyclefactor * max sidelobe * max residual&gt;
+        cyclespeedup -- Cycle threshold doubles in this number of iterations
+                default: -1; example: cyclespeedup=500
+
+        --- MEM parameters (Experimental, not well-tested)
+        sigma -- Target image sigma
+                default: '0.001Jy'; example: sigma='0.1Jy'
+        targetflux -- Target flux for final image
+                default: '1.0Jy'; example: targetflux='200Jy'
+        constrainflux -- Constrain image to match target flux;
+                otherwise, targetflux is used to initialize model only.
+                default: False; example: constrainflux=True
+        prior -- Name of MEM prior images
+                default: ['']; example: prior='source_mem.image'
+
+        --- Multi-scale parameters (Experimental, not well-tested)
+        negcomponent -- Stop component search when the largest scale has found this
+                number of negative components; -1 means continue component search
+                even if the largest component is negative.
+                default: 2; example: negcomponent=-1
+        scales -- Used for alg='multiscale'; set a number of scales or a vector
+                default: [0,3,10]; example: scales=[0.0,3.0,10.0, 30]
+        --  interactive masking
+        npercycle -- when cleanbox is set to 'interactive',
+           this is the number of iterations between each clean to update mask
+           interactively. However, this number can be adjusted during execution.
+
+	uvtaper -- Apply additional uv tapering of the visibilities.
+               default: uvtaper=False; example: uvtaper=True
+                  uvtaper=True expandable parameters
+                     outertaper -- uv-taper on outer baselines in uv-plane
+                           [bmaj, bmin, bpa] taper Gaussian scale in uv or
+                            angular units. NOTE: uv taper in (klambda) is  
+                            roughly on-sky FWHM(arcsec/200)
+                         default: outertaper=[]; no outer taper applied
+                            example: outertaper=['5klambda']  circular taper
+                                FWHM=5 kilo-lambda
+                                outertaper=['5klambda','3klambda','45.0deg']
+                                outertaper=['10arcsec'] on-sky FWHM 10"
+                                outertaper=['300.0'] default units are meters
+                                   in aperture plane
+                     innertaper -- uv-taper in center of uv-plane
+                             NOT YET IMPLEMENTED
+
+        restoringbeam -- Output Gaussian restoring beam for CLEAN image
+                [bmaj, bmin, bpa] elliptical Gaussian restoring beam
+                default units are in arc-seconds for bmaj,bmin, degrees
+                for bpa default: restoringbeam=[]; Use PSF calculated
+                from dirty beam.
+                example: restoringbeam=['10arcsec'] circular Gaussian
+                       FWHM 10" example:
+                       restoringbeam=['10.0','5.0','45.0deg'] 10"x5"
+                       at 45 degrees
+
+	calready -- if True will create scratch columns if they are 
+                not there. And after clean completes the predicted model 
+                visibility is from the clean components are
+                written to the ms.        
+
+        async --  Run asynchronously
+                default = False; do not run asychronously
+
+ ======================================================================
+
+                      HINTS ON RUNNING WIDEFIELD
+
+      1.  Decide if the images will be specified directly in the  
+          inputs or with an outlier file.  For more than a few fields,
+          an outlier file more convenient.
+
+         Direct Method:
+
+            cell = ['1.0arcsec', '1.0arcsec']
+            imagename = ['M1_0','M1_1','M1_2]
+            imsize = [[1024,1024],[128,128],[128,128]]
+            phasecenter = ['J2000 13h27m20.98 43d26m28.0', 
+                      'J2000 13h30m52.159 43d23m08.02', 'J2000 13h24m08.16 43d09m48.0']
+
+          Text file method  (in outlier.txt)
+
+            imagename = 'M1'
+            outlierfile = 'outlier.txt'
+               [phasecenter, imsize ignored]
+
+            Contents of outlier.txt
+            C   0   1024 1024   13 27 20.98     43 26 28.0
+            C   1    128  128   13 30 52.158    43 23 08.00
+            C   2    128  128   13 24 08.163    43 09 48.00
+
+         In both cases the following images will be made:
+             M1_0.image, M1_1.image, M1_2.image     cleaned images
+             M1.0.model, M1_1.model, M1_2.model     model images
+             M1.0.residual, M1_1.residual, M1_2.residual     residual images
+
+       2.  Wprojection:  It is fastest to use wprojection without faceting.
+             ftmachine = 'wproject'
+             wprojplane = NN
+
+           The value of NN should be chosen as small as possible to reduce
+           execution time.  The algorithm
+               NN = BMAX(klambda) * imagewidth (arcmin)^2 / 600, with a minimum
+                    of 16, should be adequate.
+
+       3.  Depending on the memory of the computer, a limit of about
+       5000x5000 may occur for example if a computer has 2Gbyte of
+       RAM. Also a 32-bit computer has a maximum limit of 2Gbyte
+       memory usable per process, irrespective of how much physical
+       RAM is present. Hence it is recommended to move to a 64-bit
+       computer with more than 2 GByte of RAM for &gt;5000x5000 images
+           
+
+       4. For data with extremely large 'w' values, i.e low frequency,
+       long baseline and very widefield image, the wprojection
+       convolution can be very large and either not fit in memory or
+       slow for processing.  In these cases you should consider using
+       both ftmachine='wproject' and facets=xx where is 3.
+
+  </example>
+
+</task>
+
+</casaxml>
