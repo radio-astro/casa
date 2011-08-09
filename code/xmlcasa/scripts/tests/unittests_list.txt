@@ -55,6 +55,7 @@ test_slsearch                   dmehring@nrao.edu
 test_sdaverage                  takeshi.nakazato@nao.ac.jp
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      kana.sugi@nao.ac.jp
+test_sdcoadd                    kana.sugi@nao.ac.jp
 test_sdimaging                  takeshi.nakazato@nao.ac.jp
 test_sdimprocess                takeshi.nakazato@nao.ac.jp
 test_sdlist                     kana.sugi@nao.ac.jp
