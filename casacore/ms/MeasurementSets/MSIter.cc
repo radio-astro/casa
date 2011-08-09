@@ -572,7 +572,7 @@ void MSIter::setFeedInfo()
     timeDepFeed_p=True;
     // if all interval values are <= zero or very large, 
     // there is no time dependence
-    if (allLE(interval,0.0)||allGE(interval,1.e10)) timeDepFeed_p=False;
+    if (allLE(interval,0.0)||allGE(interval,1.e9)) timeDepFeed_p=False;
     else { 
       // check if any antennas appear more than once
       // check for each spectral window and feed in turn..
