@@ -462,10 +462,30 @@ class SubMS
   Bool copyWeather();
   Bool copyGenericSubtables();
 
+  // This falls between copyGenericSubtables() and the copiers for standard
+  // subtables like copyFeed().  It is for optional subtables like CALDEVICE
+  // and SYSPOWER which can be watched for by name and may need their
+  // ANTENNA_ID and SPECTRAL_WINDOW_ID columns remapped.  (Technically FEED_ID,
+  // too, if split ever starts remapping feeds.)
+  //
+  // It must be called BEFORE copyGenericSubtables()!
+  //
+  Bool filterOptSubtable(const String& subtabname);
+
   //  Bool writeDiffSpwShape(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillAccessoryMainCols();
 
   // *** Private member functions ***
+
+  // Adds and copies inTab to msOut_p without any filtering.
+  // tabName is the table "type", i.e. POINTING or SYSPOWER without the
+  // preceding path.
+  //
+  // If noRows is True, the structure will be setup but no rows will be
+  // copied.  (Useful for filtering)
+  void copySubtable(const String& tabName, const Table& inTab,
+                    const Bool noRows=False);
+
   Bool getDataColumn(ROArrayColumn<Complex>& data,
                      const MS::PredefinedColumns colName);
   Bool getDataColumn(ROArrayColumn<Float>& data,

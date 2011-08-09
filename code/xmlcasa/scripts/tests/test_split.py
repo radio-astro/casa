@@ -573,6 +573,97 @@ class split_test_cav5(SplitChecker):
                  0.0001)
         #self.__class__.n_tests_passed += 1
 
+class split_test_cdsp(SplitChecker):
+    need_to_initialize = True
+    corrsels = ['cas-3307.ms', 'bogusCDSP.ms']  # MSes, not corr selections.
+    inpms = corrsels[0]                         # This variable is not used.
+    records = {}
+    
+    def initialize(self):
+        # The realization that need_to_initialize needs to be
+        # a class variable more or less came from
+        # http://www.gossamer-threads.com/lists/python/dev/776699
+        self.__class__.need_to_initialize = False
+
+        for inpms in self.corrsels:
+            if not os.path.exists(datapath + 'unittest/split/' + inpms):
+                raise EnvironmentError, "Missing input MS: " + datapath + 'unittest/split/' + inpms
+            self.res = self.do_split(inpms)
+
+    def do_split(self, corrsel):     # corrsel is really an input MS in
+        outms = 'reind_' + corrsel   # this class.
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nRemapping CALDEVICE and SYSPOWER of", corrsel
+            splitran = split(datapath + 'unittest/split/' + corrsel, outms, datacolumn='data',
+                             field='', spw='0,2', width=1,
+                             antenna='ea05,ea13&',
+                             timebin='', timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+            for st in ('CALDEVICE', 'SYSPOWER'):
+                record[st] = {}
+                tb.open(outms + '/' + st)
+                for c in ('ANTENNA_ID', 'SPECTRAL_WINDOW_ID'):
+                    record[st][c]   = tb.getcol(c)
+                tb.close()
+        except Exception, e:
+            print "Error channel averaging and reading", outms
+            raise e
+        self.records[corrsel] = record
+        return splitran
+
+    def test_bogus_cd_antid(self):
+        """ANTENNA_ID selection from a bad CALDEVICE"""
+        # The resulting CALDEVICE is probably useless; the point is to ensure
+        # that split ran to completion.
+        check_eq(self.records['bogusCDSP.ms']['CALDEVICE']['ANTENNA_ID'],
+                 numpy.array([0, 1, 0, 1]))
+
+    def test_bogus_cd_spwid(self):
+        """SPECTRAL_WINDOW_ID selection from a bad CALDEVICE"""
+        # The resulting CALDEVICE is probably useless; the point is to ensure
+        # that split ran to completion.
+        check_eq(self.records['bogusCDSP.ms']['CALDEVICE']['SPECTRAL_WINDOW_ID'],
+                 numpy.array([0, 0, 1, 1]))
+
+    def test_bogus_cd_antid(self):
+        """ANTENNA_ID selection from a bad SYSPOWER"""
+        # The resulting SYSPOWER is probably useless; the point is to ensure
+        # that split ran to completion.
+        check_eq(self.records['bogusCDSP.ms']['SYSPOWER']['ANTENNA_ID'][89:97],
+                 numpy.array([0, 0, 1, 0, 0, 1, 1, 1]))
+
+    def test_bogus_cd_spwid(self):
+        """SPECTRAL_WINDOW_ID selection from a bad SYSPOWER"""
+        # The resulting SYSPOWER is probably useless; the point is to ensure
+        # that split ran to completion.
+        check_eq(self.records['bogusCDSP.ms']['SYSPOWER']['SPECTRAL_WINDOW_ID'][189:197],
+                 numpy.array([0, 1, 0, 0, 0, 1, 1, 1]))
+
+    def test_cd_antid(self):
+        """ANTENNA_ID selection from CALDEVICE"""
+        check_eq(self.records['cas-3307.ms']['CALDEVICE']['ANTENNA_ID'],
+                 numpy.array([0, 1, 0, 1]))
+
+    def test_cd_spwid(self):
+        """SPECTRAL_WINDOW_ID selection from CALDEVICE"""
+        check_eq(self.records['cas-3307.ms']['CALDEVICE']['SPECTRAL_WINDOW_ID'],
+                 numpy.array([0, 0, 1, 1]))
+
+    def test_cd_antid(self):
+        """ANTENNA_ID selection from SYSPOWER"""
+        # Purposely take a few from near the end.
+        check_eq(self.records['cas-3307.ms']['SYSPOWER']['ANTENNA_ID'][-19:-6],
+                 numpy.array([1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1]))
+
+    def test_cd_spwid(self):
+        """SPECTRAL_WINDOW_ID selection from SYSPOWER"""
+        check_eq(self.records['cas-3307.ms']['SYSPOWER']['SPECTRAL_WINDOW_ID'][-18:-7],
+                 numpy.array([0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1]))
+
 
 class split_test_cst(unittest.TestCase):
     """
@@ -1338,7 +1429,7 @@ class split_test_tav_then_cvel(SplitChecker):
 
 def suite():
     return [split_test_tav, split_test_cav, split_test_cav5, split_test_cst,
-            split_test_state, split_test_optswc,
+            split_test_state, split_test_optswc, split_test_cdsp,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
             split_test_sw_and_fc, split_test_cavcd, split_test_almapol]
