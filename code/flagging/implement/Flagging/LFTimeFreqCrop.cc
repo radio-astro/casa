@@ -217,6 +217,7 @@ namespace casa {
     Vector<Float> tempDat,tempFit;
     Vector<Bool> tempFlag;
     Vector<Int> mind(2);
+    Float tol=F_TOL;
 
     // Decide which direction to fit the base polynomial
     if(direction==String("freq"))
@@ -228,6 +229,7 @@ namespace casa {
       { 
 	AlwaysAssert(cubeshp==IPosition(3,NumP,NumB,NumT), AipsError);
 	mind[0]=NumT;  mind[1]=NumC;
+	tol=T_TOL;
       }
 
     // Resize temp arrays
@@ -347,7 +349,7 @@ namespace casa {
 	    // Flag if the data differs from 1 by N sd
 	    for(Int i0=0;i0<mind[0];i0++)
 	      {
-		if(tempFlag[i0]==False && fabs(tempDat[i0]-mn) > F_TOL*sd) tempFlag[i0]=True ;
+		if(tempFlag[i0]==False && fabs(tempDat[i0]-mn) > tol*sd) tempFlag[i0]=True ;
 	      }
 
 
@@ -360,7 +362,7 @@ namespace casa {
 		if(winStats_p=="sum" || winStats_p=="both")
 		  {
 		    for(Int i=i0-halfWin_p; i<i0+halfWin_p+1; i++) tpsum += fabs(tempDat[i]-mn);
-		    if(tpsum/(2*halfWin_p+1.0) > F_TOL*sd/2.0 ) tempFlag[i0]=True;
+		    if(tpsum/(2*halfWin_p+1.0) > tol*sd/1.5 ) tempFlag[i0]=True;
 		  }
 		
 		
@@ -368,14 +370,12 @@ namespace casa {
 		if(winStats_p=="std" || winStats_p=="both")
 		  {
 		    for(Int i=i0-halfWin_p; i<i0+halfWin_p+1; i++) tpsd += (tempDat[i]-mn) * (tempDat[i]-mn) ;
-		    if(sqrt( tpsd / (2*halfWin_p+1.0) ) > F_TOL*sd/2.0)  tempFlag[i0]=True ;
+		    if(sqrt( tpsd / (2*halfWin_p+1.0) ) > tol*sd/1.5)  tempFlag[i0]=True ;
 		  }
 		
 	      }//for i0
 	  }// if winStatr += none
 	
-
-
 
 	    if(fabs(temp-sd) < 0.1)break;
 	    temp=sd;
