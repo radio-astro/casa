@@ -696,7 +696,7 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
    	errorMsg = "Can not convert value to rest wavelength/frequency: " + itsRestValue;
       os << errorMsg << LogIO::EXCEPTION;
    }
-   else if (restQuant.getUnit().empty()){
+   else if (restQuant.getValue() > 0 && restQuant.getUnit().empty()){
    	errorMsg = "Can not retrieve unit for rest wavelength/frequency in: " + itsRestValue;
       os << errorMsg << LogIO::EXCEPTION;
    }
