@@ -240,15 +240,21 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // DATA_DESCRIPTION
   uInt oldRows = itsMS.dataDescription().nrow();
+  uInt oldSPWRows = itsMS.spectralWindow().nrow();
   const Block<uInt> newDDIndices = copySpwAndPol(otherMS.spectralWindow(),
 						 otherMS.polarization(),
 						 otherMS.dataDescription());
   {
-    const uInt addedRows = itsMS.dataDescription().nrow() - oldRows;
-    const uInt matchedRows = otherMS.dataDescription().nrow() - addedRows;
+    uInt addedRows = itsMS.dataDescription().nrow() - oldRows;
+    uInt matchedRows = otherMS.dataDescription().nrow() - addedRows;
     log << "Added " << addedRows 
 	<< " rows and matched " << matchedRows 
 	<< " from the data description subtable" << LogIO::POST;
+    addedRows = itsMS.spectralWindow().nrow() - oldSPWRows;
+    matchedRows = otherMS.spectralWindow().nrow() - addedRows;
+    log << "Added " << addedRows 
+	<< " rows and matched " << matchedRows 
+	<< " from the spectral window subtable" << LogIO::POST;
   }
 
   // correct the spw entries in the SOURCE table and remove redundant rows
@@ -1564,7 +1570,8 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
     Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
 
     if(otherSpwCols.totalBandwidthQuant()(otherSpwId).getValue(Unit("Hz"))<=0.){
-      os << LogIO::WARN << "Negative or zero total bandwidth in SPW " << otherSpwId << " of MS to be appended." << LogIO::POST;
+      os << LogIO::WARN << "Negative or zero total bandwidth in SPW " 
+	 << otherSpwId << " of MS to be appended." << LogIO::POST;
     }
 
     *newSpwPtr = spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
@@ -1574,6 +1581,7 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 				  otherFreqs, itsChanReversed[d]);
     
     if (*newSpwPtr < 0) {
+      //      cout << "no counterpart found for other spw " << otherSpwId << endl;
       // need to add a new entry in the SPECTRAL_WINDOW subtable
       *newSpwPtr= spw.nrow();
       spw.addRow();
@@ -1584,6 +1592,10 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       matchedDD = False;
       doSPW_p = True;      
     }
+    //     else{
+    //       cout << "counterpart found for other spw " << otherSpwId 
+    // 	   << " found in this spw " << *newSpwPtr << endl;
+    //     }      
     
     DebugAssert(otherDDCols.polarizationId()(d) >= 0 &&
 		otherDDCols.polarizationId()(d) < 
@@ -1629,6 +1641,43 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       ddCols.spectralWindowId().put(ddMap[d], *newSpwPtr);
     }
   }
+
+  // Finally, see if there are additional SPWs in the SPW table which are
+  //  not used in the DD table
+  for(uInt otherSpwId=0; otherSpwId<otherSpw.nrow(); otherSpwId++){
+
+    DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
+    Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
+
+    if(otherSpwCols.totalBandwidthQuant()(otherSpwId).getValue(Unit("Hz"))<=0.){
+      os << LogIO::WARN << "Negative or zero total bandwidth in SPW " 
+	 << otherSpwId << " of MS to be appended." << LogIO::POST;
+    }
+    Bool chanReversed = False;
+
+    Int newSpwId = spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
+				    static_cast<uInt>(otherSpwCols.numChan()(otherSpwId)),
+				    otherSpwCols.totalBandwidthQuant()(otherSpwId),
+				    otherSpwCols.ifConvChain()(otherSpwId), freqTol, 
+				    otherFreqs, chanReversed);
+    
+    if (newSpwId < 0) {
+      //      cout << "Second iteration: no counterpart found for other spw " << otherSpwId << endl;
+      // need to add a new entry in the SPECTRAL_WINDOW subtable
+      newSpwId = spw.nrow();
+      spw.addRow();
+      spwRow.putMatchingFields(newSpwId, otherSpwRow.get(otherSpwId));
+      // fill map to be used by updateSource()
+      newSPWIndex_p.define(otherSpwId, newSpwId); 
+      doSPW_p = True;      
+    }
+    //     else{
+    //       cout << "Second iteration: counterpart found for other spw " << otherSpwId 
+    //            << " found in this spw " << newSpwId << endl;
+    //     }    
+    
+  }
+
   return ddMap;
 }
 
