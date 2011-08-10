@@ -274,6 +274,8 @@ public:
 	static Bool loggingInitialized_p;
 	static Int logLevel_p;
 
+	Mutex * getMutex() {return &vlaDataMutex_p;};
+
 protected:
 
 private:
@@ -508,6 +510,10 @@ public:
 	void requestSweepTermination ();
 	void terminate ();
 
+	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+	void setRowBlocking();
+	bool getRowBlocking() {return rowBlocking_p;}
+
 protected:
 
 	class FillerDictionary : public map<casa::asyncio::PrefetchColumnIds, VlatFunctor *> {
@@ -545,6 +551,9 @@ private:
 	Bool threadTerminated_p;
 	ROVisibilityIterator * visibilityIterator_p; // [own]
 	VlaData * vlaData_p; // [use]
+
+	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+	bool rowBlocking_p;
 
 };
 

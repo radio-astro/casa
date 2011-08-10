@@ -111,6 +111,18 @@ public:
             Double timeInterval=0,
             Int nReadAheadBuffers = -1);
 
+    // jagonzal: This is a minimum modification to prove compatibility if writing operations
+    // with asyn iterators. This code should be moved to a VisibilityIteratorAsync class.
+    static ROVisibilityIterator *
+    create (const MeasurementSet & ms,
+            const PrefetchColumns & prefetchColumns,
+            const Block<Int> & sortColumns,
+            const Bool addDefaultSortCols,
+            VisibilityIterator *rwVisibilityIterator,
+            Bool groupRows,
+            Double timeInterval=0,
+            Int nReadAheadBuffers=-1);
+
     static ROVisibilityIterator *
     create (const Block<MeasurementSet> & mss,
             const PrefetchColumns & prefetchColumns,
@@ -154,7 +166,9 @@ public:
 //    MEpoch getMEpoch () const;
 //    Vector<Float> getReceptor0Angle ();
 
-    void linkWithRovi (ROVisibilityIterator * rovi);
+    // jagonzal: Instead of a RO iterator we use a more generic RW
+    void linkWithRovi (VisibilityIterator * rovi);
+
     bool more () const;
     bool moreChunks () const;
     ROVisibilityIteratorAsync & nextChunk ();
@@ -311,6 +325,17 @@ protected:
                                Double timeInterval=0,
                                Int nReadAheadBuffers = 2);
 
+    // jagonzal: This is a minimum modification to prove compatibility if writing operations
+    // with asyn iterators. This code should be moved to a VisibilityIteratorAsync class.
+    ROVisibilityIteratorAsync (const MeasurementSet & ms,
+                               const PrefetchColumns & prefetchColumns,
+                               const Block<Int> & sortColumns,
+                               const Bool addDefaultSortCols,
+                               VisibilityIterator *rwVisibilityIterator,
+                               Bool groupRows,
+                               Double timeInterval=0,
+                               Int nReadAheadBuffers = 2);
+
     // Same as previous constructor, but with multiple MSs to iterate over.
 
     ROVisibilityIteratorAsync (const Block<MeasurementSet> & mss,
@@ -341,7 +366,17 @@ private:
 
     Int chunkNumber_p;
     ROVisibilityIteratorAsyncImpl * impl_p;
-    ROVisibilityIterator * linkedVisibilityIterator_p; // [use]
+
+    // jagonzal: This iterator is not actually in use, and by turning it into a RW
+    // iterator we can use it to support the two-iterators approach in a transparent
+    // way for the user because whenever we iterate trough the async iterator
+    // we will be internally iterating this iterator as well but acquiring/releasing
+    // the MS lock access properly
+    VisibilityIterator * linkedVisibilityIterator_p; // [use]
+
+    // jagonzal: MS access mutex
+    casa::async::Mutex * msAccessMutex_p;
+
     PrefetchColumns prefetchColumns_p;
     Int subChunkNumber_p;
     VisBufferAsync * visBufferAsync_p;

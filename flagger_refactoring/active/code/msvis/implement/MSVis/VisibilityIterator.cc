@@ -2633,6 +2633,7 @@ VisibilityIterator::VisibilityIterator(MeasurementSet &MS,
 				       Double timeInterval)
  :ROVisibilityIterator(MS, sortColumns, timeInterval)
 {
+	msAccessMutexSet_p = false;
 }
 
 VisibilityIterator::VisibilityIterator(MeasurementSet &MS, 
@@ -2640,18 +2641,21 @@ VisibilityIterator::VisibilityIterator(MeasurementSet &MS,
 				       Double timeInterval)
  :ROVisibilityIterator(MS, sortColumns, addDefSort, timeInterval)
 {
+	msAccessMutexSet_p = false;
 }
 VisibilityIterator::VisibilityIterator(Block<MeasurementSet>& mss, 
 				       const Block<Int>& sortColumns, 
 				       Double timeInterval)
 :ROVisibilityIterator(mss, sortColumns, timeInterval)
 {
+	msAccessMutexSet_p = false;
 }
 VisibilityIterator::VisibilityIterator(Block<MeasurementSet>& mss, 
 				       const Block<Int>& sortColumns, const Bool addDefSort,
 				       Double timeInterval)
  :ROVisibilityIterator(mss, sortColumns, addDefSort, timeInterval)
 {
+	msAccessMutexSet_p = false;
 }
 
 VisibilityIterator::VisibilityIterator(const VisibilityIterator & other)
@@ -2747,8 +2751,14 @@ void VisibilityIterator::setFlag(const Matrix<Bool>& flag)
 
 void VisibilityIterator::setFlag(const Cube<Bool>& flags)
 {
+  // jagonzal: Acquire MS access mutex
+  if (msAccessMutexSet_p) msAccessMutex_p->acquirelock();
+
   if (useSlicer_p) putCol(RWcolFlag, slicer_p,flags);
   else putCol(RWcolFlag, flags);
+
+  // jagonzal: Release MS acces mutex
+  if (msAccessMutexSet_p) msAccessMutex_p->unlock();
 }
 
 void VisibilityIterator::setFlagRow(const Vector<Bool>& rowflags)
@@ -3012,6 +3022,13 @@ void VisibilityIterator::putCol(ArrayColumn<Float> &column, const Slicer &slicer
 void VisibilityIterator::putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array)
 {
     column.putColumnCells(selRows_p, slicer, array);
+}
+
+// jagonzal: Set MS access mutex
+void VisibilityIterator::setMutex(casa::async::Mutex *msAccessMutex)
+{
+    msAccessMutex_p = msAccessMutex; 
+    msAccessMutexSet_p = true;
 }
 
 

@@ -477,6 +477,16 @@ Mutex::unlock ()
     ThrowIfError (code, "Mutex::unlock");
 }
 
+// jagonzal: Useful when locking is mandatory
+void 
+Mutex::acquirelock()
+{
+   while (!trylock())
+   {
+      pthread_yield();
+   }
+} 
+
 
 MutexLocker::MutexLocker (Mutex & mutex)
   : mutex_p (mutex)

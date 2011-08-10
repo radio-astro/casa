@@ -18,6 +18,9 @@
 #include <ostream>
 #include <boost/lexical_cast.hpp>
 
+// jagonzal: For MS access mutex
+#include "msvis/MSVis/AsynchronousTools.h"
+
 using namespace boost;
 using namespace std;
 
@@ -69,6 +72,41 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const ROVisibilityIterator
     startVlat ();
 }
 
+// jagonzal: This is a minimum modification to prove compatibility if writing operations
+// with asyn iterators. This code should be moved to a VisibilityIteratorAsync class.
+ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const MeasurementSet & ms,
+                                                      const PrefetchColumns & prefetchColumns,
+                                                      const Block<Int> & sortColumns,
+                                                      const Bool addDefaultSortCols,
+                                                      VisibilityIterator *rwVisibilityIterator,
+                                                      Bool groupRows,
+                                                      Double timeInterval,
+                                                      Int nReadAheadBuffers)
+: impl_p (NULL),
+  visBufferAsync_p (NULL)
+{
+    construct (prefetchColumns, nReadAheadBuffers);
+
+    measurementSets_p.clear();
+    measurementSets_p.push_back (& ms);
+
+    // jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+    if (groupRows) impl_p->vlat_p->setRowBlocking();
+    
+    impl_p->vlat_p->initialize (ms, sortColumns, addDefaultSortCols, timeInterval);
+   
+    // jagonzal: Retrieve pointer to MS access mutex from VLAT and pass it to RW Visibility Iterator
+    if (rwVisibilityIterator != NULL)
+    {
+       msAccessMutex_p = impl_p->vlaData_p->getMutex();
+       linkedVisibilityIterator_p = rwVisibilityIterator;
+       linkedVisibilityIterator_p->setMutex(msAccessMutex_p);
+    }
+
+    startVlat ();
+
+
+}
 
 ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const MeasurementSet & ms,
                                                       const PrefetchColumns & prefetchColumns,
@@ -187,7 +225,14 @@ ROVisibilityIteratorAsync::advance ()
     fillVisBuffer ();
 
     if (linkedVisibilityIterator_p != NULL){
+
+        // jagonzal: Release MS access mutex
+	msAccessMutex_p->acquirelock();
+
         ++ (* linkedVisibilityIterator_p);
+
+        // jagonzal: Release MS acces mutex
+        msAccessMutex_p->unlock();
     }
 
 }
@@ -337,6 +382,44 @@ ROVisibilityIteratorAsync::create (const MeasurementSet & ms,
                                                 prefetchColumns,
                                                 sortColumns,
                                                 addDefaultSortCols,
+                                                timeInterval,
+                                                nReadAheadBuffers);
+    }
+    else {
+        result = new ROVisibilityIterator (ms,
+                                           sortColumns,
+                                           addDefaultSortCols,
+                                           timeInterval);
+    }
+
+    Log (2, "Created ROVisibilityIterator%s (3)\n", isAsynchronousIoEnabled() ? "Async" : "");
+
+    return result;
+}
+
+
+// jagonzal: This is a minimum modification to prove compatibility if writing operations
+// with asyn iterators. This code should be moved to a VisibilityIteratorAsync class.
+ROVisibilityIterator *
+ROVisibilityIteratorAsync::create (const MeasurementSet & ms,
+                                   const PrefetchColumns & prefetchColumns,
+                                   const Block<Int> & sortColumns,
+                                   const Bool addDefaultSortCols,
+                                   VisibilityIterator *rwVisibilityIterator,
+                                   Bool groupRows, 
+                                   Double timeInterval,
+                                   Int nReadAheadBuffers)
+{
+    ROVisibilityIterator * result = NULL;
+
+    if (isAsynchronousIoEnabled()){
+
+        result = new ROVisibilityIteratorAsync (ms,
+                                                prefetchColumns,
+                                                sortColumns,
+                                                addDefaultSortCols,
+                                                rwVisibilityIterator,
+                                                groupRows,
                                                 timeInterval,
                                                 nReadAheadBuffers);
     }
@@ -568,8 +651,9 @@ ROVisibilityIteratorAsync::isAsynchronousIoEnabled()
     return ! isDisabled;
 }
 
+// jagonzal: Instead of a RO iterator we use a more generic RW
 void
-ROVisibilityIteratorAsync::linkWithRovi (ROVisibilityIterator * rovi)
+ROVisibilityIteratorAsync::linkWithRovi (VisibilityIterator * rovi)
 {
     linkedVisibilityIterator_p = rovi;
 }
@@ -609,7 +693,14 @@ ROVisibilityIteratorAsync::nextChunk ()
     subChunkNumber_p = 0;
 
     if (linkedVisibilityIterator_p != NULL){
+
+        // jagonzal: Release MS access mutex
+        msAccessMutex_p->acquirelock();
+
         linkedVisibilityIterator_p->nextChunk();
+
+        // jagonzal: Release MS acces mutex
+        msAccessMutex_p->unlock();
     }
 
     return * this;
@@ -626,7 +717,21 @@ ROVisibilityIteratorAsync::origin ()
     fillVisBuffer ();
 
     if (linkedVisibilityIterator_p != NULL){
+
+        // jagonzal: Release MS access mutex
+        msAccessMutex_p->acquirelock();
+
+	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+	if (impl_p->vlat_p->getRowBlocking())
+	{
+		Int nRowChunk = linkedVisibilityIterator_p->nRowChunk();
+		linkedVisibilityIterator_p->setRowBlocking(nRowChunk);
+	}
+
         linkedVisibilityIterator_p->origin();
+
+        // jagonzal: Release MS acces mutex
+        msAccessMutex_p->unlock();
     }
 }
 
@@ -646,7 +751,14 @@ ROVisibilityIteratorAsync::originChunks ()
     }
 
     if (linkedVisibilityIterator_p != NULL){
+
+        // jagonzal: Release MS access mutex
+        msAccessMutex_p->acquirelock();
+
         linkedVisibilityIterator_p->originChunks ();
+
+        // jagonzal: Release MS acces mutex
+        msAccessMutex_p->unlock();
     }
 }
 
