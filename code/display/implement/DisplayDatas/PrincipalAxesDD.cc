@@ -1729,7 +1729,7 @@ void PrincipalAxesDD::setDefaultOptions()
   if (iS>=0) {
      const SpectralCoordinate coord = itsCoordSys.spectralCoordinate(iS);
      Double restFreq = coord.restFrequency();
-     SpectralCoordinate::SpecType spcType = coord.spectralType();
+     SpectralCoordinate::SpecType spcType = coord.nativeType();
 
      if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
    	  itsSpectralQuantity = String("radio velocity");
@@ -2164,7 +2164,7 @@ Record PrincipalAxesDD::getLabellerOptions(){
      {
         const SpectralCoordinate sc = itsOrigCoordSys.spectralCoordinate(iS);
         Double restFreq = sc.restFrequency();
-        SpectralCoordinate::SpecType spcType = sc.spectralType();
+        SpectralCoordinate::SpecType spcType = sc.nativeType();
         Int unitSet=0;
 
         Record veltype;

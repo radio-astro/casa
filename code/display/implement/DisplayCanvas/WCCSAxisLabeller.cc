@@ -92,7 +92,7 @@ void WCCSAxisLabeller::setDefaultOptions() {
      const SpectralCoordinate coord = itsCoordinateSystem.spectralCoordinate(iS);
      Double restFreq = coord.restFrequency();
      String restString = coord.worldAxisUnits()(0);
-     SpectralCoordinate::SpecType spcType = coord.spectralType();
+     SpectralCoordinate::SpecType spcType = coord.nativeType();
 
      if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
    	  itsSpectralQuantity = String("radio velocity");
@@ -355,7 +355,7 @@ Record WCCSAxisLabeller::getOptions() const
    	  const SpectralCoordinate sc = itsCoordinateSystem.spectralCoordinate(iS);
         Double restFreq = sc.restFrequency();
         String restUnit = sc.worldAxisUnits()(0);
-        SpectralCoordinate::SpecType spcType = sc.spectralType();
+        SpectralCoordinate::SpecType spcType = sc.nativeType();
         Int unitSet=0;
 
         Record veltype;
