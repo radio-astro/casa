@@ -1000,6 +1000,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    ok = False;
 	}
 
+	SpectralCoordinate::SpecType nativeSType = SpectralCoordinate::FREQ;
+
 	// See if we found the axis
 	if (ok && nsub==1) {
 	    
@@ -1007,7 +1009,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    setWCS (wcsDest);
 
 	    String cType = wcsDest.ctype[0];
-	    	    
+    
 	    if (cType.contains("WAVE") || cType.contains("AWAV")){
 
 		if(nc==0){
@@ -1040,13 +1042,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		Bool inAir = False;
+		nativeSType = SpectralCoordinate::WAVE;
 		if(cType.contains("AWAV")){
 		  // os << LogIO::NORMAL << "Translating Air Wavelength into wavelength ..." << LogIO::POST;
 		    inAir = True;
+		    nativeSType = SpectralCoordinate::AWAV;
 		}
 
 		SpectralCoordinate c(freqSystem, wavelengths, waveUnit, restFrequency, inAir);
-		
+		c.setNativeType(nativeSType);
+
 		try {
 		    cSys.addCoordinate(c);
 		} catch (AipsError x) {
@@ -1104,6 +1109,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		    
 		SpectralCoordinate c(freqSystem, frequencies, restFrequency);
+		nativeSType = SpectralCoordinate::VOPT;
+		c.setNativeType(nativeSType);
 		
 		try {
 		    cSys.addCoordinate(c);
@@ -1123,9 +1130,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		int index=0;
 		char ctype[9];
 		
-		if (cType.contains("FREQ")) strcpy(ctype,"FREQ-???");
-		else if (cType.contains("VELO")) strcpy(ctype, "FREQ-???");
-		else if (cType.contains("VRAD")) strcpy(ctype, "FREQ-???");
+		if (cType.contains("FREQ")){
+		  strcpy(ctype,"FREQ-???");
+		  nativeSType = SpectralCoordinate::FREQ;
+		}
+		else if(cType.contains("VELO")){
+		  strcpy(ctype, "FREQ-???");
+		  nativeSType = SpectralCoordinate::VRAD;
+		}
+		else if (cType.contains("VRAD")){
+		  strcpy(ctype, "FREQ-???");
+		  nativeSType = SpectralCoordinate::VRAD;
+		}
 		else {
 		    os << LogIO::WARN << "Unrecognized frequency type" << LogIO::POST;
 		    ok = False;
@@ -1172,6 +1188,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    try {
 			Bool oneRel = True;           // wcs structure from FITS has 1-rel pixel coordinate
 			SpectralCoordinate c(freqSystem, wcsDest, oneRel);
+			c.setNativeType(nativeSType);
 			
 			fixCoordinate (c, os);
 			cSys.addCoordinate(c);
