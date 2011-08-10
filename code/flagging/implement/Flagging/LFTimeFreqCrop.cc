@@ -80,6 +80,8 @@ namespace casa {
     flagDimension_p = fullrec.asString("flagdimension");
     halfWin_p = fullrec.asInt("halfwin");
     winStats_p = fullrec.asString("usewindowstats");
+
+    MaxDeg=4;
     
     return True;
   }
@@ -163,7 +165,7 @@ namespace casa {
 	for(bs=0;bs<NumB;bs++)
 	  {
 	    Ants(bs,&a1,&a2);
-	    if(  (a1 != a2)  &&  (baselineFlag[bs]==True) ) 
+	    if( (a1 != a2) &&  baselineFlag[bs]==True)  
 	      {
 		/*		
                 if(flagDimension_p == String("time") || flagDimension_p == String("both") )
@@ -191,10 +193,7 @@ namespace casa {
 		    FitBaseAndFlag(pl,bs,freqFitType_p,String("freq"),cleanBP);
 		    FitBaseAndFlag(pl,bs,timeFitType_p,String("time"),cleanTS);
 		  }
-
-
-		
-	      }// corrchoice
+	      }// if baseline exists
 	  }//for bs
       }//for pl
     
@@ -287,7 +286,13 @@ namespace casa {
 	    //flagBP=False;
 	    for(uInt i0=0;i0<mind[0];i0++)
 	      if(tempDat[i0]==0) tempFlag[i0]=True;
-	    LineFit(tempDat,tempFlag,tempFit,0,mind[0]-1);	
+	    Int maxnp = MaxNPieces;
+	    MaxNPieces=1;
+	    MaxDeg=1;
+	    FitPiecewisePoly(tempDat,tempFlag,tempFit);	
+	    MaxNPieces = maxnp;
+	    MaxDeg=4;
+	    //LineFit(tempDat,tempFlag,tempFit,0,mind[0]-1);	
 	  }
       }// fit poly
 
@@ -397,367 +402,6 @@ namespace casa {
   }// end FitBaseAndFlag
   
   
-  //////////////////// START UNUSED CODE
-#if 0
-  
-  
-  
-  
-  
-  /* Flag in time, and build the average bandpass */
-  /* Grow flags by one timestep, check for complete flagged baselines. */
-  void LFTimeFreqCrop :: FlagTimeSeries(uInt pl, uInt bs, String fittype)
-  {
-    Float mn=0,sd=0,temp=0,tol=0;
-    uInt a1,a2;
-    Bool flg=False;
-    
-    // Create an average time-series. Average across channels    
-    
-    
-    /* For each Channel - fit lines to 1-D data in time - flag according 
-     * to them and build up the mean bandpass */
-    
-    Float rmean=0;
-    //			cout << " Antennas : " << a1 << " & " << a2 << endl;
-    for(int ch=0;ch<NumC;ch++)
-      {
-	tempTS=0;flagTS=False;
-	for(uInt tm=0;tm<NumT;tm++)
-	  {
-	    tempTS[tm] = visc(pl,ch,((tm*NumB)+bs));
-	    flagTS[tm] = flagc(pl,ch,((tm*NumB)+bs));
-	  }//for tm
-	
-	
-	rmean += UMean(tempTS,flagTS);
-	
-	temp=0;
-	for(int loop=0;loop<5;loop++)
-	  {
-	    
-	    //	    if(fittype==String("poly")) FitPiecewisePoly(tempTS,flagTS,fitTS);
-	    //else 
-	    LineFit(tempTS,flagTS,fitTS,0,tempTS.nelements()-1);	
-	    
-	    sd = UStd(tempTS,flagTS,fitTS);
-	    
-	    for(uInt i=0;i<NumT;i++)
-	      if(flagTS[i]==False && fabs(tempTS[i]-fitTS[i]) > T_TOL*sd*2.0)
-		{
-		  flagTS[i]=True ;
-		}
-	    if(fabs(temp-sd) < 0.1)break;
-	    temp=sd;
-	  }
-	
-	// If sum of 2 adjacent flags also crosses threshold, flag 
-	/*
-	  for(uInt i=1;i<NumT-1;i++)
-	  {
-	  if(flagTS[i])
-	  {
-	  if( ( fabs(tempTS[i-1]-fitTS[i-1]) + fabs(tempTS[i+1]-fitTS[i+1]) ) > T_TOL*sd )
-	  {flagTS[i-1]=True; flagTS[i+1]=True;}
-	  }
-	  }
-	*/
-	
-	//	meanBP(pl,bs,ch) = UMean(tempTS,flagTS) ;
-	
-	/* write flags to local flag cube */
-	for(uInt tm=0;tm<NumT;tm++)
-	  flagc(pl,ch,((tm*NumB)+bs))=flagTS[tm];
-	
-      }//for ch
-    
-  }    
-  
-  
-  
-  /* Fit a smooth bandpass to the mean bandpass and store it 
-   *  one for each baseline */
-  
-  // matpos  :  NumP. NumB. NumC
-  
-  void LFTimeFreqCrop :: FitCleanBandPass(uInt pl, uInt bs, String fittype)
-  {    
-    
-    Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
-    uInt a1,a2;
-    Bool flg=False;
-    
-    Ants(bs,&a1,&a2);
-    /* Fit a smooth bandpass */
-    flg=True;
-    for(int ch=0;ch<NumC;ch++)	
-      {
-	//tempBP[ch] = meanBP(pl,bs,ch);
-	
-	// Calc the mean across time (with flags), and assign to tempBP
-	tempTS=0;flagTS=False;
-	for(uInt tm=0;tm<NumT;tm++)
-	  {
-	    tempTS[tm] = visc(pl,ch,((tm*NumB)+bs));
-	    flagTS[tm] = flagc(pl,ch,((tm*NumB)+bs));
-	  }//for tm
-	tempBP[ch] = UMean(tempTS,flagTS) ;
-	
-	if(tempBP[ch] != 0) flg=False;
-      }
-    
-    if(flg==False)
-      {
-	/* Piecewise Poly Fit to the meanBP */
-	//	if(!FreqLineFit)
-	if(fittype == String("poly"))
-	  {
-	    FitPiecewisePoly(tempBP,flagBP,fitBP);	
-	  }
-	else
-	  {
-	    /* LineFit to flag off a line fit in frequency */
-	    flagBP=False;
-	    for(uInt ch=0;ch<tempBP.nelements();ch++)
-	      if(tempBP[ch]==0) flagBP[ch]=True;
-	    LineFit(tempBP,flagBP,fitBP,0,tempBP.nelements()-1);	
-	  }
-      }
-    for(int ch=0;ch<NumC;ch++)
-      {
-	if(flg==False) cleanBP(pl,bs,ch)= fitBP[ch];
-	else cleanBP(pl,bs,ch)=0;
-      }
-    
-  }// end FitCleanBandPass    
-  
-  
-  
-  /* FLAGGING IN FREQUENCY */
-  void LFTimeFreqCrop :: FlagBandPass(uInt pl, uInt bs)
-  {
-    
-    Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
-    uInt a1,a2;
-    Bool flg=False;
-    Float sd1;    
-    
-    Ants(bs,&a1,&a2);
-    
-    for(uInt tm=0;tm<NumT;tm++)
-      {
-	/* Divide (or subtract) out the clean bandpass */
-	tempBP=0,flagBP=0;
-	for(int ch=0;ch<NumC;ch++)
-	  {
-	    flagBP[ch] = flagc(pl,ch,((tm*NumB)+bs));
-	    if(flagBP[ch]==False)
-	      tempBP[ch] = visc(pl,ch,((tm*NumB)+bs))/cleanBP(pl,bs,ch);
-	  }//for ch
-	
-	/* Flag outliers based on absolute deviation from the model*/
-	
-	temp=0;
-	for(Int loop=0;loop<5;loop++)
-	  {
-	    mn=1;
-	    sd = UStd(tempBP,flagBP,mn);
-	    
-	    for(Int ch=0;ch<NumC;ch++)
-	      {
-		if(flagBP[ch]==False && fabs(tempBP[ch]-mn) > F_TOL*sd)
-		  {
-		    flagBP[ch]=True ;flagcnt++;
-		  }
-	      }
-	    if(fabs(temp-sd) < 0.1)break;
-	    temp=sd;
-	  }
-	
-	
-	/* Flag outliers based on an stddev from the mean*/
-	/*
-	// Flag point i, if the stddev of points i-N to i+N > nsigma
-	uInt nn = 2;	    
-	temp=0;
-	for(Int loop=0;loop<5;loop++)
-	{
-	mn=1;
-	sd = UStd(tempBP,flagBP,mn);
-	
-	
-	for(Int ch=0;ch<NumC;ch++)
-	{
-	if(ch>=nn || ch<NumC-nn)
-	{
-	sd1=0.0;
-	for(Int ich=ch-nn;ich<ch+nn;ich++)
-	{
-	sd1 += (tempBP[ch]-mn)*(tempBP[ch-mn]);
-	}
-	sd1 /= 2*nn+1;
-	
-	// flag now
-	if( sd1 > F_TOL*sd ) {flagBP[ch]=True; flagcnt++;}
-	}
-	else
-	{
-	if(flagBP[ch]==False && fabs(tempBP[ch]-mn) > F_TOL*sd)
-	{
-	flagBP[ch]=True ;flagcnt++;
-	}
-	}
-	}
-	if(fabs(temp-sd) < 0.1)break;
-	temp=sd;
-	}
-	*/
-	
-	
-	/* If sum of power in two adjacent channels is more than thresh, flag both side chans */
-	/*
-	  if(FlagLevel>0)
-	  {
-	  for(int ch=1;ch<NumC-1;ch++)
-	  {
-	  if(flagBP[ch])
-	  {
-	  if( ( fabs(tempBP[ch-1]-mn) + fabs(tempBP[ch+1]-mn) ) > F_TOL*sd )
-	  {flagBP[ch-1]=True; flagBP[ch+1]=True;}
-	  }
-	  }
-	  }
-	*/
-	
-	/* Fill the flags into the visbuffer array */
-	for(Int ch=0;ch<NumC;ch++)
-	  flagc(pl,ch,((tm*NumB)+bs))=flagBP[ch];
-	
-	
-      }//for tm
-    
-    
-  }// end FlagBandPass    
-  
-  
-  void LFTimeFreqCrop :: FitCleanTimeSeries(uInt pl, uInt bs, String fittype)
-  {    
-    
-    Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
-    uInt a1,a2;
-    Bool flg=False;
-    
-    Ants(bs,&a1,&a2);
-    /* Fit a smooth bandpass */
-    flg=True;
-    for(int tm=0;tm<NumT;tm++)	
-      {
-	// Calc the mean across frequency (with flags), and assign to tempTS
-	tempBP=0;flagBP=False;
-	for(uInt ch=0;ch<NumC;ch++)
-	  {
-	    tempBP[ch] = visc(pl,ch,((tm*NumB)+bs));
-	    flagBP[ch] = flagc(pl,ch,((tm*NumB)+bs));
-	  }//for tm
-	tempTS[tm] = UMean(tempBP,flagBP) ;
-	
-	if(tempTS[tm] != 0) flg=False;
-      }
-    
-    if(flg==False)// if any one datapoint is unflagged..
-      {
-	if(fittype == String("poly"))
-	  {
-	    /* Piecewise Poly Fit to the meanTS */
-	    FitPiecewisePoly(tempTS,flagTS,fitTS);	
-	  }
-	else
-	  {
-	    /* LineFit to flag off a line fit in time */
-	    flagTS=False;
-	    for(uInt tm=0;tm<tempTS.nelements();tm++)
-	      if(tempTS[tm]==0) flagTS[tm]=True;
-	    LineFit(tempTS,flagTS,fitTS,0,tempTS.nelements()-1);	
-	  }
-      }
-    for(int tm=0;tm<NumT;tm++)
-      {
-	if(flg==False) cleanTS(pl,bs,tm)= fitTS[tm];
-	else cleanTS(pl,bs,tm)=0;
-      }
-    
-  }// end FitCleanTimeSeries
-  
-  
-  
-  /* FLAGGING IN FREQUENCY */
-  void LFTimeFreqCrop :: FlagTimeSeriesAgain(uInt pl, uInt bs)
-  {
-    
-    Float mn=0,sd=0,temp=0,flagcnt=0,tol=0;
-    uInt a1,a2;
-    Bool flg=False;
-    
-    
-    Ants(bs,&a1,&a2);
-    
-    for(uInt ch=0;ch<NumC;ch++)
-      {
-	/* Divide (or subtract) out the clean bandpass */
-	tempTS=0,flagTS=0;
-	for(int tm=0;tm<NumT;tm++)
-	  {
-	    flagTS[tm] = flagc(pl,ch,((tm*NumB)+bs));
-	    if(flagTS[tm]==False)
-	      tempTS[tm] = visc(pl,ch,((tm*NumB)+bs))/cleanTS(pl,bs,tm);
-	  }//for tm
-	
-	/* Flag outliers */
-	temp=0;
-	for(Int loop=0;loop<5;loop++)
-	  {
-	    mn=1;
-	    sd = UStd(tempTS,flagTS,mn);
-	    
-	    for(Int tm=0;tm<NumT;tm++)
-	      {
-		if(flagTS[tm]==False && fabs(tempTS[tm]-mn) > F_TOL*sd)
-		  {
-		    flagTS[tm]=True ;flagcnt++;
-		  }
-	      }
-	    if(fabs(temp-sd) < 0.1)break;
-	    temp=sd;
-	  }
-	
-	/* If sum of power in two adjacent channels is more than thresh, flag both side chans */
-	/*
-	  if(FlagLevel>0)
-	  {
-	  for(int ch=1;ch<NumC-1;ch++)
-	  {
-	  if(flagBP[ch])
-	  {
-	  if( ( fabs(tempBP[ch-1]-mn) + fabs(tempBP[ch+1]-mn) ) > F_TOL*sd )
-	  {flagBP[ch-1]=True; flagBP[ch+1]=True;}
-	  }
-	  }
-	  }
-	*/
-	
-	/* Fill the flags into the visbuffer array */
-	for(Int tm=0;tm<NumT;tm++)
-	  flagc(pl,ch,((tm*NumB)+bs))=flagTS[tm];
-	
-	
-      }//for ch
-    
-    
-  }// end FlagTimeSeriesAgain
-  
-  
-#endif
-  //////////////////// END UNUSED CODE
   
   /* Calculate the MEAN of 'vect' ignoring values flagged in 'flag' */
   Float LFTimeFreqCrop :: UMean(Vector<Float> vect, Vector<Bool> flag)
@@ -929,6 +573,7 @@ namespace casa {
 	npieces = MIN(2*j+1, MaxNPieces);
 	if(j>1) {deg=2;}
 	if(j>2) {deg=3;}
+	deg = MIN(deg,MaxDeg);
 	
 	psize = (int)(tdata.nelements()/npieces);
 	//     cout << "Iter : " << j << " with Deg : " << deg << " and Piece-size : " << psize << endl;
