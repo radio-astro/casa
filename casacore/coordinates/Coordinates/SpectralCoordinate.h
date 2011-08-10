@@ -337,8 +337,8 @@ public:
     Bool setWavelengthUnit (const String& waveUnit=String("mm"));
     String wavelengthUnit () const {return waveUnit_p;};
     //
-    Bool setSpectralType (const SpectralCoordinate::SpecType spcType);
-    SpectralCoordinate::SpecType spectralType() const {return nativeType_p;}
+    Bool setNativeType (const SpectralCoordinate::SpecType spcType);
+    SpectralCoordinate::SpecType nativeType() const {return nativeType_p;}
 
     // </group>
     // Functions to convert to velocity (uses the current active
