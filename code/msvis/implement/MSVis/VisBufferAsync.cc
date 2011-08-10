@@ -100,7 +100,7 @@ VisBufferAsync::~VisBufferAsync ()
                                 // synchronous level
 
     delete msColumns_p;
-    //delete msd_p;
+    delete msd_p;
 }
 
 VisBufferAsync &
@@ -332,6 +332,13 @@ VisBufferAsync::clear ()
     selectedSpectralWindows_p.resize (0);
     visibilityShape_p.resize (0, False);
 }
+
+VisBuffer *
+VisBufferAsync::clone ()
+{
+    return new VisBufferAsync (* this);
+}
+
 
 void
 VisBufferAsync::construct ()
