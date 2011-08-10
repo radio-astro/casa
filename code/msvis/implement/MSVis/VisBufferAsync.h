@@ -16,6 +16,7 @@ class ROVisibilityIteratorAsync;
 
 class VisBufferAsync : public VisBuffer {
 
+    friend class Rovia_Test;
     friend class ROVisibilityIteratorAsync;
     friend class VisBufferAsyncWrapper;
     friend class VisBufferAutoPtr;
@@ -34,6 +35,7 @@ public:
     virtual VisBufferAsync & assign (const VisBuffer & vb, Bool copy);
     virtual Vector<MDirection> azel(Double time) const;
     virtual MDirection azel0(Double time) const;
+    virtual VisBuffer * clone ();
     virtual Int dataDescriptionId() const;
     virtual void detachFromVisIter ();
     virtual Vector<Float> feed_pa(Double time) const;
