@@ -1134,6 +1134,7 @@ record* image::fitallprofiles(const string& box, const string& region,
 	return rstat;
 }
 
+// FIXME need to support region records as input
 record* image::fitprofile(const string& box, const string& region,
 		const string& chans, const string& stokes, const int axis,
 		const variant& vmask, int ngauss, const int poly, const bool multifit,
@@ -1156,7 +1157,7 @@ record* image::fitprofile(const string& box, const string& region,
 		if (mask == "[]") {
 			mask = "";
 		}
-		ImageProfileFitter fitter(_image->getImage(), region, box, chans,
+		ImageProfileFitter fitter(_image->getImage(), region, 0, box, chans,
 				stokes, mask, axis, multifit, residual, model, ngauss, poly,
 				amp, amperr, center, centererr, fwhm, fwhmerr);
 		rstat = fromRecord(fitter.fit());

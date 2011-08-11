@@ -646,7 +646,7 @@ class simutil:
         npos=len(pointings)
         if type(time)!=type([]):
             time=[time]
-        if len(time)!=npos:
+        if len(time)==1:
             time=list(time[0] for x in range(npos))
 
         for i in range(npos):
@@ -2648,8 +2648,11 @@ class simutil:
             if self.isquantity(inwidth,halt=False):
                 model_width=inwidth
 
-        if model_width=="" or model_center=="":
-            self.msg("Model width or center undefined.  Either set incenter, inwidth and modifymodel=T, or edit the image header",priority="error")
+        if model_width=="":
+            self.msg("Sky model bandwidth undefined.  Either set modifymodel=T and define inwidth, or edit the image header and add spectral coordinate system information",priority="error")
+            return False        
+        if model_center=="":
+            self.msg("Sky model frequency center undefined.  Either set modifymodel=T and define incenter, or edit the image header and add spectral coordinate system information",priority="error")
             return False        
 
 
