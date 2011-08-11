@@ -8,13 +8,13 @@
 
 test_boxit                      dmehring@nrao.edu
 test_clearstat                  scastro@eso.org
-test_clean                      scastro@eso.org
+test_clean                      kgolap@aoc.nrao.edu
 test_cleanhelper                ttsutsum@nrao.edu
 test_componentlist              dmehring@nrao.edu
 test_concat                     dpetry@eso.org
 test_conjugatevis               dpetry@eso.org
 test_coordsys                   dmehring@nrao.edu
-test_csvclean                   scastro@eso.org
+test_csvclean                   kgolap@aoc.nrao.edu
 test_cvel                       dpetry@eso.org
 test_exportasdm                 dpetry@eso.org
 test_fixvis                     dpetry@nrao.edu
@@ -24,6 +24,7 @@ test_flagdata2                  scastro@eso.org
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
 test_ia_isconform               dmehring@nrao.edu
+test_ia_subimage                dmehring@nrao.edu
 test_imcollapse                 dmehring@nrao.edu
 test_imcontsub                  dmehring@nrao.edu
 test_imfit                      dmehring@nrao.edu

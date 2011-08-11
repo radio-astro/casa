@@ -606,10 +606,8 @@ class split_test_cst(unittest.TestCase):
         tb.open(self.outms + '/SOURCE')
         srcids = tb.getcol('SOURCE_ID')
         tb.close()
-        check_eq(srcids, numpy.array([0, 0, 0, 0, 1, 1, 1,
-                                      1, 0, 0, 0, 0, 0, 0,
-                                      0, 0, 0, 0, 0, 0, 0,
-                                      0, 0, 0, 0, 0, 0, 0]))
+        check_eq(srcids, numpy.array([0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+                                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
 
 class split_test_state(unittest.TestCase):
     """
@@ -959,8 +957,10 @@ class split_test_sw_and_fc(SplitChecker):
         shutil.rmtree(outms, ignore_errors=True)
         try:
             print "\nChecking SPECTRAL_WINDOW and FLAG_CMD with width " + spwwidth[1] + '.'
+            # Antenna selection added just so it's tested somewhere.
             splitran = split(self.inpms, outms, datacolumn='data',
-                             field='', spw=spwwidth[0], width=spwwidth[1], antenna='',
+                             field='', spw=spwwidth[0], width=spwwidth[1],
+                             antenna='VA03,VA05&',               # Case sensitive
                              timebin='0s', timerange='',
                              scan='', array='', uvrange='',
                              correlation='', async=False)

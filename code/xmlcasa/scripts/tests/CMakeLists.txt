@@ -39,6 +39,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_getchunk.py
   test_hanningsmooth.py
   test_ia_isconform.py
+  test_ia_subimage.py
   test_imcollapse.py
   test_imcontsub.py
   test_imfit.py

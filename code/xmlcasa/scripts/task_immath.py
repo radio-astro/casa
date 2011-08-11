@@ -169,7 +169,7 @@ from taskinit import *
 
 def immath(
     imagename, mode, outfile, expr, varnames, sigma,
-    polithresh, mask, region, box, chans, stokes
+    polithresh, mask, region, box, chans, stokes, stretch
 ):
     # Tell CASA who will be reporting
     casalog.origin('immath')
@@ -377,8 +377,7 @@ def immath(
             casalog.post( 'Unable to do mathematical expression: '\
                   +expr+'\n'+str(error), 'SEVERE' )
             return False
-
-            
+   
     # If we've made it here we need to apply masks or extract
     # regions from the images before doing the calculations first.
     # Warning if user has given a region file plus other region
@@ -406,8 +405,7 @@ def immath(
         try:
             _myia.open(image)
             tmpFile=tmpFilePrefix+str(i)
-            _myia.subimage( region=reg, mask=mask, outfile=tmpFile )
-
+            _myia.subimage( region=reg, mask=mask, outfile=tmpFile, stretch=stretch )
             file_map[image] = tmpFile
             subImages.append( tmpFile )
             _myia.done()
@@ -600,7 +598,6 @@ def _doPolA(filenames, varnames, tmpFilePrefix):
         # rather than create new objects with the same names
         filenames[0:1] = [Qimage, Uimage]
         varnames[0:1] = ["IM0", "IM1"]
-        print "end filenames " +str(filenames) + " varnames " + str(varnames)
     else:
         if len(filenames) > 2:
             casalog.post( "More than two images. Take first two and ignore the rest. " ,'WARN' );

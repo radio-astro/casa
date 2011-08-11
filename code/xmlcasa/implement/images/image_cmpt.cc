@@ -2650,31 +2650,33 @@ bool image::twopointcorrelation(const std::string& outfile,
 	return rstat;
 }
 
-::casac::image *
-image::subimage(const std::string& outfile, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool dropDegenerateAxes,
-		const bool overwrite, const bool list) {
-	::casac::image *rstat = 0;
+::casac::image* image::subimage(
+	const string& outfile, const record& region,
+	const variant& vmask, const bool dropDegenerateAxes,
+	const bool overwrite, const bool list, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", "subimage");
-		if (detached())
-			return rstat;
-
-		Record *Region = toRecord(region);
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
+		std::auto_ptr<Record> regionRec(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-		ImageInterface<Float> * tmpIm = _image->subimage(outfile, *Region,
-				mask, dropDegenerateAxes, overwrite, list);
-		rstat = new ::casac::image(tmpIm);
-		delete tmpIm;
-
+		}
+		std::auto_ptr<ImageInterface<Float> > tmpIm(
+			_image->subimage(
+				outfile, *regionRec, mask, dropDegenerateAxes,
+				overwrite, list, stretch
+			)
+		);
+		return new image(tmpIm.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::vector<std::string> image::summary(casac::record& header,
