@@ -51,7 +51,7 @@
 #include <ms/MeasurementSets/MSIter.h>
 
 // jagonzal: For MS access mutex
-#include "msvis/MSVis/AsynchronousTools.h"
+#include <msvis/MSVis/AsynchronousTools.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
