@@ -1602,8 +1602,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       nullSelect_p=False;
     }
     if (nullSelect_p) {
-      Table mytab(msname_p+"/FIELD", Table::Old);
-      if (mytab.nrow() > 1) {
+      if ((mssel_p->field()).nrow() > 1) {
 	os << LogIO::NORMAL4 << "Multiple fields selected" << LogIO::POST;
 	multiFields_p = True;
       } else {
@@ -6750,6 +6749,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
       //viewer_p->unload(mask_id_p);
       //Setting clean_panel_p to 0 seems to do the trick...the above stuff 
       // like done causes a crash after a call again...have to understand that
+      viewer_p->unload(image_id_p);
+      viewer_p->unload(mask_id_p);
       viewer_p->close(clean_panel_p);
       clean_panel_p=0;
       image_id_p=0;
@@ -6816,6 +6817,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	  Bool forceReload=True;
 	  Int nloop=0;
 	  if(npercycle != 0)
+
 	    nloop=niter/npercycle;
 	  Int continter=0;
 	  Int elniter=npercycle;

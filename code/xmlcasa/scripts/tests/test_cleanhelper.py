@@ -43,14 +43,15 @@ class cleanhelper_test(unittest.TestCase):
         mosweight=False
         if (os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
-            
+  
         shutil.copytree(self.datapath+self.msfile, self.msfile)
         self.imset = cleanhelper(im, self.msfile, (calready or mosweight))
-    
+
     def tearDown(self):
         if (os.path.exists(self.msfile)):
             os.system('rm -rf ' + self.msfile)
 
+        im.close()
         #os.system('rm -rf ' + self.imgname+'*')
      
     def getpixval(self,img,pixel):
