@@ -1060,27 +1060,6 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     TableExprNode exprNode=thisSelection.toTableExprNode(elms);
     selTimeRanges_p = thisSelection.getTimeList();
 
-    // Setup antNewIndex_p.
-    if(antennaSel_p){
-      Vector<Int> selAnt1s(thisSelection.getAntenna1List());
-      Vector<Int> selAnt2s(thisSelection.getAntenna2List());
-      uInt nAnt1 = selAnt1s.nelements();
-      uInt nAnt2 = selAnt2s.nelements();
-
-      selAnt1s.resize(nAnt1 + nAnt2, True);
-      selAnt1s(Slice(nAnt1, nAnt2)) = selAnt2s;
-      nAnt1 = GenSort<Int>::sort(selAnt1s, Sort::Ascending, Sort::NoDuplicates);
-      selAnt1s.resize(nAnt1, True);
-
-      Int maxAnt = max(selAnt1s);
-
-      antNewIndex_p.resize(maxAnt + 1);
-      antNewIndex_p.set(-1); //So if you see -1 in the main, feed, or pointing
-			     //tables, fix it
-      for(uInt k = 0; k < nAnt1; ++k)
-	antNewIndex_p[selAnt1s[k]] = k;
-    }
-
     {      
       const MSDataDescription ddtable = elms->dataDescription();
       ROScalarColumn<Int> polId(ddtable, 
@@ -1162,6 +1141,45 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     if(mssel_p.nrow() == 0)
       return False;
 
+    // Setup antNewIndex_p now that mssel_p is ready.
+    if(antennaSel_p){
+      // Watch out! getAntenna*List() and getBaselineList() return negative
+      // numbers for negated antennas!
+      //Vector<Int> selAnt1s(thisSelection.getAntenna1List());
+      //Vector<Int> selAnt2s(thisSelection.getAntenna2List());
+      ROScalarColumn<Int> ant1c(mssel_p, MS::columnName(MS::ANTENNA1));
+      ROScalarColumn<Int> ant2c(mssel_p, MS::columnName(MS::ANTENNA2));
+      Vector<Int> selAnts(ant1c.getColumn());
+      uInt nAnts = selAnts.nelements();
+
+      selAnts.resize(2 * nAnts, True);
+      selAnts(Slice(nAnts, nAnts)) = ant2c.getColumn();
+      nAnts = GenSort<Int>::sort(selAnts, Sort::Ascending, Sort::NoDuplicates);
+      selAnts.resize(nAnts, True);
+      Int maxAnt = max(selAnts);
+
+      if(maxAnt < 0){
+        os << LogIO::SEVERE
+           << "The maximum selected antenna number, " << maxAnt
+           << ", seems to be < 0."
+           << LogIO::POST;
+        return False;
+      }
+      antNewIndex_p.resize(maxAnt + 1);
+      antNewIndex_p.set(-1); //So if you see -1 in the main, feed, or pointing
+			     //tables, fix it
+      Bool trivial = true;
+      for(uInt k = 0; k < nAnts; ++k){
+        trivial &= (selAnts[k] == static_cast<Int>(k));   // trivial = selAnts == indgen(nAnts)
+        antNewIndex_p[selAnts[k]] = k;
+      }                                  // It is possible to exclude baselines
+      antennaSel_p = !trivial;           // without excluding any antennas.
+    }                                    // This still gets tripped up by VLA:OUT.
+    else{        // Make a default antNewIndex_p.
+      antNewIndex_p.resize(mssel_p.antenna().nrow());
+      indgen(antNewIndex_p);
+    }
+      
     if(mssel_p.nrow() < ms_p.nrow()){
       os << LogIO::NORMAL
          << mssel_p.nrow() << " out of " << ms_p.nrow() << " rows are going to be" 
@@ -7073,11 +7091,6 @@ Bool SubMS::copyCols(Table& out, const Table& in, const Bool flush)
       TableCopy::copyRows(newFeed, oldFeed);
     }
     else{
-      if(!antennaSel_p){        // Prep antNewIndex_p.
-        antNewIndex_p.resize(mssel_p.antenna().nrow());
-        indgen(antNewIndex_p);
-      }
-      
       const Vector<Int>& antIds = incols.antennaId().getColumn();
       const Vector<Int>& spwIds = incols.spectralWindowId().getColumn();
 
@@ -7648,11 +7661,6 @@ Bool SubMS::copySyscal()
         TableCopy::copyRows(newSysc, oldSysc);
       }
       else{
-        if(!antennaSel_p){        // Prep antNewIndex_p.
-          antNewIndex_p.resize(mssel_p.antenna().nrow());
-          indgen(antNewIndex_p);
-        }
-      
         const Vector<Int>& antIds = incols.antennaId().getColumn();
         const Vector<Int>& spwIds = incols.spectralWindowId().getColumn();
 
@@ -7721,11 +7729,6 @@ Bool SubMS::filterOptSubtable(const String& subtabname)
         // At this point msOut_p has subtab with 0 rows.
         Table outtab(msOut_p.tableName() + '/' + subtabname, Table::Update);
 
-        if(!antennaSel_p){        // Prep antNewIndex_p.
-          antNewIndex_p.resize(mssel_p.antenna().nrow());
-          indgen(antNewIndex_p);
-        }
-      
         ROScalarColumn<Int> inAntIdCol(intab, "ANTENNA_ID");         // + FEED_ID if it
         ROScalarColumn<Int> inSpwIdCol(intab, "SPECTRAL_WINDOW_ID"); // ever changed.
         const Vector<Int>& antIds = inAntIdCol.getColumn();
@@ -7743,7 +7746,9 @@ Bool SubMS::filterOptSubtable(const String& subtabname)
           // and SYSPOWER, but the ANTENNA_ID and SPECTRAL_WINDOW_ID of those
           // subtables were not being remapped by split.
           if(antIds[inrow] < maxSelAntp1 && antNewIndex_p[antIds[inrow]] > -1){
-            if(spwIds[inrow] < 0 || (spwIds[inrow] < spwRelabel_p.nelements() &&
+            
+            if(spwIds[inrow] < 0 || (spwIds[inrow] <
+                                     static_cast<Int>(spwRelabel_p.nelements()) &&
                                      spwRelabel_p[spwIds[inrow]] > -1)){
               TableCopy::copyRows(outtab, intab, totalSelOuttabs, inrow, 1, false);
               ++totalSelOuttabs;
@@ -7754,7 +7759,7 @@ Bool SubMS::filterOptSubtable(const String& subtabname)
             // is not necessarily an error.  It's not even possible to catch
             // all the spw errors, so we settle for catching the ones we can
             // and reliably avoiding segfaults.
-            else if(spwIds[inrow] >= spwRelabel_p.nelements())
+            else if(spwIds[inrow] >= static_cast<Int>(spwRelabel_p.nelements()))
               haveRemappingProblem = True;
           }
         }
