@@ -270,97 +270,6 @@ void doBin()
    AlwaysAssert(allEQ(maOut.getMask(),True), AipsError);
 }
 
-void doFits()
-{
-   LogOrigin lor("tImageUtilities", "doFits()", WHERE);
-   LogIO os(lor);
-   os << "Fitting Tests" << LogIO::POST;
-//
-   uInt n = 64;
-   IPosition shape(1,n);
-
-// Fill data with simple polynomial
-
-   Array<Bool> mask(shape);
-   mask = True;
-//
-   IPosition pos(1);
-   Array<Float> data(shape);
-   for (uInt i=0; i<n; i++) {
-      pos(0) = i;
-      data(pos) = 2 + 3*i;
-   }
-
-// Make input Image
-
-   LinearCoordinate lC(2);
-   CoordinateSystem cSys;
-   cSys.addCoordinate(lC);
-//
-   IPosition imShape(2,n,20);
-   TiledShape tShape(imShape);
-   TempImage<Float> im(tShape, cSys);
-
-// Replicate data array
-
-   Slicer sl (IPosition(2,0,0), imShape, Slicer::endIsLength);
-   LatticeUtilities::replicate (im, sl, data);
-
-// Attach mask
-
-   ArrayLattice<Bool> maskLat(imShape);
-   maskLat.set(True);
-   im.attachMask(maskLat);
-//
-   ImageInterface<Float>* pWeight = 0;
-
-// Make output images
-
-   ImageInterface<Float>* pFit = 0;
-   pFit = new TempImage<Float>(tShape, cSys);
-   ImageInterface<Float>* pResid = 0;
-   pResid = new TempImage<Float>(tShape, cSys);
-//
-   uInt axis = 0;
-   uInt nGauss = 0;
-   Int poly = 1;
-   String xUnit;
-   ImageUtilities::fitProfiles(pFit, pResid, xUnit, im,
-                               axis, nGauss, poly, pWeight, True);
-   if (pWeight) delete pWeight;
-
-// Check results.
-
-   Double tol = 1.0e-6;
-   uInt ny = imShape(1);
-   IPosition pos2(2,0,0);
-   IPosition sliceShape(2,imShape(0), 1);
-   if (pFit) {
-      for (uInt j=0; j<ny; j++) {
-         pos2(1) = j;
-         Array<Float> data2 = pFit->getSlice(pos2, sliceShape,True);
-         AlwaysAssert(allNear(data2,data2,tol), AipsError);
-//
-         Array<Bool> mask2 = pFit->getMaskSlice(pos2, sliceShape,True);
-         AlwaysAssert(allEQ(mask2,True), AipsError);
-      }
-      delete pFit;
-   }
-//
-   if (pResid) {
-      Float one(1.0);
-      for (uInt j=0; j<ny; j++) {
-         pos2(1) = j;
-         Vector<Float> data2 = pResid->getSlice(pos2, sliceShape,True);
-         AlwaysAssert(allNear(data2+one,one,tol), AipsError);
-//
-         Array<Bool> mask2 = pResid->getMaskSlice(pos2, sliceShape,True);
-         AlwaysAssert(allEQ(mask2,True), AipsError);
-      }
-      delete pResid;
-   }
-}
-
 void doDeconvolveFromBeam() {
 	LogOrigin lor("tImageUtilities", "doDeconvolveFromBeam()", WHERE);
 	LogIO os(lor);
@@ -395,7 +304,6 @@ void doDeconvolveFromBeam() {
 int main()
 {
   try {
-    doFits();
     doBin();
     doTypes();
     doOpens();
