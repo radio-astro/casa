@@ -1119,8 +1119,8 @@ VLAT::sweepVi ()
        visibilityIterator_p->setRowBlocking(nRowChunk);
     }
     visibilityIterator_p->origin();
+    chunkNumber = 0; // jagonzal: The chunks are already initialized
     subChunkNumber = 0; // jagonzal: The sub-chunks are already initialized
-    chunkNumber ++;
     vlaData_p->getMutex()->unlock();
 
     // Chunk loop
@@ -1155,12 +1155,10 @@ VLAT::sweepVi ()
 		subChunkNumber ++;
 	
 		// Release lock	
-		vlaData_p->getMutex()->unlock();
-
-		
+		vlaData_p->getMutex()->unlock();		
         }
 
-	// jagonzal: Sub-Chunk initialization (Need to split the iteration loop to introduce Mutex checks)
+	// jagonzal: Chunk initialization (Need to split the iteration loop to introduce Mutex checks)
 	vlaData_p->getMutex()->acquirelock();
 	visibilityIterator_p->nextChunk();
 	if (!visibilityIterator_p->moreChunks()) {
@@ -1171,9 +1169,9 @@ VLAT::sweepVi ()
 	else {
 		Log (1, "VLAT: another chunk\n");
 	}
+	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
 	if (rowBlocking_p)
 	{
-		// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
 		Int nRowChunk = visibilityIterator_p->nRowChunk();
  		visibilityIterator_p->setRowBlocking(nRowChunk);
     	}
