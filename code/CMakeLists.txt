@@ -805,6 +805,18 @@ casa_find( LIBXML2
   RUN_VERSION "LIBXML_DOTTED_VERSION; LIBXML_TEST_VERSION;" 
   )
 
+# XSLT
+casa_find( LIBXSLT
+  VERSION 1.1.17
+  PREFIX_HINTS ${LIBXSLT_ROOT_DIR}
+  INCLUDES libxslt/xsltconfig.h
+  INCLUDES_SUFFIXES libxslt
+  LIBS xslt
+  CPP_VERSION LIBXSLT_DOTTED_VERSION 
+  RUN_VERSION "LIBXSLT_DOTTED_VERSION; LIBXSLT_VERSION;" 
+  )
+
+
 # Do not reuse FindLibXml2.cmake, except this excerpt
 IF (NOT WIN32)
    # use pkg-config to get the directories and then use these values
@@ -1029,6 +1041,7 @@ casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)
 casa_add_module( calibration CASACORE tableplot msvis Boost )
 casa_add_module( synthesis CASACORE ATM casadbus msvis Boost calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )
+casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost )
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )

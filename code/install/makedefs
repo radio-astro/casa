@@ -421,6 +421,17 @@ OLDKLUDGEASDMINCD += $(AIPSROOT)/code/include/oldalma/ASDM
 OLDKLUDGEASDMDEFS := -DWITHOUT_ACS
 OLDKLUDGEASDMLIB :=
 
+KLUDGEASDM_V3ROOT := $(AIPSROOT)/code/alma_v3/implement/asdm
+#KLUDGEASDMINCD := $(AIPSROOT)/code/include/alma/asdm
+KLUDGEASDM_V3INCD := $(AIPSROOT)/code/include/alma_v3/Enumtcl
+KLUDGEASDM_V3INCD += $(AIPSROOT)/code/include/alma_v3/Enumerations
+KLUDGEASDM_V3INCD += $(AIPSROOT)/code/include/alma_v3/ASDMBinaries
+KLUDGEASDM_V3INCD += $(AIPSROOT)/code/include/alma_v3/ASDM2MSFiller
+KLUDGEASDM_V3INCD += $(AIPSROOT)/code/include/alma_v3/ASDM
+
+KLUDGEASDM_V3DEFS := -DWITHOUT_ACS
+KLUDGEASDM_V3LIB :=
+
 #XML2 needed by the asdm2MS filler.
 
 XML2ROOT := /usr
