@@ -33,6 +33,12 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	profiling_p = true;
 	debug_p = false;
 
+	// Check if async I/O is enabled
+	async_p = false;
+    	Bool asyncIOdisabled = true;
+    	AipsrcValue<Bool>::find (asyncIOdisabled,"ROVisibilityIteratorAsync.disabled", true);
+	if (asyncIOdisabled) async_p=false; else async_p=true;
+
 	// WARNING: By default the visibility iterator adds the following
 	// default columns: ARRAY_ID and FIELD_ID,DATA_DESC_ID and TIME.
 	// And they are needed for the correct operation of the VisibilityIterator
@@ -66,7 +72,7 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 			// NOTE: Time interval 0 groups all time steps together in one chunk.
 			timeInterval_p = 0;
 			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
-			groupTimeSteps_p = false;
+			groupTimeSteps_p = true;
 			break;
 		}
 		case BASELINE_SCAN_TIME_SERIES:
@@ -93,6 +99,7 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 		}
 		default:
 		{
+			cout << "DEFAULT" << endl;
 			sortOrder_p = Block<int>(4);
 			sortOrder_p[0] = MS::ARRAY_ID;
 			sortOrder_p[1] = MS::FIELD_ID;
@@ -123,11 +130,15 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	logger_p = new LogIO();
 
 	// Set all the initialized pointers to NULL
-	visibilityIterator_p = NULL;
         selectedMeasurementSet_p = NULL;
         measurementSetSelection_p = NULL;
         originalMeasurementSet_p = NULL;
+	rwVisibilityIterator_p = NULL;
+	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
+
+	// Initialize stats
+	totalWrittingTime_p = 0;
 
 	return;
 }
@@ -139,7 +150,8 @@ FlagDataHandler::~FlagDataHandler()
 {
 	// Destroy members
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	if (visibilityIterator_p) delete visibilityIterator_p;
+	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
@@ -224,20 +236,59 @@ FlagDataHandler::generateIterator()
 {
 	STARTCLOCK
 
-	// Delete previous Visibility Iterator
-	if (visibilityIterator_p) delete visibilityIterator_p;
+        // First create and initialize RW iterator
+        if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+        rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
-	// Create new Visibility Iterator
-	// WARNING: The 3rd parameters refers to the default columns which are ARRAY_ID and FIELD_ID,DATA_DESC_ID and TIME
-	visibilityIterator_p = new VisIter(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
+	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
+	// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
+	// With this configuration the Visibility Buffer is attached to the RO async iterator
+	if (async_p)
+	{
+		// Determine columns to be prefetched
+		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
+															casa::asyncio::Ant2,
+															casa::asyncio::ArrayId,
+															casa::asyncio::CorrType,
+															casa::asyncio::Feed1,
+															casa::asyncio::Feed2,
+															casa::asyncio::FieldId,
+															casa::asyncio::Flag,
+															casa::asyncio::FlagCube,
+															casa::asyncio::FlagRow,
+															casa::asyncio::ObservationId,
+															casa::asyncio::ObservedCube,
+															casa::asyncio::Freq,
+															casa::asyncio::NChannel,
+															casa::asyncio::NCorr,
+															casa::asyncio::NRow,
+															casa::asyncio::PhaseCenter,
+															casa::asyncio::Scan,
+															casa::asyncio::SpW,
+															casa::asyncio::StateId,
+															casa::asyncio::Time,
+															casa::asyncio::TimeInterval,
+															casa::asyncio::Uvw,-1);
 
-	// Set the table data manager (ISM and SSM) cache size to the full column size, for the columns
-	// ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW 
-	visibilityIterator_p->slurp();
+		// Then create and initialize RO Async iterator
+		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+		roVisibilityIterator_p = ROVisibilityIteratorAsync::create(*selectedMeasurementSet_p,prefetchColumns,sortOrder_p,true,rwVisibilityIterator_p,groupTimeSteps_p,timeInterval_p,-1);
 
-	// Attach Visibility Buffer to Visibility Iterator
-	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	visibilityBuffer_p = new VisBuffer(*visibilityIterator_p);
+		// Finally attach Visibility Buffer to Visibility Iterator
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
+		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+	}
+	// Otherwise we attach the Visibility Buffer to the RW conventional iterator
+	else
+	{
+		// Cast RW conventional interator into RO conventional iterator
+		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
+
+		// Finally attach Visibility Buffer to RO conventional iterator
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
+		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+	}
 
 	STOPCLOCK	
 	return true;
@@ -256,7 +307,7 @@ FlagDataHandler::nextChunk()
 	if (!chunksInitialized_p)
 	{
 		generateIterator();
-		visibilityIterator_p->originChunks();
+		roVisibilityIterator_p->originChunks();
 		chunksInitialized_p = true;
 		buffersInitialized_p = false;
 		moreChunks = true;
@@ -265,15 +316,20 @@ FlagDataHandler::nextChunk()
 	}
 	else
 	{
-		visibilityIterator_p->nextChunk();
+		roVisibilityIterator_p->nextChunk();
 
-		// WARNING: We iterate and afterwards check if the iterator is valid
-		if (visibilityIterator_p->moreChunks())
+		if (roVisibilityIterator_p->moreChunks())
 		{
 			buffersInitialized_p = false;
 			moreChunks = true;
 			chunkNo++;
 			bufferNo = 0;
+		}
+		else
+		{	
+			selectedMeasurementSet_p->flush();
+			selectedMeasurementSet_p->relinquishAutoLocks(True);
+			selectedMeasurementSet_p->unlock();
 		}
 	}
 
@@ -296,12 +352,12 @@ FlagDataHandler::nextBuffer()
 		// Group all the time stamps in one single buffer
 		// NOTE: Otherwise we have to iterate over Visibility Buffers
 		// that contain all the rows with the same time step.
-		if (groupTimeSteps_p)
+		if ((groupTimeSteps_p) and (!async_p))
 		{
-			Int nRowChunk = visibilityIterator_p->nRowChunk();
-	    		visibilityIterator_p->setRowBlocking(nRowChunk);
+			Int nRowChunk = roVisibilityIterator_p->nRowChunk();
+			roVisibilityIterator_p->setRowBlocking(nRowChunk);
 		}
-		visibilityIterator_p->origin();
+		roVisibilityIterator_p->origin();
 		buffersInitialized_p = true;
 		moreBuffers = true;
 		bufferNo++;
@@ -311,10 +367,10 @@ FlagDataHandler::nextBuffer()
 		// WARNING: ++ operator is defined for VisibilityIterator class ("advance" function)
 		// but if you define a VisibilityIterator pointer, then  ++ operator does not call
 		// the advance function but increments the pointers.
-		(*visibilityIterator_p)++;
+		(*roVisibilityIterator_p)++;
 
 		// WARNING: We iterate and afterwards check if the iterator is valid
-		if (visibilityIterator_p->more())
+		if (roVisibilityIterator_p->more())
 		{
 			moreBuffers = true;
 			bufferNo++;
@@ -323,6 +379,40 @@ FlagDataHandler::nextBuffer()
 
 	STOPCLOCK
 	return moreBuffers;
+}
+
+void
+FlagDataHandler::processBuffer()
+{
+	STARTCLOCK
+
+	// Try to extract flagCube from RO async iterator and set it in RW async iterator
+	Cube<Bool> flagCube = visibilityBuffer_p->get()->flagCube();
+	IPosition flagCubeShape = flagCube.shape();
+	Int nPolarizations = flagCubeShape(0);
+	Int nChannels = flagCubeShape(1);
+	Int nRows = flagCubeShape(2);
+	for (Int pol_i=0;pol_i<nPolarizations;pol_i++) {
+		for (Int chan_j=0;chan_j<nChannels;chan_j++) {
+			for (Int row_k=0;row_k<nRows;row_k++) {
+				if (chunkNo == 1) {
+					flagCube(pol_i,chan_j,row_k) = True;
+				} else {
+					flagCube(pol_i,chan_j,row_k) = False;
+				}
+			}
+		}
+	}
+
+	timeval start,stop;
+	gettimeofday(&start,0);	
+	rwVisibilityIterator_p->setFlag(flagCube);
+	gettimeofday(&stop,0);
+	totalWrittingTime_p += ((stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0)/1000.0;
+	cout << "Accumulated writting time [s]: " << totalWrittingTime_p << endl;	
+
+	STOPCLOCK
+	return;
 }
 
 

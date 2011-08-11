@@ -25,8 +25,9 @@
 
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisibilityIteratorAsync.h>
+#include <msvis/MSVis/VisBufferAsync.h>
+#include <casa/System/AipsrcValue.h>
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
 
@@ -66,15 +67,19 @@ public:
 	// Move to next buffer
 	bool nextBuffer();
 
+	// Dummy processBuffer function (it has to be implemented in the agents)
+	void processBuffer();
+
 	// Visibility Buffer
 	// WARNING: The attach mechanism only works with pointers or
 	// referenced variables. Otherwise the VisBuffer is created
 	// and attached, but when it is assigned to the member it is
 	// detached because of the dynamically called destructor
-	VisBuffer *visibilityBuffer_p;
+	VisBufferAutoPtr *visibilityBuffer_p;
 
-	// Visibility Iterator
-	VisibilityIterator *visibilityIterator_p;
+	// RO Visibility Iterator
+	VisibilityIterator *rwVisibilityIterator_p;
+	ROVisibilityIterator *roVisibilityIterator_p;
 
 	// Iteration counters
 	uShort chunkNo;
@@ -115,6 +120,7 @@ private:
 	Block<int> sortOrder_p;
 	Double timeInterval_p;
 	bool groupTimeSteps_p;
+	bool async_p;
 
 	// Iteration initialization parameters
 	bool chunksInitialized_p;
@@ -124,6 +130,7 @@ private:
 	bool profiling_p;
 	timeval start_p,stop_p;
 	double elapsedTime_p;
+	double totalWrittingTime_p;
 
 	// Debug mode
 	bool debug_p;
