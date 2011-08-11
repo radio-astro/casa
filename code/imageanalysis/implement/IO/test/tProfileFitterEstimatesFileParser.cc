@@ -41,7 +41,7 @@ void writeTestString(const String& test) {
 int main() {
 	String *parts = new String[2];
 	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
-	String datadir = parts[0] + "/data/regression/unittest/imageanalysis/IO/";
+	String datadir = parts[0] + "/data/regression/unittest/specfit/";
 	delete [] parts;
 
     try {
