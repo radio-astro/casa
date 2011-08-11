@@ -3892,6 +3892,10 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Order of polynomial element.  Default: do not fit a polynomial (&lt;0).</description>
             <value>-1</value>
         </param>
+        <param type="string" direction="in" name="estimates">
+            <description>Name of file containing initial estimates.  Default: No initial estimates ("").</description>
+            <value/>
+        </param>
         <param type="int" direction="in" name="minpts">
             <description>Minimum number of unmasked points necessary to attempt fit.</description>
             <value>0</value>
@@ -3942,7 +3946,8 @@ This method simultaneously fits one or more gaussians and/or a polynomial to one
 The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.
 
-The ngauss parameter indicates the maximum number of gaussians that should be fit. The poly parameter indicates the order of the polynomial to
+The ngauss parameter indicates the maximum number of gaussians that should be fit. If appropriate the fitter will fit fewer than this number.
+In the case where an estimates file is supplied, ngauss is ignored (see below). The poly parameter indicates the order of the polynomial to
 fit; a value &lt;0 indicates that no polynomial should be fit. An error will occur if ngauss=0 and poly&lt;0, as this indicates there
 is nothing to fit. 
 
@@ -3979,11 +3984,35 @@ or did not converge will be masked as bad.
 
 Currently, the polynomial coefficients and their errors are not returned, although they are logged.
 
-It is not yet possible to specify initial model parameter estimates; this feature is planned for a future release. Currently, the solver
-will determine initial estimates.
+INITIAL ESTIMATES
+Initial estimates for gaussian models can be specified in an estimates file. Polynomial coefficient initial estimates cannot
+be supplied. If given, the estimates file must contain initial estimates for all gaussian models to be fit. The value
+of the number of gaussians to fit is gotten from the number of estimates in the file. The file can contain comments. These
+are indicated by a "#" at the beginning of a line. All non-comment lines will be interpreted as initial estimates. The
+format of such a line is
 
-Note that ngauss is the *maximum* number of gaussians that the solver will attempt to fit. However, where appropriate, it will fit fewer than
-ngauss gaussians.
+[peak intensity], [center], [fwhm], [optional fixed parameter string]
+
+The first three values are required and must be numerical values. The peak intensity must be expressed in map units, while the
+center and fwhm must be specified in pixels. The fourth value is optional and if present, represents the parameter(s)
+that should be held constant during the fit. Any combination of the characters 'p' (peak), 'c' (center), and 'f' (fwhm) are
+permitted, eg "fc" means hold the fwhm and the center constant during the fit. Fixed parameters will have no error associated
+with them. Here is an example file:
+
+# estimates file indicating that two gaussians should be fit
+# first guassian estimate, peak=40, center at pixel number 10.5, fwhm = 5.8 pixels, all parameters allowed to vary during
+# fit
+40, 10.5, 5.8
+# second gaussian, peak = 4, center at pixel number 90.2, fwhm = 7.2 pixels, hold fwhm constant
+4, 90.2, 7.2, f
+# end file
+
+In the case of multifit=True, the initial estimates from the file will be applied to the location of the
+first fit. This is normally the bottom left corner of the region selected. If masked or not enough good
+points to perform a fit, the fitting proceeds to the next pixel with the pixel value of the lowest numbered
+axis changing the fastest. Once a successful fit has been performed at a location, subsequent fits will
+use the results of a fit for a nearest pixel for which a previous fit was successful as the initial estimate.
+The fixed parameter string will be honored for every fit performed when multifit=True.
 
 </description>
 

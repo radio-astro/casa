@@ -1114,7 +1114,7 @@ image::findsources(const int nMax, const double cutoff,
 // FIXME need to support region records as input
 record* image::fitprofile(const string& box, const string& region,
 	const string& chans, const string& stokes, const int axis,
-	const variant& vmask, int ngauss, const int poly,
+	const variant& vmask, int ngauss, const int poly, const string& estimates,
 	const int minpts, const bool multifit,	const string& model,
 	const string& residual, const string& amp,
 	const string& amperr, const string& center, const string& centererr,
@@ -1126,8 +1126,8 @@ record* image::fitprofile(const string& box, const string& region,
 	}
 	if (ngauss < 0) {
 		*_log << LogIO::WARN
-				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
-				<< LogIO::POST;
+			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
+			<< LogIO::POST;
 		ngauss = 0;
 	}
 	record *rstat = 0;
@@ -1139,7 +1139,7 @@ record* image::fitprofile(const string& box, const string& region,
 		ImageProfileFitter fitter(
 			_image->getImage(), region, 0,
 			box, chans, stokes, mask, axis,
-			multifit, residual, model, ngauss, poly,
+			multifit, residual, model, ngauss, poly, estimates,
 			amp, amperr, center, centererr, fwhm, fwhmerr, minpts
 		);
 		rstat = fromRecord(fitter.fit());

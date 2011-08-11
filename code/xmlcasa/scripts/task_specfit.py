@@ -68,9 +68,10 @@ from taskinit import *
 def specfit(
 	imagename=None, box=None, region=None, chans=None,
 	stokes=None, axis=None, mask=None, ngauss=None,
-	poly=None, minpts=None, multifit=None, model=None,
-	residual=None, amp=None, amperr=None, center=None,
-	centererr=None, fwhm=None, fwhmerr=None, wantreturn=None
+	poly=None, estimates=None, minpts=None, multifit=None,
+	model=None, residual=None, amp=None, amperr=None,
+	center=None, centererr=None, fwhm=None, fwhmerr=None,
+	wantreturn=None
 ):
     casalog.origin('specfit')
     retval = None
@@ -79,11 +80,15 @@ def specfit(
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
         retval = myia.fitprofile(
-			box, region, chans, stokes,
-			axis, mask, ngauss, poly,
-			minpts, multifit, model, residual,
-			amp, amperr, center, centererr,
-			fwhm, fwhmerr
+			box=box, region=region, chans=chans,
+			stokes=stokes, axis=axis, mask=mask,
+			ngauss=ngauss, poly=poly,
+			estimates=estimates,
+			minpts=minpts, multifit=multifit,
+			model=model, residual=residual,
+			amp=amp, amperr=amperr, center=center,
+			centererr=centererr, fwhm=fwhm,
+			fwhmerr=fwhmerr
 		)
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')

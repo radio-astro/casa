@@ -56,26 +56,27 @@ String dirName;
 void checkImage(
 	const ImageInterface<Float> *gotImage, const String& expectedName
 ) {
-  Float ftol = 1.0e-12; // 3.0e-13 is too small.
+	Float ftol = 1.0e-12; // 3.0e-13 is too small.
 
 	PagedImage<Float> expectedImage(expectedName);
 	AlwaysAssert(gotImage->shape() == expectedImage.shape(), AipsError);
 	Array<Float> gotchunk = gotImage->get();
 	Array<Float> expchunk = expectedImage.get();
-	if (anyTrue(isNaN(gotchunk))) {
-		Float nanvalue = 1453.4953342425;
-		Array<Float>::iterator iter;
-		Array<Float>::iterator jiter = expchunk.begin();
-		for (
-			iter=gotchunk.begin();
-			iter!=gotchunk.end(); iter++, jiter++
-		) {
-			if (isNaN(*iter)) {
-				*iter = nanvalue;
-			}
-			if (isNaN(*jiter)) {
-				*jiter = nanvalue;
-			}
+
+	cout << "got " << gotImage->name() << endl;
+	cout << "exp " << expectedName << endl;
+	Float nanvalue = 1453.4953342425;
+	Array<Float>::iterator iter;
+	Array<Float>::iterator jiter = expchunk.begin();
+	for (
+		iter=gotchunk.begin();
+		iter!=gotchunk.end(); iter++, jiter++
+	) {
+		if (isNaN(*iter)) {
+			*iter = nanvalue;
+		}
+		if (isNaN(*jiter)) {
+			*jiter = nanvalue;
 		}
 	}
 	Array<Float> diffData = gotchunk - expchunk;
@@ -104,7 +105,6 @@ void checkImage(
 	checkImage(&gotImage, expectedName);
 }
 
-
 void testException(
 	const String& test,
     const ImageInterface<Float>& image, const String& region,
@@ -112,7 +112,8 @@ void testException(
     const String& stokes, const String& mask,
     const uInt axis, const Bool multiFit,
     const String& residual, const String& model,
-    const uInt ngauss, const Int polyOrder
+    const uInt ngauss, const Int polyOrder,
+    const String& estimatesFilename=""
 ) {
 	writeTestString(test);
 	Bool exceptionThrown = true;
@@ -122,8 +123,8 @@ void testException(
 		    chans, stokes,
 		    mask, axis, multiFit,
 		    residual, model, ngauss,
-		    polyOrder
-		    );
+		    polyOrder, estimatesFilename
+		);
 
 		// should not get here, fail if we do.
 		exceptionThrown = false;
@@ -184,13 +185,22 @@ int main() {
     		"Exception if no gaussians and no polynomial specified", goodImage, "",
     		"", "", "", "", 2, False, "", "", 0, -1
     	);
+    	testException(
+    		"Exception if bogus estimates file given", goodImage, "",
+    		"", "", "", "", 2, False, "", "", 1, -1, "bogusfile"
+    	);
+    	testException(
+    		"Exception if badly formatted estimates file given", goodImage, "",
+    		"", "", "", "", 2, False, "", "", 1, -1,
+    		datadir + "badProfileEstimatesFormat.txt"
+    	);
     	{
     		writeTestString("test results of non-multi-pixel two gaussian fit");
             ImageProfileFitter *fitter;
             LogIO log;
             fitter =  new ImageProfileFitter(
             	&goodImage, "", 0, "", "", "", "", 2, False,
-            	"", "", 2, -1
+            	"", "", 2, -1, ""
             );
 
     		Record results = fitter->fit();
@@ -225,7 +235,7 @@ int main() {
     		writeTestString("test results of multi-pixel two gaussian fit");
     		ImageProfileFitter fitter(
     				&goodImage, "", 0, "", "", "", "", 2, True,
-    				"", "", 2, -1
+    				"", "", 2, -1, ""
     		);
     		Record results = fitter.fit();
 
@@ -258,6 +268,9 @@ int main() {
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
     	}
+    	/*
+    	 * FIXME reinstitute when isNaN() issue resolved
+*/
     	{
     		writeTestString("test writing result images of multi-pixel two gaussian fit");
     		String center = dirName + "/center";
@@ -269,7 +282,7 @@ int main() {
 
     		ImageProfileFitter fitter(
     			&goodImage, "", 0, "", "", "", "", 2, True,
-    			"", "", 2, -1, amp, ampErr, center, centerErr,
+    			"", "", 2, -1, "", amp, ampErr, center, centerErr,
     			fwhm, fwhmErr
     		);
     		Record results = fitter.fit();
@@ -292,11 +305,12 @@ int main() {
     			checkImage(dirName + "/" + names[i], datadir + names[i]);
     		}
     	}
+
     	{
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit");
     		ImageProfileFitter fitter(
     				&goodPolyImage, "", 0, "", "", "", "", 2, True,
-    				"", "", 2, 3
+    				"", "", 2, 3, ""
     		);
     		Record results = fitter.fit();
 
@@ -306,6 +320,82 @@ int main() {
     		writeTestString("  -- test all but one fits converged");
     		AlwaysAssert(nfalse(converged) == 1, AipsError);
     		AlwaysAssert(! converged(IPosition(4, 0, 8, 0, 0)), AipsError);
+    		writeTestString("  -- Test of fit units");
+    		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
+    		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
+    	}
+    	{
+    		writeTestString("test results of non-multi-pixel one gaussian fit with estimates file");
+            ImageProfileFitter *fitter;
+            LogIO log;
+            fitter =  new ImageProfileFitter(
+            	&goodImage, "", 0, "", "", "", "", 2, False,
+            	"", "", 1, -1, datadir + "goodProfileEstimatesFormat_2.txt"
+            );
+
+    		Record results = fitter->fit();
+            delete fitter;
+            Vector<Bool> converged = results.asArrayBool("converged");
+
+    		writeTestString("  -- Results arrays have one member");
+    		AlwaysAssert(converged.size() == 1, AipsError);
+
+    		writeTestString("  -- Fit converged");
+    		AlwaysAssert(converged[0], AipsError);
+
+    		writeTestString("  -- Only one gaussian fit");
+    		AlwaysAssert(((Vector<Int>)results.asArrayInt("ncomps"))[0] == 1, AipsError);
+
+    		writeTestString("  -- It is a gaussian and not something else");
+    		AlwaysAssert(((Vector<String>)results.asArrayString("type0"))[0] == "GAUSSIAN", AipsError);
+
+    		writeTestString("  -- Various tests of the fit values");
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("amp0"))[0] - (49.7) < 0.1), AipsError);
+    		cout << "amperr " << (Vector<Double>)results.asArrayDouble("ampErr0")[0] << endl;
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("ampErr0"))[0] - (4.0) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("center0"))[0] - (-237.7) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("centerErr0"))[0] - (1.7) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("fwhm0"))[0] - (42.4) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("fwhmErr0"))[0] - (4.0) < 0.1), AipsError);
+
+    		writeTestString("  -- Test of fit units");
+    		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
+    		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
+    	}
+
+    	{
+    		writeTestString("test results of non-multi-pixel one gaussian fit with estimates file holding peak constant");
+            ImageProfileFitter *fitter;
+            LogIO log;
+            fitter =  new ImageProfileFitter(
+            	&goodImage, "", 0, "", "", "", "", 2, False,
+            	"", "", 1, -1, datadir + "goodProfileEstimatesFormat_3.txt"
+            );
+
+    		Record results = fitter->fit();
+            delete fitter;
+            Vector<Bool> converged = results.asArrayBool("converged");
+
+    		writeTestString("  -- Results arrays have one member");
+    		AlwaysAssert(converged.size() == 1, AipsError);
+
+    		writeTestString("  -- Fit converged");
+    		AlwaysAssert(converged[0], AipsError);
+
+    		writeTestString("  -- Only one gaussian fit");
+    		AlwaysAssert(((Vector<Int>)results.asArrayInt("ncomps"))[0] == 1, AipsError);
+
+    		writeTestString("  -- It is a gaussian and not something else");
+    		AlwaysAssert(((Vector<String>)results.asArrayString("type0"))[0] == "GAUSSIAN", AipsError);
+
+    		writeTestString("  -- Various tests of the fit values");
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("amp0"))[0] - (45) < 1e-6), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("ampErr0"))[0] - (0.0) < 1e-6), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("center0"))[0] - (-237.7) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("centerErr0"))[0] - (1.9) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("fwhm0"))[0] - (45.6) < 0.1), AipsError);
+    		AlwaysAssert((((Vector<Double>)results.asArrayDouble("fwhmErr0"))[0] - (3.8) < 0.1), AipsError);
+
     		writeTestString("  -- Test of fit units");
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);
