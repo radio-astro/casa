@@ -120,6 +120,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             </when>
     </constraints>
 
+    <param type="string" name="useversion" >
+	    <description>Selects the version of asdm2MS to be used (\'v2\' (default) or \'v3\' (needed for ALMA data taken after May 2011))</description>
+	    <value>v2</value>
+	    <allowed kind="enum">
+	      <value>v2</value>
+	      <value>v3</value>
+	      <value></value>
+	    </allowed>
+    </param>
+
+
     </input>
 
   <returns type="void"/>
@@ -203,6 +214,9 @@ process_caldevice -- The CalDevice table is processed if and only if this parame
 verbose     -- produce log output as asdm2MS is being run
 
 showversion -- report the version of the asdm2MS being used.
+
+useversion -- Selects the version of asdm2MS to be used (\'v2\' (default) or \'v3\' (use for ALMA data))
+              default: v2
 
   </example>
 
