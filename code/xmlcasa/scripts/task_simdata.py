@@ -426,7 +426,7 @@ def simdata(
         if mra['value'] >= 359.999:
             mra['value'] = mra['value'] - 360.
         shift = [ (qa.convert(ra,'deg')['value'] - 
-                   qa.convert(mra,'deg')['value'])/pl.cos(qa.convert(mdec,'rad')['value'] ), 
+                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(mdec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
