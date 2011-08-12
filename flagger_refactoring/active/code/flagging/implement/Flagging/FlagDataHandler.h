@@ -124,8 +124,7 @@ private:
 
 	// Async I/O stuff
 	VWBT * vwbt_p;
-	bool asynci_p;
-	bool asynco_p;
+	bool asyncio_disabled_p;
 
 	// Iteration initialization parameters
 	bool chunksInitialized_p;
