@@ -4263,7 +4263,7 @@ namespace asdm {
  		
     		string xsltPath;
  			bool proceed = ((!version.compare("UNKNOWN")) && ( origin == ASDMUtils::EVLA))
-    						|| ((!version.compare("2")) && ( origin == ASDMUtils::ALMA));
+    						|| ((version.compare("3")) && ( origin == ASDMUtils::ALMA));
 			string xmlDoc;
  			try {
  				if (proceed) {
