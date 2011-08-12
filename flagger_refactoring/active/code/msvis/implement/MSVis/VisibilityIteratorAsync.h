@@ -14,6 +14,9 @@ using std::set;
 #include "VisibilityIterator.h"
 #include "UtilJ.h"
 
+// jagonzal: For MS access mutex
+#include "msvis/MSVis/AsynchronousTools.h"
+
 
 #define NotImplementedROVIA throw utilj::AipsErrorTrace (String ("Method not legal in ROVIA: ") + __PRETTY_FUNCTION__, __FILE__, __LINE__)
 
@@ -109,19 +112,8 @@ public:
             const Block<Int> & sortColumns,
             const Bool addDefaultSortCols,
             Double timeInterval=0,
-            Int nReadAheadBuffers = -1);
-
-    // jagonzal: This is a minimum modification to prove compatibility if writing operations
-    // with asyn iterators. This code should be moved to a VisibilityIteratorAsync class.
-    static ROVisibilityIterator *
-    create (const MeasurementSet & ms,
-            const PrefetchColumns & prefetchColumns,
-            const Block<Int> & sortColumns,
-            const Bool addDefaultSortCols,
-            VisibilityIterator *rwVisibilityIterator,
-            Bool groupRows,
-            Double timeInterval=0,
-            Int nReadAheadBuffers=-1);
+            Int nReadAheadBuffers = -1,
+            Bool groupRows = false);
 
     static ROVisibilityIterator *
     create (const Block<MeasurementSet> & mss,
@@ -166,9 +158,7 @@ public:
 //    MEpoch getMEpoch () const;
 //    Vector<Float> getReceptor0Angle ();
 
-    // jagonzal: Instead of a RO iterator we use a more generic RW
-    void linkWithRovi (VisibilityIterator * rovi);
-
+    void linkWithRovi (ROVisibilityIterator * rovi);
     bool more () const;
     bool moreChunks () const;
     ROVisibilityIteratorAsync & nextChunk ();
@@ -326,18 +316,8 @@ protected:
                                const Block<Int> & sortColumns,
                                const Bool addDefaultSortCols,
                                Double timeInterval=0,
-                               Int nReadAheadBuffers = 2);
-
-    // jagonzal: This is a minimum modification to prove compatibility if writing operations
-    // with asyn iterators. This code should be moved to a VisibilityIteratorAsync class.
-    ROVisibilityIteratorAsync (const MeasurementSet & ms,
-                               const PrefetchColumns & prefetchColumns,
-                               const Block<Int> & sortColumns,
-                               const Bool addDefaultSortCols,
-                               VisibilityIterator *rwVisibilityIterator,
-                               Bool groupRows,
-                               Double timeInterval=0,
-                               Int nReadAheadBuffers = 2);
+                               Int nReadAheadBuffers = 2,
+                               Bool groupRows = false);
 
     // Same as previous constructor, but with multiple MSs to iterate over.
 
@@ -369,17 +349,7 @@ private:
 
     Int chunkNumber_p;
     ROVisibilityIteratorAsyncImpl * impl_p;
-
-    // jagonzal: This iterator is not actually in use, and by turning it into a RW
-    // iterator we can use it to support the two-iterators approach in a transparent
-    // way for the user because whenever we iterate trough the async iterator
-    // we will be internally iterating this iterator as well but acquiring/releasing
-    // the MS lock access properly
-    VisibilityIterator * linkedVisibilityIterator_p; // [use]
-
-    // jagonzal: MS access mutex
-    casa::async::Mutex * msAccessMutex_p;
-
+    ROVisibilityIterator * linkedVisibilityIterator_p; // [use]
     PrefetchColumns prefetchColumns_p;
     Int subChunkNumber_p;
     VisBufferAsync * visBufferAsync_p;
