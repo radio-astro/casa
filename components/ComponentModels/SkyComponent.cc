@@ -320,8 +320,8 @@ String SkyComponent::positionToString(const CoordinateSystem *const &coordinates
 		// TODO do the pixel computations in another method
 		if (dirCoord.toPixel(pixel, world)) {
 			Vector<Double> increment = dirCoord.increment();
-			Double raPixErr = dra.getValue("rad")/increment[0];
-			Double decPixErr = ddec.getValue("rad")/increment[1];
+			Double raPixErr = abs(dra.getValue("rad")/increment[0]);
+			Double decPixErr = abs(ddec.getValue("rad")/increment[1]);
 			Vector<Double> raPix(2), decPix(2);
 			raPix.set(roundDouble(raPixErr, 3, 2));
 			decPix.set(roundDouble(decPixErr, 3, 2));
