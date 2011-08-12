@@ -119,117 +119,120 @@ int main(int argc, char **argv)
 		{
 			if (fillBuffer)
 			{
-                                dh->visibilityBuffer_p->antenna1();
-                                dh->visibilityBuffer_p->antenna2();
-                                dh->visibilityBuffer_p->arrayId();
-                                //dh->visibilityBuffer_p->channel();
-                                //dh->visibilityBuffer_p->CJones();
-                                dh->visibilityBuffer_p->corrType();
-                                //dh->visibilityBuffer_p->direction1();
-                                //dh->visibilityBuffer_p->direction2();
-                                //dh->visibilityBuffer_p->exposure();
-                                dh->visibilityBuffer_p->feed1();
-                                //dh->visibilityBuffer_p->feed1_pa();
-                                dh->visibilityBuffer_p->feed2();
-                                //dh->visibilityBuffer_p->feed2_pa();
-                                dh->visibilityBuffer_p->fieldId();
-                                dh->visibilityBuffer_p->flag();
-                                //dh->visibilityBuffer_p->flagCategory();
-                                dh->visibilityBuffer_p->flagCube();
-                                dh->visibilityBuffer_p->flagRow();
-                                //dh->visibilityBuffer_p->floatDataCube();
-                                dh->visibilityBuffer_p->frequency();
-                                dh->visibilityBuffer_p->nChannel();
-                                dh->visibilityBuffer_p->nCorr();
-                                dh->visibilityBuffer_p->nRow();
-                                //dh->visibilityBuffer_p->observationId();
-                                dh->visibilityBuffer_p->phaseCenter();
-                                //dh->visibilityBuffer_p->polFrame();
-                                //dh->visibilityBuffer_p->processorId();
-                                dh->visibilityBuffer_p->scan();
-                                //dh->visibilityBuffer_p->sigma();
-                                //dh->visibilityBuffer_p->sigmaMat();
-                                dh->visibilityBuffer_p->spectralWindow();
-                                dh->visibilityBuffer_p->stateId();
-                                dh->visibilityBuffer_p->time();
-                                //dh->visibilityBuffer_p->timeCentroid();
-                                dh->visibilityBuffer_p->timeInterval();
-                                dh->visibilityBuffer_p->uvw();
-                                //dh->visibilityBuffer_p->uvwMat();
-                                //dh->visibilityBuffer_p->visibility();
-                                dh->visibilityBuffer_p->visCube();
-                                //dh->visibilityBuffer_p->weight();
-                                //dh->visibilityBuffer_p->weightMat();
-                                //dh->visibilityBuffer_p->weightSpectrum();
+                                dh->visibilityBuffer_p->get()->antenna1();
+                                dh->visibilityBuffer_p->get()->antenna2();
+                                dh->visibilityBuffer_p->get()->arrayId();
+                                //dh->visibilityBuffer_p->get()->channel();
+                                //dh->visibilityBuffer_p->get()->CJones();
+                                dh->visibilityBuffer_p->get()->corrType();
+                                //dh->visibilityBuffer_p->get()->direction1();
+                                //dh->visibilityBuffer_p->get()->direction2();
+                                //dh->visibilityBuffer_p->get()->exposure();
+                                dh->visibilityBuffer_p->get()->feed1();
+                                //dh->visibilityBuffer_p->get()->feed1_pa();
+                                dh->visibilityBuffer_p->get()->feed2();
+                                //dh->visibilityBuffer_p->get()->feed2_pa();
+                                dh->visibilityBuffer_p->get()->fieldId();
+                                //dh->visibilityBuffer_p->get()->flagCategory();
+                                dh->visibilityBuffer_p->get()->flag();
+                                dh->visibilityBuffer_p->get()->flagRow();
+                                dh->visibilityBuffer_p->get()->flagCube();
+                                //dh->visibilityBuffer_p->get()->floatDataCube();
+                                dh->visibilityBuffer_p->get()->frequency();
+                                dh->visibilityBuffer_p->get()->nChannel();
+                                dh->visibilityBuffer_p->get()->nCorr();
+                                dh->visibilityBuffer_p->get()->nRow();
+                                //dh->visibilityBuffer_p->get()->observationId();
+                                dh->visibilityBuffer_p->get()->phaseCenter();
+                                //dh->visibilityBuffer_p->get()->polFrame();
+                                //dh->visibilityBuffer_p->get()->processorId();
+                                dh->visibilityBuffer_p->get()->scan();
+                                //dh->visibilityBuffer_p->get()->sigma();
+                                //dh->visibilityBuffer_p->get()->sigmaMat();
+                                dh->visibilityBuffer_p->get()->spectralWindow();
+                                dh->visibilityBuffer_p->get()->stateId();
+                                dh->visibilityBuffer_p->get()->time();
+                                //dh->visibilityBuffer_p->get()->timeCentroid();
+                                dh->visibilityBuffer_p->get()->timeInterval();
+                                dh->visibilityBuffer_p->get()->uvw();
+                                //dh->visibilityBuffer_p->get()->uvwMat();
+                                //dh->visibilityBuffer_p->get()->visibility();
+                                dh->visibilityBuffer_p->get()->visCube();
+                                //dh->visibilityBuffer_p->get()->weight();
+                                //dh->visibilityBuffer_p->get()->weightMat();
+                                //dh->visibilityBuffer_p->get()->weightSpectrum();
 
 			}
 
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
 
-			if (dh->visibilityBuffer_p->observationId().nelements() > 1)
+			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
-					 << dh->visibilityBuffer_p->observationId()[0] << "~"
-					 << dh->visibilityBuffer_p->observationId()[dh->visibilityBuffer_p->observationId().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->get()->observationId()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->observationId()[dh->visibilityBuffer_p->get()->observationId().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Observation:" << dh->visibilityBuffer_p->observationId()[0] << " ";
+				cout << "Observation:" << dh->visibilityBuffer_p->get()->observationId()[0] << " ";
 			}
 
-			cout << "Array:" << dh->visibilityBuffer_p->arrayId() << " ";
+			cout << "Array:" << dh->visibilityBuffer_p->get()->arrayId() << " ";
 
-			if (dh->visibilityBuffer_p->scan().nelements() > 1)
+			if (dh->visibilityBuffer_p->get()->scan().nelements() > 1)
 			{
 				cout << "Scan:"
-					 << dh->visibilityBuffer_p->scan()[0] << "~"
-					 << dh->visibilityBuffer_p->scan()[dh->visibilityBuffer_p->scan().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->get()->scan()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->scan()[dh->visibilityBuffer_p->get()->scan().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Scan:" << dh->visibilityBuffer_p->scan()[0] << " ";
+				cout << "Scan:" << dh->visibilityBuffer_p->get()->scan()[0] << " ";
 			}
 
-			cout << "Field:" << dh->visibilityBuffer_p->fieldId() << " " ;
+			cout << "Field:" << dh->visibilityBuffer_p->get()->fieldId() << " " ;
 
-			cout << "Spw:" << dh->visibilityBuffer_p->spectralWindow() << " ";
+			cout << "Spw:" << dh->visibilityBuffer_p->get()->spectralWindow() << " ";
 
-			if (dh->visibilityBuffer_p->time().nelements() > 1)
+			if (dh->visibilityBuffer_p->get()->time().nelements() > 1)
 			{
 				cout << "Time:"
-					 << dh->visibilityBuffer_p->time()[0] << "~"
-					 << dh->visibilityBuffer_p->time()[dh->visibilityBuffer_p->time().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->get()->time()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->time()[dh->visibilityBuffer_p->get()->time().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Time:" << dh->visibilityBuffer_p->time()[0] << " ";
+				cout << "Time:" << dh->visibilityBuffer_p->get()->time()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p->antenna1().nelements() > 1)
+			if (dh->visibilityBuffer_p->get()->antenna1().nelements() > 1)
 			{
 				cout << "Antenna1:"
-					 << dh->visibilityBuffer_p->antenna1()[0] << "~"
-					 << dh->visibilityBuffer_p->antenna1()[dh->visibilityBuffer_p->antenna1().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->get()->antenna1()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->antenna1()[dh->visibilityBuffer_p->get()->antenna1().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna1:" << dh->visibilityBuffer_p->antenna1()[0] << " ";
+				cout << "Antenna1:" << dh->visibilityBuffer_p->get()->antenna1()[0] << " ";
 			}
 
-			if (dh->visibilityBuffer_p->antenna2().nelements() > 1)
+			if (dh->visibilityBuffer_p->get()->antenna2().nelements() > 1)
 			{
 				cout << "Antenna2:"
-					 << dh->visibilityBuffer_p->antenna2()[0] << "~"
-					 << dh->visibilityBuffer_p->antenna2()[dh->visibilityBuffer_p->antenna2().nelements()-1] << " ";
+					 << dh->visibilityBuffer_p->get()->antenna2()[0] << "~"
+					 << dh->visibilityBuffer_p->get()->antenna2()[dh->visibilityBuffer_p->get()->antenna2().nelements()-1] << " ";
 			}
 			else
 			{
-				cout << "Antenna2:" << dh->visibilityBuffer_p->antenna2()[0] << " ";
+				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
 
-			cout << "nRows:" << dh->visibilityBuffer_p->nRow() <<endl;
-			cumRows += dh->visibilityBuffer_p->nRow();
+			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
+			cumRows += dh->visibilityBuffer_p->get()->nRow();
+
+			// Process Visibility buffer (dummy)
+			dh->processBuffer();
 		}
 	}
 
