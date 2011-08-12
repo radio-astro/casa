@@ -221,7 +221,7 @@ namespace asdm {
 	xmlChar* content = xmlNodeListGetString(doc, node->xmlChildrenNode, 1);
 	string result((char *) content);
 	xmlFree(content);
-	return result;
+	return trim_copy(result);
       }
       node = node->next;
     }
@@ -262,6 +262,7 @@ namespace asdm {
       cur = cur -> next;
     }
 
+    
     return result;
   }
 
