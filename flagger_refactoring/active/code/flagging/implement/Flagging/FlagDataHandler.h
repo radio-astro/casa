@@ -27,6 +27,7 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBufferAsync.h>
+#include <msvis/MSVis/VWBT.h>
 #include <casa/System/AipsrcValue.h>
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
@@ -120,7 +121,11 @@ private:
 	Block<int> sortOrder_p;
 	Double timeInterval_p;
 	bool groupTimeSteps_p;
-	bool async_p;
+
+	// Async I/O stuff
+	VWBT * vwbt_p;
+	bool asynci_p;
+	bool asynco_p;
 
 	// Iteration initialization parameters
 	bool chunksInitialized_p;
@@ -130,7 +135,6 @@ private:
 	bool profiling_p;
 	timeval start_p,stop_p;
 	double elapsedTime_p;
-	double totalWrittingTime_p;
 
 	// Debug mode
 	bool debug_p;
