@@ -213,6 +213,9 @@ public:
     static PrefetchColumns prefetchAllColumnsExcept (int firstColumnId, ...);
     static PrefetchColumns prefetchColumns (int firstColumnId, ...);
 
+    // jagonzal: Implement an accessor function for the mutex resident in the vla data object
+    casa::async::Mutex * getMutex();
+
     // The functions below make no sense (at first glance) for asynchronous operation and are implemented
     // to throw an AipsError if called.  ROVIA is designed to have all the data accessed through the
     // associated VisBufferAsync.  Any method which tries to access data through the ROVIA makes no

@@ -864,6 +864,12 @@ ROVisibilityIteratorAsync::prefetchColumnName (Int id)
 }
 
 
+casa::async::Mutex *
+ROVisibilityIteratorAsync::getMutex()
+{
+	return impl_p->vlaData_p->getMutex();
+}
+
 ROVisibilityIteratorAsync::PrefetchColumns
 ROVisibilityIteratorAsync::prefetchColumns (Int firstColumn, ...)
 {
