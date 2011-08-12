@@ -64,7 +64,6 @@ public:
 	static const Int CURRENT_VERSION;
 	static const Regex MAGIC;
 
-
 	// differentiating between the filename and simple text constructors
 	RegionTextParser(
 		const String& filename, const CoordinateSystem& csys,
@@ -91,6 +90,7 @@ private:
 		Int intVal;
 		String stringVal;
 		Bool boolVal;
+		AnnotationBase::LineStyle lineStyleVal;
 		Vector<MFrequency> freqRange;
 		Vector<Stokes::StokesTypes> stokes;
 	};

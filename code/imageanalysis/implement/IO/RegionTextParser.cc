@@ -205,13 +205,9 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 	const Regex startAnn("^ann[[:space:]]+");
 	const Regex startDiff("^-[[:space:]]+");
 	const Regex startGlobal("^global[[:space:]]+");
-
-
-
 	Vector<String> lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
 	Vector<Quantity> qFreqs(2, Quantity(0));
-
 	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); iter++) {
 		lineCount++;
 		Bool annOnly = False;
@@ -522,11 +518,10 @@ RegionTextParser::_getCurrentParamSet(
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
 		ParamValue paramValue;
-		AnnotationBase::Keyword key = AnnotationBase::UNKNOWN;
+		AnnotationBase::Keyword key = AnnotationBase::UNKNOWN_KEYWORD;
 		consumeMe.trim();
 		consumeMe.ltrim(',');
 		consumeMe.trim();
-
 		if (! consumeMe.contains('=')) {
 			*_log << preamble << "Illegal extra characters on line ("
 				<< consumeMe << "). Did you forget a '='?"
@@ -603,6 +598,9 @@ RegionTextParser::_getCurrentParamSet(
 			}
 			else if (keyword == "linestyle") {
 				key = AnnotationBase::LINESTYLE;
+				paramValue.lineStyleVal = AnnotationBase::lineStyleFromString(
+					paramValue.stringVal
+				);
 			}
 			else if (keyword == "symsize") {
 				key = AnnotationBase::SYMSIZE;
@@ -651,7 +649,7 @@ RegionTextParser::_getCurrentParamSet(
 			}
 		}
 		consumeMe.trim();
-		if (key != AnnotationBase::UNKNOWN) {
+		if (key != AnnotationBase::UNKNOWN_KEYWORD) {
 			currentParams[key] = paramValue;
 			newParams[key] = paramValue;
 		}
@@ -720,7 +718,6 @@ void RegionTextParser::_createAnnotation(
 			<< currentParamSet.at(AnnotationBase::RESTFREQ).stringVal << " is not "
 			<< "a valid quantity." << LogIO::EXCEPTION;
 	}
-
 	try {
 	switch (annType) {
 		case AnnotationBase::RECT_BOX:
@@ -819,7 +816,9 @@ void RegionTextParser::_createAnnotation(
 		dynamic_cast<AnnRegion *>(annotation)->setDifference(isDifference);
 	}
 	annotation->setLineWidth(currentParamSet.at(AnnotationBase::LINEWIDTH).intVal);
-	annotation->setLineStyle(currentParamSet.at(AnnotationBase::LINESTYLE).stringVal);
+	annotation->setLineStyle(AnnotationBase::lineStyleFromString(
+		currentParamSet.at(AnnotationBase::LINESTYLE).stringVal)
+	);
 	annotation->setSymbolSize(currentParamSet.at(AnnotationBase::SYMSIZE).intVal);
 	annotation->setSymbolThickness(currentParamSet.at(AnnotationBase::SYMTHICK).intVal);
 	annotation->setColor(currentParamSet.at(AnnotationBase::COLOR).stringVal);
@@ -1127,7 +1126,7 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::LINEWIDTH] = linewidth;
 
 	ParamValue linestyle;
-	linestyle.stringVal = AnnotationBase::DEFAULT_LINESTYLE;
+	linestyle.lineStyleVal = AnnotationBase::DEFAULT_LINESTYLE;
 	_currentGlobals[AnnotationBase::LINESTYLE] = linestyle;
 
 	ParamValue symsize;

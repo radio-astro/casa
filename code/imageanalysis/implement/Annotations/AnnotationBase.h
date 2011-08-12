@@ -55,17 +55,6 @@ namespace casa {
 class AnnotationBase {
 public:
 
-	static const String DEFAULT_LABEL;
-	static const String DEFAULT_COLOR;
-	static const String DEFAULT_LINESTYLE;
-	static const uInt DEFAULT_LINEWIDTH;
-	static const uInt DEFAULT_SYMBOLSIZE;
-	static const uInt DEFAULT_SYMBOLTHICKNESS;
-	static const String DEFAULT_FONT;
-	static const String DEFAULT_FONTSIZE;
-	static const String DEFAULT_FONTSTYLE;
-	static const Bool DEFAULT_USETEX;
-
 	enum Type {
 		// annotations only
 		LINE,
@@ -99,19 +88,42 @@ public:
 		FONTSTYLE,
 		USETEX,
 		LABEL,
-		UNKNOWN,
+		UNKNOWN_KEYWORD,
 		N_KEYS
 	};
+
+	enum LineStyle {
+		SOLID,
+		DASHED,
+		DOT_DASHED,
+		DOTTED,
+		UNKNOWN_LINESTYLE
+	};
+
+	static const String DEFAULT_LABEL;
+	static const String DEFAULT_COLOR;
+	static const LineStyle DEFAULT_LINESTYLE;
+	static const uInt DEFAULT_LINEWIDTH;
+	static const uInt DEFAULT_SYMBOLSIZE;
+	static const uInt DEFAULT_SYMBOLTHICKNESS;
+	static const String DEFAULT_FONT;
+	static const String DEFAULT_FONTSIZE;
+	static const String DEFAULT_FONTSTYLE;
+	static const Bool DEFAULT_USETEX;
 
 	virtual ~AnnotationBase();
 
 	Type getType() const;
+
+	static LineStyle lineStyleFromString(const String& ls);
 
 	// Given a string, return the corresponding annotation type or throw
 	// an error if the string does not correspond to an allowed type.
 	static Type typeFromString(const String& type);
 
 	static String keywordToString(const Keyword key);
+
+	static String lineStyleToString(const LineStyle linestyle);
 
 	void setLabel(const String& label);
 
@@ -121,9 +133,9 @@ public:
 
 	String getColor() const;
 
-	void setLineStyle(const String& lineStyle);
+	void setLineStyle(const LineStyle lineStyle);
 
-	String getLineStyle() const;
+	LineStyle getLineStyle() const;
 
 	void setLineWidth(const uInt linewidth);
 
@@ -171,12 +183,18 @@ public:
 		ostream& os, const map<Keyword, String>& params
 	);
 
+	// print a line style representation
+	static ostream& print(
+		ostream& os, const LineStyle ls
+	);
+
 protected:
 	Type _type;
 	MDirection::Types _directionRefFrame;
 	CoordinateSystem _csys;
 	IPosition _directionAxes;
-	String _label, _color, _linestyle, _font, _fontsize, _fontstyle;
+	String _label, _color, _font, _fontsize, _fontstyle;
+	LineStyle _linestyle;
 	uInt _linewidth, _symbolsize, _symbolthickness;
 	Bool _usetex;
 	Vector<MDirection> _convertedDirections;
@@ -202,13 +220,21 @@ protected:
 
 private:
 	static Bool _doneUnitInit;
+	static map<String, LineStyle> _lineStyleMap;
+	static map<String, Type> _typeMap;
+
 	void _initParams();
+
 
 
 };
 
 inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {
 	return annotation.print(os);
+};
+
+inline ostream &operator<<(ostream& os, const AnnotationBase::LineStyle& ls) {
+	return AnnotationBase::print(os, ls);
 };
 
 inline ostream &operator<<(ostream& os, const map<AnnotationBase::Keyword, String>& x) {
