@@ -465,30 +465,33 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       }
       MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::castType(mfImageStart_p.getRef().getType()) ; 
 
-      Vector<Double> imgridfreqs;
+      /////Some problem here it is really goofing up in getting frequency
+      /*Vector<Double> imgridfreqs;
       Vector<Double> imfreqres;
       //rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
       // should use obsFreqRef
       rstate=calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq);
       //cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
+      */
 
-
-      if (imageNchan_p==1) {
-        mySpectral = new SpectralCoordinate(mfreqref,
+      //if (imageNchan_p==1) {
+      mySpectral = new SpectralCoordinate(mfreqref,
       					  mfImageStart_p.get("Hz").getValue(),
       					  mfImageStep_p.get("Hz").getValue(),
       					  refChan, restFreq);
-      }
+	//}
+      /*
       else {
         Double finc= imgridfreqs(1)-imgridfreqs(0); 
         mySpectral = new SpectralCoordinate(mfreqref, imgridfreqs(0), finc, refChan, restFreq);
-
+	cerr << "after myspectral2 " << mySpectral->referenceValue() << " pixel " <<  mySpectral->referencePixel() << endl;
         //debug TT
         //Double wrld,pixl;
         //pixl=0.0;
         //mySpectral->toWorld(wrld,pixl);
         //cerr<<"world="<<wrld<<" pixel="<<pixl;
       }
+      */
       os << (verbose ? LogIO::NORMAL : LogIO::NORMAL3)
          << "Start frequency = " // Loglevel INFO
 	 << mfImageStart_p.get("GHz").getValue()
@@ -1094,7 +1097,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       }
 
 
-	  //in order to outframe to work need to set here original freq frame
+      //in order to outframe to work need to set here original freq frame
       //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
       mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
 					  , finc,
