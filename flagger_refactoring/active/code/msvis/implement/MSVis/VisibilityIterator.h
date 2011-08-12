@@ -50,9 +50,6 @@
 #include <msvis/MSVis/VisImagingWeight.h>
 #include <ms/MeasurementSets/MSIter.h>
 
-// jagonzal: For MS access mutex
-#include <msvis/MSVis/AsynchronousTools.h>
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
@@ -991,12 +988,6 @@ public:
 
   // Set/modify the ncorr x nrow SigmaMat.
   void setSigmaMat(const Matrix<Float>& sigmat);
-
-  // jagonzal: Set MS access mutex
-  void setupAsyncIO();
-  void setMutex(casa::async::Mutex *msAccessMutex);
-  bool getMutexSet() { return msAccessMutexSet_p;}
-
 protected:
   virtual void attachColumns(const Table &t);
   void setInterpolatedVisFlag(const Cube<Complex>& vis, 
@@ -1030,10 +1021,6 @@ protected:
   ArrayColumn<Float> RWcolSigma;
   ArrayColumn<Bool> RWcolFlag;
   ScalarColumn<Bool> RWcolFlagRow;
-
-  // jagonzal: MS access mutex
-  casa::async::Mutex * msAccessMutex_p;
-  bool msAccessMutexSet_p;
 
 };
 
