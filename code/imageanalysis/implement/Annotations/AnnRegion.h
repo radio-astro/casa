@@ -79,15 +79,6 @@ public:
 	Bool isDifference() const;
 
 protected:
-	Bool _isAnnotationOnly;
-	Vector<MFrequency> _convertedFreqLimits;
-	ImageRegion _imageRegion;
-	Quantity _beginFreq, _endFreq, _restFreq;
-	Vector<Stokes::StokesTypes> _stokes;
-	WCRegion *_wcRegion;
-	MFrequency::Types _freqRefFrame;
-	MDoppler::Types _dopplerType;
-	Bool _isDifference;
 
 	// only to be called by subclasses
 
@@ -127,6 +118,16 @@ protected:
 	virtual void _printPrefix(ostream& os) const;
 
 private:
+
+	Bool _isAnnotationOnly;
+	Vector<MFrequency> _convertedFreqLimits;
+	ImageRegion _imageRegion;
+	Quantity _beginFreq, _endFreq, _restFreq;
+	Vector<Stokes::StokesTypes> _stokes;
+	WCRegion *_wcRegion;
+	MFrequency::Types _freqRefFrame;
+	MDoppler::Types _dopplerType;
+	Bool _isDifference;
 
 	WCBox _makeExtensionBox(
 		const Vector<Quantity>& freqRange,

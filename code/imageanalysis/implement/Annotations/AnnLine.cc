@@ -46,7 +46,7 @@ AnnLine::AnnLine(
 }
 
 Vector<MDirection> AnnLine::getEndPoints() const {
-	return _convertedDirections;
+	return _getConvertedDirections();
 }
 
 ostream& AnnLine::print(ostream &os) const {

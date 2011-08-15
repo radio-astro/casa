@@ -50,7 +50,7 @@ AnnSymbol::AnnSymbol(
 }
 
 MDirection AnnSymbol::getDirection() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 AnnSymbol::Symbol AnnSymbol::getSymbol() const {

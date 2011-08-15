@@ -40,13 +40,13 @@ AnnCircle::AnnCircle(
 		restfreq, stokes, annotationOnly
 ), _inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
 
-	_convertedRadius = _lengthToAngle(_inputRadius, _directionAxes[0]);
+	_convertedRadius = _lengthToAngle(_inputRadius, _getDirectionAxes()[0]);
 	_inputCenter[0] = xcenter;
 	_inputCenter[1] = ycenter;
 
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
-	Vector<Double> coords = _convertedDirections[0].getAngle("rad").getValue();
+	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
 
 	Vector<Quantity> center(2);
 
@@ -54,14 +54,14 @@ AnnCircle::AnnCircle(
 	center[1] = Quantity(coords[1], "rad");
 
 	WCEllipsoid circle(
-		center, _convertedRadius, _directionAxes, _csys,
-		RegionType::Abs
+		center, _convertedRadius, _getDirectionAxes(),
+		_getCsys(), RegionType::Abs
 	);
 	_extend(circle);
 }
 
 MDirection AnnCircle::getCenter() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 Quantity AnnCircle::getRadius() const {

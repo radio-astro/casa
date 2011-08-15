@@ -189,18 +189,6 @@ public:
 	);
 
 protected:
-	Type _type;
-	MDirection::Types _directionRefFrame;
-	CoordinateSystem _csys;
-	IPosition _directionAxes;
-	String _label, _color, _font, _fontsize, _fontstyle;
-	LineStyle _linestyle;
-	uInt _linewidth, _symbolsize, _symbolthickness;
-	Bool _usetex;
-	Vector<MDirection> _convertedDirections;
-	map<Keyword, Bool> _globals;
-	map<Keyword, String> _params;
-	Bool _printGlobals;
 
 	AnnotationBase(
 		const Type type, const String& dirRefFrameString,
@@ -217,8 +205,32 @@ protected:
 
 	virtual void _printPairs(ostream &os) const;
 
+	inline const Vector<MDirection>& _getConvertedDirections() const {
+		return _convertedDirections;
+	}
+
+	inline const IPosition& _getDirectionAxes() const {
+		return _directionAxes;
+	}
+
+	inline const CoordinateSystem& _getCsys() const {
+		return _csys;
+	}
 
 private:
+	Type _type;
+	MDirection::Types _directionRefFrame;
+	CoordinateSystem _csys;
+	IPosition _directionAxes;
+	String _label, _color, _font, _fontsize, _fontstyle;
+	LineStyle _linestyle;
+	uInt _linewidth, _symbolsize, _symbolthickness;
+	Bool _usetex;
+	Vector<MDirection> _convertedDirections;
+	map<Keyword, Bool> _globals;
+	map<Keyword, String> _params;
+	Bool _printGlobals;
+
 	static Bool _doneUnitInit;
 	static map<String, LineStyle> _lineStyleMap;
 	static map<String, Type> _typeMap;

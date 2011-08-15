@@ -45,7 +45,7 @@ AnnVector::AnnVector(
 }
 
 Vector<MDirection> AnnVector::getEndPoints() const {
-	return _convertedDirections;
+	return _getConvertedDirections();
 }
 
 ostream& AnnVector::print(ostream &os) const {

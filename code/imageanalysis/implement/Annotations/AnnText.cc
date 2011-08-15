@@ -42,7 +42,7 @@ AnnText::AnnText(
 }
 
 MDirection AnnText::getDirection() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 String AnnText::getText() const {
