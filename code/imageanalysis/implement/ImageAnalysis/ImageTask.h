@@ -63,8 +63,6 @@ public:
 
 protected:
 
-    std::auto_ptr<LogIO> _log;
-
 	// if <src>outname</src> is empty, no image will be written
  	// if <src>overwrite</src> is True, if image already exists it will be removed
   	// if <src>overwrite</src> is False, if image already exists exception will be thrown
@@ -100,8 +98,13 @@ protected:
 
     String _summaryHeader() const;
 
+    inline const std::auto_ptr<LogIO>& _getLog() const {
+    	return _log;
+    }
+
 private:
     const ImageInterface<Float> *const _image;
+    std::auto_ptr<LogIO> _log;
 
     const Record *const _regionPtr;
     Record _regionRecord;
