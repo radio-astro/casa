@@ -46,7 +46,7 @@ ImageTask::ImageTask(
 	const String& box, const String& chanInp,
 	const String& stokes, const String& maskInp,
     const String& outname, const Bool overwrite
-) : _log(new LogIO()), _image(image), _regionPtr(regionPtr),
+) : _image(image), _log(new LogIO()), _regionPtr(regionPtr),
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite) {

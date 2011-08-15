@@ -73,12 +73,12 @@ ImageCollapser::ImageCollapser(
 	),
 	_invertAxesSelection(invertAxesSelection),
 	_axes(axes), _aggType(aggregateType) {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	if (_aggType == UNKNOWN) {
-		*_log << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
+		*_getLog() << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
 	}
 	if (! image) {
-		*_log << "Cannot use a null image pointer with this constructor"
+		*_getLog() << "Cannot use a null image pointer with this constructor"
 			<< LogIO::EXCEPTION;
 	}
 	_construct();
@@ -88,10 +88,10 @@ ImageCollapser::ImageCollapser(
 ImageCollapser::~ImageCollapser() {}
 
 ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*clone, *_getRegion(), _getMask(), _log.get(), False
+		*clone, *_getRegion(), _getMask(), _getLog().get(), False
 	);
 	clone.reset(0);
 	IPosition inShape = subImage.shape();
@@ -104,7 +104,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		! outCoords.toWorld(blc, pixblc)
 		|| ! outCoords.toWorld(trc, pixtrc)
 	) {
-		*_log << "Could not set new coordinate values" << LogIO::EXCEPTION;
+		*_getLog() << "Could not set new coordinate values" << LogIO::EXCEPTION;
 	}
 	Vector<Double> refValues = outCoords.referenceValue();
 	Vector<Double> refPixels = outCoords.referencePixel();
@@ -123,10 +123,10 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	}
 
 	if (! outCoords.setReferenceValue(refValues)) {
-		*_log << "Unable to set reference value" << LogIO::EXCEPTION;
+		*_getLog() << "Unable to set reference value" << LogIO::EXCEPTION;
 	}
 	if (! outCoords.setReferencePixel(refPixels)) {
-		*_log << "Unable to set reference pixel" << LogIO::EXCEPTION;
+		*_getLog() << "Unable to set reference pixel" << LogIO::EXCEPTION;
 	}
 
 	std::auto_ptr<ImageInterface<Float> > outImage(0);
@@ -174,7 +174,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		case ZERO:
 		case UNKNOWN:
 		default:
-			*_log << "Logic error. Should never have gotten the the bottom of the switch statement"
+			*_getLog() << "Logic error. Should never have gotten the the bottom of the switch statement"
 			<< LogIO::EXCEPTION;
 		}
 		Array<Float> data;
@@ -301,7 +301,7 @@ void ImageCollapser::_finishConstruction() {
 			iter != _axes.end(); iter++
 		) {
 		if (*iter >= _getImage()->ndim()) {
-			*_log << "Specified zero-based axis (" << *iter
+			*_getLog() << "Specified zero-based axis (" << *iter
 				<< ") must be less than the number of axes in " << _getImage()->name()
 				<< "(" << _getImage()->ndim() << LogIO::EXCEPTION;
 		}

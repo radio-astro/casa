@@ -73,8 +73,8 @@ ImageProfileFitter::ImageProfileFitter(
     	ProfileFitterEstimatesFileParser parser(estimatesFilename);
     	_estimates = parser.getEstimates();
     	_ngauss = _estimates.nelements();
-    	*_log << LogOrigin(_class, __FUNCTION__);
-    	*_log << LogIO::NORMAL << "Number of gaussians to fit found to be "
+    	*_getLog() << LogOrigin(_class, __FUNCTION__);
+    	*_getLog() << LogIO::NORMAL << "Number of gaussians to fit found to be "
     		<< _ngauss << " in estimates file " << estimatesFilename
     		<< LogIO::POST;
     }
@@ -86,7 +86,7 @@ ImageProfileFitter::~ImageProfileFitter() {}
 
 Record ImageProfileFitter::fit() {
     LogOrigin logOrigin(_class, __FUNCTION__);
-    *_log << logOrigin;
+    *_getLog() << logOrigin;
     {
     	std::auto_ptr<ImageInterface<Float> > clone(
     		_getImage()->cloneII()
@@ -105,11 +105,11 @@ Record ImageProfileFitter::fit() {
 		if (_multiFit) {
 			// FIXME need to be able to specify the weights image
 			_fitters = _fitallprofiles(weightsImageName);
-		    *_log << logOrigin;
+		    *_getLog() << logOrigin;
 		}
 		else {
 			ImageFit1D<Float> fitter = _fitProfile();
-		    *_log << logOrigin;
+		    *_getLog() << logOrigin;
 			IPosition axes(1, _fitAxis);
 			ImageCollapser collapser(
 				&_subImage, axes, True,
@@ -119,7 +119,7 @@ Record ImageProfileFitter::fit() {
 				collapser.collapse(True)
 			);
 			_subImage = SubImage<Float>::createSubImage(
-				*x, Record(), "", _log.get(),
+				*x, Record(), "", _getLog().get(),
 				False, AxesSpecifier(), False
 			);
 			_fitters.resize(IPosition(1,1));
@@ -127,11 +127,11 @@ Record ImageProfileFitter::fit() {
 		}
 	}
 	catch (AipsError exc) {
-		*_log << "Exception during fit: " << exc.getMesg()
+		*_getLog() << "Exception during fit: " << exc.getMesg()
 			<< LogIO::EXCEPTION;
 	}
 	_setResults();
-	*_log << LogIO::NORMAL << _resultsToString() << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << _resultsToString() << LogIO::POST;
 	return _results;
 }
 
@@ -165,7 +165,7 @@ void ImageProfileFitter::_getOutputStruct(
 void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 	LogOrigin logOrigin(_class, __FUNCTION__);
 	if (_ngauss == 0 && _polyOrder < 0) {
-		*_log << "Number of gaussians is 0 and polynomial order is less than zero. "
+		*_getLog() << "Number of gaussians is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
 			<< LogIO::EXCEPTION;
 	}
@@ -173,19 +173,19 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 
 void ImageProfileFitter::_finishConstruction() {
     if (_fitAxis >= (Int)_getImage()->ndim()) {
-    	*_log << "Specified fit axis " << _fitAxis
+    	*_getLog() << "Specified fit axis " << _fitAxis
     		<< " must be less than the number of image axes ("
     		<< _getImage()->ndim() << ")" << LogIO::EXCEPTION;
     }
     if (_fitAxis < 0) {
 		if (! _getImage()->coordinates().hasSpectralAxis()) {
 			_fitAxis = 0;
-			*_log << LogIO::WARN << "No spectral coordinate found in image, "
+			*_getLog() << LogIO::WARN << "No spectral coordinate found in image, "
                 << "using axis 0 as fit axis" << LogIO::POST;
 		}
 		else {
             _fitAxis = _getImage()->coordinates().spectralAxisNumber();
-			*_log << LogIO::NORMAL << "Using spectral axis (axis " << _fitAxis
+			*_getLog() << LogIO::NORMAL << "Using spectral axis (axis " << _fitAxis
 				<< ") as fit axis" << LogIO::POST;
 		}
 	}
@@ -265,7 +265,7 @@ void ImageProfileFitter::_setResults() {
 			|| ! _ampName.empty() || ! _ampErrName.empty()
 		)
 	) {
-		*_log << LogIO::WARN << "This was not a multi-pixel fit request so solution "
+		*_getLog() << LogIO::WARN << "This was not a multi-pixel fit request so solution "
 			<< "images will not be written" << LogIO::POST;
 	}
 	if (
@@ -275,7 +275,7 @@ void ImageProfileFitter::_setResults() {
 			|| ! _ampName.empty() || ! _ampErrName.empty()
 		)
 	) {
-		*_log << LogIO::WARN << "No solutions converged, solution images will not be written"
+		*_getLog() << LogIO::WARN << "No solutions converged, solution images will not be written"
 			<< LogIO::POST;
 	}
 	// because resize with copyValues=True doesn't give the expected result
@@ -364,12 +364,12 @@ String ImageProfileFitter::_resultsToString() const {
 	CoordinateSystem csys = _getImage()->coordinates();
 	Vector<Double> worldStart;
 	if (! csysSub.toWorld(worldStart, inIter.position())) {
-		*_log << csysSub.errorMessage() << LogIO::EXCEPTION;
+		*_getLog() << csysSub.errorMessage() << LogIO::EXCEPTION;
 	}
 	CoordinateSystem csysIm = _getImage()->coordinates();
 	Vector<Double> pixStart;
 	if (! csysIm.toPixel(pixStart, worldStart)) {
-		*_log << csysIm.errorMessage() << LogIO::EXCEPTION;
+		*_getLog() << csysIm.errorMessage() << LogIO::EXCEPTION;
 	}
 	if (_multiFit) {
 		for (uInt i=0; i<pixStart.size(); i++) {
@@ -427,7 +427,7 @@ String ImageProfileFitter::_resultsToString() const {
 			}
 		}
 		else {
-			*_log << csysSub.errorMessage() << LogIO::EXCEPTION;
+			*_getLog() << csysSub.errorMessage() << LogIO::EXCEPTION;
 		}
 		for (uInt i=0; i<pixStart.size(); i++) {
 			imPix[i] = pixStart[i] + subimPos[i];
@@ -729,18 +729,18 @@ void ImageProfileFitter::_makeSolutionImage(
 ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	const Bool fitIt, const String weightsImageName
 ) {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	PtrHolder<ImageInterface<Float> > weightsImagePtrHolder;
 	ImageInterface<Float> *pWeights = 0;
 	if (! weightsImageName.empty()) {
 		PagedImage<Float> weightsImage(weightsImageName);
 		if (! weightsImage.shape().conform(_getImage()->shape())) {
-			*_log << "image and sigma images must have same shape"
+			*_getLog() << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
 		std::auto_ptr<ImageRegion> pR(
 			ImageRegion::fromRecord(
-				_log.get(), weightsImage.coordinates(),
+				_getLog().get(), weightsImage.coordinates(),
 				weightsImage.shape(), *_getRegion()
 			)
 		);
@@ -774,7 +774,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	_subImage.setCoordinateInfo(cSys);
 
 	if (!ok) {
-		*_log << LogIO::WARN << errMsg << LogIO::POST;
+		*_getLog() << LogIO::WARN << errMsg << LogIO::POST;
 	}
 
 	ImageFit1D<Float> fitter;
@@ -791,7 +791,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	LCSlicer lslice(sl);
 	ImageRegion region(lslice);
 	if (! fitter.setData(region, abcissaType, xAbs)) {
-		*_log << fitter.errorMessage() << LogIO::EXCEPTION;
+		*_getLog() << fitter.errorMessage() << LogIO::EXCEPTION;
 	}
 
 	// Now we do one of three things:
@@ -807,7 +807,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 		} else {
 			// Set auto estimate
 			if (! fitter.setGaussianElements(_ngauss)) {
-				*_log << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
+				*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 			}
 		}
 		if (_polyOrder >= 0) {
@@ -816,7 +816,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 			fitter.addElement(polyEl);
 		}
 		if (! fitter.fit()) {
-			*_log << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
+			*_getLog() << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
 		}
 		if (! _model.empty()) {
 			model = fitter.getFit();
@@ -859,7 +859,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 				residual = fitter.getResidual(-1, False);
 			}
 			else {
-				*_log << LogIO::SEVERE << fitter.errorMessage()
+				*_getLog() << LogIO::SEVERE << fitter.errorMessage()
 					<< LogIO::POST;
 			}
 		}
@@ -870,19 +870,19 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	const String& weightsImageName
 ) {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	IPosition imageShape = _subImage.shape();
 	PtrHolder<ImageInterface<Float> > weightsImage;
 	std::auto_ptr<TempImage<Float> > pWeights(0);
 	if (! weightsImageName.empty()) {
 		PagedImage<Float> sigmaImage(weightsImageName);
 		if (!sigmaImage.shape().conform(_getImage()->shape())) {
-			*_log << "image and sigma images must have same shape"
+			*_getLog() << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
 		std::auto_ptr<ImageRegion> pR(
 			ImageRegion::fromRecord(
-				_log.get(), sigmaImage.coordinates(),
+				_getLog().get(), sigmaImage.coordinates(),
 				sigmaImage.shape(), *_getRegion()
 			)
 		);
@@ -907,7 +907,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	if (
 		ImageAnalysis::makeExternalImage(
 		fitImage, _model, cSys, imageShape, _subImage,
-		*_log, True, False, True
+		*_getLog(), True, False, True
 		)
 	) {
 		pFit = fitImage.ptr();
@@ -915,7 +915,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	if (
 		ImageAnalysis::makeExternalImage(
 			residImage, _residual, cSys, imageShape,
-			_subImage, *_log, True, False, True
+			_subImage, *_getLog(), True, False, True
 		)
 	) {
 		pResid = residImage.ptr();
@@ -938,7 +938,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 }
 
 void ImageProfileFitter::_convertEstimates() {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	if (_estimates.nelements() == 0) {
 		return;
 	}
@@ -948,7 +948,7 @@ void ImageProfileFitter::_convertEstimates() {
 		if (Quantity(1, _xUnit).isConform("km/s")) {
 			SpectralCoordinate specCoord = _subImage.coordinates().spectralCoordinate();
 			if (! specCoord.pixelToVelocity(center, _estimates[i].getCenter())) {
-				*_log << "Unable to convert center estimate to velocity"
+				*_getLog() << "Unable to convert center estimate to velocity"
 					<< LogIO::EXCEPTION;
 			}
 			fwhm = abs(
@@ -965,7 +965,7 @@ void ImageProfileFitter::_convertEstimates() {
 					world, Vector<Double>(1, _estimates[i].getCenter())
 				)
 			) {
-				*_log << "Unable to convert center estimate to world coordinate value"
+				*_getLog() << "Unable to convert center estimate to world coordinate value"
 					<< LogIO::EXCEPTION;
 			}
 			center = world[0];
@@ -1227,12 +1227,12 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		}
 		if (showProgress) pProgressMeter->update(Double(nProfiles));
 	}
-	*_log << LogOrigin("ImageUtilties2.tcc", __FUNCTION__);
-	*_log << LogIO::NORMAL << "Number of profiles       = " << nProfiles << LogIO::POST;
-	*_log << LogIO::NORMAL << "Number of fits attempted = " << nFit << LogIO::POST;
-	*_log << LogIO::NORMAL << "Number converged         = " << nFit - nConv - nFail << LogIO::POST;
-	*_log << LogIO::NORMAL << "Number not converged     = " << nConv << LogIO::POST;
-	*_log << LogIO::NORMAL << "Number failed            = " << nFail << LogIO::POST;
+	*_getLog() << LogOrigin("ImageUtilties2.tcc", __FUNCTION__);
+	*_getLog() << LogIO::NORMAL << "Number of profiles       = " << nProfiles << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number of fits attempted = " << nFit << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number converged         = " << nFit - nConv - nFail << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number not converged     = " << nConv << LogIO::POST;
+	*_getLog() << LogIO::NORMAL << "Number failed            = " << nFail << LogIO::POST;
 	return fitters;
 }
 

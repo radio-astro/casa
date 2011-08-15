@@ -82,7 +82,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 ) : ImageTask(
 		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
 	), _cutoff(cutoff), _mode(mode), _useCutoff(useCutoff) {
-	*_log << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	IPosition imShape = _getImage()->shape();
 	if (pbArray.shape().isEqual(imShape)) {
 		_pbImage.reset(new TempImage<Float>(imShape, _getImage()->coordinates()));
@@ -94,7 +94,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 				pbArray.shape()[0] != imShape[dirAxes[0]]
 				|| pbArray.shape()[1] != imShape[dirAxes[1]]
 			) {
-				*_log << "Array shape does not equal image direction plane shape" << LogIO::EXCEPTION;
+				*_getLog() << "Array shape does not equal image direction plane shape" << LogIO::EXCEPTION;
 			}
 			IPosition boxShape(imShape.size(), 1);
 			boxShape[dirAxes[0]] = imShape[dirAxes[0]];
@@ -103,17 +103,17 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 			std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 			SubImage<Float> sub = SubImage<Float>::createSubImage(
 				*clone, x.toRecord(""), "",
-				_log.get(), True, AxesSpecifier(False)
+				_getLog().get(), True, AxesSpecifier(False)
 			);
 			_pbImage.reset(new TempImage<Float>(sub.shape(), sub.coordinates()));
 		}
 		else {
-			*_log << "Image " << _getImage()->name()
+			*_getLog() << "Image " << _getImage()->name()
 				<< " does not have direction coordinate" << LogIO::EXCEPTION;
 		}
 	}
 	else {
-		*_log << "Primary beam array is of wrong shape" << LogIO::EXCEPTION;
+		*_getLog() << "Primary beam array is of wrong shape" << LogIO::EXCEPTION;
 	}
 	_pbImage->put(pbArray);
 	_construct();
@@ -126,10 +126,10 @@ String ImagePrimaryBeamCorrector::getClass() const {
 }
 
 void ImagePrimaryBeamCorrector::_checkPBSanity() {
-	*_log << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	if (_getImage()->shape().isEqual(_pbImage->shape())) {
 		if (! _getImage()->coordinates().near(_pbImage->coordinates())) {
-			*_log << "Coordinate systems of image and template are different"
+			*_getLog() << "Coordinate systems of image and template are different"
 				<< LogIO::EXCEPTION;
 		}
 		else {
@@ -155,13 +155,13 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 				pbCopy->coordinates().directionCoordinate()
 			)
 		) {
-			*_log << "Direction coordinates of input image and primary beam "
+			*_getLog() << "Direction coordinates of input image and primary beam "
 				<< "image are different. Cannot do primary beam correction."
 				<< LogIO::EXCEPTION;
 		}
 	}
 	else {
-		*_log << "Input image and primary beam image have different shapes. "
+		*_getLog() << "Input image and primary beam image have different shapes. "
 			<< "Cannot do primary beam correction."
 			<< LogIO::EXCEPTION;
 	}
@@ -170,13 +170,13 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 	Float myMin, myMax;
 	ls.getFullMinMax(myMin, myMax);
 	if (_mode == DIVIDE && myMax > 1.0 && ! near(myMax, 1.0)) {
-		*_log << LogIO::WARN
+		*_getLog() << LogIO::WARN
 			<< "Mode DIVIDE chosen but primary beam has one or more pixels "
 			<< "greater than 1.0. Proceeding but you may want to check your inputs"
 			<< LogIO::POST;
 	}
 	if (myMin < 0 && near(myMin, 0.0)) {
-		*_log << LogIO::WARN
+		*_getLog() << LogIO::WARN
 			<< "Primary beam has one or more pixels less than 0."
 			<< "Proceeding but you may want to check your inputs"
 			<< LogIO::POST;
@@ -194,7 +194,7 @@ CasacRegionManager::StokesControl ImagePrimaryBeamCorrector::_getStokesControl()
 ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
-	*_log << LogOrigin(_class, __FUNCTION__, WHERE);
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
     SubImage<Float> pbSubImage;
     std::auto_ptr<ImageInterface<Float> > tmpStore(0);
     ImageInterface<Float> *pbTemplate = _pbImage.get();
@@ -215,7 +215,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		}
 		subImage = SubImage<Float>(*_getImage(), LattRegionHolder(LCLELMask(mask)));
 		subImage = SubImage<Float>::createSubImage(
-		    subImage, *_getRegion(), _getMask(), _log.get(), False
+		    subImage, *_getRegion(), _getMask(), _getLog().get(), False
 		);
 	}
 	else {
@@ -229,11 +229,11 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 			)
 			: _getImage()->cloneII());
 		subImage = SubImage<Float>::createSubImage(
-		    *tmp, *_getRegion(), _getMask(), _log.get(), False
+		    *tmp, *_getRegion(), _getMask(), _getLog().get(), False
 		);
 	}
 	pbSubImage = SubImage<Float>::createSubImage(
-    	*pbTemplate, *_getRegion(), _getMask(), _log.get(), False
+    	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(), False
     );
 	tmpStore.reset(0);
 	std::auto_ptr<ImageInterface<Float> > outImage(0);
