@@ -2577,12 +2577,14 @@ class simutil:
                 axassigned[dirax[0]]=0
                 axassigned[dirax[1]]=0
                 if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
-
+            
             # move model_refdir to center of image
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
             ra = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[0]+1)]
             dec = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[1]+1)]
             model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+            model_projection=in_csys.projection()['type']
+            model_projpars=in_csys.projection()['parameters']
 
         else:
             axmap[0]=0 # direction in first two pixel axes
@@ -2599,11 +2601,14 @@ class simutil:
                 else:
                     direction=direction[0]
             if self.isdirection(direction,halt=False):
+                # NOTE: ra/dec here could be glon/glat if epoch="Galactic "
                 epoch, ra, dec = self.direction_splitter(direction)
 
                 #if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")            
-                model_refdir='J2000 '+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
+                model_refdir=epoch+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
                 model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
+                model_projection="SIN"
+                model_projpars=[0.,0]
         if model_refdir=="":
             self.msg("Model ref direction undefined.  Either set direction and modifymodel=T, or edit the image header",priority="error")
             return False        
@@ -2747,8 +2752,13 @@ class simutil:
                                 type="direction")
 
         dirm=self.dir_s2m(model_refdir)
-        raq=dirm['m0']        
-        deq=dirm['m1']        
+        raq=dirm['m0'] # NOTE: raq/deq could be glon/glat
+        deq=dirm['m1'] 
+        modelcsys.setreferencecode(dirm['refer'],type="direction")
+        if len(model_projpars)>0:
+            modelcsys.setprojection(parameters=model_projpars,type=model_projection)
+        else:
+            modelcsys.setprojection(type=model_projection)
         modelcsys.setreferencevalue(
             [qa.convert(raq,modelcsys.units()[0])['value'],
              qa.convert(deq,modelcsys.units()[1])['value']],

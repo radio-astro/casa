@@ -648,12 +648,10 @@ def simdata(
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 # time required to observe all planned scanes in etime array:
                 totalscansec = sum(etime)
-                nrot = int(totalsec/totalscansec)
                 kfld = 0
 
-                if nrot < nfld:
-                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="error")
-                    return
+                if totalsec < totalscansec:
+                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="warn")
         
                 # sm.observemany
                 observemany = True
