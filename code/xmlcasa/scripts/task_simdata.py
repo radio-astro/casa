@@ -909,6 +909,20 @@ def simdata(
             else:
                 multi = 0
 
+            # it is useful to calculate the max baseline, psfsize, and min image size
+            # even if we're not making a figure here, because later we can use it 
+            # to set a minimum size for the synthesized image, at int(8*psfsize)
+            tb.open(msfile)  
+            rawdata = tb.getcol("UVW")
+            tb.done()
+            maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+            klam_m = 300/qa.convert(model_center,'GHz')['value']
+            pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+            psfsize = 200.*klam_m/maxbase/pixsize
+            if psfsize < 32:
+                psfsize = 32
+
+
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
                 if predict_uv:
@@ -924,12 +938,7 @@ def simdata(
                     
                     # uv coverage
                     util.nextfig()
-                    tb.open(msfile)  
-                    rawdata = tb.getcol("UVW")
-                    tb.done()
                     pl.box()
-                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m = 300/qa.convert(model_center,'GHz')['value']
                     pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
                     pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
                     ax = pl.gca()
@@ -948,10 +957,6 @@ def simdata(
                     if not image:
                         msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     # defineim needs to be larger than synth beam
-                    pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    psfsize = 200.*klam_m/maxbase/pixsize
-                    if psfsize < 32:
-                        psfsize = 32
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(psfsize*8))
                     #im.makeimage(type='psf',image=project+".quick.psf")
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
@@ -1215,6 +1220,10 @@ def simdata(
         if imsize0 <= 0:
             imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                       int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+        # this is primarily for sim-from-components but useful elsewhere as a minimum
+        # image size:
+        if imsize[0]<8*psfsize: imsize[0]=int(8*psfsize)
+        if imsize[1]<8*psfsize: imsize[1]=int(8*psfsize)
 
             
 
@@ -1437,6 +1446,9 @@ def simdata(
                 file = ""
 
         # create fake model from components for analysis
+        if components_only:
+            modelflat = fileroot + "/" + project + ".compskymodel.flat"
+
         if components_only and (image or analyze):
             newmodel = fileroot + "/" + project + ".compskymodel"
             if not os.path.exists(imagename+".image"):
@@ -1450,8 +1462,6 @@ def simdata(
             cl.done()
             modelcsys = ia.coordsys()
             modelshape = ia.shape()
-
-            modelflat = fileroot + "/" + project + ".compskymodel.flat"
 
             # TODO should be able to simplify degen axes code using new
             # image anal tools.
