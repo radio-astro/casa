@@ -2264,6 +2264,17 @@ int main(int argc, char *argv[]) {
 
       string fieldName = r->getFieldName();
       string code = r->getCode();
+      DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
+      if(r->isDirectionCodeExists()){
+	dirRefCode = r->getDirectionCode();
+	//cout << "found directionCode for field " << fieldName << ": ";
+      }
+      //       else{
+      // 	cout << "No directionCode in input table. Assuming ";
+      //       }
+      string directionCode = CDirectionReferenceCode::name(dirRefCode);
+      //cout << directionCode << endl;
+
       vector<double> delayDir     = DConverter::toVectorD<Angle>(r->getDelayDir());
       vector<double> phaseDir     = DConverter::toVectorD<Angle>(r->getPhaseDir());
       vector<double> referenceDir = DConverter::toVectorD<Angle>(r->getReferenceDir());
@@ -2280,6 +2291,7 @@ int main(int argc, char *argv[]) {
 				delayDir,
 				phaseDir,
 				referenceDir,
+				directionCode,
 				r->isSourceIdExists()?r->getSourceId():0);
       }
     }

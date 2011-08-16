@@ -168,6 +168,29 @@ map<string, MDirection::Types> ASDM2MSFiller::string2MDirectionInit() {
   map<string, MDirection::Types> string2MDirection;
   string2MDirection.clear();
 
+  string2MDirection["J2000"]     = MDirection::J2000; 	  
+  string2MDirection["JMEAN"]     = MDirection::JMEAN; 	  
+  string2MDirection["JTRUE"]     = MDirection::JTRUE; 	  
+  string2MDirection["APP"]       = MDirection::APP; 	  
+  string2MDirection["B1950"]     = MDirection::B1950; 	  
+  string2MDirection["B1950_VLA"] = MDirection::B1950_VLA; 	
+  string2MDirection["BMEAN"]     = MDirection::BMEAN; 	  
+  string2MDirection["BTRUE"]     = MDirection::BTRUE; 	  
+  string2MDirection["GALACTIC"]  = MDirection::GALACTIC;  	
+  string2MDirection["HADEC"]     = MDirection::HADEC; 	  
+  string2MDirection["AZELSW"]    = MDirection::AZELSW; 	  
+  string2MDirection["AZELGEO"]   = MDirection::AZELGEO;   	
+  string2MDirection["AZELSWGEO"] = MDirection::AZELSWGEO; 	
+  string2MDirection["AZELNEGEO"] = MDirection::AZELNEGEO; 	  
+  string2MDirection["JNAT"]      = MDirection::JNAT; 	  
+  string2MDirection["ECLIPTIC"]  = MDirection::ECLIPTIC;  	
+  string2MDirection["MECLIPTIC"] = MDirection::MECLIPTIC; 	
+  string2MDirection["TECLIPTIC"] = MDirection::TECLIPTIC; 	
+  string2MDirection["SUPERGAL"]  = MDirection::SUPERGAL;  	
+  string2MDirection["ITRF"]      = MDirection::ITRF; 	  
+  string2MDirection["TOPO"]      = MDirection::TOPO; 	  
+  string2MDirection["ICRS"]      = MDirection::ICRS;      
+
   string2MDirection["MERCURY"] = MDirection::MERCURY; 
   string2MDirection["VENUS"]   = MDirection::VENUS;
   string2MDirection["MARS"]    = MDirection::MARS;
@@ -178,7 +201,6 @@ map<string, MDirection::Types> ASDM2MSFiller::string2MDirectionInit() {
   string2MDirection["PLUTO"]   = MDirection::PLUTO;
   string2MDirection["SUN"]     = MDirection::SUN;
   string2MDirection["MOON"]    = MDirection::MOON;
-  string2MDirection["COMET"]   = MDirection::COMET;
 
   return string2MDirection;
 }
@@ -1409,7 +1431,8 @@ void ASDM2MSFiller::addField(const string&      name_,
 			     vector<double>&	delay_dir_,
 			     vector<double>&	phase_dir_,
 			     vector<double>&	reference_dir_,
-			     int               source_id_) {
+			     const string&      direction_code_,
+			     int                source_id_) {
   uInt						crow;
   // cout << "\naddField : entering";
   Vector<MDirection>                           delayDir(1);
@@ -1427,7 +1450,13 @@ void ASDM2MSFiller::addField(const string&      name_,
   msfieldCol.time().put(crow, time_);
   msfieldCol.numPoly().put(crow, 0);
 
-  String s(name_); s.trim(); s.upcase();
+  String s(direction_code_);
+  if(s==""){
+    //cout << "directionCode doesn't exist or is empty. Will try to determine it based on name." << endl;
+    s=name_;
+  }
+
+  s.trim(); s.upcase();
   map<string, MDirection::Types>::const_iterator iter = string2MDirection.find(s);
 
   MDirection   delayDirMD;
@@ -1435,11 +1464,13 @@ void ASDM2MSFiller::addField(const string&      name_,
   MDirection   phaseDirMD;
   
   if (iter == string2MDirection.end()) {
+    //cout << "Could not determine directionCode. Assuming J2000 ..." << endl;
     delayDirMD    = MDirection(Quantity(delay_dir_[0], "rad"), Quantity(delay_dir_[1], "rad"), MDirection::J2000);
     referenceDirMD = MDirection(Quantity(reference_dir_[0], "rad"), Quantity(reference_dir_[1], "rad"), MDirection::J2000);
     phaseDirMD    = MDirection(Quantity(phase_dir_[0], "rad"), Quantity(phase_dir_[1], "rad"), MDirection::J2000);
   }
   else {
+    //cout << "directionCode is " << s << endl;
     delayDirMD    = MDirection(Quantity(delay_dir_[0], "rad"), Quantity(delay_dir_[1], "rad"), iter->second);
     referenceDirMD = MDirection(Quantity(reference_dir_[0], "rad"), Quantity(reference_dir_[1], "rad"),  iter->second);
     phaseDirMD    = MDirection(Quantity(phase_dir_[0], "rad"), Quantity(phase_dir_[1], "rad"), iter->second);

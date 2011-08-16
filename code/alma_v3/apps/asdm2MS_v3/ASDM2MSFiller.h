@@ -296,6 +296,7 @@ class ASDM2MSFiller
 		 vector<double>&   delay_dir_,
 		 vector<double>&   phase_dir_,
 		 vector<double>&   reference_dir_,
+		 const string&     direction_code_,
 		 int               source_id_);
 
   void addFlagCmd(double	time_,

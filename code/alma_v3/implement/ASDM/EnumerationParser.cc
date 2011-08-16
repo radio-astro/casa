@@ -694,7 +694,7 @@ DirectionReferenceCodeMod::DirectionReferenceCode EnumerationParser::getDirectio
 	catch (...) {
 			throw ConversionException("Error: could not convert '"+s+"' into a DirectionReferenceCode.", tableName);
 	}
-	return CDirectionReferenceCode::newDirectionReferenceCode(s);
+	return result;
 }
 
 vector<DirectionReferenceCodeMod::DirectionReferenceCode> EnumerationParser::getDirectionReferenceCode1D(const string &name, const string &tableName, const string &xmlDoc) {
