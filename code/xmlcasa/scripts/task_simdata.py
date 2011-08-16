@@ -303,6 +303,19 @@ def simdata(
             predict_uv = True
             pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
+            # approx max baseline, to compare with model_cell:
+            cx=pl.mean(stnx)
+            cy=pl.mean(stny)
+            cz=pl.mean(stnz)
+            lat,lon = util.irtf2loc(stnx,stny,stnz,cx,cy,cz)
+            rg=max(lat)-min(lat)
+            rg2=max(lon)-min(lon)
+            if rg2>rg:
+                rg=rg2
+            minscale = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/rg*3600.*180/pl.pi # arcsec
+            if minscale<qa.convert(model_cell[0],'arcsec')['value']:
+                msg("Sky Model cell is very large compared to expected synthesized beam - this may lead to blank or erroneous output",priority="warn")
+
 
         # Search order is fileroot/ -> specified path -> repository
         if len(sdantlist) > 0:

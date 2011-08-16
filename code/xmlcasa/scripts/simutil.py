@@ -1953,11 +1953,11 @@ class simutil:
         # TODO convert to klam: (d too)
         ###
                 
-        ra=max(lat)-min(lat)
+        rg=max(lat)-min(lat)
         r2=max(lon)-min(lon)
-        if r2>range:
-            ra=r2
-        if max(d)>0.01*ra:
+        if r2>rg:
+            rg=r2
+        if max(d)>0.01*rg:
             pl.plot(lat,lon,',')            
             #print max(d),ra
             for i in range(n):
