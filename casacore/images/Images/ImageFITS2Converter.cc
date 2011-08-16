@@ -1165,28 +1165,44 @@ Unit ImageFITSConverter::getBrightnessUnit (RecordInterface& header, LogIO& os)
 	     // Translate units from FITS units to true aips++ units
 	     // There is no scale factor in this translation.
              u = UnitMap::fromFITS(Unit(unitString));
-         } else { // unit check failed, try to recover by removing bracketed comments like in "K (Tb)"
-	     String::size_type bracketPos;
-	     String truncUnitString;
+         } 
+	 else { // unit check failed
 	     Bool uFixed = False;
+	     // try to recover by removing bracketed comments like in "K (Tb)"
+	     String::size_type bracketPos;
+	     String truncUnitString(unitString);
 	     if((bracketPos = unitString.find("("))!=String::npos 
 		|| (bracketPos = unitString.find("["))!=String::npos){
 		 // remove everything beginning at bracketPos from the string
 		 truncUnitString = unitString.substr(0, bracketPos);
+		 os << LogIO::WARN << "FITS unit \"" << unitString << "\" unknown to CASA, was truncated to \""
+		    << truncUnitString << "\"."
+		    << LogIO::POST;
 		 if (UnitVal::check(truncUnitString)) {
-		     os << LogIO::WARN << "FITS unit \"" << unitString << "\" unknown to CASA, was truncated to \""
-			<< truncUnitString << "\"."
-			<< LogIO::POST;
 		     u = UnitMap::fromFITS(Unit(truncUnitString));
 		     uFixed = True;
 		 }
 	     }
-	     if(!uFixed){ // recovery  attempt failed as well 
+	     if(!uFixed){ // try adding the most common problematic units occuring in BUNIT
+		 UnitMap::putUser("Pixel",UnitVal(1.0),"Pixel unit");
+		 UnitMap::putUser("Beam",UnitVal(1.0),"Beam area");
+		 if (UnitVal::check(truncUnitString)) {
+		     uFixed = True;
+		     u = UnitMap::fromFITS(Unit(truncUnitString));
+		     os << LogIO::NORMAL << "FITS unit \"" << truncUnitString << "\" does not conform to the FITS standard."
+			<< endl << "Correct units are always lower case except when derived from a name." 
+			<< endl << "Please use \"beam\" instead of \"Beam\", \"pixel\" instead of \"Pixel\"." 
+			<< LogIO::POST;
+		 }
+	     }
+
+	     if(!uFixed){ // recovery attempt failed as well
 		 UnitMap::putUser("\""+unitString+"\"",
                                   UnitVal(1.0, UnitDim::Dnon),
                                   "\""+unitString+"\"");
 		 os << LogIO::WARN << "FITS unit \"" << unitString
-                    << "\" unknown to CASA - will treat it as non-dimensional."
+                    << "\" unknown to CASA - will treat it as non-dimensional." << endl
+		    << " See http://fits.gsfc.nasa.gov/fits_standard.html for a list of valid units."
 		    << LogIO::POST;
 		 u.setName("\""+unitString+"\"");
 		 u.setValue(UnitVal(1.0, UnitDim::Dnon));
