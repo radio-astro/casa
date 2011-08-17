@@ -85,7 +85,11 @@ try {
    Path p(in_fits);
 
    if (in_ext.empty()) {
-   	in_ext = "qualityimage.fits[IFU1.SCI,IFU1.ERR,IFU1.DQ]";
+   	// for the entire format including ask images use this:
+   	//in_ext = "qualityimage.fits[IFU1.SCI,IFU1.ERR,IFU1.DQ]";
+
+   	// for data and error extension only use this:
+   	in_ext = "qualityimage.fits[IFU1.SCI,IFU1.ERR]";
    }
    Path pII(FITSImage::get_fitsname(in_ext));
 

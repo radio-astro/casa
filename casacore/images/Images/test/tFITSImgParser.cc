@@ -130,24 +130,33 @@ int main (int argc, const char* argv[])
 		   // check whether there exists a quality image
 		   AlwaysAssert(fitsImg2.has_qualityimg(), AipsError);
 
+		   // including mask image use this:
+		   //AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.SCI,IFU1.ERR,IFU1.DQ]"), AipsError)
+
 		   // this should be a quality image
-		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.SCI,IFU1.ERR,IFU1.DQ]"), AipsError)
+		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.SCI,IFU1.ERR]"), AipsError)
 
 		   // using not all extensions should not matter
 		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.SCI,IFU1.ERR]"), AipsError)
 
-		   // check the next quality image
-		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU2.SCI,IFU2.ERR,IFU2.DQ]"), AipsError)
+		   // including mask image use this:
+		   //AlwaysAssert(fitsImg2.is_qualityimg("[IFU2.SCI,IFU2.ERR,IFU2.DQ]"), AipsError)
 
+		   // check the next quality image
+		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU2.SCI,IFU2.ERR]"), AipsError)
+
+		   // including mask image test this:
 		   // neglect braces, add whitespaces
-		   AlwaysAssert(fitsImg2.is_qualityimg(" IFU3.SCI, IFU3.DQ "), AipsError)
+		   // AlwaysAssert(fitsImg2.is_qualityimg(" IFU3.SCI, IFU3.DQ "), AipsError)
 
 		   // the extension order does not matter
-		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU3.DQ, IFU3.SCI]"), AipsError)
+		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.ERR, IFU1.SCI]"), AipsError)
 
 		   // make sure the two string representations are NOT equal
 		   AlwaysAssert(fitsImg2.get_extlist_string(String("<A>"), False) != fitsImg2.get_extlist_string(String("<A>"), True), AipsError);
 
+		   /*
+		   // this is the full call including a mask image
 		   // retrieve all information on an extension expression
 		   Int data_HDU, error_HDU, mask_HDU, mask_value;
 		   String error_type, mask_type;
@@ -160,10 +169,24 @@ int main (int argc, const char* argv[])
 		   AlwaysAssert(mask_HDU==8, AipsError);
 		   AlwaysAssert(mask_type=="MASKONE", AipsError);
 		   AlwaysAssert(mask_value==0, AipsError);
+			*/
 
 		   // retrieve all information on an extension expression
-		   fitsImg2.get_quality_data("[IFU1.SCI,IFU1.ERR,IFU1.DQ]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
+		   Int data_HDU, error_HDU, mask_HDU, mask_value;
+		   String error_type, mask_type;
+		   fitsImg2.get_quality_data("[IFU2.SCI, IFU2.ERR]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
 
+		   // check all return values
+		   AlwaysAssert(data_HDU==4, AipsError);
+		   AlwaysAssert(error_HDU==5, AipsError);
+		   AlwaysAssert(error_type=="RMSE", AipsError);
+		   AlwaysAssert(mask_HDU==-1, AipsError);
+		   AlwaysAssert(mask_type=="", AipsError);
+		   AlwaysAssert(mask_value==0, AipsError);
+
+		   /*
+		   // this is the full call including a mask image
+		   fitsImg2.get_quality_data("[IFU1.SCI,IFU1.ERR,IFU1.DQ]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
 		   // check all return values
 		   AlwaysAssert(data_HDU==1, AipsError);
 		   AlwaysAssert(error_HDU==2, AipsError);
@@ -171,6 +194,18 @@ int main (int argc, const char* argv[])
 		   AlwaysAssert(mask_HDU==3, AipsError);
 		   AlwaysAssert(mask_type=="FLAG16BIT", AipsError);
 		   AlwaysAssert(mask_value==16383, AipsError);
+			*/
+
+		   // retrieve all information on an extension expression
+		   fitsImg2.get_quality_data("[IFU1.SCI,IFU1.ERR]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
+
+		   // check all return values
+		   AlwaysAssert(data_HDU==1, AipsError);
+		   AlwaysAssert(error_HDU==2, AipsError);
+		   AlwaysAssert(error_type=="MSE", AipsError);
+		   AlwaysAssert(mask_HDU==-1, AipsError);
+		   AlwaysAssert(mask_type=="", AipsError);
+		   AlwaysAssert(mask_value==0, AipsError);
 
 		   // retrieve all information on an extension expression
 		   fitsImg2.get_quality_data("[SCIEXT]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
@@ -190,6 +225,7 @@ int main (int argc, const char* argv[])
 		   // test the number of extensions
 		   AlwaysAssert(fitsImg3.get_numhdu()==fitsImg2.get_numhdu(), AipsError);
 
+		   /* this would be the full call, including mask images
 		   // retrieve all information on an extension expression
 		   fitsImg3.get_quality_data("[IFU1.SCI,IFU1.ERR,IFU1.DQ]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
 
@@ -200,6 +236,18 @@ int main (int argc, const char* argv[])
 		   AlwaysAssert(mask_HDU==3, AipsError);
 		   AlwaysAssert(mask_type=="FLAG16BIT", AipsError);
 		   AlwaysAssert(mask_value==16383, AipsError);
+			*/
+
+		   // retrieve all information on an extension expression
+		   fitsImg3.get_quality_data("[IFU1.SCI,IFU1.ERR,IFU1.DQ]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
+
+		   // check all return values
+		   AlwaysAssert(data_HDU==1, AipsError);
+		   AlwaysAssert(error_HDU==2, AipsError);
+		   AlwaysAssert(error_type=="MSE", AipsError);
+		   AlwaysAssert(mask_HDU==-1, AipsError);
+		   AlwaysAssert(mask_type=="", AipsError);
+		   AlwaysAssert(mask_value==0, AipsError);
 
 		   // test the assignment
 		   FITSImgParser fitsImg4=fitsImg2;
@@ -207,6 +255,7 @@ int main (int argc, const char* argv[])
 		   // test the number of extensions
 		   AlwaysAssert(fitsImg4.get_numhdu()==fitsImg2.get_numhdu(), AipsError);
 
+		   /* this would be the full call, including mask images
 		   // retrieve all information on an extension expression
 		   fitsImg4.get_quality_data("[IFU1.SCI,IFU1.ERR,IFU1.DQ]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
 
@@ -217,6 +266,18 @@ int main (int argc, const char* argv[])
 		   AlwaysAssert(mask_HDU==3, AipsError);
 		   AlwaysAssert(mask_type=="FLAG16BIT", AipsError);
 		   AlwaysAssert(mask_value==16383, AipsError);
+			*/
+
+		   // retrieve all information on an extension expression
+		   fitsImg4.get_quality_data("[IFU1.SCI,IFU1.ERR,IFU1.DQ]", data_HDU, error_HDU, error_type, mask_HDU, mask_type, mask_value);
+
+		   // check all return values
+		   AlwaysAssert(data_HDU==1, AipsError);
+		   AlwaysAssert(error_HDU==2, AipsError);
+		   AlwaysAssert(error_type=="MSE", AipsError);
+		   AlwaysAssert(mask_HDU==-1, AipsError);
+		   AlwaysAssert(mask_type=="", AipsError);
+		   AlwaysAssert(mask_value==0, AipsError);
 
 	   }
 	   else {
