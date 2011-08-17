@@ -251,9 +251,8 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
       double tint = vi.msColumns().exposure()(0);  
       int iSpW = vi.spectralWindow();
       double deltaNu = 
-	vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
+	abs(vi.msColumns().spectralWindow().totalBandwidth()(iSpW)) / 
 	Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-
 
       // 20100824 getAngle() is very slow: cache airmass
       if (!airMassValid_) {
@@ -273,10 +272,11 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	airMassValid_=True;
 	airMassTime_=curr_time();
 
-	//cout<<"t="<<curr_time()<<" A[0]="<<airMass_(0)<<" A(1)="<<airMass_(1)<<" A(15)="<<airMass_(15)<<" "<<airMass_.nelements()<<endl;
 	if (prtlev()>3) cout <<"done"<<endl;
       }
 	
+      //cout << "Delta nu = " << deltaNu << "; amp=" << amp() << "; tint=" << tint << endl;
+
 
       if (type==VisCal::M) {
 	factor = amp() / sqrt( deltaNu * tint ) ;	
