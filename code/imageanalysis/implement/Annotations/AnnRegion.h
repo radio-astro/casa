@@ -104,6 +104,15 @@ protected:
 		const Bool annotationOnly
 	);
 
+	// implicitly defined copy constructor is fine
+	// AnnRegion(AnnRegion& other);
+
+	// copy constructor
+	AnnRegion(const AnnRegion& other);
+
+	// assignment operator
+	AnnRegion& operator= (const AnnRegion& rhs);
+
 	// extend the region over spectral and/or polarization
 	// coordinates
 	void _extend(const ImageRegion& region);
@@ -124,7 +133,7 @@ private:
 	ImageRegion _imageRegion;
 	Quantity _beginFreq, _endFreq, _restFreq;
 	Vector<Stokes::StokesTypes> _stokes;
-	WCRegion *_wcRegion;
+	// WCRegion *_wcRegion;
 	MFrequency::Types _freqRefFrame;
 	MDoppler::Types _dopplerType;
 	Bool _isDifference;

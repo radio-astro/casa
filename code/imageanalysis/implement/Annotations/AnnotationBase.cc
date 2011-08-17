@@ -96,6 +96,35 @@ AnnotationBase::AnnotationBase(
 
 AnnotationBase::~AnnotationBase() {}
 
+AnnotationBase& AnnotationBase::operator= (
+	const AnnotationBase& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    _type = other._type;
+    _directionRefFrame = other._directionRefFrame;
+    _csys = other._csys;
+    _directionAxes.resize(other._directionAxes.nelements());
+    _directionAxes = other._directionAxes;
+    _label = other._label;
+    _color = other._color;
+    _font = other._font;
+    _fontsize = other._fontsize;
+    _fontstyle = other._fontstyle;
+    _linestyle = other._linestyle;
+    _linewidth = other._linewidth;
+    _symbolsize = other._symbolsize;
+    _symbolthickness = other._symbolthickness;
+    _usetex = other._usetex;
+    _convertedDirections.resize(other._convertedDirections.nelements());
+    _convertedDirections = other._convertedDirections;
+    _globals = other._globals;
+    _params = other._params;
+    _printGlobals = other._printGlobals;
+    return *this;
+}
+
 void AnnotationBase::_initParams() {
 	_params[LINEWIDTH] = String::toString(_linewidth);
 	_params[LINESTYLE] = _linestyle;

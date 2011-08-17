@@ -195,6 +195,12 @@ protected:
 		const CoordinateSystem& csys
 	);
 
+	// the implicitly defined copy constructor is fine
+	// AnnotationBase(const AnnotationBase& other);
+
+	// assignment operator
+	AnnotationBase& operator= (const AnnotationBase& other);
+
 	static void _checkMixed(const String& origin, const Array<Quantity>& quantities);
 
 	MDirection _directionFromQuantities(

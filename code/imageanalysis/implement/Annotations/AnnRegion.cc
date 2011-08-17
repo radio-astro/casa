@@ -41,7 +41,7 @@ AnnRegion::AnnRegion(
 ) : AnnotationBase(shape, dirRefFrameString, csys), _isAnnotationOnly(annotationOnly),
 	_convertedFreqLimits(Vector<MFrequency>(0)),
 	_beginFreq(beginFreq), _endFreq(endFreq), _restFreq(restfreq),
-	_stokes(stokes), _wcRegion(0), _isDifference(False) {
+	_stokes(stokes), _isDifference(False) {
 	String preamble(String(__FUNCTION__) + ": ");
 	if (_getCsys().hasSpectralAxis()) {
 		if (! _beginFreq.getUnit().empty() > 0 && _endFreq.getUnit().empty()) {
@@ -100,7 +100,29 @@ AnnRegion::AnnRegion(
 	}
 }
 
+//AnnRegion::AnnRegion(Ann)
+
 AnnRegion::~AnnRegion() {}
+
+AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnotationBase::operator= (other);
+    _isAnnotationOnly = other._isAnnotationOnly;
+    _convertedFreqLimits.resize(other._convertedFreqLimits.nelements());
+    _convertedFreqLimits = other._convertedFreqLimits;
+    _imageRegion = other._imageRegion;
+    _beginFreq = other._beginFreq;
+    _endFreq = other._endFreq;
+    _restFreq = other._restFreq;
+    _stokes.resize(other._stokes.nelements());
+    _stokes = other._stokes;
+    _freqRefFrame = other._freqRefFrame;
+    _dopplerType = other._dopplerType;
+    _isDifference = other._isDifference;
+    return *this;
+}
 
 Bool AnnRegion::isAnnotationOnly() const {
 	return _isAnnotationOnly;
@@ -208,7 +230,7 @@ void AnnRegion::_extend(const ImageRegion& region) {
 		WCBox wbox = _makeExtensionBox(freqRange, stokesRange, pixelAxes);
 		regions[i] = new WCExtension(region, wbox);
 	}
-    _imageRegion = ImageRegion(WCUnion(False, regions));
+    _imageRegion = ImageRegion(WCUnion(True, regions));
 }
 
 WCBox AnnRegion::_makeExtensionBox(
