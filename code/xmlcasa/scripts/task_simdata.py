@@ -88,7 +88,10 @@ def simdata(
 
     # some hardcoded variables that may be reintroduced in future development
     relmargin = .5  # number of PB between edge of model and pointing centers
-    scanlength = 1  # number of integrations per scan 
+    scanlength = 1  # number of integrations per scan
+
+    # as of 20100507, newfig will delete the previous one
+
     
     if type(skymodel) == type([]):
         skymodel = skymodel[0]
@@ -383,11 +386,7 @@ def simdata(
                 # todo make more robust to nonconforming z[0] strings
             pointings = util.calc_pointings2(pointingspacing,mapsize,maptype=maptype, direction=dir)
             nfld=len(pointings)
-            etime = qa.convert(qa.mul(qa.quantity(integration),scanlength),"s")['value']
-            # etime is an array of scan lengths - here they're all the same.
-            etime = etime + pl.zeros(nfld)
-            # totaltime might not allow all fields to be observed, or it might
-            # repeat
+            etime = qa.convert(qa.quantity(integration),"s")['value']
             ptgfile = fileroot + "/" + project + ".ptg.txt"
         else:
             if type(ptgfile) == type([]):
@@ -404,14 +403,13 @@ def simdata(
                     return False
 
             nfld, pointings, etime = util.read_pointings(ptgfile)
+            # a string of different integrations doesn't work below yet
+#            integration = [str(s)+"s" for s in etime]
+            integration = str(etime[0]) + "s"
+            util.msg("Using integration time "+integration+" for all pointings.",priority="warn")
+
             if max(etime) <= 0:
-                # integration is a scalar in input params
                 etime = qa.convert(qa.quantity(integration),"s")['value']
-                # make etime into an array
-                etime = etime + pl.zeros(nfld)
-            # etimes determine stop/start i.e. the scan
-            # if a longer etime is in the file, it'll do multiple integrations
-            # per scan
             # expects that the cal is separate, and this is just one round of the mosaic
 
         # find imcenter - phase center
@@ -641,18 +639,17 @@ def simdata(
                                 distance='0m')
 
                 mereftime = me.epoch('TAI', refdate)
-                # integration is a scalar quantity, etime is a vector of seconds
-                # if etimes are not all the same, integration is their max
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
-                # time required to observe all planned scanes in etime array:
-                totalscansec = sum(etime)
-                nrot = int(totalsec/totalscansec)
+                scantime = qa.mul(qa.quantity(integration),str(scanlength))
+                scansec = qa.convert(qa.quantity(scantime),'s')['value']
+                nscan = int(totalsec/scansec)
                 kfld = 0
+                # RI todo progress meter for simdata Sim::observe
 
-                if nrot < nfld:
-                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="error")
+                if nscan < nfld:
+                    msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
                     return
         
                 # sm.observemany
@@ -662,16 +659,13 @@ def simdata(
                     starttimes = []
                     stoptimes = []
                     dirs = []
-                    
-                if usehourangle:
-                    sttime = -totalsec/2.0 
-                else:
-                    sttime = 0. # leave start at the reftime
-                scanstart=sttime
 
-                while (sttime-scanstart)<totalsec: # the last scan could exceed totaltime
-                    endtime = sttime + etime[kfld]
-                    #print kfld,sttime,endtime,totalsec
+                for k in xrange(0,nscan) :
+                    if usehourangle:
+                        sttime = -totalsec/2.0 + scansec*k
+                    else:
+                        sttime = scansec*k # leave start at the reftime
+                    endtime = sttime + scansec
                     src = project + '_%d' % kfld
                     if observemany:
                         srces.append(src)
@@ -684,13 +678,13 @@ def simdata(
                                    starttime=qa.quantity(sttime, "s"),
                                    stoptime=qa.quantity(endtime, "s"),project=project);
                     kfld = kfld + 1
-                    # advance start time - XX someday slew goes here
-                    sttime = endtime
-
                     if kfld == nfld: 
-                        if docalibrator:                            
-                            endtime = sttime + qa.convert(integration,'s')['value'] 
-
+                        if docalibrator:
+                            if usehourangle:
+                                sttime = -totalsec/2.0 + scansec*k
+                            else:
+                                sttime = scansec*k
+                            endtime = sttime + scansec
                             if observemany:
                                 # need to observe cal singly to get new row in obs table, so 
                                 # first observemany the on-source pointing(s)
@@ -711,7 +705,6 @@ def simdata(
                                        state_obs_mode="CALIBRATE_PHASE.ON_SOURCE",state_sig=True,
                                        project=project);
                         kfld = kfld + 1
-                        sttime = endtime
                     if kfld > nfld: kfld = 0
                 # if directions is unset, NewMSSimulator::observemany 
 
@@ -797,12 +790,14 @@ def simdata(
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
-                totalscansec = sum(etime)
-                nscan = int(totalsec/totalscansec)
+                scantime = qa.mul(qa.quantity(integration),str(scanlength))
+                scansec = qa.convert(qa.quantity(scantime),'s')['value']
+                nscan = int(totalsec/scansec)
                 kfld = 0
+                # RI todo progress meter for simdata Sim::observe
 
                 if nscan < nfld:
-                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="error")
+                    msg("Only %i pointings of %i in the mosaic will be observed - check mosaic setup and exposure time parameters!" % (nscan,nfld),priority="error")
                     return
         
                 # sm.observemany
@@ -813,13 +808,12 @@ def simdata(
                 stoptimes = []
                 dirs = []
 
-                if usehourangle:
-                    sttime = -totalsec/2.0 
-                else:
-                    sttime = 0. # leave start at the reftime
-
-                while sttime<totalsec: # the last scan could exceed totaltime
-                    endtime = sttime + etime[k % nfld]
+                for k in xrange(0,nscan) :
+                    if usehourangle:
+                        sttime = -totalsec/2.0 + scansec*k
+                    else:
+                        sttime = scansec*k
+                    endtime = sttime + scansec
                     src = project + '_%d' % kfld
                     #if observemany:
                     srces.append(src)
@@ -832,13 +826,8 @@ def simdata(
                     #               starttime=qa.quantity(sttime, "s"),
                     #               stoptime=qa.quantity(endtime, "s"));
                     kfld = kfld + 1
-                    # advance start time
-                    sttime=endtime
-
                     if predict_uv and docalibrator and kfld == nfld:
                         # calibration obs is disabled for SD but add a gap to synchronize with interferometer
-                        endtime = sttime + qa.convert(integration,'s')['value'] 
-
                         #if docalibrator:
                         #    sttime = -totalsec/2.0 + scansec*k
                         #    endtime = sttime + scansec
@@ -852,9 +841,6 @@ def simdata(
                         #                   starttime=qa.quantity(sttime, "s"),
                         #                   stoptime=qa.quantity(endtime, "s"));
                         kfld = kfld + 1
-                        # advance start time - XX someday slew goes here
-                        sttime = endtime
-
                     if kfld > nfld-1: kfld = 0
                 # if directions is unset, NewMSSimulator::observemany 
                 # looks up the direction in the field table.
