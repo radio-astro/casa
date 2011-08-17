@@ -219,9 +219,13 @@ Bool FITSImgParser::is_qualityimg(const String &extexpr){
 		}
 	}
 
+	String mask_ext("");
+	/* Loading a mask does not yet work,
+	 * hence the identification makes no sense
 	// search for the mask extension and mark
 	// it as identified
 	String mask_ext = get_maskext(data_ext);
+	*/
 	if (mask_ext.size() > 0){
 		for (uInt index=0; index<extlist.size();index++){
 			if (!mask_ext.compare(extlist(index)))
@@ -298,8 +302,14 @@ Bool FITSImgParser::get_quality_data(const String &extexpr, Int &data_HDU, Int &
 			error_HDU =-1;
 		}
 
+
+		String mask_ext("");
+		/* Loading a mask does not yet work,
+		 * hence the identification makes no sense
 		// search for the mask extension
 		String mask_ext = get_maskext(data_HDU);
+		 */
+
 		if (mask_ext.size() > 0){
 
 			// get the extension  index
@@ -704,6 +714,9 @@ Bool FITSImgParser::find_qualimgs(void)
 					errext = String("");
 			}
 
+			maskext = String("");
+			/* Loading a mask does not yet work,
+			 * hence the identification makes no sense
 			// search the corresponding mask extension
 			maskext = get_maskext((Int)index);
 
@@ -713,6 +726,7 @@ Bool FITSImgParser::find_qualimgs(void)
 				if (mask_index < 0)
 					maskext = String("");
 			}
+			*/
 
 			// if the data extension has an error or mask extension
 			if (errext.size() > 0 || maskext.size()>0){
