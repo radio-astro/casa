@@ -129,13 +129,16 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
       if(dataType_=="image") {
 
     	// check for a FITS extension in the path name
-    	String tmp_path;
-    	if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1)
+    	String tmp_path, ext_expr;
+    	if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
     		// create a string with the file path name only
     		tmp_path = String(path, 0, path.rfind("[", path.length()));
-    	else
+    		ext_expr = String(path, path.rfind("[", path.length()), path.length());
+    	}
+    	else{
     		// copy the path name
     		tmp_path = path;
+    	}
 
     	// use the file path name for the opener
     	switch(ImageOpener::imageType(tmp_path)) {
@@ -157,8 +160,8 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
   
 	  case ImageOpener::FITS: {
 		  FITSImgParser fip = FITSImgParser(tmp_path);
-		  if (fip.has_measurement() && !tmp_path.compare(path)) {
-			  im_  = new FITSQualityImage(tmp_path, fip.get_dataext(), fip.get_errorext());
+		  if (fip.has_qualityimg() && fip.is_qualityimg(ext_expr)) {
+			  im_  = new FITSQualityImage(path);
 		  }
 		  else {
 			  im_ = new FITSImage(path);
