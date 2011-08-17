@@ -50,6 +50,9 @@
 Bool allNear (const Array<Float>& data, const Array<Bool>& dataMask,
               const Array<Float>& fits, const Array<Bool>& fitsMask, Float tol=1.0e-5);
 
+Bool testQualImg(FITSQualityImage &fQualImg, const String &in, const uInt &hdu_sci,
+		 const uInt &hdu_err, const Bool &print, const Int &size);
+
 template <class T> void printArray (T array, Int size, String pre="printArray");
 
 int main (int argc, const char* argv[])
@@ -61,33 +64,101 @@ try {
 // Get inputs
 
    Input inputs(1);
-   inputs.create("in", "",  "Input FITS file");
+   inputs.create("in_fits", "",  "Input FITS file");
+   inputs.create("in_ext", "",  "Input FITS extension expression");
    inputs.create("hdu_sci", "1", "HDU number");
    inputs.create("hdu_err", "2", "HDU number");
    inputs.create("print",   "F", "Print some data");
    inputs.create("size",    "5", "Size to print");
 //
    inputs.readArguments(argc, argv);
-   String in = inputs.getString("in");
+   String in_fits    = inputs.getString("in_fits");
+   String in_ext     = inputs.getString("in_ext");
    const uInt hdu_sci = inputs.getInt("hdu_sci");
    const uInt hdu_err = inputs.getInt("hdu_err");
    const Bool print   = inputs.getBool("print");
    const Int size     = inputs.getInt("size");
 //
-   if (in.empty()) {
-     in = "mexinputtest.fits";
+   if (in_fits.empty()) {
+   	in_fits = "qualityimage.fits";
    }   
-   Path p(in);
+   Path p(in_fits);
 
-   // create the image
-   FITSQualityImage fitsQI(in, hdu_sci, hdu_err);
-
-   {
-	   if (fitsQI.name(True)!=in){
-		   String msg = String("Image name stored in object is wrong!");
-           throw(AipsError(msg));
-	   }
+   if (in_ext.empty()) {
+   	in_ext = "qualityimage.fits[IFU1.SCI,IFU1.ERR,IFU1.DQ]";
    }
+   Path pII(FITSImage::get_fitsname(in_ext));
+
+   // create the quality image with the extension indices
+   FITSQualityImage fitsQI(in_fits, hdu_sci, hdu_err);
+   {
+   	// check the file names
+   	if (fitsQI.name(False) != p.absoluteName()){
+   		String msg = String("The names differ: " + fitsQI.name(False) + " <<>> " + p.absoluteName());
+           throw(AipsError(msg));
+   	}
+   }
+
+   // test the quality image
+   testQualImg(fitsQI, in_fits, hdu_sci, hdu_err, print, size);
+
+
+   // create the quality image with the extension expression
+   FITSQualityImage fitsQI_II(in_ext);
+   {
+   	// check the file names
+   	if (fitsQI_II.name(False) != pII.absoluteName()){
+   		String msg = String("The names differ: " + fitsQI_II.name(False) + " <<>> " + pII.absoluteName());
+           throw(AipsError(msg));
+   	}
+   }
+
+   // test the quality image
+   testQualImg(fitsQI_II, in_ext, hdu_sci, hdu_err, print, size);
+
+   cerr << "ok " << endl;
+
+} catch (AipsError x) {
+   cerr << "aipserror: error " << x.getMesg() << endl;
+   return 1;
+}
+  return 0;
+}
+
+Bool allNear (const Array<Float>& data, const Array<Bool>& dataMask,
+              const Array<Float>& fits, const Array<Bool>& fitsMask,
+              Float tol)
+{
+   Bool deletePtrData, deletePtrDataMask, deletePtrFITS, deletePtrFITSMask;
+   const Float* pData = data.getStorage(deletePtrData);
+   const Float* pFITS = fits.getStorage(deletePtrFITS);
+   const Bool* pDataMask = dataMask.getStorage(deletePtrDataMask);
+   const Bool* pFITSMask = fitsMask.getStorage(deletePtrFITSMask);
+//
+   for (uInt i=0; i<data.nelements(); i++) {
+      if (pDataMask[i] != pFITSMask[i]) {
+         cerr << "masks differ" << endl;
+         return False;
+      }
+      if (pDataMask[i]) { 
+         if (!near(pData[i], pFITS[i], tol)) {
+            cerr << "data differ, tol = " << tol << endl;
+            cerr << pData[i] << ", " << pFITS[i] << endl;
+            return False;
+         }
+      }
+   }
+//
+   data.freeStorage(pData, deletePtrData);
+   dataMask.freeStorage(pDataMask, deletePtrDataMask);
+   fits.freeStorage(pFITS, deletePtrFITS);
+   fitsMask.freeStorage(pFITSMask, deletePtrFITSMask);
+   return True;
+}
+
+Bool testQualImg(FITSQualityImage &fitsQI, const String &in, const uInt &hdu_sci,
+		 const uInt &hdu_err, const Bool &print, const Int &size)
+{
    {
 	   // make sure the last axis has two pixels
 	   uInt ndim       = fitsQI.ndim();
@@ -164,11 +235,12 @@ try {
 	   }
    }
 
-   // open the data error extensions independently
-   FITSImage fitsDataImg  = FITSImage(in, 0, hdu_sci);
-   FITSImage fitsErrorImg = FITSImage(in, 0, hdu_err);
+   // extract the FITS file name
+   String fitsname = FITSImage::get_fitsname(in);
 
-   //fitsQI.tempClose();
+   // open the data error extensions independently
+   FITSImage fitsDataImg  = FITSImage(fitsname, 0, hdu_sci);
+   FITSImage fitsErrorImg = FITSImage(fitsname, 0, hdu_err);
 
    {
 	   Array<Float> mmData;
@@ -218,7 +290,6 @@ try {
 		   printArray (fitsEData,size, "feData = ");
 		   printArray (fitsEMask,size, "feMask = ");
 	   }
-
 
 	   Array<Float> tmpData;
 	   Array<Bool>  tmpMask;
@@ -376,7 +447,6 @@ try {
 		   throw(AipsError(msg));
 	   }
    }
-
    {
 	   // test assignment
 	   FITSQualityImage  secImg = fitsQI;
@@ -443,45 +513,9 @@ try {
 	   delete pFitsMM;
    }
 
-   cerr << "ok " << endl;
-
-} catch (AipsError x) {
-   cerr << "aipserror: error " << x.getMesg() << endl;
-   return 1;
-}
-  return 0;
+	return True;
 }
 
-Bool allNear (const Array<Float>& data, const Array<Bool>& dataMask,
-              const Array<Float>& fits, const Array<Bool>& fitsMask,
-              Float tol)
-{
-   Bool deletePtrData, deletePtrDataMask, deletePtrFITS, deletePtrFITSMask;
-   const Float* pData = data.getStorage(deletePtrData);
-   const Float* pFITS = fits.getStorage(deletePtrFITS);
-   const Bool* pDataMask = dataMask.getStorage(deletePtrDataMask);
-   const Bool* pFITSMask = fitsMask.getStorage(deletePtrFITSMask);
-//
-   for (uInt i=0; i<data.nelements(); i++) {
-      if (pDataMask[i] != pFITSMask[i]) {
-         cerr << "masks differ" << endl;
-         return False;
-      }
-      if (pDataMask[i]) { 
-         if (!near(pData[i], pFITS[i], tol)) {
-            cerr << "data differ, tol = " << tol << endl;
-            cerr << pData[i] << ", " << pFITS[i] << endl;
-            return False;
-         }
-      }
-   }
-//
-   data.freeStorage(pData, deletePtrData);
-   dataMask.freeStorage(pDataMask, deletePtrDataMask);
-   fits.freeStorage(pFITS, deletePtrFITS);
-   fitsMask.freeStorage(pFITSMask, deletePtrFITSMask);
-   return True;
-}
 
 template <class T> void printArray (T array, Int size, String pre)
 {

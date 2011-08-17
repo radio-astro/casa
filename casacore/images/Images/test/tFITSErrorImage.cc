@@ -75,7 +75,7 @@ try {
 
    // Give a default image and extension
    if (in.empty()) {
-     in = "mexinputtest.fits";
+   	in = "qualityimage.fits";
    }   
    Path p(in);
    if (!hdunum)
@@ -85,8 +85,16 @@ try {
    if (verbose)
 	   cerr << "Input image: " << in << " extension: " << hdunum << endl;
 
+   // test the conversion between error types and String
+   AlwaysAssert(FITSErrorImage::stringToErrorType("MSE")==FITSErrorImage::MSE, AipsError);
+   AlwaysAssert(FITSErrorImage::errorTypeToString(FITSErrorImage::RMSE)=="RMSE", AipsError);
+   AlwaysAssert(FITSErrorImage::stringToErrorType("INVMSE")==FITSErrorImage::INVMSE, AipsError);
+   AlwaysAssert(FITSErrorImage::errorTypeToString(FITSErrorImage::INVRMSE)=="INVRMSE", AipsError);
+   AlwaysAssert(FITSErrorImage::MSE==FITSErrorImage::DEFAULT, AipsError);
+   AlwaysAssert(FITSErrorImage::stringToErrorType("WHATSUP")==FITSErrorImage::UNKNOWN, AipsError);
+
    //
-   // Open FITSErrorImage as a VARIANCE error image,
+   // Open FITSErrorImage as a MSE error image,
    // which corresponds to the default
    //
    FITSErrorImage fitsErrImage(in, 0, hdunum);
@@ -98,7 +106,7 @@ try {
 	   cerr << "Checked the image type." << endl;
 
    // Checking the default error type
-   ErrorType defErrType=VARIANCE;
+   FITSErrorImage::ErrorType defErrType=FITSErrorImage::MSE;
    AlwaysAssert(fitsErrImage.errorType()==defErrType, AipsError);
    if (verbose)
 	   cerr << "Checked for ErrorType." << endl;
@@ -210,16 +218,16 @@ try {
 	   cerr << "Compared assigned data, mask and coordinate systems." << endl;
 
    //
-   // Open FITSErrorImage as a SIGMA error image
+   // Open FITSErrorImage as a RMSE error image
    //
-   fitsErrImage2 = FITSErrorImage(in, 0, hdunum, SIGMA);
+   fitsErrImage2 = FITSErrorImage(in, 0, hdunum, FITSErrorImage::RMSE);
    fitsErrImage2.tempClose();
    if (verbose)
-	   cerr << "Opened a SIGMA error image." << endl;
+	   cerr << "Opened a RMSE error image." << endl;
 
    // Check the image type and the error type
    AlwaysAssert(fitsErrImage2.imageType()=="FITSErrorImage", AipsError);
-   AlwaysAssert(fitsErrImage2.errorType()==SIGMA, AipsError);
+   AlwaysAssert(fitsErrImage2.errorType()==FITSErrorImage::RMSE, AipsError);
    if (verbose)
 	   cerr << "Checked type and error type" << endl;
 
@@ -231,7 +239,7 @@ try {
    AlwaysAssert(allNear(tmpData, dataMask, fitsArray3, fitsMask3), AipsError);
    AlwaysAssert(fitsCS2.near(dataCS), AipsError);
    if (verbose)
-	   cerr << "Compared data and coordinate systems in SIGMA image." << endl;
+	   cerr << "Compared data and coordinate systems in RMSE image." << endl;
 
    // Print some data and mask values if desired
    fitsErrImage2.tempClose();
@@ -240,16 +248,16 @@ try {
 
 
    //
-   // Open FITSErrorImage as a INVVARIANCE error image
+   // Open FITSErrorImage as a INVMSE (inverse mean squared error) error image
    //
-   fitsErrImage2 = FITSErrorImage(in, 0, hdunum, INVVARIANCE);
+   fitsErrImage2 = FITSErrorImage(in, 0, hdunum, FITSErrorImage::INVMSE);
    fitsErrImage2.tempClose();
    if (verbose)
-	   cerr << "Opened a INVVARIANCE error image." << endl;
+	   cerr << "Opened a INVMSE error image." << endl;
 
    // Check the image type and the error type
    AlwaysAssert(fitsErrImage2.imageType()=="FITSErrorImage", AipsError);
-   AlwaysAssert(fitsErrImage2.errorType()==INVVARIANCE, AipsError);
+   AlwaysAssert(fitsErrImage2.errorType()==FITSErrorImage::INVMSE, AipsError);
    if (verbose)
 	   cerr << "Checked type and error type" << endl;
 
@@ -262,7 +270,7 @@ try {
    AlwaysAssert(allNear(tmpData, dataMask, fitsArray3, fitsMask3), AipsError);
    AlwaysAssert(fitsCS2.near(dataCS), AipsError);
    if (verbose)
-	   cerr << "Compared data and coordinate systems in INVVARIANCE image." << endl;
+	   cerr << "Compared data and coordinate systems in INVMSE image." << endl;
 
    // Print some data and mask values if desired
    fitsErrImage2.tempClose();
@@ -271,16 +279,16 @@ try {
 
 
    //
-   // Open FITSErrorImage as a INVSIGMA error image
+   // Open FITSErrorImage as a INVRMSE (inverse root mean squared) error image
    //
-   fitsErrImage2 = FITSErrorImage(in, 0, hdunum, INVSIGMA);
+   fitsErrImage2 = FITSErrorImage(in, 0, hdunum, FITSErrorImage::INVRMSE);
    fitsErrImage2.tempClose();
    if (verbose)
-	   cerr << "Opened an INVSIGMA error image." << endl;
+	   cerr << "Opened an INVRMSE error image." << endl;
 
    // Check the image type and the error type
    AlwaysAssert(fitsErrImage2.imageType()=="FITSErrorImage", AipsError);
-   AlwaysAssert(fitsErrImage2.errorType()==INVSIGMA, AipsError);
+   AlwaysAssert(fitsErrImage2.errorType()==FITSErrorImage::INVRMSE, AipsError);
    if (verbose)
 	   cerr << "Checked type and error type" << endl;
 
@@ -292,7 +300,7 @@ try {
    AlwaysAssert(allNear(tmpData, dataMask, fitsArray3, fitsMask3), AipsError);
    AlwaysAssert(fitsCS2.near(dataCS), AipsError);
    if (verbose)
-	   cerr << "Compared data and coordinate systems in an INVSIGMA image." << endl;
+	   cerr << "Compared data and coordinate systems in an INVRMSE image." << endl;
 
    // Print some data and mask values if desired
    fitsErrImage2.tempClose();
@@ -355,7 +363,6 @@ Bool cleanZero(Array<Float>& data, Array<Bool>& dataMask)
 
 	//
 	data.freeStorage(pData, deletePtrData);
-	//dataMask.freeStorage(pDataMask, deletePtrDataMask);
 	return True;
 }
 
