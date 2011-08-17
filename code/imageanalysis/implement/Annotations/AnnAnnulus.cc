@@ -77,6 +77,23 @@ AnnAnnulus::AnnAnnulus(
 
 }
 
+AnnAnnulus& AnnAnnulus::operator= (
+	const AnnAnnulus& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+	_convertedRadii.resize(other._convertedRadii.nelements());
+	_convertedRadii = other._convertedRadii;
+	_xcenter = other._xcenter;
+	_ycenter = other._ycenter;
+	_innerRadius = other._innerRadius;
+	_outerRadius = other._outerRadius;
+    return *this;
+}
+
+
 MDirection AnnAnnulus::getCenter() const {
 	return _getConvertedDirections()[0];
 }

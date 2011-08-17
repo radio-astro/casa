@@ -78,6 +78,24 @@ AnnCenterBox::AnnCenterBox(
 	_extend(box);
 }
 
+AnnCenterBox& AnnCenterBox::operator= (
+	const AnnCenterBox& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _widths.resize(other._widths.nelements());
+    _widths = other._widths;
+    _corners.resize(other._corners.nelements());
+    _corners = other._corners;
+	_inpXCenter = other._inpXCenter;
+	_inpYCenter = other._inpYCenter;
+	_inpXWidth = other._inpXWidth;
+	_inpYWidth = other._inpYWidth;
+    return *this;
+}
+
 MDirection AnnCenterBox::getCenter() const {
 	return _getConvertedDirections()[0];
 }

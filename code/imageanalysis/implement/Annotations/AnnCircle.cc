@@ -60,6 +60,21 @@ AnnCircle::AnnCircle(
 	_extend(circle);
 }
 
+AnnCircle& AnnCircle::operator= (
+	const AnnCircle& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCenter.resize(other._inputCenter.nelements());
+    _inputCenter = other._inputCenter.nelements();
+    _inputRadius = other._inputRadius;
+    _convertedRadius = other._convertedRadius;
+    return *this;
+}
+
+
 MDirection AnnCircle::getCenter() const {
 	return _getConvertedDirections()[0];
 }

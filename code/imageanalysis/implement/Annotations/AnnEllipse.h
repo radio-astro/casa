@@ -67,6 +67,10 @@ public:
 		const Bool annotationOnly
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnEllipse& operator=(const AnnEllipse& other);
+
 	// Get the center position, tranformed to the reference
 	// from of the coordinate system if necessary
 	MDirection getCenter() const;

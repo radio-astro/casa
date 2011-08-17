@@ -81,6 +81,23 @@ _inputMinorAxis(minorAxis),
 	_extend(ellipse);
 }
 
+AnnEllipse& AnnEllipse::operator= (
+	const AnnEllipse& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCenter.resize(other._inputCenter.nelements());
+    _inputCenter = other._inputCenter.nelements();
+    _inputMajorAxis = other._inputMajorAxis;
+    _inputMinorAxis = other._inputMinorAxis;
+    _inputPositionAngle = other._inputPositionAngle;
+    _convertedMajorAxis = other._convertedMajorAxis;
+    _convertedMinorAxis = other._convertedMinorAxis;
+    return *this;
+}
+
 MDirection AnnEllipse::getCenter() const {
 	return _getConvertedDirections()[0];
 }
