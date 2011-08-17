@@ -115,11 +115,11 @@ void WCCSAxisLabeller::setDefaultOptions() {
    	  itsSpectralUnit = String("nm");
      }
      else if (spcType == SpectralCoordinate::FREQ){
-   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralQuantity = String("frequency");
    	  itsSpectralUnit = String("GHz");
      }
      else{
-   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralQuantity = String("frequency");
    	  itsSpectralUnit = String("GHz");
      }
 
@@ -298,7 +298,8 @@ Record WCCSAxisLabeller::getOptions() const
 	  found=True; break;  }
 	if(!found) {
 	  vunits.resize(6, True);
-	  vunits(5) = itsDirectionSystem;  }
+	  vunits(5) = itsDirectionSystem;  
+	}
 	
         directionSystem.define("popt", vunits);
         directionSystem.define("default", itsDirectionSystem);
@@ -352,7 +353,7 @@ Record WCCSAxisLabeller::getOptions() const
 
 // get some quantities from the spectral coordinate
 
-   	  const SpectralCoordinate sc = itsCoordinateSystem.spectralCoordinate(iS);
+        const SpectralCoordinate sc = itsCoordinateSystem.spectralCoordinate(iS);
         Double restFreq = sc.restFrequency();
         String restUnit = sc.worldAxisUnits()(0);
         SpectralCoordinate::SpecType spcType = sc.nativeType();
@@ -364,11 +365,12 @@ Record WCCSAxisLabeller::getOptions() const
         veltype.define("listname", "Spectral quantity");
         veltype.define("ptype", "choice");
         Vector<String> stunits;
-        stunits.resize(4);
+        stunits.resize(5);
         stunits(0) = "optical velocity";
         stunits(1) = "radio velocity";
         stunits(2) = "wavelength";
         stunits(3) = "air wavelength";
+        stunits(4) = "frequency";
 
 //  depending on the spectral coordinate, set the default "quantity"
 
@@ -393,11 +395,11 @@ Record WCCSAxisLabeller::getOptions() const
            unitSet = 2;
         }
         else if (spcType == SpectralCoordinate::FREQ){
-           veltype.define("default", stunits(1));
+           veltype.define("default", stunits(4));
            unitSet = 0;
         }
         else{
-           veltype.define("default", stunits(1));
+           veltype.define("default", stunits(4));
            unitSet = 0;
         }
         veltype.define("popt", stunits);
@@ -431,7 +433,7 @@ Record WCCSAxisLabeller::getOptions() const
            spectralunit.define("default", specunits(0));
         }
         else {
-            spectralunit.define("default", specunits(2));
+           spectralunit.define("default", specunits(2));
         }
         spectralunit.define("popt", specunits);
         spectralunit.define("value", itsSpectralUnit);
@@ -449,14 +451,15 @@ Record WCCSAxisLabeller::getOptions() const
       	  // unfortunately, the shot way "String::toString(restFreq)"
       	  // does not deliver enough decimal points
       	  ostringstream os;
-        	  os << setprecision(8) << scientific << double(inQuant.get(outUnit).getValue()) << outUnit.getName();
+	  os << setprecision(8) << scientific << double(inQuant.get(outUnit).getValue()) << outUnit.getName();
       	  string rfstring = os.str();
       	  restvalue.define("default", String(rfstring));
         }
         else{
-      	  restvalue.define("default", String(""));}
-        restvalue.define("value", itsRestValue);
-        restvalue.define("allowunset", False);
+      	  restvalue.define("default", String(""));
+	}
+	restvalue.define("value", itsRestValue);
+	restvalue.define("allowunset", False);
         rec.defineRecord("axislabelrestvalue", restvalue);
      }
   }
@@ -647,7 +650,7 @@ String WCCSAxisLabeller::axisText(Int worldAxis, WorldCanvas* wc) const
           prefUnit = itsSpectralUnit;
           unitString = " (" + prefUnit + ")";
           if (prefUnit=="" || prefUnit==" " || prefUnit=="_") unitString = " ";
-          base = freqType + " " + itsSpectralQuantity + " velocity" + unitString;
+          base = freqType + " " + itsSpectralQuantity + " " + unitString;
        } else if (pVU==HZ) {
           base = freqType + String(" ") + base0 + unitString;
        } else {
