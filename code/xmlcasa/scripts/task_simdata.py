@@ -108,8 +108,8 @@ def simdata(
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
 
-    if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
-        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
+#    if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
+#        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
 #        if analyze:
 #            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
 
