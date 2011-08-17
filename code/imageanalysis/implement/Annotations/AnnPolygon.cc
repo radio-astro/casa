@@ -65,6 +65,21 @@ AnnPolygon::AnnPolygon(
 	_extend(wpoly);
 }
 
+AnnPolygon& AnnPolygon::operator= (
+	const AnnPolygon& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _corners.resize(other._corners.nelements());
+    _corners = other._corners;
+    _origXPos.resize(other._origXPos.nelements());
+    _origXPos = other._origXPos;
+    _origYPos.resize(other._origYPos.nelements());
+    _origYPos = other._origYPos;
+    return *this;
+}
 
 Vector<MDirection> AnnPolygon::getCorners() const {
 	return _getConvertedDirections();

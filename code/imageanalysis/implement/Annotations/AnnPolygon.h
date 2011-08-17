@@ -61,6 +61,10 @@ public:
 		const Bool annotationOnly
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnPolygon& operator=(const AnnPolygon& other);
+
 	Vector<MDirection> getCorners() const;
 
 	virtual ostream& print(ostream &os) const;

@@ -59,10 +59,20 @@ AnnRectBox::AnnRectBox(
 			"rad"
 		);
 	}
-
 	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
 	_extend(box);
+}
 
+AnnRectBox& AnnRectBox::operator= (
+	const AnnRectBox& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCorners.resize(other._inputCorners.shape());
+    _inputCorners = other._inputCorners.shape();
+    return *this;
 }
 
 Vector<MDirection> AnnRectBox::getCorners() const {

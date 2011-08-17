@@ -41,6 +41,19 @@ AnnText::AnnText(
 	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
 }
 
+AnnText& AnnText::operator= (
+	const AnnText& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnotationBase::operator=(other);
+    _inputDirection.resize(other._inputDirection.nelements());
+    _inputDirection = other._inputDirection;
+    _text = other._text;
+    return *this;
+}
+
 MDirection AnnText::getDirection() const {
 	return _getConvertedDirections()[0];
 }

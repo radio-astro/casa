@@ -74,6 +74,25 @@ AnnRotBox::AnnRotBox(
 	_extend(box);
 }
 
+AnnRotBox& AnnRotBox::operator= (
+	const AnnRotBox& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCenter.resize(other._inputCenter.nelements());
+    _inputCenter = other._inputCenter;
+    _inputWidths.resize(other._inputWidths.nelements());
+    _inputWidths = other._inputWidths;
+    _widths.resize(other._widths.nelements());
+    _widths = other._widths;
+    _positionAngle = other._positionAngle;
+    _corners.resize(other._corners.nelements());
+    _corners = other._corners;
+    return *this;
+}
+
 void AnnRotBox::_doCorners() {
 	Quantity realAngle = Quantity(90, "deg") + _positionAngle;
 

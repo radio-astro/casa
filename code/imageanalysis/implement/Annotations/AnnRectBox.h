@@ -63,6 +63,10 @@ public:
 		const Bool annotationOnly
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnRectBox& operator=(const AnnRectBox& other);
+
 	// get the blc and trc direction coords for the box.
 	// The output directions will be converted from the input
 	// reference frame to the reference frame of the input

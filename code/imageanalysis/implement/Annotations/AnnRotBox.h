@@ -68,6 +68,10 @@ public:
 		const Bool annotationOnly
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnRotBox& operator=(const AnnRotBox& other);
+
 	// get the four corners of the box in direction space.
 	// These will have been converted to the frame of the
 	// coordinate system if necessary. The only thing about

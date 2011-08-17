@@ -44,6 +44,18 @@ AnnVector::AnnVector(
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
 }
 
+AnnVector& AnnVector::operator= (
+	const AnnVector& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnotationBase::operator=(other);
+    _inputPoints.resize(other._inputPoints.shape());
+    _inputPoints = other._inputPoints;
+    return *this;
+}
+
 Vector<MDirection> AnnVector::getEndPoints() const {
 	return _getConvertedDirections();
 }

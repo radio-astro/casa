@@ -57,6 +57,10 @@ public:
 		const CoordinateSystem& csys
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnVector& operator=(const AnnVector& other);
+
 	// get the end point directions, transformed to
 	// the input coordinate system if necessary.
 	// The first element will be the starting point,
