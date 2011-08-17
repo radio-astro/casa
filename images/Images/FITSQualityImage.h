@@ -30,6 +30,7 @@
 
 
 //# Includes
+#include <images/Images/FITSErrorImage.h>
 #include <images/Images/ImageInterface.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -39,7 +40,6 @@ template <class T> class Array;
 template <class T> class Lattice;
 //
 class FITSImage;
-class FITSErrorImage;
 class IPosition;
 class Slicer;
 
@@ -71,11 +71,11 @@ class Slicer;
 
 // <example>
 // <srcblock>
-//	FITSQualityImage fitsQIStat("im.fits", 1, 2);
-//	LogIO logger(or);
-//	ImageStatistics<Float> stats(fitsQIStat, logger);
-//	Bool ok = stats.display();
-// </srcblock>
+//	   FITSQualityImage fitsQIStat("im.fits", 1, 2);
+//	   LogIO logger(or);
+//	   ImageStatistics<Float> stats(fitsQIStat, logger);
+//	   Bool ok = stats.display();
+//    </srcblock>
 // </example>
 
 // <motivation>
@@ -88,16 +88,20 @@ class Slicer;
 class FITSQualityImage: public ImageInterface<Float>
 {
 public: 
-  // Construct a FITSImage from the disk FITS file name  and extension and apply mask.
+  // Construct a FITSQualityImage from the FITS file name and extensions
+  // specified in the input.
+  explicit FITSQualityImage(const String& name);
+
+  // Construct a FITSQualityImage from the disk FITS file name and extensions.
   explicit FITSQualityImage(const String& name, uInt whichDataHDU, uInt whichErrorHDU);
 
   // Copy constructor (reference semantics)
   FITSQualityImage(const FITSQualityImage& other);
 
-  // Destructor does nothing
+  // Destructor
   ~FITSQualityImage();
 
-  // Assignment (reference semantics)
+  // Assignment (reference semantics).
   FITSQualityImage& operator=(const FITSQualityImage& other);
 
   //# ImageInterface virtual functions
@@ -108,8 +112,8 @@ public:
   // Get the image type (returns FITSImage).
   virtual String imageType() const;
 
-  // Function which changes the shape of the FITSImage.
-  // Throws an exception as FITSImage is not writable.
+  // Function which changes the shape of the FITSQualityImage.
+  // Throws an exception as FITSQualityImage is not writable.
   virtual void resize(const TiledShape& newShape);
 
   // Has the object really a mask?  The FITSQualityImage always
@@ -117,7 +121,7 @@ public:
   // always returns True
   virtual Bool isMasked() const;
 
-  // FITSimage always has a pixel mask so returns True
+  // FITSQualityImage always has a pixel mask so returns True
   virtual Bool hasPixelMask() const;
 
   // Get the region used.  There is no region. 
@@ -128,7 +132,7 @@ public:
   // Returns False as the data do not reference another Array
   virtual Bool doGetSlice (Array<Float>& buffer, const Slicer& theSlice);
 
-  // The FITSImage is not writable, so this throws an exception.
+  // The FITSQualityImage is not writable, so this throws an exception.
   virtual void doPutSlice (const Array<Float>& sourceBuffer,
 			   const IPosition& where,
 			   const IPosition& stride);
@@ -151,7 +155,7 @@ public:
   // Returns the name of the disk file.
   virtual String name (Bool stripPath=False) const;
   
-  // return the shape of the FITSImage
+  // Return the shape of the FITSImage.
   virtual IPosition shape() const;
 
   // Returns the maximum recommended number of pixels for a cursor. This is
@@ -205,26 +209,31 @@ public:
 
 private:
   String         name_p;
+  String         fullname_p;
   FITSImage      *fitsdata_p;
   FITSErrorImage *fitserror_p;
   TiledShape     shape_p;
   uInt           whichDataHDU_p;
   uInt           whichErrorHDU_p;
+  uInt           whichMaskHDU_p;
+  FITSErrorImage::ErrorType errType_p;
   Bool           isClosed_p;
   Bool           isDataClosed_p;
   Bool           isErrorClosed_p;
-  //Array<Float>   allData;
-  //Array<Bool>    allMask;
 
   // Reopen the image if needed.
   void reopenIfNeeded() const;
   void reopenDataIfNeeded();
   void reopenErrorIfNeeded();
 
+  // Get the extension indices from an
+  // extension expression.
+  void getExtInfo();
+
   // Setup the object (used by constructors).
    void setup();
 
-   // Make sure the input is compatible
+   // Make sure the input is compatible.
    Bool checkInput();
 };
 

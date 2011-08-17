@@ -67,13 +67,33 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+FITSQualityImage::FITSQualityImage(const String& name)
+: ImageInterface<Float>(),
+  name_p          (name),
+  fullname_p      (name),
+  fitsdata_p      (0),
+  fitserror_p     (0),
+  whichDataHDU_p  (0),
+  whichErrorHDU_p (0),
+  whichMaskHDU_p  (0),
+  isClosed_p      (False),
+  isDataClosed_p  (False),
+  isErrorClosed_p (False)
+{
+   getExtInfo();
+   setup();
+}
+
 FITSQualityImage::FITSQualityImage(const String& name, uInt whichDataHDU, uInt whichErrorHDU)
 : ImageInterface<Float>(),
   name_p          (name),
+  fullname_p      (name),
   fitsdata_p      (0),
   fitserror_p     (0),
   whichDataHDU_p  (whichDataHDU),
   whichErrorHDU_p (whichErrorHDU),
+  whichMaskHDU_p  (0),
+  errType_p       (FITSErrorImage::DEFAULT),
   isClosed_p      (False),
   isDataClosed_p  (False),
   isErrorClosed_p (False)
@@ -90,6 +110,8 @@ FITSQualityImage::FITSQualityImage (const FITSQualityImage& other)
   shape_p         (other.shape_p),
   whichDataHDU_p  (other.whichDataHDU_p),
   whichErrorHDU_p (other.whichErrorHDU_p),
+  whichMaskHDU_p  (other.whichMaskHDU_p),
+  errType_p       (other.errType_p),
   isClosed_p      (other.isClosed_p),
   isDataClosed_p  (other.isDataClosed_p),
   isErrorClosed_p (other.isErrorClosed_p)
@@ -124,6 +146,8 @@ FITSQualityImage& FITSQualityImage::operator=(const FITSQualityImage& other)
       shape_p         = other.shape_p;
       whichDataHDU_p  = other.whichDataHDU_p;
       whichErrorHDU_p = other.whichErrorHDU_p;
+      whichMaskHDU_p  = other.whichMaskHDU_p;
+      errType_p       = other.errType_p;
       isClosed_p      = other.isClosed_p;
       isDataClosed_p  = other.isDataClosed_p;
       isErrorClosed_p = other.isErrorClosed_p;
@@ -594,13 +618,79 @@ void FITSQualityImage::showCacheStatistics (ostream& os) const
    fitserror_p->showCacheStatistics(os);
 }
 
+void FITSQualityImage::getExtInfo()
+{
+   LogIO os(LogOrigin("FITSQualityImage", "getExtInfo", WHERE));
 
+	String extexpr;
+	Int whichDataHDU;
+	Int whichErrorHDU;
+	Int whichMaskHDU;
+	Int maskValue;
+	String errTypeStr;
+	String maskTypeStr;
+
+	// decompose the name into the fits name and extension list
+	name_p  = FITSImage::get_fitsname(fullname_p);
+	extexpr = String(fullname_p, name_p.size(), fullname_p.size()-name_p.size());
+
+	// open a FITS parser
+	FITSImgParser fip = FITSImgParser(name_p);
+
+	// make sure that the extension expression
+	// can be loaded as a quality image
+	if (!fip.is_qualityimg(extexpr))
+	   throw (AipsError ("FITSQualityImage::getExtInfo - "
+	   		"The extensions " + extexpr + " in image: " + name_p + " can not be loaded as quality image!"));
+
+	// determine all information to be able loading a quality image
+	fip.get_quality_data(extexpr, whichDataHDU, whichErrorHDU, errTypeStr, whichMaskHDU, maskTypeStr, maskValue);
+
+	// store the data extension,
+	// exit if there is none
+	if (whichDataHDU > -1)
+		whichDataHDU_p = (uInt)whichDataHDU;
+	else
+	   throw (AipsError ("FITSQualityImage::getExtInfo - "
+	   		"No data extension"));
+
+	// store the error extension,
+	// exit if there is none
+	// Note: Since mask files can not yet loaded,
+	//       the error extension is essential to
+	//       make a quality image
+	if (whichErrorHDU > -1)
+		whichErrorHDU_p = (uInt)whichErrorHDU;
+	else
+	   throw (AipsError ("FITSQualityImage::getExtInfo - "
+	   		"No error extension"));
+
+	// convert the keyword value to
+	// an error type
+	if (errTypeStr.size()>0){
+		errType_p = FITSErrorImage::stringToErrorType(errTypeStr);
+		if (errType_p == FITSErrorImage::UNKNOWN)
+		   throw (AipsError ("FITSQualityImage::getExtInfo - "
+		   		"Unknown ERRTYPE value: " + errTypeStr));
+	}
+	else{
+      os << LogIO::WARN << "No proper error type defined in the error extension. Assuming MSE (mean squared error)." << LogIO::POST;
+	}
+
+	// store the mask extension
+	// notify that the mask extension
+	// is not used.
+	if (whichMaskHDU > -1){
+		whichMaskHDU_p = whichMaskHDU;
+		os << LogIO::NORMAL << "A dedicated mask extension can not yet be loaded!" << LogIO::POST;
+	}
+}
 
 void FITSQualityImage::setup()
 {
 	// open the various fits extensions
 	fitsdata_p  = new FITSImage(name_p, 0, whichDataHDU_p);
-	fitserror_p = new FITSErrorImage(name_p, 0, whichErrorHDU_p);
+	fitserror_p = new FITSErrorImage(name_p, 0, whichErrorHDU_p, errType_p);
 
 	// do some checks on the input images
 	Bool ok;
@@ -652,25 +742,19 @@ Bool FITSQualityImage::checkInput(){
 
 void FITSQualityImage::reopenIfNeeded() const
   { if (isClosed_p){
-	  //cout << "reopening" << endl;
 	  fitsdata_p->reopen();
 	  fitserror_p->reopen();
-	  //cout << "done" << endl;
   	  }
   }
 void FITSQualityImage::reopenErrorIfNeeded()
   { if (isErrorClosed_p){
-	  //cout << "Error reopening" << endl;
 	  fitserror_p->reopen();
-	  //cout << "done" << endl;
 	  isErrorClosed_p = False;
   	  }
   }
 void FITSQualityImage::reopenDataIfNeeded()
   { if (isDataClosed_p){
-	  //cout << "Data reopening" << endl;
 	  fitsdata_p->reopen();
-	  //cout << "done" << endl;
 	  isDataClosed_p = False;
   	  }
   }
