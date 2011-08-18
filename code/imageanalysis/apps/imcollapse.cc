@@ -26,8 +26,8 @@
 //# $Id: tSubImage.cc 20567 2009-04-09 23:12:39Z gervandiepen $
 
 #include <casa/Inputs/Input.h>
+#include <images/Images/ImageUtilities.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 #include <casa/namespace.h>
 
 Int main(Int argc, char *argv[]) {
@@ -55,13 +55,19 @@ Int main(Int argc, char *argv[]) {
 	String function = input.getString("function");
 	String outname = input.getString("outname");
 	Bool overwrite = input.getBool("overwrite");
-
+	Vector<uInt> axes(1,axis);
+	ImageInterface<Float> *myim = 0;
+	LogIO mylog;
+	ImageUtilities::openImage(myim, imagename, mylog);
+	if (myim == 0) {
+		mylog << "Unable to open image " << imagename << LogIO::EXCEPTION;
+	}
+	Record *regionPtr = 0;
     ImageCollapser imCollapser(
-		function, imagename, region, box,
-		chans, stokes, mask, axis, outname,
+		function, myim, region, regionPtr, box,
+		chans, stokes, mask, axes, outname,
         overwrite
     );
-
 
 	imCollapser.collapse(False);
 

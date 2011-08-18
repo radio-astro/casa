@@ -85,17 +85,18 @@ void checkImage(
 
 void testException(
 	const String& test, const String& aggString,
-    const String& imagename, const String& region,
+    const ImageInterface<Float>& image, const String& region,
     const String& box, const String& chans,
     const String& stokes, const String& mask,
     const uInt compressionAxis
 ) {
 	writeTestString(test);
 	Bool exceptionThrown = true;
+	Vector<uInt> axes(1, compressionAxis);
 	try {
 		ImageCollapser collapser(
-			aggString, imagename, region, box,
-			chans, stokes, mask, compressionAxis,
+			aggString, &image, region, 0, box,
+			chans, stokes, mask, axes,
 			outname(), False
 		);
 		// should not get here, fail if we do.
@@ -117,19 +118,11 @@ int main() {
     os << "tImageCollapser_tmp_" << pid;
     dirName = os.str();
 	Directory workdir(dirName);
-    String goodImage(datadir + "collapse_in.fits");
+    FITSImage goodImage(datadir + "collapse_in.fits");
     const String ALL = CasacRegionManager::ALL;
 	workdir.create();
 	uInt retVal = 0;
     try {
-    	testException(
-    		"Exception if no image name given", "mean",
-    		"", "", "", "", "", "", 0
-    	);
-    	testException(
-    		"Exception if bogus image name given", "mean",
-    		"mybogus.im", "", "", "", "", "", 0
-    	);
     	testException(
     		"Exception if no aggregate string given", "",
     		goodImage, "", "", "", "", "", 0
@@ -153,8 +146,8 @@ int main() {
     	{
     		writeTestString("average full image collapse along axis 0");
     		ImageCollapser collapser(
-    			"mean", goodImage, "", "", ALL,
-    			ALL, "", 0, outname(), False
+    			"mean", &goodImage, "", 0, "", ALL,
+    			ALL, "", Vector<uInt>(1, 0), outname(), False
     		);
     		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_avg_0.fits");
@@ -162,8 +155,8 @@ int main() {
     	{
     		writeTestString("average full image collapse along axis 2");
     		ImageCollapser collapser(
-    			"mean", goodImage, "", "", ALL,
-    			ALL, "", 2, outname(), False
+    			"mean", &goodImage, "", 0, "", ALL,
+    			ALL, "", Vector<uInt>(1, 2), outname(), False
     		);
     		collapser.collapse(False);
     		checkImage(outname(), datadir + "collapse_avg_2.fits");
@@ -171,15 +164,15 @@ int main() {
     	{
     		writeTestString("sum subimage collapse along axis 1");
     		ImageCollapser *collapser = new ImageCollapser(
-    			"sum", goodImage, "", "1,1,2,2", "1~2",
-    			"qu", "", 2, outname(), False
+    			"sum", &goodImage, "", 0, "1,1,2,2", "1~2",
+    			"qu", "", Vector<uInt>(1, 2), outname(), False
     		);
     		collapser->collapse(False);
     		delete collapser;
     		// and check that we can overwrite the previous output
     		collapser = new ImageCollapser(
-        		"sum", goodImage, "", "1,1,2,2", "1~2",
-        		"qu", "", 1, outname(), True
+        		"sum", &goodImage, "", 0, "1,1,2,2", "1~2",
+        		"qu", "", Vector<uInt>(1, 1), outname(), True
         	);
     		collapser->collapse(False);
     		delete collapser;
@@ -188,8 +181,8 @@ int main() {
     	{
     		writeTestString("Check not specifying out file is ok");
     		ImageCollapser collapser(
-    			"mean", goodImage, "", "", ALL,
-    			ALL, "", 2, "", False
+    			"mean", &goodImage, "", 0, "", ALL,
+    			ALL, "", Vector<uInt>(1, 2), "", False
     		);
     		ImageInterface<Float> *collapsed = collapser.collapse(True);
     		checkImage(collapsed, datadir + "collapse_avg_2.fits");
@@ -198,8 +191,8 @@ int main() {
     	{
     		writeTestString("Check not wanting return pointer results in a NULL pointer being returned");
     		ImageCollapser collapser(
-    			"mean", goodImage, "", "", ALL,
-    			ALL, "", 2, "", False
+    			"mean", &goodImage, "", 0, "", ALL,
+    			ALL, "", Vector<uInt>(1, 2), "", False
     		);
     		ImageInterface<Float> *collapsed = collapser.collapse(False);
     		AlwaysAssert(collapsed == NULL, AipsError);
@@ -212,7 +205,7 @@ int main() {
     		axes[2] = 3;
 
     		ImageCollapser collapser(
-    			"max", goodImage, "", "", ALL,
+    			"max", &goodImage, "", 0, "", ALL,
     			ALL, "", axes, outname(), False
     		);
     		collapser.collapse(False);
@@ -222,7 +215,7 @@ int main() {
         	writeTestString("average full temporary image collapse along axis 0");
         	ImageInterface<Float> *pIm;
         	LogIO log;
-        	ImageUtilities::openImage(pIm, goodImage, log);
+        	ImageUtilities::openImage(pIm, goodImage.name(), log);
         	IPosition shape = pIm->shape();
         	CoordinateSystem csys = pIm->coordinates();
         	Array<Float> vals = pIm->get();
@@ -230,8 +223,8 @@ int main() {
         	TempImage<Float> tIm(shape, csys);
         	tIm.put(vals);
         	ImageCollapser collapser(
-        		"mean", &tIm, "", "", ALL,
-        		ALL, "", 0, outname(), False
+        		"mean", &tIm, "", 0, "", ALL,
+        		ALL, "", vector<uInt>(1, 0), outname(), False
         	);
         	collapser.collapse(False);
         	checkImage(outname(), datadir + "collapse_avg_0.fits");
@@ -241,7 +234,7 @@ int main() {
         	Vector<uInt> axes(2, 0);
         	axes[1] = 1;
         	ImageCollapser collapser(
-        		"mean", goodImage, "", "", ALL,
+        		"mean", &goodImage, "", 0, "", ALL,
         		ALL, "", axes, outname(), False
         	);
         	collapser.collapse(False);

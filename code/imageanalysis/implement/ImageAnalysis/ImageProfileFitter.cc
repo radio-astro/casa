@@ -1,3 +1,4 @@
+
 //# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -30,86 +31,74 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/Precision.h>
-#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <scimath/Mathematics/Combinatorics.h>
 
+#include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+
+#include <memory>
+
 namespace casa {
 
-ImageProfileFitter::ImageProfileFitter(
-    const String& imagename, const String& region, const String& box,
-    const String& chans, const String& stokes,
-    const String& mask, const Int axis, const Bool multiFit,
-    const String& residual, const String& model, const uInt ngauss,
-    const Int polyOrder, const String& ampName,
-	const String& ampErrName, const String& centerName,
-	const String& centerErrName, const String& fwhmName,
-	const String& fwhmErrName
-) : _log(new LogIO()), _image(0),
-	_regionName(region), _box(box), _chans(chans), _stokes(stokes),
-	_mask(mask), _residual(residual),
-	_model(model), _regionString(""), _xUnit(""),
-	_centerName(centerName), _centerErrName(centerErrName),
-	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
-	_ampName(ampName), _ampErrName(ampErrName),
-	_multiFit(multiFit), _deleteImageOnDestruct(True),
-	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
-	_results(Record()) {
-    _construct(imagename);
-}
+const String ImageProfileFitter::_class = "ImageProfileFitter";
 
 ImageProfileFitter::ImageProfileFitter(
-	const ImageInterface<Float> * const image, const String& region,
-	const String& box, const String& chans, const String& stokes,
+	const ImageInterface<Float> *const &image, const String& region,
+	const Record *const &regionPtr,	const String& box,
+	const String& chans, const String& stokes,
 	const String& mask, const Int axis, const Bool multiFit,
 	const String& residual, const String& model, const uInt ngauss,
 	const Int polyOrder, const String& ampName,
 	const String& ampErrName, const String& centerName,
 	const String& centerErrName, const String& fwhmName,
 	const String& fwhmErrName
-) : _log(new LogIO()), _image(image->cloneII()),
-	_regionName(region), _box(box), _chans(chans), _stokes(stokes),
-	_mask(mask), _residual(residual),
-	_model(model), _regionString(""), _xUnit(""),
+) : ImageTask(
+		image, region, regionPtr, box, chans, stokes,
+		mask, "", False
+	),
+	_residual(residual), _model(model), _xUnit(""),
 	_centerName(centerName), _centerErrName(centerErrName),
 	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
 	_ampName(ampName), _ampErrName(ampErrName),
 	_multiFit(multiFit), _deleteImageOnDestruct(False),
 	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
 	_results(Record()) {
-    _construct(_image);
+    _checkNGaussAndPolyOrder();
+    _construct();
+    _finishConstruction();
 }
 
-ImageProfileFitter::~ImageProfileFitter() {
-    delete _log;
-    delete _image;
-}
+ImageProfileFitter::~ImageProfileFitter() {}
 
 Record ImageProfileFitter::fit() {
-    LogOrigin logOrigin("ImageProfileFitter", __FUNCTION__);
+    LogOrigin logOrigin(_class, __FUNCTION__);
     *_log << logOrigin;
-
+    {
+    	std::auto_ptr<ImageInterface<Float> > clone(
+    		_getImage()->cloneII()
+    	);
+    	std::auto_ptr<Record> regionClone(
+    		dynamic_cast<Record *>(_getRegion()->clone())
+    	);
+    	_subImage = SubImage<Float>::createSubImage(
+    		*clone,
+    		*(ImageRegion::tweakedRegionRecord(regionClone.get())),
+    		_getMask(), 0, False
+    	);
+    }
 	Record estimate;
 
 	String weightsImageName = "";
 	try {
 		if (_multiFit) {
 			// FIXME need to be able to specify the weights image
-			_fitters = _fitallprofiles(
-				_regionRecord, _subImage, _xUnit, _fitAxis, _mask,
-				_ngauss, _polyOrder, weightsImageName,
-				_model, _residual
-			);
+			_fitters = _fitallprofiles(weightsImageName);
 		}
 		else {
-			ImageFit1D<Float> fitter = _fitProfile(
-				_regionRecord, _subImage, _xUnit, _fitAxis, _mask,
-				estimate, _ngauss, _polyOrder, _model,
-				_residual
-			);
+			ImageFit1D<Float> fitter = _fitProfile(estimate);
 			Vector<uInt> axes(1, _fitAxis);
 			ImageCollapser collapser(
 				&_subImage, axes, True,
@@ -133,49 +122,6 @@ Record ImageProfileFitter::fit() {
 
 Record ImageProfileFitter::getResults() const {
 	return _results;
-}
-
-void ImageProfileFitter::_construct(const String& imagename) {
-	LogOrigin logOrigin("ImageProfileFitter", __FUNCTION__);
-    *_log << logOrigin;
-
-    _checkNGaussAndPolyOrder();
-    ImageInputProcessor inputProcessor;
-    vector<ImageInputProcessor::OutputStruct>  outputStruct;
-    _getOutputStruct(outputStruct);
-    vector<ImageInputProcessor::OutputStruct>* outputPtr = outputStruct.size() == 0
-        ? 0
-        : &outputStruct;
-    String diagnostics;
-    inputProcessor.process(
-    	_image, _regionRecord, diagnostics,
-    	outputPtr, _stokes, imagename, 0,
-    	_regionName, _box, _chans,
-    	CasacRegionManager::USE_FIRST_STOKES,
-    	False, 0
-    );
-    _finishConstruction();
-}
-
-void ImageProfileFitter::_construct(const ImageInterface<Float>* image) {
-	LogOrigin logOrigin("ImageProfileFitter", __FUNCTION__);
-    *_log << logOrigin;
-    _checkNGaussAndPolyOrder();
-    ImageInputProcessor inputProcessor;
-    vector<ImageInputProcessor::OutputStruct>  outputStruct;
-    _getOutputStruct(outputStruct);
-    vector<ImageInputProcessor::OutputStruct>* outputPtr = outputStruct.size() == 0
-        ? 0
-        : &outputStruct;
-    String diagnostics;
-    inputProcessor.process(
-    	_regionRecord, diagnostics,
-    	outputPtr, _stokes, image, 0,
-    	_regionName, _box, _chans,
-    	CasacRegionManager::USE_FIRST_STOKES,
-    	False, 0
-    );
-    _finishConstruction();
 }
 
 void ImageProfileFitter::_getOutputStruct(
@@ -202,6 +148,7 @@ void ImageProfileFitter::_getOutputStruct(
 }
 
 void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
+	LogOrigin logOrigin(_class, __FUNCTION__);
 	if (_ngauss == 0 && _polyOrder < 0) {
 		*_log << "Number of gaussians is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
@@ -210,24 +157,19 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 }
 
 void ImageProfileFitter::_finishConstruction() {
-    if (! _box.empty() && ! _regionName.empty()) {
-    	// for output later
-    	_regionName = "";
-    }
-    if (_fitAxis >= (Int)_image->ndim()) {
+    if (_fitAxis >= (Int)_getImage()->ndim()) {
     	*_log << "Specified fit axis " << _fitAxis
     		<< " must be less than the number of image axes ("
-    		<< _image->ndim() << ")" << LogIO::EXCEPTION;
+    		<< _getImage()->ndim() << ")" << LogIO::EXCEPTION;
     }
     if (_fitAxis < 0) {
-      Int specCoord = _image->coordinates().findCoordinate(Coordinate::SPECTRAL);
-		if (specCoord < 0) {
+		if (! _getImage()->coordinates().hasSpectralAxis()) {
 			_fitAxis = 0;
 			*_log << LogIO::WARN << "No spectral coordinate found in image, "
                 << "using axis 0 as fit axis" << LogIO::POST;
 		}
 		else {
-            _fitAxis = _image->coordinates().pixelAxes(specCoord)[0];
+            _fitAxis = _getImage()->coordinates().spectralAxisNumber();
 			*_log << LogIO::NORMAL << "Using spectral axis (axis " << _fitAxis
 				<< ") as fit axis" << LogIO::POST;
 		}
@@ -283,10 +225,10 @@ void ImageProfileFitter::_setResults() {
 	_results.define("niter", niterArr);
 	_results.define("ncomps", nCompArr);
 	_results.define("xUnit", _xUnit);
-	_results.define("yUnit", _image->units().getName());
+	_results.define("yUnit", _getImage()->units().getName());
 
 	String key;
-	TempImage<Float> *tmp = static_cast<TempImage<Float>* >(_image->cloneII());
+	TempImage<Float> *tmp = static_cast<TempImage<Float>* >(_getImage()->cloneII());
 	Vector<uInt> axes(1, _fitAxis);
 	ImageCollapser collapser(
 		tmp, axes, False, ImageCollapser::ZERO, String(""), False
@@ -337,7 +279,7 @@ void ImageProfileFitter::_setResults() {
 					csys, fwhmErrMat.column(i), mUnit
 				);
 			}
-			mUnit = _image->units().getName();
+			mUnit = _getImage()->units().getName();
 			if (!_ampName.empty()) {
 				_makeSolutionImage(
 					_ampName + "_" + gnum, shape,
@@ -390,17 +332,10 @@ String ImageProfileFitter::_radToRa(Float ras) const{
 
 }
 
-
 String ImageProfileFitter::_resultsToString() const {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
-	summary << "Input parameters ---" << endl;
-	summary << "       --- imagename:           " << _image->name() << endl;
-	summary << "       --- region:              " << _regionName << endl;
-	summary << "       --- box:                 " << _box << endl;
-	summary << "       --- channels:            " << _chans << endl;
-	summary << "       --- stokes:              " << _stokes << endl;
-	summary << "       --- mask:                " << _mask << endl;
+	summary << _summaryHeader();
 	summary << "       --- polynomial order:    " << _polyOrder << endl;
 	summary << "       --- number of Gaussians: " << _ngauss << endl;
 
@@ -415,12 +350,12 @@ String ImageProfileFitter::_resultsToString() const {
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
 	CoordinateSystem csysSub = _subImage.coordinates();
-	CoordinateSystem csys = _image->coordinates();
+	CoordinateSystem csys = _getImage()->coordinates();
 	Vector<Double> worldStart;
 	if (! csysSub.toWorld(worldStart, inIter.position())) {
 		*_log << csysSub.errorMessage() << LogIO::EXCEPTION;
 	}
-	CoordinateSystem csysIm = _image->coordinates();
+	CoordinateSystem csysIm = _getImage()->coordinates();
 	Vector<Double> pixStart;
 	if (! csysIm.toPixel(pixStart, worldStart)) {
 		*_log << csysIm.errorMessage() << LogIO::EXCEPTION;
@@ -597,7 +532,7 @@ String ImageProfileFitter::_gaussianToString(
 	const Vector<Double> world
 ) const {
 	Vector<Double> myWorld = world;
-    String yUnit = _image->units().getName();
+    String yUnit = _getImage()->units().getName();
 	ostringstream summary;
 	summary << "        Type   : GAUSSIAN" << endl;
 	summary << "        Peak   : "
@@ -692,7 +627,7 @@ String ImageProfileFitter::_polynomialToString(
 	poly.get(parms);
 	poly.getError(errs);
 	for (uInt j=0; j<parms.size(); j++) {
-		String unit = _image->units().getName();
+		String unit = _getImage()->units().getName();
         if (j > 0) {
           String denom = _xUnit.find("/") != String::npos
                 ? "(" + _xUnit + ")"
@@ -733,7 +668,7 @@ String ImageProfileFitter::_polynomialToString(
         }
         pCoeffErr[j] = casa::sqrt(sumsq);
         summary << "         c" << j << " : ";
-		String unit = _image->units().getName() + "/(pixel)^" + String::toString(j);
+		String unit = _getImage()->units().getName() + "/(pixel)^" + String::toString(j);
         summary << _elementToString(pCoeff[j], pCoeffErr[j], unit) << endl;
     }
 	return summary.str();
@@ -754,49 +689,38 @@ void ImageProfileFitter::_makeSolutionImage(
 
 // moved from ImageAnalysis
 ImageFit1D<Float> ImageProfileFitter::_fitProfile(
-	Record& regionRecord, SubImage<Float>& subImage,
-	String& xUnit, const uInt axis,
-	const String& mask, const Record& estimate,
-	const uInt ngauss, const Int poly,
-	const String& modelName, const String& residualName,
+	const Record& estimate,
 	const Bool fitIt, const String weightsImageName
 ) {
-	*_log << LogOrigin("ImagePorfileFitter", __FUNCTION__);
-
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-	subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		*_image, *(ImageRegion::tweakedRegionRecord(&regionRecord)),
-		mask, 0, False
-	);
-	delete pRegionRegion;
-	delete pMaskRegion;
-	IPosition imageShape = subImage.shape();
+	*_log << LogOrigin(_class, __FUNCTION__);
+	IPosition imageShape = _subImage.shape();
 
 	PtrHolder<ImageInterface<Float> > weightsImagePtrHolder;
 	ImageInterface<Float> *pWeights = 0;
 	if (! weightsImageName.empty()) {
 		PagedImage<Float> weightsImage(weightsImageName);
-		if (! weightsImage.shape().conform(_image->shape())) {
+		if (! weightsImage.shape().conform(_getImage()->shape())) {
 			*_log << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-		ImageRegion* pR = ImageRegion::fromRecord(
-			_log, weightsImage.coordinates(),
-			weightsImage.shape(), regionRecord
+		std::auto_ptr<ImageRegion> pR(
+			ImageRegion::fromRecord(
+				_log.get(), weightsImage.coordinates(),
+				weightsImage.shape(), *_getRegion()
+			)
 		);
-		weightsImagePtrHolder.set(new SubImage<Float> (weightsImage, *pR, False));
+		weightsImagePtrHolder.set(
+			new SubImage<Float> (weightsImage, *pR, False)
+		);
 		pWeights = weightsImagePtrHolder.ptr();
-		delete pR;
 	}
 
 	// Set default axis
-	const uInt nDim = subImage.ndim();
-	CoordinateSystem cSys = subImage.coordinates();
+	const uInt nDim = _subImage.ndim();
+	CoordinateSystem cSys = _subImage.coordinates();
 	String doppler = "";
 	ImageUtilities::getUnitAndDoppler(
-		xUnit, doppler, axis, cSys
+		_xUnit, doppler, _fitAxis, cSys
 	);
 
 	// Fish out request units from input estimate record
@@ -824,9 +748,9 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
 	Bool ok = ImageFit1D<Float>::setAbcissaState(
-		errMsg, abcissaType, cSys, xUnit, doppler, axis
+		errMsg, abcissaType, cSys, _xUnit, doppler, _fitAxis
 	);
-	subImage.setCoordinateInfo(cSys);
+	_subImage.setCoordinateInfo(cSys);
 
 	if (!ok) {
 		*_log << LogIO::WARN << errMsg << LogIO::POST;
@@ -834,9 +758,9 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 
 	ImageFit1D<Float> fitter;
 	if (pWeights) {
-		fitter.setImage(subImage, *pWeights, axis);
+		fitter.setImage(_subImage, *pWeights, _fitAxis);
 	} else {
-		fitter.setImage(subImage, axis);
+		fitter.setImage(_subImage, _fitAxis);
 	}
 	// Set data region averaging data in region.  We could also set the
 	// ImageRegion from that passed in to this function rather than making
@@ -894,43 +818,45 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 			fitter.setElements(list2);
 		} else {
 			// Set auto estimate
-			if (! fitter.setGaussianElements(ngauss)) {
+			if (! fitter.setGaussianElements(_ngauss)) {
 				*_log << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 			}
 		}
-		if (poly >= 0) {
+		if (_polyOrder >= 0) {
 			// Add baseline
-			SpectralElement polyEl(poly);
+			SpectralElement polyEl(_polyOrder);
 			fitter.addElement(polyEl);
 		}
 		if (! fitter.fit()) {
 			*_log << LogIO::WARN << "Fit failed to converge" << LogIO::POST;
 		}
-		if (! modelName.empty()) {
+		if (! _model.empty()) {
 			model = fitter.getFit();
 			ImageCollapser collapser(
-				&subImage, Vector<uInt>(1, axis), True,
-				ImageCollapser::ZERO, modelName, True
+				&_subImage, Vector<uInt>(1, _fitAxis), True,
+				ImageCollapser::ZERO, _model, True
 			);
-			PagedImage<Float> *modelImage = static_cast<PagedImage<Float>*>(
-												collapser.collapse(True)
-											);
+			std::auto_ptr<PagedImage<Float> > modelImage(
+				static_cast<PagedImage<Float>*>(
+					collapser.collapse(True)
+				)
+			);
 			modelImage->put(model.reform(modelImage->shape()));
 			modelImage->flush();
-			delete modelImage;
 		}
-		if (! residualName.empty()) {
+		if (! _residual.empty()) {
 			residual = fitter.getResidual(-1, True);
             ImageCollapser collapser(
-				&subImage, Vector<uInt>(1, axis), True,
-				ImageCollapser::ZERO, residualName, True
+				&_subImage, Vector<uInt>(1, _fitAxis), True,
+				ImageCollapser::ZERO, _residual, True
 			);
-			PagedImage<Float> *residualImage = static_cast<PagedImage<Float>*>(
-												collapser.collapse(True)
-											);
+			std::auto_ptr<PagedImage<Float> > residualImage(
+				static_cast<PagedImage<Float>*>(
+					collapser.collapse(True)
+				)
+			);
 			residualImage->put(residual.reform(residualImage->shape()));
 			residualImage->flush();
-			delete residualImage;
 		}
 		const SpectralList& fitList = fitter.getList(True);
 		fitList.toRecord(recOut);
@@ -943,7 +869,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 			residual = fitter.getResidual(-1, False);
 		}
 		else {
-			if (fitter.setGaussianElements(ngauss)) { // Auto estimate
+			if (fitter.setGaussianElements(_ngauss)) { // Auto estimate
 				model = fitter.getEstimate(); // Evaluate
 				residual = fitter.getResidual(-1, False);
 				const SpectralList& list = fitter.getList(False);
@@ -960,80 +886,69 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 }
 
 Vector<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
-	Record& region, SubImage<Float>& subImage, String& xUnit, const Int axis,
-	const String& mask, const Int nGauss, const Int poly,
-	const String& weightsImageName, const String& modelImageName,
-	const String& residImageName
-) const {
-
-	*_log << LogOrigin("ImageProfileFitter", __FUNCTION__);
-
-	Int baseline(poly);
-	if (!(nGauss > 0 || baseline >= 0)) {
-		*_log
-			<< "You must specify a number of gaussians and/or a polynomial order to fit"
-			<< LogIO::EXCEPTION;
-	}
-
-	ImageRegion* pRegionRegion = 0;
-	ImageRegion* pMaskRegion = 0;
-	subImage = SubImage<Float>::createSubImage(
-		pRegionRegion, pMaskRegion,
-		*_image, *(ImageRegion::tweakedRegionRecord(&region)),
-		mask, 0, True
-	);
-	delete pRegionRegion;
-	delete pMaskRegion;
-
-	IPosition imageShape = subImage.shape();
+	const String& weightsImageName
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	Int baseline = _polyOrder;
+	IPosition imageShape = _subImage.shape();
 	PtrHolder<ImageInterface<Float> > weightsImage;
-	ImageInterface<Float>* pWeights = 0;
+	//ImageInterface<Float>* pWeights = 0;
 	if (! weightsImageName.empty()) {
 		PagedImage<Float> sigmaImage(weightsImageName);
-		if (!sigmaImage.shape().conform(_image->shape())) {
+		if (!sigmaImage.shape().conform(_getImage()->shape())) {
 			*_log << "image and sigma images must have same shape"
 					<< LogIO::EXCEPTION;
 		}
-		ImageRegion* pR = ImageRegion::fromRecord(
-			_log, sigmaImage.coordinates(),
-			sigmaImage.shape(), region
+		std::auto_ptr<ImageRegion> pR(
+			ImageRegion::fromRecord(
+				_log.get(), sigmaImage.coordinates(),
+				sigmaImage.shape(), *_getRegion()
+			)
 		);
 		weightsImage.set(new SubImage<Float> (sigmaImage, *pR, False));
-		pWeights = weightsImage.ptr();
-		delete pR;
+		//pWeights = weightsImage.ptr();
 	}
 	// Set default axis
-	CoordinateSystem cSys = subImage.coordinates();
+	CoordinateSystem cSys = _subImage.coordinates();
 	Int pAxis = CoordinateUtil::findSpectralAxis(cSys);
-	Int axis2 = axis;
+	Int axis2 = _fitAxis;
 	if (axis2 < 0) {
 		if (pAxis != -1) {
 			axis2 = pAxis;
 		} else {
-			axis2 = subImage.ndim() - 1;
+			axis2 = _subImage.ndim() - 1;
 		}
 	}
 	// Create output images with a mask
 	PtrHolder<ImageInterface<Float> > fitImage, residImage;
 	ImageInterface<Float>* pFit = 0;
 	ImageInterface<Float>* pResid = 0;
-	if (ImageAnalysis::makeExternalImage(fitImage, modelImageName, cSys, imageShape, subImage,
-			*_log, True, False, True))
+	if (
+		ImageAnalysis::makeExternalImage(
+		fitImage, _model, cSys, imageShape, _subImage,
+		*_log, True, False, True
+		)
+	) {
 		pFit = fitImage.ptr();
-	if (ImageAnalysis::makeExternalImage(residImage, residImageName, cSys, imageShape,
-			subImage, *_log, True, False, True))
+	}
+	if (
+		ImageAnalysis::makeExternalImage(
+			residImage, _residual, cSys, imageShape,
+			_subImage, *_log, True, False, True
+		)
+	) {
 		pResid = residImage.ptr();
+	}
 	// Do fits
 	// FIXME give users the option to show a progress bar
 	Bool showProgress = False;
 	uInt axis3(axis2);
-	uInt nGauss2 = max(0, nGauss);
+	uInt nGauss2 = max((uInt)0, _ngauss);
 	return ImageUtilities::fitProfiles(
-		pFit, pResid, xUnit, subImage,
+		pFit, pResid, _xUnit, _subImage,
 		axis3, nGauss2, baseline, showProgress
 	);
 
 }
 
 }
-

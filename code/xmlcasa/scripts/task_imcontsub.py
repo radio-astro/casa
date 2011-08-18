@@ -1,4 +1,5 @@
 import os
+import re
 from taskinit import *
 
 from odict import odict
@@ -9,12 +10,12 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
     filesExist=False
     if ( len( linefile ) > 0 ):
         if ( os.path.exists( linefile ) ):
-            casalog.post( 'Error: Unable to continue file '+linefile\
+            casalog.post('Error: file ' + linefile
                           +' already exists, please delete before continuing.',\
                           'SEVERE' )
             filesExist=True
-    elif ( len( linefile ) < 1 ):
-        casalog.post( "The linefile paramter is empty, consequently the" \
+    else:
+        casalog.post("The linefile parameter is empty, consequently the"
                       +" spectral line image will NOT be\nsaved on disk.", \
                       'WARN')
             
@@ -24,8 +25,8 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
                               +' already exists, please delete before continuing.',\
                           'SEVERE' )
                 filesExist=True
-    elif ( len( contfile ) < 1 ):
-        casalog.post( "The contfile paramter is empty, consequently the" \
+    else:
+        casalog.post("The contfile parameter is empty, consequently the"
                       +" continuum image will NOT be\nsaved on disk.", \
                       'WARN')
     if ( filesExist ):
@@ -34,10 +35,15 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
     _myia = iatool.create()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
+
+    if isinstance(box, list):
+        box = ', '.join([str(b) for b in box])
+
+    # Don't mix chans up with reg!  reg selects a subset for output, and chans
+    # selects a subset to define the line-free channels.
     reg = rg.frombcs(csys=mycsys.torecord(), shape=_myia.shape(),
-        box=box, chans=chans, stokes=stokes, stokescontrol="f",
-        region=region
-    )
+                     box=box, stokes=stokes, stokescontrol="f",
+                     region=region)
 
     channels=[]
 
@@ -52,10 +58,7 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
         # Parse the channel information.
         tmpChan=[]
         if ( len(chans) > 0 ):
-            if ( chans.count( ';' ) < 1 ):
-                tmpChans=chans.split(',')
-            else:
-                tmpChans=chans.split(';')
+            tmpChans = re.split(r'[,;]', chans)
         else:
             tmpChans=[str(minChan)+"~"+str(maxChan)]
 
@@ -63,10 +66,8 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
         # Now make our list of strings into a list of integers.
         # In case someone has used ',' as the main separator we
         # split each element up on ','
-        for i in range( len( tmpChans ) ):
-            current = _parse_chans( tmpChans[i], minChan, maxChan )
-            for j in range( len( current ) ):
-                channels.append( current[j] )
+        for tcs in tmpChans:
+            channels.extend(_parse_chans(tcs, minChan, maxChan))
 
     except Exception, err:
         casalog.post( 'Error: Unable to parse the channel information. '+str(err),'SEVERE' )
@@ -80,7 +81,8 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
     try:
         # Now do the continuum subtraction.
         #ia.continuumsub( outline=linefile, outcont=contfile, region=reg, fitorder=fitorder, overwrite=False )
-        _myia.continuumsub( outline=linefile, outcont=contfile, region=reg, channels=channels, fitorder=fitorder, overwrite=False )
+        _myia.continuumsub(outline=linefile, outcont=contfile, region=reg,
+                           channels=channels, fitorder=fitorder, overwrite=False)
     
         # Cleanup
         if ( reg != None ):

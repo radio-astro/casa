@@ -28,16 +28,15 @@
 #ifndef IMAGES_IMAGEPROFILEFITTER_H
 #define IMAGES_IMAGEPROFILEFITTER_H
 
-#include <casa/Logging/LogIO.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
+
 #include <images/Images/ImageFit1D.h>
-#include <images/Images/ImageInterface.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 
 #include <casa/namespace.h>
 
 namespace casa {
 
-class ImageProfileFitter {
+class ImageProfileFitter : public ImageTask {
 	// <summary>
 	// Top level interface for one-dimensional profile fits.
 	// </summary>
@@ -66,7 +65,7 @@ class ImageProfileFitter {
 public:
 	// constructor appropriate for API calls.
 	// Parameters:
-	// <src>imagename</src> - the name of the input image in which to fit the models
+	// <src>image</src> - the input image in which to fit the models
 	// <src>box</src> - A 2-D rectangular box in direction space in which to use pixels for the fitting, eg box=100,120,200,230
 	// In cases where both box and region are specified, box, not region, is used.
 	// <src>region</src> - Named region to use for fitting
@@ -83,24 +82,14 @@ public:
 	// The output solution images are only written if multiFit is true.
 
 	ImageProfileFitter(
-		const String& imagename, const String& region, const String& box,
+		const ImageInterface<Float> *const &image, const String& region,
+		const Record *const &regionPtr, const String& box,
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const Bool multiFit, const String& residual,
 		const String& model, const uInt ngauss, const Int polyOrder,
 		const String& ampName = "", const String& ampErrName = "",
 		const String& centerName = "", const String& centerErrName = "",
 		const String& fwhmName = "", const String& fwhmErrName = ""
-	);
-
-	ImageProfileFitter(
-		const ImageInterface<Float> * const image, const String& region,
-		const String& box, const String& chans, const String& stokes,
-		const String& mask, const Int axis, const Bool multiFit,
-		const String& residual, const String& model, const uInt ngauss,
-		const Int polyOrder, const String& ampName = "",
-		const String& ampErrName = "", const String& centerName = "",
-		const String& centerErrName = "", const String& fwhmName = "",
-		const String& fwhmErrName = ""
 	);
 
 	// destructor
@@ -112,31 +101,34 @@ public:
 	// get the fit results
 	Record getResults() const;
 
+    inline String getClass() const { return _class; };
+
+   	inline CasacRegionManager::StokesControl _getStokesControl() const {
+   		return CasacRegionManager::USE_FIRST_STOKES;
+   	}
+
+    inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<Coordinate::Type>(0);
+    }
 
 private:
-	LogIO *_log;
-	ImageInterface<Float> *_image;
-	Record _regionRecord;
-	String _regionName, _box, _chans, _stokes, _mask,
-		_residual, _model, _regionString, _xUnit,
+
+	String _residual, _model, _regionString, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit, _deleteImageOnDestruct;
 	Int _polyOrder, _fitAxis;
 	uInt _ngauss;
 	Vector<ImageFit1D<Float> > _fitters;
+    // subimage contains the region of the original image
+	// on which the fit is performed.
 	SubImage<Float> _subImage;
 	Record _results;
 
+	const static String _class;
+
 	// disallow default constructor
 	ImageProfileFitter();
-
-	// does the lion's share of constructing the object, ie checks validity of
-	// inputs, etc.
-
-    void _construct(const String& imagename);
-    
-    void _construct(const ImageInterface<Float>* image);
 
     void _getOutputStruct(
         vector<ImageInputProcessor::OutputStruct>& outputs
@@ -171,29 +163,16 @@ private:
     	const Vector<Double>& values, const String& unit
     );
 
-    // <src>subImage</src> will contain the subimage of the original image
-    // on which the fit is performed.
     // moved from ImageAnalysis
     ImageFit1D<Float> _fitProfile(
-        Record& regionRecord, SubImage<Float>& subImage,
-        String& xUnit,
-        const uInt axis, const String& mask,
-        const Record& estimate, const uInt ngauss = 0,
-        const Int poly = -1, const String& modelName = "",
-        const String& residName = "", const Bool fit = True,
-        const String weightsImageName = ""
+        const Record& estimate, const Bool fitIt=True,
+        const String weightsImageName=""
     );
 
-    // <src>subImage</src> will contain the subimage of the original image
-    // on which the fit is performed.
     // moved from ImageAnalysis
     Vector<ImageFit1D<Float> > _fitallprofiles(
-    	Record& region, SubImage<Float>& subImage, String& xUnit,
-    	const Int axis, const String& mask,
-        const Int ngauss, const Int poly,
-        const String& weightsImageName = "", const String& fit = "",
-        const String& resid = ""
-    ) const;
+        const String& weightsImageName = ""
+    );
 
 };
 }

@@ -96,7 +96,7 @@
 # returns an image tool upon success.
 # </todo>
 
-import random
+#import random
 import os
 import shutil
 import casac
@@ -108,7 +108,8 @@ import unittest
 list = ['g192_a2.image', 'g192_a2.image-2.rgn', 
         'g192_a2.contfree', 'g192_a2.cont', 
         'g192_a2.contfree.order1', 'g192_a2.cont.order1', 
-        'g192_a2.contfree.order2', 'g192_a2.cont.order2']
+        'g192_a2.contfree.order2', 'g192_a2.cont.order2',
+        'boxychans_cont.im', 'boxychans_line.im']
 
 # Tests the correctness of the imcontsub task in CASA including:
 #   1. Incorrect input for each paramter.  Incorrect input includes
@@ -278,86 +279,88 @@ class imcontsub_test(unittest.TestCase):
 
 
     
-    ####################################################################
-    # Continuum subtraction correctness test.
-    #
-    # This test subtacts the continuum from the g192 data file
-    # and compares the results (both continuum and spectral line
-    # with subtracted continuum files) with pervious results.
-    #
-    # Random values are selected in the files and compared.
-    # FIXME compare the entire arrays, not bloody random values
-    #
-    # Returns True if successful, and False if it has failed.
-    ####################################################################
+    ## ####################################################################
+    ## # Continuum subtraction correctness test.
+    ## #
+    ## # This test subtacts the continuum from the g192 data file
+    ## # and compares the results (both continuum and spectral line
+    ## # with subtracted continuum files) with pervious results.
+    ## #
+    ## # Random values are selected in the files and compared.
+    ## # FIXME compare the entire arrays, not bloody random values
+    ## # FIXED - replacing it with the equivalent but better test_fitorder(0)
+    ## # sped the suite up from 1847s to 1194s on faraday.cv.nrao.edu.
+    ## #
+    ## # Returns True if successful, and False if it has failed.
+    ## ####################################################################
     
-    def test_continuum(self):
-        '''Imcontsub: Testing continuum sub correctness'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
-        casalog.post( "Starting imcontsub CONTINUUM SUB CORRECTNESS tests.", 'NORMAL2' )
+    ## def test_continuum(self):
+    ##     '''Imcontsub: Testing continuum sub correctness'''
+    ##     retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+    ##     casalog.post( "Starting imcontsub CONTINUUM SUB CORRECTNESS tests.", 'NORMAL2' )
     
-        try:
-            results=imcontsub( 'g192_a2.image', fitorder=0, contfile='cont_test_cont1', linefile='cont_test_line1' )
-        except Exception, err:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-                     +"\nError: Unable to subtract continuum with a fit order of 0 "\
-                     +"\n\t REULTS: "+str(results)
-        else:
-            if ( not os.path.exists( 'cont_test_cont1' ) or not os.path.exists( 'cont_test_line1' ) or not results ): 
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                       +"\nError: continuum 3 output files were NOT created."
-            else:
-                # Now that we know something has been done lets check some values
-                # with previously created files to see if the values are the same.
-                # We randomly pick 50 points (almost 10%)
-                # FIXME lovely, yes let's pick random values to make sure any failures 
-                # cannot easily be reproduced, ugh
-                for count in range(0,50):
-                    x = random.randint(0,511)
-                    y = random.randint(0,511)
-                    box=str(x)+','+str(y)+','+str(x)+','+str(y)
-                    chan = str(random.randint(0,39))
+    ##     try:
+    ##         results=imcontsub( 'g192_a2.image', fitorder=0, contfile='cont_test_cont1', linefile='cont_test_line1' )
+    ##     except Exception, err:
+    ##         retValue['success']=False
+    ##         retValue['error_msgs']=retValue['error_msgs']\
+    ##                  +"\nError: Unable to subtract continuum with a fit order of 0 "\
+    ##                  +"\n\t REULTS: "+str(results)
+    ##     else:
+    ##         if ( not os.path.exists( 'cont_test_cont1' ) or not os.path.exists( 'cont_test_line1' ) or not results ): 
+    ##             retValue['success']=False
+    ##             retValue['error_msgs']=retValue['error_msgs']\
+    ##                    +"\nError: continuum 3 output files were NOT created."
+    ##         else:
+    ##             # Now that we know something has been done lets check some values
+    ##             # with previously created files to see if the values are the same.
+    ##             # We randomly pick 50 points (almost 10%)
+    ##             # FIXME lovely, yes let's pick random values to make sure any failures 
+    ##             # cannot easily be reproduced, ugh
+    ##             for count in range(0,50):
+    ##                 x = random.randint(0,511)
+    ##                 y = random.randint(0,511)
+    ##                 box=str(x)+','+str(y)+','+str(x)+','+str(y)
+    ##                 chan = str(random.randint(0,39))
     
-                    line_prev_value={}
-                    line_cur_value={'empty':''}
-                    try: 
-                        line_prev_value = imval( 'g192_a2.contfree', box=box, chans=chan, stokes='I' )
-                        line_cur_value  = imval( 'cont_test_line1', box=box, chans=chan, stokes='I' )
-                    except:
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                            +"\nError: Unable to compare spectral line files."
-                    else:
-                       #print "Spec line prev value: ", line_prev_value
-                       #print "spec line current value: ", line_cur_value  
-                       casalog.post( "*** line_prev_value " + str(line_prev_value), 'WARN')
-                       casalog.post( "*** line_cur_value " + str(line_cur_value), 'WARN')      
-                       if ( (line_prev_value['data'] != line_cur_value['data']).any() ):
-                        retValue['success']    = False
-                        retValue['error_msgs'] = '\nError: spectral line value differs with '\
-                              + "previously calculated value at: "\
-                              + "\t["+str(x)+','+str(y)+','+chan+',I].'\
-                              + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
-                    try:
-                        cont_prev_value = imval( 'g192_a2.cont', box=box, chans=chan, stokes='I' )
-                        cont_cur_value  = imval( 'cont_test_cont1', box=box, chans=chan, stokes='I' )
-                    except:
-                        retValue['success']=False
-                        retValue['error_msgs']=retValue['error_msgs']\
-                            +"\nError: Unable to compare continuum files."
-                    else:
-                       #print "Continuum prev value: ", cont_prev_value
-                       #print "Continuum current value: ", cont_cur_value        
-                       if ( (cont_prev_value['data'] != cont_cur_value['data']).any() ):
-                        retValue['success']    = False
-                        retValue['error_msgs'] = '\nError: continuum value differs with '\
-                            + "previously calculated value at: "\
-                            + "\t["+str(x)+','+str(y)+','+chan+',I].'
-                            #+ "\tvalues are "+str(cont_prev_value)+" and "+str(cont_cur_value)
+    ##                 line_prev_value={}
+    ##                 line_cur_value={'empty':''}
+    ##                 try: 
+    ##                     line_prev_value = imval( 'g192_a2.contfree', box=box, chans=chan, stokes='I' )
+    ##                     line_cur_value  = imval( 'cont_test_line1', box=box, chans=chan, stokes='I' )
+    ##                 except:
+    ##                     retValue['success']=False
+    ##                     retValue['error_msgs']=retValue['error_msgs']\
+    ##                         +"\nError: Unable to compare spectral line files."
+    ##                 else:
+    ##                    #print "Spec line prev value: ", line_prev_value
+    ##                    #print "spec line current value: ", line_cur_value  
+    ##                    casalog.post( "*** line_prev_value " + str(line_prev_value), 'WARN')
+    ##                    casalog.post( "*** line_cur_value " + str(line_cur_value), 'WARN')      
+    ##                    if ( (line_prev_value['data'] != line_cur_value['data']).any() ):
+    ##                     retValue['success']    = False
+    ##                     retValue['error_msgs'] = '\nError: spectral line value differs with '\
+    ##                           + "previously calculated value at: "\
+    ##                           + "\t["+str(x)+','+str(y)+','+chan+',I].'\
+    ##                           + "\tvalues are "+str(line_prev_value)+" and "+str(line_cur_value)
+    ##                 try:
+    ##                     cont_prev_value = imval( 'g192_a2.cont', box=box, chans=chan, stokes='I' )
+    ##                     cont_cur_value  = imval( 'cont_test_cont1', box=box, chans=chan, stokes='I' )
+    ##                 except:
+    ##                     retValue['success']=False
+    ##                     retValue['error_msgs']=retValue['error_msgs']\
+    ##                         +"\nError: Unable to compare continuum files."
+    ##                 else:
+    ##                    #print "Continuum prev value: ", cont_prev_value
+    ##                    #print "Continuum current value: ", cont_cur_value        
+    ##                    if ( (cont_prev_value['data'] != cont_cur_value['data']).any() ):
+    ##                     retValue['success']    = False
+    ##                     retValue['error_msgs'] = '\nError: continuum value differs with '\
+    ##                         + "previously calculated value at: "\
+    ##                         + "\t["+str(x)+','+str(y)+','+chan+',I].'
+    ##                         #+ "\tvalues are "+str(cont_prev_value)+" and "+str(cont_cur_value)
     
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
+    ##     self.assertTrue(retValue['success'],retValue['error_msgs'])
     
     
     ####################################################################
@@ -394,8 +397,7 @@ class imcontsub_test(unittest.TestCase):
     # the fitorder paramter are tested in the input test.
     #
     # The results, image file contents, are compared with previously
-    # created image files. 50 values are compared in each of the
-    # continuum file and the spectral line file, about 10% of the image.
+    # created image files.
     #
     # Returns True if successful, and False if it has failed.
     ####################################################################
@@ -415,12 +417,17 @@ class imcontsub_test(unittest.TestCase):
         # edits). This whole test file probably needs to be reviewed but of course time is tight so
         # I cannot do that now.
     
-        for order in [1,2]:
+        for order in xrange(2):
             contfile='fit_test_cont'+str(order)
             linefile='fit_test_line'+str(order)
-    
-            oldcontfile='g192_a2.cont.order'+str(order)
-            oldlinefile='g192_a2.contfree.order'+str(order)
+
+            if order > 0:
+                oldcontfile='g192_a2.cont.order'+str(order)
+                oldlinefile='g192_a2.contfree.order'+str(order)
+            else:
+                oldcontfile = 'g192_a2.cont'
+                oldlinefile = 'g192_a2.contfree'
+                
             try:
                 results = imcontsub('g192_a2.image', fitorder=order, contfile=contfile, linefile=linefile)
             except Exception, err:
@@ -429,49 +436,13 @@ class imcontsub_test(unittest.TestCase):
                     +"\nError: Unable to subtract continuum with a fit order="+str(order)\
                     +"\n\t REULTS: "+str(results)
             else:
-                if ( os.path.exists( contfile ) and os.path.exists( linefile ) and results ):
-                    try:
-                        # check the subtracted line image matches expectations
-                        subtract_expr = '(\"' + linefile + '\"-\"' + oldlinefile + '\")'
-                        output_image = "line_diff" + str(order) + ".im"
-                        immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
-                        ia.open(output_image)
-                        stats = ia.statistics()
-                        ia.close()
-                        absmax = max(abs(stats['min']), abs(stats['max']))
-                        # in an infinite precision utopia, the difference image would be 0, but
-                        # alas, we do not live in such a world yet.
-                        if (absmax > 1e-8):
-                            retValue['success'] = False
-                            retValue['error_msgs'] = retValue['error_msgs']\
-                                + "line image different from expected on order " + str(order)\
-                                + " fit. Max resid is " + str(absmax)
-                    except Exception, err:
-                        retValue['success'] = False
-                        retValue['error_msgs'] = retValue['error_msgs']\
-                            + "Exception thrown when differencing line images on order " + str(order)\
-                            + " fit " + str(err)
-                    try:
-                        # check continuum image matches expectations
-                        subtract_expr = '(\"' + contfile + '\"-\"' + oldcontfile + '\")'
-                        output_image = "cont_diff" + str(order) + ".im"
-                        immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
-                        ia.open(output_image)
-                        stats = ia.statistics()
-                        ia.close()
-                        absmax = max(abs(stats['min']), abs(stats['max']))
-                        # in an infinite precision utopia, the difference image would be 0, but
-                        # alas, we do not live in such a world yet.
-                        if (absmax > 1e-8):
-                            retValue['success'] = False
-                            retValue['error_msgs'] = retValue['error_msgs']\
-                                + "continuum image different from expected on order " + str(order)\
-                                + " fit. Max residual is " + str(absmax)
-                    except Exception, err:
-                        retValue['success'] = False
-                        retValue['error_msgs'] = retValue['error_msgs']\
-                            + "Exception thrown when differencing continuum images using order " + str(order)\
-                            + " fit " + str(err)
+                if os.path.isdir(contfile) and os.path.isdir(linefile) and results:
+                    retValue = self.cmp_images(linefile, oldlinefile,
+                                               "Order " + str(order) + " line image",
+                                               retValue)
+                    retValue = self.cmp_images(contfile, oldcontfile,
+                                               "Order " + str(order) + " continuum image",
+                                               retValue)
                 else:  
                     retValue['success']=False
                     retValue['error_msgs']=retValue['error_msgs']\
@@ -479,7 +450,64 @@ class imcontsub_test(unittest.TestCase):
                        +str(order)+" test."
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
+
+    def cmp_images(self, newimg, oldimg, errmsg, retval, tol=1.0e-8):
+        """
+        Check that newimg matches oldimg to within tol.
+        errmsg is a descriptive label in case there is an error.
+        retval is updated with the results and returned.
+        """
+        try:
+            subtract_expr = '(\"' + newimg + '\"-\"' + oldimg + '\")'
+            output_image = newimg + '.diff'
+            immath(mode='evalexpr', expr=subtract_expr, outfile=output_image)
+            ia.open(output_image)
+            stats = ia.statistics()
+            ia.close()
+            absmax = max(abs(stats['min']), abs(stats['max']))
+            # in an infinite precision utopia, the difference image would be 0, but
+            # alas, we do not live in such a world yet.
+            if (absmax > tol):
+                retval['success'] = False
+                retval['error_msgs'] += errmsg + ' error: Max residual is ' + str(absmax)
+        except Exception, err:
+            retval['success'] = False
+            retval['error_msgs'] += errmsg + " error: Exception thrown: " + str(err)
+        return retval
+        
+
+    def test_box_and_chans(self):
+        '''Imcontsub: Testing box and chans'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        #casalog.post("Starting imcontsub box and chans tests.", 'NORMAL2')
+
+        oldcfil = 'boxychans_cont.im'
+        cfil = 'test_' + oldcfil
+        oldlfil = 'boxychans_line.im'
+        lfil = 'test_' + oldlfil
+        bx   = [400, 420, 490, 470]
     
+        try:
+            results = imcontsub('g192_a2.image', fitorder=0, contfile=cfil,
+                                linefile=lfil, box=bx,
+                                chans='32~37')  # Purposely one-sided.  
+        except Exception, err:
+            retValue['success']=False
+            retValue['error_msgs'] += "\nError: Unable to subtract continuum with box and chans "\
+                                      +"\n\t RESULTS: "+str(results)
+        else:
+            if os.path.isdir(cfil) and os.path.isdir(lfil) and results:
+                retValue = self.cmp_images(lfil, oldlfil,
+                                           "box and chans line image", retValue)
+                retValue = self.cmp_images(cfil, oldcfil,
+                                           "box and chans continuum image",
+                                           retValue)
+            else:
+                retValue['success']=False
+                retValue['error_msgs'] += "\nError: box and chans output files were NOT created."
+
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        
 def suite():
     return [imcontsub_test]
 
