@@ -1109,6 +1109,11 @@ VLAT::sweepVi ()
 
     applyModifiers (visibilityIterator_p);
 
+    // jagonzal: Check if slurp is requested
+    bool slurp = false;
+    AipsrcValue<Bool>::find (slurp,"ROVisibilityIteratorAsync.slurp", false);
+    if (slurp) visibilityIterator_p->slurp();
+
     // jagonzal: Chunk initialization
     vlaData_p->getMutex()->acquirelock();
     visibilityIterator_p->originChunks(True);
