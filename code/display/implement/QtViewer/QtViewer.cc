@@ -41,10 +41,10 @@ const QString &QtViewer::name( ) {
     return name_;
 }
 
-QtViewer::QtViewer( bool is_server, const char *dbus_name ) :
-	QtViewerBase(is_server), dbus_(NULL) {
+QtViewer::QtViewer( const std::list<std::string> &args, bool is_server, const char *dbus_name ) :
+  QtViewerBase(is_server), dbus_(NULL), args_(args), is_server_(is_server) {
 
-    name_ = (is_server ? "view_server" : "viewer");
+    name_ = (is_server_ ? "view_server" : "viewer");
     dbus_name_ = (dbus_name ? dbus_name : 0);
 
     qInitResources_QtViewer();
@@ -62,7 +62,7 @@ QtViewer::QtViewer( bool is_server, const char *dbus_name ) :
 	// It doesn't work here because it makes the linker looks for
 	//   casa::qInitResources_QtViewer()     :-)   dk
 
-    if ( is_server ) {
+    if ( is_server_ ) {
 	dbus_ = new QtDBusViewerAdaptor(this);
 	dbus_->connectToDBus(dbus_name_);
     } else {
@@ -76,25 +76,34 @@ QtViewer::~QtViewer() {
 }
   
 QtDisplayPanelGui *QtViewer::createDPG() {
-  // Create a main display panel Gui.
-  //
-  QtDisplayPanelGui* dpg = new QtDisplayPanelGui(this);
-  dpg->setAttribute(Qt::WA_DeleteOnClose);
-	// Deletes this window (only) when user closes it.
-	// (Note that 'closed' Qt windows are not deleted by default --
-	// not unless this attribute is explicitly set).
-	//
-	// Noone will hold the dpg pointer (! -- at least in the current
-	// revision).  Essentially, the gui user manages dpg's storage....
-	//
-	// Note, however: DPGs do not have to be created via this routine.
-	// QtClean, e.g., constructs its own dpg directly, which does
-	// not delete on close, and which is re-opened on successive
-	// restarts of the Qt event loop.  In that case, QtClean manages
-	// its own dpg storage.
+    // Create a main display panel Gui.
+    //
+    QtDisplayPanelGui* dpg = new QtDisplayPanelGui(this,0,"dpg",args_);
 
-  dpg->show();
-  return dpg; }
+    // Previously casaviewer.cc created a QtDisplayPanelGui directly,
+    // now it uses this function to ensure consistent behavior with
+    // creation of QtDisplayPanelGui objects...
+    if ( is_server_ ) {
+
+	dpg->setAttribute(Qt::WA_DeleteOnClose);
+	    // Deletes this window (only) when user closes it.
+	    // (Note that 'closed' Qt windows are not deleted by default --
+	    // not unless this attribute is explicitly set).
+	    //
+	    // Noone will hold the dpg pointer (! -- at least in the current
+	    // revision).  Essentially, the gui user manages dpg's storage....
+	    //
+	    // Note, however: DPGs do not have to be created via this routine.
+	    // QtClean, e.g., constructs its own dpg directly, which does
+	    // not delete on close, and which is re-opened on successive
+	    // restarts of the Qt event loop.  In that case, QtClean manages
+	    // its own dpg storage.
+
+	dpg->show();
+    }
+
+    return dpg;
+}
   
   
 void QtViewer::quit() { QtViewerBase::quit(); }

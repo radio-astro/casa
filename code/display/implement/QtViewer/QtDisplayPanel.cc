@@ -58,7 +58,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent) : 
+QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const std::list<std::string> &args) : 
 		QWidget(parent),
 
 		panel_(panel),
@@ -101,7 +101,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent) :
   pd_->setOptions(margins, chgdopts);
 
   
-  setupMouseTools_();
+  setupMouseTools_( std::find(args.begin(),args.end(),"--newregions") != args.end() );
  
 
   // (or parsing background color user selection via
@@ -195,7 +195,7 @@ QtDisplayPanel::~QtDisplayPanel() {
 // MOUSE TOOL METHODS / EVENT HANDLERS.  POSITION TRACKING
     
 
-void QtDisplayPanel::setupMouseTools_() {
+void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
  
   using namespace QtMouseToolNames;	// (See QtMouseToolState.qo.h)
   

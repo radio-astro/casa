@@ -110,7 +110,8 @@ public:
     };
    
 
- QtDisplayPanel(QtDisplayPanelGui* panel, QWidget* parent=0);
+  QtDisplayPanel( QtDisplayPanelGui* panel, QWidget* parent=0,
+		  const std::list<std::string> &args = std::list<std::string>( ) );
   ~QtDisplayPanel();
   
   // True if DD is on our list.  (It may _not_ be on viewer's list
@@ -620,7 +621,7 @@ public:
  protected:
   
   // Called during construction.
-  virtual void setupMouseTools_();
+  virtual void setupMouseTools_( bool new_region_tools );
   
   // The workhorse part of [un]registering; these do not send the
   // highest-level signals.

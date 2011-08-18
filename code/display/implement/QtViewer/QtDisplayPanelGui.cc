@@ -45,7 +45,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr ) :
+QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
 		   QtPanelBase(parent), qdm_(0), qdo_(0), qfb_(0),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
 		   qsm_(0), qst_(0),
@@ -64,8 +64,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "bottom" );
     }
 
-    qdp_ = new QtDisplayPanel(this);
-//  qdo_ = new QtDataOptionsPanel(this);
+    qdp_ = new QtDisplayPanel(this,0,args);
+//  qdo_ = new QtDataOptionsPanel(this,);
 
   
     setCentralWidget(qdp_);
