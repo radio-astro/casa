@@ -108,8 +108,8 @@ def simdata(
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
 
-    if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
-        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
+#    if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
+#        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
 #        if analyze:
 #            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
 
@@ -303,6 +303,19 @@ def simdata(
             predict_uv = True
             pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
+            # approx max baseline, to compare with model_cell:
+            cx=pl.mean(stnx)
+            cy=pl.mean(stny)
+            cz=pl.mean(stnz)
+            lat,lon = util.irtf2loc(stnx,stny,stnz,cx,cy,cz)
+            rg=max(lat)-min(lat)
+            rg2=max(lon)-min(lon)
+            if rg2>rg:
+                rg=rg2
+            minscale = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/rg*3600.*180/pl.pi # arcsec
+            if minscale<qa.convert(model_cell[0],'arcsec')['value']:
+                msg("Sky Model cell is very large compared to expected synthesized beam - this may lead to blank or erroneous output",priority="warn")
+
 
         # Search order is fileroot/ -> specified path -> repository
         if len(sdantlist) > 0:
@@ -426,7 +439,7 @@ def simdata(
         if mra['value'] >= 359.999:
             mra['value'] = mra['value'] - 360.
         shift = [ (qa.convert(ra,'deg')['value'] - 
-                   qa.convert(mra,'deg')['value'])/pl.cos(qa.convert(mdec,'rad')['value'] ), 
+                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(mdec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
@@ -648,12 +661,10 @@ def simdata(
                 totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 # time required to observe all planned scanes in etime array:
                 totalscansec = sum(etime)
-                nrot = int(totalsec/totalscansec)
                 kfld = 0
 
-                if nrot < nfld:
-                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="error")
-                    return
+                if totalsec < totalscansec:
+                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="warn")
         
                 # sm.observemany
                 observemany = True
@@ -898,6 +909,20 @@ def simdata(
             else:
                 multi = 0
 
+            # it is useful to calculate the max baseline, psfsize, and min image size
+            # even if we're not making a figure here, because later we can use it 
+            # to set a minimum size for the synthesized image, at int(8*psfsize)
+            tb.open(msfile)  
+            rawdata = tb.getcol("UVW")
+            tb.done()
+            maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+            klam_m = 300/qa.convert(model_center,'GHz')['value']
+            pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+            psfsize = 200.*klam_m/maxbase/pixsize
+            if psfsize < 32:
+                psfsize = 32
+
+
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
                 if predict_uv:
@@ -913,12 +938,7 @@ def simdata(
                     
                     # uv coverage
                     util.nextfig()
-                    tb.open(msfile)  
-                    rawdata = tb.getcol("UVW")
-                    tb.done()
                     pl.box()
-                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m = 300/qa.convert(model_center,'GHz')['value']
                     pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
                     pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
                     ax = pl.gca()
@@ -937,10 +957,6 @@ def simdata(
                     if not image:
                         msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     # defineim needs to be larger than synth beam
-                    pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    psfsize = 200.*klam_m/maxbase/pixsize
-                    if psfsize < 32:
-                        psfsize = 32
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(psfsize*8))
                     #im.makeimage(type='psf',image=project+".quick.psf")
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
@@ -1204,6 +1220,10 @@ def simdata(
         if imsize0 <= 0:
             imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                       int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+        # this is primarily for sim-from-components but useful elsewhere as a minimum
+        # image size:
+        if imsize[0]<8*psfsize: imsize[0]=int(8*psfsize)
+        if imsize[1]<8*psfsize: imsize[1]=int(8*psfsize)
 
             
 
@@ -1426,6 +1446,9 @@ def simdata(
                 file = ""
 
         # create fake model from components for analysis
+        if components_only:
+            modelflat = fileroot + "/" + project + ".compskymodel.flat"
+
         if components_only and (image or analyze):
             newmodel = fileroot + "/" + project + ".compskymodel"
             if not os.path.exists(imagename+".image"):
@@ -1439,8 +1462,6 @@ def simdata(
             cl.done()
             modelcsys = ia.coordsys()
             modelshape = ia.shape()
-
-            modelflat = fileroot + "/" + project + ".compskymodel.flat"
 
             # TODO should be able to simplify degen axes code using new
             # image anal tools.

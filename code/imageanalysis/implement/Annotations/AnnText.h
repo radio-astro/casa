@@ -54,6 +54,10 @@ public:
 		const String& text
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnText& operator=(const AnnText& other);
+
 	// left most point of text string
 	MDirection getDirection() const;
 

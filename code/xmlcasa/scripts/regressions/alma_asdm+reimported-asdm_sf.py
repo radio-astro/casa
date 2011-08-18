@@ -194,7 +194,8 @@ def analyseASDM(basename, caltablename0):
         srt="all",
         time_sampling="all",ocorr_mode="ca",compression=False,asis="",
         wvr_corrected_data="no",
-        verbose=False,showversion=False
+        verbose=False,showversion=False,
+        useversion='v3'
         )
     
     # Delay correction
@@ -435,7 +436,7 @@ part1 = True
 
 # part 1
 try:
-    importasdm(myasdm_dataset_name)
+    importasdm(myasdm_dataset_name, useversion='v3')
 except:
     print myname, ": Error ", sys.exc_info()[0]
     part1 = False
@@ -693,7 +694,7 @@ except:
     
 try:
     print "Reimporting the created ASDM ...."
-    importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no')
+    importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no', useversion='v3')
     print "Testing existence of reimported MS ...."
     if(not os.path.exists(reimp_msname)):
         print "MS ", reimp_msname, " doesn't exist."

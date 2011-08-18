@@ -120,13 +120,13 @@ int main()
             }
          }
          // check the spectral type
-         if (lc2.spectralType() != SpectralCoordinate::WAVE)
-         	throw(AipsError(String("The spectral type of the coordinate is NOT WAVE!")));
+         if (lc2.nativeType() != SpectralCoordinate::WAVE)
+         	throw(AipsError(String("The native type of the coordinate should be WAVE")));
 
          // create the cSys as air wavelength and check the spectral type
          lc2 = SpectralCoordinate(MFrequency::TOPO, wavelengths, String("m"), 0.0, True);
-         if (lc2.spectralType() != SpectralCoordinate::AWAV)
-         	throw(AipsError(String("The spectral type of the coordinate is NOT AWAV!")));
+         if (lc2.nativeType() != SpectralCoordinate::AWAV)
+         	throw(AipsError(String("The native type of the coordinate should be AWAV")));
       }
 
 // Test the conversions to and from spectral type

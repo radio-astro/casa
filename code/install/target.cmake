@@ -233,9 +233,10 @@ macro( casa_add_module module )
 
     endif()
 
-    # Special case for (old)alma
+    # Special case for (old)alma(_v3)
     if( ${module} STREQUAL "alma" OR
-        ${module} STREQUAL "oldalma" )
+        ${module} STREQUAL "oldalma" OR
+	${module} STREQUAL "alma_v3")
 
       set( ${module}_INCLUDE_DIRS 
         ${${module}_INCLUDE_DIRS}

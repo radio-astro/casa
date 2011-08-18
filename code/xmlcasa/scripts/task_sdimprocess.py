@@ -19,6 +19,12 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
         # set tempolary filename
         tmprealname = []
         tmpimagname = []
+        image = None
+        convimage = None
+        polyimage = None
+        imageorg = None
+        realimage = None
+        imagimage = None
         if type(infiles) == str:
             tmprealname.append( 'fft.'+tmpstr+'.real..0.im' )
             tmpimagname.append( 'fft.'+tmpstr+'.imag.0.im' )
@@ -192,8 +198,11 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
                 #convimage.rename( outfile, overwrite=overwrite )
 
                 polyimage.close()
+                convimage.done( remove=True )
                 convimage.close()
+                image.done( remove=True )
                 image.close()
+                imageorg.done( remove=True )
                 imageorg.close()
             elif mode == 'basket':
                 ###
@@ -460,16 +469,31 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
 
         except Exception, instance:
             casalog.post( str(instance), priority = 'ERROR' )
+            if image is not None:
+                if image.isopen(): image.done( remove=True )
+            if convimage is not None:
+                if convimage.isopen(): convimage.done( remove=True )
+            if imageorg is not None:
+                if imageorg.isopen(): imageorg.done( remove=True )
+            if realimage is not None:
+                if realimage.isopen(): realimage.done( remove=True )
+            if imagimage is not None:
+                if imagimage.isopen(): imagimage.done( remove=True )
             raise Exception, instance
         finally:
             if os.path.exists( tmpmskname ):
-                 os.system( 'rm -rf %s' % tmpmskname )
+                #os.system( 'rm -rf %s' % tmpmskname )
+                cu.removetable( [tmpmskname] )
             if os.path.exists( tmpconvname ):
-                os.system( 'rm -rf %s' % tmpconvname )
+                #os.system( 'rm -rf %s' % tmpconvname )
+                cu.removetable( [tmpconvname] )
             if os.path.exists( tmppolyname ):
-                os.system( 'rm -rf %s' % tmppolyname )
+                #os.system( 'rm -rf %s' % tmppolyname )
+                cu.removetable( [tmppolyname] )
             for i in range( len(tmprealname) ):
                 if os.path.exists( tmprealname[i] ):
-                    os.system( 'rm -rf %s' % tmprealname[i] )
+                    #os.system( 'rm -rf %s' % tmprealname[i] )
+                    cu.removetable( [tmprealname[i]] )
                 if os.path.exists( tmpimagname[i] ):
-                    os.system( 'rm -rf %s' % tmpimagname[i] )
+                    #os.system( 'rm -rf %s' % tmpimagname[i] )
+                    cu.removetable( [tmpimagname[i]] )

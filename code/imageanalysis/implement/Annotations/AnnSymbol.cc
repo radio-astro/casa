@@ -46,11 +46,24 @@ AnnSymbol::AnnSymbol(
 	_inputDirection[0] = x;
 	_inputDirection[1] = y;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+}
 
+AnnSymbol& AnnSymbol::operator= (
+	const AnnSymbol& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnotationBase::operator=(other);
+    _inputDirection.resize(other._inputDirection.nelements());
+    _inputDirection = other._inputDirection;
+    _symbol = other._symbol;
+    _symbolChar = other._symbolChar;
+    return *this;
 }
 
 MDirection AnnSymbol::getDirection() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 AnnSymbol::Symbol AnnSymbol::getSymbol() const {

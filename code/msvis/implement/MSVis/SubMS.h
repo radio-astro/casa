@@ -208,12 +208,14 @@ class SubMS
                                  const Int npol, const String& telescop,
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
 				 const Int obstype=0);
+                                 //const Bool compress=False);
 
   // Same as above except allowing manual tileshapes
   static MeasurementSet* setupMS(const String& msname, const Int nchan,
                                  const Int npol,
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
 				 const Vector<Int>& tileShape=Vector<Int>(1,0));
+                                 //const Bool compress=False);
 
   
   // Add optional columns to outTab if present in inTab and possColNames.

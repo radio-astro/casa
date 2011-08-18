@@ -168,7 +168,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #######################################################################  
 
 
-    casalog.post('clean image: '+imagename) 
+    casalog.post('clean image: '+str(imagename)) 
 
 
     applyoffsets=False;

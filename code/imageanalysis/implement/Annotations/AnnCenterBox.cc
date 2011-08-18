@@ -50,8 +50,8 @@ AnnCenterBox::AnnCenterBox(
 			"y width unit " + ywidth.getUnit() + " is not an angular unit."
 		);
 	}
-	_widths[0] = _lengthToAngle(xwidth, _directionAxes[0]);
-	_widths[1] = _lengthToAngle(ywidth, _directionAxes[1]);
+	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
+	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
 
 	Vector<Quantity> center(2);
 	center[0] = xcenter;
@@ -74,12 +74,30 @@ AnnCenterBox::AnnCenterBox(
 		qtrc[i] = Quantity(trcValues[i], "rad");
 	}
 
-	WCBox box(qblc, qtrc, _directionAxes, _csys, absrel);
+	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
 	_extend(box);
 }
 
+AnnCenterBox& AnnCenterBox::operator= (
+	const AnnCenterBox& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _widths.resize(other._widths.nelements());
+    _widths = other._widths;
+    _corners.resize(other._corners.nelements());
+    _corners = other._corners;
+	_inpXCenter = other._inpXCenter;
+	_inpYCenter = other._inpYCenter;
+	_inpXWidth = other._inpXWidth;
+	_inpYWidth = other._inpYWidth;
+    return *this;
+}
+
 MDirection AnnCenterBox::getCenter() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 Vector<Quantity> AnnCenterBox::getWidths() const {
@@ -88,17 +106,17 @@ Vector<Quantity> AnnCenterBox::getWidths() const {
 
 void AnnCenterBox::_doCorners() {
 
-	Vector<Double> inc = _csys.increment();
+	Vector<Double> inc = _getCsys().increment();
 
-	Double xFactor = inc(_directionAxes[0]) > 0 ? 1.0 : -1.0;
-	Double yFactor = inc(_directionAxes[1]) > 0 ? 1.0 : -1.0;
+	Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
+	Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
 
 	Quantity xShift = Quantity(0.5*xFactor)*_widths[0];
 	Quantity yShift = Quantity(0.5*yFactor)*_widths[1];
 
-	MDirection blc = _convertedDirections[0];
+	MDirection blc = _getConvertedDirections()[0];
 	blc.shift(Quantity(-1)*xShift, Quantity(-1)*yShift);
-	MDirection trc = _convertedDirections[0];
+	MDirection trc = _getConvertedDirections()[0];
 	trc.shift(xShift, yShift);
 	_corners[0] = blc;
 	_corners[1] = trc;

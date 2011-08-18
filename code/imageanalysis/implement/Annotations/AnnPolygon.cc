@@ -53,7 +53,7 @@ AnnPolygon::AnnPolygon(
 	_checkAndConvertDirections(String(__FUNCTION__), corners);
 	Vector<Double> xv(xPositions.size()), yv(yPositions.size());
 	for (uInt i=0; i<xv.size(); i++) {
-		Vector<Double> coords = _convertedDirections[i].getAngle("rad").getValue();
+		Vector<Double> coords = _getConvertedDirections()[i].getAngle("rad").getValue();
 		xv[i] = coords[0];
 		yv[i] = coords[1];
 	}
@@ -61,13 +61,28 @@ AnnPolygon::AnnPolygon(
 	Quantum<Vector<Double> > x(xv, "rad");
 	Quantum<Vector<Double> > y(yv, "rad");
 
-	WCPolygon wpoly(x, y, IPosition(_directionAxes), _csys, RegionType::Abs);
+	WCPolygon wpoly(x, y, IPosition(_getDirectionAxes()), _getCsys(), RegionType::Abs);
 	_extend(wpoly);
 }
 
+AnnPolygon& AnnPolygon::operator= (
+	const AnnPolygon& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _corners.resize(other._corners.nelements());
+    _corners = other._corners;
+    _origXPos.resize(other._origXPos.nelements());
+    _origXPos = other._origXPos;
+    _origYPos.resize(other._origYPos.nelements());
+    _origYPos = other._origYPos;
+    return *this;
+}
 
 Vector<MDirection> AnnPolygon::getCorners() const {
-	return _convertedDirections;
+	return _getConvertedDirections();
 }
 
 ostream& AnnPolygon::print(ostream &os) const {

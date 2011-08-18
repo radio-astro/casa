@@ -41,10 +41,8 @@ AnnEllipse::AnnEllipse(
 ), _inputCenter(Vector<Quantity>(2)), _inputMajorAxis(majorAxis),
 _inputMinorAxis(minorAxis),
 	_inputPositionAngle(positionAngle) {
-	//Vector<Double> myCenter = _center.getAngle("rad").getValue();
-
-	_convertedMajorAxis = _lengthToAngle(majorAxis, _directionAxes[0]);
-	_convertedMinorAxis = _lengthToAngle(minorAxis, _directionAxes[0]);
+	_convertedMajorAxis = _lengthToAngle(majorAxis, _getDirectionAxes()[0]);
+	_convertedMinorAxis = _lengthToAngle(minorAxis, _getDirectionAxes()[0]);
 
 	String preamble = String(__FUNCTION__) + ": ";
 	if (
@@ -68,7 +66,7 @@ _inputMinorAxis(minorAxis),
 
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
-	Vector<Double> coords = _convertedDirections[0].getAngle("rad").getValue();
+	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
 
 	Vector<Quantity> qCenter(2);
 	qCenter[0] = Quantity(coords[0], "rad");
@@ -77,14 +75,31 @@ _inputMinorAxis(minorAxis),
 
 	WCEllipsoid ellipse(
 		qCenter[0], qCenter[1],
-		_convertedMajorAxis, _convertedMinorAxis, positionAngle, _directionAxes[0],
-		_directionAxes[1], _csys
+		_convertedMajorAxis, _convertedMinorAxis, positionAngle,
+		_getDirectionAxes()[0], _getDirectionAxes()[1], _getCsys()
 	);
 	_extend(ellipse);
 }
 
+AnnEllipse& AnnEllipse::operator= (
+	const AnnEllipse& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCenter.resize(other._inputCenter.nelements());
+    _inputCenter = other._inputCenter.nelements();
+    _inputMajorAxis = other._inputMajorAxis;
+    _inputMinorAxis = other._inputMinorAxis;
+    _inputPositionAngle = other._inputPositionAngle;
+    _convertedMajorAxis = other._convertedMajorAxis;
+    _convertedMinorAxis = other._convertedMinorAxis;
+    return *this;
+}
+
 MDirection AnnEllipse::getCenter() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 Quantity AnnEllipse::getMajorAxis() const {

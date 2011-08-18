@@ -27,12 +27,9 @@ AnnRotBox::AnnRotBox(
 	const Quantity& xwidth,
 	const Quantity& ywidth, const Quantity& positionAngle,
 	const String& dirRefFrameString,
-	const CoordinateSystem& csys,
-	const Quantity& beginFreq,
-	const Quantity& endFreq,
-	const String& freqRefFrameString,
-	const String& dopplerString,
-	const Quantity& restfreq,
+	const CoordinateSystem& csys, const Quantity& beginFreq,
+	const Quantity& endFreq, const String& freqRefFrameString,
+	const String& dopplerString, const Quantity& restfreq,
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
@@ -57,8 +54,8 @@ AnnRotBox::AnnRotBox(
 	_inputWidths[0] = xwidth;
 	_inputWidths[1] = ywidth;
 
-	_widths[0] = _lengthToAngle(xwidth, _directionAxes[0]);
-	_widths[1] = _lengthToAngle(ywidth, _directionAxes[1]);
+	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
+	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
 
 	_inputCenter[0] = xcenter;
 	_inputCenter[1] = ycenter;
@@ -73,17 +70,36 @@ AnnRotBox::AnnRotBox(
 	}
 	Quantum<Vector<Double> > x(xv, "rad");
 	Quantum<Vector<Double> > y(yv, "rad");
-	WCPolygon box(x, y, _directionAxes, _csys, RegionType::Abs);
+	WCPolygon box(x, y, _getDirectionAxes(), _getCsys(), RegionType::Abs);
 	_extend(box);
+}
+
+AnnRotBox& AnnRotBox::operator= (
+	const AnnRotBox& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCenter.resize(other._inputCenter.nelements());
+    _inputCenter = other._inputCenter;
+    _inputWidths.resize(other._inputWidths.nelements());
+    _inputWidths = other._inputWidths;
+    _widths.resize(other._widths.nelements());
+    _widths = other._widths;
+    _positionAngle = other._positionAngle;
+    _corners.resize(other._corners.nelements());
+    _corners = other._corners;
+    return *this;
 }
 
 void AnnRotBox::_doCorners() {
 	Quantity realAngle = Quantity(90, "deg") + _positionAngle;
 
-	Vector<Double> inc = _csys.increment();
+	Vector<Double> inc = _getCsys().increment();
 
-	Double xFactor = inc(_directionAxes[0]) > 0 ? 1.0 : -1.0;
-	Double yFactor = inc(_directionAxes[1]) > 0 ? 1.0 : -1.0;
+	Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
+	Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
 
 	// assumes first direction axis is the longitudinal axis
     Vector<Quantity> xShift(2);
@@ -92,9 +108,9 @@ void AnnRotBox::_doCorners() {
 	    Double angleRad = (realAngle + Quantity(i*90, "deg")).getValue("rad");
         xShift[i] = Quantity(0.5*xFactor*cos(angleRad))*_widths[0];
 	    yShift[i] = Quantity(0.5*yFactor*sin(angleRad))*_widths[1];
-        _corners[i] = _convertedDirections[0];
+        _corners[i] = _getConvertedDirections()[0];
         _corners[i].shift(xShift[i], yShift[i]);
-        _corners[i+2] = _convertedDirections[0];
+        _corners[i+2] = _getConvertedDirections()[0];
         _corners[i+2].shift(Quantity(-1)*xShift[i], Quantity(-1)*yShift[i]);
     }
 }

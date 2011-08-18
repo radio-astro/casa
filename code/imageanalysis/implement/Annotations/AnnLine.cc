@@ -45,8 +45,20 @@ AnnLine::AnnLine(
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
 }
 
+AnnLine& AnnLine::operator= (
+	const AnnLine& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnotationBase::operator=(other);
+    _inputPoints.resize(other._inputPoints.shape());
+    _inputPoints = other._inputPoints;
+    return *this;
+}
+
 Vector<MDirection> AnnLine::getEndPoints() const {
-	return _convertedDirections;
+	return _getConvertedDirections();
 }
 
 ostream& AnnLine::print(ostream &os) const {

@@ -72,25 +72,30 @@ class Slicer;
 // This provides native access to FITS error images.
 // </motivation>
 
-//# <todo asof="2011/05/26">
+//# <todo asof="2011/08/17">
 //# </todo>
-
-enum ErrorType
-{
-	SIGMA,             // the values are sigma
-	VARIANCE,          // the values are variance
-	INVSIGMA,          // the values are inverse sigma
-	INVVARIANCE        // the values are inverse variance
-};
 
 class FITSErrorImage: public FITSImage
 {
 public: 
-  // Construct a FITSImage from the disk FITS file name  and extension and apply mask.
-  explicit FITSErrorImage(const String& name, uInt whichRep=0, uInt whichHDU=0, ErrorType errtype=VARIANCE);
+
+	// The enum describes which types of error images exist. The type is fixed
+	// during object creation and can not be changed at a later time.
+	enum ErrorType
+	{
+		MSE,          // the values are "mean squared error" (=variance)
+		RMSE,         // the values are "root mean squared error" (=sigma)
+		INVMSE,       // the values are inverse "means squared error"
+		INVRMSE,      // the values are inverse "root mean squared error"
+		UNKNOWN,      // unknown type
+		DEFAULT=MSE
+	};
+
+	// Construct a FITSImage from the disk FITS file name  and extension and apply mask.
+  explicit FITSErrorImage(const String& name, uInt whichRep=0, uInt whichHDU=0, FITSErrorImage::ErrorType errtype=MSE);
 
   // Construct a FITSImage from the disk FITS file name and extension and apply mask or not.
-  FITSErrorImage(const String& name, const MaskSpecifier& mask, uInt whichRep=0, uInt whichHDU=0, ErrorType errtype=VARIANCE);
+  FITSErrorImage(const String& name, const MaskSpecifier& mask, uInt whichRep=0, uInt whichHDU=0, FITSErrorImage::ErrorType errtype=MSE);
 
   // Copy constructor (reference semantics)
   FITSErrorImage(const FITSErrorImage& other);
@@ -116,17 +121,23 @@ public:
 			   const IPosition& where,
 			   const IPosition& stride);
 
-  // Return the error type
-  virtual ErrorType errorType() const
+  // Return the error type.
+  virtual FITSErrorImage::ErrorType errorType() const
 		  {return errtype_p;};
+
+  // Convert an image type to String.
+  static FITSErrorImage::ErrorType stringToErrorType(String errorTypeStr);
+
+  // Convert a String to an image type.
+  static String errorTypeToString(FITSErrorImage::ErrorType errType);
 
 private:
 
-  // Set the correct masking
+  // Set the correct masking.
   void setupMask();
 
-  Array<Float>   buffer_p;
-  ErrorType      errtype_p;
+  Array<Float>              buffer_p;
+  FITSErrorImage::ErrorType errtype_p;
 };
 
 

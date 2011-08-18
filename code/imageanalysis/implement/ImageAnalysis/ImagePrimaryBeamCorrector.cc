@@ -31,6 +31,7 @@
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <images/Images/ExtendImage.h>
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
@@ -60,12 +61,12 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 	const Bool overwrite, const Float cutoff,
 	const Bool useCutoff,
 	const ImagePrimaryBeamCorrector::Mode mode
-) : _log(new LogIO()), _image(image), _pbImage(pbImage->cloneII()),
-	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-	_outname(outname), _overwrite(overwrite), _cutoff(cutoff),
+) : ImageTask(
+		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
+	), _pbImage(pbImage->cloneII()), _cutoff(cutoff),
 	_mode(mode), _useCutoff(useCutoff) {
 	_checkPBSanity();
-	_construct(box, region, regionPtr);
+	_construct();
 }
 
 ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
@@ -78,52 +79,57 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 	const Bool overwrite, const Float cutoff,
 	const Bool useCutoff,
 	const ImagePrimaryBeamCorrector::Mode mode
-) : _log(new LogIO()), _image(image), _pbImage(0),
-	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
-	_outname(outname), _overwrite(overwrite), _cutoff(cutoff),
-	_mode(mode), _useCutoff(useCutoff) {
-	if (pbArray.shape().isEqual(_image->shape())) {
-		_pbImage.reset(new TempImage<Float>(_image->shape(), _image->coordinates()));
+) : ImageTask(
+		image, region, regionPtr, box, chanInp, stokes, maskInp, outname, overwrite
+	), _cutoff(cutoff), _mode(mode), _useCutoff(useCutoff) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	IPosition imShape = _getImage()->shape();
+	if (pbArray.shape().isEqual(imShape)) {
+		_pbImage.reset(new TempImage<Float>(imShape, _getImage()->coordinates()));
 	}
 	else if (pbArray.ndim() == 2) {
-		if (_image->coordinates().hasDirectionCoordinate()) {
-			Vector<Int> dirAxes = _image->coordinates().directionAxesNumbers();
+		if (_getImage()->coordinates().hasDirectionCoordinate()) {
+			Vector<Int> dirAxes = _getImage()->coordinates().directionAxesNumbers();
 			if (
-				pbArray.shape()[0] !=_image->shape()[dirAxes[0]]
-				|| pbArray.shape()[1] !=_image->shape()[dirAxes[1]]
+				pbArray.shape()[0] != imShape[dirAxes[0]]
+				|| pbArray.shape()[1] != imShape[dirAxes[1]]
 			) {
-				*_log << "Array shape does not equal image direction plane shape" << LogIO::EXCEPTION;
+				*_getLog() << "Array shape does not equal image direction plane shape" << LogIO::EXCEPTION;
 			}
-			IPosition boxShape(_image->ndim(), 1);
-			boxShape[dirAxes[0]] = _image->shape()[dirAxes[0]];
-			boxShape[dirAxes[1]] = _image->shape()[dirAxes[1]];
-			LCBox x(IPosition(_image->ndim(), 0), boxShape - 1, _image->shape());
-			std::auto_ptr<ImageInterface<Float> > clone(_image->cloneII());
+			IPosition boxShape(imShape.size(), 1);
+			boxShape[dirAxes[0]] = imShape[dirAxes[0]];
+			boxShape[dirAxes[1]] = imShape[dirAxes[1]];
+			LCBox x(IPosition(imShape.size(), 0), boxShape - 1, imShape);
+			std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 			SubImage<Float> sub = SubImage<Float>::createSubImage(
 				*clone, x.toRecord(""), "",
-				_log.get(), True, AxesSpecifier(False)
+				_getLog().get(), True, AxesSpecifier(False)
 			);
 			_pbImage.reset(new TempImage<Float>(sub.shape(), sub.coordinates()));
 		}
 		else {
-			*_log << "Image " << _image->name()
+			*_getLog() << "Image " << _getImage()->name()
 				<< " does not have direction coordinate" << LogIO::EXCEPTION;
 		}
 	}
 	else {
-		*_log << "Primary beam array is of wrong shape" << LogIO::EXCEPTION;
+		*_getLog() << "Primary beam array is of wrong shape" << LogIO::EXCEPTION;
 	}
 	_pbImage->put(pbArray);
-	_construct(box, region, regionPtr);
+	_construct();
 }
 
 ImagePrimaryBeamCorrector::~ImagePrimaryBeamCorrector() {}
 
+String ImagePrimaryBeamCorrector::getClass() const {
+	return _class;
+}
+
 void ImagePrimaryBeamCorrector::_checkPBSanity() {
-	*_log << LogOrigin(_class, __FUNCTION__);
-	if (_image->shape().isEqual(_pbImage->shape())) {
-		if (! _image->coordinates().near(_pbImage->coordinates())) {
-			*_log << "Coordinate systems of image and template are different"
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
+	if (_getImage()->shape().isEqual(_pbImage->shape())) {
+		if (! _getImage()->coordinates().near(_pbImage->coordinates())) {
+			*_getLog() << "Coordinate systems of image and template are different"
 				<< LogIO::EXCEPTION;
 		}
 		else {
@@ -145,17 +151,17 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 	);
 	if (pbCopy->ndim() == 2) {
 		if (
-			! _image->coordinates().directionCoordinate().near(
+			! _getImage()->coordinates().directionCoordinate().near(
 				pbCopy->coordinates().directionCoordinate()
 			)
 		) {
-			*_log << "Direction coordinates of input image and primary beam "
+			*_getLog() << "Direction coordinates of input image and primary beam "
 				<< "image are different. Cannot do primary beam correction."
 				<< LogIO::EXCEPTION;
 		}
 	}
 	else {
-		*_log << "Input image and primary beam image have different shapes. "
+		*_getLog() << "Input image and primary beam image have different shapes. "
 			<< "Cannot do primary beam correction."
 			<< LogIO::EXCEPTION;
 	}
@@ -164,83 +170,40 @@ void ImagePrimaryBeamCorrector::_checkPBSanity() {
 	Float myMin, myMax;
 	ls.getFullMinMax(myMin, myMax);
 	if (_mode == DIVIDE && myMax > 1.0 && ! near(myMax, 1.0)) {
-		*_log << LogIO::WARN
+		*_getLog() << LogIO::WARN
 			<< "Mode DIVIDE chosen but primary beam has one or more pixels "
 			<< "greater than 1.0. Proceeding but you may want to check your inputs"
 			<< LogIO::POST;
 	}
 	if (myMin < 0 && near(myMin, 0.0)) {
-		*_log << LogIO::WARN
+		*_getLog() << LogIO::WARN
 			<< "Primary beam has one or more pixels less than 0."
 			<< "Proceeding but you may want to check your inputs"
 			<< LogIO::POST;
 	}
 }
 
-vector<ImageInputProcessor::OutputStruct> ImagePrimaryBeamCorrector::_getOutputStruct() {
-	vector<ImageInputProcessor::OutputStruct> outputs(0);
-	_outname.trim();
-	if (! _outname.empty()) {
-		ImageInputProcessor::OutputStruct outputImage;
-		outputImage.label = "output image";
-		outputImage.outputFile = &_outname;
-		outputImage.required = True;
-		outputImage.replaceable = _overwrite;
-		outputs.push_back(outputImage);
-	}
-	return outputs;
+vector<Coordinate::Type> ImagePrimaryBeamCorrector::_getNecessaryCoordinates() const {
+	return vector<Coordinate::Type>(1, Coordinate::DIRECTION);
 }
 
-void ImagePrimaryBeamCorrector::_construct(
-		const String& box, const String& region, const Record * const regionPtr
-) {
-	String diagnostics;
-	vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-	vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
-		? &outputs
-		: 0;
-	vector<Coordinate::Type> direction(1, Coordinate::DIRECTION);
-	ImageInputProcessor inputProcessor;
-	inputProcessor.process(
-		_regionRecord, diagnostics, outputPtr,
-    	_stokesString, _image, regionPtr,
-    	region, box, _chan,
-    	CasacRegionManager::USE_ALL_STOKES, False,
-    	&direction
-    );
+CasacRegionManager::StokesControl ImagePrimaryBeamCorrector::_getStokesControl() const {
+	return CasacRegionManager::USE_ALL_STOKES;
 }
 
 ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	const Bool wantReturn
 ) const {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
     SubImage<Float> pbSubImage;
     std::auto_ptr<ImageInterface<Float> > tmpStore(0);
     ImageInterface<Float> *pbTemplate = _pbImage.get();
-	if (! _image->shape().isEqual(_pbImage->shape())) {
-		Vector<Int> dcn = _image->coordinates().pixelAxes(
-			_image->coordinates().directionCoordinateNumber()
-		);
-		IPosition extendAxes(_image->ndim()-2);
-		uInt j = 0;
-		for (Int i=0; i<(Int)_image->ndim(); i++) {
-			if (i != dcn[0] && i != dcn[1]) {
-				extendAxes[j] = i;
-				j++;
-			}
-		}
-		ExtendLattice<Float> pbLattice(
-			*_pbImage, _image->shape(),
-			 extendAxes, IPosition(0)
-		);
-		pbTemplate = new TempImage<Float>(
-			TiledShape(_image->shape()), _image->coordinates()
+	if (! _getImage()->shape().isEqual(_pbImage->shape())) {
+		pbTemplate = new ExtendImage<Float>(
+			*_pbImage, _getImage()->shape(),
+			 _getImage()->coordinates()
 		);
 		tmpStore.reset(pbTemplate);
-		pbTemplate->copyData(pbLattice);
-		if (pbLattice.hasPixelMask()) {
-			dynamic_cast<TempImage<Float> *>(pbTemplate)->attachMask(pbLattice.pixelMask());
-		}
 	}
     SubImage<Float> subImage;
 	if (_useCutoff) {
@@ -250,31 +213,31 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		if (pbTemplate->hasPixelMask()) {
 			mask = mask && pbTemplate->pixelMask();
 		}
-		subImage = SubImage<Float>(*_image, LattRegionHolder(LCLELMask(mask)));
+		subImage = SubImage<Float>(*_getImage(), LattRegionHolder(LCLELMask(mask)));
 		subImage = SubImage<Float>::createSubImage(
-		    subImage, _regionRecord, _mask, _log.get(), False
+		    subImage, *_getRegion(), _getMask(), _getLog().get(), False
 		);
 	}
 	else {
 		std::auto_ptr<ImageInterface<Float> > tmp(
 			pbTemplate->hasPixelMask()
 			? new SubImage<Float>(
-				*_image,
+				*_getImage(),
 				LattRegionHolder(
 					LCLELMask(LatticeExpr<Bool>(pbTemplate->pixelMask()))
 				)
 			)
-			: _image->cloneII());
+			: _getImage()->cloneII());
 		subImage = SubImage<Float>::createSubImage(
-		    *tmp, _regionRecord, _mask, _log.get(), False
+		    *tmp, *_getRegion(), _getMask(), _getLog().get(), False
 		);
 	}
 	pbSubImage = SubImage<Float>::createSubImage(
-    	*pbTemplate, _regionRecord, _mask, _log.get(), False
+    	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(), False
     );
 	tmpStore.reset(0);
 	std::auto_ptr<ImageInterface<Float> > outImage(0);
-	if (_outname.empty()) {
+	if (_getOutname().empty()) {
 		outImage.reset(
 			new TempImage<Float>(
 				TiledShape(subImage.shape()), subImage.coordinates()
@@ -293,47 +256,21 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 			);
 		}
 		ImageUtilities::copyMiscellaneous(*outImage, subImage);
-
 	}
 	else {
-		File out(_outname);
-		if (out.exists()) {
-			// remove file if it exists which prevents emission of
-			// file is already open in table cache exceptions
-			if (_overwrite) {
-				if (out.isDirectory()) {
-					Directory dir(_outname);
-					dir.removeRecursive();
-				}
-				else if (out.isRegular()) {
-					RegularFile reg(_outname);
-					reg.remove();
-				}
-				else if (out.isSymLink()) {
-					SymLink link(_outname);
-					link.remove();
-				}
-			}
-			else {
-				// The only way this block can be entered is if a file by this name
-				// has been written between the checking of inputs in the constructor
-				// call and the call of this method.
-				*_log << "File " << _outname
-					<< " exists but overwrite is false so it cannot be overwritten"
-					<< LogIO::EXCEPTION;
-			}
-		}
+		_removeExistingOutfileIfNecessary();
 		ImageAnalysis ia(&subImage);
 		String mask = "";
 	    Record empty;
 		outImage.reset(
-			ia.subimage(_outname, empty, mask, False, False)
+			ia.subimage(_getOutname(), empty, mask, False, False)
 		);
 	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)
 		? subImage/pbSubImage
 		: subImage*pbSubImage;
 	outImage->copyData(expr);
+
     if (wantReturn) {
     	ImageInterface<Float> *ret = outImage.get();
     	// release the pointer for return without deleting its object

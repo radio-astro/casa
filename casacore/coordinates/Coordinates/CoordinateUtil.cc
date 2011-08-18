@@ -1169,7 +1169,7 @@ Bool CoordinateUtil::setVelocityState (String& errorMsg, CoordinateSystem& cSys,
       //cout << "setVelocityState unit: " << unit << " spcquant: " << spcquant << endl;
       MDoppler::Types oldDoppler = sCoord.velocityDoppler();
       String oldVelUnit = sCoord.velocityUnit();
-      SpectralCoordinate::SpecType oldspcType = sCoord.spectralType();
+      SpectralCoordinate::SpecType oldspcType = sCoord.nativeType();
 
 // Prepare new state
 
@@ -1202,7 +1202,7 @@ Bool CoordinateUtil::setVelocityState (String& errorMsg, CoordinateSystem& cSys,
 
 // Set new spectral type.
 
-     if (!sCoord.setSpectralType(newspcType)) {
+     if (!sCoord.setNativeType(newspcType)) {
    	  errorMsg = sCoord.errorMessage();
    	  return False;
      }
@@ -1236,7 +1236,7 @@ Bool CoordinateUtil::setSpectralState (String& errorMsg, CoordinateSystem& cSys,
       MDoppler::Types newDoppler(sCoord.velocityDoppler());
       String newVelUnit(sCoord.velocityUnit());
       String newWaveUnit(sCoord.wavelengthUnit());
-      SpectralCoordinate::SpecType newspcType = sCoord.spectralType();
+      SpectralCoordinate::SpecType newspcType = sCoord.nativeType();
       Vector<String> newWorldAxisUnits(sCoord.worldAxisUnits().copy());
 
 // Find new Doppler, if any
@@ -1291,7 +1291,7 @@ Bool CoordinateUtil::setSpectralState (String& errorMsg, CoordinateSystem& cSys,
      }
 
 // Set spectral type.
-     if (!sCoord.setSpectralType(newspcType)) {
+     if (!sCoord.setNativeType(newspcType)) {
    	  errorMsg = sCoord.errorMessage();
    	  return False;
      }
@@ -1409,7 +1409,7 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
 
       MDoppler::Types oldDoppler = sCoord.velocityDoppler();
       String oldVelUnit = sCoord.velocityUnit();
-      SpectralCoordinate::SpecType oldspcType = sCoord.spectralType();
+      SpectralCoordinate::SpecType oldspcType = sCoord.nativeType();
 //  
       MDoppler::Types newDoppler(oldDoppler);
       String newVelUnit(oldVelUnit);
@@ -1436,7 +1436,7 @@ Bool CoordinateUtil::setSpectralFormatting (String& errorMsg,
 
 // Set spectral type.
      if (newspcType != oldspcType){
-   	  if (!sCoord.setSpectralType(newspcType)) {
+   	  if (!sCoord.setNativeType(newspcType)) {
    		  errorMsg = sCoord.errorMessage();
    		  return False;
    	  }

@@ -424,18 +424,9 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
 
    restfreqs_p.resize(1);
    restfreqs_p(0) = max(0.0, wcs.restfrq);
-   if (restfreqs_p(0) > 0.0)
-   	// the next lines seem to create problems
-   	// with 32bit system
-   	//if (wcs.velref && wcs.velref < 256){
-   	//	nativeType_p = SpectralCoordinate::VOPT;}
-   	//else if (wcs.velref && wcs.velref > 256)
-      //	nativeType_p = SpectralCoordinate::VRAD;
-   	//else
-      nativeType_p = SpectralCoordinate::VRAD;
-   else
-   	nativeType_p = SpectralCoordinate::FREQ;
-//cout << "constructor 1" << endl;
+
+   nativeType_p = SpectralCoordinate::FREQ;
+
 // Velocity machine
 
    makeVelocityMachine (velUnit_p, velType_p, unit_p,
@@ -443,7 +434,6 @@ SpectralCoordinate::SpectralCoordinate (MFrequency::Types type, const ::wcsprm& 
 
 // Set name to something from wcs structure (from ctypes) ?
 
-//
    setDefaultWorldMixRanges();
 }
 
@@ -844,7 +834,7 @@ Bool SpectralCoordinate::setWavelengthUnit(const String& waveUnit)
    return True;
 }
 
-Bool SpectralCoordinate::setSpectralType(const SpectralCoordinate::SpecType spcType)
+Bool SpectralCoordinate::setNativeType(const SpectralCoordinate::SpecType spcType)
 {
 	// just copy that over
 	nativeType_p = spcType;
@@ -1324,13 +1314,6 @@ Bool SpectralCoordinate::near(const Coordinate& other,
    }
 //
 
-// Spectral type
-
-   if (nativeType_p != sCoord.nativeType_p) {
-     set_error("The SpectralCoordinates have differing native types");
-      return False;
-	}
-//
    return True;
 }
 
@@ -1673,7 +1656,7 @@ SpectralCoordinate* SpectralCoordinate::restoreVersion2 (const RecordInterface& 
     if (subrec.isDefined("nativeType")) {                    // optional
    	 spcType = static_cast<SpectralCoordinate::SpecType>(subrec.asInt("nativeType"));
     }
-    pSpectral->setSpectralType(spcType);
+    pSpectral->setNativeType(spcType);
 
 
     return pSpectral;
@@ -2228,29 +2211,29 @@ String SpectralCoordinate::format (String& units,
    		}
 
    		// new start
-			world = 0.0;
-			vWave = 0.0;
-			world(worldAxis) = worldValue;
-			if (nativeType_p == SpectralCoordinate::AWAV)
-				frequencyToAirWavelength(vWave, world);
-			else
-				frequencyToWavelength(vWave, world);
-			Quantity tmpI=Quantity(vWave(worldAxis), waveUnit_p);
-			worldValue = tmpI.get(unit).getValue();
+		world = 0.0;
+		vWave = 0.0;
+		world(worldAxis) = worldValue;
+		if (nativeType_p == SpectralCoordinate::AWAV)
+		  frequencyToAirWavelength(vWave, world);
+		else
+		  frequencyToWavelength(vWave, world);
+		Quantity tmpI=Quantity(vWave(worldAxis), waveUnit_p);
+		worldValue = tmpI.get(unit).getValue();
    		// new end
 
    		if (!showAsAbsolute) {
 
-   			// new start
-   			// Find relative coordinate in m consistent units
-   			world(worldAxis) = referenceValue()(worldAxis);
-   			if (nativeType_p == SpectralCoordinate::AWAV)
-   				frequencyToAirWavelength(vWave, world);
-   			else
-   				frequencyToWavelength(vWave, world);
-   			Quantity tmpI=Quantity(vWave(worldAxis), waveUnit_p);
-      		worldValue = worldValue - tmpI.get(unit).getValue(); // subtract reference
-      		// new end
+		  // new start
+		  // Find relative coordinate in m consistent units
+		  world(worldAxis) = referenceValue()(worldAxis);
+		  if (nativeType_p == SpectralCoordinate::AWAV)
+		    frequencyToAirWavelength(vWave, world);
+		  else
+		    frequencyToWavelength(vWave, world);
+		  Quantity tmpI=Quantity(vWave(worldAxis), waveUnit_p);
+		  worldValue = worldValue - tmpI.get(unit).getValue(); // subtract reference
+		  // new end
 
    		}
 

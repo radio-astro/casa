@@ -33,7 +33,7 @@
 namespace casa {
 const String AnnotationBase::DEFAULT_LABEL = "";
 const String AnnotationBase::DEFAULT_COLOR = "green";
-const String AnnotationBase::DEFAULT_LINESTYLE = "solid";
+const AnnotationBase::LineStyle AnnotationBase::DEFAULT_LINESTYLE = SOLID;
 const uInt AnnotationBase::DEFAULT_LINEWIDTH = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLSIZE = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLTHICKNESS = 1;
@@ -43,14 +43,16 @@ const String AnnotationBase::DEFAULT_FONTSTYLE = "bold";
 const Bool AnnotationBase::DEFAULT_USETEX = False;
 
 Bool AnnotationBase::_doneUnitInit = False;
+map<String, AnnotationBase::Type> AnnotationBase::_typeMap;
+map<String, AnnotationBase::LineStyle> AnnotationBase::_lineStyleMap;
 
 AnnotationBase::AnnotationBase(
 	const Type type, const String& dirRefFrameString,
 	const CoordinateSystem& csys
 )
 : _type(type), _csys(csys), _label(DEFAULT_LABEL), _color(DEFAULT_COLOR),
-  _linestyle(DEFAULT_LINESTYLE), _font(DEFAULT_FONT),
-  _fontsize(DEFAULT_FONTSIZE), _fontstyle(DEFAULT_FONTSTYLE),
+  _font(DEFAULT_FONT), _fontsize(DEFAULT_FONTSIZE),
+  _fontstyle(DEFAULT_FONTSTYLE), _linestyle(DEFAULT_LINESTYLE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
@@ -80,7 +82,7 @@ AnnotationBase::AnnotationBase(
 		&& _directionRefFrame != MDirection::SUPERGAL
 	) {
 		throw AipsError(preamble
-			+ "Unsupported coordinate frame for annotations "
+			+ "Unsupported coordinate frame for regions "
 			+ dirRefFrameString
 		);
 	}
@@ -93,6 +95,35 @@ AnnotationBase::AnnotationBase(
 }
 
 AnnotationBase::~AnnotationBase() {}
+
+AnnotationBase& AnnotationBase::operator= (
+	const AnnotationBase& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    _type = other._type;
+    _directionRefFrame = other._directionRefFrame;
+    _csys = other._csys;
+    _directionAxes.resize(other._directionAxes.nelements());
+    _directionAxes = other._directionAxes;
+    _label = other._label;
+    _color = other._color;
+    _font = other._font;
+    _fontsize = other._fontsize;
+    _fontstyle = other._fontstyle;
+    _linestyle = other._linestyle;
+    _linewidth = other._linewidth;
+    _symbolsize = other._symbolsize;
+    _symbolthickness = other._symbolthickness;
+    _usetex = other._usetex;
+    _convertedDirections.resize(other._convertedDirections.nelements());
+    _convertedDirections = other._convertedDirections;
+    _globals = other._globals;
+    _params = other._params;
+    _printGlobals = other._printGlobals;
+    return *this;
+}
 
 void AnnotationBase::_initParams() {
 	_params[LINEWIDTH] = String::toString(_linewidth);
@@ -123,45 +154,50 @@ AnnotationBase::Type AnnotationBase::getType() const {
 AnnotationBase::Type AnnotationBase::typeFromString(
 	const String& type
 ) {
-	String cAnnType = type;
-	cAnnType.downcase();
-	cAnnType.trim();
-	if (cAnnType == "line") {
-		return LINE;
+	if (_typeMap.size() == 0) {
+		_typeMap["line"] = LINE;
+		_typeMap["vector"] = VECTOR;
+		_typeMap["text"] = TEXT;
+		_typeMap["symbol"] = SYMBOL;
+		_typeMap["box"] = RECT_BOX;
+		_typeMap["rectangularbox"] = RECT_BOX;
+		_typeMap["centerbox"] = CENTER_BOX;
+		_typeMap["rotatedbox"] = ROTATED_BOX;
+		_typeMap["rotbox"] = ROTATED_BOX;
+		_typeMap["poly"] = POLYGON;
+		_typeMap["polygon"] = POLYGON;
+		_typeMap["circle"] = CIRCLE;
+		_typeMap["annulus"] = ANNULUS;
+		_typeMap["ellipse"] = ELLIPSE;
+
 	}
-	else if (cAnnType == "vector") {
-		return VECTOR;
-	}
-	else if (cAnnType == "text") {
-		return TEXT;
-	}
-	else if (cAnnType == "symbol") {
-		return SYMBOL;
-	}
-	if (cAnnType == "rectangularbox" || cAnnType == "box") {
-		return RECT_BOX;
-	}
-	else if (cAnnType == "centerbox") {
-		return CENTER_BOX;
-	}
-	else if (cAnnType == "rotatedbox" || cAnnType == "rotbox") {
-		return ROTATED_BOX;
-	}
-	else if (cAnnType == "polygon" || cAnnType == "poly") {
-		return POLYGON;
-	}
-	else if (cAnnType == "circle") {
-		return CIRCLE;
-	}
-	else if (cAnnType == "annulus") {
-		return ANNULUS;
-	}
-	else if (cAnnType == "ellipse") {
-		return ELLIPSE;
-	}
-	else {
+	String cType = type;
+	cType.downcase();
+	cType.trim();
+	if (_typeMap.find(cType) == _typeMap.end()) {
 		throw AipsError(type + " is not a supported annotation type");
 	}
+	return _typeMap.at(cType);
+}
+
+AnnotationBase::LineStyle AnnotationBase::lineStyleFromString(const String& ls) {
+	if (_lineStyleMap.size() == 0) {
+		_lineStyleMap["-"] = SOLID;
+		_lineStyleMap["--"] = DASHED;
+		_lineStyleMap["-."] = DOT_DASHED;
+		_lineStyleMap[":"] = DOTTED;
+	}
+	String cls = ls;
+	cls.trim();
+	if (cls.empty()) {
+		return DEFAULT_LINESTYLE;
+	}
+	if (_lineStyleMap.find(cls) == _lineStyleMap.end()) {
+		throw AipsError(
+			ls + " is not a supported line style"
+		);
+	}
+	return _lineStyleMap.at(cls);
 }
 
 void AnnotationBase::setLabel(const String& s) {
@@ -189,12 +225,12 @@ String AnnotationBase::getColor() const {
 	return _color;
 }
 
-void AnnotationBase::setLineStyle(const String& s) {
+void AnnotationBase::setLineStyle(const LineStyle s) {
 	_linestyle = s;
 	_params[LINESTYLE] = _linestyle;
 }
 
-String AnnotationBase::getLineStyle() const {
+AnnotationBase::LineStyle AnnotationBase::getLineStyle() const {
 	return _linestyle;
 }
 
@@ -296,11 +332,34 @@ String AnnotationBase::keywordToString(
 	case FONTSTYLE: return "fontstyle";
 	case USETEX: return "usetex";
 	case LABEL: return "label";
-	case UNKNOWN:
+	case UNKNOWN_KEYWORD:
 	case N_KEYS:
 	default:
-		throw AipsError("Not string representation");
+		throw AipsError("Logic error: No string representation");
 	}
+}
+
+String AnnotationBase::lineStyleToString(
+	const LineStyle style
+) {
+	switch(style) {
+	case SOLID: return "-";
+	case DASHED: return "--";
+	case DOT_DASHED: return "-.";
+	case DOTTED: return ":";
+	default:
+		throw AipsError(
+			"Logic error: No string representation for LineStyle "
+			+ style
+		);
+	}
+}
+
+ostream& AnnotationBase::print(
+	ostream& os, const LineStyle ls
+) {
+	os << lineStyleToString(ls);
+	return os;
 }
 
 

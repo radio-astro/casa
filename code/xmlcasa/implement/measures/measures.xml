@@ -661,7 +661,7 @@ print ants
 
      <param type="string" direction="in" name="name">
      <description>observatory name - case insensitive</description>
-     <value>ATCA</value>
+     <value>ALMA</value>
      </param>
 </input>
 <returns type="any">

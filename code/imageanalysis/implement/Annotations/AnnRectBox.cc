@@ -51,22 +51,32 @@ AnnRectBox::AnnRectBox(
 	Vector<Quantity> qtrc(2);
 	for (uInt i=0; i<2; i++) {
 		qblc[i] = Quantity(
-			_convertedDirections[0].getAngle("rad").getValue("rad")[i],
+			_getConvertedDirections()[0].getAngle("rad").getValue("rad")[i],
 			"rad"
 		);
 		qtrc[i] = Quantity(
-			_convertedDirections[1].getAngle("rad").getValue("rad")[i],
+			_getConvertedDirections()[1].getAngle("rad").getValue("rad")[i],
 			"rad"
 		);
 	}
-
-	WCBox box(qblc, qtrc, _directionAxes, _csys, absrel);
+	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
 	_extend(box);
+}
 
+AnnRectBox& AnnRectBox::operator= (
+	const AnnRectBox& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+    _inputCorners.resize(other._inputCorners.shape());
+    _inputCorners = other._inputCorners.shape();
+    return *this;
 }
 
 Vector<MDirection> AnnRectBox::getCorners() const {
-	return _convertedDirections;
+	return _getConvertedDirections();
 }
 
 ostream& AnnRectBox::print(ostream &os) const {

@@ -90,7 +90,7 @@ def run_fitprofile (
     imagename, box, region, chans, stokes,
     axis, mask, ngauss, poly, multifit, model,
     residual, amp="", amperr="", center="", centererr="",
-    fwhm="", fwhmerr=""
+    fwhm="", fwhmerr="", estimates=""
 ):
     myia = iatool.create()
     myia.open(imagename)
@@ -100,7 +100,8 @@ def run_fitprofile (
     res = myia.fitprofile(
         box=box, region=region, chans=chans,
         stokes=stokes, axis=axis, mask=mask,
-        ngauss=ngauss, poly=poly, multifit=multifit,
+        ngauss=ngauss, poly=poly, estimates=estimates,
+        multifit=multifit,
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr
@@ -113,12 +114,13 @@ def run_specfit(
     imagename, box, region, chans, stokes,
     axis, mask, ngauss, poly, multifit, model,
     residual, amp="", amperr="", center="", centererr="",
-    fwhm="", fwhmerr="", wantreturn=True
+    fwhm="", fwhmerr="", wantreturn=True, estimates=""
 ):
     return specfit(
         imagename=imagename, box=box, region=region,
         chans=chans, stokes=stokes, axis=axis, mask=mask,
-        ngauss=ngauss, poly=poly, multifit=multifit,
+        ngauss=ngauss, poly=poly, estimates=estimates,
+        multifit=multifit,
         model=model, residual=residual, amp=amp,
         amperr=amperr, center=center, centererr=centererr,
         fwhm=fwhm, fwhmerr=fwhmerr,
@@ -157,6 +159,7 @@ class specfit_test(unittest.TestCase):
                 if isnan(expchunk[i]):
                     expchunk[i] = nanvalue
         diffData = gotchunk - expchunk
+        print "*** diff data" + str(diffData)
         self.assertTrue(abs(diffData).max() < 4e-13)
         self.assertTrue(
             (
@@ -371,6 +374,105 @@ class specfit_test(unittest.TestCase):
                 
         for im in solims:
             shutil.rmtree(im)
+            
+    def test_5(self):
+        """test results of multi-pixel one gaussian fit with estimates file"""
+        imagename = twogauss
+        ngauss=10
+        box = ""
+        region = ""
+        chans = ""
+        stokes = ""
+        axis = 2
+        mask = ""
+        poly = -1
+        estimates = datapath + "goodProfileEstimatesFormat_2.txt"
+        multifit = True
+        model = ""
+        residual = ""
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename, box, region, chans,
+                stokes, axis, mask, ngauss, poly,
+                multifit, model, residual, 
+                estimates=estimates
+            )
+        # no tests yet, just confirm it runs to completion
+
+    def test_6(self):
+        """test results of non-multi-pixel one gaussian fit with estimates file"""
+        imagename = twogauss
+        ngauss=10
+        box = ""
+        region = ""
+        chans = ""
+        stokes = ""
+        axis = 2
+        mask = ""
+        poly = -1
+        estimates = datapath + "goodProfileEstimatesFormat_2.txt"
+        multifit = False
+        model = ""
+        residual = ""
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename, box, region, chans,
+                stokes, axis, mask, ngauss, poly,
+                multifit, model, residual, 
+                estimates=estimates
+            )
+            self.assertTrue(res['converged'] == 1)
+            self.assertTrue(res['converged'][0][0][0][0])
+            self.assertTrue(res['ncomps'][0][0][0][0] == 1)
+            self.assertTrue(res['type0'][0][0][0][0] == "GAUSSIAN")
+            self.assertTrue(res["type0"][0,0,0,0] == "GAUSSIAN")
+            self.assertAlmostEqual(res["amp0"][0,0,0,0], 49.7, 1, "amplitude determination failure")
+            self.assertAlmostEqual(res["ampErr0"][0,0,0,0], 4.0, 1, "amplitude error determination failure")
+            self.assertAlmostEqual(res["center0"][0,0,0,0], -237.7, 1, "center determination failure")
+            self.assertAlmostEqual(res["centerErr0"][0,0,0,0], 1.7, 1, "center error determination failure")
+            self.assertAlmostEqual(res["fwhm0"][0,0,0,0], 42.4, 1, "fwhm determination failure")
+            self.assertAlmostEqual(res["fwhmErr0"][0,0,0,0], 4.0, 1, "fwhm error determination failure")
+            self.assertTrue(res["xUnit"] == "km/s")
+            self.assertTrue(res["yUnit"] == "Jy")
+
+    def test_7(self):
+        """test results of non-multi-pixel one gaussian fit with estimates file keeping peak fixed"""
+        imagename = twogauss
+        ngauss=10
+        box = ""
+        region = ""
+        chans = ""
+        stokes = ""
+        axis = 2
+        mask = ""
+        poly = -1
+        estimates = datapath + "goodProfileEstimatesFormat_3.txt"
+        multifit = False
+        model = ""
+        residual = ""
+        for code in [run_fitprofile, run_specfit]:
+            res = code(
+                imagename, box, region, chans,
+                stokes, axis, mask, ngauss, poly,
+                multifit, model, residual, 
+                estimates=estimates
+            )
+            self.assertTrue(res['converged'] == 1)
+            self.assertTrue(res['converged'][0][0][0][0])
+            self.assertTrue(res['ncomps'][0][0][0][0] == 1)
+            self.assertTrue(res['type0'][0][0][0][0] == "GAUSSIAN")
+            self.assertTrue(res["type0"][0,0,0,0] == "GAUSSIAN")
+            self.assertAlmostEqual(res["amp0"][0,0,0,0], 45, 1, "amplitude determination failure")
+            self.assertAlmostEqual(res["ampErr0"][0,0,0,0], 0, 1, "amplitude error determination failure")
+            self.assertAlmostEqual(res["center0"][0,0,0,0], -237.7, 1, "center determination failure")
+            self.assertAlmostEqual(res["centerErr0"][0,0,0,0], 1.9, 1, "center error determination failure")
+            self.assertAlmostEqual(res["fwhm0"][0,0,0,0], 45.6, 1, "fwhm determination failure")
+            self.assertAlmostEqual(res["fwhmErr0"][0,0,0,0], 3.8, 1, "fwhm error determination failure")
+            self.assertTrue(res["xUnit"] == "km/s")
+            self.assertTrue(res["yUnit"] == "Jy")
+
+            
+
 
 def suite():
     return [specfit_test]

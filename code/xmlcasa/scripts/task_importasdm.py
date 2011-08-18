@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, process_syspower=None, process_caldevice=None, verbose=None, overwrite=None, showversion=None):
+def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, process_syspower=None, process_caldevice=None, verbose=None, overwrite=None, showversion=None, useversion=None):
 	""" Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
 	The conversion of the ALMA SDM archive format into a measurement set.  This version
 	is under development and is geared to handling many spectral windows of different
@@ -85,7 +85,15 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                    if singledish:
                       viso = asdm.rstrip('/') + '.importasdm.tmp.ms'
                       vis = asdm.rstrip('/') + '.asap'
-		execute_string='asdm2MS  --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' + wvr_corrected_data + '\" --asis \"' + asis + '\" --logfile \"' +casalog.logfile() +'\"'
+
+		theexecutable = 'asdm2MS'
+		if(useversion == 'v3'):
+			theexecutable = 'asdm2MS_v3'
+
+		execute_string = theexecutable+' --icm \"' +corr_mode + '\" --isrt \"' + srt+ '\" --its \"' \
+				 + time_sampling+ '\" --ocm \"' + ocorr_mode + '\" --wvr-corrected-data \"' \
+				 + wvr_corrected_data + '\" --asis \"' + asis + '\" --logfile \"' +casalog.logfile() +'\"'
+			
 		if(len(scans) > 0) :
 		   execute_string= execute_string +' --scans ' + scans
 		if (ignore_time) :
@@ -98,8 +106,6 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   execute_string= execute_string +' --compression'
 		if(verbose) :
 		   execute_string= execute_string +' --verbose'
-		if(showversion) :
-		   execute_string= execute_string +' --revision'
 		if not overwrite and os.path.exists(viso):
 		   raise Exception, "You have specified and existing ms and have indicated you do not wish to overwrite it"
 
@@ -116,13 +122,19 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 				raise Exception, "Found '%s' but can't overwrite it."%dotFlagversion
 	   
 		execute_string = execute_string + ' ' + asdm + ' ' + viso
-		casalog.post('Running the asdm2MS standalone invoked as:')
+
+		if(showversion) :
+			casalog.post("You set option \'showversion\' to True. Will just output the version information and then terminate.", 'WARN')
+			execute_string= theexecutable +' --revision'
+
+		casalog.post('Running '+theexecutable+' standalone invoked as:')
 		#print execute_string
 		casalog.post(execute_string)
         	exitcode=os.system(execute_string)
                 if exitcode!=0:
-                   casalog.post('The asdm2MS terminated','SEVERE')
-                   raise Exception, "asdm coversion error, please check if it is a valid ASDM"
+			if(not showversion):
+				casalog.post(theexecutable+' terminated with exit code '+str(exitcode),'SEVERE')
+				raise Exception, "ASDM conversion error, please check if it is a valid ASDM and that data/alma/asdm is up-to-date"
 		if compression :
                    #viso = viso + '.compressed'
                    viso = viso.rstrip('.ms') + '.compressed.ms'

@@ -59,6 +59,10 @@ public:
 		const CoordinateSystem& csys
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnLine& operator=(const AnnLine& other);
+
 	// get the end point directions, transformed to
 	// the input coordinate system if necessary
 	Vector<MDirection> getEndPoints() const;

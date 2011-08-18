@@ -66,6 +66,10 @@ public:
 		const Bool annotationOnly
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnCenterBox& operator=(const AnnCenterBox& other);
+
 	MDirection getCenter() const;
 
 	Vector<Quantity> getWidths() const;

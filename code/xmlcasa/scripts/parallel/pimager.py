@@ -1102,6 +1102,253 @@ class pimager():
         self.c.stop_cluster()
 
 ##############################
+#################
+    def pcube_expt(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
+              pixsize=['1arcsec', '1arcsec'], phasecenter='', 
+              field='', spw='*', ftmachine='ft', wprojplanes=128, facets=1, 
+              hostnames='', 
+              numcpuperhost=1, majorcycles=1, niter=1000, threshold='0.0mJy', alg='clark', scales=[0],
+              mode='channel', start=0, nchan=1, step=1, restfreq='', weight='natural', 
+              robust=0.0, 
+              imagetilevol=100000,
+              contclean=False, chanchunk=1, visinmem=False, maskimage='' ,
+              painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
+              epjtablename=''): 
+
+        """
+        msname= measurementset
+        imagename = image
+        imsize = list of 2 numbers  [nx,ny] defining image size in x and y
+        pixsize = list of 2 quantities   ['sizex', 'sizey'] defining the pixel size e.g  ['1arcsec', '1arcsec']
+        phasecenter = an integer or a direction string   integer is fieldindex or direction e.g  'J2000 19h30m00 -30d00m00'
+        field = field selection string ...msselection style
+        spw = spw selection string ...msselection style
+        ftmachine= the ftmachine to use ...'ft', 'wproject' etc
+        wprojplanes is an interger that is valid only of ftmachine is 'wproject', 
+        facets= integer do split image facet, 
+        hostnames= list of strings ..empty string mean localhost
+        numcpuperhos = integer ...number of processes to launch on each host
+        majorcycles= integer number of CS major cycles to do, 
+        niter= integer ...total number of clean iteration 
+        threshold=quantity string ...residual peak at which to stop deconvolving
+        alg= string  possibilities are 'clark', 'hogbom', 'multiscale' and their 'mf'
+        scales= list of scales in pixel for multiscale clean e.g [0, 3, 10]
+        mode= channel definition, can be 'channel', 'frequency', 'velocity'
+        start = first channel in the definition spec of mode, can be int, freq or vel quantity
+        step = channel width specified in the definition of mode
+        restfreq= what 'rest frequency' to use to calculate velocity from frequency
+                                empty string '' implies use the first restfreq in SOURCE of ms 
+        weight= type of weight to apply
+        contclean = boolean ...if False the imagename.model is deleted if its on 
+        disk otherwise clean will continue from previous run
+        chanchunk = number of channel to process at a go per process...careful not to 
+       go above total memory available
+       visinmem = load visibility in memory for major cycles...make sure totalmemory  available to all processes is more than the MS size
+        painc = Parallactic angle increment in degrees after which a new convolution function is computed (default=360.0deg)
+        cfcache = The disk cache directory for convolution functions
+        pblimit = The fraction of the peak of the PB to which the PB corrections are applied (default=0.1)
+        dopbcorr = If true, correct for PB in the major cycles as well
+        applyoffsets = If true, apply antenna pointing offsets from the pointing table given by epjtablename 
+        epjtablename = Table containing antenna pointing offsets
+        """
+
+        if(spw==''):
+            spw='*'
+        if(field==''):
+            field='*'
+        spwids=ms.msseltoindex(vis=msname, spw=spw)['spw']
+        ###num of cpu per node
+        numcpu=numcpuperhost
+        time1=time.time()
+        self.spw=spw
+        self.field=field
+        self.phasecenter=phasecenter
+        self.ftmachine=ftmachine
+        self.wprojplanes=wprojplanes
+        self.facets=facets
+        self.imsize=imsize
+        self.cell=pixsize
+        self.weight=weight
+        self.robust=robust
+        self.visinmem=visinmem
+        self.setupcluster(hostnames,numcpuperhost, 0)
+        numcpu=self.numcpu
+        ####
+        #the default working directory is somewhere 
+        owd=os.getcwd()
+        hostname=os.getenv('HOSTNAME')
+        ###start one engine locally to cleanup when possible
+        self.c.start_engine(hostname,1,owd)
+        self.c.pgc('import os')
+        self.c.pgc('os.chdir("'+owd+'")')
+        #####################
+        model=imagename+'.model' 
+        if(not contclean or (not os.path.exists(model))):
+            shutil.rmtree(model, True)
+            shutil.rmtree(imagename+'.image', True)
+            ##create the cube
+            im.selectvis(vis=msname, spw=spw, field=field)
+            im.defineimage(nx=imsize[0], ny=imsize[1], cellx=pixsize[0], celly=pixsize[1], 
+                           phasecenter=phasecenter, mode=mode, spw=spwids.tolist(), nchan=nchan, step=step, start=start, restfreq=restfreq)
+            im.setoptions(imagetilevol=imagetilevol) 
+            #print 'making model image (', model, ') ...'
+            im.make(model)
+            print 'model image (', model, ') made'
+            im.done()
+        #print 'LOCKS ', tb.listlocks()
+        
+        ia.open(model)
+        elshape=ia.shape()
+        csys=ia.coordsys()
+        fstart=csys.toworld([0,0,0,0],'n')['numeric'][3]
+        fstep=csys.toworld([0,0,0,1],'n')['numeric'][3]-fstart
+        fend=fstep*(nchan-1)+fstart
+        ia.done()
+        ###handle mask
+        if((maskimage != '') and (os.path.exists(maskimage))):
+            ia.open(maskimage)
+            maskshape=ia.shape()
+            ia.done()
+            if(maskshape != elshape):
+                newmask=maskimage+'_regrid'
+                self.regridimage(outimage=newmask, inimage=maskimage, templateimage=model);
+                maskimage=newmask
+        #print 'LOCKS2 ', tb.listlocks()
+        imepoch=csys.epoch()
+        imobservatory=csys.telescope()
+        shutil.rmtree(imagename+'.image', True)
+        shutil.rmtree(imagename+'.residual', True)
+        shutil.copytree(model, imagename+'.image')
+        shutil.copytree(model, imagename+'.residual')
+
+        out=range(numcpu)
+        outhelper=0
+        self.c.pgc('from  parallel.parallel_cont import *')
+        self.c.odo('a=imagecont()', numcpu)
+        ###set some common parameters
+        self.c.pgc('a.imagetilevol='+str(imagetilevol))
+        self.c.pgc('a.visInMem='+str(visinmem))
+        self.c.pgc('a.painc='+str(painc))
+        self.c.pgc('a.cfcache='+'"'+str(cfcache)+'"')
+        self.c.pgc('a.pblimit='+str(pblimit));
+        self.c.pgc('a.dopbcorr='+str(dopbcorr));
+        self.c.pgc('a.applyoffsets='+str(applyoffsets));
+        self.c.pgc('a.epjtablename='+'"'+str(epjtablename)+'"');
+
+        tb.clearlocks()
+        #print 'LOCKS3', tb.listlocks()
+        chancounter=0
+        #####
+        if(contclean):
+            imagecont.getallchanmodel(imagename , chanchunk)
+        #####
+        timemake=time.time()
+        print 'time to get make cubes', timemake - time1 
+        nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
+        ###spw and channel selection
+        #spwsel,startsel, nchansel=imagecont.findchanselLSRK(msname=msname, spw=spwids, 
+        #                                             field=field, 
+        #                                             numpartition=nchanchunk, 
+        #                                             beginfreq=fstart, endfreq=fend, chanwidth=fstep)
+        #print 'time to calc selection ', time.time()-timemake
+        #print 'spwsel', spwsel, 'startsel', startsel,'nchansel', nchansel
+        ##print 'startsel', startsel
+        ##print  'nchansel', nchansel
+        imnam='"%s"'%(imagename)
+        donegetchan=np.array(range(nchanchunk),dtype=bool)
+        doneputchan=np.array(range(nchanchunk),dtype=bool)
+        readyputchan=np.array(range(nchanchunk), dtype=bool)
+        cpudoing=np.array(range(nchanchunk), dtype=int)
+        donegetchan.setfield(False,bool)
+        doneputchan.setfield(False,bool)
+        readyputchan.setfield(False, bool)
+        chanind=np.array(range(numcpu), dtype=int)
+        cleanup='a.cleanupimages(readyputchan=readyputchan, imagename='+imnam+',nchanchunk='+str(nchanchunk)+',chanchunk='+str(chanchunk)+')'
+        def gen_command(ccounter):
+            startfreq=str(fstart+ccounter*chanchunk*fstep)+'Hz'
+            widthfreq=str(fstep)+'Hz'
+            imnchan=chanchunk
+            if((ccounter == (nchanchunk-1)) and ((nchan%chanchunk) != 0)):
+                imnchan=nchan%chanchunk
+                
+            return 'a.imagechan(msname='+'"'+msname+'", start='+str(startsel[ccounter])+', numchan='+str(nchansel[ccounter])+', field="'+str(field)+'", spw='+str(spwsel[ccounter])+', imroot='+imnam+',imchan='+str(ccounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'", fstart="'+startfreq+'", width="'+widthfreq+'", chanchunk='+str(imnchan)+', mask="'+maskimage+'")'
+        def gen_command2(ccounter):
+            imnchan=chanchunk
+            if((ccounter == (nchanchunk-1)) and ((nchan%chanchunk) != 0)):
+                imnchan=nchan%chanchunk
+            return 'a.imagechan_selfselect(msname='+'"'+msname+'", field="'+str(field)+'", spwids='+str(spwids.tolist())+', imroot='+imnam+',imchan='+str(ccounter)+',niter='+str(niter)+',alg="'+alg+'", scales='+str(scales)+', majcycle='+str(majorcycles)+', thr="'+str(threshold)+'", chanchunk='+str(imnchan)+', mask="'+maskimage+'")'
+        #while(chancounter < nchanchunk):
+        chanind.setfield(-1, int)
+        for k in range(numcpu):
+            if(chancounter < nchanchunk):
+                #if((len(nchansel[chancounter])==0) or (len(spwsel[chancounter])==0) or  (len(startsel[chancounter])==0)):
+                    ###no need to process this channel
+                #    doneputchan[chancounter]=True
+                #else:
+##need to retab this 
+                runcomm=gen_command2(chancounter)
+                print 'command is ', runcomm
+                out[k]=self.c.odo(runcomm,k)
+##############
+                chanind[k]=chancounter
+                chancounter=chancounter+1
+###############
+        #print 'numcpuused', chancounter, nchanchunk
+        ##reset numcpu in case less than available is used
+        numcpu=copy.deepcopy(chancounter)
+        over=False
+        helpover=True
+        #while((chancounter < nchanchunk) and (not over)):
+        while(not over):
+            #over=False
+            #while(not over):
+            #############loop waiting for a chunk of work
+                time.sleep(1)
+                overone=True
+                for k in range(numcpu):
+                    overone=(overone and ((type(out[k])==int) or (self.c.check_job(out[k],False))))
+                    #print k,  'checjob' , ((type(out[k])==int) or (self.c.check_job(out[k],False))), 'chanind', chanind[k], 'chancounter', chancounter, 'readypu', readyputchan[chanind[k]]
+                    if((chanind[k] > -1) and (not readyputchan[chanind[k]]) and ((type(out[k])==int) or self.c.check_job(out[k],False)) ):
+                        readyputchan[chanind[k]]=True      
+                        if(chancounter < nchanchunk):
+                            #if((len(nchansel[chancounter])==0) or (len(spwsel[chancounter])==0) or  (len(startsel[chancounter])==0)):
+                                ###no need to process this channel
+                             #   doneputchan[chancounter]=True
+                            #else:
+##########to be retabbed
+                            runcomm=gen_command2(chancounter)
+                            print 'command is ', runcomm
+                            print 'processor ', k
+                            out[k]=self.c.odo(runcomm,k)
+###################
+                            chanind[k]=chancounter
+                            chancounter+=1
+                        overone=(overone and ((type(out[k])==int) or self.c.check_job(out[k],False)))
+                        if(helpover and ((type(outhelper)==int) or self.c.check_job(outhelper, False))):
+                            self.c.push(readyputchan=readyputchan, targets=numcpu)
+                            outhelper=self.c.odo(cleanup, numcpu)
+                        #print 'over', over, 'chancounter', chancounter, 'chanind', chanind
+                        
+                over=(overone) and (chancounter >= nchanchunk)               
+               ############
+        timebegrem=time.time()
+        print 'Time to image is ', (timebegrem-time1)/60.0, 'mins'
+        while(not self.c.check_job(outhelper, False)):
+            time.sleep(1)
+        chans=(np.array(range(nchanchunk))*chanchunk).tolist()
+        imnams=[imagename]*nchanchunk
+        imagecont.putchanimage2(model , [imnams[k]+str(k)+'.model' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        imagecont.putchanimage2(imagename+'.residual' ,[imnams[k]+str(k)+'.residual' for k in range(nchanchunk)] , chans, doneputchan.tolist(), True)
+        imagecont.putchanimage2(imagename+'.image' , [imnams[k]+str(k)+'.image' for k in range(nchanchunk)], chans, doneputchan.tolist(), True)
+        time2=time.time()
+        print 'Time to concat/cleanup', (time2- timebegrem)/60.0, 'mins'
+        
+
+        time2=time.time()
+        print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
+        self.c.stop_engine(numcpu)
+
+##############################
 
     def pcontmultims(self, msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000], 
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 

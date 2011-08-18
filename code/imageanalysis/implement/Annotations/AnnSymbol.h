@@ -81,6 +81,10 @@ public:
 		const Char symbolChar
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnSymbol& operator=(const AnnSymbol& other);
+
 	MDirection getDirection() const;
 
 	Symbol getSymbol() const;

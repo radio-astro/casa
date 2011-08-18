@@ -28,16 +28,16 @@
 #ifndef IMAGEANALYSIS_IMAGEPRIMARYBEAMCORRECTOR_H
 #define IMAGEANALYSIS_IMAGEPRIMARYBEAMCORRECTOR_H
 
-#include <casa/Logging/LogIO.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
-#include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <memory>
 
 #include <casa/namespace.h>
 
+#include <memory>
+
 namespace casa {
 
-class ImagePrimaryBeamCorrector {
+class ImagePrimaryBeamCorrector : public ImageTask {
 	// <summary>
 	// Top level interface for primary beam correction.
 	// </summary>
@@ -109,14 +109,18 @@ public:
 	// a NULL pointer is returned and pointer deletion is performed internally.
 	ImageInterface<Float>* correct(const Bool wantReturn) const;
 
+	String getClass() const;
+
+protected:
+
+	vector<Coordinate::Type> _getNecessaryCoordinates() const;
+
+	CasacRegionManager::StokesControl _getStokesControl() const;
+
+
 private:
-	std::auto_ptr<LogIO> _log;
-	const ImageInterface<Float> *const _image;
 	std::auto_ptr<ImageInterface<Float> > _pbImage;
 
-	Record _regionRecord;
-	String _chan, _stokesString, _mask, _outname;
-	Bool _overwrite;
 	Float _cutoff;
 	Mode _mode;
 	Bool _useCutoff;
@@ -125,13 +129,6 @@ private:
 	ImagePrimaryBeamCorrector();
 
 	void _checkPBSanity();
-
-	void _construct(
-		const String& box, const String& region,
-		const Record * const regionPtr
-	);
-
-	vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
 };
 
 }

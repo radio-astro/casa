@@ -45,8 +45,8 @@ AnnAnnulus::AnnAnnulus(
 	_xcenter(xcenter), _ycenter(ycenter),
 	_innerRadius(innerRadius), _outerRadius(outerRadius) {
 
-	_convertedRadii[0] = _lengthToAngle(innerRadius, _directionAxes[0]);
-	_convertedRadii[1] = _lengthToAngle(outerRadius, _directionAxes[0]);
+	_convertedRadii[0] = _lengthToAngle(innerRadius, _getDirectionAxes()[0]);
+	_convertedRadii[1] = _lengthToAngle(outerRadius, _getDirectionAxes()[0]);
 
 	if (
 		_convertedRadii[0].getValue("rad")
@@ -64,21 +64,38 @@ AnnAnnulus::AnnAnnulus(
 
 	_checkAndConvertDirections(String(__FUNCTION__), inputCenter);
 
-	Vector<Double> coords = _convertedDirections[0].getAngle("rad").getValue();
+	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
 
 	Vector<Quantity> qCenter(2);
 	qCenter[0] = Quantity(coords[0], "rad");
 	qCenter[1] = Quantity(coords[1], "rad");
 
-	WCEllipsoid inner(qCenter, innerRadius, _directionAxes, _csys, RegionType::Abs);
-	WCEllipsoid outer(qCenter, outerRadius, _directionAxes, _csys, RegionType::Abs);
+	WCEllipsoid inner(qCenter, innerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
+	WCEllipsoid outer(qCenter, outerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
 	WCDifference annulus(outer, inner);
 	_extend(annulus);
 
 }
 
+AnnAnnulus& AnnAnnulus::operator= (
+	const AnnAnnulus& other
+) {
+    if (this == &other) {
+    	return *this;
+    }
+    AnnRegion::operator=(other);
+	_convertedRadii.resize(other._convertedRadii.nelements());
+	_convertedRadii = other._convertedRadii;
+	_xcenter = other._xcenter;
+	_ycenter = other._ycenter;
+	_innerRadius = other._innerRadius;
+	_outerRadius = other._outerRadius;
+    return *this;
+}
+
+
 MDirection AnnAnnulus::getCenter() const {
-	return _convertedDirections[0];
+	return _getConvertedDirections()[0];
 }
 
 Vector<Quantity> AnnAnnulus::getRadii() const {

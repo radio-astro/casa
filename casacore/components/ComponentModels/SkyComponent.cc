@@ -242,7 +242,7 @@ Bool SkyComponent::ok() const {
   return True;
 }
 
-String SkyComponent::summarize(const CoordinateSystem * const coordinates) const {
+String SkyComponent::summarize(const CoordinateSystem *const &coordinates) const {
 	ostringstream summary;
 	summary << "SUMMARY OF COMPONENT " << label() << endl;
 	summary << "Shape: " << shape().ident() << endl;
@@ -256,7 +256,7 @@ String SkyComponent::summarize(const CoordinateSystem * const coordinates) const
 	return summary.str();
 }
 
-String SkyComponent::positionToString(const CoordinateSystem * const coordinates) const {
+String SkyComponent::positionToString(const CoordinateSystem *const &coordinates) const {
 	// FIXME essentially cut and paste of Gareth's python code. Needs work.
 	ostringstream position;
 	MDirection mdir = shape().refDirection();
@@ -312,16 +312,16 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 		<< " arcsec)" << endl;
 	position << "       --- dec: " << dec << " +/- " << ddec << endl;
 
-	if (coordinates) {
-		Vector<Double> world(coordinates->nWorldAxes(), 0), pixel(coordinates->nPixelAxes(), 0);
+	if (coordinates && coordinates->hasDirectionCoordinate()) {
+		const DirectionCoordinate dirCoord = coordinates->directionCoordinate();
+		Vector<Double> world(dirCoord.nWorldAxes(), 0), pixel(dirCoord.nPixelAxes(), 0);
 		world[0] = longitude.getValue();
 		world[1] = lat.getValue();
 		// TODO do the pixel computations in another method
-		if (coordinates->toPixel(pixel, world)) {
-			const DirectionCoordinate dCoord = coordinates->directionCoordinate();
-			Vector<Double> increment = dCoord.increment();
-			Double raPixErr = dra.getValue("rad")/increment[0];
-			Double decPixErr = ddec.getValue("rad")/increment[1];
+		if (dirCoord.toPixel(pixel, world)) {
+			Vector<Double> increment = dirCoord.increment();
+			Double raPixErr = abs(dra.getValue("rad")/increment[0]);
+			Double decPixErr = abs(ddec.getValue("rad")/increment[1]);
 			Vector<Double> raPix(2), decPix(2);
 			raPix.set(roundDouble(raPixErr, 3, 2));
 			decPix.set(roundDouble(decPixErr, 3, 2));
@@ -331,7 +331,7 @@ String SkyComponent::positionToString(const CoordinateSystem * const coordinates
 			position << "       --- dec:  " << pixel[1] << " +/- " << decPixErr << " pixels" << endl;
 		}
 		else {
-			position << "unable to determine position in pixels" << endl;
+			position << "unable to determine position in pixels:" << coordinates->errorMessage() << endl;
 		}
 	}
 	return position.str();

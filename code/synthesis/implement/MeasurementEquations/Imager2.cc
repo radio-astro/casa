@@ -465,24 +465,26 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       }
       MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::castType(mfImageStart_p.getRef().getType()) ; 
 
+      /////Some problem here it is really goofing up in getting frequency
+      // -> fixed was made in calcImFreqs -TT 
       Vector<Double> imgridfreqs;
       Vector<Double> imfreqres;
       //rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
       // should use obsFreqRef
       rstate=calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq);
       //cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
-
+      
 
       if (imageNchan_p==1) {
-        mySpectral = new SpectralCoordinate(mfreqref,
+      mySpectral = new SpectralCoordinate(mfreqref,
       					  mfImageStart_p.get("Hz").getValue(),
       					  mfImageStep_p.get("Hz").getValue(),
       					  refChan, restFreq);
       }
       else {
-        Double finc= imgridfreqs(1)-imgridfreqs(0); 
+        Double finc= imgridfreqs(1)-imgridfreqs(0);
         mySpectral = new SpectralCoordinate(mfreqref, imgridfreqs(0), finc, refChan, restFreq);
-
+	//cerr << "after myspectral2 " << mySpectral->referenceValue() << " pixel " <<  mySpectral->referencePixel() << endl;
         //debug TT
         //Double wrld,pixl;
         //pixl=0.0;
@@ -1094,7 +1096,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       }
 
 
-	  //in order to outframe to work need to set here original freq frame
+      //in order to outframe to work need to set here original freq frame
       //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
       mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
 					  , finc,
@@ -4369,6 +4371,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
 
  
   try {
+    /***
     if(spectralwindowids_p.nelements()==1){
       if(spectralwindowids_p[0]<0){
         spectralwindowids_p.resize();
@@ -4380,14 +4383,21 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
         spectralwindowids_p=dataspectralwindowids_p;
       }
     }
-
-    if(spectralwindowids_p.nelements()==1) {
-      oldChanFreqs=msc.spectralWindow().chanFreq()(spectralwindowids_p[0]);  
-      oldFreqResolution=msc.spectralWindow().chanWidth()(spectralwindowids_p[0]);
+    ***/
+    Vector<Int> spwlist; 
+    if (mode=="frequency" || mode=="velocity") {
+       spwlist = dataspectralwindowids_p;
+    }
+    else {
+       spwlist = spectralwindowids_p;
+    }
+    if(spwlist.nelements()==1) {
+      oldChanFreqs=msc.spectralWindow().chanFreq()(spwlist[0]);  
+      oldFreqResolution=msc.spectralWindow().chanWidth()(spwlist[0]);
     }
     else {
       SubMS thems(*ms_p);
-      if(!thems.combineSpws(spectralwindowids_p,True,oldChanFreqs,oldFreqResolution)){
+      if(!thems.combineSpws(spwlist,True,oldChanFreqs,oldFreqResolution)){
         os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
       }
     }

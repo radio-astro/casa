@@ -76,7 +76,7 @@ myia = iatool.create()
 class getchunk_test(unittest.TestCase):
     
     def setUp(self):
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/imfit/'
+        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/'
         os.system('cp -r ' +datapath + image + ' ' + image)
 
     def tearDown(self):

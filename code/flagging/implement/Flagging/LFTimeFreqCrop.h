@@ -86,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Input parameters
     Double ANT_TOL, BASELN_TOL, T_TOL, F_TOL;
-    Int CorrChoice, NumTime, MaxNPieces, halfWin_p;
+    Int CorrChoice, NumTime, MaxNPieces, halfWin_p, MaxDeg;
     String Expr, Column;
     Vector<Int> intSelCorr;
 

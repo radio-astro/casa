@@ -1729,7 +1729,7 @@ void PrincipalAxesDD::setDefaultOptions()
   if (iS>=0) {
      const SpectralCoordinate coord = itsCoordSys.spectralCoordinate(iS);
      Double restFreq = coord.restFrequency();
-     SpectralCoordinate::SpecType spcType = coord.spectralType();
+     SpectralCoordinate::SpecType spcType = coord.nativeType();
 
      if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
    	  itsSpectralQuantity = String("radio velocity");
@@ -1752,11 +1752,11 @@ void PrincipalAxesDD::setDefaultOptions()
    	  itsSpectralUnit = String("nm");
      }
      else if (spcType == SpectralCoordinate::FREQ){
-   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralQuantity = String("frequency");
    	  itsSpectralUnit = String("GHz");
      }
      else{
-   	  itsSpectralQuantity = String("radio velocity");
+   	  itsSpectralQuantity = String("frequency");
    	  itsSpectralUnit = String("GHz");
      }
   }
@@ -2164,7 +2164,7 @@ Record PrincipalAxesDD::getLabellerOptions(){
      {
         const SpectralCoordinate sc = itsOrigCoordSys.spectralCoordinate(iS);
         Double restFreq = sc.restFrequency();
-        SpectralCoordinate::SpecType spcType = sc.spectralType();
+        SpectralCoordinate::SpecType spcType = sc.nativeType();
         Int unitSet=0;
 
         Record veltype;
@@ -2174,11 +2174,12 @@ Record PrincipalAxesDD::getLabellerOptions(){
         veltype.define("ptype", "choice");
         Vector<String> stunits;
 
-        stunits.resize(4);
+        stunits.resize(5);
         stunits(0) = "optical velocity";
         stunits(1) = "radio velocity";
         stunits(2) = "wavelength";
         stunits(3) = "air wavelength";
+        stunits(4) = "frequency";
 
         if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
       	  veltype.define("default", stunits(1));
@@ -2188,7 +2189,7 @@ Record PrincipalAxesDD::getLabellerOptions(){
            veltype.define("default", stunits(1));
            unitSet = 1;
         }
-       else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
+	else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
            veltype.define("default", stunits(0));
            unitSet = 1;
         }
@@ -2201,11 +2202,11 @@ Record PrincipalAxesDD::getLabellerOptions(){
            unitSet = 2;
         }
         else if (spcType == SpectralCoordinate::FREQ){
-           veltype.define("default", stunits(1));
+           veltype.define("default", stunits(4));
            unitSet = 0;
         }
         else{
-           veltype.define("default", stunits(1));
+           veltype.define("default", stunits(4));
            unitSet = 0;
         }
 

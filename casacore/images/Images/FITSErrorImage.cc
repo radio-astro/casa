@@ -35,14 +35,14 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FITSErrorImage::FITSErrorImage (const String& name, uInt whichRep, uInt whichHDU, ErrorType errtype)
+FITSErrorImage::FITSErrorImage (const String& name, uInt whichRep, uInt whichHDU, FITSErrorImage::ErrorType errtype)
 : FITSImage(name, whichRep, whichHDU),
   errtype_p(errtype)
 {
 	setupMask();
 }
 
-FITSErrorImage::FITSErrorImage (const String& name, const MaskSpecifier& maskSpec, uInt whichRep, uInt whichHDU, ErrorType errtype)
+FITSErrorImage::FITSErrorImage (const String& name, const MaskSpecifier& maskSpec, uInt whichRep, uInt whichHDU, FITSErrorImage::ErrorType errtype)
 : FITSImage (name, maskSpec, whichRep, whichHDU),
   errtype_p(errtype)
 {
@@ -106,29 +106,33 @@ Bool FITSErrorImage::doGetSlice(Array<Float>& buffer,
 	// fill the resulting array with variance values
 	switch (errtype_p)
 	{
-	case VARIANCE:
+	case MSE:
 		for (uInt i=0; i<buffer.nelements(); i++)
 			pBuffer[i] = pData[i];
 		break;
-	case SIGMA:
+	case RMSE:
 		for (uInt i=0; i<buffer.nelements(); i++)
 			pBuffer[i] = pData[i]*pData[i];
 		break;
-	case INVVARIANCE:
+	case INVMSE:
 		for (uInt i=0; i<buffer.nelements(); i++)
 			if (pData[i])
 				pBuffer[i] = 1.0/pData[i];
 			else
 				pBuffer[i] = NAN;
 		break;
-	case INVSIGMA:
+	case INVRMSE:
 		for (uInt i=0; i<buffer.nelements(); i++)
 			if (pData[i])
 				pBuffer[i] = 1.0/(pData[i]*pData[i]);
 			else
 				pBuffer[i] = NAN;
 		break;
-
+	default:
+		// this should not happen:
+		throw (AipsError ("FITSErrorImage::doGetSlice - "
+				"can not give values for this error type!"));
+		break;
 	}
 
 	// re-shuffle the arrays
@@ -146,13 +150,50 @@ void FITSErrorImage::doPutSlice (const Array<Float>&, const IPosition&,
 			"is not possible as FITSErrorImage is not writable"));
 }
 
+FITSErrorImage::ErrorType FITSErrorImage::stringToErrorType(const String errorTypeStr){
+	// convert the string to an error type
+	if (!errorTypeStr.compare("MSE"))
+		return MSE;
+	else if (!errorTypeStr.compare("RMSE"))
+		return RMSE;
+	else if (!errorTypeStr.compare("INVMSE"))
+		return INVMSE;
+	else if (!errorTypeStr.compare("INVRMSE"))
+		return INVRMSE;
+	else
+		return UNKNOWN;
+}
+
+String FITSErrorImage::errorTypeToString(const FITSErrorImage::ErrorType errType){
+	// convert the error type to a string
+	switch(errType) {
+	case MSE:
+		return "MSE";
+	case RMSE:
+		return "RMSE";
+	case INVMSE:
+		return "INVMSE";
+	case INVRMSE:
+		return "INVRMSE";
+	case UNKNOWN:
+		return "UNKNOWN";
+	default:
+		return ""; // unknown
+	}
+}
+
 void FITSErrorImage::setupMask()
 {
 	// for the inverse error types, switch on
 	// the masking of values 0.0 (in the FITS file)
-	if (errtype_p == INVVARIANCE || errtype_p == INVSIGMA){
+	if (errtype_p == INVMSE || errtype_p == INVRMSE){
 		setMaskZero(True);
 	}
-}
+	// throw an error for type "UNKNOWN", since
+	// it is now known what to do.
+	else if (errtype_p == UNKNOWN)
+		throw (AipsError ("FITSErrorImage::setupMask - "
+				"error type UNKNOWN is not accepted!"));
+	}
 } //# NAMESPACE CASA - END
 

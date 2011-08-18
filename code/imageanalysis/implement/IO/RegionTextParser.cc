@@ -37,6 +37,9 @@
 
 namespace casa {
 
+const Int RegionTextParser::CURRENT_VERSION = 0;
+const Regex RegionTextParser::MAGIC("^#CRTF");
+
 const String RegionTextParser::sOnePair = "[[:space:]]*\\[[^\\[,]+,[^\\[,]+\\][[:space:]]*";
 const String RegionTextParser::bTwoPair = "\\[" + sOnePair
 		+ "," + sOnePair;
@@ -47,12 +50,14 @@ const Regex RegionTextParser::startOnePair("^" + sOnePair);
 const Regex RegionTextParser::startNPair("^" + sNPair);
 
 RegionTextParser::RegionTextParser(
-	const String& filename, const CoordinateSystem& csys
+	const String& filename, const CoordinateSystem& csys,
+	const Int requireAtLeastThisVersion
 ) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)) {
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
+	_fileVersion(-1) {
 	String preamble = String(__FUNCTION__) + ": ";
 	RegularFile file(filename);
 	if (! file.exists()) {
@@ -70,7 +75,7 @@ RegionTextParser::RegionTextParser(
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
 			preamble
-			+ "Coordinate system has not direction coordintate"
+			+ "Coordinate system has not have a direction coordintate"
 		);
 	}
 	_setInitialGlobals();
@@ -79,15 +84,20 @@ RegionTextParser::RegionTextParser(
 	char *buffer = new char[bufSize];
 	int nRead;
 	String contents;
-
 	while ((nRead = fileIO.read(bufSize, buffer, False)) == bufSize) {
-		*_log << LogIO::NORMAL << "read: " << nRead << LogIO::POST;
 		String chunk(buffer, bufSize);
+		if (_fileVersion < 0) {
+			_determineVersion(chunk, filename, requireAtLeastThisVersion);
+		}
 		contents += chunk;
 	}
 	// get the last chunk
 	String chunk(buffer, nRead);
+	if (_fileVersion < 0) {
+		_determineVersion(chunk, filename, requireAtLeastThisVersion);
+	}
 	contents += chunk;
+	delete [] buffer;
 	_parse(contents, filename);
 }
 
@@ -97,7 +107,8 @@ RegionTextParser::RegionTextParser(
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
-	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)) {
+	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
+	_fileVersion(-1) {
 	String preamble = String(__FUNCTION__) + ": ";
 
 	if (! _csys.hasDirectionCoordinate()) {
@@ -110,14 +121,83 @@ RegionTextParser::RegionTextParser(
 	_parse(text, "");
 }
 
+RegionTextParser::~RegionTextParser() {
+	delete _log;
+	_log = 0;
+}
+
+Int RegionTextParser::getFileVersion() const {
+	if (_fileVersion < 0) {
+		*_log << "File version not associated with simple text strings"
+			<< LogIO::EXCEPTION;
+	}
+	return _fileVersion;
+}
+
 Vector<AsciiAnnotationFileLine> RegionTextParser::getLines() const {
 	return _lines;
 }
 
-
-RegionTextParser::~RegionTextParser() {
-	delete _log;
-	_log = 0;
+void RegionTextParser::_determineVersion(
+	const String& chunk, const String& filename,
+	const Int requireAtLeastThisVersion
+) {
+	*_log << LogOrigin("RegionTextParser", __FUNCTION__);
+	if (_fileVersion >= 0) {
+		// already determined
+		return;
+	}
+	if (! chunk.contains(MAGIC)) {
+		*_log << "File " << filename
+			<< " does not contain CASA region text file magic value"
+			<< LogIO::EXCEPTION;
+	}
+	Regex version = Regex(MAGIC.regexp() + "v[0-9]+");
+	if (chunk.contains(version)) {
+		String vString = chunk.substr(6);
+		Bool done = False;
+		Int count = 1;
+		Int oldVersion = -2000;
+		while (! done) {
+			try {
+				_fileVersion = String::toInt(vString.substr(0, count));
+				count++;
+				if (_fileVersion == oldVersion) {
+					done = True;
+				}
+				else {
+					oldVersion = _fileVersion;
+				}
+			}
+			catch (AipsError) {
+				done = True;
+			}
+		}
+		if (_fileVersion < requireAtLeastThisVersion) {
+			*_log << "File version " << _fileVersion
+				<< " is less than required version "
+				<< requireAtLeastThisVersion << LogIO::EXCEPTION;
+		}
+		if (_fileVersion > CURRENT_VERSION) {
+			*_log << "File version " << _fileVersion
+				<< " is greater than the most recent version of the spec ("
+				<< CURRENT_VERSION
+				<< "). Did you bring this file with you when you traveled "
+				<< "here from the future perhaps? Unfortunately we don't "
+				<< "support such possibilities yet." << LogIO::EXCEPTION;
+		}
+		*_log << LogIO::NORMAL << "Found spec version "
+			<< _fileVersion << LogIO::POST;
+	}
+	else {
+		*_log << LogIO::WARN << "File " << filename
+			<< " does not contain a CASA Region Text File spec version. "
+			<< "The current spec version, " << CURRENT_VERSION << " will be assumed. "
+			<< "WE STRONGLY SUGGEST YOU INCLUDE THE SPEC VERSION IN THIS FILE TO AVOID "
+			<< "POSSIBLE FUTURE BACKWARD INCOMPATIBILTY ISSUES. Simply ensure the first line "
+			<< "of the file is '#CRTFv" << CURRENT_VERSION << "'" << LogIO::POST;
+		_fileVersion = CURRENT_VERSION;
+	}
 }
 
 void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
@@ -125,13 +205,9 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 	const Regex startAnn("^ann[[:space:]]+");
 	const Regex startDiff("^-[[:space:]]+");
 	const Regex startGlobal("^global[[:space:]]+");
-
-
-
 	Vector<String> lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
 	Vector<Quantity> qFreqs(2, Quantity(0));
-
 	for(Vector<String>::iterator iter=lines.begin(); iter!=lines.end(); iter++) {
 		lineCount++;
 		Bool annOnly = False;
@@ -442,11 +518,10 @@ RegionTextParser::_getCurrentParamSet(
 	// get key-value pairs on the line
 	while (consumeMe.size() > 0) {
 		ParamValue paramValue;
-		AnnotationBase::Keyword key = AnnotationBase::UNKNOWN;
+		AnnotationBase::Keyword key = AnnotationBase::UNKNOWN_KEYWORD;
 		consumeMe.trim();
 		consumeMe.ltrim(',');
 		consumeMe.trim();
-
 		if (! consumeMe.contains('=')) {
 			*_log << preamble << "Illegal extra characters on line ("
 				<< consumeMe << "). Did you forget a '='?"
@@ -523,6 +598,9 @@ RegionTextParser::_getCurrentParamSet(
 			}
 			else if (keyword == "linestyle") {
 				key = AnnotationBase::LINESTYLE;
+				paramValue.lineStyleVal = AnnotationBase::lineStyleFromString(
+					paramValue.stringVal
+				);
 			}
 			else if (keyword == "symsize") {
 				key = AnnotationBase::SYMSIZE;
@@ -571,7 +649,7 @@ RegionTextParser::_getCurrentParamSet(
 			}
 		}
 		consumeMe.trim();
-		if (key != AnnotationBase::UNKNOWN) {
+		if (key != AnnotationBase::UNKNOWN_KEYWORD) {
 			currentParams[key] = paramValue;
 			newParams[key] = paramValue;
 		}
@@ -640,7 +718,6 @@ void RegionTextParser::_createAnnotation(
 			<< currentParamSet.at(AnnotationBase::RESTFREQ).stringVal << " is not "
 			<< "a valid quantity." << LogIO::EXCEPTION;
 	}
-
 	try {
 	switch (annType) {
 		case AnnotationBase::RECT_BOX:
@@ -739,7 +816,9 @@ void RegionTextParser::_createAnnotation(
 		dynamic_cast<AnnRegion *>(annotation)->setDifference(isDifference);
 	}
 	annotation->setLineWidth(currentParamSet.at(AnnotationBase::LINEWIDTH).intVal);
-	annotation->setLineStyle(currentParamSet.at(AnnotationBase::LINESTYLE).stringVal);
+	annotation->setLineStyle(AnnotationBase::lineStyleFromString(
+		currentParamSet.at(AnnotationBase::LINESTYLE).stringVal)
+	);
 	annotation->setSymbolSize(currentParamSet.at(AnnotationBase::SYMSIZE).intVal);
 	annotation->setSymbolThickness(currentParamSet.at(AnnotationBase::SYMTHICK).intVal);
 	annotation->setColor(currentParamSet.at(AnnotationBase::COLOR).stringVal);
@@ -1047,7 +1126,7 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::LINEWIDTH] = linewidth;
 
 	ParamValue linestyle;
-	linestyle.stringVal = AnnotationBase::DEFAULT_LINESTYLE;
+	linestyle.lineStyleVal = AnnotationBase::DEFAULT_LINESTYLE;
 	_currentGlobals[AnnotationBase::LINESTYLE] = linestyle;
 
 	ParamValue symsize;

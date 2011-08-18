@@ -137,31 +137,6 @@ public:
                     const MaskedArray<T>& in, const Coordinate& coordIn,
                     uInt axis, uInt bin);
 
-   // Fit all profiles in image.  The output images must be already
-   // created; if the pointer is 0, that image won't be filled.
-   // The mask from the input image is transferred to the output
-   // images.    If the weights image is pointer is non-zero, the
-   // values from it will be used to weight the data points in the
-   // fit.  You can fit some combination of gaussians and a polynomial
-   // (-1 means no polynomial).  Initial estimates are not required.
-   // Fits are done in image space to provide astronomer friendly results,
-   // but pixel space is better for the fitter when fitting polynomials.
-   // Thus, atm, callers should be aware that fitting polynomials may
-   // fail even when the data lie exactly on a polynomial curve.
-   // This will probably be fixed in the future by doing the fits
-   // in pixel space here and requiring the caller to deal with converting
-   // to something astronomer friendly if it so desires.
-
-   template <typename T>
-   static Vector<ImageFit1D<T> > fitProfiles (
-	   ImageInterface<T>* &pFit,
-       ImageInterface<T>* &pResid, String& xUnit,
-       const ImageInterface<T>& inImage,
-       const uInt axis, const uInt nGauss=1,
-       const Int poly=-1, const ImageInterface<T> *const &weightsImage=0,
-       const Bool showProgress=False, const uInt minPoints=0
-   );
-
 // This function converts pixel coordinates to world coordinates. You
 // specify a vector of pixel coordinates (<src>pixels</src>) for only one 
 // axis, the <src>pixelAxis</src>.    For the other pixel axes in the

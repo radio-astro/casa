@@ -611,7 +611,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.76
+           VERSION 1.0.77
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -804,6 +804,18 @@ casa_find( LIBXML2
   CPP_VERSION LIBXML_DOTTED_VERSION 
   RUN_VERSION "LIBXML_DOTTED_VERSION; LIBXML_TEST_VERSION;" 
   )
+
+# XSLT
+casa_find( LIBXSLT
+  VERSION 1.1.17
+  PREFIX_HINTS ${LIBXSLT_ROOT_DIR}
+  INCLUDES libxslt/xsltconfig.h
+  INCLUDES_SUFFIXES libxslt
+  LIBS xslt
+  CPP_VERSION LIBXSLT_DOTTED_VERSION 
+  RUN_VERSION "LIBXSLT_DOTTED_VERSION; LIBXSLT_VERSION;" 
+  )
+
 
 # Do not reuse FindLibXml2.cmake, except this excerpt
 IF (NOT WIN32)
@@ -1029,11 +1041,13 @@ casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)
 casa_add_module( calibration CASACORE tableplot msvis Boost )
 casa_add_module( synthesis CASACORE ATM casadbus msvis Boost calibration )
 casa_add_module( alma CASACORE LIBXML2 Boost )
+casa_add_module( alma_v3 CASACORE LIBXML2 LIBXSLT Boost )
 casa_add_module( oldalma CASACORE LIBXML2 Boost )
 casa_add_module( dish CASACORE )
 casa_add_module( nrao CASACORE )
 casa_add_module( imageanalysis CASACORE )
 casa_add_module( spectrallines CASACORE imageanalysis )
+#casa_add_module( miriad CASACORE msvis )
 
 casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis )
 

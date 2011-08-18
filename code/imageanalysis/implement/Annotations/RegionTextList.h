@@ -21,6 +21,7 @@
 #include <casa/Arrays/Vector.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <imageanalysis/IO/AsciiAnnotationFileLine.h>
+#include <imageanalysis/IO/RegionTextParser.h>
 #include <images/Regions/WCRegion.h>
 #include <images/Regions/WCUnion.h>
 
@@ -61,7 +62,7 @@ public:
 	// is used for constructing an annotation list on the fly, possibly
 	// to be written to a file when complete. It can be used to determine
 	// the composite region as well but it is the caller's responsibility
-	// to ensure the added regions added to this object are constructed
+	// to ensure the regions added to this object are constructed
 	// in a consistent manner (eg using the same coordinate system).
 	// <src>shape</src> is the image shape and is only used if
 	// the first region is a difference; in that case, the all pixels in entire
@@ -71,7 +72,6 @@ public:
 		const IPosition shape,
 		const Bool deletePointersOnDestruct=True
 	);
-
 
 	// create a list by reading it from a file.
 	// An exception is thrown if the file is not in the correct
@@ -83,6 +83,7 @@ public:
 	RegionTextList(
 		const String& filename, const CoordinateSystem& csys,
 		const IPosition shape,
+		const Int requireAtLeastThisVersion=RegionTextParser::CURRENT_VERSION,
 		const Bool deletePointersOnDestruct=True
 	);
 
@@ -137,7 +138,5 @@ inline ostream &operator<<(ostream& os, const RegionTextList& list) {
 };
 
 }
-
-
 
 #endif /* IMAGES_ASCIIREGIONFILE_H_ */

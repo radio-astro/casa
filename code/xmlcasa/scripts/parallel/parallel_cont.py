@@ -275,10 +275,12 @@ class imagecont():
         fstart=csys.toworld([0,0,0,imchan*chanchunk],'n')['numeric'][3]
         fstep=csys.toworld([0,0,0,imchan*chanchunk+1],'n')['numeric'][3]-fstart
         fend=fstep*(chanchunk-1)+fstart
+        print 'fstat bef findchansel ', fstart
         spw, start, nchan=self.findchanselLSRK(msname=msname, spw=spwids, 
                                                       field=field, 
                                                       numpartition=1, 
                                                       beginfreq=fstart, endfreq=fend, chanwidth=fstep)
+        print 'spw, start, nchan', spw, start, nchan
         if((len(spw[0])==0) or (len(nchan[0])==0) or (len(start[0]) ==0) ):
             return
         imname=imroot+str(imchan)
@@ -289,7 +291,8 @@ class imagecont():
                 maskname=''
  #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
         im.selectvis(vis=msname, field=field, spw=spw[0], nchan=nchan[0], start=start[0], step=1, datainmemory=self.visInMem)
-        im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=str(fstart)+'Hz', step=str(fstep)+'Hz')
+        print 'fstart bef def', fstart
+        im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=str(fstart)+'Hz', step=str(fstep)+'Hz', outframe='LSRK')
         im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
                   robust=self.robust)
        
@@ -307,6 +310,11 @@ class imagecont():
                     raise Exception(instance)
         if(maskname != ''):
             shutil.rmtree(maskname, True)
+        #self.putchanimage(imroot+'.model', imname+'.model', imchan*chanchunk)
+        #self.putchanimage(imroot+'.residual', imname+'.residual', imchan*chanchunk)
+        #self.putchanimage(imroot+'.image', imname+'.image', imchan*chanchunk)
+
+
 
     def imagechan_new(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, cubeim='imagecube', imroot='newmodel', imchan=0, chanchunk=1, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0]):
         origname=msname
@@ -392,29 +400,34 @@ class imagecont():
                 self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, False)
                 self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, False)
                 doneputchan[k]=True
-    def cleanupmodelimages(self, readyputchan,  imagename, nchanchunk, chanchunk):
+
+    def cleanupimages(self, readyputchan, imagename, nchanchunk, chanchunk, removefile=True):
+        self.cleanupmodelimages(readyputchan, imagename, nchanchunk, chanchunk, removefile)
+        self.cleanupresidualimages(readyputchan, imagename, nchanchunk, chanchunk, removefile)
+        self.cleanuprestoredimages(readyputchan, imagename, nchanchunk, chanchunk, removefile)
+        
+    def cleanupmodelimages(self, readyputchan,  imagename, nchanchunk, chanchunk, removefile=True):
         """
         This function will put model images only 
         """
         for k in range(nchanchunk):
             if(readyputchan[k]):
-                self.putchanimage(imagename+'.model', imagename+str(k)+'.model', k*chanchunk, True)
-    
-    def cleanupresidualimages(self, readyputchan,  imagename, nchanchunk, chanchunk):
+                self.putchanimage(imagename+'.model', imagename+str(k)+'.model', k*chanchunk, removefile)
+    def cleanupresidualimages(self, readyputchan,  imagename, nchanchunk, chanchunk, removefile=True):
         """
         This function will put residual images only 
         """
         for k in range(nchanchunk):
             if(readyputchan[k]):
-                self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, True)
-    
-    def cleanuprestoredimages(self, readyputchan,  imagename, nchanchunk, chanchunk):
+                self.putchanimage(imagename+'.residual', imagename+str(k)+'.residual', k*chanchunk, removefile)
+
+    def cleanuprestoredimages(self, readyputchan,  imagename, nchanchunk, chanchunk, removefile=True):
         """
         This function will put residual images only 
         """
         for k in range(nchanchunk):
             if(readyputchan[k]):
-                self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, True) 
+                self.putchanimage(imagename+'.image', imagename+str(k)+'.image', k*chanchunk, removefile) 
                 
     @staticmethod
     def putchanimage(cubimage,inim,chans, removeinfile=True):
@@ -426,10 +439,10 @@ class imagecont():
             chans=[chans]
         if(type(inim) != list):
             inim=[inim]
-        if( not os.path.exists(inim[0])):
-            return False
-        ia.open(inim[0])
-        inimshape=ia.shape()
+        #if( not os.path.exists(inim[0])):
+        #    return False
+        #ia.open(inim[0])
+        #inimshape=ia.shape()
         ############
         #imdata=ia.getchunk()
         #immask=ia.getchunk(getmask=True)
@@ -437,14 +450,20 @@ class imagecont():
         ia.done()
         ia.open(cubimage)
         cubeshape=ia.shape()
-        if inimshape[0:3]!=cubeshape[0:3]: 
-                return False
+        #if inimshape[0:3]!=cubeshape[0:3]: 
+        #        return False
         k=0
+        ib,=gentools(['ia'])
         for chan in chans:
-            blc=[0,0,0,chan]
-            trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
-            if( not (cubeshape[3] > (chan+inimshape[3]-1))):
-                return False
+            print 'chan', chan
+            if(os.path.exists(inim[k])):
+                ib.open(inim[k])
+                inimshape=ib.shape()
+                ib.done()
+                blc=[0,0,0,chan]
+                trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
+                if( not (cubeshape[3] > (chan+inimshape[3]-1))):
+                    return False
 
             ############
             #rg0=ia.setboxregion(blc=blc,trc=trc)
@@ -453,9 +472,9 @@ class imagecont():
             ########
             #ia.putregion(pixels=imdata,pixelmask=immask, region=rg0)
             ###########
-            ia.insert(infile=inim[k], locate=blc)
-            if(removeinfile):
-                ia.removefile(inim[k])
+                ia.insert(infile=inim[k], locate=blc)
+                if(removeinfile):
+                    ia.removefile(inim[k])
             k+=1
         ia.close()
         tb.clearlocks()
@@ -486,11 +505,28 @@ class imagecont():
         #ia.done()
         ibig.open(cubimage)
         cubeshape=ibig.shape()
+        chanstart=0
+        blc=np.array([0,0,0,0])
         #if inimshape[0:3]!=cubeshape[0:3]: 
         #        return False
-        arr=ibig.getchunk()
+        nchTile=ibig.summary()['header']['tileshape'][3]
+        trc=np.array([int(cubeshape[0]-1),int(cubeshape[1]-1),int(cubeshape[2]-1),nchTile-1])
+        arr=ibig.getchunk(blc=blc.tolist(), trc=trc.tolist())
+        nchanchunk=cubeshape[3]/nchTile
+        nreschan=cubeshape[3]%nchTile
         k=0
+        chanchunk=1
         for chan in chans:
+            if(chan >= chanchunk*nchTile):
+                ibig.putchunk(arr, blc.tolist())
+                blc[3]=chanchunk*nchTile
+                chanchunk+=1
+                if(chanchunk< nchanchunk):
+                    trc[3]=chanchunk*nchTile-1
+                else:
+                    trc[3]=nchanchunk*nchTile+nreschan-1
+                arr=ibig.getchunk(blc=blc.tolist(), trc=trc.tolist())
+                #print 'new slice', blc, trc
             if(not notprocesschan[k] and os.path.exists(inim[k])):
                 ia.open(inim[k])
                 inimshape=ia.shape()
@@ -500,8 +536,10 @@ class imagecont():
                #trc=[inimshape[0]-1,inimshape[1]-1,inimshape[2]-1,chan+inimshape[3]-1]
                #if( not (cubeshape[3] > (chan+inimshape[3]-1))):
                #   return False
-                arr[:,:,:,chan:chan+inimshape[3]]=arrsub
-
+                relchan=chan-(chanchunk-1)*nchTile
+                arr[:,:,:,relchan:relchan+inimshape[3]]=arrsub
+                #print 'chan', chan
+                arrsub=[]
             ############
             #rg0=ia.setboxregion(blc=blc,trc=trc)
             ###########
@@ -513,7 +551,7 @@ class imagecont():
             if(removeinfile):
                 shutil.rmtree(inim[k], True)
             k+=1
-        ibig.putchunk(arr)
+        ibig.putchunk(arr, blc.tolist())
         ibig.close()
         tb.clearlocks()
         #casalog.post('putLOCKS:  '+ str(inim)+ ' ---  ' + str(tb.listlocks()))

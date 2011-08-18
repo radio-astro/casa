@@ -65,6 +65,10 @@ public:
 		const Bool annotationOnly
 	);
 
+	// implicit copy constructor and destructor are fine
+
+	AnnCircle& operator=(const AnnCircle& other);
+
 	// get center position, converted to the reference frame
 	// of the coordinate system if necessary
 	MDirection getCenter() const;

@@ -581,7 +581,7 @@ QStringList QtDataManager::analyseFITSImage(QString path){
     // create a parser object and get the String information on
     // the extensions with data
     FITSImgParser fip = FITSImgParser(String(path.toStdString()));
-    extstring = fip.get_ext_list(delim);
+    extstring = fip.get_extlist_string(delim);
 
     // convert the String to a QString;
     // split into a list of QStrings

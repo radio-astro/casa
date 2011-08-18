@@ -256,7 +256,7 @@
                and the final one is for Solar System objects.  Recognized Solar
                System objects are: 
 
-	       Planets:  Mars, Jupiter, Uranus, Neptune, Pluto*
+	       Planets: Venus*, Mars, Jupiter, Uranus, Neptune, Pluto**
 	       
 	       Moons: Jupiter: Io, Europa, Ganymede, Callisto
                       Saturn:  Titan <!-- Mimas, Enceladus, Tethys, Dione,  
@@ -268,14 +268,21 @@
                       Neptune: Triton 
                       <!-- Pluto moon:    Charon -->
 	       
-               Asteroids: Ceres, Pallas**, Vesta**, Juno**, Victoria**, Davida**
+               Asteroids: Ceres, Pallas***, Vesta***, Juno***, Victoria***, Davida***
  
-               * Pluto alone.  No allowance is made for the possibility of Charon
-                 being in the field.
+               * Venus (and Jupiter and Earth, for that matter) is probably too
+                 resolved for most (sub)mm observations with interferometers.
+                 CASA has a disk-averaged Venus model for 0.303 to 350 GHz, but it
+                 may not capture the details of spectral lines (like day-night
+                 differences).
 
-               ** not recommended (The temperature is not yet adjusted for
-                  varying distance from the Sun.  The model data can be scaled
-                  after running setjy, but it is an involved process.)
+               ** Pluto alone.  No allowance is made for the possibility of Charon
+                 being in the field.  It is in the planet category for historical
+                 reasons.
+
+               *** not recommended (The temperature is not yet adjusted for
+                   varying distance from the Sun.  The model data can be scaled
+                   after running setjy, but it is an involved process.)
 
 	       The 'field' parameter must match the case of the field name(s)
 	       in vis (as shown by listobs).
@@ -305,6 +312,8 @@
 	       information to the logger.  The cookbook also has an appendix
 	       with descriptions of the models used by setjy (both
 	       extragalactic and Solar System).
- </example>
- </task>
- </casaxml>
+
+               
+</example>
+</task>
+</casaxml>
