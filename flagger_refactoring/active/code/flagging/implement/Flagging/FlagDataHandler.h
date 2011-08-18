@@ -157,6 +157,9 @@ private:
 	VWBT * vwbt_p;
 	bool asyncio_disabled_p;
 
+	// Slurp flag
+	bool slurp_p;
+
 	// Iteration initialization parameters
 	bool chunksInitialized_p;
 	bool buffersInitialized_p;

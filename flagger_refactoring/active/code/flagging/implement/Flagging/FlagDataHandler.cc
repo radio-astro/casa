@@ -37,6 +37,10 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	asyncio_disabled_p = true;
 	AipsrcValue<Bool>::find (asyncio_disabled_p,"ROVisibilityIteratorAsync.disabled", true);
 
+	// Check if slurp is enabled
+	slurp_p = false;
+	AipsrcValue<Bool>::find (slurp_p,"ROVisibilityIteratorAsync.slurp:", false);
+
 	// WARNING: By default the visibility iterator adds the following
 	// default columns: ARRAY_ID and FIELD_ID,DATA_DESC_ID and TIME.
 	// And they are needed for the correct operation of the VisibilityIterator
@@ -150,6 +154,7 @@ FlagDataHandler::~FlagDataHandler()
 	if (vwbt_p) delete vwbt_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
 	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
 	if ((!asyncio_disabled_p) and (rwVisibilityIterator_p)) delete rwVisibilityIterator_p;
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
@@ -171,7 +176,7 @@ FlagDataHandler::open(string msname)
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
 	originalMeasurementSet_p = new MeasurementSet(String(msname),Table::Update);
 
-	// Activate Memory Resident Subtables for everything but Pointing, Syscal and History
+	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
 	STOPCLOCK
@@ -373,6 +378,10 @@ FlagDataHandler::generateIterator()
 		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
 
+		// Set the table data manager (ISM and SSM) cache size to the full column size, for
+		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+		if (slurp_p) roVisibilityIterator_p->slurp();
+
 		// Finally attach Visibility Buffer to RO conventional iterator
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
 		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
@@ -407,6 +416,10 @@ FlagDataHandler::generateIterator()
 		// Then create and initialize RO Async iterator
 		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 		roVisibilityIterator_p = ROVisibilityIteratorAsync::create(*selectedMeasurementSet_p,prefetchColumns,sortOrder_p,true,timeInterval_p,-1,groupTimeSteps_p);
+
+		// Set the table data manager (ISM and SSM) cache size to the full column size, for
+		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+		if (slurp_p) roVisibilityIterator_p->slurp();
 
 		// Attach Visibility Buffer to Visibility Iterator
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
