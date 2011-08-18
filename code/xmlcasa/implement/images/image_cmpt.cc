@@ -236,40 +236,42 @@ casac::image * image::collapse(const string& function, const variant& axes,
 		return NULL;
 	}
 	try {
-		Vector<uInt> myAxes;
+		IPosition myAxes;
 		if (axes.type() == variant::INT) {
-			myAxes.resize(1);
-			myAxes[0] = (uInt) axes.toInt();
+			myAxes = IPosition(1, axes.toInt());
 		} else if (axes.type() == variant::INTVEC) {
-			vector<int> tmp = axes.getIntVec();
-			myAxes.resize(tmp.size());
-			for (uInt i = 0; i < tmp.size(); i++) {
-				myAxes[i] = tmp[i];
-			}
-		} else if (axes.type() == variant::STRINGVEC || axes.type()
-				== variant::STRING) {
-			Vector<String> axVec = (axes.type() == variant::STRING) ? Vector<
-					String> (1, axes.getString()) : toVectorString(
-					axes.toStringVec());
-			Vector<Int> holdAxes =
+			myAxes = IPosition(axes.getIntVec());
+		} else if (
+			axes.type() == variant::STRINGVEC
+			|| axes.type() == variant::STRING
+		) {
+			Vector<String> axVec = (axes.type() == variant::STRING)
+				? Vector<String> (1, axes.getString())
+				: toVectorString(axes.toStringVec());
+			myAxes = IPosition(
 				_image->getImage()->coordinates().getWorldAxesOrder(
 					axVec, False
-				);
-			myAxes.resize(holdAxes.size());
-			Vector<Int>::const_iterator jiter = holdAxes.begin();
-			for (Vector<uInt>::iterator iter = myAxes.begin(); iter
-					!= myAxes.end(); iter++) {
-				if (*jiter < 0) {
+				)
+			);
+			for (
+					IPosition::iterator iter = myAxes.begin();
+					iter != myAxes.end(); iter++
+				) {
+				if (*iter < 0) {
 					throw AipsError(
 							"At least one specified axis does not exist");
 				}
-				*iter = (uInt) *jiter;
-				jiter++;
 			}
 		} else {
 			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
 		}
 		String aggString = function;
+		aggString.trim();
+		aggString.downcase();
+		if (aggString == "avdev") {
+			*_log << "avdev currently not supported. Let us know if you have a need for it"
+				<< LogIO::EXCEPTION;
+		}
 		ImageCollapser collapser(
 			aggString, _image->getImage(), region, 0, box,
 			chans, stokes, mask, myAxes, outfile, overwrite
@@ -1109,47 +1111,23 @@ image::findsources(const int nMax, const double cutoff,
 	return rstat;
 }
 
-record* image::fitallprofiles(const string& box, const string& region,
-		const string& chans, const string& stokes, const int axis,
-		const variant& vmask, const int ngauss, const int poly,
-		const string& model, const string& residual) {
-	*_log << LogOrigin("image", __FUNCTION__);
-
-	*_log << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
-			<< " will be removed in an upcoming release. "
-			<< "Use fitprofile instead with multi=True." << LogIO::POST;
-	if (detached()) {
-		return 0;
-	}
-	record *rstat = 0;
-	try {
-
-		return fitprofile(box, region, chans, stokes, axis, vmask, ngauss,
-				poly, true, model, residual);
-
-	} catch (AipsError x) {
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
-		RETHROW(x);
-	}
-	return rstat;
-}
-
 // FIXME need to support region records as input
 record* image::fitprofile(const string& box, const string& region,
-		const string& chans, const string& stokes, const int axis,
-		const variant& vmask, int ngauss, const int poly, const bool multifit,
-		const string& model, const string& residual, const string& amp,
-		const string& amperr, const string& center, const string& centererr,
-		const string& fwhm, const string& fwhmerr) {
+	const string& chans, const string& stokes, const int axis,
+	const variant& vmask, int ngauss, const int poly, const string& estimates,
+	const int minpts, const bool multifit,	const string& model,
+	const string& residual, const string& amp,
+	const string& amperr, const string& center, const string& centererr,
+	const string& fwhm, const string& fwhmerr
+) {
 	*_log << LogOrigin("image", __FUNCTION__);
 	if (detached()) {
 		return 0;
 	}
 	if (ngauss < 0) {
 		*_log << LogIO::WARN
-				<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
-				<< LogIO::POST;
+			<< "ngauss < 0 is meaningless. Setting ngauss = 0 "
+			<< LogIO::POST;
 		ngauss = 0;
 	}
 	record *rstat = 0;
@@ -1158,9 +1136,12 @@ record* image::fitprofile(const string& box, const string& region,
 		if (mask == "[]") {
 			mask = "";
 		}
-		ImageProfileFitter fitter(_image->getImage(), region, 0, box, chans,
-				stokes, mask, axis, multifit, residual, model, ngauss, poly,
-				amp, amperr, center, centererr, fwhm, fwhmerr);
+		ImageProfileFitter fitter(
+			_image->getImage(), region, 0,
+			box, chans, stokes, mask, axis,
+			multifit, residual, model, ngauss, poly, estimates,
+			amp, amperr, center, centererr, fwhm, fwhmerr, minpts
+		);
 		rstat = fromRecord(fitter.fit());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
@@ -1459,12 +1440,11 @@ image* image::pbcor(
 		String modecopy = mode;
 		modecopy.downcase();
 		modecopy.trim();
-		ImagePrimaryBeamCorrector::Mode myMode;
+		ImagePrimaryBeamCorrector::Mode myMode = ImagePrimaryBeamCorrector::MULTIPLY;
 		if (modecopy.startsWith("d")) {
 			myMode = ImagePrimaryBeamCorrector::DIVIDE;
-		} else if (modecopy.startsWith("m")) {
-			myMode = ImagePrimaryBeamCorrector::MULTIPLY;
-		} else {
+		}
+		else {
 			*_log << "Unrecognized value for mode :'"
 				<< mode << "'" << LogIO::EXCEPTION;
 		}
@@ -2287,31 +2267,33 @@ bool image::rename(const std::string& name, const bool overwrite) {
 	return rstat;
 }
 
-bool image::replacemaskedpixels(const ::casac::variant& vpixels,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const bool updateMask, const bool list) {
-	bool rstat(false);
+bool image::replacemaskedpixels(
+	const variant& vpixels,
+	const record& region, const variant& vmask,
+	const bool updateMask, const bool list
+) {
 	try {
-		*_log << LogOrigin("image", "replacemaskedpixels");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return False;
+		}
 
 		String pixels = vpixels.toString();
-		Record *pRegion = toRecord(region);
+		std::auto_ptr<Record> pRegion(toRecord(region));
 		String maskRegion = vmask.toString();
-		if (maskRegion == "[]")
+		if (maskRegion == "[]") {
 			maskRegion = "";
-
-		rstat = _image->replacemaskedpixels(pixels, *pRegion, maskRegion,
-				updateMask, list);
-		delete pRegion;
-
-	} catch (AipsError x) {
+		}
+		return _image->replacemaskedpixels(
+			pixels, *pRegion, maskRegion,
+			updateMask, list
+		);
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*

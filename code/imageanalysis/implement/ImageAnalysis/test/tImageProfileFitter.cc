@@ -58,15 +58,34 @@ void checkImage(
 ) {
   Float ftol = 1.0e-12; // 3.0e-13 is too small.
 
-	FITSImage expectedImage(expectedName);
+	PagedImage<Float> expectedImage(expectedName);
 	AlwaysAssert(gotImage->shape() == expectedImage.shape(), AipsError);
-	Array<Float> diffData = gotImage->get() - expectedImage.get();
-        Float maxdiff = max(abs(diffData));
-        if(maxdiff > ftol){
-          cerr << "For expectedImage " << expectedName << ":" << endl;
-          cerr << "\tmaxdiff = " << maxdiff << endl;
-          cerr << "\t   ftol = " << ftol << endl;
-        }
+	Array<Float> gotchunk = gotImage->get();
+	Array<Float> expchunk = expectedImage.get();
+	if (anyTrue(isNaN(gotchunk))) {
+		Float nanvalue = 1453.4953342425;
+		Array<Float>::iterator iter;
+		Array<Float>::iterator jiter = expchunk.begin();
+		for (
+			iter=gotchunk.begin();
+			iter!=gotchunk.end(); iter++, jiter++
+		) {
+			if (isNaN(*iter)) {
+				*iter = nanvalue;
+			}
+			if (isNaN(*jiter)) {
+				*jiter = nanvalue;
+			}
+		}
+	}
+	Array<Float> diffData = gotchunk - expchunk;
+    Float maxdiff = max(abs(diffData));
+    cout << "maxdiff " << maxdiff << endl;
+    if(maxdiff > ftol){
+    	cerr << "For expectedImage " << expectedName << ":" << endl;
+    	cerr << "\tmaxdiff = " << maxdiff << endl;
+    	cerr << "\t   ftol = " << ftol << endl;
+    }
 	AlwaysAssert(max(abs(diffData)) <= ftol, AipsError);
 	CoordinateSystem gotCsys = gotImage->coordinates();
 	CoordinateSystem expectedCsys = expectedImage.coordinates();
@@ -123,8 +142,7 @@ int main() {
 	Directory workdir(dirName);
 	String *parts = new String[2];
 	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
-	String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
-	delete [] parts;
+	String datadir = parts[0] + "/data/regression/unittest/specfit/";
     FITSImage goodImage(datadir + "specfit_multipix_2gauss.fits");
     FITSImage goodPolyImage(datadir + "specfit_multipix_poly_2gauss.fits");
 	workdir.create();
@@ -211,31 +229,29 @@ int main() {
     		);
     		Record results = fitter.fit();
 
-    		writeTestString("t  -- test correct number of fits performed");
-    		Vector<Bool> converged = results.asArrayBool("converged");
+    		writeTestString("-- test correct number of fits performed");
+    		Array<Bool> converged = results.asArrayBool("converged");
     		AlwaysAssert(converged.size() == 81, AipsError);
 
     		writeTestString("  -- test all fits converged");
-    		for (uInt i=0; i<converged.size(); i++) {
-    			AlwaysAssert(converged[i], AipsError);
-    		}
+    		AlwaysAssert(allTrue(converged), AipsError);
     		writeTestString(
     			"  -- test all fits were for 2 gaussians except for the first which was for 1"
     		);
 
-    		Vector<Int> nComps = results.asArrayInt("ncomps");
-    		for (uInt i=0; i<nComps.size(); i++) {
-    			Int expected = i > 0 ? 2 : 1;
-    			AlwaysAssert(nComps[i] == expected, AipsError);
+    		Array<Int> nComps = results.asArrayInt("ncomps");
+    		for (Array<Int>::const_iterator iter=nComps.begin(); iter!=nComps.end(); iter++) {
+    			Int expected = iter != nComps.begin() ? 2 : 1;
+    			AlwaysAssert(*iter == expected, AipsError);
     		}
 
     		writeTestString("  -- Test fit component types");
     		for(uInt i=0; i<2; i++) {
     			String num = String::toString(i);
-    			Vector<String> types = results.asArrayString("type" + num);
-    			for (uInt j=0; j<types.size(); j++) {
-    				String expected = (i == 1 && j == 0) ? "" : "GAUSSIAN";
-    				AlwaysAssert(types[j] == expected, AipsError);
+    			Array<String> types = results.asArrayString("type" + num);
+    			for (Array<String>::const_iterator iter=types.begin(); iter!=types.end(); iter++) {
+    				String expected = (i == 1 && iter == types.begin()) ? "UNDEF" : "GAUSSIAN";
+    				AlwaysAssert(*iter == expected, AipsError);
     			}
     		}
     		writeTestString("  -- Test of fit units");
@@ -273,10 +289,9 @@ int main() {
         	names[11] = "fwhmErr_1";
 
     		for (uInt i=0; i<names.size(); i++) {
-    			checkImage(dirName + "/" + names[i], datadir + names[i] + ".fits");
+    			checkImage(dirName + "/" + names[i], datadir + names[i]);
     		}
     	}
-
     	{
     		writeTestString("test results of multi-pixel two gaussian, order 3 polynomial fit");
     		ImageProfileFitter fitter(
@@ -285,19 +300,12 @@ int main() {
     		);
     		Record results = fitter.fit();
 
-    		writeTestString("t  -- test correct number of fits attempted");
-    		Vector<Bool> converged = results.asArrayBool("converged");
+    		writeTestString(" -- test correct number of fits attempted");
+    		Array<Bool> converged = results.asArrayBool("converged");
     		AlwaysAssert(converged.size() == 81, AipsError);
-
     		writeTestString("  -- test all but one fits converged");
-    		for (uInt i=0; i<converged.size(); i++) {
-    			if (i == 72) {
-    				AlwaysAssert(! converged[i], AipsError);
-    			}
-    			else {
-    				AlwaysAssert(converged[i], AipsError);
-    			}
-    		}
+    		AlwaysAssert(nfalse(converged) == 1, AipsError);
+    		AlwaysAssert(! converged(IPosition(4, 0, 8, 0, 0)), AipsError);
     		writeTestString("  -- Test of fit units");
     		AlwaysAssert(results.asString("xUnit") == "km/s", AipsError);
     		AlwaysAssert(results.asString("yUnit") == "Jy", AipsError);

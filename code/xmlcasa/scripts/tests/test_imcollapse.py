@@ -349,7 +349,52 @@ class imcollapse_test(unittest.TestCase):
                     self.assertTrue(type(mytool) == type(ia))
                     self.checkImage(mytool, expected)
 
-
+    def test_8(self):
+        """imcollapse: test both OTF and permanent masking works"""
+        xx = iatool.create()
+        good_image_im = "collapse_in.im"
+        xx.fromfits(good_image_im, good_image)
+        xx.calcmask(good_image_im + "<78")
+        xx.close()
+        xx.done()
+        mytool = F
+        axes = 3
+        for i in [0,1]:
+            for j in [0, 1, 2]:
+                mask = good_image_im + ">7"
+                if j == 0:
+                    xx.open(good_image_im)
+                    xx.maskhandler("set", "")
+                    xx.close()
+                    xx.done()
+                if j == 1:
+                    mask = ""
+                    xx.open(good_image_im)
+                    xx.maskhandler("set", "mask0")
+                    xx.close()
+                    xx.done()
+                for outfile in ["", "test_8_"+str(i) + str(j)]:
+                    if i == 0:
+                        mytool = run_collapse(
+                            good_image_im, "mean", axes, outfile, "", "",
+                            "", "", mask, False
+                        )
+                        self.assertTrue(type(mytool) == type(ia))
+                    else:
+                        mytool = run_imcollapse(
+                            good_image_im, "mean", axes, outfile, "", "",
+                            "", "", mask, False, True
+                        )
+                        self.assertTrue(type(mytool) == type(ia))
+                    npts = mytool.statistics()["npts"]
+                    mytool.close()
+                    mytool.done()
+                    if (j == 0):
+                        self.assertTrue(npts == 25)
+                    elif (j == 1):
+                        self.assertTrue(npts == 26)
+                    else:
+                        self.assertTrue(npts == 24)
 
 def suite():
     return [imcollapse_test]

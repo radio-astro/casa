@@ -30,9 +30,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
-#include <casa/Logging/LogIO.h>
-#include <images/Images/ImageInterface.h>
-
 #include <casa/namespace.h>
 
 namespace casa {
@@ -67,7 +64,7 @@ class ImageCollapser : public ImageTask {
 public:
 
 	enum AggregateType {
-		AVDEV,
+		//AVDEV,
 		MAX,
 		MEAN,
 		MEDIAN,
@@ -92,13 +89,13 @@ public:
 		const String& region, const Record *const regionRec,
 		const String& box,
 		const String& chanInp, const String& stokes,
-		const String& maskInp, const Vector<uInt> axes,
+		const String& maskInp, const IPosition& axes,
 		const String& outname, const Bool overwrite
 	);
 
 	ImageCollapser(
 		const ImageInterface<Float> * const image,
-		const Vector<uInt>& axes, const Bool invertAxesSelection,
+		const IPosition& axes, const Bool invertAxesSelection,
 		const AggregateType aggregateType,
 		const String& outname, const Bool overwrite
 	);
@@ -123,11 +120,11 @@ public:
 
 private:
 	Bool _invertAxesSelection;
-	Vector<uInt> _axes;
+	IPosition _axes;
 	AggregateType _aggType;
 	static const String _class;
 
-	static map<uInt, Float (*)(const Array<Float>&)> *_funcMap;
+	//static map<uInt, Float (*)(const Array<Float>&)> *_funcMap;
 	static map<uInt, String> *_funcNameMap, *_minMatchMap;
 
 	// disallow default constructor

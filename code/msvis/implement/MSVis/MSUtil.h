@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# MSUtil.h: Definitions for MS utilities
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -16,34 +16,43 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be addressed as follows:
+//# Correspondence concerning AIPS++ should be adressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//#
+//# $Id$
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.76"
-
+#ifndef MSVIS_MSUTIL_H
+#define MSVIS_MSUTIL_H
+#include <casa/aips.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+  class MSUtil{
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+  public:
+    //Empty Constructor if needed
+    MSUtil();
+    //This method gives you the channels (and spws) that will cover the 
+    //freq range provided in the frame the user stated. 
+    //The conversion from the data frame will be done properly for finding this
+    //spw, start, nchan will be resized appropriately
+    static void getSpwInFreqRange(Vector<Int>& spw, Vector<Int>& start,
+				  Vector<Int>& nchan,
+				  const MeasurementSet& ms, 
+				  const Double freqStart,
+				  const Double freqEnd,
+				  const Double freqStep,
+				  const MFrequency::Types freqframe=MFrequency::LSRK, 
+				  const Int fieldId=0);
 
+
+
+
+  };
 } //# NAMESPACE CASA - END
-
 #endif

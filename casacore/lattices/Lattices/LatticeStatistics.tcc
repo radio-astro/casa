@@ -1254,19 +1254,26 @@ Bool LatticeStatistics<T>::getLayerStats(
         !pixelIterator.atEnd(); pixelIterator++) {
       IPosition dPos = pixelIterator.position();
       if (displayAxes_p.nelements() == 2) {
-          if (zAx == 1) 
-          if (dPos[1] != zLayer) 
-                continue;
-          else
-                layer = hLayer;
-          if (hAx == 1)
-          if (dPos[1] != hLayer) 
-                continue;
-          else
-                layer = zLayer;
+    	  if (zAx == 1) {
+    		  if (dPos[1] != zLayer) {
+    			  continue;
+    		  }
+    		  else {
+    			  layer = hLayer;
+    		  }
+    	  }
+    	  if (hAx == 1) {
+    		  if (dPos[1] != hLayer) {
+    			  continue;
+    		  }
+    		  else {
+    			  layer = zLayer;
+    		  }
+    	  }
       }
-      if (displayAxes_p.nelements() == 1)
+      if (displayAxes_p.nelements() == 1) {
          layer = zLayer;
+      }
 
       Matrix<AccumType>  matrix(pixelIterator.matrixCursor());  
       for (uInt i=0; i<n1; i++) {
@@ -1866,6 +1873,9 @@ Bool LatticeStatistics<T>::plotStats (Bool hasBeam,
 // Find extrema.  Return if there were no valid points to plot
 
    AccumType yMin, yMax, xMin, xMax, yLMin, yLMax, yRMin, yRMax;
+   // avoid compiler warning by initializing yMin, yMax
+   yMin = 0;
+   yMax = 0;
    minMax(none, xMin, xMax, abc, stats.column(NPTS));
    if (none) return True;
 

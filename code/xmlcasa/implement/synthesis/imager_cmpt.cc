@@ -107,9 +107,10 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
 }
 
 
-::casac::record* imager::advisechansel(const double freqstart, const double freqend, const double freqstep, const std::string& freqframe){
+::casac::record* imager::advisechansel(const double freqstart, const double freqend, const double freqstep, const std::string& freqframe, const std::string& msname, 
+				       const int fieldid){
   casac::record* retval=0;
-  if(hasValidMS_p){
+  if(hasValidMS_p || msname.length() > 0){
       try {
 	casa::Vector<Vector<Int> > spw;
 	casa::Vector<Vector<Int> > start;
@@ -117,7 +118,7 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
 	MFrequency::Types tp;
 	if(!MFrequency::getType(tp, freqframe))
 	  throw(AipsError("Invalid frequency frame"));
-	if(itsImager->adviseChanSelex(freqstart, freqend, freqstep, tp, spw, start, nchan)){
+	if(itsImager->adviseChanSelex(freqstart, freqend, freqstep, tp, spw, start, nchan, msname, fieldid)){
 	  Record outRec;
 	  for (uInt k =0; k < spw.nelements(); ++k){
 	    Record subRec;
@@ -133,7 +134,7 @@ imager::advise(int& pixels, ::casac::record& cell, int& facets,
 	  RETHROW(x);
        }
   } else {
-      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open/selectvis." << LogIO::POST;
+      *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open/selectvis or use msname" << LogIO::POST;
   }
     return retval;
 

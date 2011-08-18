@@ -71,6 +71,7 @@
 #include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
+#include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
@@ -6941,18 +6942,13 @@ Int Imager::interactivemask(const String& image, const String& mask,
 Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
 		       const Double& freqStep,  const MFrequency::Types& freqframe,
 		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
-			     Vector< Vector<Int> >& nchan){
+			     Vector< Vector<Int> >& nchan, const String& ms, const Int field_id){
 
   LogIO os(LogOrigin("imager", "adviseChanSelex"));
   spw.resize();
   start.resize();
   nchan.resize();
   try {
-    if(numMS_p < 1 || !rvi_p){
-      os << LogIO::SEVERE << "Data selection incomplete" 
-       << LogIO::POST;
-      return False;
-    }
     Block<Vector<Int> > bnchan;
     Block<Vector<Int> > bstart;
     Block<Vector<Int> > bspw;
@@ -6963,7 +6959,24 @@ Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd,
       fS=freqEnd;
       fE=freqStart;
     }
-    rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
+    if(ms==String("")){
+      if(numMS_p < 1 || !rvi_p){
+	os << LogIO::SEVERE << "Data selection incomplete" 
+	   << LogIO::POST;
+	return False;
+      }
+      
+      rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
+    }
+    else{
+      bnchan.resize(1);
+      bstart.resize(1);
+      bspw.resize(1);
+      MeasurementSet elms(String(ms), TableLock(TableLock::AutoNoReadLocking), Table::Old);
+      MSUtil::getSpwInFreqRange(bspw[0], bstart[0], bnchan[0], elms, fS, fE, fabs(freqStep), freqframe, field_id);
+      elms.relinquishAutoLocks(True);
+
+    }
     spw=Vector<Vector<Int> >(bspw, bspw.nelements());
     start=Vector<Vector<Int> >(bstart, bstart.nelements());
     nchan=Vector<Vector<Int> >(bnchan, bnchan.nelements());

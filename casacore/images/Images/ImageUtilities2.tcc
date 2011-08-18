@@ -142,7 +142,8 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 	ImageInterface<T>*& pFit, ImageInterface<T>*& pResid,
     String& xUnit, const ImageInterface<T>& inImage,
     const uInt axis, const uInt nGauss, const Int poly,
-    const Bool showProgress
+    const ImageInterface<T> *const &weightsImage,
+    const Bool showProgress, const uInt minPoints
 ) {
 
 	IPosition inShape = inImage.shape();
@@ -152,13 +153,6 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 	if (pResid) {
 		AlwaysAssert(inShape.isEqual(pResid->shape()), AipsError);
 	}
-	/*
-	 * the weights image isn't even used, so I'm not sure why it gets
-	 * passed in
-	if (pWeight) {
-		AlwaysAssert(inShape.isEqual(pWeight->shape()), AipsError);
-	}
-	*/
 
 	// Check axis
 
@@ -167,7 +161,7 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 
 	// Progress Meter
 
-	ProgressMeter* pProgressMeter = 0;
+	std::auto_ptr<ProgressMeter> pProgressMeter(0);
 	if (showProgress) {
 		Double nMin = 0.0;
 		Double nMax = 1.0;
@@ -178,10 +172,14 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 		}
 		ostringstream oss;
 		oss << "Fit profiles on axis " << axis+1;
-		pProgressMeter = new ProgressMeter(nMin, nMax, String(oss),
+		pProgressMeter.reset(
+			new ProgressMeter(
+				nMin, nMax, String(oss),
 				String("Fits"),
 				String(""), String(""),
-				True, max(1,Int(nMax/20)));
+				True, max(1,Int(nMax/20))
+			)
+		);
 	}
 
 	// Make fitter
@@ -246,11 +244,37 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 	uInt nFail = 0;
 	uInt nConv = 0;
 	uInt nProfiles = 0;
+	uInt nFit = 0;
 	Vector<ImageFit1D<T> > fitters(inShape.product()/inShape[axis]);
 	uInt index = 0;
 	for (inIter.reset(); !inIter.atEnd(); inIter++,nProfiles++) {
 		const IPosition& curPos = inIter.position();
-		ImageFit1D<T> fitter(inImage, axis);
+		if (minPoints > 0 && inImage.isMasked()) {
+			IPosition sliceShape = inShape;
+			sliceShape = 1;
+			sliceShape[axis] = inShape[axis];
+			Vector<Bool> maskSlice = inImage.getMaskSlice(curPos, sliceShape, True);
+			uInt goodPoints = 0;
+			for (
+				Vector<Bool>::const_iterator iter=maskSlice.begin();
+				iter != maskSlice.end(); iter++
+			) {
+				if (*iter) {
+					goodPoints++;
+					if (goodPoints >= minPoints) {
+						break;
+					}
+				}
+			}
+			// not enough good points, just add a dummy fitter and go to the next position
+			fitters[index] = ImageFit1D<T>();
+			index++;
+			continue;
+		}
+
+		ImageFit1D<T> fitter = (weightsImage == 0)
+			? ImageFit1D<T>(inImage, axis)
+			: ImageFit1D<T>(inImage, *weightsImage, axis);
 
 		fitter.errorMessage();
 		ok = fitter.setData (curPos, abcissaType, True);
@@ -263,6 +287,7 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 			fitter.addElement (polyEl);
 		}
 		if (ok) {
+			nFit++;
 			try {
 				ok = fitter.fit();                // ok == False means no convergence
 				if (!ok) {
@@ -299,18 +324,18 @@ Vector<ImageFit1D<T> > ImageUtilities::fitProfiles (
 				if (pResidMask) pResidMask->putSlice(failMask, curPos);
 			}
 		}
-		//
 		if (showProgress) pProgressMeter->update(Double(nProfiles));
 	}
 	IPosition outShape = inShape;
 	outShape[axis] = 1;
 	fitters.reform(outShape);
-	delete pProgressMeter;
-	// FIXME remove in favour of log messages
-	cerr << "Number of profiles   = " << nProfiles << endl;
-	cerr << "Number converged     = " << nProfiles - nConv - nFail << endl;
-	cerr << "Number not converged = " << nConv << endl;
-	cerr << "Number failed        = " << nFail << endl;
+	LogIO log;
+	log << LogOrigin("ImageUtilties2.tcc", __FUNCTION__);
+	log << LogIO::NORMAL << "Number of profiles       = " << nProfiles << LogIO::POST;
+	log << LogIO::NORMAL << "Number of fits attempted = " << nFit << LogIO::POST;
+	log << LogIO::NORMAL << "Number converged         = " << nFit - nConv - nFail << LogIO::POST;
+	log << LogIO::NORMAL << "Number not converged     = " << nConv << LogIO::POST;
+	log << LogIO::NORMAL << "Number failed            = " << nFail << LogIO::POST;
 	return fitters;
 }
 

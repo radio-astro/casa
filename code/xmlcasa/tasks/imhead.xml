@@ -175,7 +175,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
            beammaj	   Major axis of the clean beam
            beammin         Minor axis of the clean beam
            beampa          Position angle of the clean beam
-	   bunit	   Image pixel units (K, Jy/beam, etc)
+	   bunit	   Brightness unit (K, Jy/beam, etc)
 	   cdeltn	   Pixel size, nth axis  (max n is 4)
 	   crpixn	   Pixel coordinate of reference point, nth axis
 	   crvaln	   Pixel location of reference point, nth axis
@@ -194,7 +194,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	   observer	   Observer name
 	   projection	   Image projection ('SIN','TAN', or 'ZEA')
            reffreqtype     Reference frame for the spectral coordinates
-	   restfrequency   Rest Frequency
+	   restfreq        Rest Frequency
+           shape           Number of pixels along each axis
 	   telescope	   Telescope name
 
         Keyword arguments:

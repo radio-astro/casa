@@ -983,6 +983,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
      << "copyWeather took " << timer.real() << "s."
      << LogIO::POST;
   
+  timer.mark();
+  success &= filterOptSubtable("CALDEVICE");
+  os << LogIO::DEBUG1
+     << "CALDEVICE took " << timer.real() << "s."
+     << LogIO::POST;
+
+  timer.mark();
+  success &= filterOptSubtable("SYSPOWER");
+  os << LogIO::DEBUG1
+     << "SYSPOWER took " << timer.real() << "s."
+     << LogIO::POST;
+
   // Run this after running the other copy*()s.  Maybe there should be an
   // option to *not* run it.
   success &= copyGenericSubtables();
@@ -7442,14 +7454,7 @@ void SubMS::createSubtables(MeasurementSet& ms, Table::TableOption option)
       const MSPointing& oldPoint = mssel_p.pointing();
 
       if(!antennaSel_p && timeRange_p == ""){
-        if(PlainTable::tableCache()(msOut_p.pointingTableName()))
-          PlainTable::tableCache().remove(msOut_p.pointingTableName());
-        oldPoint.deepCopy(msOut_p.pointingTableName(), Table::New, False,
-                          Table::AipsrcEndian);
-        Table newPoint(msOut_p.pointingTableName(), Table::Update);
-        msOut_p.rwKeywordSet().defineTable(MS::keywordName(MS::POINTING),
-                                           newPoint);
-        msOut_p.initRefs();
+        copySubtable(MS::keywordName(MS::POINTING), oldPoint);
       }
       else{
         setupNewPointing();
@@ -7671,6 +7676,105 @@ Bool SubMS::copySyscal()
   return True;
 }
 
+void SubMS::copySubtable(const String& tabName, const Table& inTab,
+                         const Bool doFilter)
+{
+  String outName(msOut_p.tableName() + '/' + tabName);
+
+  if(PlainTable::tableCache()(outName))
+    PlainTable::tableCache().remove(outName);
+  inTab.deepCopy(outName, Table::New, False, Table::AipsrcEndian,
+                 doFilter);
+  Table outTab(outName, Table::Update);
+  msOut_p.rwKeywordSet().defineTable(tabName, outTab);
+  msOut_p.initRefs();
+}
+
+Bool SubMS::filterOptSubtable(const String& subtabname)
+{
+  LogIO os(LogOrigin("SubMS", "filterOptSubtable()"));
+
+  // subtabname is allowed to not exist.  Use ms_p instead of mssel_p, because
+  // the latter has a random name which does NOT necessarily lead to
+  // subtabname.  (And if selection took care of subtables, we probably
+  // wouldn't have to do it here.)
+  if(Table::isReadable(ms_p.tableName() + '/' + subtabname)){
+    const Table intab(ms_p.tableName() + '/' + subtabname);
+
+    if(intab.nrow() > 0){
+      // Add feed if selecting by it is ever added.
+      Bool doFilter = antennaSel_p || !allEQ(spwRelabel_p, spw_p);
+
+      copySubtable(subtabname, intab, doFilter);
+
+      if(doFilter){
+        // At this point msOut_p has subtab with 0 rows.
+        Table outtab(msOut_p.tableName() + '/' + subtabname, Table::Update);
+
+        if(!antennaSel_p){        // Prep antNewIndex_p.
+          antNewIndex_p.resize(mssel_p.antenna().nrow());
+          indgen(antNewIndex_p);
+        }
+      
+        ROScalarColumn<Int> inAntIdCol(intab, "ANTENNA_ID");         // + FEED_ID if it
+        ROScalarColumn<Int> inSpwIdCol(intab, "SPECTRAL_WINDOW_ID"); // ever changed.
+        const Vector<Int>& antIds = inAntIdCol.getColumn();
+        const Vector<Int>& spwIds = inSpwIdCol.getColumn();
+
+        // Copy selected rows.
+        uInt totNOuttabs = antIds.nelements();
+        uInt totalSelOuttabs = 0;
+        Int maxSelAntp1 = antNewIndex_p.nelements(); // Int for comparison with
+                                                     // antIds.
+        Bool haveRemappingProblem = False;
+        for(uInt inrow = 0; inrow < totNOuttabs; ++inrow){
+          // antenna must be selected, and spwId must be -1 (any) or selected.
+          // Extra care must be taken because for a while MSes had CALDEVICE
+          // and SYSPOWER, but the ANTENNA_ID and SPECTRAL_WINDOW_ID of those
+          // subtables were not being remapped by split.
+          if(antIds[inrow] < maxSelAntp1 && antNewIndex_p[antIds[inrow]] > -1){
+            if(spwIds[inrow] < 0 || (spwIds[inrow] < spwRelabel_p.nelements() &&
+                                     spwRelabel_p[spwIds[inrow]] > -1)){
+              TableCopy::copyRows(outtab, intab, totalSelOuttabs, inrow, 1, false);
+              ++totalSelOuttabs;
+            }
+            // Ideally we'd like to catch antenna errors too.  They are
+            // avoided, but because of the way antNewIndex_p is made, 
+            // antIds[inrow] >= maxSelAntp1
+            // is not necessarily an error.  It's not even possible to catch
+            // all the spw errors, so we settle for catching the ones we can
+            // and reliably avoiding segfaults.
+            else if(spwIds[inrow] >= spwRelabel_p.nelements())
+              haveRemappingProblem = True;
+          }
+        }
+        outtab.flush();
+        if(haveRemappingProblem)
+          os << LogIO::WARN
+             << "At least one row of " << intab.tableName()
+             << " has an antenna or spw mismatch.\n"
+             << "(Presumably from an older split, sorry.)\n"
+             << "If " << subtabname
+             << " is important, it should be fixed with tb or browsetable,\n"
+             << "or by redoing the split that made " << ms_p.tableName()
+             << " (check its history)."
+             << LogIO::POST;
+
+        // Remap antenna and spw #s.
+        ScalarColumn<Int> outAntCol(outtab, "ANTENNA_ID");
+        ScalarColumn<Int> outSpwCol(outtab, "SPECTRAL_WINDOW_ID");
+
+        for(uInt k = 0; k < totalSelOuttabs; ++k){
+          outAntCol.put(k, antNewIndex_p[outAntCol(k)]);
+          if(outSpwCol(k) > -1)
+            outSpwCol.put(k, spwRelabel_p[outSpwCol(k)]);
+        }
+      }
+    }
+  }
+  return True;
+}
+
 // writeDiffSpwShape() was the VisIter-using channel averager, which sounds
 // great, but:
 // 0. If VisIter's sort order is different from the one in the MS, then if you
@@ -7685,240 +7789,6 @@ Bool SubMS::copySyscal()
 //
 // 1. If FLOAT_DATA is present, VisIter will ignore DATA.  (G. Moellenbrock,
 //    =casa-staff, 1/15/2010)
-  
-  // Bool SubMS::writeDiffSpwShape(const Vector<MS::PredefinedColumns>& datacols)
-  // {
-  //   LogIO os(LogOrigin("SubMS", "writeDiffSpwShape()"));
-    
-  //   Vector<MS::PredefinedColumns> complexDataCols;
-  //   const Bool doFloat = sepFloat(datacols, complexDataCols);
-  //   if(doFloat){
-  //     os << LogIO::SEVERE
-  //        << "Channel averaging of FLOAT_DATA with differently shaped spws is not yet supported."
-  //        << LogIO::POST;
-  //     return false;
-  //   }
-  //   const uInt ntok = complexDataCols.nelements();
-
-  //   Bool doSpWeight = !(mscIn_p->weightSpectrum().isNull()) &&
-  //                     mscIn_p->weightSpectrum().isDefined(0);
-    
-  //   Int rowsdone=0;
-  //   Int rowsnow=0;
-  //   Block<Int> sort(0);
-  //   //sort[0] = MS::DATA_DESC_ID; // Necessary to limit chunks to 1 DDID at a time.
-    
-  //   Matrix<Int> noselection;
-  //   Bool idelete;
-    
-  //   // Bool needScratch = false;
-  //   // for(uInt ni = ntok - 1; ni >= 0; --ni){
-  //   //   if(complexDataCols[ni] == MS::MODEL_DATA ||
-  //   //      complexDataCols[ni] == MS::CORRECTED_DATA){
-  //   //     needScratch = true;
-  //   //     break;
-  //   //   }
-  //   // }
-        
-  //   // VisSet vs(mssel_p, sort, noselection, needScratch);
-
-  //   //ROVisIter& vi(vs.iter());
-  //   // WARNING: VisIter has a default sort which may not be the same as the raw
-  //   // order used outside VisIter, i.e. as already written for the auxiliary
-  //   // main columns, like DDID.  Worse, the sort is necessary to make VisIter
-  //   // break chunks at DDID boundaries, and to make the chunks reasonably large.
-  //   ROVisIter vi(mssel_p, sort);
-    
-  //   VisBuffer vb(vi);
-  //   Vector<Int> spwindex(max(spw_p)+1);
-  //   spwindex.set(-1);
-  //   for(uInt k = 0; k < spw_p.nelements(); ++k)
-  //     spwindex[spw_p[k]] = k;
-    
-  //   Cube<Complex> vis;
-  //   Cube<Bool> inFlag;
-  //   Cube<Float> inSpWeight;
-  //   Matrix<Bool> chanFlag;
-
-  //   Cube<Float> spWeight;
-    
-  //   Cube<Bool> locflag;
-  //   Vector<Int> ddIds;
-
-  //   Int oldSpw = -1;
-    
-  //   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
-  //     {
-  // 	for (vi.origin(); vi.more(); vi++) 
-  // 	  {
-  // 	    Int spw=spwindex[vb.spectralWindow()];
-  // 	    rowsnow=vb.nRow();
-  // 	    RefRows rowstoadd(rowsdone, rowsdone+rowsnow-1);
-  // 	    //	    Cube<Bool> locflag(ncorr_p[spw], nchan_p[spw], rowsnow);
-
-  //           Cube<Complex> averdata(ncorr_p[spw], nchan_p[spw], rowsnow);
-		
-  //           locflag.resize(ncorr_p[spw], nchan_p[spw], rowsnow);
-  //           //ddIds.resize(rowsnow);
-  //           //ddIds.fill(spw);
-
-  //           if(doSpWeight)
-  //             spWeight.resize(ncorr_p[spw], nchan_p[spw], rowsnow);              
-  // 	    for(uInt ni=0;ni<ntok;ni++)
-  // 	      {
-  // 		if(complexDataCols[ni]== MS::DATA)
-  // 		  vis.reference(vb.visCube());
-  // 		else if(complexDataCols[ni] == MS::MODEL_DATA)
-  // 		  vis.reference(vb.modelVisCube());
-  // 		else
-  // 		  vis.reference(vb.correctedVisCube());
-		
-  //               if(spw != oldSpw){
-  //                 os << LogIO::DEBUG1
-  //                    << "spw: " << spw << "\n"
-  //                    << "vis.shape(): " << vis.shape() << "\n"
-  //                    << "ncorr_p[spw]: " << ncorr_p[spw] << "\n"
-  //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
-  //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
-  //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
-  //                    << "rowsdone: " << rowsdone << LogIO::POST;
-  //                 oldSpw = spw;
-  //               }
-
-  //               Int npol_cube  = vis.shape()[0];
-  //               Int nchan_cube = vis.shape()[1];
-                
-  //               if(npol_cube != ncorr_p[spw] ||
-  //                  nchan_cube != inNumChan_p[spw]){
-  //                 // Should not happen, but can.
-  //                 os << LogIO::SEVERE
-  //                    << "The data in the current chunk does not have the expected shape!\n"
-  //                    << "spw: " << spw << "\n"
-  //                    << "vis.shape(): " << vis.shape() << "\n"
-  //                    << "ncorr_p[spw]: " << ncorr_p[spw] << "\n"
-  //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
-  //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
-  //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
-  //                    << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
-  //               }
-  //               else if(chanStep_p[spw] > nchan_cube){
-  //                 // Should not happen, but can.
-  //                 os << LogIO::SEVERE
-  //                    << "chanStep is too wide for the current chunk!\n"
-  //                    << "spw: " << spw << "\n"
-  //                    << "vis.shape(): " << vis.shape() << "\n"
-  //                    << "ncorr_p[spw]: " << ncorr_p[spw] << "\n"
-  //                    << "inNumChan_p[spw]: " << inNumChan_p[spw] << "\n"
-  //                    << "nchan_p[spw]: " << nchan_p[spw] << "\n"
-  //                    << "chanStep_p[spw]: " << chanStep_p[spw] << "\n"
-  //                    << "rowsdone: " << rowsdone << LogIO::EXCEPTION;
-  //               }                 
-
-  // 		chanFlag.reference(vb.flag());
-  // 		inFlag.reference(vb.flagCube());
-  // 		averdata.set(Complex(0.0, 0.0));
-		
-  // 		Float* iweight = NULL;
-  //               Float* oSpWt = NULL;
-  // 		if (doSpWeight){
-  //                 inSpWeight.reference(vb.weightSpectrum());
-  //                 iweight = inSpWeight.getStorage(idelete);
-
-  //                 spWeight.set(0.0);
-  //                 oSpWt = spWeight.getStorage(idelete);
-  //               }
-		
-  //               locflag.set(false);
-  // 		const Bool* iflag=inFlag.getStorage(idelete);
-  // 		const Complex* idata=vis.getStorage(idelete);
-  // 		Complex* odata=averdata.getStorage(idelete);
-  // 		Bool* oflag=locflag.getStorage(idelete);
-		
-  // 		for(Int r = 0; r < rowsnow; ++r)
-  // 		  {
-  //                   uInt roffset = r * nchan_cube;
-                    
-  // 		    for(Int c = 0; c < nchan_p[spw]; ++c)
-  // 		      {
-  //                       uInt coffset = c * chanStep_p[spw];
-                    
-  // 			for (Int pol = 0; pol < npol_cube; ++pol)
-  // 			  {
-  // 			    Int outoffset = (r * nchan_p[spw] + c) * npol_cube
-  //                                           + pol;
-  // 			    if(!averageChannel_p)
-  // 			      {
-  // 				Int whichChan = chanStart_p[spw] +
-  //                                               c * chanStep_p[spw];
-  // 				averdata.xyPlane(r).column(c) = vis.xyPlane(r).column(whichChan); 
-  // 				locflag.xyPlane(r).column(c)  = inFlag.xyPlane(r).column(whichChan);
-  //                               if(doSpWeight)
-  //                                 spWeight.xyPlane(r).column(c) = inSpWeight.xyPlane(r).column(whichChan);
-  // 			      }
-  // 			    else{
-  //                             if(doSpWeight){
-  //                               for(Int m = 0; m < chanStep_p[spw]; ++m){
-  //                                 Int inoffset = (roffset +
-  //                                                 (coffset + m)) * 
-  //                                                npol_cube + pol;
-				    
-  //                                 if(!iflag[inoffset]){
-  //                                   odata[outoffset] += iweight[inoffset] *
-  //                                                       idata[inoffset];
-  //                                   oSpWt[outoffset] += iweight[inoffset];
-  //                                 }
-  //                               }
-  //                               if(oSpWt[outoffset] != 0.0)
-  //                                 odata[outoffset] /= oSpWt[outoffset];
-  //                               else
-  //                                 oflag[outoffset] = True;
-  //                             }
-  //                             else{
-  //                               uInt counter = 0;
-                                
-  //                               for(Int m = 0; m < chanStep_p[spw]; ++m){
-  //                                 Int inoffset = (roffset +
-  //                                                 (coffset + m)) *
-  //                                                npol_cube + pol;
-				    
-  //                                 if(!iflag[inoffset]){
-  //                                   odata[outoffset] += idata[inoffset];
-  //                                   ++counter;
-  //                                 }
-  //                               }
-  //                               if(counter > 0)
-  // 				  odata[outoffset] /= counter;
-  //                               else
-  // 				  oflag[outoffset] = True;
-  // 				  // odata[outoffset]=0; // It's 0 anyway.
-  //                             }
-  //                           }
-  //                         }
-  // 		      }
-  // 		  }  
-		
-  // 		if (ntok==1)
-  // 		  msc_p->data().putColumnCells(rowstoadd, averdata);
-  // 		else
-  // 		  {
-  // 		    if(complexDataCols[ni] == MS::DATA)
-  // 		      msc_p->data().putColumnCells(rowstoadd, averdata);
-  // 		    else if(complexDataCols[ni] == MS::MODEL_DATA)
-  // 		      msc_p->modelData().putColumnCells(rowstoadd, averdata);
-  // 		    else
-  // 		      msc_p->correctedData().putColumnCells(rowstoadd, averdata);
-  // 		  }
-  // 	      } // End ntok loop
-	    
-  // 	    msc_p->flag().putColumnCells(rowstoadd, locflag);
-  //           if(doSpWeight)
-  //             msc_p->weightSpectrum().putColumnCells(rowstoadd, spWeight);
-  // 	    rowsdone += rowsnow;
-  // 	  }
-  //     }
-    
-  //   return True;
-  // }
 
 Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
 {

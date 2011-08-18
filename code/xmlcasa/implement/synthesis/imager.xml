@@ -166,6 +166,13 @@ for the beam size both in the plane of the sky and along the $w$ axis.
  of the data with time to locate which channel match.
  A record will be returned with an element for each ms  used in selectvis.
  Each element of the record will have the spwids and channel start and nchan for each spwid.
+  if the parameter msname is used then the MSs associated associated with
+  this tool (that have been either 'open'ed or 'selectvis'ed) are ignored
+  In this mode it is a helper function to the general world ...no need to
+  open or selectvis. You need to specify the field_id for which this calculation is 
+  being done for in the helper mode. 
+  If you have already set MS's and selected data and msname="" then 
+  the calulation is done for the field(s) selected in selectvis.
 
 </description>
 <input>
@@ -190,6 +197,14 @@ for the beam size both in the plane of the sky and along the $w$ axis.
        <description>frame in which frequency is being expressed in other parameters</description>
        <value>LSRK</value>
      </param>
+     <param type="string" direction="in" name="msname">
+       <description>name of an ms, if empty string it will use the ms's used in selectvis</description>
+       <value></value>
+     </param>
+     <param type="int" direction="in" name="fieldid">
+       <description>fieldid to use when msname is not empty otherwise ignored and field selected in selectvis is used</description>
+       <value>0</value>
+     </param>
 </input>
 <example>
 In this example, we are interested in an image cube which span 20.0682GHz to 20.1982 in LSRK  which will have a channel resolution of 3.9MHz. The field we are interested is field 4 of each of the ms.
@@ -209,6 +224,12 @@ selinfo=im.advisechansel(freqstart=2.00682e10, freqend=2.01982e10, freqstep=3.9e
 ###
 Thus from the first ms a spw selection like  '4:19~127, 5:0~22'  is all that is needed. 
 Similarly from the second ms.
+
+###if you need this info without needing to chaneg the state of the imager tool 
+then you can it as follows
+
+im.advisechansel(freqstart=2.00682e10, freqend=2.01982e10, freqstep=3.9e3, freqframe="LSRK", msname="test1.ms", fieldid=4)
+
 
 </example>
 <returns type="any">

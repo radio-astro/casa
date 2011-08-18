@@ -68,9 +68,9 @@ from taskinit import *
 def specfit(
 	imagename=None, box=None, region=None, chans=None,
 	stokes=None, axis=None, mask=None, ngauss=None,
-	poly=None, multifit=None, model=None, residual=None,
-	amp=None, amperr=None, center=None, centererr=None,
-	fwhm=None, fwhmerr=None, wantreturn=None
+	poly=None, minpts=None, multifit=None, model=None,
+	residual=None, amp=None, amperr=None, center=None,
+	centererr=None, fwhm=None, fwhmerr=None, wantreturn=None
 ):
     casalog.origin('specfit')
     retval = None
@@ -81,7 +81,7 @@ def specfit(
         retval = myia.fitprofile(
 			box, region, chans, stokes,
 			axis, mask, ngauss, poly,
-			multifit, model, residual,
+			minpts, multifit, model, residual,
 			amp, amperr, center, centererr,
 			fwhm, fwhmerr
 		)

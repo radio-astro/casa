@@ -28,16 +28,10 @@
 #ifndef IMAGEANALYSIS_IMAGETASK_H
 #define IMAGEANALYSIS_IMAGETASK_H
 
-#include <casa/Logging/LogIO.h>
-#include <coordinates/Coordinates/Coordinate.h>
-#include <images/Images/ImageInterface.h>
-
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
-#include <imageanalysis/Regions/CasacRegionManager.h>
+#include <memory>
 
 #include <casa/namespace.h>
-
-#include <memory>
 
 namespace casa {
 
@@ -69,8 +63,6 @@ public:
 
 protected:
 
-    std::auto_ptr<LogIO> _log;
-
 	// if <src>outname</src> is empty, no image will be written
  	// if <src>overwrite</src> is True, if image already exists it will be removed
   	// if <src>overwrite</src> is False, if image already exists exception will be thrown
@@ -92,11 +84,11 @@ protected:
 
     virtual void _construct();
 
-    inline const ImageInterface<Float> *const _getImage() const {return _image;}
+    inline const ImageInterface<Float>* _getImage() const {return _image;}
 
     inline const String _getMask() const {return _mask;}
 
-    inline const Record *const _getRegion() const {return &_regionRecord;}
+    inline const Record* _getRegion() const {return &_regionRecord;}
 
     inline const String _getOutname() const {return _outname; }
 
@@ -106,8 +98,13 @@ protected:
 
     String _summaryHeader() const;
 
+    inline const std::auto_ptr<LogIO>& _getLog() const {
+    	return _log;
+    }
+
 private:
     const ImageInterface<Float> *const _image;
+    std::auto_ptr<LogIO> _log;
 
     const Record *const _regionPtr;
     Record _regionRecord;

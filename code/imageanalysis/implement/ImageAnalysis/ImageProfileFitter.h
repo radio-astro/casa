@@ -87,9 +87,11 @@ public:
 		const String& chans, const String& stokes, const String& mask,
 		const Int axis, const Bool multiFit, const String& residual,
 		const String& model, const uInt ngauss, const Int polyOrder,
+		const String& estimatesFilename,
 		const String& ampName = "", const String& ampErrName = "",
-		const String& centerName = "", const String& centerErrName = "",
-		const String& fwhmName = "", const String& fwhmErrName = ""
+		const String& centerName="", const String& centerErrName="",
+		const String& fwhmName="", const String& fwhmErrName="",
+		uInt minGoodPoints=0
 	);
 
 	// destructor
@@ -118,12 +120,13 @@ private:
 		_fwhmErrName, _ampName, _ampErrName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit, _deleteImageOnDestruct;
 	Int _polyOrder, _fitAxis;
-	uInt _ngauss;
-	Vector<ImageFit1D<Float> > _fitters;
+	uInt _ngauss, _minGoodPoints;
+	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
 	SubImage<Float> _subImage;
 	Record _results;
+	SpectralList _estimates;
 
 	const static String _class;
 
@@ -159,19 +162,44 @@ private:
     ) const;
 
     static void _makeSolutionImage(
-    	const String& name, const IPosition& shape, const CoordinateSystem& csys,
-    	const Vector<Double>& values, const String& unit
+    	const String& name, const CoordinateSystem& csys,
+    	const Array<Double>& values, const String& unit,
+    	const Array<Bool>& mask
     );
 
     // moved from ImageAnalysis
     ImageFit1D<Float> _fitProfile(
-        const Record& estimate, const Bool fitIt=True,
+        const Bool fitIt=True,
         const String weightsImageName=""
     );
 
     // moved from ImageAnalysis
-    Vector<ImageFit1D<Float> > _fitallprofiles(
+    Array<ImageFit1D<Float> > _fitallprofiles(
         const String& weightsImageName = ""
+    );
+
+    void _convertEstimates();
+
+    // Fit all profiles in image.  The output images must be already
+    // created; if the pointer is 0, that image won't be filled.
+    // The mask from the input image is transferred to the output
+    // images.    If the weights image is pointer is non-zero, the
+    // values from it will be used to weight the data points in the
+    // fit.  You can fit some combination of gaussians and a polynomial
+    // (-1 means no polynomial).  Initial estimates are not required.
+    // Fits are done in image space to provide astronomer friendly results,
+    // but pixel space is better for the fitter when fitting polynomials.
+    // Thus, atm, callers should be aware that fitting polynomials may
+    // fail even when the data lie exactly on a polynomial curve.
+    // This will probably be fixed in the future by doing the fits
+    // in pixel space here and requiring the caller to deal with converting
+    // to something astronomer friendly if it so desires.
+
+    Array<ImageFit1D<Float> > _fitProfiles (
+    	ImageInterface<Float>* &pFit,
+        ImageInterface<Float>* &pResid,
+        const ImageInterface<Float> *const &weightsImage=0,
+        const Bool showProgress=False
     );
 
 };

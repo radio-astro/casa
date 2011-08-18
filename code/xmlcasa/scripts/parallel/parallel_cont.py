@@ -267,6 +267,46 @@ class imagecont():
   #                  chan=imchan)
         ###need to clean up here the channel image...will do after testing phase
 
+    def imagechan_selfselect(self, msname='spw00_4chan351rowTile.ms', spwids=[0], field=0, imroot='newmodel', imchan=0, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0],  chanchunk=1):
+        ###need generate fstart, width from 1 channel width, start, numchan and spw 
+        origname=msname
+        ia.open(imroot+'.model')
+        csys=ia.coordsys()
+        fstart=csys.toworld([0,0,0,imchan*chanchunk],'n')['numeric'][3]
+        fstep=csys.toworld([0,0,0,imchan*chanchunk+1],'n')['numeric'][3]-fstart
+        fend=fstep*(chanchunk-1)+fstart
+        spw, start, nchan=self.findchanselLSRK(msname=msname, spw=spwids, 
+                                                      field=field, 
+                                                      numpartition=1, 
+                                                      beginfreq=fstart, endfreq=fend, chanwidth=fstep)
+        if((len(spw[0])==0) or (len(nchan[0])==0) or (len(start[0]) ==0) ):
+            return
+        imname=imroot+str(imchan)
+        maskname=''
+        if(mask != ''):
+            maskname=imname+'.mask'
+            if( not self.makemask(inmask=mask, outmask=maskname, imchan=imchan, chanchunk=chanchunk)):
+                maskname=''
+ #       a.getchanimage(cubeimage=imroot+'.model', outim=imname+'.model', chan=imchan)
+        im.selectvis(vis=msname, field=field, spw=spw[0], nchan=nchan[0], start=start[0], step=1, datainmemory=self.visInMem)
+        im.defineimage(nx=self.pixels[0], ny=self.pixels[1], cellx=self.cell[0], celly=self.cell[1], phasecenter=self.phCen, facets=self.facets, mode='frequency', nchan=chanchunk, start=str(fstart)+'Hz', step=str(fstep)+'Hz')
+        im.weight(type=self.weight, rmode='norm', npixels=self.weightnpix, 
+                  robust=self.robust)
+       
+        im.setoptions(ftmachine=self.ft, wprojplanes=self.wprojplanes, imagetilevol=self.imagetilevol, singleprecisiononly=True)
+        im.setscales(scalemethod='uservector', uservector=scales)
+        im.setmfcontrol(cyclefactor=0.0)  
+        majcycle = majcycle if (niter/majcycle) >0 else 1
+        try:
+            
+            for kk in range(majcycle):
+                im.clean(algorithm=alg, niter= (niter/majcycle), threshold=thr, model=imname+'.model', image=imname+'.image', residual=imname+'.residual', mask=maskname, psfimage='')
+            im.done()
+        except Exception as instance:
+                if(string.count(str(instance), 'PSFZero') <1):
+                    raise Exception(instance)
+        if(maskname != ''):
+            shutil.rmtree(maskname, True)
 
     def imagechan_new(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, cubeim='imagecube', imroot='newmodel', imchan=0, chanchunk=1, niter=100, alg='clark', thr='0.0mJy', mask='', majcycle=1, scales=[0]):
         origname=msname
@@ -498,6 +538,32 @@ class imagecont():
             ia.done()
             return True
         return False
+
+    @staticmethod
+    def findchanselLSRK(msname='', field='*', spw='*', numpartition=1, beginfreq=0.0, endfreq=1e12, chanwidth=0.0):
+        im,ms=gentools(['im', 'ms'])
+        fieldid=0
+        if(type(field)==str):
+            fieldid=ms.msseltoindex(vis=msname, field=field)['field'][0]
+        elif(type(field)==int):
+            fieldid=field
+        #im.selectvis(vis=msname, field=field, spw=spw)
+        partwidth=(endfreq-beginfreq)/float(numpartition)
+        spwsel=[]
+        nchansel=[]
+        startsel=[]
+        for k in range(numpartition):
+            time0=time.time()
+            a=im.advisechansel(freqstart=(beginfreq+float(k)*partwidth), freqend=(beginfreq+float(k+1)*partwidth), freqstep=chanwidth, freqframe='LSRK', msname=msname, fieldid=fieldid)
+            if(a['ms_0']['spw'].tolist() != []):
+                spwsel.append(a['ms_0']['spw'].tolist())
+                nchansel.append(a['ms_0']['nchan'].tolist())
+                startsel.append(a['ms_0']['start'].tolist())
+            #print k, 'fstart',  (beginfreq+float(k)*partwidth), 'fend' , (beginfreq+float(k+1)*partwidth)
+            print 'TIme taken for lsrk calc', time.time()-time0
+        im.done()
+        del im
+        return spwsel, startsel, nchansel
         
     #putchanimage=staticmethod(putchanimage)
     def makecontimage(self, im, novaliddata, imname):

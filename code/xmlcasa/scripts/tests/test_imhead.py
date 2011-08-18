@@ -87,6 +87,7 @@ import shutil
 import casac
 from tasks import *
 from taskinit import *
+import commands
 import unittest
 
 ###########################################################################
@@ -1092,6 +1093,42 @@ class imhead_test(unittest.TestCase):
                 +"Error: CDELT4"+" has no units."
             
         self.assertTrue(retValue['success'], retValue['error_msgs'])
+
+    def test_list(self):
+        '''Imhead: CAS-3300 Test the printing of some keywords in list mode'''
+        ima = input_file
+        logfile = 'imhead.log'
+        open(logfile,'w').close
+        casalog.setlogfile(logfile)
+        imhead(imagename=ima, mode='list')
+        # restore logfile
+        casalog.setlogfile('casapy.log')
+        
+        cmd = 'grep cdelt1 imhead.log'
+        out = commands.getoutput(cmd)
+        self.assertNotEqual(out,'','The keyword cdelt1 is not listed')
+        cmd = 'grep crval1 imhead.log'
+        out = commands.getoutput(cmd)
+        self.assertNotEqual(out,'','The keyword crval1 is not listed')
+        cmd = 'grep ctype1 imhead.log'
+        out = commands.getoutput(cmd)
+        self.assertNotEqual(out,'','The keyword ctype1 is not listed')
+        cmd = 'grep cunit1 imhead.log'
+        out = commands.getoutput(cmd)
+        self.assertNotEqual(out,'','The keyword cunit1 is not listed')
+        cmd = 'grep shape imhead.log'
+        out = commands.getoutput(cmd)
+        self.assertNotEqual(out,'','The keyword shape is not listed')
+        
+    def test_shape(self):
+        '''Imhead: CAS-3301: Keyword shape should be included in the output'''
+        shape = imhead(imagename=input_file,mode='get',hdkey='shape')
+        self.assertTrue(shape,'Keyword shape is missing')
+        self.assertTrue(shape['value'].all(), 'Not all values of shape exist.')
+        self.assertEqual(shape['value'][0],256, 'Value of shape[0] should be 256 and it is %s instead.'
+                         %shape['value'][0])
+        
+        
         
         
 def suite():

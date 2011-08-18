@@ -28,20 +28,19 @@
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 
 #include <casa/Arrays/ArrayMath.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/RegularFile.h>
-#include <casa/OS/SymLink.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
+#include <lattices/Lattices/LatticeUtilities.h>
 
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
+#include <memory>
 
 namespace casa {
 
 map<uInt, String> *ImageCollapser::_funcNameMap = 0;
 map<uInt, String> *ImageCollapser::_minMatchMap = 0;
-map<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
+//map<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
 
 const String ImageCollapser::_class = "ImageCollapser";
 
@@ -50,7 +49,7 @@ ImageCollapser::ImageCollapser(
 	const String& region, const Record *const regionRec,
 	const String& box,
 	const String& chanInp, const String& stokes,
-	const String& maskInp, const Vector<uInt> axes,
+	const String& maskInp, const IPosition& axes,
 	const String& outname, const Bool overwrite
 ) : ImageTask(
 		image, region, regionRec, box, chanInp, stokes,
@@ -65,7 +64,7 @@ ImageCollapser::ImageCollapser(
 
 ImageCollapser::ImageCollapser(
 	const ImageInterface<Float> *const image,
-	const Vector<uInt>& axes, const Bool invertAxesSelection,
+	const IPosition& axes, const Bool invertAxesSelection,
 	const AggregateType aggregateType,
 	const String& outname, const Bool overwrite
 ) : ImageTask(
@@ -74,12 +73,12 @@ ImageCollapser::ImageCollapser(
 	),
 	_invertAxesSelection(invertAxesSelection),
 	_axes(axes), _aggType(aggregateType) {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	if (_aggType == UNKNOWN) {
-		*_log << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
+		*_getLog() << "UNKNOWN aggregateType not allowed" << LogIO::EXCEPTION;
 	}
 	if (! image) {
-		*_log << "Cannot use a null image pointer with this constructor"
+		*_getLog() << "Cannot use a null image pointer with this constructor"
 			<< LogIO::EXCEPTION;
 	}
 	_construct();
@@ -89,10 +88,10 @@ ImageCollapser::ImageCollapser(
 ImageCollapser::~ImageCollapser() {}
 
 ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*clone, *_getRegion(), _getMask(), _log.get(), False
+		*clone, *_getRegion(), _getMask(), _getLog().get(), False
 	);
 	clone.reset(0);
 	IPosition inShape = subImage.shape();
@@ -105,14 +104,17 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		! outCoords.toWorld(blc, pixblc)
 		|| ! outCoords.toWorld(trc, pixtrc)
 	) {
-		*_log << "Could not set new coordinate values" << LogIO::EXCEPTION;
+		*_getLog() << "Could not set new coordinate values" << LogIO::EXCEPTION;
 	}
 	Vector<Double> refValues = outCoords.referenceValue();
 	Vector<Double> refPixels = outCoords.referencePixel();
 	IPosition outShape = inShape;
 	IPosition shape(outShape.nelements(), 1);
 
-	for (Vector<uInt>::const_iterator iter=_axes.begin(); iter != _axes.end(); iter++) {
+	for (
+		IPosition::const_iterator iter=_axes.begin();
+		iter != _axes.end(); iter++
+	) {
 		uInt i = *iter;
 		refValues[i] = (blc[i] + trc[i])/2;
 		refPixels[i] = 0;
@@ -121,10 +123,10 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	}
 
 	if (! outCoords.setReferenceValue(refValues)) {
-		*_log << "Unable to set reference value" << LogIO::EXCEPTION;
+		*_getLog() << "Unable to set reference value" << LogIO::EXCEPTION;
 	}
 	if (! outCoords.setReferencePixel(refPixels)) {
-		*_log << "Unable to set reference pixel" << LogIO::EXCEPTION;
+		*_getLog() << "Unable to set reference pixel" << LogIO::EXCEPTION;
 	}
 
 	std::auto_ptr<ImageInterface<Float> > outImage(0);
@@ -137,10 +139,103 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			new PagedImage<Float>(outShape, outCoords, _getOutname())
 		);
 	}
+	Bool isPaged = ! _getOutname().empty();
 	if (_aggType == ZERO) {
 		Array<Float> zeros(outShape, 0.0);
 		outImage->put(zeros);
 	}
+	else {
+		LatticeStatsBase::StatisticsTypes lattStatType;
+		switch(_aggType) {
+		case MAX:
+			lattStatType = LatticeStatsBase::MAX;
+			break;
+		case MEAN:
+			lattStatType = LatticeStatsBase::MEAN;
+			break;
+		case MEDIAN:
+			lattStatType = LatticeStatsBase::MEDIAN;
+			break;
+		case MIN:
+			lattStatType = LatticeStatsBase::MIN;
+			break;
+		case RMS:
+			lattStatType = LatticeStatsBase::RMS;
+			break;
+		case STDDEV:
+			lattStatType = LatticeStatsBase::SIGMA;
+			break;
+		case SUM:
+			lattStatType = LatticeStatsBase::SUM;
+			break;
+		case VARIANCE:
+			lattStatType = LatticeStatsBase::VARIANCE;
+			break;
+		case ZERO:
+		case UNKNOWN:
+		default:
+			*_getLog() << "Logic error. Should never have gotten the the bottom of the switch statement"
+			<< LogIO::EXCEPTION;
+		}
+		Array<Float> data;
+		Array<Bool> mask;
+		IPosition x;
+		LatticeUtilities::collapse(
+			data, mask, _axes, subImage ,False,
+			True, True, lattStatType
+		);
+		Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
+		IPosition newOrder(outImage->ndim(), -1);
+		uInt nAltered = _axes.size();
+		uInt nUnaltered = outImage->ndim() - nAltered;
+		uInt alteredCount = nUnaltered;
+		uInt unAlteredCount = 0;
+		for (uInt i=0; i<outImage->ndim(); i++) {
+			for (uInt j=0; j<_axes.size(); j++) {
+				if (i == _axes[j]) {
+					newOrder[i] = alteredCount;
+					alteredCount++;
+					break;
+				}
+			}
+			if (newOrder[i] < 0) {
+				newOrder[i] = unAlteredCount;
+				unAlteredCount++;
+			}
+		}
+		outImage->put(reorderArray(dataCopy, newOrder));
+		Bool needsMask = False;
+		for (
+			Array<Bool>::const_iterator iter = mask.begin();
+			iter != mask.end(); iter++
+		) {
+			if (! *iter) {
+				needsMask = True;
+				break;
+			}
+		}
+		if (needsMask) {
+			Array<Bool> maskCopy = (
+				_axes.size() <= 1)
+					? mask
+					: mask.addDegenerate(_axes.size() - 1
+			);
+			Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
+			if (isPaged) {
+				String maskName = outImage->makeUniqueRegionName(
+					String("mask"), 0
+				);
+				outImage->makeMask(maskName, True, True, False);
+				(&outImage->pixelMask())->put(mCopy);
+			}
+			else {
+				dynamic_cast<TempImage<Float> *>(
+					outImage.get()
+				)->attachMask(ArrayLattice<Bool>(mCopy));
+			}
+		}
+	}
+	/*
 	else {
 		Float (*function)(const Array<Float>&) = funcMap()->at(_aggType);
 		Array<Float> data = subImage.get(False);
@@ -151,6 +246,9 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			outImage->putAt(function(data(s)), start);
 		}
 	}
+	*/
+	ImageUtilities::copyMiscellaneous(*outImage, subImage);
+
 	if (! _getOutname().empty()) {
 		outImage->flush();
 	}
@@ -160,27 +258,10 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	return outImage.release();
 }
 
-const map<uInt, Float (*)(const Array<Float>&)>* ImageCollapser::funcMap() {
-	if (! _funcMap) {
-		map<uInt, Float (*)(const Array<Float>&)> ref;
-		ref[(uInt)AVDEV] = casa::avdev;
-		ref[(uInt)MAX] = casa::max;
-		ref[(uInt)MEAN] = casa::mean;
-		ref[(uInt)MEDIAN] = casa::median;
-		ref[(uInt)MIN] = casa::min;
-		ref[(uInt)RMS] = casa::rms;
-		ref[(uInt)STDDEV] = casa::stddev;
-		ref[(uInt)SUM] = casa::sum;
-		ref[(uInt)VARIANCE] = casa::variance;
-		_funcMap = new map<uInt, Float (*)(const Array<Float>&)>(ref);
-	}
-	return _funcMap;
-}
-
 const map<uInt, String>* ImageCollapser::funcNameMap() {
 	if (! _funcNameMap) {
 		map<uInt, String> ref;
-		ref[(uInt)AVDEV] = "avdev";
+		//ref[(uInt)AVDEV] = "avdev";
 		ref[(uInt)MAX] = "max";
 		ref[(uInt)MEAN] = "mean";
 		ref[(uInt)MEDIAN] = "median";
@@ -198,7 +279,7 @@ const map<uInt, String>* ImageCollapser::funcNameMap() {
 const map<uInt, String>* ImageCollapser::minMatchMap() {
 	if (! _minMatchMap) {
 		map<uInt, String> ref;
-		ref[(uInt)AVDEV] = "a";
+		//ref[(uInt)AVDEV] = "a";
 		ref[(uInt)MAX] = "ma";
 		ref[(uInt)MEAN] = "mea";
 		ref[(uInt)MEDIAN] = "med";
@@ -216,11 +297,11 @@ const map<uInt, String>* ImageCollapser::minMatchMap() {
 
 void ImageCollapser::_finishConstruction() {
 	for (
-		Vector<uInt>::const_iterator iter=_axes.begin();
+		IPosition::const_iterator iter=_axes.begin();
 			iter != _axes.end(); iter++
 		) {
 		if (*iter >= _getImage()->ndim()) {
-			*_log << "Specified zero-based axis (" << *iter
+			*_getLog() << "Specified zero-based axis (" << *iter
 				<< ") must be less than the number of axes in " << _getImage()->name()
 				<< "(" << _getImage()->ndim() << LogIO::EXCEPTION;
 		}
@@ -228,12 +309,9 @@ void ImageCollapser::_finishConstruction() {
 	_invert();
 }
 
-
 ImageCollapser::AggregateType ImageCollapser::aggregateType(
 	String& aggString
 ) {
-	cout << __FILE__ << " " << __LINE__ << endl;
-
 	LogIO log;
 	log << LogOrigin(_class, __FUNCTION__);
 	if (aggString.empty()) {
@@ -244,12 +322,9 @@ ImageCollapser::AggregateType ImageCollapser::aggregateType(
 	const map<uInt, String> *funcNamePtr = funcNameMap();
 	map<uInt, String>::const_iterator iter;
 	const map<uInt, String> *minMatch = minMatchMap();
-	cout << "min mathc " << minMatch->at(MEAN) << endl;
-	cout << __FILE__ << " " << __LINE__ << endl;
 	for (iter = minMatch->begin(); iter != minMatch->end(); iter++) {
 		uInt key = iter->first;
 		String minMatch = iter->second;
-		cout << "key " << key << " minMatch " << minMatch << endl;
 		String funcName = (*funcNamePtr).at(key);
 		if (
 			aggString.startsWith(minMatch)
@@ -259,27 +334,15 @@ ImageCollapser::AggregateType ImageCollapser::aggregateType(
 		}
 	}
 	log << "Unknown aggregate function specified by " << aggString << LogIO::EXCEPTION;
+	// not necessary since we've thrown an exception by now but avoids compiler warning
+	return UNKNOWN;
 }
 
 void ImageCollapser::_invert() {
 	if (_invertAxesSelection) {
-		Vector<uInt> newAxes(_getImage()->ndim() - _axes.size(), 0);
-		uInt index=0;
-		for (uInt i=0; i<_getImage()->ndim(); i++) {
-			Bool found = False;
-			for (uInt j=0; j<_axes.size(); j++) {
-				if (i == _axes[j]) {
-					found = True;
-					break;
-				}
-			}
-			if (! found) {
-				newAxes[index] = i;
-				index++;
-			}
-		}
-		_axes.resize(newAxes.size());
-		_axes = newAxes;
+		IPosition x = IPosition::otherAxes(_getImage()->ndim(), _axes);
+		_axes.resize(x.size());
+		_axes = x;
 	}
 }
 }
