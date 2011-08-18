@@ -640,38 +640,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 	Vector<String> wcsNames(NWCSFIX);
 	wcsNames(DATFIX) = String("datfix");
-	wcsNames(UNITFIX) =  String("unitfix");
+	wcsNames(UNITFIX) = String("unitfix");
 	wcsNames(CELFIX) = String("celfix");
 	wcsNames(SPCFIX) = String("spcfix");
-	wcsNames(CYLFIX) =  String("cylfix");
+	wcsNames(CYLFIX) = String("cylfix");
 //
 	int stat[NWCSFIX];
 	ctrl = 7;                         // Do all unsafe unit corrections
         // wcsfix needs Int shape, so copy it.
         std::vector<Int> tmpshp(shape.begin(), shape.end());
 
+	Bool doAbort=False;
+	uInt eCount=0;
         if (wcsfix(ctrl, &(tmpshp[0]), &wcsPtr[which], stat) > 0) {
 	    for (int i=0; i<NWCSFIX; i++) {
 		int err = stat[i];
 		if (err>0) {
-		    if (i==DATFIX) {
-			os << LogIO::NORMAL << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
-			os << LogIO::NORMAL << "This probably isn't fatal. Will try to continue ..." << LogIO::POST;
-		    } else {
-			os << LogIO::NORMAL << "The wcs function '"
-			   << wcsNames(i) << "' failed with error: "
-			   << wcsfix_errmsg[err] <<  LogIO::POST;
-//
-			status = wcsvfree(&nwcs, &wcsPtr);
-			if (status!=0) {
-			    String errmsg = "wcs memory deallocation error: ";
-			    os << errmsg << LogIO::EXCEPTION;
-			}
-//
-			return False;
+		    os << LogIO::NORMAL << wcsNames(i) << " incurred the error " << wcsfix_errmsg[err] <<  LogIO::POST;
+		    eCount++;
+		    if(i==CELFIX){
+			doAbort=True;
 		    }
 		}
-	    }	   
+	    }
+	    if(eCount>1 || doAbort) {
+		os << LogIO::WARN << "The wcs function failures are too severe to continue ..." <<  LogIO::POST;
+
+		status = wcsvfree(&nwcs, &wcsPtr);
+		if (status!=0) {
+		    String errmsg = "wcs memory deallocation error: ";
+		    os << errmsg << LogIO::EXCEPTION;
+		}
+//
+		return False;
+	    }
+	    os << LogIO::NORMAL << "Will try to continue ..." <<  LogIO::POST; 
 	}	  
 
 // Now fish out the various coordinates from the wcs structure and build the CoordinateSystem
@@ -1020,6 +1023,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// make a tabular frequency coordinate from the wavelengths
 		MFrequency::Types freqSystem;
+		specAxis = axes[0]-1;
 
 		if (!frequencySystemFromWCS (os, freqSystem, errMsg, wcsDest)) {
 		    os << LogIO::WARN << errMsg << LogIO::POST;
@@ -1069,6 +1073,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// make a tabular frequency coordinate from the optical velocities
 		MFrequency::Types freqSystem;
+		specAxis = axes[0]-1;
 
 		if (!frequencySystemFromWCS (os, freqSystem, errMsg, wcsDest)) {
 		    os << LogIO::WARN << errMsg << LogIO::POST;
