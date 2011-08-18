@@ -111,7 +111,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="string" name="gaintype">
-		<description>Type of gain solution (G, T, or GSPLINE,KCROSS)</description>
+		<description>Type of gain solution (G,T,GSPLINE,K,KCROSS)</description>
 		<value>G</value>
 		<allowed kind="enum">
 			<value>G</value>
@@ -312,7 +312,10 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                    calibrated amplitude and phase.  However,
                    at present GSPLINE is somewhat experimental.  Use with
                    caution and check solutions.
-              'KCROSS' (experimental) solves for a global cross-hand
+              'K' solves for simple antenna-based single-band delays
+                   via FFTs of the spectra on baselines to the
+                   reference antenna.  (This is not global fringe-fitting.)
+              'KCROSS' solves for a global cross-hand
                    delay.  Use parang=T and apply prior gain and
                    bandpass solutions.
       smodel -- Point source Stokes parameters for source model (experimental)
