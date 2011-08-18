@@ -24,6 +24,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
@@ -31,7 +32,6 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 {
 	// Default verbosity
 	profiling_p = true;
-	debug_p = false;
 
 	// Check if async input is enabled
 	asyncio_disabled_p = true;
@@ -140,6 +140,7 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	return;
 }
 
+
 // -----------------------------------------------------------------------
 // Default destructor
 // -----------------------------------------------------------------------
@@ -148,8 +149,8 @@ FlagDataHandler::~FlagDataHandler()
 	// Destroy members
 	if (vwbt_p) delete vwbt_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
 	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+	if ((!asyncio_disabled_p) and (rwVisibilityIterator_p)) delete rwVisibilityIterator_p;
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
@@ -158,34 +159,160 @@ FlagDataHandler::~FlagDataHandler()
 	return;
 }
 
+
 // -----------------------------------------------------------------------
 // Open Measurement Set
 // -----------------------------------------------------------------------
-bool
-FlagDataHandler::open(const std::string& msname)
+void
+FlagDataHandler::open(string msname)
 {
 	STARTCLOCK
 
+	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
 	originalMeasurementSet_p = new MeasurementSet(String(msname),Table::Update);
 
 	// Activate Memory Resident Subtables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
 	STOPCLOCK
-	return true;
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Close Measurement Set
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::close()
+{
+	STARTCLOCK
+
+	if (selectedMeasurementSet_p)
+	{
+		selectedMeasurementSet_p->flush();
+		selectedMeasurementSet_p->relinquishAutoLocks(True);
+		selectedMeasurementSet_p->unlock();
+	}
+
+	STOPCLOCK
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Set Data Selection parameters
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::setDataSelection(Record record)
+{
+	STARTCLOCK
+
+	int exists;
+
+	exists = record.fieldNumber ("array");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("array"), arraySelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("field");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("field"), fieldSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("scan");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("scan"), scanSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("time");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("time"), timeSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " time selection is " << timeSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no time selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("spw");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("spw"), spwSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("baseline");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("baseline"), baselineSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " baselineSelection_p selection is " << baselineSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no baseline selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("uvw");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("uvw"), uvwSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " uvw selection is " << uvwSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
+	}
+
+	exists = record.fieldNumber ("polarization");
+	if (exists >= 0)
+	{
+		record.get (record.fieldNumber ("polarization"), polarizationSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " polarization selection is " << polarizationSelection_p << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no polarization selection" << LogIO::POST;
+	}
+
+	STOPCLOCK
+	return;
 }
 
 
 // -----------------------------------------------------------------------
 // Generate selected Measurement Set
 // -----------------------------------------------------------------------
-bool
+void
 FlagDataHandler::selectData()
 {
 	STARTCLOCK
 
 	// Create Measurement Selection object
 	const String dummyExpr = String("");
+	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	measurementSetSelection_p = new MSSelection(
 			*originalMeasurementSet_p,
 			MSSelection::PARSE_NOW,
@@ -203,6 +330,7 @@ FlagDataHandler::selectData()
 	// Apply Measurement Selection to a copy of the original Measurement Set
 	MeasurementSet auxMeasurementSet = MeasurementSet(*originalMeasurementSet_p);
 	measurementSetSelection_p->getSelectedMS(auxMeasurementSet, String(""));
+	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	selectedMeasurementSet_p = new MeasurementSet(auxMeasurementSet);
 
 	// Check if selected MS has rows...
@@ -212,24 +340,22 @@ FlagDataHandler::selectData()
 	}
 
 	// Some debugging information
-	if (debug_p)
-	{
-		cout << "Selected Measurement Set has " << measurementSetSelection_p->getSubArrayList() << " arrays" << endl;
-		cout << "Selected Measurement Set has " << measurementSetSelection_p->getFieldList() << " fields" << endl;
-		cout << "Selected Measurement Set has " << measurementSetSelection_p->getScanList() << " scans" << endl;
-		cout << "Selected Measurement Set has " << measurementSetSelection_p->getSpwList() << " spws" << endl;
-		cout << "Selected Measurement Set has " << measurementSetSelection_p->getChanList() << " channels" << endl;
-		cout << "Selected Measurement Set has " << selectedMeasurementSet_p->nrow() << " rows" << endl;
-	}
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getSubArrayList() << " arrays" << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getFieldList() << " fields" << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getScanList() << " scans" << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getSpwList() << " spws" << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getChanList() << " channels" << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << selectedMeasurementSet_p->nrow() << " rows" << LogIO::POST;
 
 	STOPCLOCK
-	return true;
+	return;
 }
+
 
 // -----------------------------------------------------------------------
 // Generate Visibility Iterator with a given sort order and time interval
 // -----------------------------------------------------------------------
-bool
+void
 FlagDataHandler::generateIterator()
 {
 	STARTCLOCK
@@ -243,7 +369,7 @@ FlagDataHandler::generateIterator()
 	// With this configuration the Visibility Buffer is attached to the RO async iterator
 	if (asyncio_disabled_p)
 	{
-		// Cast RW conventional interator into RO conventional iterator
+		// Cast RW conventional iterator into RO conventional iterator
 		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
 
@@ -253,7 +379,7 @@ FlagDataHandler::generateIterator()
 	}
 	else
 	{
-		// Determine columns to be prefetched
+		// Determine columns to be pre-fetched
 		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
 															casa::asyncio::Ant2,
 															casa::asyncio::ArrayId,
@@ -296,7 +422,7 @@ FlagDataHandler::generateIterator()
 	}
 
 	STOPCLOCK	
-	return true;
+	return;
 }
 
 
@@ -329,12 +455,6 @@ FlagDataHandler::nextChunk()
 			moreChunks = true;
 			chunkNo++;
 			bufferNo = 0;
-		}
-		else
-		{	
-			selectedMeasurementSet_p->flush();
-			selectedMeasurementSet_p->relinquishAutoLocks(True);
-			selectedMeasurementSet_p->unlock();
 		}
 	}
 
@@ -382,40 +502,107 @@ FlagDataHandler::nextBuffer()
 		}
 	}
 
+	// Set new common flag cube
+	if (moreBuffers)
+	{
+		// WARNING: We have to modify the shape of the cube before re-assigning it
+		Cube<Bool> flagCube= visibilityBuffer_p->get()->flagCube();
+		modifiedFlagCube_p.resize(flagCube.shape());
+		modifiedFlagCube_p = flagCube;
+		originalFlagCube_p.resize(flagCube.shape());
+		originalFlagCube_p = flagCube;
+	}
+
 	STOPCLOCK
 	return moreBuffers;
 }
 
+
+// -----------------------------------------------------------------------
+// Flush flags to MS
+// -----------------------------------------------------------------------
 void
-FlagDataHandler::processBuffer()
+FlagDataHandler::flushFlags()
+{
+	STARTCLOCK
+
+	if (asyncio_disabled_p)
+	{
+		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
+	}
+	else
+	{
+		vwbt_p->setFlag(modifiedFlagCube_p);
+	}
+
+	STOPCLOCK
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// As requested by Urvashi R.V. provide access to the original and modified flag cubes
+// -----------------------------------------------------------------------
+Cube<Bool>*
+FlagDataHandler::getModifiedFlagCube()
+{
+	return &modifiedFlagCube_p;
+}
+
+Cube<Bool>*
+FlagDataHandler::getOriginalFlagCube()
+{
+	return &originalFlagCube_p;
+}
+
+
+// -----------------------------------------------------------------------
+// Dummy function to simulate processing
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::processBuffer(bool write)
 {
 	STARTCLOCK
 
 	// Try to extract flagCube from RO async iterator and set it in RW async iterator
-	Cube<Bool> flagCube = visibilityBuffer_p->get()->flagCube();
-	IPosition flagCubeShape = flagCube.shape();
+	IPosition flagCubeShape = modifiedFlagCube_p.shape();
 	Int nPolarizations = flagCubeShape(0);
 	Int nChannels = flagCubeShape(1);
 	Int nRows = flagCubeShape(2);
 	for (Int pol_i=0;pol_i<nPolarizations;pol_i++) {
 		for (Int chan_j=0;chan_j<nChannels;chan_j++) {
 			for (Int row_k=0;row_k<nRows;row_k++) {
-				if (chunkNo == 1) {
-					flagCube(pol_i,chan_j,row_k) = True;
-				} else {
-					flagCube(pol_i,chan_j,row_k) = False;
+				// Flag each other chunks (i.e. even chunks)
+				if (write)
+				{
+					if (chunkNo % 2 == 0) {
+						modifiedFlagCube_p(pol_i,chan_j,row_k) = True;
+					} else {
+						modifiedFlagCube_p(pol_i,chan_j,row_k) = False;
+					}
+				}
+				else
+				{
+					if (chunkNo % 2 == 0) {
+						if (modifiedFlagCube_p(pol_i,chan_j,row_k) != True)
+						{
+							*logger_p 	<< LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__
+										<<" Wrong flag (False instead of True) in chunk " << chunkNo
+										<< " buffer " << bufferNo << " polarization " << pol_i
+										<< " channel " << nChannels << " row " << row_k << LogIO::POST;
+						}
+					} else {
+						if (modifiedFlagCube_p(pol_i,chan_j,row_k) != False)
+						{
+							*logger_p 	<< LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__
+										<<" Wrong flag (True instead of False) in chunk " << chunkNo
+										<< " buffer " << bufferNo << " polarization " << pol_i
+										<< " channel " << nChannels << " row " << row_k << LogIO::POST;
+						}
+					}
 				}
 			}
 		}
-	}
-
-	if (asyncio_disabled_p)
-	{
-		rwVisibilityIterator_p->setFlag(flagCube);
-	}
-	else
-	{
-		vwbt_p->setFlag(flagCube);
 	}
 
 	STOPCLOCK

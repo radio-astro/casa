@@ -23,12 +23,23 @@
 #ifndef FLAGDATAHANDLER_H_
 #define FLAGDATAHANDLER_H_
 
+
+// Measurement Set selection
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
+
+// Async I/O infrastructure
 #include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBufferAsync.h>
 #include <msvis/MSVis/VWBT.h>
+
+// .casarc interface
 #include <casa/System/AipsrcValue.h>
+
+// Records interface
+#include <casa/Containers/Record.h>
+
+// System utilities (for profiling macros)
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
 
@@ -37,7 +48,7 @@
 	{\
 		gettimeofday(&stop_p,0);\
 		elapsedTime_p = (stop_p.tv_sec-start_p.tv_sec)*1000.0+(stop_p.tv_usec-start_p.tv_usec)/1000.0;\
-		cout << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime_p << " ms, Memory free: " << HostInfo::memoryFree( )/1024.0 << " MB" <<endl;\
+		*logger_p << LogIO::DEBUG2 << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime_p << " ms, Memory free: " << HostInfo::memoryFree( )/1024.0 << " MB" << LogIO::POST;\
 	}
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -54,13 +65,19 @@ public:
 	~FlagDataHandler();
 
 	// Open Measurement Set
-	bool open(const std::string& msname = """");
+	void open(string msname);
+
+	// Close Measurement Set
+	void close();
+
+	// Set Data Selection parameters
+	void setDataSelection(Record record);
 
 	// Generate selected Measurement Set
-	bool selectData();
+	void selectData();
 
 	// Generate Visibility Iterator
-	bool generateIterator();
+	void generateIterator();
 
 	// Move to next chunk
 	bool nextChunk();
@@ -68,8 +85,18 @@ public:
 	// Move to next buffer
 	bool nextBuffer();
 
+	// Write flag cube into MS
+	void flushFlags();
+
+	// As requested by Urvashi R.V. provide access to the original and modified flag cubes
+	Cube<Bool> *getModifiedFlagCube();
+	Cube<Bool> *getOriginalFlagCube();
+
 	// Dummy processBuffer function (it has to be implemented in the agents)
-	void processBuffer();
+	void processBuffer(bool write);
+
+	// Set function to activate profiling
+	void setProfiling(bool enable) {profiling_p = enable;}
 
 	// Visibility Buffer
 	// WARNING: The attach mechanism only works with pointers or
@@ -107,20 +134,24 @@ private:
 	MeasurementSet *selectedMeasurementSet_p;
 
 	// Data Selection ranges
-	string arraySelection_p;
-	string fieldSelection_p;
-	string scanSelection_p;
-	string timeSelection_p;
-	string spwSelection_p;
-	string baselineSelection_p;
-	string uvwSelection_p;
-	string polarizationSelection_p;
+	casa::String arraySelection_p;
+	casa::String fieldSelection_p;
+	casa::String scanSelection_p;
+	casa::String timeSelection_p;
+	casa::String spwSelection_p;
+	casa::String baselineSelection_p;
+	casa::String uvwSelection_p;
+	casa::String polarizationSelection_p;
 
 	// Iteration parameters
 	uShort iterationApproach_p;
 	Block<int> sortOrder_p;
 	Double timeInterval_p;
 	bool groupTimeSteps_p;
+
+	// Flag Cubes
+	Cube<Bool> originalFlagCube_p;
+	Cube<Bool> modifiedFlagCube_p;
 
 	// Async I/O stuff
 	VWBT * vwbt_p;
@@ -134,9 +165,6 @@ private:
 	bool profiling_p;
 	timeval start_p,stop_p;
 	double elapsedTime_p;
-
-	// Debug mode
-	bool debug_p;
 
 	// Logger
 	casa::LogIO *logger_p;
