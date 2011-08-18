@@ -40,42 +40,23 @@ AnnCenterBox::AnnCenterBox(
 	), _widths(Vector<Quantity>(2)),
 	_corners(Vector<MDirection>(2)), _inpXCenter(xcenter),
 	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth) {
-	if (! xwidth.isConform("rad") && ! xwidth.isConform("pix")) {
-		throw AipsError(
-			"x width unit " + xwidth.getUnit() + " is not an angular unit."
-		);
-	}
-	if (! ywidth.isConform("rad") && ! ywidth.isConform("pix")) {
-		throw AipsError(
-			"y width unit " + ywidth.getUnit() + " is not an angular unit."
-		);
-	}
-	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
-	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
+	_init();
+}
 
-	Vector<Quantity> center(2);
-	center[0] = xcenter;
-	center[1] = ycenter;
-	_checkAndConvertDirections(String(__FUNCTION__), center);
-
-	_doCorners();
-	MDirection blc = _corners[0];
-	MDirection trc = _corners[1];
-
-	// FIXME refactor this so it can be shared by RectBox
-	Vector<Double> blcValues = blc.getAngle().getValue();
-	Vector<Quantity> qblc(2);
-
-	Vector<Double> trcValues = trc.getAngle().getValue();
-	Vector<Quantity> qtrc(2);
-	Vector<Int> absrel(2,(Int)RegionType::Abs);
-	for (uInt i=0; i<qtrc.size(); i++) {
-		qblc[i] = Quantity(blcValues[i], "rad");
-		qtrc[i] = Quantity(trcValues[i], "rad");
-	}
-
-	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
-	_extend(box);
+AnnCenterBox::AnnCenterBox(
+	const Quantity& xcenter,
+	const Quantity& ycenter,
+	const Quantity& xwidth,
+	const Quantity& ywidth,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(
+		CENTER_BOX, csys, stokes
+	), _widths(Vector<Quantity>(2)),
+	_corners(Vector<MDirection>(2)), _inpXCenter(xcenter),
+	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth)
+{
+	_init();
 }
 
 AnnCenterBox& AnnCenterBox::operator= (
@@ -102,6 +83,46 @@ MDirection AnnCenterBox::getCenter() const {
 
 Vector<Quantity> AnnCenterBox::getWidths() const {
 	return _widths;
+}
+
+void AnnCenterBox::_init() {
+	if (! _inpXWidth.isConform("rad") && ! _inpXWidth.isConform("pix")) {
+		throw AipsError(
+			"x width unit " + _inpXWidth.getUnit() + " is not an angular unit."
+		);
+	}
+	if (! _inpYWidth.isConform("rad") && ! _inpYWidth.isConform("pix")) {
+		throw AipsError(
+			"y width unit " + _inpYWidth.getUnit() + " is not an angular unit."
+		);
+	}
+	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
+	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
+
+	Vector<Quantity> center(2);
+	center[0] = _inpXCenter;
+	center[1] = _inpYCenter;
+	_checkAndConvertDirections(String(__FUNCTION__), center);
+
+	_doCorners();
+	MDirection blc = _corners[0];
+	MDirection trc = _corners[1];
+
+	// FIXME refactor this so it can be shared by RectBox
+	Vector<Double> blcValues = blc.getAngle().getValue();
+	Vector<Quantity> qblc(2);
+
+	Vector<Double> trcValues = trc.getAngle().getValue();
+	Vector<Quantity> qtrc(2);
+	Vector<Int> absrel(2,(Int)RegionType::Abs);
+	for (uInt i=0; i<qtrc.size(); i++) {
+		qblc[i] = Quantity(blcValues[i], "rad");
+		qtrc[i] = Quantity(trcValues[i], "rad");
+	}
+
+	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
+	_setDirectionRegion(box);
+	_extend();
 }
 
 void AnnCenterBox::_doCorners() {

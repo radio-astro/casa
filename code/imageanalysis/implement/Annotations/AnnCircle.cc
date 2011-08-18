@@ -39,25 +39,18 @@ AnnCircle::AnnCircle(
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 ), _inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
+	_init(xcenter, ycenter);
+}
 
-	_convertedRadius = _lengthToAngle(_inputRadius, _getDirectionAxes()[0]);
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
-
-	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
-
-	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
-
-	Vector<Quantity> center(2);
-
-	center[0] = Quantity(coords[0], "rad");
-	center[1] = Quantity(coords[1], "rad");
-
-	WCEllipsoid circle(
-		center, _convertedRadius, _getDirectionAxes(),
-		_getCsys(), RegionType::Abs
-	);
-	_extend(circle);
+AnnCircle::AnnCircle(
+	const Quantity& xcenter,
+	const Quantity& ycenter,
+	const Quantity& radius,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(CIRCLE, csys, stokes),
+	_inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
+	_init(xcenter, ycenter);
 }
 
 AnnCircle& AnnCircle::operator= (
@@ -91,5 +84,26 @@ ostream& AnnCircle::print(ostream &os) const {
 	return os;
 }
 
+void AnnCircle::_init(const Quantity& xcenter, const Quantity& ycenter) {
+	_convertedRadius = _lengthToAngle(_inputRadius, _getDirectionAxes()[0]);
+	_inputCenter[0] = xcenter;
+	_inputCenter[1] = ycenter;
+
+	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
+
+	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
+
+	Vector<Quantity> center(2);
+
+	center[0] = Quantity(coords[0], "rad");
+	center[1] = Quantity(coords[1], "rad");
+
+	WCEllipsoid circle(
+		center, _convertedRadius, _getDirectionAxes(),
+		_getCsys(), RegionType::Abs
+	);
+	_setDirectionRegion(circle);
+	_extend();
+}
 
 }

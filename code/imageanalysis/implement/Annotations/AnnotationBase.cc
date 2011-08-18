@@ -31,6 +31,7 @@
 #include <measures/Measures/MCDirection.h>
 
 namespace casa {
+
 const String AnnotationBase::DEFAULT_LABEL = "";
 const String AnnotationBase::DEFAULT_COLOR = "green";
 const AnnotationBase::LineStyle AnnotationBase::DEFAULT_LINESTYLE = SOLID;
@@ -39,8 +40,10 @@ const uInt AnnotationBase::DEFAULT_SYMBOLSIZE = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLTHICKNESS = 1;
 const String AnnotationBase::DEFAULT_FONT = "Helvetica";
 const String AnnotationBase::DEFAULT_FONTSIZE = "10pt";
-const String AnnotationBase::DEFAULT_FONTSTYLE = "bold";
+const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = BOLD;
 const Bool AnnotationBase::DEFAULT_USETEX = False;
+
+const String AnnotationBase::_class = "AnnotationBase";
 
 Bool AnnotationBase::_doneUnitInit = False;
 map<String, AnnotationBase::Type> AnnotationBase::_typeMap;
@@ -57,41 +60,41 @@ AnnotationBase::AnnotationBase(
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
   _printGlobals(False) {
-	String preamble = String(__FUNCTION__) + ": ";
+	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		throw AipsError(
 			preamble + "Coordinate system has no direction coordinate"
 		);
 	}
-
 	if (! MDirection::getType(_directionRefFrame, dirRefFrameString)) {
 		throw AipsError(
 			preamble + "Unknown coordinate frame "
 			+ dirRefFrameString
 		);
 	}
-	if (
-		_directionRefFrame != _csys.directionCoordinate().directionType(False)
-		&& _directionRefFrame != MDirection::B1950
-		&& _directionRefFrame != MDirection::B1950_VLA
-		&& _directionRefFrame != MDirection::BMEAN
-		&& _directionRefFrame != MDirection::DEFAULT
-		&& _directionRefFrame != MDirection::ECLIPTIC
-		&& _directionRefFrame != MDirection::GALACTIC
-		&& _directionRefFrame != MDirection::J2000
-		&& _directionRefFrame != MDirection::SUPERGAL
-	) {
-		throw AipsError(preamble
-			+ "Unsupported coordinate frame for regions "
-			+ dirRefFrameString
+	_init();
+	_initParams();
+}
+
+AnnotationBase::AnnotationBase(
+	const Type type, const CoordinateSystem& csys
+)
+: _type(type), _csys(csys), _label(DEFAULT_LABEL), _color(DEFAULT_COLOR),
+  _font(DEFAULT_FONT), _fontsize(DEFAULT_FONTSIZE),
+  _fontstyle(DEFAULT_FONTSTYLE), _linestyle(DEFAULT_LINESTYLE),
+  _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
+  _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
+  _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
+  _printGlobals(False) {
+	String preamble = String(__FUNCTION__) + ": ";
+	if (!csys.hasDirectionCoordinate()) {
+		throw AipsError(
+			preamble + "Coordinate system has no direction coordinate"
 		);
 	}
-	_params[COORD] = dirRefFrameString;
-	_directionAxes = IPosition(_csys.directionAxesNumbers());
-	for(uInt i=0; i<N_KEYS; i++) {
-		_globals[(Keyword)i] = False;
-	}
-	_initParams();
+	_directionRefFrame = _csys.directionCoordinate().directionType();
+	_init();
+
 }
 
 AnnotationBase::~AnnotationBase() {}
@@ -123,6 +126,32 @@ AnnotationBase& AnnotationBase::operator= (
     _params = other._params;
     _printGlobals = other._printGlobals;
     return *this;
+}
+
+void AnnotationBase::_init() {
+	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
+	if (
+		_directionRefFrame != _csys.directionCoordinate().directionType(False)
+		&& _directionRefFrame != MDirection::B1950
+		&& _directionRefFrame != MDirection::B1950_VLA
+		&& _directionRefFrame != MDirection::BMEAN
+		&& _directionRefFrame != MDirection::DEFAULT
+		&& _directionRefFrame != MDirection::ECLIPTIC
+		&& _directionRefFrame != MDirection::GALACTIC
+		&& _directionRefFrame != MDirection::J2000
+		&& _directionRefFrame != MDirection::SUPERGAL
+	) {
+		throw AipsError(preamble
+			+ "Unsupported coordinate frame for regions "
+			+ MDirection::showType(_directionRefFrame)
+		);
+	}
+	_params[COORD] = MDirection::showType(_directionRefFrame);
+	_directionAxes = IPosition(_csys.directionAxesNumbers());
+	for(uInt i=0; i<N_KEYS; i++) {
+		_globals[(Keyword)i] = False;
+	}
+	_initParams();
 }
 
 void AnnotationBase::_initParams() {
@@ -198,6 +227,51 @@ AnnotationBase::LineStyle AnnotationBase::lineStyleFromString(const String& ls) 
 		);
 	}
 	return _lineStyleMap.at(cls);
+}
+
+AnnotationBase::FontStyle
+AnnotationBase::fontStyleFromString(const String& fs) {
+	String cfs = fs;
+	cfs.downcase();
+	cfs.trim();
+	// FIXME when nothing to do and feeling anal, turn this into
+	// a static map
+	if (cfs.empty()) {
+		return DEFAULT_FONTSTYLE;
+	}
+	else if (cfs == "normal") {
+		return NORMAL;
+	}
+	else if (cfs == "bold") {
+		return BOLD;
+	}
+	else if (cfs == "italic") {
+		return ITALIC;
+	}
+	else if (cfs == "bold-italic") {
+		return ITALIC_BOLD;
+	}
+	else {
+		throw AipsError(
+			fs + " is not a supported font style"
+		);
+	}
+}
+
+String AnnotationBase::fontStyleToString(
+	const AnnotationBase::FontStyle fs
+) {
+	switch (fs) {
+	case NORMAL: return "normal";
+	case BOLD: return "bold";
+	case ITALIC: return "italic";
+	case ITALIC_BOLD: return "itatlic_bold";
+	default:
+		throw AipsError(
+			_class + ": " + String(__FUNCTION__) + ": "
+			+ ": Logic error, should never have gotten here"
+		);
+	}
 }
 
 void AnnotationBase::setLabel(const String& s) {
@@ -280,12 +354,12 @@ String AnnotationBase::getFontSize() const {
 	return _fontsize;
 }
 
-void AnnotationBase::setFontStyle(const String& s) {
-	_fontstyle = s;
+void AnnotationBase::setFontStyle(const AnnotationBase::FontStyle& fs) {
+	_fontstyle = fs;
 	_params[FONTSTYLE] = _fontstyle;
 }
 
-String AnnotationBase::getFontStyle() const {
+AnnotationBase::FontStyle AnnotationBase::getFontStyle() const {
 	return _fontstyle;
 }
 

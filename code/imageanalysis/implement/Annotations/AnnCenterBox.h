@@ -66,6 +66,21 @@ public:
 		const Bool annotationOnly
 	);
 
+	// Simplified constructor.
+	// all frequencies are used (these can be set after construction).
+	// centerx and centery
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+	AnnCenterBox(
+		const Quantity& centerx,
+		const Quantity& centery,
+		const Quantity& xwidth,
+		const Quantity& ywidth,
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 	// implicit copy constructor and destructor are fine
 
 	AnnCenterBox& operator=(const AnnCenterBox& other);
@@ -86,6 +101,7 @@ private:
 	Vector<MDirection> _corners;
 	Quantity _inpXCenter, _inpYCenter, _inpXWidth, _inpYWidth;
 
+	void _init();
 	void _doCorners();
 };
 

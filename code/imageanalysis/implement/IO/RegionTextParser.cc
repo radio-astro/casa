@@ -629,6 +629,9 @@ RegionTextParser::_getCurrentParamSet(
 			}
 			else if (keyword == "fontstyle") {
 				key = AnnotationBase::FONTSTYLE;
+				paramValue.fontStyleVal = AnnotationBase::fontStyleFromString(
+					paramValue.stringVal
+				);
 			}
 			else if (keyword == "usetex") {
 				String v = paramValue.stringVal;
@@ -816,15 +819,21 @@ void RegionTextParser::_createAnnotation(
 		dynamic_cast<AnnRegion *>(annotation)->setDifference(isDifference);
 	}
 	annotation->setLineWidth(currentParamSet.at(AnnotationBase::LINEWIDTH).intVal);
-	annotation->setLineStyle(AnnotationBase::lineStyleFromString(
-		currentParamSet.at(AnnotationBase::LINESTYLE).stringVal)
+	annotation->setLineStyle(
+		AnnotationBase::lineStyleFromString(
+			currentParamSet.at(AnnotationBase::LINESTYLE).stringVal
+		)
 	);
 	annotation->setSymbolSize(currentParamSet.at(AnnotationBase::SYMSIZE).intVal);
 	annotation->setSymbolThickness(currentParamSet.at(AnnotationBase::SYMTHICK).intVal);
 	annotation->setColor(currentParamSet.at(AnnotationBase::COLOR).stringVal);
 	annotation->setFont(currentParamSet.at(AnnotationBase::FONT).stringVal);
 	annotation->setFontSize(currentParamSet.at(AnnotationBase::FONTSIZE).stringVal);
-	annotation->setFontStyle(currentParamSet.at(AnnotationBase::FONTSTYLE).stringVal);
+	annotation->setFontStyle(
+		AnnotationBase::fontStyleFromString(
+			currentParamSet.at(AnnotationBase::FONTSTYLE).stringVal
+		)
+	);
 	annotation->setUseTex(currentParamSet.at(AnnotationBase::USETEX).boolVal);
 	annotation->setGlobals(_globalKeysToApply);
 	AsciiAnnotationFileLine line(annotation);
@@ -1150,7 +1159,7 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::FONTSIZE] = fontsize;
 
 	ParamValue fontstyle;
-	fontstyle.stringVal = AnnotationBase::DEFAULT_FONTSTYLE;
+	fontstyle.fontStyleVal = AnnotationBase::DEFAULT_FONTSTYLE;
 	_currentGlobals[AnnotationBase::FONTSTYLE] = fontstyle;
 
 	ParamValue usetex;

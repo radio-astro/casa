@@ -68,6 +68,21 @@ public:
 		const Bool annotationOnly
 	);
 
+	// Simplified constructor.
+	// all frequencies are used (these can be set after construction).
+	// xcenter and ycenter
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+	AnnRotBox(
+		const Quantity& xcenter,
+		const Quantity& ycenter,
+		const Quantity& xwidth,
+		const Quantity& ywidth, const Quantity& positionAngle,
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 	// implicit copy constructor and destructor are fine
 
 	AnnRotBox& operator=(const AnnRotBox& other);
@@ -87,6 +102,11 @@ private:
 	Vector<Quantity> _widths;
 	Quantity _positionAngle;
 	Vector<MDirection> _corners;
+
+	void _init(
+		const Quantity& xcenter, const Quantity& ycenter,
+		const Quantity& xwidth, const Quantity& ywidth
+	);
 
 	void _doCorners();
 };

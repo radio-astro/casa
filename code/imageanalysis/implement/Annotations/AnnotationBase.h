@@ -96,8 +96,14 @@ public:
 		SOLID,
 		DASHED,
 		DOT_DASHED,
-		DOTTED,
-		UNKNOWN_LINESTYLE
+		DOTTED
+	};
+
+	enum FontStyle {
+		NORMAL,
+		BOLD,
+		ITALIC,
+		ITALIC_BOLD
 	};
 
 	static const String DEFAULT_LABEL;
@@ -108,7 +114,7 @@ public:
 	static const uInt DEFAULT_SYMBOLTHICKNESS;
 	static const String DEFAULT_FONT;
 	static const String DEFAULT_FONTSIZE;
-	static const String DEFAULT_FONTSTYLE;
+	static const FontStyle DEFAULT_FONTSTYLE;
 	static const Bool DEFAULT_USETEX;
 
 	virtual ~AnnotationBase();
@@ -124,6 +130,10 @@ public:
 	static String keywordToString(const Keyword key);
 
 	static String lineStyleToString(const LineStyle linestyle);
+
+	static FontStyle fontStyleFromString(const String& fs);
+
+	static String fontStyleToString(const FontStyle fs);
 
 	void setLabel(const String& label);
 
@@ -157,9 +167,9 @@ public:
 
 	String getFontSize() const;
 
-	void setFontStyle(const String& fontstyle);
+	void setFontStyle(const FontStyle& fontstyle);
 
-	String getFontStyle() const;
+	FontStyle getFontStyle() const;
 
 	void setUseTex(const Bool usetex);
 
@@ -195,6 +205,12 @@ protected:
 		const CoordinateSystem& csys
 	);
 
+	// use only if the frame of the input directions is the
+	// same as the frame of the coordinate system
+	AnnotationBase(
+		const Type type, const CoordinateSystem& csys
+	);
+
 	// the implicitly defined copy constructor is fine
 	// AnnotationBase(const AnnotationBase& other);
 
@@ -228,7 +244,8 @@ private:
 	MDirection::Types _directionRefFrame;
 	CoordinateSystem _csys;
 	IPosition _directionAxes;
-	String _label, _color, _font, _fontsize, _fontstyle;
+	String _label, _color, _font, _fontsize;
+	FontStyle _fontstyle;
 	LineStyle _linestyle;
 	uInt _linewidth, _symbolsize, _symbolthickness;
 	Bool _usetex;
@@ -240,6 +257,9 @@ private:
 	static Bool _doneUnitInit;
 	static map<String, LineStyle> _lineStyleMap;
 	static map<String, Type> _typeMap;
+	const static String _class;
+
+	void _init();
 
 	void _initParams();
 

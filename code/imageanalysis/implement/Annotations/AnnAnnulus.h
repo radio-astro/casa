@@ -66,6 +66,21 @@ public:
 		const Bool annotationOnly
 	);
 
+	// Simplified constructor.
+	// all frequencies and all polarizations are used (these can be set after construction).
+	// xcenter and ycenter
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+	AnnAnnulus(
+		const Quantity& xcenter,
+		const Quantity& ycenter,
+		const Quantity& innerRadius,
+		const Quantity& outerRadius,
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 	// the default copy constructor and destructor are fine
 
 	AnnAnnulus& operator=(const AnnAnnulus& other);
@@ -85,6 +100,8 @@ public:
 private:
 	Vector<Quantity> _convertedRadii;
 	Quantity _xcenter, _ycenter, _innerRadius, _outerRadius;
+
+	void _init();
 };
 
 }

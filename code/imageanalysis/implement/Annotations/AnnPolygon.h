@@ -61,6 +61,19 @@ public:
 		const Bool annotationOnly
 	);
 
+	// Simplified constructor.
+	// all frequencies are used (these can be set after construction).
+	// xPositions and yPositions
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+	AnnPolygon(
+		const Vector<Quantity>& xPositions,
+		const Vector<Quantity>& yPositions,
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 	// implicit copy constructor and destructor are fine
 
 	AnnPolygon& operator=(const AnnPolygon& other);
@@ -72,6 +85,8 @@ public:
 private:
 	Vector<MDirection> _corners;
 	Vector<Quantity> _origXPos, _origYPos;
+
+	void _init();
 };
 
 }
