@@ -41,7 +41,9 @@ public:
 
 	void start();
 	void terminate ();
-	void setFlag(const Cube<Bool>& flagCube);
+
+	// We just want a de-referenced copy
+	void setFlag(Cube<Bool> flagCube);
 
 protected:
 

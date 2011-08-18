@@ -141,7 +141,7 @@ VWBT::next()
 }
 
 void
-VWBT::setFlag(const Cube<Bool>& flagCube)
+VWBT::setFlag(Cube<Bool> flagCube)
 {
 	// Wait until prev. flag cube is written
 	while (writing_p)
