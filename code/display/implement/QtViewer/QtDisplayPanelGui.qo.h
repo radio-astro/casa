@@ -77,10 +77,14 @@ class QtDisplayPanelGui : public QtPanelBase,
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
+ protected:
+  friend class QtViewer;
+  QtDisplayPanelGui( QtViewer* v, QWidget* parent=0, std::string rcstr="dpg",
+		     const std::list<std::string> &args = std::list<std::string>( ) );
+
  public:
   enum SCRIPTING_OPTION { INTERACT, SETOPTIONS };
 
-  QtDisplayPanelGui(QtViewer* v, QWidget* parent=0, std::string rcstr="dpg" );
   ~QtDisplayPanelGui();
 
   // access to our viewer

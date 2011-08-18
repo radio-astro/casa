@@ -38,31 +38,17 @@ AnnPolygon::AnnPolygon(
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 ), _origXPos(xPositions), _origYPos(yPositions) {
-	String preamble(String(__FUNCTION__) + ": ");
-	if (xPositions.size() != yPositions.size()) {
-		throw AipsError(
-			preamble + "x and y vectors are not the same length but must be."
-		);
-	}
+	_init();
+}
 
-	Matrix<Quantity> corners(2, xPositions.size());
-	for (uInt i=0; i<xPositions.size(); i++) {
-		corners(0, i) = xPositions[i];
-		corners(1, i) = yPositions[i];
-	}
-	_checkAndConvertDirections(String(__FUNCTION__), corners);
-	Vector<Double> xv(xPositions.size()), yv(yPositions.size());
-	for (uInt i=0; i<xv.size(); i++) {
-		Vector<Double> coords = _getConvertedDirections()[i].getAngle("rad").getValue();
-		xv[i] = coords[0];
-		yv[i] = coords[1];
-	}
-
-	Quantum<Vector<Double> > x(xv, "rad");
-	Quantum<Vector<Double> > y(yv, "rad");
-
-	WCPolygon wpoly(x, y, IPosition(_getDirectionAxes()), _getCsys(), RegionType::Abs);
-	_extend(wpoly);
+AnnPolygon::AnnPolygon(
+	const Vector<Quantity>& xPositions,
+	const Vector<Quantity>& yPositions,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(POLYGON, csys, stokes),
+	_origXPos(xPositions), _origYPos(yPositions) {
+	_init();
 }
 
 AnnPolygon& AnnPolygon::operator= (
@@ -99,6 +85,37 @@ ostream& AnnPolygon::print(ostream &os) const {
 	return os;
 }
 
+void AnnPolygon::_init() {
+	String preamble(String(__FUNCTION__) + ": ");
+	if (_origXPos.size() != _origYPos.size()) {
+		throw AipsError(
+			preamble + "x and y vectors are not the same length but must be."
+		);
+	}
+
+	Matrix<Quantity> corners(2, _origXPos.size());
+	for (uInt i=0; i<_origXPos.size(); i++) {
+		corners(0, i) = _origXPos[i];
+		corners(1, i) = _origYPos[i];
+	}
+	_checkAndConvertDirections(String(__FUNCTION__), corners);
+	Vector<Double> xv(_origXPos.size()), yv(_origYPos.size());
+	for (uInt i=0; i<xv.size(); i++) {
+		Vector<Double> coords = _getConvertedDirections()[i].getAngle("rad").getValue();
+		xv[i] = coords[0];
+		yv[i] = coords[1];
+	}
+
+	Quantum<Vector<Double> > x(xv, "rad");
+	Quantum<Vector<Double> > y(yv, "rad");
+
+	WCPolygon wpoly(
+		x, y, IPosition(_getDirectionAxes()),
+		_getCsys(), RegionType::Abs
+	);
+	_setDirectionRegion(wpoly);
+	_extend();
+}
 
 
 }

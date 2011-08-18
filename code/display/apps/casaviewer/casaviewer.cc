@@ -157,14 +157,20 @@ int main( int argc, const char *argv[] ) {
 	// Workaround for python task's "empty parameter" disability....
 	if(filename==".") filename="";
 
-	QtViewer* v = new QtViewer(server_startup,dbus_name);
+	// Pass along the remaining arguments to QtViewer...
+	// instead of littering the ctor arguments...
+	std::list<std::string> stdargs;
+	for ( int arg_index=0; args[arg_index]; ++arg_index )
+	    stdargs.push_back(args[arg_index]);
+
+	QtViewer* v = new QtViewer( stdargs, server_startup, dbus_name );
 
 	if ( ! server_startup ) {
 
 		// define the panel
 		QtDisplayPanelGui* dpg;
 
-		dpg = new QtDisplayPanelGui(v);
+		dpg = v->createDPG( );
 
 	    QtDisplayData* qdd = 0;
 

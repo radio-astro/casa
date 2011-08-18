@@ -594,6 +594,78 @@ int main () {
 				AipsError
 			);
 		}
+		{
+			log << LogIO::NORMAL
+				<< "Test center outside lattice with no conversion"
+				<< LogIO::POST;
+			Quantity centerx(1.0, "deg");
+			Quantity centery(1.0, "deg");
+			Quantity mi(30, "arcsec");
+			Quantity ma(40, "arcsec");
+			Quantity pa(0, "deg");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+
+			AnnEllipse ellipse(
+				centerx, centery, ma, mi, pa, dirTypeString,
+				csys, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+
+			MDirection center = ellipse.getCenter();
+
+			AlwaysAssert(
+				near(
+					center.getAngle("deg").getValue("deg")[0],
+					centerx.getValue("deg")
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					center.getAngle("deg").getValue("deg")[1],
+					centery.getValue("deg")
+				), AipsError
+			);
+			TableRecord regionRec = ellipse.asRecord();
+			cout << regionRec << endl;
+			QuantumHolder qh;
+			String err;
+			for (uInt i=0; i<2; i++) {
+				qh.fromRecord(
+					err,
+					regionRec.asRecord("center").asRecord(0)
+				);
+				AlwaysAssert(
+					near(
+						qh.asQuantity().getValue("rad"),
+						centerx.getValue("rad")
+					), AipsError
+				);
+				qh.fromRecord(
+					err,
+					regionRec.asRecord("center").asRecord(1)
+				);
+				AlwaysAssert(
+					near(
+						qh.asQuantity().getValue("rad"),
+						centery.getValue("rad")
+					), AipsError
+				);
+			}
+		}
 	} catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;
 		return 1;

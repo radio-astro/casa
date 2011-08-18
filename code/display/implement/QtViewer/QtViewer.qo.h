@@ -28,6 +28,8 @@
 
 #ifndef QTVIEWER_H
 #define QTVIEWER_H
+#include <list>
+#include <string>
 #include <display/QtViewer/QtViewerBase.qo.h>
 
 #include <graphics/X11/X_enter.h>
@@ -72,7 +74,7 @@ class QtViewer : public QtViewerBase {
 
  public:
   
-  QtViewer( bool is_server=false, const char *dbus_name=0 );
+  QtViewer( const std::list<std::string> &args, bool is_server=false, const char *dbus_name=0 );
   ~QtViewer();
 
   // name used to initialize connection to dbus
@@ -98,10 +100,12 @@ class QtViewer : public QtViewerBase {
  protected:
  
   QtDBusViewerAdaptor* dbus_;
+  std::list<std::string> args_;
 
  private:
   static QString name_;
   QString dbus_name_;
+  bool is_server_;
     
 };
 

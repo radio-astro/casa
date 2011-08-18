@@ -39,28 +39,19 @@ AnnRectBox::AnnRectBox(
 		dopplerString, restfreq, stokes,
 		annotationOnly
 	  ), _inputCorners(Matrix<Quantity>(2, 2)) {
+	_init(blcx, blcy, trcx, trcy);
+}
 
-	_inputCorners(0, 0) = blcx;
-	_inputCorners(1, 0) = blcy;
-	_inputCorners(0, 1) = trcx;
-	_inputCorners(1, 1) = trcy;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputCorners);
-	Vector<Int> absrel(2,(Int)RegionType::Abs);
-
-	Vector<Quantity> qblc(2);
-	Vector<Quantity> qtrc(2);
-	for (uInt i=0; i<2; i++) {
-		qblc[i] = Quantity(
-			_getConvertedDirections()[0].getAngle("rad").getValue("rad")[i],
-			"rad"
-		);
-		qtrc[i] = Quantity(
-			_getConvertedDirections()[1].getAngle("rad").getValue("rad")[i],
-			"rad"
-		);
-	}
-	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
-	_extend(box);
+AnnRectBox::AnnRectBox(
+	const Quantity& blcx,
+	const Quantity& blcy,
+	const Quantity& trcx,
+	const Quantity& trcy,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(RECT_BOX, csys, stokes),
+	_inputCorners(Matrix<Quantity>(2, 2)) {
+	_init(blcx, blcy, trcx, trcy);
 }
 
 AnnRectBox& AnnRectBox::operator= (
@@ -89,6 +80,33 @@ ostream& AnnRectBox::print(ostream &os) const {
 	return os;
 }
 
+void AnnRectBox::_init(
+	const Quantity& blcx, const Quantity& blcy,
+	const Quantity& trcx, const Quantity& trcy
+) {
+	_inputCorners(0, 0) = blcx;
+	_inputCorners(1, 0) = blcy;
+	_inputCorners(0, 1) = trcx;
+	_inputCorners(1, 1) = trcy;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputCorners);
+	Vector<Int> absrel(2,(Int)RegionType::Abs);
+
+	Vector<Quantity> qblc(2);
+	Vector<Quantity> qtrc(2);
+	for (uInt i=0; i<2; i++) {
+		qblc[i] = Quantity(
+			_getConvertedDirections()[0].getAngle("rad").getValue("rad")[i],
+			"rad"
+		);
+		qtrc[i] = Quantity(
+			_getConvertedDirections()[1].getAngle("rad").getValue("rad")[i],
+			"rad"
+		);
+	}
+	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
+	_setDirectionRegion(box);
+	_extend();
+}
 
 
 }

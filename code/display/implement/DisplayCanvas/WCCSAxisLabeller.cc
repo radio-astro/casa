@@ -443,7 +443,7 @@ Record WCCSAxisLabeller::getOptions() const
         Record restvalue;
         restvalue.define("context", "Axis_label_properties");
         restvalue.define("dlformat", "axislabelrestvalue");
-        restvalue.define("listname", "Rest value");
+        restvalue.define("listname", "Rest frequency or wavelength");
         restvalue.define("ptype", "string");
         if (restFreq>0){
       	  Unit outUnit(itsRestUnit);

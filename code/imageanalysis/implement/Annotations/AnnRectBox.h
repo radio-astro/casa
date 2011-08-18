@@ -63,6 +63,21 @@ public:
 		const Bool annotationOnly
 	);
 
+	// Simplified constructor.
+	// all frequencies are used (these can be set after construction).
+	// blcx, blcy, trcx, and trcy
+	// must be in the same frame as the csys direction coordinate.
+	// is a region (not just an annotation), although this value can be changed after
+	// construction.
+	AnnRectBox(
+		const Quantity& blcx,
+		const Quantity& blcy,
+		const Quantity& trcx,
+		const Quantity& trcy,
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 	// implicit copy constructor and destructor are fine
 
 	AnnRectBox& operator=(const AnnRectBox& other);
@@ -79,9 +94,11 @@ public:
 
 private:
 	Matrix<Quantity> _inputCorners;
+	void _init(
+		const Quantity& blcx, const Quantity& blcy,
+		const Quantity& trcx, const Quantity& trcy
+	);
 
-	// disallow default constructor
-	AnnRectBox();
 };
 
 }

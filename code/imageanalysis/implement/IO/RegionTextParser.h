@@ -91,6 +91,7 @@ private:
 		String stringVal;
 		Bool boolVal;
 		AnnotationBase::LineStyle lineStyleVal;
+		AnnotationBase::FontStyle fontStyleVal;
 		Vector<MFrequency> freqRange;
 		Vector<Stokes::StokesTypes> stokes;
 	};

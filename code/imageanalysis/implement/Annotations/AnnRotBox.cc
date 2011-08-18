@@ -39,39 +39,21 @@ AnnRotBox::AnnRotBox(
 	), _inputCenter(Vector<Quantity>(2)),
 	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
-	String preamble(String(__FUNCTION__) + ": ");
+	_init(xcenter, ycenter, xwidth, ywidth);
+}
 
-	if (! xwidth.isConform("rad") && ! xwidth.isConform("pix")) {
-		throw AipsError(
-			preamble + "x width unit " + xwidth.getUnit() + " is not an angular unit."
-		);
-	}
-	if (! ywidth.isConform("rad") && ! ywidth.isConform("pix")) {
-		throw AipsError(
-			preamble + "y width unit " + ywidth.getUnit() + " is not an angular unit."
-		);
-	}
-	_inputWidths[0] = xwidth;
-	_inputWidths[1] = ywidth;
-
-	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
-	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
-
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
-
-	_doCorners();
-	Vector<Double> xv(4), yv(4);
-	for (uInt i=0; i<4; i++) {
-		Vector<Double> coords = _corners[i].getAngle("rad").getValue();
-		xv[i] = coords[0];
-		yv[i] = coords[1];
-	}
-	Quantum<Vector<Double> > x(xv, "rad");
-	Quantum<Vector<Double> > y(yv, "rad");
-	WCPolygon box(x, y, _getDirectionAxes(), _getCsys(), RegionType::Abs);
-	_extend(box);
+AnnRotBox::AnnRotBox(
+	const Quantity& xcenter,
+	const Quantity& ycenter,
+	const Quantity& xwidth,
+	const Quantity& ywidth, const Quantity& positionAngle,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(ROTATED_BOX, csys, stokes),
+	_inputCenter(Vector<Quantity>(2)),
+	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
+	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
+	_init(xcenter, ycenter, xwidth, ywidth);
 }
 
 AnnRotBox& AnnRotBox::operator= (
@@ -128,4 +110,45 @@ ostream& AnnRotBox::print(ostream &os) const {
 	_printPairs(os);
 	return os;
 }
+
+void AnnRotBox::_init(
+	const Quantity& xcenter, const Quantity& ycenter,
+	const Quantity& xwidth, const Quantity& ywidth
+) {
+	String preamble(String(__FUNCTION__) + ": ");
+
+	if (! xwidth.isConform("rad") && ! xwidth.isConform("pix")) {
+		throw AipsError(
+			preamble + "x width unit " + xwidth.getUnit() + " is not an angular unit."
+		);
+	}
+	if (! ywidth.isConform("rad") && ! ywidth.isConform("pix")) {
+		throw AipsError(
+			preamble + "y width unit " + ywidth.getUnit() + " is not an angular unit."
+		);
+	}
+	_inputWidths[0] = xwidth;
+	_inputWidths[1] = ywidth;
+
+	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
+	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
+
+	_inputCenter[0] = xcenter;
+	_inputCenter[1] = ycenter;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
+
+	_doCorners();
+	Vector<Double> xv(4), yv(4);
+	for (uInt i=0; i<4; i++) {
+		Vector<Double> coords = _corners[i].getAngle("rad").getValue();
+		xv[i] = coords[0];
+		yv[i] = coords[1];
+	}
+	Quantum<Vector<Double> > x(xv, "rad");
+	Quantum<Vector<Double> > y(yv, "rad");
+	WCPolygon box(x, y, _getDirectionAxes(), _getCsys(), RegionType::Abs);
+	_setDirectionRegion(box);
+	_extend();
+}
+
 }

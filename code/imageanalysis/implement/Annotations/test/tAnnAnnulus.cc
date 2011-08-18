@@ -366,7 +366,6 @@ int main () {
 				csys, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
 			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
 			AlwaysAssert(
 				near(freqs[0].get("Hz").getValue(), beginFreq.getValue("Hz")),

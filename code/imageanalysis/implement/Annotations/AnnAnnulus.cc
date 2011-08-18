@@ -44,37 +44,21 @@ AnnAnnulus::AnnAnnulus(
 	), _convertedRadii(Vector<Quantity>(2)),
 	_xcenter(xcenter), _ycenter(ycenter),
 	_innerRadius(innerRadius), _outerRadius(outerRadius) {
+	_init();
+}
 
-	_convertedRadii[0] = _lengthToAngle(innerRadius, _getDirectionAxes()[0]);
-	_convertedRadii[1] = _lengthToAngle(outerRadius, _getDirectionAxes()[0]);
-
-	if (
-		_convertedRadii[0].getValue("rad")
-		>= _convertedRadii[1].getValue("rad")
-	) {
-		throw AipsError(
-			String(__FUNCTION__)
-			+ "Inner radius must be less than "
-			+ "outer radius"
-		);
-	}
-	Vector<Quantity> inputCenter(2);
-	inputCenter[0] = xcenter;
-	inputCenter[1] = ycenter;
-
-	_checkAndConvertDirections(String(__FUNCTION__), inputCenter);
-
-	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
-
-	Vector<Quantity> qCenter(2);
-	qCenter[0] = Quantity(coords[0], "rad");
-	qCenter[1] = Quantity(coords[1], "rad");
-
-	WCEllipsoid inner(qCenter, innerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
-	WCEllipsoid outer(qCenter, outerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
-	WCDifference annulus(outer, inner);
-	_extend(annulus);
-
+AnnAnnulus::AnnAnnulus(
+	const Quantity& xcenter,
+	const Quantity& ycenter,
+	const Quantity& innerRadius,
+	const Quantity& outerRadius,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnRegion(ANNULUS, csys, stokes),
+_convertedRadii(Vector<Quantity>(2)),
+	_xcenter(xcenter), _ycenter(ycenter),
+	_innerRadius(innerRadius), _outerRadius(outerRadius) {
+	_init();
 }
 
 AnnAnnulus& AnnAnnulus::operator= (
@@ -108,6 +92,39 @@ ostream& AnnAnnulus::print(ostream &os) const {
 		<< _innerRadius << ", " << _outerRadius << "]] ";
 	_printPairs(os);
 	return os;
+}
+
+void AnnAnnulus::_init() {
+	_convertedRadii[0] = _lengthToAngle(_innerRadius, _getDirectionAxes()[0]);
+	_convertedRadii[1] = _lengthToAngle(_outerRadius, _getDirectionAxes()[0]);
+
+	if (
+		_convertedRadii[0].getValue("rad")
+		>= _convertedRadii[1].getValue("rad")
+	) {
+		throw AipsError(
+			String(__FUNCTION__)
+			+ "Inner radius must be less than "
+			+ "outer radius"
+		);
+	}
+	Vector<Quantity> inputCenter(2);
+	inputCenter[0] = _xcenter;
+	inputCenter[1] = _ycenter;
+
+	_checkAndConvertDirections(String(__FUNCTION__), inputCenter);
+
+	Vector<Double> coords = _getConvertedDirections()[0].getAngle("rad").getValue();
+
+	Vector<Quantity> qCenter(2);
+	qCenter[0] = Quantity(coords[0], "rad");
+	qCenter[1] = Quantity(coords[1], "rad");
+
+	WCEllipsoid inner(qCenter, _innerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
+	WCEllipsoid outer(qCenter, _outerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
+	WCDifference annulus(outer, inner);
+	_setDirectionRegion(annulus);
+	_extend();
 }
 
 }

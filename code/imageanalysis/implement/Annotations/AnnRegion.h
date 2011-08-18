@@ -58,8 +58,22 @@ public:
 
 	virtual ~AnnRegion();
 
+	void setAnnotationOnly(const Bool isAnnotationOnly);
+
 	// is this region an annotation only? ie just for graphical rendering?
 	Bool isAnnotationOnly() const;
+
+	// if freqRefFrame=="" -> use the reference frame of the coordinate system
+	// if dopplerString=="" -> use the doppler system associated with the coordinate system
+	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
+	// Tacitly does nothing if the coordinate system has no spectral axis
+	void setFrequencyLimits(
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame="",
+		const String& dopplerString="",
+		const Quantity& restfreq=Quantity(0, "Hz")
+	);
 
 	Vector<MFrequency> getFrequencyLimits() const;
 
@@ -104,6 +118,17 @@ protected:
 		const Bool annotationOnly
 	);
 
+	// use if all coordinate values will be specified in
+	// the same frames as the input coordinate system. frequencies
+	// and the annotationOnly flag can be set after
+	// construction. By default, all frequencies and all polarizations
+	// are used, and the annotationOnly flag is False
+	AnnRegion(
+		const Type shape,
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
+	);
+
 	// implicitly defined copy constructor is fine
 	// AnnRegion(AnnRegion& other);
 
@@ -113,9 +138,9 @@ protected:
 	// assignment operator
 	AnnRegion& operator= (const AnnRegion& rhs);
 
-	// extend the region over spectral and/or polarization
+	// extend the direction plane region over spectral and/or polarization
 	// coordinates
-	void _extend(const ImageRegion& region);
+	void _extend();
 
 	void _toRecord(const ImageRegion& region);
 
@@ -126,17 +151,21 @@ protected:
 
 	virtual void _printPrefix(ostream& os) const;
 
+	// subclasses must call this at construction to set their base region
+	// defined in the direction plane
+	void _setDirectionRegion(const ImageRegion& region);
+
 private:
 
 	Bool _isAnnotationOnly;
 	Vector<MFrequency> _convertedFreqLimits;
-	ImageRegion _imageRegion;
+	ImageRegion _imageRegion, _directionRegion;
 	Quantity _beginFreq, _endFreq, _restFreq;
 	Vector<Stokes::StokesTypes> _stokes;
-	// WCRegion *_wcRegion;
 	MFrequency::Types _freqRefFrame;
 	MDoppler::Types _dopplerType;
-	Bool _isDifference;
+	Bool _isDifference, _constructing;
+	static const String _class;
 
 	WCBox _makeExtensionBox(
 		const Vector<Quantity>& freqRange,

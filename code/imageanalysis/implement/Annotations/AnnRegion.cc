@@ -28,6 +28,8 @@
 
 namespace casa {
 
+const String AnnRegion::_class = "AnnRegion";
+
 AnnRegion::AnnRegion(
 	const Type shape, const String& dirRefFrameString,
 	const CoordinateSystem& csys,
@@ -39,68 +41,34 @@ AnnRegion::AnnRegion(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnotationBase(shape, dirRefFrameString, csys), _isAnnotationOnly(annotationOnly),
-	_convertedFreqLimits(Vector<MFrequency>(0)),
-	_beginFreq(beginFreq), _endFreq(endFreq), _restFreq(restfreq),
-	_stokes(stokes), _isDifference(False) {
-	String preamble(String(__FUNCTION__) + ": ");
-	if (_getCsys().hasSpectralAxis()) {
-		if (! _beginFreq.getUnit().empty() > 0 && _endFreq.getUnit().empty()) {
-			throw AipsError(
-				preamble + "beginning frequency specified but ending frequency not. "
-				+ "Both must either be specified or not specified."
-			);
-		}
-		if (_beginFreq.getUnit().empty() && ! _endFreq.getUnit().empty()) {
-			throw AipsError(
-				preamble + "ending frequency specified but beginning frequency not. "
-				+ "Both must either be specified or not specified."
-			);
-		}
-		if (! _beginFreq.getUnit().empty()) {
-			if (! _beginFreq.isConform(_endFreq)) {
-				throw AipsError(
-					preamble + "Beginning freq units (" + _beginFreq.getUnit()
-					+ ") do not conform to ending freq units (" + _endFreq.getUnit()
-					+ ") but they must."
-				);
-			}
+	_convertedFreqLimits(Vector<MFrequency>(0)), _stokes(stokes),
+	_isDifference(False), _constructing(True) {
+	setFrequencyLimits(
+		beginFreq, endFreq, freqRefFrameString,
+		dopplerString, restfreq
+	);
+	// right before returning
+	_constructing = False;
 
-			if (
-				! _beginFreq.isConform("Hz")
-				&& ! _beginFreq.isConform("m/s")
-				&& ! _beginFreq.isConform("pix")
-			) {
-				throw AipsError(
-					preamble
-					+ "Invalid frequency unit " + beginFreq.getUnit()
-				);
-			}
-			if (_beginFreq.isConform("m/s") && _restFreq.getValue() <= 0) {
-				throw AipsError(
-					preamble
-					+ "Beginning and ending velocities supplied but no restfreq specified"
-				);
-			}
-			if (! MFrequency::getType(_freqRefFrame, freqRefFrameString)) {
-				throw AipsError(
-					preamble
-					+ "Unknown frequency frame code "
-					+ freqRefFrameString
-				);
-			}
-			if (! MDoppler::getType(_dopplerType, dopplerString)) {
-				throw AipsError(
-					preamble
-					+ "Unknown doppler code "
-					+ dopplerString
-				);
-			}
-			_checkAndConvertFrequencies();
-		}
-	}
 }
 
-//AnnRegion::AnnRegion(Ann)
+AnnRegion::AnnRegion(
+	const Type shape,
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) :	AnnotationBase(shape, csys),
+	_convertedFreqLimits(Vector<MFrequency>(0)),
+	_beginFreq(Quantity(0, "Hz")), _endFreq(Quantity(0, "Hz")),
+	_restFreq(Quantity(0, "Hz")), _stokes(stokes),
+	_isDifference(False),
+	_constructing(True) {
+
+	// right before returning
+	_constructing = False;
+
+}
+
+
 
 AnnRegion::~AnnRegion() {}
 
@@ -121,7 +89,91 @@ AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
     _freqRefFrame = other._freqRefFrame;
     _dopplerType = other._dopplerType;
     _isDifference = other._isDifference;
+    _directionRegion = other._directionRegion;
+    _constructing = other._constructing;
     return *this;
+}
+
+void AnnRegion::setFrequencyLimits(
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq
+) {
+	String preamble(_class + ": " + String(__FUNCTION__) + ": ");
+	if (! _getCsys().hasSpectralAxis()) {
+		return;
+	}
+	if (! beginFreq.getUnit().empty() > 0 && endFreq.getUnit().empty()) {
+		throw AipsError(
+			preamble + "beginning frequency specified but ending frequency not. "
+			+ "Both must specified or both must be unspecified."
+		);
+	}
+	if (beginFreq.getUnit().empty() && ! endFreq.getUnit().empty()) {
+		throw AipsError(
+			preamble + "ending frequency specified but beginning frequency not. "
+			+ "Both must specified or both must be unspecified."
+		);
+	}
+	if (! beginFreq.getUnit().empty()) {
+		if (! beginFreq.isConform(endFreq)) {
+			throw AipsError(
+				preamble + "Beginning freq units (" + _beginFreq.getUnit()
+				+ ") do not conform to ending freq units (" + _endFreq.getUnit()
+				+ ") but they must."
+			);
+		}
+
+		if (
+			! beginFreq.isConform("Hz")
+			&& ! beginFreq.isConform("m/s")
+			&& ! beginFreq.isConform("pix")
+		) {
+			throw AipsError(
+				preamble
+				+ "Invalid frequency unit " + beginFreq.getUnit()
+			);
+		}
+		if (beginFreq.isConform("m/s") && restfreq.getValue() <= 0) {
+			throw AipsError(
+				preamble
+				+ "Beginning and ending velocities supplied but no restfreq specified"
+			);
+		}
+		if (freqRefFrame.empty()) {
+			_freqRefFrame = _getCsys().spectralCoordinate().frequencySystem();
+		}
+		else if (! MFrequency::getType(_freqRefFrame, freqRefFrame)) {
+			throw AipsError(
+				preamble
+				+ "Unknown frequency frame code "
+				+ freqRefFrame
+			);
+		}
+		if (dopplerString.empty()) {
+			_dopplerType = _getCsys().spectralCoordinate().velocityDoppler();
+		}
+		else if (! MDoppler::getType(_dopplerType, dopplerString)) {
+			throw AipsError(
+				preamble + "Unknown doppler code " + dopplerString
+			);
+		}
+		_beginFreq = beginFreq;
+		_endFreq = endFreq;
+		_restFreq = restfreq;
+		_checkAndConvertFrequencies();
+		if (! _constructing) {
+			// have to re-extend the direction region because of new freq range.
+			// but not during object construction
+			_extend();
+		}
+	}
+}
+
+void AnnRegion::setAnnotationOnly(const Bool isAnnotationOnly) {
+	_isAnnotationOnly = isAnnotationOnly;
 }
 
 Bool AnnRegion::isAnnotationOnly() const {
@@ -135,7 +187,6 @@ void AnnRegion::setDifference(const Bool difference) {
 Bool AnnRegion::isDifference() const {
 	return _isDifference;
 }
-
 
 Vector<MFrequency> AnnRegion::getFrequencyLimits() const {
 	return _convertedFreqLimits;
@@ -161,7 +212,11 @@ Bool AnnRegion::isRegion() const {
 	return True;
 }
 
-void AnnRegion::_extend(const ImageRegion& region) {
+void AnnRegion::_setDirectionRegion(const ImageRegion& region) {
+	_directionRegion = region;
+}
+
+void AnnRegion::_extend() {
 	Int stokesAxis = -1;
 	Int spectralAxis = -1;
 	Vector<Quantity> freqRange;
@@ -195,7 +250,7 @@ void AnnRegion::_extend(const ImageRegion& region) {
 		nBoxes = stokesRanges.size()/2;
 	}
 	if (nBoxes == 0) {
-		_imageRegion = region;
+		_imageRegion = _directionRegion;
 		return;
 	}
 	uInt nExtendAxes = 0;
@@ -219,7 +274,7 @@ void AnnRegion::_extend(const ImageRegion& region) {
 	}
 	if (nBoxes == 1) {
 		WCBox wbox = _makeExtensionBox(freqRange, stokesRanges, pixelAxes);
-        _imageRegion = ImageRegion(WCExtension(region, wbox));
+        _imageRegion = ImageRegion(WCExtension(_directionRegion, wbox));
         return;
 	}
 	PtrBlock<const WCRegion*> regions(nBoxes);
@@ -228,7 +283,7 @@ void AnnRegion::_extend(const ImageRegion& region) {
 		stokesRange[0] = stokesRanges[2*i];
 		stokesRange[1] = stokesRanges[2*i + 1];
 		WCBox wbox = _makeExtensionBox(freqRange, stokesRange, pixelAxes);
-		regions[i] = new WCExtension(region, wbox);
+		regions[i] = new WCExtension(_directionRegion, wbox);
 	}
     _imageRegion = ImageRegion(WCUnion(True, regions));
 }
