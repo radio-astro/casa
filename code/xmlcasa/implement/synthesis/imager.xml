@@ -2482,7 +2482,7 @@ im.selectvis(field=0, spw=0)
 im.defineimage(nx=400, cellx='0.001arcsec', phasecenter=0)
 a=[100.0, 100.0, 200, 200.0]
 b=[50, 50, 80, 80]
-im.regionmask(mask='bigmask', boxes[a,b])
+im.regionmask(mask='bigmask', boxes=[a,b])
 im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 Another example using rg.wbox function: 
@@ -2597,7 +2597,7 @@ Makes a mask  then cleans using it.
 
 a=[100.0, 100.0, 200, 200.0]
 b=[50, 50, 80, 80]
-im.regiontoimagemask(mask='bigmask', boxes[a,b])
+im.regiontoimagemask(mask='bigmask', boxes=[a,b])
 im.clean(mask='bigmask', model='3C273XC1.clean.masked', niter=1000)
 
 Another example using rg.wbox function: 
