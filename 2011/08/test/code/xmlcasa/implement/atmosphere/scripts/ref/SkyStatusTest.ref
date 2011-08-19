@@ -1,0 +1,128 @@
+CASA Version 2.0 Rev 3119
+  Built on: Mon 2007/08/27 01:15:06 UTC
+
+___________________________________________________________
+Available tasks:
+
+   accum         exportfits      immoments       plotcal
+   simdata       exportuvfits    importasdm      plotxy
+   applycal      feather         importfits      (pointcal)
+   bandpass      filecatalog     importuvfits    regridimage
+   blcal         flagautocorr    importvla       restore
+   browsetable   flagdata        invert          setjy
+   clean         flagmanager     listcal         smoothcal
+   clearcal      fluxscale       listhistory     split
+   clearplot     fringecal       listobs         uvcontsub
+   clearstat     ft              makemask        uvmodelfit
+   concat        gaincal         mosaic          viewer
+   deconvolve    imhead          plotants
+ 
+Available tools:
+
+   cb (calibrater)     cp (cal plot)     fg (flagger)
+   ia (image analysis) im (imager)       me (measures)
+   mp (MS plot)        ms (MS)           qa (quanta)
+   sm (simulation      tb (table)        tp (table plot)
+ 
+   pl (pylab functions)
+   sd (ASAP functions - run asap_init() to import into CASA)
+
+___________________________________________________________________
+
+Help :   
+   help taskname          - Full help for task
+   help par.parametername - Full help for parameter name 
+   find string            - Find occurances of string in doc
+   tasklist               - Task list organized by catagory
+   taskhelp               - One line summary of available tasks
+   toolhelp               - One line summary of available tools
+   startup                - The start up screen
+
+___________________________________________________________________
+will execute script SkyStatusTest.py
+Activating auto-logging. Current session state plus future input saved.
+Filename       : ipython.log
+Mode           : backup
+Output logging : False
+Raw input log  : False
+Timestamping   : False
+State          : active
+Atmospheric type:    tropical
+size of Temperature Profile:  22
+BASIC ATMOSPHERIC PARAMETERS TO GENERATE REFERENCE ATMOSPHERIC PROFILE
+  
+Ground temperature T:         270 K
+Ground pressure P:            560 mb
+Relative humidity rh:         20 %
+Scale height h0:              2 km
+Pressure step dp:             10 mb
+Altitude alti:                5000 m
+Attitude top atm profile:     48 km
+Pressure step factor:         1.2 
+Tropospheric lapse rate:      -5.6 K/km
+Atmospheric type:             tropical
+
+Built atmospheric profile with 22 layers.
+
+
+Layer parameters:
+Number of layers returned: 22
+Layer parameters: 
+ P: 554.977 mb  T: 269.598 K  Thickness: 143.444 m  WaterVapor: 0.000762199 kg m-3  WaterVapor: 2.5504e+22 m-3  CO: 1.93876e+18 m-3  O3: 5.62901e+17 m-3  N2O: 4.76212e+18 m-3
+ P: 543.967 mb  T: 268.706 K  Thickness: 175.101 m  WaterVapor: 0.000703854 kg m-3  WaterVapor: 2.35517e+22 m-3  CO: 1.90629e+18 m-3  O3: 5.58954e+17 m-3  N2O: 4.68575e+18 m-3
+ P: 530.751 mb  T: 267.615 K  Thickness: 214.579 m  WaterVapor: 0.000638519 kg m-3  WaterVapor: 2.13656e+22 m-3  CO: 1.86583e+18 m-3  O3: 5.54106e+17 m-3  N2O: 4.59355e+18 m-3
+ P: 514.888 mb  T: 266.275 K  Thickness: 264.252 m  WaterVapor: 0.000566481 kg m-3  WaterVapor: 1.89551e+22 m-3  CO: 1.81512e+18 m-3  O3: 5.48123e+17 m-3  N2O: 4.48208e+18 m-3
+ P: 495.844 mb  T: 264.618 K  Thickness: 327.475 m  WaterVapor: 0.000488584 kg m-3  WaterVapor: 1.63486e+22 m-3  CO: 1.75116e+18 m-3  O3: 5.40691e+17 m-3  N2O: 4.34711e+18 m-3
+ P: 472.979 mb  T: 262.555 K  Thickness: 409.147 m  WaterVapor: 0.000406408 kg m-3  WaterVapor: 1.35988e+22 m-3  CO: 1.66905e+18 m-3  O3: 5.31317e+17 m-3  N2O: 4.18305e+18 m-3
+ P: 445.521 mb  T: 259.963 K  Thickness: 516.736 m  WaterVapor: 0.00032243 kg m-3  WaterVapor: 1.07889e+22 m-3  CO: 1.56532e+18 m-3  O3: 5.19589e+17 m-3  N2O: 3.98414e+18 m-3
+ P: 412.536 mb  T: 256.662 K  Thickness: 662.272 m  WaterVapor: 0.000240119 kg m-3  WaterVapor: 8.03464e+21 m-3  CO: 1.43556e+18 m-3  O3: 5.01384e+17 m-3  N2O: 3.74538e+18 m-3
+ P: 372.891 mb  T: 252.381 K  Thickness: 866.58 m  WaterVapor: 0.000163845 kg m-3  WaterVapor: 5.48243e+21 m-3  CO: 1.26268e+18 m-3  O3: 4.89541e+17 m-3  N2O: 3.44722e+18 m-3
+ P: 325.19 mb  T: 246.68 K  Thickness: 1169.46 m  WaterVapor: 9.84855e-05 kg m-3  WaterVapor: 3.29543e+21 m-3  CO: 1.03631e+18 m-3  O3: 4.87238e+17 m-3  N2O: 3.07023e+18 m-3
+ P: 267.67 mb  T: 238.76 K  Thickness: 1658.92 m  WaterVapor: 4.85606e-05 kg m-3  WaterVapor: 1.62489e+21 m-3  CO: 7.6885e+17 m-3  O3: 5.03793e+17 m-3  N2O: 2.58146e+18 m-3
+ P: 256.935 mb  T: 230.765 K  Thickness: 1000 m  WaterVapor: 2.49802e-05 kg m-3  WaterVapor: 8.35865e+20 m-3  CO: 5.53847e+17 m-3  O3: 5.37164e+17 m-3  N2O: 2.16403e+18 m-3
+ P: 257.26 mb  T: 224.015 K  Thickness: 1000 m  WaterVapor: 1.51513e-05 kg m-3  WaterVapor: 5.06978e+20 m-3  CO: 3.99903e+17 m-3  O3: 5.63587e+17 m-3  N2O: 1.87717e+18 m-3
+ P: 211.112 mb  T: 215.315 K  Thickness: 1625 m  WaterVapor: 7.86037e-06 kg m-3  WaterVapor: 2.63017e+20 m-3  CO: 2.48942e+17 m-3  O3: 5.7276e+17 m-3  N2O: 1.56008e+18 m-3
+ P: 158.866 mb  T: 203.315 K  Thickness: 2000 m  WaterVapor: 3.17588e-06 kg m-3  WaterVapor: 1.06268e+20 m-3  CO: 1.23924e+17 m-3  O3: 5.91703e+17 m-3  N2O: 1.1682e+18 m-3
+ P: 114.088 mb  T: 191.865 K  Thickness: 2000 m  WaterVapor: 1.16834e-06 kg m-3  WaterVapor: 3.90939e+19 m-3  CO: 5.57264e+16 m-3  O3: 1.47198e+18 m-3  N2O: 7.62395e+17 m-3
+ P: 81.0467 mb  T: 190.615 K  Thickness: 2000 m  WaterVapor: 4.29808e-07 kg m-3  WaterVapor: 1.43819e+19 m-3  CO: 2.61142e+16 m-3  O3: 2.77652e+18 m-3  N2O: 4.64509e+17 m-3
+ P: 50.4577 mb  T: 201.065 K  Thickness: 3750 m  WaterVapor: 1.02088e-07 kg m-3  WaterVapor: 3.41599e+18 m-3  CO: 1.54239e+16 m-3  O3: 3.93168e+18 m-3  N2O: 2.3445e+17 m-3
+ P: 27.4549 mb  T: 212.515 K  Thickness: 4000 m  WaterVapor: 1.47072e-08 kg m-3  WaterVapor: 4.9212e+17 m-3  CO: 1.04872e+16 m-3  O3: 4.55929e+18 m-3  N2O: 1.03582e+17 m-3
+ P: 15.0592 mb  T: 221.315 K  Thickness: 4000 m  WaterVapor: 1.99041e-09 kg m-3  WaterVapor: 6.66012e+16 m-3  CO: 7.05928e+15 m-3  O3: 3.23216e+18 m-3  N2O: 4.5226e+16 m-3
+ P: 8.2977 mb  T: 230.215 K  Thickness: 4250 m  WaterVapor: 2.53052e-10 kg m-3  WaterVapor: 8.46739e+15 m-3  CO: 4.4967e+15 m-3  O3: 1.76311e+18 m-3  N2O: 1.69912e+16 m-3
+ P: 4.09633 mb  T: 241.315 K  Thickness: 6000 m  WaterVapor: 1.95133e-11 kg m-3  WaterVapor: 6.52935e+14 m-3  CO: 2.56843e+15 m-3  O3: 6.47884e+17 m-3  N2O: 3.88669e+15 m-3
+
+First guess precipitable water vapor content:  1.571821108 mm
+(This value is estimated from the relative humidity at ground level and the water vapor scale height)
+
+TEST FOR JUST 1 FREQUENCY
+=========================
+Frequency:  850.0 GHz
+Wet opacity: 1.71934248507 neper  for  1.0 mm  H2O (TELCAL has 1.09385 nepers, for 1 mm H2O??)
+Dry opacity: 0.121489707254  nepers
+Sky brightness: 189.623309137 K
+
+(INPUT CHANGE) water vapor column: 0.4 mm
+(NEW OUTPUT) T_EBB = 121.051687661 K
+(Current water vapor column in Radiance Class: 1.0 mm
+
+(INPUT CHANGE) Air mass:  2.0
+(NEW OUTPUT) T_EBB =  242.609564516 K
+
+(INPUT CHANGE) water vapor column: 0.8 mm
+(NEW OUTPUT) T_EBB = 229.859339644 K
+
+ TEST FOR JUST 1 SPECTRAL WINDOW WITH SEVERAL CHANNELS
+ =====================================================
+
+water vapor column:  1.0 mm
+Air mass:  1.0
+
+Freq: 847.0 GHz  T_EBB= 190.098515821 K
+Freq: 848.0 GHz  T_EBB= 189.865185045 K
+Freq: 849.0 GHz  T_EBB= 196.704601643 K
+Freq: 850.0 GHz  T_EBB= 189.623309137 K
+Freq: 851.0 GHz  T_EBB= 189.390154369 K
+Freq: 852.0 GHz  T_EBB= 189.422493164 K
+Freq: 853.0 GHz  T_EBB= 189.933201659 K
+Freq: 854.0 GHz  T_EBB= 189.590370338 K
+leaving casapy...

@@ -1,0 +1,61 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# scanregister: reads the latest registration and puts it in a to be processed
+# file
+#-----------------------------------------------------------------------------
+#   Copyright (C) 1995-1997,1999
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: scanregister [<folder>]"
+#-----------------------------------------------------------------------------
+# scanregister puts the latesest registration into a central file that is
+# processed by the registrations script since I don't seem to be able to
+# run glish from this script.
+#
+# Freely adapted from MC's scanhtml script
+#
+# Options:
+#   none
+#
+# Original: 1995/07/18 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+# Directory definitions.
+  MHBIN=/opt/local/mh/bin
+  AIPSMAIL=$HOME/Mail
+  MSTRETCD=$HOME/master/etc
+
+# Parse the folder name.
+  if [ $# -gt 0 ]
+  then
+     FOLDER=$1
+  else
+     FOLDER="aips2-register"
+  fi
+
+
+  $MHBIN/next +"$FOLDER" -showproc cat >> /export/aips++/tmp/A2registration.todo
+
+  exit 0
