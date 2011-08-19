@@ -77,7 +77,8 @@ public:
   inline String&      tInterpType()    { return tInterpType_; };
   inline String&      fInterpType()    { return fInterpType_; };
   inline Vector<Int>& spwMap()         { return spwMap_; };
-  inline Int&         refant()         { return refant_; };
+  inline Int&         refant()         { return refantlist()(0); };
+  inline Vector<Int>& refantlist()     { return urefantlist_; };
   inline Int&         minblperant()    { return minblperant_; };
   inline String&      apmode()         { return apmode_; };
   inline String&      solint()         { return solint_; };
@@ -438,7 +439,7 @@ private:
   Vector<Int> spwMap_;
 
   // Refant
-  Int refant_;
+  Vector<Int> urefantlist_;
 
   // Min baselines per ant for solve
   Int minblperant_;
