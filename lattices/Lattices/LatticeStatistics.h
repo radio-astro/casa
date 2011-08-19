@@ -43,7 +43,8 @@
 #include <casa/Utilities/DataType.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Logging/LogIO.h>
-
+#include <vector>
+#include <list>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -281,6 +282,12 @@ public:
 
    Bool display();
    Bool getLayerStats(String& stats, Double area, 
+                      Int zAxis=-1, Int zLayer=-1, 
+                      Int hAxis=-1, Int hLayer=-1); 
+
+   typedef std::pair<String,String> stat_element;
+   typedef std::list<stat_element> stat_list;
+   Bool getLayerStats( stat_list &stats, Double area, 
                       Int zAxis=-1, Int zLayer=-1, 
                       Int hAxis=-1, Int hLayer=-1); 
 
