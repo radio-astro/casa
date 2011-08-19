@@ -90,7 +90,7 @@ public:
 
 	Vector<MDirection> getCorners() const;
 
-	virtual ostream& print(ostream &os) const;
+	ostream& print(ostream &os) const;
 
 private:
 	Matrix<Quantity> _inputCorners;

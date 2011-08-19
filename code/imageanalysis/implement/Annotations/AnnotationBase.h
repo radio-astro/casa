@@ -198,6 +198,11 @@ public:
 		ostream& os, const LineStyle ls
 	);
 
+	// print a font style representation
+	static ostream& print(
+		ostream& os, const FontStyle fs
+	);
+
 protected:
 
 	AnnotationBase(
@@ -258,13 +263,8 @@ private:
 	static map<String, LineStyle> _lineStyleMap;
 	static map<String, Type> _typeMap;
 	const static String _class;
-
 	void _init();
-
 	void _initParams();
-
-
-
 };
 
 inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {
@@ -273,6 +273,10 @@ inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {
 
 inline ostream &operator<<(ostream& os, const AnnotationBase::LineStyle& ls) {
 	return AnnotationBase::print(os, ls);
+};
+
+inline ostream &operator<<(ostream& os, const AnnotationBase::FontStyle& fs) {
+	return AnnotationBase::print(os, fs);
 };
 
 inline ostream &operator<<(ostream& os, const map<AnnotationBase::Keyword, String>& x) {
