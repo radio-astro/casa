@@ -348,7 +348,7 @@ class Calibrater
 		     const MRadialVelocity& mStep);
   
   // Interpret refant index
-  Int getRefantIdx(const String& refant);
+  Vector<Int> getRefantIdxList(const String& refant);
   
   Vector<Int> getAntIdx(const String& antenna);
 
