@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+ 
+	<tool name="sdlinefinder" module="singledish">
+        <shortdescription>tool for automated line search</shortdescription>
+       
+<code>
+	<include>xmlcasa/singledish/sdlinefinder_forward.h</include>
+<private>
+	#include &lt;xmlcasa/singledish/sdlinefinder_private.h&gt;
+</private>
+</code>
+
+<!--   <needs>sdtable</needs> -->
+ 
+   <method type="constructor" name="sdlinefinder">
+   <shortdescription>Construct a sdlinefinder tool</shortdescription>
+<returns type="sdlinefinder"/>
+</method>
+
+
+ 
+   <method type="function" name="setoptions">
+   <shortdescription>Set the parameters of the search algorithm</shortdescription>
+   
+<input>
+     <param type="double" name="threshold">
+     <description>a single channel threshold default is sqrt(3), which
+                  means together with 3 minimum channels at least 3 sigma
+                  detection criterion.  For bad baseline shape, threshold 
+                  may need to be increased.  </description>
+     <value>sqrt(3.)</value>
+     </param>
+
+     <param type="int" name="minnchan">
+     <description>minimum number of channels above the threshold to report
+                  a detection, default is 3</description>
+     <value>1</value>
+     </param>
+ 
+     <param type="int" name="avglimit" >
+     <description>perform the averaging of no more than avglimit
+                 adjacent channels to search for broad lines
+                 Default is 8, but for a bad baseline shape this
+                 parameter should be decreased (may be even down to a
+                 minimum of 1 to disable this option) to avoid
+                 confusing of baseline undulations with a real line.
+                 Setting a very large value doesn't usually provide
+                 valid detections.</description>
+     <value>8</value></param>
+
+     <param type="double" name="boxsize" >
+     <description>the box size for running mean calculation. Default is
+                 1./5. of the whole spectrum size</description>
+     <value>0.2</value>
+     </param>
+</input>
+<returns type="bool"/>
+
+</method>
+
+<!-- NEED TO PASS sdtable object for "scan" RATHER THAN A RECORD -->
+   <method type="function" name="setscan">
+   <shortdescription>Set the 'scantable' data to work with, 
+                     associated mask (mask parameter) and 
+                     the edge channel rejection (edge parameter) </shortdescription>
+<input>
+
+     <param type="any" name="scan">
+     <any type="record"/>
+     <description>sdtable to work with</description>
+<!--
+     <param type="object" name="scan">
+     <description>sdtable to work with</description>
+-->
+     </param>
+     <param type="boolArray" name="mask">
+     <description>an optional mask retreived from sdtable</description>
+     </param>
+     <param type="intArray" name="edge">
+     <description>an optional number of channel to drop.
+                  If edge has zero length, all channels chosen 
+                  by mask will be used.
+                  If edge has one element only, it represents 
+                  the number of channels to drop from both sides of 
+                  the spectrum. edge is introduced for convinience, 
+                  although all functionality can be achieved using 
+                  a spectrum mask only</description>
+     </param>
+</input>
+<returns type="void"/>
+</method>
+
+   <method type="function" name="findlines">
+   <shortdescription>search for spectral lines for a row specified by 
+                     whichRow and Beam/IF/Pol specified by current cursor 
+                     set for the scantable.  Number of lines found is 
+                     returned.</shortdescription>
+<input>
+     <param type="int" name="whichRow">
+     <description>specified row </description>
+     </param>
+</input>
+<returns type="int"/>
+</method>
+                                                                                
+ 
+   <method type="function" name="getmask">
+   <shortdescription>get the mask to mask out all lines that have been 
+                     found (default) </shortdescription>
+<input>
+     <param type="bool" name="invert">
+     <description>If invert=true, only channels belong to lines will be 
+                  unmasked.
+            Note: all channels originally masked by the input mask (mask
+                  in setscan) or dropped out by the edge parameter (edge
+                  in setscan) are still excluded regardless on the invert 
+                  option.</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="boolArray"/>
+</method>
+
+   <method type="function" name="getlineranges">
+   <shortdescription>Get range for all lines found. The same units as 
+                     used in the scan will be returned 
+                     (e.g. velocity instead of channels).
+   </shortdescription>
+<input>
+</input>
+<returns type="doubleArray"/>
+</method>
+ 
+   <method type="function" name="getlinerangesinchannels">
+   <shortdescription>The same as getLineRanges, but channels are always 
+                     used to specify the range.  </shortdescription>
+<input>
+</input>
+<returns type="intArray"/> 
+</method>
+
+</tool>
+ 
+</casaxml>
