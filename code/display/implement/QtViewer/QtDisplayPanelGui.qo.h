@@ -43,6 +43,7 @@
 #include <graphics/X11/X_exit.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/region/QtRegionDock.qo.h>
 #include <display/Utilities/Lowlevel.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -169,6 +170,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   // return the id for viewer state for this type of panel
   virtual std::string rcid( ) const { return rcid_; }
 
+  viewer::QtRegionDock *regionDock( ) { return regionDock_; }
+  int numFrames( ) const { return qdp_->nFrames( ); }
+
  public slots:
  
   // At least for now, colorbars can only be placed horizontally or vertically,
@@ -224,6 +228,7 @@ class QtDisplayPanelGui : public QtPanelBase,
  
   virtual void trackingMoved(Qt::DockWidgetArea);
   virtual void animatorMoved(Qt::DockWidgetArea);
+  virtual void regionMoved(Qt::DockWidgetArea);
   virtual void mousetoolbarMoved(bool);
 
 
@@ -419,6 +424,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   QDockWidget*  animDockWidget_;
   QFrame*       animWidget_;  // Ui::QtAnimatorGui populates this.
+  viewer::QtRegionDock  *regionDock_;
   
   QDockWidget*  trkgDockWidget_;
   QWidget*    trkgWidget_;

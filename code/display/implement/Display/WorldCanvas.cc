@@ -53,6 +53,8 @@
 #include <casa/BasicSL/Constants.h>
 #include <cpgplot.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <display/DisplayDatas/DisplayData.h>
+
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -93,13 +95,15 @@ WorldCanvas::WorldCanvas(PixelCanvas * pc,
     itsHeldReason(Display::BackCopiedToFront),
     itsCoordinateSystem(0),
     itsGrabbing(False),
-    images_(0,16) {
+    images_(0,16),
+    itsCSmaster(0) {
   setWorldCanvasPosition(xOrigin, yOrigin, xSize, ySize);
   ctorInit();
 }
 
 // Destructor.
 WorldCanvas::~WorldCanvas() {
+  itsCSmaster = 0;
   itsHoldCount = 0;
   if (itsCoordinateSystem)
     delete itsCoordinateSystem;itsCoordinateSystem = 0;
@@ -2842,6 +2846,60 @@ Bool WorldCanvas::inPC(Int x, Int y) {
 	   y >= 0 && y < Int(itsPixelCanvas->height()) ); 
 }
 
+// Adding, removing and querying restrictions
+void WorldCanvas::setRestriction(const Attribute &restriction) {
+  itsRestrictions.set(restriction);
+}
+void WorldCanvas::setRestrictions(const AttributeBuffer &resBuff) {
+  itsRestrictions.set(resBuff);
+}
+const Bool WorldCanvas::existRestriction(const String &name) const {
+  return itsRestrictions.exists(name);
+}
+void WorldCanvas::removeRestriction(const String &restrictionName) {
+  itsRestrictions.remove(restrictionName);
+}
+void WorldCanvas::removeRestrictions() {
+  itsRestrictions.clear();
+}
+Bool WorldCanvas::matchesRestriction(const Attribute 
+					   &restriction) const {
+  return itsRestrictions.matches(restriction);
+}
+Bool WorldCanvas::matchesRestrictions(const AttributeBuffer 
+					    &buffer) const {
+  return itsRestrictions.matches(buffer);
+}
+const AttributeBuffer *WorldCanvas::restrictionBuffer() const {
+  return &itsRestrictions;
+}
+
+int WorldCanvas::zIndex( ) const {
+    int result = 0;
+    if ( itsRestrictions.exists("zIndex")) {
+	itsRestrictions.getValue("zIndex", result);
+    }
+    return result;
+}
+
+Vector<String> WorldCanvas::worldAxisNames() {
+  Vector<String> axisNames;
+  if (csMaster() != 0) axisNames = csMaster()->worldAxisNames();
+  return axisNames;  }
+
+  
+Vector<String> WorldCanvas::worldAxisUnits() {
+  Vector<String> axisUnits;
+  if (csMaster() != 0) axisUnits = csMaster()->worldAxisUnits();
+  return axisUnits;  }
+
+const std::list<DisplayData*> &WorldCanvas::displaylist( ) const {
+  static std::list<DisplayData*> empty;
+  if ( csMaster( ) == 0 ) return empty;
+  const WorldCanvasHolder *wch = csMaster( )->findHolder(this);
+  if ( wch == 0 ) return empty;
+  return wch->displaylist( );
+}
 
 } //# NAMESPACE CASA - END
 

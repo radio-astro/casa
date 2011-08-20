@@ -468,9 +468,9 @@ Bool MultiWCHolder::conforms(DisplayData* dd,
   
   wch=wchs.getRight();  if(wch==0 || dd==0) return False;
   
-  return (!testZ     || dd->conformsToZIndex(*wch))  &&
-         (!testCS    || dd->conformsToCS(*wch))      &&
-	 (!testRstrs || dd->conformsToRstrs(*wch));  }
+  return (!testZ     || dd->conformsToZIndex(*wch->worldCanvas()))  &&
+	 (!testCS    || dd->conformsToCS(*wch->worldCanvas()))      &&
+	 (!testRstrs || dd->conformsToRstrs(*wch->worldCanvas()));  }
   
 
 } //# NAMESPACE CASA - END

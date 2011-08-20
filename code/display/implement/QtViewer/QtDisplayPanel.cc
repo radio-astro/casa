@@ -64,7 +64,9 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		panel_(panel),
 		pd_(0), pc_(0),
 		qdds_(),
-		zoom_(0), panner_(0), crosshair_(0), rtregion_(0), elregion_(0),
+		zoom_(0), panner_(0), crosshair_(0),
+		rtregion_(0), ortregion_(0),
+		elregion_(0),
 		ptregion_(0), polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
 		tracking_(True),
@@ -78,10 +80,11 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		hasRgn_(False), rgnExtent_(0), qsm_(0),
 		lastMotionEvent_(0), bkgdClrOpt_(0), 
                 extChan_(""), extPol_("")  ,
-                printStats(True), useRegion(False){
+                printStats(True), useRegion(False) {
     
   setWindowTitle("Viewer Display Panel");
-  
+  bool use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
+
   //pc_  = new QtPixelCanvas(this);
   pc_ = new QtPixelCanvas();
     
@@ -100,9 +103,8 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
   margins.define("bottommarginspacepg", 9);
   pd_->setOptions(margins, chgdopts);
 
-  
-  setupMouseTools_( std::find(args.begin(),args.end(),"--newregions") != args.end() );
- 
+  region_source_factory = new viewer::QtRegionSourceFactory(panel_);
+  setupMouseTools_( use_new_regions );
 
   // (or parsing background color user selection via
   // getOptions() / setOptions() / Options gui.
@@ -226,7 +228,19 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   //ptregion_  = new MWCPTRegion;       pd_->addTool(POLYGON, ptregion_);
   ptregion_  = new QtPolyTool(pd_);   pd_->addTool(POLYGON, ptregion_);
   //rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
-  rtregion_  = new QtRectTool(pd_);   pd_->addTool(RECTANGLE, rtregion_);
+  if ( new_region_tools ) {
+      rtregion_  = new QtRectTool(region_source_factory,pd_);   pd_->addTool(RECTANGLE, rtregion_);
+      connect( rtregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( rtregion_, SIGNAL(echoClicked(Record)),
+			  SLOT(clicked(Record)) );
+  } else {
+      ortregion_  = new QtOldRectTool(pd_);   pd_->addTool(RECTANGLE, ortregion_);
+      connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( ortregion_, SIGNAL(echoClicked(Record)),
+			   SLOT(clicked(Record)) );
+  }
 
   elregion_  = new QtEllipseTool(pd_);   pd_->addTool(ELLIPSE, elregion_);
 
@@ -247,17 +261,11 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 	// over within the PC.
 
   
-  connect( rtregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-  
   connect( elregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
 
   connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-  
-  connect( rtregion_, SIGNAL(echoClicked(Record)),
-		        SLOT(clicked(Record)) );
   
   connect( elregion_, SIGNAL(echoClicked(Record)),
 		        SLOT(clicked(Record)) );

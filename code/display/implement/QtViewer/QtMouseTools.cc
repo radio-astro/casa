@@ -115,7 +115,7 @@ Bool QtRTRegion::getMouseRegion(Record& mouseRegion,
   linear.define("trc", lin);
   if(wldOk) { 
     world.define("trc", wld);
-    world.define("units", wch->worldAxisUnits());  }
+    world.define("units", itsCurrentWC->worldAxisUnits());  }
 
   mouseRegion.defineRecord("pixel", pixel);
   mouseRegion.defineRecord("linear", linear);
@@ -165,7 +165,7 @@ void QtRTRegion::doubleClicked(Int x, Int y) {
    //cout << "wldOk=" << wldOk << endl;
    //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
    Vector<String> unit;
-   unit = wch->worldAxisUnits();
+   unit = itsCurrentWC->worldAxisUnits();
    //cout << "units=(" << unit(0) << ", " << unit(1) << ")" <<  endl;
    unit.resize(2, true);
    //cout << "units=" << unit <<  endl;
@@ -310,7 +310,7 @@ Bool QtELRegion::getMouseRegion(Record& mouseRegion,
   linear.define("x", lx);  linear.define("y", ly);
   if(wldOk) {
     world.define("x", wx);  world.define("y", wy);
-    world.define("units", wch->worldAxisUnits());  }
+    world.define("units", itsCurrentWC->worldAxisUnits());  }
 
   // load the output records
   mouseRegion.defineRecord("pixel", pixel);
@@ -346,7 +346,7 @@ void QtELRegion::doubleClicked(Int x, Int y) {
    //cout << "wldOk=" << wldOk << endl;
    //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
    Vector<String> unit;
-   unit = wch->worldAxisUnits();
+   unit = itsCurrentWC->worldAxisUnits();
    //cout << "units=(" << unit(0) << ", " << unit(1) << ")" <<  endl;
    unit.resize(2, true);
    //cout << "units=" << unit <<  endl;
@@ -459,7 +459,7 @@ Bool QtPTRegion::getMouseRegion(Record& mouseRegion,
   linear.define("x", lx);  linear.define("y", ly);
   if(wldOk) { 
     world.define("x", wx);  world.define("y", wy);
-    world.define("units", wch->worldAxisUnits());  }
+    world.define("units", itsCurrentWC->worldAxisUnits());  }
 
   mouseRegion.defineRecord("pixel", pixel);
   mouseRegion.defineRecord("linear", linear);
@@ -507,7 +507,7 @@ void QtPTRegion::doubleClicked(Int x, Int y) {
    //cout << "wldOk=" << wldOk << endl;
    //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
    Vector<String> units;
-   units = wch->worldAxisUnits();
+   units = itsCurrentWC->worldAxisUnits();
    //cout << "units=(" << units(0) << ", " << units(1) << ")" <<  endl;
    units.resize(2, true);
 

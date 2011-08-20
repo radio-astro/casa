@@ -28,6 +28,7 @@
 #ifndef TRIALDISPLAY_WORLDCANVAS_H
 #define TRIALDISPLAY_WORLDCANVAS_H
 
+#include <list>
 #include <casa/aips.h>
 #include <casa/Containers/List.h>
 #include <casa/Arrays/Matrix.h>
@@ -54,7 +55,7 @@ class WCResampleHandler;
 class WCDataScaleHandler;
 class WCPGFilter;
 class CoordinateSystem;
-
+class DisplayData;
 
 // <summary> 
 // Implementation of drawing in world coordinates on top of a PixelCanvas.
@@ -974,6 +975,56 @@ public:
   // </group>
   
 
+  // Install a single restriction, or a buffer of restrictions, on the
+  // WorldCanvas which DisplayData must match in order that they
+  // be allowed to draw themselves.
+  // <group>
+  void setRestriction(const Attribute& restriction);
+  void setRestrictions(const AttributeBuffer& resBuff);
+  // </group>
+
+  // Check if a named restriction exists.
+  const Bool existRestriction(const String& name) const;
+  
+  // Remove the named restriction, or all restrictions, from the
+  // WorldCanvas.
+  // <group>
+  void removeRestriction(const String& restrictionName);
+  void removeRestrictions();
+  // </group>
+  
+  // Determine whether the restrictions installed on the
+  // WorldCanvas match the given restriction or buffer of
+  // restrictions.
+  // <group>
+  Bool matchesRestriction(const Attribute& restriction) const;
+  Bool matchesRestrictions(const AttributeBuffer& buffer) const;
+  // </group>
+ 
+  // Return the buffer of restrictions installed on this
+  // WorldCanvas.
+  const AttributeBuffer *restrictionBuffer() const;
+  // convienience function based on "restriction buffer"...
+  int zIndex( ) const;
+
+  // The DD in charge of setting WC coordinate state (0 if none).
+  const DisplayData *csMaster() const { return itsCSmaster;  }
+  DisplayData *&csMaster() { return itsCSmaster;  }
+
+  // Is the specified DisplayData the one in charge of WC state?
+  // (During DD::sizeControl() execution, it means instead that the
+  // DD has permission to become CSmaster, if it can).
+  Bool isCSmaster(const DisplayData *dd) const {
+    return dd==csMaster() && dd!=0;  }
+    
+  // Return the names and units of the world coordinate axes.
+  // <group>
+  virtual Vector<String> worldAxisNames();
+  virtual Vector<String> worldAxisUnits();
+  // </group>
+
+  const std::list<DisplayData*> &displaylist( ) const;
+
  private:
 
   // Support for construction.
@@ -1259,11 +1310,26 @@ public:
   // finished -- that type of call is equivalent to 'new ColorIndexedImage_'.
   ColorIndexedImage_* getClearedColorIndexedImage(void* drawObj=0);
 
-  
+  // A buffer to contain the restrictions that DisplayDatas must match
+  // if they are to be allowed to draw themselves.
+  AttributeBuffer itsRestrictions;
 
+  
+  // [First] responder to 'sizeControl', responsible for setting
+  // WC CS, zoom window and draw area.  It will be 0 initially, and
+  // whenever the old master is unregistered (until a new master responds).
+  // This is a further attempt toward a coherent sense of 'who's in charge'
+  // of WC[H] state (there is more to do).
+  //
+  // Some day, the WC CS should be directly responsible for all the Canvas's
+  // coordinate conversions.  For now at least we'll know that they're done
+  // by the DD below (which should be equivalent).
+  DisplayData* itsCSmaster;
+  
   // itsId & itsRef used to ensure thread-safe execution of pgplot
  
   uInt itsId; // id of wc instance
+
 
   // WorldCanvas::refresh is a recursive function. itsRef is used to
   // determine when the recursion is over. i.e, when the initial

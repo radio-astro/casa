@@ -83,6 +83,7 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   void mousePressEvent(QMouseEvent* e);
   void mouseReleaseEvent(QMouseEvent* e);
   void keyPressEvent(QKeyEvent* e ); 
+  void enterEvent( QEvent* e );
   // </group>
   
   Bool cache_label_and_axis;
