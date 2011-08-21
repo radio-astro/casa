@@ -389,7 +389,10 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 
     
 
-void QtDisplayPanel::resetRTRegion()  { rtregion_->reset();  }
+void QtDisplayPanel::resetRTRegion()  {
+    if ( rtregion_ ) rtregion_->reset();
+    if ( ortregion_ ) ortregion_->reset();
+}
 
 void QtDisplayPanel::resetETRegion()  { elregion_->reset();  }
 
