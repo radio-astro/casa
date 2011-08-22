@@ -21,6 +21,7 @@ import sets
 import commands
 import pylab as pl
 import datetime
+import string
 
 # profile generation:
 import time
@@ -44,8 +45,7 @@ known_releases = ["CASA Version 2.3.0 (build #6654)",
 
 exclude_host = ['el4tst','el4tst64b',
                 'ub8tst','ub8tst64b',
-                'fc8tst','fc8tst64b', 'fc8tst.cv.nrao.edu',
-                'onager','ballista' ]
+                'fc8tst','fc8tst64b', 'fc8tst.cv.nrao.edu','onager','ballista' ]
 exclude_test = {}
 exclude_test['pointing_regression'] = ["CASA Version 2.4.0 (build #8115)"]
 same_version_per_host = False # if False, the latest run for each test is reported
@@ -1076,19 +1076,19 @@ class report:
                         if log.has_key('image_x'):
                             f.write('<pre>')
                             f.write('On image    \n  optimized coord:\n   [%g,%g]\n  FWHM: %.6f\n\nfit #1\n  optimized coord:\n   [%g,%g]\n  FWHM: %g \n\n' %
-                                    (float(log['image_x']),
-                                     float(log['image_y']),
-                                     float(log['image_fwhm']),
-                                     float(log['image_fit1_x']),
-                                     float(log['image_fit1_y']),
-                                     float(log['image_fit1_fwhm'])))
+                                    (float(string.replace(string.replace(log['image_x'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['image_y'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['image_fwhm'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['image_fit1_x'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['image_fit1_y'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['image_fit1_fwhm'], '[', ''), ']', ''))))
                             f.write('On Template \n  optimized coord:\n   [%g,%g]\n  FWHM: %.6f\n\nfit #1\n  optimized coord:\n   [%g,%g]\n  FWHM: %g \n'%
-                                    (float(log['ref_x']),
-                                     float(log['ref_y']),
-                                     float(log['ref_fwhm']),
-                                     float(log['ref_fit1_x']),
-                                     float(log['ref_fit1_y']),
-                                     float(log['ref_fit1_fwhm'])))
+                                    (float(string.replace(string.replace(log['ref_x'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['ref_y'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['ref_fwhm'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['ref_fit1_x'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['ref_fit1_y'], '[', ''), ']', '')),
+                                     float(string.replace(string.replace(log['ref_fit1_fwhm'], '[', ''), ']', ''))))
                             f.write('</pre>')
                     elif log['type'] == 'pol1' or \
                          log['type'] == 'pol2' or \
