@@ -77,7 +77,7 @@ SolvableVisCal::SolvableVisCal(VisSet& vs) :
   tInterpType_(""),
   fInterpType_(""),
   spwMap_(vs.numberSpw(),-1),
-  refant_(-1),
+  urefantlist_(1,-1),
   minblperant_(4),
   solved_(False),
   apmode_(""),
@@ -131,7 +131,7 @@ SolvableVisCal::SolvableVisCal(const Int& nAnt) :
   tInterpType_(""),
   fInterpType_(""),
   spwMap_(1,-1),
-  refant_(-1),
+  urefantlist_(1,-1),
   minblperant_(4),
   solved_(False),
   apmode_(""),
@@ -964,7 +964,8 @@ void SolvableVisCal::setSolve() {
   if (prtlev()>2) cout << "SVC::setSolve()" << endl;
 
   interval()=10.0;
-  refant()=-1;
+  urefantlist_.resize(1);
+  urefantlist_(0)=-1;
   apmode()="AP";
   calTableName()="<none>";
   solnorm()=False;
@@ -1045,9 +1046,10 @@ void SolvableVisCal::setSolve(const Record& solve)
   if (solve.isDefined("preavg"))
     preavg()=solve.asFloat("preavg");
 
-  if (solve.isDefined("refant"))
-    refant()=solve.asInt("refant");
-
+  if (solve.isDefined("refant")) {
+    refantlist().resize();
+    refantlist()=solve.asArrayInt("refant");
+  }
   if (solve.isDefined("minblperant"))
     minblperant()=solve.asInt("minblperant");
 
@@ -1108,15 +1110,14 @@ String SolvableVisCal::solveinfo() {
 
   // Get the refant name from the MS
   String refantName("none");
-  /*
   if (refant()>-1) {
-    MeasurementSet ms(msName());
-    MSAntennaColumns mscol(ms.antenna());
-    refantName=mscol.name()(refant());
+    refantName="";
+    Int nra=refantlist().nelements();
+    for (Int i=0;i<nra;++i) {
+      refantName+=csmi.getAntName(refantlist()(i));
+      if (i<nra-1) refantName+=",";
+    }
   }
-  */
-  if (refant()>-1)
-      refantName=csmi.getAntName(refant());
 
   ostringstream o;
   o << boolalpha
@@ -1139,7 +1140,7 @@ void SolvableVisCal::setAccumulate(VisSet& vs,
 				   const String& table,
 				   const String& select,
 				   const Double& t,
-				   const Int& refAnt) {
+				   const Int&) {
 
   LogMessage message(LogOrigin("SolvableVisCal","setAccumulate"));
 
@@ -2243,7 +2244,7 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
 }
 
 Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb, 
-				   const Int& fieldId) {
+				   const Int&) {
 
   if (prtlev()>2) cout << "SVC::syncSolveMeta(,,)" << endl;
 
@@ -2586,7 +2587,7 @@ Bool SolvableVisCal::verifyForSolve(VisBuffer& vb) {
     
 }
 
-void SolvableVisCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
+void SolvableVisCal::selfGatherAndSolve(VisSet&, VisEquation&) {
     
   if (useGenericGatherForSolve())
     throw(AipsError("Spurious call to selfGatherAndSolve() with useGenericGatherForSolve()=T."));
@@ -2594,7 +2595,7 @@ void SolvableVisCal::selfGatherAndSolve(VisSet& vs, VisEquation& ve) {
     throw(AipsError("Attempt to call un-implemented selfGatherAndSolve()"));
 
 }
-void SolvableVisCal::selfSolveOne(VisBuffGroupAcc& vbga) {
+void SolvableVisCal::selfSolveOne(VisBuffGroupAcc&) {
     
   if (useGenericSolveOne())
     throw(AipsError("Spurious call to selfSolveOne() with useGenericSolveOne()=T."));
@@ -2986,6 +2987,7 @@ void SolvableVisCal::stateSVC(const Bool& doVC) {
   cout << "  fInterpType() = " << fInterpType() << endl;
   cout << "  spwMap() = " << spwMap() << endl;
   cout << "  refant() = " << refant() << endl;
+  cout << "  refantlist() = " << refantlist() << endl;
   
   cout << "  solveCPar().shape()   = " << solveCPar().shape() 
        << " (" << solveCPar().data() << ")" << endl;
@@ -3337,8 +3339,8 @@ void SolvableVisMueller::calcAllDiffMueller() {
 
 }
 
-void SolvableVisMueller::calcOneDiffMueller(Matrix<Complex>& mat, 
-					    const Vector<Complex>& par) {
+void SolvableVisMueller::calcOneDiffMueller(Matrix<Complex>&, 
+					    const Vector<Complex>&) {
 
   if (prtlev()>10) cout << "        SVM::calcOneDiffMueller()" << endl;
 
@@ -4169,8 +4171,8 @@ void SolvableVisJones::calcAllDiffJones() {
 
 }
 
-void SolvableVisJones::calcOneDiffJones(Matrix<Complex>& mat, 
-					const Vector<Complex>& par) {
+void SolvableVisJones::calcOneDiffJones(Matrix<Complex>&, 
+					const Vector<Complex>&) {
 
   if (prtlev()>10) cout << "        SVJ::calcOneDiffJones()" << endl;
 
@@ -4238,7 +4240,7 @@ void SolvableVisJones::stateSVJ(const Bool& doVC) {
 void SolvableVisJones::globalPostSolveTinker() {
 
   // Re-reference the phase, if requested
-  if (refant()>-1) applyRefAnt();
+  if (refantlist()(0)>-1) applyRefAnt();
 
   // Apply more general post-solve stuff
   SolvableVisCal::globalPostSolveTinker();
@@ -4251,36 +4253,73 @@ void SolvableVisJones::applyRefAnt() {
   // 1. Synchronize refant changes on par axis
   // 2. Implement minimum mean deviation algorithm
 
-  if (refant()<0) 
+  if (refantlist()(0)<0) 
     throw(AipsError("No refant specified."));
 
-  // Get the refant name from the nMS
-  String refantName("none");
-  /*
-  MeasurementSet ms(msName());
-  MSAntennaColumns msantcol(ms.antenna());
-  refantName=msantcol.name()(refant());
-  */
-  refantName=csmi.getAntName(refant());
+  Int nUserRefant=refantlist().nelements();
+
+  // Get the preferred refant names from the MS
+  String refantName(csmi.getAntName(refantlist()(0)));
+  if (nUserRefant>1) {
+    refantName+=" (";
+    for (Int i=1;i<nUserRefant;++i) {
+      refantName+=csmi.getAntName(refantlist()(i));
+      if (i<nUserRefant-1) refantName+=",";
+    }
+    refantName+=")";
+  }
 
   logSink() << "Applying refant: " << refantName
 	    << LogIO::POST;
-  // , optimizing phase continuity even if refant sometimes missing." 
 
-  Bool newway(True);
+  // Generate a prioritized refant choice list
+  //  The first entry in this list is the user's primary refant,
+  //   the second entry is the refant used on the previous interval,
+  //   and the rest is a prioritized list of alternate refants,
+  //   starting with the user's secondary (if provided) refants,
+  //   followed by the rest of the array, in distance order.   This
+  //   makes the priorities correct all the time, and prevents
+  //   a semi-stochastic alternation (by preferring the last-used
+  //   alternate, even if nominally higher-priority refants become
+  //   available)
 
-  // Use ANTENNA-table-ordered refant list if user's choice bad
-  //  The first two entries in this list are the user's refant,
-  //   and the one that was used on the previous interval.  This
-  //   makes the priorities correct all the time.
-  Vector<Int> refantlist(nAnt()+2);
-  indgen(refantlist);
-  refantlist-=2;
-  refantlist(0)=refantlist(1)=refant();
+  // Extract antenna positions
+  Matrix<Double> xyz;
+  {
+    MeasurementSet ms(msName());
+    MSAntennaColumns msant(ms.antenna());
+    msant.position().getColumn(xyz);
+  }
+  // Calculate (squared) antenna distances, relative
+  //  to last preferred antenna
+  Vector<Double> dist2(xyz.ncolumn(),0.0);
+  for (Int i=0;i<3;++i) {
+    Vector<Double> row=xyz.row(i);
+    row-=row(refantlist()(nUserRefant-1));
+    dist2+=square(row);
+  }
+  // Move preferred antennas to a large distance
+  for (Int i=0;i<nUserRefant;++i)
+    dist2(refantlist()(i))=DBL_MAX;
+
+  // Generated sorted index
+  Vector<uInt> ord;
+  genSort(ord,dist2);
+
+  // Assemble the whole choices list
+  Vector<Int> refantchoices(nUserRefant+1+ord.nelements(),0);
+  Vector<Int> r(refantchoices(IPosition(1,nUserRefant+1),IPosition(1,refantchoices.nelements()-1)));
+  convertArray(r,ord);
+
+  // set first two to primary preferred refant
+  refantchoices(0)=refantchoices(1)=refantlist()(0);
+
+  // set user's secondary refants (if any)
+  if (nUserRefant>1) 
+    refantchoices(IPosition(1,2),IPosition(1,nUserRefant))=
+      refantlist()(IPosition(1,1),IPosition(1,nUserRefant-1));
 
   Bool usedaltrefant(False);
-
-  //  cout << "refantlist = " << refantlist << endl;
 
   for (Int ispw=0;ispw<nSpw();++ispw) {
 
@@ -4319,8 +4358,8 @@ void SolvableVisJones::applyRefAnt() {
 	  IPosition trc1(4,ipar,ichan,nAnt()-1,ord(0));
 	  if (ntrue(sok(blc1,trc1))>0) {
 	    
-	    while ( iref<(nAnt()+2) &&
-		    !sok(IPosition(4,ipar,ichan,refantlist(iref),ord(0))) ) {
+	    while ( iref<(nAnt()+nUserRefant+1) &&
+		    !sok(IPosition(4,ipar,ichan,refantchoices(iref),ord(0))) ) {
 	      ++iref;
 	    }
 	    
@@ -4329,7 +4368,7 @@ void SolvableVisJones::applyRefAnt() {
 	      
 	      if (iref>0) usedaltrefant=True;
 	      
-	      Int currrefant=refantlist(iref);
+	      Int currrefant=refantchoices(iref);
 
 	      // Only report if using an alternate refant
 	      if (currrefant!=lastrefant && iref>0) {
@@ -4386,9 +4425,7 @@ void SolvableVisJones::applyRefAnt() {
 	
 	// Only if time-dep referencing required....
 	if (cs().nTime(ispw) > 1) {
-	  
-	if (newway) {
-	    
+	  	    
           Int islot0(0);
           Int islot1(0);
 
@@ -4419,8 +4456,8 @@ void SolvableVisJones::applyRefAnt() {
 		
 		iref=0;
 		while ( iref<(nAnt()+2) &&
-			(!sok(IPosition(4,ipar,ichan,refantlist(iref),ord(islot0))) ||
-			 !sok(IPosition(4,ipar,ichan,refantlist(iref),ord(islot1))))   ) {
+			(!sok(IPosition(4,ipar,ichan,refantchoices(iref),ord(islot0))) ||
+			 !sok(IPosition(4,ipar,ichan,refantchoices(iref),ord(islot1))))   ) {
 		  ++iref;
 		}
 		
@@ -4429,7 +4466,7 @@ void SolvableVisJones::applyRefAnt() {
 		  
 		  if (iref>0) usedaltrefant=True;
 		  
-		  currrefant=refantlist(iref);
+		  currrefant=refantchoices(iref);
   
 		  // Only report if using an alternate refant
 		  if (currrefant!=lastrefant && iref>0) {
@@ -4452,7 +4489,7 @@ void SolvableVisJones::applyRefAnt() {
 		  lastrefant=currrefant;
 		  
 		  // 2nd priority refant on next iteration is the one used this iteration
-		  refantlist(1)=currrefant;
+		  refantchoices(1)=currrefant;
 		  
 		  Complex &r0=sol(IPosition(4,ipar,ichan,currrefant,ord(islot0)));
 		  Complex &r1=sol(IPosition(4,ipar,ichan,currrefant,ord(islot1)));
@@ -4529,125 +4566,6 @@ void SolvableVisJones::applyRefAnt() {
 	    }
 	    
 	  } // islot0<nslots
-	  }
-	  else {
-
-	  // This is the old way (out of time order)
-
-	  IPosition blc(3,ipar,ichan,0);
-	  IPosition trc(3,ipar,ichan,nAnt()-1);
-
-	  ArrayIterator<Complex> sol(cs().par(ispw),3);
-	  ArrayIterator<Bool> sOk(cs().parOK(ispw),3);
-
-	  Int islot(0);
-	  
-	  // Advance to first slot that has some good solutions
-	  while (ntrue(sOk.array()(blc,trc))<1 &&
-		 !sol.pastEnd()) {
-	    sol.next();
-	    sOk.next();
-	    islot++;
-	  }
-
-	  // Arrays for referencing slices
-	  Cube<Complex> s0, s1;
-	  Cube<Bool> ok0, ok1;
-
-	  // We are at the initial "prior" solution
-	  s0.reference(sol.array());
-	  ok0.reference(sOk.array());
-	  
-	  // Nominally, first solution to adjust is the next one
-	  sol.next();
-	  sOk.next();
-	  islot++;
-	
-	  Complex rph(1.0);
-	  Int lastiref(-1);
-	  while (!sol.pastEnd()) {
-	
-	    // Do referencing if current slot has any good solutions
-	    if (ntrue(sOk.array()(blc,trc))>0) {
-	      
-	      // The current solution
-	      s1.reference(sol.array());
-	      ok1.reference(sOk.array());
-
-	      // Find first refant this and prev slot have in common
-	      Int iref=0;
-	      while ( iref<(nAnt()+1) &&
-		      (!ok0(ipar,ichan,refantlist(iref)) || 
-		       !ok1(ipar,ichan,refantlist(iref)))  ) iref++;
-
-	      if (iref>nAnt())
-		cout << "No antenna overlap..." << endl;
-	      else {
-		// found a refant, use it
-
-		if (iref!=lastiref)
-		  cout << "Using refant id=" << refantlist(iref) << " at "
-		       << MVTime(cs().time(ispw)(islot)/C::day).string(MVTime::YMD,7) << " "
-		       << "(islot=" << islot 
-		       << ", Spw=" << ispw 
-		       << ", Fld=" << cs().fieldId(ispw)(islot)
-		       << ", ipar=" << ipar 
-		       << ")" << endl;
-
-		lastiref=iref;
-	    
-	      		
-		Complex &r0=s0(ipar,ichan,refantlist(iref));
-		Complex &r1=s1(ipar,ichan,refantlist(iref));
-
-		//		cout << arg(r0)*180.0/C::pi << " "
-		//		     << arg(r1)*180.0/C::pi << " ";
-
-		
-		// If we can calculate a meaningful ref phasor, do it
-		if (abs(r0)>0.0f && abs(r1)>0.0f) {
-		  
-		  rph=r1/r0;
-		  rph/=abs(rph);
-		  
-		  //		  cout << "(" << arg(rph)*180.0/C::pi << ") ";
-
-
-		  /*
-		    cout << islot << " " << ichan << " " << ipar << " "
-		    << " refant = " << refantlist(iref) << " ph="
-		    << arg(rph)*180.0/C::pi 
-		    << endl;
-		  */
-		  
-		  // Adjust each good ant by this phasor
-		  for (Int iant=0;iant<nAnt();++iant) 
-		    if (ok1(ipar,ichan,iant))
-		      s1(ipar,ichan,iant)/=rph;
-
-		  //		  cout << " --> " << arg(r1)*180.0/C::pi << endl;
-
-		} // non-zero reference amps
-		else 
-		  cout << "Bad referencing phasors." << endl;
-
-
-	      } // refant ok
-
-	      // This slot is now basis for referencing the next one 
-	      s0.reference(s1);
-	      ok0.reference(ok1);
-	      
-	    } // a good interval
-
-	    // Advance to next solution
-	    islot++;
-	    sol.next();
-	    sOk.next();
-
-	  } // !pastEnd
-	  
-	  } // newway
 
 	} // nTime>1
 	

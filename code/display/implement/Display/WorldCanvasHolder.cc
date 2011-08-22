@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructors and destructors:
 WorldCanvasHolder::WorldCanvasHolder(WorldCanvas *wCanvas) :
-  itsWorldCanvas(wCanvas), itsCSmaster(0), itsLastCSmaster(0) {
+  itsWorldCanvas(wCanvas), itsLastCSmaster(0) {
   // Register this as an event handler for the WorldCanvas.
   itsWorldCanvas->addRefreshEventHandler(*this);
   itsWorldCanvas->addMotionEventHandler(*this);
@@ -65,7 +65,6 @@ WorldCanvasHolder::WorldCanvasHolder(WorldCanvas *wCanvas) :
 }
 
 WorldCanvasHolder::~WorldCanvasHolder() {
-  itsCSmaster = 0;
   // remove all displaydatas
   
   worldCanvas()->hold();
@@ -96,7 +95,7 @@ void WorldCanvasHolder::addDisplayData(DisplayData *dData) {
   // and add the new displayData
   itsDisplayList.push_back(dData);
 
-  if(csMaster()==0) executeSizeControl(worldCanvas());
+  if(worldCanvas()->csMaster()==0) executeSizeControl(worldCanvas());
 	// If the new DD can assume the CS master role, let it set up
 	// WC state immediately, since there is no master at present.
   worldCanvas()->release();
@@ -107,7 +106,7 @@ void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
   worldCanvas()->hold();
   std::list <DisplayData*>::iterator pos = find( itsDisplayList.begin(), itsDisplayList.end(), &dData );
   if ( pos != itsDisplayList.end() ) {
-    if(csMaster()==&dData) itsCSmaster=0;		// CS master removed.
+    if(worldCanvas()->isCSmaster(&dData)) worldCanvas()->csMaster() = 0;		// CS master removed.
     itsDisplayList.erase(pos);
     // Notify DisplayData
     dData.notifyUnregister(*this, ignoreRefresh);
@@ -121,35 +120,6 @@ void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
 
 const uInt WorldCanvasHolder::nDisplayDatas() const {
   return itsDisplayList.size();
-}
-
-
-// Adding, removing and querying restrictions
-void WorldCanvasHolder::setRestriction(const Attribute &restriction) {
-  itsRestrictions.set(restriction);
-}
-void WorldCanvasHolder::setRestrictions(const AttributeBuffer &resBuff) {
-  itsRestrictions.set(resBuff);
-}
-const Bool WorldCanvasHolder::existRestriction(const String &name) const {
-  return itsRestrictions.exists(name);
-}
-void WorldCanvasHolder::removeRestriction(const String &restrictionName) {
-  itsRestrictions.remove(restrictionName);
-}
-void WorldCanvasHolder::removeRestrictions() {
-  itsRestrictions.clear();
-}
-Bool WorldCanvasHolder::matchesRestriction(const Attribute 
-					   &restriction) const {
-  return itsRestrictions.matches(restriction);
-}
-Bool WorldCanvasHolder::matchesRestrictions(const AttributeBuffer 
-					    &buffer) const {
-  return itsRestrictions.matches(buffer);
-}
-const AttributeBuffer *WorldCanvasHolder::restrictionBuffer() const {
-  return &itsRestrictions;
 }
 
 // Refreshing the WorldCanvas
@@ -287,8 +257,8 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
   
   // Give current CS master (if any) the chance to remain master
   // (it will probably do so).
-  Bool masterFound = itsCSmaster!=0 && 
-		     itsCSmaster->sizeControl(*this, sizeControlAtts);
+  Bool masterFound = worldCanvas()->csMaster() !=0 && 
+	worldCanvas()->csMaster()->sizeControl(*this, sizeControlAtts);
 
   // Even if master role is already taken, all sizeControl routines are still
   // executed, to give give the DDs a chance to do minor adjustments (to
@@ -299,8 +269,8 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
   for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
 	iter != itsDisplayList.end(); ++iter ) {
     if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
-    if ( *iter == itsCSmaster ) continue;	// (already given the chance).
-    if ( ! masterFound ) itsCSmaster = *iter;	// (This assignment does not
+    if ( worldCanvas()->isCSmaster(*iter) ) continue;	// (already given the chance).
+    if ( ! masterFound ) worldCanvas()->csMaster() = *iter;	// (This assignment does not
 		// yet confirm the CS master; it only indicates an offer
 		// at this stage.  But setting itsCSmaster here also puts the
 		// dd in charge, at least temporarily, of any WC coordinate
@@ -317,7 +287,7 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
     // any old axis codes; next master will set them to suit itself.
     // Assure that the zoom window is reset when a DD _does_ accept CS master.
         
-    itsCSmaster = 0;
+    worldCanvas()->csMaster() = 0;
     
     String xAxis = "xaxiscode (required match)",
            yAxis = "yaxiscode (required match)";
@@ -331,7 +301,7 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
     itsWorldCanvas->removeAttribute(zoomT);  }	  // meaningful anymore.
 
 
-  itsLastCSmaster = itsCSmaster;
+  itsLastCSmaster = worldCanvas()->csMaster( );
 	// (Used during the next call to this routine, when the _next_
 	// CS master does sizeControl and wants to determine whether it
 	// (or anyone) wasCSmaster()).
@@ -347,7 +317,7 @@ Bool WorldCanvasHolder::syncCSmaster(const WorldCanvasHolder* wch) {
 	iter != itsDisplayList.end(); ++iter ) {
     if ( ! (*iter)->isDisplayable( ) ) continue; // not displayable
     if ( *iter == wch->csMaster()) {
-      itsCSmaster = *iter;
+      worldCanvas()->csMaster() = *iter;
       executeSizeControl(worldCanvas());
 	// Makes sure the new master sets up WC state immediately.
       return True;
@@ -411,7 +381,7 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	    conforms[dd] = False;
 	    continue;
 	} else {
-	    conforms[dd] = (*iter)->conformsTo(*this);
+	    conforms[dd] = (*iter)->conformsTo(*wc);
 	}
   }
 
@@ -538,27 +508,13 @@ void WorldCanvasHolder::handleEvent(DisplayEvent& ev) {
 
 Bool WorldCanvasHolder::linToWorld(Vector<Double> &world,
 				   const Vector<Double> &lin) {
-  return (itsCSmaster!=0)?  itsCSmaster->linToWorld(world, lin) : False;  }
+  return (worldCanvas()->csMaster()  != 0) ?  worldCanvas()->csMaster()->linToWorld(world, lin) : False;  }
 
 
 Bool WorldCanvasHolder::worldToLin(Vector<Double> &lin,
 				   const Vector<Double> &world) {
-  return (itsCSmaster!=0)? itsCSmaster->worldToLin(lin, world) : False;  }
+  return (worldCanvas()->csMaster() != 0) ? worldCanvas()->csMaster()->worldToLin(lin, world) : False;  }
 
-
-Vector<String> WorldCanvasHolder::worldAxisNames() {
-  Vector<String> axisNames;
-  if (itsCSmaster!=0) axisNames = itsCSmaster->worldAxisNames();
-  return axisNames;  }
-
-  
-Vector<String> WorldCanvasHolder::worldAxisUnits() {
-  Vector<String> axisUnits;
-  if (itsCSmaster!=0) axisUnits = itsCSmaster->worldAxisUnits();
-  return axisUnits;  }
-
-  
-    
   
 const uInt WorldCanvasHolder::nelements() {
   // Returns the maximum animation frames of all registered DDs
@@ -577,7 +533,7 @@ const uInt WorldCanvasHolder::nelements() {
 
 	if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
 
-	if ( itsCSmaster == 0 || isCSmaster(*iter) || (*iter)->conformsToCS(*this) ) {
+	if ( worldCanvas()->csMaster( ) == 0 || worldCanvas()->isCSmaster(*iter) || (*iter)->conformsToCS(*worldCanvas()) ) {
 	    maxNelements = max(maxNelements, (*iter)->nelements());
 	}
   }

@@ -706,6 +706,20 @@ void DisplayData::setAttributeOnPrimaryWCHs(Attribute &at) {
   }
 }
 
+const WorldCanvasHolder *DisplayData::findHolder(const WorldCanvas *wCanvas) const {
+  ConstListIter<WorldCanvasHolder*> it(&itsWCHList);
+  WorldCanvasHolder *tholder = 0;
+  it.toStart();
+  while (!it.atEnd() && !tholder) {
+    tholder = it.getRight();
+    if (tholder->worldCanvas() != wCanvas) {
+      tholder = 0;
+      it++;
+    }
+  }
+  return tholder;
+}
+
 WorldCanvasHolder *DisplayData::findHolder(const WorldCanvas *wCanvas) {
   ConstListIter<WorldCanvasHolder*> it(&itsWCHList);
   WorldCanvasHolder *tholder = 0;

@@ -690,7 +690,7 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("solint", TpString);
   solveparDesc.addField ("preavg", TpDouble);
   solveparDesc.addField ("apmode", TpString);
-  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("refant", TpArrayInt);
   solveparDesc.addField ("minblperant", TpInt);
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
@@ -710,7 +710,7 @@ Bool Calibrater::setsolve (const String& type,
   String upmode=apmode;
   upmode.upcase();
   solvepar.define ("apmode", upmode);
-  solvepar.define ("refant", getRefantIdx(refant));
+  solvepar.define ("refant", getRefantIdxList(refant));
   solvepar.define ("minblperant", minblperant);
   solvepar.define ("table", table);
   solvepar.define ("append", append);
@@ -807,7 +807,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solveparDesc.addField ("solnorm", TpBool);
     solveparDesc.addField ("maskcenter", TpInt);
     solveparDesc.addField ("maskedge", TpFloat);
-    solveparDesc.addField ("refant", TpInt);
+    solveparDesc.addField ("refant", TpArrayInt);
 
     //    solveparDesc.addField ("preavg", TpDouble);
     //    solveparDesc.addField ("phaseonly", TpBool);
@@ -825,7 +825,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solvepar.define ("solnorm", solnorm);
     solvepar.define ("maskcenter", maskcenter);
     solvepar.define ("maskedge", maskedge);
-    solvepar.define ("refant", getRefantIdx(refant));
+    solvepar.define ("refant", getRefantIdxList(refant));
 
 
     //    solvepar.define ("t", t);
@@ -894,7 +894,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
   solveparDesc.addField ("apmode", TpString);
   solveparDesc.addField ("splinetime", TpDouble);
   solveparDesc.addField ("preavg", TpDouble);
-  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("refant", TpArrayInt);
   solveparDesc.addField ("numpoint", TpInt);
   solveparDesc.addField ("phasewrap", TpDouble);
   
@@ -907,7 +907,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
   solvepar.define ("apmode", upMode);
   solvepar.define ("splinetime",splinetime);
   solvepar.define ("preavg", preavg);
-  solvepar.define ("refant", getRefantIdx(refant));
+  solvepar.define ("refant", getRefantIdxList(refant));
   solvepar.define ("numpoint",numpoint);
   solvepar.define ("phasewrap",phasewrap);
   
@@ -2982,18 +2982,32 @@ void Calibrater::selectChannel(const String& mode,
   
 }
 
+// Parse refant specification
+Vector<Int> Calibrater::getRefantIdxList(const String& refant) {
 
-// Interpret refant *index*
-Int Calibrater::getRefantIdx(const String& refant) {
-  Int irefant(-1);
-  if (refant.length()!=0) {
+  Vector<Int> irefant;
+  if (refant.length()==0) {
+    // Nothing specified, return -1 in single-element vector
+    irefant.resize(1);
+    irefant(0)=-1;
+  }
+  else {
+    // parse the specification
     MSSelection msselect;
     msselect.setAntennaExpr(refant);
-    Vector<Int> ant1list=msselect.getAntenna1List(mssel_p);
-    irefant= max(ant1list);  // is this right?
+    Vector<Int> iref=msselect.getAntenna1List(mssel_p);
+    if (anyLT(iref,0))
+      cout << "Negated selection (via '!') not yet implemented for refant," << endl << " and will be ignored." << endl;
+    irefant=iref(iref>-1).getCompressedArray();
+    if (irefant.nelements()==0) {
+      irefant.resize(1);
+      irefant(0)=-1;
+    }
   }
+
   return irefant;
 }
+
 
 // Interpret refant *index*
 Vector<Int> Calibrater::getAntIdx(const String& antenna) {

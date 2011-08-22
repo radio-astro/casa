@@ -26,6 +26,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtAutoGui/QtGuiEntry.qo.h
   implement/QtPlotter/QtCanvas.qo.h
   implement/QtPlotter/QtMWCTools.qo.h
+  implement/QtPlotter/QtOldMWCTools.qo.h
   implement/QtPlotter/QtPlotter.qo.h
   implement/QtPlotter/QtProfile.qo.h
   implement/QtPlotter/QtDrawCanvas.qo.h
@@ -47,6 +48,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtLELEdit.qo.h
   implement/QtViewer/QtMouseToolBar.qo.h
   implement/QtViewer/QtMouseTools.qo.h
+  implement/QtViewer/QtOldMouseTools.qo.h
   implement/QtViewer/QtMouseToolState.qo.h
   implement/QtViewer/QtPixelCanvas.qo.h
   implement/QtViewer/QtRegionManager.qo.h
@@ -58,6 +60,12 @@ qt4_wrap_cpp( outfiles_qoh
   implement/RegionShapes/QtRegionShapeManager.qo.h
   implement/RegionShapes/QtSingleRegionShape.qo.h
   implement/RegionShapes/RSUtils.qo.h
+  implement/region/QtRegion.qo.h
+  implement/region/QtRectangle.qo.h
+  implement/region/QtRegionSource.qo.h
+  implement/region/QtRegionDock.qo.h
+  implement/region/QtRegionState.qo.h
+  implement/region/QtRegionStats.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -83,6 +91,9 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/RegionShapes/QtRSFileLoader.ui
   implement/RegionShapes/QtRSFileSaver.ui
   implement/RegionShapes/QtSingleRegionShape.ui
+  implement/region/QtRegionDock.ui
+  implement/region/QtRegionState.ui
+  implement/region/QtRegionStats.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc implement/QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )
@@ -186,6 +197,8 @@ casa_add_library( display
   implement/DisplayEvents/MWCPTRegion.cc
   implement/DisplayEvents/MWCEllipseTool.cc
   implement/DisplayEvents/MWCRectTool.cc
+  implement/DisplayEvents/MultiRectTool.cc
+  implement/DisplayEvents/MultiRectToolImpl.cc
   implement/DisplayEvents/MWCETRegion.cc
   implement/DisplayEvents/MWCRTRegion.cc
   implement/DisplayEvents/MWCRTZoomer.cc
@@ -278,6 +291,7 @@ casa_add_library( display
   implement/QtAutoGui/QtXmlRecord.cc
   implement/QtPlotter/QtCanvas.cc
   implement/QtPlotter/QtMWCTools.cc
+  implement/QtPlotter/QtOldMWCTools.cc
   implement/QtPlotter/QtPlotSettings.cc
   implement/QtPlotter/QtPlotter.cc
   implement/QtPlotter/QtProfile.cc
@@ -298,6 +312,7 @@ casa_add_library( display
   implement/QtViewer/QtDisplayPanelGui.cc
   implement/QtViewer/QtMouseToolBar.cc
   implement/QtViewer/QtMouseTools.cc
+  implement/QtViewer/QtOldMouseTools.cc
   implement/QtViewer/QtMouseToolState.cc
   implement/QtViewer/QtPCColorTable.cc
   implement/QtViewer/QtPixelCanvas.cc
@@ -319,6 +334,16 @@ casa_add_library( display
   implement/Utilities/DlHandle.cc
   implement/Utilities/DlTarget.cc
   implement/Utilities/Lowlevel.cc
+  implement/region/QtRegion.cc
+  implement/region/QtRectangle.cc
+  implement/region/RegionSource.cc
+  implement/region/QtRegionSource.cc
+  implement/region/QtRegionSourceFactory.cc
+  implement/region/QtRegionDock.cc
+  implement/region/QtRegionState.cc
+  implement/region/QtRegionStats.cc
+  implement/region/Rectangle.cc
+  implement/region/Region.cc
   )
 
 casa_add_executable( display casaplotter apps/casaplotter/casaplotter.cc )

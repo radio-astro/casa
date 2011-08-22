@@ -36,12 +36,12 @@
 #include <display/DisplayCanvas/WCSizeControlHandler.h>
 #include <display/DisplayCanvas/WCCoordinateHandler.h>
 #include <display/Display/AttributeBuffer.h>
+#include <display/Display/WorldCanvas.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 class Attribute;
 class DisplayData;
-class WorldCanvas;
 class String;
 
 // <summary>
@@ -113,31 +113,31 @@ class WorldCanvasHolder : public WCRefreshEH,
   // WorldCanvasHolder which DisplayData must match in order that they
   // be allowed to draw themselves.
   // <group>
-  virtual void setRestriction(const Attribute& restriction);
-  virtual void setRestrictions(const AttributeBuffer& resBuff);
+  void setRestriction(const Attribute& restriction) { itsWorldCanvas->setRestriction(restriction); }
+  void setRestrictions(const AttributeBuffer& resBuff) { itsWorldCanvas->setRestrictions(resBuff); } 
   // </group>
 
   // Check if a named restriction exists.
-  virtual const Bool existRestriction(const String& name) const;
+  const Bool existRestriction(const String& name) const { return itsWorldCanvas->existRestriction(name); }
   
   // Remove the named restriction, or all restrictions, from the
   // WorldCanvasHolder.
   // <group>
-  virtual void removeRestriction(const String& restrictionNAme);
-  virtual void removeRestrictions();
+  void removeRestriction(const String& restrictionName) { itsWorldCanvas->removeRestriction(restrictionName); }
+  void removeRestrictions() { itsWorldCanvas->removeRestrictions( ); }
   // </group>
   
   // Determine whether the restrictions installed on the
   // WorldCanvasHolder match the given restriction or buffer of
   // restrictions.
   // <group>
-  virtual Bool matchesRestriction(const Attribute& restriction) const;
-  virtual Bool matchesRestrictions(const AttributeBuffer& buffer) const;
+  Bool matchesRestriction(const Attribute& restriction) const { return itsWorldCanvas->matchesRestriction(restriction); }
+  Bool matchesRestrictions(const AttributeBuffer& buffer) const { return itsWorldCanvas->matchesRestrictions(buffer); }
   // </group>
  
   // Return the buffer of restrictions installed on this
   // WorldCanvasHolder.
-  virtual const AttributeBuffer *restrictionBuffer() const;
+  const AttributeBuffer *restrictionBuffer() const { return itsWorldCanvas->restrictionBuffer( ); }
   
   // Invoke a refresh on the WorldCanvas, ie. this is a shorthand for
   // WorldCanvasHolder->worldCanvas()->refresh(reason);.
@@ -184,12 +184,6 @@ class WorldCanvasHolder : public WCRefreshEH,
     return WCCoordinateHandler::worldToLin(lin, failures, world);  }
   // </group> 
 
-  // Return the names and units of the world coordinate axes.
-  // <group>
-  virtual Vector<String> worldAxisNames();
-  virtual Vector<String> worldAxisUnits();
-  // </group>
-
   // Return the number of world axes, which is hard-wired to 2.
   virtual uInt nWorldAxes() const {
     return 2;
@@ -204,22 +198,21 @@ class WorldCanvasHolder : public WCRefreshEH,
   virtual void cleanup();
   
   // The DD in charge of setting WC coordinate state (0 if none).
-  virtual const DisplayData* csMaster() const { return itsCSmaster;  }
+  const DisplayData* csMaster() const { return itsWorldCanvas->csMaster( ); }
 
   // Is the specified DisplayData the one in charge of WC state?
   // (During DD::sizeControl() execution, it means instead that the
   // DD has permission to become CSmaster, if it can).
-  virtual Bool isCSmaster(const DisplayData *dd) const {
-    return dd==csMaster() && dd!=0;  }
+  Bool isCSmaster(const DisplayData *dd) const { return itsWorldCanvas->isCSmaster(dd); }
     
   // Was the passed DD the last CS master (or, if no DD passed, was
   // there any CS master)?  For convenience of the DDs during the next
   // sizeControl execution, in determining whether a CS master change is
   // occurring, and whether anyone was master before.  This affects
   // whether any old zoom window is retained or completely reset.
-  virtual Bool wasCSmaster(DisplayData* dd=0) const { 
+  Bool wasCSmaster(DisplayData* dd=0) const { 
     return (dd==0)? itsLastCSmaster!=0 : itsLastCSmaster==dd;  }
-    
+
   // used by PanelDisplay on new WCHs to keep a consistent CS master on
   // all its main display WC[H]s.  Sets [default] CS master dd to that of
   // passed wch (if that dd is registered here), and gets it to reset WC
@@ -237,20 +230,6 @@ private:
   // A list containing the DisplayDatas that are registered on this
   // WorldCanvasHolder.
   std::list<DisplayData*> itsDisplayList;
-  // A buffer to contain the restrictions that DisplayDatas must match
-  // if they are to be allowed to draw themselves.
-  AttributeBuffer itsRestrictions;
-  
-  // [First] responder to 'sizeControl', responsible for setting
-  // WC CS, zoom window and draw area.  It will be 0 initially, and
-  // whenever the old master is unregistered (until a new master responds).
-  // This is a further attempt toward a coherent sense of 'who's in charge'
-  // of WC[H] state (there is more to do).
-  //
-  // Some day, the WC CS should be directly responsible for all the Canvas's
-  // coordinate conversions.  For now at least we'll know that they're done
-  // by the DD below (which should be equivalent).
-  DisplayData* itsCSmaster;
   
   // The CS master in effect after executeSizeControl was last run (0 if none).
   // For determining (via wasCSmaster(), above) whether a CS master change is
@@ -261,8 +240,8 @@ private:
   // time it is used).
   void* itsLastCSmaster;
 
-};
 
+};
 
 } //# NAMESPACE CASA - END
 

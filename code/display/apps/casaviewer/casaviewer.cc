@@ -153,10 +153,14 @@ int main( int argc, const char *argv[] ) {
 	if(narg>3) arg3     = args[3];
 #endif
 
-
 	// Workaround for python task's "empty parameter" disability....
 	if(filename==".") filename="";
 
+	if ( filename != "" && filename[0] == '-' && filename[1] == '-' ) {
+	    struct stat statbuf;
+	    if ( stat( filename.c_str( ), &statbuf ) == -1 ) { filename = ""; }
+	}
+	  
 	// Pass along the remaining arguments to QtViewer...
 	// instead of littering the ctor arguments...
 	std::list<std::string> stdargs;
@@ -374,6 +378,34 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	    args[numargs++] = strdup(argv[x]);
     }
     args[numargs] = 0;
+
+    std::list<char*> files;
+    std::list<char*> others;
+    std::list<char*> flags;
+    struct stat statbuf;
+    for ( int x = 1; x < numargs; ++x ) {
+	if ( ! stat( args[x], &statbuf ) ) {
+	    files.push_back(args[x]);
+	} else if ( args[x][0] == '-' && args[x][1] == '-' ) {
+	    flags.push_back(args[x]);
+	} else {
+	    others.push_back(args[x]);
+	}
+    }
+
+    int offset = 1;
+    for ( std::list<char*>::iterator iter = files.begin( );
+	  iter != files.end( ); ++iter ) {
+	args[offset++] = *iter;
+    }
+    for ( std::list<char*>::iterator iter = others.begin( );
+	  iter != others.end( ); ++iter ) {
+	args[offset++] = *iter;
+    }
+    for ( std::list<char*>::iterator iter = flags.begin( );
+	  iter != flags.end( ); ++iter ) {
+	args[offset++] = *iter;
+    }
 }
 
 void start_manager_root( const char *origname, int numargs, char **args, const char *dbusname,

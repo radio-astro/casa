@@ -125,6 +125,9 @@ class WCCSAxisLabeller : public WCAxisLabeller {
     if(uibase==0 || uibase==1) uiBase_ = uibase;  }
   // </group>
  
+
+  const String &spectralunitStr( ) const { return itsSpectralUnit; }
+
  
  protected:
   Bool itsAbsolute;

@@ -98,6 +98,7 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
   String dataType() const { return "image"; }
   // Get image analyis about object...
   virtual ImageAnalysis *imageanalysis( ) const;
+  ImageInterface<Float> *imageinterface( );
 
 
   // left as pure virtual for implementation in concrete class

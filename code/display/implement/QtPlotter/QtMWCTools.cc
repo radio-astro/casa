@@ -102,7 +102,7 @@ void QtEllipseTool::setCoordType(const String& t) {
 }
 
 //////////////rect tool//////////////////
-QtRectTool::QtRectTool(PanelDisplay *pd) : QtRTRegion(pd) 
+QtRectTool::QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtRTRegion(rf,pd) 
 {
   setObjectName("RectTool"); 
 }

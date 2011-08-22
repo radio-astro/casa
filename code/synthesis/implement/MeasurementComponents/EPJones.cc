@@ -225,9 +225,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (solve.isDefined("preavg"))
       preavg()=solve.asFloat("preavg");
     
-    if (solve.isDefined("refant"))
-      refant()=solve.asInt("refant");
-    
+    if (solve.isDefined("refant")) {
+      refantlist().resize();
+      refantlist()=solve.asArrayInt("refant");
+    }
+
     if (solve.isDefined("phaseonly"))
       if (solve.asBool("phaseonly"))
 	apmode()="phaseonly";

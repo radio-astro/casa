@@ -1157,6 +1157,9 @@ uInt QtPixelCanvas::dlKeyMods_(QMouseEvent* e) {
   return kmods;  }
 
   
+void QtPixelCanvas::enterEvent( QEvent* e ) {
+  setFocus(Qt::MouseFocusReason);
+}
   
 void QtPixelCanvas::mouseMoveEvent(QMouseEvent* e ) {
   callMotionEventHandlers(e->x(), q_(e->y()), dlKeyMods_(e));  }

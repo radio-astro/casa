@@ -55,6 +55,7 @@ class WCMotionEvent;
 class WCRefreshEvent;
 class Record;
 class ImageAnalysis;
+template <class T> class ImageInterface;
 
 // <summary> 
 // Base class for display objects.
@@ -418,14 +419,13 @@ public:
   // for purposes of drawing or event handling.
   // <group>
   virtual Bool conformsTo(const WorldCanvas *wCanvas) {
-    WorldCanvasHolder *wch = findHolder(wCanvas);
     rstrsConformed_ = csConformed_ = zIndexConformed_ = False;
-    return (wch!=0 && conformsTo(*wch));  }
+    return (wCanvas!=0 && conformsTo(*wCanvas));  }
  
-  virtual Bool conformsTo(const WorldCanvasHolder& wch) {
-    conformsToRstrs(wch);
-    conformsToCS(wch);
-    conformsToZIndex(wch);
+  virtual Bool conformsTo(const WorldCanvas& wc) {
+    conformsToRstrs(wc);
+    conformsToCS(wc);
+    conformsToZIndex(wc);
     return conformed();  }
   // </group>
 
@@ -433,15 +433,15 @@ public:
   // on the given WCH.  (Note: this will include blink index, if any,
   // but _not_ zIndex.  zIndex is an individual DM restriction, not an
   // overall DD restriction).
-  virtual Bool conformsToRstrs(const WorldCanvasHolder& wch) {
-    rstrsConformed_ = wch.matchesRestrictions(restrictions);
+  virtual Bool conformsToRstrs(const WorldCanvas& wc) {
+    rstrsConformed_ = wc.matchesRestrictions(restrictions);
     return rstrsConformed_;  }
 
   // Determine whether DD is compatible with the WC[H]'s current
   // world coordinates.  Derived DDs can override according to their
   // individual capabilities (PADD and ACDD match axis codes).
   // Overriding DDs should set csConformed_ to the value returned.
-  virtual Bool conformsToCS(const WorldCanvasHolder& wch) {
+  virtual Bool conformsToCS(const WorldCanvas& wc) {
     csConformed_ = True;
     return csConformed_;  }
 
@@ -450,9 +450,9 @@ public:
   // within the current number of DD animation frames).
   // (Generally, DDs should probably override setActiveZIndex_()
   // rather than this method).
-  virtual Bool conformsToZIndex(const WorldCanvasHolder& wch) {
+  virtual Bool conformsToZIndex(const WorldCanvas& wc) {
     Int zindex = 0;	// (default in case no zIndex exists).
-    const AttributeBuffer *rstrs = wch.restrictionBuffer();
+    const AttributeBuffer *rstrs = wc.restrictionBuffer();
     if (rstrs->exists("zIndex")) rstrs->getValue("zIndex",zindex);
     return setActiveZIndex_(zindex);  }
     
@@ -461,8 +461,8 @@ public:
   // just prior (and has returned a True result).  Those calls make
   // wch the 'active' one; zIndex varies from one wch to another.
   // You can pass a wch, which will force a call to conformsToZIndex(wch).
-  virtual Int activeZIndex(const WorldCanvasHolder* wch=0) {
-    if(wch!=0) conformsToZIndex(*wch);
+  virtual Int activeZIndex(const WorldCanvas* wc=0) {
+    if(wc!=0) conformsToZIndex(*wc);
     return activeZIndex_;  }
 
   
@@ -603,11 +603,13 @@ public:
   // "DisplayData" this function will return null...
   // Use dataType() to check...
   virtual ImageAnalysis *imageanalysis( ) const { return 0; }
+  virtual ImageInterface<Float> *imageinterface( ) { return 0; }
 
   // Identify the WorldCanvasHolder for the given WorldCanvas.  Return
   // <src>0</src> if the DisplayData does not know of a
   // WorldCanvasHolder for the WorldCanvas.
-  virtual WorldCanvasHolder *findHolder(const WorldCanvas *wCanvas);
+  const WorldCanvasHolder *findHolder(const WorldCanvas *wCanvas) const;
+  WorldCanvasHolder *findHolder(const WorldCanvas *wCanvas);
 
   // Return a sorted Block of all animation frame numbers currently set
   // onto all WCHs where this DD is registered.

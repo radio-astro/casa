@@ -51,9 +51,11 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		   qsm_(0), qst_(0),
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
-		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr) {
+		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
+		   regionDock_(0) {
     
     setWindowTitle("Viewer Display Panel");
+    bool use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
     if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {
@@ -63,10 +65,21 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     if ( tpos != "bottom" && tpos != "right" && tpos != "left" && tpos != "top" ) {
 	rc.put( "viewer." + rcid() + ".position.cursor_tracking", "bottom" );
     }
+    std::string rpos = rc.get("viewer." + rcid() + ".position.regions");
+    if ( rpos != "bottom" && rpos != "right" && rpos != "left" && rpos != "top" ) {
+	rc.put( "viewer." + rcid() + ".position.regions", "bottom" );
+    }
+
+    if ( use_new_regions ) {
+	// -----
+	// This must be created here, because the process of (a) constructing a QtDisplayPanel,
+	// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
+	// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
+	regionDock_  = new viewer::QtRegionDock();
+    }
 
     qdp_ = new QtDisplayPanel(this,0,args);
-//  qdo_ = new QtDataOptionsPanel(this,);
-
+//  qdo_ = new QtDataOptionsPanel(this);
   
     setCentralWidget(qdp_);
   
@@ -239,6 +252,18 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// versa.  Also note: technically, the _layout_ is not the child
 	// widget's 'parent'.
 
+
+
+//  ------------------------------------------------------------------------------------------
+    if ( regionDock_ ) {
+	std::string rgnloc = rc.get("viewer." + rcid() + ".position.regions");
+	addDockWidget( rgnloc == "right" ? Qt::RightDockWidgetArea :
+			rgnloc == "left" ? Qt::LeftDockWidgetArea :
+			rgnloc == "top" ? Qt::TopDockWidgetArea :
+			Qt::BottomDockWidgetArea, regionDock_, Qt::Vertical );
+    }
+
+#if 0   
     if ( trackloc == "right" && animloc == "right" && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
 	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
     } else if ( trackloc == "left" && animloc == "left" && rc.get("viewer." + rcid() + ".leftdock") == "tabbed" ) {
@@ -248,6 +273,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     } else if ( trackloc == "bottom" && animloc == "bottom" && rc.get("viewer." + rcid() + ".bottomdock") == "tabbed" ) {
 	tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
     }
+#endif
+
+//  ------------------------------------------------------------------------------------------
    
     // (This was going to be used for tracking....  May still be useful for
     // additions, or perhaps they should be in central widget, above QtPC).
@@ -512,6 +540,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //## docking changes
     connect( trkgDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(trackingMoved(Qt::DockWidgetArea)) );
     connect( animDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(animatorMoved(Qt::DockWidgetArea)) );
+    if ( regionDock_ ) connect( regionDock_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(regionMoved(Qt::DockWidgetArea)) );
 #if QT_VERSION >= 0x040600
     connect( mouseToolBar_, SIGNAL(topLevelChanged(bool)), SLOT(mousetoolbarMoved(bool)) );
 #endif
@@ -1035,6 +1064,18 @@ void QtDisplayPanelGui::animatorMoved(Qt::DockWidgetArea area) {
 	rc.put( "viewer." + rcid() + ".position.animator", "left" );
     } else if ( area == Qt::TopDockWidgetArea ) {
 	rc.put( "viewer." + rcid() + ".position.animator", "top" );
+    }
+}
+
+void QtDisplayPanelGui::regionMoved(Qt::DockWidgetArea area) {
+    if ( area == Qt::RightDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.regions", "right" );
+    } else if ( area == Qt::BottomDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.regions", "bottom" );
+    } else if ( area == Qt::LeftDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.regions", "left" );
+    } else if ( area == Qt::TopDockWidgetArea ) {
+	rc.put( "viewer." + rcid() + ".position.regions", "top" );
     }
 }
 

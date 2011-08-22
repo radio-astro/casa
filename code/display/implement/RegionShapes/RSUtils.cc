@@ -114,7 +114,7 @@ bool RSUtils::worldToPixel(const Quantum<Vector<double> >& worldX,
     if(pixelY.size() != worldY.getValue().size())
         pixelY.resize(worldY.getValue().size());
     
-    const Vector<String>& units = wch.worldAxisUnits();
+    const Vector<String>& units = wch.worldCanvas()->worldAxisUnits();
     const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
     MDirection::Types wcSys = worldSystem(cs);
     
@@ -187,7 +187,7 @@ bool RSUtils::pixelToWorld(const Vector<double>& pixelX,
     if(pixelY.size() != worldY.getValue().size())
         worldY.getValue().resize(pixelY.size());
     
-    const Vector<String>& units = wch.worldAxisUnits();
+    const Vector<String>& units = wch.worldCanvas()->worldAxisUnits();
     const CoordinateSystem& cs = wch.worldCanvas()->coordinateSystem();
     MDirection::Types wcSys = worldSystem(cs);
     
@@ -260,7 +260,7 @@ bool RSUtils::worldToLinear(const Quantum<Vector<double> >& worldX,
     if(linearY.size() != worldY.getValue().size())
         linearY.resize(worldY.getValue().size());
 
-    const Vector<String>& units = wch.worldAxisUnits();
+    const Vector<String>& units = wch.worldCanvas()->worldAxisUnits();
     Quantum<Vector<Double> > world(Vector<Double>(2), units(0));
     Vector<Double> linear(2);
 
@@ -526,7 +526,7 @@ bool RSUtils::linearToWorld(const Vector<double>& linearX,
     worldX.setUnit(RegionShape::UNIT);
     worldY.setUnit(RegionShape::UNIT);
     
-    const Vector<String>& units = wch.worldAxisUnits();
+    const Vector<String>& units = wch.worldCanvas()->worldAxisUnits();
     
     Quantum<Vector<double> > world(Vector<double>(2), RegionShape::UNIT);
     Vector<double> linear(2), pixel(2);

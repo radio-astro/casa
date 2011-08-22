@@ -34,6 +34,7 @@
 
 #include <display/Display/PanelDisplay.h>
 #include <display/QtViewer/QtMouseTools.qo.h>
+#include <display/region/RegionSourceFactory.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QObject>
@@ -122,7 +123,7 @@ class QtRectTool: public QtRTRegion,  public QtMWCTool
   Q_OBJECT
 
 public: 
-  QtRectTool(PanelDisplay* pd);
+  QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
   virtual ~QtRectTool() {}
 
 public slots:

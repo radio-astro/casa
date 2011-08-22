@@ -1558,6 +1558,9 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
   itsChanReversed.set(False);
   newSPWIndex_p.clear();
   doSPW_p = False;
+
+  Vector<Bool> foundInDD(otherSpw.nrow(), False);
+
   // loop over the rows of the other data description table
   for (uInt d = 0; d < nDDs; d++) {
     Bool matchedDD = True;
@@ -1566,6 +1569,8 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 		AipsError);
     const uInt otherSpwId = static_cast<uInt>(otherDDCols.spectralWindowId()(d));
     DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
+
+    foundInDD(otherSpwId) = True;
 
     Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
 
@@ -1581,7 +1586,7 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 				  otherFreqs, itsChanReversed[d]);
     
     if (*newSpwPtr < 0) {
-      //      cout << "no counterpart found for other spw " << otherSpwId << endl;
+      //cout << "no counterpart found for other spw " << otherSpwId << endl;
       // need to add a new entry in the SPECTRAL_WINDOW subtable
       *newSpwPtr= spw.nrow();
       spw.addRow();
@@ -1592,10 +1597,10 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       matchedDD = False;
       doSPW_p = True;      
     }
-    //     else{
-    //       cout << "counterpart found for other spw " << otherSpwId 
-    // 	   << " found in this spw " << *newSpwPtr << endl;
-    //     }      
+    //else{
+    //cout << "counterpart found for other spw " << otherSpwId 
+    //	   << " found in this spw " << *newSpwPtr << endl;
+    //}      
     
     DebugAssert(otherDDCols.polarizationId()(d) >= 0 &&
 		otherDDCols.polarizationId()(d) < 
@@ -1646,35 +1651,39 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
   //  not used in the DD table
   for(uInt otherSpwId=0; otherSpwId<otherSpw.nrow(); otherSpwId++){
 
-    DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
-    Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
+    if(!foundInDD(otherSpwId)){ // not already processed above
 
-    if(otherSpwCols.totalBandwidthQuant()(otherSpwId).getValue(Unit("Hz"))<=0.){
-      os << LogIO::WARN << "Negative or zero total bandwidth in SPW " 
-	 << otherSpwId << " of MS to be appended." << LogIO::POST;
-    }
-    Bool chanReversed = False;
+      DebugAssert(otherSpwCols.numChan()(otherSpwId) > 0, AipsError);    
+      Vector<Double> otherFreqs = otherSpwCols.chanFreq()(otherSpwId);
 
-    Int newSpwId = spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
-				    static_cast<uInt>(otherSpwCols.numChan()(otherSpwId)),
-				    otherSpwCols.totalBandwidthQuant()(otherSpwId),
-				    otherSpwCols.ifConvChain()(otherSpwId), freqTol, 
-				    otherFreqs, chanReversed);
+      if(otherSpwCols.totalBandwidthQuant()(otherSpwId).getValue(Unit("Hz"))<=0.){
+	os << LogIO::WARN << "Negative or zero total bandwidth in SPW " 
+	   << otherSpwId << " of MS to be appended." << LogIO::POST;
+      }
+      Bool chanReversed = False;
+
+      Int newSpwId = spwCols.matchSpw(otherSpwCols.refFrequencyMeas()(otherSpwId),
+				      static_cast<uInt>(otherSpwCols.numChan()(otherSpwId)),
+				      otherSpwCols.totalBandwidthQuant()(otherSpwId),
+				      otherSpwCols.ifConvChain()(otherSpwId), freqTol, 
+				      otherFreqs, chanReversed);
     
-    if (newSpwId < 0) {
-      //      cout << "Second iteration: no counterpart found for other spw " << otherSpwId << endl;
-      // need to add a new entry in the SPECTRAL_WINDOW subtable
-      newSpwId = spw.nrow();
-      spw.addRow();
-      spwRow.putMatchingFields(newSpwId, otherSpwRow.get(otherSpwId));
-      // fill map to be used by updateSource()
-      newSPWIndex_p.define(otherSpwId, newSpwId); 
-      doSPW_p = True;      
-    }
-    //     else{
-    //       cout << "Second iteration: counterpart found for other spw " << otherSpwId 
-    //            << " found in this spw " << newSpwId << endl;
-    //     }    
+      if (newSpwId < 0) {
+	//cout << "Second iteration: no counterpart found for other spw " << otherSpwId << endl;
+	// need to add a new entry in the SPECTRAL_WINDOW subtable
+	newSpwId = spw.nrow();
+	spw.addRow();
+	spwRow.putMatchingFields(newSpwId, otherSpwRow.get(otherSpwId));
+	// fill map to be used by updateSource()
+	newSPWIndex_p.define(otherSpwId, newSpwId); 
+	doSPW_p = True;      
+      }
+      //else{
+      //cout << "Second iteration: counterpart found for other spw " << otherSpwId 
+      //     << " found in this spw " << newSpwId << endl;
+      //}
+    
+    } // endif
     
   }
 

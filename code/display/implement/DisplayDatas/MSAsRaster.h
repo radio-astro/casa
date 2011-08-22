@@ -174,8 +174,8 @@ class MSAsRaster: public ActiveCaching2dDD {
   // Otherwise they will not respond.  Multiple MSARs on one canvas
   // (blinking, etc.) is not supported, because of possible confusion
   // about which one(s) should respond to flagging edits.
-  virtual Bool conformsToCS(const WorldCanvasHolder& wch) {
-    csConformed_ = wch.isCSmaster(this);
+  virtual Bool conformsToCS(const WorldCanvas& wc) {
+    csConformed_ = wc.isCSmaster(this);
     return csConformed_;  }
 
   // Format the data value at the given world position.

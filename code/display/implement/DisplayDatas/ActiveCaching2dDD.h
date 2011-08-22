@@ -111,7 +111,7 @@ class ActiveCaching2dDD : public CachingDisplayData {
   
   // Determine whether DD can draw on the current coordinate system
   // of the given WC[H].
-  virtual Bool conformsToCS(const WorldCanvasHolder& wch);
+  virtual Bool conformsToCS(const WorldCanvas& wc);
 
   // Tidy up the elements of this DisplayData.
   virtual void cleanup();  
