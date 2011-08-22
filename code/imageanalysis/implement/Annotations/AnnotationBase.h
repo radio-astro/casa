@@ -113,7 +113,7 @@ public:
 	static const uInt DEFAULT_SYMBOLSIZE;
 	static const uInt DEFAULT_SYMBOLTHICKNESS;
 	static const String DEFAULT_FONT;
-	static const String DEFAULT_FONTSIZE;
+	static const uInt DEFAULT_FONTSIZE;
 	static const FontStyle DEFAULT_FONTSTYLE;
 	static const Bool DEFAULT_USETEX;
 
@@ -163,9 +163,9 @@ public:
 
 	String getFont() const;
 
-	void setFontSize(const String& fontsize);
+	void setFontSize(const uInt fontsize);
 
-	String getFontSize() const;
+	uInt getFontSize() const;
 
 	void setFontStyle(const FontStyle& fontstyle);
 
@@ -249,10 +249,11 @@ private:
 	MDirection::Types _directionRefFrame;
 	CoordinateSystem _csys;
 	IPosition _directionAxes;
-	String _label, _color, _font, _fontsize;
+	String _label, _color, _font;
 	FontStyle _fontstyle;
 	LineStyle _linestyle;
-	uInt _linewidth, _symbolsize, _symbolthickness;
+	uInt _fontsize, _linewidth, _symbolsize,
+		_symbolthickness;
 	Bool _usetex;
 	Vector<MDirection> _convertedDirections;
 	map<Keyword, Bool> _globals;

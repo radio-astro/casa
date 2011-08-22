@@ -39,7 +39,7 @@ const uInt AnnotationBase::DEFAULT_LINEWIDTH = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLSIZE = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLTHICKNESS = 1;
 const String AnnotationBase::DEFAULT_FONT = "Helvetica";
-const String AnnotationBase::DEFAULT_FONTSIZE = "10pt";
+const uInt AnnotationBase::DEFAULT_FONTSIZE = 10;
 const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = BOLD;
 const Bool AnnotationBase::DEFAULT_USETEX = False;
 
@@ -54,8 +54,8 @@ AnnotationBase::AnnotationBase(
 	const CoordinateSystem& csys
 )
 : _type(type), _csys(csys), _label(DEFAULT_LABEL), _color(DEFAULT_COLOR),
-  _font(DEFAULT_FONT), _fontsize(DEFAULT_FONTSIZE),
-  _fontstyle(DEFAULT_FONTSTYLE), _linestyle(DEFAULT_LINESTYLE),
+  _font(DEFAULT_FONT), _fontstyle(DEFAULT_FONTSTYLE),
+  _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
@@ -80,8 +80,8 @@ AnnotationBase::AnnotationBase(
 	const Type type, const CoordinateSystem& csys
 )
 : _type(type), _csys(csys), _label(DEFAULT_LABEL), _color(DEFAULT_COLOR),
-  _font(DEFAULT_FONT), _fontsize(DEFAULT_FONTSIZE),
-  _fontstyle(DEFAULT_FONTSTYLE), _linestyle(DEFAULT_LINESTYLE),
+  _font(DEFAULT_FONT), _fontstyle(DEFAULT_FONTSTYLE),
+  _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
@@ -161,7 +161,7 @@ void AnnotationBase::_initParams() {
 	_params[SYMTHICK] = String::toString(_symbolthickness);
 	_params[COLOR] = _color;
 	_params[FONT] = _font;
-	_params[FONTSIZE] = _fontsize;
+	_params[FONTSIZE] = String::toString(_fontsize);
 	_params[FONTSTYLE] = fontStyleToString(_fontstyle);
 	_params[USETEX] = _usetex ? "true" : "false";
 	if (! _label.empty()) {
@@ -345,12 +345,12 @@ String AnnotationBase::getFont() const {
 	return _font;
 }
 
-void AnnotationBase::setFontSize(const String& s) {
+void AnnotationBase::setFontSize(const uInt s) {
 	_fontsize = s;
 	_params[FONTSIZE] = String::toString(_fontsize);
 }
 
-String AnnotationBase::getFontSize() const {
+uInt AnnotationBase::getFontSize() const {
 	return _fontsize;
 }
 
