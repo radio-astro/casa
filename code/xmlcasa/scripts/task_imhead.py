@@ -1,4 +1,4 @@
-#!/usr/lib/casapy/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 #######################################################################3
 #  task_imhead.py
