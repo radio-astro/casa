@@ -156,13 +156,13 @@ void AnnotationBase::_init() {
 
 void AnnotationBase::_initParams() {
 	_params[LINEWIDTH] = String::toString(_linewidth);
-	_params[LINESTYLE] = _linestyle;
+	_params[LINESTYLE] = lineStyleToString(_linestyle);
 	_params[SYMSIZE] = String::toString(_symbolsize);
 	_params[SYMTHICK] = String::toString(_symbolthickness);
 	_params[COLOR] = _color;
 	_params[FONT] = _font;
 	_params[FONTSIZE] = _fontsize;
-	_params[FONTSTYLE] = _fontstyle;
+	_params[FONTSTYLE] = fontStyleToString(_fontstyle);
 	_params[USETEX] = _usetex ? "true" : "false";
 	if (! _label.empty()) {
 		_params[LABEL] = _label;
@@ -436,6 +436,12 @@ ostream& AnnotationBase::print(
 	return os;
 }
 
+ostream& AnnotationBase::print(
+	ostream& os, const FontStyle fs
+) {
+	os << fontStyleToString(fs);
+	return os;
+}
 
 ostream& AnnotationBase::print(
 	ostream& os, const map<Keyword, String>& params

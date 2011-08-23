@@ -192,7 +192,10 @@ class MultiWCHolder {
   
   // Clear PC in MWCH's area (not implemented on this level).
   virtual void clear() {  } 
- 
+
+  // Added to collect region statistics from MultiRectTool::update_stats( )...
+  List<DisplayData*> *displayDatas( ) { return &itsDDList; }
+
  protected:
 
   // Copy constructor - construct a new MultiWCHolder from

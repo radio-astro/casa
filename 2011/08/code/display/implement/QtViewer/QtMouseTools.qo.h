@@ -30,7 +30,7 @@
 #define QTMOUSETOOLS_H
 
 #include <casa/aips.h>
-#include <display/DisplayEvents/MWCRTRegion.h>
+#include <display/DisplayEvents/MultiRectToolImpl.h>
 #include <display/DisplayEvents/MWCETRegion.h>
 #include <display/DisplayEvents/MWCPTRegion.h>
 #include <display/Display/PanelDisplay.h>
@@ -68,7 +68,7 @@ class QtMouseTool: public QObject {
 // QtRTRegion is the Rectangle Region mouse tool that sends a signal
 // when a new rectangle is ready.
 // </synopsis>
-class QtRTRegion: public QtMouseTool, public MWCRTRegion {
+class QtRTRegion: public QtMouseTool, public MultiRectToolImpl {
   
   Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
@@ -76,7 +76,7 @@ class QtRTRegion: public QtMouseTool, public MWCRTRegion {
 
  public: 
  
-  QtRTRegion(PanelDisplay* pd) : QtMouseTool(), MWCRTRegion(), pd_(pd) {  }
+  QtRTRegion(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtMouseTool(), MultiRectToolImpl(rf, pd), pd_(pd) {  }
   
   ~QtRTRegion() {  }
   

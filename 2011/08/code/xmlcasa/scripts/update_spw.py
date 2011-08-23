@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 # The above is for running the doctest, not normal use.
 
 """

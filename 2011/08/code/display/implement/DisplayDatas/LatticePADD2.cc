@@ -418,6 +418,16 @@ Bool LatticePADisplayData<Complex>::updateHistogram(Record &rec,
   
   return histOK;  }
 
-      
+template <>
+ImageInterface<Float> *LatticePADisplayData<Complex>::imageinterface( ) {
+    return 0;
+}
+
+template <>
+ImageInterface<Float> *LatticePADisplayData<Float>::imageinterface( ) {
+    return itsBaseImagePtr;
+}
+
+
 } //# NAMESPACE CASA - END
 

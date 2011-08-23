@@ -510,7 +510,7 @@ Bool ActiveCaching2dDD::sizeControl(WorldCanvasHolder &wch,
 }
 
 
-Bool ActiveCaching2dDD::conformsToCS(const WorldCanvasHolder& wch) {
+Bool ActiveCaching2dDD::conformsToCS(const WorldCanvas& wc) {
   // Determine whether DD can draw on the current coordinate system of the
   // given WC[H].  This implementation simply to compares 'axis
   // codes' for equality if they exist on the WC.  (More sophisticated
@@ -518,14 +518,13 @@ Bool ActiveCaching2dDD::conformsToCS(const WorldCanvasHolder& wch) {
   // pixels, as well as the DD's own ability to reproject or transform
   // reference frames, if any).
 
-  WorldCanvas *wc = wch.worldCanvas();
   String xAxis = "xaxiscode (required match)",
          yAxis = "yaxiscode (required match)";
   String xcode, ycode;
   
   return csConformed_ =
-	  (!wc->getAttributeValue(xAxis, xcode) || xcode==codeWorldAxis(0))
-       && (!wc->getAttributeValue(yAxis, ycode) || ycode==codeWorldAxis(1));
+	  (!wc.getAttributeValue(xAxis, xcode) || xcode==codeWorldAxis(0))
+       && (!wc.getAttributeValue(yAxis, ycode) || ycode==codeWorldAxis(1));
 }
 
 

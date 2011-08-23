@@ -43,7 +43,7 @@ namespace casa {
     MDirection::Types wcSys = RSUtils::worldSystem(cs);                       \
                                                                               \
     bool isValid = true;                                                      \
-    const Vector<String>& units = m_lastWCH->worldAxisUnits();                \
+    const Vector<String>& units = m_lastWCH->worldCanvas()->worldAxisUnits(); \
     vector<double> v(n);                                                      \
     Quantum<Vector<double> > q(Vector<double>(2), UNIT);                      \
     Quantum<Vector<double> > qx(Vector<double>(1), UNIT),                     \
@@ -1265,7 +1265,7 @@ void RSPolygon::getPolygonCoordinates(double& centerX, double& centerY,
     MDirection::Types wcSys = RSUtils::worldSystem(cs);                       \
                                                                               \
     bool isValid = true;                                                      \
-    const Vector<String>& units = m_lastWCH->worldAxisUnits();                \
+    const Vector<String>& units = m_lastWCH->worldCanvas()->worldAxisUnits(); \
     vector<double> v(2);                                                      \
     Quantum<Vector<double> > q(Vector<double>(2), UNIT);                      \
     Quantum<Vector<double> > qx(Vector<double>(1), UNIT),                     \
@@ -2847,7 +2847,7 @@ String RSComposite::type() const {
     MDirection::Types wcSys = RSUtils::worldSystem(cs);                       \
                                                                               \
     bool isValid = true;                                                      \
-    const Vector<String>& units = m_lastWCH->worldAxisUnits();                \
+    const Vector<String>& units = m_lastWCH->worldCanvas()->worldAxisUnits(); \
     vector<double> v(3);                                                      \
     Quantum<Vector<double> > q(Vector<double>(2), UNIT);                      \
     Quantum<Vector<double> > qx(Vector<double>(1), UNIT),                     \

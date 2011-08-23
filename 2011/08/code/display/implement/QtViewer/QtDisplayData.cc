@@ -621,7 +621,7 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   // emit optionsChanged() if other option values, limits, etc.
   // should also change as a result.
   // Set emitAll = True if the call was not initiated by the options gui
-  // itself (e.g. via scripting or save-restore); that will assure that
+  // itself (e.g. via scripting or save-restore); that will ensure that
   // the options gui does receive all option updates (via the optionsChanged
   // signal) and updates its user interface accordingly.
   
@@ -821,7 +821,7 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   // 'setanimator' sub-record unless the dd is CS master).
 
   if(emitAll) chgdOpts.merge(opts, Record::SkipDuplicates);
-	// When emitAll==True this assures that the options gui
+	// When emitAll==True this ensures that the options gui
 	// receives all option updates via the optionsChanged
 	// signal, not just internally-generated ones.  For use
 	// when the gui itself didn't initiate the setOptions call.
@@ -1140,7 +1140,7 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
     
     // Check DD applicability to current panel state.
     
-    if(!padd->conformsTo(*wch)) return 0;
+    if(!padd->conformsTo(*wch->worldCanvas())) return 0;
 	// (A side-effect of this is to make the padd->activeZIndex()
 	// call below return a value appropriate to the wch and padd...)
     
@@ -1175,11 +1175,11 @@ ImageRegion* QtDisplayData::mouseToImageRegion(Record mouseRegion,
 	// (padd->fixedPosition() can't be trusted to have the correct
 	// zIndex value on the animation axis; at least, not yet).
     
-    dispAxes.resize(2, True);	// Now assure that dispAxes is restricted
+    dispAxes.resize(2, True);	// Now ensure that dispAxes is restricted
 				// to just the axes on display X and Y,
 				// (for WCPolygon definition, below).
 
-    // unitInit() assures that the special region Unit "pix" is defined.
+    // unitInit() ensures that the special region Unit "pix" is defined.
     // I'm trying to use the WCBox constructor that requires Quanta to
     // be passed to it -- with "pix" units in this case.  I can't wait
     // till _after_ the ctor is called for those units to be defined!...
@@ -1870,7 +1870,7 @@ void QtDisplayData::getInitialAxes_(Block<uInt>& axs, const IPosition& shape,
 			// spectral axis (-1 if none).
   if(cs!=0) {
     
-    // First, assure that a non-degenerate Spectral axis is
+    // First, ensure that a non-degenerate Spectral axis is
     // at least on the animator (if not on display).  (Added 8/06)
     
     for(uInt axno=0; axno<ndim && axno<cs->nWorldAxes(); axno++) {
@@ -1957,7 +1957,7 @@ ImageRegion* QtDisplayData::mouseToImageRegion(
   
   try {  
     
-    if (!padd->conformsTo(*wch)) 
+    if (!padd->conformsTo(*wch->worldCanvas())) 
        return 0;
     
     String regionType = mouseRegion.asString("type");

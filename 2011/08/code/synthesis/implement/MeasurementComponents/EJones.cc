@@ -56,7 +56,8 @@ EGainCurve::EGainCurve(VisSet& vs) :
   VisCal(vs), 
   VisMueller(vs),
   SolvableVisJones(vs),
-  za_()
+  za_(),
+  spwOK_()
 {
   if (prtlev()>2) cout << "EGainCurve::EGainCurve(vs)" << endl;
 
@@ -87,8 +88,15 @@ EGainCurve::EGainCurve(VisSet& vs) :
   Vector<Double> timerange(obscol.timeRange()(0));
   obstime_ = timerange(0);
 
+
   const ROMSSpWindowColumns& spwcol(mscol.spectralWindow());
-  spwfreqs_ = spwcol.refFrequency().getColumn();
+  spwfreqs_.resize(nSpw(),0.0);
+  for (Int ispw=0;ispw<nSpw();++ispw) {
+    Vector<Double> chanfreqs=spwcol.chanFreq()(ispw);
+    spwfreqs_(ispw)=chanfreqs(chanfreqs.nelements()/2);
+  }
+  //  cout << "spwfreqs_ = " << spwfreqs_ << endl;
+
 
 }
 
@@ -97,6 +105,8 @@ EGainCurve::~EGainCurve() {
 }
 
 void EGainCurve::setApply(const Record& applypar) {
+
+  LogMessage message;
 
   // Extract user's table name
   if (applypar.isDefined("table")) {
@@ -116,6 +126,7 @@ void EGainCurve::setApply(const Record& applypar) {
                                  && rawgaintab.col("ETIME") > obstime_);
 
   // ...for each spw:
+  spwOK_.resize(nSpw(),False);  // will set True when we find them
   for (Int ispw=0; ispw<nSpw(); ispw++) {
 
     currSpw()=ispw;
@@ -125,7 +136,7 @@ void EGainCurve::setApply(const Record& applypar) {
                                     && timegaintab.col("EFREQ") > spwfreqs_(ispw));
 
     if (freqgaintab.nrow() > 0) {
-  /*
+    /*
       { ostringstream o;
       o<< "  Found the following gain curve coefficient data" << endl
        << "  for spectral window = "  << ispw << " (ref freq="
@@ -133,7 +144,7 @@ void EGainCurve::setApply(const Record& applypar) {
       message.message(o);
       logSink().post(message);
       }
-  */
+    */
       // Find nominal gain curve
       //  Nominal antenna is named "0" (this is a VLA convention)
       Matrix<Float> nomgain(4,2,0.0);
@@ -166,17 +177,21 @@ void EGainCurve::setApply(const Record& applypar) {
 	  piter.array().nonDegenerate().reform(nomgain.shape())=nomgain;
         }
 
-    /*
+	/*
         { ostringstream o;
           o<< "   Antenna=" << antnames_(iant) << ": "
            << piter.array().nonDegenerate();
           message.message(o);
           logSink().post(message);
         }
-    */
+	*/
       }
 
-    } else {
+      spwOK_(currSpw())=True;
+
+    } 
+    /*
+else {
 
       { ostringstream o;
 	o<< "Could not find gain curve data for Spw="
@@ -186,6 +201,7 @@ void EGainCurve::setApply(const Record& applypar) {
       }
 
     }
+    */
 
   } // ispw
 

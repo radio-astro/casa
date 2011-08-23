@@ -182,7 +182,7 @@ SkyCatOverlayDD::SkyCatOverlayDD(const SkyCatOverlayDD &other) :
 void SkyCatOverlayDD::operator=(const SkyCatOverlayDD &) {
 }
 
-Bool SkyCatOverlayDD::conformsToCS(const WorldCanvasHolder& wch) {
+Bool SkyCatOverlayDD::conformsToCS(const WorldCanvas& wc) {
   // Determine whether DD can draw on the current coordinate system of the
   // given WC[H].  This DD requires two sky coordinates; it tests that
   // direction coordinates are encoded into both axis codes.
@@ -190,14 +190,13 @@ Bool SkyCatOverlayDD::conformsToCS(const WorldCanvasHolder& wch) {
   // (12/04: The whole DD till needs work to function correctly in some
   // cases, such as transposed RA and Dec...).
   
-  WorldCanvas *wc = wch.worldCanvas();
   String xAxis = "xaxiscode (required match)",
          yAxis = "yaxiscode (required match)";
   String xcode, ycode;
   
   return csConformed_  =
-	  wc->getAttributeValue(xAxis, xcode) && xcode.contains("Direction")
-       && wc->getAttributeValue(yAxis, ycode) && ycode.contains("Direction");
+	  wc.getAttributeValue(xAxis, xcode) && xcode.contains("Direction")
+       && wc.getAttributeValue(yAxis, ycode) && ycode.contains("Direction");
 }
 
  

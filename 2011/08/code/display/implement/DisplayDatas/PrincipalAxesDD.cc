@@ -703,7 +703,7 @@ Bool PrincipalAxesDD::sizeControl(WorldCanvasHolder &wch,
   // The next statement assures that the latest zIndex is retrived into
   // these from the wch, where the definitive value is kept). 
   
-  conformsToZIndex(wch);
+  conformsToZIndex(*wCanvas);
   
 
   CoordinateSystem wccs = itsCoordSys;
@@ -1610,8 +1610,9 @@ Bool PrincipalAxesDD::findActiveImage(WorldCanvasHolder &wch) {
   zIndexConformed_ = False;
   activeZIndex_ = 0;
   
-  conformsToRstrs(wch);
-  conformsToCS(wch);
+  WorldCanvas *wCanvas = wch.worldCanvas();
+  conformsToRstrs(*wCanvas);
+  conformsToCS(*wCanvas);
 	// Matches restriction buffers and checks coordinate compatibility
 	// between DD and WC[H].   Note: this _will_ test any new, general
 	// WCH restrictions against those of the DDs (as long as a way is
@@ -1764,6 +1765,10 @@ void PrincipalAxesDD::setDefaultOptions()
 // Set up the default formatting for the SpectralCoordinate (handles km/s or Hz)
 
   setSpectralFormatting (itsPosTrackCoordSys, itsSpectralQuantity, itsSpectralUnit);
+}
+
+const String &PrincipalAxesDD::spectralunitStr( ) const {
+    return static_cast<WCCSNLAxisLabeller*>(itsAxisLabellers[0])->spectralunitStr( );
 }
 
 Bool PrincipalAxesDD::setLabellerOptions(Record &rec, Record &recout)
@@ -2346,7 +2351,7 @@ Bool PrincipalAxesDD::canHaveVelocityUnit (const CoordinateSystem& cSys) const
 }
 
 
-Bool PrincipalAxesDD::conformsToCS(const WorldCanvasHolder& wch) {
+Bool PrincipalAxesDD::conformsToCS(const WorldCanvas &wc) {
   // Is the DD is capable (in its current state) of drawing
   // in the current CoordinateSystem of the WCH's WorldCanvas?
   // This implementation just checks for matching axis codes.
@@ -2356,16 +2361,26 @@ Bool PrincipalAxesDD::conformsToCS(const WorldCanvasHolder& wch) {
   // WCH restrictions, and serves (via setActiveZIndex_()) to inform the
   // DD of the passed WCH's current zIndex value.
 
-  WorldCanvas *wc = wch.worldCanvas();
   String xAxis = "xaxiscode (required match)",
          yAxis = "yaxiscode (required match)";
   String xcode, ycode;
   
   return csConformed_ =
-	  (!wc->getAttributeValue(xAxis, xcode) || xcode==worldAxisCode(0))
-       && (!wc->getAttributeValue(yAxis, ycode) || ycode==worldAxisCode(1));
+	  (!wc.getAttributeValue(xAxis, xcode) || xcode==worldAxisCode(0))
+       && (!wc.getAttributeValue(yAxis, ycode) || ycode==worldAxisCode(1));
 }
 
+const String &PrincipalAxesDD::spectStr( ) const {
+    static String empty("");
+
+    if ( itsAxisLabellers.nelements( ) <=  0 ) return empty;
+
+    WCCSAxisLabeller *lbl = (WCCSAxisLabeller*) itsAxisLabellers[0];
+
+    if ( lbl == 0 ) return empty;
+
+    return lbl->spectralunitStr( );
+}
   
 void PrincipalAxesDD::notifyUnregister(WorldCanvasHolder &wcHolder,
                                        Bool ignoreRefresh) {

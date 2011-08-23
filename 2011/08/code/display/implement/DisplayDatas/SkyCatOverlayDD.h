@@ -138,7 +138,7 @@ class SkyCatOverlayDD : public PassiveTableDD {
 
   // Determine ability to draw, given current canvas coordinate state.
   // This DD requires direction coordinates in both X and Y axis codes.
-  virtual Bool conformsToCS(const WorldCanvasHolder& wch);
+  virtual Bool conformsToCS(const WorldCanvas& wch);
   
 protected:
 

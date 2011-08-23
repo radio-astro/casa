@@ -33,11 +33,14 @@
 #include <casa/Containers/List.h>
 #include <display/QtViewer/QtPixelCanvas.qo.h>
 #include <display/QtViewer/QtMouseTools.qo.h>
+#include <display/QtViewer/QtOldMouseTools.qo.h>
 #include <display/Display/PanelDisplay.h>
 #include <images/Regions/ImageRegion.h>
 #include <display/DisplayEvents/MWCRTZoomer.h>
 #include <display/DisplayEvents/PCPositionEH.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
+#include <display/QtPlotter/QtOldMWCTools.qo.h>
+#include <display/region/QtRegionSourceFactory.h>
 
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
@@ -50,7 +53,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-class String;
 class QtDisplayPanelGui;
 class QtDisplayData;
 class DisplayData;
@@ -755,6 +757,7 @@ public:
   
   //# QtRTRegion* rtregion_;
   QtRectTool* rtregion_;
+  QtOldRectTool* ortregion_;
 
   // ellipse tool
   QtEllipseTool *elregion_;
@@ -762,6 +765,8 @@ public:
   //# MWCPTRegion* ptregion_;
   //# QtPTRegion* ptregion_;
   QtPolyTool* ptregion_;
+
+  viewer::QtRegionSourceFactory *region_source_factory;
 
   MWCPolylineTool* polyline_;
 

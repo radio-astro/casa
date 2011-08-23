@@ -32,7 +32,8 @@
 #include <stdio.h>
 
 namespace casa {
-   namespace memory {
+
+    namespace memory {
 	template <class T> class cptr {
 	    public:
 		cptr( ) : ptr((T*)0) { }
@@ -41,27 +42,44 @@ namespace casa {
 		cptr<T>(cptr<T> *other) : ptr(other->ptr) { }
 		T *operator->( ) { return ptr.val; }
 		T &operator*( ) { return *ptr.val; }
-		cptr<T> &operator=( cptr<T> &other ) { ptr = other.ptr; return *this; }
-		cptr<T> &operator=( T *&optr ) { ptr = optr; optr = 0; return *this; }
+
+		bool isNull( ) const { return ptr.isNull( ); }
+		const cptr<T> &operator=( const cptr<T> &other ) { ptr = other.ptr; return *this; }
+		const cptr<T> &operator=( T *&optr ) { ptr = optr; optr = 0; return *this; }
 		std::string state( ) const {
 		    char buf[128];
 		    sprintf( buf, "0x%lx (%d)", (unsigned long) ptr.val, *ptr.count );
 		    return std::string(buf);
 		}
+		void clear( ) { ptr.clear( ); }
+		unsigned int count( ) const { return *ptr.count; }
+
 	    private:
+		template <class X> friend bool operator==(const cptr<X>&, X*);
+		template <class X> friend bool operator==(X*, const cptr<X>&);
+
 		struct kernel {
 		    T *val;
 		    unsigned int *count;
 		    kernel(T *v) : val(v), count(new unsigned int) { *count = 1u; }
 		    kernel( const kernel &other ) : val(other.val), count(other.count) { *count += 1u; }
 		    ~kernel( ) { release( ); }
-		    void operator=( kernel &other ) { release( ); val = other.val; count = other.count; *count += 1u; }
+		    void operator=( const kernel &other ) {  release( ); val = other.val; count = other.count; *count += 1u; }
 		    void operator=( T *oval ) { release( ); val = oval; count = new unsigned int; *count = 1u; }
-		    void release( ) { if ( --*count == 0u ) { delete val; delete count; } }
+		    void release( ) {  if ( --*count == 0u ) { delete val; delete count; } }
+		    bool isNull( ) const { return val == 0 ? true : false; }
+		    void clear( ) { release( ); val = 0; count = new unsigned int; *count = 1u; }
+		    bool eq( T *x ) const { return val == x; }
 		};
 		kernel ptr;
 	};
-   }
+
+	template<class T> bool operator==( const cptr<T> &l, T *r ) { return l.ptr.eq(r); }
+	template<class T> bool operator==( T *l, const cptr<T> &r ) { return r.ptr.eq(l); }
+    }
+
+    using memory::operator==;
+
 }
 
 #endif

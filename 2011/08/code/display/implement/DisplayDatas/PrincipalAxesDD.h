@@ -100,7 +100,7 @@ class PrincipalAxesDD : public DisplayData {
   
   // Is the DD is capable (in its current state) of drawing
   // in the current CoordinateSystem of the WCH's WorldCanvas?
-  virtual Bool conformsToCS(const WorldCanvasHolder& wch);
+  virtual Bool conformsToCS(const WorldCanvas &wc);
 
   // Miscellaneous information supply routines
   // <group>
@@ -233,6 +233,18 @@ class PrincipalAxesDD : public DisplayData {
 
   virtual void notifyUnregister(WorldCanvasHolder& wcHolder, 
                                 Bool ignoreRefresh = False);
+
+  // allow external functions to translate axes...
+  Int xlatePixelAxes( Int idx ) const { return itsTransPixelAxes[idx]; }
+  const String &xaxisStr( ) const { return itsOptionsXAxis; }
+  const String &yaxisStr( ) const { return itsOptionsYAxis; }
+  const String &zaxisStr( ) const { return itsOptionsZAxis; }
+  const String &spectStr( ) const;
+
+  // Convert list of world axis names to pixel axis names
+   Vector<String> worldToPixelAxisNames (const CoordinateSystem& cSys) const;
+
+   const String &spectralunitStr( ) const;
 
  protected:
 
@@ -419,9 +431,6 @@ class PrincipalAxesDD : public DisplayData {
   void removePixelAxes (CoordinateSystem& cSys,
                         uInt startAxis,
                         const IPosition& fixedPosition);
-
-  // Convert list of world axis names to pixel axis names
-   Vector<String> worldToPixelAxisNames (const CoordinateSystem& cSys) const;
 
 };
  

@@ -124,8 +124,8 @@ class WCCoordinateHandler {
 
   // Routines that give the axes names and the unit.
   // <group>
-  virtual Vector<String> worldAxisNames() = 0;
-  virtual Vector<String> worldAxisUnits() = 0;
+  /* virtual Vector<String> worldAxisNames() = 0; */
+  /* virtual Vector<String> worldAxisUnits() = 0; */
   // </group>
 
   // Destructor
