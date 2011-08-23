@@ -152,20 +152,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 <!--*************************************************************-->
-<!--  predict always reads from $project.skymodel file now -->
+<!--  observe always reads from $project.skymodel file now -->
 
-    <param type="bool" name="predict">
+    <param type="bool" name="observe">
       <description>calculate visibilites using ptgfile</description>
       <value>True</value>
     </param>
 
     <param type="string" name="refdate" subparam="true">
-      <description>date of observation</description>
-      <value>2012/05/21</value>
+      <description>date of observation - not critical unless concatting simulations</description>
+      <value>2014/01/01</value>
     </param>
 
-    <param type="string" name="reftime" subparam="true">
-      <description>time of observation e.g. 22:05:00, or "transit"</description>
+    <param type="string" name="hourangle" subparam="true">
+      <description>hour angle of observation center e.g. -3:00:00, or "transit"</description>
       <value>transit</value>
     </param>
     
@@ -498,7 +498,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	</equals>
       </when>
       <!-- **********************************************************  -->
-      <when param="predict">
+      <when param="observe">
 	<equals type="bool" value="True">
 	  <default param="complist">
 	    <description>optional model componentlist file</description>
@@ -507,7 +507,7 @@ modifying the description doesn't work yet but its an improvement ticket.
 	  <default param="compwidth"><value type="string">2GHz</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
-	  <default param="reftime"><value type="string">transit</value></default>
+	  <default param="hourangle"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
 	  <default param="caldirection"><value type="string"></value></default>
 	  <default param="calflux"><value type="string">1Jy</value></default>
@@ -637,7 +637,7 @@ mosaic simulation task:
          or "0.25PB" to use 1/4 of the primary beam FWHM, or 
          "" will use the primary beam HWHM.
     -------------------------------
-    predict -- calculate visibilities from skymodel (which may have been 
+    observe -- calculate visibilities from skymodel (which may have been 
          modified above, (optionally) complist, and $ptgfile (which 
          may have been generated above)
        * if graphics selected, display the array (like plotants), the uv 
@@ -723,7 +723,7 @@ mosaic simulation task:
          for multiple fields (with Clark PSF calculation in minor cycles).
     vis -- the simulated interferometric MS, or total-power one, or both
        * NOTE: vis='default' will automatically set proper MS name(s) ONLY
-         when either predicting or applying any noise in the same run.
+         when either observing or applying any noise in the same run.
        * you can use '$project' to let the task automatically replace it to
          the project name, e.g., vis='$project.noisy.ms,$project.nosisy.sd.ms'.
     modelimage -- prior (e.g. SD) image to be used in clean
@@ -806,7 +806,7 @@ mosaic simulation task:
     project.quick.psf = psf calculated from uv coverage
     project.ms = noise-free measurement set
     project.noisy.ms = corrupted measurement set 
-    project.predict.png = diagnostic figure of uv coverage and visibilities
+    project.observe.png = diagnostic figure of uv coverage and visibilities
 
     project.image = synthesized image
     project.flux.pbcoverage = promary beam correction for mosaic image

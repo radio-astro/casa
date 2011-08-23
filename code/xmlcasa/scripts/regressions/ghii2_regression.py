@@ -51,7 +51,7 @@ direction="J2000 05h18m48.0s -68d42m00s"
 mapsize="17arcsec"  # input is 16.3, relmargin=0.5
 pointingspacing="4.5arcsec"
 
-predict=True
+observe=True
 complist=project+".cl"
 refdate="2012/06/21/03:25:00"
 antennalist=cfgdir+"alma.out05.cfg"

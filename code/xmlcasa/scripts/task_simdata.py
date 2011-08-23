@@ -13,8 +13,8 @@ def simdata(
     setpointings=None,
     ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
-    predict=None, 
-    refdate=None, reftime=None, complist=None, compwidth=None,
+    observe=None, 
+    refdate=None, hourangle=None, complist=None, compwidth=None,
     totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
@@ -36,6 +36,10 @@ def simdata(
 
     # RI TODO for inbright=unchanged, need to scale input image to jy/pix
     # according to actual units in the input image
+
+    # it was requested to make the user interface "observe" for what is sm.observe and sm.predict
+    # interally the code is clearer if we stick with predict, predict_sd, predict_int so
+    predict=observe
 
     casalog.origin('simdata')
     if verbose: casalog.filter(level="DEBUG2")
@@ -595,14 +599,15 @@ def simdata(
                 z = qq.groups()
                 refdate=z[0]
                 if len(z)>1:
-                    msg("Discarding time part of refdate, "+z[1]+", in favor of reftime parameter = "+reftime)
+                    msg("Discarding time part of refdate, "+z[1]+", in favor of hourangle parameter = "+hourangle)
 
-            if reftime=="transit":
-                refdate=refdate+"/00:00:00"
-                usehourangle=True
+            if hourangle=="transit":
+                haoffset=0.0
             else:
-                refdate=refdate+"/"+reftime
-                usehourangle=False
+                haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+
+            refdate=refdate+"/00:00:00"
+            usehourangle=True
 
 
             if predict_uv: 
@@ -678,6 +683,7 @@ def simdata(
                     sttime = -totalsec/2.0 
                 else:
                     sttime = 0. # leave start at the reftime
+                sttime=sttime+haoffset
                 scanstart=sttime
 
                 while (sttime-scanstart)<totalsec: # the last scan could exceed totaltime
@@ -825,9 +831,10 @@ def simdata(
                 dirs = []
 
                 if usehourangle:
-                    sttime = -totalsec/2.0 
+                    sttime = -totalsec/2.0
                 else:
                     sttime = 0. # leave start at the reftime
+                sttime=sttime+haoffset
 
                 while sttime<totalsec: # the last scan could exceed totaltime
                     endtime = sttime + etime[k % nfld]
