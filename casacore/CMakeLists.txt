@@ -25,11 +25,11 @@ if (NOT CMAKE_CXX_FLAGS)
 ##    set (CMAKE_CXX_FLAGS "-W -Wall -Wpointer-arith -pedantic -Wno-long-long")
     set (CMAKE_CXX_FLAGS "-W -Wall -fno-omit-frame-pointer")
 endif (NOT CMAKE_CXX_FLAGS)
-if( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+if( CMAKE_SYSTEM MATCHES ^Darwin-10 OR CMAKE_SYSTEM MATCHES ^Darwin-11)
 	add_definitions( -DCASA_NOTAPE )
 	set( CMAKE_OSX_ARCHITECTURES x86_64 )
 	#set( CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
-endif(CMAKE_SYSTEM MATCHES ^Darwin-10 )
+endif(CMAKE_SYSTEM MATCHES ^Darwin-10 OR CMAKE_SYSTEM MATCHES ^Darwin-11)
 
 # Set build type if not given.
 if (NOT CMAKE_BUILD_TYPE)
