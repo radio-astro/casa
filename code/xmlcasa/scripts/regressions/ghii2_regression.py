@@ -36,7 +36,6 @@ cl.addcomponent(dir="J2000 05h18m48.586s -68d42m00.05s",flux=0.5,freq="650GHz")
 cl.rename(project+".cl")
 cl.done()
 
-modifymodel=True # but only brightness
 skymodel="30dor.image"
 inbright=".1"
 incell=""

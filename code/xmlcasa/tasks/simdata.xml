@@ -23,54 +23,52 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 
-
-
-
-    <param type="bool" name="modifymodel">
-      <description>modify model image </description>
-      <value type="bool">False</value>
-    </param>
     <!-- all parms default to keep what's in the image, if the param=="" -->
 
-    <param type="string" name="skymodel" subparam='true'>
-      <!-- modifying the description in constraints doesn't work yet -->
-      <description>model image to observe or modify</description>
-      <value type="string">$project.skymodel</value>
+    <param type="string" name="skymodel">
+      <description>model image to observe</description>
+      <value type="string"></value>
     </param>
 
     <param type="string" name="inbright" subparam='true'>
-       <description>scale surface brightness of brightest pixel e.g. "1.2Jy/pixel" or ""</description>
+       <description>scale surface brightness of brightest pixel e.g. "1.2Jy/pixel"</description>
        <value type="string"></value>
     </param>
     <!-- TODO parse Jy/pixel, MJy/Sr, eventually K, etc -->
     <!-- TODO document permitted units in online help -->
 
     <param type="string" name="indirection" subparam="true">
-      <description>"J2000 19h00m00 -40d00m00" or ""</description>
+      <description>set new direction e.g. "J2000 19h00m00 -40d00m00"</description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="incell" subparam='true'>
-      <description>cell/pixel size e.g. "0.1arcsec" or ""</description>
+      <description>set new cell/pixel size e.g. "0.1arcsec"</description>
       <value type="string"></value>
     </param>
     
     <param type="string" name="incenter" subparam="true">
-      <description>frequency of center channel e.g. "89GHz" or ""</description>
+      <description>set new frequency of center channel e.g. "89GHz" (required even for 2D model)</description>
       <value type="string"></value>
     </param>    
 
     <param type="string" name="inwidth" subparam="true">
-      <description>channel width e.g. "10MHz" or ""</description>
+      <description>set new channel width e.g. "10MHz" (required even for 2D model)</description>
       <value type="string"></value>
     </param>
 
-<!--
-    <param type="int" name="innchan" subparam="true">
-      <description>number of channels or 0 to use model image</description>
-      <value>0</value>
+
+
+    <param type="string" name="complist">
+      <description>componentlist to observe</description>
+      <value></value>
     </param>
--->
+
+    <param type="string" name="compwidth" subparam="true">
+      <description>bandwidth of components</description>
+      <value>"8GHz"</value>
+    </param>
+
 
 
 <!--*************************************************************-->
@@ -169,16 +167,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>transit</value>
     </param>
     
-    <param type="string" name="complist" subparam="true">
-      <description>optional componentlist to observe with skymodel</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="compwidth" subparam="true">
-      <description>optional bandwidth if simulating from components only</description>
-      <value>"2GHz"</value>
-    </param>
-
     <param type="string" name="totaltime" subparam="true">
       <description>total time of observation</description>
       <value>7200s</value>
@@ -431,48 +419,28 @@ it'll do them for the same amount of time -->
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <when param="modifymodel">
-	<equals type="bool" value="False">
-	  <default param="skymodel">
-<!--  
-modifying the description doesn't work yet but its an improvement ticket.
-note for help: a symlink will be created from this to $project.model.image
-if that's not the file the user is using.   
--->
-	    <description>model sky image</description>
-	    <value type="string">$project.skymodel</value>
-	  </default>
-	</equals>
-	<!-- ******************** -->
-	<equals type="bool" value="True">
-	  <default param="skymodel">
-<!--  
-modifying the description doesn't work yet but its an improvement ticket.
--->
-	    <description>original model (modified will be $project.skymodel)</description>
-	    <value type="string"></value>
-	  </default>
+      <when param="skymodel">
+	<notequals value="">
 	  <default param="inbright"><value type="string"></value></default>
 	  <default param="indirection">
-	    <description>center of model sky image</description>
 	    <value type="string"></value>
 	  </default>
 	  <default param="incell"><value type="string"></value></default>
 	  <default param="incenter">
-	    <description>center of centerchan; if 1 chan, the freq of the continuum image</description>
+	    <description>set central frequency (required even for 2D image)</description>
 	    <value type="string"></value>
 	  </default>
 	  <default param="inwidth">
-	    <description>chan width or bandwidth of 1-chan (continuum)</description>
+	    <description>set channel width or bandwidth of 2D / continuum image</description>
 	    <value type="string"></value>
 	  </default>
-<!--
-	  <default param="innchan">
-	    <description>1 for continuum</description>
-	    <value>0</value>
-	  </default>
--->
-	</equals>
+	</notequals>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="complist">
+	<notequals value="">
+	  <default param="compwidth"><value type="string">8GHz</value></default>
+	</notequals>
       </when>
       <!-- **********************************************************  -->
       <when param="setpointings">
@@ -500,11 +468,6 @@ modifying the description doesn't work yet but its an improvement ticket.
       <!-- **********************************************************  -->
       <when param="observe">
 	<equals type="bool" value="True">
-	  <default param="complist">
-	    <description>optional model componentlist file</description>
-	    <value type="string"></value>
-	  </default>
-	  <default param="compwidth"><value type="string">2GHz</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>

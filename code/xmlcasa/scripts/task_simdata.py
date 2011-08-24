@@ -7,14 +7,14 @@ import pdb
 
 def simdata(
     project=None, 
-    modifymodel=None,
     skymodel=None, inbright=None, indirection=None, incell=None, 
     incenter=None, inwidth=None, # innchan=None,
+    complist=None, compwidth=None,
     setpointings=None,
     ptgfile=None, integration=None, direction=None, mapsize=None, 
     maptype=None, pointingspacing=None, caldirection=None, calflux=None, 
     observe=None, 
-    refdate=None, hourangle=None, complist=None, compwidth=None,
+    refdate=None, hourangle=None, 
     totaltime=None, antennalist=None, 
     sdantlist=None, sdant=None,
     thermalnoise=None,
@@ -98,24 +98,11 @@ def simdata(
         skymodel = skymodel[0]
     skymodel = skymodel.replace('$project',project)
 
-    # check for people re-imaging only, in case they've turned modifymodel 
-    # off without changing their imagename to project.skymodel
-    if image and not predict and not modifymodel:
-        if len(skymodel) < 9 or skymodel[-8:] != "skymodel":
-            if os.path.exists(skymodel):
-                msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
-                msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
-                skymodel = fileroot + "/" + project + ".skymodel"
-
 
     if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
         return False
 
-#    if((not os.path.exists(skymodel)) and (os.path.exists(complist))):
-#        msg("No skymodel found. Simulating from components only is new and still considered an 'expert' feature.",priority="warn")
-#        if analyze:
-#            msg("In particular, fidelity image may be misleading due to division by small values",priority="warn")
 
     # handle '$project' in modelimage
     modelimage = modelimage.replace('$project',project)
@@ -139,48 +126,37 @@ def simdata(
         ##################################################################
         # set up skymodelimage
 
-#         # check for people re-imaging only, in case they've turned modifymodel 
-#         # off without changing their imagename to project.skymodel
-#         if image and not predict and not modifymodel:
-#             if len(skymodel) < 9 or skymodel[-8:] != "skymodel":
-#                 if os.path.exists(skymodel):
-#                     msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="warn")
-#                     msg("Proceeding with "+project+".skymodel instead of "+skymodel,priority="warn")
-#                     skymodel = fileroot + "/" + project + ".skymodel"
-#                 else:
-#                     msg("When imaging from a previously predicted project, you should either set modifymodel=T with the same settings as before, or set modifymodel=F and skymodel=$project.skymodel.",priority="error")
-#                     return False
 
         if os.path.exists(skymodel):
             components_only = False
-            # if the skymodel is okay, work from it directly
-            if util.is4d(skymodel) and os.path.isdir(skymodel) and not modifymodel:
-                newmodel = skymodel
+            # create a new skymodel called skymodel, or if its already there, called newmodel
+            default_model = project + ".skymodel"
+            if skymodel == default_model:
+                newmodel = fileroot + "/" + project + ".newmodel"
             else:
-                # otherwise create $newmodel
-                default_model = project + ".skymodel"
-                if skymodel == default_model:
-                    newmodel = fileroot + "/" + project + ".newmodel"
+                newmodel = fileroot + "/" + default_model
+            if os.path.exists(newmodel):
+                if overwrite:
+                    shutil.rmtree(newmodel)
                 else:
-                    newmodel = fileroot + "/" + default_model
-                if os.path.exists(newmodel):
-                    if overwrite:
-                        shutil.rmtree(newmodel)
-                    else:
-                        msg(newmodel+" exists -- please delete it, change skymodel, or set overwrite=T",priority="error")
-                        return False
+                    msg(newmodel+" exists -- please delete it, change skymodel, or set overwrite=T",priority="error")
+                    return False
 
             # modifymodel just collects info if skymodel==newmodel
             innchan = -1
+            returnpars = util.modifymodel(skymodel,newmodel,
+                                          inbright,indirection,incell,
+                                          incenter,inwidth,innchan,
+                                          flatimage=False) 
+            if not returnpars:
+                return False
+
             (model_refdir,model_cell,model_size,
              model_nchan,model_center,model_width,
-             model_stokes) = util.modifymodel(skymodel,
-             newmodel,modifymodel,inbright,indirection,incell,
-             incenter,inwidth,innchan,
-             flatimage=False) 
+             model_stokes) = returnpars 
 
             modelflat = newmodel + ".flat"
-            if os.path.exists(modelflat) and (not predict) and analyze:
+            if os.path.exists(modelflat) and (not observe) and analyze:
                 # if we're not predicting, then we want to use the previously
                 # created modelflat, because it may have components added 
                 msg("flat sky model "+modelflat+" exists, predict not requested",priority="warn")
@@ -196,11 +172,6 @@ def simdata(
             util.bandwidth = bandwidth
 
         else:
-            # if there are only components, modifymodel=T doesn't 
-            # make sense
-            if modifymodel:
-                msg("can't find model image "+skymodel+" to modify",priority="error")
-                return False
             components_only = True
             # if only components, the pointings 
             # can be displayed on blank sky, with symbols at the locations 
@@ -317,8 +288,14 @@ def simdata(
             if rg2>rg:
                 rg=rg2
             minscale = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/rg*3600.*180/pl.pi # arcsec
-            if minscale<qa.convert(model_cell[0],'arcsec')['value']:
-                msg("Sky Model cell is very large compared to expected synthesized beam - this may lead to blank or erroneous output",priority="warn")
+            cell_asec=qa.convert(model_cell[0],'arcsec')['value']
+            if minscale < cell_asec:
+                msg("Sky model cell of "+str(cell_asec)+" asec is very large compared to highest resolution "+str(minscale)+" asec - this will lead to blank or erroneous output. (Did you set incell?)",priority="error")
+                return False
+            if minscale < 2*cell_asec:
+                msg("Sky model cell of "+str(cell_asec)+" asec is not small compared to highest resolution "+str(minscale)+" asec. (Did you set incell?)",priority="warn")
+      
+
 
 
         # Search order is fileroot/ -> specified path -> repository
@@ -506,56 +483,54 @@ def simdata(
         ##################################################################
         # create one figure for model and pointings - need antenna diam 
         # to determine primary beam
-        #if modifymodel or setpointings:
-        if True: 
-            if grfile:
-                file = fileroot + "/" + project + ".skymodel.png"
-            else:
-                file = ""                            
+        if grfile:
+            file = fileroot + "/" + project + ".skymodel.png"
+        else:
+            file = ""                            
     
-            if grscreen or grfile:
-                util.newfig(show=grscreen)
+        if grscreen or grfile:
+            util.newfig(show=grscreen)
 
-                if components_only:
-                    pl.plot()
-                    # TODO add symbols at locations of components
-                    pl.plot(coffs[0,]*3600,coffs[1,]*3600,'o',c="#dddd66")
-                    pl.axis("equal")
+            if components_only:
+                pl.plot()
+                # TODO add symbols at locations of components
+                pl.plot(coffs[0,]*3600,coffs[1,]*3600,'o',c="#dddd66")
+                pl.axis("equal")
 
-                else:
-                    discard = util.statim(modelflat,plot=True,incell=model_cell)
+            else:
+                discard = util.statim(modelflat,plot=True,incell=model_cell)
+            lims = pl.xlim(),pl.ylim()
+            if pb <= 0 and verbose:
+                msg("unknown primary beam size for plot",priority="warn")
+            if max(max(lims)) > pb:
+                plotcolor = 'w'
+            else:
+                plotcolor = 'k'
+
+            #if offsets.shape[1] > 16 or pb <= 0 or pb > pl.absolute(max(max(lims))):
+            if offsets.shape[1] > 16 or pb <= 0:
                 lims = pl.xlim(),pl.ylim()
-                if pb <= 0 and verbose:
-                    msg("unknown primary beam size for plot",priority="warn")
-                if max(max(lims)) > pb:
-                    plotcolor = 'w'
-                else:
-                    plotcolor = 'k'
+                pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
+                        plotcolor+'+',markeredgewidth=1)
+                #if pb > 0 and pl.absolute(lims[0][0]) > pb:
+                if pb > 0:
+                    plotpb(pb,pl.gca(),lims=lims,color=plotcolor)
+            else:
+                from matplotlib.patches import Circle
+                for i in xrange(offsets.shape[1]):
+                    pl.gca().add_artist(Circle(
+                        ((offsets[0,i]+shift[0])*3600,
+                         (offsets[1,i]+shift[1])*3600),
+                        radius=pb/2.,edgecolor=plotcolor,fill=False,
+                        label='beam',transform=pl.gca().transData,clip_on=True))
 
-                #if offsets.shape[1] > 16 or pb <= 0 or pb > pl.absolute(max(max(lims))):
-                if offsets.shape[1] > 16 or pb <= 0:
-                    lims = pl.xlim(),pl.ylim()
-                    pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
-                            plotcolor+'+',markeredgewidth=1)
-                    #if pb > 0 and pl.absolute(lims[0][0]) > pb:
-                    if pb > 0:
-                        plotpb(pb,pl.gca(),lims=lims,color=plotcolor)
-                else:
-                    from matplotlib.patches import Circle
-                    for i in xrange(offsets.shape[1]):
-                        pl.gca().add_artist(Circle(
-                            ((offsets[0,i]+shift[0])*3600,
-                             (offsets[1,i]+shift[1])*3600),
-                            radius=pb/2.,edgecolor=plotcolor,fill=False,
-                            label='beam',transform=pl.gca().transData,clip_on=True))
-
-                xlim = max(abs(pl.array(lims[0])))
-                ylim = max(abs(pl.array(lims[1])))
-                # show entire pb: (statim doesn't by default)
-                pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
-                pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])            
-                pl.xlabel("resized model sky",fontsize="x-small")
-                util.endfig(show=grscreen,filename=file)
+            xlim = max(abs(pl.array(lims[0])))
+            ylim = max(abs(pl.array(lims[1])))
+            # show entire pb: (statim doesn't by default)
+            pl.xlim([max([xlim,pb/2]),min([-xlim,-pb/2])])
+            pl.ylim([min([-ylim,-pb/2]),max([ylim,pb/2])])            
+            pl.xlabel("resized model sky",fontsize="x-small")
+            util.endfig(show=grscreen,filename=file)
     
 
 
@@ -908,16 +883,16 @@ def simdata(
             ############################################
             # create figure 
             if grfile:            
-                file = fileroot + "/" + project + ".predict.png"
+                file = fileroot + "/" + project + ".observe.png"
             else:
                 file = ""
             if predict_uv:
                 multi = [2,2,1]
             else:
                 multi = 0
-
+            
             # it is useful to calculate the max baseline, psfsize, and min image size
-            # even if we're not making a figure here, because later we can use it 
+            # even if we're not even making a figure, so we can used it
             # to set a minimum size for the synthesized image, at int(8*psfsize)
             tb.open(msfile)  
             rawdata = tb.getcol("UVW")
@@ -928,8 +903,8 @@ def simdata(
             psfsize = 200.*klam_m/maxbase/pixsize
             if psfsize < 32:
                 psfsize = 32
-
-
+            
+            
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
                 if predict_uv:
@@ -956,7 +931,7 @@ def simdata(
                     # Add single dish (zero-spacing)
                     if predict_sd:
                         pl.plot([0.],[0.],'r,')
-
+            
                     # show dirty beam from observed uv coverage
                     util.nextfig()
                     im.open(msfile)  
@@ -1197,46 +1172,47 @@ def simdata(
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
 
-        # make sure cell is defined
-        if type(cell) == type([]):
-            if len(cell) > 0:
-                cell0 = cell[0]
-            else:
-                cell0 = ""
-        else:
-            cell0 = cell
-        if len(cell0) <= 0:
-            cell = model_cell
-        if type(cell) == type([]):
-            if len(cell) == 1:
-                cell = [cell[0],cell[0]]
-        else:
-            cell = [cell,cell]
+        #####################################################################
+        if image:
 
-        # cells are positive by convention
-        cell = [qa.abs(cell[0]),qa.abs(cell[1])]
-
-        # and imsize
-        if type(imsize) == type([]):
-            if len(imsize) > 0:
-                imsize0 = imsize[0]
+            # make sure cell is defined
+            if type(cell) == type([]):
+                if len(cell) > 0:
+                    cell0 = cell[0]
+                else:
+                    cell0 = ""
             else:
-                imsize0 = -1
-        else:
-            imsize0 = imsize
-        if imsize0 <= 0:
-            imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
-                      int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
-        # this is primarily for sim-from-components but useful elsewhere as a minimum
-        # image size:
-        if imsize[0]<8*psfsize: imsize[0]=int(8*psfsize)
-        if imsize[1]<8*psfsize: imsize[1]=int(8*psfsize)
+                cell0 = cell
+            if len(cell0) <= 0:
+                cell = model_cell
+            if type(cell) == type([]):
+                if len(cell) == 1:
+                    cell = [cell[0],cell[0]]
+            else:
+                cell = [cell,cell]
+            
+            # cells are positive by convention
+            cell = [qa.abs(cell[0]),qa.abs(cell[1])]
+            
+            # and imsize
+            if type(imsize) == type([]):
+                if len(imsize) > 0:
+                    imsize0 = imsize[0]
+                else:
+                    imsize0 = -1
+            else:
+                imsize0 = imsize
+            if imsize0 <= 0:
+                imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
+                          int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+            # this is primarily for sim-from-components but useful elsewhere as a minimum
+            # image size:
+            if imsize[0]<8*psfsize: imsize[0]=int(8*psfsize)
+            if imsize[1]<8*psfsize: imsize[1]=int(8*psfsize)
 
             
 
 
-        #####################################################################
-        if image:
             # if you neither predict nor noisify this time and already
             # have modelimage generated, set the name to tpimage
             #if not tpset and os.path.exists(modelimage):
@@ -1357,7 +1333,7 @@ def simdata(
                 beam = ia.restoringbeam()
                 if len(beam) == 0:
                     msg('setting primary beam information to image.')
-                    # !! aveant will only be set if modifymodel or setpointingsm and in 
+                    # !! aveant will only be set if modifymodel or setpointings and in 
                     # any case it will the the aveant of the INTERFM array - we want the SD
                     tb.open(tpmstoimage+"/ANTENNA")
                     diams = tb.getcol("DISH_DIAMETER")
@@ -1559,8 +1535,7 @@ def simdata(
                 msg("sky model image "+str(modelim)+" not found",priority="error")
                 return False
 
-            # so we should have modelim and modelim.flat created above, 
-            # whether modifymodel is true or not.
+            # we should have modelim and modelim.flat created above 
 
             if not image:
                 if not os.path.exists(imagename+".image"):

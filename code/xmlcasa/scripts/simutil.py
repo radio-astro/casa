@@ -2055,52 +2055,13 @@ class simutil:
     # TODO spectral extrapolation and regridding using innchan ****
 
     def modifymodel(self, inimage, outimage, 
-                modifymodel,inbright,
-                direction,incell,incenter,inwidth,innchan,
+                inbright,indirection,incell,incenter,inwidth,innchan,
                 flatimage=False):  # if nonzero, create mom -1 image 
 
         # new ia tool
         in_ia=ia.newimagefromfile(inimage)            
         in_shape=in_ia.shape()
         in_csys=in_ia.coordsys()
-
-        # cell size:  from incell param, or from image
-        model_cell=qa.quantity('0arcsec')
-        if modifymodel:
-            if type(incell) == type([]):
-                if len(incell)>0:
-                    model_cell =  map(qa.convert,incell,['arcsec','arcsec'])
-            else:                
-                if len(incell)>0:
-                    model_cell = qa.abs(qa.convert(incell,'arcsec'))
-            model_cell = [model_cell,model_cell]
-
-            # in modifymodel ONLY, model_cell[0]<0 for RA increasing left
-            if qa.gt(qa.convert(model_cell[0],'arcsec'),"0arcsec"):
-                model_cell[0]=qa.mul(model_cell[0],-1)
-            if qa.lt(qa.convert(model_cell[1],'arcsec'),"0arcsec"):
-                model_cell[1]=qa.abs(model_cell[1])
-
-        # if incell fails to convert to a sensible model_cell, or if we're not 
-        # modifying the model, we need to get model_cell from the image coordsys
-        if (not modifymodel) or (model_cell[1]['value']<=0):
-            increments=in_csys.increment(type="direction")['numeric']
-            incellx=qa.quantity(increments[0],in_csys.units(type="direction")[0])
-            incelly=qa.quantity(increments[1],in_csys.units(type="direction")[1])
-            xform=in_csys.lineartransform(type="direction")
-            offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
-            if offdiag > 1e-4:
-                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
-            incellx=qa.mul(incellx,xform[0,0])
-            incelly=qa.mul(incelly,xform[1,1])
-
-            # preserve sign in case input image is backwards (RA increasing right)
-            model_cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
-
-        if self.verbose:
-            self.msg("model image shape= %s" % in_shape,origin="setup model")
-            self.msg("model pixel = %8.2e x %8.2e arcsec" % (model_cell[0]['value'],model_cell[1]['value']),origin="setup model")
-
 
 
         # pull data first, since ia.stats doesn't work w/o a CS:
@@ -2115,7 +2076,6 @@ class simutil:
 
 
         # brightness scaling 
-        # we can in principal change inbright even if modifymodel=F
         if (inbright=="unchanged") or (inbright==""):
             scalefactor=1.
         else:
@@ -2130,9 +2090,6 @@ class simutil:
                         inb=qinb['value']
                         self.msg("assuming inbright="+str(inbright)+" means "+str(inb)+" Jy/pixel",priority="warn")
                     inbright=inb
-            #stats=in_ia.statistics(verbose=False,list=False)
-            #highvalue=stats['max']
-            #scalefactor=float(inbright)/highvalue.max()
             scalefactor=float(inbright)/arr.max()
 
 
@@ -2161,37 +2118,37 @@ class simutil:
             self.msg("model image has more than 4 dimensions.  Not sure how to proceed",priority="error")
             return False
 
+
+        # make incell a list if not already
+        if type(incell) == type([]):
+            incell =  map(qa.convert,incell,['arcsec','arcsec'])
+        else:
+            incell = qa.abs(qa.convert(incell,'arcsec'))
+            # incell[0]<0 for RA increasing left
+            incell = [qa.mul(incell,-1),incell]
+        # later, we can test validity with qa.compare()
+
+
         # now parse coordsys:
         model_refdir=""
-        #model_refpix=[]
+        model_cell=""
         # look for direction coordinate, with two pixel axes:
         if in_dir['return']:
-            # ra,dec = in_csys.referencevalue(type="direction")['numeric']
-            # model_refpix = in_csys.referencepixel(type="direction")['numeric'].tolist()            
-            # model_refdir= in_csys.referencecode(type="direction")+" "+qa.formxxx(str(ra)+"rad",format='hms',prec=5)+" "+qa.formxxx(str(dec)+"rad",format='dms',prec=5)
-            # ra=qa.quantity(str(ra)+"rad")
-            # dec=qa.quantity(str(dec)+"rad")
             in_ndir = in_dir['pixel'].__len__() 
             if in_ndir != 2:
-                if modifymodel:
-                    self.msg("Mal-formed direction coordinates in modelimage. Discarding and using first two pixel axes for RA and Dec.")
-                    axmap[0]=0 # direction in first two pixel axes
-                    axmap[1]=1
-                    axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
-                    axassigned[1]=0
-                else:
-                    self.msg("I can't understand your direction coordinates, so either edit the header or set modifymodel=True",priority="error")
-                    return False
+                self.msg("Mal-formed direction coordinates in modelimage. Discarding and using first two pixel axes for RA and Dec.")
+                axmap[0]=0 # direction in first two pixel axes
+                axmap[1]=1
+                axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
+                axassigned[1]=0
             else:
-                # here, it doesn't matter if we're modifying or not, we have found some 
-                # direction axes, and may change their increments and direction or not.
+                # we've found direction axes, and may change their increments and direction or not.
                 dirax=in_dir['pixel']
                 axmap[0]=dirax[0]
                 axmap[1]=dirax[1]                    
                 axassigned[dirax[0]]=0
                 axassigned[dirax[1]]=0
                 if self.verbose: self.msg("Direction coordinate (%i,%i) parsed" % (axmap[0],axmap[1]),origin="setup model")
-            
             # move model_refdir to center of image
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
             ra = in_ia.toworld(model_refpix,'q')['quantity']['*'+str(axmap[0]+1)]
@@ -2200,34 +2157,80 @@ class simutil:
             model_projection=in_csys.projection()['type']
             model_projpars=in_csys.projection()['parameters']
 
-        else:
-            axmap[0]=0 # direction in first two pixel axes
+            # cell size from image
+            increments=in_csys.increment(type="direction")['numeric']
+            incellx=qa.quantity(increments[0],in_csys.units(type="direction")[0])
+            incelly=qa.quantity(increments[1],in_csys.units(type="direction")[1])
+            xform=in_csys.lineartransform(type="direction")
+            offdiag=max(abs(xform[0,1]),abs(xform[1,0]))
+            if offdiag > 1e-4:
+                self.msg("Your image is rotated with respect to Lat/Lon.  I can't cope with that yet",priority="error")
+            incellx=qa.mul(incellx,xform[0,0])
+            incelly=qa.mul(incelly,xform[1,1])
+
+            # preserve sign in case input image is backwards (RA increasing right)
+            model_cell = [qa.convert(incellx,'arcsec'),qa.convert(incelly,'arcsec')]
+
+        else: # no valid direction coordinate
+            axmap[0]=0 # assign direction to first two pixel axes
             axmap[1]=1
-            axassigned[0]=0  # coordinate corresponding to first 2 pixel axes
+            axassigned[0]=0  # assign coordinate corresponding to first 2 pixel axes
             axassigned[1]=0
 
-        if modifymodel:
-            # try to parse direction using splitter function and set model_refdir if success
-            if type(direction)==type([]):
-                if len(direction) > 1:
-                    self.msg("error parsing direction "+str(direction)+" -- should be a single direction string")
-                    return False
-                else:
-                    direction=direction[0]
-            if self.isdirection(direction,halt=False):
-                # NOTE: ra/dec here could be glon/glat if epoch="Galactic "
-                epoch, ra, dec = self.direction_splitter(direction)
 
-                #if self.verbose: self.msg("setting model image direction to ra="+qa.angle(qa.div(ra,"15"))+" dec="+qa.angle(dec),origin="setup model")            
-                model_refdir=epoch+qa.formxxx(ra,format='hms',prec=5)+" "+qa.formxxx(dec,format='dms',prec=5)
-                model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
-                model_projection="SIN"
-                model_projpars=[0.,0]
-        if model_refdir=="":
-            self.msg("Model ref direction undefined.  Either set direction and modifymodel=T, or edit the image header",priority="error")
-            return False        
+        # try to parse direction using splitter function and override model_refdir 
+        if type(indirection)==type([]):
+            if len(indirection) > 1:
+                self.msg("error parsing indirection "+str(indirection)+" -- should be a single direction string")
+                return False
+            else:
+                indirection=indirection[0]
+        if self.isdirection(indirection,halt=False):
+            # lon/lat = ra/dec if J2000, =glon/glat if galactic
+            epoch, lon, lat = self.direction_splitter(indirection)
 
-        # we've now found or assigned two direction axes.
+            model_refdir=epoch+qa.formxxx(lon,format='hms',prec=5)+" "+qa.formxxx(lat,format='dms',prec=5)
+            model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
+            model_projection="SIN" # for indirection we default to SIN.
+            model_projpars=[0.,0]
+            if self.verbose: self.msg("setting model image direction to indirection = "+model_refdir)
+        else:
+            # indirection is not set - is there a direction in the model already?
+            if not self.isdirection(model_refdir,halt=False):
+                self.msg("Cannot determine reference direction in model image.  Valid 'indirection' parameter must be provided.",priority="error")
+                return False
+        
+
+        # override model_cell?
+        cell_replaced=False
+        if self.isquantity(incell[0],halt=False):
+            if qa.compare(incell[0],"1arcsec"): 
+                model_cell=incell
+                cell_replaced=True
+                if self.verbose: self.msg("replacing existing model cell size with incell")
+        valid_modcell=False
+        if not cell_replaced:
+            if self.isquantity(model_cell[0],halt=False):
+                if qa.compare(model_cell[0],"1arcsec"):
+                    valid_modcell=True
+            if not valid_modcell:
+                self.msg("Unable to determine model cell size.  Valid 'incell' parameter must be provided.",priority="error")
+                return False
+
+
+     
+        if self.verbose:
+            self.msg("model image shape="+str(in_shape),origin="setup model")
+            self.msg("model pixel = %8.2e x %8.2e arcsec" % (model_cell[0]['value'],model_cell[1]['value']),origin="setup model")
+
+
+
+
+
+
+
+        # we've now found or assigned two direction axes, and changed direction and cell if required
+        # next, work on spectral axis:
 
         model_center=""
         model_width=""
@@ -2258,21 +2261,44 @@ class simutil:
             # need to add one to the coordsys 
             add_spectral_coord=True 
 
-        if modifymodel:
-            if self.isquantity(incenter,halt=False):
-                foo=qa.quantity(incenter)
-                if foo['value']>=0:
+
+        # override incenter?
+        center_replaced=False
+        if self.isquantity(incenter,halt=False):
+            if qa.compare(incenter,"1Hz"): 
+                if (qa.quantity(incenter))['value']>=0:
                     model_center=incenter
                     model_restfreq=model_center
-            if self.isquantity(inwidth,halt=False):
-                model_width=inwidth
+                    center_replaced=True
+                    if self.verbose: self.msg("setting central frequency to "+incenter)
+        valid_modcenter=False
+        if not center_replaced:
+            if self.isquantity(model_center,halt=False):
+                if qa.compare(model_center,"1Hz"):
+                    valid_modcenter=True
+            if not valid_modcenter:
+                self.msg("Unable to determine model frequency.  Valid 'incenter' parameter must be provided.",priority="error")
+                return False
 
-        if model_width=="":
-            self.msg("Sky model bandwidth undefined.  Either set modifymodel=T and define inwidth, or edit the image header and add spectral coordinate system information",priority="error")
-            return False        
-        if model_center=="":
-            self.msg("Sky model frequency center undefined.  Either set modifymodel=T and define incenter, or edit the image header and add spectral coordinate system information",priority="error")
-            return False        
+        # override inwidth?
+        width_replaced=False
+        if self.isquantity(inwidth,halt=False):
+            if qa.compare(inwidth,"1Hz"): 
+                if (qa.quantity(inwidth))['value']>=0:
+                    model_width=inwidth
+                    width_replaced=True
+                    if self.verbose: self.msg("setting channel width to "+inwidth)
+        valid_modwidth=False
+        if not width_replaced:
+            if self.isquantity(model_width,halt=False):
+                if qa.compare(model_width,"1Hz"):
+                    valid_modwidth=True
+            if not valid_modwidth:
+                self.msg("Unable to determine model channel or bandwidth.  Valid 'inwidth' parameter must be provided.",priority="error")
+                return False
+
+
+
 
 
         model_stokes=""
@@ -2347,8 +2373,11 @@ class simutil:
                 model_stokes="I"
 
 
+
+
+        # ========================================
         # now we should have 4 assigned pixel axes, and model_cell, model_refdir, model_nchan, 
-        # model_stokes all set either from modifymodel or from input image
+        # model_stokes all set 
         out_nstk=len(model_stokes)
         if self.verbose:
             self.msg("axis map for model image = %i %i %i %i" %
@@ -2366,21 +2395,18 @@ class simutil:
                                 type="direction")
 
         dirm=self.dir_s2m(model_refdir)
-        raq=dirm['m0'] # NOTE: raq/deq could be glon/glat
-        deq=dirm['m1'] 
+        lonq=dirm['m0'] 
+        latq=dirm['m1'] 
         modelcsys.setreferencecode(dirm['refer'],type="direction")
         if len(model_projpars)>0:
-            modelcsys.setprojection(parameters=model_projpars,type=model_projection)
+            modelcsys.setprojection(parameters=model_projpars.tolist(),type=model_projection)
         else:
             modelcsys.setprojection(type=model_projection)
         modelcsys.setreferencevalue(
-            [qa.convert(raq,modelcsys.units()[0])['value'],
-             qa.convert(deq,modelcsys.units()[1])['value']],
+            [qa.convert(lonq,modelcsys.units()[0])['value'],
+             qa.convert(latq,modelcsys.units()[1])['value']],
             type="direction")
-        modelcsys.setreferencepixel(
-            model_refpix,
-#            [0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]],
-            "direction")
+        modelcsys.setreferencepixel(model_refpix,"direction")
         if self.verbose: 
             self.msg("sky model image direction = "+model_refdir)
             self.msg("sky model image increment = "+str(model_cell))
@@ -2390,7 +2416,7 @@ class simutil:
 #        modelcsys.setreferencepixel(0.5*model_nchan,type="spectral") # default is middle chan
         modelcsys.setreferencepixel(0.5*(model_nchan-1),type="spectral") # but not half-pixel
         modelcsys.setincrement(qa.convert(model_width,modelcsys.units()[3])['value'],type="spectral")
-        #modelcsys.summary()
+
 
         # first assure that the csys has the expected order 
         expected=['Direction', 'Direction', 'Stokes', 'Spectral']
@@ -2421,7 +2447,7 @@ class simutil:
                 axmap[tmp]=tmp                
 
 
-        # there's got to be a better way to remove NaNs: :)
+        # there's got to be a better way to remove NaNs:
         if outimage!=inimage:
             for i0 in range(arr.shape[0]):
                 for i1 in range(arr.shape[1]):
@@ -2679,7 +2705,7 @@ class simutil:
         if len(complist)>0:
             ia.open(flat)
             if not os.path.exists(complist):
-                self.msg("sky component list "+str(complist)+" not found in flatimge",priority="error")
+                self.msg("sky component list "+str(complist)+" not found in flatimage",priority="error")
             cl.open(complist)
             ia.modify(cl.torecord(),subtract=False) 
             cl.done()
@@ -2749,8 +2775,7 @@ class simutil:
 
         # add unresolved components in Jy/pix
         # don't do this if you've already done it in flatimage()!
-        if (os.path.exists(complist)):
-            #pdb.set_trace()
+        if (os.path.exists(complist)):            
             cl.open(complist)
             imrr.modify(cl.torecord(),subtract=False)
             cl.done()
