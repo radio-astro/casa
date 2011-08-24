@@ -969,8 +969,8 @@ if( Boost_VERSION GREATER 103499 )
   endif()
 endif() 
 
-if( NOT Boost_VERSION GREATER 103199 AND NOT CASA_IGNORE_VERSION )
-  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 103200 (1.32.0) or newer. Please check!" )
+if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
+  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
 endif()
 
 #
