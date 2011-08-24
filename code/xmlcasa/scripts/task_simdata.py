@@ -441,7 +441,7 @@ def simdata(
                 else:
                     util.msg("pointing file "+ptgfile+" already exists and user does not want to overwrite",priority="error")
                     return False
-            util.write_pointings(ptgfile,pointings,etime)
+            util.write_pointings(ptgfile,pointings,etime.tolist())
 
         msg("phase center = "+imcenter)
         if nfld > 1 and verbose:
@@ -982,6 +982,21 @@ def simdata(
                 util.telescopename = telescopename
                 # todo add check that entire column is the same
                 tb.done()
+                # it is useful to calculate the max baseline, psfsize, and min image size
+                # even if we're not even making a figure, so we can used it
+                # to set a minimum size for the synthesized image, at int(8*psfsize)
+                tb.open(msfile)  
+                rawdata = tb.getcol("UVW")
+                tb.done()
+                maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                klam_m = 300/qa.convert(model_center,'GHz')['value']
+                pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+                psfsize = 200.*klam_m/maxbase/pixsize
+                if psfsize < 32:
+                    psfsize = 32
+            
+            
+
 
         ######################################################################
         # noisify

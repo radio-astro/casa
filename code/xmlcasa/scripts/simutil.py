@@ -612,7 +612,7 @@ class simutil:
 
         # need an error check here if zero valid pointings were read
         if len(pointings) < 1:
-            s="No valid point is found in input file"
+            s="No valid lines found in pointing file"
             self.msg(s,priority="error")
         self.msg("read in %i pointing(s) from file" % len(pointings))
         self.pointings=pointings
