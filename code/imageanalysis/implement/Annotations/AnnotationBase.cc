@@ -30,10 +30,28 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <measures/Measures/MCDirection.h>
 
+#include <iomanip>
+
+#include <boost/assign.hpp>
+
+using namespace std;
+using namespace boost::assign;
+
 namespace casa {
 
+const AnnotationBase::RGB AnnotationBase::BLACK(3, 0.0);
+const AnnotationBase::RGB AnnotationBase::BLUE = list_of(0.0)(0.0)(255.0);
+const AnnotationBase::RGB AnnotationBase::CYAN = list_of(255.0)(255.0)(0.0);
+const AnnotationBase::RGB AnnotationBase::GRAY = list_of(190.0)(190.0)(190.0);
+const AnnotationBase::RGB AnnotationBase::GREEN = list_of(0.0)(255.0)(0.0);
+const AnnotationBase::RGB AnnotationBase::MAGENTA = list_of(255.0)(0.0)(255.0);
+const AnnotationBase::RGB AnnotationBase::ORANGE = list_of(255.0)(165.0)(0.0);
+const AnnotationBase::RGB AnnotationBase::RED = list_of(255.0)(0.0)(0.0);
+const AnnotationBase::RGB AnnotationBase::WHITE(3, 255.0);
+const AnnotationBase::RGB AnnotationBase::YELLOW = list_of(255.0)(255.0)(0.0);
+
 const String AnnotationBase::DEFAULT_LABEL = "";
-const String AnnotationBase::DEFAULT_COLOR = "green";
+const AnnotationBase::RGB AnnotationBase::DEFAULT_COLOR = AnnotationBase::GREEN;
 const AnnotationBase::LineStyle AnnotationBase::DEFAULT_LINESTYLE = SOLID;
 const uInt AnnotationBase::DEFAULT_LINEWIDTH = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLSIZE = 1;
@@ -42,19 +60,27 @@ const String AnnotationBase::DEFAULT_FONT = "Helvetica";
 const uInt AnnotationBase::DEFAULT_FONTSIZE = 10;
 const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = BOLD;
 const Bool AnnotationBase::DEFAULT_USETEX = False;
-
 const String AnnotationBase::_class = "AnnotationBase";
 
+std::list<string> AnnotationBase::_colorNames;
+
 Bool AnnotationBase::_doneUnitInit = False;
+Bool AnnotationBase::_doneColorInit = False;
+
 map<String, AnnotationBase::Type> AnnotationBase::_typeMap;
 map<String, AnnotationBase::LineStyle> AnnotationBase::_lineStyleMap;
+
+map<string, AnnotationBase::RGB> AnnotationBase::_colors;
+map<AnnotationBase::RGB, string> AnnotationBase::_rgbNameMap;
+
+const Regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
 
 AnnotationBase::AnnotationBase(
 	const Type type, const String& dirRefFrameString,
 	const CoordinateSystem& csys
 )
-: _type(type), _csys(csys), _label(DEFAULT_LABEL), _color(DEFAULT_COLOR),
-  _font(DEFAULT_FONT), _fontstyle(DEFAULT_FONTSTYLE),
+: _type(type), _csys(csys), _label(DEFAULT_LABEL),
+  _font(DEFAULT_FONT), _color(DEFAULT_COLOR), _fontstyle(DEFAULT_FONTSTYLE),
   _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
@@ -73,14 +99,13 @@ AnnotationBase::AnnotationBase(
 		);
 	}
 	_init();
-	_initParams();
 }
 
 AnnotationBase::AnnotationBase(
 	const Type type, const CoordinateSystem& csys
 )
-: _type(type), _csys(csys), _label(DEFAULT_LABEL), _color(DEFAULT_COLOR),
-  _font(DEFAULT_FONT), _fontstyle(DEFAULT_FONTSTYLE),
+: _type(type), _csys(csys), _label(DEFAULT_LABEL),
+  _font(DEFAULT_FONT), _color(DEFAULT_COLOR), _fontstyle(DEFAULT_FONTSTYLE),
   _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
@@ -94,7 +119,6 @@ AnnotationBase::AnnotationBase(
 	}
 	_directionRefFrame = _csys.directionCoordinate().directionType();
 	_init();
-
 }
 
 AnnotationBase::~AnnotationBase() {}
@@ -130,6 +154,7 @@ AnnotationBase& AnnotationBase::operator= (
 
 void AnnotationBase::_init() {
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
+	_initColors();
 	if (
 		_directionRefFrame != _csys.directionCoordinate().directionType(False)
 		&& _directionRefFrame != MDirection::B1950
@@ -159,7 +184,7 @@ void AnnotationBase::_initParams() {
 	_params[LINESTYLE] = lineStyleToString(_linestyle);
 	_params[SYMSIZE] = String::toString(_symbolsize);
 	_params[SYMTHICK] = String::toString(_symbolthickness);
-	_params[COLOR] = _color;
+	_params[COLOR] = getColorString();
 	_params[FONT] = _font;
 	_params[FONTSIZE] = String::toString(_fontsize);
 	_params[FONTSTYLE] = fontStyleToString(_fontstyle);
@@ -291,13 +316,57 @@ String AnnotationBase::getLabel() const {
 }
 
 void AnnotationBase::setColor(const String& s) {
-	_color = s;
-	_params[COLOR] = _color;
+    String c = s;
+    c.trim();
+    c.downcase();
+    if (_colors.find(c) != _colors.end()) {
+    	_color = _colors.find(c)->second;
+    }
+    else if (c.matches(rgbHexRegex)) {
+    	String red = s.substr(0, 2);
+    	int hexInt;
+    	sscanf(red.c_str(), "%x", &hexInt );
+    	_color[0] = hexInt;
+    	String green = s.substr(2, 2);
+    	sscanf(green.c_str(), "%x", &hexInt );
+    	_color[1] = hexInt;
+    	String blue = s.substr(4, 2);
+    	sscanf(blue.c_str(), "%x", &hexInt );
+    	_color[2] = hexInt;
+    }
+    else {
+        throw AipsError("Unrecognized color specification " + s);
+    }
+	_params[COLOR] = getColorString();
 }
 
-String AnnotationBase::getColor() const {
+AnnotationBase::RGB AnnotationBase::getColor() const {
 	return _color;
 }
+
+String AnnotationBase::getColorString() const {
+	return colorToString(_color);
+}
+
+String AnnotationBase::colorToString(const AnnotationBase::RGB& color) {
+	if (_rgbNameMap.find(color) != _rgbNameMap.end()) {
+		return _rgbNameMap.find(color)->second;
+	}
+	else {
+		ostringstream oss;
+		oss << hex << std::setw(2) << std::setfill('0') << (Int)floor(color[0] + 0.5)
+			<< hex << std::setw(2) << std::setfill('0') << (Int)floor(color[1] + 0.5)
+			<< hex << std::setw(2) << std::setfill('0') << (Int)floor(color[2] + 0.5);
+		String rgbString = oss.str();
+		rgbString.downcase();
+		return rgbString;
+	}
+}
+
+
+
+AnnotationBase::RGB rgbFromHex(String& s);
+
 
 void AnnotationBase::setLineStyle(const LineStyle s) {
 	_linestyle = s;
@@ -568,6 +637,39 @@ void AnnotationBase::_checkAndConvertDirections(
 		}
 	}
 }
+
+void AnnotationBase::_initColors() {
+	if (_doneColorInit) {
+		return;
+	}
+	_colors = map_list_of
+			("black", BLACK)
+			("blue", BLUE)
+			("cyan", CYAN)
+			("gray", GRAY)
+			("green", GREEN)
+			("magenta", MAGENTA)
+			("orange", ORANGE)
+			("red", RED)
+			("white", WHITE)
+			("yellow", YELLOW);
+
+	for (
+		map<string, RGB>::const_iterator iter=_colors.begin();
+			iter != _colors.end(); iter++
+		) {
+		_rgbNameMap[iter->second] = iter->first;
+		_colorNames.push_back(iter->first);
+	}
+
+    _doneColorInit = True;
+}
+
+std::list<std::string> AnnotationBase::colorChoices() {
+	_initColors();
+	return _colorNames;
+}
+
 
 }
 

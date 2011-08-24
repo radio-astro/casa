@@ -1147,7 +1147,8 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::SYMTHICK] = symthick;
 
 	ParamValue color;
-	color.stringVal = AnnotationBase::DEFAULT_COLOR;
+	color.color = AnnotationBase::DEFAULT_COLOR;
+	color.stringVal = AnnotationBase::colorToString(color.color);
 	_currentGlobals[AnnotationBase::COLOR] = color;
 
 	ParamValue font;

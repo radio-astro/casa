@@ -94,10 +94,10 @@ private:
 		AnnotationBase::FontStyle fontStyleVal;
 		Vector<MFrequency> freqRange;
 		Vector<Stokes::StokesTypes> stokes;
+		AnnotationBase::RGB color;
 	};
 
 	typedef std::map<AnnotationBase::Keyword, ParamValue> ParamSet;
-
 
 	const static String sOnePair;
 	const static String bTwoPair;
