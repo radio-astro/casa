@@ -73,7 +73,7 @@ map<String, AnnotationBase::LineStyle> AnnotationBase::_lineStyleMap;
 map<string, AnnotationBase::RGB> AnnotationBase::_colors;
 map<AnnotationBase::RGB, string> AnnotationBase::_rgbNameMap;
 
-const Regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
+const boost::regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
 
 AnnotationBase::AnnotationBase(
 	const Type type, const String& dirRefFrameString,
@@ -322,7 +322,7 @@ void AnnotationBase::setColor(const String& s) {
     if (_colors.find(c) != _colors.end()) {
     	_color = _colors.find(c)->second;
     }
-    else if (c.matches(rgbHexRegex)) {
+    else if (boost::regex_match(c.c_str(), rgbHexRegex)) {
     	String red = s.substr(0, 2);
     	int hexInt;
     	sscanf(red.c_str(), "%x", &hexInt );

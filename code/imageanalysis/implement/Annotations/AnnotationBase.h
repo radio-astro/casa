@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
+#include <boost/regex.hpp>
 #include <list>
 
 namespace casa {
@@ -130,7 +131,7 @@ public:
 	static const FontStyle DEFAULT_FONTSTYLE;
 	static const Bool DEFAULT_USETEX;
 
-	static const Regex rgbHexRegex;
+	static const boost::regex rgbHexRegex;
 
 	virtual ~AnnotationBase();
 
