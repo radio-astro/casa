@@ -155,9 +155,32 @@ def write_history(myms, vis, tname, param_names, param_vals, myclog=None, debug=
         retval = True
         isopen = False
         try:
+                if not myclog and hasattr(casalog, 'post'):
+                        myclog = casalog
+        except Exception, instance:
+                # There's no logger to complain to, and I don't want to exit
+                # just because of that.
+                pass
+        try:
                 myms.open(vis, nomodify=False)
                 isopen = True
                 myms.writehistory(message='taskname=%s' % tname, origin=tname)
+                vestr = 'version: '
+                try:
+                        # Don't use myclog.version(); it also prints to the
+                        # logger, which is confusing.
+                        vestr += casa['build']['version'] + ' '
+                        vestr += casa['source']['url'].split('/')[-2]
+                        vestr += ' rev. ' + casa['source']['revision']
+                        vestr += ' ' + casa['build']['time']
+                except Exception, instance:
+                        if hasattr(myclog, 'version'):
+                                # Now give it a try.
+                                vestr += myclog.version()
+                        else:
+                                vestr += ' could not be determined' # We tried.
+                myms.writehistory(message=vestr, origin=tname)
+
                 # Write the arguments.
                 for argnum in xrange(len(param_names)):
                         msg = "%-11s = " % param_names[argnum]
