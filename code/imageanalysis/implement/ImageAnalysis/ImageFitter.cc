@@ -1016,7 +1016,7 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 	SubImage<Float> subImageTmp = SubImage<Float>(*_image, slice, False);
 	SubImage<Float> x = SubImage<Float>::createSubImage(
 		subImageTmp, _regionRecord,
-		_mask, False, False
+		_mask, 0, False
 	);
 	return x;
 }
