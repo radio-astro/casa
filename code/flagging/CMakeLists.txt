@@ -21,7 +21,9 @@
 if( APPLE AND
     NOT INTEL_CXX_COMPILER MATCHES true  AND
     NOT CMAKE_CXX_FLAGS MATCHES x86_64 AND
-    NOT _gcc_machine MATCHES x86_64 )
+    NOT _gcc_machine MATCHES x86_64  AND
+    NOT _gcc_machine MATCHES 11.0  AND
+    NOT _gcc_machine MATCHES i686-apple-darwin11 )
       set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=i586 -msse3" )
 endif()
 
