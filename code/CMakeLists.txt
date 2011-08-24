@@ -713,6 +713,7 @@ casa_find( PYTHON
      ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+     ${python_prefix} # Support the ALMA ACS special case.
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
 
