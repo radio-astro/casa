@@ -38,7 +38,8 @@ expected = {
                                                                0.,  0.]]), 0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
                         ('EXPOSURE', 1): 20.971519947052002,
-                        ('FLAG', 1): [False for i in xrange(8)],
+                        ('FLAG', 1): [True, False, False, False,
+                                      False, False, True, True],
                         ('WEIGHT', 1): (150.0, 0.1),
                         ('SIGMA', 1): 0.081649661,
                         ('WEIGHT', 2): (2332.0, 0.05),
@@ -96,7 +97,8 @@ expected = {
                                                                0.,  0.]]), 0.005),
                         ('TIME', 1): (4715114710.4857559, 0.01),
                         ('EXPOSURE', 1): 20.971519947052002,
-                        ('FLAG', 1): [False for i in xrange(8)],
+                        ('FLAG', 1): [True, False, False, False,
+                                      False, False, True, True],
                         ('WEIGHT', 1): (150.0, 0.1),
                         ('SIGMA', 1): 0.081649661,
                         ('WEIGHT', 2): (2332.0, 0.05),
@@ -276,6 +278,62 @@ expected = {
                         ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
                         ('DATA_DESC_ID', 134): 1,
                         ('DATA', 134): (numpy.array([[5.0+0.5j, 5.0+2.5j]]), 0.005)
+                        }
+                }
+            },
+        '0:4~7': {                 # Tests channel selection not starting at 0,
+            'nrows_aft_tavg': 269, # with a nontrivial WEIGHT_SPECTRUM.
+            'nrows_aft_cavg': 269,
+            'datshp': (1, 2, 269),
+            'cells': {
+                #T or C  (col, row)  val, or (val, tolerance)
+                'tav': {('FLAG', 0): [False for i in xrange(4)],
+                        ('WEIGHT', 0): (1152.0, 0.1),
+                        ('EXPOSURE', 0): 18.874367952346802,
+                        ('DATA', 1): (numpy.array([[4.500+4.j, 4.500+5.j,
+                                                    0.000+0.j, 0.000+0.j]]),
+                                      0.005),
+                        ('WEIGHT_SPECTRUM', 1): (numpy.array([[40., 50., 0., 0.]]),
+                                                 0.005),
+                        ('TIME', 1): (4715114710.4857559, 0.01),
+                        ('EXPOSURE', 1): 20.971519947052002,
+                        ('WEIGHT', 1): (90.0, 0.1),
+                        ('SIGMA', 1): 0.10540926,
+                        ('WEIGHT', 2): (1174.0, 0.05),
+                        ('WEIGHT_SPECTRUM', 2): (numpy.array([[292., 293.,
+                                                               294., 295.]]),
+                                                 0.01),
+                        ('FLAG', 3): [False for i in xrange(4)],
+                        ('WEIGHT_SPECTRUM', 4): (numpy.array([[32., 32.,
+                                                               32., 32.]]), 0.005),
+                        ('ANTENNA2', 5): 7,  # Baseline 0-6 is dropped
+                        ('DATA_DESC_ID', 44): 0,
+                        ('DATA_DESC_ID', 134): 0
+                        },
+                'cav': {('FLAG', 0): [False, False],
+                        ('WEIGHT', 0): (1152.0, 0.1),
+                        ('EXPOSURE', 0): 18.874368,
+                        ('FEED1', 0): 0,
+                        ('FEED2', 9): 0,
+                        ('DATA', 1): (numpy.array([[4.5+4.5556j, 0.0+0.j]]), 0.005),
+                        ('DATA', 81): (numpy.array([[14.454+4.5j,
+                                                     14.454+6.5j]]), 0.005),
+                        ('DATA', 192): (numpy.array([[43.48377+4.5j,
+                                                      43.48377+6.5j]]), 0.005),
+                        ('WEIGHT_SPECTRUM', 1): (numpy.array([[90.0, 0.0]]),
+                                                 0.005),
+                        ('TIME', 1): (4715114710.4857559, 0.01),
+                        ('EXPOSURE', 1): 20.971519947,
+                        ('ARRAY_ID', 1): 0,
+                        ('WEIGHT', 1): (90.0, 0.1),
+                        ('SIGMA', 1): 0.10540926,
+                        ('WEIGHT', 2): (1174.0, 0.05),
+                        ('WEIGHT_SPECTRUM', 2): (numpy.array([[585., 589.]]), 0.01),
+                        ('FLAG', 3): [False, False],
+                        ('ANTENNA2', 5): 7,
+                        ('DATA_DESC_ID', 134): 0,
+                        ('DATA', 134): (numpy.array([[33.58345+4.5j,
+                                                      33.58345+6.5j]]), 0.005)
                         }
                 }
             }

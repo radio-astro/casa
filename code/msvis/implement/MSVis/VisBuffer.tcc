@@ -40,12 +40,16 @@ void VisBuffer::chanAveVisCube(Cube<T>& data, Int nChanOut)
     // Chuck it to the caller.
     throw(AipsError("Can't average " + String(nChan0) + " channels to " +
                     String(nChanOut) + " channels!"));
-  if(nChan0 == nChanOut)
-    return;                     // No-op.
 
   csh(1) = nChanOut;
 
   Vector<Int>& chans(channel());
+  Bool areShifting = true;
+  if(chans.nelements() > 0 && chans[0] == 0)
+    areShifting = false;
+  if(nChan0 == nChanOut && !areShifting)
+    return;                     // No-op.
+
   Cube<T> newCube(csh);
   newCube = T(0.0);
   Int nCor = nCorr();
@@ -54,7 +58,7 @@ void VisBuffer::chanAveVisCube(Cube<T>& data, Int nChanOut)
   const Bool doSpWt(visIter_p->existsWeightSpectrum());
 
   // Make sure weightSpectrum() is unaveraged.
-  if(doSpWt && weightSpectrum().shape()(1) < nChan0)
+  if(doSpWt && (areShifting || weightSpectrum().shape()(1) < nChan0))
     fillWeightSpectrum();
 
   Vector<Double> totwt(nCor);

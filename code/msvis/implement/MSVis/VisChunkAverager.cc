@@ -32,9 +32,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //----------------------------------------------------------------------------
   
 VisChunkAverager::VisChunkAverager(const Vector<MS::PredefinedColumns>& dataCols,
-                                   const Bool doSpWeight) 
+                                   const Bool doSpWeight,
+                                   const Vector<Matrix<Int> >& chBounds) 
   : colEnums_p(dataCols),
     doSpWeight_p(doSpWeight),
+    chanAveBounds_p(chBounds),
     readyToHash_p(false),
     haveHashMap_p(false)
 {
@@ -153,6 +155,28 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
   lastinterval = vb.timeInterval()[nrows - 1];
 
   for(vi.origin(); vi.more(); ++vi){
+    // Preload the things that need to be channel averaged.
+    for(uInt colind = 0; colind < colEnums_p.nelements(); ++colind){
+      if(colEnums_p[colind] == MS::DATA)
+        vb.visCube();
+      else if(colEnums_p[colind] == MS::MODEL_DATA)
+        vb.modelVisCube();
+      else if(colEnums_p[colind] == MS::CORRECTED_DATA)
+        vb.correctedVisCube();
+      else if(colEnums_p[colind] == MS::DATA)
+        vb.floatDataCube();
+    }
+
+    // The flags and weights are already loaded by this point, UNLESS the
+    // row flag was True for all the rows.  Make sure they're loaded, or
+    // they could end up with the wrong shape.
+    vb.flagCube();
+    if(vi.existsWeightSpectrum())
+      vb.weightSpectrum();
+    vb.weightMat();
+      
+    vb.channelAve(chanAveBounds_p[vi.spectralWindow()]);
+
     // First iterate through the *unflagged* rows of the current VisBuffer.
     Int outrow = 0;
     Bool firstValidOutRowInIntegration = true;
@@ -210,33 +234,33 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
           Double channellesswt = 0.0;
           Double constwtperchan = wtM[cor] / nChan_p;
 
-          for(Int chn = 0; chn < nChan_p; ++chn){
-            if(!vb.flagCube()(cor, chn, inrow)){
-              Double wt = doSpWeight_p ? vb.weightSpectrum()(cor, chn, inrow) :
+          for(Int ochan = 0; ochan < nChan_p; ++ochan){
+            if(!vb.flagCube()(cor, ochan, inrow)){
+              Double wt = doSpWeight_p ? vb.weightSpectrum()(cor, ochan, inrow) :
                 constwtperchan;
 
               if(doSpWeight_p)
-                avBuf_p.weightSpectrum()(cor, chn, outrow) += wt;
+                avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
               channellesswt += wt;
-              avBuf_p.flagCube()(cor, chn, outrow) = False;
+              avBuf_p.flagCube()(cor, ochan, outrow) &= wt <= 0.0;
 
               // FLAG_CATEGORY?
             
               for(Int i = colEnums_p.nelements(); i--;){
                 if(colEnums_p[i] == MS::CORRECTED_DATA)
-                  avBuf_p.correctedVisCube()(cor, chn, outrow) += 
-                    (wt * vb.correctedVisCube()(cor, chn, inrow));
+                  avBuf_p.correctedVisCube()(cor, ochan, outrow) += 
+                    (wt * vb.correctedVisCube()(cor, ochan, inrow));
                 else if(colEnums_p[i] == MS::MODEL_DATA)
-                  avBuf_p.modelVisCube()(cor, chn, outrow) += 
-                    (wt * vb.modelVisCube()(cor, chn, inrow));
+                  avBuf_p.modelVisCube()(cor, ochan, outrow) += 
+                    (wt * vb.modelVisCube()(cor, ochan, inrow));
                 // else if(colEnums_p[i] == MS::LAG_DATA)
                 //  VisBuffer doesn't handle LAG_DATA
                 else if(colEnums_p[i] == MS::FLOAT_DATA)
-                  avBuf_p.floatDataCube()(cor, chn, outrow) += 
-                    (wt * vb.floatDataCube()(cor, chn, inrow));
+                  avBuf_p.floatDataCube()(cor, ochan, outrow) += 
+                    (wt * vb.floatDataCube()(cor, ochan, inrow));
                 else if(colEnums_p[i] == MS::DATA)
-                  avBuf_p.visCube()(cor, chn, outrow) += 
-                    (wt * vb.visCube()(cor, chn, inrow));
+                  avBuf_p.visCube()(cor, ochan, outrow) += 
+                    (wt * vb.visCube()(cor, ochan, inrow));
               }
             }
           }
@@ -485,9 +509,9 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
       for(Int cor = 0; cor < nCorr_p; ++cor){
         Double constwtperchan = wtM[cor] / nChan_p;
 
-        for(Int chn = 0; chn < avBuf_p.nChannel(); ++chn){
-          if(!avBuf_p.flagCube()(cor, chn, outrow)){
-            Double w = doSpWeight_p ? avBuf_p.weightSpectrum()(cor, chn, outrow)
+        for(Int ochan = 0; ochan < avBuf_p.nChannel(); ++ochan){
+          if(!avBuf_p.flagCube()(cor, ochan, outrow)){
+            Double w = doSpWeight_p ? avBuf_p.weightSpectrum()(cor, ochan, outrow)
               : constwtperchan;
 
             // The 2nd choice begs the question of why it isn't flagged.
@@ -495,17 +519,17 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
 
             for(Int i = colEnums_p.nelements(); i--;){
               if(colEnums_p[i] == MS::CORRECTED_DATA)
-                avBuf_p.correctedVisCube()(cor, chn, outrow) *= norm;
+                avBuf_p.correctedVisCube()(cor, ochan, outrow) *= norm;
               else if(colEnums_p[i] == MS::MODEL_DATA)
-                avBuf_p.modelVisCube()(cor, chn, outrow) *= norm;
+                avBuf_p.modelVisCube()(cor, ochan, outrow) *= norm;
               // else if(colEnums_p[i] == MS::LAG_DATA)
               //  VisBuffer doesn't handle LAG_DATA.
               else if(colEnums_p[i] == MS::FLOAT_DATA)
-                avBuf_p.floatDataCube()(cor, chn, outrow) *= norm;
+                avBuf_p.floatDataCube()(cor, ochan, outrow) *= norm;
               else if(colEnums_p[i] == MS::DATA)
-                avBuf_p.visCube()(cor, chn, outrow) *= norm;
+                avBuf_p.visCube()(cor, ochan, outrow) *= norm;
             }
-          }     // ends if(!avBuf_p.flagCube()(cor, chn, outrow))
+          }     // ends if(!avBuf_p.flagCube()(cor, ochan, outrow))
         }       // ends chan loop
       }         // ends cor loop
     }           // ends if(!avBuf_p.flagRow()(outrow))
@@ -514,8 +538,8 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
 }
 
 uInt VisChunkAverager::hashFunction(const Int ant1, const Int ant2,
-                                   const Int feed1, const Int feed2,
-                                   const Int procid) const
+                                    const Int feed1, const Int feed2,
+                                    const Int procid) const
 {
   return feed2 +
     maxfeed2p1_p * (feed1 +

@@ -92,7 +92,8 @@ public:
   // Construct from which *DATA column(s) to read and whether or not to use
   // WEIGHT_SPECTRUM.
   VisChunkAverager(const Vector<MS::PredefinedColumns>& dataCols,
-                   const Bool doSpWeight);
+                   const Bool doSpWeight,
+                   const Vector<Matrix<Int> >& chBounds=Vector<Matrix<Int> >());
 
   // Null destructor
   ~VisChunkAverager();
@@ -187,11 +188,16 @@ private:
                      const uInt chunkletNum,
                      const std::vector<Int>& inrows_for_slot) const;
 
+  // Start of initialization list.
   // Which of DATA, MODEL_DATA, and/or CORRECTED_DATA to use.
   Vector<MS::PredefinedColumns> colEnums_p;
 
   // Use WEIGHT_SPECTRUM?
   Bool doSpWeight_p;
+
+  // Used for both selecting and averaging channels.
+  Vector<Matrix<Int> > chanAveBounds_p;
+  // End of initialization list.
 
   // Is everything setup for hashFunction()?
   Bool readyToHash_p;

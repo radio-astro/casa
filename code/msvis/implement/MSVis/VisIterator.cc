@@ -183,72 +183,6 @@ void ROVisIterator::setSelTable()
     attachColumns(attachTable());
 }
 
-void ROVisIterator::slicesToMatrices(Vector<Matrix<Int> >& matv,
-                                     const Vector<Vector<Slice> >& slicesv,
-                                     const Vector<Int>& widthsv) const
-{
-  Int nspw = slicesv.nelements();
-
-  matv.resize(nspw);
-  uInt selspw = 0;
-  for(uInt spw = 0; spw < nspw; ++spw){
-    uInt nSlices = slicesv[spw].nelements();
-
-    // Figure out how big to make matv[spw].
-    uInt totOutChan = 0;
-    
-    Int width = (nSlices > 0) ? widthsv[selspw] : 1;
-    if(width < 1)
-      throw(AipsError("Cannot channel average with width < 1"));
-
-    for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
-      const Slice& sl = slicesv[spw][slicenum];
-      Int firstchan = sl.start();
-      Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
-      Int inc = sl.all() ? 1 : sl.inc();
-
-      // Even if negative increments are desirable, the for loop below has a <.
-      if(inc < 1)
-        throw(AipsError("The channel increment must be >= 1"));
-
-      // This formula is very dependent on integer division.  Don't rearrange it.
-      totOutChan += 1 + ((lastchan - firstchan) / inc) / (1 + (width - 1) / inc);
-    }
-    matv[spw].resize(totOutChan, 4);
-
-    // Index of input channel in SELECTED list, i.e.
-    // mschan = vi.chanIds(chanids, spw)[selchanind].
-    uInt selchanind = 0;
-
-    // Fill matv with channel boundaries.
-    uInt outChan = 0;
-    for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
-      const Slice& sl = slicesv[spw][slicenum];
-      Int firstchan = sl.start();
-      Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
-      Int inc = sl.all() ? 1 : sl.inc(); // Default to no skipping
-
-      // Again, these depend on integer division.  Don't rearrange them.
-      Int selspan = 1 + (width - 1) / inc;
-      Int span = inc * selspan;
-
-      for(Int mschan = firstchan; mschan <= lastchan; mschan += span){
-        // The start and end in MS channel #s.
-        matv[spw](outChan, 0) = mschan;
-        matv[spw](outChan, 1) = mschan + width - 1;
-
-        // The start and end in selected reckoning.
-        matv[spw](outChan, 2) = selchanind;
-        selchanind += selspan;
-        matv[spw](outChan, 3) = selchanind - 1;
-        ++outChan;
-      }
-    }
-    if(nSlices > 0)     // spw was selected
-      ++selspw;
-  }
-}
-
 // Return native correlation _indices_
 Vector<Int>& ROVisIterator::corrIds(Vector<Int>& corrids) const
 {
@@ -279,7 +213,6 @@ Vector<Int>& ROVisIterator::corrIds(Vector<Int>& corrids) const
 
   return corrids;
 }
-
 
 Vector<Int>& ROVisIterator::corrType(Vector<Int>& corrTypes) const
 {

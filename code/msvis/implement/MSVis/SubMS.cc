@@ -8262,6 +8262,10 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   //vi.selectChannel(chanSlices_p);     // ROVisIterator
   //vi.selectCorrelation(corrSlices_p);
 
+  // Translate chanSlices_p into the form vb.channelAve() wants.
+  Vector<Matrix<Int> > chanAveBounds;
+  vi.slicesToMatrices(chanAveBounds, chanSlices_p, widths_p);
+
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
   Vector<Int> spwindex(max(spw_p) + 1);
@@ -8298,7 +8302,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 		      True, 1);
   uInt inrowsdone = 0;  // only for the meter.
 
-  VisChunkAverager vca(dataColNames, doSpWeight);
+  VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
@@ -8497,6 +8501,10 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   vi.selectChannel(chanSlices_p);     // ROVisIterator
   vi.selectCorrelation(corrSlices_p);
 
+  // Translate chanSlices_p into the form vb.channelAve() wants.
+  Vector<Matrix<Int> > chanAveBounds;
+  vi.slicesToMatrices(chanAveBounds, chanSlices_p, widths_p);
+
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
   Vector<Int> spwindex(max(spw_p) + 1);
@@ -8533,7 +8541,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
 		      True, 1);
   uInt inrowsdone = 0;  // only for the meter.
 
-  VisChunkAverager vca(dataColNames, doSpWeight);
+  VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
