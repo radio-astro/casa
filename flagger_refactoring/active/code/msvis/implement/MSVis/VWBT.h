@@ -41,6 +41,7 @@ public:
 
 	void start();
 	void terminate ();
+	bool isWriting() { return writing_p;}
 
 	// We just want a de-referenced copy
 	void setFlag(Cube<Bool> flagCube);
