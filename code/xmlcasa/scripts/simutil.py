@@ -2192,7 +2192,7 @@ class simutil:
             model_refdir=epoch+qa.formxxx(lon,format='hms',prec=5)+" "+qa.formxxx(lat,format='dms',prec=5)
             model_refpix=[0.5*in_shape[axmap[0]],0.5*in_shape[axmap[1]]]
             model_projection="SIN" # for indirection we default to SIN.
-            model_projpars=[0.,0]
+            model_projpars=pl.array([0.,0])
             if self.verbose: self.msg("setting model image direction to indirection = "+model_refdir)
         else:
             # indirection is not set - is there a direction in the model already?

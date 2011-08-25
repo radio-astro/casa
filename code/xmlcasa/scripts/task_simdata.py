@@ -793,7 +793,8 @@ def simdata(
                 nscan = int(totalsec/totalscansec)
                 kfld = 0
 
-                if nscan < nfld:
+                #if nscan < nfld:
+                if totalsec < totalscansec:
                     msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="error")
                     return
         

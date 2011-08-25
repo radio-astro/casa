@@ -31,7 +31,7 @@ project = 'm51both_co32'
 # Clear out results from previous runs.
 os.system('rm -rf '+project+'*')
 
-modifymodel=True
+#modifymodel=True
 skymodel = modelname
 inbright = '0.004'
 indirection = 'B1950 23h59m59.96 -34d59m59.50'
@@ -45,7 +45,8 @@ mapsize = '1arcmin'
 #maptype = 'square'
 pointingspacing = '9arcsec'
 
-predict = True
+#predict = True
+observe = True
 refdate='2012/11/21/20:00:00'
 #totaltime = '31360s'
 sdantlist = cfgdir+'aca.tp.cfg'
