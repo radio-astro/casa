@@ -22,7 +22,6 @@ importfits(fitsimage=datadir+"testcube.fits",imagename="testcube2")
 default("simdata")
 project="tc2"
 
-modifymodel=True
 skymodel="testcube2"
 inbright=".1"
 indirection="J2000 19h00m00s -40d00m00s"
@@ -33,7 +32,7 @@ inwidth="0.5MHz"
 setpointings=False
 ptgfile=datadir+"testcube.ptg.txt"
 
-predict=True
+observe=True
 antennalist=cfgdir+"alma.out01.cfg"
 refdate="2012/06/21/03:25:00"
 totaltime="7200s"

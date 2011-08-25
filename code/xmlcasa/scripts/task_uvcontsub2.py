@@ -74,14 +74,16 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             whichcol = 'DATA'
         mytb.close()
 
+        casalog.post('Preparing to add scratch columns.')
         if whichcol != 'DATA' or tempspw != '':
-            casalog.post('splitting to ' + csvis + ' with tempspw="'
-                         + tempspw + '"', 'DEBUG1')
+            casalog.post('splitting to ' + csvis + ' with spw="'
+                         + tempspw + '"')
             myms.open(vis, nomodify=True)
             myms.split(csvis, spw=tempspw, whichcol=whichcol)
             myms.close()
         else:
-            casalog.post('cping to ' + csvis, 'DEBUG1')
+            # This takes almost 30s/GB.  (lustre, 8/2011)
+            casalog.post('Copying ' + vis + ' to ' + csvis + ' with cp.')
             copy_tree(vis, csvis)
         
         if (type(csvis) == str) and os.path.isdir(csvis):

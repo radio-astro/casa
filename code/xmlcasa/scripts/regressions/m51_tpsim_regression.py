@@ -31,7 +31,7 @@ project = 'm51sd_co32'
 # Clear out results from previous runs.
 os.system('rm -rf '+project+'*')
 
-modifymodel=True
+#modifymodel=True
 #skymodel = 'm51.image'
 skymodel = modelname
 inbright = '0.004'
@@ -46,7 +46,8 @@ mapsize = ''
 maptype = 'square'
 pointingspacing = '9arcsec'
 
-predict = True
+#predict = True
+observe = True
 # you should explicitly empty antennalist to avoid synthesis simulation
 antennalist = ''
 refdate='2012/11/21/20:00:00'

@@ -162,9 +162,7 @@ namespace casa {
 		ann->setLineWidth( (*iter)->lineWidth( ) );
 
 		ann->setFont( (*iter)->textFont( ) );
-		char buff[256];
-		sprintf( buff, "%d", (*iter)->textFontSize( ) );
-		ann->setFontSize( buff );
+		ann->setFontSize( (*iter)->textFontSize( ) );
 		int font_style = (*iter)->textFontStyle( );
 		ann->setFontStyle( font_style | Region::ItalicText && font_style | Region::BoldText ? AnnotationBase::ITALIC_BOLD :
 				   font_style | Region::ItalicText ? AnnotationBase::ITALIC : 

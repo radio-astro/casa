@@ -981,9 +981,6 @@ Cube<Bool>& ROVisibilityIterator::flag(Cube<Bool>& flags) const
     if (!flagOK_p) {
       // need to do the interpolation
       getInterpolatedVisFlagWeight(Corrected);
-      This->flagOK_p = True;
-      This->visOK_p[Corrected] = True;
-      This->weightSpOK_p = True;
       if(floatDataFound_p){
         getInterpolatedFloatDataFlagWeight();
         This->floatDataCubeOK_p = True;
@@ -1155,9 +1152,6 @@ ROVisibilityIterator::visibility(Cube<Complex>& vis, DataColumn whichOne) const
   if (velSelection_p) {
     if (!visOK_p[whichOne]) {
       getInterpolatedVisFlagWeight(whichOne);
-      This->visOK_p[whichOne] = True;
-      This->flagOK_p = True;
-      This->weightSpOK_p = True;
     }
     vis.resize(visCube_p.shape()); vis=visCube_p;
   } else { 
@@ -1245,7 +1239,7 @@ void transpose(Matrix<Float>& out, const Matrix<Float>& in)
   in.freeStorage(pin,deleteIn);
 }
 void ROVisibilityIterator::getInterpolatedVisFlagWeight(DataColumn whichOne)
-     const
+const
 {
   // get vis, flags & weights
   // tricky.. to avoid recursion we need to set velSelection_p to False
@@ -1254,6 +1248,7 @@ void ROVisibilityIterator::getInterpolatedVisFlagWeight(DataColumn whichOne)
   visibility(This->visCube_p, whichOne);
   flag(This->flagCube_p); 
   imagingWeight(This->imagingWeight_p);
+  weightSpectrum(This->wtSp_p);
   Vector<Double> freq; frequency(freq);
   This->velSelection_p = True;
 
@@ -1288,7 +1283,19 @@ void ROVisibilityIterator::getInterpolatedVisFlagWeight(DataColumn whichOne)
   InterpolateArray1D<Float,Float>::interpolate(intWt,sfreq,xfreq,wt,method2);
   swapyz(This->visCube_p,intVis);
   swapyz(This->flagCube_p,intFlag);
+  if(existsWeightSpectrum()){
+    Cube<Float> wtsp, intWtSp;
+
+    swapyz(wtsp, wtSp_p);
+    InterpolateArray1D<Float,Float>::interpolate(intWtSp, sfreq, xfreq, wtsp,
+                                                 method2);
+    swapyz(This->wtSp_p, intWtSp);
+  }
   transpose(This->imagingWeight_p,intWt);
+
+  This->flagOK_p = True;
+  This->visOK_p[whichOne] = True;
+  This->weightSpOK_p = True;       // Used more for IMAGING_WEIGHT than WEIGHT_SPECTRUM.
 }
 
 void ROVisibilityIterator::getInterpolatedFloatDataFlagWeight() const
@@ -1798,7 +1805,7 @@ Matrix<Float>& ROVisibilityIterator::weightMat(Matrix<Float>& wtmat) const
 }
 
 
-Bool ROVisibilityIterator::existsWeightSpectrum()
+Bool ROVisibilityIterator::existsWeightSpectrum() const
 {
   if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
     try{
@@ -1824,12 +1831,21 @@ Bool ROVisibilityIterator::existsWeightSpectrum()
   return msHasWtSp_p;
 }
 
-
 Cube<Float>& ROVisibilityIterator::weightSpectrum(Cube<Float>& wtsp) const
 {
-  if (!colWeightSpectrum.isNull()) {
-    wtsp.resize(nPol_p,nChan_p,curNumRow_p);
-    getCol(colWeightSpectrum, wtsp);
+  if(existsWeightSpectrum()){
+    if(velSelection_p){
+      if(!weightSpOK_p)
+        getInterpolatedVisFlagWeight(Corrected);
+      wtsp.resize(wtSp_p.shape());
+      wtsp = wtSp_p;
+    }
+    else{
+      if(useSlicer_p)
+        getCol(colWeightSpectrum, slicer_p, wtsp, True);
+      else
+        getCol(colWeightSpectrum, wtsp, True);
+    }
   } else {
     wtsp.resize(0,0,0);
   }
@@ -2167,6 +2183,72 @@ void  ROVisibilityIterator::doChannelSelection()
 
 
 
+}
+
+void ROVisibilityIterator::slicesToMatrices(Vector<Matrix<Int> >& matv,
+                                            const Vector<Vector<Slice> >& slicesv,
+                                            const Vector<Int>& widthsv) const
+{
+  Int nspw = slicesv.nelements();
+
+  matv.resize(nspw);
+  uInt selspw = 0;
+  for(uInt spw = 0; spw < nspw; ++spw){
+    uInt nSlices = slicesv[spw].nelements();
+
+    // Figure out how big to make matv[spw].
+    uInt totOutChan = 0;
+    
+    Int width = (nSlices > 0) ? widthsv[selspw] : 1;
+    if(width < 1)
+      throw(AipsError("Cannot channel average with width < 1"));
+
+    for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
+      const Slice& sl = slicesv[spw][slicenum];
+      Int firstchan = sl.start();
+      Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
+      Int inc = sl.all() ? 1 : sl.inc();
+
+      // Even if negative increments are desirable, the for loop below has a <.
+      if(inc < 1)
+        throw(AipsError("The channel increment must be >= 1"));
+
+      // This formula is very dependent on integer division.  Don't rearrange it.
+      totOutChan += 1 + ((lastchan - firstchan) / inc) / (1 + (width - 1) / inc);
+    }
+    matv[spw].resize(totOutChan, 4);
+
+    // Index of input channel in SELECTED list, i.e.
+    // mschan = vi.chanIds(chanids, spw)[selchanind].
+    uInt selchanind = 0;
+
+    // Fill matv with channel boundaries.
+    uInt outChan = 0;
+    for(uInt slicenum = 0; slicenum < nSlices; ++slicenum){
+      const Slice& sl = slicesv[spw][slicenum];
+      Int firstchan = sl.start();
+      Int lastchan = sl.all() ? firstchan + chanWidth_p[spw] - 1 : sl.end();
+      Int inc = sl.all() ? 1 : sl.inc(); // Default to no skipping
+
+      // Again, these depend on integer division.  Don't rearrange them.
+      Int selspan = 1 + (width - 1) / inc;
+      Int span = inc * selspan;
+
+      for(Int mschan = firstchan; mschan <= lastchan; mschan += span){
+        // The start and end in MS channel #s.
+        matv[spw](outChan, 0) = mschan;
+        matv[spw](outChan, 1) = mschan + width - 1;
+
+        // The start and end in selected reckoning.
+        matv[spw](outChan, 2) = selchanind;
+        selchanind += selspan;
+        matv[spw](outChan, 3) = selchanind - 1;
+        ++outChan;
+      }
+    }
+    if(nSlices > 0)     // spw was selected
+      ++selspw;
+  }
 }
 
 void

@@ -730,6 +730,10 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     Int nChanOut(chanAveBounds_p.nrow());
     Vector<Int> chans(channel()); // Ensure channels pre-filled
     
+    // Row weight and sigma refer to the number of channels in the MS,
+    // regardless of any selection.
+    Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
+
     const Bool doWtSp(visIter_p->existsWeightSpectrum());
 
     // Apply averaging to whatever data is present
@@ -737,6 +741,24 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     if (modelVisCubeOK_p)     chanAveVisCube(modelVisCube(),nChanOut);
     if (correctedVisCubeOK_p) chanAveVisCube(correctedVisCube(),nChanOut);
     if (floatDataCubeOK_p)    chanAveVisCube(floatDataCube(), nChanOut);
+
+    uInt nCor = nCorr();
+    uInt nrows = nRow();
+    Matrix<Float> rowWtFac(nCor, nrows);
+    if(doWtSp){                                    // Get the total weight spectrum
+      const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
+      uInt nch = wtsp.shape()(1);
+
+      for(uInt row = 0; row < nrows; ++row){
+        for(uInt icor = 0; icor < nCor; ++icor){
+          rowWtFac(icor, row) = 0.0;
+          for(Int ichan = 0; ichan < nch; ++ichan)
+            // Presumably the input row weight was set without taking flagging
+            // into account.
+            rowWtFac(icor, row) += wtsp(icor, ichan, row);
+        }
+      }
+    }
 
     // The false makes it leave weightSpectrum() averaged if it is present.
     if(flagCubeOK_p)          chanAveFlagCube(flagCube(), nChanOut, false);
@@ -773,22 +795,16 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     channel().reference(newChan);
     nChannel()=nChanOut;
 
-    // Row weight and sigma refer to the number of channels in the MS,
-    // regardless of any selection.
-    Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
-
     if(totn < nAllChan0){
       // Update weightMat and sigmaMat, since only part of the row was used.
-      uInt nCor = nCorr();
-      uInt nrows = nRow();
-      Matrix<Float> rowWtFac(nCor, nrows);
-
       if(doWtSp){
         // chanAccCube(weightSpectrum(), nChanOut); already done.
         const Cube<Float>& wtsp(weightSpectrum());
 
         for(uInt row = 0; row < nrows; ++row){
           for(uInt icor = 0; icor < nCor; ++icor){
+            Float totwtsp = rowWtFac(icor, row);
+            
             rowWtFac(icor, row) = 0.0;
             for(Int ochan = 0; ochan < nChanOut; ++ochan){
               Float oswt = wtsp(icor, ochan, row);       // output spectral
@@ -798,6 +814,8 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
               else
                 flagCube()(icor, ochan, row) = True;
             }
+            if(totwtsp > 0.0)
+              rowWtFac(icor, row) /= totwtsp;
           }
         }
       }
@@ -810,7 +828,8 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
           Float rwfcr = rowWtFac(icor, row);
 
           weightMat()(icor, row) *= rwfcr;
-          sigmaMat()(icor, row) /= sqrt(rwfcr);
+          if(rwfcr > 0.0)
+            sigmaMat()(icor, row) /= sqrt(rwfcr);
         }
       }
     }
@@ -830,10 +849,10 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
     // Chuck it to the caller.
     throw(AipsError("Can't average " + String(nChan0) + " channels to " +
                     String(nChanOut) + " channels!"));
-  if(nChan0 == nChanOut)
-    return;    // No-op.
 
   Vector<Int>& chans(channel());
+  if(nChan0 == nChanOut && chans.nelements() > 0 && chans[0] == 0)
+    return;    // No-op.
 
   Cube<Bool> newFlag(csh);
   newFlag = True;
@@ -1139,7 +1158,7 @@ void VisBuffer::resetWeightMat()
 void VisBuffer::phaseCenterShift(const Vector<Double>& phase)
 {
 
-  AlwaysAssert(phase.nelements()==nRow(), AipsError);
+  AlwaysAssert(static_cast<Int>(phase.nelements()) == nRow(), AipsError);
 
   // phase is in metres 
   // phase*(-2*pi*f/c) gives phase for the channel of the given baseline in radian

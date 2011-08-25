@@ -39,19 +39,12 @@ cl.addcomponent(dir=direction,flux=0.0003,freq="672GHz")
 cl.rename("star672GHz.cl")
 cl.done()
 
-modifymodel=False
-#indirection="J2000 18h00m00.03s -45d59m59.6s"
-#incenter="672.0GHz" 
-#inwidth="8.0GHz"
-#incell="0.004arcsec" 
-#inbright="unchanged"
-
 setpointings=True
 mapsize="0.76arcsec"
 pointingspacing="0.5arcsec"
 integration="10s"
 
-predict=True
+observe=True
 antennalist=repodir+"/data/alma/simmos/alma.out20.cfg"
 refdate="2012/06/21/03:25:00"
 totaltime="1200s"

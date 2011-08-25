@@ -828,7 +828,7 @@ void RegionTextParser::_createAnnotation(
 	annotation->setSymbolThickness(currentParamSet.at(AnnotationBase::SYMTHICK).intVal);
 	annotation->setColor(currentParamSet.at(AnnotationBase::COLOR).stringVal);
 	annotation->setFont(currentParamSet.at(AnnotationBase::FONT).stringVal);
-	annotation->setFontSize(currentParamSet.at(AnnotationBase::FONTSIZE).stringVal);
+	annotation->setFontSize(currentParamSet.at(AnnotationBase::FONTSIZE).intVal);
 	annotation->setFontStyle(
 		AnnotationBase::fontStyleFromString(
 			currentParamSet.at(AnnotationBase::FONTSTYLE).stringVal
@@ -1147,7 +1147,8 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::SYMTHICK] = symthick;
 
 	ParamValue color;
-	color.stringVal = AnnotationBase::DEFAULT_COLOR;
+	color.color = AnnotationBase::DEFAULT_COLOR;
+	color.stringVal = AnnotationBase::colorToString(color.color);
 	_currentGlobals[AnnotationBase::COLOR] = color;
 
 	ParamValue font;
@@ -1155,7 +1156,7 @@ void RegionTextParser::_setInitialGlobals() {
 	_currentGlobals[AnnotationBase::FONT] = font;
 
 	ParamValue fontsize;
-	fontsize.stringVal = AnnotationBase::DEFAULT_FONTSIZE;
+	fontsize.intVal = AnnotationBase::DEFAULT_FONTSIZE;
 	_currentGlobals[AnnotationBase::FONTSIZE] = fontsize;
 
 	ParamValue fontstyle;

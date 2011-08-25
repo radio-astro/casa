@@ -430,7 +430,7 @@ public:
   virtual Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
 
   // Determine whether WEIGHT_SPECTRUM exists.
-  Bool existsWeightSpectrum();
+  Bool existsWeightSpectrum() const;
 
   // Return weightspectrum (a weight for each channel)
   virtual Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
@@ -536,6 +536,13 @@ public:
 			   Block< Vector<Int> >& blockWidth,
 			   Block< Vector<Int> >& blockIncr,
 			   Block< Vector<Int> >& blockSpw);
+
+  // Translate slicesv from the form returned by MSSelection::getChanSlices()
+  // to matv as used by setChanAveBounds().  widthsv is the channel averaging
+  // width for each _selected_ spw.
+  void slicesToMatrices(Vector<Matrix<Int> >& matv,
+                        const Vector<Vector<Slice> >& slicesv,
+                        const Vector<Int>& widthsv) const;
 
   // Get the spw, start  and nchan for all the ms's is this Visiter that 
   // match the frequecy "freqstart-freqStep" and "freqEnd+freqStep" range
@@ -648,7 +655,9 @@ protected:
   // returns the table, to which columns are attached, 
   // can be overridden in derived classes
   virtual const Table attachTable() const;
-  // get the (velocity selected) interpolated visibilities, flags and weights
+  // get the (velocity selected) interpolated visibilities, flags and weights.
+  // It is not really const at all (it seems to use This-> trickery so callers
+  // like flag() can be declared const).
   virtual void getInterpolatedVisFlagWeight(DataColumn whichOne) const;
 
   // get the (velocity selected) interpolated FLOAT_DATA (as real Floats),
@@ -760,6 +769,7 @@ protected:
   Cube<Complex> visCube_p;
   Cube<Float> floatDataCube_p;
   mutable Matrix<Double> uvwMat_p;
+  Cube<Float> wtSp_p;
   Matrix<Float> imagingWeight_p;
   Vector<Float> feedpa_p;
 
@@ -772,7 +782,8 @@ protected:
   Bool floatDataFound_p;
 
   // Does the current MS have a valid WEIGHT_SPECTRUM?
-  Bool msHasWtSp_p;     // make mutable so existsWeightSpectrum() can be const?
+  // mutable so existsWeightSpectrum() and its callers can pretend to be const.
+  mutable Bool msHasWtSp_p;
 
   // for PA/AZEL calculations
   MSDerivedValues msd_p;

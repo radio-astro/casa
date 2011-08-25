@@ -23,54 +23,52 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 
-
-
-
-    <param type="bool" name="modifymodel">
-      <description>modify model image </description>
-      <value type="bool">False</value>
-    </param>
     <!-- all parms default to keep what's in the image, if the param=="" -->
 
-    <param type="string" name="skymodel" subparam='true'>
-      <!-- modifying the description in constraints doesn't work yet -->
-      <description>model image to observe or modify</description>
-      <value type="string">$project.skymodel</value>
+    <param type="string" name="skymodel">
+      <description>model image to observe</description>
+      <value type="string"></value>
     </param>
 
     <param type="string" name="inbright" subparam='true'>
-       <description>scale surface brightness of brightest pixel e.g. "1.2Jy/pixel" or ""</description>
+       <description>scale surface brightness of brightest pixel e.g. "1.2Jy/pixel"</description>
        <value type="string"></value>
     </param>
     <!-- TODO parse Jy/pixel, MJy/Sr, eventually K, etc -->
     <!-- TODO document permitted units in online help -->
 
     <param type="string" name="indirection" subparam="true">
-      <description>"J2000 19h00m00 -40d00m00" or ""</description>
+      <description>set new direction e.g. "J2000 19h00m00 -40d00m00"</description>
       <value type="string"></value>
     </param>
 
     <param type="string" name="incell" subparam='true'>
-      <description>cell/pixel size e.g. "0.1arcsec" or ""</description>
+      <description>set new cell/pixel size e.g. "0.1arcsec"</description>
       <value type="string"></value>
     </param>
     
     <param type="string" name="incenter" subparam="true">
-      <description>frequency of center channel e.g. "89GHz" or ""</description>
+      <description>set new frequency of center channel e.g. "89GHz" (required even for 2D model)</description>
       <value type="string"></value>
     </param>    
 
     <param type="string" name="inwidth" subparam="true">
-      <description>channel width e.g. "10MHz" or ""</description>
+      <description>set new channel width e.g. "10MHz" (required even for 2D model)</description>
       <value type="string"></value>
     </param>
 
-<!--
-    <param type="int" name="innchan" subparam="true">
-      <description>number of channels or 0 to use model image</description>
-      <value>0</value>
+
+
+    <param type="string" name="complist">
+      <description>componentlist to observe</description>
+      <value></value>
     </param>
--->
+
+    <param type="string" name="compwidth" subparam="true">
+      <description>bandwidth of components</description>
+      <value>"8GHz"</value>
+    </param>
+
 
 
 <!--*************************************************************-->
@@ -152,33 +150,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 <!--*************************************************************-->
-<!--  predict always reads from $project.skymodel file now -->
+<!--  observe always reads from $project.skymodel file now -->
 
-    <param type="bool" name="predict">
+    <param type="bool" name="observe">
       <description>calculate visibilites using ptgfile</description>
       <value>True</value>
     </param>
 
     <param type="string" name="refdate" subparam="true">
-      <description>date of observation</description>
-      <value>2012/05/21</value>
+      <description>date of observation - not critical unless concatting simulations</description>
+      <value>2014/01/01</value>
     </param>
 
-    <param type="string" name="reftime" subparam="true">
-      <description>time of observation e.g. 22:05:00, or "transit"</description>
+    <param type="string" name="hourangle" subparam="true">
+      <description>hour angle of observation center e.g. -3:00:00, or "transit"</description>
       <value>transit</value>
     </param>
     
-    <param type="string" name="complist" subparam="true">
-      <description>optional componentlist to observe with skymodel</description>
-      <value></value>
-    </param>
-
-    <param type="string" name="compwidth" subparam="true">
-      <description>optional bandwidth if simulating from components only</description>
-      <value>"2GHz"</value>
-    </param>
-
     <param type="string" name="totaltime" subparam="true">
       <description>total time of observation</description>
       <value>7200s</value>
@@ -431,48 +419,28 @@ it'll do them for the same amount of time -->
 <!--  CONSTRAINTS  -->    
     
     <constraints>
-      <when param="modifymodel">
-	<equals type="bool" value="False">
-	  <default param="skymodel">
-<!--  
-modifying the description doesn't work yet but its an improvement ticket.
-note for help: a symlink will be created from this to $project.model.image
-if that's not the file the user is using.   
--->
-	    <description>model sky image</description>
-	    <value type="string">$project.skymodel</value>
-	  </default>
-	</equals>
-	<!-- ******************** -->
-	<equals type="bool" value="True">
-	  <default param="skymodel">
-<!--  
-modifying the description doesn't work yet but its an improvement ticket.
--->
-	    <description>original model (modified will be $project.skymodel)</description>
-	    <value type="string"></value>
-	  </default>
+      <when param="skymodel">
+	<notequals value="">
 	  <default param="inbright"><value type="string"></value></default>
 	  <default param="indirection">
-	    <description>center of model sky image</description>
 	    <value type="string"></value>
 	  </default>
 	  <default param="incell"><value type="string"></value></default>
 	  <default param="incenter">
-	    <description>center of centerchan; if 1 chan, the freq of the continuum image</description>
+	    <description>set central frequency (required even for 2D image)</description>
 	    <value type="string"></value>
 	  </default>
 	  <default param="inwidth">
-	    <description>chan width or bandwidth of 1-chan (continuum)</description>
+	    <description>set channel width or bandwidth of 2D / continuum image</description>
 	    <value type="string"></value>
 	  </default>
-<!--
-	  <default param="innchan">
-	    <description>1 for continuum</description>
-	    <value>0</value>
-	  </default>
--->
-	</equals>
+	</notequals>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="complist">
+	<notequals value="">
+	  <default param="compwidth"><value type="string">8GHz</value></default>
+	</notequals>
       </when>
       <!-- **********************************************************  -->
       <when param="setpointings">
@@ -498,16 +466,11 @@ modifying the description doesn't work yet but its an improvement ticket.
 	</equals>
       </when>
       <!-- **********************************************************  -->
-      <when param="predict">
+      <when param="observe">
 	<equals type="bool" value="True">
-	  <default param="complist">
-	    <description>optional model componentlist file</description>
-	    <value type="string"></value>
-	  </default>
-	  <default param="compwidth"><value type="string">2GHz</value></default>
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
-	  <default param="reftime"><value type="string">transit</value></default>
+	  <default param="hourangle"><value type="string">transit</value></default>
 	  <default param="totaltime"><value>"7200s"</value></default>
 	  <default param="caldirection"><value type="string"></value></default>
 	  <default param="calflux"><value type="string">1Jy</value></default>
@@ -637,7 +600,7 @@ mosaic simulation task:
          or "0.25PB" to use 1/4 of the primary beam FWHM, or 
          "" will use the primary beam HWHM.
     -------------------------------
-    predict -- calculate visibilities from skymodel (which may have been 
+    observe -- calculate visibilities from skymodel (which may have been 
          modified above, (optionally) complist, and $ptgfile (which 
          may have been generated above)
        * if graphics selected, display the array (like plotants), the uv 
@@ -723,7 +686,7 @@ mosaic simulation task:
          for multiple fields (with Clark PSF calculation in minor cycles).
     vis -- the simulated interferometric MS, or total-power one, or both
        * NOTE: vis='default' will automatically set proper MS name(s) ONLY
-         when either predicting or applying any noise in the same run.
+         when either observing or applying any noise in the same run.
        * you can use '$project' to let the task automatically replace it to
          the project name, e.g., vis='$project.noisy.ms,$project.nosisy.sd.ms'.
     modelimage -- prior (e.g. SD) image to be used in clean
@@ -806,7 +769,7 @@ mosaic simulation task:
     project.quick.psf = psf calculated from uv coverage
     project.ms = noise-free measurement set
     project.noisy.ms = corrupted measurement set 
-    project.predict.png = diagnostic figure of uv coverage and visibilities
+    project.observe.png = diagnostic figure of uv coverage and visibilities
 
     project.image = synthesized image
     project.flux.pbcoverage = promary beam correction for mosaic image

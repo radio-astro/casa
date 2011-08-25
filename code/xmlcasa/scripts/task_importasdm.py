@@ -22,13 +22,16 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		viso = ''
 		visoc = '' # for the wvr corrected version, if needed
                 if singledish:
+                        theexecutable = 'asdm2ASAP'
+                        if useversion == 'v2':
+                                theexecutable = 'oldasdm2ASAP'
                         if compression:
                                 casalog.post('compression=True has no effect for single-dish format.')
-                        cmd = 'which asdm2ASAP > /dev/null 2>&1'
+                        cmd = 'which %s > /dev/null 2>&1'%(theexecutable)
                         ret = os.system( cmd )
                         if ret == 0:
                                 import commands
-                                casalog.post( 'found asdm2ASAP' )
+                                casalog.post( 'found %s'%(theexecutable) )
                                 casapath_split = os.environ['CASAPATH'].split()
                                 casaroot = casapath_split[0]
                                 if ( len(casapath_split) > 1 ):
@@ -50,24 +53,30 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                 if lpath not in os.environ['LD_LIBRARY_PATH'].split(':'):
                                         casalog.post( 'appending %s to LD_LIBRARY_PATH'%(lpath) )
                                         os.environ['LD_LIBRARY_PATH'] += ':%s'%(lpath)
-                                execute_string = 'asdm2ASAP -asdm ' + asdm 
-                                if ( len(vis) != 0 ):
-                                        execute_string += ' -asap ' + vis.rstrip('/')
-                                execute_string += ' -antenna ' + str(antenna) + ' -apc ' + wvr_corrected_data + ' -time-sampling ' + time_sampling.lower() + ' -overwrite ' + str(overwrite) 
-                                if ( corr_mode == 'all' ):
-                                        execute_string += ' -corr-mode ao,ca -ocorr-mode ao'
+                                if showversion:
+                                        execute_string = theexecutable + ' --help'
                                 else:
-                                        execute_string += ' -corr-mode ' + corr_mode.replace(' ',',') + ' -ocorr-mode ao'
-                                if ( srt == 'all' ):
-                                        execute_string += ' -srt ' + srt
-                                else:
-                                        execute_string += ' -srt ' + srt.replace(' ',',')
-                                execute_string += ' -logfile ' + casalog.logfile()
+                                        execute_string = theexecutable + ' -asdm ' + asdm 
+                                        if ( len(vis) != 0 ):
+                                                execute_string += ' -asap ' + vis.rstrip('/')
+                                        execute_string += ' -antenna ' + str(antenna) + ' -apc ' + wvr_corrected_data + ' -time-sampling ' + time_sampling.lower() + ' -overwrite ' + str(overwrite) 
+                                        if ( corr_mode == 'all' ):
+                                                execute_string += ' -corr-mode ao,ca -ocorr-mode ao'
+                                        else:
+                                                execute_string += ' -corr-mode ' + corr_mode.replace(' ',',') + ' -ocorr-mode ao'
+                                        if ( srt == 'all' ):
+                                                execute_string += ' -srt ' + srt
+                                        else:
+                                                execute_string += ' -srt ' + srt.replace(' ',',')
+                                        execute_string += ' -logfile ' + casalog.logfile()
                                 casalog.post( 'execute_string is' )
                                 casalog.post( '   '+execute_string )
-                                ret = os.system( execute_string )  
+                                ret = os.system( execute_string )
+                                if ret != 0 and not showversion:
+                                        casalog.post(theexecutable+' terminated with exit code '+str(ret),'SEVERE')
+                                        raise Exception, "ASDM conversion error, please check if it is a valid ASDM and/or useversion='%s' is consistent with input ASDM."%(useversion)
                         else:
-                                casalog.post( 'You should build ASAP to be able to create single-dish data.','SEVERE' )
+                                casalog.post( 'You have to build ASAP to be able to create single-dish data.','SEVERE' )
                         return 
 		if(len(vis) > 0) :
 		   viso = vis

@@ -31,7 +31,8 @@
 #include <casa/aips.h>
 
 #include <coordinates/Coordinates/CoordinateSystem.h>
-#include <measures/Measures/Stokes.h>
+#include <boost/regex.hpp>
+#include <list>
 
 namespace casa {
 
@@ -54,6 +55,8 @@ namespace casa {
 
 class AnnotationBase {
 public:
+
+	typedef vector<float> RGB;
 
 	enum Type {
 		// annotations only
@@ -106,16 +109,29 @@ public:
 		ITALIC_BOLD
 	};
 
+    static const RGB BLACK;
+    static const RGB BLUE;
+    static const RGB CYAN;
+    static const RGB GRAY;
+    static const RGB GREEN;
+    static const RGB MAGENTA;
+    static const RGB ORANGE;
+    static const RGB RED;
+    static const RGB WHITE;
+    static const RGB YELLOW;
+
 	static const String DEFAULT_LABEL;
-	static const String DEFAULT_COLOR;
+	static const RGB DEFAULT_COLOR;
 	static const LineStyle DEFAULT_LINESTYLE;
 	static const uInt DEFAULT_LINEWIDTH;
 	static const uInt DEFAULT_SYMBOLSIZE;
 	static const uInt DEFAULT_SYMBOLTHICKNESS;
 	static const String DEFAULT_FONT;
-	static const String DEFAULT_FONTSIZE;
+	static const uInt DEFAULT_FONTSIZE;
 	static const FontStyle DEFAULT_FONTSTYLE;
 	static const Bool DEFAULT_USETEX;
+
+	static const boost::regex rgbHexRegex;
 
 	virtual ~AnnotationBase();
 
@@ -139,9 +155,21 @@ public:
 
 	String getLabel() const;
 
+    // <src>color</src> must either be a recognized color name or
+    // a valid rgb hex string, else an expection is thrown
 	void setColor(const String& color);
+	
+    // color must have three elements all with values between 0 and 255 inclusive
+    // or an exception is thrown.
+    void setColor(const RGB& color);
 
-	String getColor() const;
+    // returns the color name if it is recognized or its rgb hex string 
+	String getColorString() const;
+
+	static String colorToString(const RGB& color);
+
+    // get the color associated with this object
+    RGB getColor() const;
 
 	void setLineStyle(const LineStyle lineStyle);
 
@@ -163,9 +191,9 @@ public:
 
 	String getFont() const;
 
-	void setFontSize(const String& fontsize);
+	void setFontSize(const uInt fontsize);
 
-	String getFontSize() const;
+	uInt getFontSize() const;
 
 	void setFontStyle(const FontStyle& fontstyle);
 
@@ -202,6 +230,9 @@ public:
 	static ostream& print(
 		ostream& os, const FontStyle fs
 	);
+
+	// Get a list of the user-friendly color names supported
+	static std::list<std::string> colorChoices();
 
 protected:
 
@@ -249,22 +280,32 @@ private:
 	MDirection::Types _directionRefFrame;
 	CoordinateSystem _csys;
 	IPosition _directionAxes;
-	String _label, _color, _font, _fontsize;
+	String _label, _font;
+    RGB _color;
 	FontStyle _fontstyle;
 	LineStyle _linestyle;
-	uInt _linewidth, _symbolsize, _symbolthickness;
+	uInt _fontsize, _linewidth, _symbolsize,
+		_symbolthickness;
 	Bool _usetex;
 	Vector<MDirection> _convertedDirections;
 	map<Keyword, Bool> _globals;
 	map<Keyword, String> _params;
 	Bool _printGlobals;
 
-	static Bool _doneUnitInit;
+	static Bool _doneUnitInit, _doneColorInit;
 	static map<String, LineStyle> _lineStyleMap;
 	static map<String, Type> _typeMap;
+	static map<string, RGB> _colors;
+	static map<RGB, string> _rgbNameMap;
+	static std::list<std::string> _colorNames;
+
 	const static String _class;
+
 	void _init();
 	void _initParams();
+
+	static void _initColors();
+
 };
 
 inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {

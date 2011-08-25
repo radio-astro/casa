@@ -36,7 +36,6 @@ cl.addcomponent(dir="J2000 05h18m48.586s -68d42m00.05s",flux=0.5,freq="650GHz")
 cl.rename(project+".cl")
 cl.done()
 
-modifymodel=True # but only brightness
 skymodel="30dor.image"
 inbright=".1"
 incell=""
@@ -51,7 +50,7 @@ direction="J2000 05h18m48.0s -68d42m00s"
 mapsize="17arcsec"  # input is 16.3, relmargin=0.5
 pointingspacing="4.5arcsec"
 
-predict=True
+observe=True
 complist=project+".cl"
 refdate="2012/06/21/03:25:00"
 antennalist=cfgdir+"alma.out05.cfg"

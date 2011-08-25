@@ -178,11 +178,10 @@ average over frequency (channels) and time (integrations).
                spw='0~2:2~6'; spw 0,1,2 with channels 2 through 6 in each.
                spw = '*:3~64'  channels 3 through 64 for all sp id's
                        spw = ' :3~64' will NOT work.
-               spw = '*:0;60~63'  channel 0 and channels 60 to 63 for all IFs 
-                      ';' needed to separate different channel ranges in one spw
-               spw='0:0~10;15~60'; spectral window 0 with channels 0-10,15-60
-               spw='0:0~10,1:20~30,2:1;2;4'; spw 0, channels 0-10,
-                        spw 1, channels 20-30, and spw 2, channels, 1, 2 and 4
+               split does not support multiple channel ranges per spectral
+               window (';') because it is not clear whether to keep the ranges
+               in the original spectral window or make a new spectral window
+               for each additional range.
 	width -- Defines the number of channel to average to form the one
 	         output channel.
 		 default: '1' =&gt; no channel averaging

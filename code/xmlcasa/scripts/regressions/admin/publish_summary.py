@@ -657,6 +657,10 @@ class runTest:
                     name = "Leopard"
                 elif vers.find("10.6") >= 0:
                     name = "Snow Leopard"
+                elif vers.find("10.7") >= 0:
+                    name = "Tiger"
+                else :
+                    name = "Unknown Mac OSX"
 
                 DIST = commands.getoutput("/usr/bin/sw_vers -productName") + " " + \
                        vers + " (" + name + " " + \

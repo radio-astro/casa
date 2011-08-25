@@ -713,6 +713,7 @@ casa_find( PYTHON
      ${python_prefix}/lib/python${PYTHONV}/site-packages/numpy/core
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}
      ${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core
+     ${python_prefix} # Support the ALMA ACS special case.
   LIBS ${python_library}
   CPP_VERSION PY_VERSION )
 
@@ -968,8 +969,8 @@ if( Boost_VERSION GREATER 103499 )
   endif()
 endif() 
 
-if( NOT Boost_VERSION GREATER 103199 AND NOT CASA_IGNORE_VERSION )
-  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 103200 (1.32.0) or newer. Please check!" )
+if( NOT Boost_VERSION GREATER 104099 AND NOT CASA_IGNORE_VERSION )
+  message( FATAL_ERROR "Boost version (${Boost_VERSION}) is too old! Must be 104100 (1.41.0) or newer. Please check!" )
 endif()
 
 #
@@ -1035,7 +1036,7 @@ casa_add_module( tableplot CASACORE PYTHON )
 casa_add_module( msvis CASACORE graphics Boost )
 casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( plotms CASACORE QT4 casaqt msvis Boost )
-casa_add_module( imageanalysis CASACORE )
+casa_add_module( imageanalysis CASACORE Boost)
 casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis imageanalysis Boost )
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)

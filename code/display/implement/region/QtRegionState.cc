@@ -268,7 +268,7 @@ namespace casa {
 	    bool do_unlink = false;
 	    int fd = open( name.toAscii( ).constData( ), O_WRONLY | O_APPEND );
 	    if ( fd == -1 ) {
-		fd = open( name.toAscii( ).constData( ), O_WRONLY | O_APPEND | O_CREAT );
+		fd = open( name.toAscii( ).constData( ), O_WRONLY | O_APPEND | O_CREAT, 0644 );
 		if ( fd != -1 ) do_unlink = true;
 	    }
 	    if ( fd == -1 ) {

@@ -543,6 +543,75 @@ int main () {
 				AipsError
 			);
 		}
+		{
+			log << LogIO::NORMAL
+				<< "Test colors"
+				<< LogIO::POST;
+			Quantity centerx(0.01, "deg");
+			Quantity centery(0.02, "deg");
+			Quantity inner(30, "arcsec");
+			Quantity outer(40, "arcsec");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+
+			AnnAnnulus annulus(
+				centerx, centery, inner, outer, dirTypeString,
+				csys, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			{
+				// we don't support this color name
+				Bool thrown = False;
+				try {
+					annulus.setColor("purple");
+					AlwaysAssert(False, AipsError);
+				}
+				catch (AipsError x) {
+					log << LogIO::NORMAL << "Exception caught as expected: "
+						<< x.getMesg() << LogIO::POST;
+					thrown = True;
+				}
+				AlwaysAssert(thrown, AipsError);
+			}
+			{
+				// bad hex spec
+				Bool thrown = False;
+				try {
+					annulus.setColor("GG0022");
+					AlwaysAssert(False, AipsError);
+				}
+				catch (AipsError x) {
+					log << LogIO::NORMAL << "Exception caught as expected: "
+						<< x.getMesg() << LogIO::POST;
+					thrown = True;
+				}
+				AlwaysAssert(thrown, AipsError);
+			}
+			annulus.setColor("FF0000");
+			AlwaysAssert(annulus.getColorString() == "red", AipsError);
+			cout << "ann 1st color " << annulus << endl;
+			annulus.setColor("Ff15De");
+			AlwaysAssert(annulus.getColorString() == "ff15de", AipsError);
+			cout << "ann 2nd color " << annulus << endl;
+			annulus.setColor(" bLue" );
+			AlwaysAssert(annulus.getColorString() == "blue", AipsError);
+			cout << "ann 3rd color " << annulus << endl;
+			AlwaysAssert(AnnotationBase::colorChoices().size() == 10, AipsError);
+
+		}
 	} catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;
 		return 1;
