@@ -28,10 +28,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // -----------------------------------------------------------------------
 // Default constructor
 // -----------------------------------------------------------------------
-FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(iterationApproach)
+FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double timeInterval):
+		msname_p(msname), iterationApproach_p(iterationApproach), timeInterval_p(timeInterval)
 {
+	// Initialize logger
+	logger_p = new LogIO();
+
 	// Default verbosity
-	profiling_p = true;
+	profiling_p = false;
 
 	// Check if async input is enabled
 	asyncio_disabled_p = true;
@@ -60,9 +64,9 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 
 	switch (iterationApproach_p)
 	{
-		case SCAN_SUB_INTEGRATION:
+		case COMPLETE_SCAN_MAPPED:
 		{
-			cout << "SCAN_SUB_INTEGRATION" << endl;
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: COMPLETE_SCAN_MAPPED" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -71,15 +75,66 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 			sortOrder_p[4] = MS::DATA_DESC_ID;
 			sortOrder_p[5] = MS::TIME;
 
-			// NOTE: Time interval 0 groups all time steps together in one chunk.
-			timeInterval_p = 0;
 			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
 			groupTimeSteps_p = true;
+			mapAntennaPairs_p = true;
+			mapSubIntegrations_p = true;
 			break;
 		}
-		case BASELINE_SCAN_TIME_SERIES:
+		case COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY:
 		{
-			cout << "BASELINE_SCAN_TIME_SERIES" << endl;
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: COMPLETE_SCAN_MAP_SUB_INTEGRATIONS_ONLY" << LogIO::POST;
+			sortOrder_p = Block<int>(6);
+			sortOrder_p[0] = MS::OBSERVATION_ID;
+			sortOrder_p[1] = MS::ARRAY_ID;
+			sortOrder_p[2] = MS::SCAN_NUMBER;
+			sortOrder_p[3] = MS::FIELD_ID;
+			sortOrder_p[4] = MS::DATA_DESC_ID;
+			sortOrder_p[5] = MS::TIME;
+
+			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
+			groupTimeSteps_p = true;
+			mapAntennaPairs_p = false;
+			mapSubIntegrations_p = true;
+			break;
+		}
+		case COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY:
+		{
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY" << LogIO::POST;
+			sortOrder_p = Block<int>(6);
+			sortOrder_p[0] = MS::OBSERVATION_ID;
+			sortOrder_p[1] = MS::ARRAY_ID;
+			sortOrder_p[2] = MS::SCAN_NUMBER;
+			sortOrder_p[3] = MS::FIELD_ID;
+			sortOrder_p[4] = MS::DATA_DESC_ID;
+			sortOrder_p[5] = MS::TIME;
+
+			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
+			groupTimeSteps_p = true;
+			mapAntennaPairs_p = true;
+			mapSubIntegrations_p = false;
+			break;
+		}
+		case COMPLETE_SCAN_UNMAPPED:
+		{
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: COMPLETE_SCAN_UNMAPPED" << LogIO::POST;
+			sortOrder_p = Block<int>(6);
+			sortOrder_p[0] = MS::OBSERVATION_ID;
+			sortOrder_p[1] = MS::ARRAY_ID;
+			sortOrder_p[2] = MS::SCAN_NUMBER;
+			sortOrder_p[3] = MS::FIELD_ID;
+			sortOrder_p[4] = MS::DATA_DESC_ID;
+			sortOrder_p[5] = MS::TIME;
+
+			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
+			groupTimeSteps_p = true;
+			mapAntennaPairs_p = false;
+			mapSubIntegrations_p = false;
+			break;
+		}
+		case ANTENNA_PAIR:
+		{
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: ANTENNA_PAIR" << LogIO::POST;
 			sortOrder_p = Block<int>(8);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -93,22 +148,44 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 			sortOrder_p[6] = MS::ANTENNA2;
 			sortOrder_p[7] = MS::TIME;
 
-			// NOTE: Time interval 0 groups all time steps together in one chunk.
-			timeInterval_p = 0;
 			// NOTE: groupTimeSteps_p=true groups all time steps together in one buffer.
 			groupTimeSteps_p = true;
+			mapAntennaPairs_p = false;
+			mapSubIntegrations_p = false;
+			break;
+		}
+		case  SUB_INTEGRATION:
+		{
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: SUB_INTEGRATION" << LogIO::POST;
+			sortOrder_p = Block<int>(6);
+			sortOrder_p[0] = MS::OBSERVATION_ID;
+			sortOrder_p[1] = MS::ARRAY_ID;
+			sortOrder_p[2] = MS::SCAN_NUMBER;
+			sortOrder_p[3] = MS::FIELD_ID;
+			sortOrder_p[4] = MS::DATA_DESC_ID;
+			sortOrder_p[5] = MS::TIME;
+
+			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
+			groupTimeSteps_p = false;
+			mapAntennaPairs_p = false;
+			mapSubIntegrations_p = false;
 			break;
 		}
 		default:
 		{
-			cout << "DEFAULT" << endl;
-			sortOrder_p = Block<int>(4);
-			sortOrder_p[0] = MS::ARRAY_ID;
-			sortOrder_p[1] = MS::FIELD_ID;
-			sortOrder_p[2] = MS::DATA_DESC_ID;
-			sortOrder_p[3] = MS::TIME;
-			timeInterval_p = 0;
-			groupTimeSteps_p = false;
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: COMPLETE_SCAN_MAPPED" << LogIO::POST;
+			sortOrder_p = Block<int>(6);
+			sortOrder_p[0] = MS::OBSERVATION_ID;
+			sortOrder_p[1] = MS::ARRAY_ID;
+			sortOrder_p[2] = MS::SCAN_NUMBER;
+			sortOrder_p[3] = MS::FIELD_ID;
+			sortOrder_p[4] = MS::DATA_DESC_ID;
+			sortOrder_p[5] = MS::TIME;
+
+			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
+			groupTimeSteps_p = true;
+			mapAntennaPairs_p = true;
+			mapSubIntegrations_p = true;
 			break;
 		}
 	}
@@ -128,8 +205,9 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	chunkNo = 0;
 	bufferNo = 0;
 
-	// Initialize logger
-	logger_p = new LogIO();
+	// Initialize stats
+	stats_p = false;
+	cubeAccessCounter_p = 0;
 
 	// Set all the initialized pointers to NULL
 	selectedMeasurementSet_p = NULL;
@@ -138,8 +216,9 @@ FlagDataHandler::FlagDataHandler(uShort iterationApproach): iterationApproach_p(
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
+	subIntegrationMap_p = NULL;
+	antennaPairMap_p = NULL;
 	vwbt_p = NULL;
-
 
 	return;
 }
@@ -152,6 +231,8 @@ FlagDataHandler::~FlagDataHandler()
 {
 	// Destroy members
 	if (vwbt_p) delete vwbt_p;
+	if (antennaPairMap_p) delete antennaPairMap_p;
+	if (subIntegrationMap_p) delete subIntegrationMap_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
 	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
@@ -169,12 +250,12 @@ FlagDataHandler::~FlagDataHandler()
 // Open Measurement Set
 // -----------------------------------------------------------------------
 void
-FlagDataHandler::open(string msname)
+FlagDataHandler::open()
 {
 	STARTCLOCK
 
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-	originalMeasurementSet_p = new MeasurementSet(String(msname),Table::Update);
+	originalMeasurementSet_p = new MeasurementSet(msname_p,Table::Update);
 
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
@@ -194,9 +275,25 @@ FlagDataHandler::close()
 
 	if (selectedMeasurementSet_p)
 	{
+		// Wait until all the pending writing operations are done
+		if (!asyncio_disabled_p)
+		{
+			while (vwbt_p->isWriting())
+			{
+				pthread_yield();
+			}
+		}
+
+		// Flush and unlock MS
 		selectedMeasurementSet_p->flush();
 		selectedMeasurementSet_p->relinquishAutoLocks(True);
 		selectedMeasurementSet_p->unlock();
+
+		// Post stats
+		if (stats_p)
+		{
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Total Flag Cube accesses: " <<  cubeAccessCounter_p << LogIO::POST;
+		}
 	}
 
 	STOPCLOCK
@@ -356,6 +453,80 @@ FlagDataHandler::selectData()
 	return;
 }
 
+// -----------------------------------------------------------------------
+// Swap MS to check what is the maximum RAM memory needed
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::checkMaxMemory()
+{
+	STARTCLOCK
+
+	double memoryNeeded = 0;
+	double maxMemoryNeeded = 0;
+	// visCube,flagCube
+	double memoryPerVisFlagCubes = 65.0/(1024.0*1024.0);
+	// ant1, ant2, corrType, feed1, feed2, fieldId, frequency, scan, spw, stateId, time, timeInterval, uvw
+	double memoryPerRow = 32*15/(1024.0*1024.0);
+
+	for (rwVisibilityIterator_p->originChunks(); rwVisibilityIterator_p->moreChunks();rwVisibilityIterator_p->nextChunk())
+	{
+		// Check if we have to group time steps
+		if (groupTimeSteps_p)
+		{
+			rwVisibilityIterator_p->setRowBlocking(rwVisibilityIterator_p->nRowChunk());
+		}
+
+		// Iterate over vis buffers
+		for (rwVisibilityIterator_p->origin(); rwVisibilityIterator_p->more();(*rwVisibilityIterator_p)++)
+		{
+			// Check total amount of memory needed for visibilities
+			memoryNeeded = memoryPerVisFlagCubes*(rwVisibilityIterator_p->visibilityShape().product());
+
+			// Add up memory needed for the rest of the columns
+			memoryNeeded += memoryPerRow*(rwVisibilityIterator_p->nRow());
+
+			if (memoryNeeded > maxMemoryNeeded) maxMemoryNeeded = memoryNeeded;
+		}
+	}
+
+	Int buffers = 1;
+	double memoryFree = HostInfo::memoryFree( )/1024.0;
+	double memoryUsed = 100*memoryNeeded/memoryFree;
+	if (asyncio_disabled_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " This process needs " << maxMemoryNeeded << " MB for loading visibility buffers ("
+				<< memoryUsed << "%) of available free memory (" << memoryFree << " MB)"<< LogIO::POST;
+	}
+	else
+	{
+		AipsrcValue<Int>::find (buffers,"ROVisibilityIteratorAsync.nBuffers", 2);
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " This process needs " << buffers << " (pre-fetched buffers in async mode) x " << maxMemoryNeeded << " MB for loading visibility buffers ("
+				<< memoryUsed << "%) of available free memory (" << memoryFree << " MB)"<< LogIO::POST;
+	}
+
+	if (buffers*maxMemoryNeeded > memoryFree*0.90)
+	{
+		if (asyncio_disabled_p)
+		{
+			*logger_p << LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__ << " This process would need to consume more than 90% ("
+					<< buffers*maxMemoryNeeded << " MB) of the available memory (" << memoryFree
+					<< " MB) for loading vis buffers, aborting. Consider reducing the time interval."<< LogIO::POST;
+		}
+		else
+		{
+			*logger_p << LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__ << " This process would need to consume more than 90% ("
+					<< buffers*maxMemoryNeeded << " MB) of the available memory (" << memoryFree
+					<< " MB) for loading vis buffers, aborting. Consider reducing the time interval, or reducing the number of buffers pre-fetched by async I/O (" << buffers
+					<< ") or even switch off async I/O." << LogIO::POST;
+		}
+
+		throw(AipsError("FlagDataHandler::checkMaxMemory() Not enough memory to process"));
+	}
+
+	STOPCLOCK
+	return;
+}
+
 
 // -----------------------------------------------------------------------
 // Generate Visibility Iterator with a given sort order and time interval
@@ -368,6 +539,8 @@ FlagDataHandler::generateIterator()
 	// First create and initialize RW iterator
 	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
 	rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
+
+	checkMaxMemory();
 
 	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
 	// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
@@ -497,6 +670,8 @@ FlagDataHandler::nextBuffer()
 		}
 		roVisibilityIterator_p->origin();
 		buffersInitialized_p = true;
+		if (mapAntennaPairs_p) generateAntennaPairMap();
+		if (mapSubIntegrations_p) generateSubIntegrationMap();
 		moreBuffers = true;
 		bufferNo++;
 	}
@@ -510,6 +685,8 @@ FlagDataHandler::nextBuffer()
 		// WARNING: We iterate and afterwards check if the iterator is valid
 		if (roVisibilityIterator_p->more())
 		{
+			if (mapAntennaPairs_p) generateAntennaPairMap();
+			if (mapSubIntegrations_p) generateSubIntegrationMap();
 			moreBuffers = true;
 			bufferNo++;
 		}
@@ -524,6 +701,9 @@ FlagDataHandler::nextBuffer()
 		modifiedFlagCube_p = flagCube;
 		originalFlagCube_p.resize(flagCube.shape());
 		originalFlagCube_p = flagCube;
+
+		IPosition flagCubeShape = modifiedFlagCube_p.shape();
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Current buffer shape: " << flagCubeShape  << " and indexing:" <<  modifiedFlagCube_p.printConfig() <<LogIO::POST;
 	}
 
 	STOPCLOCK
@@ -568,36 +748,275 @@ FlagDataHandler::getOriginalFlagCube()
 	return &originalFlagCube_p;
 }
 
+// -----------------------------------------------------------------------
+// Mapping functions as requested by Urvashi
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::generateAntennaPairMap()
+{
+	STARTCLOCK
+
+	// Free previous map and create a new one
+	if (antennaPairMap_p) delete antennaPairMap_p;
+	antennaPairMap_p = new antennaPairMap();
+
+	// Retrieve antenna vectors
+	Vector<Int> antenna1Vector = visibilityBuffer_p->get()->antenna1();
+	Vector<Int> antenna2Vector = visibilityBuffer_p->get()->antenna2();
+
+	// Fill map
+	Int ant1_i,ant2_i;
+	uInt nRows = antenna1Vector.size();
+	for (uInt row_idx=0;row_idx<nRows;row_idx++)
+	{
+		ant1_i = antenna1Vector[row_idx];
+		ant2_i = antenna2Vector[row_idx];
+		if (antennaPairMap_p->find(std::make_pair(ant1_i,ant2_i)) == antennaPairMap_p->end())
+		{
+			std::vector<uInt> newPair;
+			newPair.push_back(row_idx);
+			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)] = newPair;
+		}
+		else
+		{
+			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)].push_back(row_idx);
+		}
+	}
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
+
+	STOPCLOCK
+	return;
+}
+
+
+void
+FlagDataHandler::generateSubIntegrationMap()
+{
+	STARTCLOCK
+
+	// Free previous map and create a new one
+	if (subIntegrationMap_p) delete subIntegrationMap_p;
+	subIntegrationMap_p = new subIntegrationMap();
+
+	// Retrieve antenna vectors
+	Vector<Double> timeVector = visibilityBuffer_p->get()->time();
+
+	// Fill map
+	uInt nRows = timeVector.size();
+	for (uInt row_idx=0;row_idx<nRows;row_idx++)
+	{
+		if (subIntegrationMap_p->find(timeVector[row_idx]) == subIntegrationMap_p->end())
+		{
+			std::vector<uInt> newSubIntegration;
+			newSubIntegration.push_back(row_idx);
+			(*subIntegrationMap_p)[timeVector[row_idx]] = newSubIntegration;
+		}
+		else
+		{
+			(*subIntegrationMap_p)[timeVector[row_idx]].push_back(row_idx);
+		}
+	}
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << subIntegrationMap_p->size() <<" Sub-Integrations (time steps) found in current buffer" << LogIO::POST;
+
+	STOPCLOCK
+	return;
+}
+
+
+
+Cube<Bool> *
+FlagDataHandler::getFlagsView(Int antenna1, Int antenna2)
+{
+	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
+	CubeView<Bool> * cube= new CubeView<Bool>(&modifiedFlagCube_p,rows);
+	return cube;
+}
+
+Cube<Bool> *
+FlagDataHandler::getFlagsView(Double timestep)
+{
+	std::vector<uInt> *rows = &((*subIntegrationMap_p)[timestep]);
+	CubeView<Bool> * cube= new CubeView<Bool>(&modifiedFlagCube_p,rows);
+	return cube;
+}
+
+Cube<Complex> *
+FlagDataHandler::getVisibilitiesView(Int antenna1, Int antenna2)
+{
+	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
+	CubeView<Complex> * cube= new CubeView<Complex>(&(visibilityBuffer_p->get()->visCube()),rows);
+	return cube;
+}
+
+Cube<Complex> *
+FlagDataHandler::getVisibilitiesView(Double timestep)
+{
+	std::vector<uInt> *rows = &((*subIntegrationMap_p)[timestep]);
+	CubeView<Complex> * cube= new CubeView<Complex>(&(visibilityBuffer_p->get()->visCube()),rows);
+	return cube;
+}
+
 
 // -----------------------------------------------------------------------
 // Dummy function to simulate processing
 // -----------------------------------------------------------------------
-void
-FlagDataHandler::processBuffer(bool write)
+uShort
+FlagDataHandler::processBuffer(bool write, uShort rotateMode, uShort rotateViews)
 {
 	STARTCLOCK
 
-	// Try to extract flagCube from RO async iterator and set it in RW async iterator
-	IPosition flagCubeShape = modifiedFlagCube_p.shape();
-	Int nPolarizations = flagCubeShape(0);
-	Int nChannels = flagCubeShape(1);
-	Int nRows = flagCubeShape(2);
-	for (Int pol_i=0;pol_i<nPolarizations;pol_i++) {
-		for (Int chan_j=0;chan_j<nChannels;chan_j++) {
-			for (Int row_k=0;row_k<nRows;row_k++) {
+	stats_p = true;
+
+	antennaPairMapIterator 	myAntennaPairMapIterator;
+	Double timestep;
+	subIntegrationMapIterator mySubIntegrationMapIterator;
+	std::pair<Int,Int> antennaPair;
+	uShort processView = rotateViews;
+	IPosition flagCubeShape;
+	Cube<Bool> *flagCube;
+	switch (rotateMode)
+	{
+		case 0:
+			fillBuffer(modifiedFlagCube_p,write,0);
+		break;
+
+		case 1:
+			for (myAntennaPairMapIterator=antennaPairMap_p->begin(); myAntennaPairMapIterator != antennaPairMap_p->end(); ++myAntennaPairMapIterator) {
+				antennaPair = myAntennaPairMapIterator->first;
+				flagCube = getFlagsView(antennaPair.first,antennaPair.second);
+				flagCubeShape = flagCube->shape();
+				*logger_p 	<< LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__
+							<< " Flag cube for (" <<  antennaPair.first << "," << antennaPair.second << ") has shape ["
+						    << flagCubeShape(0) << "," <<  flagCubeShape(1) << "," << flagCubeShape(2) << "]" << LogIO::POST;
+
+				if (rotateViews == 0)
+				{
+					fillBuffer(*flagCube,write,0);
+				}
+				else
+				{
+					if (processView == 1)
+					{
+						fillBuffer(*flagCube,write,1);
+						processView = 2;
+					}
+					else
+					{
+						fillBuffer(*flagCube,write,2);
+						processView = 1;
+					}
+				}
+
+				delete flagCube;
+			}
+		break;
+
+		case 2:
+			for (mySubIntegrationMapIterator=subIntegrationMap_p->begin(); mySubIntegrationMapIterator != subIntegrationMap_p->end(); ++mySubIntegrationMapIterator) {
+				timestep = mySubIntegrationMapIterator->first;
+				flagCube = getFlagsView(timestep);
+				flagCubeShape = flagCube->shape();
+				*logger_p 	<< LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__
+							<< " Flag cube for (" <<  timestep << ") has shape ["
+						    << flagCubeShape(0) << "," <<  flagCubeShape(1) << "," << flagCubeShape(2) << "]" << LogIO::POST;
+
+				if (rotateViews == 0)
+				{
+					fillBuffer(*flagCube,write,0);
+				}
+				else
+				{
+					if (processView == 1)
+					{
+						fillBuffer(*flagCube,write,1);
+						processView = 2;
+					}
+					else
+					{
+						fillBuffer(*flagCube,write,2);
+						processView = 1;
+					}
+				}
+
+				delete flagCube;
+			}
+		break;
+
+		default:
+		break;
+	}
+
+	STOPCLOCK
+	return processView;
+}
+
+void
+FlagDataHandler::fillBuffer(Cube<Bool> &flagCube,bool write, uShort processBuffer)
+{
+	bool processCondition = false;
+	if (processBuffer == 0)
+	{
+		if (groupTimeSteps_p)
+		{
+			if (chunkNo % 2 == 0)
+			{
+				processCondition = true;
+			}
+			else
+			{
+				processCondition = false;
+			}
+		}
+		else
+		{
+			if (bufferNo % 2 == 0)
+			{
+				processCondition = true;
+			}
+			else
+			{
+				processCondition = false;
+			}
+		}
+	}
+	else
+	{
+		if (processBuffer == 1)
+		{
+			processCondition = true;
+		}
+		else
+		{
+			processCondition = false;
+		}
+	}
+
+	IPosition flagCubeShape = flagCube.shape();
+	uInt nPolarizations = flagCubeShape(0);
+	uInt nChannels = flagCubeShape(1);
+	uInt nRows = flagCubeShape(2);
+	bool flag;
+	for (uInt row_k=0;row_k<nRows;row_k++) {
+		for (uInt chan_j=0;chan_j<nChannels;chan_j++) {
+			for (uInt pol_i=0;pol_i<nPolarizations;pol_i++) {
 				// Flag each other chunks (i.e. even chunks)
 				if (write)
 				{
-					if (chunkNo % 2 == 0) {
-						modifiedFlagCube_p(pol_i,chan_j,row_k) = True;
+					if (processCondition) {
+						flagCube(pol_i,chan_j,row_k) = True;
+						cubeAccessCounter_p++;
 					} else {
-						modifiedFlagCube_p(pol_i,chan_j,row_k) = False;
+						flagCube(pol_i,chan_j,row_k) = False;
+						cubeAccessCounter_p++;
 					}
 				}
 				else
 				{
-					if (chunkNo % 2 == 0) {
-						if (modifiedFlagCube_p(pol_i,chan_j,row_k) != True)
+					flag = flagCube(pol_i,chan_j,row_k);
+					cubeAccessCounter_p++;
+
+					if (processCondition) {
+						if (flag != True)
 						{
 							*logger_p 	<< LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__
 										<<" Wrong flag (False instead of True) in chunk " << chunkNo
@@ -605,7 +1024,7 @@ FlagDataHandler::processBuffer(bool write)
 										<< " channel " << nChannels << " row " << row_k << LogIO::POST;
 						}
 					} else {
-						if (modifiedFlagCube_p(pol_i,chan_j,row_k) != False)
+						if (flag != False)
 						{
 							*logger_p 	<< LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__
 										<<" Wrong flag (True instead of False) in chunk " << chunkNo
@@ -618,9 +1037,9 @@ FlagDataHandler::processBuffer(bool write)
 		}
 	}
 
-	STOPCLOCK
 	return;
 }
+
 
 
 } //# NAMESPACE CASA - END
