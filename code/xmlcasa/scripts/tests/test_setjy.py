@@ -1,3 +1,4 @@
+from glob import glob
 import numpy
 import os
 import sys
@@ -90,7 +91,12 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                                                         1234.0 * (43.42064/35.0)**0.7,
                                                         -0.7,
                                                         "35.0GHz")
-        shutil.rmtree(self.inpms)
+        things_to_rm = glob(self.inpms + '*')  # incl. flagversions.
+        for t in things_to_rm:
+            if os.path.isdir(t):
+                shutil.rmtree(t)
+            else:
+                os.remove(t)
         # setjy returns None :-P
         #return self.__class__.records[False]['setjyran'] and \
         #       self.__class__.records[True]['setjyran']
@@ -110,6 +116,9 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
                                            async=False)
+            tb.open(self.inpms + '/HISTORY')
+            record['history'] = tb.getcell('MESSAGE', tb.nrows() - 2)
+            tb.close()
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
                                             complex_value='amp',
@@ -128,6 +137,24 @@ class setjy_test_modimage(CheckAfterImportuvfits):
             print "Error from setjy or ms.statistics()"
             raise e
         return record
+
+    def test_history_standard(self):
+        """Flux density in HISTORY (standard)?"""
+        # Don't bother checking it without scaling - it won't be there and isn't
+        # interesting.
+        self.assertTrue("Scaling spw 1's model image to I =" in
+                        self.records[True]['history'])
+            
+    def test_history_fluxdensity(self):
+        """Flux density in HISTORY (fluxdensity)?"""
+        self.assertTrue("Scaling spw 1's model image to I =" in
+                        self.records['fluxdens']['history'])
+            
+    def test_history_spix(self):
+        """Flux density in HISTORY (spix)?"""
+        self.assertTrue("Scaling spw 1's model image to I =" in
+                        self.records['spix']['history'])
+            
 
     def test_no_scaling(self):
         """modimage != '' and fluxdensity == 0 -> no scaling?"""
@@ -209,10 +236,18 @@ class Uranus(SplitChecker):
             record['auto4'] = tb.getcell('MODEL_DATA', 2)
             record['med4'] = tb.getcell('MODEL_DATA', 4)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
+            tb.close()
+            tb.open(self.inpms + '/HISTORY')
+            record['history'] = tb.getcell('MESSAGE', tb.nrows() - 3)
         finally:
             tb.close()
         self.__class__.records[corrsel] = record
         return sjran
+
+    def test_history_Uranus(self):
+        """Flux density in HISTORY (Uranus)?"""
+        self.assertTrue(("Uranus" in self.records['']['history']) and
+                        ("V=0] Jy" in self.records['']['history']))
 
     def test_wvr(self):
         """WVR spw"""
@@ -288,10 +323,18 @@ class ScaleUranusByChan(SplitChecker):
             record['long1'] = tb.getcell('MODEL_DATA', 19)
             record['auto4'] = tb.getcell('MODEL_DATA', 2)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
+            tb.close()
+            tb.open(self.inpms + '/HISTORY')
+            record['history'] = tb.getcell('MESSAGE', tb.nrows() - 3)
         finally:
             tb.close()
         self.__class__.records[corrsel] = record
         return sjran
+
+    def test_history_scalebychan(self):
+        """Flux density in HISTORY (scalebychan)?"""
+        self.assertTrue(("Uranus" in self.records['']['history']) and
+                        ("V=0] Jy" in self.records['']['history']))
 
     def test_wvr(self):
         """WVR spw with scalebychan"""

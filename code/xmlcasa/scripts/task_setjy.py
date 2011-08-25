@@ -162,12 +162,7 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
                      modimage = candidates[0]
                      casalog.post("Using %s for modimage." % modimage, 'INFO')
 
-             myim.setjy(field=field, spw=spw, modimage=modimage,
-                        fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
-                        standard=standard, scalebychan=scalebychan)
-             myim.close()
-
-             # Write history
+             # Write the parameters to HISTORY before the tool writes anything.
              try:
                     param_names = setjy.func_code.co_varnames[:setjy.func_code.co_argcount]
                     param_vals = [eval(p) for p in param_names]   
@@ -176,6 +171,11 @@ def setjy(vis=None, field=None, spw=None, modimage=None, listmodimages=None,
              except Exception, instance:
                     casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                                  'WARN')
+
+             myim.setjy(field=field, spw=spw, modimage=modimage,
+                        fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
+                        standard=standard, scalebychan=scalebychan)
+             myim.close()
        except Exception, instance:
               print '*** Error ***',instance
        return retval

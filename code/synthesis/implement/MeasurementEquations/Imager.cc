@@ -1314,7 +1314,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     return False;
   }
 
-  os << "mode=" << mode << " nchan=" << nchan 
+  os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+     << "mode=" << mode << " nchan=" << nchan 
      <<  " start=" << start << " step=" << step;
   ostringstream clicom;
   clicom <<  " mstart='" << mStart << "' mstep='" << mStep;
@@ -4888,6 +4889,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
          << "Using model image, so zeroing user QUV flux densities."
          << LogIO::POST;
       fluxdens[1] = fluxdens[2] = fluxdens[3] = 0.0;
+      writeHistory(os);
     }
 
     // Loop over field id. and spectral window id.
@@ -4947,6 +4949,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           os << "U=" << fluxUsed(2) << ", ";
           os << "V=" << fluxUsed(3) << "] Jy, ";
           os << ("(" + fluxScaleName + ")") << LogIO::POST;
+          writeHistory(os);
         }
           
         // If a model image has been specified, 
@@ -5215,6 +5218,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     os << "U=" << fluxUsed(2) << ", ";
     os << "V=" << fluxUsed(3) << "] Jy, ";
     os << ("(" + fluxScaleName + ")") << LogIO::POST;
+    writeHistory(os);
   }  // End of if(!foundSrc).
 
   return foundSrc;
@@ -5352,6 +5356,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
            << fluxUsedPerChan.row(0) 
            << " Jy (ch 0) for visibility prediction."
            << LogIO::POST;
+        writeHistory(os);
         for(uInt k = 0; k < fluxUsedPerChan.ncolumn(); ++k){
           Float scale = fluxUsedPerChan.column(k)(0)/sumI;
           blc[3] = k;
@@ -5377,23 +5382,27 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
          << fluxUsed[0] // Loglevel INFO
          << " Jy for visibility prediction."
          << LogIO::POST;
+      writeHistory(os);
     }
   }
   else{
     os << LogIO::NORMAL                                  // Loglevel INFO
  << "Using the model image's original unscaled flux density for visibility prediction."
        << LogIO::POST;
+    writeHistory(os);
     if(imshape(3) > 1 && modimage.shape()(freqAxis) != 1)
       sjy_regridCubeChans(tmodimage, modimage, freqAxis);
     else
       tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
   }
             
-  if(selspw == 0)
+  if(selspw == 0){
     os << LogIO::NORMAL // Loglevel INFO
        << "The model image's reference pixel is " << sep 
        << " arcsec from " << fieldName << "'s phase center."
        << LogIO::POST;
+    writeHistory(os);
+  }
 
   return tmodimage;
 }
