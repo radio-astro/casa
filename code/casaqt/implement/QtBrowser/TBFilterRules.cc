@@ -615,7 +615,8 @@ void TBFilterRules::listIndexChanged(int i) {
     comparatorChooser->addItem(TBConstants::compToString(
             r->getComparator()).c_str());
 
-    valueEdit->setText(r->getValue()->asString().c_str());
+    if(r->getValue())
+       valueEdit->setText(r->getValue()->asString().c_str());
     if(r->getValue2())
        valueEdit2->setText(r->getValue2()->asString().c_str());
 
