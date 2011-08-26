@@ -12,6 +12,7 @@ imagetestimage.fits
 jyperpixelimage.fits
 linearCoords.fits
 mexinputtest.fits
+qualityimage.fits
 ngc5921.clean.fits
 ngc5921.clean.no_freq.no_stokes.fits
 test_image.fits
