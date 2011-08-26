@@ -616,7 +616,8 @@ void TBFilterRules::listIndexChanged(int i) {
             r->getComparator()).c_str());
 
     valueEdit->setText(r->getValue()->asString().c_str());
-    valueEdit2->setText(r->getValue2()->asString().c_str());
+    if(r->getValue2())
+       valueEdit2->setText(r->getValue2()->asString().c_str());
 
     notChooser->setEnabled(false);
     fieldChooser->setEnabled(false);
