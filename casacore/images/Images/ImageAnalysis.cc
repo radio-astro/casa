@@ -1360,11 +1360,18 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 
 	// Make the convolver
-	Image2DConvolver<Float> ic;
-        ic.convolve(
-            *itsLog, *pImOut, subImage, kernelType, axes3,
-            parameters, autoScale, scale, True
-        );
+        try {
+          Image2DConvolver<Float> ic;
+          ic.convolve(
+              *itsLog, *pImOut, subImage, kernelType, axes3,
+              parameters, autoScale, scale, True
+          );
+        }
+        catch ( AipsError &e ) {
+          pImOut->unlock() ;
+          delete pImOut ;
+          throw e ;
+        }
 
 	// Return image
 	return pImOut;
