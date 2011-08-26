@@ -121,10 +121,7 @@ RegionTextParser::RegionTextParser(
 	_parse(text, "");
 }
 
-RegionTextParser::~RegionTextParser() {
-	delete _log;
-	_log = 0;
-}
+RegionTextParser::~RegionTextParser() {}
 
 Int RegionTextParser::getFileVersion() const {
 	if (_fileVersion < 0) {
@@ -263,7 +260,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			*_log << LogIO::NORMAL << preamble << "global found" << LogIO::POST;
 			continue;
 		}
-		// now look for shapes and annotations
+		// now look for per-line shapes and annotations
 		Vector<Quantity> qDirs;
 		Vector<Quantity> quantities;
 		String textString;
@@ -273,6 +270,28 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		ParamSet currentParamSet = _getCurrentParamSet(
 			spectralParmsUpdated, newParams, consumeMe, preamble
 		);
+		if (newParams.find(AnnotationBase::LABEL) == newParams.end()) {
+			if (newParams.find(AnnotationBase::LABELCOLOR) != newParams.end()) {
+				*_log << LogIO::WARN << preamble
+					<< "Ignoring labelcolor because there is no associated label specified"
+					<< LogIO::POST;
+			}
+			if (newParams.find(AnnotationBase::LABELPOS) != newParams.end()) {
+				*_log << LogIO::WARN << preamble
+					<< "Ignoring labelpos because there is no associated label specified"
+					<< LogIO::POST;
+			}
+			if (newParams.find(AnnotationBase::LABELOFF) != newParams.end()) {
+				*_log << LogIO::WARN << preamble
+					<< "Ignoring labeloff because there is no associated label specified"
+					<< LogIO::POST;
+			}
+		}
+		else if (newParams.find(AnnotationBase::LABELCOLOR) == newParams.end()) {
+			// if a label is specified but no label color is specified, the labelcolor
+			// is to be the same as the annotation color
+			newParams[AnnotationBase::LABELCOLOR] = newParams[AnnotationBase::COLOR];
+		}
 		if (_csys.hasSpectralAxis() && spectralParmsUpdated) {
 			qFreqs = _quantitiesFromFrequencyString(
 				currentParamSet[AnnotationBase::RANGE].stringVal, preamble
@@ -646,6 +665,36 @@ RegionTextParser::_getCurrentParamSet(
 				}
 				paramValue.boolVal = (v == "true" || v == "t");
 			}
+			else if (keyword == "labelcolor") {
+				key = AnnotationBase::LABELCOLOR;
+			}
+			else if (keyword == "labelpos") {
+				key = AnnotationBase::LABELPOS;
+			}
+			else if (keyword == "labeloff") {
+				String v = paramValue.stringVal;
+				if (! v.contains(Regex("[0-9]+[:space:]*,[:space:]*[0-9]+"))) {
+					*_log << preamble << "Illegal label offset specification "
+						<< v << LogIO::EXCEPTION;
+				}
+				// the brackets have been stripped, add them back to make it easier
+				// to parse with a method already in existence
+				Vector<String> pair = _extractSinglePair("[" + v + "]");
+				Regex rInt("[-+]?[0-9]+");
+				paramValue.intVec = vector<Int>();
+
+				for (
+					Vector<String>::const_iterator iter=pair.begin();
+					iter != pair.end(); iter++
+				) {
+					if (! iter->matches(rInt)) {
+						*_log << preamble << "Illegal label offset specification, "
+							<< *iter << " is not an integer" << LogIO::EXCEPTION;
+					}
+					paramValue.intVec.push_back(String::toInt(*iter));
+				}
+				key = AnnotationBase::LABELOFF;
+			}
 			else {
 				*_log << preamble << "Unrecognized key " << keyword
 					<< LogIO::EXCEPTION;
@@ -835,6 +884,9 @@ void RegionTextParser::_createAnnotation(
 		)
 	);
 	annotation->setUseTex(currentParamSet.at(AnnotationBase::USETEX).boolVal);
+	annotation->setLabelColor(currentParamSet.at(AnnotationBase::LABELCOLOR).stringVal);
+	annotation->setLabelPosition(currentParamSet.at(AnnotationBase::LABELPOS).stringVal);
+	annotation->setLabelOffset(currentParamSet.at(AnnotationBase::LABELOFF).intVec);
 	annotation->setGlobals(_globalKeysToApply);
 	AsciiAnnotationFileLine line(annotation);
 	_addLine(line);
@@ -916,7 +968,7 @@ String RegionTextParser::_getKeyValue(
 	if (consumeMe.contains(",")) {
 		Int commaPos = consumeMe.find(",");
 		if (value.empty()) {
-			value = consumeMe.substr(0, commaPos - 1);
+			value = consumeMe.substr(0, commaPos);
 		}
 		consumeMe.del(0, commaPos);
 	}
@@ -1166,8 +1218,21 @@ void RegionTextParser::_setInitialGlobals() {
 	ParamValue usetex;
 	usetex.boolVal = AnnotationBase::DEFAULT_USETEX;
 	_currentGlobals[AnnotationBase::USETEX] = usetex;
-}
 
+	ParamValue labelcolor;
+	labelcolor.color = AnnotationBase::DEFAULT_LABELCOLOR;
+	labelcolor.stringVal = AnnotationBase::colorToString(labelcolor.color);
+	_currentGlobals[AnnotationBase::LABELCOLOR] = labelcolor;
+
+	ParamValue labelpos;
+	labelpos.stringVal = AnnotationBase::DEFAULT_LABELPOS;
+	_currentGlobals[AnnotationBase::LABELPOS] = labelpos;
+
+	ParamValue labeloff;
+	labeloff.intVec = AnnotationBase::DEFAULT_LABELOFF;
+	_currentGlobals[AnnotationBase::LABELOFF] = labeloff;
+
+}
 
 }
 
