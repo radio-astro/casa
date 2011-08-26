@@ -325,15 +325,66 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             imageids=[]
             imsizes=[]
             phasecenters=[]
+            parms={}
             rootname=''
+            # new handling:
+            # need to combine task parameter inputs and outlier file input
             if len(outlierfile) != 0:
-                imsizes,phasecenters,imageids=imset.readoutlier(outlierfile)
-                if type(imagename) == list:
-                    rootname = imagename[0]
+                #imsizes,phasecenters,imageids=imset.readoutlier(outlierfile)
+                # if newfomat = False, outlier file is in old format
+                f_imageids,f_imsizes,f_phasecenters,f_masks,f_modelimages,parms,newformat=imset.newreadoutlier(outlierfile)
+                #print "from outlierfile: f_imsizes=",f_imsizes," f_phasecenters=",f_phasecenters,\
+                # " f_imageids=",f_imageids," f_masks=",f_masks, " parms=",parms
+
+                if type(imagename) == list or newformat:
+
+                    #rootname = imagename[0]
+                    rootname = ''
                 else:
                     rootname = imagename
-                if len(imageids) > 1:
+                
+                # combine with the task parameter input
+                if type(imagename) == str:
+                    imageids.append(imagename)
+                    imsizes.append(imsize)
+                    phasecenters.append(phasecenter)
+                else:
+                    imageids=imagename
+                    imsizes=imsize
+                    phasecenters=phasecenter
+
+                # for mask, modelimage  task input 
+                # turn them into list or list of list 
+                if type(mask) !=  list:
+                    mask=[mask] 
+                elif type(mask[0]) != list:
+                    mask=[mask]
+                if type(modelimage) != list:
+                    modelimage=[modelimage]
+                elif type(modelimage[0]) != list and type(imagename) != str:
+                    modelimage=[modelimage]
+                # now append readoutlier content
+                for indx, name in enumerate(f_imageids): 
+                    imageids.append(name)    
+                    imsizes.append(f_imsizes[indx])    
+                    phasecenters.append(f_phasecenters[indx])    
+                    mask.append(f_masks[indx])
+                    modelimage.append(f_modelimages[indx])
+                    
+                nfield=len(imageids)
+                if nfield > 1:
                     multifield=True
+                    #check if number of elements for each list matches
+                    if len(imsizes) != nfield:
+                        raise Exception, "Mismatch in number of imsizes for %s image fields" % nfield 
+                    if len(phasecenters) != nfield:
+                        raise Exception, "Mismatch in number of phasecenters for %s image fields" % nfield 
+                    # check of mask and modelimage need to be done later...
+                   
+                    # check for dulplicated entry
+                    for imname in imageids:
+                        if (imageids.count(imname)!=1):
+                           raise Exception, "Duplicate entry for imagename=%s" % imname 
             else:
                  imsizes=imsize
                  phasecenters=phasecenter
@@ -420,7 +471,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     maskobject=mask, slice=chanslice)
 
             else:
-                imset.makemultifieldmask2(mask,chanslice)
+                #imset.makemultifieldmask2(mask,chanslice)
+                imset.makemultifieldmask3(mask,chanslice)
                 maskimage=[]
                 for img in sorted(imset.maskimages):
                     maskimage.append(imset.maskimages[img])
@@ -455,8 +507,14 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 if dochaniter:
                     imset.defineChaniterModelimages(modelimage,j,tmppath)
                 else:
-                    imset.convertmodelimage(modelimages=modelimage,
-                                    outputmodel=imset.imagelist.values()[0]+'.model')
+                    if len(imset.imagelist)!= len(modelimage):
+                        raise Exception, "Number of modelimage does not match with number of image field"
+                    for j in range(len(imset.imagelist)): 
+                  # imset.convertmodelimage(modelimages=modelimage,
+                  #                outputmodel=imset.imagelist.values()[0]+'.model')
+                        if modelimage[j] != '' and modelimage[j] != []:
+                            imset.convertmodelimage(modelimages=modelimage[j],
+                                             outputmodel=imset.imagelist.values()[j]+'.model')
             modelimages=[]
             restoredimage=[]
             residualimage=[]
@@ -464,7 +522,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             fluximage=[]
             for k in range(len(imset.imagelist)):
                 ia.open(imset.imagelist[k])
-                if (modelimage =='' or modelimage==[]) and multifield:
+                if ((modelimage =='' or modelimage==[]) or \
+                    (type(modelimage)==list and modelimage[k]=='')) and \
+                    multifield:
                     ia.rename(imset.imagelist[k]+'.model',overwrite=True)
                 else:
                     ia.remove(verbose=False)

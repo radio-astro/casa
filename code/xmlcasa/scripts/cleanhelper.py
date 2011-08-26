@@ -645,7 +645,7 @@ class cleanhelper:
         in clean with flanking fields (added by TT)
         required: definemultiimages has already run so that imagelist is defined 
         """
-        print "##########Calling makemultifieldmask3"
+        #print "Inside makemultifieldmask3"
         if((len(self.maskimages)==(len(self.imagelist)))):
             if(not self.maskimages.has_key(self.imagelist[0])):
                 self.maskimages={}
@@ -716,13 +716,16 @@ class cleanhelper:
                         masktext.append(masklets)
 
         #group circles and boxes in dic for each image field 
+        # new behavior should be:
+        # 1. if the boxfile is in list of list, treat it apply only to the specific field???
+        # 2. if it is in a single list, the field number is matched to each field...
         circles, boxes=self.readmultifieldboxfile(masktext)
          
         # Loop over imagename
         # take out text file names contain multifield boxes and field info  
         # from maskobject and create updated one (updatedmaskobject)
         # by adding boxlists to it instead.
-        # Use readmultifieldmaskbox to read old outlier/box text file format
+        # Use readmultifieldboxfile to read old outlier/box text file format
         maskobject_tmp = maskobject 
 	updatedmaskobject = [] 
         for maskid in range(len(maskobject_tmp)):
@@ -755,9 +758,10 @@ class cleanhelper:
                             # add to maskobject (extra list bracket taken out)
                             updatedmaskobject.append(inboxes)
            
-        # print "Updated maskobject=",updatedmaskobject
+        #print "Updated maskobject=",updatedmaskobject
 
         for maskid in range(len(self.maskimages)):
+            #print "maskid, mask=",maskid, updatedmaskobject[maskid]
             self.outputmask=''
             inoutputmask=self.maskimages[self.imagelist[maskid]]
             self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
@@ -1518,6 +1522,152 @@ class cleanhelper:
 
         f.close()
         return imsizes,phasecenters,imageids
+
+    def newreadoutlier(self, outlierfile): 
+        """
+	read a outlier file with a new format.
+	The format consists of a set of task parameter inputs.
+	imagename="outlier1" imsize=[128,128] phasecenter="J2000 hhmmss.s ddmmss.s" 
+	imagename="outlier2" imsize=[128,128] phasecenter="J2000 hhmmss.s ddmmss.s"
+	mask=['viewermask.rgn','box[[50,60],[50,60]]'] ...
+
+	Currently supported paramters are:
+	imagename (required: used to delinate a paramater set for each field)
+	imsize (required)
+	phasecenter (required)
+	mask (optional)
+        modelimage (optional) 
+	* other parameters can be included in the file but not parsed
+
+        """
+        import ast
+        import re
+
+        imsizes=[]
+        phasecenters=[]
+        imageids=[]
+        masks=[]
+        modelimages=[]
+        f=open(outlierfile)
+        keywd = "imagename"
+        oldformat=False
+        nchar= len(keywd)
+        content0=''
+        while 1:
+            try:
+                line=f.readline()
+                if len(line)!=0:
+                    if line.split()[0]=='C' or line.split()[0]=='c':
+                        oldformat=True
+                    elif line.split()[0]!='#':
+                        content0+=line     
+                else:
+                   raise Exception
+            except:
+                break
+        f.close()
+        if oldformat:
+        #    f.close()
+            self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
+            # do old to new data format conversion....
+            (phasecenters,imsizes,imageids)=self.readoutlier(self,outfilename)
+        #f.seek(0)
+        #content0 = f.read()
+        #f.close()
+        content=content0.replace('\n',' ')
+        last = len(content)
+        # split the content using imagename as a key 
+        # and store each parameter set in pars dict
+        pars={}
+        initi = content.find(keywd)
+        if initi > -1:
+            i = 0
+            prevstart=initi
+            while True:
+                step = nchar*(i+1)
+                start = prevstart+step
+                nexti = content[start:].find(keywd)
+                #print "look at start=",start, " nexti=",nexti, " step=",step, " prevstart=",prevstart
+
+                if nexti == -1:
+                    pars[i]=content[prevstart:]
+                    #print "range=",prevstart, " to the end"
+                    break
+                pars[i]=content[prevstart:prevstart+nexti+step]
+                #print "range=",prevstart, " to", prevstart+nexti+step-1
+                prevstart=prevstart+nexti+step
+                i+=1
+
+        # for parsing of indiviual par (per field)
+        #print "pars=",pars
+        dparm ={}
+        indx=0
+        for key in pars.keys():
+            # do parsing
+            parstr = pars[key]
+            # clean up extra white spaces
+            parm=' '.join(parstr.split())
+            # more clean up
+            parm=parm.replace("[ ","[")
+            parm=parm.replace(" ]","]")
+            parm=parm.replace(" ,",",")
+            parm=parm.replace(", ",",")
+            parm=parm.replace(" =","=")
+            parm=parm.replace("= ","=")
+            #print "parm=",parm
+            subdic={}
+            # final parameter sets 
+            values=re.compile('\w+=').split(parm)
+            values=values[1:len(values)]
+           
+            ipar = 0 
+            for pv in parm.split():
+                if pv.find('=') != -1:
+                    if ipar >= len(values):
+                        raise Exception, TypeError("mismath in no. parameters in parsing outlier file.")
+                    (k,v) = pv.split('=')
+                    # fix a string to proper litral value
+                    # take out any commas at end which will
+                    # confuse literal_eval function
+                    pat = re.compile(',+$')
+                    subdic[k]=ast.literal_eval(pat.sub('',values[ipar]))
+                    ipar += 1
+            dparm[indx]=subdic
+            indx+=1
+        #print "DONE for parsing parm for each field"
+        # put into list of parameters
+        # imsizes, phasecenters, imagenames(imageids)
+        # mask is passed to other function for forther processing
+        if not oldformat:
+            #pack them by parameter name
+            for fld in dparm.keys():
+                # before process, check if it contains all required keys
+                # namely, imagename, phasecenter, imsize
+                #print "dparm[",fld,"]=",dparm[fld]
+                if not (dparm[fld].has_key("imagename") and\
+                        dparm[fld].has_key("phasecenter") and\
+                        dparm[fld].has_key("imsize")):
+                    raise Exception, TypeError("Missing one or more of the required parameters: \
+                     imagename, phasecenter, and imsize in the outlier file. Please check the input outlier file.") 
+                for key in dparm[fld].keys():  
+                    if key == "imagename":
+                        imageids.append(dparm[fld][key])
+                    if key == "phasecenter":
+                        phasecenters.append(dparm[fld][key])
+                    if key == "imsize":
+                        imsizes.append(dparm[fld][key])
+                    if key == "mask":
+                        masks.append(dparm[fld][key])
+                    if key == "modelimage":
+                        modelimages.append(dparm[fld][key])
+                if not dparm[fld].has_key("mask"):
+                    masks.append([])
+                if not dparm[fld].has_key("modelimage"):
+                    modelimages.append('')
+                
+                 
+        return (imageids,imsizes,phasecenters,masks,modelimages,dparm, not oldformat) 
+
 
     def copymaskimage(self, maskimage, shp, outfile):
         if outfile == maskimage:     # Make it a no-op,
@@ -2810,11 +2960,41 @@ class cleanhelper:
         multifield=False
 
         if len(outlierfile) != 0:
-            imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
-            if type(imagename) == list:
-                rootname = imagename[0]
+            #imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
+            f_imageids,f_imsizes,f_phasecenters,f_masks,f_modelimages,parms,newformat=self.newreadoutlier(outlierfile)
+            if type(imagename) == list or newformat:
+                #rootname = imagename[0]
+                rootname = ''
             else:
                 rootname = imagename
+
+            # combine with the task parameter input
+            if type(imagename) == str:
+                imageids.append(imagename)
+                imsizes.append(imsize)
+                phasecenters.append(phasecenter)
+            else:
+                imageids=imagename
+                imsizes=imsize
+                phasecenters=phasecenter
+
+            if type(mask) !=  list:
+                mask=[mask]
+            elif type(mask[0]) != list:
+                mask=[mask]
+            if type(modelimage) != list:
+                modelimage=[modelimage]
+            elif type(modelimage[0]) != list and type(imagename) != str:
+                modelimage=[modelimage]
+
+            # now append readoutlier content
+            for indx, name in enumerate(f_imageids):
+                imageids.append(name)
+                imsizes.append(f_imsizes[indx])
+                phasecenters.append(f_phasecenters[indx])
+                mask.append(f_masks[indx])
+                modelimage.append(f_modelimages[indx])
+
             if len(imageids) > 1:
                 multifield=True
         else:
@@ -2879,12 +3059,18 @@ class cleanhelper:
         psfimage=[]
         fluximage=[]
         for k in range(len(self.imagelist)):
-            ia.open(self.imagelist[k])
-            if (modelimage =='' or modelimage==[]) and multifield:
-                ia.rename(self.imagelist[k]+'.model',overwrite=True)
+            #ia.open(self.imagelist[k])
+            #if (modelimage =='' or modelimage==[]) and multifield:
+            #    ia.rename(self.imagelist[k]+'.model',overwrite=True)
+            #else:
+            #    ia.remove(verbose=False)
+            if ((modelimage =='' or modelimage==[]) or \
+                (type(modelimage)==list and modelimage[k]=='')) and multifield:
+                ia.rename(imset.imagelist[k]+'.model',overwrite=True)
             else:
                 ia.remove(verbose=False)
             ia.close()
+
             modelimages.append(self.imagelist[k]+'.model')
             restoredimage.append(self.imagelist[k]+'.image')
             residualimage.append(self.imagelist[k]+'.residual')
