@@ -754,7 +754,7 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
       for(uInt row = 0; row < nrows; ++row){
         for(uInt icor = 0; icor < nCor; ++icor){
           rowWtFac(icor, row) = 0.0;
-          for(Int ichan = 0; ichan < nch; ++ichan)
+          for(uInt ichan = 0; ichan < nch; ++ichan)
             // Presumably the input row weight was set without taking flagging
             // into account.
             rowWtFac(icor, row) += wtsp(icor, ichan, row);

@@ -2218,7 +2218,7 @@ void ROVisibilityIterator::slicesToMatrices(Vector<Matrix<Int> >& matv,
                                             const Vector<Vector<Slice> >& slicesv,
                                             const Vector<Int>& widthsv) const
 {
-  Int nspw = slicesv.nelements();
+  uInt nspw = slicesv.nelements();
 
   matv.resize(nspw);
   uInt selspw = 0;

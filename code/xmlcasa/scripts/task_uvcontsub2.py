@@ -51,12 +51,9 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             casalog.post('split is being run internally, and the selected spws')
             casalog.post('will be renumbered to start from 0 in the output!')
 
-            # Initialize spwmap.
-            spwmap = update_spw(tempspw, None)[1]
-
             # Now get myfitspw.
-            myfitspw = update_spw(fitspw, spwmap)[0]
-            myspw = update_spw(spw, spwmap)[0]
+            myfitspw = update_spwchan(vis, tempspw, fitspw)
+            myspw = update_spwchan(vis, tempspw, spw)
 
         final_csvis = csvis
         workingdir = os.path.abspath(os.path.dirname(vis.rstrip('/')))
@@ -85,7 +82,17 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
             # This takes almost 30s/GB.  (lustre, 8/2011)
             casalog.post('Copying ' + vis + ' to ' + csvis + ' with cp.')
             copy_tree(vis, csvis)
-        
+
+        # It is less confusing if we write the history now that the "root" MS
+        # is made, but before cb adds its messages.
+        #
+        # Not a dict, because we want to maintain the order.
+        param_names = uvcontsub2.func_code.co_varnames[:uvcontsub2.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+            
+        write_history(myms, csvis, 'uvcontsub2', param_names, param_vals,
+                      casalog)
+
         if (type(csvis) == str) and os.path.isdir(csvis):
             mycb.open(csvis)
         else:
@@ -184,13 +191,6 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         myms.split(final_csvis, spw=myspw, whichcol='corrected')
         myms.close()
 
-        # Not a dict, because we want to maintain the order.
-        param_names = uvcontsub2.func_code.co_varnames[:uvcontsub2.func_code.co_argcount]
-        param_vals = [eval(p) for p in param_names]
-            
-        write_history(myms, final_csvis, 'uvcontsub2', param_names, param_vals,
-                      casalog)
-
         #casalog.post("\"want_cont\" = \"%s\"" % want_cont, 'WARN')
         #casalog.post("\"csvis\" = \"%s\"" % csvis, 'WARN')
         if want_cont:
@@ -202,8 +202,6 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
                        whichcol='MODEL_DATA',
                        spw=myspw)
             myms.close()
-            write_history(myms, final_csvis[:-3], 'uvcontsub2', param_names,
-                          param_vals, casalog)
 
         #casalog.post("rming \"%s\"" % csvis, 'WARN')
         shutil.rmtree(csvis)
