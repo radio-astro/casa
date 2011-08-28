@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TapeIO.cc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: TapeIO.cc 21029 2011-03-16 13:41:57Z gervandiepen $
 
 #include <casa/IO/TapeIO.h>
 #include <casa/OS/Path.h>
@@ -35,13 +35,27 @@
 #include <errno.h>                // needed for errno
 #include <casa/string.h>          // needed for strerror
 
-// No tape support on Cray XT3 or OSX 10.6
 #ifndef CASA_NOTAPE
-#include <sys/mtio.h>             // needed for ioctl
-#if defined(AIPS_SOLARIS) || defined(__APPLE__)
-#include <sys/ioctl.h>            // needed for ioctl
-#include <sys/types.h>            // needed for ioctl
+// No tape support on Cray XT3 and OS-X 10.6
+#  if defined(AIPS_CRAY_PGI)
+#    define CASA_NOTAPE 1
+#  endif
+#  if defined(__APPLE__)
+// MAC_OS_X_VERSION_MAX_ALLOWED reflects the version of the SDK being used
+#    include <AvailabilityMacros.h>
+#    if defined(MAC_OS_X_VERSION_10_6)
+#      if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+#        define CASA_NOTAPE 1
+#      endif
+#    endif
+#  endif
 #endif
+#ifndef CASA_NOTAPE
+#  include <sys/mtio.h>             // needed for ioctl
+#  if defined(AIPS_SOLARIS) || defined(AIPS_DARWIN)
+#    include <sys/ioctl.h>            // needed for ioctl
+#    include <sys/types.h>            // needed for ioctl
+#  endif
 #endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -198,7 +212,7 @@ void TapeIO::setVariableBlockSize() {
 #endif
 }
 
-#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(CASA_NOTAPE )
+#if (defined(AIPS_SOLARIS) || defined(AIPS_LINUX)) && !defined(CASA_NOTAPE)
 void TapeIO::setBlockSize(uInt sizeInBytes) {
   struct mtop tapeCommand;
 #if defined(AIPS_LINUX) 

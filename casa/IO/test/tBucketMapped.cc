@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBucketMapped.cc 20933 2010-08-16 10:38:18Z gervandiepen $
+//# $Id: tBucketMapped.cc 21011 2010-12-16 12:37:49Z gervandiepen $
 
 #include <casa/IO/BucketMapped.h>
 #include <casa/IO/BucketFile.h>
@@ -60,14 +60,17 @@ void a (Bool)
   file.open();
   BucketMapped cache (&file, 512, 32768, 5);
   Int i;
-  char buf[32768];
+  union {
+    char buf[32768];
+    Int  bufi[32768/4];
+  };
   for (i=0; i<32768; i++) {
     buf[i] = 0;
   }
   cache.extend (100);
   for (i=0; i<100; i++) {
-    *(Int*)buf = i+1;
-    *(Int*)(buf+32760) = i+10;
+    bufi[0] = i+1;
+    bufi[32760/4] = i+10;
     memcpy (cache.getrwBucket(i), buf, 32768);
   }
   for (i=0; i<100; i++) {

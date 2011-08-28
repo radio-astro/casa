@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableVector.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableVector.h 21091 2011-06-01 12:08:15Z gervandiepen $
 
 #ifndef TABLES_TABLEVECTOR_H
 #define TABLES_TABLEVECTOR_H
@@ -189,9 +189,6 @@ public:
 protected:
     TabVecRep<T>* tabVecPtr_p;
 
-    // Check if a new TabxxxVec succeeded; if so, link to it.
-    void checkLink();
-
     // Destruct the object. It decreases the reference count in the
     // underlying object.
     void destruct();
@@ -272,7 +269,6 @@ class TableVector : public ROTableVector<T>
 {
   //# Make members of parent class known.
 protected:
-  using ROTableVector<T>::checkLink;
   using ROTableVector<T>::tabVecPtr_p;
 
 public:

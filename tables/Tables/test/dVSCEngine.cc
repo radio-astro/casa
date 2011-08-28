@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dVSCEngine.cc 19965 2007-02-28 03:59:45Z gervandiepen $
+//# $Id: dVSCEngine.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Define a main program to allow compalition and linking by the make system.
 //# The variable is set in tVSCEngine.cc to skip it.

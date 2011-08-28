@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DiskShape.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: DiskShape.cc 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #include <components/ComponentModels/DiskShape.h>
 #include <components/ComponentModels/Flux.h>

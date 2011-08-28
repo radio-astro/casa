@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasValue.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MeasValue.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/MeasValue.h>
@@ -57,8 +57,7 @@ void MeasValue::adjust(Double &val) {
   val = 1.0;
 }
 
-void MeasValue::readjust(Double val) {
-  val = 1.0; // Only to suppress warning message
+void MeasValue::readjust(Double) {
 }
 
 //# Global functions

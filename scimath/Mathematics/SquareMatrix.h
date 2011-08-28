@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SquareMatrix.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: SquareMatrix.h 21024 2011-03-01 11:46:18Z gervandiepen $
  
 #ifndef SCIMATH_SQUAREMATRIX_H
 #define SCIMATH_SQUAREMATRIX_H
@@ -122,7 +122,7 @@ public:
     // Enum used internally to optimize operations.
     enum {General, Diagonal, ScalarId};
     // Destructor
-    ~SquareMatrix() {};
+    ~SquareMatrix() {}
     // Default constructor - creates a unity matrix at present, this may not
     // be what we want (non-intuitive?)
     SquareMatrix() : type_p(ScalarId) {a_p[0][0]=T(1);}

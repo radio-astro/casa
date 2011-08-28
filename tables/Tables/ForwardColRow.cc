@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ForwardColRow.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ForwardColRow.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/ForwardColRow.h>
@@ -140,10 +140,13 @@ DataManager* ForwardColumnIndexedRowEngine::makeObject
 }
 void ForwardColumnIndexedRowEngine::registerClass()
 {
-    DataManager::registerCtor ("ForwardColumnIndexedRowEngine",
-			       ForwardColumnIndexedRowEngine::makeObject);
+    DataManager::registerCtor (className(), makeObject);
 }
 String ForwardColumnIndexedRowEngine::dataManagerType() const
+{
+    return className();
+}
+String ForwardColumnIndexedRowEngine::className()
 {
     return "ForwardColumnIndexedRowEngine";
 }

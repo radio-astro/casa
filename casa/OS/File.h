@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: File.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: File.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef CASA_FILE_H
 #define CASA_FILE_H
@@ -31,6 +31,7 @@
 //# Includes
 #include <casa/aips.h>
 #include <casa/OS/Path.h>
+#include <casa/OS/Mutex.h>
 #include <casa/BasicSL/String.h>
 
 
@@ -295,10 +296,11 @@ private:
     void getstat (const File& file, void* buf) const;
 
 
-    // A sequence number to generate unique file names.
-    static uInt uniqueSeqnr_p;
     // Full pathname of the file.
     Path itsPath;
+    // A sequence number to generate unique file names.
+    static uInt uniqueSeqnr_p;
+    static Mutex theirMutex;
 };
 
 

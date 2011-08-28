@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayError.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayError.h 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #ifndef CASA_ARRAYERROR_H
 #define CASA_ARRAYERROR_H
@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // ArrayError is the base class for all the Array-specific exception classes,
 // i.e. if it is caught you will catch (through inheritance) all Array-specific
 // exceptions. Note that (presently, anyway) the Array classes will throw
-// a few non-Array exceptions, in particular AllocError.
+// a few non-Array exceptions.
 // <srcblock>
 // try {
 //    // Some lines, functions, ...

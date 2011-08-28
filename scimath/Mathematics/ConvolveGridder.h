@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ConvolveGridder.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: ConvolveGridder.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_CONVOLVEGRIDDER_H
 #define SCIMATH_CONVOLVEGRIDDER_H
@@ -48,7 +48,7 @@ public:
 
   virtual void setConvolutionFunction(const String& type);
 
-  virtual ~ConvolveGridder() {};
+  virtual ~ConvolveGridder() {}
 
   virtual Bool grid(Array<Range>& gridded,
 		    const Vector<Domain>& position,

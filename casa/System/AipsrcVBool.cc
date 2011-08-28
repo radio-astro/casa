@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcVBool.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AipsrcVBool.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 
@@ -37,6 +37,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Data
 AipsrcVector<Bool> AipsrcVector<Bool>::myp_p;
+Mutex AipsrcVector<Bool>::theirMutex;
 
 //# Constructor
 AipsrcVector<Bool>::AipsrcVector() : 
@@ -73,6 +74,7 @@ Bool AipsrcVector<Bool>::find(Vector<Bool> &value,
 
 uInt AipsrcVector<Bool>::registerRC(const String &keyword,
 				    const Vector<Bool> &deflt) {
+  ScopedMutexLock lock(theirMutex);
   uInt n = Aipsrc::registerRC(keyword, myp_p.ntlst);
   myp_p.tlst.resize(n);
   find ((myp_p.tlst)[n-1], keyword, deflt);
@@ -80,18 +82,21 @@ uInt AipsrcVector<Bool>::registerRC(const String &keyword,
 }
 
 const Vector<Bool> &AipsrcVector<Bool>::get(uInt keyword) {
+  ScopedMutexLock lock(theirMutex);
   AlwaysAssert(keyword > 0 && keyword <= myp_p.tlst.nelements(), AipsError);
   return (myp_p.tlst)[keyword-1];
 }
 
 void AipsrcVector<Bool>::set(uInt keyword,
 			     const Vector<Bool> &deflt) {
+  ScopedMutexLock lock(theirMutex);
   AlwaysAssert(keyword > 0 && keyword <= myp_p.tlst.nelements(), AipsError);
   (myp_p.tlst)[keyword-1].resize(deflt.nelements());
   (myp_p.tlst)[keyword-1] = deflt;
 }
 
 void AipsrcVector<Bool>::save(uInt keyword) {
+  ScopedMutexLock lock(theirMutex);
   AlwaysAssert(keyword > 0 && keyword <= myp_p.tlst.nelements(), AipsError);
   ostringstream oss;
   Int n = ((myp_p.tlst)[keyword-1]).nelements();

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Path.cc 20965 2010-09-27 06:42:34Z gervandiepen $
+//# $Id: Path.cc 21030 2011-03-16 13:44:34Z gervandiepen $
 
 
 #include <casa/OS/Path.h>
@@ -37,6 +37,9 @@
 #include <unistd.h>                 // needed for pathconf
 #include <limits.h>                 // needed for PATH_MAX, etc.
 #include <ctype.h>                  // needed for isprint
+#include <stdlib.h>                 // needed for realpath
+#include <errno.h>                  // needed for errno
+#include <casa/string.h>            // needed for strerror
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -136,6 +139,17 @@ const String& Path::absoluteName() const
 	itsAbsolutePathName = removeDots (makeAbsoluteName (expandedName()));
     }
     return itsAbsolutePathName;
+}
+
+String Path::resolvedName() const
+{
+    char name[PATH_MAX+1];
+    char* ptr = realpath (absoluteName().c_str(), name);
+    if (ptr == 0) {
+        throw AipsError("resolvedName(" + absoluteName() + ") failed: " +
+                        strerror(errno));
+    }
+    return String(name);
 }
 
 Bool Path::isValid() const

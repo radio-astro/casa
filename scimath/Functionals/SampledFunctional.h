@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SampledFunctional.h 19779 2006-12-12 23:20:42Z gvandiep $
+//# $Id: SampledFunctional.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_SAMPLEDFUNCTIONAL_H
 #define SCIMATH_SAMPLEDFUNCTIONAL_H
@@ -107,7 +107,7 @@ public:
   // Return the total size of the data set.
   virtual uInt nelements() const = 0;
   // The virtual destructor does nothing
-  virtual ~SampledFunctional(){};
+  virtual ~SampledFunctional(){}
 };
 
 

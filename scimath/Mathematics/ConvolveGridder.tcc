@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ConvolveGridder.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ConvolveGridder.tcc 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <casa/BasicSL/Constants.h>
@@ -106,7 +106,7 @@ extern "C" {
    void ddgrd3d(Int*, Int*, Int *, Int*, Int*, Int *, const Double*,
 		 Double*, Int*, Int*, Double*, Double*, Double*,
 		 Double*);
-};
+}
 
 // Double versions
 

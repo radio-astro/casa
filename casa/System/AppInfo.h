@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: AppInfo.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: AppInfo.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef CASA_APPINFO_H
 #define CASA_APPINFO_H
@@ -141,7 +141,7 @@ private:
 //# Inlines
 
 inline Double AppInfo::timeZone() {if (need_init_p) init();
-	                  return AipsrcValue<Double>::get(tz_r);};
+	                  return AipsrcValue<Double>::get(tz_r);}
 
 
 } //# NAMESPACE CASA - END

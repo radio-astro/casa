@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: NNLSMatrixSolver.cc 20253 2008-02-23 15:15:00Z gervandiepen $
+//# $Id: NNLSMatrixSolver.cc 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #include <casa/aips.h>
 #include <scimath/Mathematics/NNLSMatrixSolver.h>
@@ -45,7 +45,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 extern "C" {
   void nnls(FType*,int*,int*,int*,FType*,FType*,float*,FType*,FType*,int*,int*,int*);
-};
+}
 
 // Default Constructor
 NNLSMatrixSolver::NNLSMatrixSolver(): MatrixSolver() {}

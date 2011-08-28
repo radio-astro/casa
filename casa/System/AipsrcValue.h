@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsrcValue.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AipsrcValue.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef CASA_AIPSRCVALUE_H
 #define CASA_AIPSRCVALUE_H
@@ -220,6 +220,7 @@ private:
   //# Data
   // The global AipsrcValue object
   static AipsrcValue myp_p;
+  static Mutex theirMutex;
   // Register list
   // <group>
   Block<T> tlst;
@@ -263,6 +264,7 @@ public:
   static void save(uInt keyword);
 private:
   static AipsrcValue_Bool myp_p;
+  static Mutex theirMutex;
   Block<Bool> tlst;
   Block<String> ntlst;
   AipsrcValue_Bool<Bool> &operator=(const AipsrcValue_Bool<Bool> &other);

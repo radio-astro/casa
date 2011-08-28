@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RowCopier.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RowCopier.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/RowCopier.h>
 #include <tables/Tables/TableColumn.h>
@@ -101,10 +101,6 @@ void ColumnHolder::attach(const String &outCol, const String &inCol)
   	  outTabCol.resize(outTabCol.nelements() + 1);
 	  inTabCol[inTabCol.nelements() - 1] = new ROTableColumn(in,inCol);
 	  outTabCol[outTabCol.nelements() - 1] = new TableColumn(out,outCol);
-	  if (inTabCol[inTabCol.nelements() - 1] == 0 ||
-	      outTabCol[outTabCol.nelements() - 1] == 0) {
-	      throw(AllocError("RowCopier :ROTableColumn or TableColumn",1)); 
-	  }
     } else {
 	throw(TableError("RowCopier: " + inCol + " and " +
 			 outCol + " are not conformant"));
@@ -133,9 +129,6 @@ RowCopier::RowCopier(Table &out, const Table &in)
     }
 
     columns_p = new ColumnHolder(out,in);
-    if (columns_p == 0) {
-	throw(AllocError("RowCopier: ColumnHolder",1));
-    }
     for (uInt i=0; i < out.tableDesc().ncolumn(); i++) {
 	TableColumn outCol(out, i);
 	if (in.tableDesc().isColumn(outCol.columnDesc().name())) {
@@ -156,9 +149,6 @@ RowCopier::RowCopier(Table &out, const Table &in,
     }
 
     columns_p = new ColumnHolder(out,in);
-    if (columns_p == 0) {
-	throw(AllocError("RowCopier: ColumnHolder",1));
-    }
 
     if (inNames.nelements() != outNames.nelements()) {
 	throw(TableError("RowCopier: Non-conformant column name vectors"));

@@ -563,7 +563,7 @@ void NewMSSimulator::local2global(Vector<Double>& xGeo,
     zGeo(i) = cosLat * yLocal(i)  + sinLat * zLocal(i)  + xyz(2);
   }
   
-};
+}
 
 void NewMSSimulator::longlat2global(Vector<Double>&,
 				    Vector<Double>&,
@@ -575,7 +575,7 @@ void NewMSSimulator::longlat2global(Vector<Double>&,
 {
   LogIO os(LogOrigin("NewMSSimulator", "longlat2global()", WHERE));
   os <<  LogIO::SEVERE << "NewMSSimulator::longlat2global not yet implemented" << LogIO::POST;
-};
+}
 
 
 void NewMSSimulator::initFields(const String& sourceName, 
@@ -657,7 +657,7 @@ void NewMSSimulator::initFields(const String& sourceName,
     sourcec.sysvel().put(baseSrcID, svV); 
   }
 
-};
+}
 
 
   bool NewMSSimulator::getFields(Int& nField,
@@ -691,7 +691,7 @@ void NewMSSimulator::initFields(const String& sourceName,
 
   return (nField>0);
 
-};
+}
 
 
 
@@ -1002,7 +1002,7 @@ void NewMSSimulator::initFeeds(const String& mode,
     feedc.interval().put(i, forever);
   }
   os << "Added rows to FEED table" << LogIO::POST;
-};
+}
 
 
 
@@ -1782,7 +1782,7 @@ void NewMSSimulator::observe(const Vector<String>& sourceNames,
 //  os << nSubElevation << " visibilities flagged due to elevation limit of " << 
 //    elevationLimit_p.getValue("deg") << " degrees " << endl << LogIO::DEBUG1;
   
-};
+}
 
 // Calculates the fractional blockage of one antenna by another
 // We will want to put this somewhere else eventually, but I don't yet know where!
@@ -1826,7 +1826,7 @@ void NewMSSimulator::blockage(Double &fraction1, Double &fraction2,
   if (uvw(2) < 0.0) fraction1 = 0.0;
   
   return;
-};
+}
 
 
 String NewMSSimulator::formatDirection(const MDirection& direction) {

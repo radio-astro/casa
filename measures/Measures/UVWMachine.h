@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UVWMachine.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: UVWMachine.h 21024 2011-03-01 11:46:18Z gervandiepen $
 #ifndef MEASURES_UVWMACHINE_H
 #define MEASURES_UVWMACHINE_H
 
@@ -135,7 +135,7 @@ template <class T> class Vector;
 //	// Conversion to J2000 is set by:
 //	UVWMachine uvm(MDirection::Ref(MDirection::J2000), indir);
 //	// The rotation matrix to go to new UVW is obtained by:
-//	RotMatrix rm(uvm.rotationUVW());
+//	RotMatrix rm(uvm.rotationUVM());
 //	// If an UVW specified:
 //	MVPosition uvw(-739.048461, -1939.10604, 1168.62562);
 //	// This can be converted by e.g.:
@@ -203,7 +203,7 @@ class UVWMachine {
   // Return the new phase center coordinates
   const MDirection &phaseCenter() const;
   // Return if the engine is an effective NOP
-  Bool isNOP() { return nop_p; };
+  Bool isNOP() { return nop_p; }
   // Return a rotation matrix that can be used to convert UVW coordinates:
   // UVW(new) = UVW(old) * rotationUVW()
   const RotMatrix &rotationUVW() const;

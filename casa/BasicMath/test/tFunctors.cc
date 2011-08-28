@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFunctors.cc 20565 2009-04-08 14:51:14Z gervandiepen $
+//# $Id: tFunctors.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #include <casa/aips.h>
 #include <casa/BasicMath/Functors.h>

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Measure.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: Measure.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef MEASURES_MEASURE_H
 #define MEASURES_MEASURE_H
@@ -337,7 +337,7 @@ public:
   // </srcblock>
   // <group>
   // Dummy for cxx2html
-  void dummy_giveMe() const {;};
+  void dummy_giveMe() const {}
   // </group>
   //
   // Set the reference type to the specified String. False if illegal
@@ -385,7 +385,7 @@ public:
   // </srcblock>
   // <group>
   // Dummy for cxx2html
-  void dummy_getRef() const {;};
+  void dummy_getRef() const {}
   // </group>
   //
   // Each derived class should be able to get its internal value and have:
@@ -399,7 +399,7 @@ public:
   //    Quantum<Vector<Double> > get(const Unit &unit) const;
   // </srcblock>
   // <group>
-  void dummy_getValue() const {;};
+  void dummy_getValue() const {}
   // </group>
   //
   //
@@ -443,7 +443,7 @@ private:
   // </srcblock>
   // <group>
   // Dummy for cxx2html
-  void dummy_data() const {;};
+  void dummy_data() const {}
   // </group>
   //
   //# Member functions

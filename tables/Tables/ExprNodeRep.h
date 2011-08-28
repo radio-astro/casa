@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeRep.h 20940 2010-08-25 09:08:06Z gervandiepen $
+//# $Id: ExprNodeRep.h 21037 2011-04-04 07:06:59Z gervandiepen $
 
 #ifndef TABLES_EXPRNODEREP_H
 #define TABLES_EXPRNODEREP_H
@@ -388,6 +388,12 @@ public:
 
     // Create a empty range object.
     static void createRange (Block<TableExprRange>&);
+
+    // Convert a NodeDataType to a string.
+    static String typeString (NodeDataType);
+
+    // Convert a ValueType to a string.
+    static String typeString (ValueType);
 
 protected:
     uInt              count_p;       //# Reference count

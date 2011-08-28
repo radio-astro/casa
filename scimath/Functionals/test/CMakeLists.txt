@@ -4,7 +4,6 @@ dGaussianND
 tChebyshev
 tCombiFunction
 tCompoundFunction
-tConstantND
 tFuncExpression
 tFunctionHolder
 tFunctionOrder

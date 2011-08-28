@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUDFNodeArray.h 20940 2010-08-25 09:08:06Z gervandiepen $
+//# $Id: ExprUDFNodeArray.h 21109 2011-07-18 10:28:54Z gervandiepen $
 
 #ifndef TABLES_EXPRUDFNODEARRAY_H
 #define TABLES_EXPRUDFNODEARRAY_H
@@ -76,7 +76,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
 
     // Constructor
-    TableExprUDFNodeArray (UDFBase* udf, const TableExprNodeSet& source);
+    TableExprUDFNodeArray (UDFBase* udf, const Table&,
+                           const TableExprNodeSet& source);
 
     // Destructor
     virtual ~TableExprUDFNodeArray();
@@ -90,6 +91,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Array<String>   getArrayString   (const TableExprId& id);
     virtual Array<MVTime>   getArrayDate     (const TableExprId& id);
     // </group>
+
+    // Replace the Table pointer in this node.
+    virtual void replaceTablePtr (const Table&);
 
   private:
     UDFBase* itsUDF;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: AipsIOCarray.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: AipsIOCarray.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/IO/AipsIOCarray.h>
 #include <casa/Exceptions/Error.h>
@@ -56,9 +56,6 @@ void getnewAipsIO (AipsIO& ios, uInt& n, T** data)
 {
     ios >> n;
     *data = new T[n];
-    if (*data == 0) {
-	throw (AllocError ("getnewAipsIO", n));
-    }
     getAipsIO (ios, n, *data);
 }
 

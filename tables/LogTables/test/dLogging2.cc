@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dLogging2.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: dLogging2.cc 21005 2010-12-08 08:56:59Z gervandiepen $
 
 //#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //#!!
@@ -65,7 +65,7 @@ DataClass::DataClass(const IPosition &shape, const LogSink &sink)
   if (shape.nelements() != 1) {                                          // 8
     logMessage.priority(LogMessage::SEVERE).line(__LINE__).message(      // 9
 	     "Illegal Shape! Must be one dimensional.");                 // 10
-      log_sink_p.postThenThrow(logMessage);                              // 11
+    log_sink_p.postThenThrow(logMessage, AipsError());                   // 11
   }                                                                      // 12
                                                                          // 13
   data_p.resize(shape(0));                                               // 14

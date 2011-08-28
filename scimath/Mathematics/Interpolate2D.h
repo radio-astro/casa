@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Interpolate2D.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Interpolate2D.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_INTERPOLATE2D_H
 #define SCIMATH_INTERPOLATE2D_H
@@ -175,7 +175,7 @@ class Interpolate2D {
   // </group>
   
   // Recover interpolation method
-  Method interpolationMethod() const {return itsMethod;};
+  Method interpolationMethod() const {return itsMethod;}
   
   // Convert string ("nearest", "linear", "cubic") to interpolation method
   // Minimum match will do.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Aipsrc.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Aipsrc.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 
@@ -133,55 +133,56 @@ Bool Aipsrc::find(uInt &value, const String &keyword,
 Bool Aipsrc::findDir(String& foundDir, const String& lastPart,
                      const Vector<String>& prepends,
                      const Vector<String>& appends,
-                     const Bool useStds)
+                     Bool useStds)
 {
   // Setup a string that is either "/" + lastPart or blank.
   String myLastPart("");
-  if(lastPart != "")
+  if (lastPart != "") {
     myLastPart += "/" + lastPart;
-  
+  }
   // Note that this function returns as soon as possible, i.e. it goes until it
   // matches or runs out of possibilities.
-
-  for(uInt i = 0; i < prepends.nelements(); ++i){
+  for (uInt i = 0; i < prepends.nelements(); ++i) {
     foundDir = prepends[i] + myLastPart;
-    
     File testPath(foundDir);
-    if(testPath.isDirectory())
-      return true;
+    if (testPath.isDirectory()) {
+      return True;
+    }
   }
-  if(useStds){
+  if (useStds) {
     // Test . using lastPart or ., not "".
-    if(lastPart != "")
+    if (lastPart!= "") {
       foundDir = lastPart;
-    else
+    } else {
       foundDir = ".";
+    }
     File testDot(foundDir);
-    if(testDot.isDirectory())
-      return true;
-
+    if (testDot.isDirectory()) {
+      return True;
+    }
     foundDir = aipsHome() + myLastPart;
     File testAipsHome(foundDir);
-    if(testAipsHome.isDirectory())
-      return true;
-    
+    if (testAipsHome.isDirectory()) {
+      return True;
+    }
     foundDir = aipsRoot() + myLastPart;
     File testAipsRoot(foundDir);
-    if(testAipsRoot.isDirectory())
-      return true;
+    if (testAipsRoot.isDirectory()) {
+      return True;
+    }
   }
-  for(uInt i = 0; i < appends.nelements(); ++i){
+  for (uInt i = 0; i < appends.nelements(); ++i) {
     foundDir = appends[i] + myLastPart;
-    
     File testPath(foundDir);
-    if(testPath.isDirectory())
-      return true;
+    if (testPath.isDirectory()) {
+      return True;
+    }
   }
-  return false;
+  return False;
 }
 
 void Aipsrc::reRead() {
-  parse();
+  parse(True);
 }
 
 Double Aipsrc::lastRead() {
@@ -393,41 +394,45 @@ void Aipsrc::save(const String keyword, const String val) {
   delete [] buf;
 }
   
-uInt Aipsrc::parse() {
-  // Refill basic data
-  filled = False;
-  // If defined use setting of CASARCFILES. Make sure it's ended by a colon.
-  String filelist = EnvironmentVariable::get("CASARCFILES");
-  if (! filelist.empty()) {
-    filelist += ':';
-  } else {
-    // Otherwise use CASAPATH.
-    // This parse based on order HOME, AIPSROOT, AIPSHOST, AIPSSITE, AIPSARCH
-    filelist = fillAips(uhome) + String("/.casarc:");
-    filelist += fillAips(uhome) + String("/.casa/rc:");
-    filelist += fillAips(uhome) + String("/.aipsrc:");
-    filelist += (root + String("/.aipsrc:"));
-    filelist += (host + String("/aipsrc:"));
-    filelist += (site + String("/aipsrc:"));
-    filelist += (arch + String("/aipsrc:"));
+void Aipsrc::parse(Bool force) {
+  // Thread-safety. Note that when the lock is acquired,
+  // parse might have been done already in another thread.
+  ScopedMutexLock lock(theirMutex);
+  if (doInit || force) {
+    // Refill basic data
+    filled = False;
+    // If defined use setting of CASARCFILES. Make sure it's ended by a colon.
+    String filelist = EnvironmentVariable::get("CASARCFILES");
+    if (! filelist.empty()) {
+      filelist += ':';
+    } else {
+      // Otherwise use CASAPATH.
+      // This parse based on order HOME, AIPSROOT, AIPSHOST, AIPSSITE, AIPSARCH
+      filelist = fillAips(uhome) + String("/.casarc:");
+      filelist += fillAips(uhome) + String("/.casa/rc:");
+      filelist += fillAips(uhome) + String("/.aipsrc:");
+      filelist += (root + String("/.aipsrc:"));
+      filelist += (host + String("/aipsrc:"));
+      filelist += (site + String("/aipsrc:"));
+      filelist += (arch + String("/aipsrc:"));
+    }
+    doParse(filelist);
+    doInit = False;		 // Indicate parse done (before call to find)
+    String x;
+    if (find(x, String("user.aipsdir"), String("/aips++"))) {
+      home = x;
+    } else {
+      home = uhome + x;
+    }
   }
-  uInt i = parse(filelist);
-  String x;
-  if (find(x, String("user.aipsdir"), String("/aips++"))) {
-    home = x;
-  } else {
-    home = uhome + x;
-  }
-  return i;
 }
 
-uInt Aipsrc::parse(String &fileList) {
-  doInit = False;		 // Indicate parse done
+void Aipsrc::doParse(String &fileList) {
   Time x;
   lastParse = x.modifiedJulianDay();	// Save time of parse
   Int nkw = Aipsrc::genParse(Aipsrc::keywordPattern,
-			     Aipsrc::keywordValue, 
-			     Aipsrc::fileEnd, fileList);
+                             Aipsrc::keywordValue, 
+                             Aipsrc::fileEnd, fileList);
   const String gs00(".");	// make correct patterns
   const String gs01("\\.");
   const String gs10("*");
@@ -439,7 +444,6 @@ uInt Aipsrc::parse(String &fileList) {
     keyword.gsub(gs10, gs11);
     keywordPattern[i] = String("^") + keyword + String("$");
   }
-  return nkw;
 }
 
 uInt Aipsrc::genParse(Block<String> &keywordPattern, 
@@ -619,7 +623,8 @@ Bool Aipsrc::genGet(String &val, Vector<String> &namlst, Vector<String> &vallst,
 
   // Static Initializations -- Only really want to read the files once
 
-  Bool Aipsrc::doInit = True;
+  Mutex Aipsrc::theirMutex;
+  volatile Bool Aipsrc::doInit = True;
   Double Aipsrc::lastParse = 0;
   Block<String> Aipsrc::keywordPattern(0);
   Block<String> Aipsrc::keywordValue(0);

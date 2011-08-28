@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: NNGridder.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: NNGridder.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_NNGRIDDER_H
 #define SCIMATH_NNGRIDDER_H
@@ -44,7 +44,7 @@ public:
   NNGridder(const IPosition& shape, const Vector<Domain>& scale,
 	    const Vector<Domain>& offset);
 
-  virtual ~NNGridder() {};
+  virtual ~NNGridder() {}
 
   virtual Bool grid(Array<Range>& gridded,
 		    const Vector<Domain>& position,

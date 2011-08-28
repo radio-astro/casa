@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tVirtColEng.cc 18125 2004-12-07 21:12:11Z wyoung $
+//# $Id: tVirtColEng.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# Define the variable to exclude the main from dVirtColEng.cc
 #define DVIRTCOLENG_MAIN

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Convolver.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Convolver.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_CONVOLVER_H
 #define SCIMATH_CONVOLVER_H
@@ -234,7 +234,7 @@ public:
   // When using the default constructor the psf MUST be specified using the
   // setPsf function prior to doing any convolution. 
   // <group>
-  Convolver(){};
+  Convolver(){}
   // </group>
   // Create the cached Transfer function assuming that circular convolution
   // will be done

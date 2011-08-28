@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Queue.tcc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: Queue.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/Containers/Queue.h>
 #include <casa/Utilities/Copy.h>
@@ -77,9 +77,6 @@ template<class T> void Queue<T>::compress()
 
     T *oldstorage = data_p.storage();
     T *newstorage = new T[n];
-    if (newstorage == 0) {
-	throw(AllocError("Queue<T>::compress()", n*sizeof(T)));
-    }
     objcopy(newstorage, oldstorage + first_p, n);
     // The data_p Block now takes over responsibility for deleting newStorage.
     data_p.replaceStorage(n, newstorage, True);

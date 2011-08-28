@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: PointShape.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: PointShape.h 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #ifndef COMPONENTS_POINTSHAPE_H
 #define COMPONENTS_POINTSHAPE_H

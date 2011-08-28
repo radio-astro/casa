@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tHDF5.cc 20712 2009-09-03 14:36:23Z gervandiepen $
+//# $Id: tHDF5.cc 20766 2009-10-06 00:52:29Z Malte.Marquarding $
 
 #include <iostream>
 
@@ -39,6 +39,7 @@ int main()
 #include <vector>
 #include <math.h>
 #include <hdf5.h>
+#include <stdlib.h>
 
 using namespace std;
 

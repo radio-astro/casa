@@ -88,10 +88,6 @@ Functionals/CompoundFunction.h
 Functionals/CompoundFunction.tcc
 Functionals/CompoundParam.h
 Functionals/CompoundParam.tcc
-Functionals/ConstantNDParam.h
-Functionals/ConstantNDParam.tcc
-Functionals/ConstantND.h
-Functionals/ConstantND.tcc
 Functionals/DiracDFunction.h
 Functionals/DiracDFunction.tcc
 Functionals/DiracDParam.h
@@ -219,7 +215,6 @@ Mathematics/DFTServer.h
 Mathematics/DFTServer.tcc
 Mathematics/FFTPack.h
 Mathematics/FFTServer.h
-Mathematics/FFTServer.tcc
 Mathematics/FFTW.h
 Mathematics/Gridder.h
 Mathematics/Gridder.tcc

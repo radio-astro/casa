@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCBaseline.cc 20124 2007-10-02 01:17:34Z Malte.Marquarding $
+//# $Id: MCBaseline.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions.h>
@@ -36,7 +36,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Statics
-Bool MCBaseline::stateMade_p = False;
 uInt MCBaseline::ToRef_p[N_Routes][3] = {
   {MBaseline::GALACTIC,	 	MBaseline::J2000,	0},
   {MBaseline::GALACTIC,		MBaseline::B1950,	2},
@@ -87,15 +86,11 @@ uInt MCBaseline::ToRef_p[N_Routes][3] = {
   {MBaseline::ICRS,		MBaseline::J2000,	0},
   {MBaseline::J2000,		MBaseline::ICRS,	0} };
 uInt MCBaseline::FromTo_p[MBaseline::N_Types][MBaseline::N_Types];
+MutexedInit MCBaseline::theirMutexedInit (MCBaseline::doFillState);
 
 //# Constructors
 MCBaseline::MCBaseline() : measMath() {
-  if (!stateMade_p) {
-    MBaseline::checkMyTypes();
-    MCBase::makeState(MCBaseline::stateMade_p, MCBaseline::FromTo_p[0],
-		      MBaseline::N_Types, MCBaseline::N_Routes,
-		      MCBaseline::ToRef_p);
-  };
+  fillState();
 }
 
 //# Destructor
@@ -118,8 +113,8 @@ void MCBaseline::getConvert(MConvertBase &mc,
       iin = ToRef_p[tmp][1];
       mc.addMethod(tmp);
       initConvert(tmp, mc);
-    };
-  };
+    }
+  }
 }
 
 void MCBaseline::clearConvert() {
@@ -447,20 +442,20 @@ void MCBaseline::doConvert(MVBaseline &in,
     default:
       break;
       
-    };	// switch
-  };	// for
+    }	// switch
+  }	// for
 }
 
 String MCBaseline::showState() {
-  if (!stateMade_p) {
-    MBaseline::checkMyTypes();
-    MCBase::makeState(MCBaseline::stateMade_p, MCBaseline::FromTo_p[0],
-		      MBaseline::N_Types, MCBaseline::N_Routes,
-		      MCBaseline::ToRef_p);
-  };
-  return MCBase::showState(MCBaseline::stateMade_p, MCBaseline::FromTo_p[0],
+  fillState();
+  return MCBase::showState(MCBaseline::FromTo_p[0],
 			   MBaseline::N_Types, MCBaseline::N_Routes,
 			   MCBaseline::ToRef_p);
+}
+
+void MCBaseline::doFillState (void*) {
+  MBaseline::checkMyTypes();
+  MCBase::makeState(FromTo_p[0], MBaseline::N_Types, N_Routes, ToRef_p);
 }
 
 } //# NAMESPACE CASA - END

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTime.cc 20625 2009-06-12 00:27:08Z gervandiepen $
+//# $Id: tTime.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #include <casa/OS/Time.h>
 #include <casa/iostream.h>

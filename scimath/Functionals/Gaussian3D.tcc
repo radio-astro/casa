@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Gaussian3D.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: Gaussian3D.tcc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 
 #include <scimath/Functionals/Gaussian3D.h>
@@ -102,9 +102,6 @@ template<class T>
 Function<T>* Gaussian3D<T>::clone() const 
 {
   Function<T> *tmp = new Gaussian3D<T>(*this);
-  if (!tmp)
-    throw(AllocError("Gaussian3D<T>::cloneFunctionND() - new failed",  
-		     sizeof(Gaussian3D<T>)));
   return tmp;
 }
 

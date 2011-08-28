@@ -22,7 +22,7 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# $Id: Interpolate1D.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Interpolate1D.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_INTERPOLATE1D_H
 #define SCIMATH_INTERPOLATE1D_H
@@ -180,7 +180,7 @@ public:
 
   // Name of function
   virtual const String &name() const { static String x("interpolate1d");
-    return x; };
+    return x; }
 
   // Interpolation is done using the () operator (see example above). Actual
   // use is through the virtual <src>eval()</src> function.

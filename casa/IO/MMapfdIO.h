@@ -32,7 +32,6 @@
 //# Includes
 #include <casa/IO/LargeFiledesIO.h>
 #include <casa/OS/RegularFile.h>
-#include <set>
 
 namespace casa
 {
@@ -47,11 +46,9 @@ namespace casa
 // cache of tiles. When using memory-mapped IO it does not need to do that
 // anymore.
 //
-// Best performance on Linux and Mac was achieved when mapping only
-// the part of the file that is currently in use, but at least a couple
-// of MB. Thus, using memory mapping with > 4 GB files which do not
-// fit in the virtual memory address space on 32-bit system, is a non-issue,
-// because only a small part of the file is mapped at any time.
+// On 32-bit systems its use is limited because for large files the 4 GB
+// memory space is insufficient. However, for 64-bit systems the memory
+// space is large enough to make use of it.
 //
 // In the general case there is direct access to the mapped file space.
 // The read and write methods copies the data into/from a buffer.
@@ -61,8 +58,6 @@ namespace casa
 // writable, writing into the mapped data segment means changing the file
 // contents.
 // </synopsis>
-//
-
 
 class MMapfdIO: public LargeFiledesIO
 {
@@ -71,45 +66,40 @@ public:
   // A file can be memory-mapped using the map function.
   MMapfdIO();
 
-  // Map the beginning of the given file descriptor into memory with 
-  // read access. The map has also write access if the file is opened for
-  // write. The file name is only used in possible error messages.
+  // Map the given file descriptor entirely into memory with read access.
+  // The map has also write access if the file is opened for write.
+  // The file name is only used in possible error messages.
   MMapfdIO (int fd, const String& fileName);
 
   // Destructor.
   // If needed, it will flush and unmap the file, but not close it.
   ~MMapfdIO();
 
-  // Map the beginning of the given file descriptor into memory with read
-  // access. The map has also write access if the file is opened for write.
+  // Map the given file descriptor entirely into memory with read access.
+  // The map has also write access if the file is opened for write.
   // An exception is thrown if a file descriptor was already attached.
   // The file name is only used in possible error messages.
   void map (int fd, const String& fileName);
 
-  // Map or remap the file. Only the required section of the file,
-  // as given by the offset and length parameters, is mapped.
+  // Map or remap the entire file.
   // Remapping is needed if the file has grown elsewhere.
-  void mapFile(Int64 offset, Int64 length);
+  void mapFile();
 
   // Flush changed mapped data to the file.
   // Nothing is done if the file is readonly.
   void flush();
 
   // Write the number of bytes from the seek position on.
-  // The file will be extended and remapped if writing beyond end-of-file,
-  // or if the currently mapped section does not include the required
-  // section. In that case possible pointers obtained using
-  // <src>getXXPointer</src> are not valid anymore.
+  // The file will be extended and remapped if writing beyond end-of-file.
+  // In that case possible pointers obtained using <src>getXXPointer</src>
+  // are not valid anymore.
   virtual void write (uInt size, const void* buf);
 
   // Read <src>size</src> bytes from the File. Returns the number of bytes
   // actually read. Will throw an exception (AipsError) if the requested
   // number of bytes could not be read unless throwException is set to
   // False. Will always throw an exception if the file is not readable or
-  // the system call returns an undocumented value. The file will be
-  // remapped if the currently mapped section does not include the
-  // required section. In that case, possible pointers obtained using
-  // <src>getXXPointer</src> are not valid anymore.
+  // the system call returns an undocumented value.
   virtual Int read (uInt size, void* buf, Bool throwException=True);
 
   // Get a read or write pointer to the given position in the mapped file.
@@ -119,14 +109,9 @@ public:
   // So it means that the write pointer can only be used to update the file,
   // not to extend it. The <src>seek</src> and <src>write</src> functions
   // should be used to extend a file.
-  // The length parameter is the required length of validity of the returned
-  // buffer. The file will be remapped if the currently mapped section does
-  // not include the required section. In that case possible pointers
-  // obtained from previous calls to <src>getXXPointer</src> are not valid
-  // anymore.
   // <group>
-  const void* getReadPointer (Int64 offset, Int64 length) const;
-  void* getWritePointer (Int64 offset, Int64 length);
+  const void* getReadPointer (Int64 offset) const;
+  void* getWritePointer (Int64 offset);
   // </group>
 
   // Get the file size.
@@ -149,15 +134,9 @@ private:
   // </group>
 
   Int64  itsFileSize;       //# File size
-  Int64  itsMapOffset;      //# Start of memory map in file
-  Int64  itsMapSize;        //# Size of currently memory mapped region
   Int64  itsPosition;       //# Current seek position
   char*  itsPtr;            //# Pointer to memory map
   Bool   itsIsWritable;
-
-  // Mapped regions of the file which have not been unmapped
-  std::set<std::pair<char *, Int64> > itsMappedRegions;
-  Int64 itsTotalMapSize;
 };
 
 } // end namespace

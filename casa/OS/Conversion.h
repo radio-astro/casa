@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Conversion.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Conversion.h 21111 2011-07-20 13:10:57Z gervandiepen $
 
 #ifndef CASA_CONVERSION_H
 #define CASA_CONVERSION_H
@@ -144,6 +144,12 @@ public:
     // Also added this for HPUX11 (2b provided in the makedefs)
     // (because they do not use an unsigned int for nbytes).
     static void* mymemcpy (void* to, const void* from, unsigned int nbytes);
+
+private:
+    // Copy bits to Bool in an unoptimized way needed when 'to' is not
+    // aligned properly.
+    static unsigned int bitToBool_ (void* to, const void* from,
+                                    unsigned int nvalues);
 };
 
 

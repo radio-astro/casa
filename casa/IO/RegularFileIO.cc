@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RegularFileIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RegularFileIO.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/IO/RegularFileIO.h>
@@ -55,12 +55,10 @@ RegularFileIO::RegularFileIO (const RegularFile& regularFile,
   itsRegularFile (regularFile)
 {
     const String& name = itsRegularFile.path().expandedName();
-    Bool writable = True;
     Bool create = False;
     Int stropt;
     switch (option) {
     case ByteIO::Old:
-	writable = False;
 	stropt = O_RDONLY;
 	break;
     case ByteIO::NewNoReplace:

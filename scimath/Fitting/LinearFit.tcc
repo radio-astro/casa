@@ -69,16 +69,16 @@ fitIt(Vector<typename FunctionTraits<T>::BaseType> &sol,
     if (ptr_derive_p->mask(i)) sol_p[k++] = sol[i];
   }
   // Build normal equations
-  this->buildMatrix(x, y, sigma, mask);
+  buildMatrix(x, y, sigma, mask);
   // Build constraint equations
-  this->buildConstraint();
+  buildConstraint();
   // Invert normal equations
   solved_p = this->invert(nr_p, svd_p);
   // Get solution and errors
   if (solved_p) {
-    this->solve(condEq_p);
+    solve(condEq_p);
     sol_p += condEq_p;
-    this->getErrors(err_p);
+    getErrors(err_p);
     errors_p = True;
     for (uInt i=0, k=0; i<pCount_p; i++) {
       if (ptr_derive_p->mask(i)) sol[i] = sol_p[k++];

@@ -221,13 +221,12 @@ DataType TableRecord::type (Int whichField) const
     return description().type (whichField);
 }
 
-void TableRecord::removeField(const RecordFieldId& id)
+void TableRecord::removeField (const RecordFieldId& id)
 {
     throwIfFixed();
-    Int whichField = idToNumber(id);	// Throws an exception if id is absent.
-
-    rwRef().removeField(whichField);
-    notify(RecordNotice(RecordNotice::REMOVE, whichField));
+    Int whichField = idToNumber (id);
+    rwRef().removeField (whichField);
+    notify (RecordNotice (RecordNotice::REMOVE, whichField));
 }
 
 void TableRecord::renameField (const String& newName, const RecordFieldId& id)

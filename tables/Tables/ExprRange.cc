@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprRange.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ExprRange.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/ExprRange.h>
 #include <tables/Tables/TableColumn.h>
@@ -44,9 +44,6 @@ TableExprRange::TableExprRange(const ROTableColumn& col, double stval,
   tabColPtr_p(0)
 {
     tabColPtr_p = new ROTableColumn(col);
-    if (tabColPtr_p == 0) {
-	throw (AllocError ("TableExprRange::TableExprRange", 1));
-    }
     sval_p(0) = stval;
     eval_p(0) = endval;
 }
@@ -58,9 +55,6 @@ TableExprRange::TableExprRange (const TableExprRange& that)
 {
     if (that.tabColPtr_p != 0) {
 	tabColPtr_p = new ROTableColumn (*(that.tabColPtr_p));
-	if (tabColPtr_p == 0) {
-	    throw (AllocError ("TableExprRange::TableExprRange", 1));
-	}
     }
 }
 
@@ -75,9 +69,6 @@ TableExprRange& TableExprRange::operator= (const TableExprRange& that)
 	delete tabColPtr_p;
 	if (that.tabColPtr_p != 0) {
 	    tabColPtr_p = new ROTableColumn (*(that.tabColPtr_p));
-	    if (tabColPtr_p == 0) {
-		throw (AllocError ("TableExprRange::operator=", 1));
-	    }
 	}
     }
     return *this;

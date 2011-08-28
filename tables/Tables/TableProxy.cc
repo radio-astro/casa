@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableProxy.cc 20924 2010-07-05 11:38:03Z gervandiepen $
+//# $Id: TableProxy.cc 21027 2011-03-16 09:12:25Z gervandiepen $
 
 
 #include <tables/Tables/TableProxy.h>
@@ -44,7 +44,7 @@
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/TableAttr.h>
-#include <tables/Tables/TiledStManAccessor.h>
+#include <tables/Tables/DataManAccessor.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/TableError.h>
 #include <casa/BasicSL/Complex.h>
@@ -60,6 +60,7 @@
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/Slicer.h>
+#include <casa/Logging/LogIO.h>
 #include <casa/iostream.h>
 #include <casa/sstream.h>
 #include <casa/stdio.h>                  // needed for sprintf
@@ -404,9 +405,11 @@ Bool TableProxy::getColInfo (const String& colName, Bool useBrackets,
       break;
     case TpUChar:
     case TpShort:
+    case TpUShort:
       oss << "S";
       break;
     case TpInt:
+    case TpUInt:
       oss << "I";
       break;
     case TpFloat:
@@ -825,6 +828,19 @@ Record TableProxy::getDataManagerInfo()
   return table_p.dataManagerInfo();
 }
 
+Record TableProxy::getProperties (const String& name, Bool byColumn)
+{
+  RODataManAccessor acc (table_p, name, byColumn);
+  return acc.getProperties();
+}
+
+void TableProxy::setProperties (const String& name, Bool byColumn,
+                                const Record& properties)
+{
+  RODataManAccessor acc (table_p, name, byColumn);
+  acc.setProperties (properties);
+}
+
 Record TableProxy::getTableDescription (Bool actual, Bool cOrder)
 {
   // Get the table description.
@@ -866,6 +882,11 @@ String TableProxy::tableName()
   return table_p.tableName();
 }
 
+Vector<String> TableProxy::getPartNames (Bool recursive)
+{
+  return Vector<String>(table_p.getPartNames (recursive));
+}
+
 String TableProxy::getAsciiFormat() const
 {
   return asciiFormat_p;
@@ -874,6 +895,15 @@ String TableProxy::getAsciiFormat() const
 Record TableProxy::getCalcResult() const
 {
   return calcResult_p;
+}
+
+String TableProxy::showStructure (Bool showDataMan, Bool showColumns,
+                                  Bool showSubTables, Bool sortColumns) const
+{
+  ostringstream ostr;
+  table_p.showStructure (ostr, showDataMan, showColumns, showSubTables,
+                         sortColumns);
+  return ostr.str();
 }
 
 Int TableProxy::nrows()
@@ -1313,7 +1343,7 @@ void TableProxy::putKeyword (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.rwKeywordSet());
   } else {
-    TableColumn tabColumn (table_p, columnName);
+    ROTableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.rwKeywordSet());
   }
   RecordFieldId fieldid(0);
@@ -1333,7 +1363,7 @@ void TableProxy::putKeywordSet (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.rwKeywordSet());
   } else {
-    TableColumn tabColumn (table_p, columnName);
+    ROTableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.rwKeywordSet());
   }
   putKeyValues (*keySet, valueSet);
@@ -1347,7 +1377,7 @@ void TableProxy::removeKeyword (const String& columnName,
   if (columnName.empty()) {
     keySet = &(table_p.rwKeywordSet());
   }else{
-    TableColumn tabColumn (table_p, columnName);
+    ROTableColumn tabColumn (table_p, columnName);
     keySet = &(tabColumn.rwKeywordSet());
   }
   RecordFieldId fieldid(0);
@@ -1610,6 +1640,9 @@ Bool TableProxy::makeTableDesc (const Record& gdesc, TableDesc& tabdesc,
 	} else if (valtype == "short") {
 	  tabdesc.addColumn (ScalarColumnDesc<Short>
 			     (name, comment, dmtype, dmgrp, 0, option));
+	} else if (valtype == "ushort") {
+	  tabdesc.addColumn (ScalarColumnDesc<uShort>
+			     (name, comment, dmtype, dmgrp, 0, option));
 	} else if (valtype == "integer"  ||  valtype == "int") {
 	  tabdesc.addColumn (ScalarColumnDesc<Int>
 			     (name, comment, dmtype, dmgrp, 0, option));
@@ -1711,6 +1744,14 @@ Bool TableProxy::addArrayColumnDesc (TableDesc& tabdesc,
       tabdesc.addColumn (ArrayColumnDesc<Short>
 			 (name, comment, dmtype, dmgrp, ndim, option));
     }
+  } else if (valtype == "ushort") {
+    if (shp.nelements() > 0) {
+      tabdesc.addColumn (ArrayColumnDesc<uShort>
+			 (name, comment, dmtype, dmgrp, shp, option));
+    }else{
+      tabdesc.addColumn (ArrayColumnDesc<uShort>
+			 (name, comment, dmtype, dmgrp, ndim, option));
+    }
   } else if (valtype == "integer"  ||  valtype == "int") {
     if (shp.nelements() > 0) {
       tabdesc.addColumn (ArrayColumnDesc<Int>
@@ -1780,6 +1821,14 @@ String TableProxy::getTypeStr (DataType dtype)
   switch (dtype) {
   case TpBool:
     return "boolean";
+  case TpUChar:
+    return "uchar";
+  case TpShort:
+    return "short";
+  case TpUShort:
+    return "ushort";
+  case TpUInt:
+    return "uint";
   case TpFloat:
     return "float";
   case TpDouble:
@@ -1795,7 +1844,7 @@ String TableProxy::getTypeStr (DataType dtype)
   default:
     break;
   }
-  return "integer";
+  return "int";
 }
 
 Record TableProxy::recordColumnDesc (const ColumnDesc& cold, Bool cOrder)

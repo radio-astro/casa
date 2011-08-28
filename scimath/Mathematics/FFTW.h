@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-//# $Id: FFTW.h 20932 2010-07-08 09:06:37Z gervandiepen $
+//# $Id: FFTW.h 21069 2011-05-06 13:59:44Z gervandiepen $
 
 #ifndef SCIMATH_FFTW_H
 #define SCIMATH_FFTW_H
@@ -32,6 +32,7 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/VectorIter.h>
 #include <casa/Arrays/Matrix.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa {
 
@@ -92,9 +93,10 @@ private:
   
   unsigned flags;
 
-  static Bool is_initialized_fftw;  // FFTW needs initialization
-                                    // only once per process
-                                    // not once per object
+  static volatile Bool is_initialized_fftw;  // FFTW needs initialization
+                                             // only once per process,
+                                             // not once per object
+  static Mutex theirMutex;          // Initialization mutex
 };    
     
 } //# NAMESPACE CASA - END

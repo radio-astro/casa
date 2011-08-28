@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaledComplexData.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaledComplexData.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/ScaledComplexData.h>
@@ -141,9 +141,6 @@ template<class S, class T>
 DataManager* ScaledComplexData<S,T>::clone() const
 {
     DataManager* dmPtr = new ScaledComplexData<S,T> (*this);
-    if (dmPtr == 0) {
-	throw (AllocError ("ScaledComplexData::clone()", 1));
-    }
     return dmPtr;
 }
 
@@ -229,15 +226,9 @@ void ScaledComplexData<S,T>::prepare()
     //# Allocate column objects to get scale and offset.
     if (! fixedScale_p) {
 	scaleColumn_p = new ROScalarColumn<S> (table(), scaleName_p);
-	if (scaleColumn_p == 0) {
-	    throw (AllocError ("ScaledComplexData::prepare", 1));
-	}
     }
     if (! fixedOffset_p) {
 	offsetColumn_p = new ROScalarColumn<S> (table(), offsetName_p);
-	if (offsetColumn_p == 0) {
-	    throw (AllocError ("ScaledComplexData::prepare", 1));
-	}
     }
 }
 

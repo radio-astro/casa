@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrColDesc.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrColDesc.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_ARRCOLDESC_H
 #define TABLES_ARRCOLDESC_H
@@ -265,15 +265,13 @@ public:
     // Show the column.
     void show (ostream& os) const;
 
-public:
-    // Construct the object to register its class.
-    ArrayColumnDesc
-      (SimpleOrderedMap<String, BaseColumnDesc* (*)(const String&)>&);
+    // Register the construction function of this class.
+    void registerClass() const;
 
-protected:
     // Create the object from AipsIO (this function is registered).
     static BaseColumnDesc* makeDesc(const String& name);
 
+protected:
     // Put the object.
     virtual void putDesc (AipsIO&) const;
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: IPosition2.cc 20840 2009-12-07 08:52:26Z gervandiepen $
+//# $Id: IPosition2.cc 21048 2011-04-11 07:51:52Z gervandiepen $
 
 //# This source file is not needed if you aren't interested in converting
 //# to and from Array<Int>, i.e. if you don't want IPosition's to depend
@@ -41,62 +41,40 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 IPosition::IPosition (const Array<Int> &other)
-: size_p (other.nelements()),
-  data_p (0)
+  : size_p (0),
+    data_p (0)
 {
-    if (size_p == 0) {
-	return;        // Be slightly loose about conformance checking
+    if (other.size() > 0) {
+        if (other.ndim() != 1) {
+            throw(AipsError("IPosition::IPosition(const Array<Int> &other) - "
+                            "other is not one-dimensional"));
+        }
+        fill (other.size(), other.begin());
     }
-    if (other.ndim() != 1) {
-	throw(AipsError("IPosition::IPosition(const Array<Int> &other) - "
-			"other is not one-dimensional"));
-    }
-    allocateBuffer();
-    Bool del;
-    const Int *storage = other.getStorage(del);
-    for (uInt i=0; i<size_p; ++i) {
-      data_p[i] = storage[i];
-    }
-    other.freeStorage (storage, del);
     DebugAssert(ok(), AipsError);
 }
 
 Vector<Int> IPosition::asVector() const
 {
     DebugAssert(ok(), AipsError);
-    // Make an array which is the correct size.
     Vector<Int> retval(nelements());
-    for (uInt i=0; i<nelements(); i++) {
-        AlwaysAssert (data_p[i] <= 2147483647, AipsError);
-	retval[i] = data_p[i];
-    }
+    copy (retval.begin());
     return retval;
 }
 
-IPosition::IPosition (const std::vector<Int> &other)
-: size_p (other.size()),
-  data_p (0)
+  IPosition::IPosition (const std::vector<Int> &other)
+  : size_p (0),
+    data_p (0)
 {
-    if (size_p == 0) {
-	return;        // Be slightly loose about conformance checking
-    }
-    allocateBuffer();
-    Bool del;
-    for (uInt i=0; i<size_p; ++i) {
-      data_p[i] = other[i];
-    }
+    fill (other.size(), other.begin());
     DebugAssert(ok(), AipsError);
 }
 
 std::vector<Int> IPosition::asStdVector() const
 {
     DebugAssert(ok(), AipsError);
-    // Make an array which is the correct size.
     std::vector<Int> retval(nelements());
-    for (uInt i=0; i<nelements(); i++) {
-        AlwaysAssert (data_p[i] <= 2147483647, AipsError);
-	retval[i] = data_p[i];
-    }
+    copy (retval.begin());
     return retval;
 }
 

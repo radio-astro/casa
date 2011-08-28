@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dRetypedArrayEngine.cc 20932 2010-07-08 09:06:37Z gervandiepen $
+//# $Id: dRetypedArrayEngine.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 
 //# Includes
@@ -219,7 +219,7 @@ void a (Bool doExcp)
     // First register the virtual column engine.
     RetypedArrayEngine<RetypedArrayEx1,float>::registerClass();
     // Add ArrayColumnDesc<RetypedArrayEx1> to column type map.
-    ArrayColumnDesc<RetypedArrayEx1> tmp(ColumnDesc::registerMap);
+    ArrayColumnDesc<RetypedArrayEx1>("x").registerClass();
 
     // Build the table description.
     TableDesc td("", "1", TableDesc::Scratch);
@@ -311,7 +311,7 @@ void c()
     // First register the virtual column engine.
     RetypedArrayEngine<RetypedArrayEx2,DComplex>::registerClass();
     // Add ArrayColumnDesc<RetypedArrayEx2> to column type map.
-    ArrayColumnDesc<RetypedArrayEx2> tmp(ColumnDesc::registerMap);
+    ArrayColumnDesc<RetypedArrayEx2>("x").registerClass();
 
     // Build the table description.
     TableDesc td("", "1", TableDesc::Scratch);

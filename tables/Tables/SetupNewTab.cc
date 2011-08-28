@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SetupNewTab.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SetupNewTab.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/Table.h>
@@ -45,9 +45,6 @@ SetupNewTable::SetupNewTable (const String& tableName,
 			      Table::TableOption opt)
 {
     newTable_p = new SetupNewTableRep (tableName, tableDescName, opt);
-    if (newTable_p == 0) {
-	throw (AllocError ("SetupNewTable::SetupNewTable", 1));
-    }
 }
 
 SetupNewTable::SetupNewTable (const String& tableName,
@@ -55,9 +52,6 @@ SetupNewTable::SetupNewTable (const String& tableName,
 			      Table::TableOption opt)
 {
     newTable_p = new SetupNewTableRep (tableName, tableDesc, opt);
-    if (newTable_p == 0) {
-	throw (AllocError ("SetupNewTable::SetupNewTable", 1));
-    }
 }
 
 SetupNewTable::SetupNewTable (const SetupNewTable& that)
@@ -103,9 +97,6 @@ SetupNewTableRep::SetupNewTableRep (const String& tableName,
 {
     //# Copy the table description.
     tdescPtr_p = new TableDesc(tableDescName);
-    if (tdescPtr_p == 0) {
-	throw (AllocError ("SetupNewTable::SetupNewTable",1));
-    }
     //# Setup the new table.
     setup();
 }
@@ -123,9 +114,6 @@ SetupNewTableRep::SetupNewTableRep (const String& tableName,
 {
     //# Read the table description.
     tdescPtr_p = new TableDesc(tableDesc, "", "", TableDesc::Scratch);
-    if (tdescPtr_p == 0) {
-	throw (AllocError ("SetupNewTable::SetupNewTable",1));
-    }
     //# Setup the new table.
     setup();
 }
@@ -170,9 +158,6 @@ void SetupNewTableRep::setup()
     tdescPtr_p->checkSubTableDesc();
     //# Create a column set.
     colSetPtr_p = new ColumnSet(tdescPtr_p);
-    if (colSetPtr_p == 0) {
-	throw (AllocError ("SetupNewTable::SetupNewTable",1));
-    }
 }
 
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixSolver.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MatrixSolver.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_MATRIXSOLVER_H
 #define SCIMATH_MATRIXSOLVER_H
@@ -148,7 +148,7 @@ public:
 protected:
 
   LogSink logSink_p;
-  virtual LogSink& logSink() {return logSink_p;};
+  virtual LogSink& logSink() {return logSink_p;}
 
   // the A matrix data member
   Matrix<FType> AMatrix;

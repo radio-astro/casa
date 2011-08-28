@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: WrapperBase.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: WrapperBase.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_WRAPPERBASE_H
 #define SCIMATH_WRAPPERBASE_H
@@ -67,12 +67,12 @@ template<class T> class WrapperBase {
  public:
   //# Constructors
   // Default constructor: zero dimension
-  WrapperBase() : ndim_p(0), arg_p(0) {};
+  WrapperBase() : ndim_p(0), arg_p(0) {}
   // Standard constructor
-  explicit WrapperBase(const uInt dim) : ndim_p(dim), arg_p(dim) {};
+  explicit WrapperBase(const uInt dim) : ndim_p(dim), arg_p(dim) {}
 
   // Destructor
-  virtual ~WrapperBase() {};
+  virtual ~WrapperBase() {}
 
   //# Operators    
   // Evaluate the function at <src>x</src>.
@@ -83,7 +83,7 @@ template<class T> class WrapperBase {
 
   //# Member functions
   // Get the dimensionality
-  virtual uInt ndim() const { return ndim_p; };
+  virtual uInt ndim() const { return ndim_p; }
 
  protected:
   //# Data

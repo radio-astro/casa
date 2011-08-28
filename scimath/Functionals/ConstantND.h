@@ -116,7 +116,7 @@ public:
   // <group>
   ConstantND(const ConstantND<T> &other) : ConstantNDParam<T>(other) {};
   template <class W>
-    ConstantND(const ConstantND<W> &other) : ConstantNDParam<T>(other) {};
+    ConstantND(const ConstantND<W> &other) : ConstantNDParam<T>(other) {}
   ConstantND<T> &operator=(const ConstantND<T> &other) {
     ConstantNDParam<T>::operator=(other); return *this; };
   // </group>
@@ -172,7 +172,7 @@ public:
     ConstantNDParam<AutoDiff<T> >(other) {};
   template <class W>
     ConstantND_PS(const ConstantND_PS<W> &other) :
-    ConstantNDParam<AutoDiff<T> >(other) {};
+    ConstantNDParam<AutoDiff<T> >(other) {}
   ConstantND_PS<AutoDiff<T> > &
     operator=(const ConstantND_PS<AutoDiff<T> > &other) {
     ConstantNDParam<AutoDiff<T> >::operator=(other); return *this; };

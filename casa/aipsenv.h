@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aipsenv.h 20734 2009-09-28 23:44:40Z Malte.Marquarding $
+//# $Id: aipsenv.h 21112 2011-07-20 14:30:54Z gervandiepen $
 
 // this file contains all the compiler specific defines
 
@@ -222,6 +222,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #if !defined(AIPS_STDLIB)
 #define AIPS_STDLIB
 #endif
+#endif
+
+// Only use multi-threading if USE_THREADS is defined.
+#ifndef USE_THREADS
+# ifdef USE_MULTI_THREADING
+#  undef USE_MULTI_THREADING
+# endif
 #endif
 
 } //# NAMESPACE CASA - END

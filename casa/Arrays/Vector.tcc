@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Vector.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Vector.tcc 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayError.h>
@@ -271,8 +271,15 @@ template<class T> Vector<T> Vector<T>::operator()(const Slice &slice)
     return vp;
 }
 
+template<class T> const Vector<T> Vector<T>::operator()
+  (const Slice &slice) const
+{
+    return const_cast<Vector<T>*>(this)->operator() (slice);
+}
+
 template<class T>
-void Vector<T>::doNonDegenerate (Array<T> &other, const IPosition &ignoreAxes)
+void Vector<T>::doNonDegenerate (const Array<T> &other,
+                                 const IPosition &ignoreAxes)
 {
     Array<T> tmp(*this);
     tmp.nonDegenerate (other, ignoreAxes);

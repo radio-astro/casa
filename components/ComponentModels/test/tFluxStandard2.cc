@@ -138,7 +138,8 @@ int main(int argc, char* argv[])
     expads[2] = 1.70287e-06;
     objnames[3] = "Jupiter";
     expfds[3][0] = 1438.55;	// 115 GHz
-    expfds[3][1] = 12529.9;	// 345 GHz, outside model limit (lambda >= 1mm),
+    expfds[3][1] = 2.78922;	// 345 GHz, outside model limit (lambda >= 1mm),
+				// so it uses the CMB temperature with a warning.
     expads[3] = 0.000164169;
     objnames[4] = "Ganymede";
     expfds[4][0] = 1.33757;	// 115 GHz

@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScalarMeasColumn.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ScalarMeasColumn.tcc 21028 2011-03-16 13:40:48Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/ScalarMeasColumn.h>
@@ -69,6 +69,7 @@ ROScalarMeasColumn<M>::ROScalarMeasColumn (const Table& tab,
   // ArrayColumn is needed to store the data component of the Measures.
   M tMeas;
   itsNvals = tMeas.getValue().getTMRecordValue().nelements();
+  AlwaysAssert (itsNvals <= tmDesc.getUnits().size(), AipsError);
   if (itsNvals == 1) {
     itsScaDataCol = new ROScalarColumn<Double>(tab, columnName);
   } else {
@@ -168,9 +169,6 @@ template<class M>
 void ROScalarMeasColumn<M>::get (uInt rownr, M& meas) const
 {
   Vector<Quantum<Double> > qvec(itsNvals);
-
-//    cerr << "ROSMC::get ITS UNITS IS: " << itsUnits.getName() << endl;
-
   const Vector<Unit>& units = measDesc().getUnits();
   if (itsScaDataCol != 0) {
     qvec(0).setValue ((*itsScaDataCol)(rownr));

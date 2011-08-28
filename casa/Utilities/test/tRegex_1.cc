@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRegex_1.cc 20606 2009-05-19 08:05:56Z gervandiepen $
+//# $Id: tRegex_1.cc 20843 2009-12-11 07:59:36Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Regex.h>
@@ -93,7 +93,7 @@ int main ()
     for (i=0; i<ntests; i++) {
 	cout << p[i] << " --> " << Regex::fromString(p[i]) << endl;
         Regex exp(Regex::fromString(p[i]));
-        AlwaysAssertExit (String(p[i]).matches(exp));
+        AlwaysAssertExit (p[i].matches(exp));
     }
 
 #define CHECKPATT(i,str) \

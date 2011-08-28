@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Error.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Error.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef CASA_ERROR_H
 #define CASA_ERROR_H
@@ -36,6 +36,18 @@
 #include <exception>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+// Throw an exception with a string composed of various arguments.
+// E.g.
+// <srcblock>
+//    CASATHROW (AipsError, "integer=" << myint << ", float=" << myfloat)
+// </srcblock>
+#define CASATHROW(exc, arg) do {     \
+    std::ostringstream casa_log_oss; \
+    casa_log_oss << arg;             \
+    throw exc(casa_log_oss.str());   \
+  } while (0)
+
 
 // <summary>Base class for all AIPS++ library errors</summary>
 // <use visibility=export>
@@ -91,9 +103,13 @@ public:
   AipsError::Category getCategory( ) const
     { return(category); }
 
-  //
+  // Append a message. This is used by LogIO when an exception is logged.
+  // The message is const to be able to use it for a temporary exception.
+  void setMessage (const String& msg) const
+    { const_cast<AipsError*>(this)->message = msg; }
+
   // Creates an AipsError and initializes the error message from
-  // the parameter
+  // the parameter.
   // <group>
   AipsError (const Char *str, Category c = GENERAL);
   AipsError (const String &str, Category c = GENERAL);
@@ -325,6 +341,39 @@ public:
   // Destructor which does nothing.
   //
   ~duplError() throw();
+};
+
+
+// <summary>Exception for an error in a system call</summary>
+// <use visibility=export>
+//
+// <reviewed reviewer="UNKNOWN" date="before2004/08/25" tests="" demos="">
+// </reviewed>
+//
+// <synopsis>
+// This error is to be used for if a system call returns an error.
+// It uses strerror to get the system error message.
+// </synopsis>
+
+class SystemCallError : public AipsError
+{
+public:
+  // This constructs a "SystemCallError" from the system call function name
+  // and the errno.
+  SystemCallError(const String &funcName, int error, Category c=GENERAL);
+
+  // Destructor which does nothing.
+  ~SystemCallError() throw();
+
+  // Get the errno.
+  int error() const
+    { return itsError; }
+
+  // Get the message belonging to an error.
+  static String errorMessage(int error);
+
+private:
+  int itsError;
 };
 
 

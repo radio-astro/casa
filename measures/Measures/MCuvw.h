@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MCuvw.h 20117 2007-09-05 04:38:35Z Malte.Marquarding $
+//# $Id: MCuvw.h 21100 2011-06-28 12:49:00Z gervandiepen $
 
 #ifndef MEASURES_MCUVW_H
 #define MEASURES_MCUVW_H
@@ -38,6 +38,7 @@
 #include <measures/Measures/MConvertBase.h>
 #include <measures/Measures/MeasMath.h>
 #include <casa/Quanta/MVDirection.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -174,12 +175,16 @@ private:
   MVDirection MVDIR1;
 
   //# State machine data
-  // Has state matrix been made
-  static Bool stateMade_p;
   // Transition list
   static uInt ToRef_p[N_Routes][3];
   // Transition matrix
   static uInt FromTo_p[Muvw::N_Types][Muvw::N_Types];
+  // Mutex for thread-safety.
+  static MutexedInit theirMutexedInit;
+
+  // Fill the global state in a thread-safe way.
+  static void fillState()
+    { theirMutexedInit.exec(); }
 
   //# Constructors
   // Copy constructor (not implemented)
@@ -221,6 +226,9 @@ private:
   // Rotate from pole to direction
   void fromPole(MVPosition &in);
 
+private:
+  // Fill the global state in a thread-safe way.
+  static void doFillState (void*);  
 };
 
 

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: GaussianShape.h 20704 2009-09-03 08:53:52Z gervandiepen $
+//# $Id: GaussianShape.h 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #ifndef COMPONENTS_GAUSSIANSHAPE_H
 #define COMPONENTS_GAUSSIANSHAPE_H

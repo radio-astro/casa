@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: EvenPolynomial.tcc 19879 2007-02-15 03:52:50Z Malte.Marquarding $
+//# $Id: EvenPolynomial.tcc 21024 2011-03-01 11:46:18Z gervandiepen $
 
 //# Includes
 #include <scimath/Functionals/EvenPolynomial.h>
@@ -41,7 +41,7 @@ T EvenPolynomial<T>::eval(typename Function1D<T>::FunctionArg x) const {
     accum *= x[0];
     accum *= x[0];
     accum += param_p[j];
-  };
+  }
   return accum;
 }
 

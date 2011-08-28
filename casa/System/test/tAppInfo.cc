@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tAppInfo.cc 19846 2007-02-12 03:11:58Z Malte.Marquarding $
+//# $Id: tAppInfo.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/Vector.h>
@@ -66,9 +66,12 @@ int main()
 	tmp.resize(0);
 	// Someday this test will fail!
 	tmp = AppInfo::workDirectories(1000000);
-	AlwaysAssertExit(tmp.nelements() == 0);
+        // Indeed this tests failed in Nov-2009 on a 2 TByte disk.
+        // So outcommented the test.
+	///AlwaysAssertExit(tmp.nelements() == 0);
 
 	// Check that we cycle through the valid directories
+	tmp.resize(0);
 	tmp = AppInfo::workDirectories();
 	String dir1 = AppInfo::workDirectory();
 	String dir2 = AppInfo::workDirectory();
@@ -84,15 +87,16 @@ int main()
 	AlwaysAssertExit(file.contains(dir1) || file.contains(dir2));
 	AlwaysAssertExit(file.contains(Regex("/foo_")));
 
-	Bool caught = False;
+	///Bool caught = False;
 	try {
 	    cerr << "=====Expect a single SEVERE level message\n";
 	    file = AppInfo::workFileName(1000000);
-	} catch (AipsError x) {
-	    caught = True;
+	} catch (AipsError& x) {
+            ///caught = True;
 	} 
-	cerr << "=====There should be no more messages\n\n";
-	AlwaysAssertExit(caught);
+        // Do not check if it failed or succeeded, because that is
+        // system dependent (same reason as workDirectories test).
+	///AlwaysAssertExit(caught);
     }
 
     cerr << "OK" << endl;

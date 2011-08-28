@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: File.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
+//# $Id: File.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 
 #include <casa/OS/Path.h>
@@ -61,6 +61,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 # define fileLSTAT lstat
 # define fileSTAT  stat
 #endif
+
+
+uInt File::uniqueSeqnr_p = 0;      // Initialization
+Mutex File::theirMutex;
 
 
 File::File () 
@@ -256,14 +260,18 @@ void File::setPermissions(uInt permissions)
     chmod ((itsPath.expandedName()).chars(),long (permissions));
 }
 
-uInt File::uniqueSeqnr_p = 0;      // Initialization
 
 Path File::newUniqueName (const String& directory, const String& prefix)
 {
-    //  creats an new unique name 
+    // create an new unique name 
     char str[32];
     // fill str with the pid and the unique number
-    sprintf (str, "%i_%i", Int(getpid()), uniqueSeqnr_p++);
+    uInt seqnr;
+    {
+      ScopedMutexLock lock(theirMutex); 
+      seqnr = uniqueSeqnr_p++;
+    }
+    sprintf (str, "%i_%i", Int(getpid()), seqnr);
     if (directory.empty()  ||  directory.lastchar() == '/') {
 	return Path (directory + prefix + str);
     }
@@ -337,23 +345,13 @@ String File::modifyTimeString () const
     return String (asctime (localtime (&buf.st_mtime)));
 }
 
-File::FileWriteStatus File::getWriteStatus() const {
- 	if(exists()) {
- 		if (isWritable()) {
- 			return OVERWRITABLE;
- 		}
- 		else {
- 			return NOT_OVERWRITABLE;
- 		}
- 	}
- 	if (canCreate()) {
- 		return CREATABLE;
- 	}
- 	else {
- 		return NOT_CREATABLE;
- 	}
- 	throw AipsError("Unknown writeability status for " + itsPath.expandedName());
- }
+File::FileWriteStatus File::getWriteStatus() const
+{
+  if (exists()) {
+    return (isWritable()  ?  OVERWRITABLE : NOT_OVERWRITABLE);
+  }
+  return (canCreate()  ?  CREATABLE : NOT_CREATABLE);
+}
 
 
 uInt File::statusChangeTime () const

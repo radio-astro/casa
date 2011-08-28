@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBucketCache.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: tBucketCache.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #include <casa/IO/BucketCache.h>
 #include <casa/IO/BucketFile.h>
@@ -129,13 +129,16 @@ void a (Bool)
     BucketCache cache (&file, 512, 32768, 5, 10, 0, aToLocal, aFromLocal,
 		       aInitBuffer, aDeleteBuffer);
     uInt i;
-    char buf[32768];
+    union {
+      char buf[32768];
+      Int  bufi[32768/4];
+    };
     for (i=0; i<32768; i++) {
 	buf[i] = 0;
     }
     for (i=0; i<100; i++) {
-	*(Int*)buf = i+1;
-	*(Int*)(buf+32760) = i+10;
+	bufi[0] = i+1;
+	bufi[32760/4] = i+10;
 	char* ptr = new char[32768];
 	memcpy (ptr, buf, 32768);
 	cache.addBucket (ptr);
@@ -219,10 +222,9 @@ void c (uInt)
     BucketCache cache (&file, 512, 32768, rec[0], 10, 0, aToLocal, aFromLocal,
 		       aInitBuffer, aDeleteBuffer);
     cache.get ((char*)rec, 512, 512 + cache.nBucket()*32768);
-    char* buf;
     for (uInt j=0; j<25; j++) {
 	for (i=0; i<100; i++) {
-	    buf = cache.getBucket(i);
+	    cache.getBucket(i);
 	}
     }
     cout << "read 25x" << cache.nBucket() << " buckets with swap" << endl;

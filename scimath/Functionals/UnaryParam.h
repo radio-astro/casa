@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UnaryParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: UnaryParam.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_UNARYPARAM_H
 #define SCIMATH_UNARYPARAM_H
@@ -116,12 +116,12 @@ public:
   virtual ~UnaryParam();
 
   //# Operators    
-  virtual uInt ndim() const { return 1; };
+  virtual uInt ndim() const { return 1; }
 
   //# Member functions
   // Give name of function
   virtual const String &name() const { static String x("unary");
-    return x; };
+    return x; }
 
   //# Make members of parent classes known.
 protected:

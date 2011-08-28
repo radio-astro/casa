@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FunctionOrder.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: FunctionOrder.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONORDER_H
 #define SCIMATH_FUNCTIONORDER_H
@@ -160,7 +160,7 @@ ostream &operator<<(ostream &os, const FunctionOrder<T> &par);
 //# Inlines
 template<class T>
 inline ostream &operator<<(ostream &os, const FunctionOrder<T> &par) {
-  return par.print(os); };
+  return par.print(os); }
 
 
 } //# NAMESPACE CASA - END

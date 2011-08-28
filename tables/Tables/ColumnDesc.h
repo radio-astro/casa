@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ColumnDesc.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ColumnDesc.h 21100 2011-06-28 12:49:00Z gervandiepen $
 
 #ifndef TABLES_COLUMNDESC_H
 #define TABLES_COLUMNDESC_H
@@ -35,6 +35,7 @@
 #include <casa/Containers/SimOrdMap.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Arrays/IPosition.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -157,7 +158,10 @@ public:
     ColumnDesc (const ColumnDesc& that);
 
     // Default constructor (needed for ColumnDescSet).
-    ColumnDesc();
+    ColumnDesc()
+      : colPtr_p(0),
+        allocated_p (False)
+    {}
 
     ~ColumnDesc();
 
@@ -330,13 +334,6 @@ public:
     // Show on ostream.
     friend ostream& operator<< (ostream& ios, const ColumnDesc& cd);
 
-    // Serve as default function for registerMap (see below), which catches 
-    // all unknown xxxColumnDesc class names.
-    // <thrown>
-    //   <li> TableUnknownDesc
-    // </thrown>
-    static BaseColumnDesc* unknownColumnDesc (const String& name);
-
     // Set the name of the column.
     void setName (const String& name)
 	{ colPtr_p->setName(name); }
@@ -349,21 +346,46 @@ public:
     ConcatColumn* makeConcatColumn (ConcatTable* rtp) const
 	{ return colPtr_p->makeConcatColumn (rtp); }
 
-protected:
-    BaseColumnDesc* colPtr_p;
-    Bool            allocated_p;    //# False = not allocated -> do not delete
 
-    // Define a map which maps the name of the various xxxColumnDesc
+    // Define the type of a XXColumnDesc construction function.
+    typedef BaseColumnDesc* ColumnDescCtor (const String& className);
+
+    // Get a construction function for a XXColumnDesc object (thread-safe).
+    static ColumnDescCtor* getCtor (const String& name);
+
+    // Register a "XXColumnDesc" constructor (thread-safe).
+    static void registerCtor (const String& name, ColumnDescCtor*);
+
+    // Register the main data managers (if not done yet).
+    // It is fully thread-safe.
+    static void registerMainCtor()
+      { theirMutexedInit.exec(); }
+
+private:
+    // Register a constructor without doing a mutex lock.
+    static void unlockedRegisterCtor (const String& type, ColumnDescCtor* func)
+      { theirRegisterMap.define (type, func); }
+
+    // Define a map which maps the name of the various XXColumnDesc
     // classes to a static function constructing them.
     // This is used when reading a column description back; it in fact
     // determines the exact column type and is an easier thing to do
     // than an enormous switch statement.
-    // The map is filled by the function registerColumnDesc upon the
-    // first call of ColumnDesc::getFile.
-    static Bool registrationDone_p;
-public:
-    static SimpleOrderedMap<String, BaseColumnDesc* (*)(const String&)> registerMap;
+    // The map is filled with the main XXColumnDesc construction functions
+    // by the function registerColumnDesc upon the first call of
+    // <src>ColumnDesc::getFile</src>.
+    static MutexedInit theirMutexedInit;
+    static SimpleOrderedMap<String, BaseColumnDesc* (*)(const String&)> theirRegisterMap;
 
+    // Serve as default function for theirRegisterMap (see below),
+    // which catches all unknown XXColumnDesc class names.
+    // <thrown>
+    //   <li> TableUnknownDesc
+    // </thrown>
+    static BaseColumnDesc* unknownColumnDesc (const String& name);
+
+    // Do the actual (thread-safe) registration of the main data managers.
+    static void doRegisterMainCtor (void*);
 
 private:
     // Construct from a pointer (for class BaseColumn).
@@ -412,15 +434,11 @@ private:
     // Get the object from AipsIO.
     void getFile (AipsIO&, const TableAttr&);
 
-    // Register all column types. In this way the getFile function
-    // can construct the correct xxxColumnDesc object.
-    void registerColumnDesc();
-};
 
-inline ColumnDesc::ColumnDesc()
-: colPtr_p(0),
-  allocated_p (False)
-{}
+protected:
+    BaseColumnDesc* colPtr_p;
+    Bool            allocated_p;    //# False = not allocated -> do not delete
+};
 
 
 } //# NAMESPACE CASA - END

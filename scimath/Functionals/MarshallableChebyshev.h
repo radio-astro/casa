@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: MarshallableChebyshev.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MarshallableChebyshev.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_MARSHALLABLECHEBYSHEV_H
 #define SCIMATH_MARSHALLABLECHEBYSHEV_H
@@ -186,7 +186,7 @@ public:
     // </group>
   
     // Destructor
-    virtual ~MarshallableChebyshev() {};
+    virtual ~MarshallableChebyshev() {}
   
     // store the state of this Function into a Record
     virtual void store(Record& gr) const;
@@ -195,7 +195,7 @@ public:
     // deleting the pointer. 
     virtual Function<T> *clone() const { 
 	return new MarshallableChebyshev<T>(*this); 
-    };
+    }
 };
 
 

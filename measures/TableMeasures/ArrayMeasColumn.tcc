@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMeasColumn.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ArrayMeasColumn.tcc 21028 2011-03-16 13:40:48Z gervandiepen $
 
 //# Includes
 #include <measures/TableMeasures/ArrayMeasColumn.h>
@@ -75,6 +75,7 @@ ROArrayMeasColumn<M>::ROArrayMeasColumn (const Table& tab,
   // Determine the number of values in the Measure.
   M tMeas;
   itsNvals = tMeas.getValue().getTMRecordValue().nelements();
+  AlwaysAssert (itsNvals <= tmDesc.getUnits().size(), AipsError);
 
   // Set up the reference code component of the MeasRef. It can be variable
   // and therefore stored in a column which may be either an array or scalar

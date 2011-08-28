@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FunctionWrapper.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: FunctionWrapper.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONWRAPPER_H
 #define SCIMATH_FUNCTIONWRAPPER_H
@@ -118,7 +118,7 @@ public:
   FunctionWrapper<T> &operator=(const FunctionWrapper<T> &other);
 
   // Destructor
-  virtual ~FunctionWrapper() {};
+  virtual ~FunctionWrapper() {}
 
   //# Operators    
   // Evaluate the function at <src>x</src>.
@@ -133,7 +133,7 @@ public:
   // for deleting this pointer.
   // <group>
   virtual Function<T> *clone() const {
-    return new FunctionWrapper<T>(*this); };
+    return new FunctionWrapper<T>(*this); }
   // </group>
 
 protected:
