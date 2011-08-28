@@ -287,6 +287,7 @@ def simdata(
             rg2=max(lon)-min(lon)
             if rg2>rg:
                 rg=rg2
+            # rg is in m
             minscale = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/rg*3600.*180/pl.pi # arcsec
             cell_asec=qa.convert(model_cell[0],'arcsec')['value']
             if minscale < cell_asec:
@@ -795,8 +796,7 @@ def simdata(
 
                 #if nscan < nfld:
                 if totalsec < totalscansec:
-                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="error")
-                    return
+                    msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="warn")
         
                 # sm.observemany
                 observemany = True
@@ -895,15 +895,19 @@ def simdata(
             # it is useful to calculate the max baseline, psfsize, and min image size
             # even if we're not even making a figure, so we can used it
             # to set a minimum size for the synthesized image, at int(8*psfsize)
-            tb.open(msfile)  
-            rawdata = tb.getcol("UVW")
-            tb.done()
-            maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-            klam_m = 300/qa.convert(model_center,'GHz')['value']
             pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-            psfsize = 200.*klam_m/maxbase/pixsize
-            if psfsize < 32:
-                psfsize = 32
+            if os.path.exists(msfile):
+                # minscale was set from the antenna posns before, but uv is better
+                tb.open(msfile)  
+                rawdata = tb.getcol("UVW")
+                tb.done()
+                maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m            
+                minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
+                psfsize = 100.*minscale/pixsize
+                if psfsize < 32:
+                    psfsize = 32
+            else:
+                psfsize=3*pixsize
             
             
             if (grscreen or grfile):
@@ -976,25 +980,29 @@ def simdata(
             # get telescopename from ms
             # KS - telescopename seems not used in image and analyze
             # RI - possibly indirectly, through the util() object 4/8/11; 
-            if (image or analyze) and os.path.exists(fileroot+"/"+project+'.ms'):
-                tb.open(fileroot+"/"+project+".ms/OBSERVATION")
-                n = tb.getcol("TELESCOPE_NAME")
-                telescopename = n[0]
-                util.telescopename = telescopename
-                # todo add check that entire column is the same
-                tb.done()
-                # it is useful to calculate the max baseline, psfsize, and min image size
-                # even if we're not even making a figure, so we can used it
-                # to set a minimum size for the synthesized image, at int(8*psfsize)
-                tb.open(msfile)  
-                rawdata = tb.getcol("UVW")
-                tb.done()
-                maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                klam_m = 300/qa.convert(model_center,'GHz')['value']
+            if (image or analyze):
                 pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                psfsize = 200.*klam_m/maxbase/pixsize
-                if psfsize < 32:
-                    psfsize = 32
+                if os.path.exists(fileroot+"/"+project+'.ms'):
+                    tb.open(fileroot+"/"+project+".ms/OBSERVATION")
+                    n = tb.getcol("TELESCOPE_NAME")
+                    telescopename = n[0]
+                    util.telescopename = telescopename
+                    # todo add check that entire column is the same
+                    tb.done()
+                    # it is useful to calculate the max baseline, psfsize, and min image size
+                    # even if we're not even making a figure, so we can used it
+                    # to set a minimum size for the synthesized image, at int(8*psfsize)
+                    tb.open(msfile)  
+                    rawdata = tb.getcol("UVW")
+                    tb.done()
+                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
+                    psfsize = 100.*minscale/pixsize
+                    if psfsize < 32:
+                        psfsize = 32
+                else:
+                    psfsize=3*pixsize
+                        
             
             
 
@@ -1179,6 +1187,58 @@ def simdata(
                 sm.done();
 
                 
+
+
+
+
+        # create fake model from components for analysis
+        if components_only:
+            modelflat = fileroot + "/" + project + ".compskymodel.flat"
+
+        if components_only and (image or analyze):
+            newmodel = fileroot + "/" + project + ".compskymodel"
+            if not os.path.exists(imagename+".image"):
+                msg("must image before analyzing",priority="error")
+                return False
+            ia.imagecalc(pixels="'"+imagename+".image' * 0",outfile=newmodel,overwrite=True)
+            ia.open(newmodel)
+            cl.open(complist)
+            ia.setbrightnessunit("Jy/pixel")
+            ia.modify(cl.torecord(),subtract=False)
+            cl.done()
+            modelcsys = ia.coordsys()
+            modelshape = ia.shape()
+
+            # TODO should be able to simplify degen axes code using new
+            # image anal tools.
+            inspectax = modelcsys.findcoordinate('spectral')['pixel']
+            innchan = modelshape[inspectax]
+            
+            stokesax = modelcsys.findcoordinate('stokes')['pixel']
+            innstokes = modelshape[stokesax]
+
+            if innchan > 1:
+                # actually run ia.moments
+                ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
+                ia.done()
+            else:   
+                ia.done()
+
+                # just remove degenerate axes from modelimage4d
+                ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
+                if innstokes <= 1:
+                    os.rename(modelflat,modelflat+".tmp")
+                    ia.open(modelflat+".tmp")
+                    ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+                    ia.done()
+                    shutil.rmtree(modelflat+".tmp")
+            if innstokes > 1:
+                os.rename(modelflat,modelflat+".tmp")
+                po.open(modelflat+".tmp")
+                foo = po.stokesi(outfile=modelflat,stokes='I')
+                foo.done()
+                po.done()
+                shutil.rmtree(modelflat+".tmp")
 
             
 
@@ -1444,54 +1504,6 @@ def simdata(
             else:
                 file = ""
 
-        # create fake model from components for analysis
-        if components_only:
-            modelflat = fileroot + "/" + project + ".compskymodel.flat"
-
-        if components_only and (image or analyze):
-            newmodel = fileroot + "/" + project + ".compskymodel"
-            if not os.path.exists(imagename+".image"):
-                msg("must image before analyzing",priority="error")
-                return False
-            ia.imagecalc(pixels="'"+imagename+".image' * 0",outfile=newmodel,overwrite=True)
-            ia.open(newmodel)
-            cl.open(complist)
-            ia.setbrightnessunit("Jy/pixel")
-            ia.modify(cl.torecord(),subtract=False)
-            cl.done()
-            modelcsys = ia.coordsys()
-            modelshape = ia.shape()
-
-            # TODO should be able to simplify degen axes code using new
-            # image anal tools.
-            inspectax = modelcsys.findcoordinate('spectral')['pixel']
-            innchan = modelshape[inspectax]
-            
-            stokesax = modelcsys.findcoordinate('stokes')['pixel']
-            innstokes = modelshape[stokesax]
-
-            if innchan > 1:
-                # actually run ia.moments
-                ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                ia.done()
-            else:   
-                ia.done()
-
-                # just remove degenerate axes from modelimage4d
-                ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
-                if innstokes <= 1:
-                    os.rename(modelflat,modelflat+".tmp")
-                    ia.open(modelflat+".tmp")
-                    ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                    ia.done()
-                    shutil.rmtree(modelflat+".tmp")
-            if innstokes > 1:
-                os.rename(modelflat,modelflat+".tmp")
-                po.open(modelflat+".tmp")
-                foo = po.stokesi(outfile=modelflat,stokes='I')
-                foo.done()
-                po.done()
-                shutil.rmtree(modelflat+".tmp")
 
 
         if image and len(mstoimage) > 0:

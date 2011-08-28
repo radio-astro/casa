@@ -2063,7 +2063,6 @@ class simutil:
         in_shape=in_ia.shape()
         in_csys=in_ia.coordsys()
 
-
         # pull data first, since ia.stats doesn't work w/o a CS:
         if outimage!=inimage:
             if self.verbose: self.msg("rearranging input data (may take some time for large cubes)")
@@ -2073,6 +2072,7 @@ class simutil:
             arr=pl.zeros(in_shape)
         axmap=[-1,-1,-1,-1]
         axassigned=[-1,-1,-1,-1]
+
 
 
         # brightness scaling 

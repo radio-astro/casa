@@ -46,7 +46,6 @@ mapsize = ''
 maptype = 'square'
 pointingspacing = '9arcsec'
 
-#predict = True
 observe = True
 # you should explicitly empty antennalist to avoid synthesis simulation
 antennalist = ''
