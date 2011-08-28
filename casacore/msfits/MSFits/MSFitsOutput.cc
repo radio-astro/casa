@@ -23,9 +23,10 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSFitsOutput.cc 20620 2009-06-11 10:00:28Z gervandiepen $
+//# $Id: MSFitsOutput.cc 21105 2011-07-15 08:07:31Z gervandiepen $
 
 #include <msfits/MSFits/MSFitsOutput.h>
+#include <msfits/MSFits/MSFitsOutputAstron.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <tables/Tables.h>
@@ -98,6 +99,16 @@ Bool MSFitsOutput::writeFitsFile(const String& fitsfile,
                                  Double sensitivity,
                                  const Bool padWithFlags)
 {
+  ROMSObservationColumns obsCols(ms.observation());
+  if (obsCols.nrow() > 0  &&
+      (obsCols.telescopeName()(0) == "WSRT"  ||
+       obsCols.telescopeName()(0) == "LOFAR")) {
+    return MSFitsOutputAstron::writeFitsFile (fitsfile, ms, column,
+                                              startchan, nchan, stepchan,
+                                              writeSysCal, asMultiSource,
+                                              combineSpw, writeStation,
+                                              sensitivity);
+  }
   LogIO os(LogOrigin("MSFitsOutput", "writeFitsFile"));
   const uInt nrow = ms.nrow();
   String msfile=ms.tableName();

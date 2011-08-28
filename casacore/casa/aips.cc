@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aips.cc 19848 2007-02-12 04:43:35Z Malte.Marquarding $
+//# $Id: aips.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/aips.h>
 

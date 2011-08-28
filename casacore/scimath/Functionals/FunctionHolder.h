@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FunctionHolder.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: FunctionHolder.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_FUNCTIONHOLDER_H
 #define SCIMATH_FUNCTIONHOLDER_H
@@ -73,11 +73,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //	String error;		// error message
 //	if (!FunctionHolder(dir).toRecord(error, rec)) {
 //		cout << error << endl;
-//	};
+//	}
 //	Record grec;		// a Record
 //	if (!FunctionHolder(dir).toRecord(error, grec)) {  // make record
 //		cout << error << endl;
-//	};
+//	}
 // // Note that for GlishRecords use can be made of the
 // // GlishRecord::to/fromrecord() methods.
 // </srcblock>

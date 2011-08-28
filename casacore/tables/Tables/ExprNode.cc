@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.cc 20940 2010-08-25 09:08:06Z gervandiepen $
+//# $Id: ExprNode.cc 21101 2011-07-06 07:57:05Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
@@ -1026,18 +1026,12 @@ TableExprNode TableExprNode::newColumnNode (const Table& table,
     } else {
 	throw (TableInvExpr (name, " must be a Scalar or Array column"));
     }
-    if (tsnptr == 0) {
-	throw (AllocError ("TableExprNode::newColumnNode", 1));
-    }
     return tsnptr;
 }
 
 
 //# Create a constant node for a keyword on behalf of the Table class.
 //# The constructor reads in the value and stores it as a constant.
-// <throw>
-//   <li> AllocError
-// </thrown>
 TableExprNode TableExprNode::newKeyConst (const TableRecord& keyset,
 					  const Vector<String>& fieldNames)
 {
@@ -1271,9 +1265,9 @@ TableExprNode TableExprNode::newUDFNode (const String& name,
     }
     udf->init (par, table, style);
     if (udf->ndim() == 0) {
-        return new TableExprUDFNode (udf.transfer(), set);
+        return new TableExprUDFNode (udf.transfer(), table, set);
     } else {
-        return new TableExprUDFNodeArray (udf.transfer(), set);
+        return new TableExprUDFNodeArray (udf.transfer(), table, set);
     }
 }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaRecordColDesc.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaRecordColDesc.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/ScaRecordColDesc.h>
 #include <tables/Tables/ScaRecordColData.h>
@@ -56,17 +56,6 @@ ScalarRecordColumnDesc::ScalarRecordColumnDesc (const String& name,
 		  0, IPosition(), True, False, False)
 {}
   
-// Register the makeDesc function.
-ScalarRecordColumnDesc::ScalarRecordColumnDesc (
-    SimpleOrderedMap<String, BaseColumnDesc* (*)(const String&)>& map)
-: BaseColumnDesc ("", "", "", "",
-		  TpRecord, "TableRecord", 0,
-		  0, IPosition(),
-		  True, False, False)
-{
-    map.define (className(), makeDesc);
-}
-
 ScalarRecordColumnDesc::ScalarRecordColumnDesc
                                           (const ScalarRecordColumnDesc& that)
 : BaseColumnDesc (that)

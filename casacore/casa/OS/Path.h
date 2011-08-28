@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Path.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Path.h 21030 2011-03-16 13:44:34Z gervandiepen $
 
 
 #ifndef CASA_PATH_H
@@ -165,6 +165,13 @@ public:
     // It is generated from the expanded pathname by adding
     // the working directory when needed.
     const String& absoluteName () const;
+
+    // Return the realpath which is the absolute pathname with possible
+    // symlinks resolved. It also resolves //, /./, /../ and trailing /.
+    // <br>The path must be an existing file or directory.
+    // It uses the system's realpath function. In case it fails,
+    // an exception is thrown.
+    String resolvedName() const;
 
     // Check if pathname is valid. This function checks for: double slashes, 
     // non-printable characters, pathname length and filename lenghts, this 

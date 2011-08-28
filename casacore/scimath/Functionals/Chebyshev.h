@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: Chebyshev.h 20364 2008-06-30 06:10:38Z gervandiepen $
+//# $Id: Chebyshev.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_CHEBYSHEV_H
 #define SCIMATH_CHEBYSHEV_H
@@ -299,7 +299,7 @@ public:
 	ChebyshevParam<T>::operator=(other); return *this; }
   
     // Destructor
-    virtual ~Chebyshev() {};
+    virtual ~Chebyshev() {}
   
     //# Operators    
     // Evaluate the Chebyshev at <src>x</src>.

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprUDFNode.cc 20983 2010-10-01 10:02:48Z gervandiepen $
+//# $Id: ExprUDFNode.cc 21101 2011-07-06 07:57:05Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/ExprUDFNode.h>
@@ -31,11 +31,13 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  TableExprUDFNode::TableExprUDFNode (UDFBase* udf,
+  TableExprUDFNode::TableExprUDFNode (UDFBase* udf, const Table& tab,
                                       const TableExprNodeSet& source)
     : TableExprNodeMulti (udf->dataType(), VTScalar, OtFunc, source),
       itsUDF (udf)
   {
+    // Set the table. This is needed for ExprNode::checkReplaceTable to work.
+    table_p = tab;
     // The source may be empty which causes the expression type
     // to be made constant. Force it to be variable.
     exprtype_p = Variable; 
@@ -46,6 +48,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   TableExprUDFNode::~TableExprUDFNode()
   {
     delete itsUDF;
+  }
+
+  void TableExprUDFNode::replaceTablePtr (const Table& table)
+  {
+    itsUDF->replaceTable (table);
   }
 
   Bool      TableExprUDFNode::getBool     (const TableExprId& id)

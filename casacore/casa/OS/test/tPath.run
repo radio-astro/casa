@@ -17,13 +17,16 @@ tPath_Env_Curr=`pwd`
 export tPath_Env_Curr
 tPath_Env_Test1='$HOME'
 export tPath_Env_Test1
+mkdir tPath_tmpdir
+mkdir tPath_tmpdir/d1
+mkdir tPath_tmpdir/d1/d2
 
 if [ $# != 0 ]
 then
     if [ $1 != 0 ]
     then
-        ./tPath $2
+        $casa_checktool ./tPath $2
     fi
 else
-    ./tPath
+    $casa_checktool ./tPath
 fi

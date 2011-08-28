@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FluxStandard.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: FluxStandard.cc 21087 2011-05-13 13:57:10Z gervandiepen $
 //----------------------------------------------------------------------------
 
 #include <components/ComponentModels/FluxStandard.h>
@@ -59,7 +59,7 @@ FluxStandard::FluxStandard(const FluxStandard::FluxScale scale) :
 // Output to private data:
 //    itsFluxScale      FluxStandard::FluxScale     Flux scale (eg. BAARS)
 //
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -67,7 +67,7 @@ FluxStandard::~FluxStandard()
 {
 // Default destructor
 //
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -167,7 +167,7 @@ Bool FluxStandard::compute(const String& sourceName,
          << " cannot be used this way.  (Does it require a time?)"
          << LogIO::POST;
     return false;
-  };
+  }
 
   // Set the source or fail.
   if(!fluxStdPtr->setSource(sourceName)){
@@ -182,7 +182,7 @@ Bool FluxStandard::compute(const String& sourceName,
   // Compute the flux density values and their uncertainties, returning whether
   // or not it worked.
   return (*fluxStdPtr)(values, errors, mfreqs);
-};
+}
 
 // Like compute, but it also saves a ComponentList for the source to disk
 // and returns the name (sourceName_mfreqGHzmtime.cl), making it suitable for
@@ -223,8 +223,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
       for(uInt spw = 0; spw < nspws; ++spw){
         clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
-                                         values[spw], point,
-                                         prefix + "spw" + String(spw) + "_");
+                                         values[spw], point, prefix);
       }
       success = True;
     }
@@ -235,7 +234,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
     for(uInt spw = 0; spw < nspws; ++spw){
       ComponentType::Shape cmpshape = ssobj.compute(values[spw], errors[spw], angdiam,
-                                                    mfreqs[spw], spw == 0);
+                                                    mfreqs[spw]);
     
       switch(cmpshape){
       case ComponentType::DISK:
@@ -249,19 +248,17 @@ Bool FluxStandard::computeCL(const String& sourceName,
           disk.setWidthInRad(angdiam, angdiam, 0.0);
 
           clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
-                                           values[spw], disk,
-                                           prefix + "spw" + String::toString(spw) +
-                                           "_");
+                                           values[spw], disk, prefix);
           success = True;
           break;
-        };
+        }
       default: {
         ostringstream oss;
 
         oss << ComponentType::name(cmpshape) << " is not a supported component type.";
         throw(AipsError(String(oss)));
-      };
-      };
+      }
+      }
     }
   }
   return success;
@@ -404,7 +401,7 @@ Bool FluxStandard::matchStandard (const String& name,
   stdName = standardName (stdEnum);
 
   return matched;
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -423,23 +420,23 @@ String FluxStandard::standardName (const FluxStandard::FluxScale& stdEnum)
   case BAARS: {
     stdName = "Baars";
     break;
-  };
+  }
   case PERLEY_90: {
     stdName = "Perley 90";
     break;
-  };
+  }
   case PERLEY_TAYLOR_95: {
     stdName = "Perley-Taylor 95";
     break;
-  };
+  }
   case PERLEY_TAYLOR_99: {
     stdName = "Perley-Taylor 99";
     break;
-  };
+  }
   case PERLEY_BUTLER_2010: {
     stdName = "Perley-Butler 2010";
     break;
-  };
+  }
   case SS_JPL_BUTLER: 
     {
       stdName = "JPL-Butler Solar System Object";
@@ -449,9 +446,9 @@ String FluxStandard::standardName (const FluxStandard::FluxScale& stdEnum)
     {
       stdName = "unrecognized standard";
     }
-  };
+  }
   return stdName;
-};
+}
 
 //----------------------------------------------------------------------------
 // End of FluxStandard definition.

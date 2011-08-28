@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LargeFilebufIO.cc 20900 2010-06-04 08:49:48Z gervandiepen $
+//# $Id: LargeFilebufIO.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/IO/LargeIOFuncDef.h>
@@ -164,9 +164,10 @@ void LargeFilebufIO::writeBuffer (Int64 offset, const char* buf, Int size)
       itsSeekOffset = offset;
     }
     if (::traceWRITE (itsFile, const_cast<char*>(buf), size) != size) {
+      int error = errno;
       itsSeekOffset = -1;
       throw AipsError (String("LargeFilebufIO: write error for file ")
-		       + fileName() + ": " + strerror(errno));
+		       + fileName() + ": " + strerror(error));
     }
     itsSeekOffset += size;
   }
@@ -180,6 +181,7 @@ uInt LargeFilebufIO::readBuffer (Int64 offset, char* buf, uInt size,
     itsSeekOffset = offset;
   }
   Int bytesRead = ::traceREAD (itsFile, buf, size);
+  int error = errno;
   if (bytesRead > Int(size)) { // Should never be executed
     itsSeekOffset = -1;
     throw AipsError ("LargeFilebufIO::read - read returned a bad value"
@@ -194,11 +196,13 @@ uInt LargeFilebufIO::readBuffer (Int64 offset, char* buf, uInt size,
     if (bytesRead < 0) {
       itsSeekOffset = -1;
       throw AipsError (String("LargeFilebufIO::read error for file ")
-		       + fileName() + ": " + strerror(errno));
+		       + fileName() + ": " + strerror(error));
     } else if (bytesRead < Int(size)) {
       itsSeekOffset = -1;
-      throw AipsError ("LargeFilebufIO::read - incorrect number of bytes"
-		       " read for file " + fileName());
+      throw AipsError ("LargeFilebufIO::read - incorrect number of bytes ("
+		       + String::toString(bytesRead) + " out of "
+                       + String::toString(size) + ") read for file "
+                       + fileName());
     }
   }
   itsSeekOffset += bytesRead;
@@ -210,7 +214,7 @@ void LargeFilebufIO::write (uInt size, const void* buf)
   // Throw an exception if not writable.
   if (!itsWritable) {
     throw AipsError ("LargeFilebufIO object (file " + fileName()
-		     + "} is not writable");
+		     + ") is not writable");
   }
   const char* bufc = static_cast<const char*>(buf);
   // Determine blocknr of first and last full block.
@@ -256,7 +260,7 @@ Int LargeFilebufIO::read (uInt size, void* buf, Bool throwException)
   // Throw an exception if not readable.
   if (!itsReadable) {
     throw AipsError ("LargeFilebufIO object (file " + fileName()
-		     + "} is not readable");
+		     + ") is not readable");
   }
   char* bufc = static_cast<char*>(buf);
   // Determine blocknr of first and last full block.

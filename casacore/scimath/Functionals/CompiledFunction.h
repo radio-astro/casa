@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CompiledFunction.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: CompiledFunction.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_COMPILEDFUNCTION_H
 #define SCIMATH_COMPILEDFUNCTION_H
@@ -133,21 +133,21 @@ template <class T> class CompiledFunction : public CompiledParam<T> {
   //# Constructors
   // The default constructor -- no functions, no parameters, nothing, the
   // function operator returns a 0.
-  CompiledFunction() : CompiledParam<T>() {};
+  CompiledFunction() : CompiledParam<T>() {}
   // Make this object a (deep) copy of other.
   // <group>
   CompiledFunction(const CompiledFunction<T> &other) :
-    CompiledParam<T>(other) {};
+    CompiledParam<T>(other) {}
   template <class W>
     CompiledFunction(const CompiledFunction<W> &other) :
-    CompiledParam<T>(other) {};
+    CompiledParam<T>(other) {}
   // </group>
   // Make this object a (deep) copy of other.
   CompiledFunction<T> &operator=(const CompiledFunction<T> &other) {
-    CompiledParam<T>::operator=(other); return *this; };
+    CompiledParam<T>::operator=(other); return *this; }
 
   // Destructor
-  virtual ~CompiledFunction() {};
+  virtual ~CompiledFunction() {}
 
   //# Operators
   // Evaluate the function at <src>x</src>.
@@ -158,11 +158,11 @@ template <class T> class CompiledFunction : public CompiledParam<T> {
   // deleting the pointer.
   // <group>
   virtual Function<T> *clone() const {
-    return new CompiledFunction<T>(*this); };
+    return new CompiledFunction<T>(*this); }
   virtual Function<typename FunctionTraits<T>::DiffType> *cloneAD() const {
-    return new CompiledFunction<typename FunctionTraits<T>::DiffType>(*this); };
+    return new CompiledFunction<typename FunctionTraits<T>::DiffType>(*this); }
   virtual Function<typename FunctionTraits<T>::BaseType> *cloneNonAD() const {
-    return new CompiledFunction<typename FunctionTraits<T>::BaseType>(*this); };
+    return new CompiledFunction<typename FunctionTraits<T>::BaseType>(*this); }
   // </group>
   
 };

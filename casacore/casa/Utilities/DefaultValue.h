@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: DefaultValue.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DefaultValue.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef CASA_DEFAULTVALUE_H
 #define CASA_DEFAULTVALUE_H
@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 template <class T> inline void defaultValue(T &theValue)
 {
   theValue = T(0);
-};
+}
 
 // </group>
 
@@ -108,8 +108,3 @@ template <class T> inline void defaultValue(T &theValue)
 } //# NAMESPACE CASA - END
 
 #endif
-
-
-
-
-

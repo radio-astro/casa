@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MSFitsIDI.h 18700 2005-05-23 07:45:13Z cvsmgr $
+//# $Id: MSFitsIDI.h 21069 2011-05-06 13:59:44Z gervandiepen $
 
 #ifndef MS_MSFITSIDI_H
 #define MS_MSFITSIDI_H

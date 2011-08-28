@@ -30,23 +30,19 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <cstring>   //# for memset
-#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   BucketMapped::BucketMapped (BucketFile* file, Int64 startOffset,
                               uInt bucketSize, uInt nrOfBuckets)
-    : BucketBase (file, startOffset, bucketSize, nrOfBuckets),
-      zeros(new char[itsBucketSize]())
+    : BucketBase (file, startOffset, bucketSize, nrOfBuckets)
   {
     AlwaysAssert (itsFile->mappedFile() != 0, AipsError);
   }
 
   BucketMapped::~BucketMapped()
-  {
-      delete [] zeros;
-  }
+  {}
 
   void BucketMapped::doResync()
   {
@@ -60,19 +56,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   void BucketMapped::doExtend (uInt)
   {
-    // Extend the file.
-    // Earlier versions of this function used to write only the
-    // very last byte of the extended file. But that method was
-    // found to severely degrade the performance of the following 
-    // memory mapping on OS X 10.5 and OS X 10.6 (not on Linux).
- 
-    itsFile->mappedFile()->seek(itsStartOffset + 
-                                Int64(itsCurNrOfBuckets)*itsBucketSize);
-    
-    while (itsCurNrOfBuckets < itsNewNrOfBuckets) {
-      itsFile->mappedFile()->write(itsBucketSize, zeros);
-      itsCurNrOfBuckets++;
-    }
+    // Extend the file by writing the last byte.
+    char ch=0;
+    itsFile->mappedFile()->seek (itsStartOffset + 
+                                 Int64(itsNewNrOfBuckets)*itsBucketSize - 1);
+    itsFile->mappedFile()->write (1, &ch);
   }
 
   const char* BucketMapped::getBucket (uInt bucketNr)
@@ -84,8 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       initializeBuckets (bucketNr);
     }
     return static_cast<const char*>(itsFile->mappedFile()->getReadPointer
-                                    (itsStartOffset + Int64(bucketNr)*itsBucketSize,
-                                     itsBucketSize));
+      (itsStartOffset + Int64(bucketNr)*itsBucketSize));
   }
 
   void BucketMapped::initializeBuckets (uInt bucketNr)
@@ -95,12 +82,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // Initialize this bucket and all uninitialized ones before it.
       while (itsCurNrOfBuckets <= bucketNr) {
         char* data = static_cast<char*>(itsFile->mappedFile()->getWritePointer
-                                        (itsStartOffset + Int64(itsCurNrOfBuckets)*itsBucketSize,
-                                         itsBucketSize));
+                   (itsStartOffset + Int64(itsCurNrOfBuckets)*itsBucketSize));
         memset (data, 0, itsBucketSize);
         itsCurNrOfBuckets++;
         setWritten();
       }
     }
   }
+
+
 } //# NAMESPACE CASA - END

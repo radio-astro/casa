@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Gaussian3DParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Gaussian3DParam.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_GAUSSIAN3DPARAM_H
 #define SCIMATH_GAUSSIAN3DPARAM_H
@@ -200,10 +200,10 @@ public:
   //# Member functions
   // Give name of function
   virtual const String &name() const { static String x("gaussian3d");
-  return x; };
+  return x; }
 
   // Return dimensionality
-  virtual uInt ndim() const {return 3;};
+  virtual uInt ndim() const {return 3;}
 
   // Get or set the peak height of the Gaussian
   // <group>

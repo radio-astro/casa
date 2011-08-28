@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayError.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayError.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 // .SUMMARY General, Indexing, and Conformace errors thrown by Array classes.
 
@@ -86,7 +86,8 @@ ArrayConformanceError::~ArrayConformanceError() throw(){}
 
 
 ArrayNDimError::ArrayNDimError(Int ndim1, Int ndim2, const Char *m,Category c)
-: ArrayConformanceError(m,c),
+: ArrayConformanceError(m + String(" ndim ") + String::toString(ndim1)
+                        + " differs from " + String::toString(ndim2), c),
   r1(ndim1),
   r2(ndim2)
 {}
@@ -103,7 +104,8 @@ void ArrayNDimError::ndims(Int &ndim1, Int &ndim2) const
 
 ArrayShapeError::ArrayShapeError(const IPosition &s1, const IPosition & s2,
 				 const Char *m,Category c)
-: ArrayConformanceError(m,c),
+: ArrayConformanceError(m + String(" shape ") + s1.toString()
+                        + " differs from " + s2.toString(), c),
   sh1(s1), sh2(s2)
 {
     // Nothing

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: RigidVector.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: RigidVector.h 21024 2011-03-01 11:46:18Z gervandiepen $
  
 #ifndef SCIMATH_RIGIDVECTOR_H
 #define SCIMATH_RIGIDVECTOR_H
@@ -237,7 +237,7 @@ public:
 
 // // The following are needed for Image<RigidVector>
 
-//   static IPosition shape() {return IPosition(1,n);};
+//   static IPosition shape() {return IPosition(1,n);}
 
 //   static void* newCopyInfo (const TableRecord& record,
 // 			    const IPosition& sourceElementShape);

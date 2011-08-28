@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecTemp.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TVecTemp.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/TVecTemp.h>
@@ -39,9 +39,6 @@ TabVecTemp<T>::TabVecTemp (const Vector<T>& vec)
 {
     nrel_p   = vec.nelements();
     vecPtr_p = new Vector<T>(vec);
-    if (vecPtr_p == 0) {
-	throw (AllocError("TabVecTemp vector", nrel_p));
-    }
     tag_p = TagTemp;
 }
 
@@ -51,9 +48,6 @@ TabVecTemp<T>::TabVecTemp (uInt leng)
 {
     nrel_p   = leng;
     vecPtr_p = new Vector<T>(nrel_p);
-    if (vecPtr_p == 0) {
-	throw (AllocError("TabVecTemp vector", nrel_p));
-    }
     tag_p = TagTemp;
 }
 

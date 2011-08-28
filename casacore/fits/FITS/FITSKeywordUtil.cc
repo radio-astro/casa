@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSKeywordUtil.cc 20461 2008-12-03 10:01:23Z gervandiepen $
+//# $Id: FITSKeywordUtil.cc 21069 2011-05-06 13:59:44Z gervandiepen $
 
 #include <fits/FITS/FITSKeywordUtil.h>
 

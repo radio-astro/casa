@@ -37,6 +37,7 @@
 #include <images/Images/ImageInterface.h>
 #include <components/ComponentModels/ComponentType.h>
 #include <casa/Arrays/AxesSpecifier.h>
+#include <casa/Utilities/PtrHolder.h>
 #include <measures/Measures/Stokes.h>
 
 namespace casa {

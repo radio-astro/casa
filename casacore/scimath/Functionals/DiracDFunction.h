@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DiracDFunction.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: DiracDFunction.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_DIRACDFUNCTION_H
 #define SCIMATH_DIRACDFUNCTION_H
@@ -91,26 +91,26 @@ public:
   // <note role=warning> Could not use default arguments
   // that worked both with gcc and IRIX </note>
   // <group>
-  DiracDFunction() : DiracDParam<T>() {};
+  DiracDFunction() : DiracDParam<T>() {}
   explicit DiracDFunction(const T &height) :
-    DiracDParam<T>(height) {};
+    DiracDParam<T>(height) {}
   DiracDFunction(const T &height, const T &center) :
-    DiracDParam<T>(height, center) {};
+    DiracDParam<T>(height, center) {}
   // </group>
 
   // Copy constructor (deep copy)
   // <group>
-  DiracDFunction(const DiracDFunction<T> &other) : DiracDParam<T>(other) {};
+  DiracDFunction(const DiracDFunction<T> &other) : DiracDParam<T>(other) {}
   template <class W>
-  DiracDFunction(const DiracDFunction<W> &other) : DiracDParam<T>(other) {};
+  DiracDFunction(const DiracDFunction<W> &other) : DiracDParam<T>(other) {}
   // </group>
 
   // Copy assignment (deep copy)
   DiracDFunction<T> &operator=(const DiracDFunction<T> &other) {
-    DiracDParam<T>::operator=(other); return *this; };
+    DiracDParam<T>::operator=(other); return *this; }
     
   // Destructor
-  virtual ~DiracDFunction() {};
+  virtual ~DiracDFunction() {}
 
   //# Operators    
   // Evaluate the DiracD at <src>x</src>.
@@ -123,11 +123,11 @@ public:
   // Return a copy of this object from the heap. The caller is responsible 
   // for deleting this pointer. 
   // <group>
-  virtual Function<T> *clone() const { return new DiracDFunction<T>(*this); };
+  virtual Function<T> *clone() const { return new DiracDFunction<T>(*this); }
   virtual Function<typename FunctionTraits<T>::DiffType> *cloneAD() const {
-    return new DiracDFunction<typename FunctionTraits<T>::DiffType>(*this); };
+    return new DiracDFunction<typename FunctionTraits<T>::DiffType>(*this); }
   virtual Function<typename FunctionTraits<T>::BaseType> *cloneNonAD() const {
-    return new DiracDFunction<typename FunctionTraits<T>::BaseType>(*this); };
+    return new DiracDFunction<typename FunctionTraits<T>::BaseType>(*this); }
   // </group>
 
   //# Make members of parent classes known.

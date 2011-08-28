@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMeasComet.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMeasComet.cc 21074 2011-05-06 14:08:29Z gervandiepen $
 
 //# Includes
 #include <casa/aips.h>

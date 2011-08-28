@@ -75,7 +75,7 @@ MSFitsIDI::MSFitsIDI(const Path& tapeDevice, const String& msOut,
 //
   init(tapeDevice.absoluteName(), FITS::Tape9, msOut, overWrite, obsType);
 //
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -108,7 +108,7 @@ MSFitsIDI::MSFitsIDI(const String& inFile, const String& msOut,
 //
   init(inFile, FITS::Disk, msOut, overWrite, obsType);
 //
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -120,8 +120,8 @@ MSFitsIDI::~MSFitsIDI()
 //DP //
 //DP   if (itsMS) {
 //DP     delete (itsMS);
-//DP   };
-};
+//DP   }
+}
 
 //----------------------------------------------------------------------------
 
@@ -138,8 +138,8 @@ void MSFitsIDI::selectFiles(const Vector<Int>& files)
   itsSelectedFiles = files;
   if (itsSelectedFiles.nelements() > 0) {
     itsAllFilesSelected = False;
-  };
-};
+  }
+}
 
 //----------------------------------------------------------------------------
 
@@ -172,7 +172,7 @@ Bool MSFitsIDI::fillMS()
       } else {
 	atEnd = (fileIndex >= itsSelectedFiles.nelements()-1);
 	if (!atEnd) fileno = itsSelectedFiles(fileIndex++);
-      };
+      }
 
       if (!atEnd) {
 	// Advance tape if necessary
@@ -181,24 +181,24 @@ Bool MSFitsIDI::fillMS()
 	  TapeIO tapeDev(itsDataSource);
 	  tapeDev.skip(nskip);
 	  currentFile = currentFile + nskip;
-	};
+	}
 
 	// Read and process the selected input file
 	readFITSFile(atEnd);
 
 	// Increment file counter
 	currentFile = currentFile + 1;
-      };
-    }; 
+      }
+    } 
       
     //
     // Disk input:
     //
   } else if (itsDeviceType == FITS::Disk) {
     readFITSFile(atEnd);
-  };
+  }
   return True;
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -232,7 +232,7 @@ void MSFitsIDI::init(const String& dataSource,
       !File(sourcePath).isReadable()) {
     os << LogIO::SEVERE << "FITS-IDI data source is not readable"
        << LogIO::EXCEPTION;
-  };
+  }
 
   itsDataSource = sourcePath.absoluteName();
   itsDeviceType = deviceType;
@@ -258,7 +258,7 @@ void MSFitsIDI::init(const String& dataSource,
 
   // Set remaining default parameters
   itsAllFilesSelected = True;
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -275,7 +275,7 @@ void MSFitsIDI::readFITSFile(Bool& atEnd)
   FitsInput infits(itsDataSource.chars(), itsDeviceType);
   if (infits.err() != FitsIO::OK) {
     os << LogIO::SEVERE << "Error reading FITS input" << LogIO::EXCEPTION;
-  };
+  }
 
   // Regular expression for trailing blanks
   Regex trailing(" *$");
@@ -312,14 +312,14 @@ void MSFitsIDI::readFITSFile(Bool& atEnd)
       if (hduName != "") {
 	if (hduName != "UV_DATA") {
 	  tableName = tableName + "_tmp/" + hduName;
-	};
+	}
 
 	// Process the FITS-IDI input
 	Bool success  = bintab.readFitsFile(tableName);
 	if (infits.err() != FitsIO::OK) {
 	  os << LogIO::SEVERE << "Error reading FITS input" 
 	     << LogIO::EXCEPTION;
-	};
+	}
 	if(success){
 	  if (hduName != "UV_DATA") {
 	    subTableNr++;
@@ -330,9 +330,9 @@ void MSFitsIDI::readFITSFile(Bool& atEnd)
 	else{ // ignore this subtable
 	  infits.skip_all(FITS::BinaryTableHDU);
 	}
-      };
-    };
-  }; // end while
+      }
+    }
+  } // end while
 
   // Move the subtables in the proper place and add the subtable
   // references to the main table description.
@@ -384,7 +384,7 @@ void MSFitsIDI::readFITSFile(Bool& atEnd)
   }
   tmpDir.removeRecursive(False);
 
-};
+}
   
 
 } //# NAMESPACE CASA - END

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TableColumn.cc 21027 2011-03-16 09:12:25Z gervandiepen $
 
 #include <tables/Tables/TableColumn.h>
 #include <tables/Tables/Table.h>
@@ -98,32 +98,41 @@ void ROTableColumn::throwIfNull() const
 Bool ROTableColumn::hasContent() const
 {
   Bool retval = !isNull() && isDefined(0);
-
   if(retval){
-    // The first cell seems to have something, but check for
-    // degenerate Arrays.
-    try{
-      uInt nDim = ndim(0);
+	// The first cell seems to have something, but check for
+	// degenerate Arrays.
+      try{
+         uInt nDim = ndim(0);
 
-      if(nDim > 0){
-	IPosition shp(shape(0));
+         if(nDim > 0){
+            IPosition shp(shape(0));
 
-	for(uInt i = 0; i < nDim; ++i){
-	  if(shp[i] == 0){
-	    retval = False;
-	    break;
-	  }
-	}
+            for(uInt i = 0; i < nDim; ++i){
+               if(shp[i] == 0){
+                  retval = False;
+                  break;
+               }
+            }
+         }
       }
-    }
-    catch(AipsError x){
-      // ndim(0) will throw an exception if the column is scalar.
-      // This seems like a kludgy way of distinguishing between the 2.
-      retval = True;
-    }
+      catch(AipsError x) {
+         // ndim(0) will throw an exception if the column is scalar.
+         // This seems like a kludgy way of distinguishing between the 2.
+         retval = True;
+      }
   }
   return retval;
 }
+
+TableRecord& ROTableColumn::rwKeywordSet()
+{
+    if (! baseTabPtr_p->isWritable()) {
+	throw (TableError ("ROTableColumn::rwKeywordSet cannot be used: table "
+			   + baseTabPtr_p->tableName() + " is not writable"));
+    }
+    return baseColPtr_p->rwKeywordSet();
+}
+
 
 const ColumnDesc& ROTableColumn::columnDesc() const
     { return baseColPtr_p->columnDesc(); }

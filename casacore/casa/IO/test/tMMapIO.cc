@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMMapIO.cc 20589 2009-05-06 11:56:14Z gervandiepen $
+//# $Id: tMMapIO.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
 
 #include <casa/IO/MMapIO.h>
 #include <casa/IO/RegularFileIO.h>

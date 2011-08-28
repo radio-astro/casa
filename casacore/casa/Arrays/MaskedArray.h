@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskedArray.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: MaskedArray.h 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #ifndef CASA_MASKEDARRAY_H
 #define CASA_MASKEDARRAY_H
@@ -353,7 +353,6 @@ public:
     //
     // <thrown>
     //    <li> ArrayConformanceError
-    //    <li> AllocError
     // </thrown>
     //
     // <group>
@@ -380,7 +379,6 @@ public:
     //
     // <thrown>
     //    <li> ArrayConformanceError
-    //    <li> AllocError
     // </thrown>
     //
     // <group>
@@ -404,7 +402,6 @@ public:
     //
     // <thrown>
     //    <li> ArrayConformanceError
-    //    <li> AllocError
     // </thrown>
     //
     // <group>
@@ -432,7 +429,6 @@ public:
     //
     // <thrown>
     //    <li> ArrayConformanceError
-    //    <li> AllocError
     // </thrown>
     //
     // <group>
@@ -458,10 +454,6 @@ public:
     // the MaskedArray returned is readonly.  If <src>isreadonly</src> is
     // <src>False</src> and the input MaskedArray is readonly, then the
     // constructed MaskedArray is readonly.
-    //
-    // <thrown>
-    //    <li> AllocError
-    // </thrown>
     //
     // <group>
     MaskedArray(const MaskedArray<T> &other, Bool isreadonly);

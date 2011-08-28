@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSlidingArrayMath.cc 20446 2008-11-28 11:01:33Z gervandiepen $
+//# $Id: tSlidingArrayMath.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Arrays/MaskArrMath.h>
 #include <casa/Arrays/ArrayLogical.h>

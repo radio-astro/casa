@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableParse.h 20967 2010-09-27 11:06:03Z gervandiepen $
+//# $Id: TableParse.h 21103 2011-07-08 07:27:17Z gervandiepen $
 
 #ifndef TABLES_TABLEPARSE_H
 #define TABLES_TABLEPARSE_H
@@ -430,6 +430,9 @@ public:
 		 const String& shorthand,
 		 const vector<const Table*> tempTables,
 		 const vector<TableParseSelect*>& stack);
+
+  // Replace the first table (used by CALC command).
+  void replaceTable (const Table& table);
 
   // Find the keyword or column name and create a TableExprNode from it.
   TableExprNode handleKeyCol (const String& name);

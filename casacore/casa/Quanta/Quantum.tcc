@@ -23,10 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Quantum.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Quantum.tcc 20993 2010-11-08 13:36:32Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/QuantumType.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Arrays/IPosition.h>
@@ -345,12 +346,12 @@ QBase *Quantum<Qtype>::clone() const {
 
 template <class Qtype>
 uInt Quantum<Qtype>::type() const {
-  return Register(static_cast<Quantum<Qtype> *>(0));
+  return quantumType (static_cast<Quantum<Qtype> *>(0));
 }
 
 template <class Qtype>
 uInt Quantum<Qtype>::myType() {
-  return Register(static_cast<Quantum<Qtype> *>(0));
+  return quantumType (static_cast<Quantum<Qtype> *>(0));
 }
 
 

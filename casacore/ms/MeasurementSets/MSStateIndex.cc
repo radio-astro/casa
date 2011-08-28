@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     nrows_p = msStateCols_p.nrow();
     stateIds_p.resize(nrows_p);
     indgen(stateIds_p);
-  };
+  }
   
   //-------------------------------------------------------------------------
   
@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     MaskedArray<Int> maskStateID(stateIds_p,maskArray);
     return maskStateID.getCompressedArray();
-  }; 
+  } 
 
   Vector<Int> MSStateIndex::maskStateIDs(const Vector<Int>& ids)
   {
@@ -145,7 +145,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MaskedArray<Int> maskStateId(stateIds_p, tmaskArray);
 
     return maskStateId.getCompressedArray();
-  }; 
+  } 
   
   //-------------------------------------------------------------------------
   
@@ -167,10 +167,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	matchedStateIds.resize(matchedStateIds.nelements() +
 			       currentMatch.nelements(), True);
 	matchedStateIds = concatenateArray(temp, currentMatch);
-      };
-    };
+      }
+    }
     return matchedStateIds;
-  };
+  }
   
   //-------------------------------------------------------------------------
   
@@ -187,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        !msStateCols_p.flagRow().getColumn());
     MaskedArray<Int> maskStateId(stateIds_p, maskArray);
     return maskStateId.getCompressedArray();
-  }; 
+  } 
   
   //-------------------------------------------------------------------------
   
@@ -209,10 +209,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	matchedStateIds.resize(matchedStateIds.nelements() +
 			       currentMatch.nelements(), True);
 	matchedStateIds = concatenateArray(temp, currentMatch);
-      };
-    };
+      }
+    }
     return matchedStateIds;
-  };
+  }
   
   //-------------------------------------------------------------------------
   Vector<Int> MSStateIndex::matchStateIDLT(const Int n)
@@ -223,7 +223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        !msStateCols_p.flagRow().getColumn());
     MaskedArray<Int> maskStateId(stateIds_p, maskArray);
     return maskStateId.getCompressedArray();
-  };
+  }
 
   //-------------------------------------------------------------------------
   Vector<Int> MSStateIndex::matchStateIDGT(const Int n)
@@ -234,7 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        !msStateCols_p.flagRow().getColumn());
     MaskedArray<Int> maskStateId(stateIds_p, maskArray);
     return maskStateId.getCompressedArray();
-  };
+  }
   //-------------------------------------------------------------------------
   
   Vector<Int> MSStateIndex::matchStateIDGTAndLT(const Int n0, const Int n1)
@@ -247,7 +247,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        !msStateCols_p.flagRow().getColumn());
     MaskedArray<Int> maskStateId(stateIds_p, maskArray);
     return maskStateId.getCompressedArray();
-  };
+  }
   //-------------------------------------------------------------------------
   
 } //# NAMESPACE CASA - END

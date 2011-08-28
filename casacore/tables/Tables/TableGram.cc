@@ -23,14 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableGram.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TableGram.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 // TableGram; grammar for table command lines
 
 // This file includes the output files of bison and flex for
 // parsing command lines operating on tables.
-// This is a preliminary version; eventually it has to be incorporated
-// in the AIPS++ command language.
 
 
 #include <tables/Tables/TableGram.h>

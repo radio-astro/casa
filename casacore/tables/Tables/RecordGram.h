@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.h 20922 2010-07-05 11:36:04Z gervandiepen $
+//# $Id: RecordGram.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_RECORDGRAM_H
 #define TABLES_RECORDGRAM_H
@@ -33,6 +33,7 @@
 #include <tables/Tables/TableGram.h>
 #include <tables/Tables/TaQLStyle.h>
 #include <tables/Tables/Table.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -216,6 +217,7 @@ private:
     static const RecordInterface* theirRecPtr;
     static const Table*           theirTabPtr;
     static TableExprNode*         theirNodePtr;
+    static Mutex                  theirMutex;
 };
 
 

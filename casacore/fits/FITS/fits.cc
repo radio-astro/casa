@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: fits.cc 20749 2009-09-30 14:24:05Z gervandiepen $
+//# $Id: fits.cc 21081 2011-05-09 11:36:20Z gervandiepen $
 
 //# Partial implementation of little endian code by Kris Huber
 //# (kris@helios.ece.usu.edu)
@@ -1453,14 +1453,12 @@ int FITS::get_comment(const char *s, int len, int &begpos) {
 	    if (i < len) {
 		begpos = i;
 		return trim_comment(&s[i],(len - i));
-	    } else {
-		begpos = 0;
-		return 0;
 	    }
-	} else {
-	    begpos = 0;
-	    return trim_comment(s,len);
+            begpos = 0;
+            return 0;
 	}
+        begpos = 0;
+        return trim_comment(s,len);
 }
 
 void FITS::fstr2str(char *target, const char *source, int len) {
@@ -2576,7 +2574,7 @@ Bool FitsFPUtil::isFP(const void *) {return False;}
 
 void FitsFPUtil::setNaN(double &val)
 {
-    char *cptr = (char *)(&val);
+    unsigned char *cptr = (unsigned char *)(&val);
     for (unsigned int i=0; i<sizeof(double); i++) {
 	cptr[i] = 0xff;
     }
@@ -2584,7 +2582,7 @@ void FitsFPUtil::setNaN(double &val)
 
 void FitsFPUtil::setNaN(float &val)
 {
-    char *cptr = (char *)(&val);
+    unsigned char *cptr = (unsigned char *)(&val);
     for (unsigned int i=0; i<sizeof(float); i++) {
 	cptr[i] = 0xff;
     }

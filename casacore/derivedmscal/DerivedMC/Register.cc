@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Register.cc 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: Register.cc 21108 2011-07-18 07:40:54Z gervandiepen $
 
 #include <derivedmscal/DerivedMC/Register.h>
 #include <derivedmscal/DerivedMC/DerivedMSCal.h>
@@ -49,4 +49,5 @@ void register_derivedmscal()
   UDFBase::registerUDF ("derivedmscal.AZEL1", UDFMSCal::makeAZEL1);
   UDFBase::registerUDF ("derivedmscal.AZEL2", UDFMSCal::makeAZEL2);
   UDFBase::registerUDF ("derivedmscal.UVW",   UDFMSCal::makeUVW);
+  UDFBase::registerUDF ("derivedmscal.STOKES",UDFMSCal::makeStokes);
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MVDoppler.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: MVDoppler.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions/Error.h>
@@ -178,11 +178,9 @@ Vector<Quantum<Double> > MVDoppler::getRecordValue() const {
 Bool MVDoppler::putValue(const Vector<Quantum<Double> > &in) {
   static Bool needInit = True;
   static UnitVal Velocity;
-  static Double LVel;
   if (needInit) {
     needInit = False;
     Velocity = UnitVal::LENGTH/UnitVal::TIME;
-    LVel = (QC::c).getBaseValue();
   }
   uInt i = in.nelements();
   if (i == 0) {

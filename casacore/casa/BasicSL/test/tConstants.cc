@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tConstants.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tConstants.cc 20734 2009-09-28 23:44:40Z Malte.Marquarding $
 
 //# Includes
 
@@ -100,7 +100,7 @@ int main()
                             } else {
                                  cout << "(unprintable)"    << endl;
                             }
-#if !defined(AIPS_DARWIN)
+#if !defined(AIPS_DARWIN) && !defined(AIPS_BSD)
    cout << endl
         << "Machine constants from values.h:"               << endl
         << "HIBITS................  " << HIBITS             << endl

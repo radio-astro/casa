@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTableDesc.cc 20632 2009-06-14 12:16:13Z gervandiepen $
+//# $Id: tTableDesc.cc 21096 2011-06-09 09:12:20Z gervandiepen $
 
 #include <tTableDesc.h>
 #include <tables/Tables/TableDesc.h>
@@ -52,8 +52,8 @@
 void a (Bool doExcp)
 {
     // Add Scalar/ArrayColumnDesc<ExampleDesc> to column type map.
-    ScalarColumnDesc<ExampleDesc> tmp0(ColumnDesc::registerMap);
-    ArrayColumnDesc<ExampleDesc>  tmp1(ColumnDesc::registerMap);
+    ScalarColumnDesc<ExampleDesc>("x").registerClass();
+    ArrayColumnDesc<ExampleDesc>("x").registerClass();
 
     // First build the description of a subtable.
     // Do it in separate scope to destruct it (thus to write it).
@@ -104,19 +104,8 @@ void a (Bool doExcp)
 
     td.addColumn (ArrayColumnDesc<Complex> ("Arr1","comment for Arr1",0));
     td.addColumn (ArrayColumnDesc<Int> ("A2r1","comment for Arr1",3));
-    if (doExcp) {
-	try {
-	    td.addColumn (ArrayColumnDesc<uInt> ("Arr3","comment for Arr1",
-						 IPosition(2,3,4)));
-	} catch (AipsError x) {
-	    cout << x.getMesg() << endl;     // shape for non-fixedShape array
-	} 
-    }
     ArrayColumnDesc<uInt> coldes("Arr3","comment for Arr1",
 				 IPosition(2,3,4), ColumnDesc::Direct);
-    Matrix<uInt> defmat(3,4);
-    defmat = 0;
-    Matrix<uInt> defmat2(4,4);
     td.addColumn (coldes);
 
     // Set the shape of some columns.

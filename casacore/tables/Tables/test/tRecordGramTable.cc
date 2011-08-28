@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRecordGramTable.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tRecordGramTable.cc 21086 2011-05-13 08:31:02Z gervandiepen $
 
 #include <tables/Tables/RecordGram.h>
 #include <tables/Tables/ExprNode.h>
@@ -45,7 +45,7 @@
 
 void doIt (const String& str)
 {
-  String name = "tTable_2.data_v0";
+  String name = "$testsrcdir/tTable_2.data_v0";
   Table tab(name);
   TableExprNode expr = RecordGram::parse (tab, str);
   cout << str << ": ";

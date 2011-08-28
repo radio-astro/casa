@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: HyperPlaneParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: HyperPlaneParam.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_HYPERPLANEPARAM_H
 #define SCIMATH_HYPERPLANEPARAM_H
@@ -136,18 +136,18 @@ public:
   // parameters
   // <group>
   Bool operator==(const HyperPlaneParam<T> &other) const {
-    return (this->param_p == other.param_p); };
+    return (this->param_p == other.param_p); }
   Bool operator!=(const HyperPlaneParam<T> &other) const {
-    return (this->param_p != other.param_p); };
+    return (this->param_p != other.param_p); }
   // </group>
     
   //# Member functions
   // Give name of function
   virtual const String &name() const { static String x("hyperplane");
-    return x; };
+    return x; }
 
   // What is the dimension of the parameter list
-  virtual uInt ndim() const { return this->param_p.nelements(); };
+  virtual uInt ndim() const { return this->param_p.nelements(); }
 
   //# Make members of parent classes known.
 protected:

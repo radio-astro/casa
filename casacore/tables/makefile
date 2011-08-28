@@ -1,10 +1,5 @@
-# $Id: makefile 17683 2004-08-24 20:15:35Z gvandiep $
+# $Id: makefile 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-# Use the generic AIPS++ class implementation makefile.
-#------------------------------------------------------
-include $(word 1, $(AIPSPATH))/code/install/makefile.imp
-
-# Set up a parallel make if PARALLEL_MAKE is defined in makedefs.
-ifdef PARALLEL_MAKE
-  MAKE := $(PARALLEL_MAKE)
-endif
+# Use the generic AIPS++ package makefile.
+#-----------------------------------------
+include $(word 1, $(AIPSPATH))/code/install/makefile.pkg

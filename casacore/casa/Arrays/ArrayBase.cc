@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayBase.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ArrayBase.cc 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #include <casa/Arrays/ArrayBase.h>
 #include <casa/Arrays/ArrayError.h>
@@ -176,9 +176,10 @@ void ArrayBase::baseReform (ArrayBase& tmp, const IPosition& len) const
 }
 
 
-void ArrayBase::baseNonDegenerate (ArrayBase& other,
+void ArrayBase::baseNonDegenerate (const ArrayBase& other,
 				   const IPosition& ignoreAxes)
 {
+  AlwaysAssert (this != &other, AipsError);
   AlwaysAssert(other.ndim() > 0, AipsError);
   // These data members are the same irrespective of the degenerate axes. 
   nels_p       = other.nels_p;
@@ -284,7 +285,7 @@ size_t ArrayBase::makeSubset (ArrayBase& out,
   if (b.nelements() != ndim() || e.nelements() != ndim() ||
       i.nelements() != ndim()) {
     throw(ArrayError("ArrayBase::operator()(b,e,i) - ndim() differs from"
-		     " an iposition size"));
+		     " the array ndim"));
   }
   uInt j;
   for (j=0; j < ndim(); j++) {

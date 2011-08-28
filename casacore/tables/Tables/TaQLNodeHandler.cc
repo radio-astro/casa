@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeHandler.cc 20967 2010-09-27 11:06:03Z gervandiepen $
+//# $Id: TaQLNodeHandler.cc 21103 2011-07-08 07:27:17Z gervandiepen $
 
 #include <tables/Tables/TaQLNodeHandler.h>
 #include <tables/Tables/TaQLNode.h>
@@ -577,7 +577,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   TaQLNodeResult TaQLNodeHandler::visitCalcNode (const TaQLCalcNodeRep& node)
   {
     TableParseSelect* curSel = pushStack (TableParseSelect::PCALC);
-    handleTables  (node.itsTables);
+    handleTables (node.itsTables);
+    // If where, orderby, limit and/or offset is given, handle as FROM query.
+    if (node.itsWhere.isValid() || node.itsSort.isValid() ||
+        node.itsLimitOff.isValid()) {
+      handleWhere (node.itsWhere);
+      visitNode   (node.itsSort);
+      visitNode   (node.itsLimitOff);
+      Table tab = curSel->doFromQuery(node.style().doTiming());
+      // Replace with the resulting table.
+      curSel->replaceTable (tab);
+    }
     TaQLNodeResult eres = visitNode (node.itsExpr);
     curSel->handleCalcComm (getHR(eres).getExpr());
     TaQLNodeHRValue* hrval = new TaQLNodeHRValue();

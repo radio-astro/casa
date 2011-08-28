@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LargeFiledesIO.h 20859 2010-02-03 13:14:15Z gervandiepen $
+//# $Id: LargeFiledesIO.h 20868 2010-03-08 07:50:40Z gervandiepen $
 
 #ifndef CASA_LARGEFILEDESIO_H
 #define CASA_LARGEFILEDESIO_H
@@ -94,7 +94,7 @@ public:
 
     // Construct from the given file descriptor.
     // The file name is only used in possible error messages.
-    explicit LargeFiledesIO (int fd, const String& fileName);
+    explicit LargeFiledesIO (int fd, const String& fileName=String());
 
     // Attach to the given file descriptor.
     // An exception is thrown if it is not in a detached state.

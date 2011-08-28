@@ -44,7 +44,6 @@ Containers/StackError.cc
 Containers/ValueHolder.cc
 Containers/Record2Interface.cc
 Containers/Stack2.cc
-Containers/ContainerIO.tcc
 Exceptions/Error2.cc
 HDF5/HDF5Record.cc
 HDF5/HDF5Error.cc
@@ -114,6 +113,7 @@ OS/Timer.cc
 OS/DataConversion.cc
 OS/VAXConversion.cc
 OS/malloc.cc
+OS/Mutex.cc
 OS/EnvVar.cc
 OS/RegularFile.cc
 OS/DOos.cc
@@ -124,7 +124,6 @@ OS/IBMConversion.cc
 OS/RawDataConversion.cc
 OS/LECanonicalDataConversion.cc
 OS/SymLink.cc
-OS/Mutex.cc
 Quanta/UnitMap3.cc
 Quanta/UnitName.cc
 Quanta/Unit.cc
@@ -166,11 +165,11 @@ System/AipsrcBool.cc
 System/AppInfo.cc
 System/Aipsrc.cc
 System/AipsrcVBool.cc
-System/Casarc.cc
 System/PGPlotterNull.cc
 System/ObjectID.cc
 System/Choice.cc
 System/ProgressMeter.cc
+System/Casarc.cc
 Utilities/cregex.cc
 Utilities/RecordTransformable.cc
 Utilities/DynBuffer.cc
@@ -184,12 +183,12 @@ Utilities/ValType.cc
 Utilities/StringDistance.cc
 Utilities/Notice.cc
 Utilities/MUString.cc
+Utilities/Precision.cc
 Utilities/Regex.cc
 Utilities/BitVector.cc
 Utilities/Fallible2.cc
 Utilities/CompositeNumber.cc
 Utilities/Copy2.cc
-Utilities/Precision.cc
 aips.cc
 version.cc
 )
@@ -299,6 +298,8 @@ install (FILES
 Containers/Block.h
 Containers/BlockIO.h
 Containers/BlockIO.tcc
+Containers/ContainerIO.h
+Containers/ContainerIO.tcc
 Containers/HashMap.h
 Containers/HashMap.tcc
 Containers/HashMapIO.h
@@ -493,7 +494,7 @@ Quanta/QMath.tcc
 Quanta/Quantum.h
 Quanta/Quantum.tcc
 Quanta/QuantumHolder.h
-#Quanta/QuantumType.h
+Quanta/QuantumType.h
 Quanta/RotMatrix.h
 Quanta/UnitDim.h
 Quanta/Unit.h
@@ -509,8 +510,8 @@ System/AipsrcValue.h
 System/AipsrcValue.tcc
 System/AipsrcVector.h
 System/AipsrcVector.tcc
-System/Casarc.h
 System/AppInfo.h
+System/Casarc.h
 System/Choice.h
 System/ObjectID.h
 System/PGPlotter.h

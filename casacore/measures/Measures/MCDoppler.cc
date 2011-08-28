@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCDoppler.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MCDoppler.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MCDoppler.h>
@@ -31,7 +31,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Statics
-Bool MCDoppler::stateMade_p = False;
 uInt MCDoppler::ToRef_p[N_Routes][3] = {
     {MDoppler::RADIO,	MDoppler::RATIO,	0}, 
     {MDoppler::Z,	MDoppler::RATIO,	0},
@@ -42,15 +41,11 @@ uInt MCDoppler::ToRef_p[N_Routes][3] = {
     {MDoppler::RATIO,	MDoppler::BETA,		0},
     {MDoppler::RATIO,	MDoppler::GAMMA,	0} };
 uInt MCDoppler::FromTo_p[MDoppler::N_Types][MDoppler::N_Types];
+MutexedInit MCDoppler::theirMutexedInit (MCDoppler::doFillState);
 
 //# Constructors
 MCDoppler::MCDoppler() {
-  if (!stateMade_p) {
-    MDoppler::checkMyTypes();
-    MCBase::makeState(MCDoppler::stateMade_p, MCDoppler::FromTo_p[0],
-		      MDoppler::N_Types, MCDoppler::N_Routes,
-		      MCDoppler::ToRef_p);
-  };
+    fillState();
 }
 
 //# Destructor
@@ -74,7 +69,7 @@ void MCDoppler::getConvert(MConvertBase &mc,
     iin = ToRef_p[tmp][1];
     mc.addMethod(tmp);
     initConvert(tmp, mc);
-  };
+  }
 }
 
 void MCDoppler::clearConvert() {
@@ -89,7 +84,7 @@ void MCDoppler::initConvert(uInt which, MConvertBase &mc) {
     
   default:
     break;
-  };
+  }
 }
 
 void MCDoppler::doConvert(MeasValue &in,
@@ -105,7 +100,7 @@ void MCDoppler::doConvert(MVDoppler &in,
 			  MRBase &outref,
 			  const MConvertBase &mc) {
 
-  if (False) {inref.getType(); outref.getType(); }; // to stop warning
+  if (False) {inref.getType(); outref.getType(); } // to stop warning
     
   Double t = (Double) in;
 
@@ -147,21 +142,21 @@ void MCDoppler::doConvert(MVDoppler &in,
 
     default:
       break;
-    }; // switch
+    } // switch
     in = t;
-  }; // for
+  } // for
 }
 
 String MCDoppler::showState() {
-  if (!stateMade_p) {
-    MDoppler::checkMyTypes();
-    MCBase::makeState(MCDoppler::stateMade_p, MCDoppler::FromTo_p[0],
-		      MDoppler::N_Types, MCDoppler::N_Routes,
-		      MCDoppler::ToRef_p);
-  };
-  return MCBase::showState(MCDoppler::stateMade_p, MCDoppler::FromTo_p[0],
+  fillState();
+  return MCBase::showState(MCDoppler::FromTo_p[0],
 			   MDoppler::N_Types, MCDoppler::N_Routes,
 			   MCDoppler::ToRef_p);
+}
+
+  void MCDoppler::doFillState (void*) {
+  MDoppler::checkMyTypes();
+  MCBase::makeState(FromTo_p[0],  MDoppler::N_Types, N_Routes, ToRef_p);
 }
 
 } //# NAMESPACE CASA - END

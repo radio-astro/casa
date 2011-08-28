@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: CompiledParam.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: CompiledParam.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_COMPILEDPARAM_H
 #define SCIMATH_COMPILEDPARAM_H
@@ -128,27 +128,27 @@ template <class T> class CompiledParam : public Function<T> {
   //# Member functions
   // Give name of function
   virtual const String &name() const { static String x("compiled");
-    return x; };
+    return x; }
 
   // Set a function. The return will be False (and an error message will be
   // set) if a compilation error occurs 
   Bool setFunction(const String &newFunction);
 
   // Return the error message of the compilation
-  const String &errorMessage() const { return msg_p; };
+  const String &errorMessage() const { return msg_p; }
 
   // Return the expression
   const FuncExpression &function() const;
 
   // Returns the dimension of function
-  virtual uInt ndim() const { return ndim_p; };
+  virtual uInt ndim() const { return ndim_p; }
 
   // Returns the text of the function string
-  const String &getText() const { return text_p; };
+  const String &getText() const { return text_p; }
 
   // Returns the function pointer (for debugging)
   const FuncExpression* getFunctionPtr() const {
-    return functionPtr_p; };
+    return functionPtr_p; }
 
 protected:
   //# Data

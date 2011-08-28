@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCRadialVelocity.cc 19852 2007-02-13 01:54:23Z Malte.Marquarding $
+//# $Id: MCRadialVelocity.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <casa/BasicSL/Constants.h>
@@ -37,7 +37,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Statics
-Bool MCRadialVelocity::stateMade_p = False;
 uInt MCRadialVelocity::ToRef_p[N_Routes][3] = {
   {MRadialVelocity::LSRD,	MRadialVelocity::BARY,	 	0},
   {MRadialVelocity::BARY,	MRadialVelocity::LSRD,		0},
@@ -55,16 +54,12 @@ uInt MCRadialVelocity::ToRef_p[N_Routes][3] = {
   {MRadialVelocity::CMB,	MRadialVelocity::BARY,		0} };
 uInt MCRadialVelocity::
 FromTo_p[MRadialVelocity::N_Types][MRadialVelocity::N_Types];
+MutexedInit MCRadialVelocity::theirMutexedInit (MCRadialVelocity::doFillState);
 
 //# Constructors
 MCRadialVelocity::MCRadialVelocity() :
   MVPOS1(0), MVDIR1(0), ABERFROM(0), ABERTO(0) {
-  if (!stateMade_p) {
-    MRadialVelocity::checkMyTypes();
-    MCBase::makeState(MCRadialVelocity::stateMade_p, MCRadialVelocity::FromTo_p[0],
-		      MRadialVelocity::N_Types, MCRadialVelocity::N_Routes,
-		      MCRadialVelocity::ToRef_p);
-  };
+    fillState();
 }
 
 //# Destructor
@@ -88,7 +83,7 @@ void MCRadialVelocity::getConvert(MConvertBase &mc,
     iin = ToRef_p[tmp][1];
     mc.addMethod(tmp);
     initConvert(tmp, mc);
-  };
+  }
 }
 
 void MCRadialVelocity::clearConvert() {
@@ -144,7 +139,7 @@ void MCRadialVelocity::initConvert(uInt which, MConvertBase &mc) {
 
   default:
     break;
-  };
+  }
 }
 
 void MCRadialVelocity::doConvert(MeasValue &in,
@@ -323,20 +318,20 @@ void MCRadialVelocity::doConvert(MVRadialVelocity &in,
 
     default:
       break;
-    }; // switch
-  }; // for
+    } // switch
+  } // for
 }
 
 String MCRadialVelocity::showState() {
-  if (!stateMade_p) {
-    MRadialVelocity::checkMyTypes();
-    MCBase::makeState(MCRadialVelocity::stateMade_p, MCRadialVelocity::FromTo_p[0],
-		      MRadialVelocity::N_Types, MCRadialVelocity::N_Routes,
-		      MCRadialVelocity::ToRef_p);
-  };
-  return MCBase::showState(MCRadialVelocity::stateMade_p, MCRadialVelocity::FromTo_p[0],
+  fillState();
+  return MCBase::showState(MCRadialVelocity::FromTo_p[0],
 			   MRadialVelocity::N_Types, MCRadialVelocity::N_Routes,
 			   MCRadialVelocity::ToRef_p);
+}
+
+void MCRadialVelocity::doFillState (void*) {
+  MRadialVelocity::checkMyTypes();
+  MCBase::makeState(FromTo_p[0], MRadialVelocity::N_Types, N_Routes, ToRef_p);
 }
 
 } //# NAMESPACE CASA - END

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasJPL.h 20362 2008-06-27 04:54:24Z Malte.Marquarding $
+//# $Id: MeasJPL.h 21100 2011-06-28 12:49:00Z gervandiepen $
 
 #ifndef MEASURES_MEASJPL_H
 #define MEASURES_MEASJPL_H
@@ -35,6 +35,7 @@
 #include <tables/Tables/TableRecord.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <casa/Containers/RecordField.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -220,9 +221,7 @@ private:
 
   //# Data members
   // Measured data readable
-  static Bool measFlag[N_Files];
-  // Measured data present
-  static Bool measured[N_Files];
+  static volatile Bool measFlag[N_Files];
   // Tables present
   static Table t[N_Files];
   // Row descriptions
@@ -262,6 +261,8 @@ private:
   static Double twot;
   static Double vfac;
   // </group>
+  // Mutex for thread-safety.
+  static Mutex theirMutex;
 };
 
 //# Inline Implementations

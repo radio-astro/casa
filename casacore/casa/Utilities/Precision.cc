@@ -23,68 +23,65 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id:  $
+//# $Id: Precision.cc 21022 2011-03-01 10:07:47Z gervandiepen $
 
 #include <casa/Utilities/Precision.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-uInt precisionForValueErrorPairs(
-	const Vector<Double>& pair1, const Vector<Double>& pair2
-) {
-	Double val1 = fabs(pair1[0]);
-	Double err1 = pair1[1];
-	Double value = val1;
-	Double error = fabs(err1);
+uInt precisionForValueErrorPairs (const Vector<Double>& pair1,
+                                  const Vector<Double>& pair2)
+{
+  Double val1 = fabs(pair1[0]);
+  Double err1 = pair1[1];
+  Double value = val1;
+  Double error = fabs(err1);
 
-	if (pair2.size() == 2){
-		Double val2 = fabs(pair2[0]);
-		Double err2 = pair2[1];
+  if (pair2.size() == 2){
+    Double val2 = fabs(pair2[0]);
+    Double err2 = pair2[1];
+    value = max(val1, val2);
+    error = (err1 == 0 || err2 == 0)
+      ? max(fabs(err1), fabs(err1))
+      : min(fabs(err1), fabs(err2));
+  }
 
-        value = max(val1, val2);
-        error = (err1 == 0 || err2 == 0)
-        	? max(fabs(err1), fabs(err1))
-        	: min(fabs(err1), fabs(err2));
-	}
+  // Here are a few general safeguards
+  // If we are dealing with a value smaller than the estimated error
+  // (e.g., 0.6 +/- 12) , the roles in formatting need to be
+  // reversed.
+  if ( value < error ) {
+    value = max(value,0.1*error);
+    // TODO be cool and figure out a way to swap without using a temporary variable
+    Double tmp = value;
+    value = error;
+    error = tmp;
+  }
 
-	// Here are a few general safeguards
-	// If we are dealing with a value smaller than the estimated error
-	// (e.g., 0.6 +/- 12) , the roles in formatting need to be
-	// reversed.
-	if ( value < error ) {
-		value = max(value,0.1*error);
-		// TODO be cool and figure out a way to swap without using a temporary variable
-		Double tmp = value;
-		value = error;
-		error = tmp;
-	}
+  // A value of precisely 0 formats as if it were 1.  If the error is
+  // precisely 0, we print to 3 significant digits
+  if ( value == 0 ) {
+    value = 1;
+  }
+  if ( error == 0 ) {
+    error = 0.1*value;
+  }
 
-	// A value of precisely 0 formats as if it were 1.  If the error is
-	// precisely 0, we print to 3 significant digits
+  // Arithmetically we have to draw the limit somewhere.  It is
+  // unlikely that numbers (and errors) < 1e-10 are reasonably
+  // printed using this limited technique.
+  value = max(value, 1e-10);
+  error = max(error, 1e-8);
 
-	if ( value == 0 ) {
-		value = 1;
-	}
-	if ( error == 0 ) {
-		error = 0.1*value;
-	}
+  // Print only to two significant digits in the error
+  error = 0.1*error;
 
-	// Arithmetically we have to draw the limit somewhere.  It is
-	// unlikely that numbers (and errors) < 1e-10 are reasonably
-	// printed using this limited technique.
-	value = max(value, 1e-10);
-	error = max(error, 1e-8);
-
-	// Print only to two significant digits in the error
-	error = 0.1*error;
-
-	// Generate format
-
-	uInt after = 0;
-	if ( log10(error) < 0 ) {
-		after = int(fabs(log10(error)))+1;
-	}
-	return after;
+  // Generate format
+  uInt after = 0;
+  if ( log10(error) < 0 ) {
+    after = int(fabs(log10(error)))+1;
+  }
+  return after;
 }
 
 } //# NAMESPACE CASA - END

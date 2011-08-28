@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMaskArrMath2.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tMaskArrMath2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 //# If AIPS_DEBUG is not set, the Assert's won't be called.
 #if !defined(AIPS_DEBUG)

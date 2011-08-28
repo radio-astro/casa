@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tCountedPtr.h 20627 2009-06-12 00:45:54Z gervandiepen $
+//# $Id: tCountedPtr.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 // Split off from the original tCountedPtr.cc
 // in order to satisfy the automated building of the test program.

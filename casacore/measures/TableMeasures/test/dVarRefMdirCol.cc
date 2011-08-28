@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tVarRefMDir.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: dVarRefMdirCol.cc 21074 2011-05-06 14:08:29Z gervandiepen $
 
 #include <measures/TableMeasures/ScalarMeasColumn.h>
 #include <measures/TableMeasures/ArrayMeasColumn.h>
@@ -74,7 +74,7 @@
 // ref)
 // Filler writers should make use of it if FIELD and POINTING subtable etc if necessary 
 
-int main(int argc, const char*[])
+int main()
 {
   try {
     {
@@ -88,27 +88,33 @@ int main(int argc, const char*[])
       TableMeasValueDesc tmvd(td, "PHASE_CENTER");
       TableMeasDesc<MDirection> tmdMDirection(tmvd, tmrd);
       tmdMDirection.write(td);
-      SetupNewTable newtab("tVarRefDIR.tab", td, Table::New);
+      SetupNewTable newtab("dVarRefMdirCol_tmp.tab", td, Table::New);
       Table tab(newtab, 4);
       MDirection::ScalarColumn tmpCol(tab, "PHASE_CENTER");
-      tmpCol.put (0, MDirection(Quantity(0.0,"deg"), Quantity(0.0, "deg"), MDirection::URANUS));
-      tmpCol.put (1, MDirection(Quantity(150.0,"deg"), Quantity(15.0, "deg"), MDirection::J2000));
-      tmpCol.put (2, MDirection(Quantity(170.0,"deg"), Quantity(12.0, "deg"), MDirection::B1950));
-      tmpCol.put (3, MDirection(Quantity(80.0,"deg"), Quantity(10.0, "deg"), MDirection::GALACTIC));
+      tmpCol.put (0, MDirection(Quantity(0.0,"deg"), Quantity(0.0, "deg"),
+                                MDirection::URANUS));
+      tmpCol.put (1, MDirection(Quantity(150.0,"deg"), Quantity(15.0, "deg"),
+                                MDirection::J2000));
+      tmpCol.put (2, MDirection(Quantity(170.0,"deg"), Quantity(12.0, "deg"),
+                                MDirection::B1950));
+      tmpCol.put (3, MDirection(Quantity(80.0,"deg"), Quantity(10.0, "deg"),
+                                MDirection::GALACTIC));
     }
     {
       //get the values now
-      Table tab("tVarRefDIR.tab");
+      Table tab("dVarRefMdirCol_tmp.tab");
       MDirection::ROScalarColumn tmpCol(tab, "PHASE_CENTER");
       for(uInt k =0 ; k < 4; ++k){
 	String Ref = tmpCol(k).getRefString();
 	MVAngle mvRA=tmpCol(k).getAngle().getValue()(0);
 	MVAngle mvDEC=tmpCol(k).getAngle().getValue()(1);
-	cout << "Row "<< k << " Ref " << Ref << ": " << mvRA(0.0).string(MVAngle::TIME,8) << ", " << mvDEC(0.0).string(MVAngle::ANGLE_CLEAN,8)  << endl;
+	cout << "Row "<< k << " Ref " << Ref << ": "
+             << mvRA(0.0).string(MVAngle::TIME,8) << ", "
+             << mvDEC(0.0).string(MVAngle::ANGLE_CLEAN,8)  << endl;
       }
     }
 
-  } catch (AipsError x) {
+  } catch (AipsError& x) {
     cout << "An error occurred.  The test ended early with the following";
     cout << " message:\n";
     cout << x.getMesg() << endl;

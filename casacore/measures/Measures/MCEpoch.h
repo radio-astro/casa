@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MCEpoch.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MCEpoch.h 21100 2011-06-28 12:49:00Z gervandiepen $
 
 #ifndef MEASURES_MCEPOCH_H
 #define MEASURES_MCEPOCH_H
@@ -36,6 +36,7 @@
 #include <measures/Measures/MCBase.h>
 #include <measures/Measures/MConvertBase.h>
 #include <measures/Measures/MEpoch.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -153,12 +154,16 @@ private:
   Nutation *NUTATTO;
 
   //# State machine data
-  // Has state matrix been made
-  static Bool stateMade_p;
   // Transition list
   static uInt ToRef_p[N_Routes][3];
   // Transition matrix
   static uInt FromTo_p[MEpoch::N_Types][MEpoch::N_Types];
+  // Mutex for thread-safety.
+  static MutexedInit theirMutexedInit;
+
+  // Fill the global state in a thread-safe way.
+  static void fillState()
+    { theirMutexedInit.exec(); }
   
   //# Constructors
   // Copy constructor (not implemented)
@@ -190,6 +195,9 @@ private:
 		 MRBase &outref,
 		 const MConvertBase &mc);
   
+private:
+  // Fill the global state in a thread-safe way.
+  static void doFillState (void*);  
 };
 
 

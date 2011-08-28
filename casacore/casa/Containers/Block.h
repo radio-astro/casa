@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Block.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Block.h 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #ifndef CASA_BLOCK_H
 #define CASA_BLOCK_H
@@ -36,6 +36,8 @@
 #if defined(AIPS_ARRAY_INDEX_CHECK)
 #include <casa/Exceptions/Error.h>
 #endif
+
+#include <stddef.h>   // for ptrdiff_t
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

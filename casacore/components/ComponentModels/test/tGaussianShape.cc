@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tGaussianShape.cc 20262 2008-02-25 23:32:52Z gervandiepen $
+//# $Id: tGaussianShape.cc 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #include <casa/aips.h>
 #include <components/ComponentModels/ComponentType.h>

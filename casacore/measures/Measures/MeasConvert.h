@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasConvert.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MeasConvert.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef MEASURES_MEASCONVERT_H
 #define MEASURES_MEASCONVERT_H
@@ -229,7 +229,7 @@ public:
   // Get method
   virtual uInt getMethod(uInt which) const;
   // Is the conversion engine empty?
-  Bool isNOP() { return crout.nelements() == 0; };
+  Bool isNOP() { return crout.nelements() == 0; }
   // Print conversion engine
   virtual void print(ostream &os) const;
   

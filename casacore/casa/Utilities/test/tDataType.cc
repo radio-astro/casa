@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tDataType.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+//# $Id: tDataType.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #include <casa/Utilities/DataType.h>
 #include <casa/BasicSL/String.h>
@@ -315,9 +315,8 @@ void simpleTests()
 void excpAsScalar(DataType type)
 {
     Bool hadExcp = False;
-    DataType dummy;
     try {
-	dummy = asScalar(type);
+	asScalar(type);
     } catch (AipsError x) {
 	hadExcp = True;
     } 
@@ -327,9 +326,8 @@ void excpAsScalar(DataType type)
 void excpAsArray(DataType type)
 {
     Bool hadExcp = False;
-    DataType dummy;
     try {
-	dummy = asArray(type);
+	asArray(type);
     } catch (AipsError x) {
 	hadExcp = True;
     } 

@@ -24,22 +24,26 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ComponentType.h 20299 2008-04-03 05:56:44Z gervandiepen $
+//# $Id: ComponentType.h 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #ifndef COMPONENTS_COMPONENTTYPE_H
 #define COMPONENTS_COMPONENTTYPE_H
 
 #include <casa/aips.h>
+
+//# Forward Declaration
 namespace casac {
       class componentlist;
-};
+}
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+//# Forward Declaration
 class String;
 class SkyCompRep;
 class ComponentShape;
 class SpectralModel;
-class componentlist;
+
 
 // <summary>Enumerators common to the ComponentsModels module</summary>
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tGenSort.cc 20377 2008-07-09 13:32:36Z gervandiepen $
+//# $Id: tGenSort.cc 20794 2009-11-05 03:47:24Z Malte.Marquarding $
 
 //# Includes
 
@@ -257,7 +257,6 @@ void sortall (Int* arr, uInt nr, int type, Sort::Order ord, Bool showFlag)
 /*
 Test remarks on MacBook OS-X Tiger g++-4.01. -O2:
 1. casa's quicksort and kthLargest are as fast as STL sort and nth_element.
-   However, casa's quicksort is stable and std::sort is not. It is 2-3
-   times faster than std::stable_sort.
 2. median could use min(2nd partition) to determine element (n+1)/2.
+
 */

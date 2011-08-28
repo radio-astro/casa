@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Array.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: Array.tcc 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/MaskedArray.h>
@@ -121,10 +121,13 @@ template<class T> void Array<T>::assign (const Array<T>& other)
 template<class T> void Array<T>::reference(const Array<T> &other)
 {
     DebugAssert(ok(), ArrayError);
-    baseCopy (other);
+    // First copy data, then meta data.
+    // This is better in case of multi-threading because it makes it possible
+    // to test the size and be sure that the data is there.
     data_p  = other.data_p;
     begin_p = other.begin_p;
     end_p   = other.end_p;
+    baseCopy (other);
 }
 
 template<class T> Array<T> Array<T>::copy() const
@@ -441,15 +444,7 @@ template<class T> Array<T> Array<T>::reform(const IPosition &len) const
 }
 
 template<class T>
-const Array<T> Array<T>::nonDegenerate (uInt startingAxis,
-					Bool throwIfError) const
-{
-    return (const_cast<Array<T>*>(this))->nonDegenerate (startingAxis,
-							 throwIfError);
-}
-
-template<class T>
-Array<T> Array<T>::nonDegenerate (uInt startingAxis, Bool throwIfError)
+Array<T> Array<T>::nonDegenerate (uInt startingAxis, Bool throwIfError) const
 {
     Array<T> tmp;
     DebugAssert(ok(), ArrayError);
@@ -458,7 +453,7 @@ Array<T> Array<T>::nonDegenerate (uInt startingAxis, Bool throwIfError)
 }
 
 template<class T>
-void Array<T>::nonDegenerate (Array<T> &other, uInt startingAxis,
+void Array<T>::nonDegenerate (const Array<T> &other, uInt startingAxis,
 			      Bool throwIfError)
 {
     if (startingAxis < other.ndim()) {
@@ -477,13 +472,7 @@ void Array<T>::nonDegenerate (Array<T> &other, uInt startingAxis,
 }
 
 template<class T>
-const Array<T> Array<T>::nonDegenerate (const IPosition &ignoreAxes) const
-{
-    return (const_cast<Array<T>*>(this))->nonDegenerate(ignoreAxes);
-}
-
-template<class T>
-Array<T> Array<T>::nonDegenerate (const IPosition &ignoreAxes)
+Array<T> Array<T>::nonDegenerate (const IPosition &ignoreAxes) const
 {
     Array<T> tmp;
     DebugAssert(ok(), ArrayError);
@@ -492,7 +481,26 @@ Array<T> Array<T>::nonDegenerate (const IPosition &ignoreAxes)
 }
 
 template<class T>
-void Array<T>::doNonDegenerate (Array<T> &other, const IPosition &ignoreAxes)
+void Array<T>::removeDegenerate (uInt startingAxis, Bool throwIfError)
+{
+    Array<T> tmp;
+    DebugAssert(ok(), ArrayError);
+    tmp.nonDegenerate (*this, startingAxis, throwIfError);
+    reference (tmp);
+}
+
+template<class T>
+void Array<T>::removeDegenerate (const IPosition &ignoreAxes)
+{
+    Array<T> tmp;
+    DebugAssert(ok(), ArrayError);
+    tmp.nonDegenerate(*this, ignoreAxes);
+    reference (tmp);
+}
+
+template<class T>
+void Array<T>::doNonDegenerate (const Array<T> &other,
+                                const IPosition &ignoreAxes)
 {
     DebugAssert(ok(), ArrayError);
     baseNonDegenerate (other, ignoreAxes);
@@ -622,6 +630,12 @@ template<class T> Array<T> Array<T>::operator()(const IPosition &b,
     DebugAssert (tmp.ok(), ArrayError);
     return tmp;
 }
+template<class T> const Array<T> Array<T>::operator()(const IPosition &b,
+                                                      const IPosition &e,
+                                                      const IPosition &i) const
+{
+    return const_cast<Array<T>*>(this)->operator() (b,e,i);
+}
 
 template<class T> Array<T> Array<T>::operator()(const IPosition &b,
 						const IPosition &e)
@@ -629,6 +643,11 @@ template<class T> Array<T> Array<T>::operator()(const IPosition &b,
     IPosition i(e.nelements());
     i = 1;
     return (*this)(b,e,i);
+}
+template<class T> const Array<T> Array<T>::operator()(const IPosition &b,
+                                                      const IPosition &e) const
+{
+    return const_cast<Array<T>*>(this)->operator() (b,e);
 }
 
 template<class T> Array<T> Array<T>::operator()(const Slicer& slicer)
@@ -639,6 +658,10 @@ template<class T> Array<T> Array<T>::operator()(const Slicer& slicer)
     IPosition blc, trc, inc;
     slicer.inferShapeFromSource (shape(), blc, trc, inc);
     return operator() (blc, trc, inc);
+}
+template<class T> const Array<T> Array<T>::operator()(const Slicer& slicer) const
+{
+    return const_cast<Array<T>*>(this)->operator() (slicer);
 }
 
 template<class T> ArrayBase* Array<T>::getSection(const Slicer& slicer)
@@ -664,7 +687,7 @@ template<class T> Array<T> Array<T>::operator[](uInt i) const
 
 
 template<class T>
-MaskedArray<T> Array<T>::operator() (const LogicalArray &mask) const
+const MaskedArray<T> Array<T>::operator() (const LogicalArray &mask) const
 {
     MaskedArray<T> ret (*this, mask, True);
     return ret;
@@ -678,7 +701,7 @@ MaskedArray<T> Array<T>::operator() (const LogicalArray &mask)
 }
 
 template<class T>
-MaskedArray<T> Array<T>::operator() (const MaskedLogicalArray &mask) const
+const MaskedArray<T> Array<T>::operator() (const MaskedLogicalArray &mask) const
 {
     MaskedArray<T> ret (*this, mask, True);
     return ret;

@@ -23,10 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SSMIndColumn.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SSMIndColumn.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 //# Includes
 #include <tables/Tables/SSMIndColumn.h>
+#include <tables/Tables/Table.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Slicer.h>
@@ -144,8 +145,10 @@ StIndArray* SSMIndColumn::getShape (uInt aRowNr)
 {
     StIndArray* aPtr = getArrayPtr (aRowNr);
     if (aPtr == 0) {
-	throw (DataManInvOper ("SSMIndColumn::getShape: no array in row "+
-			       String::toString(aRowNr)));
+      throw (DataManInvOper ("SSMIndColumn::getShape: no array in row "+
+                             String::toString(aRowNr) + " of column "
+                             + columnName()
+                             + " in table " + itsSSMPtr->table().tableName()));
     }
     aPtr->getShape (*itsIosFile);
     return aPtr;

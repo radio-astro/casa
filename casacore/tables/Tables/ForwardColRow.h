@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ForwardColRow.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ForwardColRow.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_FORWARDCOLROW_H
 #define TABLES_FORWARDCOLROW_H
@@ -325,6 +325,9 @@ public:
 
     // Record a record containing data manager specifications.
     virtual Record dataManagerSpec() const;
+
+    // Return the name of the class.
+    static String className();
 
     // Register the class name and the static makeObject "constructor".
     // This will make the engine known to the table system.

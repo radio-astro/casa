@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Quantum.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Quantum.h 20993 2010-11-08 13:36:32Z gervandiepen $
 
 #ifndef CASA_QUANTUM_H
 #define CASA_QUANTUM_H
@@ -405,7 +405,7 @@ template <class Qtype> class Quantum : public QBase{
   virtual QBase *clone() const;
   // Print a Quantum
   virtual void print(ostream &os) const;
-  // Get the type (== Register()) of derived Quantum (faster than Strings)
+  // Get the type (using QuantumType) of derived Quantum (faster than Strings)
   // <group>
   virtual uInt type() const;
   static uInt myType();

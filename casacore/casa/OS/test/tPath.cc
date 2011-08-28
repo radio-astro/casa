@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tPath.cc 20965 2010-09-27 06:42:34Z gervandiepen $
+//# $Id: tPath.cc 21030 2011-03-16 13:44:34Z gervandiepen $
 
 
 #include <casa/OS/Path.h>
@@ -129,6 +129,21 @@ void doIt (Bool doExcp, Bool& success)
     check (user, user, curr + "/" + user, success);
     check ("$tPath_Env_Test1/$HOME", home + "/" +  home,
 	   home + home, success);
+
+    // Check resolvedName.
+    String tpDir = Path("$tPath_Env_Curr/tPath_tmpdir").absoluteName();
+    AlwaysAssertExit (Path("$tPath_Env_Curr/tPath_tmpdir//d1/../d1/.//d2/").
+                      resolvedName() == tpDir + "/d1/d2");
+    if (doExcp) {
+      Bool ok = True;
+	try {
+            Path("/a/b").resolvedName();
+	} catch (AipsError x) {
+            cout << ">>> " << x.getMesg() << endl << "<<<" << endl;
+            ok = False;
+	}
+        AlwaysAssertExit (!ok);
+    }
 
     // Check copy ctor and assignment (also self-assignment).
     String str;

@@ -57,7 +57,7 @@ template <class T> class Vector;
 
 // This class like the other spectral models becomes more useful when used
 // through the <linkto class=SkyComponent>SkyComponent</linkto> class, which
-// incorporates the flux and spatial variation of the emission, or through the
+// incorperates the flux and spatial variation of the emission, or through the
 // <linkto class=ComponentList>ComponentList</linkto> class, which handles
 // groups of SkyComponent objects.
 
@@ -114,7 +114,10 @@ template <class T> class Vector;
 // <srcblock>
 //  SpectralIndex siModel;
 //  siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
-//  siModel.setIndex(1.0);
+//  siModel.setIndex(1.0, Stokes::I);  
+//  siModel.setIndex(0.5, Stokes::Q);  
+//  siModel.setIndex(0.5, Stokes::U);  
+//  siModel.setIndex(-1.0, Stokes::V);
 //  const Flux<Double> LBandFlux(1.0, 1.0, 1.0, 1.0);
 //  const MVFrequency step(Quantity(100.0, "MHz"));
 //  MVFrequency sampleFreq = siModel.refFrequency().getValue();

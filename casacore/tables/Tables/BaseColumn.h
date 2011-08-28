@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseColumn.h 20997 2010-11-17 07:05:29Z gervandiepen $
+//# $Id: BaseColumn.h 21091 2011-06-01 12:08:15Z gervandiepen $
 
 #ifndef TABLES_BASECOLUMN_H
 #define TABLES_BASECOLUMN_H
@@ -325,6 +325,15 @@ public:
     virtual void freeIterBuf (void*& lastVal, void*& curVal);
 
 protected:
+    // Throw exceptions for invalid scalar get or put.
+    // <group>
+    void throwGetScalar() const;
+    void throwPutScalar() const;
+    void throwGetType (const String& type) const;
+    void throwPutType (const String& type) const;
+    // </group>
+
+    //# Data members
     const BaseColumnDesc*  colDescPtr_p;
     //# This ColumnDesc object is created to be able to return 
     //# a const ColumnDesc& by function columnDesc().

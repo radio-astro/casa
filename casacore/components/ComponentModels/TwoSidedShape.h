@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: TwoSidedShape.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TwoSidedShape.h 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #ifndef COMPONENTS_TWOSIDEDSHAPE_H
 #define COMPONENTS_TWOSIDEDSHAPE_H
@@ -314,15 +314,14 @@ public:
   virtual Bool fromPixel (const Vector<Double>& parameters,
                           const DirectionCoordinate& dirCoord);
 
+  // Get the string containing the various size quantities of a component.
+  virtual String sizeToString() const = 0;
+
+  // Format the string containing the various size quantities of a component.
   static String sizeToString(
     	Quantity major, Quantity minor, Quantity posangle,
     	Bool includeUncertainties = True, Quantity majorErr = 0,
-    	Quantity minorErr = 0, Quantity posanErr = 0
-  );
-
-  // Shush a compiler warning about ComponentShape::sizeToString() being
-  // hidden.
-  virtual String sizeToString() const = 0;
+    	Quantity minorErr = 0, Quantity posanErr = 0);
 
 protected:
   // The constructors and assignment operator are protected as only derived

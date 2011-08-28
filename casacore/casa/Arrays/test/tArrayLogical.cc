@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayLogical.cc 20648 2009-06-29 07:22:00Z gervandiepen $
+//# $Id: tArrayLogical.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 //# If AIPS_DEBUG is not set, the Assert's won't be called.
 #if !defined(AIPS_DEBUG)

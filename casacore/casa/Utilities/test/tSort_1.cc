@@ -23,10 +23,11 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSort_1.cc 20627 2009-06-12 00:45:54Z gervandiepen $
+//# $Id: tSort_1.cc 21089 2011-05-19 03:51:34Z gervandiepen $
 
 //# Includes
 #include <casa/Utilities/Sort.h>
+#include <casa/Utilities/GenSort.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/OS/Timer.h>
 #include <casa/sstream.h>
@@ -36,6 +37,7 @@
 //# Forward Declarations
 Bool sortarr (Int*, uInt nr, int);
 Bool sortall (Int*, uInt nr, uInt type);
+Bool sort2 (uInt nr);
 
 // Define file global variable for cmp-routine.
 static Int* gbla;
@@ -108,6 +110,8 @@ int main(int argc, const char* argv[])
     delete [] a5;
     delete [] a6;
     delete [] a7;
+
+    sort2 (nr);
 
     if (success) {
 	return 0;
@@ -227,7 +231,7 @@ Bool sortall (Int* arr, uInt nr, uInt type)
     return success;
 }
 
-Bool sortarr (Int* arr, uInt nr, int opt)
+Bool sortarr1 (Int* arr, uInt nr, int opt)
 {
     Bool success = True;
     Sort sort;
@@ -249,4 +253,76 @@ Bool sortarr (Int* arr, uInt nr, int opt)
 	}
     }
     return success;
+}
+
+Bool sortarr2 (Int* arr, uInt nr, int opt)
+{
+    Bool success = True;
+    Sort sort;
+    sort.sortKey (arr, CountedPtr<BaseCompare>(new ObjCompare<Int>), 4);
+    Vector<uInt> ptr;
+    Timer tim;
+    sort.sort (ptr,nr,opt);
+    tim.show("  with obj");
+    for (uInt i=1; i<nr; i++) {
+	if (arr[ptr(i)] < arr[ptr(i-1)]) {
+	    cout << "Out of order " <<arr[ptr(i)] << "," <<arr[ptr(i-1)]<<endl;
+	    success = False;
+	    break;
+	}
+	if (arr[ptr(i)] == arr[ptr(i-1)]  &&  ptr(i) <= ptr(i-1)) {
+	    cout << "not stable " << ptr(i) << "<=" << ptr(i-1) << endl;
+	    success = False;
+	    break;
+	}
+    }
+    return success;
+}
+
+Bool sortarr (Int* arr, uInt nr, int opt)
+{
+  //    return sortarr1(arr,nr,opt) && sortarr2(arr,nr,opt);
+    return sortarr2(arr,nr,opt);
+}
+
+// Sort two arrays using Sort or in a Combined way.
+// It resembles sorting on baselines.
+Bool sort2 (uInt nr)
+{
+  uInt nrbl = 45*46/2;
+  uInt nrt = (nr+nrbl-1)/nrbl;
+  Vector<Int> vec1(nrt*nrbl);
+  Vector<Int> vec2(nrt*nrbl);
+  uInt inx = 0;
+  for (uInt i=0; i<nrt; ++i) {
+    for (Int a1=0; a1<45; ++a1) {
+      for (Int a2=0; a2<=a1; ++a2) {
+        vec1[inx] = a1;
+        vec2[inx] = a2;
+        ++inx;
+      }
+    }
+  }
+  {
+    Timer timer;
+    Sort sort;
+    sort.sortKey (vec1.data(), TpInt);
+    sort.sortKey (vec2.data(), TpInt);
+    Vector<uInt> inx;
+    sort.sort (inx, vec1.size());
+    cout << "sort2     ";
+    timer.show();
+  }
+  {
+    Timer timer;
+    Int nrant = 1 + max(max(vec1), max(vec2));
+    Vector<Int> bl(vec1*nrant);
+    bl += vec2;
+    timer.show();
+    Vector<uInt> inx;
+    GenSortIndirect<Int>::sort (inx, bl);
+    cout << "sort2c    ";
+    timer.show();
+  }
+  return True;
 }

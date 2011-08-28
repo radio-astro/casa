@@ -30,6 +30,7 @@
 #define VLAT_H_
 
 #include "AsynchronousTools.h"
+using casa::async::Mutex;
 #include "UtilJ.h"
 using casa::utilj::ThreadTimes;
 using casa::utilj::DeltaThreadTimes;
@@ -307,7 +308,7 @@ private:
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
 	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
 	mutable Condition vlaDataChanged_p;
-	mutable Mutex vlaDataMutex_p;
+	mutable async::Mutex vlaDataMutex_p;
 
     Int clock (Int arg, Int base);
     String makeReport ();

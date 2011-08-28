@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNode.cc 20967 2010-09-27 11:06:03Z gervandiepen $
+//# $Id: ExprFuncNode.cc 21037 2011-04-04 07:06:59Z gervandiepen $
 
 #include <tables/Tables/ExprFuncNode.h>
 #include <tables/Tables/TableError.h>
@@ -256,8 +256,12 @@ Double TableExprFuncNode::fillUnits (TableExprNodeRep* node,
     case anycone3FUNC:
     case findconeFUNC:
     case findcone3FUNC:
+    case angdistFUNC:
       for (uInt i=0; i<nodes.nelements(); ++i) {
 	TableExprNodeUnit::adaptUnit (nodes[i], "rad");
+      }
+      if (func == angdistFUNC) {
+        node->setUnit ("rad");
       }
       break;
     default:
@@ -311,11 +315,17 @@ void TableExprFuncNode::fillChildNodes (TableExprFuncNode* thisNode,
     }
     // Convert String to Date if needed
     for (i=0; i<nodes.nelements(); i++) {
-	if (nodes[i]->dataType() == NTString  &&  dtypeOper[i] == NTDate) {
-	    TableExprNode dNode = datetime (thisNode->operands_p[i]);
-	    unlink (thisNode->operands_p[i]);
-	    thisNode->operands_p[i] = getRep (dNode)->link();
-	}
+	if (dtypeOper[i] == NTDate) {
+            if (nodes[i]->dataType() == NTString) {
+                TableExprNode dNode = datetime (thisNode->operands_p[i]);
+                unlink (thisNode->operands_p[i]);
+                thisNode->operands_p[i] = getRep (dNode)->link();
+            } else if (nodes[i]->dataType() == NTDouble) {
+                TableExprNode dNode = mjdtodate (thisNode->operands_p[i]);
+                unlink (thisNode->operands_p[i]);
+                thisNode->operands_p[i] = getRep (dNode)->link();
+            }
+        }
     }
 }
 
@@ -400,7 +410,8 @@ Bool TableExprFuncNode::getBool (const TableExprId& id)
 	       operands_p[1]->getBool(id) : operands_p[2]->getBool(id);
     default:
 	throw (TableInvExpr ("TableExprFuncNode::getBool, "
-			     "unknown function"));
+			     "unknown function " +
+                             String::toString(funcType_p)));
     }
     return True;
 }
@@ -527,7 +538,8 @@ Int64 TableExprFuncNode::getInt (const TableExprId& id)
 	       operands_p[1]->getInt(id) : operands_p[2]->getInt(id);
     default:
 	throw (TableInvExpr ("TableExprFuncNode::getInt, "
-			     "unknown function"));
+			     "unknown function " +
+                             String::toString(funcType_p)));
     }
     return 0;
 }
@@ -646,10 +658,6 @@ Double TableExprFuncNode::getDouble (const TableExprId& id)
     case fmodFUNC:
 	return fmod     (operands_p[0]->getDouble(id),
 			 operands_p[1]->getDouble(id));
-        ///    case datetimeFUNC:
-        ///    case mjdtodateFUNC:
-        ///    case dateFUNC:
-        ///        return Double (getDate(id));
     case mjdFUNC:
 	return operands_p[0]->getDate(id).day();
     case timeFUNC:                                       //# return in radians
@@ -735,6 +743,19 @@ Double TableExprFuncNode::getDouble (const TableExprId& id)
     case iifFUNC:
         return operands_p[0]->getBool(id)  ?
 	       operands_p[1]->getDouble(id) : operands_p[2]->getDouble(id);
+    case angdistFUNC:
+      {
+        Array<double> a1 = operands_p[0]->getArrayDouble(id);
+        Array<double> a2 = operands_p[1]->getArrayDouble(id);
+        if (!(a1.size() == 2  &&  a1.contiguousStorage()  &&
+              a2.size() == 2  &&  a2.contiguousStorage())) {
+          throw TableInvExpr ("Arguments of angdist function must have a "
+                              "multiple of 2 values");
+        }
+        const double* d1 = a1.data();
+        const double* d2 = a2.data();
+        return angdist (d1[0], d1[1], d2[0], d2[1]);
+      }
     default:
         // Functions like MJD are implemented as Int only.
         return getInt(id);
@@ -831,7 +852,8 @@ DComplex TableExprFuncNode::getDComplex (const TableExprId& id)
 	       operands_p[1]->getDComplex(id) : operands_p[2]->getDComplex(id);
     default:
 	throw (TableInvExpr ("TableExprFuncNode::getDComplex, "
-			     "unknown function"));
+			     "unknown function " +
+                             String::toString(funcType_p)));
     }
     return DComplex(0., 0.);
 }
@@ -887,7 +909,8 @@ String TableExprFuncNode::getString (const TableExprId& id)
 	       operands_p[1]->getString(id) : operands_p[2]->getString(id);
     default:
 	throw (TableInvExpr ("TableExprFuncNode::getString, "
-			     "unknown function"));
+			     "unknown function " +
+                             String::toString(funcType_p)));
     }
     return "";
 }
@@ -908,7 +931,8 @@ TaqlRegex TableExprFuncNode::getRegex (const TableExprId& id)
       break;
     }
     throw (TableInvExpr ("TableExprFuncNode::getRegex, "
-                         "unknown function"));
+                         "unknown function " +
+                         String::toString(funcType_p)));
 }
 
 MVTime TableExprFuncNode::getDate (const TableExprId& id)
@@ -932,7 +956,8 @@ MVTime TableExprFuncNode::getDate (const TableExprId& id)
 	       operands_p[1]->getDate(id) : operands_p[2]->getDate(id);
     default:
 	throw (TableInvExpr ("TableExprFuncNode::getDate, "
-			     "unknown function"));
+			     "unknown function " +
+                             String::toString(funcType_p)));
     }
     return MVTime();
 }
@@ -1017,6 +1042,18 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
     case isdefFUNC:
 	checkNumOfArg (1, 1, nodes);
 	return checkDT (dtypeOper, NTAny, NTBool, nodes);
+    case angdistFUNC:
+        checkNumOfArg (2, 2, nodes);
+        if (nodes[0]->valueType() != VTArray  ||
+            nodes[1]->valueType() != VTArray) {
+          throw TableInvExpr ("Arguments of angdist function "
+                              "have to be arrays");
+        }
+        if (nodes[0]->shape().product() != 2  ||
+            nodes[1]->shape().product() != 2) {
+          resVT = VTArray;    // result is scalar if both arg have 2 values
+        }
+        return checkDT (dtypeOper, NTReal, NTDouble, nodes);
     default:
 	break;
     }
@@ -1131,7 +1168,7 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
         break;
     }
     // The following functions accept scalars and arrays.
-    // They return a array if one of the input arguments is an array.
+    // They return an array if one of the input arguments is an array.
     // If a function has no arguments, it results in a scalar.
     for (i=0; i< nodes.nelements(); i++) {
         ValueType vt = nodes[i]->valueType();

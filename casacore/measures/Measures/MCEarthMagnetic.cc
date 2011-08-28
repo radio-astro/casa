@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCEarthMagnetic.cc 19852 2007-02-13 01:54:23Z Malte.Marquarding $
+//# $Id: MCEarthMagnetic.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <casa/Exceptions.h>
@@ -38,7 +38,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Statics
-Bool MCEarthMagnetic::stateMade_p = False;
 uInt MCEarthMagnetic::ToRef_p[N_Routes][3] = {
   {MEarthMagnetic::GALACTIC,	 	MEarthMagnetic::J2000,		0},
   {MEarthMagnetic::GALACTIC,		MEarthMagnetic::B1950,		2},
@@ -86,17 +85,12 @@ uInt MCEarthMagnetic::ToRef_p[N_Routes][3] = {
   {MEarthMagnetic::J2000,		MEarthMagnetic::ICRS,		0} };
 uInt MCEarthMagnetic::
 FromTo_p[MEarthMagnetic::N_Types][MEarthMagnetic::N_Types];
+MutexedInit MCEarthMagnetic::theirMutexedInit (MCEarthMagnetic::doFillState);
 
 //# Constructors
 MCEarthMagnetic::MCEarthMagnetic() :
   MVPOS1(0), EFIELD(0), measMath() {
-  if (!stateMade_p) {
-    MEarthMagnetic::checkMyTypes();
-    MCBase::makeState(MCEarthMagnetic::stateMade_p,
-		      MCEarthMagnetic::FromTo_p[0],
-		      MEarthMagnetic::N_Types, MCEarthMagnetic::N_Routes,
-		      MCEarthMagnetic::ToRef_p);
-  };
+    fillState();
 }
 
 //# Destructor
@@ -124,7 +118,7 @@ void MCEarthMagnetic::getConvert(MConvertBase &mc,
       mc.addMethod(MCEarthMagnetic::R_MODEL);
       initConvert(MCEarthMagnetic::R_MODEL, mc);
       iin = MEarthMagnetic::ITRF;
-    };
+    }
     if (oplan) iout = MEarthMagnetic::ITRF;
     Int tmp;
     while (iin != iout) {
@@ -132,8 +126,8 @@ void MCEarthMagnetic::getConvert(MConvertBase &mc,
       iin = ToRef_p[tmp][1];
       mc.addMethod(tmp);
       initConvert(tmp, mc);
-    };
-  };
+    }
+  }
 }
 
 void MCEarthMagnetic::clearConvert() {
@@ -477,7 +471,7 @@ void MCEarthMagnetic::doConvert(MVEarthMagnetic &in,
 	MEarthMagnetic::Ref::frameEpoch(inref, outref).
 	  getTDB(tdbTime);
 	EFIELD = new EarthField(modID, tdbTime);
-      };
+      }
       MEarthMagnetic::Ref::framePosition(outref, inref).
 	getITRF(*MVPOS1);
       in = EFIELD->operator()(*MVPOS1);
@@ -490,22 +484,20 @@ void MCEarthMagnetic::doConvert(MVEarthMagnetic &in,
     default:
       break;
       
-    };	// switch
-  };	// for
+    }	// switch
+  }	// for
 }
 
 String MCEarthMagnetic::showState() {
-  if (!stateMade_p) {
-    MEarthMagnetic::checkMyTypes();
-    MCBase::makeState(MCEarthMagnetic::stateMade_p,
-		      MCEarthMagnetic::FromTo_p[0],
-		      MEarthMagnetic::N_Types, MCEarthMagnetic::N_Routes,
-		      MCEarthMagnetic::ToRef_p);
-  };
-  return MCBase::showState(MCEarthMagnetic::stateMade_p,
-			   MCEarthMagnetic::FromTo_p[0],
+  fillState();
+  return MCBase::showState(MCEarthMagnetic::FromTo_p[0],
 			   MEarthMagnetic::N_Types, MCEarthMagnetic::N_Routes,
 			   MCEarthMagnetic::ToRef_p);
+}
+
+void MCEarthMagnetic::doFillState (void*) {
+  MEarthMagnetic::checkMyTypes();
+  MCBase::makeState(FromTo_p[0], MEarthMagnetic::N_Types, N_Routes, ToRef_p);
 }
 
 } //# NAMESPACE CASA - END

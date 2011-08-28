@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFBase.h 20983 2010-10-01 10:02:48Z gervandiepen $
+//# $Id: UDFBase.h 21101 2011-07-06 07:57:05Z gervandiepen $
 
 #ifndef TABLES_UDFBASE_H
 #define TABLES_UDFBASE_H
@@ -33,6 +33,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TaQLStyle.h>
 #include <casa/Containers/Block.h>
+#include <casa/OS/Mutex.h>
 #include <casa/stdmap.h>
 
 
@@ -97,6 +98,13 @@ namespace casa {
   //        </ul>
   //        See class TableExprFuncNode for more info about these functions.
   //   </ul>
+  //  </td>
+  // </tr>
+  // <tr>
+  //  <td><src>replaceTable</src></td>
+  //  <td>The possible Table to use is set by the setup function. However,
+  //      the table to use might change which is done by thos function.
+  //      It needs to be implemented, even if no Table object is kept.
   //  </td>
   // </tr>
   // <tr>
@@ -188,6 +196,9 @@ namespace casa {
     const String& getUnit() const
       { return itsUnit; }
 
+    // Replace the Table in this node.
+    virtual void replaceTable (const Table&) = 0;
+
   private:
     // Set up the function object.
     virtual void setup (const Table& table,
@@ -218,7 +229,7 @@ namespace casa {
     void setUnit (const String& unit);
 
   public:
-    // Register a the name and construction function of a UDF.
+    // Register a the name and construction function of a UDF (thread-safe).
     // An exception is thrown if this name already exists with a different
     // construction function.
     static void registerUDF (const String& name, MakeUDFObject* func);
@@ -240,7 +251,7 @@ namespace casa {
     const IPosition& shape() const
       { return itsShape; }
 
-    // Create a UDF object.
+    // Create a UDF object (thread-safe).
     static UDFBase* createUDF (const String& name);
 
   private:
@@ -250,7 +261,8 @@ namespace casa {
     Int                            itsNDim;
     IPosition                      itsShape;
     String                         itsUnit;
-    static map<String, MakeUDFObject*> itsRegistry;
+    static map<String, MakeUDFObject*> theirRegistry;
+    static Mutex                       theirMutex;
   };
 
 } // end namespace

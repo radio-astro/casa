@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MCBase.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MCBase.h 21100 2011-06-28 12:49:00Z gervandiepen $
 
 #ifndef MEASURES_MCBASE_H
 #define MEASURES_MCBASE_H
@@ -103,7 +103,8 @@ class String;
 //	static uInt state[ntyp][ntyp];	// the resultant transition matrix
 //					// diagonal == nrout
 //	// Make the state machine
-//	MCBase::makeState(made, state[0], ntyp, nrout, routes);
+//	MCBase::makeState(state[0], ntyp, nrout, routes);
+//      made = True;
 // </srcblock>
 // </example>
 //
@@ -158,7 +159,6 @@ protected:
   // The following routines create a state transition matrix from a list
   // of all defined transitions. It uses the following information:
   // <ul>
-  //  <li> made : has the matrix been made?
   //  <li> nrout: the number of transitions; numbered 0, ...
   //  <li> ntyp: the number of states
   //  <li> list: a [nrout][3] list of input and output transition type of
@@ -168,11 +168,11 @@ protected:
   // </ul>
   // <group>
   // Routine to make the transition table if necessary
-  static void makeState(Bool &made, uInt *state,
+  static void makeState(uInt *state,
 			const uInt ntyp, const uInt nrout,
 			const uInt list[][3]);
   // Return a fromatted String with matrix information (based on < 100 types)
-  static String showState(Bool &made, uInt *state,
+  static String showState(uInt *state,
 			  const uInt ntyp, const uInt nrout,
 			  const uInt list[][3]);
 private:

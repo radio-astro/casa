@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ObjectPool.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ObjectPool.h 21067 2011-05-06 13:58:12Z gervandiepen $
 
 #ifndef CASA_OBJECTPOOL_H
 #define CASA_OBJECTPOOL_H
@@ -32,6 +32,7 @@
 #include <casa/aips.h>
 #include <casa/Containers/PoolStack.h>
 #include <casa/Containers/SimOrdMap.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -141,6 +142,7 @@ private:
   PoolStack<T, Key> *defStack_p;
   Key cacheKey_p;
   PoolStack<T, Key> *cacheStack_p;
+  Mutex mutex_p;
   // </group>
 
   // The pool map
@@ -154,6 +156,8 @@ private:
   // </group>
 
   //# Member functions
+  // Do the actual clearing of the stack (without a lock).
+  void doClearStack(const Key key);
 };
 
 

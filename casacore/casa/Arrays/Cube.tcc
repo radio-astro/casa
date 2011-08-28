@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Cube.tcc 20887 2010-05-07 11:50:41Z Malte.Marquarding $
+//# $Id: Cube.tcc 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #include <casa/Arrays/Cube.h>
 #include <casa/Arrays/Matrix.h>
@@ -148,7 +148,7 @@ template<class T> Cube<T> &Cube<T>::operator=(const Cube<T> &other)
     if (this == &other)
         return *this;
 
-    Bool Conform = this->conform(other);
+    Bool Conform = conform(other);
     Array<T>::operator=(other);
     if (!Conform) {
 	makeIndexingConstants();
@@ -161,7 +161,7 @@ template<class T> Array<T> &Cube<T>::operator=(const Array<T> &a)
 {
     DebugAssert(ok(), ArrayError);
     if (a.ndim() == 3) {
-	Bool Conform = this->conform(a);
+	Bool Conform = conform(a);
 	Array<T>::operator=(a);
 	if (!Conform) {
 	    makeIndexingConstants();
@@ -235,6 +235,12 @@ template<class T> Cube<T> Cube<T>::operator()(const Slice &sliceX,
     return this->operator()(blc,trc,incr);
 }
 
+template<class T> const Cube<T> Cube<T>::operator()
+  (const Slice &sliceX, const Slice &sliceY, const Slice &sliceZ) const
+{
+    return const_cast<Cube<T>*>(this)->operator() (sliceX, sliceY, sliceZ);
+}
+
 template<class T> void Cube<T>::makeIndexingConstants()
 {
     // No lAssert since the Cube often isn't constructed yet when
@@ -246,7 +252,8 @@ template<class T> void Cube<T>::makeIndexingConstants()
 
 
 template<class T>
-void Cube<T>::doNonDegenerate (Array<T> &other, const IPosition &ignoreAxes)
+void Cube<T>::doNonDegenerate (const Array<T> &other,
+                               const IPosition &ignoreAxes)
 {
     Array<T> tmp(*this);
     tmp.nonDegenerate (other, ignoreAxes);

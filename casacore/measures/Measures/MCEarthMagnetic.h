@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MCEarthMagnetic.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MCEarthMagnetic.h 21100 2011-06-28 12:49:00Z gervandiepen $
 
 #ifndef MEASURES_MCEARTHMAGNETIC_H
 #define MEASURES_MCEARTHMAGNETIC_H
@@ -37,6 +37,7 @@
 #include <measures/Measures/MCBase.h>
 #include <measures/Measures/MConvertBase.h>
 #include <measures/Measures/MeasMath.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -175,12 +176,16 @@ private:
   MeasMath measMath;
 
   //# State machine data
-  // Has state matrix been made
-  static Bool stateMade_p;
   // Transition list
   static uInt ToRef_p[N_Routes][3];
   // Transition matrix
   static uInt FromTo_p[MEarthMagnetic::N_Types][MEarthMagnetic::N_Types];
+  // Mutex for thread-safety.
+  static MutexedInit theirMutexedInit;
+
+  // Fill the global state in a thread-safe way.
+  static void fillState()
+    { theirMutexedInit.exec(); }
 
   //# Constructors
   // Copy constructor (not implemented)
@@ -212,6 +217,9 @@ private:
 		 MRBase &outref,
 		 const MConvertBase &mc);
   
+private:
+  // Fill the global state in a thread-safe way.
+  static void doFillState (void*);  
 };
 
 

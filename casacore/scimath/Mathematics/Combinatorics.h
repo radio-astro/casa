@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: Combinatorics.h 21116 2011-07-21 11:23:15Z gervandiepen $
 
 #ifndef SCIMATH_COMBINATORICS_H
 #define SCIMATH_COMBINATORICS_H
@@ -34,6 +34,7 @@
 #include <casa/aips.h>
 #include <casa/namespace.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -43,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <use visibility=export>
 
-// <author>Dave Mehringer</author>
+//# <author>Dave Mehringer</author>
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
 
@@ -68,16 +69,24 @@ class Combinatorics {
   
   public:
  
-  // n!
-  static uInt factorial(const uInt n);
+  // Get n!
+  static uInt factorial(const uInt n)
+  {
+    //# This test is thread-safe.
+    if (n >= _factorialCacheSize) fillCache(n);
+    return _factorialCache[n];
+  }
   
   // "n choose k" = n!/(k!(n-k)!)
   // Exception is thrown if k > n.
   static uInt choose(const uInt n, const uInt k);
 
   private:
+  static void fillCache(const uInt n);
 
   static Vector<uInt> _factorialCache;
+  static volatile uInt _factorialCacheSize; //# volatile for double checked lock
+  static Mutex theirMutex;
 };
 } //# NAMESPACE CASA - END
 

@@ -13,6 +13,11 @@ SELECT ab AS ab1,ac AS ac1,ad,ae,af,ag FROM tTaQLNode_tmp.data2 ORDERBY af
 select ab from tTaQLNode_tmp.tab where ab==2**1**2 || ab==-2**-1*0x0A1f/-2*3
 SELECT ab FROM tTaQLNode_tmp.tab WHERE ((ab)=((2)**((1)**(2))))||((ab)=((((-((2)**(-(1))))*(2591))/(-(2)))*(3)))
 
+>>>
+select ab from tTaQLNode_tmp.tab where ab==2^1^2 || ab==-2^-1*8/-2*3
+SELECT ab FROM tTaQLNode_tmp.tab WHERE ((ab)=(((2)^(1))^(2)))||((ab)=((-(2))^((((-(1))*(8))/(-(2)))*(3))))
+
+<<<
 select ab,ac,af from tTaQLNode_tmp.tab where lower(af) == regex("v[01279]")
 SELECT ab,ac,af FROM tTaQLNode_tmp.tab WHERE (lower(af))=(regex('v[01279]'))
 
@@ -33,6 +38,18 @@ SELECT ab,ac,af FROM tTaQLNode_tmp.tab WHERE (af)=(SQLPATTERN('_3%'))
 
 select ab,ac,af from tTaQLNode_tmp.tab where af not like "_3%"
 SELECT ab,ac,af FROM tTaQLNode_tmp.tab WHERE (af)<>(SQLPATTERN('_3%'))
+
+select from tTaQLNode_tmp.tab where af ~ d/abc/
+SELECT FROM tTaQLNode_tmp.tab WHERE (af)~d/abc/
+
+select from tTaQLNode_tmp.tab where af ~ d#abc#ib3
+SELECT FROM tTaQLNode_tmp.tab WHERE (af)~d#abc#ib3
+
+select from tTaQLNode_tmp.tab where af ~ d/abc/03bi
+SELECT FROM tTaQLNode_tmp.tab WHERE (af)~d/abc/ib3
+
+select from tTaQLNode_tmp.tab where af ~ d%abc%04
+SELECT FROM tTaQLNode_tmp.tab WHERE (af)~d%abc%4
 
 select ab,ac from tTaQLNode_tmp.tab where ab%1.5==0
 SELECT ab,ac FROM tTaQLNode_tmp.tab WHERE ((ab)%(1.5))=(0)
@@ -178,11 +195,17 @@ SELECT ab FROM tTaQLNode_tmp.tab WHERE anyCone([ab,ab],[(2)'rad',(2)'rad',(1)'ra
 select *, !~p/ab*/i, *, !~m%b%, !~ m%c%i, abc, ~p/AB*/ from tTaQLNode_tmp.tab
 SELECT ~p/*/,!~p/ab*/i,~p/*/,!~m%b%,!~m%c%i,abc,~p/AB*/ FROM tTaQLNode_tmp.tab
 
+count TIME from tTaQLNode_tmp.tab
+COUNT  TIME FROM tTaQLNode_tmp.tab
+
+count ANTENNA+1,ANTENNA2+3 from tTaQLNode_tmp.tab where ab
+COUNT  (ANTENNA)+(1),(ANTENNA2)+(3) FROM tTaQLNode_tmp.tab WHERE ab
+
 calc from tTaQLNode_tmp.tab calc findcone([ab,ab],array([2rad,2rad,4rad,4rad],[2,2]),[1rad,2rad])
-CALC FROM tTaQLNode_tmp.tab CALC findcone([ab,ab],array([(2)'rad',(2)'rad',(4)'rad',(4)'rad'],[2,2]),[(1)'rad',(2)'rad'])
+CALC findcone([ab,ab],array([(2)'rad',(2)'rad',(4)'rad',(4)'rad'],[2,2]),[(1)'rad',(2)'rad']) FROM tTaQLNode_tmp.tab
 
 calc from tTaQLNode_tmp.tab  calc findcone([ab,ab],[select from tTaQLNode_tmp.tab giving [ab,ab]],[1rad,2rad])
-CALC FROM tTaQLNode_tmp.tab CALC findcone([ab,ab],[SELECT FROM tTaQLNode_tmp.tab GIVING [ab,ab]],[(1)'rad',(2)'rad'])
+CALC findcone([ab,ab],[SELECT FROM tTaQLNode_tmp.tab GIVING [ab,ab]],[(1)'rad',(2)'rad']) FROM tTaQLNode_tmp.tab
 
 
 calc sum([select from tTaQLNode_tmp.tab giving [ab+1]])
@@ -192,19 +215,19 @@ calc sum([select from tTaQLNode_tmp.tab giving [ab,ac,ab:ac]])
 CALC sum([SELECT FROM tTaQLNode_tmp.tab GIVING [ab,ac,ab:ac]])
 
 calc from $1 calc sum([select ab from $1])
-CALC FROM $1 CALC sum([SELECT ab FROM $1])
+CALC sum([SELECT ab FROM $1]) FROM $1
 
 calc from tTaQLNode_tmp.tab calc ab
-CALC FROM tTaQLNode_tmp.tab CALC ab
+CALC ab FROM tTaQLNode_tmp.tab
 
 calc from tTaQLNode_tmp.tab calc arr1[2,1,1]
-CALC FROM tTaQLNode_tmp.tab CALC (arr1)[2,1,1]
+CALC (arr1)[2,1,1] FROM tTaQLNode_tmp.tab
 
 calc from tTaQLNode_tmp.tab calc arr1[1+ab%2,1,1]
-CALC FROM tTaQLNode_tmp.tab CALC (arr1)[(1)+((ab)%(2)),1,1]
+CALC (arr1)[(1)+((ab)%(2)),1,1] FROM tTaQLNode_tmp.tab
 
 calc from $1 calc ab+1
-CALC FROM $1 CALC (ab)+(1)
+CALC (ab)+(1) FROM $1
 
 
 update tTaQLNode_tmp.tab set ab=sum(arr1)+ac*2, arr1=arr1+2 where ac>3
@@ -257,6 +280,12 @@ INSERT INTO tTaQLNode_tmp.tab [ab,ac] VALUES [(1)+(2),((3)*(ab))+(sum([SELECT ab
 
 select ab,ac from tTaQLNode_tmp.tab
 SELECT ab,ac FROM tTaQLNode_tmp.tab
+
+count ab,ac+1 from tTaQLnode_tmp.tab
+COUNT  ab,(ac)+(1) FROM tTaQLnode_tmp.tab
+
+count min(ab),ac+1 from tTaQLnode_tmp.tab where ac>1
+COUNT  min(ab),(ac)+(1) FROM tTaQLnode_tmp.tab WHERE (ac)>(1)
 
 create table tTaQLNode_tmp.tab col1 i4, col2 r4 ndim=1, c3 r8 [ndim=2, shape=[3,4]] dminfo [name="ISM1",type="IncrementalStMan"], [name="SSM1",type="StandardStMan", bucketsize=1000]
 CREATE TABLE tTaQLNode_tmp.tab col1 I4,col2 R4 ndim=1,c3 R8 [ndim=2,shape=[3,4]] DMINFO [name='ISM1',type='IncrementalStMan'],[name='SSM1',type='StandardStMan',bucketsize=1000]

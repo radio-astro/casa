@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ScaColDesc.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ScaColDesc.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_SCACOLDESC_H
 #define TABLES_SCACOLDESC_H
@@ -228,24 +228,20 @@ public:
     // Show the column.
     void show (ostream& os) const;
 
-private:
-    T  defaultVal_p;                        //# default value
+    // Register the construction function of this class.
+    void registerClass() const;
 
     // Create the object from AipsIO (this function is registered).
     static BaseColumnDesc* makeDesc (const String& name);
+
+private:
+    T  defaultVal_p;                        //# default value
 
     // Put the object.
     virtual void putDesc (AipsIO&) const;
 
     // Get the object.
     virtual void getDesc (AipsIO&);
-
-public:
-    // The purpose of this constructor is to register the makeDesc
-    // function of this class and map it to a name.
-    // ColumnDesc.cc registers such functions by using these constructors.
-    ScalarColumnDesc
-      (SimpleOrderedMap<String, BaseColumnDesc* (*)(const String&)>&);
 };
 
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: FitsIDItoMS.cc 21069 2011-05-06 13:59:44Z gervandiepen $
 
 #include <msfits/MSFits/FitsIDItoMS.h> 
 #include <casa/Arrays/ArrayIO.h> 

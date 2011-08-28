@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ComponentShape.h 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ComponentShape.h 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #ifndef COMPONENTS_COMPONENTSHAPE_H
 #define COMPONENTS_COMPONENTSHAPE_H

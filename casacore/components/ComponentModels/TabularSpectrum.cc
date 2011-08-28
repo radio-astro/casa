@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SpectralIndex.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: TabularSpectrum.cc 21081 2011-05-09 11:36:20Z gervandiepen $
 
 #include <components/ComponentModels/TabularSpectrum.h>
 #include <casa/Arrays/Vector.h>
@@ -184,7 +184,6 @@ void TabularSpectrum::sample(Vector<Double>& scale,
   DebugAssert(scale.nelements() == nSamples, AipsError);
 
   MFrequency::Convert toThisFrame(refFrame, freqRef_p);
-  const MFrequency& refFreq(refFrequency());
   Vector<Double> nu(frequencies.nelements());
   //try frame conversion only if it is not something stupid...
   //if it is then assume the frequencies are fine as is.
@@ -227,7 +226,7 @@ uInt TabularSpectrum::nParameters() const {
 }
 
 void TabularSpectrum::setParameters(const Vector<Double>& newSpectralParms) {
-  DebugAssert(newSpectralParms.nelements() == nParameters(), AipsError);
+  AlwaysAssert(newSpectralParms.nelements() == nParameters(), AipsError);
 }
 
 Vector<Double> TabularSpectrum::parameters() const {
@@ -235,7 +234,7 @@ Vector<Double> TabularSpectrum::parameters() const {
 }
 
 void TabularSpectrum::setErrors(const Vector<Double>& newSpectralErrs) {
-  DebugAssert(newSpectralErrs.nelements() == nParameters(), AipsError);
+  AlwaysAssert(newSpectralErrs.nelements() == nParameters(), AipsError);
 }
 
 Vector<Double> TabularSpectrum::errors() const {

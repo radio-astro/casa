@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseColDesc.h 20972 2010-09-29 06:56:32Z gervandiepen $
+//# $Id: BaseColDesc.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_BASECOLDESC_H
 #define TABLES_BASECOLDESC_H
@@ -111,9 +111,6 @@ friend class ColumnDesc;
 
 public:
     // Construct the column base object.
-    // <thrown>
-    //   <li> AllocError
-    // </thrown>
     BaseColumnDesc (const String& name, const String& comment,
 		    const String& dataManagerType,
 		    const String& dataManagerGroup,

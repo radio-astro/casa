@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tBucketBuffered.cc 20876 2010-04-15 12:56:34Z gervandiepen $
+//# $Id: tBucketBuffered.cc 21011 2010-12-16 12:37:49Z gervandiepen $
 
 #include <casa/IO/BucketBuffered.h>
 #include <casa/IO/BucketFile.h>
@@ -60,14 +60,17 @@ void a (Bool)
   file.open();
   BucketBuffered cache (&file, 512, 32768, 5);
   Int i;
-  char buf[32768];
+  union {
+    char buf[32768];
+    Int  bufi[32768/4];
+  };
   for (i=0; i<32768; i++) {
     buf[i] = 0;
   }
   cache.extend (100);
   for (i=0; i<100; i++) {
-    *(Int*)buf = i+1;
-    *(Int*)(buf+32760) = i+10;
+    bufi[0] = i+1;
+    bufi[32760/4] = i+10;
     memcpy (cache.getBuffer(), buf, 32768);
     cache.write (i, 0, 32768);
   }

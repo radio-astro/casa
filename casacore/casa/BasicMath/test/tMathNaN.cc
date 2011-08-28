@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMathNaN.cc 20632 2009-06-14 12:16:13Z gervandiepen $
+//# $Id: tMathNaN.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 #include <casa/aips.h>
 #include <casa/Exceptions/Error.h>
@@ -208,7 +208,7 @@ Bool doIt (Int n, Float x, Bool nan)
 int main (int argc, const char* argv[])
 {
    Input inputs(1);
-   inputs.version ("$Revision: 20632 $");
+   inputs.version ("$Revision: 20652 $");
    inputs.create("n", "100", "Number of tries");
  
    inputs.readArguments(argc, argv);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Stokes.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Stokes.h 21074 2011-05-06 14:08:29Z gervandiepen $
 
 #ifndef MEASURES_STOKES_H
 #define MEASURES_STOKES_H

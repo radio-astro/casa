@@ -1,4 +1,4 @@
-# $Id: makefile 19739 2006-11-13 02:06:18Z gvandiep $
+# $Id: makefile 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 EXTRA_C++FLAGS=-fPIC
 # Use the generic AIPS++ class implementation makefile.
 #------------------------------------------------------

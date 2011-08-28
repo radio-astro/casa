@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableColumn.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: TableColumn.h 21027 2011-03-16 09:12:25Z gervandiepen $
 
 #ifndef TABLES_TABLECOLUMN_H
 #define TABLES_TABLECOLUMN_H
@@ -167,9 +167,13 @@ public:
     // if function isNull() is True.
     void throwIfNull() const;
 
-    // Get const access to the column keyword set.
+    // Get readonly access to the column keyword set.
     const TableRecord& keywordSet() const
 	{ return baseColPtr_p->keywordSet(); }
+
+    // Get read/write access to the column keyword set.
+    // An exception is thrown if the table is not writable.
+    TableRecord& rwKeywordSet();
 
     // Get const access to the column description.
     // ColumnDesc functions have to be used to get the data type, etc..
@@ -203,10 +207,12 @@ public:
     // Test if the given cell contains a defined value.
     Bool isDefined (uInt rownr) const
 	{ TABLECOLUMNCHECKROW(rownr); return baseColPtr_p->isDefined (rownr); }
+    //
+// Tests whether the column is not null and that the first cell is
+// defined and not a degenerate Array.
+	Bool hasContent() const;
 
-    // Tests whether the column is not null and that the first cell is
-    // defined and not a degenerate Array.
-    Bool hasContent() const;
+
 
     // Get the #dimensions of an array in a particular cell.
     uInt ndim (uInt rownr) const
@@ -423,10 +429,6 @@ public:
     void attach (const Table& table, uInt columnIndex)
 	{ reference (TableColumn (table, columnIndex)); }
     // </group>
-
-    // Get access to the column keyword set.
-    TableRecord& rwKeywordSet()
-	{ return baseColPtr_p->rwKeywordSet(); }
 
     // Copy the value of a cell of that column to a cell of this column.
     // This function only works for the standard data types.

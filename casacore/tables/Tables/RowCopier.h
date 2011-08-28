@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RowCopier.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: RowCopier.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 
 #ifndef TABLES_ROWCOPIER_H
@@ -159,7 +159,6 @@ public:
     // array columns)
     // <thrown>
     //  <li> TableError
-    //  <li> AllocError
     // </thrown>
     RowCopier (Table &out, const Table &in);
 
@@ -172,7 +171,6 @@ public:
     // (not the same type and not both scalar or both array columns)
     // <thrown>
     //  <li> TableError
-    //  <li> AllocError
     // </thrown>
     RowCopier (Table &out, const Table &in, const Vector<String>& outNames,
 	       const Vector<String>& inNames);

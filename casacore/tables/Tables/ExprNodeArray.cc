@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNodeArray.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: ExprNodeArray.cc 21036 2011-04-01 07:56:27Z gervandiepen $
 
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeArray.h>
@@ -1003,7 +1003,7 @@ TableExprNodeIndex::TableExprNodeIndex (const TableExprNodeSet& indices,
   isCOrder_p         (style.isCOrder()),
   isSingle_p         (True)
 {
-  if (style.isEndExcl()) ++endMinus_p;
+    if (style.isEndExcl()) ++endMinus_p;
     fillIndex (indices);
 }
 
@@ -1171,7 +1171,7 @@ void TableExprNodeIndex::convertConstIndex()
 		if (val < 0) {
 		    end_p = Slicer::MimicSource;
 		}else{
-		    end_p(i) = val - origin_p;
+		    end_p(i) = val - endMinus_p;
 		}
 	    }else{
 		varIndex_p[j] = True;

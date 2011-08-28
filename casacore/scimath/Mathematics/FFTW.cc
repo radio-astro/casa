@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTW.cc 20932 2010-07-08 09:06:37Z gervandiepen $
+//# $Id: FFTW.cc 21117 2011-07-27 09:08:53Z gervandiepen $
 
 
 #include <scimath/Mathematics/FFTW.h>
@@ -43,7 +43,8 @@
 
 namespace casa {
 
-  Bool FFTW::is_initialized_fftw = False;
+  volatile Bool FFTW::is_initialized_fftw = False;
+  Mutex FFTW::theirMutex;
 
 
 #ifdef HAVE_FFTW3
@@ -93,22 +94,25 @@ namespace casa {
       itsPlanC2CB  (0)
   {
     if (!is_initialized_fftw) {
-      int numCPUs = HostInfo::numCPUs();
-      int nthreads = 1;
-      // cerr << "Number of threads is " << numCPUs << endl;
-      if (numCPUs > 1) {
-	nthreads = numCPUs;
-      }
+      ScopedMutexLock lock(theirMutex);
+      if (!is_initialized_fftw) {
+        int numCPUs = HostInfo::numCPUs();
+        int nthreads = 1;
+        // cerr << "Number of threads is " << numCPUs << endl;
+        if (numCPUs > 1) {
+          nthreads = numCPUs;
+        }
       
-      //    std::cout << "init threads " << fftwf_init_threads() << std::endl;
-      //    std::cout << "init threads " << fftw_init_threads() << std::endl;
+        //    std::cout << "init threads " << fftwf_init_threads() << std::endl;
+        //    std::cout << "init threads " << fftw_init_threads() << std::endl;
 #ifdef HAVE_FFTW3_THREADS
-      fftwf_init_threads();
-      fftw_init_threads();
-      fftwf_plan_with_nthreads(nthreads);
-      fftw_plan_with_nthreads(nthreads);
+        fftwf_init_threads();
+        fftw_init_threads();
+        fftwf_plan_with_nthreads(nthreads);
+        fftw_plan_with_nthreads(nthreads);
 #endif
-      is_initialized_fftw = True;
+        is_initialized_fftw = True;
+      }
     }
     //    std::cerr << "will use " << nthreads << " threads " << std::endl;
 

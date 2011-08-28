@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dCOWptr.cc 20146 2007-11-07 01:16:17Z Malte.Marquarding $
+//# $Id: dCOWptr.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Arrays/IPosition.h>
 #include <casa/Arrays/Array.h>

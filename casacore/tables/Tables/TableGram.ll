@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.ll 20967 2010-09-27 11:06:03Z gervandiepen $
+    $Id: TableGram.ll 20997 2010-11-17 07:05:29Z gervandiepen $
 */
 
 /* yy_unput is not used, so let flex not generate it, otherwise picky
@@ -81,6 +81,8 @@ TIME      {DTIMEHM}|{POSDM}|{POSD}
 /*
      positions/times with colons cannot be allowed, because they interfere
      with the interval syntax. It is only possible when preceeded by a date.
+     Furthermore, a colon is sometimes also used for degrees (in declinations),
+     so it's better to stick to hms and dms.
 */
 
 

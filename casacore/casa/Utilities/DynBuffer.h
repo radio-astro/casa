@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DynBuffer.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DynBuffer.h 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #ifndef CASA_DYNBUFFER_H
 #define CASA_DYNBUFFER_H
@@ -95,9 +95,6 @@ public:
 
     // Allocate a first buffer of the specified number of bytes
     // (default 4096). When the allocation fails, an exception is thrown.
-    // <thrown>
-    //    <li> AllocError
-    // </thrown>
     DynBuffer (uInt nrOfBytes=4096);
 
     // Remove the whole buffer, i.e. the first buffer and all the 
@@ -114,9 +111,6 @@ public:
     // When not all values fit in the current buffer, new buffer space
     // is added (probably non-contiguous). If that allocation fails an
     // exception is thrown.
-    // <thrown>
-    // <li> AllocError
-    // </thrown>
     uInt alloc (uInt nrOfValues, uInt valueSize, Char*& ptr);
 
     // Remove buffer <src>nrOfBuffer</src> and the buffers appended to it,
@@ -147,10 +141,6 @@ private:
     // space), the next buffer already allocated (if there is one), or
     // a newly allocated and linked-in buffer. If, in the last case,
     // the allocation fails an exception is thrown.
-    //
-    // <thrown>
-    // <li> AllocError
-    // </thrown>
     uInt newbuf (uInt nrOfValues, uInt valueSize);
 
 

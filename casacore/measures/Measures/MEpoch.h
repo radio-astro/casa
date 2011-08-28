@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MEpoch.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MEpoch.h 21074 2011-05-06 14:08:29Z gervandiepen $
 
 #ifndef MEASURES_MEPOCH_H
 #define MEASURES_MEPOCH_H
