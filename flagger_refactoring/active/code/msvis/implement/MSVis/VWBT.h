@@ -34,8 +34,8 @@ class VWBT : public casa::async::Thread {
 public:
 
 	VWBT(VisibilityIterator *visibilityIterator,
-        Mutex * msAccessMutex,
-        bool groupRows);
+         casa::async::Mutex * msAccessMutex,
+         bool groupRows);
 
 	~VWBT ();
 

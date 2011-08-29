@@ -274,7 +274,7 @@ public:
 	static Bool loggingInitialized_p;
 	static Int logLevel_p;
 
-	Mutex * getMutex() {return &vlaDataMutex_p;};
+	casa::async::Mutex * getMutex() {return &vlaDataMutex_p;};
 
 protected:
 
@@ -309,7 +309,7 @@ private:
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
 	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
 	mutable Condition vlaDataChanged_p;
-	mutable Mutex vlaDataMutex_p;
+	mutable casa::async::Mutex vlaDataMutex_p;
 
     Int clock (Int arg, Int base);
     String makeReport ();

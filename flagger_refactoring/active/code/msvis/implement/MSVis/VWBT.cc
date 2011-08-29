@@ -25,7 +25,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 VWBT::VWBT(VisibilityIterator *visibilityIterator,
-           Mutex * msAccessMutex,
+		   casa::async::Mutex * msAccessMutex,
            bool groupRows)
 {
    visibilityIterator_p = visibilityIterator;
