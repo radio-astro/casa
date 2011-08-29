@@ -287,10 +287,8 @@ FlagDataHandler::close()
 		// Wait until all the pending writing operations are done
 		if (!asyncio_disabled_p)
 		{
-			while (vwbt_p->isWriting())
-			{
-				pthread_yield();
-			}
+			vwbt_p->terminate();
+			vwbt_p->join();
 		}
 
 		// Flush and unlock MS
