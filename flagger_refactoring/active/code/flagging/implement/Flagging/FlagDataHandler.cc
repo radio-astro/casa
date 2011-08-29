@@ -42,8 +42,17 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	AipsrcValue<Bool>::find (asyncio_disabled_p,"ROVisibilityIteratorAsync.disabled", true);
 
 	// Check if slurp is enabled
-	slurp_p = false;
-	AipsrcValue<Bool>::find (slurp_p,"ROVisibilityIteratorAsync.slurp:", false);
+	if (asyncio_disabled_p)
+	{
+		slurp_p = true;
+		AipsrcValue<Bool>::find (slurp_p,"ROVisibilityIteratorAsync.slurp:", true);
+	}
+	else
+	{
+		slurp_p = false;
+		AipsrcValue<Bool>::find (slurp_p,"ROVisibilityIteratorAsync.slurp:", false);
+	}
+
 
 	// WARNING: By default the visibility iterator adds the following
 	// default columns: ARRAY_ID and FIELD_ID,DATA_DESC_ID and TIME.
@@ -491,7 +500,7 @@ FlagDataHandler::checkMaxMemory()
 
 	Int buffers = 1;
 	double memoryFree = HostInfo::memoryFree( )/1024.0;
-	double memoryUsed = 100*memoryNeeded/memoryFree;
+	double memoryUsed = 100*maxMemoryNeeded/memoryFree;
 	if (asyncio_disabled_p)
 	{
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " This process needs " << maxMemoryNeeded << " MB for loading visibility buffers ("
@@ -702,8 +711,8 @@ FlagDataHandler::nextBuffer()
 		originalFlagCube_p.resize(flagCube.shape());
 		originalFlagCube_p = flagCube;
 
-		IPosition flagCubeShape = modifiedFlagCube_p.shape();
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Current buffer shape: " << flagCubeShape  << " and indexing:" <<  modifiedFlagCube_p.printConfig() <<LogIO::POST;
+		//IPosition flagCubeShape = modifiedFlagCube_p.shape();
+		//*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Current buffer shape: " << flagCubeShape  << " and indexing:" <<  modifiedFlagCube_p.printConfig() <<LogIO::POST;
 	}
 
 	STOPCLOCK
