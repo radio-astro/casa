@@ -236,7 +236,7 @@ public:
     T &operator()(uInt i1, uInt i2, uInt i3)
     {
     	uInt i3_index = rows_p->at(i3);
-    	return parentCube_p->operator()(i1,i2,i3_index);
+    	return parentCube_p->at(i1,i2,i3_index);
     }
 
     const IPosition &shape() const
