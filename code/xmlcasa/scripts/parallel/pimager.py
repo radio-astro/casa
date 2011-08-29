@@ -57,6 +57,66 @@ class pimager():
         return True
 
     @staticmethod
+    def findchansel(msname='', spw='*', numpartition=1, freqrange=[0, 1e12]):
+        thesel=ms.msseltoindex(msname, spw=spw)
+        spwids=thesel['spw']
+        nchans=np.sum(thesel['channel'][:,2]-thesel['channel'][:,1]+1)
+        
+        if(nchans < 1):
+            return []
+        tb.open(msname)
+        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
+        if(len(spectable) ==2):
+            spectable=spectable[1]
+        else:
+            spectable=msname+"/SPECTRAL_WINDOW"
+        tb.open(spectable)
+        elfreq=[]
+        nspw=tb.nrows()
+        for k in range(nspw):
+            elfreq.append(tb.getcol('CHAN_FREQ', k, 1).flatten())
+        tb.done()
+        beginfreq=1e12
+        endfreq=0.0
+        ####number of channel for each partition
+        nch=np.zeros(numpartition)
+        nch[:]=int(nchans/numpartition)
+        nch[0:(nchans%numpartition)] +=1
+        sel=['-1']*numpartition
+        row=0
+        nextstart=thesel['channel'][row,1]-1
+        nextspw=thesel['channel'][row,0]
+        nextend=thesel['channel'][row,2]
+        for k in range(numpartition):
+            startch=nextstart+1
+            spwsel=nextspw
+            endch=nextstart
+            for jj in range(int(nch[k])):
+                nextstart=endch+1
+                chanval=endch if (endch > -1) else 0
+                beginfreq=beginfreq if(beginfreq < elfreq[spwsel][chanval]) else elfreq[spwsel][chanval]
+                endfreq=endfreq if(endfreq > elfreq[spwsel][chanval]) else elfreq[spwsel][chanval]
+                endch +=1
+                if(endch>nextend):
+                    row+=1
+                    nextend=thesel['channel'][row,2]
+                    sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch-1)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch-1))
+                    startch=thesel['channel'][row,1] 
+                    endch=startch
+                    nextstart=endch+1
+                    spwsel=thesel['channel'][row,0]
+                    nextspw=spwsel
+            sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch))
+            if(startch==endch):
+                nextstart=nextstart-1
+        freqrange[0]=beginfreq
+        freqrange[1]=endfreq
+        print  'FREQRANGE', freqrange
+
+        return sel
+                
+
+    @staticmethod
     def findchanselcont(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, freqrange=[0, 1e12]):
         numproc=numpartition
         spwsel=[]
@@ -165,7 +225,7 @@ class pimager():
         return spwsel, startsel, retchan
 
     @staticmethod
-    def findchansel(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, continuum=True):
+    def findchanselold(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, continuum=True):
         numproc=numpartition
         spwsel=[]
         startsel=[]
@@ -444,56 +504,31 @@ class pimager():
         numcpu=self.numcpu
         time1=time.time()
         ###spw and channel selection
-        spwsel,startsel,nchansel=self.findchanselcont(msname, spwids, numcpu)
+        #spwsel,startsel,nchansel=self.findchanselcont(msname, spwids, numcpu)
 
-        print 'SPWSEL ', spwsel, startsel, nchansel 
+        #print 'SPWSEL ', spwsel, startsel, nchansel
+        freqrange=[0.0, 0.0]
+        spwsel=self.findchansel(msname, spw, numcpu, freqrange=freqrange)
+        minfreq=freqrange[0]
+        maxfreq=freqrange[1]
 
         out=range(numcpu)  
         c=self.c
         c.pgc('casalog.filter()')
         c.pgc('from  parallel.parallel_cont import *')
-        #spwlaunch='"'+spw+'"' if (type(spw)==str) else str(spw)
-        #fieldlaunch='"'+field+'"' if (type(field) == str) else str(field)
-        #pslaunch='"'+phasecenter+'"' if (type(phasecenter) == str) else str(phasecenter)
-        #launchcomm='a=imagecont(ftmachine='+'"'+ftmachine+'",'+'wprojplanes='+str(wprojplanes)+',facets='+str(facets)+',pixels='+str(imsize)+',cell='+str(pixsize)+', spw='+spwlaunch +',field='+fieldlaunch+',phasecenter='+pslaunch+',weight="'+weight+'", robust='+str(robust)+ ', stokes="'+stokes+'")'
-        #print 'launch command', launchcomm
-        #c.pgc(launchcomm);
-        tb.open(msname)
-        spectable=string.split(tb.getkeyword('SPECTRAL_WINDOW'))
-        if(len(spectable) ==2):
-            spectable=spectable[1]
-        else:
-            spectable=msname+"/SPECTRAL_WINDOW"
-        tb.open(spectable)
-        #freqs=tb.getcol('CHAN_FREQ')
-        allfreq=tb.getcol('CHAN_FREQ', spwids[0],1)
-        for k in range(1, len(spwids)) :
-            allfreq=np.append(allfreq, tb.getcol('CHAN_FREQ', spwids[k],1))
-        ##number of channels in the ms
-        numchanperms=len(allfreq)
-        #print 'number of channels', numchanperms
-        minfreq=np.min(allfreq)
-        band=np.max(allfreq)-minfreq
-        ##minfreq=minfreq-(band/2.0);
+
+        band=maxfreq-minfreq
         ###need to get the data selection for each process here
         ## this algorithm is a poor first try
         if(minfreq <0 ):
             minfreq=0.0
         freq='"%s"'%(str((minfreq+band/2.0))+'Hz')
         band='"%s"'%(str((band*1.1))+'Hz')
-        tb.done()
         ###define image names
         imlist=[]
         char_set = string.ascii_letters
         cfcachelist=[]
         for k in range(numcpu):
-            #substr='spw'
-            #for u in range(len(spwsel[k])):
-            #    if(u==0):
-            #       substr=substr+'_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
-            #   else:
-            #        substr=substr+'_spw_'+str(spwsel[k][u])+'_chan_'+str(startsel[k][u])
-            ####new version to keep filename small
             substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
             while (os.path.exists(substr+'.model')):
                 substr=self.workingdirs[k]+'/Temp_'+str(k)+'_'+string.join(random.sample(char_set,8), sep='')
@@ -518,8 +553,8 @@ class pimager():
                 c.odo('a.dopbcorr='+str(dopbcorr),k);
                 c.odo('a.applyoffsets='+str(applyoffsets),k);
                 c.odo('a.epjtablename='+'"'+str(epjtablename)+'"',k);
-                runcomm='a.imagecont(msname='+'"'+msname+'", start='+str(startsel[k])+', numchan='+str(nchansel[k])+', field="'+str(field)+'", spw='+str(spwsel[k])+', freq='+freq+', band='+band+', imname='+imnam+')'
-                print 'command is ', runcomm,cfcachelist[k];
+                runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+')'
+                print 'command is ', runcomm
                 out[k]=c.odo(runcomm,k)
             over=False
             printkounter=0
@@ -536,13 +571,16 @@ class pimager():
                 over=overone
             residual=imagename+'.residual'
             psf=imagename+'.psf'
+            fluxim=imagename+'.flux'
             psfs=range(len(imlist))
             residuals=range(len(imlist))
             restoreds=range(len(imlist))
+            fluxims=range(len(imlist))
             for k in range (len(imlist)):
                 psfs[k]=imlist[k]+'.psf'
                 residuals[k]=imlist[k]+'.residual'
                 restoreds[k]=imlist[k]+'.image'
+                fluxims[k]=imlist[k]+'.flux'
             self.averimages(residual, residuals)
             if(maskimage == ''):
                 maskimage='lala.mask'
@@ -586,6 +624,8 @@ class pimager():
             #ia.done()
             if(maj==0):
                 self.averimages(psf, psfs)
+                if(self.ftmachine=='mosaic'):
+                    self.averimages(fluxim, fluxims)
             #incremental clean...get rid of tempmodel
             shutil.rmtree(tempmodel, True)
             rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
@@ -782,13 +822,10 @@ class pimager():
         #print 'LOCKS3', tb.listlocks()
         chancounter=0
         nchanchunk=nchan/chanchunk if (nchan%chanchunk) ==0 else nchan/chanchunk+1
-        ###spw and channel selection
-        spwselnew,startselnew,nchanselnew=self.findchansel(msname, spwids, nchanchunk, beginfreq=fstart, endfreq=fend, continuum=True)
         spwsel,startsel, nchansel=imagecont.findchanselLSRK(msname=msname, spw=spwids, 
                                                       field=field, 
                                                       numpartition=nchanchunk, 
                                                       beginfreq=fstart, endfreq=fend, chanwidth=fstep)
-        print 'spwsel', spwselnew, 'startsel', startselnew,'nchansel', nchanselnew
         print 'spwsel', spwsel, 'startsel', startsel,'nchansel', nchansel
         #print 'startsel', startsel
         #print  'nchansel', nchansel
@@ -1787,8 +1824,9 @@ class pimager():
             self.msinfo[msnames[k]]=odict()
             myrec=self.msinfo[msnames[k]]
             freqrange=[0,0]
-            channel=ms.msseltoindex(vis=msnames[k], spw=spw[k])['channel']
-            myrec['spwids']=ms.msseltoindex(vis=msnames[k], spw=spw[k])['spw']
+            elselec=ms.msseltoindex(vis=msnames[k], spw=spw[k])
+            channel=elselec['channel']
+            myrec['spwids']=elselec['spw']
             spws, starts, nchans=self.findchanselcont(
                 msname=msnames[k], spwids=myrec['spwids'], 
                 numpartition=1, beginfreq=freqmin, 
@@ -1803,8 +1841,7 @@ class pimager():
                         if(myrec['startsel'][elspw] < channel[elspw][1]):
                             myrec['startsel'][elspw]=channel[elspw][1]
                         if((myrec['nchansel'][elspw] > (channel[elspw][2]- myrec['startsel'][elspw]))):
-                            myrec['nchansel'][elspw]=(channel[elspw][2]- myrec['startsel'][elspw])+1
-                                
+                            myrec['nchansel'][elspw]=(channel[elspw][2]- myrec['startsel'][elspw])+1  
             retfreqmax=freqrange[1] if (freqrange[1] > retfreqmax) else retfreqmax
             retfreqmin=freqrange[0] if (freqrange[0] <  retfreqmin) else retfreqmin
         freqmin=retfreqmin
@@ -1925,7 +1962,7 @@ class pimager():
             myrec=odict()
             myrec['msname']=workdirs[k]+'/'+msnames[k]
             myrec['spwids']=ms.msseltoindex(vis=myrec['msname'], spw=spw)['spw']
-            myrec['spwsel'],myrec['startsel'],myrec['nchansel']=self.findchansel(msnames[k], myrec['spwids'], numcpuperhost)
+            myrec['spwsel'],myrec['startsel'],myrec['nchansel']=self.findchanselcont(msnames[k], myrec['spwids'], numcpuperhost)
             c.start_engine(hostname,numcpuperhost,workdirs[k])
             hostdata[hostname]=myrec
         ##start an engine locally for deconvolution
