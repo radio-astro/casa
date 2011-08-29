@@ -251,12 +251,17 @@ void ROArrayColumn<T>::handleSlices (const Vector<Vector<Slice> >& slices,
   IPosition colLen   (slicer.length());
   IPosition colIncr  (slicer.stride());
   IPosition pos(nrdim, 0);
+  uInt nReads = 0;
   while (True) {
     Array<T> refArr (arr(arrStart, arrEnd));
     functor.apply (Slicer(colStart, colLen, colIncr), refArr);
+    ++nReads;
     uInt i;
     for (i=0; i<nrdim; ++i) {
       pos[i]++;
+      // if(pos[i] > 1)
+      // 	cerr << "pos[" << i << "] = " << pos[i]
+      // 	     << ", slices[i].size() = " << slices[i].size() << endl;
       if (uInt(pos[i]) < slices[i].size()) {
         const Slice& slice = slices[i][pos[i]];
         colStart[i] = slice.start();
@@ -277,6 +282,10 @@ void ROArrayColumn<T>::handleSlices (const Vector<Vector<Slice> >& slices,
       break;
     }
   }
+  // if(nReads > 1)
+  //   cerr << "nSlices = " << slices.nelements()
+  // 	 << ", nrdim = " << nrdim
+  // 	 << ", nReads = " << nReads << endl;
 }
 
 

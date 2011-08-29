@@ -124,13 +124,17 @@ class FluxCalc_SS_JPL_Butler
   //    the model's shape, or UNKNOWN_SHAPE on failure.
   // Inputs:
   //    must be already set, or it returns UNKNOWN_SHAPE.
+  //    report: If False, suppress logger messages like e.g. references for the
+  //            temperature.  Intended for use in a loop, i.e. print the
+  //            messages for the 1st spw but do not repeat them for the others.
   // Output args:
   //    value: the calculated flux.
   //    error: the estimated uncertainty of value.
   //    angdiam: angular diameter in radians
   ComponentType::Shape compute(Vector<Flux<Double> >& values,
                                Vector<Flux<Double> >& errors, Double& angdiam,
-                               const Vector<MFrequency>& mfreqs);
+                               const Vector<MFrequency>& mfreqs,
+			       const Bool report=True);
 
   // Same as the above, but for a set of sets of frequencies, i.e.
   // mfreqs[spw] is a set of frequencies for channels in spectral window spw.
@@ -206,10 +210,15 @@ class FluxCalc_SS_JPL_Butler
                      const Vector<MFrequency>& mfreqs);
 
   // Uses objnum_p to look up a mean temperature, and uses that.
+  // report: If False, suppress logger messages like references for the
+  // temperature.  Intended for use in a loop, i.e. print the
+  // messages for the 1st spw but do not repeat them for the others.
   // Returns whether or not it was successful.
   Bool compute_constant_temperature(Vector<Flux<Double> >& values,
-				    Vector<Flux<Double> >& errors, const Double angdiam,
-				    const Vector<MFrequency>& mfreqs);  
+				    Vector<Flux<Double> >& errors,
+				    const Double angdiam,
+				    const Vector<MFrequency>& mfreqs,
+				    const Bool report=True);  
 
   // Find the row in mjd closest to time_p, and the rows just before and after
   // it, taking boundaries into account.

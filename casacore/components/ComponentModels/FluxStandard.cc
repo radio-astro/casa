@@ -223,7 +223,8 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
       for(uInt spw = 0; spw < nspws; ++spw){
         clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
-                                         values[spw], point, prefix);
+                                         values[spw], point,
+					 prefix + "spw" + String(spw) + "_");
       }
       success = True;
     }
@@ -234,7 +235,7 @@ Bool FluxStandard::computeCL(const String& sourceName,
 
     for(uInt spw = 0; spw < nspws; ++spw){
       ComponentType::Shape cmpshape = ssobj.compute(values[spw], errors[spw], angdiam,
-                                                    mfreqs[spw]);
+                                                    mfreqs[spw], spw == 0);
     
       switch(cmpshape){
       case ComponentType::DISK:
@@ -248,7 +249,8 @@ Bool FluxStandard::computeCL(const String& sourceName,
           disk.setWidthInRad(angdiam, angdiam, 0.0);
 
           clpaths[spw] = makeComponentList(sourceName, mfreqs[spw], mtime,
-                                           values[spw], disk, prefix);
+                                           values[spw], disk,
+					   prefix + "spw" + String::toString(spw) + "_");
           success = True;
           break;
         }
