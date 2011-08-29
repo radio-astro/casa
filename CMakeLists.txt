@@ -19,7 +19,7 @@ endif (ENABLE_SHARED)
 
 # By default do not use HDF5, FFTW3, threads
 option (USE_HDF5 "" NO)
-option (USE_FFTW3 "" NO)
+option (USE_FFTW3 "" YES)
 option (USE_THREADS "" NO)
 option (ENABLE_MULTI_THREADING "" NO)
 
