@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+  
+<task type="function" name="sim_analyze" category="simulation">
+
+  <shortdescription>image and analyze simulated datasets</shortdescription>
+  <description>
+    This task is for imaging and analyzing datasets simulated with sim_observe
+    Please contact CASA helpdesk with questions.
+  </description>
+  
+  <input>
+    
+    <param type="string" name="project">
+      <description>root prefix for output file names</description>
+      <value>sim</value>
+    </param>
+    
+
+
+<!--  IMAGE   -->    
+
+    <param type="bool" name="image">
+      <description>(re)image $project.ms to $project.image</description>
+      <value>True</value>
+    </param>    
+
+    <param type="string" name="vis" subparam='true'>
+      <description>Measurement Set(s) to image</description>
+      <value>default</value>
+    </param>
+
+    <param type="string" name="modelimage" subparam='true'>
+      <description>prior image to use in clean e.g. existing single dish image</description>
+      <value type="string"></value>
+    </param>
+    
+    <param type="string" name="cell" subparam='true'>
+      <description>cell size with units or "" to equal model</description>
+      <value type="string"></value>
+    </param>
+    
+    <param type="intArray" name="imsize" subparam="true">
+      <description>output image size in pixels (x,y) or 0 to match model</description>
+      <value type="vector"><value>128</value><value>128</value></value>
+    </param>
+
+    <param type="string" name="imdirection" subparam="true">
+      <description>set output image direction, (otherwise center on the model)</description>
+      <value type="string"></value>
+    </param>
+
+<!-- force the same channelization as the ms -->
+<!--
+    <param type="string" name="start" subparam="true">
+      <description>frequency of first channel (default=ms)</description>
+      <value>89GHz</value>
+    </param>    
+    <param type="string" name="width" subparam="true">
+      <description>channel width (default=ms)</description>
+      <value>10MHz</value>
+    </param>
+    <param type="int" name="nchan" subparam="true">
+      <description>number of channels or -1 for full range</description>
+      <value>-1</value>
+    </param>
+-->    
+    <param type="int" name="niter" subparam="true">
+      <description>maximum number of iterations (0 for dirty image)</description>
+      <value>500</value>
+    </param>
+
+    <param type="string" name="threshold" subparam="true">
+      <description>flux level (+units) to stop cleaning</description>
+      <value>0.1mJy</value>
+    </param>
+
+    <param type="string" name="weighting" subparam="true">
+      <description>weighting to apply to visibilities</description>
+      <value>natural</value>
+      <allowed kind="enum">
+	<value>natural</value>
+	<value>uniform</value>
+	<value>briggs</value>  <!-- robust=0.5  -->
+      </allowed>
+    </param>
+
+    <param type="any" name="mask" subparam="true">
+      <description>clean mask -- see help clean</description>
+      <any type="variant"/>
+      <!-- <value type="stringArray"></value> -->
+      <value type="vector"><value></value></value>
+    </param>
+
+    <param type="stringArray" name="outertaper" subparam="true">
+      <description>uv-taper on outer baselines in uv-plane</description>
+      <value type="vector">
+	<value></value>
+      </value>
+    </param>
+
+    <param type="string" name="stokes" subparam="true">
+      <description>Stokes params to image</description>
+      <value>I</value>
+      <allowed kind="enum">
+	<value>I</value>
+	<value>IV</value>
+	<value>QU</value>
+	<value>IQUV</value>
+	<value>RR</value>
+	<value>LL</value>
+	<value>RRLL</value>
+	<value>XX</value>
+	    <value>YY</value>
+	    <value>XXYY</value>
+      </allowed>
+    </param>
+
+
+
+
+
+<!--  ANALYZE   -->    
+    
+    <param type="bool" name="analyze">
+      <description>(only first 6 selected outputs will be displayed)</description>
+      <value>False</value>
+    </param>
+
+<!--    
+    <param type="string" name="sim_image" subparam="true">
+      <description>simulated image, created by this task or manually</description>
+      <value>$project/$project.image</value>
+    </param>
+-->
+
+    <param type="bool" name="showuv" subparam="true">
+      <description>display uv coverage</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="showpsf" subparam="true">
+      <description>display synthesized (dirty) beam (ignored in single dish simulation)</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="showmodel" subparam="true">
+      <description>display sky model at original resolution</description>
+      <value>True</value>
+    </param>
+    
+    <param type="bool" name="showconvolved" subparam="true">
+      <description>display sky model convolved with output beam</description>
+      <value>False</value>
+    </param>
+    
+    <param type="bool" name="showclean" subparam="true">
+      <description>display the synthesized image</description>
+      <value>True</value>
+    </param>
+
+    <param type="bool" name="showresidual" subparam="true">
+      <description>display the clean residual image (ignored in single dish simulation)</description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="showdifference" subparam="true">
+      <description>display difference image</description>
+      <value>True</value>
+    </param>
+    
+    <param type="bool" name="showfidelity" subparam="true">
+      <description>display fidelity</description>
+      <value>True</value>
+    </param>
+
+
+
+
+
+    <param type="string" name="graphics">
+      <description>display graphics at each stage to [screen|file|both|none]</description>
+      <value type="string">both</value>
+      <allowed kind="enum">
+	<value>screen</value>
+	<value>file</value>
+	<value>both</value>
+	<value>none</value>
+	<value></value>
+      </allowed>
+    </param>
+
+    <param type="bool" name="verbose">
+      <description></description>
+      <value>False</value>
+    </param>
+
+    <param type="bool" name="overwrite">
+      <description>overwrite files starting with $project</description>
+      <value>True</value>
+    </param>
+
+
+
+        
+    
+<!--  CONSTRAINTS  -->    
+    
+    <constraints>
+      <when param="image">
+	<equals type="bool" value="True">
+	  <default param="vis"><value type="string">default</value></default>
+	  <default param="modelimage"><value type="string"></value></default>
+	  <default param="imsize">
+	    <value>0</value>
+	  </default>
+	  <default param="imdirection">
+	    <value type="string"></value>
+	  </default>
+	  <default param="cell"><value type="string"></value></default>
+	  <default param="niter"><value>500</value></default>
+	  <default param="threshold"><value type="string">0.1mJy</value></default>
+	  <default param="weighting"><value type="string">natural</value></default>
+	  <default param="mask">      <value type="vector"><value></value></value></default>
+	  <default param="outertaper"><value type="vector"><value></value></value></default>
+	  <default param="stokes"><value type="string">I</value></default>
+	</equals>
+	<equals type="bool" value="False"/>
+      </when>
+      <!-- **********************************************************  -->
+      <when param="analyze">
+	<equals type="bool" value="False"/>
+	<equals type="bool" value="True">
+<!--
+	  <default param="sim_image"><value>$project/$project.image</value></default>
+-->
+	  <default param="showuv"><value type="bool">True</value></default>
+	  <default param="showpsf"><value type="bool">True</value></default>
+	  <default param="showmodel"><value type="bool">True</value></default> 
+	  <default param="showconvolved"><value type="bool">False</value></default>
+	  <default param="showclean"><value type="bool">True</value></default>
+	  <default param="showresidual"><value type="bool">False</value></default>
+	  <default param="showdifference"><value type="bool">True</value></default>
+	  <default param="showfidelity"><value type="bool">True</value></default>
+	</equals>
+      </when>
+    </constraints>
+    
+    
+    
+  </input>
+  <returns type="void"/>
+  
+<example>
+
+    This task is for imaging and analyzing datasets created with 
+    sim_observe or simdata.  New functionality is actively 
+    being added, so if you have changed versions of CASA, check 
+    the inputs carefully.
+    Please contact CASA experts with any questions.
+    -------------------------------
+    project -- root filename for all output files.
+               must be the same as used when simulating the observation.
+               in particular $project/$project.skymodel will be required
+               to compare output and input images.
+    image -- invert and deconvolve the measurement set(s)
+       * NOTE: interactive clean or more parameters than the subset visible
+         here are available by simply running the clean task directly, 
+         then returning to simdata to run "analyze" if desired.
+       * NOTE: the channelization of the output image cube will be the 
+         same as that in the simulated Measurement Set.
+       * if graphics selected, display the clean image and residual image
+       * uses Cotton-Schwab clean for single fields and Mosaic gridding
+         for multiple fields (with Clark PSF calculation in minor cycles).
+    vis -- the simulated interferometric MS, or total-power one, or both
+       * you can use '$project' to let the task automatically replace it to
+         the project name, e.g., vis='$project.noisy.ms,$project.nosisy.sd.ms'.
+    modelimage -- prior (e.g. SD) image to be used in clean
+    cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
+    imsize -- image size in spatial pixels (x,y)
+       0 or -1 will use the model image size; example: imsize=[500,500]
+    niter -- mumber of clean/deconvolution iterations, 0 for no cleaning
+    threshold -- flux level to stop cleaning
+    weighting -- weighting to apply to visibilities
+       options: 'natural','uniform','briggs' (robust=0.5)
+    outertaper -- apply additional uv outer taper of visibilities
+    stokes -- Stokes parameters to image; 'I','IV','IQU','IQUV'
+    -------------------------------
+    analyze -- compute and display difference between model and output, 
+         fidelity, etc. 
+       * it is recommended to have graphics turned on for this subtask
+    sim_image -- simulated image to analyze
+    showarray -- like plotants (ignored in single dish simulation)
+    showuv -- display uv coverage
+    showpsf -- display synthesized (dirty) beam (ignored in single dish simulation)
+    showmodel -- display sky model at original resolution
+    showconvolved -- display sky model convolved with output beam 
+    showclean -- display the synthesized image
+    showresidual -- display the clean residual image (ignored in single dish simulation)
+    showdifference -- display difference between output cleaned image and 
+         input model sky image convolved with output synthesized beam
+    showfidelity -- display fidelity image
+         fidelity = input/max( abs(input-output), 0.7*rms(output) )
+    
+
+
+
+    -------------------------------
+    Output produced: (not all will always exist, depending on input parameters)
+    -------------------------------
+    project.skymodel.flat.regrid.conv = input sky regridded to match the output
+         image, and convolved with the output synthesized beam
+
+    project.image = synthesized image
+    project.flux.pbcoverage = promary beam correction for mosaic image
+    project.residual = residual image after cleaning
+    project.clean.last = parameter file of what parameters were used in the
+         clean task
+    project.psf = synthesized beam calculated from weighted uv distribution
+    project.image.png = diagnostic figure of clean image and residual
+
+    project.fidelity = fidelity image
+    project.analysis.png = diagnostic figure of difference and fidelity
+
+    project.sim_analyze.last = saved input parameters for simdata task
+
+</example>
+</task>
+</casaxml>
