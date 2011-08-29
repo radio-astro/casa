@@ -57,6 +57,8 @@ protected:
 private:
 	
 	// State parameters
+	volatile Bool terminationRequested_p;
+	Bool threadTerminated_p;
 	Bool writing_p;
 
 	// Writing members

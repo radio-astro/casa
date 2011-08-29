@@ -31,7 +31,11 @@ VWBT::VWBT(VisibilityIterator *visibilityIterator,
    visibilityIterator_p = visibilityIterator;
    msAccessMutex_p = msAccessMutex;
    groupRows_p = groupRows;
+
+   terminationRequested_p = false;
+   threadTerminated_p = false;
    writing_p = false;
+
    flagCube_p = NULL;
 
    initialize();
@@ -66,7 +70,7 @@ VWBT::initialize()
 void *
 VWBT::run ()
 {
-	while (True)
+	while (!terminationRequested_p)
 	{
 		if (writing_p)
 		{
@@ -91,6 +95,9 @@ VWBT::run ()
 			pthread_yield();
 		}
 	}
+
+	threadTerminated_p = true;
+
 	return NULL;
 }
 
@@ -98,12 +105,21 @@ void
 VWBT::start()
 {
 	casa::async::Thread::startThread();
+
+	return;
 }
 
 void
 VWBT::terminate ()
 {
+	terminationRequested_p = true;
+	while (!threadTerminated_p)
+	{
+		pthread_yield();
+	}
 	casa::async::Thread::terminate();
+
+	return;
 }
 
 bool
@@ -155,6 +171,8 @@ VWBT::setFlag(Cube<Bool> flagCube)
 	// Prepare next flag cube to be written
 	flagCube_p = new Cube<Bool>(flagCube);
 	writing_p = true;
+
+	return;
 }
 
 
