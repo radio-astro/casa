@@ -448,7 +448,7 @@ Bool &access(Bool *storage,uInt x, uInt y, uInt z)
 void example()
 {
 	// Create a new flag data handler with (time,frequency) maps and sub-integration views
-	FlagDataHandler *dh = new FlagDataHandler("",FlagDataHandler::COMPLETE_SCAN_MAPPED);
+	FlagDataHandler *dh = new FlagDataHandler("test.ms",FlagDataHandler::COMPLETE_SCAN_MAPPED,10);
 
 	// Open Ms
 	dh->open();
