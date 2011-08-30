@@ -389,7 +389,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                  imsizes=imsize
                  phasecenters=phasecenter
                  imageids=imagename
-
 #
 # Moved getAlgorithm() to here so that multifield is set using outlier file.
 #
@@ -507,6 +506,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 if dochaniter:
                     imset.defineChaniterModelimages(modelimage,j,tmppath)
                 else:
+                    if type(modelimage)== str: 
+                        modelimage=[modelimage] 
                     if len(imset.imagelist)!= len(modelimage):
                         raise Exception, "Number of modelimage does not match with number of image field"
                     for j in range(len(imset.imagelist)): 
