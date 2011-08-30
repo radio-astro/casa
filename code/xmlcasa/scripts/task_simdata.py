@@ -901,13 +901,12 @@ def simdata(
                 tb.open(msfile)  
                 rawdata = tb.getcol("UVW")
                 tb.done()
-                maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m            
+                maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                klam_m = 300/qa.convert(model_center,'GHz')['value']
                 minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
-                psfsize = 100.*minscale/pixsize
-                if psfsize < 32:
-                    psfsize = 32
+                psfsize = minscale/pixsize
             else:
-                psfsize=3*pixsize
+                psfsize=3
             
             
             if (grscreen or grfile):
@@ -944,7 +943,7 @@ def simdata(
                     if not image:
                         msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     # defineim needs to be larger than synth beam
-                    im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(psfsize*8))
+                    im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([psfsize*10,128])))
                     #im.makeimage(type='psf',image=project+".quick.psf")
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
                         shutil.rmtree(fileroot+"/"+project+".quick.psf")
@@ -996,12 +995,11 @@ def simdata(
                     rawdata = tb.getcol("UVW")
                     tb.done()
                     maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    klam_m = 300/qa.convert(model_center,'GHz')['value']
                     minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
-                    psfsize = 100.*minscale/pixsize
-                    if psfsize < 32:
-                        psfsize = 32
+                    psfsize = minscale/pixsize
                 else:
-                    psfsize=3*pixsize
+                    psfsize=3
                         
             
             
@@ -1283,9 +1281,8 @@ def simdata(
                           int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
             # this is primarily for sim-from-components but useful elsewhere as a minimum
             # image size:
-            if imsize[0]<8*psfsize: imsize[0]=int(8*psfsize)
-            if imsize[1]<8*psfsize: imsize[1]=int(8*psfsize)
-
+            if imsize[0]<3*psfsize: imsize[0]=int(3*psfsize)
+            if imsize[1]<3*psfsize: imsize[1]=int(3*psfsize)
             
 
 
@@ -1734,9 +1731,8 @@ def simdata(
                             im.open(msfile)  
                             # TODO spectral parms
                             # defineim needs to be larger than synth beam
-                            psfsize = 200.*klam_m/maxbase/pixsize
-                            if psfsize < 32: psfsize = 32
-                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=psfsize*8)
+                            psfsize = klam_m/maxbase/pixsize
+                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=max([psfsize*10,128]))
                             if os.path.exists(psfim):
                                 shutil.rmtree(psfim)
                             im.approximatepsf(psf=psfim)
