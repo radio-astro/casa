@@ -724,6 +724,8 @@ void MSLister::listData(const int pageRows,
         uvdist(tableRow) = uvdist(tableRow)/(C::c/freqs_p(spwinid(tableRow)));
       }
 
+      /* List available units on the top of the output */
+      myout << "Units of columns are: Date/Time(YYMMDD/HH:MM:SS UT), UVDist(wavelength), Phase(deg), UVW(m)" << endl;
       // Add or adjust ranges_p to non-zero absolutes for non-index and/or
       // converted values (so we can use ranges_p for field width and
       // precision setting):
