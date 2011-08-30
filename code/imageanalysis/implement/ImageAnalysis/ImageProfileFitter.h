@@ -63,6 +63,10 @@ class ImageProfileFitter : public ImageTask {
 	// </example>
 
 public:
+
+	static const Double integralConst;
+
+
 	// constructor appropriate for API calls.
 	// Parameters:
 	// <src>image</src> - the input image in which to fit the models
@@ -91,6 +95,7 @@ public:
 		const String& ampName = "", const String& ampErrName = "",
 		const String& centerName="", const String& centerErrName="",
 		const String& fwhmName="", const String& fwhmErrName="",
+		const String& integralName="", const String& integralErrErrName="",
 		uInt minGoodPoints=0
 	);
 
@@ -117,7 +122,8 @@ private:
 
 	String _residual, _model, _regionString, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
-		_fwhmErrName, _ampName, _ampErrName;
+		_fwhmErrName, _ampName, _ampErrName,
+		_integralName, _integralErrName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit, _deleteImageOnDestruct;
 	Int _polyOrder, _fitAxis;
 	uInt _ngauss, _minGoodPoints;

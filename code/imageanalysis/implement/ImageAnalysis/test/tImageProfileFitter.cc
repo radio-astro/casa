@@ -128,11 +128,9 @@ void testException(
 
 		// should not get here, fail if we do.
 		exceptionThrown = false;
-		AlwaysAssert(false, AipsError);
 	}
-	catch (AipsError x) {
-		AlwaysAssert(exceptionThrown, AipsError);
-	}
+	catch (AipsError x) {}
+	AlwaysAssert(exceptionThrown, AipsError);
 }
 
 int main() {

@@ -3936,7 +3936,14 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Prefix of name of FWHM error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
-
+        <param type="string" direction="in" name="integral">
+            <description>Prefix of name of integral solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
+        <param type="string" direction="in" name="integralerr">
+            <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value></value>
+        </param>
     </input>
 <returns type="any"><any type="record"/></returns>
 
@@ -3975,10 +3982,11 @@ type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
 center[0,1,...] The fitted center value for the nth component which is a gaussian.
 fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
 amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
-centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for the nth component which is a gaussian.
+integral[0,1,...] The integral value for the nth component which is a gaussian.
+centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] integralErr[0,1,...] The associated errors for the nth component which is a gaussian.
 
 One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
-fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
+fwhm, fwhmerr, integral, and integralerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian
 component number. Writing analogous images for polynomial coefficients is not yet supported. Pixels for which fits were not attempted
 or did not converge will be masked as bad.
 
