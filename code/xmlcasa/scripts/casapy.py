@@ -254,7 +254,7 @@ if os.uname()[0]=='Darwin' :
 
         # In the distro of the app then the apps dir is not there and you find things in MacOS
         if not os.path.exists(casa['helpers']['logger']) :
-            casa['helpers']['logger'] = casa_path[0]+'/MacOS/casalogger'
+            casa['helpers']['logger'] = casa_path[0]+'/Resources/Logger.app/Contents/MacOS/casalogger'
 
 
 ## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
