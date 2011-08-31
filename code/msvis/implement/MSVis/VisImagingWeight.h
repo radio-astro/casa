@@ -118,6 +118,11 @@ template<class T> class Vector;
 			 const Matrix<Double>& uvw,
 			 const Vector<Double>& frequency, const Vector<Float>& weight) const;
 
+     // This is to  get/set uniform style weight density...e.g if the caller wants to
+     // add densities from different pieces of data distributed via different 
+     // VisibilityIterators
+     virtual Bool getWeightDensity (Block<Matrix<Float> >& density);
+     virtual void setWeightDensity(const Block<Matrix<Float> >& density);
 
     private:
 
@@ -133,6 +138,9 @@ template<class T> class Vector;
      Double sinpa_p;
      Double rbmaj_p;
      Double rbmin_p;
+     Double robust_p;
+     String rmode_p;
+     Quantity noise_p;
 
 
  };
