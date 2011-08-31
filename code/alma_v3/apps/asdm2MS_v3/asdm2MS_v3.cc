@@ -2749,6 +2749,17 @@ int main(int argc, char *argv[]) {
 
       vector<double> direction = DConverter::toVectorD(r->getDirection());
  
+      DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
+      if(r->isDirectionCodeExists()){
+	dirRefCode = r->getDirectionCode();
+	//cout << "found directionCode for source " << sourceName << ": ";
+      }
+      //else{
+      //  cout << "No directionCode in input table. Assuming ";
+      //}
+      string directionCode = CDirectionReferenceCode::name(dirRefCode);
+      //cout << directionCode << endl;
+
       vector<double> position ;
       if (r->isPositionExists()){
 	position = DConverter::toVectorD<Length>(r->getPosition());
@@ -2784,6 +2795,7 @@ int main(int argc, char *argv[]) {
 				calibrationGroup,
 				code,
 				direction,
+				directionCode,
 				position,
 				properMotion,
 				transition,

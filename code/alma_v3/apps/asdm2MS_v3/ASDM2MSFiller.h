@@ -364,6 +364,7 @@ class ASDM2MSFiller
 		 int             calibration_group_,
 		 string&         code_,
 		 vector<double>& direction_,
+		 string&         direction_code_,
 		 vector<double>& position_,
 		 vector<double>& proper_motion_,
 		 vector<string>& transition_,
