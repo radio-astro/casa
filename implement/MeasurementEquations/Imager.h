@@ -561,6 +561,16 @@ class Imager
 		       const Int fieldid=0);
 
 
+  //These are utility functions when weights from different imager instances 
+  //need to reconciled in parallel gridding by different instances of imagers 
+  //for example.
+  // when type is "imaging"
+  // getweightGrid will get the weight density for uniform style imaging weight
+  // the Block elements are for different fields if independent field weighting 
+  // was done.
+
+  Bool getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type);
+  Bool setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type);
   String dQuantitytoString(const Quantity& dq);
 
 protected:
