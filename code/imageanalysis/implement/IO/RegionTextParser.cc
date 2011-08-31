@@ -221,7 +221,7 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			continue;
 		}
 		String consumeMe = *iter;
-		consumeMe.downcase();
+		// consumeMe.downcase();
 		Bool spectralParmsUpdated;
 		ParamSet newParams;
 		if (consumeMe.contains(startDiff)) {
@@ -673,14 +673,21 @@ RegionTextParser::_getCurrentParamSet(
 			}
 			else if (keyword == "labeloff") {
 				String v = paramValue.stringVal;
-				if (! v.contains(Regex("[0-9]+[:space:]*,[:space:]*[0-9]+"))) {
+				static const String sInt("[-+]?[0-9]+");
+				static const Regex rInt(sInt);
+				if (
+					! v.contains(
+						Regex(
+							sInt + "[:space:]*,[:space:]*" + sInt
+						)
+					)
+				) {
 					*_log << preamble << "Illegal label offset specification "
 						<< v << LogIO::EXCEPTION;
 				}
 				// the brackets have been stripped, add them back to make it easier
 				// to parse with a method already in existence
 				Vector<String> pair = _extractSinglePair("[" + v + "]");
-				Regex rInt("[-+]?[0-9]+");
 				paramValue.intVec = vector<Int>();
 
 				for (
@@ -726,12 +733,15 @@ RegionTextParser::_getCurrentParamSet(
 Vector<Quantity> RegionTextParser::_quantitiesFromFrequencyString(
 	const String& freqString, const String& preamble
 ) const {
-	if (! freqString.matches(sOnePair)) {
+	// the brackets have been stripped, add them back to make it easier
+	// to parse with a method already in existence
+	String cString = "[" + freqString + "]";
+	if (! cString.contains(startOnePair)) {
 		*_log << preamble << "Incorrect spectral range specification ("
 			<< freqString << ")" << LogIO::EXCEPTION;
 	}
 	return _extractSingleQuantityPair(
-		freqString, preamble
+		cString, preamble
 	);
 }
 
@@ -1001,7 +1011,7 @@ Vector<Quantity> RegionTextParser::_extractTwoQuantityPairsAndSingleQuantity(
 	quotes[1] = '"';
 
 	Int end = consumeMe.find(']', 0);
-	String qString = consumeMe.substr(0, end - 1);
+	String qString = consumeMe.substr(0, end);
 	qString.trim();
 
 	qString.trim(quotes, 2);
