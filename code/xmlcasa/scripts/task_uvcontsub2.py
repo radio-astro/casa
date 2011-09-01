@@ -20,13 +20,15 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         # This one is redundant - it is already checked at the XML level.
         if not os.path.isdir(vis):
             raise Exception, 'Visibility data set not found - please verify the name'
+
+        
+        mytb.open(vis + '/SPECTRAL_WINDOW')
+        allspw = '0~' + str(mytb.nrows() - 1)
+        mytb.close()
         if 'spw' not in combine:
             spwmfitspw = subtract_spws(spw, fitspw)
             if spwmfitspw == 'UNKNOWN':
-                # Rats.  We need to make '' explicit.
-                mytb.open(vis + '/SPECTRAL_WINDOW')
-                spwmfitspw = subtract_spws('0~' + str(mytb.nrows() - 1), fitspw)
-                mytb.close()
+                spwmfitspw = subtract_spws(allspw, fitspw)
             if spwmfitspw:
                 raise Exception, "combine must include 'spw' when the fit is being applied to spws outside fitspw."
         
@@ -39,11 +41,11 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         myfitspw = fitspw
         myspw = spw
 
-        tempspw = join_spws(fitspw, spw)
-#        if 'spw' not in combine:
-#            # We only need the spws (but potentially all the channels) listed
-#            # in fitspw.
-#            tempspw = re.sub(r':[^,]+', '', fitspw)
+        # We only need the spws in the union of fitspw and spw, but keep all
+        # the channels or the weights (as used by calibrater) will be messed up.
+        tempspw = re.sub(r':[^,]+', '', join_spws(fitspw, spw))
+        if tempspw == allspw:
+            tempspw = ''
         if tempspw:
             # The split will reindex the spws.  Update spw and fitspw.
             # Do fitspw first because the spws in spw are supposed to be
@@ -72,11 +74,18 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         mytb.close()
 
         casalog.post('Preparing to add scratch columns.')
-        if whichcol != 'DATA' or tempspw != '':
+        myfield = field
+        if field == '':
+            myfield = '*'
+        if myfield != '*' and set(ms.msseltoindex(vis,
+                               field=myfield)['field']) == set(ms.msseltoindex(vis,
+                                                                 field='*')['field']):
+            myfield = '*'
+        if whichcol != 'DATA' or tempspw != '' or myfield != '*':
             casalog.post('splitting to ' + csvis + ' with spw="'
                          + tempspw + '"')
             myms.open(vis, nomodify=True)
-            myms.split(csvis, spw=tempspw, whichcol=whichcol)
+            myms.split(csvis, spw=tempspw, field=myfield, whichcol=whichcol)
             myms.close()
         else:
             # This takes almost 30s/GB.  (lustre, 8/2011)
@@ -104,68 +113,20 @@ def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
         
         # select the data for continuum subtraction
         mycb.reset()
-        mycb.selectvis(spw=myfitspw, field=field)
-
-        # Arrange apply of existing other calibrations
-        # First do the existing cal tables...
-        #ngaintab = 0;
-        #if (gaintable!=['']):
-        #    ngaintab=len(gaintable)
-        #ngainfld = len(gainfield)
-        #nspwmap = len(spwmap)
-        #ninterp = len(interp)
-
-        # handle list of list issues with spwmap
-        #if (nspwmap>0):
-        #       if (type(spwmap[0])!=list):
-        #           # first element not a list, only one spwmap specified
-        #           # make it a list of list
-        #           spwmap=[spwmap];
-        #           nspwmap=1;
-
-        #for igt in range(ngaintab):
-        #    if (gaintable[igt]!=''):
-
-        #        # field selection is null unless specified
-        #        thisgainfield=''
-        #        if (igt<ngainfld):
-        #            thisgainfield=gainfield[igt]
-
-        #           # spwmap is null unless specifed
-        #           thisspwmap=[-1]
-        #           if (igt<nspwmap):
-        #               thisspwmap=spwmap[igt];
-
-        #           # interp is 'linear' unless specified
-        #           thisinterp='linear'
-        #           if (igt<ninterp):
-        #               if (interp[igt]==''):
-        #                   interp[igt]=thisinterp
-        #               thisinterp=interp[igt]
-                    
-        #           mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
-        #               calwt=True,spwmap=thisspwmap,interp=thisinterp)
-
-        # ...and now the specialized terms
-        # (BTW, interp irrelevant for these, since they are evaluated)
-        #if (opacity>0.0): mycb.setapply(type='TOPAC',t=-1,opacity=opacity,calwt=True)
-        #if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=True)
-
-        # Apply parallactic angle, if requested
-        #if parang: mycb.setapply(type='P')
+        mycb.selectvis(spw=myfitspw)
 
         # Set up the solve
         amuellertab = tempfile.mkdtemp(prefix='Temp_contsub.tab',
                                        dir=workingdir)
 
         mycb.setsolve(type='A', t=solint, table=amuellertab, combine=combine,
-                    fitorder=fitorder)
+                      fitorder=fitorder)
 
         # solve for the continuum
         mycb.solve()
 
         # subtract the continuum
-        mycb.selectvis(field=field, spw=myspw)
+        mycb.selectvis(spw=myspw)
         aspwmap=-1
         # if we combined on spw in solve, fanout the result with spwmap=-999;
         if 'spw' in combine:

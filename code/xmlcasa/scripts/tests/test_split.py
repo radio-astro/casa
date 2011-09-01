@@ -342,34 +342,34 @@ class split_test_tav(SplitChecker):
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
-        """SIGMA[7],  time avg. without correlation selection"""
+        """SIGMA[7], time avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
                  numpy.array([0.00168478, 0.00179394,
                               0.00182574, 0.00194404]),
                  0.0001)
         
     def test_sigma_rrll(self):
-        """SIGMA[7],  time avg. RR, LL"""
+        """SIGMA[7], time avg. RR, LL"""
         check_eq(self.records['rr, ll']['sigma'],
                  numpy.array([0.00168478, 0.00194404]),
                  0.0001)
         #self.__class__.n_tests_passed += 1
         
     def test_sigma_rllr(self):
-        """SIGMA[7],  time avg. RL, LR"""
+        """SIGMA[7], time avg. RL, LR"""
         check_eq(self.records['rl, lr']['sigma'],
                  numpy.array([0.00179394, 0.00182574]),
                  0.0001)
         #self.__class__.n_tests_passed += 1
         
     def test_sigma_rr(self):
-        """SIGMA[7],  time avg. RR"""
+        """SIGMA[7], time avg. RR"""
         check_eq(self.records['rr']['sigma'],
                  numpy.array([0.00168478]),
                  0.0001)
         
     def test_sigma_ll(self):
-        """SIGMA[7],  time avg. LL"""
+        """SIGMA[7], time avg. LL"""
         check_eq(self.records['ll']['sigma'],
                  numpy.array([0.00194404]),
                  0.0001)
@@ -450,41 +450,35 @@ class split_test_cav(SplitChecker):
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
         check_eq(self.records['']['weight'],
-                 numpy.array([0.38709676, 0.38709676]),
-                 0.001)
+                 numpy.array([0.38709676, 0.38709676]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_wt_rr(self):
         """WEIGHT[5], chan avg. RR"""
         check_eq(self.records['rr']['weight'],
-                 numpy.array([0.38709676]),
-                 0.001)
+                 numpy.array([0.38709676]), 0.001)
 
     def test_wt_ll(self):
         """WEIGHT[5], chan avg. LL"""
         check_eq(self.records['ll']['weight'],
-                 numpy.array([0.38709676]),
-                 0.001)
+                 numpy.array([0.38709676]), 0.001)
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
-        """SIGMA[7],  chan avg. without correlation selection"""
+        """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([1.60727513, 1.60727513]),
-                 0.0001)
+                 numpy.array([1.0, 1.0]), 0.0001)
         
     def test_sigma_rr(self):
-        """SIGMA[7],  chan avg. RR"""
+        """SIGMA[7], chan avg. RR"""
         check_eq(self.records['rr']['sigma'],
-                 numpy.array([1.60727513]),
-                 0.0001)
+                 numpy.array([1.0]), 0.0001)
         #self.__class__.n_tests_passed += 1
         
     def test_sigma_ll(self):
-        """SIGMA[7],  chan avg. LL"""
+        """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([1.60727513]),
-                 0.0001)
+                 numpy.array([1.0]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cav5(SplitChecker):
@@ -561,16 +555,14 @@ class split_test_cav5(SplitChecker):
         #self.__class__.n_tests_passed += 1
 
     def test_sigma(self):
-        """SIGMA[7],  chan avg. without correlation selection"""
+        """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([1.60727513, 1.60727513]),
-                 0.0001)
+                 numpy.array([1.0, 1.0]), 0.0001)
         
     def test_sigma_ll(self):
-        """SIGMA[7],  chan avg. LL"""
+        """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([1.60727513]),
-                 0.0001)
+                 numpy.array([1.0]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cdsp(SplitChecker):

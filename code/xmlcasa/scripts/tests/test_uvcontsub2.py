@@ -163,13 +163,11 @@ class combspw(UVContChecker):
 
     def test_0ran(self):
         """combspw fitorder=0 line estimate"""
-        check_eq(self.records[0]['contsub'], -6.99146+17.53703j,
-                 0.001)
+        check_eq(self.records[0]['contsub'], -6.2324+17.9865j, 0.001)
 
     def test_1ran(self):
         """combspw fitorder=1 line estimate"""
-        check_eq(self.records[1]['contsub'], -7.0302+17.4318428j,
-                 0.001)
+        check_eq(self.records[1]['contsub'], -6.2533+17.6584j, 0.001)
         
 def suite():
     return [zeroth, fourth, combspw]

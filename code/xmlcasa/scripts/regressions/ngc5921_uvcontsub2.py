@@ -152,7 +152,7 @@ def reportresults(redi):
         tstutl.note(msg, normalsevere[tup[0]])
         if len(tup) > 1:
             print >>logfile, tup[1]
-        tstutl.note("\"tup[0]\": \"%s\"" % tup[0], "WARN")
+        #tstutl.note("\"tup[0]\": \"%s\"" % tup[0], "WARN")
         if not tup[0]:
             ok = False
             if len(tup) > 2:
@@ -170,7 +170,7 @@ def listfailures(redi):
         if not tup[0]:
             msg = t + "  FAILED"
             if len(tup) > 2:
-                msg += ":\n  " + tup[1] + "\n    difference: " + tup[2]
+                msg += ":\n  " + str(tup[1]) + "\n    difference: " + str(tup[2])
             tstutl.note(msg, "SEVERE")
     
 # Start benchmarking

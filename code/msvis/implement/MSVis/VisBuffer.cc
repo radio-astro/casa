@@ -747,6 +747,9 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     uInt nCor = nCorr();
     uInt nrows = nRow();
     Matrix<Float> rowWtFac(nCor, nrows);
+
+    Double selChanFac = 1.0;
+
     if(doWtSp){                                    // Get the total weight spectrum
       const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
       uInt nch = wtsp.shape()(1);
@@ -760,7 +763,11 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
             rowWtFac(icor, row) += wtsp(icor, ichan, row);
         }
       }
-    }
+      if(nAllChan0 > 0)                 // This is slightly fudgy.
+        selChanFac = nch / nAllChan0;   // Now that selection is applied to
+    }                                   // weightSpectrum(), we can't get at
+    else                                // the unselected channel weights.
+      rowWtFac = 1.0;
 
     // The false makes it leave weightSpectrum() averaged if it is present.
     if(flagCubeOK_p)          chanAveFlagCube(flagCube(), nChanOut, false);
@@ -821,17 +828,15 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
           }
         }
       }
-      else{
-        rowWtFac = static_cast<Float>(totn) / nAllChan0;
-      }
+      selChanFac = static_cast<Float>(totn) / nAllChan0;
 
       for(uInt row = 0; row < nrows; ++row){
         for(uInt icor = 0; icor < nCor; ++icor){
           Float rwfcr = rowWtFac(icor, row);
 
-          weightMat()(icor, row) *= rwfcr;
-          if(rwfcr > 0.0)
-            sigmaMat()(icor, row) /= sqrt(rwfcr);
+          weightMat()(icor, row) *= selChanFac * rwfcr;
+          if(rwfcr > 0.0)                               // Unlike WEIGHT, SIGMA
+            sigmaMat()(icor, row) /= sqrt(rwfcr);       // is for a single chan
         }
       }
     }

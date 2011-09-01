@@ -301,7 +301,7 @@ def set_to_chanstr(chanset, totnchan=None):
                         retstr += ';' + str(cc)
                         sc = cc
                 oldc = cc
-    else:
+    elif len(mylist) > 0:
         retstr = str(mylist[0])
     return retstr
         
@@ -592,9 +592,11 @@ def spw_to_dict(spw, spwdict={}, conv_multiranges=True):
     enter_ranges(spwgrp, chagrp)
     return myspwdict
 
-def join_spws(spw1, spw2):
+def join_spws(spw1, spw2, span_semicolon=True):
     """
-    Returns the union of spw selection strings spw1 and spw2.  For any spws
+    Returns the union of spw selection strings spw1 and spw2.
+
+    span_semicolon (default True): If True, for any spws
     that have > 1 channel range, the entire spw will be selected.
 
     Examples:
@@ -607,6 +609,8 @@ def join_spws(spw1, spw2):
     '1~10:5~122,15~22:5~122'
     >>> join_spws('', '')
     ''
+    >>> join_spws('1~10:5~122,15~22:5~122', '0~21')
+    '0~21,22:5~122'
     """
     if not spw1 or not spw2:
         return ''
@@ -618,19 +622,10 @@ def join_spws(spw1, spw2):
     # Convert channel sets to strings
     for s in spwdict:
         cstr = ''
-        if isinstance(spwdict[s], set) and len(spwdict[s]) > 0:
-            clist = list(spwdict[s])
-            clist.sort()
-            cstr = str(clist[0])
-            laststart = 0
-            for i in xrange(1, len(clist)):
-                if clist[i] == clist[laststart] + 1:
-                    cstr += '~'
-                elif clist[i] > clist[i - 1] + 1:
-                    cstr = ''                      # Multiple channel ranges are not yet supported,
-                    break                          # just select everything in the spw.
-            if len(cstr) > 0 and cstr[-1] == '~':
-                cstr += str(clist[-1])
+        if isinstance(spwdict[s], set):
+            cstr = set_to_chanstr(spwdict[s])
+            if span_semicolon and ';' in cstr:
+                cstr = ''
         spwdict[s] = cstr
 
     # If consecutive spws have the same channel selection, merge them.
@@ -653,7 +648,7 @@ def join_spws(spw1, spw2):
     if res[-1] == '~':               # Finish the last range if it is dangling.
         res += str(slist[-1])
     if spwdict[slist[-1]] != '':          # Add channel range, if any.
-        res += ':' + spwdict[slist[i - 1]]
+        res += ':' + spwdict[slist[-1]]
     return res
 
 def intersect_spws(spw1, spw2):
