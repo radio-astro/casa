@@ -4174,7 +4174,62 @@ Bool ImageAnalysis::statistics(
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
 		mtmp,  (verbose ? itsLog : 0), False
 	);
+	/*
+	{
+		cout << "mask " << subImage.getMask() << endl;
+		Array<Bool> mymask = subImage.getMask();
+		IPosition shape = mymask.shape();
+		IPosition index = shape-1;
+		uInt j=0;
+		while(True) {
+			for (uInt i=0; i<shape(0); i++) {
+				index[0] = i;
+				cout << mymask(index) << " ";
+			}
+			cout << index << endl;
+			for (j=1; j<shape.size(); j++) {
+				if (index[j] == 0) {
+					index[j] = shape[j]-1;
+					cout << endl;
+				}
+			else {
+				index[j]--;
+				break;
+			}
 
+			}
+			if (j == shape.size()) {
+				break;
+			}
+		}
+		cout << "pixel mask " << endl;
+		mymask = subImage.pixelMask().get();
+		shape = mymask.shape();
+		index = shape-1;
+		j=0;
+		while(True) {
+			for (uInt i=0; i<shape(0); i++) {
+				index[0] = i;
+				cout << mymask(index) << " ";
+			}
+			cout << index << endl;
+			for (j=1; j<shape.size(); j++) {
+				if (index[j] == 0) {
+					index[j] = shape[j]-1;
+					cout << endl;
+				}
+			else {
+				index[j]--;
+				break;
+			}
+
+			}
+			if (j == shape.size()) {
+				break;
+			}
+		}
+	}
+	*/
 	// Reset who is logging stuff.
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -4414,6 +4469,7 @@ Bool ImageAnalysis::statistics(
 	}
 
 	if (list || !pgdevice.empty()) {
+		pStatistics_p->showRobust(trobust);
 		if (!pStatistics_p->display()) {
 			*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;
 		}
