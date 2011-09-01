@@ -53,10 +53,9 @@ namespace casa {
 	    public:
 		QtRegion( const QString &nme, QtRegionSource *factory );
 		virtual ~QtRegion( );
-#if OLDSTUFF
-		void clearstats( );
-		void addstats( const std::string &name, std::list<std::pair<String,String> > *stats );
-#endif
+
+		const std::string name( ) const { return name_.toStdString( ); }
+
 		std::string lineColor( ) const { return mystate->lineColor( ); }
 		int lineWidth( ) const { return mystate->lineWidth( ); }
 		Region::LineStyle lineStyle( ) const { return mystate->lineStyle( ); }

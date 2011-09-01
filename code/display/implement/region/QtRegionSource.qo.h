@@ -47,10 +47,11 @@ namespace casa {
 	    public:
 		QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel ) : RegionSource(rc), panel_(panel) { }
 
-		memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y );
-		memory::cptr<Rectangle> rectangle( WorldCanvas *wc, int blc_x, int blc_y, int trc_x, int trc_y );
+		/* memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
+		memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+		memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 );
+
 #if 0
-		const Polygon &polygon( const std::vector<int> &x, const std::vector<int> &y ) = 0;
 		const Ellipse &ellipse( const std::vector<int> &x, const std::vector<int> &y ) = 0;
 #endif
 

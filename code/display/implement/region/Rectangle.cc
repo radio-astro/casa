@@ -26,7 +26,7 @@ namespace casa {
 	}
 
 
-	int Rectangle::resize( int handle, double x, double y ) {
+	int Rectangle::moveHandle( int handle, double x, double y ) {
 	    switch ( handle ) {
 	      case 1:		// trc handle
 		if ( x < blc_x ) {
@@ -207,7 +207,8 @@ namespace casa {
 
 	    if ( visible_ == false ) return result;
 
-	    if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
+	    //if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
+	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
 		result |= MouseSelected;
 		result |= MouseRefresh;
 		selected_ = true;
@@ -223,50 +224,6 @@ namespace casa {
 		result |= MouseRefresh;
 	    }
 	    return result;
-	}
-
-	static Int getAxisIndex( ImageInterface<Float> *image, String axtype ) {
-
-	    if( image == 0 ) return -1;
-
-	    const CoordinateSystem* cs=0;
-	    try {
-		cs = &(image->coordinates());
-	    } catch(...) { cs = 0;  }	// (necessity of try-catch is doubtful...).
-
-	    if (cs==0) return -1;
-
-	    try {
-		Int nAxes = image->ndim();
-		for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) {
-		    // coordno : type of coordinate
-		    // axisincoord : index within the coordinate list defined by coordno
-		    Int coordno, axisincoord;
-		    cs->findWorldAxis(coordno, axisincoord, ax);
-
-		    //cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs->showType(coordno) << endl;
-
-		    if( cs->showType(coordno) == String("Direction") ) {
-			// Check for Right Ascension and Declination
-			Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
-			AlwaysAssert( axisincoord>=0 && axisincoord < axnames.nelements(), AipsError);
-			if( axnames[axisincoord] == axtype ) {
-			    return ax;
-			}
-		    } else {
-			// Check for Stokes and Spectral
-			if ( cs->showType(coordno)==axtype ) {
-			    return ax;
-			}
-		    }
-		}
-	    } catch (...) {
-		std::string errMsg_ = "Unknown error converting region ***";
-		// cerr<<"mse2ImgReg: "<<errMsg_<<endl;	//#dg
-		// emit qddRegnError(errMsg_);
-		return -1;
-	    }
-	    return -1;
 	}
 
 	Region::StatisticsList *Rectangle::generate_statistics_list(  ) {
@@ -330,7 +287,7 @@ namespace casa {
 
 		    dispAxes.resize(2,True);
 
-		    WCBox dummy;
+		    // WCBox dummy;
 		    Quantum<Double> px0(0.,"pix");
 		    Vector<Quantum<Double> > blcq(nAxes,px0), trcq(nAxes,px0);
 
@@ -365,6 +322,7 @@ namespace casa {
 		    ImageRegion *imageregion = new ImageRegion(box);
 
 		    region_statistics->push_back(StatisticsList::value_type(full_image_name,getLayerStats(padd,image,*imageregion)));
+		    delete imageregion;
 
 		} catch (const casa::AipsError& err) {
 		    errMsg_ = err.getMesg();

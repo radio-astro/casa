@@ -873,6 +873,52 @@ namespace casa {
 		    return 0;
 		}
 	}
+
+	Int Region::getAxisIndex( ImageInterface<Float> *image, String axtype ) {
+
+	    if( image == 0 ) return -1;
+
+	    const CoordinateSystem* cs=0;
+	    try {
+		cs = &(image->coordinates());
+	    } catch(...) { cs = 0;  }	// (necessity of try-catch is doubtful...).
+
+	    if (cs==0) return -1;
+
+	    try {
+		Int nAxes = image->ndim();
+		for(Int ax=0; ax<nAxes && ax<Int(cs->nWorldAxes()); ax++) {
+		    // coordno : type of coordinate
+		    // axisincoord : index within the coordinate list defined by coordno
+		    Int coordno, axisincoord;
+		    cs->findWorldAxis(coordno, axisincoord, ax);
+
+		    //cout << "coordno=" << coordno << "  axisincoord : " << axisincoord << "  type : " << cs->showType(coordno) << endl;
+
+		    if( cs->showType(coordno) == String("Direction") ) {
+			// Check for Right Ascension and Declination
+			Vector<String> axnames = (cs->directionCoordinate(coordno)).axisNames(MDirection::DEFAULT);
+			AlwaysAssert( axisincoord>=0 && axisincoord < axnames.nelements(), AipsError);
+			if( axnames[axisincoord] == axtype ) {
+			    return ax;
+			}
+		    } else {
+			// Check for Stokes and Spectral
+			if ( cs->showType(coordno)==axtype ) {
+			    return ax;
+			}
+		    }
+		}
+	    } catch (...) {
+		std::string errMsg_ = "Unknown error converting region ***";
+		// cerr<<"mse2ImgReg: "<<errMsg_<<endl;	//#dg
+		// emit qddRegnError(errMsg_);
+		return -1;
+	    }
+	    return -1;
+	}
+
+
     }
 
 }

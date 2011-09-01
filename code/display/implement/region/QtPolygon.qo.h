@@ -1,4 +1,4 @@
-//# QtRectangle.h: base class for statistical regions
+//# QtPolygon.h: base class for statistical regions
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,11 +26,11 @@
 //# $Id$
 
 
-#ifndef REGION_QTRECTANGLE_H_
-#define REGION_QTRECTANGLE_H_
+#ifndef REGION_QTPOLYGON_H_
+#define REGION_QTPOLYGON_H_
 
 #include <display/region/QtRegion.qo.h>
-#include <display/region/Rectangle.h>
+#include <display/region/Polygon.h>
 
 namespace casa {
     namespace viewer {
@@ -45,10 +45,9 @@ namespace casa {
 	//    <ul>
 	//        <li> regions are produced by a factory to permit the creation of gui specific regions </li>
 	//    </ul>
-	class QtRectangle : public QtRegion, public Rectangle {
-	    Q_OBJECT
+	class QtPolygon : public QtRegion, public Polygon {
+
 	    public:
-		~QtRectangle( );
 
 		const std::string name( ) const { return QtRegion::name( ); }
 
@@ -74,32 +73,30 @@ namespace casa {
 				   const std::string &coord, const std::string &units )
 			{ Region::movePosition( x, y, coord, units ); }
 
-
 		int numFrames( ) const { return QtRegion::numFrames( ); }
 		void zRange( int &min, int &max ) const { QtRegion::zRange(min,max); }
 		int zIndex( ) const { return Region::zIndex( ); }
-
-		bool regionVisible( ) const { return Region::regionVisible( ); }
-		void regionCenter( double &x, double &y ) const { Rectangle::regionCenter( x, y ); }
-
-		QtRectangle( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-
-		// qt-event -> QtRegion -> QtRectangle -> Region::refresh( )
-		void refresh( ) { Rectangle::refresh( ); }
-		AnnRegion *annotation( ) const { return Rectangle::annotation( ); }
-
-		// indicates that the user has selected this rectangle...
-		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
 
 		// indicates that region movement requires that the statistcs be updated...
 		void updateStateInfo( bool region_modified ) { QtRegion::updateStateInfo( region_modified ); }
 
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
-	    protected:
-		Region::StatisticsList *generate_statistics_list( ) { return Rectangle::generate_statistics_list( ); }
-		virtual Region *fetch_my_region( ) { return (Region*) this; }
+		QtPolygon( QtRegionSource *factory, WorldCanvas *wc, double x1, double y1 );
 
+		bool regionVisible( ) const { return Region::regionVisible( ); }
+		void regionCenter( double &x, double &y ) const { Polygon::regionCenter( x, y ); }
+
+		// qt-event -> QtRegion -> QtPolygon -> Region::refresh( )
+		void refresh( ) { Polygon::refresh( ); }
+		AnnRegion *annotation( ) const { return Polygon::annotation( ); }
+
+		// indicates that the user has selected this rectangle...
+		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
+
+	    protected:
+		Region::StatisticsList *generate_statistics_list( ) { return Polygon::generate_statistics_list( ); }
+		virtual Region *fetch_my_region( ) { return (Region*) this; }
 
 	};
     }

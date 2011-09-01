@@ -91,7 +91,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	public:
   
 	    // Constructor
-	    MultiRectTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd, Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False);
+	    MultiRectTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
+			   Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False );
   
 	    // Destructor
 	    virtual ~MultiRectTool();
@@ -207,8 +208,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    viewer::RegionSource *rfactory;
 	    rectanglelist rectangles;
-	    /* memory::cptr<viewer::Rectangle> selected; */
-
 	    PanelDisplay *pd_;
     };
 

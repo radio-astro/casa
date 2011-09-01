@@ -242,7 +242,7 @@ if( APPLE )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
 	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
 	else()
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit -lgfortran"  )
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit"  )
         endif()
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.

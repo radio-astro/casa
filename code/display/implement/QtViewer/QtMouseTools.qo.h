@@ -32,7 +32,7 @@
 #include <casa/aips.h>
 #include <display/DisplayEvents/MultiRectToolImpl.h>
 #include <display/DisplayEvents/MWCETRegion.h>
-#include <display/DisplayEvents/MWCPTRegion.h>
+#include <display/DisplayEvents/MultiPolyToolImpl.h>
 #include <display/Display/PanelDisplay.h>
 #include <casa/Containers/Record.h>
 
@@ -157,7 +157,7 @@ class QtELRegion: public QtMouseTool, public MWCETRegion {
 // QtPTRegion is the Polygon Region mouse tool that sends a signal
 // when a new polygon is ready.
 // </synopsis>
-class QtPTRegion: public QtMouseTool, public MWCPTRegion {
+class QtPTRegion: public QtMouseTool, public MultiPolyToolImpl {
   
   Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
@@ -165,7 +165,7 @@ class QtPTRegion: public QtMouseTool, public MWCPTRegion {
 
  public: 
  
-  QtPTRegion(PanelDisplay* pd) : QtMouseTool(), MWCPTRegion(), pd_(pd) {  }
+  QtPTRegion(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtMouseTool(), MultiPolyToolImpl(rf, pd), pd_(pd) {  }
   
   ~QtPTRegion() {  }
   
