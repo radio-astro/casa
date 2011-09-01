@@ -36,7 +36,6 @@ set (tests
 dImageHistograms
 dImageInterface
 dImageMoments
-dImageProfileFit
 dImageStatistics
 dImageSummary
 dPagedImage
