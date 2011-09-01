@@ -51,6 +51,7 @@ tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
 tImageAnalysis
+tImageAnalysis2
 tImageConcat
 tImageConvolver
 tImageDecomposer
