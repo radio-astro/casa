@@ -242,6 +242,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
+  class MSSelectionObservationError : public MSSelectionError {
+  public:
+    // Add given message to string "MSSelection time error: ".
+    MSSelectionObservationError (const String& message,Category c=GENERAL);
+    ~MSSelectionObservationError () throw();
+  };
+  
+  class MSSelectionObservationParseError: public MSSelectionObservationError {
+  public:
+    MSSelectionObservationParseError (const String& message,Category c=GENERAL);
+    ~MSSelectionObservationParseError () throw();
+  };
+
+  class MSSelectionObservationWarning: public MSSelectionObservationError {
+  public:
+    MSSelectionObservationWarning (const String& message,Category c=GENERAL);
+    ~MSSelectionObservationWarning () throw();
+  };
+  //
+  //-------------------------------------------------------------------
+  //  
   String constructMessage(const Int pos, const String& command);
 } //# NAMESPACE CASA - END
 

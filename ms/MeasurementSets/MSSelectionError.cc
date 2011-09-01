@@ -199,5 +199,20 @@ MSSelectionStateParseError::MSSelectionStateParseError (const String& str,Catego
 MSSelectionStateParseError::~MSSelectionStateParseError () throw()
 {}
 
+//
+//-----------------------------------------------------------------------------------
+//
+MSSelectionObservationError::MSSelectionObservationError (const String& str,Category c)
+: MSSelectionError(str,c)
+{}
+MSSelectionObservationError::~MSSelectionObservationError () throw()
+{}
+
+MSSelectionObservationParseError::MSSelectionObservationParseError (const String& str,Category c)
+: MSSelectionObservationError(str,c)
+{}
+MSSelectionObservationParseError::~MSSelectionObservationParseError () throw()
+{}
+
 } //# NAMESPACE CASA - END
 

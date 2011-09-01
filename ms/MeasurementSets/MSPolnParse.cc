@@ -111,6 +111,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					 Vector<Int>& polnIDs,
 					 Vector<Int>& polnIndices)
   {
+    (void)msPolNdx;
     Vector<Int> ddIDs;
     Vector<Int> thisDDList;
     Vector<Int> validPolIDs, validPolIndices;
@@ -233,6 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						    Vector<Int>& polIndices,
 						    Bool addToMap)
   {
+    (void)polIndexMap;
     Vector<Int> rowList;
     MSPolarization mspol(ms()->polarizationTableName());
     ROMSPolarizationColumns mspolC(mspol);
@@ -269,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	  }
 
-	if ((allFound=(foundCounter == polIds.nelements())))
+	if ((allFound=(foundCounter == (Int)polIds.nelements())))
 	  {
 	    if (addToMap) setIDLists((Int)row,0,polIndices);
 	  }
@@ -377,7 +379,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Vector<Int> polnIDs;
 
 	String s(":"), spwExpr, polnExpr;
-	Int nSpw, nCorr, nTokens;
+	Int nSpw, nTokens;
 	//
 	// User suppport: Check if they tried [SPW:CHAN:]POLN kind of
 	// specification.  Darn - String::freq(...) does not work!

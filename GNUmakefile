@@ -352,6 +352,7 @@ MSLIB := ms/MeasurementSets/MSAntennaGram.lcc ms/MeasurementSets/MSAntennaGram.y
 	       ms/MeasurementSets/MSArrayGram.lcc ms/MeasurementSets/MSArrayGram.ycc \
 	       ms/MeasurementSets/MSCorrGram.lcc ms/MeasurementSets/MSCorrGram.ycc \
 	       ms/MeasurementSets/MSFieldGram.lcc ms/MeasurementSets/MSFieldGram.ycc \
+	       ms/MeasurementSets/MSObservationGram.lcc ms/MeasurementSets/MSObservationGram.ycc \
 	       ms/MeasurementSets/MSScanGram.lcc ms/MeasurementSets/MSScanGram.ycc \
 	       ms/MeasurementSets/MSSpwGram.lcc ms/MeasurementSets/MSSpwGram.ycc \
 	       ms/MeasurementSets/MSTimeGram.lcc ms/MeasurementSets/MSTimeGram.ycc \
@@ -364,6 +365,7 @@ MSLIB := ms/MeasurementSets/MSAntennaGram.lcc ms/MeasurementSets/MSAntennaGram.y
 	       ms/MeasurementSets/MSArrayGram.lcc ms/MeasurementSets/MSArrayGram.ycc \
 	       ms/MeasurementSets/MSCorrGram.lcc ms/MeasurementSets/MSCorrGram.ycc \
 	       ms/MeasurementSets/MSFieldGram.lcc ms/MeasurementSets/MSFieldGram.ycc \
+	       ms/MeasurementSets/MSObservationGram.lcc ms/MeasurementSets/MSObservationGram.ycc \
 	       ms/MeasurementSets/MSScanGram.lcc ms/MeasurementSets/MSScanGram.ycc \
 	       ms/MeasurementSets/MSSpwGram.lcc ms/MeasurementSets/MSSpwGram.ycc \
 	       ms/MeasurementSets/MSTimeGram.lcc ms/MeasurementSets/MSTimeGram.ycc \
