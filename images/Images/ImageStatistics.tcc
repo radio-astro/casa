@@ -65,7 +65,8 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 // Constructor
 //
 : LatticeStatistics<T>(image, os, showProgress, forceDisk),
-  pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)), precision_(-1)
+  pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)),
+  precision_(-1), _showRobust(False)
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
@@ -80,7 +81,8 @@ ImageStatistics<T>::ImageStatistics (const ImageInterface<T>& image,
 // Constructor
 //
 : LatticeStatistics<T>(image, showProgress, forceDisk),
-  pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)), precision_(-1)
+  pInImage_p(0), blc_(IPosition(image.coordinates().nPixelAxes(), 0)),
+  precision_(-1), _showRobust(False)
 {
    if (!setNewImage(image)) {
       os_p << error_p << LogIO::EXCEPTION;
@@ -345,6 +347,11 @@ Bool ImageStatistics<T>::listStats (Bool hasBeam, const IPosition& dPos,
 }
 
 template <class T>
+void ImageStatistics<T>::showRobust(const Bool show) {
+	_showRobust = show;
+}
+
+template <class T>
 void ImageStatistics<T>::displayStats(
 		AccumType nPts, AccumType sum, AccumType median,
 		AccumType medAbsDevMed, AccumType quartile, AccumType sumSq,
@@ -437,12 +444,14 @@ void ImageStatistics<T>::displayStats(
 				<< sbunit <<  LogIO::POST;
 		os_p << "        -- Root mean square [rms]:                  " << rms << " "
 				<< sbunit << LogIO::POST;
-		os_p << "        -- Median of the pixel values [median]:     " << median <<
+		if (_showRobust) {
+			os_p << "        -- Median of the pixel values [median]:     " << median <<
 				" " << sbunit << LogIO::POST;
-		os_p << "        -- Median of the deviations [medabsdevmed]: " << medAbsDevMed
+			os_p << "        -- Median of the deviations [medabsdevmed]: " << medAbsDevMed
 				<< " " << sbunit << LogIO::POST;
-		os_p << "        -- Quartile [quartile]:                     " << quartile << " " <<
+			os_p << "        -- Quartile [quartile]:                     " << quartile << " " <<
 				sbunit <<LogIO::POST;
+		}
 	} else {
 		os_p << LogIO::WARN << "No valid points found " << LogIO::POST;
 	}

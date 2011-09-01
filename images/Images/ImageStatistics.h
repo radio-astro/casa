@@ -142,6 +142,9 @@ public:
 
    Int getPrecision() const;
 
+   // list robust statistics? Should be called before display()
+   void showRobust(const Bool show);
+
 private:
 
 // Data
@@ -150,6 +153,7 @@ private:
    const ImageInterface<T>* pInImage_p;
    IPosition blc_;
    Int precision_;
+   Bool _showRobust;
 
 // Virtual functions.  See LatticeStatistics for more information
 // about these, or see the implementation.
