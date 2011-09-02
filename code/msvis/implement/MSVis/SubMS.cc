@@ -659,23 +659,11 @@ Bool SubMS::pickAntennas(Vector<Int>& selected_antennaids,
   return didSelect;
 }
   
-  void SubMS::selectArray(const String& subarray)
-  {
-    arrayExpr_p = subarray;
-    if(arrayExpr_p == ""){      // Zap any old ones.
-      arrayId_p.resize();
-      arrayRemapper_p.clear();
-    }
-    // else arrayId_p will get set in makeSelection().
-
-  }
-  
   void SubMS::selectTime(Double timeBin, String timerng)
   {  
     timeBin_p   = timeBin;
     timeRange_p = timerng;
-  }
-  
+  }  
   
   Bool SubMS::makeSubMS(String& msname, String& colname,
                         const Vector<Int>& tileShape, const String& combine)

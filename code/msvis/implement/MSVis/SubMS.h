@@ -167,7 +167,7 @@ class SubMS
 			   const Vector<String>& antennaSel);
   
   // Select array IDs to use.
-  void selectArray(const String& subarray);
+  void selectArray(const String& subarray) {arrayExpr_p = subarray;}
 
   //select time parameters
   void selectTime(Double timeBin=-1.0, String timerng="");
@@ -630,7 +630,6 @@ class SubMS
   Vector<Int> antIndexer_p;
   Vector<Int> antNewIndex_p;
 
-  Vector<Int> arrayId_p;
   Vector<Int> selObsId_p;  // List of selected OBSERVATION_IDs.
   Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
   Vector<uInt> spw2ddid_p;
@@ -638,7 +637,7 @@ class SubMS
   // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
   Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
-  std::map<Int, Int> arrayRemapper_p, stateRemapper_p; 
+  std::map<Int, Int> stateRemapper_p; 
 
   Vector<Vector<Slice> > chanSlices_p;  // Used by VisIterator::selectChannel()
   Vector<Slice> corrSlice_p;
