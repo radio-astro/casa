@@ -36,12 +36,12 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 MWCRulerlineTool::MWCRulerlineTool(Display::KeySym keysym,
-			     Bool  scrollingAllowed) :
+			     Bool) :
   MultiWCTool(keysym),
   itsActive(False),
+  itsEqualUnits(False),
   itsRaIndex(-1),
-  itsDecIndex(-1),
-  itsEqualUnits(False)
+  itsDecIndex(-1)
 {
 }
 
@@ -52,11 +52,15 @@ void MWCRulerlineTool::keyPressed(const WCPositionEvent &ev) {
   itsX1=itsX2=ev.pixX(); itsY1=itsY2=ev.pixY();
   itsCurrentWC = ev.worldCanvas();
   itsActive = True;
-
-  // get the index of RA and DEC in the coo-sytem
-  Vector<String> aXisNames=itsCurrentWC->coordinateSystem().worldAxisNames();
   itsRaIndex  = -1;
   itsDecIndex = -1;
+  itsEqualUnits=True;
+
+  // extract the axis names and units
+  Vector<String> aXisNames=itsCurrentWC->worldAxisNames();
+  Vector<String> unitNames=itsCurrentWC->worldAxisUnits();
+
+  // identify RA and DEC axis
   for (Int index=0; index < (Int)aXisNames.size(); index++){
 	  if (aXisNames(index).contains("scension") && (index < 2))
 		  itsRaIndex=index;
@@ -64,13 +68,13 @@ void MWCRulerlineTool::keyPressed(const WCPositionEvent &ev) {
 		  itsDecIndex=index;
   }
 
-  // get the units of the axes in the coordinate-system
-  Vector<String> unitNames=itsCurrentWC->coordinateSystem().worldAxisUnits();
-  //cout << "unit names: " << unitNames << endl;
-  if (!unitNames(0).compare(unitNames(1)))
-	  itsEqualUnits=True;
-  else
-	  itsEqualUnits=False;
+  // check for equal units
+  if (unitNames.size()>1){
+	  if (!unitNames(0).compare(unitNames(1)))
+		  itsEqualUnits=True;
+	  else
+		  itsEqualUnits=False;
+  }
 }
 
 void MWCRulerlineTool::moved(const WCMotionEvent &ev) {
@@ -101,8 +105,20 @@ void MWCRulerlineTool::draw(const WCRefreshEvent &) {
   // get the position of the start- and end-points
   pix1(0) = (Double)itsX1; pix1(1) = (Double)itsY1;
   pix2(0) = (Double)itsX2; pix2(1) = (Double)itsY2;
-  itsCurrentWC->pixToWorld(world1, pix1);
-  itsCurrentWC->pixToWorld(world2, pix2);
+
+  // determine the positions in world coordinates
+  if (!itsCurrentWC->pixToWorld(world1, pix1)
+		  || !itsCurrentWC->pixToWorld(world2, pix2)){
+
+	  // if one of the positions could
+	  // NOT be determined, just draw a line between
+	  // the start and end point
+	  pCanvas->setColor(drawColor());
+	  pCanvas->setDrawFunction(Display::DFCopy);
+ 	  pCanvas->setLineWidth(2);
+  	  pCanvas->drawLine(itsX1, itsY1, itsX2, itsY2);
+  	  return;
+  }
 
   // get the corner point in world-
   // and pixel-coordinates
