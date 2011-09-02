@@ -26,22 +26,23 @@ def sdlist(infile, antenna, scanaverage, outfile, overwrite):
             #load the data with or without averaging
             s=sd.scantable(infile,average=scanaverage,antenna=antenna)
 
-            sum = s._summary()
+            s._summary(outfile)
+#             sum = s._summary()
             
-            #if ( outfile == '' ):
-                    #sum = s.summary()
-            #else:
-                    #sum = s.summary(outfile)
-            if ( outfile != '' ):
-                    f = open( outfile, 'w' )
-                    f.write( sum )
-                    f.close()
+#             #if ( outfile == '' ):
+#                     #sum = s.summary()
+#             #else:
+#                     #sum = s.summary(outfile)
+#             if ( outfile != '' ):
+#                     f = open( outfile, 'w' )
+#                     f.write( sum )
+#                     f.close()
 
-            #if ( sd.rcParams['verbose'] == 'False'):
-                    # print the summary to the screen manually
-                    #print sum
-            casalog.post( sum )
-            casalog.post( '--------------------------------------------------------------------------------' )
+#             #if ( sd.rcParams['verbose'] == 'False'):
+#                     # print the summary to the screen manually
+#                     #print sum
+#             casalog.post( sum )
+#             casalog.post( '--------------------------------------------------------------------------------' )
 
             # Clean up scantable
             del s
