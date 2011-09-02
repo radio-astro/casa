@@ -149,7 +149,7 @@ class SplitChecker(unittest.TestCase):
         if all_ran:
             #print "self.inpms:", self.inpms
             # if inpms is local...
-            if (not self.inpms[0] == '/') and os.path.exists(self.inpms):
+            if self.inpms[0] != '/' and os.path.exists(self.inpms):
                 #print "rming", self.inpms
                 shutil.rmtree(self.inpms, ignore_errors=True)
 
@@ -704,6 +704,7 @@ class split_test_cst(SplitChecker):
             tb.open(self.outms + '/OBSERVATION')
             record['ebs'] = tb.getcol('SCHEDULE')[1]
             tb.close()
+            shutil.rmtree(self.outms, ignore_errors=True)
         except Exception, e:
             print "Error getting results from", self.outms
             raise e
