@@ -657,40 +657,82 @@ class split_test_cdsp(SplitChecker):
                  numpy.array([0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1]))
 
 
-class split_test_cst(unittest.TestCase):
+class split_test_cst(SplitChecker):
     """
     The main thing here is to not segfault even when the SOURCE table
     contains nonsense.
-    """    
+    """
+    need_to_initialize = True
+    corrsels = ['']
     inpms = datapath + 'unittest/split/crazySourceTable.ms' # read-only
     outms = 'filteredsrctab.ms'
+    records = {}
 
-    def setUp(self):
+    def initialize(self):
+        # The realization that need_to_initialize needs to be
+        # a class variable more or less came from
+        # http://www.gossamer-threads.com/lists/python/dev/776699
+        self.__class__.need_to_initialize = False
+
+        if not os.path.isdir(self.inpms):
+            raise EnvironmentError, "Missing input MS: " + self.inpms
+        self.res = self.do_split(self.inpms)
+
+    def do_split(self, inpms):
         shutil.rmtree(self.outms, ignore_errors=True)
+        record = {}
         try:
-            print "\nSplitting", self.inpms
-            splitran = split(self.inpms, self.outms, datacolumn='data',
+            print "\nSplitting", inpms
+            splitran = split(inpms, self.outms, datacolumn='data',
                              field='', spw='', width=1,
                              antenna='',
                              timebin='', timerange='',
                              scan='', array='', uvrange='',
-                             correlation='', async=False)
+                             correlation='',
+                             observation='1~3,5',
+                             async=False)
         except Exception, e:
             print "Error splitting to", self.outms
             raise e
+        try:
+            tb.open(self.outms + '/SOURCE')
+            record['srcids'] = tb.getcol('SOURCE_ID')
+            tb.close()
+            tb.open(self.outms)
+            record['lastmainobsid'] = tb.getcell('OBSERVATION_ID', tb.nrows() - 1)
+            tb.close()
+            tb.open(self.outms + '/OBSERVATION')
+            record['ebs'] = tb.getcol('SCHEDULE')[1]
+            tb.close()
+        except Exception, e:
+            print "Error getting results from", self.outms
+            raise e
+        self.records[inpms] = record
+        return splitran
+            
 
-    def tearDown(self):
-        shutil.rmtree(self.outms, ignore_errors=True)
+#    def tearDown(self):
+#        shutil.rmtree(self.outms, ignore_errors=True)
         
     def test_cst(self):
         """
         Check that only the good part of a SOURCE subtable with some nonsense made it through
         """
-        tb.open(self.outms + '/SOURCE')
-        srcids = tb.getcol('SOURCE_ID')
-        tb.close()
-        check_eq(srcids, numpy.array([0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
-                                      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+        check_eq(self.records[self.inpms]['srcids'],
+                 numpy.array([0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+
+    def test_obs(self):
+        """
+        Selected right observation IDs?
+        """
+        check_eq(self.records[self.inpms]['ebs'],
+                 numpy.array(['ExecBlock uid://A002/Xb4fac/X1',
+                              'ExecBlock uid://A002/Xb4f4c/X1',
+                              'ExecBlock uid://A002/Xb4eec/X1',
+                              'ExecBlock uid://A002/Xb506c/X1']))
+        check_eq(self.records[self.inpms]['lastmainobsid'], 2)
+        
 
 class split_test_state(unittest.TestCase):
     """
