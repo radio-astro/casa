@@ -93,7 +93,6 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
  protected slots:
   
   void createButtonClicked();
-  void showTools(bool show);
   void clickItem(QTreeWidgetItem* item);
   void expandItem(QTreeWidgetItem* item);
   void changeItemSelection();
