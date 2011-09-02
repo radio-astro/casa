@@ -334,6 +334,7 @@ class PartitionHelper(ParallelTaskHelper):
         selectionPairs.append(('scan','scan'))
         selectionPairs.append(('uvdist','uvrange'))
         selectionPairs.append(('scanintent','scanintent'))
+        selectionPairs.append(('observation','observation'))
         return self.__generateFilter(selectionPairs)
 
     def _getCalibrationFilter(self):
@@ -389,6 +390,7 @@ def partition(vis,
            scanintent,
            array,
            uvrange,
+           observation,
            combine):
     """Create a visibility subset from an existing visibility set:
 
@@ -445,6 +447,8 @@ def partition(vis,
              default '' (all).
     uvrange -- uv distance range to select.
                default '' (all).
+    observation -- observation ID(s) to select.
+                   default '' (all).
     combine -- Data descriptors that time averaging can ignore:
                   scan, and/or state
                   Default '' (none)
@@ -506,43 +510,20 @@ def partition(vis,
                          whichcol=datacolumn,
                          scan=scan,
                          uvrange=uvrange,
-                         combine=combine)
+                         combine=combine,
+                         intent=scanintent,
+                         obs=observation)
     finally:
         msTool.close()
 
+    # Write history to output MS, not the input ms.
     try:
-        # Write history to output MS, not the input ms.
-        msTool.open(outputvis, nomodify=False)
-        msTool.writehistory(message='taskname=partition',
-                            origin='partition')
-        msTool.writehistory(message='vis         = "'
-                            +str(vis)+'"',
-                            origin='partition')
-        msTool.writehistory(message='outputvis   = "'
-                            +str(outputvis)+'"',
-                            origin='partition')
-        msTool.writehistory(message='field       = "'
-                            +str(field)+'"',
-                            origin='partition')
-        msTool.writehistory(message='spw       = '
-                            +str(spw),
-                            origin='partition')
-        msTool.writehistory(message='antenna     = "'
-                            +str(antenna)+'"',
-                            origin='partition')
-        msTool.writehistory(message='timebin     = "'
-                            +str(timebin)+'"',
-                            origin='partition')
-        msTool.writehistory(message='timerange   = "'
-                            +str(timerange)+'"',
-                            origin='partition')
-        msTool.writehistory(message='datacolumn  = "'
-                            +str(datacolumn)+'"',
-                            origin='partition')
-        msTool.writehistory(message='combine  = "'
-                            +str(combine)+'"',
-                            origin='partition')
-    finally:
-        msTool.close()
+        param_names = partition.func_code.co_varnames[:partition.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+        write_history(msTool, outputvis, 'partition', param_names,
+                      param_vals, casalog)
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                     'WARN')
 
     return True

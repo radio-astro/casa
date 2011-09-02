@@ -143,7 +143,10 @@ average over frequency (channels) and time (integrations).
 		<description>Select data by baseline length</description>
 		<value></value>
 	</param>
-
+        <param type="string" name="observation">
+                <description>Select by observation ID(s)</description>
+                <value></value>
+        </param>
 	<param type="any" name="combine" subparam="true">
 		<description>Let time bins span changes in scan and/or state</description>
 		<any type="variant" limittypes="string stringArray"/>
@@ -291,6 +294,8 @@ average over frequency (channels) and time (integrations).
             uvrange='0~1000km'; uvrange in kilometers
 	scan -- Scan number range
             default: ''=all
+	observation -- Select by observation ID(s)
+                       default: ''=all
         combine -- Let time bins span changes in scan and/or state.
                    default = '' (separate time bins by both of the above)
                    combine = 'scan': Can be useful when the scan number

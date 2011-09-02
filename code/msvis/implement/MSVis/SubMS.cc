@@ -111,6 +111,7 @@ namespace casa {
     timeBin_p(-1.0),
     scanString_p(""),
     intentString_p(""),
+    obsString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
     timeRange_p(""),
@@ -130,6 +131,7 @@ namespace casa {
     timeBin_p(-1.0),
     scanString_p(""),
     intentString_p(""),
+    obsString_p(""),
     uvrangeString_p(""),
     taqlString_p(""),
     timeRange_p(""),
@@ -473,7 +475,8 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
                           const String& baseline, const String& scan,
                           const String& uvrange, const String& taql,
                           const Vector<Int>& step, const String& subarray,
-                          const String& correlation, const String& intent)
+                          const String& correlation, const String& intent,
+                          const String& obs)
   {
     LogIO os(LogOrigin("SubMS", "setmsselect()"));
     Bool  ok;
@@ -501,6 +504,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     }
     scanString_p    = scan;
     intentString_p  = intent;
+    obsString_p     = obs;
     uvrangeString_p = uvrange;
     taqlString_p    = taql;
 
@@ -1051,6 +1055,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     thisSelection.setUvDistExpr(uvrangeString_p);
     thisSelection.setScanExpr(scanString_p);
     thisSelection.setStateExpr(intentString_p);
+    thisSelection.setObservationExpr(obsString_p);
     if(arrayExpr_p != "")
       thisSelection.setArrayExpr(arrayExpr_p);
     if(corrString_p != "")
@@ -1059,6 +1064,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
     TableExprNode exprNode=thisSelection.toTableExprNode(elms);
     selTimeRanges_p = thisSelection.getTimeList();
+    selObsId_p = thisSelection.getObservationList();
 
     {      
       const MSDataDescription ddtable = elms->dataDescription();
@@ -6906,8 +6912,8 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
   //
   // Can only be used when incol and outcol have the same # of rows!
   //
-  void SubMS::remapColumn(const ROScalarColumn<Int>& incol,
-                          ScalarColumn<Int>& outcol)
+void SubMS::remapColumn(ScalarColumn<Int>& outcol,
+                        const ROScalarColumn<Int>& incol)
   {
     uInt nrows = incol.nrow();
     
@@ -6920,16 +6926,48 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
     }
     
     std::map<Int, Int> mapper;
-    
-    make_map(incol, mapper);
+    Vector<Int> inv(incol.getColumn());
+    Vector<Int> outv(nrows);
+
+    make_map(mapper, inv);
     if(mapper.size() == 1){
       outcol.fillColumn(0);        // Just a little optimization.
     }
     else{
       for(uInt k = 0; k < nrows; ++k)
-	outcol.put(k, mapper[incol(k)]);
+        outv[k] = mapper[inv[k]];
+      outcol.putColumn(outv);
     }
   }
+
+void SubMS::remapColumn(ScalarColumn<Int>& outcol,
+                        const ROScalarColumn<Int>& incol,
+                        const Vector<Int>& selvals)
+{
+  uInt nrows = incol.nrow();
+    
+  if(nrows != outcol.nrow()){
+    ostringstream ostr;
+
+    ostr << "SubMS::remapColumn(): the # of input rows, " << nrows
+         << ", != the # of output rows, " << outcol.nrow();
+    throw(AipsError(ostr.str()));
+  }
+    
+  std::map<Int, Int> mapper;
+  Vector<Int> inv(incol.getColumn());
+  Vector<Int> outv(nrows);
+
+  make_map(mapper, selvals);
+  if(mapper.size() == 1){
+    outcol.fillColumn(0);        // Just a little optimization.
+  }
+  else{
+    for(uInt k = 0; k < nrows; ++k)
+      outv[k] = mapper[inv[k]];
+    outcol.putColumn(outv);
+  }
+}
   
 // Realigns some _ID vectors so that the output looks like a whole dataset
 // instead of part of one.  (i.e. we don't want references to unselected spws,
@@ -6944,10 +6982,10 @@ void SubMS::relabelIDs()
     msc_p->fieldId().put(k, fieldRelabel_p[fieldId(k)]);
   }
 
-  remapColumn(mscIn_p->arrayId(), msc_p->arrayId());
-  remapColumn(mscIn_p->stateId(), msc_p->stateId());
-  remapColumn(mscIn_p->processorId(), msc_p->processorId());
-  remapColumn(mscIn_p->observationId(), msc_p->observationId());
+  remapColumn(msc_p->arrayId(), mscIn_p->arrayId());
+  remapColumn(msc_p->stateId(), mscIn_p->stateId());
+  remapColumn(msc_p->processorId(), mscIn_p->processorId());
+  remapColumn(msc_p->observationId(), mscIn_p->observationId(), selObsId_p);
 }
 
 Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
@@ -7347,14 +7385,16 @@ Bool SubMS::copyGenericSubtables(){
 }
 
   Bool SubMS::copyObservation()
-  {  
+  {
     const MSObservation& oldObs = mssel_p.observation();
     MSObservation& newObs = msOut_p.observation();
     const ROMSObservationColumns oldObsCols(oldObs);
     MSObservationColumns newObsCols(newObs);
     newObsCols.setEpochRef(MEpoch::castType(oldObsCols.releaseDateMeas().getMeasRef().getType()));
 
-    TableCopy::copyRows(newObs, oldObs);
+    uInt nObs = selObsId_p.nelements();
+    for(uInt outrn = 0; outrn < nObs; ++outrn)
+      TableCopy::copyRows(newObs, oldObs, outrn, selObsId_p[outrn], 1);
     //W TableCopy::deepCopy(newObs, oldObs, false);
     
     return True;
@@ -7386,7 +7426,7 @@ Bool SubMS::copyState()
 
       // Initialize stateRemapper_p if necessary.
       if(stateRemapper_p.size() < 1)
-	make_map(mscIn_p->stateId(), stateRemapper_p);
+	make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
       uInt nStates = stateRemapper_p.size();
       
@@ -7977,36 +8017,31 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   return True;
 }
 
-// Sets mapper to the distinct values of mscol, in increasing order.
-// A static method that is used by SubMS, but doesn't necessarily have to go
-// with it.  It may belong in something more MSColumnsish.
-void SubMS::make_map(const Vector<Int>& mscol, Vector<Int>& mapper)
+// // Sets mapper to the distinct values of mscol, in increasing order.
+// // A static method that is used by SubMS, but doesn't necessarily have to go
+// // with it.  It may belong in something more MSColumnsish.
+// void SubMS::make_map(const Vector<Int>& mscol, Vector<Int>& mapper)
+// {
+//   std::set<Int> valSet;
+  
+//   for(Int i = mscol.nelements(); i--;)  // Strange, but slightly more
+//     valSet.insert(mscol[i]);            // efficient than going forward.
+//   mapper.resize(valSet.size());
+
+//   uInt remaval = 0;
+//   for(std::set<Int>::const_iterator vs_iter = valSet.begin();
+//       vs_iter != valSet.end(); ++vs_iter){
+//     mapper[remaval] = *vs_iter;
+//     ++remaval;
+//   }
+// }
+
+void SubMS::make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv)
 {
   std::set<Int> valSet;
   
-  for(Int i = mscol.nelements(); i--;)  // Strange, but slightly more
-    valSet.insert(mscol[i]);            // efficient than going forward.
-  mapper.resize(valSet.size());
-
-  uInt remaval = 0;
-  for(std::set<Int>::const_iterator vs_iter = valSet.begin();
-      vs_iter != valSet.end(); ++vs_iter){
-    mapper[remaval] = *vs_iter;
-    ++remaval;
-  }
-}
-
-// Sets mapper to to a map from the distinct values of mscol, in increasing
-// order, to 0, 1, 2, ..., mapper.size() - 1.
-// A static method that is used by SubMS, but doesn't necessarily have to go
-// with it.  It may belong in something more MSColumnsish.
-void SubMS::make_map(const ROScalarColumn<Int>& mscol,
-		     std::map<Int, Int>& mapper)
-{
-  std::set<Int> valSet;
-  
-  for(Int i = mscol.nrow(); i--;)  // Strange, but slightly more
-    valSet.insert(mscol(i));       // efficient than going forward.
+  for(Int i = inv.nelements(); i--;)  // Strange, but slightly more
+    valSet.insert(inv[i]);         // efficient than going forward.
 
   uInt remaval = 0;
   for(std::set<Int>::const_iterator vs_iter = valSet.begin();
@@ -8180,7 +8215,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   }
 
   if(stateRemapper_p.size() < 1)
-    make_map(mscIn_p->stateId(), stateRemapper_p);
+    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
@@ -8274,11 +8309,11 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     spwindex[spw_p[k]] = k;
     
   std::map<Int, Int> procMapper;
-  make_map(mscIn_p->processorId(), procMapper); // Chunkize?
+  make_map(procMapper, mscIn_p->processorId().getColumn());
 
   // Vector<Int> inObs;            // mscIn_p->observationId()
   std::map<Int, Int> obsMapper;
-  make_map(mscIn_p->observationId(), obsMapper); // Chunkize?
+  make_map(obsMapper, mscIn_p->observationId().getColumn());
 
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
@@ -8424,7 +8459,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   }
 
   if(stateRemapper_p.size() < 1)
-    make_map(mscIn_p->stateId(), stateRemapper_p);
+    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
@@ -8513,11 +8548,11 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
     spwindex[spw_p[k]] = k;
     
   std::map<Int, Int> procMapper;
-  make_map(mscIn_p->processorId(), procMapper); // Chunkize?
+  make_map(procMapper, mscIn_p->processorId().getColumn());
 
   // Vector<Int> inObs;            // mscIn_p->observationId()
   std::map<Int, Int> obsMapper;
-  make_map(mscIn_p->observationId(), obsMapper); // Chunkize?
+  make_map(obsMapper, mscIn_p->observationId().getColumn());
 
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
