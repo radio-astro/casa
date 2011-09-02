@@ -6630,6 +6630,8 @@ Bool SubMS::fillAccessoryMainCols(){
      << "Copying uvw took " << timer.real() << "s."
      << LogIO::POST;
   
+  msc_p->processorId().putColumn(mscIn_p->processorId().getColumn());
+
   timer.mark();
   relabelIDs();
   os << LogIO::DEBUG1
@@ -6914,31 +6916,36 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
   //
 void SubMS::remapColumn(ScalarColumn<Int>& outcol,
                         const ROScalarColumn<Int>& incol)
-  {
-    uInt nrows = incol.nrow();
+{
+  uInt nrows = incol.nrow();
     
-    if(nrows != outcol.nrow()){
-      ostringstream ostr;
+  if(nrows != outcol.nrow()){
+    ostringstream ostr;
 
-      ostr << "SubMS::remapColumn(): the # of input rows, " << nrows
-	   << ", != the # of output rows, " << outcol.nrow();
-      throw(AipsError(ostr.str()));
-    }
+    ostr << "SubMS::remapColumn(): the # of input rows, " << nrows
+         << ", != the # of output rows, " << outcol.nrow();
+    throw(AipsError(ostr.str()));
+  }
     
-    std::map<Int, Int> mapper;
-    Vector<Int> inv(incol.getColumn());
+  std::map<Int, Int> mapper;
+  Vector<Int> inv(incol.getColumn());
+
+  make_map(mapper, inv);
+  if(mapper.size() == 1){
+    outcol.fillColumn(0);        // Just a little optimization.
+  }
+  else{
     Vector<Int> outv(nrows);
 
-    make_map(mapper, inv);
-    if(mapper.size() == 1){
-      outcol.fillColumn(0);        // Just a little optimization.
-    }
-    else{
+    if(mapper.size() > 0){
       for(uInt k = 0; k < nrows; ++k)
         outv[k] = mapper[inv[k]];
-      outcol.putColumn(outv);
     }
+    else
+      incol.getColumn(outv);
+    outcol.putColumn(outv);
   }
+}
 
 void SubMS::remapColumn(ScalarColumn<Int>& outcol,
                         const ROScalarColumn<Int>& incol,
@@ -6963,8 +6970,14 @@ void SubMS::remapColumn(ScalarColumn<Int>& outcol,
     outcol.fillColumn(0);        // Just a little optimization.
   }
   else{
-    for(uInt k = 0; k < nrows; ++k)
-      outv[k] = mapper[inv[k]];
+    Vector<Int> outv(nrows);
+
+    if(mapper.size() > 0){
+      for(uInt k = 0; k < nrows; ++k)
+        outv[k] = mapper[inv[k]];
+    }
+    else
+      incol.getColumn(outv);
     outcol.putColumn(outv);
   }
 }
@@ -6984,7 +6997,7 @@ void SubMS::relabelIDs()
 
   remapColumn(msc_p->arrayId(), mscIn_p->arrayId());
   remapColumn(msc_p->stateId(), mscIn_p->stateId());
-  remapColumn(msc_p->processorId(), mscIn_p->processorId());
+  //remapColumn(msc_p->processorId(), mscIn_p->processorId());
   remapColumn(msc_p->observationId(), mscIn_p->observationId(), selObsId_p);
 }
 
@@ -7393,8 +7406,13 @@ Bool SubMS::copyGenericSubtables(){
     newObsCols.setEpochRef(MEpoch::castType(oldObsCols.releaseDateMeas().getMeasRef().getType()));
 
     uInt nObs = selObsId_p.nelements();
-    for(uInt outrn = 0; outrn < nObs; ++outrn)
-      TableCopy::copyRows(newObs, oldObs, outrn, selObsId_p[outrn], 1);
+    if(nObs > 0){
+      for(uInt outrn = 0; outrn < nObs; ++outrn)
+        TableCopy::copyRows(newObs, oldObs, outrn, selObsId_p[outrn], 1);
+    }
+    else  // '' -> '*'
+      TableCopy::copyRows(newObs, oldObs);
+      
     //W TableCopy::deepCopy(newObs, oldObs, false);
     
     return True;
@@ -8053,14 +8071,16 @@ void SubMS::make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv)
 
 void SubMS::remap(Vector<Int>& col, const Vector<Int>& mapper)
 {
-  for(Int row = col.nelements(); row--;)
-    col[row] = mapper[col[row]];
+  if(mapper.nelements() > 0)
+    for(Int row = col.nelements(); row--;)
+      col[row] = mapper[col[row]];
 }
 
 void SubMS::remap(Vector<Int>& col, const std::map<Int, Int>& mapper)
 {
-  for(Int row = col.nelements(); row--;)
-    col[row] = mapper.find(col[row])->second;
+  if(mapper.size() > 0)
+    for(Int row = col.nelements(); row--;)
+      col[row] = mapper.find(col[row])->second;
 }
 
 // Returns rv s.t. mapper[rv] == ov, assuming that mapper[i + 1] >= mapper[i]
@@ -8308,12 +8328,12 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   for(uInt k = 0; k < spw_p.nelements(); ++k)
     spwindex[spw_p[k]] = k;
     
-  std::map<Int, Int> procMapper;
-  make_map(procMapper, mscIn_p->processorId().getColumn());
+  //std::map<Int, Int> procMapper;
+  //make_map(procMapper, mscIn_p->processorId().getColumn());
 
   // Vector<Int> inObs;            // mscIn_p->observationId()
   std::map<Int, Int> obsMapper;
-  make_map(obsMapper, mscIn_p->observationId().getColumn());
+  make_map(obsMapper, selObsId_p);
 
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
@@ -8406,7 +8426,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       remap(avb.observationId(), obsMapper);
       msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
 
-      remap(avb.processorId(), procMapper);
+      //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
 
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!
@@ -8547,12 +8567,12 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   for(uInt k = 0; k < spw_p.nelements(); ++k)
     spwindex[spw_p[k]] = k;
     
-  std::map<Int, Int> procMapper;
-  make_map(procMapper, mscIn_p->processorId().getColumn());
+  //std::map<Int, Int> procMapper;
+  //make_map(procMapper, mscIn_p->processorId().getColumn());
 
   // Vector<Int> inObs;            // mscIn_p->observationId()
   std::map<Int, Int> obsMapper;
-  make_map(obsMapper, mscIn_p->observationId().getColumn());
+  make_map(obsMapper, selObsId_p);
 
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
@@ -8645,7 +8665,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       remap(avb.observationId(), obsMapper);
       msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
 
-      remap(avb.processorId(), procMapper);
+      //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
 
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!

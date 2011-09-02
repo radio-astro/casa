@@ -267,7 +267,8 @@ class SubMS
 			  const Bool areSelecting=false);
   
   // Replaces col[i] with mapper[col[i]] for each element of col.
-  // Does NOT check whether mapper[col[i]] is defined.
+  // Does NOT check whether mapper[col[i]] is defined, but it does return
+  // right away (i.e. a no-op) if mapper is empty.
   static void remap(Vector<Int>& col, const Vector<Int>& mapper);
   static void remap(Vector<Int>& col, const std::map<Int, Int>& mapper);
 
