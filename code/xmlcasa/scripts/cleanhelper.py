@@ -1193,7 +1193,7 @@ class cleanhelper:
         if((resbmaj != '') and (resbmin != '')):
            self.im.setbeam(resbmaj, resbmin, resbpa)
         
-    def convertmodelimage(self, modelimages=[], outputmodel=''):
+    def convertmodelimage(self, modelimages=[], outputmodel='',imindex=0):
         modelos=[]
         maskelos=[]
         if((modelimages=='') or (modelimages==[])):
@@ -1209,7 +1209,8 @@ class cleanhelper:
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
             else:
                 ##assuming its a model image already then just regrid it
-                self.im.make(modelos[k])
+                #self.im.make(modelos[k])
+                shutil.copytree(self.imagelist[imindex],modelos[k])
                 ia.open(modelos[k])
                 newcsys=ia.coordsys()
                 newshape=ia.shape()
