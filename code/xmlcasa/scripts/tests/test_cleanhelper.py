@@ -62,7 +62,7 @@ class cleanhelper_test(unittest.TestCase):
             os.system('rm -rf ' + self.msfile)
 
         im.close()
-        #os.system('rm -rf ' + self.imgname+'*')
+        os.system('rm -rf ' + self.imgname+'*')
      
     def getpixval(self,img,pixel):
         ia.open(img)
@@ -104,11 +104,14 @@ class cleanhelper_test(unittest.TestCase):
         self.res=im.summary()
         self.assertTrue(self.res)
 
-    def run_defineimages(self,sf=False):
+    def run_defineimages(self,sf=False, makelargeim=False):
         rootname=self.imgname
         makepbim=True
         if sf:
-          imsizes=self.imsize
+          if makelargeim:
+              imsizes=[1000,1000]
+          else:
+              imsizes=self.imsize
           phasecenters=self.phasecenter
           imageids='sf'
         else:
@@ -164,7 +167,8 @@ class cleanhelper_test(unittest.TestCase):
         self.imset.maskimages={}
         mmask=[[[55,55,65,65],[40,70,50,75]],[20,20,40,40],[5,5,15,10]]
         self.run_defineimages()
-        self.imset.makemultifieldmask2(mmask)
+        #self.imset.makemultifieldmask2(mmask)
+        self.imset.makemultifieldmask3(mmask)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg, self.refpath+'ref-'+maskimg)
@@ -179,7 +183,8 @@ class cleanhelper_test(unittest.TestCase):
         """[Cleanhelper makemultfieldmask2 test: boxes given as a AIPS boxfile]"""
         self.imset.maskimages={}
         self.run_defineimages()
-        self.imset.makemultifieldmask2(maskobject=self.outlierfile)
+        #self.imset.makemultifieldmask2(maskobject=self.outlierfile)
+        self.imset.makemultifieldmask3(maskobject=self.outlierfile)
         for imgroot,maskimg in self.imset.maskimages.iteritems():
           self.assertTrue(os.path.exists(maskimg))
           retval=self.comparemask(maskimg,self.refpath+'ref-'+maskimg)
@@ -249,9 +254,12 @@ class cleanhelper_test(unittest.TestCase):
 
     def testMakemaskimagemixed(self):
         """[Mixed input to mask parameter (single field)] """
-        self.run_defineimages(sf=True)
+        # there is descrepancy in circle mask created by 32bit anc 64bit machine
+        # if the circle is relatively small ....(the mask made by 32bit machine
+        # miss 1 or 2 pixels at some edges), so make a image size bigger for this test... 
+        self.run_defineimages(sf=True,makelargeim=True)
         maskimage=self.imset.imagelist[0]+'_mixed.mask'
-        masks = ['circle [ [ 220pix , 30pix] ,15pix ]', self.boxfile2, self.rgnfile,self.rgntextfile]
+        masks = ['circle [ [ 220pix , 650pix] ,100pix ]', self.boxfile2, self.rgnfile,self.rgntextfile]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=masks)
         self.assertTrue(os.path.exists(maskimage)," boxfile  maskimage does not exist")
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
