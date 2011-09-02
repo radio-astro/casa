@@ -6630,6 +6630,7 @@ Bool SubMS::fillAccessoryMainCols(){
      << "Copying uvw took " << timer.real() << "s."
      << LogIO::POST;
   
+  msc_p->arrayId().putColumn(mscIn_p->arrayId().getColumn());
   msc_p->processorId().putColumn(mscIn_p->processorId().getColumn());
 
   timer.mark();
@@ -6995,7 +6996,7 @@ void SubMS::relabelIDs()
     msc_p->fieldId().put(k, fieldRelabel_p[fieldId(k)]);
   }
 
-  remapColumn(msc_p->arrayId(), mscIn_p->arrayId());
+  //remapColumn(msc_p->arrayId(), mscIn_p->arrayId());
   remapColumn(msc_p->stateId(), mscIn_p->stateId());
   //remapColumn(msc_p->processorId(), mscIn_p->processorId());
   remapColumn(msc_p->observationId(), mscIn_p->observationId(), selObsId_p);
