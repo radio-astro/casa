@@ -14,6 +14,7 @@ def plotuv(vis, colors=['r', 'y', 'g', 'b'], symb=',', ncycles=1,
     field: field selection string (for now, only 1 field will be plotted).
     antenna: antenna selection string (currently ignored).
     """
+    debug = False
     ncolors = ncycles * len(colors)
     try:
         symbs = [c + symb for c in colors]
@@ -116,67 +117,91 @@ def plotuv(vis, colors=['r', 'y', 'g', 'b'], symb=',', ncycles=1,
 
         pl.clf()
         for d in ddids:
+            casalog.post('d = %d' % d, 'DEBUG1')
+            #print "minmax[%d] = %s" % (d, minmax[d])
             s = dd_to_spw[d]
-            chfkey = 'r' + str(s + 1)
             maxci = colorind(minmax[s][1])
             minci = colorind(minmax[s][0])
             ncolsspanned = 1 + maxci - minci
 
             # Get the subset of UVW that will be plotted for this spw.
             st = tb.query(basequery + ' and DATA_DESC_ID==' + str(d), columns='UVW')
-            uvw = 0.001 * st.getcol('UVW')
             snbl = st.nrows()
-            st.close()
-            if maxnpts > 0:
-                ntoplot = (maxnpts * snbl) / (nbl * ncolsspanned)
-            else:
-                ntoplot = snbl
-            if ntoplot < snbl:
-                uvinds = [((snbl - 1) * uvi) / (ntoplot - 1) for uvi in xrange(ntoplot)]
-                u = uvw[0, uvinds]
-                v = uvw[1, uvinds]
-            else:
-                u = uvw[0, :]
-                v = uvw[1, :]
-            del uvw
-        
-            freqspread = minmax[s][1] - minmax[s][0]
-            # It'd be easier to just divide the frequency range by ncolors, but those
-            # frequencies might not land on real channels.
-            nchans = chfs[chfkey].shape[0]
-            if ncolsspanned > 1:
-                cinds = [((nchans - 1) * c) / (ncolsspanned - 1) for c in
-                         xrange(ncolsspanned)]
-            else:
-                cinds = [nchans / 2]
-            wvlngths = 2.9978e8 / chfs[chfkey].flatten()[cinds]
+            #print "snbl:", snbl
+            if snbl > 0:
+                uvw = 0.001 * st.getcol('UVW')
+                st.close()
+                if maxnpts > 0:
+                    ntoplot = (maxnpts * snbl) / (nbl * ncolsspanned)
+                else:
+                    ntoplot = snbl
+                if ntoplot < snbl:
+                    uvinds = [((snbl - 1) * uvi) / (ntoplot - 1) for uvi in xrange(ntoplot)]
+                    casalog.post("(max, min)(uvinds) = %g, %g" % (max(uvinds), min(uvinds)),
+                                 'DEBUG1')
+                    casalog.post("len(uvw[0]) = %d" % len(uvw[0]), 'DEBUG1')
+                    u = uvw[0, uvinds]
+                    v = uvw[1, uvinds]
+                else:
+                    u = uvw[0, :]
+                    v = uvw[1, :]
+                del uvw
 
-            # All this fussing with permutations and sieves is to give all the
-            # frequencies a chance at being seen, at least in the case of a
-            # single spw.  This way a channel will only blot out the plot where
-            # either it really does have a much higher density than the others
-            # or all the channels overlap.
-            perm = pl.array(range(ncolsspanned - 1, -1, -1))
-            #print "****s:", s
-            #print "perm:", perm
-            #print "ntoplot:", ntoplot
-            #print "ncolsspanned:", ncolsspanned
-            #print "minci:", minci
-            for si in perm:
-                #print '(perm + si) % ncolsspanned =', (perm + si) % ncolsspanned
-                for ci in (perm + si) % ncolsspanned:
-                    symb = symbs[(ci + minci) % nsymbs]
-                    wvlngth = wvlngths[ci]
-                    pl.plot( u[si:ntoplot:ncolsspanned] / wvlngth,
-                             v[si:ntoplot:ncolsspanned] / wvlngth, symb)
-                    pl.plot(-u[si:ntoplot:ncolsspanned] / wvlngth,
-                            -v[si:ntoplot:ncolsspanned] / wvlngth, symb)
+                freqspread = minmax[s][1] - minmax[s][0]
+                # It'd be easier to just divide the frequency range by ncolors, but those
+                # frequencies might not land on real channels.
+                chfkey = 'r' + str(s + 1)
+                nchans = chfs[chfkey].shape[0]
+                #print "nchans:", nchans
+                if ncolsspanned > 1:
+                    cinds = [((nchans - 1) * c) / (ncolsspanned - 1) for c in
+                             xrange(ncolsspanned)]
+                else:
+                    cinds = [nchans / 2]
+                wvlngths = 2.9978e8 / chfs[chfkey].flatten()[cinds]
+
+                # All this fussing with permutations and sieves is to give all the
+                # frequencies a chance at being seen, at least in the case of a
+                # single spw.  This way a channel will only blot out the plot where
+                # either it really does have a much higher density than the others
+                # or all the channels overlap.
+                perm = pl.array(range(ncolsspanned - 1, -1, -1))
+                if debug:
+                    print "****s:", s
+                    print "perm:", perm
+                    print "ntoplot:", ntoplot
+                    print "ncolsspanned:", ncolsspanned
+                    print "minci:", minci
+                for si in perm:
+                    if debug:
+                        print '(perm + si) % ncolsspanned =', (perm + si) % ncolsspanned
+                    for ci in (perm + si) % ncolsspanned:
+                        symb = symbs[(ci + minci) % nsymbs]
+                        wvlngth = wvlngths[ci]
+                        #casalog.post("spw %d, lambda: %g" % (s, wvlngth), 'DEBUG1')
+                        casalog.post("spw %d, si %d, ntoplot %d, ncolsspanned %d" % (s,
+                                                                                     si,
+                                                                                     ntoplot,
+                                                                                     ncolsspanned),
+                                     'DEBUG1')
+                        casalog.post('len(u) = %d, len(v) = %d' % (len(u), len(v)),
+                                     'DEBUG1')
+                        casalog.post('symb = %s' % symb, 'DEBUG1')
+                        pl.plot( u[si:ntoplot:ncolsspanned] / wvlngth,
+                                 v[si:ntoplot:ncolsspanned] / wvlngth, symb)
+                        pl.plot(-u[si:ntoplot:ncolsspanned] / wvlngth,
+                                -v[si:ntoplot:ncolsspanned] / wvlngth, symb)
+                        casalog.post('plotted baselines both ways', 'DEBUG1')
+            else:
+                st.close()
         
+        casalog.post('Scaling axes', 'DEBUG1')
         pl.axis('equal')
         pl.axis('scaled')
         pl.xlabel('u (k$\lambda$)')
         pl.ylabel('v (k$\lambda$)')
         pl.title(title)
+        casalog.post('Done plotting', 'DEBUG1')
         tb.close()
     except Exception, e:
         print "Exception %s getting the UVWs from %s" % (e, vis)
