@@ -396,7 +396,7 @@ public:
   Record msseltoindex(const String& spw="", const String& field="", 
 		      const String& baseline="", const String& time="", 
 		      const String& scan="", const String& uvrange="", 
-		      const String& taql="");
+		      const String& observation="", const String& taql="");
 
 protected:
 
