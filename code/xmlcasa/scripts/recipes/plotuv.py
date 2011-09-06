@@ -1,5 +1,14 @@
+from matplotlib.widgets import Button
+from taskinit import ms, tbtool, casalog
+
+from taskutil import get_global_namespace
+my_globals = get_global_namespace()
+pl = my_globals['pl']
+del my_globals
+
 def plotuv(vis, colors=['r', 'y', 'g', 'b'], symb=',', ncycles=1,
-           maxnpts=100000, spw='*', field='*', antenna='*'):
+           maxnpts=100000, spw='*', field='*', antenna='*',
+           observation='', savefig=''):
     """
     Plots the uv coverage of vis in klambda.  ncycles of colors will be
     allocated to representative wavelengths.
@@ -14,17 +23,52 @@ def plotuv(vis, colors=['r', 'y', 'g', 'b'], symb=',', ncycles=1,
     field: field selection string (for now, only 1 field will be plotted).
     antenna: antenna selection string (currently ignored).
     """
-    debug = False
-    ncolors = ncycles * len(colors)
+    casalog.origin('plotuv')
     try:
-        symbs = [c + symb for c in colors]
+        uvplotinfo = UVPlotInfo(vis, spw, field, antenna, observation,
+                                ncycles, colors, symb, savefig, maxnpts)
     except Exception, e:
-        print "Exception %s forming the plot symbols out of %s and %s" % (e, colors, symb)
+        casalog.post("Error plotting the UVWs of %s:" % vis, 'SEVERE')
+        casalog.post("%s" % e, 'SEVERE')
         return False
-    nsymbs = len(symbs)
-
-    title = vis
+    retval = True
     try:
+        if len(uvplotinfo.selindices['field']) > 1:
+            fldnav = NavField(uvplotinfo)
+            #inprogress = fldnav.show()
+            fldnav.next("dummy")
+        else:
+            retval = plotfield(uvplotinfo.selindices['field'][0], uvplotinfo)
+    except Exception, e:
+        casalog.post("Error plotting the UVWs of %s:" % vis, 'SEVERE')
+        casalog.post("%s" % e, 'SEVERE')
+        return False
+    return retval
+
+class UVPlotInfo:
+    """Gathers and holds info for a uv plot or set of them."""
+    def __init__(self, vis, spw, field, antenna, observation, ncycles,
+                 colors, symb, savefig, maxnpts):
+        self.ncolors = ncycles * len(colors)
+        try:
+            self.symbs = [c + symb for c in colors]
+        except Exception, e:
+            raise ValueError, "Exception %s forming the plot symbols out of %s and %s" % (e, colors, symb)
+        self.nsymbs = len(self.symbs)
+        self.maxnpts = maxnpts
+        try:
+            self.savefig = savefig
+            if savefig:
+                savefigparts = savefig.split('.')
+                self.ext = '.' + savefigparts[-1]
+                self.savefig = '.'.join(savefigparts[:-1])
+        except Exception, e:
+            raise ValueError, "Exception %s parsing savefig" % e
+
+        self.vis = vis
+        self.title = vis
+        self.tb = tbtool.create()
+
         # Convert '' to '*' for ms.msseltoindex.
         if not spw:
             spw = '*'
@@ -32,178 +76,282 @@ def plotuv(vis, colors=['r', 'y', 'g', 'b'], symb=',', ncycles=1,
             field = '*'
         if not antenna:
             antenna = '*'
+        self.selindices = ms.msseltoindex(vis, field=field, spw=spw,
+                                          baseline=antenna, observation=observation)
+        basequery = ""
+        if observation:
+            basequery += 'OBSERVATION_ID in %s' % self.selindices['obsids']
         if antenna != '*':
-            print "Sorry, antenna selection is ignored for now."
-        msselindices = ms.msseltoindex(vis, spw=spw, field=field)
-    except Exception, e:
-        print "Exception %s parsing the spw and field selection." % e
+            if basequery:
+                basequery += ' and '
+            basequery += 'ANTENNA1 in [%s] and ANTENNA2 in [%s]' % (
+                ','.join(map(str, self.selindices['antenna1'])),
+                ','.join(map(str, self.selindices['antenna2'])))
+        self.basequery = basequery
+
+        try:
+            self.fldnames = {}
+            self.listfield = False
+            if field != '*' or len(self.selindices['field']) > 1:
+                self.listfield = True
+                self.tb.open(vis + '/FIELD')
+                fldnamarr = self.tb.getcol('NAME')
+                self.tb.close()
+                for i in xrange(len(fldnamarr)):
+                    self.fldnames[i] = fldnamarr[i]
+            self.subtitle = ''
+            if spw != '*' or antenna != '*' or observation:
+                subtitles = []
+                if spw != '*':
+                    subtitles.append("spw='%s'" % spw)
+                if antenna != '*':
+                    subtitles.append("antenna='%s'" % antenna)
+                if observation != '*':
+                    subtitles.append("observation='%s'" % observation)
+                self.subtitle = '(' + ', '.join(subtitles) + ')'
+        except Exception, e:
+            raise ValueError, "Exception %s parsing the selection." % e
+
+        try:
+            self.tb.open(vis + '/SPECTRAL_WINDOW')
+            self.chfs = self.tb.getvarcol('CHAN_FREQ')
+            self.tb.close()
+            self.nspw = len(self.chfs)
+            if self.nspw > 1:
+                # Bite the bullet now instead of while the main table is open.
+                self.tb.open(vis + '/DATA_DESCRIPTION')
+                self.dd_to_spw = self.tb.getcol('SPECTRAL_WINDOW_ID')
+                self.tb.close()
+            else:
+                self.dd_to_spw = [0]
+        except Exception, e:
+            raise ValueError, "Exception %s getting the frequencies from %s" % (e, vis)
+
+def plotfield(fld, uvplotinfo, debug=False):
+    """Plot the selected baselines of fld."""
+    fldquery = uvplotinfo.basequery
+    fldtitle = uvplotinfo.title
+    if uvplotinfo.listfield:
+        if fldquery:
+            fldquery += ' and '
+        fldquery += 'FIELD_ID==' + str(fld)
+        fldtitle += ', field %d (%s)' % (fld, uvplotinfo.fldnames[fld])
+        casalog.post('Plotting field %d (%s)' % (fld, uvplotinfo.fldnames[fld]))
+
+    # Figure out how to divvy up the plotting among the frequencies.
+    # I'm sure nested queries can be done, but I want to avoid temp tables
+    # on disk.
+    casalog.post('fldquery: ' + fldquery, 'DEBUG1')
+    uvplotinfo.tb.open(uvplotinfo.vis)
+    ftab = uvplotinfo.tb.query(fldquery, columns='DATA_DESC_ID')
+    nbl = ftab.nrows()
+    casalog.post("nbl: %d" % nbl, 'DEBUG1')
+
+    if uvplotinfo.nspw > 1:
+        ddids = ftab.getcol('DATA_DESC_ID')
+        usedddids = {}
+        for d in ddids:
+            if uvplotinfo.dd_to_spw[d] in uvplotinfo.selindices['spw']:
+                usedddids[d] = uvplotinfo.dd_to_spw[d]
+        ddids = list(usedddids.keys())
+        ddids.sort()
+        usedspws = list(set(usedddids.values()))
+        usedspws.sort()
+    elif uvplotinfo.nspw == 1:
+        ddids = [0]
+        usedspws = [0]
+    else:
+        ddids = []
+        usedspws = []
+    ftab.close()
+
+    if not ddids:
+        casalog.post('Nothing selected for field %d' % fld)
         return False
-    
-    try:
-        tb.open(vis + '/SPECTRAL_WINDOW')
-        chfs = tb.getvarcol('CHAN_FREQ')
-        tb.close()
-        nspw = len(chfs)
-        if nspw > 1:
-            # Bite the bullet now instead of while the main table is open.
-            tb.open(vis + '/DATA_DESCRIPTION')
-            dd_to_spw = tb.getcol('SPECTRAL_WINDOW_ID')
-            tb.close()
-        else:
-            dd_to_spw = [0]
-    except Exception, e:
-        print "Exception %s getting the frequencies from %s" % (e, vis)
-        return False
+
+    maxddid = ddids[-1]
+    minddid = ddids[0]
+    minmax = {}
+    globminf = -1
+    globmaxf = -1
+    for s in usedspws:
+        r = 'r' + str(s + 1)
+        minf = uvplotinfo.chfs[r][0, 0]
+        maxf = uvplotinfo.chfs[r][-1, 0]
+        if maxf < minf:
+            minf, maxf = maxf, minf
+        minmax[s] = (minf, maxf)
+        #print "minmax[s]:", minmax[s]
+        if minf < globminf or globminf < 0.0:
+            globminf = minf
+        if maxf > globmaxf:
+            globmaxf = maxf
+    freqspan = globmaxf - globminf
 
     def colorind(f):
         if freqspan > 0:
-            return min(int(ncolors * (f - globminf) / freqspan),
-                       ncolors - 1)
+            return min(int(uvplotinfo.ncolors * (f - globminf) / freqspan),
+                       uvplotinfo.ncolors - 1)
         else:
             return 0
+    
+    if uvplotinfo.maxnpts > 0 and nbl * (1 + colorind(globmaxf) -
+                              colorind(globminf)) > uvplotinfo.maxnpts:
+        casalog.post(
+ "Only plotting %d out of %d (scaled) baselines to conserve memory" % (uvplotinfo.maxnpts,
+                          nbl * (1 + colorind(globmaxf) - colorind(globminf))),
+                     'WARN')
 
-    try:
-        tb.open(vis)
-        # I'm sure nested queries can be done, but I want to avoid temp tables
-        # on disk.
-        #st = tb.query('FIELD_ID==' + str(msselindices['field'][0]),
-        #              columns='UVW, DATA_DESC_ID')
-        basequery = 'FIELD_ID==' + str(msselindices['field'][0])
-        if len(msselindices['field']) > 1:
-            print "Sorry, plotuv can only show one field per call."
-        if len(msselindices['field']) > 1 or field != '*':
-            title += ', field ' + str(msselindices['field'][0])
-        nbl = tb.nrows()
-        #print "nbl:", nbl
+    if fldquery:
+        fldquery += ' and '
+    pl.clf()
+    for d in ddids:
+        #print "minmax[%d] = %s" % (d, minmax[d])
+        s = uvplotinfo.dd_to_spw[d]
+        maxci = colorind(minmax[s][1])
+        minci = colorind(minmax[s][0])
+        ncolsspanned = 1 + maxci - minci
 
-        # Figure out how to divvy up the plotting among the frequencies.
-        if nspw > 1:
-            ddids = tb.getcol('DATA_DESC_ID')
-            usedddids = {}
-            for d in ddids:
-                if dd_to_spw[d] in msselindices['spw']:
-                    usedddids[d] = dd_to_spw[d]
-            ddids = list(usedddids.keys())
-            ddids.sort()
-            usedspws = list(set(usedddids.values()))
-            usedspws.sort()
-        else:
-            ddids = [0]
-            usedspws = [0]
-        maxddid = ddids[-1]
-        minddid = ddids[0]
-        minmax = {}
-        globminf = -1
-        globmaxf = -1
-        for s in usedspws:
-            r = 'r' + str(s + 1)
-            minf = chfs[r][0, 0]
-            maxf = chfs[r][-1, 0]
-            if maxf < minf:
-                minf, maxf = maxf, minf
-            minmax[s] = (minf, maxf)
-            #print "minmax[s]:", minmax[s]
-            if minf < globminf or globminf < 0.0:
-                globminf = minf
-            if maxf > globmaxf:
-                globmaxf = maxf
-        freqspan = globmaxf - globminf
-        if maxnpts > 0 and nbl * (1 + colorind(globmaxf) -
-                                  colorind(globminf)) > maxnpts:
-            casalog.post(
-     "Only plotting %d out of %d (scaled) baselines to conserve memory" % (maxnpts,
-                              nbl * (1 + colorind(globmaxf) - colorind(globminf))),
-                         'WARN')
-
-        pl.clf()
-        for d in ddids:
-            casalog.post('d = %d' % d, 'DEBUG1')
-            #print "minmax[%d] = %s" % (d, minmax[d])
-            s = dd_to_spw[d]
-            maxci = colorind(minmax[s][1])
-            minci = colorind(minmax[s][0])
-            ncolsspanned = 1 + maxci - minci
-
-            # Get the subset of UVW that will be plotted for this spw.
-            st = tb.query(basequery + ' and DATA_DESC_ID==' + str(d), columns='UVW')
-            snbl = st.nrows()
-            #print "snbl:", snbl
-            if snbl > 0:
-                uvw = 0.001 * st.getcol('UVW')
-                st.close()
-                if maxnpts > 0:
-                    ntoplot = (maxnpts * snbl) / (nbl * ncolsspanned)
-                else:
-                    ntoplot = snbl
-                if ntoplot < snbl:
-                    uvinds = [((snbl - 1) * uvi) / (ntoplot - 1) for uvi in xrange(ntoplot)]
-                    casalog.post("(max, min)(uvinds) = %g, %g" % (max(uvinds), min(uvinds)),
-                                 'DEBUG1')
-                    casalog.post("len(uvw[0]) = %d" % len(uvw[0]), 'DEBUG1')
-                    u = uvw[0, uvinds]
-                    v = uvw[1, uvinds]
-                else:
-                    u = uvw[0, :]
-                    v = uvw[1, :]
-                del uvw
-
-                freqspread = minmax[s][1] - minmax[s][0]
-                # It'd be easier to just divide the frequency range by ncolors, but those
-                # frequencies might not land on real channels.
-                chfkey = 'r' + str(s + 1)
-                nchans = chfs[chfkey].shape[0]
-                #print "nchans:", nchans
-                if ncolsspanned > 1:
-                    cinds = [((nchans - 1) * c) / (ncolsspanned - 1) for c in
-                             xrange(ncolsspanned)]
-                else:
-                    cinds = [nchans / 2]
-                wvlngths = 2.9978e8 / chfs[chfkey].flatten()[cinds]
-
-                # All this fussing with permutations and sieves is to give all the
-                # frequencies a chance at being seen, at least in the case of a
-                # single spw.  This way a channel will only blot out the plot where
-                # either it really does have a much higher density than the others
-                # or all the channels overlap.
-                perm = pl.array(range(ncolsspanned - 1, -1, -1))
-                if debug:
-                    print "****s:", s
-                    print "perm:", perm
-                    print "ntoplot:", ntoplot
-                    print "ncolsspanned:", ncolsspanned
-                    print "minci:", minci
-                for si in perm:
-                    if debug:
-                        print '(perm + si) % ncolsspanned =', (perm + si) % ncolsspanned
-                    for ci in (perm + si) % ncolsspanned:
-                        symb = symbs[(ci + minci) % nsymbs]
-                        wvlngth = wvlngths[ci]
-                        #casalog.post("spw %d, lambda: %g" % (s, wvlngth), 'DEBUG1')
-                        casalog.post("spw %d, si %d, ntoplot %d, ncolsspanned %d" % (s,
-                                                                                     si,
-                                                                                     ntoplot,
-                                                                                     ncolsspanned),
-                                     'DEBUG1')
-                        casalog.post('len(u) = %d, len(v) = %d' % (len(u), len(v)),
-                                     'DEBUG1')
-                        casalog.post('symb = %s' % symb, 'DEBUG1')
-                        pl.plot( u[si:ntoplot:ncolsspanned] / wvlngth,
-                                 v[si:ntoplot:ncolsspanned] / wvlngth, symb)
-                        pl.plot(-u[si:ntoplot:ncolsspanned] / wvlngth,
-                                -v[si:ntoplot:ncolsspanned] / wvlngth, symb)
-                        casalog.post('plotted baselines both ways', 'DEBUG1')
+        # Get the subset of UVW that will be plotted for this spw.
+        st = uvplotinfo.tb.query(fldquery + 'DATA_DESC_ID==' + str(d), columns='UVW')
+        snbl = st.nrows()
+        #print "snbl:", snbl
+        if snbl > 0:
+            uvw = 0.001 * st.getcol('UVW')
+            st.close()
+            if uvplotinfo.maxnpts > 0:
+                ntoplot = (uvplotinfo.maxnpts * snbl) / (nbl * ncolsspanned)
             else:
-                st.close()
-        
-        casalog.post('Scaling axes', 'DEBUG1')
-        pl.axis('equal')
-        pl.axis('scaled')
-        pl.xlabel('u (k$\lambda$)')
-        pl.ylabel('v (k$\lambda$)')
-        pl.title(title)
-        casalog.post('Done plotting', 'DEBUG1')
-        tb.close()
-    except Exception, e:
-        print "Exception %s getting the UVWs from %s" % (e, vis)
-        return False
+                ntoplot = snbl
+            if ntoplot < snbl:
+                uvinds = [((snbl - 1) * uvi) / (ntoplot - 1) for uvi in xrange(ntoplot)]
+                casalog.post("(max, min)(uvinds) = %g, %g" % (max(uvinds), min(uvinds)),
+                             'DEBUG1')
+                casalog.post("len(uvw[0]) = %d" % len(uvw[0]), 'DEBUG1')
+                u = uvw[0, uvinds]
+                v = uvw[1, uvinds]
+            else:
+                u = uvw[0, :]
+                v = uvw[1, :]
+            del uvw
+            casalog.post('len(u) = %d' % len(u), 'DEBUG1')
+
+            freqspread = minmax[s][1] - minmax[s][0]
+            # It'd be easier to just divide the frequency range by ncolors, but those
+            # frequencies might not land on real channels.
+            chfkey = 'r' + str(s + 1)
+            nchans = uvplotinfo.chfs[chfkey].shape[0]
+            casalog.post("nchans: %d" % nchans, 'DEBUG1')
+            if ncolsspanned > 1:
+                cinds = [((nchans - 1) * c) / (ncolsspanned - 1) for c in
+                         xrange(ncolsspanned)]
+            else:
+                cinds = [nchans / 2]
+            wvlngths = 2.9978e8 / uvplotinfo.chfs[chfkey].flatten()[cinds]
+
+            # All this fussing with permutations and sieves is to give all the
+            # frequencies a chance at being seen, at least in the case of a
+            # single spw.  This way a channel will only blot out the plot where
+            # either it really does have a much higher density than the others
+            # or all the channels overlap.
+            perm = pl.array(range(ncolsspanned - 1, -1, -1))
+            if debug:
+                print "****s:", s
+                print "perm:", perm
+                print "ntoplot:", ntoplot
+                print "ncolsspanned:", ncolsspanned
+                print "minci:", minci
+            for si in perm:
+                if debug:
+                    print '(perm + si) % ncolsspanned =', (perm + si) % ncolsspanned
+                for ci in (perm + si) % ncolsspanned:
+                    symb = uvplotinfo.symbs[(ci + minci) % uvplotinfo.nsymbs]
+                    wvlngth = wvlngths[ci]
+                    #casalog.post("spw %d, lambda: %g" % (s, wvlngth), 'DEBUG1')
+                    casalog.post(
+                        "d %d, spw %d, si %d, ntoplot %d, ncolsspanned %d, symb %s" %
+                                 (d, s, si, ntoplot, ncolsspanned, symb), 'DEBUG1')
+                    pl.plot( u[si:ntoplot:ncolsspanned] / wvlngth,
+                             v[si:ntoplot:ncolsspanned] / wvlngth, symb)
+                    pl.plot(-u[si:ntoplot:ncolsspanned] / wvlngth,
+                            -v[si:ntoplot:ncolsspanned] / wvlngth, symb)
+                    casalog.post('plotted baselines both ways', 'DEBUG1')
+        else:
+            st.close()
+    uvplotinfo.tb.close()
+    casalog.post('Scaling axes', 'DEBUG1')
+    pl.axis('equal')
+    pl.axis('scaled')
+    pl.xlabel('u (k$\lambda$)')
+    pl.ylabel('v (k$\lambda$)')
+    if uvplotinfo.subtitle:
+        pl.suptitle(fldtitle, fontsize=14)
+        pl.title(uvplotinfo.subtitle, fontsize=10)
+    else:
+        pl.title(fldtitle)                
+    if uvplotinfo.savefig:
+        pl.savefig(uvplotinfo.savefig + str(fld) + uvplotinfo.ext)
     return True
+
+class NavField:
+    def __init__(self, pltinfo):
+        self.fld = -1
+        self.nflds = len(pltinfo.selindices['field'])
+        self.pltinfo = pltinfo
+        prevwidth = 0.13
+        nextwidth = 0.12
+        butheight = 0.05
+        butleft = 0.7
+        butbot = 0.025
+        butgap = 0.5 * butbot
+        self.nextloc = [butleft + prevwidth + butgap,
+                        butbot, nextwidth, butheight]
+        self.prevloc = [butleft, butbot, prevwidth, butheight]
+        self.inactivecolor = '#99aaff'
+        self.activecolor = '#aaffcc'        
+
+    def _draw_buts(self):
+        if self.fld < self.nflds - 1:
+            axnext = pl.axes(self.nextloc)
+            self.bnext = Button(axnext, 'Next fld >',
+                                color=self.inactivecolor,
+                                hovercolor=self.activecolor)
+            self.bnext.on_clicked(self.next)
+        if self.fld > 0:
+            axprev = pl.axes(self.prevloc)
+            self.bprev = Button(axprev, '< Prev fld',
+                                color=self.inactivecolor,
+                                hovercolor=self.activecolor)
+            self.bprev.on_clicked(self.prev)
+        #pl.show()
+
+    def _do_plot(self):
+        didplot = plotfield(self.pltinfo.selindices['field'][self.fld],
+                            self.pltinfo)
+        if didplot:
+            self._draw_buts()
+        return didplot
+    
+    def next(self, event):
+        didplot = False
+        startfld = self.fld
+        while self.fld < self.nflds - 1 and not didplot:
+            self.fld += 1
+            didplot = self._do_plot()
+        if not didplot:
+            print "You are on the last field with any selected baselines."
+            self.fld = startfld
+            #plotfield(self.pltinfo.selindices['field'][self.fld],
+            #          self.pltinfo, self.mytb)
+
+    def prev(self, event):
+        didplot = False
+        startfld = self.fld
+        while self.fld > 0 and not didplot:
+            self.fld -= 1
+            didplot = self._do_plot()
+        if not didplot:
+            print "You are on the first field with any selected baselines."
+            self.fld = startfld
+            #plotfield(self.pltinfo.selindices['field'][self.fld],
+            #          self.pltinfo, self.mytb)

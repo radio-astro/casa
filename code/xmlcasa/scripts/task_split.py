@@ -205,6 +205,16 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         import shutil
         shutil.rmtree(cavms)
 
+    # Write history to output MS, not the input ms.
+    try:
+        param_names = split.func_code.co_varnames[:split.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]   
+        retval &= write_history(myms, outputvis, 'split', param_names, param_vals,
+                                casalog)
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                     'WARN')
+
     # Update FLAG_CMD if necessary.
     if ((spw != '') and (spw != '*')) or do_chan_mod:
         isopen = False
@@ -282,15 +292,4 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
             if isopen:
                 casalog.post('Closing FLAG_CMD', 'DEBUG1')
                 mytb.close()
-    
-    # Write history to output MS, not the input ms.
-    try:
-        param_names = split.func_code.co_varnames[:split.func_code.co_argcount]
-        param_vals = [eval(p) for p in param_names]   
-        retval &= write_history(myms, outputvis, 'split', param_names, param_vals,
-                            casalog)
-    except Exception, instance:
-        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
-                     'WARN')
-
     return retval
