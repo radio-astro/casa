@@ -155,8 +155,6 @@ casa_add_library( synthesis
  implement/MeasurementEquations/LatticeModel.cc
  implement/MeasurementEquations/MatrixCleaner.cc
  implement/MeasurementEquations/MultiTermMatrixCleaner.cc
- implement/MeasurementEquations/PSkyEquation.cc
- implement/MeasurementEquations/Qimager.cc
  implement/MeasurementEquations/Simulator.cc
  implement/MeasurementEquations/SkyEquation.cc
  implement/MeasurementEquations/StokesImageUtil.cc
@@ -196,5 +194,6 @@ casa_add_assay( synthesis implement/MeasurementEquations/test/tImager.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tIncCEMemModel.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tLatConvEquation.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tStokesUtil.cc )
+casa_add_assay( synthesis implement/MeasurementEquations/test/tViewerAttach.cc)
 casa_add_assay( synthesis implement/Parallel/test/tApplicator.cc )
 
