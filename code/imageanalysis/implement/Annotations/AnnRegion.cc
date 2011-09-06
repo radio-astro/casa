@@ -233,7 +233,7 @@ void AnnRegion::_extend() {
 	vector<Stokes::StokesTypes> stokesRanges;
 	if (
 		_getCsys().hasPolarizationAxis() && _stokes.size() > 0
-		&& (stokesAxis = _getCsys().polarizationAxisNumber())
+		&& (stokesAxis = _getCsys().polarizationAxisNumber()) >= 0
 	) {
 		vector<uInt> stokesNumbers(2*_stokes.size());
 		for (uInt i=0; i<_stokes.size(); i++) {
