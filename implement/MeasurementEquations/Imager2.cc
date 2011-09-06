@@ -3728,30 +3728,7 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	   << dataStep[0] << LogIO::POST;
       }
   }
-  else if (dataMode=="velocity") {
-      MVRadialVelocity mvStart(mDataStart.get("m/s"));
-      MVRadialVelocity mvStep(mDataStep.get("m/s"));
-      MRadialVelocity::Types
-	vType((MRadialVelocity::Types)mDataStart.getRefPtr()->getType());
-      os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
-	 << " channels, starting at radio velocity " << mvStart
-	 << " stepped by " << mvStep << ", reference frame is "
-	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      rvi_p->selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
-				  vType, MDoppler::RADIO);
-  }
-  else if (dataMode=="opticalvelocity") {
-      MVRadialVelocity mvStart(mDataStart.get("m/s"));
-      MVRadialVelocity mvStep(mDataStep.get("m/s"));
-      MRadialVelocity::Types
-	vType((MRadialVelocity::Types)mDataStart.getRefPtr()->getType());
-      os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
-	 << " channels, starting at optical velocity " << mvStart
-	 << " stepped by " << mvStep << ", reference frame is "
-	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      rvi_p->selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
-				  vType, MDoppler::OPTICAL);
-  }
+  
 
   return True;
 
@@ -4509,6 +4486,7 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 } 
 
 } //# NAMESPACE CASA - END
+
 
 
 
