@@ -1,10 +1,12 @@
-This view exists to simplify the checkout of just the directories required to build 
+This directory is checked out from https://svn.cv.nrao.edu/svn/casa/branches/project/views/
+
+These view exists to simplify the checkout of just the directories required to build 
 and test the CASA components:
 
    * casacore
    * code
    * asap
 
-from the _active_ branch.
+This view contains code from the CASA _active_ branch.
 
 Do NOT 'svn add' any files or directories to the directory containing this README file!
