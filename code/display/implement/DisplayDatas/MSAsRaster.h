@@ -47,6 +47,7 @@
 #include <display/Display/DisplayEnums.h>
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/DisplayDatas/CachingDisplayMethod.h>
+#include <display/DisplayDatas/DisplayDataOptions.h>
 #include <display/Display/Colormap.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -129,7 +130,7 @@ class MSAsRaster: public ActiveCaching2dDD {
 
   // constructor
   // from the filename of an MS
-  MSAsRaster(const String msname);
+  MSAsRaster( const String msname, const viewer::DisplayDataOptions &ddo );
 
   //# from an MS object
   //# MSAsRaster(MeasurementSet* ms);
@@ -327,7 +328,7 @@ class MSAsRaster: public ActiveCaching2dDD {
   // </group>
 
   // Initialization common to all useful constructors
-  void initMSAR_();
+  void initMSAR_( const viewer::DisplayDataOptions &ddo );
 
   // set/restore default option values on this level only.  (Not implemented).
   void setDefaultMSAROptions_();
@@ -338,7 +339,7 @@ class MSAsRaster: public ActiveCaching2dDD {
   //# the user input settings.  (Most of the control logic is elsewhere).
 
   // prepare the selection MS and its VisSet.
-  void selectVS_();
+  void selectVS_( const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions( ) );
 
   // find the ranges of the MS selection (VisSet) for the 5 hypercube axes
   void findRanges_();

@@ -35,6 +35,7 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <ms/MeasurementSets/MSColumns.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
@@ -63,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //---------------------------------------------------------------------
-MSAsRaster::MSAsRaster(const String msname): 
+MSAsRaster::MSAsRaster( const String msname, const viewer::DisplayDataOptions &ddo ): 
 
             ActiveCaching2dDD(),		// base class
 
@@ -176,13 +177,13 @@ MSAsRaster::MSAsRaster(const String msname):
     if ( itsMS->nrow() == 0u )
 	throw AipsError("Measurement Set contains no data.");
 
-    initMSAR_();
+    initMSAR_( ddo );
 }
 
 
 
 //---------------------------------------------------------------------
-void MSAsRaster::initMSAR_() {
+void MSAsRaster::initMSAR_( const viewer::DisplayDataOptions &ddo ) {
     // common constructor initialization
 
     // Initialize private internal colormap with colors for flagged data, etc.
@@ -256,7 +257,7 @@ void MSAsRaster::initMSAR_() {
     // We always create the VisSet and gather valid ranges for
     // the whole MS (and set the CS accordingly) on startup.
 
-    selectVS_();
+    selectVS_( ddo );
     vs_ = wvi_p;
     findRanges_();
 
@@ -314,7 +315,7 @@ void MSAsRaster::initMSAR_() {
 
 
 //--------------------------------------------------------------------------
-void MSAsRaster::selectVS_() {
+void MSAsRaster::selectVS_( const viewer::DisplayDataOptions &ddo ) {
   // Prepare the selection MS and its VisSet.
   // Can take 5-20 sec. if sorted selected reference MS does not
   // already exist.
@@ -345,10 +346,19 @@ void MSAsRaster::selectVS_() {
   		// we don't know whether it will have to sort or not...).
 
    
-  // If the entire MS has been selected,
-  // use the original MS [and VisSet] as the selected ones.
-  
-  if( Int(fieldIds_.nelements()) == nFieldIds_ &&
+  if ( ddo.size( ) > 0 ) {
+      // user selection from GUI or arguments when opening...
+      mssel_ = new MeasurementSet( );
+      Vector<Vector<Slice> > chansel;
+      Vector<Vector<Slice> > corrsel;
+      bool res = mssSetData( *itsMS, *mssel_, chansel, corrsel, "",
+			     ddo["time"], ddo["antenna"], ddo["field"], ddo["spw"],
+			     ddo["uvrange"], ddo["msexpr"], ddo["corr"], ddo["scan"], ddo["array"] );
+
+  } else if( Int(fieldIds_.nelements()) == nFieldIds_ &&
+      // If the entire MS has been selected,
+      // use the original MS [and VisSet] as the selected ones.
+
       Int(spwIds_.nelements()) == nSpwIds_ ) {
       mssel_ = itsMS;
       if( vs_ != 0 )
@@ -366,7 +376,8 @@ void MSAsRaster::selectVS_() {
     msseln.setSpwExpr(MSSelection::indexExprStr(spwIds_));
 
     
-    mssel_ = new MS( (*itsMS)(msseln.toTableExprNode(itsMS)) );  }
+    mssel_ = new MS( (*itsMS)(msseln.toTableExprNode(itsMS)) );
+  }
 
     
   msselValid_ = (mssel_!=0 && mssel_->nrow()!=0u);  

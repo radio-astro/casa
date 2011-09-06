@@ -45,6 +45,7 @@
 #include <display/QtViewer/QtDisplayPanel.qo.h>
 #include <display/region/QtRegionDock.qo.h>
 #include <display/Utilities/Lowlevel.h>
+#include <display/DisplayDatas/DisplayDataOptions.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -123,8 +124,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   // register the DD for display.
   // Check return value for 0, or connect to the createDDFailed()
   // signal, to handle failure.
-  QtDisplayData* createDD(String path, String dataType, String displayType,
-                          Bool autoRegister=True);
+  QtDisplayData* createDD( String path, String dataType, String displayType, Bool autoRegister=True,
+			   const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
    
   // Removes the QDD from the list and deletes it (if it existed -- 
   // Return value: whether qdd was in the list in the first place).

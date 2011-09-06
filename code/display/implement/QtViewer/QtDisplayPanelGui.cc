@@ -667,10 +667,10 @@ QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
 //# DisplayData functionality brought down from QtViewerBase
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-QtDisplayData* QtDisplayPanelGui::createDD(String path, String dataType,
-			       String displayType, Bool autoRegister) {
+QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String displayType,
+					    Bool autoRegister, const viewer::DisplayDataOptions &ddo ) {
 
-  QtDisplayData* qdd = new QtDisplayData(this, path, dataType, displayType);
+  QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo );
   
   if(qdd->isEmpty()) {
     errMsg_ = qdd->errMsg();

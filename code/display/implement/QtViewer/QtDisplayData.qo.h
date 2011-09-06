@@ -36,6 +36,7 @@
 #include <display/Display/DParameterRange.h>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DisplayEnums.h>
+#include <display/DisplayDatas/DisplayDataOptions.h>
 #include <vector>
 
 
@@ -67,8 +68,8 @@ class QtDisplayData : public QObject {
 
  public:
   
-  QtDisplayData(QtDisplayPanelGui *panel, String path, String dataType,
-				 String displayType);
+  QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType, String displayType,
+		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ) );
   ~QtDisplayData();
   
   virtual String name() { return name_;  }
