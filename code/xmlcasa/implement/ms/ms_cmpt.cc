@@ -2726,6 +2726,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 		 const ::casac::variant& baseline, 
 		 const ::casac::variant& time, 
 		 const ::casac::variant& scan, const ::casac::variant& uvrange,
+                 const ::casac::variant& observation,
 		 const std::string& taql){
   casac::record* rstat(0);
   try {
@@ -2736,6 +2737,7 @@ ms::msseltoindex(const std::string& vis, const ::casac::variant& spw,
 					toCasaString(baseline), 
 					toCasaString(time),toCasaString(scan),
 					toCasaString(uvrange),
+                                        toCasaString(observation),
 					String(taql));
     rstat = fromRecord(selected); 
 					
