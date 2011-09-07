@@ -151,6 +151,17 @@ private:
   // Averaging interval
   Double interval_p;
 
+  // Pre-normalization flag
+  Bool prenorm_p;
+
+  // Diagnostic print level
+  Int prtlev_;
+
+  // How many VisBuffers have been accumulated.
+  uInt nBuf_p;
+
+  // End of initialization list
+
   // Per-interval timestamp averaging
   Double aveTime_p;
   Double aveTimeWt_p;
@@ -159,9 +170,6 @@ private:
   Double globalTime_p;
   Double globalTimeWt_p;
 
-  // Pre-normalization flag
-  Bool prenorm_p;
-
   // Start time and row of current accumulation
   Double tStart_p;
   Int avrow_p;
@@ -169,12 +177,6 @@ private:
   // Flag to mark the first accumulation interval
   Bool firstInterval_p;
   
-  // Diagnostic print level
-  Int prtlev_;
-
-  // How many VisBuffers have been accumulated.
-  uInt nBuf_p;
-
   // A map from avBuf_p's row numbers to row numbers in the VisBuffer used to
   // fill avBuf_p.  Only useful if nBuf_p == 1.  Unfilled rows point to -1.
   Vector<Int> outToInRow_p;

@@ -217,9 +217,10 @@
 
             Only one flux density can be specified at a time.  The phases are
                set to zero.
-            example   fluxdensity=-1  will use standard for recognized calibrators
-                      (like 3C286, 3C147 and 3C48, depending on standard) and insert
-                      1.0 for selected fields with unrecognized sources.
+            example   fluxdensity=-1  will use standard for recognized
+	              calibrators (like 3C286, 3C147 and 3C48, depending on
+		      standard) and insert 1.0 for selected fields with
+		      unrecognized sources.
             example   field = '1'; fluxdensity=[3.2,0,0,0] wil put in 
                       a flux density of I=3.2 for field='1'
 
@@ -270,7 +271,8 @@
                    Neptune: Triton 
                    <!-- Pluto moon:    Charon -->
 	       
-            Asteroids: Ceres, Pallas***, Vesta***, Juno***, Victoria***, Davida***
+            Asteroids: Ceres, Pallas***, Vesta***, Juno***, Victoria***,
+	               Davida***
 
             * Venus (and Jupiter and Earth, for that matter) is probably too
               resolved for most (sub)mm observations with interferometers.
