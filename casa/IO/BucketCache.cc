@@ -227,7 +227,8 @@ char* BucketCache::getBucket (uInt bucketNr)
         if (! its_file->isWritable()) {
             throw AipsError ("BucketCache::getBucket: bucket " +
                              String::toString(bucketNr) +
-                             " exceeds nr of buckets");
+                             " exceeds nr of buckets and file is not writable: " +
+                             its_file->name());
         }
 	initializeBuckets (bucketNr);
     }
