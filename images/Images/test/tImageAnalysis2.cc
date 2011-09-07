@@ -402,7 +402,7 @@ int main() {
 			AlwaysAssert(fabs(1-z_yval[6]/0.0231727)  < 1e-5, AipsError);
 			AlwaysAssert(fabs(1-z_yval[7]/0.0246372)  < 1e-5, AipsError);
 
-			// extract the root mean sqared error spectrum in "wavelength"
+			// extract the root mean squared error spectrum in "wavelength"
 			// with the default unit
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
@@ -421,7 +421,7 @@ int main() {
 			AlwaysAssert(fabs(1-z_yval[7]/0.156963)  < 1e-5, AipsError);
 
 			// extract square root of the
-			// sum of squares in "wavelength"
+			// sum in "wavelength"
 			// with the default unit
 			ok = analysis.getFreqProfile(
 					wxv, wyv, z_xval, z_yval,
@@ -430,14 +430,14 @@ int main() {
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
-			AlwaysAssert(fabs(1-z_yval[0]/0.886384)  < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[1]/1.31181) < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[2]/0.965372) < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[3]/0.883408)  < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[4]/2.2528)   < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[5]/0.832024) < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[6]/0.877469)  < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[7]/1.01205)  < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[0]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[1]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[2]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(1-z_yval[3]/sqrt(2.17288))  < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[4]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[5]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[6]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[7]) < 1e-5, AipsError);
 
 			// extract average square root of the
 			// sum of squares in "wavelength"
@@ -449,14 +449,14 @@ int main() {
 
 			// check the spectrum points
 			AlwaysAssert(ok, AipsError);
-			AlwaysAssert(fabs(1-z_yval[0]/0.0354554)  < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[1]/0.0524723) < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[2]/0.0386149) < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[3]/0.0353363)  < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[4]/0.0901118)   < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[5]/0.033281) < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[6]/0.0350988)  < 1e-5, AipsError);
-			AlwaysAssert(fabs(1-z_yval[7]/0.0404818)  < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[0])  < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[1]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[2]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(1-z_yval[3]/(sqrt(2.17288)/25.0))  < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[4])   < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[5]) < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[6])  < 1e-5, AipsError);
+			AlwaysAssert(fabs(0.0-z_yval[7])  < 1e-5, AipsError);
 
 			// extract the default combine type
 			// (mean) in "wavelength"
