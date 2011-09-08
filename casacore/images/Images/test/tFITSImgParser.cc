@@ -136,6 +136,12 @@ int main (int argc, const char* argv[])
 		   // this should be a quality image
 		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.SCI,IFU1.ERR]"), AipsError)
 
+		   // capitalization is not important
+		   AlwaysAssert(fitsImg2.is_qualityimg("[ifu1.sci,IFU1.ERR]"), AipsError)
+
+		   // capitalization is not important
+		   AlwaysAssert(fitsImg2.is_qualityimg("[ifu1.sci,ifu1.err]"), AipsError)
+
 		   // using not all extensions should not matter
 		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.SCI,IFU1.ERR]"), AipsError)
 
@@ -143,6 +149,8 @@ int main (int argc, const char* argv[])
 		   //AlwaysAssert(fitsImg2.is_qualityimg("[IFU2.SCI,IFU2.ERR,IFU2.DQ]"), AipsError)
 
 		   // check the next quality image
+		   // note in the data extension, the keywords pointing
+		   // to the error extension are filled in small letters
 		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU2.SCI,IFU2.ERR]"), AipsError)
 
 		   // including mask image test this:
