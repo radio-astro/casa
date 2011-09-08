@@ -4403,7 +4403,7 @@ Int CoordinateSystem::spectralAxisNumber() const {
 }
 
 
-Bool CoordinateSystem::hasPolarizationAxis() const {
+Bool CoordinateSystem::hasPolarizationCoordinate() const {
     Int polarizationCoordNum = findCoordinate(Coordinate::STOKES);
     return (
         polarizationCoordNum >= 0
@@ -4417,7 +4417,7 @@ Int CoordinateSystem::polarizationCoordinateNumber() const {
 }
 
 Int CoordinateSystem::polarizationAxisNumber() const {
-    if (! hasPolarizationAxis()) {
+    if (! hasPolarizationCoordinate()) {
         return -1;
     }
     return pixelAxes(polarizationCoordinateNumber())[0];
@@ -4469,7 +4469,7 @@ String CoordinateSystem::qualityAtPixel(const uInt pixel) const {
 }
 
 Int CoordinateSystem::stokesPixelNumber(const String& stokesString) const {
-    if (! hasPolarizationAxis()) {
+    if (! hasPolarizationCoordinate()) {
         return -1;
     }
     Int polCoordNum = findCoordinate(Coordinate::STOKES);
@@ -4483,7 +4483,7 @@ Int CoordinateSystem::stokesPixelNumber(const String& stokesString) const {
 }
 
 String CoordinateSystem::stokesAtPixel(const uInt pixel) const {
-    if (! hasPolarizationAxis()) {
+    if (! hasPolarizationCoordinate()) {
          return "";
     }
     Int polCoordNum = polarizationCoordinateNumber();

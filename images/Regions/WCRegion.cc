@@ -186,7 +186,15 @@ LCRegion* WCRegion::toLCRegion (const CoordinateSystem& cSys,
 {
     uInt i,n;
     // Make sure shape length matches number of pixel axes.
-    AlwaysAssert (shape.nelements() == cSys.nPixelAxes(), AipsError);
+
+    if (shape.nelements() != cSys.nPixelAxes()) {
+    	ostringstream os;
+    	os << "WCRegion::" << __FUNCTION__ << ": shape has "
+			<< shape.nelements() << " elements, the coordinate system has "
+			<< cSys.nPixelAxes() << " axes. The actual shape is "
+			<< shape;
+    	throw AipsError(os.str());
+    }
     // Make pixel axes description of coordinate system.
     Record desc = makeAxesDesc (cSys);
     // Find the mapping of the axesDesc of the region to the axesDesc

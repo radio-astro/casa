@@ -65,16 +65,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return itsCoordinates.polarizationCoordinateNumber();
     }
 
+    /*
     Bool ImageMetaData::hasPolarizationAxis() const {
     	return itsCoordinates.hasPolarizationAxis();
     } 
+    */
 
     Int ImageMetaData::polarizationAxisNumber() const {
     	return itsCoordinates.polarizationAxisNumber();
     }       
 
     uInt ImageMetaData::nStokes() const {
-        if (! hasPolarizationAxis()) {
+        if (! itsCoordinates.hasPolarizationCoordinate()) {
             return 0;
         }
         return itsShape[polarizationAxisNumber()];
@@ -89,14 +91,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
     String ImageMetaData::stokesAtPixel(const uInt pixel) const {
-        if (! hasPolarizationAxis() || pixel >= nStokes()) {
+        if (! itsCoordinates.hasPolarizationCoordinate() || pixel >= nStokes()) {
              return "";
         }
         return itsCoordinates.stokesAtPixel(pixel);
     }
 
     Bool ImageMetaData::isStokesValid(const String& stokesString) const {
-        if (! hasPolarizationAxis()) {
+        if (! itsCoordinates.hasPolarizationCoordinate()) {
             return False;
         }
         Int stokesPixNum = stokesPixelNumber(stokesString);
