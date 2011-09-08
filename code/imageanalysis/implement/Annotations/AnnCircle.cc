@@ -27,6 +27,7 @@ AnnCircle::AnnCircle(
 	const Quantity& radius,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -35,7 +36,7 @@ AnnCircle::AnnCircle(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
-		CIRCLE, dirRefFrameString, csys, beginFreq,
+		CIRCLE, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 ), _inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
@@ -47,8 +48,9 @@ AnnCircle::AnnCircle(
 	const Quantity& ycenter,
 	const Quantity& radius,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(CIRCLE, csys, stokes),
+) : AnnRegion(CIRCLE, csys, imShape, stokes),
 	_inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
 	_init(xcenter, ycenter);
 }

@@ -34,12 +34,12 @@
 
 #include <iomanip>
 
-
 int main () {
 	try {
 		LogIO log;
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
+		IPosition shape(4, 400,400,1,5500);
 		{
 			log << LogIO::NORMAL
 				<<"Test mixed world and pixel coordinates throws exception"
@@ -52,22 +52,22 @@ int main () {
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-					csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(False)
 			);
 			String freqRefFrameString = MFrequency::showType(
-					csys.spectralCoordinate().frequencySystem()
+				csys.spectralCoordinate().frequencySystem()
 			);
 			String dopplerString = MDoppler::showType(
-					csys.spectralCoordinate().velocityDoppler()
+				csys.spectralCoordinate().velocityDoppler()
 			);
 			Quantity restfreq(
-					csys.spectralCoordinate().restFrequency(), "Hz"
+				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
 			Vector<Stokes::StokesTypes> stokes(0);
 			try {
 				AnnCenterBox box(
 					centerx, centery, widthx, widthy, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 
@@ -89,22 +89,22 @@ int main () {
 						Quantity widthy(45, "arcsec");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
-					csys.directionCoordinate().directionType(False)
+				csys.directionCoordinate().directionType(False)
 			);
 			String freqRefFrameString = MFrequency::showType(
-					csys.spectralCoordinate().frequencySystem()
+				csys.spectralCoordinate().frequencySystem()
 			);
 			String dopplerString = MDoppler::showType(
-					csys.spectralCoordinate().velocityDoppler()
+				csys.spectralCoordinate().velocityDoppler()
 			);
 			Quantity restfreq(
-					csys.spectralCoordinate().restFrequency(), "Hz"
+				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
 			Vector<Stokes::StokesTypes> stokes(0);
 			try {
 				AnnCenterBox box(
 					centerx, centery, widthx, widthy, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -121,7 +121,7 @@ int main () {
 				<< "Test corners with no conversions"
 				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
-			Quantity centery(0.01, "deg");
+			Quantity centery(0.02, "deg");
 			Quantity widthx(30, "arcsec");
 			Quantity widthy(45, "arcsec");
 			Quantity beginFreq, endFreq;
@@ -138,15 +138,12 @@ int main () {
 				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
 			Vector<Stokes::StokesTypes> stokes(0);
-
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
 			Vector<MDirection> corners = box.getCorners();
-
 			AlwaysAssert(
 				near(
 					corners[0].getAngle("deg").getValue("deg")[0],
@@ -174,6 +171,7 @@ int main () {
 			cout << box.getCorners() << endl;
 		}
 		{
+
 			log << LogIO::NORMAL
 				<< "Test widths specified in pixels"
 				<< LogIO::POST;
@@ -195,15 +193,12 @@ int main () {
 				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
 			Vector<Stokes::StokesTypes> stokes(0);
-
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
 			Vector<MDirection> corners = box.getCorners();
-
 			AlwaysAssert(
 				near(
 					corners[0].getAngle("deg").getValue("deg")[0],
@@ -232,7 +227,7 @@ int main () {
 			cout << box.getCorners() << endl;
 		}
 		{
-			// check unmodified frequencies
+			log << LogIO::NORMAL << "Check unmodified frequencies" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity widthx(30, "arcsec");
@@ -255,8 +250,8 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy,
-				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -271,7 +266,7 @@ int main () {
 			);
 		}
 		{
-			// check frequencies GALACTO -> LSRK
+			log << LogIO::NORMAL << "Test frequencies GALACTO -> LSRK" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity widthx(30, "arcsec");
@@ -293,8 +288,8 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy,
-				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -309,14 +304,15 @@ int main () {
 			);
 		}
 		{
-			// check unmodified frequencies when specifying relativistic velocities
+			log << LogIO::NORMAL
+				<< "Test unmodified frequencies when specifying relativistic velocities" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity widthx(30, "arcsec");
 			Quantity widthy(45, "arcsec");
 
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity beginFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -333,30 +329,31 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy,
-				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
 		{
-			// check unmodified frequencies when specifying velocities
+			log << LogIO::NORMAL
+				<< "Test unmodified frequencies when specifying velocities" << LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity widthx(30, "arcsec");
 			Quantity widthy(45, "arcsec");
 
-			Quantity beginFreq(-20, "km/s");
-			Quantity endFreq(20000, "m/s");
+			Quantity beginFreq(20000, "m/s");
+			Quantity endFreq(-20, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -373,30 +370,32 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy,
-				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1420500511.0578821),
+				near(freqs[1].get("Hz").getValue(), 1420500511.0578821),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1420310992.5141187),
+				near(freqs[0].get("Hz").getValue(), 1420310992.5141187),
 				AipsError
 			);
 		}
 		{
-			// check unmodified frequencies when specifying relativistic velocities
+			log << LogIO::NORMAL
+				<< "Test unmodified frequencies when specifying relativistic velocities"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity widthx(30, "arcsec");
 			Quantity widthy(45, "arcsec");
 
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity beginFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -413,23 +412,24 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy,
-				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
 		{
-			// check modified doppler definitions
+			log << LogIO::NORMAL << "Test modified doppler definitions"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
 			Quantity widthx(30, "arcsec");
@@ -451,8 +451,8 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCenterBox box(
 				centerx, centery, widthx, widthy,
-				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << box << endl;
@@ -460,7 +460,7 @@ int main () {
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			cout << freqs[0].get("Hz").getValue() << endl;
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1410929824.5978253),
+					near(freqs[0].get("Hz").getValue(), 1410929824.5978253),
 				AipsError
 			);
 			AlwaysAssert(

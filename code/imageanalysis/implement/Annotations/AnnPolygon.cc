@@ -26,6 +26,7 @@ AnnPolygon::AnnPolygon(
 	const Vector<Quantity>& yPositions,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -34,7 +35,7 @@ AnnPolygon::AnnPolygon(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
-		POLYGON, dirRefFrameString, csys, beginFreq,
+		POLYGON, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 ), _origXPos(xPositions), _origYPos(yPositions) {
@@ -45,8 +46,9 @@ AnnPolygon::AnnPolygon(
 	const Vector<Quantity>& xPositions,
 	const Vector<Quantity>& yPositions,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(POLYGON, csys, stokes),
+) : AnnRegion(POLYGON, csys, imShape, stokes),
 	_origXPos(xPositions), _origYPos(yPositions) {
 	_init();
 }

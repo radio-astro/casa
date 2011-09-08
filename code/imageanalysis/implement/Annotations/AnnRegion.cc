@@ -1,19 +1,3 @@
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
-//# License for more details.
-//#
-//# You should have received a copy of the GNU Library General Public License
-//# along with this library; if not, write to the Free Software Foundation,
-//# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
-//#
-
 #include <imageanalysis/Annotations/AnnRegion.h>
 
 #include <casa/Exceptions/Error.h>
@@ -33,6 +17,7 @@ const String AnnRegion::_class = "AnnRegion";
 AnnRegion::AnnRegion(
 	const Type shape, const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -42,30 +27,28 @@ AnnRegion::AnnRegion(
 	const Bool annotationOnly
 ) : AnnotationBase(shape, dirRefFrameString, csys), _isAnnotationOnly(annotationOnly),
 	_convertedFreqLimits(Vector<MFrequency>(0)), _stokes(stokes),
-	_isDifference(False), _constructing(True) {
+	_isDifference(False), _constructing(True), _imShape(imShape) {
 	setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrameString,
 		dopplerString, restfreq
 	);
 	// right before returning
 	_constructing = False;
-
 }
 
 AnnRegion::AnnRegion(
 	const Type shape,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) :	AnnotationBase(shape, csys),
 	_convertedFreqLimits(Vector<MFrequency>(0)),
 	_beginFreq(Quantity(0, "Hz")), _endFreq(Quantity(0, "Hz")),
 	_restFreq(Quantity(0, "Hz")), _stokes(stokes),
-	_isDifference(False),
-	_constructing(True) {
+	_isDifference(False), _constructing(True), _imShape(imShape) {
 
 	// right before returning
 	_constructing = False;
-
 }
 
 
@@ -91,6 +74,7 @@ AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
     _isDifference = other._isDifference;
     _directionRegion = other._directionRegion;
     _constructing = other._constructing;
+    _imShape = other._imShape;
     return *this;
 }
 
@@ -232,7 +216,7 @@ void AnnRegion::_extend() {
 	}
 	vector<Stokes::StokesTypes> stokesRanges;
 	if (
-		_getCsys().hasPolarizationAxis() && _stokes.size() > 0
+		_getCsys().hasPolarizationCoordinate() && _stokes.size() > 0
 		&& (stokesAxis = _getCsys().polarizationAxisNumber()) >= 0
 	) {
 		vector<uInt> stokesNumbers(2*_stokes.size());
@@ -250,41 +234,44 @@ void AnnRegion::_extend() {
 	}
 	if (nBoxes == 0) {
 		_imageRegion = _directionRegion;
-		return;
 	}
-	uInt nExtendAxes = 0;
-	if (spectralAxis >= 0) {
-		nExtendAxes++;
-	}
-	if (stokesAxis >= 0) {
-		nExtendAxes++;
-	}
+	else {
+		uInt nExtendAxes = 0;
+		if (spectralAxis >= 0) {
+			nExtendAxes++;
+		}
+		if (stokesAxis >= 0) {
+			nExtendAxes++;
+		}
 
-	IPosition pixelAxes(nExtendAxes);
-	uInt n = 0;
-	// spectral axis must be first to be consistent with _makeExtensionBox()
-	if (spectralAxis > 0) {
-		pixelAxes[n] = spectralAxis;
-		n++;
+		IPosition pixelAxes(nExtendAxes);
+		uInt n = 0;
+		// spectral axis must be first to be consistent with _makeExtensionBox()
+		if (spectralAxis > 0) {
+			pixelAxes[n] = spectralAxis;
+			n++;
+		}
+		if (stokesAxis > 0) {
+			pixelAxes[n] = stokesAxis;
+			n++;
+		}
+		if (nBoxes == 1) {
+			WCBox wbox = _makeExtensionBox(freqRange, stokesRanges, pixelAxes);
+			_imageRegion = ImageRegion(WCExtension(_directionRegion, wbox));
+		}
+		else {
+			PtrBlock<const WCRegion*> regions(nBoxes);
+			for (uInt i=0; i<nBoxes; i++) {
+				Vector<Stokes::StokesTypes> stokesRange(2);
+				stokesRange[0] = stokesRanges[2*i];
+				stokesRange[1] = stokesRanges[2*i + 1];
+				WCBox wbox = _makeExtensionBox(freqRange, stokesRange, pixelAxes);
+				regions[i] = new WCExtension(_directionRegion, wbox);
+			}
+			_imageRegion = ImageRegion(WCUnion(True, regions));
+		}
 	}
-	if (stokesAxis > 0) {
-		pixelAxes[n] = stokesAxis;
-		n++;
-	}
-	if (nBoxes == 1) {
-		WCBox wbox = _makeExtensionBox(freqRange, stokesRanges, pixelAxes);
-        _imageRegion = ImageRegion(WCExtension(_directionRegion, wbox));
-        return;
-	}
-	PtrBlock<const WCRegion*> regions(nBoxes);
-	for (uInt i=0; i<nBoxes; i++) {
-		Vector<Stokes::StokesTypes> stokesRange(2);
-		stokesRange[0] = stokesRanges[2*i];
-		stokesRange[1] = stokesRanges[2*i + 1];
-		WCBox wbox = _makeExtensionBox(freqRange, stokesRange, pixelAxes);
-		regions[i] = new WCExtension(_directionRegion, wbox);
-	}
-    _imageRegion = ImageRegion(WCUnion(True, regions));
+	_imageRegion.asWCRegionPtr()->toLCRegion(_getCsys(), _imShape);
 }
 
 WCBox AnnRegion::_makeExtensionBox(
@@ -308,7 +295,6 @@ WCBox AnnRegion::_makeExtensionBox(
 	WCBox wbox(blc, trc, pixelAxes, _getCsys(), absRel);
 	return wbox;
 }
-
 
 void AnnRegion::_checkAndConvertFrequencies() {
 	MFrequency::Types cFrameType = _getCsys().spectralCoordinate().frequencySystem(False);

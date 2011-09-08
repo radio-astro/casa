@@ -57,7 +57,7 @@ RegionTextList::RegionTextList(
 ) : _lines(Vector<AsciiAnnotationFileLine>(0)),
 _deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys), _shape(shape), _canGetRegion(True) {
-	RegionTextParser parser(filename, csys, requireAtLeastThisVersion);
+	RegionTextParser parser(filename, csys, shape, requireAtLeastThisVersion);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();
@@ -74,7 +74,7 @@ RegionTextList::RegionTextList(
 ) : _lines(Vector<AsciiAnnotationFileLine>(0)),
 _deletePointersOnDestruct(deletePointersOnDestruct),
 	_csys(csys), _shape(shape), _canGetRegion(True) {
-	RegionTextParser parser(csys, text);
+	RegionTextParser parser(csys, shape, text);
 	Vector<AsciiAnnotationFileLine> lines = parser.getLines();
 	for (
 		Vector<AsciiAnnotationFileLine>::const_iterator iter=lines.begin();

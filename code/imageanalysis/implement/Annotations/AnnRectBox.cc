@@ -26,6 +26,7 @@ AnnRectBox::AnnRectBox(
 	const Quantity& trcy,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -34,7 +35,7 @@ AnnRectBox::AnnRectBox(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
-		RECT_BOX, dirRefFrameString, csys,
+		RECT_BOX, dirRefFrameString, csys, imShape,
 		beginFreq, endFreq, freqRefFrameString,
 		dopplerString, restfreq, stokes,
 		annotationOnly
@@ -48,8 +49,9 @@ AnnRectBox::AnnRectBox(
 	const Quantity& trcx,
 	const Quantity& trcy,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(RECT_BOX, csys, stokes),
+) : AnnRegion(RECT_BOX, csys, imShape, stokes),
 	_inputCorners(Matrix<Quantity>(2, 2)) {
 	_init(blcx, blcy, trcx, trcy);
 }
@@ -89,6 +91,7 @@ void AnnRectBox::_init(
 	_inputCorners(0, 1) = trcx;
 	_inputCorners(1, 1) = trcy;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCorners);
+
 	Vector<Int> absrel(2,(Int)RegionType::Abs);
 
 	Vector<Quantity> qblc(2);

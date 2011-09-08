@@ -27,13 +27,14 @@ AnnRotBox::AnnRotBox(
 	const Quantity& xwidth,
 	const Quantity& ywidth, const Quantity& positionAngle,
 	const String& dirRefFrameString,
-	const CoordinateSystem& csys, const Quantity& beginFreq,
+	const CoordinateSystem& csys, const IPosition& imShape,
+const Quantity& beginFreq,
 	const Quantity& endFreq, const String& freqRefFrameString,
 	const String& dopplerString, const Quantity& restfreq,
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
-		ROTATED_BOX, dirRefFrameString, csys, beginFreq,
+		ROTATED_BOX, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString, restfreq,
 		stokes, annotationOnly
 	), _inputCenter(Vector<Quantity>(2)),
@@ -47,9 +48,9 @@ AnnRotBox::AnnRotBox(
 	const Quantity& ycenter,
 	const Quantity& xwidth,
 	const Quantity& ywidth, const Quantity& positionAngle,
-	const CoordinateSystem& csys,
+	const CoordinateSystem& csys, const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(ROTATED_BOX, csys, stokes),
+) : AnnRegion(ROTATED_BOX, csys, imShape, stokes),
 	_inputCenter(Vector<Quantity>(2)),
 	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {

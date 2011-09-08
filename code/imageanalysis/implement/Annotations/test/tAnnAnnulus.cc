@@ -37,6 +37,7 @@ int main () {
 	try {
 		LogIO log;
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+		IPosition shape(4, 400,400,1,5500);
 		AnnRegion::unitInit();
 		{
 			log << LogIO::NORMAL
@@ -47,7 +48,6 @@ int main () {
 			Quantity centery(0.01, "pix");
 			Quantity inner(30, "arcsec");
 			Quantity outer(40, "arcsec");
-
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -65,7 +65,7 @@ int main () {
 			try {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -103,7 +103,7 @@ int main () {
 			try {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -141,7 +141,7 @@ int main () {
 			try {
 				AnnAnnulus annulus(
 					centerx, centery, inner, outer, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -176,13 +176,11 @@ int main () {
 				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
 			Vector<Stokes::StokesTypes> stokes(0);
-
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
 			MDirection center = annulus.getCenter();
 
 			AlwaysAssert(
@@ -247,7 +245,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			MDirection center = annulus.getCenter();
@@ -318,7 +316,7 @@ int main () {
 
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -363,7 +361,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
@@ -383,8 +381,8 @@ int main () {
 				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity inner(30, "arcsec");
-			Quantity outer(40, "arcsec");
+			Quantity inner(30, "pix");
+			Quantity outer(40, "pix");
 
 			Quantity beginFreq(1415, "MHz");
 			Quantity endFreq(1450e6, "Hz");
@@ -403,7 +401,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -446,7 +444,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -489,7 +487,7 @@ int main () {
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -528,7 +526,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << "annulus " << annulus << endl;
@@ -569,7 +567,7 @@ int main () {
 
 			AnnAnnulus annulus(
 				centerx, centery, inner, outer, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			{

@@ -495,8 +495,9 @@ namespace casa {
 
 	    Vector<Stokes::StokesTypes> stokes;
 	    /*Int polaxis =*/ CoordinateUtil::findStokesAxis(stokes, cs);
+	    const DisplayData *dd = wc_->displaylist().front();
 
-	    AnnPolygon *poly = new AnnPolygon( xv, yv, cs, stokes );
+	    AnnPolygon *poly = new AnnPolygon( xv, yv, cs, dd->dataShape(), stokes );
 
 	    return poly;
 	}

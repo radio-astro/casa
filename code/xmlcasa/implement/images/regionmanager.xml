@@ -1466,8 +1466,8 @@ to plot all of the simple regions that made up a compound region.
         </param>
 
         <param type="intArray" direction="in" name="shape">
-            <description>Image shape, only used if first text description is a difference.</description>
-            <value>1</value>
+            <description>Image shape.</description>
+            <value>0</value>
         </param>
 
         <param type="record" direction="in" name="csys">

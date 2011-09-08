@@ -36,6 +36,7 @@
 int main () {
 	try {
 		LogIO log;
+		IPosition shape(4, 400, 400, 1, 5500);
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
 		{
@@ -64,7 +65,7 @@ int main () {
 			try {
 				AnnCircle circle(
 					centerx, centery, radius, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -101,7 +102,7 @@ int main () {
 			try {
 				AnnCircle circle(
 					centerx, centery, radius, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -138,7 +139,7 @@ int main () {
 
 			AnnCircle circle(
 				centerx, centery, radius, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -196,7 +197,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCircle circle(
 				centerx, centery, radius, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			MDirection center = circle.getCenter();
@@ -256,7 +257,7 @@ int main () {
 
 			AnnCircle circle(
 				centerx, centery, radius, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -293,7 +294,7 @@ int main () {
 			AnnCircle circle(
 				centerx, centery, radius,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -333,7 +334,7 @@ int main () {
 			AnnCircle circle(
 				centerx, centery, radius,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -356,8 +357,8 @@ int main () {
 			Quantity centery(0.01, "deg");
 			Quantity radius(30, "arcsec");
 
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity beginFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -375,17 +376,17 @@ int main () {
 			AnnCircle circle(
 				centerx, centery, radius,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = circle.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
@@ -398,8 +399,8 @@ int main () {
 			Quantity centery(0.01, "deg");
 			Quantity radius(30, "arcsec");
 
-			Quantity beginFreq(-20, "km/s");
-			Quantity endFreq(20000, "m/s");
+			Quantity beginFreq(20000, "m/s");
+			Quantity endFreq(-20, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -417,17 +418,17 @@ int main () {
 			AnnCircle circle(
 				centerx, centery, radius,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = circle.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1420500511.0578821),
+				near(freqs[1].get("Hz").getValue(), 1420500511.0578821),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1420310992.5141187),
+				near(freqs[0].get("Hz").getValue(), 1420310992.5141187),
 				AipsError
 			);
 		}
@@ -456,7 +457,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnCircle circle(
 				centerx, centery, radius, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << circle << endl;

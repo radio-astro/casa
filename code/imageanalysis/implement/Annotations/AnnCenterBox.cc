@@ -26,6 +26,7 @@ AnnCenterBox::AnnCenterBox(
 	const Quantity& ywidth,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -34,7 +35,7 @@ AnnCenterBox::AnnCenterBox(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) :  AnnRegion(
-		CENTER_BOX, dirRefFrameString, csys, beginFreq,
+		CENTER_BOX, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 	), _widths(Vector<Quantity>(2)),
@@ -49,9 +50,10 @@ AnnCenterBox::AnnCenterBox(
 	const Quantity& xwidth,
 	const Quantity& ywidth,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(
-		CENTER_BOX, csys, stokes
+		CENTER_BOX, csys, imShape, stokes
 	), _widths(Vector<Quantity>(2)),
 	_corners(Vector<MDirection>(2)), _inpXCenter(xcenter),
 	_inpYCenter(ycenter), _inpXWidth(xwidth), _inpYWidth(ywidth)

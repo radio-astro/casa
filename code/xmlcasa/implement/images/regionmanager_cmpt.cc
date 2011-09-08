@@ -506,6 +506,11 @@ regionmanager::fromtextfile(
     }
     *itsLog << LogOrigin("regionmanager", __FUNCTION__);
     try {
+    	if (shape.size() == 1 && shape[0] == 0) {
+    		*itsLog << "Illegal shape. Please provide a legal image "
+    			<< "shape consistent with the supplied coordinate system"
+    			<< LogIO::EXCEPTION;
+    	}
     	CoordinateSystem coordsys;
     	IPosition myShape(shape);
     	auto_ptr<Record> csysRec(toRecord(csys));

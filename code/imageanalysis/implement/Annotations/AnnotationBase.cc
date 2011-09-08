@@ -733,6 +733,9 @@ void AnnotationBase::_checkAndConvertDirections(
 			_convertedDirections[i] = MDirection::Convert(_convertedDirections[i], csysDirectionRefFrame)();
 		}
 	}
+	// check this now because if converting from world to pixel fails when regions are being formed,
+	// it will wreak havoc
+	_testConvertToPixel();
 }
 
 void AnnotationBase::_initColors() {
@@ -767,7 +770,23 @@ std::list<std::string> AnnotationBase::colorChoices() {
 	return _colorNames;
 }
 
+void AnnotationBase::_testConvertToPixel() const {
+	Vector<Double> pixel(2);
+	Vector<Double> world(2);
+	Vector<String> units = _csys.worldAxisUnits();
+	Vector<String>::const_iterator unit = units.begin();
+	for (
+		Vector<MDirection>::const_iterator iter = _convertedDirections.begin();
+		iter != _convertedDirections.end(); iter++, unit++
+	) {
+		world = iter->getAngle().getValue(*unit);
+		if (! _csys.directionCoordinate().toPixel(pixel, world)) {
+			throw (WorldToPixelConversionError());
+		}
+	}
+}
 
 }
+
 
 

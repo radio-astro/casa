@@ -67,11 +67,12 @@ public:
 	// differentiating between the filename and simple text constructors
 	RegionTextParser(
 		const String& filename, const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Int requireAtLeastThisVersion
 	);
 
 	RegionTextParser(
-		const CoordinateSystem& csys, const String& text
+		const CoordinateSystem& csys, const IPosition& imShape, const String& text
 	);
 
 	~RegionTextParser();
@@ -112,6 +113,7 @@ private:
 	Vector<AsciiAnnotationFileLine> _lines;
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;
 	Int _fileVersion;
+	IPosition _imShape;
 
 	void _parse(const String& contents, const String& fileDesc);
 

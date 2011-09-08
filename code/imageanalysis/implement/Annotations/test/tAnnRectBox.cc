@@ -30,10 +30,11 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
+#include <images/Images/PagedImage.h>
+
 #include <casa/namespace.h>
 
 #include <iomanip>
-
 
 int main () {
 	try {
@@ -429,6 +430,17 @@ int main () {
 				AipsError
 			);
 		}
+        {
+            Quantity blcx (4.94852990, "rad");
+            Quantity blcy (3.47999219e-02, "rad");
+            Quantity trcx(4.94804479,"rad");
+            Quantity trcy(3.52847397e-02, "rad");
+            PagedImage<Float> im("g35.03_II_nh3_11.hline.image");
+            Vector<Stokes::StokesTypes> stokes(1, Stokes::I);
+            Int polaxis = CoordinateUtil::findStokesAxis(stokes, im.coordinates());
+            cout << "stokes " << stokes << endl;
+            AnnRectBox *box = new AnnRectBox( blcx, blcy, trcx, trcy, im.coordinates(), stokes );
+        }
 
 	} catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;

@@ -1006,7 +1006,7 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 		startPos[spectralAxisNumber] = _chanVec[0];
 		endPos[spectralAxisNumber] = _chanVec[1];
 	}
-	if (imcsys.hasPolarizationAxis()) {
+	if (imcsys.hasPolarizationCoordinate()) {
 		uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
 		startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(_stokesString);
 		endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
@@ -1158,7 +1158,7 @@ ComponentList ImageFitter::_fitsky(
 			startPos[spectralAxisNumber] = chan;
 			endPos[spectralAxisNumber] = chan;
 		}
-		if (imcsys.hasPolarizationAxis()) {
+		if (imcsys.hasPolarizationCoordinate()) {
 			uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
 			startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(stokesString);
 			endPos[stokesAxisNumber] = startPos[stokesAxisNumber];

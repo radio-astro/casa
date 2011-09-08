@@ -59,6 +59,7 @@ public:
 		const Quantity& ywidth, const Quantity& positionAngle,
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Quantity& beginFreq,
 		const Quantity& endFreq,
 		const String& freqRefFrameString,
@@ -80,6 +81,7 @@ public:
 		const Quantity& xwidth,
 		const Quantity& ywidth, const Quantity& positionAngle,
 		const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 
