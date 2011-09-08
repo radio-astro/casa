@@ -517,10 +517,10 @@ void TBPlotter::doPlot(bool overplot) {
         plotCanvas->setXAxisTitle(xName);
         plotCanvas->setYAxisTitle(yName);
         data->title = xName + " vs. " + yName;
-        plotCanvas->plot(data, format, overplot);
         
         plotCanvas->setXAxisDate(xType == TBConstants::TYPE_DATE);
         plotCanvas->setYAxisDate(yType == TBConstants::TYPE_DATE);
+        plotCanvas->plot(data, format, overplot);
     } else {
         QMessageBox::critical(this, "Plot Error",
                               "Error loading data from table.");
