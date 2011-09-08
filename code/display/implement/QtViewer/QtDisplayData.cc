@@ -128,16 +128,16 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
       
       if(dataType_=="image") {
 
-    	// check for a FITS extension in the path name
-    	String tmp_path, ext_expr;
-    	if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
-    		// create a string with the file path name only
-    		tmp_path = String(path, 0, path.rfind("[", path.length()));
-    		ext_expr = String(path, path.rfind("[", path.length()), path.length());
-    	}
-    	else{
-    		// copy the path name
-    		tmp_path = path;
+      // check for a FITS extension in the path name
+      File fin(path);
+      String tmp_path, ext_expr;
+      tmp_path = path;
+    	if (!fin.exists() && !fin.isDirectory()){
+    		if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
+    			// create a string with the file path name only
+    			tmp_path = String(path, 0, path.rfind("[", path.length()));
+    			ext_expr = String(path, path.rfind("[", path.length()), path.length());
+    		}
     	}
 
     	// use the file path name for the opener
