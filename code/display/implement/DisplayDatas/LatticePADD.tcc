@@ -766,7 +766,7 @@ Record LatticePADisplayData<T>::getOptions() {
   if (className() != String("LatticeAsVector")) {
      Record resample;
      resample.define("dlformat", "resample");
-     resample.define("listname", "Resampling mode");
+     resample.define("listname", "resampling mode");
      resample.define("ptype", "choice");
      Vector<String> vresample(3);
      vresample(0) = "nearest"; vresample(1) = "bilinear"; vresample(2) = "bicubic";
@@ -1185,31 +1185,31 @@ void LatticePADisplayData<T>::SetUpBeamData_() {
     bmClr(10) = "gray";
 
     
-    beamOnOff_ = new DParameterChoice("beam", "Draw Beam?",
+    beamOnOff_ = new DParameterChoice("beam", "draw beam?",
                  "Should the image's restoring beam ellipse be drawn?",
-                 yesNo, yesNo[0], yesNo[0], "Beam_Ellipse");
+                 yesNo, yesNo[0], yesNo[0], "beam_ellipse");
     
-    beamStyle_ = new DParameterChoice("beamoutline", "Beam Style",
+    beamStyle_ = new DParameterChoice("beamoutline", "beam style",
                  "whether the ellipse will be drawn in outline or filled",
-                 outlnFill, outlnFill[0], outlnFill[0], "Beam_Ellipse");
+                 outlnFill, outlnFill[0], outlnFill[0], "beam_ellipse");
     
-    beamColor_ = new DParameterChoice("beamcolor", "Color",
+    beamColor_ = new DParameterChoice("beamcolor", "color",
                  "beam ellipse's color",
-                 bmClr, bmClr[0], bmClr[0], "Beam_Ellipse");
+                 bmClr, bmClr[0], bmClr[0], "beam_ellipse");
     
-    beamLineWidth_ = new DParameterRange<Int>("beamlinewidth", "Line Width",
+    beamLineWidth_ = new DParameterRange<Int>("beamlinewidth", "line width",
                      "width of the line used to draw the ellipse",
-		     1, 7,  1,  1, 1, "Beam_Ellipse");
+		     1, 7,  1,  1, 1, "beam_ellipse");
     
-    beamXCenter_ = new DParameterRange<Float>("beamxcenter", "X Center",
+    beamXCenter_ = new DParameterRange<Float>("beamxcenter", "x center",
               "relative horizontal position of the beam's center within\n"
 	      "the image drawing area:  0 = left edge, 1 = right edge",
-	      0., 1.,  .02,  .1, .1, "Beam_Ellipse");
+	      0., 1.,  .02,  .1, .1, "beam_ellipse");
     
-    beamYCenter_ = new DParameterRange<Float>("beamycenter", "Y Center",
+    beamYCenter_ = new DParameterRange<Float>("beamycenter", "y center",
               "relative vertical position of the beam's center within\n"
 	      "the image drawing area:  0 = bottom edge, 1 = top edge",
-	      0., 1.,  .02,  .1, .1, "Beam_Ellipse");
+	      0., 1.,  .02,  .1, .1, "beam_ellipse");
 
         
     // The major and minor axes must both be positive

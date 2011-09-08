@@ -239,9 +239,9 @@ Record WCCSAxisLabeller::getOptions() const
 //
 
   Record pixworld;
-  pixworld.define("context", "Axis_label_properties");
+  pixworld.define("context", "axis_label_properties");
   pixworld.define("dlformat", "axislabelpixelworld");
-  pixworld.define("listname", "World or pixel coordinates");
+  pixworld.define("listname", "world or pixel coordinates");
   pixworld.define("ptype", "choice");
   Vector<String> v(2);
   v(0) = "world";
@@ -257,9 +257,9 @@ Record WCCSAxisLabeller::getOptions() const
   rec.defineRecord("axislabelpixelworld", pixworld);
 //
   Record absrel;
-  absrel.define("context", "Axis_label_properties");
+  absrel.define("context", "axis_label_properties");
   absrel.define("dlformat", "axislabelabsrel");
-  absrel.define("listname", "Absolute or relative");
+  absrel.define("listname", "absolute or relative");
   absrel.define("ptype", "choice");
   v.resize(2);
   v(0) = "absolute";
@@ -279,9 +279,9 @@ Record WCCSAxisLabeller::getOptions() const
   if (iD>=0) {
      {
         Record directionSystem;
-        directionSystem.define("context", "Axis_label_properties");
+        directionSystem.define("context", "axis_label_properties");
         directionSystem.define("dlformat", "axislabeldirectionsystem");
-        directionSystem.define("listname", "Direction reference");
+        directionSystem.define("listname", "direction reference");
         directionSystem.define("ptype", "choice");
         Vector<String> vunits(5);
         vunits(0) = "J2000";
@@ -310,9 +310,9 @@ Record WCCSAxisLabeller::getOptions() const
 //
      {
         Record directionunit;
-        directionunit.define("context", "Axis_label_properties");
+        directionunit.define("context", "axis_label_properties");
         directionunit.define("dlformat", "axislabeldirectionunit");
-        directionunit.define("listname", "Direction unit");
+        directionunit.define("listname", "direction unit");
         directionunit.define("ptype", "userchoice");
         Vector<String> vunits(4);
         vunits(0) = "deg";
@@ -333,9 +333,9 @@ Record WCCSAxisLabeller::getOptions() const
   if (iS>=0) {
      {
         Record frequencySystem;
-        frequencySystem.define("context", "Axis_label_properties");
+        frequencySystem.define("context", "axis_label_properties");
         frequencySystem.define("dlformat", "axislabelfrequencysystem");
-        frequencySystem.define("listname", "Spectral reference");
+        frequencySystem.define("listname", "spectral reference");
         frequencySystem.define("ptype", "choice");
         Vector<String> vunits(5);
         vunits(0) = "LSRK";
@@ -360,9 +360,9 @@ Record WCCSAxisLabeller::getOptions() const
         Int unitSet=0;
 
         Record veltype;
-        veltype.define("context", "Axis_label_properties");
+        veltype.define("context", "axis_label_properties");
         veltype.define("dlformat", "axislabelspectraltype");
-        veltype.define("listname", "Spectral quantity");
+        veltype.define("listname", "spectral quantity");
         veltype.define("ptype", "choice");
         Vector<String> stunits;
         stunits.resize(5);
@@ -408,9 +408,9 @@ Record WCCSAxisLabeller::getOptions() const
         rec.defineRecord("axislabelspectraltype", veltype);
 
         Record spectralunit;
-        spectralunit.define("context", "Axis_label_properties");
+        spectralunit.define("context", "axis_label_properties");
         spectralunit.define("dlformat", "axislabelspectralunit");
-        spectralunit.define("listname", "Spectral unit");
+        spectralunit.define("listname", "spectral unit");
         spectralunit.define("ptype", "userchoice");
         Vector<String> specunits;
         specunits.resize(9);
@@ -441,9 +441,9 @@ Record WCCSAxisLabeller::getOptions() const
         rec.defineRecord("axislabelspectralunit", spectralunit);
 
         Record restvalue;
-        restvalue.define("context", "Axis_label_properties");
+        restvalue.define("context", "axis_label_properties");
         restvalue.define("dlformat", "axislabelrestvalue");
-        restvalue.define("listname", "Rest frequency or wavelength");
+        restvalue.define("listname", "rest frequency or wavelength");
         restvalue.define("ptype", "string");
         if (restFreq>0){
       	  Unit outUnit(itsRestUnit);
@@ -466,9 +466,9 @@ Record WCCSAxisLabeller::getOptions() const
   if (itsCoordinateSystem.nWorldAxes() > 2) {
     
     Record zlabeltype;
-    zlabeltype.define("context", "Axis_label_properties");
+    zlabeltype.define("context", "axis_label_properties");
     zlabeltype.define("dlformat", "axislabelzlabeltype");
-    zlabeltype.define("listname", "Movie axis label type");
+    zlabeltype.define("listname", "movie axis label type");
     zlabeltype.define("ptype", "choice");
     Vector<String> vztype(3);
     vztype(0) = "world";
@@ -481,9 +481,9 @@ Record WCCSAxisLabeller::getOptions() const
     rec.defineRecord("axislabelzlabeltype", zlabeltype);
 
     Record zlabelpos;
-    zlabelpos.define("context", "Axis_label_properties");
+    zlabelpos.define("context", "axis_label_properties");
     zlabelpos.define("dlformat", "axislabelzlabelpos");
-    zlabelpos.define("listname", "Movie axis label position");
+    zlabelpos.define("listname", "movie axis label position");
     zlabelpos.define("ptype", "choice");
     Vector<String> vzpos(10);
     vzpos(0) = "inside";

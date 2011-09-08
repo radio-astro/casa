@@ -39,8 +39,9 @@ QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent
     
   setWindowTitle("Viewer Data Options Panel");
   
-  setupUi(this);  
-    
+  setupUi(this);
+  connect( auto_apply, SIGNAL(clicked(bool)), SLOT(auto_apply_state_change(bool)) );
+
   //#dk tabs_->setFixedWidth(585);
   //#dk tabs_->setMinimumHeight(600);
   //setMinimumWidth(570);		//#dk
@@ -87,6 +88,8 @@ void QtDataOptionsPanel::createDDTab_(QtDisplayData* qdd) {
   
   QtDisplayDataGui* qddg = new QtDisplayDataGui(qdd);
 
+  connect( this, SIGNAL(setAutoApply(bool)), qddg, SLOT(autoApplyState(bool)) );
+
   //cerr<<"QDO:crT:nT:"<<tabs_->count()<<" nm:"<<qdd->nameChrs();  //#dg
 
   //cerr<<"QDO:crTb:tbs.szHnt:"<<tabs_->sizeHint().width()<<","
@@ -129,6 +132,20 @@ void QtDataOptionsPanel::removeDDTab_(QtDisplayData* qdd) {
       delete sca;
     
       break;  }  }  }
+
+
+void QtDataOptionsPanel::auto_apply_state_change(bool) {
+    //  green: rgb(20, 227, 67), red: rgb(255, 53, 43)
+    if ( auto_apply->text( ) == "auto apply" ) {
+	auto_apply->setText("manual apply");
+	auto_apply->setStyleSheet( "QPushButton { color: rgb(255, 53, 43) }" );
+	emit setAutoApply(false);
+    } else {
+	auto_apply->setText("auto apply");
+	auto_apply->setStyleSheet( "QPushButton { color: rgb(20, 227, 67) }" );
+	emit setAutoApply(true);
+    }
+}
 
 
 //void QtDataOptionsPanel::paintEvent ( QPaintEvent * event ) {

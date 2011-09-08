@@ -577,7 +577,7 @@ Record ScrollingRasterDD::getOptions() {
   
   Record resample;
   resample.define("dlformat", "resample");
-  resample.define("listname", "Resampling mode");
+  resample.define("listname", "resampling mode");
   resample.define("ptype", "choice");
   Vector<String> vresample(3);
   vresample(0) = "nearest"; vresample(1) = "bilinear"; vresample(2) = "bicubic";

@@ -2001,7 +2001,7 @@ Bool PrincipalAxesDD::setOptions(Record &rec, Record &recOut)
 	// see uiBase() for information about slider position
 	// numbering from either 0 or 1.
       haxis.define("allowunset", False);
-      haxis.define("context", "Hidden_axes");
+      haxis.define("context", "hidden_axes");
       recOut.defineRecord(dlformatchr, haxis);
     }
   }
@@ -2028,13 +2028,13 @@ Record PrincipalAxesDD::getOptions()
 //
   Record xaxis;
   xaxis.define("dlformat", "xaxis");
-  xaxis.define("listname", "X-axis");
+  xaxis.define("listname", "x-axis");
   xaxis.define("ptype", "choice");
   xaxis.define("popt", pixelAxisNames);
   xaxis.define("default", pixelAxisNames(0));
   xaxis.define("value", itsOptionsXAxis);
   xaxis.define("allowunset", False);
-  xaxis.define("context", "Display_axes");
+  xaxis.define("context", "display_axes");
   xaxis.define("dependency_group", "axes");
   xaxis.define("dependency_type", "exclusive");
   xaxis.define("dependency_list", "yaxis zaxis");
@@ -2042,13 +2042,13 @@ Record PrincipalAxesDD::getOptions()
 //
   Record yaxis;
   yaxis.define("dlformat", "yaxis");
-  yaxis.define("listname", "Y-axis");
+  yaxis.define("listname", "y-axis");
   yaxis.define("ptype", "choice");
   yaxis.define("popt", pixelAxisNames);
   yaxis.define("default", pixelAxisNames(1));
   yaxis.define("value", itsOptionsYAxis);
   yaxis.define("allowunset", False);
-  yaxis.define("context", "Display_axes");
+  yaxis.define("context", "display_axes");
   yaxis.define("dependency_group", "axes");
   yaxis.define("dependency_type", "exclusive");
   yaxis.define("dependency_list", "xaxis zaxis");
@@ -2058,13 +2058,13 @@ Record PrincipalAxesDD::getOptions()
 //
     Record zaxis;
     zaxis.define("dlformat", "zaxis");
-    zaxis.define("listname", "Z-axis");
+    zaxis.define("listname", "z-axis");
     zaxis.define("ptype", "choice");
     zaxis.define("popt", pixelAxisNames);
     zaxis.define("default", pixelAxisNames(2));
     zaxis.define("value", itsOptionsZAxis);
     zaxis.define("allowunset", False);
-    zaxis.define("context", "Display_axes");
+    zaxis.define("context", "display_axes");
     zaxis.define("dependency_group", "axes");
     zaxis.define("dependency_type", "exclusive");
     zaxis.define("dependency_list", "xaxis yaxis");
@@ -2086,7 +2086,7 @@ Record PrincipalAxesDD::getOptions()
 	// see uiBase() for information about slider position
 	// numbering from either 0 or 1.
     haxis.define("allowunset", False);
-    haxis.define("context", "Hidden_axes");
+    haxis.define("context", "hidden_axes");
     rec.defineRecord(dlformatchr, haxis);
   }
 //
@@ -2103,7 +2103,7 @@ Record PrincipalAxesDD::getLabellerOptions(){
 //
   Record aspect;
   aspect.define("dlformat", "aspect");
-  aspect.define("listname", "Aspect ratio");
+  aspect.define("listname", "aspect ratio");
   aspect.define("ptype", "choice");
   Vector<String> vaspect(3);
   vaspect(0) = "fixed lattice";
@@ -2117,7 +2117,7 @@ Record PrincipalAxesDD::getLabellerOptions(){
 //
   Record pixeltreatment;
   pixeltreatment.define("dlformat", "pixeltreatment");
-  pixeltreatment.define("listname", "Pixel treatment");
+  pixeltreatment.define("listname", "pixel treatment");
   pixeltreatment.define("ptype", "choice");
   Vector<String> vpixeltreatment(2);
   vpixeltreatment(0) = "center";
@@ -2129,9 +2129,9 @@ Record PrincipalAxesDD::getLabellerOptions(){
   rec.defineRecord("pixeltreatment", pixeltreatment);
 //
   Record absrel;
-  absrel.define("context", "Position_tracking");
+  absrel.define("context", "position_tracking");
   absrel.define("dlformat", "absrel");
-  absrel.define("listname", "Absolute or relative");   
+  absrel.define("listname", "absolute or relative");   
   absrel.define("ptype", "choice");
   Vector<String> v(2);
   v(0) = "absolute";
@@ -2147,9 +2147,9 @@ Record PrincipalAxesDD::getLabellerOptions(){
   rec.defineRecord("absrel", absrel);
 //
   Record fracpix;
-  fracpix.define("context", "Position_tracking");
+  fracpix.define("context", "position_tracking");
   fracpix.define("dlformat", "fracpix");
-  fracpix.define("listname", "Fractional or integral pixel coordinates");   
+  fracpix.define("listname", "fractional or integral pixel coordinates");   
   fracpix.define("ptype", "choice");
   v.resize(2);
   v(0) = "fractional";
@@ -2175,9 +2175,9 @@ Record PrincipalAxesDD::getLabellerOptions(){
         Int unitSet=0;
 
         Record veltype;
-        veltype.define("context", "Position_tracking");
+        veltype.define("context", "position_tracking");
         veltype.define("dlformat", "spectraltype");
-        veltype.define("listname", "Spectral quantity");
+        veltype.define("listname", "spectral quantity");
         veltype.define("ptype", "choice");
         Vector<String> stunits;
 
@@ -2223,9 +2223,9 @@ Record PrincipalAxesDD::getLabellerOptions(){
         rec.defineRecord("spectraltype", veltype);
 
         Record spectralunit;
-        spectralunit.define("context", "Position_tracking");
+        spectralunit.define("context", "position_tracking");
         spectralunit.define("dlformat", "spectralunit");
-        spectralunit.define("listname", "Spectral unit");
+        spectralunit.define("listname", "spectral unit");
         spectralunit.define("ptype", "userchoice");
         Vector<String> specunits;
 
@@ -2257,9 +2257,9 @@ Record PrincipalAxesDD::getLabellerOptions(){
      }
 
      Record spectralnotation;
-     spectralnotation.define("context", "Position_tracking");
+     spectralnotation.define("context", "position_tracking");
      spectralnotation.define("dlformat", "spectralnotation");
-     spectralnotation.define("listname", "Numeric notation");   
+     spectralnotation.define("listname", "numeric notation");   
      spectralnotation.define("ptype", "choice");
      Vector<String> choices(3);
      choices(0) = "Flexible";

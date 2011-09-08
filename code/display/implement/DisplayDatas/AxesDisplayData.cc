@@ -45,30 +45,30 @@ AxesDisplayData::AxesDisplayData() :
   Vector<String> vstring;
 
   // "Basic" context
-  itsParamTitleText = new DParameterString("titletext", "Title", "", "", "",
-		"Axis_Drawing_and_Labels");
-  itsParamXAxisText = new DParameterString("xaxistext", "X-axis", "",
-		"<axis name>", "<axis name>", "Axis_Drawing_and_Labels");
-  itsParamYAxisText = new DParameterString("yaxistext", "Y-axis", "",
-		"<axis name>", "<axis name>", "Axis_Drawing_and_Labels");
+  itsParamTitleText = new DParameterString("titletext", "title", "", "", "",
+		"axis_drawing_and_labels");
+  itsParamXAxisText = new DParameterString("xaxistext", "x-axis", "",
+		"<axis name>", "<axis name>", "axis_drawing_and_labels");
+  itsParamYAxisText = new DParameterString("yaxistext", "y-axis", "",
+		"<axis name>", "<axis name>", "axis_drawing_and_labels");
   vstring.resize(3);
   vstring(0) = "None";
   vstring(1) = "Tick marks";
   vstring(2) = "Full grid";
-  itsParamXGridType = new DParameterChoice("xgridtype", "X grid type", "",
-		vstring, vstring(1), vstring(1), "Axis_Drawing_and_Labels");
-  itsParamYGridType = new DParameterChoice("ygridtype", "Y grid type", "",
-		vstring, vstring(1), vstring(1), "Axis_Drawing_and_Labels");
+  itsParamXGridType = new DParameterChoice("xgridtype", "x grid type", "",
+		vstring, vstring(1), vstring(1), "axis_drawing_and_labels");
+  itsParamYGridType = new DParameterChoice("ygridtype", "y grid type", "",
+		vstring, vstring(1), vstring(1), "axis_drawing_and_labels");
 
   // "Colors" context
   itsParamTitleColor =  new DParameterColorChoice("titlecolor",
-			"Title color", "", "Axis_Drawing_and_Labels");
+			"title color", "", "axis_drawing_and_labels");
   itsParamXAxisColor =  new DParameterColorChoice("xaxiscolor",
-			"'X' axis color", "", "Axis_Drawing_and_Labels");
+			"'x' axis color", "", "axis_drawing_and_labels");
   itsParamYAxisColor = new DParameterColorChoice("yaxiscolor",
-			"'Y' axis color", "", "Axis_Drawing_and_Labels");
+			"'y' axis color", "", "axis_drawing_and_labels");
   itsParamOutlineColor = new DParameterColorChoice("outlinecolor",
-			"Outline color", "", "Axis_Drawing_and_Labels");
+			"outline color", "", "axis_drawing_and_labels");
 
   // "Styles" context
   vstring.resize(4);
@@ -77,25 +77,25 @@ AxesDisplayData::AxesDisplayData() :
   vstring(2) = "italic";
   vstring(3) = "script";
   itsParamCharacterFont
-    = new DParameterChoice("labelcharfont", "Character font",
+    = new DParameterChoice("labelcharfont", "character font",
 			   "", vstring, vstring(0), vstring(0), 
-			   "Axis_Drawing_and_Labels");
+			   "axis_drawing_and_labels");
 
 
   Float defaultChrSz;
   AipsrcValue<Float>::find(defaultChrSz,"display.axislabels.charsize", 1.2f);
   itsParamCharacterSize
-    = new DParameterRange<Float>("labelcharsize", "Character size",
+    = new DParameterRange<Float>("labelcharsize", "character size",
 				 "", 0.0, 4.0, 0.05,
 				 defaultChrSz, defaultChrSz,
-				 "Axis_Drawing_and_Labels");
+				 "axis_drawing_and_labels");
   Float defaultLnWid;
   AipsrcValue<Float>::find(defaultLnWid,"display.axislabels.linewidth", 1.4f);
   itsParamLineWidth
-    = new DParameterRange<Float>("labellinewidth", "Line width",
+    = new DParameterRange<Float>("labellinewidth", "line width",
 				 "", 0.0, 5.0, 0.10,
 				 defaultLnWid, defaultLnWid,
-				 "Axis_Drawing_and_Labels");
+				 "axis_drawing_and_labels");
   
 }
 

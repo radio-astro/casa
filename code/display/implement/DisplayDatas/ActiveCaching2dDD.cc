@@ -184,7 +184,7 @@ Record ActiveCaching2dDD::getOptions() {
 //
   Record aspect;
   aspect.define("dlformat", "aspect");
-  aspect.define("listname", "Aspect ratio");
+  aspect.define("listname", "aspect ratio");
   aspect.define("ptype", "choice");
   Vector<String> vaspect(3);
   vaspect(0) = "fixed lattice";
@@ -198,9 +198,9 @@ Record ActiveCaching2dDD::getOptions() {
 //
 //   
   Record absrel; 
-  absrel.define("context", "Position_tracking");
+  absrel.define("context", "position_tracking");
   absrel.define("dlformat", "absrel");
-  absrel.define("listname", "Absolute or relative");
+  absrel.define("listname", "absolute or relative");
   absrel.define("ptype", "choice");
   Vector<String> v(2);
   v(0) = "absolute";
@@ -216,9 +216,9 @@ Record ActiveCaching2dDD::getOptions() {
   rec.defineRecord("absrel", absrel); 
 //
   Record pixworld;
-  pixworld.define("context", "Position_tracking");
+  pixworld.define("context", "position_tracking");
   pixworld.define("dlformat", "pixelworld");
-  pixworld.define("listname", "World or pixel coordinates");
+  pixworld.define("listname", "world or pixel coordinates");
   pixworld.define("ptype", "choice");
   v.resize(2);
   v(0) = "world";
@@ -234,9 +234,9 @@ Record ActiveCaching2dDD::getOptions() {
   rec.defineRecord("pixelworld", pixworld);
 //
   Record fracpix;
-  fracpix.define("context", "Position_tracking");
+  fracpix.define("context", "position_tracking");
   fracpix.define("dlformat", "fracpix");
-  fracpix.define("listname", "Fractional or integral pixel coordinates");
+  fracpix.define("listname", "fractional or integral pixel coordinates");
   fracpix.define("ptype", "choice");
   v.resize(2);
   v(0) = "fractional";
@@ -255,9 +255,9 @@ Record ActiveCaching2dDD::getOptions() {
   Int iS = itsCoordinateSystem.findCoordinate(Coordinate::SPECTRAL, after);
   if (iS>=0) {
      Record spectralunit;
-     spectralunit.define("context", "Position_tracking");
+     spectralunit.define("context", "position_tracking");
      spectralunit.define("dlformat", "spectralunit");
-     spectralunit.define("listname", "Spectral unit");
+     spectralunit.define("listname", "spectral unit");
      spectralunit.define("ptype", "userchoice");
      Vector<String> vunits(4);
      vunits(0) = "km/s";
@@ -271,9 +271,9 @@ Record ActiveCaching2dDD::getOptions() {
      rec.defineRecord("spectralunit", spectralunit);
 //
      Record veltype;
-     veltype.define("context", "Position_tracking");
+     veltype.define("context", "position_tracking");
      veltype.define("dlformat", "velocitytype");
-     veltype.define("listname", "Velocity type");
+     veltype.define("listname", "velocity type");
      veltype.define("ptype", "choice");
      vunits.resize(3);
      vunits(0) = "optical";

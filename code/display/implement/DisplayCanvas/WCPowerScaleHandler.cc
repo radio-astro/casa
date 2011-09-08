@@ -81,7 +81,7 @@ Record WCPowerScaleHandler::getOptions() {
 
   Record powercycles;
   powercycles.define("dlformat", "powercycles");
-  powercycles.define("listname", "Scaling power cycles");
+  powercycles.define("listname", "scaling power cycles");
   powercycles.define("ptype", "floatrange");
   powercycles.define("pmin", Float(-5.0));
   powercycles.define("pmax", Float(5.0));
