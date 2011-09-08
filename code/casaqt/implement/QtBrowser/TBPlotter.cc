@@ -49,8 +49,8 @@ PlotSlicer::PlotSlicer(): QHBoxLayout(), complex(false) {
     setSpacing(3);
     setContentsMargins(0, 0, 0, 0);
     complexChooser = new QComboBox();
-    complexChooser->addItem("Amplitude");
-    complexChooser->addItem("Phase");
+    complexChooser->addItem("Real");
+    complexChooser->addItem("Imaginary");
 
     axisLabel = new QLabel("Plot axis");
     plotAxisChooser = new QSpinBox();
@@ -380,8 +380,8 @@ void TBPlotter::doPlot(bool overplot) {
     if(xs.size() > 0) ss << " [array]";
     if(xComplex) {
         ss << " [complex - ";
-        if(xAmp) ss << "amplitude";
-        else ss << "phase";
+        if(xAmp) ss << "real";
+        else ss << "imaginary";
         ss << "]";
     }
     ss << endl;
@@ -390,8 +390,8 @@ void TBPlotter::doPlot(bool overplot) {
     if(ys.size() > 0) ss << " [array]";
     if(yComplex) {
         ss << " [complex - ";
-        if(yAmp) ss << "amplitude";
-        else ss << "phase";
+        if(yAmp) ss << "real";
+        else ss << "imaginary";
         ss << "]";
     }
     TBConstants::dprint(TBConstants::DEBUG_HIGH, ss.str());
@@ -468,8 +468,8 @@ void TBPlotter::doPlot(bool overplot) {
             xName += "]";
         }
         if(xComplex) {
-            if(xAmp) xName += " - amplitude";
-            else xName += " - phase";
+            if(xAmp) xName += " - real";
+            else xName += " - imaginary";
         }
         if(ys.size() > 0) {
             yName += " [";
@@ -484,8 +484,8 @@ void TBPlotter::doPlot(bool overplot) {
             yName += "]";
         }
         if(yComplex) {
-            if(yAmp) yName += " - amplitude";
-            else yName += " - phase";
+            if(yAmp) yName += " - real";
+            else yName += " - imaginary";
         }
 
         // set up plot format
