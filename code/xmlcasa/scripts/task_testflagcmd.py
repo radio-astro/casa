@@ -25,6 +25,8 @@ def testflagcmd(
     rowlist=None,
     setcol=None,
     setval=None,
+    parallel=None,
+    async=None
     ):
     #
     # Task testflagcmd
@@ -177,11 +179,15 @@ def testflagcmd(
         unionpars = getUnion(cmdlist)
         casalog.post('The union of all parameters is %s' %(unionpars))
         
-        # Setup the FlagDataHandler
-        tfglocal.setMS(vis)
+        # Parse the configuration for the tool (msname, async, parallel)
+        # Create a dictionary with the configuration
+        tfconfig['MSNAME'] = vis
+        tfconfig['ASYNC'] = async
+        tfconfig['PARALLEL'] = parallel
+        tfglocal.parseTestFlaggerConfig(tfconfig)
 
-        # Select the data
-        tfglocal.setDataSelection(unionpars)
+        # Parse the data selection
+        tfglocal.parseDataSelection(unionpars)
                         
 #********************************************************************************
         
@@ -220,14 +226,13 @@ def testflagcmd(
             # Hopefully we still have cmdlist, so let's use it
             # Apply the flags
 #            nap = applyFlags(tfglocal,cmdlist,flagbackup,reset)
+
+            # Parse the agents parameters
             setupAgent(tfglocal,cmdlist,flagbackup,reset)
             
-            # Initialize the FlagDataHandler
-            tfglocal.initDataHandler()
-            
-            # Initialize the agents
-            tfglocal.initAgents()
-            
+            # Initialize the FlagDataHandler and Agents
+            tfglocal.init()
+                        
             # Run the tool
             tfglocal.run()
             
@@ -2308,34 +2313,28 @@ def setupAgent(tfglocal,cmdlist,flagbackup,reset):
             if cmdline.__contains__('manualflag'): 
                 mode = 'manualflag'
                 modepars = getLinePars(cmdline,manualpars)   
-                print "Call setagent(manualflag,modepars)"
                 print modepars
             elif cmdline.__contains__('quack'):
                 mode = 'quack'
                 modepars = getLinePars(cmdline,quackpars)
-                print "Call setagent(quack,modepars)"
                 print modepars
             elif cmdline.__contains__('shadow'):
                 mode = 'shadow'
                 modepars = getLinePars(cmdline,shadowpars)
-                print "Call setagent(shadow,modepars)"
                 print modepars
         else:
             #no mode means manualflag
             mode = 'manualflag'
             modepars = getLinePars(cmdline,manualpars)   
-            print "Call setagent(manualflag,modepars)"
             print modepars
         
-        # Setup the agent (adds agent to list of agents)
-        tfglocal.setAgent(modepars)
+        # Parse the dictionary of agents
+        tfglocal.parseAgentParameters(agents_list)        
 
-        # Backup the flags
+        # FIXME: Backup the flags
         if (flagbackup):
-            backup_cmdflags(tfglocal, 'flagcmd2_' + mode)
+            backup_cmdflags(tfglocal, 'testflagcmd_' + mode)
 
-            
-    # Run the agents
     
     
     
@@ -2374,6 +2373,7 @@ def getLinePars(cmdline, mlist=[]):
     arrays = ''
     uvs = ''
     spws = ''
+    modes = ''
 
         
     # split by white space
@@ -2429,8 +2429,8 @@ def getLinePars(cmdline, mlist=[]):
                 spws += xval + ','
                 
             elif xkey == "mode":
-                #do nothing, or maybe write mode in dictionary?????
-                print
+                # write mode in dictionary
+                modes += xval + ','
 
             else:
                 # Any mode parameter requested?
@@ -2454,7 +2454,9 @@ def getLinePars(cmdline, mlist=[]):
     arrays = arrays.rstrip(',')
     uvs = uvs.rstrip(',')
     spws = spws.rstrip(',')
+    modes = modes.rstrip(',')
 
+    dicpars['mode'] = modes
     dicpars['scan'] = scans
     dicpars['field'] = fields
     dicpars['antenna'] = ants
@@ -2495,12 +2497,6 @@ def isUnflag(cmdline):
             if xkey == 'unflag':
                 return xval
             
-            
-            
-            
-            
-            
-            
-            
+          
             
             
