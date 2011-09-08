@@ -98,6 +98,7 @@ void doit4 ();
 void doit5 ();
 void doit6 ();
 void doit7 ();
+void verifyCAS3264 ();
 
 
 
@@ -299,6 +300,9 @@ int main()
          LogIO os(lO);
          IPosition s1, s2;
          cSys.list(os, MDoppler::RADIO, s1, s2);
+      }
+      {
+    	  verifyCAS3264();
       }
 
 
@@ -2326,4 +2330,23 @@ void doit6 ()
       }
       delete pC;
    }
+
 }
+   void verifyCAS3264() {
+	   cout << __FUNCTION__ << endl;
+	   CoordinateSystem cSys;
+	   SpectralCoordinate spC = makeSpectralCoordinate();     // 0
+	   cSys.addCoordinate(spC);
+	   DirectionCoordinate dC = makeDirectionCoordinate();    // 1 & 2
+	   cSys.addCoordinate(dC);
+	   cout << cSys.nPixelAxes();
+	   Vector<Double> ftRef(3);
+	   Vector<Double> ref(3);
+	   ref(0)= 22.5;
+	   ref(1)= 18.2;
+	   ref(2) = 31.48;
+	   cerr << "Utils: ref = " << ref << endl;
+	   cSys.setReferencePixel(ref);
+	   cerr << "Utils coords.refpix: " << cSys.referencePixel() << endl;
+   }
+

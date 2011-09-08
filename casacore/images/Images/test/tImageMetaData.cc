@@ -71,8 +71,10 @@ int main() {
         }
 
         {
+        	/*
             AlwaysAssert(fourAxesImageMetaData.hasPolarizationAxis(), AipsError);
             AlwaysAssert(! twoAxesImageMetaData.hasPolarizationAxis(), AipsError);
+            */
         }
 
         {
