@@ -472,7 +472,7 @@ def applyflagcmd(
         aparams = uparams + sparams
         kmodes['online'] = oparams
         kmodes['manualflag'] = aparams + ['unflag']
-        kmodes['clip'] = aparams + ['unflag', 'cliprange', 'clipexpr',
+        kmodes['clip'] = aparams + ['unflag', 'cliprange', 'clipexpr', 'clipoutside',
                                     'clipcolumn', 'clipchanavg']
         kmodes['quack'] = aparams + ['unflag', 'quackinterval',
                 'quackmode', 'quackincrement']
