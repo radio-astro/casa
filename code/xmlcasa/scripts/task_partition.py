@@ -512,7 +512,7 @@ def partition(vis,
                          uvrange=uvrange,
                          combine=combine,
                          intent=scanintent,
-                         obs=observation)
+                         obs=str(observation))
     finally:
         msTool.close()
 

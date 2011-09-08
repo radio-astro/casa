@@ -143,9 +143,10 @@ average over frequency (channels) and time (integrations).
 		<description>Select data by baseline length</description>
 		<value></value>
 	</param>
-        <param type="string" name="observation">
+        <param type="any" name="observation">
                 <description>Select by observation ID(s)</description>
-                <value></value>
+		<any type="variant" limittypes="string int"/>
+		<value type="string"></value>
         </param>
 	<param type="any" name="combine" subparam="true">
 		<description>Let time bins span changes in scan and/or state</description>
