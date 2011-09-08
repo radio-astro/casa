@@ -271,6 +271,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_plotants.py
   scripts/task_plotcal.py
   scripts/task_plotms.py
+  scripts/task_plotuv.py
   scripts/task_plotxy.py
   scripts/task_partition.py
   scripts/task_polcal.py
@@ -391,6 +392,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/plotants.xml
   tasks/plotcal.xml
   tasks/plotms.xml
+  tasks/plotuv.xml
   tasks/plotxy.xml
   tasks/partition.xml
   tasks/polcal.xml
