@@ -1585,6 +1585,11 @@ the ms definition itself. -->
      <value></value>
      </param>
       
+     <param type="string" direction="in" name="observation">
+     <description>Select by observation ID(s)</description>
+     <value></value>
+     </param>
+      
      <param type="string" direction="in" name="uvrange">
      <description>uv-distance (output units: wavelength)</description>
      <value></value>

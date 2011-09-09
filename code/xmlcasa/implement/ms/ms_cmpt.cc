@@ -1191,6 +1191,7 @@ ms::lister(const std::string& options,
            const std::string& scan,
            const std::string& feed,
            const std::string& array,
+	   const std::string& observation,
            const std::string& uvrange,
            const std::string& average,
            const bool         showflags,
@@ -1205,8 +1206,8 @@ ms::lister(const std::string& options,
     
     MSLister msl(*itsMS, *itsLog);
     msl.list(options, datacolumn, field, spw, antenna, timerange,
-             correlation, scan, feed, array, uvrange, average, showflags,
-             msselect, pagerows, listfile);
+             correlation, scan, feed, array, observation, uvrange, average,
+	     showflags, msselect, pagerows, listfile);
     rstat = True;
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
