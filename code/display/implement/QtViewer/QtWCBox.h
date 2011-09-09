@@ -135,6 +135,8 @@ public:
    void setPolExt(const Double, const Double);
    Bool getPolExt(Double&, Double&);
 
+   static void unitInit();
+
 private:
    Vector<Quantum<Double> > itsBlc;
    Vector<Quantum<Double> > itsTrc;
@@ -157,7 +159,6 @@ private:
                      const Int shape,
                      const Bool isBlc) const;
 
-   static void unitInit();
 };
 
 

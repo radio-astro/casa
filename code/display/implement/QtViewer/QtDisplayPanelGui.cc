@@ -42,6 +42,7 @@
 #include <display/QtViewer/QtDataManager.qo.h>
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
+#include <display/QtViewer/QtWCBox.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -53,6 +54,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
 		   regionDock_(0) {
+
+    // initialize the "pix" unit, et al...
+    QtWCBox::unitInit( );
     
     setWindowTitle("Viewer Display Panel");
     bool use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
