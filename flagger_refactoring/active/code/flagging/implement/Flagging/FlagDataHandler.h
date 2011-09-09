@@ -51,7 +51,7 @@
 	{\
 		gettimeofday(&stop,0);\
 		elapsedTime = (stop.tv_sec-start.tv_sec)*1000.0+(stop.tv_usec-start.tv_usec)/1000.0;\
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime << " ms, Memory free: " << HostInfo::memoryFree( )/1024.0 << " MB" << LogIO::POST;\
+		*logger_p << LogIO::DEBUG2 << "FlagDataHandler::" << __FUNCTION__ << " Executed in: " << elapsedTime << " ms, Memory free: " << HostInfo::memoryFree( )/1024.0 << " MB" << LogIO::POST;\
 	}
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -86,19 +86,19 @@ public:
 	~FlagDataHandler();
 
 	// Open Measurement Set
-	void open();
+	bool open();
 
 	// Close Measurement Set
-	void close();
+	bool close();
 
 	// Set Data Selection parameters
-	void setDataSelection(Record record);
+	bool setDataSelection(Record record);
 
 	// Generate selected Measurement Set
-	void selectData();
+	bool selectData();
 
 	// Generate Visibility Iterator
-	void generateIterator();
+	bool generateIterator();
 
 	// Swap MS to check what is the maximum RAM memory needed
 	void checkMaxMemory();
@@ -110,11 +110,11 @@ public:
 	bool nextBuffer();
 
 	// Write flag cube into MS
-	void flushFlags();
+	bool flushFlags();
 
 	// As requested by Urvashi R.V. provide access to the original and modified flag cubes
-	Cube<Bool> *getModifiedFlagCube();
-	Cube<Bool> *getOriginalFlagCube();
+	Cube<Bool> * getModifiedFlagCube();
+	Cube<Bool> * getOriginalFlagCube();
 
 	// Mapping functions as requested by Urvashi
 	void generateAntennaPairMap();
@@ -145,6 +145,12 @@ public:
 	VisibilityIterator *rwVisibilityIterator_p;
 	ROVisibilityIterator *roVisibilityIterator_p;
 
+	// Measurement set section
+	String msname_p;
+	MeasurementSet *selectedMeasurementSet_p;
+	MeasurementSet *originalMeasurementSet_p;
+	MSSelection *measurementSetSelection_p;
+
 	// Iteration counters
 	uShort chunkNo;
 	uShort bufferNo;
@@ -153,16 +159,6 @@ public:
 protected:
 
 private:
-
-	// Measurement Set
-	String msname_p;
-	MeasurementSet *originalMeasurementSet_p;
-
-	// Measurement Set Selection
-	MSSelection *measurementSetSelection_p;
-
-	// Selected Measurement Set
-	MeasurementSet *selectedMeasurementSet_p;
 
 	// Data Selection ranges
 	casa::String arraySelection_p;
@@ -207,6 +203,7 @@ private:
 	// Iteration initialization parameters
 	bool chunksInitialized_p;
 	bool buffersInitialized_p;
+	bool iteratorGenerated_p;
 
 	// Profiling
 	bool profiling_p;

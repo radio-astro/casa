@@ -182,7 +182,9 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 		}
 		default:
 		{
-			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: COMPLETE_SCAN_MAPPED" << LogIO::POST;
+			iterationApproach_p = SUB_INTEGRATION;
+
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: SUB_INTEGRATION" << LogIO::POST;
 			sortOrder_p = Block<int>(6);
 			sortOrder_p[0] = MS::OBSERVATION_ID;
 			sortOrder_p[1] = MS::ARRAY_ID;
@@ -192,9 +194,9 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 			sortOrder_p[5] = MS::TIME;
 
 			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
-			groupTimeSteps_p = true;
-			mapAntennaPairs_p = true;
-			mapSubIntegrations_p = true;
+			groupTimeSteps_p = false;
+			mapAntennaPairs_p = false;
+			mapSubIntegrations_p = false;
 			break;
 		}
 	}
@@ -211,6 +213,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// Initialize iteration parameters
 	chunksInitialized_p = false;
 	buffersInitialized_p = false;
+	iteratorGenerated_p = false;
 	chunkNo = 0;
 	bufferNo = 0;
 
@@ -258,7 +261,7 @@ FlagDataHandler::~FlagDataHandler()
 // -----------------------------------------------------------------------
 // Open Measurement Set
 // -----------------------------------------------------------------------
-void
+bool
 FlagDataHandler::open()
 {
 	STARTCLOCK
@@ -270,14 +273,14 @@ FlagDataHandler::open()
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
 	STOPCLOCK
-	return;
+	return true;
 }
 
 
 // -----------------------------------------------------------------------
 // Close Measurement Set
 // -----------------------------------------------------------------------
-void
+bool
 FlagDataHandler::close()
 {
 	STARTCLOCK
@@ -290,6 +293,7 @@ FlagDataHandler::close()
 			vwbt_p->terminate();
 			vwbt_p->join();
 		}
+
 
 		// Flush and unlock MS
 		selectedMeasurementSet_p->flush();
@@ -304,14 +308,14 @@ FlagDataHandler::close()
 	}
 
 	STOPCLOCK
-	return;
+	return true;
 }
 
 
 // -----------------------------------------------------------------------
 // Set Data Selection parameters
 // -----------------------------------------------------------------------
-void
+bool
 FlagDataHandler::setDataSelection(Record record)
 {
 	STARTCLOCK
@@ -407,14 +411,14 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 
 	STOPCLOCK
-	return;
+	return true;
 }
 
 
 // -----------------------------------------------------------------------
 // Generate selected Measurement Set
 // -----------------------------------------------------------------------
-void
+bool
 FlagDataHandler::selectData()
 {
 	STARTCLOCK
@@ -431,7 +435,7 @@ FlagDataHandler::selectData()
 			(const String)spwSelection_p,
 			(const String)uvwSelection_p,
 			dummyExpr, // taqlExpr
-			dummyExpr, // polnExpr
+			(const String)polarizationSelection_p,
 			(const String)scanSelection_p,
 			(const String)arraySelection_p,
 			dummyExpr); // intent
@@ -448,16 +452,22 @@ FlagDataHandler::selectData()
 		*logger_p << LogIO::WARN << "Selected Measurement Set doesn't have any rows " << LogIO::POST;
 	}
 
-	// Some debugging information
-	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getSubArrayList() << " arrays" << LogIO::POST;
-	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getFieldList() << " fields" << LogIO::POST;
-	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getScanList() << " scans" << LogIO::POST;
-	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getSpwList() << " spws" << LogIO::POST;
-	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << measurementSetSelection_p->getChanList() << " channels" << LogIO::POST;
-	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Selected Measurement Set has " << selectedMeasurementSet_p->nrow() << " rows" << LogIO::POST;
+	// More debugging information from MS-Selection
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected uvw range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
+
+	ostringstream polarizationListToPrint (ios::in | ios::out);
+	polarizationListToPrint << measurementSetSelection_p->getPolMap();
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected polarization ids are " << polarizationListToPrint.str() << LogIO::POST;
 
 	STOPCLOCK
-	return;
+	return true;
 }
 
 // -----------------------------------------------------------------------
@@ -538,7 +548,7 @@ FlagDataHandler::checkMaxMemory()
 // -----------------------------------------------------------------------
 // Generate Visibility Iterator with a given sort order and time interval
 // -----------------------------------------------------------------------
-void
+bool
 FlagDataHandler::generateIterator()
 {
 	STARTCLOCK
@@ -561,6 +571,22 @@ FlagDataHandler::generateIterator()
 		// Set the table data manager (ISM and SSM) cache size to the full column size, for
 		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
 		if (slurp_p) roVisibilityIterator_p->slurp();
+
+		// Apply channel selection (in row selection cannot be done with MSSelection)
+		// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
+		Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
+		Vector<Int> spwlist = measurementSetSelection_p->getSpwList();
+		Int spw,channelStart,channelStop,channelStep,channelWidth;
+		for(uInt spw_i=0;spw_i<spwlist.nelements();spw_i++ )
+		{
+			// NOTE: selectChannel needs channelStart,channelWidth,channelStep
+			spw = spwlist[spw_i];
+			channelStart = spwchan(spw_i,1);
+			channelStop = spwchan(spw_i,2);
+			channelStep = spwchan(spw_i,3);
+			channelWidth = channelStop-channelStart+1;
+			roVisibilityIterator_p->selectChannel(1,channelStart,channelWidth,channelStep,spw);
+		}
 
 		// Finally attach Visibility Buffer to RO conventional iterator
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
@@ -614,8 +640,9 @@ FlagDataHandler::generateIterator()
 
 	}
 
+	iteratorGenerated_p = true;
 	STOPCLOCK	
-	return;
+	return true;
 }
 
 
@@ -630,13 +657,13 @@ FlagDataHandler::nextChunk()
 	bool moreChunks = false;
 	if (!chunksInitialized_p)
 	{
-		generateIterator();
+		if (!iteratorGenerated_p) generateIterator();
 		roVisibilityIterator_p->originChunks();
 		chunksInitialized_p = true;
 		buffersInitialized_p = false;
-		moreChunks = true;
 		chunkNo++;
 		bufferNo = 0;
+		moreChunks = true;
 	}
 	else
 	{
@@ -703,11 +730,12 @@ FlagDataHandler::nextBuffer()
 	if (moreBuffers)
 	{
 		// WARNING: We have to modify the shape of the cube before re-assigning it
-		Cube<Bool> flagCube= visibilityBuffer_p->get()->flagCube();
-		modifiedFlagCube_p.resize(flagCube.shape());
-		modifiedFlagCube_p = flagCube;
-		originalFlagCube_p.resize(flagCube.shape());
-		originalFlagCube_p = flagCube;
+		Cube<Bool> modifiedflagCube= visibilityBuffer_p->get()->flagCube();
+		modifiedFlagCube_p.resize(modifiedflagCube.shape());
+		modifiedFlagCube_p = modifiedflagCube;
+		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
+		originalFlagCube_p.resize(originalFlagCube.shape());
+		originalFlagCube_p = originalFlagCube;
 
 		//IPosition flagCubeShape = modifiedFlagCube_p.shape();
 		//*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Current buffer shape: " << flagCubeShape  << " and indexing:" <<  modifiedFlagCube_p.printConfig() <<LogIO::POST;
@@ -721,7 +749,7 @@ FlagDataHandler::nextBuffer()
 // -----------------------------------------------------------------------
 // Flush flags to MS
 // -----------------------------------------------------------------------
-void
+bool
 FlagDataHandler::flushFlags()
 {
 	STARTCLOCK
@@ -736,20 +764,20 @@ FlagDataHandler::flushFlags()
 	}
 
 	STOPCLOCK
-	return;
+	return true;
 }
 
 
 // -----------------------------------------------------------------------
 // As requested by Urvashi R.V. provide access to the original and modified flag cubes
 // -----------------------------------------------------------------------
-Cube<Bool>*
+Cube<Bool> *
 FlagDataHandler::getModifiedFlagCube()
 {
 	return &modifiedFlagCube_p;
 }
 
-Cube<Bool>*
+Cube<Bool> *
 FlagDataHandler::getOriginalFlagCube()
 {
 	return &originalFlagCube_p;
@@ -1028,7 +1056,7 @@ FlagDataHandler::fillBuffer(Cube<Bool> &flagCube,bool write, uShort processBuffe
 							*logger_p 	<< LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__
 										<<" Wrong flag (False instead of True) in chunk " << chunkNo
 										<< " buffer " << bufferNo << " polarization " << pol_i
-										<< " channel " << nChannels << " row " << row_k << LogIO::POST;
+										<< " channel " << chan_j << " row " << row_k << LogIO::POST;
 						}
 					} else {
 						if (flag != False)
@@ -1036,7 +1064,7 @@ FlagDataHandler::fillBuffer(Cube<Bool> &flagCube,bool write, uShort processBuffe
 							*logger_p 	<< LogIO::SEVERE << "FlagDataHandler::" << __FUNCTION__
 										<<" Wrong flag (True instead of False) in chunk " << chunkNo
 										<< " buffer " << bufferNo << " polarization " << pol_i
-										<< " channel " << nChannels << " row " << row_k << LogIO::POST;
+										<< " channel " << chan_j << " row " << row_k << LogIO::POST;
 						}
 					}
 				}
