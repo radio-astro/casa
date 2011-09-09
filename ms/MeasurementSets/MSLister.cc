@@ -231,25 +231,25 @@ void MSLister::listHeader()
         logStream_p << LogIO::DEBUG1 << "End: MSLister::getRanges" << LogIO::POST;
     }
 
-  void MSLister::list (const String,
-                       const String datacolumn,
-                       const String field,
-                       const String spw,
-                       const String antenna,
-                       const String timerange,
-                       const String correlation,
-                       const String scan,
-                       const String,
-                       const String,
-                       const String uvrange,
-                       const String,
+  void MSLister::list (const String&,
+                       const String& datacolumn,
+                       const String& field,
+                       const String& spw,
+                       const String& antenna,
+                       const String& timerange,
+                       const String& correlation,
+                       const String& scan,
+                       const String&,
+                       const String&,
+                       const String& observation,
+                       const String& uvrange,
+                       const String&,
                        const bool  ,
-                       const String msSelect,
+                       const String& msSelect,
                        const long   pagerows,
-                       const String listfile)
+                       const String& listfile)
 {
   try{
-
     logStream_p << LogIO::DEBUG1 << "Begin: MSLister::list" << LogIO::POST;
 
     String chanmode;
@@ -293,7 +293,7 @@ void MSLister::listHeader()
               nchan, start, step, mStart,  mStep, correlation,
               // IGNORE PARAMETERS THAT ARE NOT YET IMPLEMENTED
               // array, msSelect);
-              "", msSelect);
+              "", observation, msSelect);
 
     // List the data
     listData(pagerows, listfile);
@@ -326,11 +326,10 @@ void MSLister::selectvis(const String& timerange,
                          const MRadialVelocity&,
                          const String& correlation,
                          const String& array,
+			 const String& observation,
                          const String& msSelect)
 {
-
   try {
-
     logStream_p << LogIO::DEBUG1 << "Begin: MSLister::selectvis" << LogIO::POST;
 
     // List input parameter values.
@@ -342,6 +341,7 @@ void MSLister::selectvis(const String& timerange,
     logStream_p << LogIO::DEBUG1 << "uvrange     = " << uvrange     << " , strlen = " << uvrange.length()     << endl;
     logStream_p << LogIO::DEBUG1 << "correlation = " << correlation << " , strlen = " << correlation.length() << endl;
     logStream_p << LogIO::DEBUG1 << "array       = " << array       << " , strlen = " << array.length()       << endl;
+    logStream_p << LogIO::DEBUG1 << "observation = " << observation << " , strlen = " << observation.length() << endl;
     logStream_p << LogIO::DEBUG1 << "msSelect    = " << uvrange     << " , strlen = " << msSelect.length()    << LogIO::POST;
     // logStream_p << "feed        = " << feed        << " , strlen = " << feed.length()        << endl;
     // logStream_p << "average     = " << uvrange     << " , strlen = " << average.length()     << endl;
@@ -350,8 +350,10 @@ void MSLister::selectvis(const String& timerange,
     // Apply selection to the original MeasurementSet
     if (!(timerange.empty() && spw.empty() && scan.empty() && field.empty() &&
           antenna.empty() && uvrange.empty() && correlation.empty() &&
-          msSelect.empty()) ) {
-      logStream_p << LogIO::NORMAL1 << "Performing selection on MeasurementSet" << LogIO::POST;
+          observation.empty() && msSelect.empty()) ) {
+      logStream_p << LogIO::NORMAL1 
+		  << "Performing selection on MeasurementSet"
+		  << LogIO::POST;
     } else {
       logStream_p << LogIO::NORMAL1 << "No selection requested." << LogIO::POST;
     }
@@ -378,14 +380,17 @@ void MSLister::selectvis(const String& timerange,
                            msSelect,             // taQLExpr
                            "", // correlation,          // corrExpr
                            scan,                 // scanExpr
-                           array);               // arrayExpr
+			   array,               // arrayExpr
+			   "", // stateExpr
+			   observation); // observationExpr
 
     // Check to see if selection returned any rows.
     Bool nonTrivial = pMSSelection->getSelectedMS(*pMSSel_p, "");
 
     /* // Write the selected MS to disk
-    // This proved to be useful for investigating strange listvis output; its easier to snoop inside a small subset
-    // of an MS than to snoop inside the whole thing.
+    // This proved to be useful for investigating strange listvis output;
+    // it's easier to snoop inside a small subset of an MS than to snoop inside
+    // the whole thing.
     String selectedMS = "MSLister.selected.ms";
     logStream_p << LogIO::NORMAL1 << "Writing selected MS to disk (overwriting if necessary)." << LogIO::POST;
     cout << "Writing selected MS to disk (overwriting if necessary)." << endl;
@@ -520,9 +525,7 @@ void MSLister::listData(const int pageRows,
   // **SPW**
 
   try{
-
     char cfill = cout.fill(' '); // fill character for terminal output
-
     Bool prompt=True;
 
     // Default myout as a synonym for cout.  (iostream makes it next to
