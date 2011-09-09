@@ -65,7 +65,7 @@ testflagger::~testflagger()
 
 
 bool
-testflagger::parseTestFlaggerConfig(const ::casac::record& tfconfig)
+testflagger::configTestFlagger(const ::casac::record& tfconfig)
 {
 	try
 	{
@@ -89,7 +89,7 @@ testflagger::parseDataSelection(const ::casac::record& selconfig)
 	{
 		Record config = *toRecord(selconfig);
 		if (testflagger_p) {
-			return testflagger_p->configDataSelection(config);
+			return testflagger_p->parseDataSelection(config);
 		}
 
 		return false;
@@ -105,10 +105,10 @@ testflagger::parseAgentParameters(const ::casac::record& aparams)
 {
 	try
 	{
-		Record agent_rec = *toRecord(aparams);
+		Record agent_params = *toRecord(aparams);
 
 		if(testflagger_p){
-			return testflagger_p->configAgentParameters(agent_rec);
+			return testflagger_p->parseAgentParameters(agent_params);
 		}
 
 		return false;
@@ -124,7 +124,10 @@ testflagger::init()
 	try
 	{
 		if(testflagger_p){
-			return testflagger_p->initFlagDataHandler();
+			if (testflagger_p->initFlagDataHandler()) {
+				return testflagger->initAgents();
+			}
+			return false;
 		}
 
 		return false;

@@ -27,6 +27,9 @@
 #ifndef FLAGGING_FLAGGER_H
 #define FLAGGING_FLAGGER_H
 
+#include <iostream>
+#include <vector>
+
 #include <flagging/Flagging/RFCommon.h>
 #include <flagging/Flagging/RFABase.h>
 #include <tableplot/TablePlot/FlagVersion.h>
@@ -42,6 +45,7 @@
 #include <casa/Quanta/Quantum.h>
 
 #include <flagging/Flagging/FlagDataHandler.h>
+#include <flagging/Flagging/FlagAgentBase.h>
 
 #include <boost/smart_ptr.hpp>
 
@@ -94,23 +98,20 @@ class RFChunkStats;
 // were too slow. Hence, Flagger was developed.
 // </motivation>
 //
-// <todo asof="2001/04/16">
-//   <li> add this feature
-//   <li> fix this bug
-//   <li> start discussion of this possible extension
-// </todo>
 
 
 class TestFlagger : public FlaggerEnums
 {
 protected:
 
+	static LogIO os;
+
 	// variables to parse to configTestFlagger
 	String msname_p;
 	Bool asyncio_p;
 	Bool parallel_p;
 
-	// variables to parse to configDataSelection
+	// variables to parse to parseDataSelection
 	String spw_p;
 	String scan_p;
 	String field_p;
@@ -123,18 +124,15 @@ protected:
 	String uvrange_p;
 	Record *dataselection_p;
 
-	static LogIO os;
 
-	// variables for initFlagDataHandler
+	// variables for initFlagDataHandler and initAgents
 	FlagDataHandler *fdh_p;
-	Vector<Record> *agents_config_list_p;
-	Vector<FlagAgentBase> *agents_list_p;
+	std::vector<Record> agents_config_list_p;
+	std::vector<FlagAgentBase> agents_list_p;
 
 public:  
 	// default constructor
 	TestFlagger  ();
-	// construct and attach to a measurement set
-	TestFlagger  ( MeasurementSet &ms );
 
 	// destructor
 	~TestFlagger ();
@@ -143,13 +141,17 @@ public:
 	void done();
 
 	// configure the tool
-	void configTestFlagger(Record &config);
+	bool configTestFlagger(Record &config);
 
 	// parse the data selection
-	void configDataSelection(Record &selrec);
+	bool parseDataSelection(Record &selrec);
 
-	// configure the parameters of the agent
-	void configAgentParameters(Record &aparams);
+	// parse the parameters of the agent
+	bool parseAgentParameters(Record &agent_params);
+
+	bool initFlagDataHandler();
+
+	bool initAgents();
 
 
 private:

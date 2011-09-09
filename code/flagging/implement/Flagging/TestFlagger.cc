@@ -35,6 +35,7 @@
 #include <casa/OS/HostInfo.h>
 #include <flagging/Flagging/TestFlagger.h>
 #include <flagging/FlagDataHandler.h>
+#include <flagging/Flagging/FlagAgentBase.h>
 #include <flagging/Flagging/RFAFlagExaminer.h>
 #include <flagging/Flagging/RFAMedianClip.h>
 #include <flagging/Flagging/RFASpectralRej.h>
@@ -74,6 +75,8 @@
 #include <algorithm>
 
 #include <sstream>
+#include <iostream>
+#include <vector>
 
 namespace casa {
 
@@ -138,8 +141,6 @@ TestFlagger::done(void)
 	dataselection_p = NULL;
 	agents_config_list_p = NULL;
 	agents_list_p = NULL;
-
-
 }
 
 // ---------------------------------------------------------------------
@@ -152,26 +153,34 @@ TestFlagger::configTestFlagger(Record &config)
 	// msname, async, parallel
 	LogIO os(LogOrigin("TestFlagger", "configTestFlagger()", WHERE));
 
+	if (!config or config.empty()){
+		return false;
+	}
+
 	// get the parameters to parse
 	// TODO: Check for the existence later....
 	config.get("MSNAME", msname_p);
 	config.get("ASYNC", asyncio_p);
 	config.get("PARALLEL", parallel_p);
 
-
+	return true;
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::configDataSelection
+// TestFlagger::parseDataSelection
 // Parse union of parameters to the FlagDataHandler
 // ---------------------------------------------------------------------
-void
-TestFlagger::configDataSelection(Record &record)
+bool
+TestFlagger::parseDataSelection(Record &selrec)
 {
 
-	LogIO os(LogOrigin("TestFlagger", "configDataSelection()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", "parseDataSelection()", WHERE));
 
-	dataselection_p = record;
+	if(!selrec or selrec.empty()) {
+		return false;
+	}
+
+	dataselection_p = selrec;
 
 	// FIXME: maybe this is not needed.
 	record.get("spw", spw_p);
@@ -185,23 +194,26 @@ TestFlagger::configDataSelection(Record &record)
 	record.get("array", array_p);
 	record.get("uvrange", uvrange_p);
 
-
+	return true;
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::configAgentParameters
-// Create a vector of agents
+// TestFlagger::parseAgentParameters
+// Create a vector of agents and parameters
 // ---------------------------------------------------------------------
 bool
-TestFlagger::configAgentParameters(Record& agent_rec)
+TestFlagger::parseAgentParameters(Record& agent_params)
 {
-	LogIO os(LogOrigin("TestFlagger", "configAgentParameters()", WHERE));
+	LogIO os(LogOrigin("TestFlagger", "parseAgentParameters()", WHERE));
+
+	if(!agent_params or agent_params.empty()){
+		return false;
+	}
 
 	// add this agent to the list
-	// implement a push_back function to add the agent
-	// agents_push_back(agent_rec)
-	// the list is actually a Vector<Record> agents_config_list_p
+	agents_config_list_p.push_back(agent_params);
 
+	return true;
 }
 
 
@@ -212,7 +224,16 @@ TestFlagger::configAgentParameters(Record& agent_rec)
 bool
 TestFlagger::initFlagDataHandler()
 {
+
+	bool ret_status = true;
+
 	LogIO os(LogOrigin("TestFlagger", "initFlagDataHandler()", WHERE));
+
+	if (msname_p.empty()) {
+		os << LogIO::SEVERE << "No Measurement Set has been parsed"
+				<< LogIO::POST;
+		return False;
+	}
 
 	if(fdh_p) delete fdh_p;
 
@@ -222,11 +243,30 @@ TestFlagger::initFlagDataHandler()
 	// Open the MS
 	fdh_p.open();
 
-	// Set the data selection
-	fdh_p.setDataSelection(dataselection_p);
+	if (!dataselection_p) {
+		return false;
+	}
 
-	// Select the data and generate iterators
-	fdh_p.selectData();
+	// Set the data selection
+	ret_status = fdh_p.setDataSelection(dataselection_p);
+	if (!ret_status) {
+		os << LogIO::SEVERE << "Failed to set the data selection."
+				<< LogIO::POST;
+		return false;
+	}
+
+	// Select the data
+	ret_status = fdh_p.selectData();
+	if (!ret_status) {
+		os << LogIO::SEVERE << "Failed to select the data."
+				<< LogIO::POST;
+		return false;
+	}
+
+	// Generate the iterators
+	fdh_p.generateIterator();
+
+	return true;
 }
 
 
@@ -238,7 +278,27 @@ bool
 TestFlagger::initAgents()
 {
 
-	// call the factory method
+	LogIO os(LogOrigin("TestFlagger", "initAgents()", WHERE));
+
+	if (agents_config_list_p.empty()){
+		return false;
+	}
+
+	// loop through the vector of agents
+	for (int i=0; i < agents_config_list_p.size(); i++) {
+
+		// get agent record
+		Record agent_rec = agents_config_list_p[i];
+
+		// call the factory method for each one of them
+		FlagAgentBase *fa = FlagAgentBase::create(agent_rec);
+
+		// add to list of FlagAgentBase
+		agents_list_p.push_back(fa);
+
+	}
+
+
 }
 
 
@@ -250,7 +310,50 @@ bool
 TestFlagger::run()
 {
 
-	//loop through the agents and run them
+	LogIO os(LogOrigin("TestFlagger", "run()", WHERE));
+
+	if (agents_list_p.empty()) {
+		return false;
+	}
+
+	//loop through the agents list and run them
+	for (int i = 0; i < agents_list_p.size(); i++) {
+
+		FlagAgentBase *agent = agents_list_p[i];
+
+	}
+	String mode = agent_rec.get("mode",mode);
+
+	switch(mode)
+	{
+	case "manualflag":
+		//
+		break;
+	case "clip":
+		//
+		break;
+	case "shadow":
+		//
+		break;
+	case "quack":
+		//
+		break;
+	case "rfi":
+		//
+		break;
+	case "elevation":
+		//
+		break;
+	case "autoflag":
+		//
+		break;
+	default:
+		// manualflag
+		break;
+	}
+
+}
+
 }
 
 

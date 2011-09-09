@@ -184,7 +184,7 @@ def testflagcmd(
         tfconfig['MSNAME'] = vis
         tfconfig['ASYNC'] = async
         tfconfig['PARALLEL'] = parallel
-        tfglocal.parseTestFlaggerConfig(tfconfig)
+        tfglocal.configTestFlagger(tfconfig)
 
         # Parse the data selection
         tfglocal.parseDataSelection(unionpars)
@@ -506,7 +506,7 @@ def applyflagcmd(
         aparams = uparams + sparams
         kmodes['online'] = oparams
         kmodes['manualflag'] = aparams + ['unflag']
-        kmodes['clip'] = aparams + ['unflag', 'cliprange', 'clipexpr',
+        kmodes['clip'] = aparams + ['unflag', 'cliprange', 'clipexpr', 'clipsoutside',
                                     'clipcolumn', 'clipchanavg']
         kmodes['quack'] = aparams + ['unflag', 'quackinterval',
                 'quackmode', 'quackincrement']
@@ -2282,6 +2282,7 @@ def getUnion(cmdlist):
 def setupAgent(tfglocal,cmdlist,flagbackup,reset):
     ''' for optype = apply '''
         
+    # TO DO: consider the unflag parameter in all modes
     # Read the mode
     # First remove the blank lines from the list (if any)
     blanks = cmdlist.count('\n')
@@ -2293,6 +2294,7 @@ def setupAgent(tfglocal,cmdlist,flagbackup,reset):
     manualpars = ['autocorr','unflag','clipexpr','clipminmax','clipcolumn','clipoutside','channelavg']
     quackpars = ['autocorr','unflag','quackinterval','quackmode','quackincrement']
     shadowpars = ['diameter']
+    clippars = ['cliprange', 'clipexpr', 'clipsoutside','clipcolumn', 'clipchanavg']
     # Add additional modes
     
     nrows = cmdlist.__len__()
