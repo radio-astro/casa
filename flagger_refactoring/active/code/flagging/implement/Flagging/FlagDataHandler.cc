@@ -37,21 +37,35 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// Default verbosity
 	profiling_p = false;
 
-	// Check if async input is enabled
+	// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
 	asyncio_disabled_p = true;
 	AipsrcValue<Bool>::find (asyncio_disabled_p,"ROVisibilityIteratorAsync.disabled", true);
+	if (!asyncio_disabled_p)
+	{
+		// Check Flag Data Handler config
+		Bool tmp = false;
+		AipsrcValue<Bool>::find (tmp,"FlagDataHandler.asyncio", false);
+		if (!tmp)
+		{
+			asyncio_disabled_p = true;
+		}
+	}
 
 	// Check if slurp is enabled
 	if (asyncio_disabled_p)
 	{
 		slurp_p = true;
-		AipsrcValue<Bool>::find (slurp_p,"ROVisibilityIteratorAsync.slurp:", true);
+		AipsrcValue<Bool>::find (slurp_p,"FlagDataHandler.slurp:", true);
 	}
 	else
 	{
 		slurp_p = false;
-		AipsrcValue<Bool>::find (slurp_p,"ROVisibilityIteratorAsync.slurp:", false);
+		AipsrcValue<Bool>::find (slurp_p,"FlagDataHandler.slurp:", false);
 	}
+
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<
+			" Asyncio activated: " << !asyncio_disabled_p <<
+			" Slurp activated: "<< slurp_p <<  LogIO::POST;
 
 
 	// WARNING: By default the visibility iterator adds the following
@@ -557,6 +571,13 @@ FlagDataHandler::generateIterator()
 	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
 	rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
+	// Set the table data manager (ISM and SSM) cache size to the full column size, for
+	// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+	if (slurp_p) rwVisibilityIterator_p->slurp();
+
+	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator un sync mode)
+	applyChannelSelection(rwVisibilityIterator_p);
+
 	checkMaxMemory();
 
 	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
@@ -567,26 +588,6 @@ FlagDataHandler::generateIterator()
 		// Cast RW conventional iterator into RO conventional iterator
 		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
-
-		// Set the table data manager (ISM and SSM) cache size to the full column size, for
-		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-		if (slurp_p) roVisibilityIterator_p->slurp();
-
-		// Apply channel selection (in row selection cannot be done with MSSelection)
-		// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
-		Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
-		Vector<Int> spwlist = measurementSetSelection_p->getSpwList();
-		Int spw,channelStart,channelStop,channelStep,channelWidth;
-		for(uInt spw_i=0;spw_i<spwlist.nelements();spw_i++ )
-		{
-			// NOTE: selectChannel needs channelStart,channelWidth,channelStep
-			spw = spwlist[spw_i];
-			channelStart = spwchan(spw_i,1);
-			channelStop = spwchan(spw_i,2);
-			channelStep = spwchan(spw_i,3);
-			channelWidth = channelStop-channelStart+1;
-			roVisibilityIterator_p->selectChannel(1,channelStart,channelWidth,channelStep,spw);
-		}
 
 		// Finally attach Visibility Buffer to RO conventional iterator
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
@@ -627,6 +628,9 @@ FlagDataHandler::generateIterator()
 		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
 		if (slurp_p) roVisibilityIterator_p->slurp();
 
+		// Apply channel selection
+		applyChannelSelection(roVisibilityIterator_p);
+
 		// Attach Visibility Buffer to Visibility Iterator
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
 		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
@@ -643,6 +647,28 @@ FlagDataHandler::generateIterator()
 	iteratorGenerated_p = true;
 	STOPCLOCK	
 	return true;
+}
+
+void
+FlagDataHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
+{
+	// Apply channel selection (in row selection cannot be done with MSSelection)
+	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
+	Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
+	Vector<Int> spwlist = measurementSetSelection_p->getSpwList();
+	Int spw,channelStart,channelStop,channelStep,channelWidth;
+	for(uInt spw_i=0;spw_i<spwlist.nelements();spw_i++ )
+	{
+		// NOTE: selectChannel needs channelStart,channelWidth,channelStep
+		spw = spwlist[spw_i];
+		channelStart = spwchan(spw_i,1);
+		channelStop = spwchan(spw_i,2);
+		channelStep = spwchan(spw_i,3);
+		channelWidth = channelStop-channelStart+1;
+		roVisIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
+	}
+
+	return;
 }
 
 
@@ -859,7 +885,7 @@ FlagDataHandler::generateSubIntegrationMap()
 
 
 
-Cube<Bool> *
+CubeView<Bool> *
 FlagDataHandler::getFlagsView(Int antenna1, Int antenna2)
 {
 	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
@@ -867,7 +893,7 @@ FlagDataHandler::getFlagsView(Int antenna1, Int antenna2)
 	return cube;
 }
 
-Cube<Bool> *
+CubeView<Bool> *
 FlagDataHandler::getFlagsView(Double timestep)
 {
 	std::vector<uInt> *rows = &((*subIntegrationMap_p)[timestep]);
@@ -875,7 +901,7 @@ FlagDataHandler::getFlagsView(Double timestep)
 	return cube;
 }
 
-Cube<Complex> *
+CubeView<Complex> *
 FlagDataHandler::getVisibilitiesView(Int antenna1, Int antenna2)
 {
 	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
@@ -883,7 +909,7 @@ FlagDataHandler::getVisibilitiesView(Int antenna1, Int antenna2)
 	return cube;
 }
 
-Cube<Complex> *
+CubeView<Complex> *
 FlagDataHandler::getVisibilitiesView(Double timestep)
 {
 	std::vector<uInt> *rows = &((*subIntegrationMap_p)[timestep]);
@@ -909,71 +935,74 @@ FlagDataHandler::processBuffer(bool write, uShort rotateMode, uShort rotateViews
 	uShort processView = rotateViews;
 	IPosition flagCubeShape;
 	Cube<Bool> *flagCube;
+	CubeView<Bool> *flagCubeView;
 	switch (rotateMode)
 	{
 		case 0:
-			fillBuffer(modifiedFlagCube_p,write,0);
+			flagCubeView = new CubeView<Bool>(&modifiedFlagCube_p);
+			fillBuffer(*flagCubeView,write,0);
+			delete flagCubeView;
 		break;
 
 		case 1:
 			for (myAntennaPairMapIterator=antennaPairMap_p->begin(); myAntennaPairMapIterator != antennaPairMap_p->end(); ++myAntennaPairMapIterator) {
 				antennaPair = myAntennaPairMapIterator->first;
-				flagCube = getFlagsView(antennaPair.first,antennaPair.second);
-				flagCubeShape = flagCube->shape();
+				flagCubeView = getFlagsView(antennaPair.first,antennaPair.second);
+				flagCubeShape = flagCubeView->shape();
 				*logger_p 	<< LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__
 							<< " Flag cube for (" <<  antennaPair.first << "," << antennaPair.second << ") has shape ["
 						    << flagCubeShape(0) << "," <<  flagCubeShape(1) << "," << flagCubeShape(2) << "]" << LogIO::POST;
 
 				if (rotateViews == 0)
 				{
-					fillBuffer(*flagCube,write,0);
+					fillBuffer(*flagCubeView,write,0);
 				}
 				else
 				{
 					if (processView == 1)
 					{
-						fillBuffer(*flagCube,write,1);
+						fillBuffer(*flagCubeView,write,1);
 						processView = 2;
 					}
 					else
 					{
-						fillBuffer(*flagCube,write,2);
+						fillBuffer(*flagCubeView,write,2);
 						processView = 1;
 					}
 				}
 
-				delete flagCube;
+				delete flagCubeView;
 			}
 		break;
 
 		case 2:
 			for (mySubIntegrationMapIterator=subIntegrationMap_p->begin(); mySubIntegrationMapIterator != subIntegrationMap_p->end(); ++mySubIntegrationMapIterator) {
 				timestep = mySubIntegrationMapIterator->first;
-				flagCube = getFlagsView(timestep);
-				flagCubeShape = flagCube->shape();
+				flagCubeView = getFlagsView(timestep);
+				flagCubeShape = flagCubeView->shape();
 				*logger_p 	<< LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__
 							<< " Flag cube for (" <<  timestep << ") has shape ["
 						    << flagCubeShape(0) << "," <<  flagCubeShape(1) << "," << flagCubeShape(2) << "]" << LogIO::POST;
 
 				if (rotateViews == 0)
 				{
-					fillBuffer(*flagCube,write,0);
+					fillBuffer(*flagCubeView,write,0);
 				}
 				else
 				{
 					if (processView == 1)
 					{
-						fillBuffer(*flagCube,write,1);
+						fillBuffer(*flagCubeView,write,1);
 						processView = 2;
 					}
 					else
 					{
-						fillBuffer(*flagCube,write,2);
+						fillBuffer(*flagCubeView,write,2);
 						processView = 1;
 					}
 				}
 
-				delete flagCube;
+				delete flagCubeView;
 			}
 		break;
 
@@ -986,7 +1015,7 @@ FlagDataHandler::processBuffer(bool write, uShort rotateMode, uShort rotateViews
 }
 
 void
-FlagDataHandler::fillBuffer(Cube<Bool> &flagCube,bool write, uShort processBuffer)
+FlagDataHandler::fillBuffer(CubeView<Bool> &flagCube,bool write, uShort processBuffer)
 {
 	bool processCondition = false;
 	if (processBuffer == 0)

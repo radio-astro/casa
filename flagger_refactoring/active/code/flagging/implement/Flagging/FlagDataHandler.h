@@ -62,6 +62,61 @@ typedef std::map< Double,std::vector<uInt> >::iterator subIntegrationMapIterator
 typedef std::map< std::pair<Int,Int>,std::vector<uInt> > antennaPairMap;
 typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
 
+// We need to have the CubeView definition here because its type is used by FlagDataHandler class
+template<class T> class CubeView
+{
+
+public:
+
+	CubeView(Cube<T> *parentCube,std::vector<uInt> *rows = NULL)
+	{
+		parentCube_p = parentCube;
+
+		if ((rows != NULL) and (rows->size() > 0))
+		{
+			rows_p = rows;
+			IPosition baseCubeShape = parentCube_p->shape();
+			reducedLength_p = IPosition(3);
+			reducedLength_p(0) = baseCubeShape(0);
+			reducedLength_p(1) = baseCubeShape(1);
+			reducedLength_p(2) = rows_p->size();
+		}
+		else
+		{
+			IPosition baseCubeShape = parentCube_p->shape();
+			reducedLength_p = IPosition(3);
+			reducedLength_p(0) = baseCubeShape(0);
+			reducedLength_p(1) = baseCubeShape(1);
+			reducedLength_p(2) = baseCubeShape(2);
+
+			rows_p = new vector<uInt>(reducedLength_p(2));
+			rows_p->clear();
+			for (uInt i=0; i<reducedLength_p(2); i++ )
+			{
+				rows_p->push_back(i);
+			}
+		}
+	}
+
+    T &operator()(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i3_index = rows_p->at(i3);
+    	return parentCube_p->at(i1,i2,i3_index);
+    }
+
+    const IPosition &shape() const
+    {
+    	return reducedLength_p;
+    }
+
+protected:
+
+private:
+    Cube<T> *parentCube_p;
+	std::vector<uInt> *rows_p;
+	IPosition reducedLength_p;
+};
+
 // Flag Data Handler class definition
 class FlagDataHandler
 {
@@ -94,6 +149,9 @@ public:
 	// Set Data Selection parameters
 	bool setDataSelection(Record record);
 
+	// Set Data Selection parameters
+	void applyChannelSelection(ROVisibilityIterator *roVisIter);
+
 	// Generate selected Measurement Set
 	bool selectData();
 
@@ -121,15 +179,14 @@ public:
 	void generateSubIntegrationMap();
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
-	Cube<Bool> * getFlagsView(Int antenna1, Int antenna2);
-	Cube<Bool> * getFlagsView(Double timestep);
-	Cube<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
-	Cube<Complex> * getVisibilitiesView(Double timestep);
-
+	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
+	CubeView<Bool> * getFlagsView(Double timestep);
+	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
+	CubeView<Complex> * getVisibilitiesView(Double timestep);
 
 	// Dummy processBuffer function (it has to be implemented in the agents)
 	uShort processBuffer(bool write, uShort rotateMode, uShort rotateViews);
-	void fillBuffer(Cube<Bool> &flagCube, bool write, uShort processBuffer);
+	void fillBuffer(CubeView<Bool> &flagCube, bool write, uShort processBuffer);
 
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
@@ -211,44 +268,6 @@ private:
 	// Logger
 	casa::LogIO *logger_p;
 
-};
-
-template<class T> class CubeView : public Cube<T>
-{
-
-public:
-
-	CubeView(Cube<T> *parentCube,std::vector<uInt> *rows)
-	{
-		parentCube_p = parentCube;
-		rows_p = rows;
-
-		IPosition baseCubeShape = parentCube_p->shape();
-		reducedLength_p = IPosition(3);
-		reducedLength_p(0) = baseCubeShape(0);
-		reducedLength_p(1) = baseCubeShape(1);
-		reducedLength_p(2) = rows_p->size();
-	}
-
-    T &operator()(uInt i1, uInt i2, uInt i3)
-    {
-    	uInt i3_index = rows_p->at(i3);
-    	return parentCube_p->at(i1,i2,i3_index);
-    }
-
-    const IPosition &shape() const
-    {
-    	return reducedLength_p;
-    }
-
-    void setRowsVector(std::vector<uInt> *rows) {rows_p = rows;}
-
-protected:
-
-private:
-    Cube<T> *parentCube_p;
-	std::vector<uInt> *rows_p;
-	IPosition reducedLength_p;
 };
 
 } //# NAMESPACE CASA - END
