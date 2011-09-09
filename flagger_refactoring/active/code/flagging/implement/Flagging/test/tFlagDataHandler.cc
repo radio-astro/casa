@@ -1,4 +1,4 @@
-//# FlagDataHandler.h: This file contains the unit tests of the FlagDataHandler class.
+//# tFlagDataHandler.cc: This file contains the unit tests of the FlagDataHandler class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -526,6 +526,9 @@ void example()
 	// Close MS
 	dh->close();
 
+	// Delete Flag Data Handler
+	delete dh;
+
 	return;
 }
 
@@ -533,7 +536,7 @@ int main(int argc, char **argv)
 {
 	// Variables declaration
 	string parameter, value;
-	string inputFile, observation, array, scan, field, spw;
+	string inputFile, observation, array, time, scan, field, spw, baseline, uvw;
 	unsigned short testMode = 0;
 	unsigned short logLevel = 0;
 
@@ -581,6 +584,12 @@ int main(int argc, char **argv)
 			record.define ("scan", casa::String(value));
 			if (logLevel >= 3) cout << "Scan selection is: " << scan << endl;
 		}
+		else if (parameter == string("-time"))
+		{
+			time = value;
+			record.define ("time", casa::String(value));
+			if (logLevel >= 3) cout << "Time selection is: " << time << endl;
+		}
 		else if (parameter == string("-field"))
 		{
 			field = value;
@@ -592,6 +601,18 @@ int main(int argc, char **argv)
 			spw = value;
 			record.define ("spw", casa::String(value));
 			if (logLevel >= 3) cout << "SPW selection is: " << spw << endl;
+		}
+		else if (parameter == string("-baseline"))
+		{
+			baseline = value;
+			record.define ("baseline", casa::String(value));
+			if (logLevel >= 3) cout << "Baseline selection is: " << baseline << endl;
+		}
+		else if (parameter == string("-uvw"))
+		{
+			uvw = value;
+			record.define ("uvw", casa::String(value));
+			if (logLevel >= 3) cout << "UVW selection is: " << uvw << endl;
 		}
 		else if (parameter == string("-mode"))
 		{
