@@ -483,7 +483,7 @@ Mutex::acquirelock()
 {
    while (!trylock())
    {
-      pthread_yield();
+	   sched_yield();
    }
 } 
 
