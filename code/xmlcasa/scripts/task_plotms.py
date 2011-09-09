@@ -7,7 +7,7 @@ def plotms(vis=None,
            yaxis=None, ydatacolumn=None,
            selectdata=None, field=None, spw=None,
            timerange=None, uvrange=None, antenna=None, scan=None,
-           correlation=None, array=None, msselect=None,
+           correlation=None, array=None, observation=None, msselect=None,
            averagedata=None,
            avgchannel=None, avgtime=None, avgscan=None, avgfield=None,
            avgbaseline=None, avgantenna=None, avgspw=None, scalar=None,
@@ -72,6 +72,8 @@ def plotms(vis=None,
         correlation -- select using correlations
                        default: '' (all).
         array -- select using (sub)-array range
+                 default: '' (all).
+        observation -- select by observation ID(s).
                  default: '' (all).
         msselect -- TaQL selection expression
                     default: '' (all).
@@ -177,9 +179,10 @@ def plotms(vis=None,
         
         # Set selection
         if (selectdata):
-            pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan, correlation, array, msselect, False)
+            pm.setPlotMSSelection(field, spw, timerange, uvrange, antenna, scan,
+                                  correlation, array, str(observation), msselect, False)
         else:
-            pm.setPlotMSSelection('','','','','','','','','',False)
+            pm.setPlotMSSelection('', '', '', '', '', '', '', '', '', '', False)
             
         # Set averaging
         if not averagedata:

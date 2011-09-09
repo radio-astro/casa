@@ -360,6 +360,11 @@ only be applied next time update() and/or show() is called.
       <value />
     </param>
     
+    <param type="string" name="observation">
+      <description>MS selection parameter for obsID</description>
+      <value />
+    </param>
+    
     <param type="string" name="msselect">
       <description>MS selection parameter for msselect</description>
       <value />

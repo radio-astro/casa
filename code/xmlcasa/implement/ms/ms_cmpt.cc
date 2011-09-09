@@ -2987,7 +2987,8 @@ bool ms::msselect(const ::casac::record& exprs)
     {
      *itsLog << LogOrigin("ms", "msselect");
       Record *casaRec = toRecord(exprs);
-      String spwExpr, timeExpr, fieldExpr, baselineExpr, scanExpr, scanIntentExpr, polnExpr, uvDistExpr;
+      String spwExpr, timeExpr, fieldExpr, baselineExpr, scanExpr, scanIntentExpr,
+	polnExpr, uvDistExpr, obsExpr;
       Int nFields = casaRec->nfields();
       for (Int i=0; i<nFields; i++)
 	{
@@ -2999,13 +3000,14 @@ bool ms::msselect(const ::casac::record& exprs)
 	  if (casaRec->name(i) == "scanintent")    {scanIntentExpr = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "polarization")  {polnExpr       = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "uvdist")        {uvDistExpr     = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "observation")   {obsExpr        = casaRec->asString(RecordFieldId(i));}
 	}
       // if (itsSelectedMS) delete itsSelectedMS;
       // itsSelectedMS = new MeasurementSet();
       retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
 			  timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
 			  "",/*taQLExpr*/ polnExpr, scanExpr,
-			  "",/*arrayExpr*/ scanIntentExpr, itsMSS);
+			  "",/*arrayExpr*/ scanIntentExpr, obsExpr, itsMSS);
       itsSel->setMS(*itsMS);
       return retVal;
     }
