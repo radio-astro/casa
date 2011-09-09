@@ -298,6 +298,7 @@ class AtmosCorruptor : public CalCorruptor {
    inline Double& Rtatmos() { return Rtatmos_; };
    //inline Double& Rtrx() { return Rtrx_; };
    inline Double& Rtcmb() { return Rtcmb_; };
+   inline Float& senscoeff() { return sensitivityCoeff_; };
 
    virtual Complex simPar(const VisIter& vi, VisCal::Type type,Int ipar);
    
@@ -336,6 +337,7 @@ class AtmosCorruptor : public CalCorruptor {
    Vector<Float> airMass_; // length= nAnt, recalculated if ness
    Bool airMassValid_;
    Double airMassTime_;
+   Float sensitivityCoeff_;
 };
 
 

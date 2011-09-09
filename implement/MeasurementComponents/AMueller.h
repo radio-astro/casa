@@ -189,6 +189,10 @@ protected:
   // override VC default of timeDepMat=F for OTF simulatio:
   virtual Bool timeDepMat() { return simOnTheFly(); };
 
+  // Calculate an ensemble of Mueller matrices (all baselines, channels)
+  // overrriding VisCal::calcAllMueller
+  virtual void calcAllMueller();
+
   // Calculate a single Mueller matrix by some means
   // override SolvableVisMueller::calcOneMueller
   virtual void calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,

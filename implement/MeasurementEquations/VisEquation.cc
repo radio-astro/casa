@@ -312,7 +312,8 @@ void VisEquation::collapse(VisBuffer& vb) {
 }
 
 //----------------------------------------------------------------------
-void VisEquation::collapseForSim(VisBuffer& vb) {
+// void VisEquation::collapseForSim(VisBuffer& vb) {
+void VisEquation::collapseForSim(VisBuffer& vb, const Bool avoidACs) {
 
   if (prtlev()>0) cout << "VE::collapseforSim()" << endl;
 
@@ -349,7 +350,7 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
   while (lidx<napp_ && vc()[lidx]->type() < pivot_) {
     if (prtlev()>2) cout << vc()[lidx]->typeName();
     if (vc()[ridx]->extraTag()!="NoiseScale" or vc()[lidx]->type()!=VisCal::T) {
-      vc()[lidx]->correct(vb);
+      vc()[lidx]->correct(vb, avoidACs);
       if (prtlev()>2) cout << " -> correct";
     }
     if (prtlev()>2) cout << endl;
@@ -367,14 +368,14 @@ void VisEquation::collapseForSim(VisBuffer& vb) {
     // manually pick off a T intended to be noise scaling T:
     if (pivot_ <= VisCal::T and vc()[ridx]->type()==VisCal::T) {
       if (vc()[ridx]->extraTag()=="NoiseScale") {
-	vc()[ridx]->correct(vb);  // correct DATA
+	vc()[ridx]->correct(vb, avoidACs);  // correct DATA
 	if (prtlev()>2) cout << " -> correct";
       } else {
-	vc()[ridx]->corrupt(vb);
+	vc()[ridx]->corrupt(vb, avoidACs);
 	if (prtlev()>2) cout << " -> corrupt";
       }
     } else { 
-      vc()[ridx]->corrupt(vb);
+      vc()[ridx]->corrupt(vb, avoidACs);
       if (prtlev()>2) cout << " -> corrupt";
     }
     if (prtlev()>2) cout << endl;
