@@ -59,6 +59,7 @@ casa_add_library( calibration
   implement/CalTables/GJonesTable.cc
   implement/CalTables/MJonesDesc.cc
   implement/CalTables/MJonesMRec.cc
+  implement/CalTables/NewCalColumns.cc
   implement/CalTables/NewCalTable.cc
   implement/CalTables/NewCalTableDesc.cc
   implement/CalTables/NewCalTableEnums.cc
