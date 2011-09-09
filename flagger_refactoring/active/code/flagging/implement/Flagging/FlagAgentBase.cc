@@ -603,10 +603,10 @@ FlagAgentBase::iterateRows()
 
 	if ((!rowsIndex_p.size()) || (!channelIndex_p.size()) || (!polarizationIndex_p.size())) return;
 
-	cout << "Going to process a buffer with: " <<
+	*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
 			rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 			channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
-			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << endl;
+			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
 
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
@@ -639,7 +639,7 @@ void
 FlagAgentBase::applyCommonFlags(uInt row, uInt channel, uInt pol)
 {
 	// NOTE: Notice that the position is pol,channel,row, not the other way around
-	commonFlagCube_p->at(pol,channel,row) = flag_p;
+	commonFlagCube_p->operator()(pol,channel,row) = flag_p;
 	return;
 }
 
@@ -647,8 +647,8 @@ void
 FlagAgentBase::applyPrivateFlags(uInt row, uInt channel, uInt pol)
 {
 	// NOTE: Notice that the position is pol,channel,row, not the other way around
-	commonFlagCube_p->at(pol,channel,row) = flag_p;
-	privateFlagCube_p->at(pol,channel,row) = flag_p;
+	commonFlagCube_p->operator()(pol,channel,row) = flag_p;
+	privateFlagCube_p->operator()(pol,channel,row) = flag_p;
 	return;
 }
 
@@ -671,7 +671,7 @@ FlagAgentBase::checkFlags(uInt row, uInt channel, uInt pol)
 FlagAgentBase *
 FlagAgentBase::create (Record config)
 {
-	FlagAgentBase *ret;
+	FlagAgentBase *ret = NULL;
 	return ret;
 }
 
