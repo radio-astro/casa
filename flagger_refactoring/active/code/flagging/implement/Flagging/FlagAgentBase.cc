@@ -148,7 +148,7 @@ FlagAgentBase::run ()
 		}
 		else
 		{
-			pthread_yield();
+			sched_yield();
 		}
 	}
 
@@ -171,7 +171,7 @@ FlagAgentBase::terminate ()
 	terminationRequested_p = true;
 	while (!threadTerminated_p)
 	{
-		pthread_yield();
+		sched_yield();
 	}
 	casa::async::Thread::terminate();
 
@@ -184,7 +184,7 @@ FlagAgentBase::queueProcess()
 	// Wait until we are done with previous buffer
 	while (processing_p)
 	{
-		pthread_yield();
+		sched_yield();
 	}
 
 	// Enable processing to trigger flagging
@@ -196,7 +196,7 @@ FlagAgentBase::queueProcess()
 	{
 		while (processing_p)
 		{
-			pthread_yield();
+			sched_yield();
 		}
 	}
 
@@ -209,7 +209,7 @@ FlagAgentBase::completeProcess()
 	// Wait until we are done with previous buffer
 	while (processing_p)
 	{
-		pthread_yield();
+		sched_yield();
 	}
 
 	return;
