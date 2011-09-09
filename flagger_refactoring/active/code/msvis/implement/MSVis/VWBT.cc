@@ -92,7 +92,7 @@ VWBT::run ()
 		}
 		else
 		{
-			pthread_yield();
+			sched_yield();
 		}
 	}
 
@@ -115,7 +115,7 @@ VWBT::terminate ()
 	terminationRequested_p = true;
 	while (!threadTerminated_p)
 	{
-		pthread_yield();
+		sched_yield();
 	}
 	casa::async::Thread::terminate();
 
@@ -162,7 +162,7 @@ VWBT::setFlag(Cube<Bool> flagCube)
 	// Wait until prev. flag cube is written
 	while (writing_p)
 	{
-		pthread_yield();
+		sched_yield();
 	}
 
 	// Delete prev. flag cube
