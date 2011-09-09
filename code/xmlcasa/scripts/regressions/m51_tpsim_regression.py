@@ -56,7 +56,9 @@ sdant = 0
 
 # only tsys-manual is available so far
 #thermalnoise = ''   #w/o noise 
-thermalnoise = 'tsys-manual'  #w/ noise 
+thermalnoise = 'tsys-manual'  #w/ noise
+t_sky = 263.0
+t_ground = t_sky
 
 image = True
 # default vis name of SD simulation
@@ -95,38 +97,38 @@ m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # reference statistic values for simulated image
-#rev.15394 (2001-06-16 After Trx update)
-# refstats = {'sum':15959,
-#             'max':1.6241,
-#             'min':-0.50853,
-#             'rms':0.18486,
-#             'sigma':0.17455}
-
 # rev.15907 (2011-08-16 proper handling of epoch)
-refstats = {'max': 1.544,
-            'min': -0.53458,
-            'rms': 0.17651,
-            'sigma':0.16696,
-            'sum': 15013}
+# refstats = {'max': 1.544,
+#             'min': -0.53458,
+#             'rms': 0.17651,
+#             'sigma':0.16696,
+#             'sum': 15013}
+
+# KS - updated 2011-09-09 (apply noise using cal table)
+refstats = {'max': 1.5608,
+            'min': -0.33003,
+            'rms': 0.17279,
+            'sigma': 0.15789,
+            'sum': 18400}
 
 ia.open(project+"/"+project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # reference statistic values for diff image
-#rev.15394 (2011-06-16 After Trx update)
-# diffstats = {'sum':35091,
-#              'max':2.7172,
-#              'min':-0.47044,
-#              'rms':0.30265,
-#              'sigma':0.27144}
-
 # rev.15907 (2011-08-16 proper handling of epoch)
-diffstats = {'max':2.7944,
-             'min':-0.4701,
-             'rms':0.31019,
-             'sigma':0.27807,
-             'sum':36037}
+# diffstats = {'max':2.7944,
+#              'min':-0.4701,
+#              'rms':0.31019,
+#              'sigma':0.27807,
+#              'sum':36037}
+
+# KS - updated 2011-09-09 (apply noise using cal table)
+diffstats = {'max': 2.7729,
+             'min': -0.25207,
+             'rms': 0.29521,
+             'sigma': 0.26765,
+             'sum': 32650 }
 
 
 # relative tolerances to reference values

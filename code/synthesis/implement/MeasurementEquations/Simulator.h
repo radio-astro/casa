@@ -239,8 +239,8 @@ public:
 		   const Float tatmos, 
 		   const Float tcmb);
 
-  Bool setnoise(const String& mode, 
-		const String& caltable,			 
+  Bool setnoise(const String& mode,
+		const String& caltable,
 		const Quantity& simplenoise,
 		// if blank, not stored
 		// or ATM calculation
@@ -250,19 +250,21 @@ public:
 		const Quantity& waterheight,
 		const Quantity& pwv,
 		// user-specified tau and tatmos 
-		const Float tatmos, 
+		const Float tatmos,
 		const Float tau,
 		//
 		const Float antefficiency,
 		const Float spillefficiency,
 		const Float correfficiency,
-		const Float trx, 
-		const Float tground,		
-		const Float tcmb, 
-		const Bool OTF);
+		const Float trx,
+		const Float tground,
+		const Float tcmb,
+		const Bool OTF,
+		const Float senscoeff);
 
   // apply errors to the data in our MS
-  Bool corrupt();
+  //  Bool corrupt();
+  Bool corrupt(const Bool avoidauto);
 
   // Set limits
   Bool setlimits(const Double shadowFraction,

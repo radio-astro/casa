@@ -191,7 +191,7 @@ String VisCal::applyinfo() {
 
 }
 
-void VisCal::correct(VisBuffer& vb,Bool avoidACs) {
+void VisCal::correct(VisBuffer& vb, Bool avoidACs) {
 
   if (prtlev()>3) cout << "VC::correct(vb)" << endl;
 
@@ -200,15 +200,16 @@ void VisCal::correct(VisBuffer& vb,Bool avoidACs) {
 }
 
 
-void VisCal::corrupt(VisBuffer& vb) {
+// void VisCal::corrupt(VisBuffer& vb) {
+void VisCal::corrupt(VisBuffer& vb, Bool avoidACs) {
 
   if (prtlev()>3) cout << "VC::corrupt(vb)" << endl;
 
   // Call non-in-place version, in-place-wise:
-  corrupt(vb,vb.modelVisCube());
+  corrupt(vb,vb.modelVisCube(),avoidACs);
 }
 
-void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout,Bool avoidACs) {
+void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout, Bool avoidACs) {
 
   if (prtlev()>3) cout << " VC::correct(vb,Vout)" << endl;
   
@@ -225,7 +226,8 @@ void VisCal::correct(VisBuffer& vb, Cube<Complex>& Vout,Bool avoidACs) {
 
 }
 
-void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
+// void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
+void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs) {
 
   if (prtlev()>3) cout << " VC::corrupt()" << endl;
 
@@ -244,7 +246,7 @@ void VisCal::corrupt(VisBuffer& vb, Cube<Complex>& Mout) {
   syncCal(vb,False);
 
   // Call generic row-by-row apply, with inversion turned OFF
-  applyCal(vb,Mout);
+  applyCal(vb,Mout,avoidACs);
 
   // Restore user's calWt()
   calWt()=userCalWt;
@@ -810,7 +812,7 @@ void VisMueller::calcAllMueller() {
       // TBD  What if calcOneMueller needs freq value info?
       
       calcOneMueller(oneMueller,oneMOK,onePar,onePOK);
-      
+
       // Advance iterators, as required
       Miter.next();
       MOKiter.next();

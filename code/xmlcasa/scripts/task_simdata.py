@@ -1093,7 +1093,7 @@ def simdata(
                                 mode="tsys-atm",table=noisymsroot)
                     # don't set table, that way it won't save to disk
                     #                        mode="calculate",table=noisymsroot)
-                sm.corrupt();
+                sm.corrupt(avoidauto=True);
                 sm.done();
 
             # now TP ms:
@@ -1136,25 +1136,40 @@ def simdata(
                     msg('antenna efficiency    = ' + str(eta_a),origin="noise")
                     msg('spillover efficiency  = ' + str(eta_s),origin="noise")
                     msg('correlator efficiency = ' + str(eta_q),origin="noise")
+                # sensitivity constant
+                tpcoeff = 1.0
 
                 sm.openfromms(noisymsroot+".sd.ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
-                #sm.setseed(seed)
+                sm.setseed(seed)
                 if thermalnoise == "tsys-manual":
                     if verbose:
-                        msg("sm.[old]setnoise(spillefficiency="+str(eta_s)+
+                        msg("sm.setnoise(spillefficiency="+str(eta_s)+
                             ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
                             ",trx="+str(t_rx)+",tau="+str(tau0)+
-                            ",tatmos="+str(t_sky)+
-                            ",tcmb="+str(t_cmb));
-                    sm.oldsetnoise(spillefficiency=eta_s,correfficiency=eta_q,
-                                   antefficiency=eta_a,trx=t_rx,
-                                   tau=tau0,tatmos=t_sky,tcmb=t_cmb,
-                                   mode="calculate")
+                            ",tatmos="+str(t_sky)+",tground="+str(t_ground)+
+                            ",tcmb="+str(t_cmb)+",senscoeff="+str(tpcoeff)+
+                            ",mode='tsys-manual')");
+                        msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
+                    sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                                antefficiency=eta_a,trx=t_rx,
+                                tau=tau0,tatmos=t_sky,tground=t_ground,tcmb=t_cmb,
+                                mode="tsys-manual",senscoeff=tpcoeff)
                 else:
-                    msg("Can't corrupt SD data using ATM library - please use tsys-manual",priority="error")
-                    return False
-                sm.corrupt();
+                    if verbose:
+                        msg("sm.setnoise(spillefficiency="+str(eta_s)+
+                            ",correfficiency="+str(eta_q)+",antefficiency="+str(eta_a)+
+                            ",trx="+str(t_rx)+",tground="+str(t_ground)+
+                            ",tcmb="+str(t_cmb)+",senscoeff="+str(tpcoeff)+
+                            ",mode='tsys-atm'"+
+                            ",pground='560mbar',altitude='5000m',waterheight='200m',relhum=20,pwv="+str(user_pwv)+"mm)");
+                        msg("** this may be slow if your MS is finely sampled in time ** ",priority="warn")
+                    sm.setnoise(spillefficiency=eta_s,correfficiency=eta_q,
+                                antefficiency=eta_a,trx=t_rx,
+                                tground=t_ground,tcmb=t_cmb,pwv=str(user_pwv)+"mm",
+                                mode="tsys-atm",table=noisymsroot+".sd",senscoeff=tpcoeff)
+                    # don't set table, that way it won't save to disk
+                sm.corrupt(avoidauto=False);
                 sm.done();
                 # update TP ms name for the following steps
                 sdmsfile = noisymsroot + ".sd.ms"

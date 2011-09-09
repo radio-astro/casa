@@ -710,6 +710,14 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     Matrix<Bool> flags;
     
     ProgressMeter meter(0.,1. , "Simulating "+nameOfType(type())+" ", "", "", "", True, .1);
+
+    // check if it's possible to simulate ACs
+    Bool knownACtype(False);
+    String mode(corruptor_p->mode());
+    if (type()==VisCal::ANoise)
+     knownACtype = True;
+    else if (type()==VisCal::T && (mode=="tsys-manual" || mode=="tsys-atm"))
+      knownACtype = True;
     
     for (Int isim=0;isim<nSim && vi.moreChunks();++isim) {      
     
@@ -797,8 +805,11 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
     		gpos(0)=ipar;
     		if ( a1(irow)==a2(irow) ) {
     		  // autocorrels should get 1. for multiplicative VC
-    		  if (type()==VisCal::ANoise or type()==VisCal::A)
+//     		  if (type()==VisCal::ANoise or type()==VisCal::A)
+    		  if (type()==VisCal::A)
     		    solveCPar()(gpos)=0.0;
+		  else if (knownACtype)
+		    solveCPar()(gpos) = corruptor_p->simPar(vi,type(),ipar);
     		  else
     		    solveCPar()(gpos)=1.0;
 		  solveParOK()(gpos)=True;		     
