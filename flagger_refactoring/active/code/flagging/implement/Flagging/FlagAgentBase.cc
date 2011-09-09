@@ -495,7 +495,7 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 		// Finally check what channels are within the range
 		for (uInt channel_i=0;channel_i<nChannels;channel_i++)
 		{
-			if ((channel_i>=channelStart) and (channelStart<=channelStop)) channelIndex_p.push_back(channel_i);
+			if ((channel_i>=channelStart) and (channel_i<=channelStop)) channelIndex_p.push_back(channel_i);
 		}
 	}
 	else
@@ -601,10 +601,12 @@ FlagAgentBase::iterateRows()
 		if (!find(spwList_p,visibilityBuffer_p->get()->spectralWindow())) return;
 	}
 
+	if ((!rowsIndex_p.size()) || (!channelIndex_p.size()) || (!polarizationIndex_p.size())) return;
+
 	cout << "Going to process a buffer with: " <<
-			rowsIndex_p.size() << " rows, " <<
-			channelIndex_p.size() << " channels, " <<
-			polarizationIndex_p.size() << " polarizations" << endl;
+			rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
+			channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
+			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << endl;
 
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
@@ -666,6 +668,12 @@ FlagAgentBase::checkFlags(uInt row, uInt channel, uInt pol)
 	return;
 }
 
+FlagAgentBase *
+FlagAgentBase::create (Record config)
+{
+	FlagAgentBase *ret;
+	return ret;
+}
 
 
 } //# NAMESPACE CASA - END

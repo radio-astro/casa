@@ -59,6 +59,8 @@ public:
 	void completeProcess();
 	void * run ();
 
+    static FlagAgentBase *create (Record config);
+
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
 
