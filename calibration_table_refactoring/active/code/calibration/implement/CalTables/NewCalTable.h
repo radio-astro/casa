@@ -49,6 +49,7 @@
 #include <ms/MeasurementSets/MSHistoryColumns.h>
 #include <calibration/CalTables/NewCalTableDesc.h>
 #include <calibration/CalTables/NewCalMainRecord.h>
+#include <calibration/CalTables/NewCalMainColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -119,7 +120,10 @@ class NewCalTable : public Table
 
    // initialize reference to subtables
    void initSubtables();
+   void clearSubtables();
 
+   void copyMemCalSubtables(const NewCalTable& other);
+   void copyMemCalSubtable(const Table& otherSubtable, Table& subTable);
    // get number of rows in cal main table, and subtables  
    //Int nRowMain() const;
    //Int nRowHistory() const;
@@ -170,16 +174,11 @@ class NewCalTable : public Table
    const CalSpectralWindow& spectralWindow() const {return spectralWindow_p;}
    const CalHistory& history() const {return history_p;}
 
-
+/***
  protected:
-   // Return cal_main and sub-tables as Table references
-   /***
-   Table& calMainAsTable() {return *itsMainTable;};
-   Table& calDescAsTable() {return *itsDescTable;};
-   Table& calHistoryAsTable() {return *itsHistoryTable;};
-   const Table& calMainAsTable() const {return *itsMainTable;};
-   const Table& calDescAsTable() const {return *itsDescTable;};
-   const Table& calHistoryAsTable() const {return *itsHistoryTable;};
+   friend class NewCalColumns;
+   friend class RONewCalColumns;
+   
 ***/
  
  private:

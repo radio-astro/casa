@@ -45,7 +45,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class NewCalMainColumns {
+class NewCalTable;
+
+class NewCalMainColumns
+{
   public:
     // Construct from a calibration table
     NewCalMainColumns (NewCalTable& calTable);
@@ -118,5 +121,4 @@ class NewCalMainColumns {
     ArrayColumn<Float> weight_p;
   };
 } //# NAMESPACE CASA - END
-
 #endif

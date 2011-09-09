@@ -75,7 +75,8 @@ NewCalMainColumns::NewCalMainColumns(NewCalTable& calTable)
   attach (calTable, flag_p, NCT::FLAG);
   attach (calTable, snr_p, NCT::SNR);
   attach (calTable, weight_p, NCT::WEIGHT);
-
+  //cerr<<"NewCalMainColumns instantiated"<<endl;
+  //cerr<<"NewCalMainColumns ctor: caltable name="<<calTable.tableName()<<endl;
 };
 
 //----------------------------------------------------------------------------

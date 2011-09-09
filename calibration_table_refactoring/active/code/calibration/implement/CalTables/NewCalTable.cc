@@ -156,6 +156,7 @@ NewCalTable::NewCalTable (const NewCalTable& other): Table(other)
 //    other            const NewCalTable&       Existing NewCalTable object
 //
    //cerr<<"copy constructor ...."<<endl;
+   copyMemCalSubtables(other);
    initSubtables();
 };
 
@@ -169,6 +170,7 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
 //
   //cerr<<"assignment operator..."<<endl;
   if (this != &other) {
+    clearSubtables();
     Table::operator=(other);
     if (!conformant(this->tableDesc()))
         throw (AipsError("NewCalTable( const NewCalTable&) - "
@@ -195,14 +197,29 @@ void NewCalTable::initSubtables()
   }
 }
 //----------------------------------------------------------------------------
-//Int NewCalTable::nRowMain() const 
-//{
-// Output: 
-//    nMainRow         Int
-//
-//  return caltable_.nrow();
-//};
-
+void NewCalTable::clearSubtables()
+{
+   antenna_p=CalAntenna();
+   field_p=CalField();
+   spectralWindow_p=CalSpectralWindow();
+   history_p = CalHistory();
+}
+//----------------------------------------------------------------------------
+void NewCalTable::copyMemCalSubtables(const NewCalTable & other)
+{
+   copyMemCalSubtable(other.antenna_p, antenna_p);
+   copyMemCalSubtable(other.field_p, field_p);
+   copyMemCalSubtable(other.spectralWindow_p, spectralWindow_p);
+   copyMemCalSubtable(other.history_p, history_p);
+}
+//----------------------------------------------------------------------------
+void NewCalTable::copyMemCalSubtable(const Table & otherCalsubtable, Table & calSubtable )
+{
+  //if (! otherCalsubtable.isNull () && otherCalsubtable.tableType() == Table::Memory){
+  if (! otherCalsubtable.isNull ()){
+        calSubtable = otherCalsubtable;
+    }
+}
 //----------------------------------------------------------------------------
 Record NewCalTable::getRowMain (const Int& jrow)
 {
@@ -249,21 +266,17 @@ void NewCalTable::setMetaInfo(const String& msName)
   const MSField msfldtab = inms.field();
   const MSSpectralWindow msspwtab = inms.spectralWindow();
 
+  // deep copy subtables from an MS to NCT 
+  // by TableCopy::copyRows
   //copy antenna table
   CalAntenna calantab(this->antenna());
-  //String calantabname = this->antenna().tableName();
   TableCopy::copyRows(calantab,msantab);
-  //msantab.deepCopy(calantabname,Table::New,True);
   //copy field table
   CalField calfldtab(this->field());
   TableCopy::copyRows(calfldtab,msfldtab);
-  //String calfldtabname = this->field().tableName();
-  //msfldtab.deepCopy(calfldtabname,Table::New,True);
   //copy spectralWindow table
   CalSpectralWindow calspwtab(this->spectralWindow());
   TableCopy::copyRows(calspwtab,msspwtab);
-  //String calspwtabname = this->spectralWindow().tableName();
-  //msspwtab.deepCopy(calspwtabname,Table::New,True);
 
   this->rwKeywordSet().define(RecordFieldId("MSName"),Path(msName).absoluteName());
 }
