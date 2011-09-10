@@ -1042,10 +1042,11 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 	  >= 0){
 	String newName = otherAntCols.name()(a)+"m";
 	Int secondMovedAntId = -1;
+	Int count = 1;
 	while((secondMovedAntId=antCols.matchAntenna(newName, 
 						     otherAntCols.positionMeas()(a), Quantum<Double>(100, "AU")))
-	      >= 0){ // append "m"s until there is no match
-	  newName = newName+"m";
+	      >= 0){ // append numbers starting at 2 until there is no match
+	  newName = newName+String::toString(++count);
 	  movedAntId = secondMovedAntId;
 	}
 	os << "Antenna " << antCols.name()(movedAntId)  << " (ID " << movedAntId << ") has changed its position between MSs."  
