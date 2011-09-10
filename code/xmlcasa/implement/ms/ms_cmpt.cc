@@ -817,7 +817,8 @@ ms::statistics(const std::string& column,
                const std::string& time, 
                const std::string& correlation,
                const std::string& scan, 
-               const std::string& array)
+               const std::string& array,
+	       const std::string& obs)
 {
     *itsLog << LogOrigin("ms", "statistics");
 
@@ -840,7 +841,8 @@ ms::statistics(const std::string& column,
            "uvrange = " << uvrange << endl <<
            "correlation = " << correlation << endl <<
            "scan = " << scan << endl <<
-           "array = " << array << endl;
+	   "array = " << array <<
+	   "obs = " << obs << endl;
 
          MSSelection mssel(*itsMS,
                            MSSelection::PARSE_NOW, 
@@ -852,7 +854,9 @@ ms::statistics(const std::string& column,
                            dummyExpr,   // taqlExpr
                            correlation,
                            scan,
-                           array);
+                           array,
+			   "",		// stateExpr
+			   obs);
 
          MeasurementSet *sel_p;
          MeasurementSet sel;
