@@ -101,7 +101,7 @@ class QtEllipseTool: public QtELRegion,  public QtMWCTool
   Q_OBJECT
 
 public:
-  QtEllipseTool(PanelDisplay* pd);
+  QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd);
   virtual ~QtEllipseTool() {}
 
 public slots:

@@ -260,7 +260,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>43</y>
+            <y>42</y>
             <width>121</width>
             <height>41</height>
            </rect>
@@ -286,7 +286,7 @@
           <property name="geometry">
            <rect>
             <x>130</x>
-            <y>43</y>
+            <y>42</y>
             <width>121</width>
             <height>41</height>
            </rect>
@@ -312,7 +312,7 @@
           <property name="geometry">
            <rect>
             <x>260</x>
-            <y>43</y>
+            <y>42</y>
             <width>131</width>
             <height>41</height>
            </rect>
@@ -355,8 +355,8 @@
          <widget class="QPushButton" name="coordinates_apply">
           <property name="geometry">
            <rect>
-            <x>357</x>
-            <y>90</y>
+            <x>362</x>
+            <y>84</y>
             <width>81</width>
             <height>31</height>
            </rect>
@@ -368,8 +368,8 @@
          <widget class="QPushButton" name="coordinates_reset">
           <property name="geometry">
            <rect>
-            <x>275</x>
-            <y>90</y>
+            <x>283</x>
+            <y>84</y>
             <width>81</width>
             <height>31</height>
            </rect>

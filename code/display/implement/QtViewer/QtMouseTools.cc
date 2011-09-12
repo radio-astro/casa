@@ -225,7 +225,7 @@ Bool QtELRegion::getMouseRegion(Record& mouseRegion,
   mouseRegion = Record();	// Initialize to empty Record.
 
 
-  if(!ellipseDefined() || itsCurrentWC==0) return False;
+  if(!rectangleDefined() || itsCurrentWC==0) return False;
   wch = pd_->wcHolder(itsCurrentWC);
 	// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
 	// locating the important coordinate state 'zindex' on wch

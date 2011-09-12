@@ -149,6 +149,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // to be used by them, as well as internally.
 	    virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
 
+	    virtual memory::cptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
+
+	protected:
+	    viewer::RegionSource *rfactory;
+
 	private:
 	    typedef std::list<memory::cptr<viewer::Rectangle> > rectanglelist;
 
@@ -206,7 +211,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // store the times of the last two presses here:
 	    Double itsLastPressTime, its2ndLastPressTime;
 
-	    viewer::RegionSource *rfactory;
 	    rectanglelist rectangles;
 	    PanelDisplay *pd_;
     };

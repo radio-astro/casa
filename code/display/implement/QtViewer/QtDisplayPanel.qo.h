@@ -761,6 +761,7 @@ public:
 
   // ellipse tool
   QtEllipseTool *elregion_;
+  QtOldEllipseTool *oelregion_;
   
   //# MWCPTRegion* ptregion_;
   //# QtPTRegion* ptregion_;
