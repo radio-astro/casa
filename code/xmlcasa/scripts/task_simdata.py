@@ -37,7 +37,8 @@ def simdata(
     # RI TODO for inbright=unchanged, need to scale input image to jy/pix
     # according to actual units in the input image
 
-    # it was requested to make the user interface "observe" for what is sm.observe and sm.predict
+    # it was requested to make the user interface "observe" for what 
+    # is sm.observe and sm.predict.
     # interally the code is clearer if we stick with predict, predict_sd, predict_int so
     predict=observe
 
@@ -59,19 +60,7 @@ def simdata(
     # put output in directory called "project"
     fileroot = project
     if os.path.exists(fileroot):
-#        if overwrite:
-#            shutil.rmtree(fileroot)
-#            os.mkdir(fileroot)
-#        else:
         if not overwrite:
-# this will break re-analysis of existing ms..
-#            timestr = time.strftime("%y%b%d_%H:%M:%S",time.gmtime(os.path.getctime(fileroot)))
-#            if os.path.exists(fileroot+"."+timestr):
-#                 msg("project exists and overwrite=F",priority="error")
-#                 return False
-#            else:
-#                shutil.move(fileroot,fileroot+"."+timestr)
-            #                os.mkdir(fileroot)
             if (predict and os.path.exists(fileroot+"/"+project+".ms")):
                 msg(fileroot+"/"+project+".ms exists but overwrite=F",priority="error")
                 return False
@@ -123,7 +112,7 @@ def simdata(
 #    if True:
 
         ##################################################################
-        # set up skymodelimage
+        # set up skymodel image
 
 
         if os.path.exists(skymodel):
@@ -154,7 +143,7 @@ def simdata(
              model_nchan,model_center,model_width,
              model_stokes) = returnpars 
 
-            modelflat = newmodel + ".flat"
+            modelflat = fileroot + "/" + project + ".skymodel.flat"
             if os.path.exists(modelflat) and (not observe) and analyze:
                 # if we're not predicting, then we want to use the previously
                 # created modelflat, because it may have components added 
@@ -163,6 +152,9 @@ def simdata(
             else:
                 # create and add components into modelflat with util.flatimage()
                 util.flatimage(newmodel,complist=complist,verbose=verbose)
+                # we want the skymodel.flat image to be called that no matter what 
+                # the skymodel image is called, since that's what used in analysis
+                shutil.move(newmodel+".flat",modelflat)
 
             casalog.origin('simdata')
 
@@ -172,12 +164,8 @@ def simdata(
 
         else:
             components_only = True
-            # if only components, the pointings 
-            # can be displayed on blank sky, with symbols at the locations 
-            # of components, but if analysis is going to be peformed, 
-            # TODO create a sky model image here ?
+            # calculate model parameters from the component list:
 
-            # we need model_refdir below for calibrator
             compdirs = []
             cl.open(complist)
 
@@ -194,6 +182,7 @@ def simdata(
                 msg("component-only simulation, compwidth unset: setting bandwidth to 2GHz",priority="warn")
 
             model_nchan = 1
+            model_stokes = "I"
 
             cmax = 0.0014 # ~5 arcsec
             for i in range(coffs.shape[1]):
@@ -204,23 +193,11 @@ def simdata(
                 if yc > cmax:
                     cmax = yc
 
-            #model_size=qa.quantity(2*cmax,'deg'),qa.quantity(2*cmax,'deg')
             model_size = ["%fdeg" % (2*cmax), "%fdeg" % (2*cmax)]
-            model_cell = ["0.1arcsec", "0.1arcsec"]
-
-            
-            if type(cell) == type([]):
-                if len(cell) > 0:
-                    cell0 = cell[0]
-                else:
-                    cell0 = ""
-            else:
-                cell0 = cell
-
-            if len(cell0) > 0:
-                model_cell = [cell0,cell0]
 
 
+        # for cases either if there is a skymodel or if there are only components,
+        # if the user has not input a map size (for setpointings), then use model_size
         if len(mapsize) == 0:
             mapsize = model_size
             if verbose: msg("setting map size to "+str(model_size))
@@ -233,7 +210,7 @@ def simdata(
 
 
         ##################################################################
-        # read antenna file here to get Primary Beam
+        # read antenna file here to get Primary Beam, and estimate maxbase and psfsize
         predict_uv = False
         predict_sd = False
         sd_only = False
@@ -241,7 +218,7 @@ def simdata(
         stnx = []  # for later, to know if we read an array in or not
         repodir = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
 
-        # experimental: alma;0.4arcsec  allowed string
+        # convert "alma;0.4arcsec" to an actual configuration
         if str.upper(antennalist[0:4]) == "ALMA":
             tail = antennalist[5:]
             if util.isquantity(tail,halt=False):
@@ -282,19 +259,12 @@ def simdata(
             cy=pl.mean(stny)
             cz=pl.mean(stnz)
             lat,lon = util.irtf2loc(stnx,stny,stnz,cx,cy,cz)
-            rg=max(lat)-min(lat)
-            rg2=max(lon)-min(lon)
-            if rg2>rg:
-                rg=rg2
-            # rg is in m
-            minscale = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/rg*3600.*180/pl.pi # arcsec
-            cell_asec=qa.convert(model_cell[0],'arcsec')['value']
-            if minscale < cell_asec:
-                msg("Sky model cell of "+str(cell_asec)+" asec is very large compared to highest resolution "+str(minscale)+" asec - this will lead to blank or erroneous output. (Did you set incell?)",priority="error")
-                return False
-            if minscale < 2*cell_asec:
-                msg("Sky model cell of "+str(cell_asec)+" asec is not small compared to highest resolution "+str(minscale)+" asec. (Did you set incell?)",priority="warn")
-      
+            maxbase=max(lat)-min(lat) # in meters
+            maxbase2=max(lon)-min(lon)
+            if maxbase2>maxbase:
+                maxbase=maxbase2
+            # estimate the psf size from the minimum spatial scale            
+            psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
 
 
 
@@ -342,8 +312,115 @@ def simdata(
                 del minsize
             del sdpb2
 
+            if sd_only:  # make sure psfsize is defined, for use in image size and cell
+                # size checks later.
+                psfsize = pb
+                maxbase = 0.
+            
 
 
+
+
+
+        # now we have an estimate of the psf from the antenna configuration, 
+        # so we can guess a model_cell for the case of component-only 
+        # simulation, 
+        if components_only:
+            # first set based on psfsize:
+            model_cell = [ str(psfsize/5)+"arcsec", str(psfsize/5)+"arcsec" ]
+            
+            # if the user has set cell for imaging, we'll use that
+            if type(cell) == type([]):
+                if len(cell) > 0:
+                    cell0 = cell[0]
+                else:
+                    cell0 = ""
+            else:
+                cell0 = cell
+
+            if len(cell0) > 0:
+                # we would like to warn the user if they're not likely to sample the
+                # psf, but we don't have a psf estimate yet until we read antennas.
+                msg("Setting cell size for component generated skymodel image to user supplied cell size "+str(cell0),priority="warn")
+                model_cell = [cell0,cell0]                
+
+            # XXX if the user has set direction should we center the compskymodel there?
+            # if len(direction)>0: model_refdir = direction
+
+        # and can create a compskymodel image (tmp) and 
+        # skymodel.flat which is what is needed for analysis.
+
+        if components_only:
+            newmodel = fileroot + "/" + project + ".compskymodel"
+            needmodel=True
+
+            modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
+            newepoch,newlat,newlon = util.direction_splitter(model_refdir)
+            
+            if os.path.exists(newmodel):
+                if overwrite:
+                    shutil.rmtree(newmodel)
+                else:
+                    needmodel=False
+                    ia.open(newmodel)
+                    oldshape=ia.shape()
+                    if len(oldshape) != 2:
+                        needmodel=True
+                    else:
+                        if oldshape[0] != modimsize or oldshape[1]==modimsize:
+                            needmodel=True
+                    oldcs=ia.coordsys()                            
+                    ia.done()
+                    olddir = (oldcs.referencevalue())['numeric']
+                    if ( olddir[0] != qa.convert(newlat,oldcs.units()[0])['value'] or
+                         olddir[1] != qa.convert(newlon,oldcs.units()[1])['value'] or 
+                         newepoch != oldcs.referencecode() ):
+                        needmodel=True
+                    oldcs.done()
+                    del oldcs, olddir
+                    if needmodel:                        
+                        msg(newmodel+" exists and is inconsistent with required size="+str(modimsize)+" and direction. Please set overwrite=True",priority="error")
+                        return False
+
+            if needmodel:
+                csmodel = ia.newimagefromshape(newmodel,[modimsize,modimsize,1,1])
+                modelcsys = csmodel.coordsys()
+                modelshape = csmodel.shape()     
+                modelcsys.setdirection(refpix=[modimsize/2,modimsize/2],
+                                       refval=[qa.tos(newlat),qa.tos(newlon)],
+                                       refcode=newepoch,
+                                       incr=[qa.tos(qa.mul(model_cell[0],-1)),
+                                             model_cell[1]])
+                modelcsys.setreferencevalue(type="spectral",value=qa.tos(model_center))
+                modelcsys.setrestfrequency(qa.tos(model_center))
+                modelcsys.setincrement(type="spectral",value=compwidth)
+                csmodel.setcoordsys(modelcsys.torecord())
+                modelcsys.done()
+                cl.open(complist)
+                csmodel.setbrightnessunit("Jy/pixel")
+                csmodel.modify(cl.torecord(),subtract=False)
+                cl.done()
+                csmodel.done()
+                # as noted, compskymodel doesn't need to exist, only skymodel.flat
+                # flatimage adds in components if complist!=None
+                util.flatimage(newmodel,complist=complist,verbose=verbose)
+                modelflat = fileroot + "/" + project + ".skymodel.flat"
+                shutil.move(newmodel+".flat",modelflat)
+                # XXX remove compskymodel here
+
+
+        # and finally, with model_cell set either from an actual skymodel, 
+        # or from the antenna configuration in components_only case, 
+        # we can check for the user that the psf is likely to be sampled enough:
+        cell_asec=qa.convert(model_cell[0],'arcsec')['value']
+        if psfsize < cell_asec:
+            msg("Sky model cell of "+str(cell_asec)+" asec is very large compared to highest resolution "+str(psfsize)+" asec - this will lead to blank or erroneous output. (Did you set incell?)",priority="error")
+            return False
+        if psfsize < 2*cell_asec:
+            msg("Sky model cell of "+str(cell_asec)+" asec is large compared to highest resolution "+str(psfsize)+" asec. (Did you set incell?)",priority="warn")
+
+        # set this for future minimum image size
+        minimsize = 8* int(psfsize/cell_asec)
 
 
 
@@ -892,22 +969,16 @@ def simdata(
             else:
                 multi = 0
             
-            # it is useful to calculate the max baseline, psfsize, and min image size
-            # even if we're not even making a figure, so we can used it
-            # to set a minimum size for the synthesized image, at int(8*psfsize)
-            pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
+            # update psfsize using uv coverage instead of maxbase above
             if os.path.exists(msfile):
-                # minscale was set from the antenna posns before, but uv is better
+                # psfsize was set from the antenna posns before, but uv is better
                 tb.open(msfile)  
                 rawdata = tb.getcol("UVW")
                 tb.done()
                 maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                klam_m = 300/qa.convert(model_center,'GHz')['value']
-                minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
-                psfsize = minscale/pixsize
-            else:
-                psfsize=3
-            
+                psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+                minimsize = 8* int(psfsize/cell_asec)
+
             
             if (grscreen or grfile):
                 util.newfig(multi=multi,show=grscreen)
@@ -925,6 +996,7 @@ def simdata(
                     # uv coverage
                     util.nextfig()
                     pl.box()
+                    klam_m = 300/qa.convert(model_center,'GHz')['value']
                     pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
                     pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
                     ax = pl.gca()
@@ -941,10 +1013,8 @@ def simdata(
                     im.open(msfile)  
                     # TODO spectral parms
                     if not image:
-                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
-                    # defineim needs to be larger than synth beam
-                    im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([psfsize*10,128])))
-                    #im.makeimage(type='psf',image=project+".quick.psf")
+                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")                    
+                    im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))                    
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
                         shutil.rmtree(fileroot+"/"+project+".quick.psf")
                     im.approximatepsf(psf=fileroot+"/"+project+".quick.psf")
@@ -955,9 +1025,9 @@ def simdata(
                     beamcs = ia.coordsys()
                     beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                     nn = beam_array.shape
-                    xextent = nn[0]*pixsize*0.5
+                    xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]
-                    yextent = nn[1]*pixsize*0.5
+                    yextent = nn[1]*cell_asec*0.5
                     yextent = [-yextent,yextent]
                     flipped_array = beam_array.transpose()
                     ttrans_array = flipped_array.tolist()
@@ -980,7 +1050,6 @@ def simdata(
             # KS - telescopename seems not used in image and analyze
             # RI - possibly indirectly, through the util() object 4/8/11; 
             if (image or analyze):
-                pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
                 if os.path.exists(fileroot+"/"+project+'.ms'):
                     tb.open(fileroot+"/"+project+".ms/OBSERVATION")
                     n = tb.getcol("TELESCOPE_NAME")
@@ -988,22 +1057,13 @@ def simdata(
                     util.telescopename = telescopename
                     # todo add check that entire column is the same
                     tb.done()
-                    # it is useful to calculate the max baseline, psfsize, and min image size
-                    # even if we're not even making a figure, so we can used it
-                    # to set a minimum size for the synthesized image, at int(8*psfsize)
+                    # set psfsize from uv coverage
                     tb.open(msfile)  
                     rawdata = tb.getcol("UVW")
                     tb.done()
                     maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m = 300/qa.convert(model_center,'GHz')['value']
-                    minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
-                    psfsize = minscale/pixsize
-                else:
-                    psfsize=3
-                        
-            
-            
-
+                    psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+                    minimsize = 8* int(psfsize/cell_asec)
 
         ######################################################################
         # noisify
@@ -1208,7 +1268,6 @@ def simdata(
 
 
 
-
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
@@ -1238,7 +1297,10 @@ def simdata(
             
             # cells are positive by convention
             cell = [qa.abs(cell[0]),qa.abs(cell[1])]
-            
+
+            # use this hereafter instead of model_cell
+            cell_asec=qa.convert(cell[0],'arcsec')['value']
+                    
             # and imsize
             if type(imsize) == type([]):
                 if len(imsize) > 0:
@@ -1250,10 +1312,13 @@ def simdata(
             if imsize0 <= 0:
                 imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                           int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+            else:
+                imsize=[imsize0,imsize0]
+
             # this is primarily for sim-from-components but useful elsewhere as a minimum
             # image size:
-            if imsize[0]<3*psfsize: imsize[0]=int(3*psfsize)
-            if imsize[1]<3*psfsize: imsize[1]=int(3*psfsize)
+            if imsize[0] < minimsize: imsize[0] = minimsize
+            if imsize[1] < minimsize: imsize[1] = minimsize
             
 
 
@@ -1339,10 +1404,6 @@ def simdata(
                     tpimage = imagename + '.sd.image'
                 else:
                     tpimage = imagename + '.image'
-                #if sd_only:
-                #    # for analysis step -> do it later
-                #    msfile=tpmstoimage
-                #else:
                 # check for modelimage
                 if len(mstoimage):
                     if len(modelimage) and tpimage != modelimage and \
@@ -1446,56 +1507,6 @@ def simdata(
 
             msg("done inverting and cleaning")
 
-        # create fake model from components for analysis
-        if components_only:
-            # needed to be specified even if neigher image nor analyze
-            modelflat = fileroot + "/" + project + ".compskymodel.flat"
-            
-            if image or analyze:
-                newmodel = fileroot + "/" + project + ".compskymodel"
-                if not os.path.exists(imagename+".image"):
-                    msg("must image before analyzing",priority="error")
-                    return False
-                ia.imagecalc(pixels="'"+imagename+".image' * 0",outfile=newmodel,overwrite=True)
-                ia.open(newmodel)
-                cl.open(complist)
-                ia.setbrightnessunit("Jy/pixel")
-                ia.modify(cl.torecord(),subtract=False)
-                cl.done()
-                modelcsys = ia.coordsys()
-                modelshape = ia.shape()
-            
-                # TODO should be able to simplify degen axes code using new
-                # image anal tools.
-                inspectax = modelcsys.findcoordinate('spectral')['pixel']
-                innchan = modelshape[inspectax]
-                
-                stokesax = modelcsys.findcoordinate('stokes')['pixel']
-                innstokes = modelshape[stokesax]
-            
-                if innchan > 1:
-                    # actually run ia.moments
-                    ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                    ia.done()
-                else:   
-                    ia.done()
-            
-                    # just remove degenerate axes from modelimage4d
-                    ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
-                    if innstokes <= 1:
-                        os.rename(modelflat,modelflat+".tmp")
-                        ia.open(modelflat+".tmp")
-                        ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                        ia.done()
-                        shutil.rmtree(modelflat+".tmp")
-                if innstokes > 1:
-                    os.rename(modelflat,modelflat+".tmp")
-                    po.open(modelflat+".tmp")
-                    foo = po.stokesi(outfile=modelflat,stokes='I')
-                    foo.done()
-                    po.done()
-                    shutil.rmtree(modelflat+".tmp")
-
 
 
         if image:
@@ -1539,17 +1550,8 @@ def simdata(
                 discard = util.statim(modelflat+".regrid",disprange=disprange)
                 util.nextfig()
 
-                # disprange from skymodel.regrid is in Jy/pix, but convolved im is in Jy/bm
-                # bmarea is in units of output image pixels
-                # unless we simulated from components in which case things 
-                # are off
-                if components_only:
-                    disprange = []
-                else:
-                    disprange = [disprange[0]*bmarea,disprange[1]*bmarea]
-
                 # convolved sky model - units of Jy/bm
-                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)                
+                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                 util.nextfig()
                 
                 # clean image - also in Jy/beam
@@ -1571,20 +1573,9 @@ def simdata(
         # analysis
 
         if analyze:
-            if not os.path.exists(newmodel):
-                msg("skymodel "+str(newmodel)+" not found",priority="warn")
-                if not os.path.exists(complist):
-                    return False
-                else:
-                    msg("If you have a sky model image, please set the skymodel parameter.",priority="warn")
-
-            modelim = newmodel
-
-            if not os.path.exists(modelim):
-                msg("sky model image "+str(modelim)+" not found",priority="error")
+            if not os.path.exists(modelflat):
+                msg("sky model image "+str(modelflat)+" not found",priority="error")
                 return False
-
-            # we should have modelim and modelim.flat created above 
 
             if not image:
                 if not os.path.exists(imagename+".image"):
@@ -1629,14 +1620,14 @@ def simdata(
                 
             # regridded and convolved input:?
             if not convsky_current:
-                util.convimage(modelim+".flat",imagename+".image.flat")
+                util.convimage(modelflat,imagename+".image.flat")
                 convsky_current = True
             
             # now should have all the flat, convolved etc even if didn't run "image" 
 
             # make difference image.
             # immath does Jy/bm if image but only if ia.setbrightnessunit("Jy/beam") in convimage()
-            convolved = modelim + ".flat.regrid.conv"
+            convolved = modelflat + ".regrid.conv"
             difference = imagename + '.diff'
             ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
             
@@ -1746,7 +1737,6 @@ def simdata(
                     util.nextfig()
 
                 if showpsf:
-                    pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
                     if image: 
                         psfim = imagename + ".psf"
                     else:
@@ -1754,9 +1744,7 @@ def simdata(
                         if not quickpsf_current:
                             im.open(msfile)  
                             # TODO spectral parms
-                            # defineim needs to be larger than synth beam
-                            psfsize = klam_m/maxbase/pixsize
-                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=max([psfsize*10,128]))
+                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=max([minimsize,128]))
                             if os.path.exists(psfim):
                                 shutil.rmtree(psfim)
                             im.approximatepsf(psf=psfim)
@@ -1769,9 +1757,9 @@ def simdata(
                     beamcs = ia.coordsys()
                     beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                     nn = beam_array.shape
-                    xextent = nn[0]*pixsize*0.5
+                    xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]
-                    yextent = nn[1]*pixsize*0.5
+                    yextent = nn[1]*cell_asec*0.5
                     yextent = [-yextent,yextent]
                     flipped_array = beam_array.transpose()
                     ttrans_array = flipped_array.tolist()
@@ -1834,12 +1822,10 @@ def simdata(
 
 
         # cleanup - delete newmodel, newmodel.flat etc
-        if os.path.exists(modelflat):
-            shutil.rmtree(modelflat)  
+#        if os.path.exists(modelflat):
+#            shutil.rmtree(modelflat)  
         if os.path.exists(modelflat+".regrid"):
             shutil.rmtree(modelflat+".regrid")  
-#        if os.path.exists(modelflat+".regrid.conv"):
-#            shutil.rmtree(modelflat+".regrid.conv")  
         if os.path.exists(imagename+".image.flat"):
             shutil.rmtree(imagename+".image.flat")  
         if os.path.exists(imagename+".residual.flat"):
@@ -1854,8 +1840,8 @@ def simdata(
             shutil.rmtree(absconv)  
 #        if os.path.exists(imagename+".diff"):
 #            shutil.rmtree(imagename+".diff")  
-#        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
-#            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
+        if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
+            shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
         if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
             shutil.rmtree(imagename+".quick.psf")  
 
