@@ -73,15 +73,10 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # restfreq
             if restfreq=='' and srctab != '':
                 tb.open(srctab)
-##                 rfcol=tb.getcol('REST_FREQUENCY').transpose()
                 srcidcol=tb.getcol('SOURCE_ID')
                 for i in range(tb.nrows()):
-                    if sourceid==srcidcol[i] and tb.iscelldefined('REST_FREQUENCY',i):
+                    if sourceid==srcidcol[i] and not tb.iscelldefined('REST_FREQUENCY',i):
                         restfreq=tb.getcell('REST_FREQUENCY',i)[0]
-##                         if len(rfcol[i])==0:
-##                             restfreq=0.0
-##                         else:
-##                             restfreq=rfcol[i][0]
                         break
                 tb.close()
                 casalog.post("restfreq set to %s"%restfreq, "INFO")
@@ -170,7 +165,6 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # Imaging #
             ###########
             casalog.post("Start imaging...", "INFO")
-            casalog.post("antenna = %s, fieldid = %s, spwId = %s, nchan = %s"%(antenna,fieldid,spwid,nchan),"INFO")
             im.open(infile)
             im.selectvis(field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
             if dochannelmap:
