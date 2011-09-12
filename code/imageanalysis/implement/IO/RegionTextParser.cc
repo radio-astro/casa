@@ -881,6 +881,13 @@ void RegionTextParser::_createAnnotation(
 			<< "image. This region/annotation will be ignored" << LogIO::POST;
 		return;
 	}
+	catch (ToLCRegionConversionError x) {
+		*_log << LogIO::WARN << preamble
+			<< "Error converting world region to lattice region which probably indicates "
+			<< "the region lies outside of the image. This region will be ignored."
+			<< LogIO::POST;
+		return;
+	}
 	catch (AipsError x) {
 		*_log << preamble << x.getMesg() << LogIO::EXCEPTION;
 	}

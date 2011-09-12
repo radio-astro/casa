@@ -56,6 +56,8 @@ int main() {
 		split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
 		String goodFile = parts[0]
 		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile.txt";
+		String goodFile2 = parts[0]
+				    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile2.txt";
 		delete [] parts;
 
 		RegionTextParser parser(
@@ -63,6 +65,18 @@ int main() {
 			RegionTextParser::CURRENT_VERSION
 		);
 		cout << parser.getLines() << endl;
+		cout << parser.getLines().size() << endl;
+
+		AlwaysAssert(parser.getLines().size() == 33, AipsError);
+
+		RegionTextParser parser2(
+			goodFile2, csys, IPosition(4, 2000, 2000, 4, 2000),
+			RegionTextParser::CURRENT_VERSION
+		);
+
+		cout << parser2.getLines().size() << endl;
+		AlwaysAssert(parser2.getLines().size() == 34, AipsError);
+
 
     }
     catch (AipsError x) {
