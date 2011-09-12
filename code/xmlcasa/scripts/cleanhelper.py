@@ -40,6 +40,7 @@ class cleanhelper:
         self.usescratch=usescratch
         self.dataspecframe='LSRK'
         self.usespecframe='' 
+        self.inframe=False
         # to use phasecenter parameter in initChannelizaiton stage
         # this is a temporary fix need. 
         self.srcdir=''
@@ -912,8 +913,17 @@ class cleanhelper:
             maskframe=self.dataspecframe
         else:
             maskframe=self.usespecframe
+        if len(self.vis)!=1:
+            if  not self.inframe:
+                # for multi-ms case default output frame is default to LSRK
+                # (set by baseframe in imager_cmt.cc) 
+                maskframe='LSRK'
+        mycsys=ia.coordsys()
+        mycsys.setreferencecode(maskframe,'spectral',True)
+        self.csys=mycsys.torecord()
         self.csys['spectral2']['conversion']['system']=maskframe
         ia.setcoordsys(self.csys)
+        ##ia.setcoordsys(mycsys.torecord())
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -2406,6 +2416,7 @@ class cleanhelper:
         # set usespecframe:  user's frame if set, otherwise data's frame
         if(frame != ''):
             self.usespecframe=frame
+            self.inframe=True
         else:
             self.usespecframe=self.dataspecframe
 
