@@ -16,22 +16,26 @@
 
 namespace casa {
 
-const String ImageTransposer::_class = "ImageReorderer";
+const String ImageTransposer::_class = "ImageTransposer";
 
 ImageTransposer::ImageTransposer(
 	const ImageInterface<Float> *const &image, const String& order, const String& outputImage
 )
-: _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>(0)), _outputImage(outputImage) {
-	LogOrigin origin("ImageReorderer", String(__FUNCTION__) + "_1");
-	*_log << origin;
+	: ImageTask(
+		image, "", 0, "", "", "",
+		"", outputImage, False
+	),
+	_order(Vector<Int>(0)) {
+	LogOrigin origin(_class, String(__FUNCTION__) + "_1");
+	*_getLog() << origin;
 	_construct();
-	*_log << origin;
+	*_getLog() << origin;
 	Regex intRegex("^[0-9]+$");
 	if (order.matches(intRegex)) {
 		_order = _getOrder(order);
 	}
 	else {
-		*_log << "Incorrect order specification " << order
+		*_getLog() << "Incorrect order specification " << order
 			<< ". All characters must be digits." << LogIO::EXCEPTION;
 	}
 }
@@ -39,36 +43,42 @@ ImageTransposer::ImageTransposer(
 ImageTransposer::ImageTransposer(
 	const ImageInterface<Float> *const &image, const Vector<String> order, const String& outputImage
 )
-: _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
+:  ImageTask(
+		image, "", 0, "", "", "",
+		"", outputImage, False
+	), _order(Vector<Int>()) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_2");
-	*_log << origin;
+	*_getLog() << origin;
 	_construct();
-	*_log << origin;
+	*_getLog() << origin;
 	Vector<String> orderCopy = order;
-	_order = _image->coordinates().getWorldAxesOrder(orderCopy, True);
-	*_log << "Old to new axis mapping is " << _order << LogIO::NORMAL;
+	_order = _getImage()->coordinates().getWorldAxesOrder(orderCopy, True);
+	*_getLog() << "Old to new axis mapping is " << _order << LogIO::NORMAL;
 }
 
 ImageTransposer::ImageTransposer(
 	const ImageInterface<Float> *const &image, uInt order, const String& outputImage
 )
-: _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
+:  ImageTask(
+		image, "", 0, "", "", "",
+		"", outputImage, False
+	), _order(Vector<Int>()) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_3");
-	*_log << origin;
+	*_getLog() << origin;
 	_construct();
-	*_log << origin;
+	*_getLog() << origin;
 	_order = _getOrder(order);
 }
 
 ImageInterface<Float>* ImageTransposer::transpose() const {
-	*_log << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	// get the image data
-	Array<Float> dataCopy = _image->get();
+	Array<Float> dataCopy = _getImage()->get();
 
-	CoordinateSystem csys = _image->coordinates();
+	CoordinateSystem csys = _getImage()->coordinates();
 	CoordinateSystem newCsys = csys;
 	newCsys.transpose(_order, _order);
-	IPosition shape = _image->shape();
+	IPosition shape = _getImage()->shape();
 	IPosition newShape(_order.size());
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
@@ -77,21 +87,21 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
 	output->put(reorderArray(dataCopy, _order));
-	if (_image->hasPixelMask()) {
+	if (_getImage()->hasPixelMask()) {
 		std::auto_ptr<Lattice<Bool> > maskLattice(
-			_image->pixelMask().clone()
+			_getImage()->pixelMask().clone()
 		);
 		Array<Bool> maskCopy = maskLattice->get();
 		dynamic_cast<TempImage<Float> *>(output.get())->attachMask(
 			ArrayLattice<Bool>(reorderArray(maskCopy, _order))
 		);
 	}
-	ImageUtilities::copyMiscellaneous(*output, *_image);
-	if (! _outputImage.empty()) {
+	ImageUtilities::copyMiscellaneous(*output, *_getImage());
+	if (! _getOutname().empty()) {
 		ImageAnalysis ia(output.get());
 		Record empty;
 		output.reset(
-			ia.subimage(_outputImage, empty, "", False, False)
+			ia.subimage(_getOutname(), empty, "", False, False)
 		);
 	}
 	return output.release();
@@ -99,30 +109,9 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 
 ImageTransposer::~ImageTransposer() {}
 
-void ImageTransposer::_construct() {
-	*_log << LogOrigin(_class, __FUNCTION__);
-	if (! _outputImage.empty()) {
-		File outputImageFile(_outputImage);
-		switch(outputImageFile.getWriteStatus()) {
-		case File::CREATABLE:
-			// handle just to avoid compiler warning
-			break;
-		case File::OVERWRITABLE:
-			// fall through to NOT_OVERWRITABLE
-			// FIXME add caller specified Bool overwrite flag
-		case File::NOT_OVERWRITABLE:
-			*_log << "Requested output image " << _outputImage
-			<< " already exists and will not be overwritten" << LogIO::EXCEPTION;
-		case File::NOT_CREATABLE:
-			*_log << "Requested output image " << _outputImage
-			<< " cannot be created. Perhaps a permissions issue?" << LogIO::EXCEPTION;
-		}
-	}
-}
-
 Vector<Int> ImageTransposer::_getOrder(uInt order) const {
-	*_log << LogOrigin(_class, String(__FUNCTION__));
-	uInt naxes = _image->ndim();
+	*_getLog() << LogOrigin(_class, String(__FUNCTION__));
+	uInt naxes = _getImage()->ndim();
 	uInt raxes = uInt(log10(order)) + 1;
 	if (naxes != raxes) {
 		istringstream is;
@@ -132,12 +121,12 @@ Vector<Int> ImageTransposer::_getOrder(uInt order) const {
 		}
 	}
 	if (raxes != naxes) {
-		*_log << "Image has " << naxes << " axes but " << raxes
+		*_getLog() << "Image has " << naxes << " axes but " << raxes
 				<< " were given for reordering. Number of axes to reorder must match the number of image axes"
 				<< LogIO::EXCEPTION;
 	}
 	if (raxes > 10) {
-		*_log << "Only images with less than 10 axes can currently be reordered. This image has "
+		*_getLog() << "Only images with less than 10 axes can currently be reordered. This image has "
 				<< naxes << " axes" << LogIO::EXCEPTION;
 	}
 	Vector<Int> myorder(naxes);
@@ -149,7 +138,7 @@ Vector<Int> ImageTransposer::_getOrder(uInt order) const {
 	for (uInt i=0; i<myorder.size(); i++) {
 		uInt index = scratchOrder/mag;
 		if (index >= naxes) {
-			*_log << "Image does not contain zero-based axis number " << index
+			*_getLog() << "Image does not contain zero-based axis number " << index
 					<< " but this was incorrectly specified in order parameter. "
 					<< order << " All digits in the order parameter must be greater "
 					<< "than or equal to zero and less than the number of image axes."
@@ -157,8 +146,7 @@ Vector<Int> ImageTransposer::_getOrder(uInt order) const {
 		}
 		for (uInt j=0; j<i; j++) {
 			if ((Int)index == myorder[j]) {
-				cout << "*** blah!" << endl;
-				*_log << "Axis number " << index
+				*_getLog() << "Axis number " << index
 						<< " specified multiple times in order parameter "
 						<< order << " . It can only be specified once."
 						<< LogIO::EXCEPTION;

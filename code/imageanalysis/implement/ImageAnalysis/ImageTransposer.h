@@ -29,14 +29,13 @@
 #ifndef IMAGETRANSPOSER_H_
 #define IMAGETRANSPOSER_H_
 
-#include <casa/Logging/LogIO.h>
-#include <images/Images/ImageInterface.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <memory>
 
 namespace casa {
-class ImageTransposer {
+class ImageTransposer : public ImageTask {
     // <summary>
-      // Top level interface for reordering image axes
+      // Top level interface for transposing image axes
       // </summary>
 
       // <reviewed reviewer="" date="" tests="" demos="">
@@ -50,7 +49,7 @@ class ImageTransposer {
       // </etymology>
 
       // <synopsis>
-      // ImageReorderer is the top level interface for reordering image axes.
+      // ImageReorderer is the top level interface for transposing image axes.
       // </synopsis>
 
       // <example>
@@ -77,20 +76,28 @@ public:
 	// destructor
 	~ImageTransposer();
 
-	// reorder the axes and write the output image. Returns the associated PagedImage object.
+	// transpose the axes and write the output image. Returns the associated PagedImage object.
 	ImageInterface<Float>* transpose() const;
 
+	inline String getClass() const {
+		return _class;
+	}
+
+protected:
+   	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+   		return CasacRegionManager::USE_ALL_STOKES;
+   	}
+
+	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<Coordinate::Type>(0);
+	}
+
 private:
-	std::auto_ptr<LogIO>_log;
-	const ImageInterface<Float> *const _image;
 	Vector<Int> _order;
-	String _outputImage;
+	//String _outputImage;
 	static const String _class;
 
-	// Do not allow use of default constuctor
-	ImageTransposer();
-
-	void _construct();
+	// void _construct();
 
 	Vector<Int> _getOrder(uInt order) const;
 
@@ -99,4 +106,4 @@ private:
 }
 
 
-#endif /* IMAGEREORDERER_H_ */
+#endif /* IMAGETRANSPOSER_H_ */

@@ -118,6 +118,15 @@ public:
 
 	inline String getClass() const { return _class; }
 
+protected:
+	inline  CasacRegionManager::StokesControl _getStokesControl() const {
+		return CasacRegionManager::USE_ALL_STOKES;
+	}
+
+	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+		return vector<Coordinate::Type>(0);
+	}
+
 private:
 	Bool _invertAxesSelection;
 	IPosition _axes;
@@ -136,13 +145,6 @@ private:
 
 	void _finishConstruction();
 
-	inline  CasacRegionManager::StokesControl _getStokesControl() const {
-		return CasacRegionManager::USE_ALL_STOKES;
-	}
-
-	inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-		return vector<Coordinate::Type>(0);
-	}
 };
 }
 

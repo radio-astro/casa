@@ -180,9 +180,6 @@ int main() {
 	Bool ok = True;
 	try {
 		testException(
-			"test no specified output image will throw an exception", goodInputImage, "", ""
-		);
-		testException(
 			"test non-writable output image will throw an exception",
 			goodInputImage, "012", "/x.im"
 		);
