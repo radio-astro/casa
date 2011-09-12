@@ -19,7 +19,10 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                 tbkeys=tb.getkeywords()
                 ftab=tbkeys['FIELD'].split()[-1]
                 spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
-                srctab=tbkeys['SOURCE'].split()[-1]
+                if tbkeys.has_key('SOURCE'):
+                    srctab=tbkeys['SOURCE'].split()[-1]
+                else:
+                    srctab = ''
                 tb.close()
                 if any(key=='MS_VERSION' for key in tbkeys):
                     casalog.post( 'MS format' )
@@ -58,6 +61,8 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                     msg='field name '+field+' not found in FIELD table'
                     raise Exception, msg
             else:
+                if field == -1:
+                    sourceid=fsrcids[0]
                 if field < len(fieldnames):
                     fieldid=field
                     sourceid=fsrcids[field]
@@ -66,16 +71,17 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                     raise Exception, msg
             
             # restfreq
-            if restfreq=='':
+            if restfreq=='' and srctab != '':
                 tb.open(srctab)
-                rfcol=tb.getcol('REST_FREQUENCY').transpose()
+##                 rfcol=tb.getcol('REST_FREQUENCY').transpose()
                 srcidcol=tb.getcol('SOURCE_ID')
                 for i in range(tb.nrows()):
-                    if sourceid==srcidcol[i]:
-                        if len(rfcol[i])==0:
-                            restfreq=0.0
-                        else:
-                            restfreq=rfcol[i][0]
+                    if sourceid==srcidcol[i] and tb.iscelldefined('REST_FREQUENCY',i):
+                        restfreq=tb.getcell('REST_FREQUENCY',i)[0]
+##                         if len(rfcol[i])==0:
+##                             restfreq=0.0
+##                         else:
+##                             restfreq=rfcol[i][0]
                         break
                 tb.close()
                 casalog.post("restfreq set to %s"%restfreq, "INFO")
@@ -93,7 +99,10 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
 
             # antenna
             if type(antenna)==int:
-                antenna=str(antenna)+'&&&'
+                if antenna == -1:
+                    pass
+                else:
+                    antenna=str(antenna)+'&&&'
             else:
                 if (len(antenna)!=0) and (antenna.find('&')==-1) and (antenna.find(';')==-1):
                     antenna = antenna + '&&&'
@@ -161,6 +170,7 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             # Imaging #
             ###########
             casalog.post("Start imaging...", "INFO")
+            casalog.post("antenna = %s, fieldid = %s, spwId = %s, nchan = %s"%(antenna,fieldid,spwid,nchan),"INFO")
             im.open(infile)
             im.selectvis(field=fieldid, spw=spwid, nchan=-1, start=0, step=1, baseline=antenna, scan=scanlist)
             if dochannelmap:
