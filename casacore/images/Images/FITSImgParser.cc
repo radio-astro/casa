@@ -133,21 +133,22 @@ uInt FITSImgParser::get_firstdata_index(void){
 	return numhdu_p;
 }
 
-String FITSImgParser::get_extlist_string(const String &delimiter, const Bool &listall)
+String FITSImgParser::get_extlist_string(const String &delimiter, const String &qualmarker,
+		const String &fitsmarker, const Bool &listall)
 {
 	String bigString="";
 
 	// add the quality image sets
 	if (listall){
 		for (uInt index=0; index < qualimglist_p.size(); index++){
-			bigString += fitsname(True) + String("[") + qualimglist_p(index) + String("]") + delimiter;
+			bigString += qualmarker + fitsname(True) + String("[") + qualimglist_p(index) + String("]") + delimiter;
 		}
 	}
 
 	// add the individual extensions
 	for (uInt index=0; index < numhdu_p; index++){
 		if (extensions_p[index].has_data())
-			bigString += extensions_p[index].get_extexpr() + delimiter;
+			bigString += fitsmarker + extensions_p[index].get_extexpr() + delimiter;
 	}
 
 	// return the String
