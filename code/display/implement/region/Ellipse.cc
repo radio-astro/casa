@@ -207,6 +207,11 @@ namespace casa {
 		    radiiq[1] = centerq[1] - _blc_2_;
 		    radiiq[1].setValue(fabs(radiiq[1].getValue( )));
 
+		    // This is a 2D ellipse (which is the same sort of ellipse that is created via
+		    // the new annotaitons). I don't know how one creates an elliptical column (which
+		    // extends the 2D ellipse through all spectral channels) that is analogous to
+		    // what is done for rectangles... must consult the delphic oracle when the
+		    // need arises... <drs>
 		    WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
 		    ImageRegion *imageregion = new ImageRegion(ellipse);
 
