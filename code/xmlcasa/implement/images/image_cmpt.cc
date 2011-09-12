@@ -99,7 +99,7 @@
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
-#include <imageanalysis/ImageAnalysis/ImageReorderer.h>
+#include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 
 #include <xmlcasa/version.h>
 
@@ -1193,11 +1193,11 @@ image* image::reorder(
 		if (detached()) {
 			return 0;
 		}
-		std::auto_ptr<ImageReorderer> transposer(0);
+		std::auto_ptr<ImageTransposer> transposer(0);
 		switch(order.type()) {
 		case variant::INT:
 			transposer.reset(
-				new ImageReorderer(
+				new ImageTransposer(
 					_image->getImage(),
 					order.toInt(), outfile
 				)
@@ -1205,7 +1205,7 @@ image* image::reorder(
 			break;
 		case variant::STRING:
 			transposer.reset(
-				new ImageReorderer(
+				new ImageTransposer(
 					_image->getImage(),
 					order.toString(), outfile
 				)
@@ -1215,7 +1215,7 @@ image* image::reorder(
 			{
 				Vector<String> orderVec = toVectorString(order.toStringVec());
 				transposer.reset(
-					new ImageReorderer(
+					new ImageTransposer(
 						_image->getImage(), orderVec,
 						outfile
 					)

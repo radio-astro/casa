@@ -5,20 +5,20 @@
  *      Author: dmehring
  */
 
+#include <imageanalysis/ImageAnalysis/ImageTransposer.h>
+
 #include <images/Images/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 
-#include <imageanalysis/ImageAnalysis/ImageReorderer.h>
-
 #include <memory>
 
 namespace casa {
 
-const String ImageReorderer::_class = "ImageReorderer";
+const String ImageTransposer::_class = "ImageReorderer";
 
-ImageReorderer::ImageReorderer(
+ImageTransposer::ImageTransposer(
 	const ImageInterface<Float> *const &image, const String& order, const String& outputImage
 )
 : _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>(0)), _outputImage(outputImage) {
@@ -36,7 +36,7 @@ ImageReorderer::ImageReorderer(
 	}
 }
 
-ImageReorderer::ImageReorderer(
+ImageTransposer::ImageTransposer(
 	const ImageInterface<Float> *const &image, const Vector<String> order, const String& outputImage
 )
 : _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
@@ -49,7 +49,7 @@ ImageReorderer::ImageReorderer(
 	*_log << "Old to new axis mapping is " << _order << LogIO::NORMAL;
 }
 
-ImageReorderer::ImageReorderer(
+ImageTransposer::ImageTransposer(
 	const ImageInterface<Float> *const &image, uInt order, const String& outputImage
 )
 : _log(new LogIO), _image(image->cloneII()), _order(Vector<Int>()), _outputImage(outputImage) {
@@ -60,7 +60,7 @@ ImageReorderer::ImageReorderer(
 	_order = _getOrder(order);
 }
 
-ImageInterface<Float>* ImageReorderer::transpose() const {
+ImageInterface<Float>* ImageTransposer::transpose() const {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	// get the image data
 	Array<Float> dataCopy = _image->get();
@@ -97,9 +97,9 @@ ImageInterface<Float>* ImageReorderer::transpose() const {
 	return output.release();
 }
 
-ImageReorderer::~ImageReorderer() {}
+ImageTransposer::~ImageTransposer() {}
 
-void ImageReorderer::_construct() {
+void ImageTransposer::_construct() {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (! _outputImage.empty()) {
 		File outputImageFile(_outputImage);
@@ -120,7 +120,7 @@ void ImageReorderer::_construct() {
 	}
 }
 
-Vector<Int> ImageReorderer::_getOrder(uInt order) const {
+Vector<Int> ImageTransposer::_getOrder(uInt order) const {
 	*_log << LogOrigin(_class, String(__FUNCTION__));
 	uInt naxes = _image->ndim();
 	uInt raxes = uInt(log10(order)) + 1;
@@ -171,7 +171,7 @@ Vector<Int> ImageReorderer::_getOrder(uInt order) const {
 	return myorder;
 }
 
-Vector<Int> ImageReorderer::_getOrder(const String& order) const {
+Vector<Int> ImageTransposer::_getOrder(const String& order) const {
 	return _getOrder(String::toInt(order));
 }
 

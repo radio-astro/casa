@@ -26,15 +26,15 @@
 //#  Created on: May 7, 2010
 //#     Author: dmehring
 
-#ifndef IMAGEREORDERER_H_
-#define IMAGEREORDERER_H_
+#ifndef IMAGETRANSPOSER_H_
+#define IMAGETRANSPOSER_H_
 
 #include <casa/Logging/LogIO.h>
 #include <images/Images/ImageInterface.h>
 #include <memory>
 
 namespace casa {
-class ImageReorderer {
+class ImageTransposer {
     // <summary>
       // Top level interface for reordering image axes
       // </summary>
@@ -55,27 +55,27 @@ class ImageReorderer {
 
       // <example>
       // <srcblock>
-      // ImageReorderer reorderer(...)
+      // ImageTransposer transposer(...)
       // reorderer.reorder();
       // </srcblock>
       // </example>
 public:
-	ImageReorderer(
+	ImageTransposer(
 		const ImageInterface<Float> *const &image,
 		uInt order, const String& outputImage
 	);
 
-	ImageReorderer(
+	ImageTransposer(
 		const ImageInterface<Float> *const &image,
 		const String& order, const String& outputImage
 	);
 
-	ImageReorderer(
+	ImageTransposer(
 		const ImageInterface<Float> *const &image,
 		const Vector<String> order, const String& outputImage
 	);
 	// destructor
-	~ImageReorderer();
+	~ImageTransposer();
 
 	// reorder the axes and write the output image. Returns the associated PagedImage object.
 	ImageInterface<Float>* transpose() const;
@@ -88,7 +88,7 @@ private:
 	static const String _class;
 
 	// Do not allow use of default constuctor
-	ImageReorderer();
+	ImageTransposer();
 
 	void _construct();
 
