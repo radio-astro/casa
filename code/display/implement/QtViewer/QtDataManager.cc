@@ -81,22 +81,25 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   
   
   hideDisplayButtons();
-  
-  uiDataType_["Unknown"] = UNKNOWN;
-  uiDataType_["Image"] = IMAGE;
+
+  uiDataType_["Unknown"]         = UNKNOWN;
+  uiDataType_["Image"]           = IMAGE;
   uiDataType_["Measurement Set"] = MEASUREMENT_SET;
-  uiDataType_["Sky Catalog"] = SKY_CATALOG;
-  uiDataType_["Directory"] = DIRECTORY;
-  uiDataType_["FITS Image"] = IMAGE;
-  uiDataType_["Miriad Image"] = IMAGE;
-  uiDataType_["Gipsy"] = IMAGE;
-  uiDataType_["Restore File"] = RESTORE;
+  uiDataType_["Sky Catalog"]     = SKY_CATALOG;
+  uiDataType_["Directory"]       = DIRECTORY;
+  uiDataType_["FITS Image"]      = IMAGE;
+  uiDataType_["FITS Ext."]       = IMAGE;
+  uiDataType_["Quality Ext."]    = QUALIMG;
+  uiDataType_["Miriad Image"]    = IMAGE;
+  uiDataType_["Gipsy"]           = IMAGE;
+  uiDataType_["Restore File"]    = RESTORE;
   
-  dataType_["unknown"] = UNKNOWN;
-  dataType_["image"] = IMAGE;
-  dataType_["ms"] = MEASUREMENT_SET;
-  dataType_["skycatalog"] = SKY_CATALOG;
-  dataType_["restore"] = RESTORE;
+  dataType_[UNKNOWN]         = "unknown";
+  dataType_[IMAGE]           = "image";
+  dataType_[QUALIMG]         = "image";
+  dataType_[MEASUREMENT_SET] = "ms";
+  dataType_[SKY_CATALOG]     = "skycatalog";
+  dataType_[RESTORE]         = "restore";
   
   uiDisplayType_["Raster Image"] = RASTER;
   uiDisplayType_["Contour Map"] = CONTOUR;
@@ -251,33 +254,33 @@ static int findNumberOfFITSImageExt( QString path ) {
 
 
 void QtDataManager::expandItem(QTreeWidgetItem* item) {
-    if ( item->text(1) == "FITS Image" && item->childCount( ) == 1 ) {
-	// check whether its a FITS image and prevent second generation children
-	if(item!=0 && item->text(1)=="FITS Image" && !item->text(0).endsWith("]")){
-	    delete item->takeChild(0);
+	if ( item->text(1) == "FITS Image" && item->childCount( ) == 1 ) {
+		// check whether its a FITS image and prevent second generation children
+		if(item!=0 && item->text(1)=="FITS Image" && !item->text(0).endsWith("]")){
+			delete item->takeChild(0);
 
-	    QString path = dir_.path() + "/" +  item->text(0);
+			QString path = dir_.path() + "/" +  item->text(0);
 
-	    // get a list of all extensions with data
-	    QStringList extList = analyseFITSImage(path);
+			// get a list of all extensions with data
+			QStringList extList = analyseFITSImage(path);
 
-	    // if there is more than one extension
-	    if (extList.size()>1) {
-		QTreeWidgetItem *childItem;
-		int dType = uiDataType_[item->text(1)];
+			// if there is more than one extension
+			if (extList.size()>1) {
+				QTreeWidgetItem *childItem;
+				int dType = uiDataType_[item->text(1)];
 
-		// add the extensions as child items
-		for (int j = 0; j < extList.size(); j++) {
-		    QString ext = extList.at(j);
-		    childItem = new QTreeWidgetItem(item);
-		    childItem->setText(0, ext);
-		    childItem->setText(1, item->text(1));
-		    childItem->setTextColor(1, getDirColor(dType));
+				// add the extensions as child items
+				for (int j = 0; j < extList.size(); j+=2) {
+					childItem = new QTreeWidgetItem(item);
+					childItem->setText(0, extList.at(j));
+					childItem->setText(1, extList.at(j+1));
+					dType = uiDataType_[childItem->text(1)];
+					childItem->setTextColor(1, getDirColor(dType));
+				}
+			}
+			treeWidget_->resizeColumnToContents(0);
 		}
-	    }
-	    treeWidget_->resizeColumnToContents(0);
 	}
-    }
 }
 
 
@@ -399,6 +402,12 @@ void QtDataManager::showDisplayButtons(int ddtp) {
         oldPanelButton_->show();
         newPanelButton_->show();
         break;
+     case QUALIMG:
+        rasterButton_->show();
+        contourButton_->show();
+        vectorButton_->show();
+        markerButton_->show();
+        break;
   }
 }
 
@@ -412,6 +421,7 @@ QColor QtDataManager::getDirColor(int ddtp) {
      case SKY_CATALOG:      clr = Qt::darkCyan;         break;
      case RESTORE:          clr = QColor(255,43,45);    break;
      case DIRECTORY:        clr = Qt::black;            break;
+     case QUALIMG:          clr = Qt::darkRed;              break;
      case UNKNOWN: default: clr = Qt::darkMagenta;  }
      
   return clr;
@@ -437,58 +447,58 @@ void QtDataManager::returnPressed(){
 
 
 
-    void QtDataManager::createButtonClicked() {
-  
+void QtDataManager::createButtonClicked() {
+
 	QPushButton* button = dynamic_cast<QPushButton*>(sender());
-  
+
 	if(panel_==0 || button==0) return;
-  
+
 	String path, datatype, displaytype;
-  
+
 	displaytype = (displayType_.key(uiDisplayType_[button->text()])).toStdString();
-  
+
 	if(lelEdit_->isActive()) {
 
-	    // Display LEL expression.
-	    path = lelEdit_->text().trimmed().toStdString();
-	    datatype = "lel";
+		// Display LEL expression.
+		path = lelEdit_->text().trimmed().toStdString();
+		datatype = "lel";
 
 	} else if (treeWidget_->currentItem() > 0) {
-  
-	    // Display selected file.
-	    path = (dir_.path() + "/" + treeWidget_->currentItem()->text(0)).toStdString();
 
-	    datatype = dataType_.key(uiDataType_[treeWidget_->currentItem()->text(1)]).toStdString();
+		// Display selected file.
+		path = (dir_.path() + "/" + treeWidget_->currentItem()->text(0)).toStdString();
+
+		datatype = dataType_.value(uiDataType_[treeWidget_->currentItem()->text(1)]).toStdString();
 	}
 
 	if(path=="" || datatype=="" || displaytype=="") return;
 
 	viewer::DisplayDataOptions ddo;
 	if ( datatype == "ms" ) {
-	    if ( ms_selection->select_field->text( ) != "" )
-		ddo.insert( "field", ms_selection->select_field->text( ).toStdString( ) );
-	    if ( ms_selection->select_spw->text( ) != "" )
-		ddo.insert( "spw", ms_selection->select_spw->text( ).toStdString( ) );
-	    if ( ms_selection->select_time->text( ) != "" )
-		ddo.insert( "time", ms_selection->select_time->text( ).toStdString( ) );
-	    if ( ms_selection->select_uvrange->text( ) != "" )
-		ddo.insert( "uvrange", ms_selection->select_uvrange->text( ).toStdString( ) );
-	    if ( ms_selection->select_antenna->text( ) != "" )
-		ddo.insert( "antenna", ms_selection->select_antenna->text( ).toStdString( ) );
-	    if ( ms_selection->select_scan->text( ) != "" )
-		ddo.insert( "scan", ms_selection->select_scan->text( ).toStdString( ) );
-	    if ( ms_selection->select_corr->text( ) != "" )
-		ddo.insert( "corr", ms_selection->select_corr->text( ).toStdString( ) );
-	    if ( ms_selection->select_array->text( ) != "" )
-		ddo.insert( "array", ms_selection->select_array->text( ).toStdString( ) );
-	    if ( ms_selection->select_msexpr->text( ) != "" )
-		ddo.insert( "msexpr", ms_selection->select_msexpr->text( ).toStdString( ) );
+		if ( ms_selection->select_field->text( ) != "" )
+			ddo.insert( "field", ms_selection->select_field->text( ).toStdString( ) );
+		if ( ms_selection->select_spw->text( ) != "" )
+			ddo.insert( "spw", ms_selection->select_spw->text( ).toStdString( ) );
+		if ( ms_selection->select_time->text( ) != "" )
+			ddo.insert( "time", ms_selection->select_time->text( ).toStdString( ) );
+		if ( ms_selection->select_uvrange->text( ) != "" )
+			ddo.insert( "uvrange", ms_selection->select_uvrange->text( ).toStdString( ) );
+		if ( ms_selection->select_antenna->text( ) != "" )
+			ddo.insert( "antenna", ms_selection->select_antenna->text( ).toStdString( ) );
+		if ( ms_selection->select_scan->text( ) != "" )
+			ddo.insert( "scan", ms_selection->select_scan->text( ).toStdString( ) );
+		if ( ms_selection->select_corr->text( ) != "" )
+			ddo.insert( "corr", ms_selection->select_corr->text( ).toStdString( ) );
+		if ( ms_selection->select_array->text( ) != "" )
+			ddo.insert( "array", ms_selection->select_array->text( ).toStdString( ) );
+		if ( ms_selection->select_msexpr->text( ) != "" )
+			ddo.insert( "msexpr", ms_selection->select_msexpr->text( ).toStdString( ) );
 	}
 
 	panel_->createDD( path, datatype, displaytype, True, ddo );
-    
+
 	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
-    }
+}
 
 
 //<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
@@ -563,25 +573,45 @@ void QtDataManager::showDDCreateError_(String errMsg) {
 
 
 QStringList QtDataManager::analyseFITSImage(QString path){
-    String   delim="<delim>";
-    QString qdelim="<delim>";
-    String   extstring;
-    QString qextstring;
+	 QString qdelim="<delim>";
+	 QString qualMark="<qualimg>";
+	 QString fitsMark="<fitsimg>";
 
-    QStringList extlist;
+	 QStringList typedExtlist;
 
-    // create a parser object and get the String information on
+	 // create a parser object and get the String information on
     // the extensions with data
     FITSImgParser fip = FITSImgParser(String(path.toStdString()));
-    extstring = fip.get_extlist_string(delim);
+    String extstring = fip.get_extlist_string("<delim>", "<qualimg>", "<fitsimg>");
 
     // convert the String to a QString;
     // split into a list of QStrings
-    qextstring = QString(extstring.c_str());
-    extlist = qextstring.split(qdelim, QString::SkipEmptyParts);
+    QString qextstring = QString(extstring.c_str());
+    QStringList extlist = qextstring.split(qdelim, QString::SkipEmptyParts);
+
+    // create a list with the type plus
+    // the extension name
+    for (int j = 0; j < extlist.size(); j++) {
+   	 QString ext = extlist.at(j);
+   	 if (ext.contains(qualMark)){
+   		 typedExtlist << ext.remove(qualMark);
+   		 typedExtlist << "Quality Ext.";
+   	 }
+   	 else if (ext.contains(fitsMark)){
+   		 typedExtlist << ext.remove(fitsMark);
+   		 typedExtlist << "FITS Ext.";
+   	 }
+   	 else {
+   		 typedExtlist << ext;
+   	 }
+    }
 
     // return the QString list
-    return extlist;
+    return typedExtlist;
+}
+
+Bool QtDataManager::isQualImg(const QString &extexpr){
+	return True;
 }
 
 } //# NAMESPACE CASA - END
