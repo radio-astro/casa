@@ -161,7 +161,7 @@ int main (int argc, const char* argv[])
 		   AlwaysAssert(fitsImg2.is_qualityimg("[IFU1.ERR, IFU1.SCI]"), AipsError)
 
 		   // make sure the two string representations are NOT equal
-		   AlwaysAssert(fitsImg2.get_extlist_string(String("<A>"), False) != fitsImg2.get_extlist_string(String("<A>"), True), AipsError);
+		   AlwaysAssert(fitsImg2.get_extlist_string(String("<A>"), "", "", False) != fitsImg2.get_extlist_string(String("<A>"), "", "", True), AipsError);
 
 		   /*
 		   // this is the full call including a mask image

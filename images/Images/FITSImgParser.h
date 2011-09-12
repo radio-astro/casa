@@ -115,7 +115,8 @@ public:
   uInt get_numhdu(void) { return numhdu_p;};
 
   // Get a string representation of the extension list.
-  String get_extlist_string(const String &delimiter, const Bool &listall=True);
+  String get_extlist_string(const String &delimiter, const String &qualmarker="",
+		  const String &fitsmarker="", const Bool &listall=True);
 
   // Get the flag indicating at least one quality image.
   Bool has_qualityimg(void) {return qualimglist_p.size() > 0 ? True : False;};
