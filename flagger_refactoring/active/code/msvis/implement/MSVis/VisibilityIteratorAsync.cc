@@ -641,15 +641,16 @@ ROVisibilityIteratorAsync::originChunks ()
 {
     readComplete (); // complete any pending read
 
-    Bool atOrigin = chunkNumber_p == 0 && subChunkNumber_p == -1;
+    // jagonzal: Nuke this condition according to Jim Jacobs
+    // Bool atOrigin = chunkNumber_p == 0 && subChunkNumber_p == -1;
 
-    if (! atOrigin){
+    // if (! atOrigin){
 
         chunkNumber_p = 0;
         subChunkNumber_p = -1;
 
         impl_p->vlaData_p->requestViReset ();
-    }
+    // }
 
     if (linkedVisibilityIterator_p != NULL){
         linkedVisibilityIterator_p->originChunks ();
@@ -1005,9 +1006,10 @@ RoviaModifiers::~RoviaModifiers ()
 {
     // Free the objects owned by the vector
 
-    for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
-        delete (* i);
-    }
+	// jagonzal: Coment out this as suggested by Jim
+    // for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
+    //    delete (* i);
+    // }
 }
 
 void
@@ -1022,7 +1024,8 @@ RoviaModifiers::apply (ROVisibilityIterator * rovi)
     // Free the objects owned by the vector
 
     for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
-        Log (1, "Applying vi modifier: %s\n", lexical_cast<String> (** i).c_str());
+    	// jagonzal: We have to comment this out because the lexical_cast is crashing
+        // Log (1, "Applying vi modifier: %s\n", lexical_cast<String> (** i).c_str());
         (* i) -> apply (rovi);
     }
 

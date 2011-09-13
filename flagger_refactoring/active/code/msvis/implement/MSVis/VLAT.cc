@@ -552,8 +552,9 @@ VlaData::waitForViReset()
 
         resetBufferData ();
 
+        // jagonzal: This should be the other way around according to Jim Jacobs
         asyncio::RoviaModifiers roviaModifiersCopy;
-        roviaModifiers_p.transfer (roviaModifiersCopy);
+        roviaModifiersCopy.transfer (roviaModifiers_p);
 
         sweepTerminationRequested_p = False;
         viResetComplete_p = True;
@@ -1144,8 +1145,23 @@ VLAT::sweepVi ()
 			goto done;
 		}
 		VlaDatum * vlaDatum = vlaData_p -> fillStart (chunkNumber, subChunkNumber);
+ 		if (vlaData_p->isSweepTerminationRequested()) {
+			Log (1, "VLAT: sweep termination requested, bailing out\n");
+			vlaData_p->getMutex()->unlock();
+			goto done;
+		}
  		fillDatum (vlaDatum);
+ 		if (vlaData_p->isSweepTerminationRequested()) {
+			Log (1, "VLAT: sweep termination requested, bailing out\n");
+			vlaData_p->getMutex()->unlock();
+			goto done;
+		}
  		vlaData_p -> fillComplete (vlaDatum);
+ 		if (vlaData_p->isSweepTerminationRequested()) {
+			Log (1, "VLAT: sweep termination requested, bailing out\n");
+			vlaData_p->getMutex()->unlock();
+			goto done;
+		}
 		
 		// jagonzal: Timestep iteration
 		++ (* visibilityIterator_p);
