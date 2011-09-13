@@ -32,7 +32,7 @@
 #include <measures/Measures/Stokes.h>
 #include <casa/Quanta/Euler.h>
 #include <casa/Quanta/RotMatrix.h>
-#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MFrequency.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
-    convFuncCtor_p(cf),canComputeResiduals_p(False)
+    convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -175,6 +175,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cfs_p = other.cfs_p;
       cfwts_p = other.cfwts_p;
       canComputeResiduals_p = other.canComputeResiduals_p;
+      toVis_p=other.toVis_p;
     };
     return *this;
   };
@@ -880,8 +881,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   Bool FTMachine::toRecord(String& error, RecordInterface& outRecord, 
 			   Bool withImage) {
-    // Save the FTMachine to a Record; currently undefined for the base
-    // FTMachine class.
+    // Save the FTMachine to a Record
     //
     
     if(withImage){
@@ -894,19 +894,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.define("lastfieldid", lastFieldId_p);
     outRecord.define("lastmsid", lastMSId_p);
     outRecord.define("tangentspecified", tangentSpecified_p);
-    {
-      Record tmprec;
-      MeasureHolder mh(mTangent_p);
-      if(mh.toRecord(error, tmprec))
-	outRecord.defineRecord("mtangent_rec", tmprec);
-    }
-    {
-      Record tmprec;
-      MeasureHolder mh(mImage_p);
-      if(mh.toRecord(error, tmprec))
-	outRecord.defineRecord("mimage_rec", tmprec);
-    }
-    
+    saveMeasure(outRecord, String("mtangent_rec"), error, mTangent_p);
+    saveMeasure(outRecord, "mimage_rec", error, mImage_p);
     //mFrame_p not necessary to save as it is generated from mLocation_p
     outRecord.define("nx", nx);
     outRecord.define("ny", ny);
@@ -914,63 +903,132 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.define("nchan", nchan);
     outRecord.define("nvischan", nvischan);
     outRecord.define("nvispol", nvispol);
-    {
-      Record tmprec;
-      MeasureHolder mh(mLocation_p);
-      if(mh.toRecord(error, tmprec))
-	outRecord.defineRecord("mlocation_rec", tmprec);
-    }
-
-
-    // Set uvwMachine to NULL ..will force regeneration
-    uvwMachine_p=0;
+    saveMeasure(outRecord, "mlocation_rec", error, mLocation_p);
+    //no need to save uvwMachine_p
     outRecord.define("douvwrotation", doUVWRotation_p);
     outRecord.define("freqinterpmethod", static_cast<Int>(freqInterpMethod_p));
     outRecord.define("spwchanselflag", spwChanSelFlag_p);
     outRecord.define("freqframevalid", freqFrameValid_p);
-    /*
-      //Spectral and pol stuff 
-      selectedSpw_p.resize();
-      selectedSpw_p=other.selectedSpw_p;
-      imageFreq_p.resize();
-      imageFreq_p=other.imageFreq_p;
-      lsrFreq_p.resize();
-      lsrFreq_p=other.lsrFreq_p;
-      interpVisFreq_p.resize();
-      interpVisFreq_p=other.interpVisFreq_p;
-      multiChanMap_p=other.multiChanMap_p;
-      chanMap.resize();
-      chanMap=other.chanMap;
-      polMap.resize();
-      polMap=other.polMap;
-      nVisChan_p.resize();
-      nVisChan_p=other.nVisChan_p;
-      spectralCoord_p=other.spectralCoord_p;
-      doConversion_p.resize();
-      doConversion_p=other.doConversion_p;
-      pointingDirCol_p=other.pointingDirCol_p;
-      //moving source stuff
-      movingDir_p=other.movingDir_p;
-      fixMovingSource_p=other.fixMovingSource_p;
-      firstMovingDir_p=other.firstMovingDir_p;
-      
-      //Double precision gridding for those FTMachines that can do
-      useDoubleGrid_p=other.useDoubleGrid_p;
-      cfStokes_p = other.cfStokes_p;
-      polInUse_p = other.polInUse_p;
-    */
-    return False;
+    outRecord.define("selectedspw", selectedSpw_p);
+    outRecord.define("imagefreq", imageFreq_p);
+    outRecord.define("lsrfreq", lsrFreq_p);
+    outRecord.define("interpvisfreq", interpVisFreq_p);
+    Record multichmaprec;
+    for (uInt k=0; k < multiChanMap_p.nelements(); ++k)
+      multichmaprec.define(k, multiChanMap_p[k]);
+    outRecord.defineRecord("multichanmaprec", multichmaprec);
+    outRecord.define("chanmap", chanMap);
+    outRecord.define("polmap", polMap);
+    outRecord.define("nvischan", nVisChan_p);
+    spectralCoord_p.save(outRecord, "spectralcoord");
+    outRecord.define("doconversion", doConversion_p);
+    outRecord.define("pointingdircol", pointingDirCol_p);
+    saveMeasure(outRecord, "movingdir_rec", error, movingDir_p);
+    outRecord.define("fixmovingsource", fixMovingSource_p);
+    saveMeasure(outRecord, "firstmovingdir_rec", error, firstMovingDir_p);
+    outRecord.define("usedoublegrid", useDoubleGrid_p);
+    outRecord.define("cfstokes", cfStokes_p);
+    outRecord.define("polinuse", polInUse_p);
+    outRecord.define("sumweight", sumWeight);
+    return True;
   };
   
-  Bool FTMachine::fromRecord(String&, //error,
-			     const RecordInterface&// inRecord
+  Bool FTMachine::saveMeasure(RecordInterface& rec, const String& name, String& err, const Measure& meas){
+    Record tmprec;
+    MeasureHolder mh(meas);
+    if(mh.toRecord(err, tmprec)){
+      rec.defineRecord(name, tmprec);
+      return True;
+    }
+    return False;
+  }
+
+  Bool FTMachine::fromRecord(String& error,
+			     const RecordInterface& inRecord
 			     ) {
-    // Restore an FTMachine from a Record; currently undefined for the 
-    // base FTMachine class
+    // Restore an FTMachine from a Record
     //
     uvwMachine_p=0; //when null it is reconstructed from mImage_p and mFrame_p
     //mFrame_p is not necessary as it is generated in initMaps from mLocation_p
-    return False;
+    if(inRecord.isDefined("image")){
+      const Record rec=inRecord.asRecord("image");
+      if(image->fromRecord(error, rec))
+	return False;      
+    }
+    nAntenna_p=inRecord.asuInt("nantenna");
+    distance_p=inRecord.asDouble("distance");
+    lastFieldId_p=inRecord.asInt("lastfieldid");
+    lastMSId_p=inRecord.asInt("lastmsid");
+    inRecord.get("tangentspecified", tangentSpecified_p);
+    { const Record rec=inRecord.asRecord("mtangent_rec");
+      MeasureHolder mh;
+      if(!mh.fromRecord(error, rec))
+	return False;
+      mTangent_p=mh.asMDirection();
+    }
+    { const Record rec=inRecord.asRecord("mimage_rec");
+      MeasureHolder mh;
+      if(!mh.fromRecord(error, rec))
+	return False;
+      mImage_p=mh.asMDirection();
+    }
+    
+    inRecord.get("nx", nx);
+    inRecord.get("ny", ny);
+    inRecord.get("npol", npol);
+    inRecord.get("nchan", nchan);
+    inRecord.get("nvischan", nvischan);
+    inRecord.get("nvispol", nvispol);
+    { const Record rec=inRecord.asRecord("mlocation_rec");
+      MeasureHolder mh;
+      if(!mh.fromRecord(error, rec))
+	return False;
+      mLocation_p=mh.asMPosition();
+    }
+    inRecord.get("douvwrotation", doUVWRotation_p);
+    Int tmpInt;
+    inRecord.get("freqinterpmethod", tmpInt);
+    freqInterpMethod_p=static_cast<InterpolateArray1D<Double, Complex >::InterpolationMethod>(tmpInt);
+    inRecord.get("spwchanselflag", spwChanSelFlag_p);
+    inRecord.get("freqframevalid", freqFrameValid_p);
+    inRecord.get("selectedspw", selectedSpw_p);
+    inRecord.get("imagefreq", imageFreq_p);
+    inRecord.get("lsrfreq", lsrFreq_p);
+    inRecord.get("interpvisfreq", interpVisFreq_p);
+    const Record multichmaprec=inRecord.asRecord("multichanmaprec");
+    multiChanMap_p.resize(multichmaprec.nfields(), True, False);
+    for (uInt k=0; k < multichmaprec.nfields(); ++k)
+      multichmaprec.get(k, multiChanMap_p[k]);
+    inRecord.get("chanmap", chanMap);
+    inRecord.get("polmap", polMap);
+    inRecord.get("nvischan", nVisChan_p);
+    SpectralCoordinate *tmpSpec=SpectralCoordinate::restore(inRecord, "spectralcoord");
+    if(tmpSpec){
+      spectralCoord_p=*tmpSpec;
+      delete tmpSpec;
+    }
+    inRecord.get("doconversion", doConversion_p);
+    inRecord.get("pointingdircol", pointingDirCol_p);
+    { const Record rec=inRecord.asRecord("movingdir_rec");
+      MeasureHolder mh;
+      if(!mh.fromRecord(error, rec))
+	return False;
+      movingDir_p=mh.asMDirection();
+    }
+    inRecord.get("fixmovingsource", fixMovingSource_p);
+    { const Record rec=inRecord.asRecord("firstmovingdir_rec");
+      MeasureHolder mh;
+      if(!mh.fromRecord(error, rec))
+	return False;
+      firstMovingDir_p=mh.asMDirection();
+    }
+    inRecord.get("usedoublegrid", useDoubleGrid_p);
+    inRecord.get("cfstokes", cfStokes_p);
+    inRecord.get("polinuse", polInUse_p);
+    inRecord.get("sumweight", sumWeight);
+    
+    
+    return True;
   };
   
   // Make a plain straightforward honest-to-FSM image. This returns
