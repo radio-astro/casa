@@ -154,7 +154,10 @@ def simdata(
                 util.flatimage(newmodel,complist=complist,verbose=verbose)
                 # we want the skymodel.flat image to be called that no matter what 
                 # the skymodel image is called, since that's what used in analysis
-                shutil.move(newmodel+".flat",modelflat)
+                if modelflat != newmodel+".flat":
+                    if os.path.exists(modelflat):
+                        shutil.rmtree(modelflat)
+                    shutil.move(newmodel+".flat",modelflat)
 
             casalog.origin('simdata')
 
@@ -403,11 +406,14 @@ def simdata(
                 csmodel.done()
                 # as noted, compskymodel doesn't need to exist, only skymodel.flat
                 # flatimage adds in components if complist!=None
-                util.flatimage(newmodel,complist=complist,verbose=verbose)
+                #util.flatimage(newmodel,complist=complist,verbose=verbose)
+                util.flatimage(newmodel,verbose=verbose)
                 modelflat = fileroot + "/" + project + ".skymodel.flat"
-                shutil.move(newmodel+".flat",modelflat)
+                if modelflat != newmodel+".flat":
+                    if os.path.exists(modelflat):
+                        shutil.rmtree(modelflat)
+                    shutil.move(newmodel+".flat",modelflat)
                 # XXX remove compskymodel here
-
 
         # and finally, with model_cell set either from an actual skymodel, 
         # or from the antenna configuration in components_only case, 
@@ -485,6 +491,12 @@ def simdata(
             # if a longer etime is in the file, it'll do multiple integrations
             # per scan
             # expects that the cal is separate, and this is just one round of the mosaic
+            # furthermore, the cal will use _integration_ from the inputs, and that
+            # needs to be less than the min etime:
+            if min(etime) < integration:
+                integration = min(etime)
+                msg("Setting integration to "+str(integration)+"s to match the shortest time in the pointing file.",priority="warn")
+
 
         # find imcenter - phase center
         imcenter , offsets = util.average_direction(pointings)        
@@ -662,6 +674,16 @@ def simdata(
             refdate=refdate+"/00:00:00"
             usehourangle=True
 
+            # totaltime as an integer for # times through the mosaic:
+            if qa.quantity(totaltime)['unit'] == '':
+                # assume it means number of maps, or # repetitions.
+                totalsec = sum(etime)
+                if docalibrator:
+                    totalsec = totalsec + integration # cal gets one int-time
+                totalsec = float(totaltime) * totalsec
+                msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
+            else:                
+                totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
 
             if predict_uv: 
                 if os.path.exists(msfile):
@@ -713,10 +735,8 @@ def simdata(
 
                 mereftime = me.epoch('TAI', refdate)
                 # integration is a scalar quantity, etime is a vector of seconds
-                # if etimes are not all the same, integration is their max
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
-                totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 # time required to observe all planned scanes in etime array:
                 totalscansec = sum(etime)
                 kfld = 0
@@ -866,7 +886,6 @@ def simdata(
                 mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
-                totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 totalscansec = sum(etime)
                 nscan = int(totalsec/totalscansec)
                 kfld = 0
@@ -1324,10 +1343,6 @@ def simdata(
 
             # if you neither predict nor noisify this time and already
             # have modelimage generated, set the name to tpimage
-            #if not tpset and os.path.exists(modelimage):
-            #    # should be CASA image so far. 
-            #    tpimage=modelimage # KS-don't think this is necessary
-            #    tpset=True
 
             # Set proper MS name(s) automatically if vis='default'
             if vis == "default":

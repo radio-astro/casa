@@ -168,7 +168,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
     
     <param type="string" name="totaltime" subparam="true">
-      <description>total time of observation</description>
+      <description>total time of observation or number of repetitions</description>
       <value>7200s</value>
     </param>
 
@@ -553,12 +553,8 @@ mosaic simulation task:
     -------------------------------
     project -- root filename for all output files.
     -------------------------------
-    modifymodel -- change the coordinate system of the model sky image?
-       * if graphics selected, display the rescaled model image
-    skymodel -- if modifymodel=False, use this as the sky model. 
-       * if modifyimage=True, use this as the starting point, modify it 
-         write the output to a different image (default $project.skymodel)
-         and use that new image as the sky model
+    skymodel -- image model of the sky, 
+         with optional parameters that can be overriden
     inbright -- peak brightness in Jy/pixel, or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
@@ -606,12 +602,13 @@ mosaic simulation task:
        * if graphics selected, display the array (like plotants), the uv 
          coverage, the synthesized (dirty) beam, and ephemeris information
        * if simulating from component list only, you should specify
-         modifymodel=False, and set compwidth, the desired bandwidth - 
+         compwidth, the desired bandwidth - 
          there is not currently a way to specify the spectrum of a component, 
          so simulations from a componentlist only will be continuum (1 chan)
     refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
        * NOTE: observations are currently centered at the nearest transit *
-    totaltime --- total time of observation e.g '7200s'
+    totaltime --- total time of observation e.g '7200s' or if an number without
+         units, interpreted as the number of times to repeat the map
     antennalist -- ascii file containing antenna positions.
          each row has x y z coordinates and antenna diameter; 
          header lines are required to specify the observatory name
@@ -727,8 +724,9 @@ mosaic simulation task:
     
     * simdata does NOT require a coordinate system in the header. If the
       coordinate information is incomplete, missing, or you would like to
-      override it, set "modifymodel=True".  simdata will then assume that the
-      axes of your input correspond to RA, Dec, and (optionally) frequency and
+      override it, set the appropriate "in" paremeters.  
+      In the absence of other information, simdata will assume that the axes of 
+      your input correspond to RA, Dec, and (optionally) frequency and 
       (optionally) Stokes parameter.  
 
     * If you have a proper Coordinate System, simdata will so its best to
