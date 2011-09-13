@@ -95,11 +95,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Associate the ms.
     MSAntennaParse (const MeasurementSet* ms);
 
-    // Add the given antennae selection.
-    const TableExprNode* selectAntennaIds(const Vector<Int>& antennaIds, 
-					  BaselineListType autoCorr=CrossOnly,
-                                          Bool negate=False);
-
     // Add the given baseline selection.
     const TableExprNode* selectAntennaIds(const Vector<Int>& antennaIds1,
                                           const Vector<Int>& antennaIds2, 
