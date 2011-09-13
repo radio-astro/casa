@@ -892,7 +892,7 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
   const ROTableRow otherAntRow(otherAnt);
   TableRow antRow(ant);
   TableRecord antRecord;
-  RecordFieldId nameAnt(MSAntenna::columnName(MSAntenna::NAME));
+  //RecordFieldId nameAnt(MSAntenna::columnName(MSAntenna::NAME));
 
   MSFeedColumns& feedCols = feed();
   const ROMSFeedColumns otherFeedCols(otherFeed);
@@ -1040,18 +1040,22 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
       if( (movedAntId=antCols.matchAntenna(otherAntCols.name()(a), 
 					   otherAntCols.positionMeas()(a), Quantum<Double>(100, "AU")))
 	  >= 0){
-	String newName = otherAntCols.name()(a)+"m";
-	Int secondMovedAntId = -1;
-	Int count = 1;
-	while((secondMovedAntId=antCols.matchAntenna(newName, 
-						     otherAntCols.positionMeas()(a), Quantum<Double>(100, "AU")))
-	      >= 0){ // append numbers starting at 2 until there is no match
-	  newName = newName+String::toString(++count);
-	  movedAntId = secondMovedAntId;
-	}
-	os << "Antenna " << antCols.name()(movedAntId)  << " (ID " << movedAntId << ") has changed its position between MSs."  
-	   << " Moved antenna will be named " << newName << " (ID " << antMap[a] << ")" << LogIO::POST;
-	antRecord.define(nameAnt, newName); // append an "m" to the name to make it unique
+	os << "*** Antenna " << antCols.name()(movedAntId) << " (station " <<  antCols.station()(movedAntId)
+	   << ", ID " << movedAntId << ") has changed its position between MSs."  << endl
+ 	   << "    Moved antenna is on station " << otherAntCols.station()(a)
+	   << " and will have ID " << antMap[a] << "." << LogIO::POST;
+// 	String newName = otherAntCols.name()(a)+"m";
+// 	Int secondMovedAntId = -1;
+// 	Int count = 1;
+// 	while((secondMovedAntId=antCols.matchAntenna(newName, 
+// 						     otherAntCols.positionMeas()(a), Quantum<Double>(100, "AU")))
+// 	      >= 0){ // append numbers starting at 2 until there is no match
+// 	  newName = newName+String::toString(++count);
+// 	  movedAntId = secondMovedAntId;
+// 	}
+// 	os << "Antenna " << antCols.name()(movedAntId)  << " (ID " << movedAntId << ") has changed its position between MSs."  
+// 	   << " Moved antenna will be named " << newName << " (ID " << antMap[a] << ")" << LogIO::POST;
+// 	antRecord.define(nameAnt, newName); // append an "m" to the name to make it unique
       }
 
       antRow.putMatchingFields(antMap[a], antRecord);
