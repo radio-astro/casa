@@ -279,6 +279,7 @@ void GridFT::initializeToVis(ImageInterface<Complex>& iimage,
 			     const VisBuffer& vb)
 {
   image=&iimage;
+  toVis_p=True;
 
   ok();
 
@@ -374,6 +375,7 @@ void GridFT::initializeToSky(ImageInterface<Complex>& iimage,
 {
   // image always points to the image
   image=&iimage;
+  toVis_p=False;
 
   init();
 
@@ -998,34 +1000,29 @@ void GridFT::getWeightImage(ImageInterface<Float>& weightImage, Matrix<Float>& w
   }
 }
 
-Bool GridFT::toRecord(String&,// error,
+Bool GridFT::toRecord(String& error,
 		      RecordInterface& outRec, Bool withImage)
 {
+
+  
+
   // Save the current GridFT object to an output state record
   Bool retval = True;
 
-  Double cacheVal=(Double)cachesize;
-  outRec.define("cache", cacheVal);
-  outRec.define("tile", tilesize);
-  outRec.define("gridfunction", convType);
+  //save the base class variables
+  if(!FTMachine::toRecord(error, outRec, withImage))
+    return False;
 
-  Vector<Double> phaseValue(2);
-  String phaseUnit;
-  phaseValue=mTangent_p.getAngle().getValue();
-  phaseUnit= mTangent_p.getAngle().getUnit();
-  outRec.define("phasevalue", phaseValue);
-  outRec.define("phaseunit", phaseUnit);
+  //a call to init  will redo imagecache and gridder
+  // so no need to save these
 
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  dirValue=mLocation_p.get("m").getValue();
-  dirUnit=mLocation_p.get("m").getUnit();
-  outRec.define("dirvalue", dirValue);
-  outRec.define("dirunit", dirUnit);
-
-  outRec.define("padding", padding_p);
-  outRec.define("maxdataval", maxAbsData);
-
+  outRec.define("cachesize", Int64(cachesize));
+  outRec.define("tilesize", tilesize);
+  outRec.define("convtype", convType);
+  outRec.define("uvscale", uvScale);
+  outRec.define("uvoffset", uvOffset);
+  outRec.define("istiled", isTiled);
+  outRec.define("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   for (Int k=0; k<4 ; k++){
     center_loc(k)=centerLoc(k);
@@ -1033,51 +1030,26 @@ Bool GridFT::toRecord(String&,// error,
   }
   outRec.define("centerloc", center_loc);
   outRec.define("offsetloc", offset_loc);
-  outRec.define("sumofweights", sumWeight);
-  if(withImage && image){ 
-    ImageInterface<Complex>& tempimage(*image);
-    Record imageContainer;
-    String error;
-    retval = (retval || tempimage.toRecord(error, imageContainer));
-    outRec.defineRecord("image", imageContainer);
-  }
-return retval;
+  outRec.define("padding", padding_p);
+  outRec.define("usezero", usezero_p);
+  outRec.define("nopadding", noPadding_p);
+  return retval;
 }
 
-Bool GridFT::fromRecord(String&, //error,
+Bool GridFT::fromRecord(String& error,
 			const RecordInterface& inRec)
 {
   Bool retval = True;
+  if(!FTMachine::fromRecord(error, inRec))
+    return False;
   gridder=0; imageCache=0; lattice=0; arrayLattice=0;
-  Double cacheVal;
-  inRec.get("cache", cacheVal);
-  cachesize=(Long)cacheVal;
-  inRec.get("tile", tilesize);
-  inRec.get("gridfunction", convType);
-
-  Vector<Double> phaseValue(2);
-  inRec.get("phasevalue",phaseValue);
-  String phaseUnit;
-  inRec.get("phaseunit",phaseUnit);
-  Quantity val1(phaseValue(0), phaseUnit);
-  Quantity val2(phaseValue(1), phaseUnit); 
-  MDirection phasecenter(val1, val2);
-
-  mTangent_p=phasecenter;
-  // This should be passed down too but the tangent plane is 
-  // expected to be specified in all meaningful cases.
-  tangentSpecified_p=True;  
-  Vector<Double> dirValue(3);
-  String dirUnit;
-  inRec.get("dirvalue", dirValue);
-  inRec.get("dirunit", dirUnit);
-  MVPosition dummyMVPos(dirValue(0), dirValue(1), dirValue(2));
-  MPosition mLocation(dummyMVPos, MPosition::ITRF);
-  mLocation_p=mLocation;
-
-  inRec.get("padding", padding_p);
-  inRec.get("maxdataval", maxAbsData);
-
+  cachesize=inRec.asInt64("cachesize");
+  inRec.get("tilesize", tilesize);
+  inRec.get("convtype", convType);
+  inRec.get("uvscale", uvScale);
+  inRec.get("uvoffset", uvOffset);
+  inRec.get("istiled", isTiled);
+  inRec.get("maxabsdata", maxAbsData);
   Vector<Int> center_loc(4), offset_loc(4);
   inRec.get("centerloc", center_loc);
   inRec.get("offsetloc", offset_loc);
@@ -1086,17 +1058,15 @@ Bool GridFT::fromRecord(String&, //error,
 		      center_loc(3));
   offsetLoc=IPosition(ndim4, offset_loc(0), offset_loc(1), offset_loc(2), 
 		      offset_loc(3));
-  inRec.get("sumofweights", sumWeight);
-  if(inRec.nfields() > 12 ){
-    Record imageAsRec=inRec.asRecord("image");
-    if(!image) { 
-      image= new TempImage<Complex>(); 
-    };
-    String error;
-    retval = (retval || image->fromRecord(error, imageAsRec));    
- 
+  inRec.get("padding", padding_p);
+  inRec.get("usezero", usezero_p);
+  inRec.get("nopadding", noPadding_p);
+
+  ///setup some of the parameters
+  init();
+  if(inRec.isDefined("image")){
+    //FTMachine::fromRecord would have recovered the image
     // Might be changing the shape of sumWeight
-    init(); 
 
     if(isTiled) {
       lattice=CountedPtr<Lattice<Complex> >(image, False);
@@ -1118,9 +1088,29 @@ Bool GridFT::fromRecord(String&, //error,
       lattice=arrayLattice;
     }
 
-    //AlwaysAssert(lattice, AipsError);
-    AlwaysAssert(gridder, AipsError);
-    AlwaysAssert(image, AipsError);
+    
+ 
+    ////if this FTMachine is a forward one then we need to go to the vis domain
+    if(toVis_p)
+    {
+      //grid correction
+      Vector<Complex> correction(nx);
+      correction=Complex(1.0, 0.0);
+      // Do the Grid-correction
+      IPosition cursorShape(4, nx, 1, 1, 1);
+      IPosition axisPath(4, 0, 1, 2, 3);
+      LatticeStepper lsx(lattice->shape(), cursorShape, axisPath);
+      LatticeIterator<Complex> lix(*lattice, lsx);
+      for(lix.reset();!lix.atEnd();lix++) {
+        gridder->correctX1D(correction, lix.position()(1));
+        lix.rwVectorCursor()/=correction;
+      }
+    
+  
+      // Now do the FFT2D in place
+      LatticeFFT::cfft2d(*lattice);
+    }
+
   };
   return retval;
 }
