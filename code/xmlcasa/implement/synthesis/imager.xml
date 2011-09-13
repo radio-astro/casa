@@ -3064,19 +3064,25 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      </param>
 
      <param type="any" name="time">
-     <description>Limit data selected to be within a given time range. Syntax is the defined in the msselection link</description>
+     <description>Limit data selected to be within a given time range. The syntax is defined in the msselection link</description>
      <any type="variant"/>
      <value></value>
      </param>
 
      <param type="any" name="scan">
-     <description>Limit data selected on scan numbers. Syntax is the defined in the msselection link</description>
+     <description>Limit data selected on scan numbers. The syntax is defined in the msselection link</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+     
+     <param type="any" name="observation">
+     <description>Limit data using observation IDs.  The syntax is defined in the msselection link</description>
      <any type="variant"/>
      <value></value>
      </param>
      
      <param type="any" name="uvrange">
-     <description>Limit data selected on uv distance. Syntax is the defined in 
+     <description>Limit data selected on uv distance. The syntax is defined in 
      the msselection link</description>
      <any type="variant"/>
      <value></value>

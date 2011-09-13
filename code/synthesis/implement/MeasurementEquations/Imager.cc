@@ -1265,7 +1265,8 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const Vector<Int>& antIndex,
 			  const String& antnames,
 			  const String& spwstring,
-                          const String& uvdist, const String& scan, const Bool useModelCol)
+                          const String& uvdist, const String& scan,
+                          const String& obs, const Bool useModelCol)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1286,7 +1287,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
   //Calling the old setdata
   return   setdata(mode, nchan, start, step, dummy, dummy, spectralwindowids, 
 		   fieldids, msSelect, timerng, fieldnames, antIndex, 
-                   antnames, spwstring, uvdist, scan, useModelCol);
+                   antnames, spwstring, uvdist, scan, obs, useModelCol);
 
 }
 
@@ -1301,6 +1302,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
                      const String& uvdist, const String& scan,
+                     const String& obs,
                      const Bool /*useModelCol*/,
                      const Bool be_calm)
 {
@@ -1340,7 +1342,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     //MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
     //MSSelection thisSelection (sorted, MSSelection::PARSE_NOW,timerng,antnames,
     //			       fieldnames, spwstring,uvdist, msSelect,"",
-    //			       scan); 
+    //			       scan, obs); 
 
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p = fieldids;
@@ -1390,6 +1392,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     
     if(scan != ""){
       thisSelection.setScanExpr(scan);
+    }
+    if(obs != ""){
+      thisSelection.setObservationExpr(obs);
     }
     if(msSelect != ""){
       thisSelection.setTaQLExpr(msSelect);
@@ -4799,7 +4804,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
 		MRadialVelocity(),
 		selectSpw, selectField, msSelectString, "", "", Vector<Int>(), 
-		"", "", "", "", True);
+		"", "", "", "", "", True);
 
 	if (!nullSelect_p) {
 
@@ -5111,7 +5116,7 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
     setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
             MRadialVelocity(),
             selectSpw, selectField, msSelectString, "", "",
-            Vector<Int>(), "", "", "", "", True, true);
+            Vector<Int>(), "", "", "", "", "", True, true);
 
   if(!nullSelect_p){
     // Use ft to form visibilities

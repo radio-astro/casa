@@ -1051,7 +1051,7 @@ class cleanhelper:
 
     
     # split version of datselweightfilter
-    def datsel(self, field, spw, timerange, uvrange, antenna,scan,
+    def datsel(self, field, spw, timerange, uvrange, antenna, scan, observation,
                            calready, nchan=-1, start=0, width=1):
 
         # for multi-MSes, if field,spw,timerage,uvrange,antenna,scan are not
@@ -1059,7 +1059,8 @@ class cleanhelper:
         self.fieldindex=[]
         #nvislist=range(len(self.vis))
         vislist=self.sortedvisindx
-        self.paramlist={'field':field,'spw':spw,'timerange':timerange,'antenna':antenna,'scan':scan,'uvrange':uvrange}
+        self.paramlist={'field':field,'spw':spw,'timerange':timerange,'antenna':antenna,
+                        'scan':scan, 'observation': observation, 'uvrange':uvrange}
         for i in vislist:
           selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
           tempfield=selectedparams['field']
@@ -1087,14 +1088,16 @@ class cleanhelper:
           inspw=selectedparams['spw'] 
           intimerange=selectedparams['timerange'] 
           inantenna=selectedparams['antenna'] 
-          inscan=selectedparams['scan'] 
+          inscan=selectedparams['scan']
+          inobs = selectedparams['observation']
           inuvrange=selectedparams['uvrange'] 
 
           if len(self.vis)==1:
             #print "single ms case"
             self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
                               spw=inspw,time=intimerange, baseline=inantenna,
-                              scan=inscan, uvrange=inuvrange, usescratch=calready)
+                              scan=inscan, observation=inobs, uvrange=inuvrange,
+                              usescratch=calready)
           else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
             self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
@@ -1130,7 +1133,9 @@ class cleanhelper:
         else:
           raise Exception, 'params must be a dictionary'
  
-    # weighting/filetering part of datselweightfilter
+    # weighting/filtering part of datselweightfilter.
+    # The scan parameter is not actually used, so observation is not included
+    # as a parameter.  Both are used via self._selectlistinputs().
     def datweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                         wgttype, robust, noise, npixels, mosweight,
                         innertaper, outertaper, calready, nchan=-1, start=0, width=1):
@@ -1156,14 +1161,17 @@ class cleanhelper:
           intimerange=selectedparams['timerange'] 
           inantenna=selectedparams['antenna'] 
           inscan=selectedparams['scan'] 
+          inobs=selectedparams['observation'] 
           inuvrange=selectedparams['uvrange'] 
           
           if len(self.vis) > 1:
             self.im.selectvis(vis=self.vis[i], field=self.fieldindex[i],spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan, uvrange=inuvrange, usescratch=calready)
+                              baseline=inantenna, scan=inscan, observation=inobs,
+                              uvrange=inuvrange, usescratch=calready)
           else: 
             self.im.selectvis(field=field,spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan, uvrange=inuvrange, usescratch=calready)
+                              baseline=inantenna, scan=inscan, observation=inobs,
+                              uvrange=inuvrange, usescratch=calready)
           self.im.weight(type=weighting,rmode=rmode,robust=robust, 
                          npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
      
@@ -2957,7 +2965,7 @@ class cleanhelper:
 
 
     def makeTemplateCubes(self, imagename,outlierfile, field, spw, selectdata, timerange,
-          uvrange, antenna, scan, mode, facets, cfcache, interpolation, 
+          uvrange, antenna, scan, observation, mode, facets, cfcache, interpolation, 
           imagermode, localFTMachine, mosweight, locnchan, locstart, locwidth, outframe,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
@@ -3018,7 +3026,8 @@ class cleanhelper:
         # readoutlier need to be run first....
         #pdb.set_trace() 
         self.datsel(field=field, spw=spw, timerange=timerange, uvrange=uvrange, 
-                    antenna=antenna,scan=scan, calready=calready, nchan=-1, start=0, width=1)
+                    antenna=antenna,scan=scan, observation=observation, calready=calready,
+                    nchan=-1, start=0, width=1)
 
         self.definemultiimages(rootname=rootname,imsizes=imsizes,cell=cell,
                                 stokes=stokes,mode=mode,

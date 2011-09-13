@@ -1215,7 +1215,8 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 		  const std::vector<int>& start, const std::vector<int>& step, 
                   const ::casac::variant& spw, const ::casac::variant& field,
                   const ::casac::variant& baseline,
-		  const ::casac::variant& time,const ::casac::variant& scan,
+		  const ::casac::variant& time, const ::casac::variant& scan,
+                  const ::casac::variant& observation,
                   const ::casac::variant& uvrange, const std::string& taql,
                   const bool useScratch, const bool datainmemory)
 {
@@ -1252,6 +1253,8 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 	 uvdist=toCasaString(uvrange);
 	 casa::String scanrange="";
 	 scanrange=toCasaString(scan);
+	 casa::String obsrange="";
+	 obsrange=toCasaString(observation);
 	 //Only load to memory if open is not used and loadinmemory
 	 if((String(vis) != String("")) && datainmemory)
 	   rstat=(static_cast<ImagerMultiMS *>(itsImager))->setDataToMemory(
@@ -1262,7 +1265,8 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 									    fieldIndex, 
 									    String(taql), String(timerange),
 									    fieldnames, antIndex, antennanames, 
-									    spwstring, uvdist, scanrange);
+									    spwstring, uvdist,
+                                                                            scanrange, obsrange);
 	 else
 	   rstat = itsImager->setDataPerMS(vis, mode, Vector<Int>(nchan), 
 					   Vector<Int>(start),
@@ -1270,7 +1274,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 					   fieldIndex, 
 					   String(taql), String(timerange),
 					   fieldnames, antIndex, antennanames, 
-					   spwstring, uvdist, scanrange, useScratch);
+					   spwstring, uvdist, scanrange, obsrange, useScratch);
 	 hasValidMS_p=rstat;
        } catch  (AipsError x) {
           *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

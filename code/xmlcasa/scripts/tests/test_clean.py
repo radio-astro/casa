@@ -417,7 +417,19 @@ class clean_test1(unittest.TestCase):
                         "mask mismatch for applying a wider chan. range mask to narrower chan. range clean")
         self.assertTrue(self.compareimages(self.img+'.wide.mask', self.img+'.ref.mask'), 
                         "mask mismatch for applying a narrower chan. range mask to wider chan. range clean")
- 
+
+    def test45(self):
+        """Clean 45: Test selection of obs ID 0 (present)"""
+        self.res = clean(vis=self.msfile, imagename=self.img + '0',
+                         selectdata=True, observation='0', niter=10)
+        self.assertTrue(os.path.exists(self.img + '0.image'))
+
+    def test46(self):
+        """Clean 46: Test selection of obs ID 2 (absent)"""
+        self.res = clean(vis=self.msfile, imagename=self.img + '2',
+                         selectdata=True, observation='2', niter=10)
+        self.assertFalse(os.path.exists(self.img + '2.image'))
+        
      
 class clean_test2(unittest.TestCase):
     

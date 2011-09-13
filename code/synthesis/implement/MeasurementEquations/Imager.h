@@ -204,6 +204,7 @@ class Imager
 			     const String& spwstring="",
 			     const String& uvdist="",
                              const String& scan="",
+                             const String& obs="",
                              const Bool useModelCol=False);
 
   // Select some data.
@@ -223,6 +224,7 @@ class Imager
 	       const String& spwstring="",
 	       const String& uvdist="",
                const String& scan="",
+               const String& obs="",
                const Bool usemodelCol=False,
                const Bool be_calm=false);
   
