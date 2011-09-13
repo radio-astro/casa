@@ -65,6 +65,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_pcasa.py
   test_plotants.py
   test_plotms.py
+  test_plotuv.py
   test_report.py
   test_rg_frombcs.py
   test_rg_fromtextfile.py

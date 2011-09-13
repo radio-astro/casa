@@ -9,9 +9,8 @@ from update_spw import expand_tilde
 
 import pylab as pl
 
-def plotuv(vis, field='*', antenna='*', spw='*', observation='', array='',
-           maxnpts=100000, colors=['r', 'y', 'g', 'b'], symb=',', ncycles=1,
-           figfile=''):
+def plotuv(vis, field=None, antenna=None, spw=None, observation=None, array=None,
+           maxnpts=None, colors=None, symb=None, ncycles=None, figfile=None):
     """
     Plots the uv coverage of vis in klambda.  ncycles of colors will be
     allocated to representative wavelengths.
@@ -91,7 +90,7 @@ class UVPlotInfo:
             basequery += 'ANTENNA1 in [%s] and ANTENNA2 in [%s]' % (
                 ','.join(map(str, self.selindices['antenna1'])),
                 ','.join(map(str, self.selindices['antenna2'])))
-        if array != '*':
+        if array:
             if basequery:
                 basequery += ' and '
             arrids = expand_tilde(array)
