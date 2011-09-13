@@ -137,33 +137,56 @@ void QtRectTool::setCoordType(const String& t) {
 
 //////////////cross tool//////////////////
 
-QtCrossTool::QtCrossTool() : MWCCrosshairTool()
+QtCrossTool::QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtPointRegion(rf,pd) 
 {
   setObjectName("CrossTool"); 
 }
 
-void QtCrossTool::crosshairReady(const String &evtype) {
+// void QtCrossTool::crosshairReady(const String &evtype) {
+//   if (!itsCurrentWC) return;
+
+//   //qDebug() << "cross ready" << coordType.chars();
+//   Double wx, wy;
+//   Double px, py;
+//   getWorld(wx, wy);
+//   getLin(px, py);
+//   Vector<Double> wxx(1);
+//   Vector<Double> wyy(1);
+//   wxx[0]=wx; 
+//   wyy[0]=wy;
+//   Vector<Double> pxx(1);
+//   Vector<Double> pyy(1);
+//   pxx[0]=px; 
+//   pyy[0]=py;
+//   emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
+// }
+
+void QtCrossTool::updateRegion() {
   if (!itsCurrentWC) return;
 
-  //qDebug() << "cross ready" << coordType.chars();
-  Double wx, wy;
-  Double px, py;
-  getWorld(wx, wy);
-  getLin(px, py);
-  Vector<Double> wxx(1);
-  Vector<Double> wyy(1);
-  wxx[0]=wx; 
-  wyy[0]=wy;
-  Vector<Double> pxx(1);
-  Vector<Double> pyy(1);
-  pxx[0]=px; 
-  pyy[0]=py;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
+  //qDebug() << "rect ready" << coordType.chars();
+  Vector<Double> wx;
+  Vector<Double> wy;
+  Vector<Double> px;
+  Vector<Double> py;
+  getWorldCoords(wx, wy);
+  getLinearCoords(px, py);
+  Vector<Double> wxx(2);
+  Vector<Double> wyy(2);
+  wxx(0) = wx(0); wxx(1) = wy(0);
+  wyy(0) = wx(1); wyy(1) = wy(1);
+  Vector<Double> pxx(2);
+  Vector<Double> pyy(2);
+  pxx(0) = px(0); pxx(1) = py(0);
+  pyy(0) = px(1); pyy(1) = py(1);
+  //cout << "(" << xx(0) << "," << yy(0) << ")"
+  //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
+  emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
 }
 
 void QtCrossTool::setCoordType(const String& t) {
   QtMWCTool::setCoordType(t);
-  crosshairReady("");
+  // crosshairReady("");
 }
 
 

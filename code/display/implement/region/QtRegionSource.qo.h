@@ -55,6 +55,7 @@ namespace casa {
 		// smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be
 		// generalized to "memory::cptr<Region>"...
 		memory::cptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+		memory::cptr<Rectangle> point( WorldCanvas *wc, double x, double y );
 
 		QtRegionDock *dock( );
 		int numFrames( ) const;

@@ -1,4 +1,4 @@
-//# regionsource.h: regionsource producing persistent regions used within the casa viewer
+//# point.h: base class for statistical regions
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,36 +26,44 @@
 //# $Id$
 
 
-#ifndef REGION_REGIONSOURCE_H_
-#define REGION_REGIONSOURCE_H_
+#ifndef REGION_POINT_H_
+#define REGION_POINT_H_
+
+#include <display/region/Rectangle.h>
+#include <casa/BasicSL/String.h>
 #include <casadbus/types/ptr.h>
-#include <display/region/RegionCreator.h>
+#include <list>
 
 namespace casa {
 
-    class WorldCanvas;
+    class PanelDisplay;
+    class AnnRegion;
 
     namespace viewer {
 
-	class Rectangle;
-	class Polygon;
-	class Ellipse;
-
-	class RegionSource {
+	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
+	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
+	// this means that coordinate transformation is required each time the region is drawn.
+	class Point : public Rectangle {
 	    public:
-		/* virtual memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) = 0; */
-		virtual memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) = 0;
-		virtual memory::cptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual memory::cptr<Rectangle> point( WorldCanvas *wc, double x, double y ) = 0;
+		~Point( );
+		Point( WorldCanvas *wc, double x, double y ) :
+		    Rectangle( wc, x, y, x, y ) { }
 
-		virtual void revokeRegion( Region *r ) { region_creator->revokeRegion(r); }
+		int clickHandle( double x, double y ) const { return 0; }
 
-		RegionSource( RegionCreator *rc ) : region_creator(rc) { }
-		virtual ~RegionSource( );
+		bool clickWithin( double x, double y ) const;
 
-	    private:
-		RegionCreator *region_creator;
+		// returns mouse movement state
+		int mouseMovement( double x, double y, bool other_selected );
+
+		AnnRegion *annotation( ) const;
+
+	    protected:
+
+		static const int radius;
+		void drawRegion( bool );
+
 	};
     }
 }

@@ -1,5 +1,5 @@
-//# regionsource.h: regionsource producing persistent regions used within the casa viewer
-//# Copyright (C) 2011
+//# MultiPointTool.cc: Base class for MultiWorldCanvas event-based point tools
+//# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,39 +25,13 @@
 //#
 //# $Id$
 
+#include <display/DisplayEvents/MultiPointTool.h>
 
-#ifndef REGION_REGIONSOURCE_H_
-#define REGION_REGIONSOURCE_H_
-#include <casadbus/types/ptr.h>
-#include <display/region/RegionCreator.h>
+namespace casa { //# NAMESPACE CASA - BEGIN
 
-namespace casa {
-
-    class WorldCanvas;
-
-    namespace viewer {
-
-	class Rectangle;
-	class Polygon;
-	class Ellipse;
-
-	class RegionSource {
-	    public:
-		/* virtual memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) = 0; */
-		virtual memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) = 0;
-		virtual memory::cptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual memory::cptr<Rectangle> point( WorldCanvas *wc, double x, double y ) = 0;
-
-		virtual void revokeRegion( Region *r ) { region_creator->revokeRegion(r); }
-
-		RegionSource( RegionCreator *rc ) : region_creator(rc) { }
-		virtual ~RegionSource( );
-
-	    private:
-		RegionCreator *region_creator;
-	};
+    memory::cptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double ) const {
+	return rfactory->point( wc, x, y );
     }
-}
 
-#endif
+
+} //# NAMESPACE CASA - END

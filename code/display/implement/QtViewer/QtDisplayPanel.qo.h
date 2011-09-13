@@ -754,6 +754,7 @@ public:
   
   //# MWCCrosshairTool* crosshair_;
   QtCrossTool* crosshair_;
+  QtOldCrossTool* ocrosshair_;
   
   //# QtRTRegion* rtregion_;
   QtRectTool* rtregion_;

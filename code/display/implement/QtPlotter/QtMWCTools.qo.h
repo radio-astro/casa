@@ -28,9 +28,6 @@
 #define QTMWCTOOLS_H
 
 #include <casa/aips.h>
-//#include <casa/BasicSL/String.h>
-//#include <display/DisplayEvents/MWCRTRegion.h>
-#include <display/DisplayEvents/MWCCrosshairTool.h>
 
 #include <display/Display/PanelDisplay.h>
 #include <display/QtViewer/QtMouseTools.qo.h>
@@ -139,14 +136,14 @@ protected:
   virtual void updateRegion();
 };
 
-class QtCrossTool: public QObject, public QtMWCTool, public MWCCrosshairTool
+class QtCrossTool: public QtPointRegion, public QtMWCTool
 {
   Q_OBJECT
 
 public: 
-  QtCrossTool();
+  QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
   virtual ~QtCrossTool() {}
-  virtual void crosshairReady(const String& evtype);
+  /* virtual void crosshairReady(const String& evtype); */
 
 public slots:
   void setCoordType(const String& t);
@@ -157,7 +154,8 @@ signals:
 		 const Vector<Double> wx, const Vector<Double> wy,
 		 const ProfileType ptype);
 
-
+protected:
+  virtual void updateRegion();
 };
 
 
