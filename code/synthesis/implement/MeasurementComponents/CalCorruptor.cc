@@ -160,14 +160,14 @@ AtmosCorruptor::AtmosCorruptor() :
   CalCorruptor(1),  // parent
   mean_pwv_(-1.),
   airMassValid_(False),airMassTime_(-1000),
-  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
+  screen_p(0),itsatm(0),itsSpecGrid(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.),
   airMassValid_(False),airMassTime_(-1000),
-  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
+  screen_p(0),itsatm(0),itsSpecGrid(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::~AtmosCorruptor() {
@@ -178,6 +178,10 @@ AtmosCorruptor::~AtmosCorruptor() {
   if (itsRIP) {
     delete itsRIP;
     itsRIP=0;
+  }
+  if (itsSpecGrid) {
+    delete itsSpecGrid;
+    itsSpecGrid=0;
   }
   if (itsatm) {
     delete itsatm;
