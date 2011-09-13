@@ -250,7 +250,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
       connect( crosshair_, SIGNAL(echoClicked(Record)),
 			   SLOT(clicked(Record)) );
   } else {
-      ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POSITION, crosshair_);
+      ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POSITION, ocrosshair_);
       optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, optregion_);
       ortregion_  = new QtOldRectTool(pd_);	pd_->addTool(RECTANGLE, ortregion_);
       oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(RECTANGLE, oelregion_);
