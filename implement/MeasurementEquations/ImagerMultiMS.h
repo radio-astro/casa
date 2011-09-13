@@ -54,7 +54,8 @@ namespace casa {
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,
-				   const String& scan);
+				   const String& scan,
+                                   const String& obs="");  // select by obs ID
       // Set the data selection on for each ms seperately
       virtual  Bool setDataPerMS(const String& msname, const String& mode, 
 				 const Vector<Int>& nchan, 
@@ -70,6 +71,7 @@ namespace casa {
 				 const String& spwstring="",
 				 const String& uvdist="",
                                  const String& scan="",
+                                 const String& obs="",
                                  const Bool useModel=False);
 
 
@@ -118,7 +120,8 @@ namespace casa {
 			   const String& antnames="",
 			   const String& spwstring="",
 			   const String& uvdist="",
-			   const String& scan="");
+			   const String& scan="",
+                           const String& obs="");
       Bool dataSet_p;
 
       
