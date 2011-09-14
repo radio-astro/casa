@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tfitsread_data.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tfitsread_data.cc 21024 2011-03-01 11:46:18Z gervandiepen $
 
 //# Includes
 
@@ -106,17 +106,17 @@ cout<< " The header card images are( testing kwlist_str()): " << endl; \
 }
 
 // now actually make the necessary versions of the above
-DOGROUP(unsigned char);
-DOGROUP(short);
-DOGROUP(FitsLong);
-DOGROUP(float);
-DOGROUP(double);
+DOGROUP(unsigned char)
+DOGROUP(short)
+DOGROUP(FitsLong)
+DOGROUP(float)
+DOGROUP(double)
 
-DOARRAY(unsigned char);
-DOARRAY(short);
-DOARRAY(FitsLong);
-DOARRAY(float);
-DOARRAY(double);
+DOARRAY(unsigned char)
+DOARRAY(short)
+DOARRAY(FitsLong)
+DOARRAY(float)
+DOARRAY(double)
 
 #undef DOGROUP
 #undef DOARRAY

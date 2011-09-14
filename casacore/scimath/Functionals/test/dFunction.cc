@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dFunction.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: dFunction.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 //
 
 //# Includes
@@ -125,7 +125,7 @@ int main(int argc, const char* argv[])
   // Inputs
   cout << ">>>" << endl;
   Input inputs(1);
-  inputs.version("$Id: dFunction.cc 20622 2009-06-11 13:52:35Z gervandiepen $");
+  inputs.version("$Id: dFunction.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $");
   inputs.create("n", "100000", "n"); 
   inputs.readArguments(argc, argv);
   Int N = inputs.getInt("n"); 

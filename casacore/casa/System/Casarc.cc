@@ -235,10 +235,10 @@ namespace casa {
     }
 
     const std::list<Casarc*> &Casarc::list( ) {
-	if ( rclist == 0 ) {
-	    rclist = new std::list<Casarc*>( );
-	}
-	return *rclist;
+        if ( rclist == 0 ) {
+            rclist = new std::list<Casarc*>( );
+        }
+        return *rclist;
     }
 
     bool Casarc::get( const std::string &keyword, std::string &value ) {
@@ -380,10 +380,9 @@ namespace casa {
         return rcmap.end( );
     }
 
-    Casarc::Casarc( const std::string &path ) : inode(0), filename(path), have_lock(0),
- 						mapped_file(0), mapped_file_size(0) {
+    Casarc::Casarc( const std::string &path ) : mapped_file(0), mapped_file_size(0),
+                                                have_lock(0), filename(path), inode(0) {
 	struct stat buf;
-	const char *ptr;
 
 	if ( initialized == false ) { startup( ); }
 
@@ -436,21 +435,21 @@ namespace casa {
     }
 
     #define is_added_tag(PTR,OFF)															\
-	PTR[OFF+0] == '#' && PTR[OFF+1] == ' ' &&													\
+       (PTR[OFF+0] == '#' && PTR[OFF+1] == ' ' &&                        \
 	PTR[OFF+2] == 'a' && PTR[OFF+3] == 'd' && PTR[OFF+4] == 'd' && PTR[OFF+5] == 'e' && PTR[OFF+6] == 'd' && PTR[OFF+7] == ' ' &&			\
 	isdigit(PTR[OFF+8]) && isdigit(PTR[OFF+9]) && isdigit(PTR[OFF+10]) && isdigit(PTR[OFF+11]) && PTR[OFF+12] == '-' &&				\
 	isdigit(PTR[OFF+13]) && isdigit(PTR[OFF+14]) && PTR[OFF+15] == '-' && isdigit(PTR[OFF+16]) && isdigit(PTR[OFF+17]) && PTR[OFF+18] == ' ' &&	\
 	isdigit(PTR[OFF+19]) && isdigit(PTR[OFF+20]) && PTR[OFF+21] == ':' && isdigit(PTR[OFF+22]) && isdigit(PTR[OFF+23]) && PTR[OFF+24] == ':' &&	\
-	isdigit(PTR[OFF+25]) && isdigit(PTR[OFF+26])
+	isdigit(PTR[OFF+25]) && isdigit(PTR[OFF+26]))
 
     #define is_modified_tag(PTR,OFF)															\
-	PTR[OFF+0] == '#' && PTR[OFF+1] == ' ' &&													\
+       (PTR[OFF+0] == '#' && PTR[OFF+1] == ' ' &&                        \
 	PTR[OFF+2] == 'm' && PTR[OFF+3] == 'o' && PTR[OFF+4] == 'd' && PTR[OFF+5] == 'i' && PTR[OFF+6] == 'f' && PTR[OFF+7] == 'i' && PTR[OFF+8] == 'e' && \
 	PTR[OFF+9] == 'd' && PTR[OFF+10] == ' ' &&													\
 	isdigit(PTR[OFF+11]) && isdigit(PTR[OFF+12]) && isdigit(PTR[OFF+13]) && isdigit(PTR[OFF+14]) && PTR[OFF+15] == '-' &&				\
 	isdigit(PTR[OFF+16]) && isdigit(PTR[OFF+17]) && PTR[OFF+18] == '-' && isdigit(PTR[OFF+19]) && isdigit(PTR[OFF+20]) && PTR[OFF+21] == ' ' &&	\
 	isdigit(PTR[OFF+22]) && isdigit(PTR[OFF+23]) && PTR[OFF+24] == ':' && isdigit(PTR[OFF+25]) && isdigit(PTR[OFF+26]) && PTR[OFF+27] == ':' &&	\
-	isdigit(PTR[OFF+28]) && isdigit(PTR[OFF+29])
+	isdigit(PTR[OFF+28]) && isdigit(PTR[OFF+29]))
 
     void Casarc::read_file( ) {
 
@@ -493,7 +492,6 @@ namespace casa {
 	    throw( "Casarc::read_file, could not memory map casarc file" );
 	}
 
-	off_t key_start = 0;
 	int line_count = 0;
 
 	char *keyword, *value;

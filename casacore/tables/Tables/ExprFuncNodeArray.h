@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNodeArray.h 20794 2009-11-05 03:47:24Z Malte.Marquarding $
+//# $Id: ExprFuncNodeArray.h 21109 2011-07-18 10:28:54Z gervandiepen $
 
 #ifndef TABLES_EXPRFUNCNODEARRAY_H
 #define TABLES_EXPRFUNCNODEARRAY_H
@@ -103,6 +103,9 @@ private:
     // Try if the function gives a constant result.
     // If so, set the expression type to Constant.
     void tryToConst();
+
+    // Replace the Table pointer in this node and all its children.
+    virtual void replaceTablePtr (const Table&);
 
     // Some functions to be used by TableExprNodeFuncArray.
     // <group>

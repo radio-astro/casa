@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: aipsxtype.h 19848 2007-02-12 04:43:35Z Malte.Marquarding $
+//# $Id: aipsxtype.h 20774 2009-10-08 05:37:06Z Malte.Marquarding $
 
 #ifndef CASA_AIPSXTYPE_H
 #define CASA_AIPSXTYPE_H
@@ -37,9 +37,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // An implementation must support the + and - operators.
 typedef long long Int64;
 typedef unsigned long long uInt64;
-
-//# Slicer is used in GLU (OpenGL Utilities), so use another name for AIPS++.
-#define Slicer ArraySlicer
 
 //# All FITS code seems to assume longs are 4 bytes. Take care of machines 
 //# for which this isn't true here by defining FitsLong to be the 4 byte int.

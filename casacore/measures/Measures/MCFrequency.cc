@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCFrequency.cc 20533 2009-03-09 12:41:17Z wbrouw $
+//# $Id: MCFrequency.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <casa/BasicSL/Constants.h>
@@ -36,7 +36,6 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Statics
-Bool MCFrequency::stateMade_p = False;
 uInt MCFrequency::ToRef_p[N_Routes][3] = {
   {MFrequency::LSRD,	MFrequency::BARY,	0},
   {MFrequency::BARY,	MFrequency::LSRD,	0},
@@ -55,17 +54,13 @@ uInt MCFrequency::ToRef_p[N_Routes][3] = {
   {MFrequency::REST,	MFrequency::LSRK,	3},
   {MFrequency::LSRK,	MFrequency::REST,	3} };
 uInt MCFrequency::FromTo_p[MFrequency::N_Types][MFrequency::N_Types];
+MutexedInit MCFrequency::theirMutexedInit (MCFrequency::doFillState);
 
 
 //# Constructors
 MCFrequency::MCFrequency() :
   MVPOS1(0), MVDIR1(0), ABERFROM(0), ABERTO(0) {
-  if (!stateMade_p) {
-    MFrequency::checkMyTypes();
-    MCBase::makeState(MCFrequency::stateMade_p, MCFrequency::FromTo_p[0],
-		      MFrequency::N_Types, MCFrequency::N_Routes,
-		      MCFrequency::ToRef_p);
-  };
+    fillState();
 }
 
 //# Destructor
@@ -89,7 +84,7 @@ void MCFrequency::getConvert(MConvertBase &mc,
     iin = ToRef_p[tmp][1];
     mc.addMethod(tmp);
     initConvert(tmp, mc);
-  };
+  }
 }
 
 void MCFrequency::clearConvert() {
@@ -350,20 +345,20 @@ void MCFrequency::doConvert(MVFrequency &in,
 
     default:
       break;
-    }; // switch
-  }; //for
+    } // switch
+  } //for
 }
 
 String MCFrequency::showState() {
-  if (!stateMade_p) {
-    MFrequency::checkMyTypes();
-    MCBase::makeState(MCFrequency::stateMade_p, MCFrequency::FromTo_p[0],
-		      MFrequency::N_Types, MCFrequency::N_Routes,
-		      MCFrequency::ToRef_p);
-  };
-  return MCBase::showState(MCFrequency::stateMade_p, MCFrequency::FromTo_p[0],
+  fillState();
+  return MCBase::showState(MCFrequency::FromTo_p[0],
 			   MFrequency::N_Types, MCFrequency::N_Routes,
 			   MCFrequency::ToRef_p);
+}
+
+void MCFrequency::doFillState (void*) {
+  MFrequency::checkMyTypes();
+  MCBase::makeState(FromTo_p[0], MFrequency::N_Types, N_Routes, ToRef_p);
 }
 
 } //# NAMESPACE CASA - END

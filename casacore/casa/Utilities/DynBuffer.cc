@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: DynBuffer.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: DynBuffer.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/Utilities/DynBuffer.h>
 #include <casa/Exceptions/Error.h>
@@ -47,12 +47,8 @@ DynBuffer::DynBuffer (uInt bsz)
 {
     allocstart ();
     bufptr_p[0] = new Char[bufsz_p];
-    if (bufptr_p[0] == 0) {
-	throw (AllocError("DynBuffer constructor", bufsz_p));
-    }else{
-        totlen_p[0] = bufsz_p;
-        nrbuf_p = 1;
-    }
+    totlen_p[0] = bufsz_p;
+    nrbuf_p = 1;
 }
 
 
@@ -105,10 +101,6 @@ uInt DynBuffer::newbuf (uInt nr, uInt valsz)
 	    }
 	    totlen_p[nrbuf_p] = (nr*valsz > bufsz_p ? nr*valsz : bufsz_p);
 	    bufptr_p[nrbuf_p] = new Char[totlen_p[nrbuf_p]];
-	    if (bufptr_p[nrbuf_p] == 0) {
-		throw (AllocError("DynBuffer", totlen_p[nrbuf_p]));
-		return 0;
-	    }
 	    nrbuf_p++;
 	}
 

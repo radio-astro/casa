@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tArrayMath.cc 20598 2009-05-11 09:24:24Z gervandiepen $
+//# $Id: tArrayMath.cc 21095 2011-06-09 09:11:36Z gervandiepen $
 
 //# Includes
 #include <casa/Arrays/Array.h>
@@ -435,6 +435,8 @@ TestBinary(*, testTimesDComplex, DComplex, DComplex)
 TestBinary(*, testTimesComplex, Complex, Complex)
 TestBinary(/, testDivideCF, Complex, Float)
 TestBinary(*, testTimesCF, Complex, Float)
+TestBinary(/, testDivideCD, DComplex, Double)
+TestBinary(*, testTimesCD, DComplex, Double)
 TestUnary(+, testUPlusInt, Int)
 TestUnary(-, testUMinusInt, Int)
 TestUnary(~, testUNegateInt, Int)
@@ -502,6 +504,8 @@ int main()
     testTimesComplex();
     testDivideCF();
     testTimesCF();
+    testDivideCD();
+    testTimesCD();
     testUPlusInt();
     testUMinusInt();
     testUNegateInt();

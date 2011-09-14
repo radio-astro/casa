@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprFuncNodeArray.cc 20967 2010-09-27 11:06:03Z gervandiepen $
+//# $Id: ExprFuncNodeArray.cc 21109 2011-07-18 10:28:54Z gervandiepen $
 
 #include <tables/Tables/ExprFuncNodeArray.h>
 #include <tables/Tables/TableError.h>
@@ -123,6 +123,11 @@ void TableExprFuncNodeArray::tryToConst()
     default:
 	break;
     }
+}
+
+void TableExprFuncNodeArray::replaceTablePtr (const Table& table)
+{
+  node_p.replaceTablePtr (table);
 }
 
 
@@ -1178,6 +1183,31 @@ Array<Double> TableExprFuncNodeArray::getArrayDouble (const TableExprId& id)
 	}
 	result.putStorage (res, deleteRes);
 	return result;
+      }
+    case TableExprFuncNode::angdistFUNC:
+      {
+        Array<double> a1 = operands()[0]->getArrayDouble(id);
+        Array<double> a2 = operands()[1]->getArrayDouble(id);
+        if (!(a1.size() %2 == 0  &&  a2.size() %2 == 0)) {
+          throw TableInvExpr ("Arguments of angdist function must have a "
+                              "multiple of 2 values");
+        }
+        Array<double>::const_iterator end1 = a1.end();
+        Array<double>::const_iterator end2 = a2.end();
+        Array<double> result(IPosition(2, a1.size()/2, a2.size()/2));
+        double* res = result.data();
+        for (Array<double>::const_iterator p2 = a2.begin(); p2!=end2; ++p2) {
+          double ra2     = *p2;
+          ++p2;
+          double sindec2 = sin(*p2);
+          double cosdec2 = cos(*p2);
+          for (Array<double>::const_iterator p1 = a1.begin(); p1!=end1; ++p1) {
+            double ra1 = *p1;
+            ++p1;
+            *res++ = acos (sin(*p1)*sindec2 + cos(*p1)*cosdec2*cos(ra1-ra2));
+          }
+        }
+        return result;
       }
     default:
       {

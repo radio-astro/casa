@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TVecScaCol.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: TVecScaCol.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/aips.h>
 #include <tables/Tables/TVecScaCol.h>
@@ -41,9 +41,6 @@ TabVecScaCol<T>::TabVecScaCol (const ROTableColumn& column)
     //# Construct a scalar column.
     //# This will check the type, etc. and link to the BaseTable object.
     colPtr_p = new ROScalarColumn<T> (column);
-    if (colPtr_p == 0) {
-	throw (AllocError ("TabVecScaCol::TabVecScaCol", 1));
-    }
     tag_p  = TagScaCol;
     nrel_p = -1;                                 // #rows is #nelements
 }
@@ -56,9 +53,6 @@ TabVecScaCol<T>::TabVecScaCol (const TableColumn& column)
     //# This will check the type, etc. and link to the BaseTable object.
     colPtrPut_p = new ScalarColumn<T> (column);
     colPtr_p    = colPtrPut_p;
-    if (colPtr_p == 0) {
-	throw (AllocError ("TabVecScaCol::TabVecScaCol", 1));
-    }
     tag_p  = TagScaCol;
     nrel_p = -1;                                 // #rows is #nelements
 }

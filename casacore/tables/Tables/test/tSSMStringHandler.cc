@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSSMStringHandler.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tSSMStringHandler.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableDesc.h>

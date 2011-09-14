@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasureHolder.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MeasureHolder.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef MEASURES_MEASUREHOLDER_H
 #define MEASURES_MEASUREHOLDER_H
@@ -101,11 +101,11 @@ class MeasValue;
 //	String error;		// error message
 //	if (!MeasureHolder(dir).toRecord(error, rec)) {
 //		cout << error << endl;
-//	};
+//	}
 //	Record grec;		// a Record
 //	if (!MeasureHolder(dir).toRecord(error, grec)) {  // make record
 //		cout << error << endl;
-//	};
+//	}
 // // Note that for GlishRecords use can be made of the
 // // GlishRecord::to/fromrecord() methods.
 // </srcblock>
@@ -213,11 +213,11 @@ public:
   // Get identification of record
   virtual const String &ident() const;
   // Do we write MeasValues to record?
-  Bool writeMV() const { return convertmv_p; };
+  Bool writeMV() const { return convertmv_p; }
   // Make a block of n MeasValues
-  void makeMV(uInt n) { createMV(n); };
+  void makeMV(uInt n) { createMV(n); }
   // Get number of MeasValue pointers in block
-  uInt nelements() const { return mvhold_p.nelements(); };
+  uInt nelements() const { return mvhold_p.nelements(); }
   // Set a measvalue at position pos (False if illegal pos)
   Bool setMV(uInt pos, const MeasValue &in);
   // Get a pointer to a MeasValue (or 0)

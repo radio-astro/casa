@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BucketCache.cc 20870 2010-03-23 13:31:52Z gervandiepen $
+//# $Id: BucketCache.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 
 //# Includes
@@ -76,9 +76,6 @@ BucketCache::BucketCache (BucketFile* file, Int64 startOffset,
     // Allocate a buffer (for data in external format).
     // Initialize it to prevent "uninitialized memory errors" when writing.
     its_Buffer = new char[bucketSize];
-    if (its_Buffer == 0) {
-	throw (AllocError ("BucketCache::BucketCache", bucketSize));
-    }
     for (uInt i=0; i<bucketSize; i++) {
 	its_Buffer[i] = 0;
     }

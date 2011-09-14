@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VanVleck.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: VanVleck.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 
@@ -56,6 +56,7 @@ Double VanVleck::itsXlev = 0.0;
 Double VanVleck::itsYlev = 0.0;
 Double VanVleck::itsXmean = 0.0;
 Double VanVleck::itsYmean = 0.0;
+Mutex VanVleck::theirMutex;
 
 #define NEED_UNDERSCORES
 #if defined(NEED_UNDERSCORES)
@@ -111,6 +112,7 @@ extern "C" {
 
 void VanVleck::size(uInt npts)
 {
+    ScopedMutexLock lock(theirMutex);
     if (itsSize != npts) {
 	itsSize = npts;
 	initInterpolator();
@@ -125,6 +127,7 @@ uInt VanVleck::getsize()
 void VanVleck::setQuantization(const Matrix<Double> &qx, 
 			       const Matrix<Double> &qy)
 {
+    ScopedMutexLock lock(theirMutex);
     // should double check that first dimension is 2
 
     uInt nx = qx.ncolumn();
@@ -172,6 +175,7 @@ Bool VanVleck::setEquiSpaced(Double xlev, Double ylev,
 {
     Bool result = n==3 || n==9;
     if (result) {
+        ScopedMutexLock lock(theirMutex);
 	itsNx = itsNy = n;
 	itsXlev = xlev;
 	itsYlev = ylev;
@@ -322,12 +326,34 @@ void VanVleck::initInterpolator()
 void VanVleck::getTable(Vector<Double> &rs,
 			Vector<Double> &rhos)
 {
+  ScopedMutexLock lock(theirMutex);
   rs.resize(itsInterp->getX().nelements());
   rs = itsInterp->getX();
   rhos.resize(itsInterp->getY().nelements());
   rhos = itsInterp->getY();
 }
 
+Double VanVleck::r(const Double rho)
+{
+  ScopedMutexLock lock(theirMutex);
+  return (*itsInterp)(rho);
+}
+
+Bool VanVleck::dcoff(Double &dcoffset, Double &threshold,
+		     Int n, Double zerolag, Double bias)
+{
+    Bool result = True;
+    if (n == 3) {
+	result = dcoff3(dcoffset, threshold, zerolag, bias);
+    } else {
+	dcoffset = 0.0;
+	threshold = thresh(n,zerolag);
+    }
+    return result;
+}
+
+
+// Only private functions hereafter. They do not need to be locked.
 double VanVleck::drbydrho(double *rho)
 {
     Double s = 0.0;
@@ -520,20 +546,6 @@ Double VanVleck::predictNgt3(Int n, Double threshhold)
     }
   }
   return result;
-}
-
-
-Bool VanVleck::dcoff(Double &dcoffset, Double &threshold,
-		     Int n, Double zerolag, Double bias)
-{
-    Bool result = True;
-    if (n == 3) {
-	result = dcoff3(dcoffset, threshold, zerolag, bias);
-    } else {
-	dcoffset = 0.0;
-	threshold = thresh(n,zerolag);
-    }
-    return result;
 }
 
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LSQFit.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LSQFit.cc 21049 2011-04-13 07:52:48Z gervandiepen $
 
 //# Includes
 #include <scimath/Fitting/LSQFit.h>
@@ -732,7 +732,7 @@ void  LSQFit::set(Double factor, Double LMFactor) {
   startnon_p = LMFactor;
 }
 
-const std::string &LSQFit::readyText() {
+const std::string &LSQFit::readyText() const {
   static std::string txt[LSQFit::N_ReadyCode] =
     { "Not ready",
       "Incremental solution too small",

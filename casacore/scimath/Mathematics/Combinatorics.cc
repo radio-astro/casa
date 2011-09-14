@@ -23,36 +23,37 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: Combinatorics.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 //   
 
 #include <scimath/Mathematics/Combinatorics.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    Vector<uInt> Combinatorics::_factorialCache(0);
+    // Initialize factorial with first 2 values (0! and 1! are both 1).
+    Vector<uInt> Combinatorics::_factorialCache(2,1);
+    volatile uInt Combinatorics::_factorialCacheSize = 2;
+    Mutex Combinatorics::theirMutex;
 
-
-    uInt Combinatorics::factorial(const uInt n) {
-        if (n < _factorialCache.size()) {
-            return _factorialCache[n];
+    void Combinatorics::fillCache(const uInt n) {
+        // Make updating the cache thread-safe.
+        // After acquiring a lock, test again if an update needs to be done
+        // because another thread might have done it in the mean time.
+        ScopedMutexLock lock(theirMutex);
+        if (n >= _factorialCacheSize) {
+          // Create a new cache vector.
+          // Note: do not resize the existing one, because that makes
+          // simultaneous read-access non thread-safe.
+          Vector<uInt> newCache(n+1);
+          for (uInt i=0; i<_factorialCacheSize; ++i) {
+            newCache[i] = _factorialCache[i];
+          }
+          for (uInt i=_factorialCacheSize; i<=n; ++i) {
+            newCache[i] = i * newCache[i-1];
+          }
+          _factorialCache.reference (newCache);
+          _factorialCacheSize = _factorialCache.size();
         }
-        uInt oldSize = _factorialCache.size();
-        if (_factorialCache.size() < 2) {
-            _factorialCache.resize(2);
-            _factorialCache[0] = 1;
-            _factorialCache[1] = 1;
-        }
-        else {
-            _factorialCache.resize(n+1, True);
-        }
-        if (n < 2) {
-            return 1;
-        }
-        for (uInt i=oldSize-1; i<=n; i++) {
-            _factorialCache[i] = i * _factorialCache[i-1];
-        }
-        return _factorialCache[_factorialCache.size()-1];
     }
 
     uInt Combinatorics::choose(const uInt n, const uInt k) {

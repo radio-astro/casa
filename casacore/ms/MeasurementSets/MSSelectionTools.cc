@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return loc;
      
-  };
+  }
   //
   //----------------------------------------------------------------------------
   //
@@ -78,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     return loc;
-  };
+  }
   //
   //----------------------------------------------------------------------------
   //
@@ -273,4 +273,4 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt i=0;i<tmp.size();i++) elems[i]=tmp[i];
     return elems;
   }
-};
+}

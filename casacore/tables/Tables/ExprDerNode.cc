@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprDerNode.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ExprDerNode.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/ExprDerNode.h>
 #include <tables/Tables/Table.h>
@@ -130,9 +130,6 @@ TableExprNodeColumn::TableExprNodeColumn (const Table& table,
 {
     //# Create a table column object and check if the column is a scalar.
     tabColPtr_p = new ROTableColumn (table, name);
-    if (tabColPtr_p == 0) {
-	throw (AllocError ("TableExprNodeColumn",1));
-    }
     if (! tabColPtr_p->columnDesc().isScalar()) {
 	throw (TableInvExpr (name, " is no scalar column"));
     }

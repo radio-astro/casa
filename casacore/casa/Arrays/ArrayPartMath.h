@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayPartMath.h 20868 2010-03-08 07:50:40Z gervandiepen $
+//# $Id: ArrayPartMath.h 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #ifndef CASA_ARRAYPARTMATH_H
 #define CASA_ARRAYPARTMATH_H
@@ -239,7 +239,7 @@ Array<T> boxedArrayMath (const Array<T>& array,
 // Apply for each element in the array the given ArrayMath reduction function
 // object to the box around that element. The full box is 2*halfBoxSize + 1.
 // It can be used for arrays and boxes of any dimensionality; missing
-// halfBoxSize values are set to 1.
+// halfBoxSize values are set to 0.
 // <example>
 // Determine for each element in the array the median of a box
 // with size [51,51] around that element:

@@ -52,6 +52,7 @@
 
 // Outcomment and uncomment the correct typedef and define.
 //typedef Int Type;
+
 typedef Double Type;
 #define ARRINIT indgen(array)
 #define ARRINCR array += (Type)1
@@ -325,6 +326,8 @@ void writeVar (int acc, Bool chk, const IPosition& shape,
 	ARRINCR;
       }
     }
+    // Sync to measure true IO.
+    table.flush(True);
   } catch (AipsError x) {
     cout << "Caught an exception: " << x.getMesg() << endl;
   }
@@ -382,7 +385,7 @@ int main (int argc, const char* argv[])
       istringstream istr(argv[7]);
       istr >> ty;
     }
-    uInt tz = 0;
+    uInt tz = 1;
     if (argc >= 9) {
       istringstream istr(argv[8]);
       istr >> tz;
@@ -418,7 +421,7 @@ int main (int argc, const char* argv[])
       istr >> iy;
     }
     IPosition shape(2,nx,ny);
-    IPosition tileShape(2,tx,ty);
+    IPosition tileShape(3,tx,ty,tz);
     IPosition blc(2,sx,sy);
     IPosition trc(2,ex,ey);
     IPosition inc(2,ix,iy);

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: dVirtColEng.cc 20622 2009-06-11 13:52:35Z gervandiepen $
+//# $Id: dVirtColEng.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
 //# Define a main program to allow compalition and linking by the make system.
 //# The variable is set in tVirtColEng.cc to skip it.

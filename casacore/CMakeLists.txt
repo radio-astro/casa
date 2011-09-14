@@ -1,7 +1,6 @@
 #
 # Casacore
 #
-
 project(casacore)
 
 cmake_minimum_required (VERSION 2.6)
@@ -18,18 +17,19 @@ else (ENABLE_SHARED)
     option (BUILD_SHARED_LIBS "" NO)
 endif (ENABLE_SHARED)
 
+# By default do not use HDF5, FFTW3, threads
+option (USE_HDF5 "" NO)
+option (USE_FFTW3 "" YES)
+option (USE_THREADS "" NO)
+option (ENABLE_MULTI_THREADING "" NO)
+
 # Define the compiler flags to be used.
 # Note: -Wshadow and -Wunreachable-code give (too) many warnings.
 # Casacore uses longlong, so no warnings for it.
 if (NOT CMAKE_CXX_FLAGS)
-##    set (CMAKE_CXX_FLAGS "-W -Wall -Wpointer-arith -pedantic -Wno-long-long")
-    set (CMAKE_CXX_FLAGS "-W -Wall -fno-omit-frame-pointer")
+    set (CMAKE_CXX_FLAGS "-W -Wall -Wpointer-arith -pedantic -Wno-long-long")
+##    set (CMAKE_CXX_FLAGS "-W -Wall")
 endif (NOT CMAKE_CXX_FLAGS)
-if( CMAKE_SYSTEM MATCHES ^Darwin-10 OR CMAKE_SYSTEM MATCHES ^Darwin-11)
-	add_definitions( -DCASA_NOTAPE )
-	set( CMAKE_OSX_ARCHITECTURES x86_64 )
-	#set( CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
-endif(CMAKE_SYSTEM MATCHES ^Darwin-10 OR CMAKE_SYSTEM MATCHES ^Darwin-11)
 
 # Set build type if not given.
 if (NOT CMAKE_BUILD_TYPE)
@@ -42,14 +42,7 @@ if (NOT CMAKE_BUILD_TYPE)
     endif("_cmpvar" STREQUAL "dbg" OR "_cmpvar" STREQUAL "debug")
 endif (NOT CMAKE_BUILD_TYPE)
 
-# If given, add the data directory as compile variable.
-# If it contains a single $, it needs to be doubled for make purposes.
-if (DATA_DIR)
-    string(REGEX REPLACE [$] $$ DATA_DIRX ${DATA_DIR})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCASADATA='\"${DATA_DIRX}\"'")
-endif (DATA_DIR)
-
-# For the sake of consistency
+# FindHDF5 uses environment variables, so set it if needed.
 if (HDF5_ROOT_DIR)
     set (ENV{HDF5_ROOT} ${HDF5_ROOT_DIR})
 endif (HDF5_ROOT_DIR)
@@ -84,31 +77,34 @@ if (NOT ${MODULE} STREQUAL "casa")
 endif (NOT ${MODULE} STREQUAL "casa")
 
 # Determine which external packages to use.
-include (UsePrivatePath)
 include (CTest)
-include (FindDL)
-include (FindReadline)
-include (FindHDF5)
+find_package (DL)
+find_package (Readline)
+if (USE_HDF5)
+    find_package (HDF5 REQUIRED)
+endif (USE_HDF5)
 if (_usebison STREQUAL YES)
-    include (FindFLEX REQUIRED)
-    include (FindBISON REQUIRED)
+    find_package (FLEX REQUIRED)
+    find_package (BISON REQUIRED)
 endif (_usebison STREQUAL YES)
 if (_uselapack STREQUAL YES)
-    include (FindBLAS REQUIRED)
-    include (FindLAPACK REQUIRED)
-    if (FFTW3_DISABLE_THREADS)
-        find_package (FFTW3 COMPONENTS single double)
-    else (FFTW3_DISABLE_THREADS)
-        find_package (FFTW3 COMPONENTS single double threads)
-    endif (FFTW3_DISABLE_THREADS)
+    find_package (BLAS REQUIRED)
+    find_package (LAPACK REQUIRED)
+    if (USE_FFTW3)
+        if (FFTW3_DISABLE_THREADS)
+            find_package (FFTW3 COMPONENTS single double REQUIRED)
+        else (FFTW3_DISABLE_THREADS)
+            find_package (FFTW3 COMPONENTS single double threads)
+        endif (FFTW3_DISABLE_THREADS)
+    endif (USE_FFTW3)
 endif (_uselapack STREQUAL YES)
 if (_usefits STREQUAL YES)
-    include (FindCFITSIO REQUIRED)
+    find_package (CFITSIO REQUIRED)
 endif (_usefits STREQUAL YES)
 if (_usewcs STREQUAL YES)
-    include (FindWCSLIB REQUIRED)
+    find_package (WCSLIB REQUIRED)
 endif (_usewcs STREQUAL YES)
-
+ 
 # Set the include directories and HAVE compiler variables
 include_directories (${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 if (WCSLIB_FOUND)
@@ -135,7 +131,26 @@ if (READLINE_FOUND)
     add_definitions(-DHAVE_READLINE)
 endif (READLINE_FOUND)
 
-# Add the modules to be built.
+# Thread support.
+set(_errmsg "FIXME: Don't know how to enable thread support for ")
+find_package(Pthreads REQUIRED)
+if(CMAKE_COMPILER_IS_GNUCC)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+else(CMAKE_COMPILER_IS_GNUCC)
+    message(FATAL_ERROR "${_errmsg} ${CMAKE_C_COMPILER}")
+endif(CMAKE_COMPILER_IS_GNUCC)
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+else(CMAKE_COMPILER_IS_GNUCXX)
+    message(FATAL_ERROR "${_errmsg} ${CMAKE_CXX_COMPILER}")
+endif(CMAKE_COMPILER_IS_GNUCXX)
+if(USE_THREADS)
+    add_definitions(-DUSE_THREADS)
+endif(USE_THREADS)
+if(ENABLE_MULTI_THREADING)
+    add_definitions(-DUSE_MULTI_THREADING)
+endif(ENABLE_MULTI_THREADING)
+
 #
 # Choose to have correct RPATHs both in the build tree and
 # in the install tree (at the cost of having to change the
@@ -144,6 +159,9 @@ endif (READLINE_FOUND)
 set( CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/lib )
 set( CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
+
+
+# Add the modules to be built.
 foreach (module ${_modules})
     add_subdirectory (${module})
     if (APPLE)
@@ -152,7 +170,6 @@ foreach (module ${_modules})
         endif (${module} STREQUAL scimath_f OR ${module} STREQUAL fits OR ${module} STREQUAL mirlib OR ${module} STREQUAL coordinates)
     endif (APPLE)
 endforeach (module)
-#set( CMAKE_INSTALL_NAME_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 
 # Show summary.
 message (STATUS "CMAKE_SYSTEM .......... = ${CMAKE_SYSTEM}")
@@ -162,6 +179,7 @@ message (STATUS "BUILD_SHARED_LIBS ..... = ${BUILD_SHARED_LIBS}")
 message (STATUS "CMAKE_CXX_COMPILER .... = ${CMAKE_CXX_COMPILER}")
 message (STATUS "CMAKE_CXX_FLAGS ....... = ${CMAKE_CXX_FLAGS}")
 message (STATUS "DL library?       ..... = ${DL_LIBRARIES}")
+message (STATUS "Pthreads library? ..... = ${PTHREADS_LIBRARIES}")
 message (STATUS "Readline library? ..... = ${READLINE_LIBRARIES}")
 message (STATUS "BLAS library? ......... = ${BLAS_LIBRARIES}")
 message (STATUS "LAPACK library? ....... = ${LAPACK_LIBRARIES}")

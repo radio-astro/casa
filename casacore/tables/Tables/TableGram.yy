@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: TableGram.yy 20983 2010-10-01 10:02:48Z gervandiepen $
+    $Id: TableGram.yy 21103 2011-07-08 07:27:17Z gervandiepen $
 */
 
 /*
@@ -148,6 +148,8 @@ using namespace casa;
 %type <node> elem
 %type <node> subsrange
 %type <node> colonrange
+%type <node> colonrangeinterval
+%type <node> colonrangeindex
 %type <node> range
 %type <node> sortexpr
 %type <nodelist> sortlist
@@ -403,16 +405,23 @@ delcomm:   DELETE FROM tables whexpr order limitoff {
 
 calccomm:  CALC FROM tables CALC orexpr {
 	       $$ = new TaQLNode(
-                    new TaQLCalcNodeRep (*$3, *$5));
+                    new TaQLCalcNodeRep (*$3, *$5,
+                                         TaQLNode(), TaQLNode(), TaQLNode()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | CALC orexpr {
+               TaQLMultiNode tabNode((TaQLMultiNodeRep*)0);
 	       $$ = new TaQLNode(
-                    new TaQLCalcNodeRep (0, *$2));
+               new TaQLCalcNodeRep (tabNode, *$2,
+                                    TaQLNode(), TaQLNode(), TaQLNode()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         ;
-           
+         | CALC orexpr FROM tables whexpr order limitoff {
+	       $$ = new TaQLNode(
+                    new TaQLCalcNodeRep (*$4, *$2, *$5, *$6, *$7));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+
 cretabcomm: CREATETAB tabname colspecs dminfo {
 	       $$ = new TaQLNode(
                     new TaQLCreTabNodeRep ($2->getString(), *$3, *$4));
@@ -1112,7 +1121,7 @@ singlerange: range {
            }
          ;
 
-range:     colonrange {
+range:     colonrangeinterval {
                $$ = $1;
            }
          | LT arithexpr COMMA arithexpr GT {
@@ -1252,10 +1261,48 @@ subsrange: arithexpr {
                     new TaQLIndexNodeRep (*$1, 0, 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | colonrange {
+         | colonrangeindex {
                $$ = $1;
 	   }
          ;
+
+colonrangeinterval: colonrange {
+               $$ = $1;
+            }
+         |  arithexpr COLON {
+	       $$ = new TaQLNode(
+                    new TaQLIndexNodeRep (*$1, 0, 0));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+            }
+         |  arithexpr COLON COLON {
+	       $$ = new TaQLNode(
+                    new TaQLIndexNodeRep (*$1, 0, 0));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+            }
+         |  arithexpr COLON COLON arithexpr {
+	       $$ = new TaQLNode(
+                    new TaQLIndexNodeRep (*$1, 0, *$4));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+            }
+
+colonrangeindex: colonrange {
+               $$ = $1;
+            }
+         |  arithexpr COLON {
+	       $$ = new TaQLNode (new TaQLIndexNodeRep
+                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), 0));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+            }
+         |  arithexpr COLON COLON {
+	       $$ = new TaQLNode (new TaQLIndexNodeRep
+                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), 0));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+            }
+         |  arithexpr COLON COLON arithexpr {
+	       $$ = new TaQLNode (new TaQLIndexNodeRep
+                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), *$4));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+            }
 
 colonrange: arithexpr COLON arithexpr {
 	       $$ = new TaQLNode(
@@ -1265,16 +1312,6 @@ colonrange: arithexpr COLON arithexpr {
          |  arithexpr COLON arithexpr COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (*$1, *$3, *$5));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON {
-	       $$ = new TaQLNode(
-                    new TaQLIndexNodeRep (*$1, 0, 0));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON COLON arithexpr {
-	       $$ = new TaQLNode(
-                    new TaQLIndexNodeRep (*$1, 0, *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
             }
          |  COLON arithexpr {

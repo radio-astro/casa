@@ -12,6 +12,7 @@ imagetestimage.fits
 jyperpixelimage.fits
 linearCoords.fits
 mexinputtest.fits
+qualityimage.fits
 ngc5921.clean.fits
 ngc5921.clean.no_freq.no_stokes.fits
 test_image.fits
@@ -35,7 +36,6 @@ set (tests
 dImageHistograms
 dImageInterface
 dImageMoments
-dImageProfileFit
 dImageStatistics
 dImageSummary
 dPagedImage
@@ -50,6 +50,7 @@ tFITSExtImageII
 tFITSQualityImage
 tHDF5Image
 tImageAnalysis
+tImageAnalysis2
 tImageConcat
 tImageConvolver
 tImageDecomposer

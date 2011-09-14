@@ -657,7 +657,9 @@ void MSIter::setFeedInfo()
 
     // a bit ugly construction
     // to preserve the old interface (feed=0 only)
+    receptorAnglesFeed0_p.resize();
     receptorAnglesFeed0_p=receptorAngles_p.xyPlane(0); 
+    CJonesFeed0_p.resize();
     CJonesFeed0_p=CJones_p.column(0);
     //
   }

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: SkyCompRep.h 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: SkyCompRep.h 21071 2011-05-06 14:02:15Z gervandiepen $
 
 #ifndef COMPONENTS_SKYCOMPREP_H
 #define COMPONENTS_SKYCOMPREP_H

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNode.h 20944 2010-08-30 07:48:24Z gervandiepen $
+//# $Id: TaQLNode.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_TAQLNODE_H
 #define TABLES_TAQLNODE_H
@@ -31,6 +31,7 @@
 //# Includes
 #include <tables/Tables/TaQLNodeRep.h>
 #include <tables/Tables/TaQLStyle.h>
+#include <casa/OS/Mutex.h>
 #include <vector>
 #include <iostream>
 
@@ -157,6 +158,8 @@ public:
   static std::vector<TaQLNode*> theirNodesCreated;
   // Keep the TaQL style to use.
   static TaQLStyle theirStyle;
+  // Use a mutex to guard the statics.
+  static Mutex theirMutex;
 };
 
 

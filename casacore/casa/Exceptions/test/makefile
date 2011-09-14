@@ -1,4 +1,4 @@
-# $Id: makefile 17698 2004-08-24 20:57:47Z cvsmgr $
+# $Id: makefile 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 # Use the generic AIPS++ test makefile.
 #--------------------------------------

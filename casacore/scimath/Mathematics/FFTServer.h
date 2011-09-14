@@ -23,13 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: FFTServer.h 20932 2010-07-08 09:06:37Z gervandiepen $
+//# $Id: FFTServer.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef SCIMATH_FFTSERVER_H
 #define SCIMATH_FFTSERVER_H
 
 //# Includes
-#include <scimath/Mathematics/FFTW.h>
 #include <casa/aips.h>
 #include <scimath/Mathematics/FFTW.h>
 #include <casa/Arrays/IPosition.h>
@@ -101,9 +100,7 @@ public:
 // twiddle factors used during the transform. The initialised transform shape
 // is always compared with the shape of the supplied arguments when a transform
 // is done and the FFTServer class will automatically resize itself if
-// necessary. So the default constructor is perfectly safe to use. After this
-// implementation was changed from using FFTPack to FFTW, nothing is gained by
-// using the non-default constructor; it exists only for historical reasons.
+// necessary. So the default constructor is perfectly safe to use.
 
 // With any transform the output Array must either be the correct shape for the
 // desired output or zero length (ie not contain any elements). If it is zero
@@ -139,8 +136,15 @@ public:
 // first axis.
 // </ul>
 
-// This class does transforms using the highly optimized FFTW package and will
-// use as many threads as there are CPU cores.
+// This class does transforms using the widely used FORTRAN fftpack
+// package or the highly optimized FFTW package (to be chosen at build time).
+// <br>
+// <em> P.N. Swarztrauber, Vectorizing the FFTs, in Parallel Computations
+// (G. Rodrigue, ed.), Academic Press, 1982, pp. 51--83. </em><br>
+// The fftpack package only does one dimensional transforms and this class
+// decomposes multi-dimensional transforms into a series of 1-dimensional ones.
+// <br>If at build time it is chosen to use FFTW in a multi-threaded way,
+// it will try to use as many cores as possible.
 
 // In this class a forward transform is defined as one that goes from the real
 // to the complex (or the time to frequency) domain. In a forward transform the
@@ -156,13 +160,14 @@ public:
 // <src>[nx/2,ny/2,...]</src> were the indexing begins at zero. Because the
 // fftpack software assumes the origin of the transform is at the first element
 // ie.,<src>[0,0,...]</src> this class flips the data in the Array around to
-// compensate. This flipping does not use threads and may take much longer than
-// the FFT itself. It can be avoided by using the <src>fft0</src> member
+// compensate. For fftpack this flipping takes about one 20% of the total
+// transform time, while for FFTW it can easily exceed the transform time.
+// Flipping can be avoided by using the <src>fft0</src> member
 // functions which do not flip the data.
 
 // Some of the member functions in this class scramble the input Array,
 // possibly by flipping the quandrants of the data although this is not
-// guaranteed. Modifification of the input Array can be avoided, at the expense
+// guaranteed. Modification of the input Array can be avoided, at the expense
 // of copying the data to temporary storage, by either:
 // <ul> <li> Ensuring the input Array is a const Array.
 //      <li> Setting the constInput Flag to True.
@@ -234,8 +239,7 @@ public:
   // Initialise the server to do transforms on Arrays of the specified
   // shape. The server will, however, resize to do transforms of other lengths
   // if necessary. See the resize function for a description of the
-  // TransformType enumerator. This constructor is deprecated; just use the
-  // default one.
+  // TransformType enumerator.
   FFTServer(const IPosition & fftSize, 
 	    const FFTEnums::TransformType transformType 
 	    = FFTEnums::REALTOCOMPLEX);
@@ -255,11 +259,11 @@ public:
 
   // Modify the FFTServer object to do transforms of the supplied shape. The
   // amount of internal storage, and the initialisation, depends on the type of
-  // transform that will be done. Th etransform type is specified with the
-  // TransformTypes enumerator. There is no difference in
+  // transform that will be done. The transform type is specified with the
+  // TransformTypes enumerator. Currently there is no difference in
   // initialisation for the COMPLEXTOREAL and REALTOCOMPLEX transforms. The
   // shape argument is the shape of the real array (or complex one if complex
-  // to complex transforms are being done). It is not necessary to
+  // to complex transforms are being done). In general it is not necessary to
   // use this function as all the fft & fft0 functions will automatically
   // resize the server, if necessary, to match their input arguments.
   void resize(const IPosition & fftSize,
@@ -312,7 +316,7 @@ public:
   // The <src>fft0</src> functions are equivalent to the <src>fft</src>
   // functions described above except that the origin of the transform is the
   // first element of the Array, ie. [0,0,0...], rather than the centre
-  // element, ie [nx/2, ny/2, nz/2, ...]. As the underlying FFTW functions
+  // element, ie [nx/2, ny/2, nz/2, ...]. As the underlying functions
   // assume that the origin of the transform is the first element these
   // routines are in general faster than the equivalent ones with the origin
   // at the centre of the Array.
@@ -396,12 +400,13 @@ private:
   std::vector<S> itsWorkC2C;
 };
 
+
 } //# NAMESPACE CASA - END
 
 //# Do NOT include the .tcc file here like done for other templated classes.
 //# The instantiations are done explicitly.
 //# In this way the HAVE_FFTW ifdef is only used in .cc files and does
-//# not appear in headers, so othert packages using FFTServer do not need
+//# not appear in headers, so other packages using FFTServer do not need
 //# to (un)set HAVE_FFTW.
 
 #endif

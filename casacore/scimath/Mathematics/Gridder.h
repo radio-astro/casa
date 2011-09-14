@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: Gridder.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: Gridder.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_GRIDDER_H
 #define SCIMATH_GRIDDER_H
@@ -79,7 +79,7 @@ public:
 
 protected:
 
-  Int nint(Double val) {return Int(std::floor(val+0.5));};
+  Int nint(Double val) {return Int(std::floor(val+0.5));}
 
   virtual void fillCorrectionVectors();
 

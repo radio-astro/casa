@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: QBase.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: QBase.h 20993 2010-11-08 13:36:32Z gervandiepen $
 
 #ifndef CASA_QBASE_H
 #define CASA_QBASE_H
@@ -129,7 +129,7 @@ public:
   virtual const Unit &getFullUnit() const = 0;
   // Print a Quantum
   virtual void print(ostream &os) const = 0;
-  // Get the type (== Register() of derived Quantum (faster than Strings)
+  // Get the type of derived Quantum (using QuantumType).
   // All should have:
   // static uInt myType();
   virtual uInt type() const = 0;

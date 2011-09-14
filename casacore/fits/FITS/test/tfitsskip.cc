@@ -25,7 +25,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tfitsskip.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: tfitsskip.cc 21069 2011-05-06 13:59:44Z gervandiepen $
 
 //# Includes
 
@@ -107,17 +107,17 @@ void show(HeaderDataUnit *h) {
 }
 
 // now actually make the necessary versions of the above
-DOGROUP(unsigned char);
-DOGROUP(short);
-DOGROUP(FitsLong);
-DOGROUP(float);
-DOGROUP(double);
+DOGROUP(unsigned char)
+DOGROUP(short)
+DOGROUP(FitsLong)
+DOGROUP(float)
+DOGROUP(double)
 
-DOARRAY(unsigned char);
-DOARRAY(short);
-DOARRAY(FitsLong);
-DOARRAY(float);
-DOARRAY(double);
+DOARRAY(unsigned char)
+DOARRAY(short)
+DOARRAY(FitsLong)
+DOARRAY(float)
+DOARRAY(double)
 
 #undef DOGROUP
 #undef DOARRAY

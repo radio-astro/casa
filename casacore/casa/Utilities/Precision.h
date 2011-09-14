@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id:  $
+//# $Id: Precision.h 21022 2011-03-01 10:07:47Z gervandiepen $
 
 #ifndef CASA_PRECISION_H
 #define CASA_PRECISION_H
@@ -35,16 +35,17 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> Various precision-related functions </summary>
-// <use visibility=export>
-// <reviewed reviewer="" date="" tests="" demos="">
+  // <summary> Various precision-related functions </summary>
+  // <use visibility=export>
+  // <reviewed reviewer="" date="" tests="" demos="">
 
-// <synopsis>
-// Various functions for determining precision for printing.
-// </synopsis>
+  // <synopsis>
+  // Various functions for determining precision for printing.
+  // </synopsis>
 
-// Determine precision for two related value, error pairs (such as RA-Dec)
-	uInt precisionForValueErrorPairs(const Vector<Double>& pair1, const Vector<Double>& pair2);
+  // Determine precision for two related value,error pairs (such as RA-Dec)
+  uInt precisionForValueErrorPairs (const Vector<Double>& pair1,
+                                    const Vector<Double>& pair2);
 
 } //# NAMESPACE CASA - END
 

@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: FITSSpectralUtil.h 20494 2009-01-16 15:29:27Z gervandiepen $
+//# $Id: FITSSpectralUtil.h 21069 2011-05-06 13:59:44Z gervandiepen $
 
 
 #ifndef FITS_FITSSPECTRALUTIL_H

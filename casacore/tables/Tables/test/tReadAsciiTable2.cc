@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tReadAsciiTable2.cc 20177 2007-11-22 03:27:05Z Malte.Marquarding $
+//# $Id: tReadAsciiTable2.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/ReadAsciiTable.h>
 #include <iostream>

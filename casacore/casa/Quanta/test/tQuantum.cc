@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tQuantum.cc 20211 2008-01-18 03:29:02Z Malte.Marquarding $
+//# $Id: tQuantum.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 
 #include <casa/aips.h>
@@ -209,8 +209,7 @@ try {
     } 
     
     try {
-	Bool loc;
-	loc = A<D;
+        A<D;
     } catch (AipsError x) {
 	cout << x.getMesg() << endl;
     } 

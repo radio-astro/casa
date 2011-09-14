@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: StIndArrAIO.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: StIndArrAIO.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/StIndArrAIO.h>
 #include <tables/Tables/StArrayFile.h>
@@ -313,9 +313,6 @@ void StManColumnIndArrayAipsIO::getData (void* dp, uInt inx, uInt nrval,
 	    *dpa = 0;
 	}else{
 	    *dpa = new StIndArray (offset);
-	    if (*dpa == 0) {
-		throw (AllocError ("StManColumnIndArrayAipsIO::getData",1));
-	    }
 	}
 	dpa++;
     }

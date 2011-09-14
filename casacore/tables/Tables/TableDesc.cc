@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TableDesc.cc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: TableDesc.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/TabPath.h>
@@ -121,7 +121,6 @@ TableDesc::~TableDesc ()
 
 
 // <thrown>
-//   <li> AllocError
 //   <li> TableDescNoName
 //   <li> TableDuplFile
 //   <li> TableNoFile
@@ -134,11 +133,6 @@ void TableDesc::init (const TabPath& tdpath)
     //# Allocate the keyword sets.
     key_p = new TableRecord();
     privKey_p = new TableRecord();
-    if (key_p == 0  ||  privKey_p == 0) {
-	delete key_p;
-	delete privKey_p;
-	throw (AllocError ("TableDesc::init",1));
-    }
     //# If non-scratch, check if name is not blank and look if the
     //# description already exists.
     if (option_p == Scratch) {

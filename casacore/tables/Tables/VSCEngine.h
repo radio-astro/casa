@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: VSCEngine.h 20926 2010-07-05 11:42:12Z gervandiepen $
+//# $Id: VSCEngine.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef TABLES_VSCENGINE_H
 #define TABLES_VSCENGINE_H
@@ -157,9 +157,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      {
 //          DataManager* dmPtr = new AVSCEngine (sourceColumnName(),
 //					 xTargetName_p, yTargetName_p);
-//          if (dmPtr == 0) {
-//              throw (AllocError ("AVSCEngine::clone()", 1));
-//          }
 //          return dmPtr;
 //      }
 //
@@ -238,9 +235,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //      static DataManager* makeObject (const String& dataManagerType)
 //      {
 //          DataManager* dmPtr = new AVSCEngine();
-//          if (dmPtr == 0) {
-//              throw (AllocError ("AVSCEngine::makeObject()", 1));
-//          }
 //          return dmPtr;
 //      }
 //  };

@@ -56,10 +56,21 @@ MSDerivedValues&
 MSDerivedValues::operator=(const MSDerivedValues& other) 
 {
   antenna_p=other.antenna_p;
+
   // should copy all data here, for now, just init
   init();
+
+  radialVelocityType_p = other.radialVelocityType_p;
+
   return *this;
 }
+
+const Vector<MPosition> &
+MSDerivedValues::getAntennaPositions () const
+{
+    return mAntPos_p;
+}
+
 
 Int MSDerivedValues::setAntennas(const ROMSAntennaColumns& ac)
 {
@@ -275,8 +286,15 @@ Double MSDerivedValues::parAngle()
   return pa;
 }
 
+MRadialVelocity::Types
+MSDerivedValues::getRadialVelocityType () const
+{
+    return radialVelocityType_p;
+}
+
 MSDerivedValues& MSDerivedValues::setVelocityFrame(MRadialVelocity::Types vType)
 {
+  radialVelocityType_p = vType;
   cTOPOToLSR_p.setOut(vType);
   return *this;
 }
@@ -362,7 +380,7 @@ void MSDerivedValues::init()
 				   MRadialVelocity::Ref(MRadialVelocity::TOPO,
 							fAntFrame_p)),
 		   MRadialVelocity::Ref(MRadialVelocity::LSRK));
-
+  radialVelocityType_p = MRadialVelocity::LSRK;
   frqref_p= MFrequency::Ref(MFrequency::LSRK);
   velref_p=MDoppler::Ref(MDoppler::RADIO);
   restFreq_p=Quantity(0.0, "Hz");

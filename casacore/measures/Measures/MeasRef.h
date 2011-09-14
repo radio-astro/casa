@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: MeasRef.h 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: MeasRef.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef MEASURES_MEASREF_H
 #define MEASURES_MEASREF_H
@@ -179,10 +179,10 @@ private:
   public:
     // Constructor
     // <note role=warning> Next one must be in-line for (some?) compilers </note>
-    RefRep() : type(Ms::DEFAULT), offmp(0), frame(), cnt(1) {};
+    RefRep() : type(Ms::DEFAULT), offmp(0), frame(), cnt(1) {}
     // Destructor
     // <note role=warning> Next one must be in-line for (some?) compilers </note>
-    ~RefRep() {delete offmp;}; 
+    ~RefRep() {delete offmp;} 
     // The actual data
     // <group>
     // Type of reference

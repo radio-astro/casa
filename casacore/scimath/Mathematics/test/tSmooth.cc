@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id:  $
+//# $Id: tSmooth.cc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/Arrays/IPosition.h>

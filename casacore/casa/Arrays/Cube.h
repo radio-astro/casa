@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Cube.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Cube.h 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #ifndef CASA_CUBE_H
 #define CASA_CUBE_H
@@ -187,8 +187,12 @@ public:
     // //...
     // vd(Slice(0,10),Slice(10,10,Slice(0,10))) = -1.0; // sub-cube set to -1.0
     // </srcblock>
+    // <group>
     Cube<T> operator()(const Slice &sliceX, const Slice &sliceY,
 		       const Slice &sliceZ);
+    const Cube<T> operator()(const Slice &sliceX, const Slice &sliceY,
+                             const Slice &sliceZ) const;
+    // </group>
 
     // Slice using IPositions. Required to be defined, otherwise the base
     // class versions are hidden.
@@ -196,9 +200,16 @@ public:
     Array<T> operator()(const IPosition &blc, const IPosition &trc,
 			const IPosition &incr)
       { return Array<T>::operator()(blc,trc,incr); }
+    const Array<T> operator()(const IPosition &blc, const IPosition &trc,
+                              const IPosition &incr) const
+      { return Array<T>::operator()(blc,trc,incr); }
     Array<T> operator()(const IPosition &blc, const IPosition &trc)
       { return Array<T>::operator()(blc,trc); }
+    const Array<T> operator()(const IPosition &blc, const IPosition &trc) const
+      { return Array<T>::operator()(blc,trc); }
     Array<T> operator()(const Slicer& slicer)
+      { return Array<T>::operator()(slicer); }
+    const Array<T> operator()(const Slicer& slicer) const
       { return Array<T>::operator()(slicer); }
     // </group>
 
@@ -208,7 +219,7 @@ public:
     // <group>
 
     // Return a MaskedArray.
-    MaskedArray<T> operator() (const LogicalArray &mask) const
+    const MaskedArray<T> operator() (const LogicalArray &mask) const
       { return Array<T>::operator() (mask); }
 
     // Return a MaskedArray.
@@ -225,7 +236,7 @@ public:
     // <group>
 
     // Return a MaskedArray.
-    MaskedArray<T> operator() (const MaskedLogicalArray &mask) const
+    const MaskedArray<T> operator() (const MaskedLogicalArray &mask) const
       { return Array<T>::operator() (mask); }
 
     // Return a MaskedArray.
@@ -285,7 +296,8 @@ protected:
     // Remove the degenerate axes from other and store result in this cube.
     // An exception is thrown if removing degenerate axes does not result
     // in a cube.
-    virtual void doNonDegenerate(Array<T> &other, const IPosition &ignoreAxes);
+    virtual void doNonDegenerate(const Array<T> &other,
+                                 const IPosition &ignoreAxes);
 
 private:
     // Cached constants to improve indexing.

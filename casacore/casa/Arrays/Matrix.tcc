@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Matrix.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Matrix.tcc 21098 2011-06-24 07:42:37Z gervandiepen $
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
@@ -148,9 +148,9 @@ template<class T> Matrix<T> &Matrix<T>::operator=(const Matrix<T> &other)
     if (this == &other)
         return *this;
 
-    Bool Conform = this->conform(other);
+    Bool Conform = conform(other);
     if (Conform == False && this->nelements() != 0)
-	this->validateConformance(other);  // We can't overwrite, so throw exception
+	validateConformance(other);  // We can't overwrite, so throw exception
 
     Array<T>::operator=(other);
     if (!Conform) {
@@ -163,7 +163,7 @@ template<class T> Matrix<T> &Matrix<T>::operator=(const Matrix<T> &other)
 template<class T> Array<T> &Matrix<T>::operator=(const Array<T> &a)
 {
     DebugAssert(ok(), ArrayError);
-    Bool Conform = this->conform(a);
+    Bool Conform = conform(a);
     if (a.ndim() == 2) {
 	Array<T>::operator=(a);
 	if (!Conform) {
@@ -224,6 +224,11 @@ template<class T> Matrix<T> Matrix<T>::operator()(const Slice &sliceX,
     IPosition trc(2,b1+(l1-1)*s1,b2+(l2-1)*s2);
     IPosition incr(2,s1,s2);
     return this->operator()(blc,trc,incr);
+}
+template<class T> const Matrix<T> Matrix<T>::operator()
+  (const Slice &sliceX, const Slice &sliceY) const
+{
+    return const_cast<Matrix<T>*>(this)->operator() (sliceX, sliceY);
 }
 
 // <thrown>
@@ -367,7 +372,8 @@ template<class T> void Matrix<T>::makeIndexingConstants()
 
 
 template<class T>
-void Matrix<T>::doNonDegenerate (Array<T> &other, const IPosition &ignoreAxes)
+void Matrix<T>::doNonDegenerate (const Array<T> &other,
+                                 const IPosition &ignoreAxes)
 {
     Array<T> tmp(*this);
     tmp.nonDegenerate (other, ignoreAxes);

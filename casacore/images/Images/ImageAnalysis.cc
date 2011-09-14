@@ -1360,11 +1360,18 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
 
 	// Make the convolver
-	Image2DConvolver<Float> ic;
-        ic.convolve(
-            *itsLog, *pImOut, subImage, kernelType, axes3,
-            parameters, autoScale, scale, True
-        );
+        try {
+          Image2DConvolver<Float> ic;
+          ic.convolve(
+              *itsLog, *pImOut, subImage, kernelType, axes3,
+              parameters, autoScale, scale, True
+          );
+        }
+        catch ( AipsError &e ) {
+          pImOut->unlock() ;
+          delete pImOut ;
+          throw e ;
+        }
 
 	// Return image
 	return pImOut;
@@ -4167,7 +4174,62 @@ Bool ImageAnalysis::statistics(
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
 		mtmp,  (verbose ? itsLog : 0), False
 	);
+	/*
+	{
+		cout << "mask " << subImage.getMask() << endl;
+		Array<Bool> mymask = subImage.getMask();
+		IPosition shape = mymask.shape();
+		IPosition index = shape-1;
+		uInt j=0;
+		while(True) {
+			for (uInt i=0; i<shape(0); i++) {
+				index[0] = i;
+				cout << mymask(index) << " ";
+			}
+			cout << index << endl;
+			for (j=1; j<shape.size(); j++) {
+				if (index[j] == 0) {
+					index[j] = shape[j]-1;
+					cout << endl;
+				}
+			else {
+				index[j]--;
+				break;
+			}
 
+			}
+			if (j == shape.size()) {
+				break;
+			}
+		}
+		cout << "pixel mask " << endl;
+		mymask = subImage.pixelMask().get();
+		shape = mymask.shape();
+		index = shape-1;
+		j=0;
+		while(True) {
+			for (uInt i=0; i<shape(0); i++) {
+				index[0] = i;
+				cout << mymask(index) << " ";
+			}
+			cout << index << endl;
+			for (j=1; j<shape.size(); j++) {
+				if (index[j] == 0) {
+					index[j] = shape[j]-1;
+					cout << endl;
+				}
+			else {
+				index[j]--;
+				break;
+			}
+
+			}
+			if (j == shape.size()) {
+				break;
+			}
+		}
+	}
+	*/
 	// Reset who is logging stuff.
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -4407,6 +4469,7 @@ Bool ImageAnalysis::statistics(
 	}
 
 	if (list || !pgdevice.empty()) {
+		pStatistics_p->showRobust(trobust);
 		if (!pStatistics_p->display()) {
 			*itsLog << pStatistics_p->errorMessage() << LogIO::EXCEPTION;
 		}
@@ -5577,17 +5640,15 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
-				       Vector<Float>& specVal, const CoordinateSystem& cs,
-				       const String& xunits, const String& specFrame) {
+		Vector<Float>& specVal, const CoordinateSystem& cs,
+		const String& xunits, const String& specFrame) {
 
-        CoordinateSystem cSys=cs;
+	CoordinateSystem cSys=cs;
 	if(specFrame != ""){
-	  String errMsg;
-	  if(!CoordinateUtil::setSpectralConversion(errMsg, cSys, specFrame)){
-	    cerr << "Failed to convert with error: " << errMsg << endl; 
-
-	  }
-	  
+		String errMsg;
+		if(!CoordinateUtil::setSpectralConversion(errMsg, cSys, specFrame)){
+			cerr << "Failed to convert with error: " << errMsg << endl;
+		}
 	}
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
@@ -5598,7 +5659,8 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 	String axis = specaxis;
 	axis.downcase();
 	Bool ok = False;
-       	if (axis.contains("velo") || axis.contains("freq") || axis.contains("wave")) { // need a conversion
+
+	if (axis.contains("velo") || axis.contains("freq") || axis.contains("wave")) { // need a conversion
 
 		// first convert from pixels to frequencies
 		Vector<String> tmpstr(1);
@@ -5640,19 +5702,22 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		xworld = pix;
 		ok = True;
 	}
+
 	if (!ok)
 		return False;
-	convertArray(specVal, xworld);
-	return True;
 
+	convertArray(specVal, xworld);
+
+	return True;
 }
 
-Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy, 
+
+Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 				   Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-				   const String& xytype, 
-				   const String& specaxis, const Int& ,
-				   const Int& , const Int& ,
-				   const String& xunits, const String& specFrame) {
+				   const String& xytype,
+				   const String& specaxis, const Int&,
+				   const Int&, const Int&,
+				   const String& xunits, const String& specFrame, const Int& whichQuality) {
 
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (xy.size() != 2) {
@@ -5660,64 +5725,86 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 			<< xy.size() << "." << LogIO::EXCEPTION;
 	}
 	String whatXY = xytype;
-	Vector<Double> xypix(2, 0);
+	Vector<Double> xypix(2);
+	xypix = 0.0;
 	whatXY.downcase();
 	CoordinateSystem cSys = pImage_p->coordinates();
 	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
+
+	// if necessary, convert from
+	// world to pixel coordinates
 	if (whatXY.contains("wor")) {
 		const DirectionCoordinate& dirCoor = cSys.directionCoordinate(which);
-		if (!dirCoor.toPixel(xypix, xy)) {
+		if (!dirCoor.toPixel(xypix, xy))
 			return False;
-		}
 	}
 	else {
 		if (xy.nelements() != 2)
 			return False;
 		xypix = xy;
 	}
-	Vector<Int> dirPixelAxis = cSys.pixelAxes(which);
+
+	// create container to define the corners
 	IPosition blc(pImage_p->ndim(), 0);
 	IPosition trc(pImage_p->ndim(), 0);
-	if (
-		(xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
-		|| (xypix(1) > pImage_p->shape()(1))
-	) {
+
+	// set the right index in the quality-coordinate
+	Int qualAx = cSys.findCoordinate(Coordinate::QUALITY);
+	if (qualAx>-1){
+		Int pixQualAx = cSys.pixelAxes(qualAx)[0];
+		blc(pixQualAx) = whichQuality;
+		trc(pixQualAx) = whichQuality;
+	}
+
+	// make sure the pixel is insed the mage
+	if ((xypix(0) < 0) || (xypix(0) > pImage_p->shape()(0)) || (xypix(1) < 0)
+		  || (xypix(1) > pImage_p->shape()(1))) {
 		return False;
 	}
+
+	// set the directional position in pixels
+	Vector<Int> dirPixelAxis = cSys.pixelAxes(which);
 	blc[dirPixelAxis(0)] = Int(xypix(0) + 0.5); // note: pixel _center_ is at integer values
 	trc[dirPixelAxis(0)] = Int(xypix(0) + 0.5);
 	blc[dirPixelAxis(1)] = Int(xypix(1) + 0.5);
 	trc[dirPixelAxis(1)] = Int(xypix(1) + 0.5);
 
+	// set the spectral index to extract the entire spectrum
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Vector<Bool> zyaxismask;
 	trc[cSys.pixelAxes(specAx)[0]] = pImage_p->shape()(cSys.pixelAxes(specAx)[0]) - 1;
+
+	// extract the data and the mask
 	zyaxisval.resize();
 	zyaxisval = pImage_p->getSlice(blc, trc - blc + 1, True);
 	zyaxismask = pImage_p->getMaskSlice(blc, trc - blc + 1, True);
-	//   if(pImage_p->units().getName().contains("Jy")){   // convert to mJy
-	//     for (uInt kk=0; kk < zyaxisval.nelements() ; ++kk){
-	//       zyaxisval[kk]=Quantity(zyaxisval[kk], pImage_p->units()).getValue("mJy");
-	//     }
-	//   }
 
-	// apply mask
+	// apply the mask
+	// FIXME: I dont think it makes
+	// sense to just set these values to 0.0
+	// masked spectral points should be eliminated.
 	for (uInt kk = 0; kk < zyaxisval.nelements(); ++kk) {
 		if (!zyaxismask[kk]) {
 			zyaxisval[kk] = 0.;
 		}
 	}
+
+	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }
 
+
 Bool ImageAnalysis::getFreqProfile(
-	const Vector<Double>& x, const Vector<Double>& y, 
-	Vector<Float>& zxaxisval, Vector<Float>& zyaxisval, 
-	const String& xytype, const String& specaxis,
-	const Int& whichStokes, const Int& whichTabular,
-	const Int& whichLinear, const String& xunits, const String& specFrame
-) {
+		const Vector<Double>& x, const Vector<Double>& y,
+		Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+		const String& xytype, const String& specaxis,
+		const Int& whichStokes, const Int& whichTabular,
+		const Int& whichLinear, const String& xunits,
+		const String& specFrame, const Int &combineType,
+		const Int& whichQuality)
+{
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	Vector<Double> xy(2);
 	xy[0] = 0;
@@ -5726,27 +5813,33 @@ Bool ImageAnalysis::getFreqProfile(
 	RegionManager regMan;
 	ImageRegion* imagreg = 0;
 	CoordinateSystem cSys = pImage_p->coordinates();
-	Array<Float> toAver;
-	Array<Bool> mask;
+	Array<Float> dataArr;
+	Array<Bool>  maskArr;
+
+	// the x- and y-array must
+	// have at least one element
 	if (n < 1) {
 		return False;
 	}
+
+	// for a point extraction,
+	// call the another method
 	if (n == 1) {
 		xy[0] = x[0];
 		xy[1] = y[0];
-		return getFreqProfile(
-			xy, zxaxisval, zyaxisval, xytype, specaxis,
-			whichStokes, whichTabular, whichLinear, xunits,
-			specFrame
-		);
+		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
+				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality);
 	}
+
 	// n > 1, i.e. region to average over is a rectangle or polygon
+	// identify the relevant axes (SPECTRAL and DIRECTIONAL)
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Int pixSpecAx = cSys.pixelAxes(specAx)[0];
 	Int nchan = pImage_p->shape()(pixSpecAx);
-	Vector<Int> dirPixelAxis = cSys.pixelAxes(
-		cSys.findCoordinate(Coordinate::DIRECTION)
-	);
+	Vector<Int> dirPixelAxis = cSys.pixelAxes(cSys.findCoordinate(Coordinate::DIRECTION));
+
+	// create the image region for
+	// a rectangle
 	if (n == 2) { // rectangle
 		Vector<Quantity> blc(2);
 		Vector<Quantity> trc(2);
@@ -5762,7 +5855,10 @@ Bool ImageAnalysis::getFreqProfile(
 			imagreg = regMan.wbox(blc, trc, pixax, cSys);
 		}
 	}
-	if (n > 2) { // polygon
+
+	// create the image region for
+	// a polygon
+	if (n > 2) {
 		Vector<Quantity> xvertex(n);
 		Vector<Quantity> yvertex(n);
 		for (Int k = 0; k < n; ++k) {
@@ -5774,38 +5870,136 @@ Bool ImageAnalysis::getFreqProfile(
 		pixax(1) = dirPixelAxis[1];
 		imagreg = regMan.wpolygon(xvertex, yvertex, pixax, cSys, "abs");
 	}
+
+	// extract the subimage
+	// and the corresponding mask
 	if (imagreg != 0) {
-		SubImage<Float> subim(*pImage_p, *imagreg, False);
-		mask = (imagreg->toLatticeRegion(cSys, pImage_p->shape())).get();
-		toAver = subim.get();
+		try{
+			SubImage<Float> subim(*pImage_p, *imagreg, False);
+			maskArr = (imagreg->toLatticeRegion(cSys, pImage_p->shape())).get();
+			dataArr = subim.get();
+		} catch (AipsError x) {
+			*itsLog << "Error in extraction: " << x.getMesg() << LogIO::POST;
+			return False;
+		}
 	}
 	else {
 		return False;
 	}
 
-	Int polAx = cSys.findCoordinate(Coordinate::STOKES);
-	IPosition blc(cSys.nPixelAxes());
-	IPosition trc(cSys.nPixelAxes());
-	if (polAx >= 0) {
-		Int pixPolAx = cSys.pixelAxes(polAx)[0];
-		//FIXME only the I image for now
-		blc(pixPolAx) = 0;
-		trc(pixPolAx) = 0;
-	}
-	//x-y plane
-	blc(dirPixelAxis[0]) = 0;
-	blc(dirPixelAxis[1]) = 0;
-	trc(dirPixelAxis[0]) = toAver.shape()(dirPixelAxis[0]) - 1;
-	trc(dirPixelAxis[1]) = toAver.shape()(dirPixelAxis[1]) - 1;
-	zyaxisval.resize(nchan);
-	for (Int k = 0; k < nchan; ++k) {
-		blc(pixSpecAx) = k;
-		trc(pixSpecAx) = k;
-		MaskedArray<Float> planedat(toAver(blc, trc), mask(blc, trc));
-		zyaxisval(k) = mean(planedat);
+	IPosition blc(cSys.nPixelAxes(),0);
+	IPosition trc(cSys.nPixelAxes(),0);
 
+	//FIXME only the I image for now
+	//Int polAx  = cSys.findCoordinate(Coordinate::STOKES);
+	//if (polAx >= 0) {
+	//	Int pixPolAx = cSys.pixelAxes(polAx)[0];
+	//	blc(pixPolAx) = 0;
+	//	trc(pixPolAx) = 0;
+	//}
+
+	try{
+		// set the right index in the quality-coordinate
+		Int qualAx = cSys.findCoordinate(Coordinate::QUALITY);
+		if (qualAx>-1){
+			Int pixQualAx = cSys.pixelAxes(qualAx)[0];
+			blc(pixQualAx) = whichQuality;
+			trc(pixQualAx) = whichQuality;
+		}
+
+		//x-y plane
+		blc(dirPixelAxis[0]) = 0;
+		blc(dirPixelAxis[1]) = 0;
+		trc(dirPixelAxis[0]) = dataArr.shape()(dirPixelAxis[0]) - 1;
+		trc(dirPixelAxis[1]) = dataArr.shape()(dirPixelAxis[1]) - 1;
+		zyaxisval.resize(nchan);
+
+		// branch the various
+		// combine types
+		switch (combineType)
+		{
+		case 0:
+			// combine with average
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = mean(planedat);
+			}
+			break;
+		case 1:
+			// combine with median
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = median(planedat);
+			}
+			break;
+		case 2:
+			// combine with sum
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = sum(planedat);
+			}
+			break;
+		case 3:
+			// combine with variance
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = variance(planedat);
+			}
+			break;
+		case 4:
+			// combine with stddev
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = stddev(planedat);
+			}
+			break;
+		case 5:
+			// combine with the square root of the sum of squares
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = sqrt(sumsquares(planedat));
+			}
+			break;
+		case 6:
+			// combine with the average square root of the sum of squares
+			Float fnpix;
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				fnpix = Float(planedat.size());
+				zyaxisval(k) = sqrt(sumsquares(planedat));
+				if (fnpix >0.0)
+					zyaxisval(k) = zyaxisval(k) / fnpix;
+			}
+			break;
+		default:
+			// default is average
+			for (Int k = 0; k < nchan; ++k) {
+				blc(pixSpecAx) = k;
+				trc(pixSpecAx) = k;
+				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
+				zyaxisval(k) = mean(planedat);
+			}
+		}
+	} catch (AipsError x) {
+		*itsLog << "Error in extraction: " << x.getMesg() << LogIO::POST;
+		return False;
 	}
 
+	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
 	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tRegister.h 17800 2004-08-25 05:56:44Z gvandiep $
+//# $Id: tRegister.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #ifndef CASA_TREGISTER_H
 #define CASA_TREGISTER_H

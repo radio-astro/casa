@@ -1,4 +1,3 @@
-//-*- C++ -*-
 //# ArrayMath.cc: Arithmetic functions defined on Arrays
 //# Copyright (C) 1993,1994,1995,1996,1997,1998,1999,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
@@ -24,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrayMath.tcc 20739 2009-09-29 01:15:15Z Malte.Marquarding $
+//# $Id: ArrayMath.tcc 21095 2011-06-09 09:11:36Z gervandiepen $
 
 #include <casa/iostream.h>
 
@@ -217,7 +216,7 @@ void minMaxMasked(T &minVal, T &maxVal,
   }
   size_t minp = 0;
   size_t maxp = 0;
-  T minv = array.data()[0]*weight.data()[0];
+  T minv = array.data()[0] * weight.data()[0];
   T maxv = minv;
   if (array.contiguousStorage()  &&  weight.contiguousStorage()) {
     typename Array<T>::const_contiter iter = array.cbegin();
@@ -641,6 +640,116 @@ template<class T>
 Array<T> operator^ (const T &left, const Array<T> &right)
 {
     return arrayTransformResult (left, right, BitXor<T>());
+}
+
+
+// Mixed-type *=, /=, *, & / operators:
+// <thrown>
+//   </item> ArrayConformanceError
+// </thrown>
+template<typename T>
+void operator*= (Array<std::complex<T> > &left,
+                 const Array<T> &other)
+{
+  checkArrayShapes (left, other, "*=");
+  arrayTransformInPlace (left, other,
+                         casa::Multiplies<std::complex<T>,T>());
+}
+
+template<typename T>
+void operator*= (Array<std::complex<T> > &left,
+                 const T &other)
+{
+  arrayTransformInPlace (left, other,
+                         casa::Multiplies<std::complex<T>,T>());
+}
+
+// <thrown>
+//   </item> ArrayConformanceError
+// </thrown>
+template<typename T>
+void operator/= (Array<std::complex<T> > &left,
+                 const Array<T> &other)
+{
+  checkArrayShapes (left, other, "/=");
+  arrayTransformInPlace (left, other,
+                         casa::Divides<std::complex<T>,T>());
+}
+
+template<typename T>
+void operator/= (Array<std::complex<T> > &left,
+                 const T &other)
+{
+  arrayTransformInPlace (left, other,
+                         casa::Divides<std::complex<T>,T>());
+}
+
+// <thrown>
+//   </item> ArrayConformanceError
+// </thrown>
+template<typename T>
+Array<std::complex<T> > operator*(const Array<std::complex<T> > &left,
+                                  const Array<T> &other)
+{
+  checkArrayShapes (left, other, "*");
+  Array<std::complex<T> > result(left.shape());
+  arrayContTransform (left, other, result,
+                      casa::Multiplies<std::complex<T>,T>());
+  return result;
+}
+
+// <thrown>
+//   </item> ArrayConformanceError
+// </thrown>
+template<typename T>
+Array<std::complex<T> > operator/(const Array<std::complex<T> > &left,
+                                  const Array<T> &other)
+{
+  checkArrayShapes (left, other, "/");
+  Array<std::complex<T> > result(left.shape());
+  arrayContTransform (left, other, result,
+                      casa::Divides<std::complex<T>,T>());
+  return result;
+}
+
+template<typename T>
+Array<std::complex<T> > operator* (const Array<std::complex<T> > &left,
+                                   const T &other)
+{
+  Array<std::complex<T> > result(left.shape());
+  arrayContTransform (left, other, result,
+                      casa::Multiplies<std::complex<T>,T>());
+  return result;
+}
+
+template<typename T>
+Array<std::complex<T> > operator/ (const Array<std::complex<T> > &left,
+                                   const T &other)
+{
+  Array<std::complex<T> > result(left.shape());
+  arrayContTransform (left, other, result,
+                      casa::Divides<std::complex<T>,T>());
+  return result;
+}
+
+template<typename T>
+Array<std::complex<T> > operator*(const std::complex<T> &left,
+                                  const Array<T> &other)
+{
+  Array<std::complex<T> > result(other.shape());
+  arrayContTransform (left, other, result,
+                      casa::Multiplies<std::complex<T>,T>());
+  return result;
+}
+
+template<typename T>
+Array<std::complex<T> > operator/(const std::complex<T> &left,
+                                  const Array<T> &other)
+{
+  Array<std::complex<T> > result(other.shape());
+  arrayContTransform (left, other, result,
+                      casa::Divides<std::complex<T>,T>());
+  return result;
 }
 
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: BaseColDesc.cc 20972 2010-09-29 06:56:32Z gervandiepen $
+//# $Id: BaseColDesc.cc 21091 2011-06-01 12:08:15Z gervandiepen $
 
 #include <tables/Tables/BaseColDesc.h>
 #include <tables/Tables/ColumnDesc.h>
@@ -65,10 +65,7 @@ BaseColumnDesc::BaseColumnDesc (const String& name, const String& comment,
     }
     // A shape can only be given for a FixedShape array.
     if (shape_p.nelements() > 0) {
-	if ((option_p & ColumnDesc::FixedShape)  !=  ColumnDesc::FixedShape) {
-	    throw (TableInvColumnDesc (name,
-			          "Shape only allowed for FixedShape arrays"));
-	}
+	option_p |= ColumnDesc::FixedShape;
     }
     // Option Undefined can only be set for standard types.
     if (dtype_p == TpOther) {
@@ -291,7 +288,8 @@ void BaseColumnDesc::getFile (AipsIO& ios, const TableAttr& parentAttr)
     Int dtype;
     ios >> dtype;
     if (dtype != dtype_p) {
-	throw (TableInternalError ("BaseColumnDesc: data type read mismatch"));
+	throw (TableInternalError ("BaseColumnDesc: data type read mismatch"
+                                   " for column " + colName_p));
     }
     ios >> option_p;
     ios >> nrdim_p;

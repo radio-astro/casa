@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: TaQLNodeDer.h 20944 2010-08-30 07:48:24Z gervandiepen $
+//# $Id: TaQLNodeDer.h 21103 2011-07-08 07:27:17Z gervandiepen $
 
 #ifndef TABLES_TAQLNODEDER_H
 #define TABLES_TAQLNODEDER_H
@@ -1004,9 +1004,12 @@ public:
 class TaQLCalcNodeRep: public TaQLNodeRep
 {
 public:
-  TaQLCalcNodeRep (const TaQLMultiNode& tables, const TaQLNode& expr)
+  TaQLCalcNodeRep (const TaQLMultiNode& tables, const TaQLNode& expr,
+                   const TaQLNode& where,
+                   const TaQLNode& sort, const TaQLNode& limitoff)
     : TaQLNodeRep (TaQLNode_Calc),
-      itsTables(tables), itsExpr(expr) {}
+      itsTables(tables), itsExpr(expr),
+      itsWhere(where), itsSort(sort), itsLimitOff(limitoff) {}
   virtual ~TaQLCalcNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;
@@ -1015,6 +1018,9 @@ public:
 
   TaQLMultiNode itsTables;
   TaQLNode      itsExpr;
+  TaQLNode      itsWhere;
+  TaQLNode      itsSort;
+  TaQLNode      itsLimitOff;
 };
 
 

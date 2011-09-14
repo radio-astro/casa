@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tSlice.cc 20483 2009-01-08 10:55:37Z gervandiepen $
+//# $Id: tSlice.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/Slicer.h>

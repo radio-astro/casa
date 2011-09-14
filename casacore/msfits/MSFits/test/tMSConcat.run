@@ -8,7 +8,7 @@
 # The script supplies the names of all test tables found in the system.
 # It is meant to be run from assay, but can also be used standalone.
 #
-# $Id: tMSConcat.run 20932 2010-07-08 09:06:37Z gervandiepen $
+# $Id: tMSConcat.run 21100 2011-06-28 12:49:00Z gervandiepen $
 #-----------------------------------------------------------------------------
 
   if [ ${#AIPSPATH} = 0 ]
@@ -36,4 +36,4 @@
      exit 3
   fi
 
-  tMSConcat fits=$FITS1 ms=$MS1 fitsappend=$FITS2 append=$MS2
+  $casa_checktool ./tMSConcat fits=$FITS1 ms=$MS1 fitsappend=$FITS2 append=$MS2

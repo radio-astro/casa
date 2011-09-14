@@ -23,12 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Sequence.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Sequence.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef CASA_SEQUENCE_H
 #define CASA_SEQUENCE_H
 
 #include <casa/aips.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -65,14 +66,16 @@ public:
 class uIntSequence : public Sequence<uInt> {
 
 public:
-    // Get the next <src>uInt</src> value in the sequence.
+    // Get the next <src>uInt</src> value in the sequence (thread-safe).
     // <group>
-    uInt getNext();
-    static uInt SgetNext() {return ++num;}
+    uInt getNext()
+      { return SgetNext(); }
+    static uInt SgetNext();
     // </group>
 
 private:
     static uInt num;
+    static Mutex theirMutex;
 };
 
 

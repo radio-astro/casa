@@ -24,7 +24,7 @@
                            520 Edgemont Road
                            Charlottesville, VA 22903-2475 USA
 
-    $Id: cregex.cc 20901 2010-06-09 07:23:37Z gervandiepen $
+    $Id: cregex.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 */
 
 
@@ -239,7 +239,7 @@ enum regexpcode
 
 /* Store NUMBER in two contiguous bytes starting at DESTINATION.  */
 #define STORE_NUMBER(destination, number)				\
-  { (destination)[0] = (number) & 0377;					\
+  { (destination)[0] = (signed char)((number) & 0377);                  \
     (destination)[1] = (signed char)((number) >> 8); }
   
 /* Same as STORE_NUMBER, except increment the destination pointer to
@@ -1684,7 +1684,7 @@ struct register_info
 
 #define PUSH_FAILURE_POINT(pattern_place, string_place)			\
   {									\
-    short last_used_reg, this_reg;					\
+    long last_used_reg, this_reg;					\
 									\
     /* Find out how many registers are active or have been matched.	\
        (Aside from register zero, which is only set at the end.)  */	\

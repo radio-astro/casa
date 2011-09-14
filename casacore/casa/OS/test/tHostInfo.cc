@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: tHostInfo.cc 20891 2010-05-17 07:10:15Z gervandiepen $
+//# $Id: tHostInfo.cc 21081 2011-05-09 11:36:20Z gervandiepen $
 
 // For sleep() and ssize_t.
 #include <stdio.h>
@@ -39,12 +39,8 @@
 
 #include <casa/namespace.h>
 
-#define AIPSRCENV "CASARCFILES=aipsrc"
-
 int main()
 {
-
-    putenv(strdup(AIPSRCENV));
     cout << "Host: " << HostInfo::hostName() << endl;
     cout << "Process ID: " << HostInfo::processID() << endl;
     Double s = HostInfo::secondsFrom1970();

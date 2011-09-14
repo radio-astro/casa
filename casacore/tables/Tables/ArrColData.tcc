@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ArrColData.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrColData.tcc 21091 2011-06-01 12:08:15Z gervandiepen $
 
 #include <tables/Tables/ArrColData.h>
 #include <tables/Tables/ArrColDesc.h>
@@ -82,7 +82,7 @@ void ArrayColumnData<T>::createDataManagerColumn()
 	                                   == ColumnDesc::FixedShape) {
 	if (!shapeColDef_p) {
 	    throw (TableInvOper ("ArrayColumnData::createDataManagerColumn; "
-				 "shape of FixedShape array "
+				 "shape of FixedShape array in column "
 				 + colDescPtr_p->name() + " not defined"));
 	}
 	dataColPtr_p->setFixedShapeColumn (shapeCol_p);
@@ -114,13 +114,15 @@ void ArrayColumnData<T>::setShapeColumn (const IPosition& shp)
     if (shapeColDef_p) {
 	if (shp != shapeCol_p) {
 	    throw (TableInvOper
-		   ("ArrayColumnData: change in shape of FixedShape array"));
+		   ("ArrayColumnData: change in shape of FixedShape array"
+                    " of column " + colDescPtr_p->name()));
 	}
     }
     if (columnDesc().ndim() > 0) {
 	if (Int(shp.nelements()) != columnDesc().ndim()) {
 	    throw (TableInvOper
-	       ("ArrayColumnData: mismatch in #dim of FixedShape array shape"));
+	       ("ArrayColumnData: mismatch in #dim of FixedShape array shape"
+                " of column " + colDescPtr_p->name()));
 	}
     }
     shapeCol_p    = shp;
@@ -319,12 +321,14 @@ void ArrayColumnData<T>::checkShape (const IPosition& shape) const
     if ((columnDesc().options() & ColumnDesc::FixedShape)
 	                               == ColumnDesc::FixedShape) {
 	throw (TableInvOper
-	     ("ArrayColumn::setShape only possible for non-FixedShape arrays"));
+	     ("ArrayColumn::setShape only possible for non-FixedShape arrays"
+              " of column " + colDescPtr_p->name()));
     }
     if (columnDesc().ndim() > 0) {
 	if (Int(shape.nelements()) != columnDesc().ndim()) {
 	    throw (TableInvOper
-		   ("ArrayColumn::setShape: mismatch in #dim of array"));
+		   ("ArrayColumn::setShape: mismatch in #dim of array"
+                    " of column " + colDescPtr_p->name()));
 	}
     }
 }

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SimOrdMap.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: SimOrdMap.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/Containers/SimOrdMap.h>
 #include <casa/Exceptions/Error.h>
@@ -81,9 +81,6 @@ void SimpleOrderedMap<K,V>::copyBlock (const SimpleOrderedMap<K,V>& that)
 {
     for (uInt i=0; i<nrused; i++) {
         kvblk[i] = new OrderedPair<K,V> (that.getKey(i), that.getVal(i));
-	if (kvblk[i] == 0) {
-	    throw (AllocError ("SimpleOrderedMap::copyBlock",1));
-	}
     }
 }
 
@@ -182,9 +179,6 @@ V &SimpleOrderedMap<K,V>::define (const K& k, const V& v)
         nrused++;
     }
     kvblk[inx] = new OrderedPair<K,V> (k,v);
-    if (kvblk[inx] == 0) {
-	throw (AllocError ("SimpleOrderedMap::define",1));
-    }
     return(KVBLKpair(inx)->y());
 }
 

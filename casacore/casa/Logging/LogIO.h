@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: LogIO.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: LogIO.h 21005 2010-12-08 08:56:59Z gervandiepen $
 
 #ifndef CASA_LOGIO_H
 #define CASA_LOGIO_H
@@ -225,7 +225,8 @@ public:
     // Post the accumulated message at SEVERE priority and then throw an
     // exception.
     // After the post the priority is reset to NORMAL.
-    void postThenThrow();
+    template<typename EXC> void postThenThrow (const EXC& exc)
+      { preparePostThenThrow(exc); sink_p.postThenThrow (msg_p, exc); }
 
     // Change the priority of the message. It does NOT post the accumulated
     // message at the old priority first.
@@ -237,7 +238,7 @@ public:
     // Change the origin of the accumulated message.
     void origin(const LogOrigin &origin);
 
-    // Accumulate output in this ostream.
+    // Acumulate output in this ostream.
     ostream& output();
 
     // Occasionally it is useful to interrogate the local log sink.
@@ -245,6 +246,9 @@ public:
     const LogSinkInterface &localSink() const;
 
 private:
+    // Prepare message stream for postThenThrow function.
+    void preparePostThenThrow (const AipsError& x);
+
     LogSink sink_p;
     LogMessage msg_p;
     ostringstream *text_p;
@@ -273,7 +277,6 @@ LogIO &operator<<(LogIO &os, LogIO::Command item);
 LogIO &operator<<(LogIO &os, const SourceLocation *item);
 LogIO &operator<<(LogIO &os, const LogOrigin &OR);
 // </group>
-
 
 // <summary>
 // Functions to accumulate text in the output message.

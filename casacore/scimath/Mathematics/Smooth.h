@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: $
+//# $Id: Smooth.h 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #ifndef SCIMATH_SMOOTH_H
 #define SCIMATH_SMOOTH_H

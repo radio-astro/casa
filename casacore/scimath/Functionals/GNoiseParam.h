@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: GNoiseParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: GNoiseParam.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_GNOISEPARAM_H
 #define SCIMATH_GNOISEPARAM_H
@@ -102,12 +102,12 @@ public:
   virtual ~GNoiseParam();
 
   //# Operators    
-  virtual uInt ndim() const { return 0; };
+  virtual uInt ndim() const { return 0; }
 
   //# Member functions
   // Give name of function
   virtual const String &name() const { static String x("gaussnoise");
-    return x; };
+    return x; }
 
 protected:
   //# Data

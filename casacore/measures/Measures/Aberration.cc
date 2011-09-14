@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Aberration.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: Aberration.cc 21024 2011-03-01 11:46:18Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/Aberration.h>
@@ -79,10 +79,10 @@ void Aberration::copy(const Aberration &other) {
     for (Int i=0; i<3; i++) {
 	aval[i] = other.aval[i];
 	dval[i] = other.dval[i];
-    };
+    }
     for (Int j=0; j<4; j++) {
 	result[j] = other.result[j];
-    };
+    }
 }
 
 //# Destructor
@@ -96,11 +96,11 @@ const MVPosition &Aberration::operator()(Double epoch) {
     Double fac = 1;
     if (AipsrcValue<Bool>::get(Aberration::usejpl_reg) && method != B1950) {
       fac /= MeasTable::Planetary(MeasTable::CAU);
-    };
+    }
     lres++; lres %= 4;
     for (Int i=0; i<3; i++) {
       result[lres](i) = fac * (aval[i] + dt*dval[i]);
-    };
+    }
     return result[lres];
 }
 
@@ -112,10 +112,10 @@ const MVPosition &Aberration::derivative(Double epoch) {
     Double fac = 1;
     if (AipsrcValue<Bool>::get(Aberration::usejpl_reg) && method != B1950) {
       fac /=  MeasTable::Planetary(MeasTable::CAU);
-    };
+    }
     for (Int i=0; i<3; i++) {
       result[lres](i) = fac * dval[i];
-    };
+    }
     return result[lres];
 }
 
@@ -126,12 +126,12 @@ void Aberration::fill() {
       AipsrcValue<Double>::registerRC(String("measures.aberration.d_interval"),
 				      Unit("d"), Unit("d"),
 				      Aberration::INTV);
-  };
+  }
   if (!Aberration::usejpl_reg) {
     usejpl_reg =
       AipsrcValue<Bool>::registerRC(String("measures.aberration.b_usejpl"),
 				    False);
-  };
+  }
   checkEpoch = 1e30;
 }
 
@@ -144,50 +144,47 @@ void Aberration::calcAber(Double t) {
 	       AipsrcValue<Double>::get(Aberration::interval_reg)) ||
       (AipsrcValue<Bool>::get(Aberration::usejpl_reg) &&
        method != B1950) ) {
-    Double sdtmp;
-    Double cdtmp;
-    
     checkEpoch = t;
     switch (method) {
     case B1950:
-      // Yes, this really should be the time in Julian centuries since January
-      // 0.5, 1900, not 1950.  And MJDB1900 should probably be named MJD1900
-      // since it is 15019.5, indicating a Julian instead of a Besselian (=
+      // Yes, this really should be the time in Julian centuries since January 	 
+      // 0.5, 1900, not 1950.  And MJDB1900 should probably be named MJD1900 	 
+      // since it is 15019.5, indicating a Julian instead of a Besselian (= 	 
       // tropical) date.
       t = (t - MeasData::MJDB1900)/MeasData::JDCEN;
       break;
     default:
       t = (t - MeasData::MJD2000)/MeasData::JDCEN;
       break;
-    };
+    }
     Int i,j;
     Vector<Double> fa(13), dfa(13);
     for (i=0; i<3; i++) {
       aval[i] = dval[i] = Double(0);
-    };
-    Double dtmp, ddtmp;
+    }
+    Double dtmp, ddtmp, sdtmp, cdtmp;
     switch (method) {
     case B1950:
       for (i=0; i<12; i++) {
-        const Polynomial<Double>& aberArgP = MeasTable::aber1950Arg(i);
-        
+	const Polynomial<Double>& aberArgP = MeasTable::aber1950Arg(i);
+
 	fa(i) = aberArgP(t);
 	dfa(i) = (aberArgP.derivative())(t);
-      };
+      }
       for (i=0; i<132; i++) {
-        const Vector<Char>& mulAberArgV = MeasTable::mulAber1950Arg(i);
-          
+	const Vector<Char>& mulAberArgV = MeasTable::mulAber1950Arg(i);
+
 	dtmp = ddtmp = 0; 
 	for (j=0; j<12; j++) {
-	  dtmp  += mulAberArgV[j] * fa(j);
+	  dtmp += mulAberArgV[j] * fa(j);
 	  ddtmp += mulAberArgV[j] * dfa(j);
-	};
+	}
 
-        sdtmp = sin(dtmp);
-        cdtmp = cos(dtmp);
-        
-        const Vector<Double>& mulAberV = MeasTable::mulAber1950(i, t);
-        
+	sdtmp = sin(dtmp);
+	cdtmp = cos(dtmp);
+
+	const Vector<Double>& mulAberV = MeasTable::mulAber1950(i, t);
+
 	aval[0] += mulAberV[0] * sdtmp + mulAberV[1] * cdtmp;
 	aval[1] += mulAberV[2] * sdtmp + mulAberV[3] * cdtmp;
 	aval[2] += mulAberV[4] * sdtmp + mulAberV[5] * cdtmp;
@@ -197,65 +194,65 @@ void Aberration::calcAber(Double t) {
 	  (mulAberV[2] * cdtmp - mulAberV[3] * sdtmp) * ddtmp;
 	dval[2] += mulAberV[10] * sdtmp + mulAberV[11] * cdtmp +
 	  (mulAberV[4] * cdtmp - mulAberV[5] * sdtmp) * ddtmp;
-      };
+      }
       for (i=0; i<3; i++) {
 	aval[i] /= C::c;
 	dval[i] /= (C::c * MeasData::JDCEN);
-      };
+      }
       break;
       
     default:
       if (AipsrcValue<Bool>::get(Aberration::usejpl_reg)) {
 	const Vector<Double> &mypl =
 	  MeasTable::Planetary(MeasTable::EARTH, checkEpoch);
-	for (i = 0; i < 3; ++i) {
+	for (i=0; i<3; i++) {
 	  aval[i] = mypl[i + 3];
 	  dval[i] = 0;
-	};
+	}
       } else {
 	for (i=0; i<13; i++) {
-          const Polynomial<Double>& aberArgP = MeasTable::aberArg(i);
-        
+	  const Polynomial<Double>& aberArgP = MeasTable::aberArg(i);
+
 	  fa(i) = aberArgP(t);
 	  dfa(i) = (aberArgP.derivative())(t);
-	};
+	}
 	for (i=0; i<80; i++) {
-          const Vector<Char>& mulAberArgV = MeasTable::mulAberArg(i);
+	  const Vector<Char>& mulAberArgV = MeasTable::mulAberArg(i);
 
 	  dtmp = ddtmp = 0; 
 	  for (j=0; j<6; j++) {
-	    dtmp  += mulAberArgV[j] *  fa[j];
+	    dtmp  += mulAberArgV[j] * fa[j];
 	    ddtmp += mulAberArgV[j] * dfa[j];
-	  };
+	  }
 
-          sdtmp = sin(dtmp);
-          cdtmp = cos(dtmp);
-        
-          const Vector<Double>& mulAberV = MeasTable::mulAber(i, t);
-        
+	  sdtmp = sin(dtmp);
+	  cdtmp = cos(dtmp);
+	  
+	  const Vector<Double>& mulAberV = MeasTable::mulAber(i, t);
+
 	  aval[0] += mulAberV[0] * sdtmp + mulAberV[1] * cdtmp;
 	  aval[1] += mulAberV[2] * sdtmp + mulAberV[3] * cdtmp;
 	  aval[2] += mulAberV[4] * sdtmp + mulAberV[5] * cdtmp;
-	  dval[0] += mulAberV[6] * sdtmp + mulAberV[7] * cdtmp
-            + (mulAberV[0] * cdtmp - mulAberV[1] * sdtmp) * ddtmp;
-	  dval[1] += mulAberV[8] * sdtmp + mulAberV[9] * cdtmp
-            + (mulAberV[2] * cdtmp - mulAberV[3] * sdtmp) * ddtmp;
-	  dval[2] += mulAberV[10] * sdtmp + mulAberV[11] * cdtmp
-            + (mulAberV[4] * cdtmp - mulAberV[5] * sdtmp) * ddtmp;
-	};
+	  dval[0] += mulAberV[6] * sdtmp + mulAberV[7] * cdtmp +
+	    (mulAberV[0] * cdtmp - mulAberV[1] * sdtmp) * ddtmp;
+	  dval[1] += mulAberV[8] * sdtmp + mulAberV[9] * cdtmp +
+	    (mulAberV[2] * cdtmp - mulAberV[3] * sdtmp) * ddtmp;
+	  dval[2] += mulAberV[10] * sdtmp + mulAberV[11] * cdtmp +
+	    (mulAberV[4] * cdtmp - mulAberV[5] * sdtmp) * ddtmp;
+	}
 	for (i=0; i<17; i++) {
-          const Vector<Char>& mulAberArgV = MeasTable::mulAberSunArg(i);
+	  const Vector<Char>& mulAberArgV = MeasTable::mulAberSunArg(i);
 
 	  dtmp = ddtmp = 0;
 	  for (j=0; j<7; j++) {
-	    dtmp  += mulAberArgV[j] *  fa[j + 1];
+	    dtmp  += mulAberArgV[j] * fa[j + 1];
 	    ddtmp += mulAberArgV[j] * dfa[j + 1];
-	  };
+	  }
+	  
+	  sdtmp = sin(dtmp);
+	  cdtmp = cos(dtmp);
 
-          sdtmp = sin(dtmp);
-          cdtmp = cos(dtmp);
-        
-          const Vector<Double>& mulAberV = MeasTable::mulSunAber(i);
+	  const Vector<Double>& mulAberV = MeasTable::mulSunAber(i);
 
 	  aval[0] += mulAberV[0] * sdtmp + mulAberV[1] * cdtmp;
 	  aval[1] += mulAberV[2] * sdtmp + mulAberV[3] * cdtmp;
@@ -263,36 +260,36 @@ void Aberration::calcAber(Double t) {
 	  dval[0] += (mulAberV[0] * cdtmp - mulAberV[1] * sdtmp) * ddtmp;
 	  dval[1] += (mulAberV[2] * cdtmp - mulAberV[3] * sdtmp) * ddtmp;
 	  dval[2] += (mulAberV[4] * cdtmp - mulAberV[5] * sdtmp) * ddtmp;
-	};
+	}
 	for (i=0; i<17; i++) {
-          const Vector<Char>& mulAberArgV = MeasTable::mulAberEarthArg(i);
+	  const Vector<Char>& mulAberArgV = MeasTable::mulAberEarthArg(i);
 
 	  dtmp = ddtmp = 0;
 	  for (j=0; j<5; j++) {
 	    dtmp  += mulAberArgV[j] *  fa[j + 8];
 	    ddtmp += mulAberArgV[j] * dfa[j + 8];
-	  };
+	  }
 
-          sdtmp = sin(dtmp);
-          cdtmp = cos(dtmp);
-        
-          const Vector<Double>& mulAberV = MeasTable::mulEarthAber(i);
+	  sdtmp = sin(dtmp);
+	  cdtmp = cos(dtmp);
+	          
+	  const Vector<Double>& mulAberV = MeasTable::mulEarthAber(i);
 
 	  aval[0] += mulAberV[0] * sdtmp;
 	  aval[1] += mulAberV[1] * cdtmp;
 	  aval[2] += mulAberV[2] * cdtmp;
 	  dval[0] += mulAberV[0] * cdtmp * ddtmp;
-	  dval[1] -= mulAberV[1] * sdtmp * ddtmp;
-	  dval[2] -= mulAberV[2] * sdtmp * ddtmp;
-	};
+	  dval[1] += -mulAberV[1] * sdtmp * ddtmp;
+	  dval[2] += -mulAberV[2] * sdtmp * ddtmp;
+	}
 	for (i=0; i<3; i++) {
 	  aval[i] /= C::c;
 	  dval[i] /= (C::c * MeasData::JDCEN);
-	};
-      };
+	}
+      }
       break;
-    };
-  };
+    }
+  }
 }
 
 } //# NAMESPACE CASA - END

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: SincParam.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: SincParam.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_SINCPARAM_H
 #define SCIMATH_SINCPARAM_H
@@ -116,12 +116,12 @@ public:
   virtual ~SincParam();
 
   //# Operators    
-  virtual uInt ndim() const { return 1; };
+  virtual uInt ndim() const { return 1; }
 
   //# Member functions
   // Give name of function
   virtual const String &name() const { static String x("sinc");
-    return x; };
+    return x; }
 
 
   //# Make members of parent classes known.

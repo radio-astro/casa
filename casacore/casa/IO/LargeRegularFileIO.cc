@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LargeRegularFileIO.cc 20615 2009-06-09 02:16:01Z Malte.Marquarding $
+//# $Id: LargeRegularFileIO.cc 21090 2011-06-01 10:01:28Z gervandiepen $
 
 #include <casa/aips.h>
 #include <casa/IO/LargeIOFuncDef.h>
@@ -64,12 +64,10 @@ int LargeRegularFileIO::openCreate (const RegularFile& file,
                                     ByteIO::OpenOption option)
 {
     const String& name = file.path().expandedName();
-    Bool writable = True;
     Bool create = False;
     Int stropt;
     switch (option) {
     case ByteIO::Old:
-	writable = False;
 	stropt = O_RDONLY;
 	break;
     case ByteIO::NewNoReplace:

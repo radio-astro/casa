@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: RecordGram.cc 20922 2010-07-05 11:36:04Z gervandiepen $
+//# $Id: RecordGram.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 // RecordGram; grammar for record command lines
 
@@ -69,6 +69,7 @@ const RecordInterface* RecordGram::theirRecPtr = 0;
 TableExprNode* RecordGram::theirNodePtr = 0;
 const Table* RecordGram::theirTabPtr = 0;
 TaQLStyle RecordGram::theirTaQLStyle;
+Mutex RecordGram::theirMutex;
 
 
 //# Parse the command.
@@ -111,6 +112,7 @@ void RecordGramerror (const char*)
 TableExprNode RecordGram::parse (const RecordInterface& record,
 				 const String& expression)
 {
+    ScopedMutexLock lock(theirMutex);
     theirRecPtr = &record;
     theirTabPtr = 0;
     return doParse (expression);
@@ -119,6 +121,7 @@ TableExprNode RecordGram::parse (const RecordInterface& record,
 TableExprNode RecordGram::parse (const Table& table,
 				 const String& expression)
 {
+    ScopedMutexLock lock(theirMutex);
     theirRecPtr = 0;
     theirTabPtr = &table;
     return doParse (expression);

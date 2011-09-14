@@ -134,7 +134,7 @@ class FluxCalc_SS_JPL_Butler
   ComponentType::Shape compute(Vector<Flux<Double> >& values,
                                Vector<Flux<Double> >& errors, Double& angdiam,
                                const Vector<MFrequency>& mfreqs,
-                               const Bool report=True);
+			       const Bool report=True);
 
   // Same as the above, but for a set of sets of frequencies, i.e.
   // mfreqs[spw] is a set of frequencies for channels in spectral window spw.
@@ -216,9 +216,9 @@ class FluxCalc_SS_JPL_Butler
   // Returns whether or not it was successful.
   Bool compute_constant_temperature(Vector<Flux<Double> >& values,
 				    Vector<Flux<Double> >& errors,
-                                    const Double angdiam,
+				    const Double angdiam,
 				    const Vector<MFrequency>& mfreqs,
-                                    const Bool report=True);  
+				    const Bool report=True);  
 
   // Find the row in mjd closest to time_p, and the rows just before and after
   // it, taking boundaries into account.

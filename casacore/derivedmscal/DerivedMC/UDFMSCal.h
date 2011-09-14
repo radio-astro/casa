@@ -23,14 +23,16 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: UDFMSCal.h 20941 2010-08-25 18:35:26Z gervandiepen $
+//# $Id: UDFMSCal.h 21108 2011-07-18 07:40:54Z gervandiepen $
 
 #ifndef DERIVEDMSCAL_UDFMSCAL_H
 #define DERIVEDMSCAL_UDFMSCAL_H
 
 //# Includes
 #include <derivedmscal/DerivedMC/MSCalEngine.h>
+#include <ms/MeasurementSets/StokesConverter.h>
 #include <tables/Tables/UDFBase.h>
+#include <tables/Tables/ExprNode.h>
 
 namespace casa {
 
@@ -94,7 +96,7 @@ namespace casa {
   {
   public:
     // Define the possible 'column' types.
-    enum ColType {HA, PA, LAST, AZEL, UVW};
+    enum ColType {HA, PA, LAST, AZEL, UVW, STOKES};
 
     explicit UDFMSCal (ColType, Int antnr);
 
@@ -110,22 +112,38 @@ namespace casa {
     static UDFBase* makeAZEL1 (const String&);
     static UDFBase* makeAZEL2 (const String&);
     static UDFBase* makeUVW   (const String&);
+    static UDFBase* makeStokes(const String&);
 
     // Setup the object.
     virtual void setup (const Table&, const TaQLStyle&);
 
+    // Replace the Table in this node.
+    virtual void replaceTable (const Table&);
+
     // Get the value.
     virtual Double getDouble (const TableExprId& id);
+    virtual Array<Bool> getArrayBool (const TableExprId& id);
     virtual Array<Double> getArrayDouble (const TableExprId& id);
+    virtual Array<DComplex> getArrayDComplex (const TableExprId& id);
 
   private:
-    MSCalEngine    itsEngine;
-    ColType        itsType;
-    Int            itsAntNr;
+    // Setup the Stokes conversion.
+    void setupStokes (const Table& table,
+                      PtrBlock<TableExprNodeRep*>& operands);
+
+    // Setup direction conversion if a direction is explicitly given.
+    void setupDir (TableExprNodeRep*& operand);
+
+    //# Data members.
+    MSCalEngine     itsEngine;
+    StokesConverter itsStokesConv;
+    TableExprNode   itsDataNode;   //# for stokes conversion
+    ColType         itsType;
+    Int             itsAntNr;
     //# Preallocate vectors to avoid having to construct them too often.
     //# Makes it thread-unsafe though.
-    Vector<Double> itsTmpAzEl;
-    Vector<Double> itsTmpUVW;
+    Vector<Double>  itsTmpAzEl;
+    Vector<Double>  itsTmpUVW;
   };
 
 } //end namespace

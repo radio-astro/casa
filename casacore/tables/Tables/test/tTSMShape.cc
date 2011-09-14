@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tTSMShape.cc 20177 2007-11-22 03:27:05Z Malte.Marquarding $
+//# $Id: tTSMShape.cc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
 #include <tables/Tables/TSMShape.h>
 #include <casa/iostream.h>

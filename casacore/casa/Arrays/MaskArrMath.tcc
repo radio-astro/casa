@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MaskArrMath.tcc 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: MaskArrMath.tcc 21051 2011-04-20 11:46:29Z gervandiepen $
 
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/MaskArrMath.h>
@@ -1520,12 +1520,6 @@ template<class T> T median(const MaskedArray<T> &left, Bool sorted,
 	// Make a copy of the masked elements.
 
 	T *copy = new T[nelem];
-	if (copy == 0) {
-            left.freeArrayStorage(leftarrStorage, leftarrDelete);
-            left.freeMaskStorage(leftmaskStorage, leftmaskDelete);
-	    throw (AllocError("T ::median(const Array<T> &) - sort buffer",
-			      nelem));
-	}
         T *copyS = copy;
 
         uInt ntotal = nelem;

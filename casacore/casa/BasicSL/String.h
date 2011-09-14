@@ -591,7 +591,6 @@ class String : public string {
 
   static Int toInt(const String& string);
 
-
   // Remove beginning and ending whitespace.
   void trim();
 
@@ -637,13 +636,13 @@ class String : public string {
     return string::find_first_of(s, pos, n); }
   size_type find_first_of(Char c, size_type pos=0) const {
     return string::find_first_of(c, pos); }
-  size_type find_last_of(const string &str, size_type pos=0) const {
+  size_type find_last_of(const string &str, size_type pos=npos) const {
     return string::find_last_of(str, pos); }
-  size_type find_last_of(const Char *s, size_type pos=0) const {
+  size_type find_last_of(const Char *s, size_type pos=npos) const {
     return string::find_last_of(s, pos); }
   size_type find_last_of(const Char *s, size_type pos, size_type n) const {
     return string::find_last_of(s, pos, n); }
-  size_type find_last_of(Char c, size_type pos=0) const {
+  size_type find_last_of(Char c, size_type pos=npos) const {
     return string::find_last_of(c, pos); }
   size_type find_first_not_of(const string &str, size_type pos=0) const {
     return string::find_first_not_of(str, pos); }
@@ -653,13 +652,13 @@ class String : public string {
     return string::find_first_not_of(s, pos, n); }
   size_type find_first_not_of(Char c, size_type pos=0) const {
     return string::find_first_not_of(c, pos); }
-  size_type find_last_not_of(const string &str, size_type pos=0) const {
+  size_type find_last_not_of(const string &str, size_type pos=npos) const {
     return string::find_last_not_of(str, pos); }
-  size_type find_last_not_of(const Char *s, size_type pos=0) const {
+  size_type find_last_not_of(const Char *s, size_type pos=npos) const {
     return string::find_last_not_of(s, pos); }
   size_type find_last_not_of(const Char *s, size_type pos, size_type n) const {
     return string::find_last_not_of(s, pos, n); }
-  size_type find_last_not_of(Char c, size_type pos=0) const {
+  size_type find_last_not_of(Char c, size_type pos=npos) const {
     return string::find_last_not_of(c, pos); }
   // </group>
   

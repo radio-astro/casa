@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: ExprNode.h 20967 2010-09-27 11:06:03Z gervandiepen $
+//# $Id: ExprNode.h 21102 2011-07-07 07:37:45Z gervandiepen $
 
 #ifndef TABLES_EXPRNODE_H
 #define TABLES_EXPRNODE_H
@@ -135,6 +135,15 @@ class TableExprNode;
 			   const TableExprNode& tolerance);
   // </group>
 
+  // Angular distance between positions.
+  // Both arguments have to be arrays. If both arrays contain 2 values
+  // (ra and dec), the result is a scalar.
+  // Otherwise the arrays have to contain a multiple of 2 values and the
+  // result is a 2-dim array giving the distance of each position in the
+  // first array to each position in the second array.
+    TableExprNode angdist (const TableExprNode& pos1,
+                           const TableExprNode& pos2);
+
   // Cone search; test if the position of a source is inside a cone.
   // <br>Argument <src>sourcePos</src> must be a double array
   // containing two values (ra and dec of source) in radians.
@@ -233,6 +242,8 @@ class TableExprNode;
   // </group>
 
   // Functions for date-values. Defined for scalars and arrays.
+  //# Note, ctod is called ctodt, because Mac OS-X defines a macro
+  //# ctod in param.h
   // <group>
     TableExprNode datetime  (const TableExprNode& node);
     TableExprNode mjdtodate (const TableExprNode& node);
@@ -244,7 +255,7 @@ class TableExprNode;
     TableExprNode cmonth    (const TableExprNode& node);
     TableExprNode weekday   (const TableExprNode& node);
     TableExprNode cdow      (const TableExprNode& node);
-    TableExprNode ctod      (const TableExprNode& node);
+    TableExprNode ctodt     (const TableExprNode& node);
     TableExprNode cdate     (const TableExprNode& node);
     TableExprNode ctime     (const TableExprNode& node);
     TableExprNode week	    (const TableExprNode& node);
@@ -580,6 +591,8 @@ class TableExprNode
     friend TableExprNode nearAbs (const TableExprNode& left,
 				  const TableExprNode& right,
 				  const TableExprNode& tolerance);
+    friend TableExprNode angdist (const TableExprNode& pos1,
+                                  const TableExprNode& pos2);
     friend TableExprNode cones (const TableExprNode& sourcePos,
 				const TableExprNode& cones);
     friend TableExprNode anyCone (const TableExprNode& sourcePos,
@@ -641,7 +654,7 @@ class TableExprNode
     friend TableExprNode cmonth    (const TableExprNode& node);
     friend TableExprNode weekday   (const TableExprNode& node);
     friend TableExprNode cdow      (const TableExprNode& node);
-    friend TableExprNode ctod      (const TableExprNode& node);
+    friend TableExprNode ctodt     (const TableExprNode& node);
     friend TableExprNode cdate     (const TableExprNode& node);
     friend TableExprNode ctime     (const TableExprNode& node);
     friend TableExprNode week	   (const TableExprNode& node);
@@ -835,6 +848,11 @@ public:
     // Zero is returned if no table is associated with it.
     uInt nrow() const
       { return node_p->nrow(); }
+
+    // Is the result value defined?
+    // Normally it is, but not for a column with an undefined value.
+    Bool isResultDefined (const TableExprId& id) const
+      { return node_p->isDefined (id); }
 
     // Get a value for this node in the given row.
     // These functions are implemented in the derived classes and
@@ -1232,6 +1250,12 @@ inline TableExprNode nearAbs (const TableExprNode& left,
     return TableExprNode::newFunctionNode (TableExprFuncNode::nearabs3FUNC,
 					   left, right, tolerance);
 }
+inline TableExprNode angdist (const TableExprNode& pos1,
+                              const TableExprNode& pos2)
+{
+    return TableExprNode::newFunctionNode (TableExprFuncNode::angdistFUNC,
+					   pos1, pos2);
+}
 inline TableExprNode cones (const TableExprNode& sourcePos,
 			    const TableExprNode& cones)
 {
@@ -1484,7 +1508,7 @@ inline TableExprNode cdow (const TableExprNode& node)
 {
     return TableExprNode::newFunctionNode (TableExprFuncNode::cdowFUNC, node);
 }
-inline TableExprNode ctod (const TableExprNode& node)
+inline TableExprNode ctodt (const TableExprNode& node)
 {
     return TableExprNode::newFunctionNode (TableExprFuncNode::ctodFUNC, node);
 }

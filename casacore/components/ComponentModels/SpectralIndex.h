@@ -114,7 +114,10 @@ template <class T> class Vector;
 // <srcblock>
 //  SpectralIndex siModel;
 //  siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
-//  siModel.setIndex(1.0);
+//  siModel.setIndex(1.0, Stokes::I);  
+//  siModel.setIndex(0.5, Stokes::Q);  
+//  siModel.setIndex(0.5, Stokes::U);  
+//  siModel.setIndex(-1.0, Stokes::V);
 //  const Flux<Double> LBandFlux(1.0, 1.0, 1.0, 1.0);
 //  const MVFrequency step(Quantity(100.0, "MHz"));
 //  MVFrequency sampleFreq = siModel.refFrequency().getValue();

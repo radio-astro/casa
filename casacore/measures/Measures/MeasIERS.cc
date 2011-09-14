@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MeasIERS.cc 20699 2009-09-02 12:21:07Z gervandiepen $
+//# $Id: MeasIERS.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <measures/Measures/MeasIERS.h>
@@ -70,7 +70,7 @@ Bool MeasIERS::get(Double &returnValue,
     forcepredict_reg = 
       AipsrcValue<Bool>::registerRC(String("measures.measiers.b_forcepredict"),
 				    False);
-  };
+  }
   if (AipsrcValue<Bool>::get(MeasIERS::notable_reg)) return True;
   Bool res = True;
   Double f;
@@ -80,14 +80,14 @@ Bool MeasIERS::get(Double &returnValue,
       (dateNow - date) <= 
       AipsrcValue<Double>::get(MeasIERS::predicttime_reg)) {
     res = False;			// do predict
-  };
+  }
   MeasIERS::Files which = MeasIERS::MEASURED;
   if (res) {
     res = initMeas(which);
     if (res) {
       res = fillMeas(which, date);
-    };
-  };
+    }
+  }
   if (!res) {				// Retry for predicted
     which = MeasIERS::PREDICTED;
     if (!initMeas(which)) return False;
@@ -115,10 +115,10 @@ Bool MeasIERS::get(Double &returnValue,
              << LogIO::POST;
         }
 	msgDone = True;
-      };
+      }
       return False;
-    };
-  };
+    }
+  }
   // Interpolation fraction
   f = date - ldat[which][0];
   returnValue = ldat[which+N_Files][type]*f - ldat[which][type]*(f-1.0);
@@ -141,69 +141,78 @@ Bool MeasIERS::initMeas(MeasIERS::Files which) {
     "DdPsi",
     "DdEps"};
   static const String tplc[N_Files] = {"measures.ierseop97.directory",
-				 "measures.ierspredict.directory"};
+                                       "measures.ierspredict.directory"};
 
-  if (!measured[which] && measFlag[which]) {
-    measFlag[which] = False;
-    TableRecord kws;
-    Double dt;
-    String vs;
-    Bool ok = True;
-    if (!MeasIERS::getTable(MeasIERS::t[which], kws, row[which],
-			    rfp[Int(which)], vs, dt, 
-			    N_Types, names, tp[which],
-			    tplc[which],
-			    "geodetic")) {
-      LogIO os(LogOrigin("MeasIERS",
-			 String("initMeas(MeasIERS::Files)"),
-			 WHERE));
-      os << LogIO::NORMAL1
-         << "Cannot read IERS (Earth axis data) table " << tp[which]
-         << "\nCalculations will proceed with lower precision"
-         << LogIO::POST;
-      return False;
-    };
-    MeasIERS::openNote(&MeasIERS::closeMeas);
-    if (!kws.isDefined("MJD0") || kws.asDouble("MJD0") < 10000)
-      ok = False;
-    if (ok) {
-      mjd0[which] = Int(kws.asDouble("MJD0"));
-      Int n = t[which].nrow();
-      row[which].get(n-1);
-      if (*(rfp[Int(which)][0]) != mjd0[which] + n) { 
-	ok = False;
-      } else {
-	mjdl[which] = mjd0[which] + n;
-      };
-    };
-    if (!ok) {
-      LogIO os(LogOrigin("MeasIERS",
-			 String("initMeas(MeasIERS::Files)"),
-			 WHERE));
-      os << String("Corrupted IERS table ") + tp[which] << LogIO::EXCEPTION;
-    };
-    measured[which] = True;
-    for (Int i = 0; i < MeasIERS::N_Types; i++) {
-      for (Int j = 0; j < 2*MeasIERS::N_Files; j++) {
-	ldat[j][i] = 0;
-      };
-    }; 
-  };
-  return (measured[which]);
+  if (measFlag[which]) {
+    ScopedMutexLock locker(theirMutex);
+    if (measFlag[which]) {
+      TableRecord kws;
+      Double dt;
+      String vs;
+      Bool ok = True;
+      if (!MeasIERS::getTable(MeasIERS::t[which], kws, row[which],
+                              rfp[Int(which)], vs, dt, 
+                              N_Types, names, tp[which],
+                              tplc[which],
+                              "geodetic")) {
+        LogIO os(LogOrigin("MeasIERS",
+                           String("initMeas(MeasIERS::Files)"),
+                           WHERE));
+        os << LogIO::NORMAL1
+           << "Cannot read IERS (Earth axis data) table " << tp[which]
+           << "\nCalculations will proceed with lower precision"
+           << LogIO::POST;
+        ok = False;
+      }
+      if (ok) {
+        MeasIERS::openNote(&MeasIERS::closeMeas);
+        if (!kws.isDefined("MJD0") || kws.asDouble("MJD0") < 10000) {
+          ok = False;
+        }
+      }
+      if (ok) {
+        mjd0[which] = Int(kws.asDouble("MJD0"));
+        Int n = t[which].nrow();
+        row[which].get(n-1);
+        if (*(rfp[Int(which)][0]) != mjd0[which] + n) { 
+          ok = False;
+        } else {
+          mjdl[which] = mjd0[which] + n;
+        }
+      }
+      if (!ok) {
+        LogIO os(LogOrigin("MeasIERS",
+                           String("initMeas(MeasIERS::Files)"),
+                           WHERE));
+        os << String("Corrupted IERS table ") + tp[which] << LogIO::EXCEPTION;
+      }
+      for (Int i = 0; i < MeasIERS::N_Types; i++) {
+        for (Int j = 0; j < 2*MeasIERS::N_Files; j++) {
+          ldat[j][i] = 0;
+        }
+      }
+      measFlag[which] = False;
+    }
+  }
+  return (! t[which].isNull());
 }
 
 void MeasIERS::closeMeas() {
   for (uInt i=0; i<N_Files; ++i) {
-    if (Table::isOpened(tp[i]) || measured[i] || !measFlag[i]) {
-      measFlag[i] = True;
-      measured[i] = False;
-      dateNow = 0.0;
-      mjd0[i] = 0;
-      mjdl[i] = 0;
-      msgDone = False;
-      t[i] = Table();
-    };
-  };
+    if (!measFlag[i]) {
+      ScopedMutexLock locker(theirMutex);
+      if (!measFlag[i]) {
+        if (! t[i].isNull()) {
+          dateNow = 0.0;
+          mjd0[i] = 0;
+          mjdl[i] = 0;
+          msgDone = False;
+          t[i] = Table();
+        }
+        measFlag[i] = True;
+      }
+    }
+  }
 }
 
 void MeasIERS::openNote(CLOSEFUN fun) {
@@ -213,13 +222,13 @@ void MeasIERS::openNote(CLOSEFUN fun) {
       tmp = new CLOSEFUN[sizeNote];
       for (uInt i=0; i<sizeNote; ++i) tmp[i] = toclose[i];
       delete [] toclose; toclose = 0;
-    };
+    }
     toclose = new CLOSEFUN[sizeNote+10];
     for (uInt i=0; i<sizeNote; ++i) toclose[i] = tmp[i];
     for (uInt i=sizeNote; i<sizeNote+10; ++i) toclose[i] = 0;
     sizeNote += 10;
     delete [] tmp; tmp = 0;
-  };
+  }
   toclose[nNote++] = fun;
 }
 
@@ -228,11 +237,11 @@ void MeasIERS::closeTables() {
     for (uInt i=sizeNote; i-1 != 0; --i) {
       if (toclose[i-1] != 0) toclose[i-1]();
       toclose[i-1] = 0;
-    };
+    }
     delete [] toclose; toclose = 0;
     sizeNote = 0;
     nNote = 0;
-  };
+  }
 }
 
 // Table handling
@@ -270,15 +279,15 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 	   << "Column " << rfn[i] << " is missing."
 	   << LogIO::POST;
 	ok = False;// break;
-      };
-    };
-  };
+      }
+    }
+  }
   if (!ok) {
     os << name + " has an incompatible format."
        << "\nYou may want to notify the CASA system manager about it."
        << LogIO::EXCEPTION;
     return False;
-  };
+  }
   table = tab;
   kws = ks;
   row = rw;
@@ -318,15 +327,15 @@ Bool MeasIERS::getTable(Table &table, TableRecord &kws, ROTableRow &row,
 	   << "Required column " << reqcols[i] << " is missing."
 	   << LogIO::POST;
 	ok = False;// break;
-      };
-    };
-  };
+      }
+    }
+  }
   if(!ok){
     os << name + " has an incompatible format."
        << "\nYou may want to notify the CASA system manager about it."
        << LogIO::EXCEPTION;
     return False;
-  };
+  }
 
   // Now look for optional columns.
   Vector<String> foundoptcols;
@@ -411,14 +420,14 @@ Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
 		if (Table::isReadable(ldir + name)) {
 		  found = True;
 		  break;
-		};
+		}
 		ldir = Aipsrc::aipsRoot() + "/data/" + path[i];
 		searched.resize(searched.nelements()+1, True);
 		searched[searched.nelements()-1] = ldir;
 		if (Table::isReadable(ldir + name)) {
 		  found = True;
 		  break;
-		};
+		}
 		Path cdatapath(String(CASADATA));
 		ldir = cdatapath.absoluteName() + path[i];
 		searched.resize(searched.nelements() + 1, True);
@@ -426,7 +435,7 @@ Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
 		if (Table::isReadable(ldir + name)) {
 		  found = True;
 		  break;
-		};
+		}
 		ldir = cdatapath.absoluteName() + "/share/casacore/data/" \
 		  + path[i];
 		ldir = cdatapath.absoluteName() + path[i];
@@ -435,13 +444,13 @@ Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
 		if (Table::isReadable(ldir + name)) {
 		  found = True;
 		  break;
-		};              
+		}              
 	      }
-	    };
-	  };
-	};
+	    }
+	  }
+	}
       }
-    };
+    }
     if(!Table::isReadable(ldir + name)){
       os << LogIO::WARN <<
 	String("Requested data table ") << name <<
@@ -450,7 +459,7 @@ Bool MeasIERS::findTab(Table& tab, const Table *tabin, const String &rc,
 	os << searched[i] << "\n";
       os << LogIO::POST;
       return False;
-    };
+    }
     tab = Table(ldir + name);
   }
   else
@@ -477,7 +486,7 @@ Bool MeasIERS::handle_keywords(Double &dt, String &vs, const TableRecord& ks,
        << "\nks.isDefined(VS_TYPE) " << ks.isDefined("VS_TYPE")
        << "\ntab.tableInfo().type() " << tab.tableInfo().type()
        << LogIO::POST;
-  };
+  }
   if (ok) {
     Quantity ldt;
     if (MVTime::read(ldt, ks.asString("VS_DATE"))) {
@@ -485,8 +494,8 @@ Bool MeasIERS::handle_keywords(Double &dt, String &vs, const TableRecord& ks,
       vs = ks.asString("VS_VERSION");
     } else {
       ok = False;
-    };
-  };
+    }
+  }
   return ok;
 }
 
@@ -494,7 +503,7 @@ Bool MeasIERS::fillMeas(MeasIERS::Files which, Double utf) {
   Int ut = ifloor(utf);
   if (ut < mjd0[which] + 1 || ut >= mjdl[which]) {
     return False;
-  };
+  }
   if (utf >= ldat[which][0] &&
       utf <= ldat[which+N_Files][0]) {
     // Already there
@@ -504,7 +513,7 @@ Bool MeasIERS::fillMeas(MeasIERS::Files which, Double utf) {
       // Shift one
       for (Int i=0; i<MeasIERS::N_Types; i++) {
 	ldat[which][i] = ldat[which+N_Files][i];
-      };
+      }
       // For end points
       ut = Int(ldat[which][0]);
     } else {
@@ -512,13 +521,13 @@ Bool MeasIERS::fillMeas(MeasIERS::Files which, Double utf) {
       row[which].get(ut-mjd0[which]-1);
       for (Int i=0; i<MeasIERS::N_Types; i++) {
 	ldat[which][i] = *(rfp[which][i]);
-      };
-    };
+      }
+    }
     // Read second line
     row[which].get(Int(ldat[which][0])-mjd0[which]);
     for (Int i=0; i<MeasIERS::N_Types; i++) {
       ldat[which+N_Files][i] = *(rfp[which][i]);
-    };
+    }
     if (ldat[which][0] != ut || ldat[which+N_Files][0] != ut+1) {
       LogIO os(LogOrigin("MeasIERS",
 			 String("fillMeas(MeasIERS::Files, Double)"),
@@ -527,13 +536,12 @@ Bool MeasIERS::fillMeas(MeasIERS::Files which, Double utf) {
 	String("The IERS table ") + tp[which] +
 	" has been corrupted: regenerate" <<
 	LogIO::EXCEPTION;
-    };
-  };
+    }
+  }
   return True;
 }
   
-Bool MeasIERS::measFlag[MeasIERS::N_Files] = {True, True};
-Bool MeasIERS::measured[MeasIERS::N_Files] = {False, False};
+volatile Bool MeasIERS::measFlag[MeasIERS::N_Files] = {True, True};
 Double MeasIERS::dateNow = 0.0;
 Table MeasIERS::t[MeasIERS::N_Files];
 ROTableRow MeasIERS::row[MeasIERS::N_Files];
@@ -546,6 +554,6 @@ const String MeasIERS::tp[MeasIERS::N_Files] = {"IERSeop97", "IERSpredict"};
 uInt MeasIERS::sizeNote = 0;
 uInt MeasIERS::nNote = 0;
 MeasIERS::CLOSEFUN *MeasIERS::toclose = 0;
+Mutex MeasIERS::theirMutex;
 
 } //# NAMESPACE CASA - END
-

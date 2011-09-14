@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: hdu.h 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: hdu.h 21081 2011-05-09 11:36:20Z gervandiepen $
 
 #ifndef FITS_HDU_H
 #define FITS_HDU_H
@@ -136,8 +136,8 @@ class HeaderDataUnit {
 		return kwlist_(n,i); }
 	const FitsKeyword *nextkw(FITS::ReservedName &n, int i) { 
 		return kwlist_.next(n,i); }
-	const FitsKeyword *kw(char *n) { return kwlist_(n); }
-	const FitsKeyword *nextkw(char *n) { return kwlist_.next(n); }
+	const FitsKeyword *kw(const char *n) { return kwlist_(n); }
+	const FitsKeyword *nextkw(const char *n) { return kwlist_.next(n); }
 	void mk(FITS::ReservedName k, Bool v, const char *c = 0);
 	void mk(FITS::ReservedName k, const char *v = 0, const char *c = 0);
 	void mk(FITS::ReservedName k, Int v, const char *c = 0);

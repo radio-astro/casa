@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MatrixMathLA.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MatrixMathLA.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_MATRIXMATHLA_H
 #define SCIMATH_MATRIXMATHLA_H
@@ -161,7 +161,7 @@ extern "C" {
       void zpotri(const char *uplo, const int *n, DComplex *a, 
 		  const int *lda, int *info);
 
-};
+}
 
 //# Overloaded versions of the above to make templating work more easily
 inline void getrf(const int *m, const int *n, float *a, const int *lda,

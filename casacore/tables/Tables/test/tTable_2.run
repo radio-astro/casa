@@ -7,10 +7,10 @@
 # The script supplies the names of all test tables found in the system.
 # It is meant to be run from assay, but can also be used standalone.
 #
-# $Id: tTable_2.run 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+# $Id: tTable_2.run 21091 2011-06-01 12:08:15Z gervandiepen $
 #-----------------------------------------------------------------------------
 
 # Fundamentals.
-  TABLES="tTable_2.data_v*"
+  TABLES="$testsrcdir/tTable_2.data_v*"
 
-  ./tTable_2 $TABLES
+  $casa_checktool ./tTable_2 $TABLES

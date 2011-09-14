@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Aipsrc.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: Aipsrc.h 21067 2011-05-06 13:58:12Z gervandiepen $
 
 #ifndef CASA_AIPSRC_H
 #define CASA_AIPSRC_H
@@ -32,6 +32,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Block.h>
 #include <casa/Arrays/Vector.h>
+#include <casa/OS/Mutex.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -270,7 +271,7 @@ public:
   static Bool findDir(String& foundDir, const String& lastPart="",
                       const Vector<String>& prepends=Vector<String>(),
                       const Vector<String>& appends=Vector<String>(),
-                      const Bool useStds=true);
+                      Bool useStds=True);
 
   // Functions to register keywords for later use in get() and set(). The
   // returned value is the index for get() and set().
@@ -375,8 +376,9 @@ protected:
   
 private:
   //# Data
+  static Mutex theirMutex;
   // Indicate files read
-  static Bool doInit;
+  static volatile Bool doInit;
   // Last time data was (re)read
   static Double lastParse; 
   // List of values belonging to keywords found
@@ -412,8 +414,8 @@ private:
   //# General member functions
   // Read in the aipsrc files, returning the number of lines found
   // <group>
-  static uInt parse();
-  static uInt parse(String &fileList);
+  static void parse(Bool force=False);
+  static void doParse(String &fileList);
   // </group>
   
   // The following parse function can be used for any list of files. It will

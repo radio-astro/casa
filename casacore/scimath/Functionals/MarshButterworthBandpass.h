@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#! ========================================================================
-//# $Id: MarshButterworthBandpass.h 20229 2008-01-29 15:19:06Z gervandiepen $
+//# $Id: MarshButterworthBandpass.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef SCIMATH_MARSHBUTTERWORTHBANDPASS_H
 #define SCIMATH_MARSHBUTTERWORTHBANDPASS_H
@@ -152,7 +152,7 @@ public:
     // </group>
   
     // Destructor
-    virtual ~MarshButterworthBandpass() {};
+    virtual ~MarshButterworthBandpass() {}
   
     // store the state of this Function into a Record
     virtual void store(Record& gr) const;
@@ -161,7 +161,7 @@ public:
     // deleting the pointer. 
     virtual Function<T> *clone() const {
 	return new MarshButterworthBandpass<T>(*this); 
-    };
+    }
 };
 
 

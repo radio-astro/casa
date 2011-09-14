@@ -24,7 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //#
-//# $Id: ArrayAccessor.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
+//# $Id: ArrayAccessor.h 21024 2011-03-01 11:46:18Z gervandiepen $
 
 #ifndef CASA_ARRAYACCESSOR_H
 #define CASA_ARRAYACCESSOR_H
@@ -57,7 +57,7 @@ namespace {
     // Axis number
     uInt N;
   };
-};
+}
 
 // <summary> Axis independent base for the ArrayAccessor classes </summary>
 // <use visibility=local>

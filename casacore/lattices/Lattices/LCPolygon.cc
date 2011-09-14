@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: LCPolygon.cc 20652 2009-07-06 05:04:32Z Malte.Marquarding $
+//# $Id: LCPolygon.cc 21039 2011-04-06 05:52:01Z gervandiepen $
 
 
 #include <lattices/Lattices/LCPolygon.h>
@@ -57,10 +57,10 @@ LCPolygon::LCPolygon (const Vector<Double>& x, const Vector<Double>& y,
   itsY (y.nelements())
 {
     for (uInt i=0; i<x.nelements(); i++) {
-	itsX(i) = x(i);
+	itsX[i] = x[i];
 	if (i < y.nelements()) {
            // define box will catch unequal lengths x and y
-           itsY(i) = y(i);  
+           itsY[i] = y[i];  
         }
                                                 
     }
@@ -138,8 +138,8 @@ LCRegion* LCPolygon::doTranslate (const Vector<Float>& translateVector,
     y = itsY;
     uInt n = x.nelements();
     for (uInt i=0; i<n; i++) {
-        x(i) += translateVector(0);
-        y(i) += translateVector(1);
+        x[i] += translateVector[0];
+        y[i] += translateVector[1];
     }
     return new LCPolygon (x, y, newLatticeShape);
 }
@@ -179,6 +179,33 @@ LCPolygon* LCPolygon::fromRecord (const TableRecord& rec,
                           Vector<Int>(rec.toArrayInt ("shape")));
 }
 
+// Truncate start such that edge is taken if very close to a pixel point.
+// Take care of fact that Float is not always exact.
+Int LCPolygon::truncateStart (Float v)
+{
+  Int res;
+  Float vt = floor(v+0.1);
+  if (near(vt, v))  {
+    res = v+0.1;
+  } else {
+    res = v+1;
+  }
+  return std::max (res, 0);
+}
+
+// Truncate end such that edge is taken if very close to a pixel point.
+Int LCPolygon::truncateEnd (Float v, Int maxEnd)
+{
+  Int res;
+  Float vt = floor(v+0.1);
+  if (near(vt, v))  {
+    res = v+0.1;
+  } else {
+    res = v;
+  }
+  return std::min (res, maxEnd);
+}
+
 void LCPolygon::defineBox()
 {
     const IPosition& shape = latticeShape();
@@ -194,32 +221,32 @@ void LCPolygon::defineBox()
 			  "can only be used as a 2-dim region"));
     }
     // If the last point is not equal to the first one, add it.
-    if (!near (itsX(nrp-1), itsX(0))  ||  !near(itsY(nrp-1), itsY(0))) {
+    if (!near (itsX[nrp-1], itsX[0])  ||  !near(itsY[nrp-1], itsY[0])) {
 	itsX.resize (nrp+1, True);
 	itsY.resize (nrp+1, True);
 	nrp++;
     }
-    itsX(nrp-1) = itsX(0);        // Make sure they are always equal.
-    itsY(nrp-1) = itsY(0);
-    if (nrp < 4) {
+    itsX[nrp-1] = itsX[0];        // Make sure they are always equal.
+    itsY[nrp-1] = itsY[0];
+    if (nrp < 3) {
 	throw (AipsError ("LCPolygon::LCPolygon - "
 			  "at least 3 different points have to be specified"));
     }
     // Determine the maximum and minimum x,y.
     // They form the bounding box.
     // Check if at least one point is inside lattice.
-    Float minx = itsX(0);
-    Float maxx = itsX(0);
-    Float miny = itsY(0);
-    Float maxy = itsY(0);
+    Float minx = itsX[0];
+    Float maxx = itsX[0];
+    Float miny = itsY[0];
+    Float maxy = itsY[0];
     Bool inside = False;
     for (i=1; i<nrp; i++) {
-	if (itsX(i) < minx) minx = itsX(i);
-	if (itsX(i) > maxx) maxx = itsX(i);
-	if (itsY(i) < miny) miny = itsY(i);
-	if (itsY(i) > maxy) maxy = itsY(i);
-	if (itsX(i) >= 0  &&  itsX(i) <= shape(0)-1
-        &&  itsY(i) >= 0  &&  itsY(i) <= shape(1)-1) {
+	if (itsX[i] < minx) minx = itsX[i];
+	if (itsX[i] > maxx) maxx = itsX[i];
+	if (itsY[i] < miny) miny = itsY[i];
+	if (itsY[i] > maxy) maxy = itsY[i];
+	if (itsX[i] >= 0  &&  itsX[i] <= shape[0]-1
+        &&  itsY[i] >= 0  &&  itsY[i] <= shape[1]-1) {
 	    inside = True;
 	}
     }
@@ -227,21 +254,20 @@ void LCPolygon::defineBox()
 	throw (AipsError ("LCPolygon::LCPolygon - "
 			  "all x,y points are outside the lattice"));
     }
-    // Determine blc and trc. Note that float to int conversion truncates,
-    // so add almost 1 to get correct blc.
+    // Get boundingbox; truncate values in the right way.
     IPosition blc(2, 0);
     IPosition trc(shape-1);
-    if (minx > 0) blc(0) = Int(minx+0.5);
-    if (miny > 0) blc(1) = Int(miny+0.5);
-    if (maxx < shape(0)-1) trc(0) = Int(maxx+0.5);
-    if (maxy < shape(1)-1) trc(1) = Int(maxy+0.5);
+    blc[0] = truncateStart(minx);
+    blc[1] = truncateStart(miny);
+    trc[0] = truncateEnd(maxx, shape[0]-1);
+    trc[1] = truncateEnd(maxy, shape[1]-1);
     setBoundingBox (Slicer(blc, trc, Slicer::endIsLast));
 }
 
 void LCPolygon::defineMask()
 {
     // Create and initialize the mask.
-    const IPosition& blc = boundingBox().start();
+    IPosition blc = boundingBox().start();
     const IPosition& shape = boundingBox().length();
     Matrix<Bool> mask(shape);
     mask = False;
@@ -255,10 +281,31 @@ void LCPolygon::defineMask()
     // This is usually most efficient; however if ny>>nx it might be
     // more efficient to call fillMask with x and y swapped. That also
     // means that the mask should be transposed after fillMask.
-    fillMask (ptrM, shape(1), shape(0), blc(1), blc(0), ptrY, ptrX, nrline);
+    fillMask (ptrM, shape[1], shape[0], blc[1], blc[0], ptrY, ptrX, nrline);
     itsX.freeStorage (ptrX, delX);
     itsY.freeStorage (ptrY, delY);
     mask.putStorage (ptrM, delM);
+    // Test if rows/columns at the edges are all False.
+    // If so, remove them and adjust the bounding box.
+    Int stx = 0;
+    Int sty = 0;
+    Int endx = shape[0];
+    Int endy = shape[1];
+    for (; stx<endx && allEQ(mask.row(stx), False); ++stx);
+    for (; endx-1>stx && allEQ(mask.row(endx-1), False); --endx);
+    for (; sty<endy && allEQ(mask.column(sty), False); ++sty);
+    for (; endy-1>sty && allEQ(mask.column(endy-1), False); --endy);
+    if (stx>0 || sty>0 || endx<shape[0] || endy<shape[1]) {
+      if (stx >= endx  ||  sty >> endy) {
+        throw AipsError ("polygon does not contain any pixel");
+      }
+      Matrix<Bool> mask2;
+      mask2 = mask(Slice(stx,endx-stx), Slice(sty,endy-sty));
+      mask.reference (mask2);
+      blc[0] += stx;
+      blc[1] += sty;
+      setBoundingBox (Slicer(blc, mask.shape()));
+    }
     setMask (mask);
 }
 
@@ -266,133 +313,98 @@ void LCPolygon::fillMask (Bool* mask, Int ny, Int nx,
 			  Int blcy, Int blcx,
 			  const Float* ptrY, const Float* ptrX, uInt nrline)
 {
-    uInt i;
-    Block<Float> a(nrline);
-    Block<Float> b(nrline);
-    Block<Int>  dir(nrline, -1);     // -1=same dir, 0=vertical, 1=change dir
-    // Fill the mask for all vertical lines.
-    // Also determine the index of the last non-vertical line, which
-    // is used in the slope-calculation loop.
-    Int prev = -1;
+  uInt i;
+  Block<Float> a(nrline);
+  Block<Float> b(nrline);
+  Block<Int> dir(nrline, -1);     // -1=same dir, 0=vertical, 1=change dir
+  // Fill the mask for all vertical lines.
+  // Also determine the index of the last non-vertical line, which
+  // is used in the slope-calculation loop.
+  Int prev = -1;
+  for (i=0; i<nrline; i++) {
+    if (near (ptrY[i], ptrY[i+1])) {
+      dir[i] = 0;                         // vertical line
+      // Fill vertical line if on pixel.
+      Int y = truncateStart (ptrY[i]);
+      if (near(Float(y), ptrY[i])) {
+        Int xs, xe;
+        if (ptrX[i] < ptrX[i+1]) {
+          xs = truncateStart (ptrX[i] - blcx);
+          xe = truncateEnd (ptrX[i+1] - blcx, nx-1);
+        } else {
+          xs = truncateStart (ptrX[i+1] - blcx);
+          xe = truncateEnd (ptrX[i] - blcx, nx-1);
+        }
+	Bool* maskPtr = mask + (y-blcy)*nx;
+	while (xs <= xe) {
+	    maskPtr[xs++] = True;
+	}
+      }
+    } else {
+      prev = i;
+    }
+  }
+  // Calculate the slope (a) and offset (b) for all line segments.
+  // Vertical line segments are ignored for this.
+  // Determine if a line segment changes direction with respect to
+  // the last non-vertical line segment.
+  for (i=0; i<nrline; i++) {
+    if (dir[i] != 0) {
+      a[i] = (ptrX[i] - ptrX[i+1]) / (ptrY[i] - ptrY[i+1]);
+      b[i] = ptrX[i] - a[i] * ptrY[i];
+      if ((ptrY[i] > ptrY[i+1]  &&  ptrY[prev] < ptrY[prev+1])
+      ||  (ptrY[i] < ptrY[i+1]  &&  ptrY[prev] > ptrY[prev+1])) {
+        dir[i] = 1;
+      }
+      prev = i;
+    }
+  }
+  // Loop through all y-es and mask the x-points inside or on the polygon.
+  // This is done by determining the crossing point of all the y-lines
+  // with all line segments (the in/out algorithm).
+  Block<Float> cross(nrline);
+  Bool* maskPtr = mask;
+  for (Int y=0; y<ny; y++) {
+    uInt nrcross = 0;
+    Float yf = y + blcy;
     for (i=0; i<nrline; i++) {
-	if (!near (ptrY[i], ptrY[i+1])) {
-	    prev = i;
-	} else {
-	    dir[i] = 0;                         // vertical line
-	    Int y = Int(ptrY[i] + 0.5) - blcy;
-	    Int xs = Int(ptrX[i]+0.5) - blcx;
-	    Int xe = Int(ptrX[i+1]+0.5) - blcx;
-	    fillLine (mask, ny, nx, y, xs, xe);
-	}
+      // Ignore vertical lines.
+      if (dir[i] != 0) {
+        Bool take = False;
+        // Calculate the crossing point if yf is inside the line segment.
+        if ((yf > ptrY[i]  &&  yf < ptrY[i+1])
+        ||  (yf < ptrY[i]  &&  yf > ptrY[i+1])
+        ||  near(yf, ptrY[i])  ||  near(yf, ptrY[i+1])) {
+          Float cr = a[i] * yf + b[i] - blcx;
+          take = True;
+          // If a polygon point is a pixel point (in y), always
+          // count the ending point of the line segment.
+          // Do not count the starting point if the direction has
+          // not changed with respect to the previous non-vertical
+          // line segment.
+          if (near (yf, ptrY[i])) {
+            if (dir[i] != 1) {
+              take = False;
+            }
+          }
+          if (take) {
+            cross[nrcross++] = cr;
+          }
+        }
+      }
     }
-    // Calculate the slope (a) and offset (b) for all line segments.
-    // Vertical line segments are ignored.
-    // Determine if a line segment changes direction with respect to
-    // the last non-vertical line segment.
-    for (i=0; i<nrline; i++) {
-	if (dir[i] != 0) {
-	    a[i] = (ptrX[i] - ptrX[i+1]) / (ptrY[i] - ptrY[i+1]);
-	    b[i] = ptrX[i] - a[i] * ptrY[i];
-	    if ((ptrY[i] > ptrY[i+1]  &&  ptrY[prev] < ptrY[prev+1])
-	    ||  (ptrY[i] < ptrY[i+1]  &&  ptrY[prev] > ptrY[prev+1])) {
-		dir[i] = 1;
-	    }
-	    prev = i;
-	}
+    DebugAssert (nrcross >= 2, AipsError);
+    DebugAssert (nrcross%2 == 0, AipsError);
+    GenSort<Float>::sort (cross, nrcross);
+    for (i=0; i<nrcross; i+=2) {
+      Int xs = truncateStart (cross[i]);
+      Int xe = truncateEnd (cross[i+1], nx-1);
+      while (xs <= xe) {
+        maskPtr[xs++] = True;
+      }
     }
-    // Loop through all y-es and determine which x-points are inside.
-    // This is done by determining the crossing point of all the y-lines
-    // with all line segments (the in/out algorithm).
-    Block<Int> cross(nrline);
-    Bool* maskPtr = mask;
-    for (Int y=0; y<ny; y++) {
-	uInt nrcross = 0;
-	Float yf = y + blcy;
-	Float yfs = yf - 0.5;
-	Float yfe = yf + 0.5;
-	for (i=0; i<nrline; i++) {
-	    // Ignore vertical lines.
-	    if (dir[i] != 0) {
-		// A pixel is not a single point but in fact an interval.
-		Int crs = -1;
-		Int cre = -1;
-		Bool take = False;
-		// Calculate the crossing point for the interval around yf
-		// if that interval and the line segment overlap.
-		if ((yfs < ptrY[i+1]  &&  yfe > ptrY[i])
-                ||  (yfs < ptrY[i]  &&  yfe > ptrY[i+1])) {
-		    crs = Int(a[i] * yfs + b[i] + 0.5) - blcx;
-		    cre = Int(a[i] * yfe + b[i] + 0.5) - blcx;
-		    take = True;
-		    // When a polygon point is a pixel point (in y), always
-		    // count the ending point of the line segment.
-		    // Do not count the starting point if the direction has
-		    // not changed with respect to the previous non-vertical
-		    // line segment.
-		    if (ptrY[i] > yfs  &&  ptrY[i] < yfe) {
-		        if (dir[i] != 1) {
-			    take = False;
-			}
-			// Limit the crs or cre depending on direction.
-			Int cr = Int(ptrX[i] + 0.5) - blcx;
-			if (ptrY[i] < ptrY[i+1]) {
-			    crs = cr;
-			} else {
-			    cre = cr;
-			}
-		    } else if (ptrY[i+1] > yfs  &&  ptrY[i+1] < yfe) {
-		        Int cr = Int(ptrX[i+1] + 0.5) - blcx;
-			if (ptrY[i+1] < ptrY[i]) {
-			    crs = cr;
-			} else {
-			    cre = cr;
-			}
-		    }
-		}
-		if (take) {
-		    cross[nrcross++] = crs;
-		}
-		// Always take points that are close to a line.
-		if (crs != cre) {
-		    fillLine (mask, ny, nx, y, crs, cre);
-		}
-	    }
-	}
-	DebugAssert (nrcross >= 2, AipsError);
-	DebugAssert (nrcross%2 == 0, AipsError);
-	GenSort<Int>::sort (cross, nrcross);
-	for (i=0; i<nrcross; i+=2) {
-	    if (y >= 0  &&  y < ny) {
-	        Int xs = max (0, cross[i]);
-	        Int xe = min (nx-1, cross[i+1]);
-		while (xs <= xe) {
-		    maskPtr[xs++] = True;
-		}
-	    }
-	}
-	maskPtr += nx;
-    }
-}
-
-void LCPolygon::fillLine (Bool* mask, Int ny, Int nx, Int y, Int x1, Int x2)
-{
-    if (y >= 0  &&  y < ny) {
-        Int xs = x1;
-	if (x2 < x1) {
-	    xs = x2;
-	    x2 = x1;
-	}
-	if (xs < 0) {
-	    xs = 0;
-	}
-	if (x2 >= nx) {
-	    x2 = nx - 1;
-	}
-	mask += y*nx;
-	while (xs <= x2) {
-	    mask[xs++] = True;
-	}
-    }
+    maskPtr += nx;
+  }
 }
 
 } //# NAMESPACE CASA - END

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tMemoryStMan.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: tMemoryStMan.cc 21091 2011-06-01 12:08:15Z gervandiepen $
 
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>
@@ -418,7 +418,7 @@ void deleteRow(const uInt aRow)
   ScalarColumn<DComplex> aa(aTable,"Col-1");
 
   // Make sure ColumnCache is filled.
-  DComplex val = aa(0);
+  aa(0);
 
   aTable.removeRow(aRow);
   
@@ -437,7 +437,7 @@ void deleteRows(const Vector<uInt>& aNrRows)
   ScalarColumn<DComplex> ae(aTable,"Col-5");
 
   // Make sure ColumnCache is filled.
-  DComplex val= ae(0);
+  ae(0);
 
   aTable.removeRow(aNrRows);
   

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: nISMBucket.cc 20329 2008-06-06 07:59:22Z gervandiepen $
+//# $Id: nISMBucket.cc 20860 2010-02-11 12:27:23Z gervandiepen $
 
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Block.h>
@@ -68,7 +68,7 @@ int main (int argc, const char* argv[])
 	cin >> nrow;
     }else{
 	istringstream istr2(argv[2]);
-	istr1 >> nrow;
+	istr2 >> nrow;
     }
     nrent = 0;
     totNrcol = 0;

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tFITSSpectralUtil.cc 20487 2009-01-14 04:56:08Z Malte.Marquarding $
+//# $Id: tFITSSpectralUtil.cc 21069 2011-05-06 13:59:44Z gervandiepen $
 
 //# Includes
 #include <fits/FITS/FITSSpectralUtil.h>

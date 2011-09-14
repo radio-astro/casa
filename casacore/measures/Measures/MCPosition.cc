@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MCPosition.cc 18093 2004-11-30 17:51:10Z ddebonis $
+//# $Id: MCPosition.cc 21100 2011-06-28 12:49:00Z gervandiepen $
 
 //# Includes
 #include <casa/Quanta/Quantum.h>
@@ -37,21 +37,16 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Statics
-Bool MCPosition::stateMade_p = False;
 uInt MCPosition::ToRef_p[N_Routes][3] = {
   {MPosition::ITRF,	MPosition::WGS84,	0},
   {MPosition::WGS84,	MPosition::ITRF,	0} };
 uInt MCPosition::FromTo_p[MPosition::N_Types][MPosition::N_Types];
+MutexedInit MCPosition::theirMutexedInit (MCPosition::doFillState);
 
 //# Constructors
 MCPosition::MCPosition() :
   DVEC1(0) {
-  if (!stateMade_p) {
-    MPosition::checkMyTypes();
-    MCBase::makeState(MCPosition::stateMade_p, MCPosition::FromTo_p[0],
-		      MPosition::N_Types, MCPosition::N_Routes,
-		      MCPosition::ToRef_p);
-  };
+    fillState();
 }
 
 //# Destructor
@@ -75,7 +70,7 @@ void MCPosition::getConvert(MConvertBase &mc,
     iin = ToRef_p[tmp][1];
     mc.addMethod(tmp);
     initConvert(tmp, mc);
-  };
+  }
 }
 
 void MCPosition::clearConvert() {
@@ -93,7 +88,7 @@ void MCPosition::initConvert(uInt which, MConvertBase &mc) {
 
   default:
     break;
-  };
+  }
 }
 
 void MCPosition::doConvert(MeasValue &in,
@@ -109,7 +104,7 @@ void MCPosition::doConvert(MVPosition &in,
 			   MRBase &outref,
 			   const MConvertBase &mc) {
     
-  if (False) { inref.getType(); outref.getType(); }; // to stop warnings
+  if (False) { inref.getType(); outref.getType(); } // to stop warnings
 
   Double g1, g2, g3, g4;
 
@@ -135,7 +130,7 @@ void MCPosition::doConvert(MVPosition &in,
 	  (*DVEC1)(2) = atan(((*DVEC1)(2))/d2);
 	} else {
 	  (*DVEC1)(2) = ((*DVEC1)(2) >= 0) ? C::pi_2 : - C::pi_2;
-	};
+	}
       }
       while ( !nearAbs((*DVEC1)(2), g2, 1e-10));
       (*DVEC1)(0) = d2/cos((*DVEC1)(2)) - MeasTable::WGS84(0) * g3;
@@ -171,27 +166,27 @@ void MCPosition::doConvert(MVPosition &in,
 	g2 *= g3;
 	// Apply
 	in(2) = g2;
-      };
+      }
     }	
     break;
 
     default:
       break;
 	
-    }; //switch
-  }; // for
+    } //switch
+  } // for
 }
 
 String MCPosition::showState() {
-  if (!stateMade_p) {
-    MPosition::checkMyTypes();
-    MCBase::makeState(MCPosition::stateMade_p, MCPosition::FromTo_p[0],
-		      MPosition::N_Types, MCPosition::N_Routes,
-		      MCPosition::ToRef_p);
-  };
-  return MCBase::showState(MCPosition::stateMade_p, MCPosition::FromTo_p[0],
+  fillState();
+  return MCBase::showState(MCPosition::FromTo_p[0],
 			   MPosition::N_Types, MCPosition::N_Routes,
 			   MCPosition::ToRef_p);
+}
+
+void MCPosition::doFillState (void*) {
+  MPosition::checkMyTypes();
+  MCBase::makeState(FromTo_p[0], MPosition::N_Types, N_Routes, ToRef_p);
 }
 
 } //# NAMESPACE CASA - END

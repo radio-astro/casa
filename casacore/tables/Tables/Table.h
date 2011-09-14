@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: Table.h 21051 2011-04-20 11:46:29Z gervandiepen $
+//# $Id: Table.h 21116 2011-07-21 11:23:15Z gervandiepen $
 
 #ifndef TABLES_TABLE_H
 #define TABLES_TABLE_H
@@ -474,7 +474,7 @@ public:
     static String fileName (const String& tableName);
 
     // Test if a table with the given name exists and is readable.
-    // If not, an exception is thrown if <src>throwIf==True</src.
+    // If not, an exception is thrown if <src>throwIf==True</src>.
     static Bool isReadable (const String& tableName, bool throwIf=False);
 
     // Return the layout of a table (i.e. description and #rows).

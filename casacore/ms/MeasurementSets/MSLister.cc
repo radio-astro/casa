@@ -359,7 +359,7 @@ void MSLister::selectvis(const String& timerange,
     if (pMSSel_p) {
       delete pMSSel_p;
       pMSSel_p=0;
-    };
+    }
 
     // Assume no selection, for starters
     pMSSel_p = new MeasurementSet(*pMS_p);
@@ -503,7 +503,7 @@ void MSLister::selectvis(const String& timerange,
     // initialize(*pMS_p,False);
     throw(AipsError("Error in MSLister::selectvis()"));
   }
-}; // end selectvis
+} // end selectvis
 
 void MSLister::listData(const int pageRows,
                         const String listfile)
@@ -724,6 +724,8 @@ void MSLister::listData(const int pageRows,
         uvdist(tableRow) = uvdist(tableRow)/(C::c/freqs_p(spwinid(tableRow)));
       }
 
+      /* List available units on the top of the output */
+      myout << "Units of columns are: Date/Time(YYMMDD/HH:MM:SS UT), UVDist(wavelength), Phase(deg), UVW(m)" << endl;
       // Add or adjust ranges_p to non-zero absolutes for non-index and/or
       // converted values (so we can use ranges_p for field width and
       // precision setting):
