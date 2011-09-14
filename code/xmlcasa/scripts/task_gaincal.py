@@ -4,7 +4,8 @@ from taskinit import *
 
 def gaincal(vis=None,caltable=None,
 	    field=None,spw=None,intent=None,
-	    selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
+	    selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,
+            observation=None, msselect=None,
 	    solint=None,combine=None,preavg=None,refant=None,minblperant=None,
 	    minsnr=None,solnorm=None,
 	    gaintype=None,smodel=None,calmode=None,append=None,
@@ -25,16 +26,16 @@ def gaincal(vis=None,caltable=None,
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent,
+			cb.selectvis(time=timerange,spw=spw, scan=scan, field=field,
+				     intent=intent, observation=str(observation),
 				     baseline=antenna,uvrange=uvrange,chanmode='none',
 				     msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
 			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
-				     baseline='',uvrange='',chanmode='none',
-				     msselect='');
+                                     observation='', baseline='', uvrange='',
+                                     chanmode='none', msselect='')
 
 		# set the model, if specified
 		if (len(smodel)>0):

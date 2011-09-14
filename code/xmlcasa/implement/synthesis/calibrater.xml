@@ -112,6 +112,12 @@ cb.open('ngc5921.ms');
      <value></value>
      </param>
 
+     <param type="any" direction="in" name="observation">
+     <description>Select by observation ID(s)</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
      <param type="any" direction="in" name="baseline">
      <description>Select on antennas/baselines</description>
      <any type="variant"/>
@@ -188,6 +194,8 @@ no specified parameters restores selection of the entire MS.
 only a single channel range can be specified per spw.
 
 \item[scan] is used to specify scan numbers and ranges
+
+\item[observation] is used to specify observation ID(s).
 
 \item[field] is used to specify field names or indices
 
