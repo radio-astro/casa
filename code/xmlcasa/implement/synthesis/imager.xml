@@ -365,7 +365,7 @@ mask.
        </description>
        <value>-1</value>
      </param>
-     <param type="string" name="refcode">
+     <param type="string" direction="in" name="refcode">
        <description>
          Reference frame to use for the generated (u, v, w)s.  WARNING: clean
          and the im tool ignore the reference frame claimed by the UVW column
@@ -377,10 +377,14 @@ mask.
        </description>
        <value></value>
      </param>
-     <param type="bool" name="reuse">
+     <param type="bool" direction="in" name="reuse">
        <description>Start from the UVWs in vis (True) or calculate them from the antenna positions?</description>
        <value>true</value>
      </param>
+<!--     <param type="string" direction="in" name="observation">
+       <description>Select by observation ID(s).  Blank = all.</description>
+       <value></value>
+     </param> -->
    </input>  
    <returns type="bool"/>
    <example>

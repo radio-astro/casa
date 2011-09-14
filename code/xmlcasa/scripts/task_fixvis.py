@@ -1,8 +1,7 @@
 from taskinit import *
 import shutil
 
-def fixvis(vis, outputvis='',field='', observation='', refcode='', reuse=True,
-           phasecenter=''):
+def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter=''):
     """
     Input Parameters
     vis        -- Name of the input visibility set
@@ -10,8 +9,6 @@ def fixvis(vis, outputvis='',field='', observation='', refcode='', reuse=True,
     outputvis  -- Name of the output visibility set, default: same as vis
 
     field      -- field selection string
-
-    observaton -- obs ID selection string
 
     refcode    -- Reference frame to convert to,
                   default: the refcode of PHASE_DIR in the FIELD table
@@ -102,6 +99,11 @@ def fixvis(vis, outputvis='',field='', observation='', refcode='', reuse=True,
             myim.calcuvw(fields=fldids, refcode=therefcode, reuse=reuse)
             myim.close()
         else: # we are modifying UVWs and visibilities
+            ## if observation:
+            ##     casalog.post('Modifying the phase tracking center(s) is imcompatible', 'SEVERE')
+            ##     casalog.post('with operating on only a subset of the observation IDs', 'SEVERE')
+            ##     return False
+            
             if(type(phasecenter) != str):
                 casalog.post("Invalid phase center.", 'SEVERE')
                 return False

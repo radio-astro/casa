@@ -181,6 +181,13 @@ class fixvis_test1(unittest.TestCase):
                         mystats1['maxposf']=='18:00:02.333, -30.59.29.999, I, 2.26e+11Hz' and
                         (mystats1['maxpos']==[34,64,0,0]).all())
 
+    ## def test_obs_pc(self):
+    ##     """Prevent phasecenter modification for a subset of obsIDs"""
+    ##     refcode = 'J2000'
+    ##     shutil.rmtree(outms2, ignore_errors=True)
+    ##     self.res = fixvis(inpms2, outms2, field='0', refcode=refcode,
+    ##                       phasecenter='-0d0m3s 0deg', observation='0')
+    ##     self.assertFalse(self.res)
     
 def suite():
     return [fixvis_test1]        

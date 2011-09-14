@@ -196,11 +196,15 @@ bool imager::calcuvw(const std::vector<int>& fields, const std::string& refcode,
 
     FixVis visfixer(*itsMS);
     visfixer.setFields(fields);
+    // String obs(observation);
+    // if(obs != "")
+    //   visfixer.setObsIDs(obs);
     rstat = visfixer.calc_uvw(String(refcode), reuse);
 
     // Update HISTORY table of modfied MS 
     ostringstream param;
-    param << "fields =" << Vector<Int>(fields) << ", refcode = " << refcode << ", reuse =" << reuse; 
+    param << "fields = " << Vector<Int>(fields) << ", refcode = " << refcode
+          << ", reuse = " << reuse;// << ", observation = " << obs; 
     String paramstr=param.str();
     if(!(Table::isReadable(itsMS->historyTableName()))){
       TableRecord &kws = itsMS->rwKeywordSet();

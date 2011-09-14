@@ -35,6 +35,7 @@ FixVis::FixVis(MeasurementSet& ms, const String& dataColName) :
   tiledShape_p(cimageShape_p, tileShape_p),
   antennaSel_p(false),
   freqFrameValid_p(false)
+  //  obsString_p("")
 {
   logSink() << LogOrigin("FixVis", "") << LogIO::NORMAL3;
 
@@ -515,6 +516,8 @@ Bool FixVis::makeSelection(const Int selectedField)
     if(antennaSelStr_p[0] != "")
       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antennaSelStr_p));
   }
+  //  if(obsString_p != "")
+  //  thisSelection.setObservationExpr(obsString_p);
     
   TableExprNode exprNode = thisSelection.toTableExprNode(&ms_p);    
     
