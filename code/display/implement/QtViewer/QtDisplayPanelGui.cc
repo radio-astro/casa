@@ -1269,159 +1269,146 @@ void QtDisplayPanelGui::showImageProfile() {
     QHash<QString, ImageInterface<float>*> overlap;
     for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 
-         QtDisplayData* pdd = qdds.getRight();
-         if(pdd != 0 && pdd->dataType() == "image") {
-
+	QtDisplayData* pdd = qdds.getRight();
+	if(pdd != 0 && pdd->dataType() == "image") {
             
-            ImageInterface<float>* img = pdd->imageInterface();
-            PanelDisplay* ppd = qdp_->panelDisplay();
-            if (ppd != 0 && img != 0) {
-
+	    ImageInterface<float>* img = pdd->imageInterface();
+	    PanelDisplay* ppd = qdp_->panelDisplay();
+	    if (ppd != 0 && img != 0) {
  
-              if (ppd->isCSmaster(pdd->dd())) { 
-	      
-	      // pdd is a suitable QDD for profiling.
+		if (ppd->isCSmaster(pdd->dd())) { 
+
+		    // pdd is a suitable QDD for profiling.
               
-	      if (!profile_) {
-	        // Set up profiler for first time.
+		    if (!profile_) {
+			// Set up profiler for first time.
 	        
-                profile_ = new QtProfile(img, pdd->name().chars());
-                connect(profile_,  SIGNAL(hideProfile()),
-                                   SLOT(hideImageProfile()));
-                connect(qdp_,      SIGNAL(registrationChange()),
-                                   SLOT(refreshImageProfile()));
-                connect(pdd, 
-			SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-                        profile_, 
-			SLOT(changeAxis(String, String, String, std::vector<int> )));
+			profile_ = new QtProfile(img, pdd->name().chars());
+			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
+			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
+			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 
-                QtCrossTool *pos = (QtCrossTool*)
-                      (ppd->getTool(QtMouseToolNames::POSITION));
-                if (pos) {
-                   connect(pos, 
-                    SIGNAL(wcNotify( const String,
-				     const Vector<Double>, 
-				     const Vector<Double>,
-				     const Vector<Double>, 
-				     const Vector<Double>,
-				     const ProfileType)),
-                    profile_,
-                    SLOT(wcChanged( const String,
-				    const Vector<Double>, 
-				    const Vector<Double>,
-				     const Vector<Double>, 
-				     const Vector<Double>,
-				     const ProfileType)));
-                   connect(profile_, 
-                    SIGNAL(coordinateChange(const String&)),
-                     pos,
-                    SLOT(setCoordType(const String&)));
-                }
-                QtRectTool *rect = (QtRectTool*)
-                      (ppd->getTool(QtMouseToolNames::RECTANGLE));
-                if (rect) {
-                   connect(rect, 
-                   SIGNAL(wcNotify( const String,
-				    const Vector<Double>, 
-				    const Vector<Double>,
-				    const Vector<Double>, 
-				    const Vector<Double>,
-				    const ProfileType)),
-                   profile_,
-                   SLOT(wcChanged( const String,
-				   const Vector<Double>, 
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const ProfileType )));
-                   connect(profile_, 
-                    SIGNAL(coordinateChange(const String&)),
-                     rect,
-                    SLOT(setCoordType(const String&)));
-                }
+			{
+			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
+			    if (pos) {
+				connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+							       const Vector<Double>, const Vector<Double>, const ProfileType)),
+					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								   const Vector<Double>, const Vector<Double>, const ProfileType)));
+				connect( profile_, SIGNAL(coordinateChange(const String&)),
+					 pos, SLOT(setCoordType(const String&)));
+			    } else {
+				QtOldCrossTool *pos = dynamic_cast<QtOldCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
+				if (pos) {
+				    connect( pos, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								   const Vector<Double>, const Vector<Double>, const ProfileType)),
+					     profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								       const Vector<Double>, const Vector<Double>, const ProfileType)));
+				    connect( profile_, SIGNAL(coordinateChange(const String&)),
+					     pos, SLOT(setCoordType(const String&)));
+				}
+			    }
+			}
+			
+			{
+			    QtRectTool *rect = dynamic_cast<QtRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+			    if (rect) {
+				connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								const Vector<Double>, const Vector<Double>, const ProfileType)),
+					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								   const Vector<Double>, const Vector<Double>, const ProfileType )));
+				connect( profile_, SIGNAL(coordinateChange(const String&)),
+					 rect, SLOT(setCoordType(const String&)));
+			    } else { 
+				QtOldRectTool *rect = dynamic_cast<QtOldRectTool*>(ppd->getTool(QtMouseToolNames::RECTANGLE));
+				if (rect) {
+				    connect( rect, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								    const Vector<Double>, const Vector<Double>, const ProfileType)),
+					     profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								       const Vector<Double>, const Vector<Double>, const ProfileType )));
+				    connect( profile_, SIGNAL(coordinateChange(const String&)),
+					     rect, SLOT(setCoordType(const String&)));
+				}
+			    }
+			}
 
-                QtEllipseTool *ellipse = (QtEllipseTool*)
-                      (ppd->getTool(QtMouseToolNames::ELLIPSE));
-                if (ellipse) {
-                   connect(ellipse,
-                   SIGNAL(wcNotify( const String,
-				    const Vector<Double>,
-				    const Vector<Double>,
-				    const Vector<Double>,
-				    const Vector<Double>,
-				    const ProfileType )),
-                   profile_,
-                   SLOT(wcChanged( const String,
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const ProfileType )));
-                   connect(profile_,
-                    SIGNAL(coordinateChange(const String&)),
-                    ellipse,
-                    SLOT(setCoordType(const String&)));
-                }
+			{
+			    QtEllipseTool *ellipse = dynamic_cast<QtEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
+			    if (ellipse) {
+				connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								   const Vector<Double>, const Vector<Double>, const ProfileType )),
+					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								   const Vector<Double>, const Vector<Double>, const ProfileType )));
+				connect( profile_, SIGNAL(coordinateChange(const String&)),
+					 ellipse, SLOT(setCoordType(const String&)));
+			    } else {
+				QtOldEllipseTool *ellipse = dynamic_cast<QtOldEllipseTool*>(ppd->getTool(QtMouseToolNames::ELLIPSE));
+				if (ellipse) {
+				    connect( ellipse, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								       const Vector<Double>, const Vector<Double>, const ProfileType )),
+					     profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								       const Vector<Double>, const Vector<Double>, const ProfileType )));
+				    connect( profile_, SIGNAL(coordinateChange(const String&)),
+					     ellipse, SLOT(setCoordType(const String&)));
+				}
+			    }
+			}
 
-                QtPolyTool *poly = (QtPolyTool*)
-                      (ppd->getTool(QtMouseToolNames::POLYGON));
-                if (poly) {
-                   connect(poly, 
-                   SIGNAL(wcNotify( const String,
-				    const Vector<Double>, 
-				    const Vector<Double>,
-				    const Vector<Double>,
-				    const Vector<Double>,
-				    const ProfileType )),
-                   profile_,
-                   SLOT(wcChanged( const String, 
-				   const Vector<Double>, 
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const Vector<Double>,
-				   const ProfileType )));
-                   connect(profile_, 
-                    SIGNAL(coordinateChange(const String&)),
-                     poly,
-                    SLOT(setCoordType(const String&)));
-                }
-              }
-              
-	      else {
-                if (profileDD_ != pdd) {
+			{
+			    QtPolyTool *poly = dynamic_cast<QtPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
+			    if (poly) {
+				connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								const Vector<Double>, const Vector<Double>, const ProfileType )),
+					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								   const Vector<Double>, const Vector<Double>, const ProfileType )));
+				connect( profile_, SIGNAL(coordinateChange(const String&)),
+					 poly, SLOT(setCoordType(const String&)));
+			    } else {
+				QtOldPolyTool *poly = dynamic_cast<QtOldPolyTool*>(ppd->getTool(QtMouseToolNames::POLYGON));
+				if (poly) {
+				    connect( poly, SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+								    const Vector<Double>, const Vector<Double>, const ProfileType )),
+					     profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+								       const Vector<Double>, const Vector<Double>, const ProfileType )));
+				    connect( profile_, SIGNAL(coordinateChange(const String&)),
+					     poly, SLOT(setCoordType(const String&)));
+				}
+			    }
+			}
+		    } else {
+			if (profileDD_ != pdd) {
 
-	        // [Re-]orient pre-existing profiler to pdd
-                profile_->resetProfile(img, pdd->name().chars());
-                profileDD_ = pdd;
-                }
-                else {
-                  pdd->checkAxis();
-                }
-              }
+			    // [Re-]orient pre-existing profiler to pdd
+			    profile_->resetProfile(img, pdd->name().chars());
+			    profileDD_ = pdd;
+			} else {
+			    pdd->checkAxis();
+			}
+		    }
 
-              if (pdd->getAxisIndex(String("Spectral")) == -1) {
-                  profileDD_ = 0;
-	          hideImageProfile();  
-              }
-              else {
-	          profileDD_ = pdd;
-                  profile_->show();
-                  pdd->checkAxis();
-              }
+		    if (pdd->getAxisIndex(String("Spectral")) == -1) {
+			profileDD_ = 0;
+			hideImageProfile();  
+		    } else {
+			profileDD_ = pdd;
+			profile_->show();
+			pdd->checkAxis();
+		    }
 	      
-	      //break;
-            }
-            else {
-              if (pdd->getAxisIndex(String("Spectral")) != -1) 
-                 overlap[pdd->name().chars()] = img;
-            }
-            }
-         }
+		    //break;
+		} else {
+		    if (pdd->getAxisIndex(String("Spectral")) != -1) 
+		      overlap[pdd->name().chars()] = img;
+		}
+	    }
+	}
     }
+
     if (profile_) {
-       connect(this, SIGNAL(overlay(QHash<QString, ImageInterface<float>*>)),
-            profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
-       emit overlay(overlap);
+	connect( this, SIGNAL(overlay(QHash<QString, ImageInterface<float>*>)),
+		 profile_, SLOT(overplot(QHash<QString, ImageInterface<float>*>)));
+	emit overlay(overlap);
     }
 }
 
