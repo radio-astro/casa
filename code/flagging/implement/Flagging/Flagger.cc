@@ -315,7 +315,7 @@ Bool Flagger::selectdata(Bool useoriginalms,
 		String field, String spw, String array,
 		String feed, String scan,
 		String baseline, String uvrange, String time,
-		String correlation, String intent)
+		String correlation, String intent, String observation)
 {
 	if (dbg) cout << "selectdata: "
 			<< "useoriginalms=" << useoriginalms
@@ -323,7 +323,8 @@ Bool Flagger::selectdata(Bool useoriginalms,
 			<< " array=" << array << " feed=" << feed
 			<< " scan=" << scan << " baseline=" << baseline
 			<< " uvrange=" << uvrange << " time=" << time
-			<< " correlation=" << correlation << " scan intent="<< intent << endl;
+			<< " correlation=" << correlation << " scan intent="<< intent
+			<< " observation=" << observation << endl;
 
 	LogIO os(LogOrigin("Flagger", "selectdata()", WHERE));
 	if (ms.isNull()) {
@@ -374,7 +375,8 @@ Bool Flagger::selectdata(Bool useoriginalms,
 			dummyExpr, // corrExpr
 			(const String)scan,
 			(const String)array,
-			(const String)intent);
+			(const String)intent,
+			(const String)observation);
 	spw_selection = ((spw != "" && spw != "*") || uvrange.length() > 0);
 	// multiple spw agents are also needed for uvrange selections...
 
@@ -411,6 +413,7 @@ Bool Flagger::selectdata(Bool useoriginalms,
 		cout << "Arrays : " << msselection_p->getSubArrayList() << endl;
 		// cout << "Feeds : " << msselection_p->getFeedList() << endl;
 		cout << "Scan intent : " << msselection_p->getStateObsModeList() << endl;
+		cout << "Observation : " << msselection_p->getObservationList() << endl;
 
 	}
 
@@ -432,14 +435,15 @@ Bool Flagger::setdata(
 		String field, String spw, String array,
 		String feed, String scan,
 		String baseline,  String uvrange,  String time,
-		String correlation, String intent)
+		String correlation, String intent, String observation)
 {
 	if (dbg) cout << "setdata: "
 			<< " field=" << field << " spw=" << spw
 			<< " array=" << array << " feed=" << feed
 			<< " scan=" << scan << " baseline=" << baseline
 			<< " uvrange=" << uvrange << " time=" << time
-			<< " correlation=" << correlation << " scan intent=" << intent << endl;
+			<< " correlation=" << correlation << " scan intent=" << intent
+			<< " observation=" << observation << endl;
 
 	LogIO os(LogOrigin("Flagger", "setdata()", WHERE));
 	setdata_p = False;
@@ -455,7 +459,7 @@ Bool Flagger::setdata(
 	/* Parse selection parameters */
 	if (!spw.length()) spw = String("*");
 
-	if (!selectdata(True,field,spw,array,feed,scan, baseline,uvrange,time,correlation,intent))
+	if (!selectdata(True,field,spw,array,feed,scan, baseline,uvrange,time,correlation,intent,observation))
 	{
 		os << LogIO::SEVERE << "Selection failed !!"
 				<< LogIO::POST;
@@ -715,6 +719,16 @@ Bool Flagger::fillSelections(Record &rec)
 		Record flagRec(flagDesc);
 		flagRec.define(RF_INTENT, stateobsmodelist);
 		rec.mergeField(flagRec, RF_INTENT, RecordInterface::OverwriteDuplicates);
+	}
+	/* Observation ID */
+	Vector<Int> observationlist = msselection_p->getObservationList();
+	if (observationlist.nelements())
+	{
+		RecordDesc flagDesc;
+		flagDesc.addField(RF_OBSERVATION, TpArrayInt);
+		Record flagRec(flagDesc);
+		flagRec.define(RF_OBSERVATION, observationlist);
+		rec.mergeField(flagRec, RF_OBSERVATION, RecordInterface::OverwriteDuplicates);
 	}
 
 	return True;
