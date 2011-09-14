@@ -968,11 +968,11 @@ void PlotMSIndexer::reportMeta(Double x, Double y, Bool masked,stringstream& ss)
   if (!plotmscache_->netAxesMask_(2) || ant1<0)
     ss << "*&";
   else
-    ss << plotmscache_->antnames_(ant1) << "&";
+    ss << plotmscache_->antstanames_(ant1) << " & ";
   if (!plotmscache_->netAxesMask_(2) || ant2<0)
     ss << "*";
   else
-    ss << plotmscache_->antnames_(ant2);
+    ss << plotmscache_->antstanames_(ant2);
 
   // Antenna indices
   if (showindices) {
@@ -1139,13 +1139,13 @@ String PlotMSIndexer::iterLabel() {
     Int ant1=Int(plotmscache_->getAnt1(currChunk_,getIndex0010(currChunk_,irel_)));
     Int ant2=Int(plotmscache_->getAnt2(currChunk_,getIndex0010(currChunk_,irel_)));
     String lab=itername+": ";
-    lab+=(ant1>-1 ? plotmscache_->antnames_(ant1) : "*")+"&";
-    lab+=(ant2>-1 ? plotmscache_->antnames_(ant2) : "*");
+    lab+=(ant1>-1 ? plotmscache_->antstanames_(ant1) : "*")+" & ";
+    lab+=(ant2>-1 ? plotmscache_->antstanames_(ant2) : "*");
     return lab;
     break;
   }
   case PMS::ANTENNA:
-    return itername+": "+plotmscache_->antnames_(iterValue_);
+    return itername+": "+plotmscache_->antstanames_(iterValue_);
     break;
   default:
     return "";
