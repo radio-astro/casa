@@ -181,12 +181,12 @@ void QtCrossTool::updateRegion() {
   pyy(0) = px(1); pyy(1) = py(1);
   //cout << "(" << xx(0) << "," << yy(0) << ")"
   //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
+  emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
 }
 
 void QtCrossTool::setCoordType(const String& t) {
   QtMWCTool::setCoordType(t);
-  // crosshairReady("");
+  updateRegion( );
 }
 
 
