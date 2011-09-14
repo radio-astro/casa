@@ -17,29 +17,29 @@ def gaincal(vis=None,caltable=None,
         casalog.origin('gaincal')
 
 	try: 
-
+                mycb = cbtool.create()
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(vis)
+                        mycb.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw, scan=scan, field=field,
+			mycb.selectvis(time=timerange,spw=spw, scan=scan, field=field,
 				     intent=intent, observation=str(observation),
 				     baseline=antenna,uvrange=uvrange,chanmode='none',
 				     msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
-			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
+			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
                                      observation='', baseline='', uvrange='',
                                      chanmode='none', msselect='')
 
 		# set the model, if specified
 		if (len(smodel)>0):
-			cb.setptmodel(smodel);
+			mycb.setptmodel(smodel);
 
 
 
@@ -80,7 +80,7 @@ def gaincal(vis=None,caltable=None,
 						interp[igt]=thisinterp
 					thisinterp=interp[igt];
 
-				cb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+				mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
 					    calwt=True,spwmap=thisspwmap,interp=thisinterp)
 		
 		# ...and now the specialized terms
@@ -90,39 +90,39 @@ def gaincal(vis=None,caltable=None,
 		opacarr=np.array(opacity)   # as numpy array for uniformity
 		if (np.sum(opacarr)>0.0):
 			# opacity transmitted as a list in all cases
-			cb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=True)
+			mycb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=True)
 
-		if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=True)
+		if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=True)
 
 		# Apply parallactic angle, if requested
-		if parang: cb.setapply(type='P')
+		if parang: mycb.setapply(type='P')
 
 		# Set up for solving:  
 		phaseonly=False
 		if (gaintype=='G'):
-			cb.setsolve(type='G',t=solint,combine=combine,preavg=preavg,refant=refant,
+			mycb.setsolve(type='G',t=solint,combine=combine,preavg=preavg,refant=refant,
 				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
 		elif (gaintype=='T'):
-			cb.setsolve(type='T',t=solint,combine=combine,preavg=preavg,refant=refant,
+			mycb.setsolve(type='T',t=solint,combine=combine,preavg=preavg,refant=refant,
 				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
 		elif (gaintype=='K' or gaintype=='KCROSS' or gaintype=='XY+QU'):
-			cb.setsolve(type=gaintype,t=solint,combine=combine,preavg=preavg,refant=refant,
+			mycb.setsolve(type=gaintype,t=solint,combine=combine,preavg=preavg,refant=refant,
 				    minblperant=minblperant,
 				    solnorm=solnorm,minsnr=minsnr,table=caltable,
 				    apmode=calmode,phaseonly=phaseonly,append=append)
 		elif (gaintype=='GSPLINE'):
-			cb.setsolvegainspline(table=caltable,append=append,mode=calmode,
+			mycb.setsolvegainspline(table=caltable,append=append,mode=calmode,
 					      refant=refant,splinetime=splinetime,preavg=preavg,
 					      npointaver=npointaver,phasewrap=phasewrap)
-		cb.solve()
-		cb.close()
+		mycb.solve()
+		mycb.close()
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		mycb.close()
 		raise Exception, instance
 

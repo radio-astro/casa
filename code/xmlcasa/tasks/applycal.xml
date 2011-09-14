@@ -74,6 +74,12 @@ another visibility file.
 		<value></value>
 	</param>
 
+        <param type="any" name="observation" subparam="true">
+                <description>Select by observation ID(s)</description>
+		<any type="variant" limittypes="string int"/>
+		<value type="string"></value>
+        </param>
+
 	<param type="string" name="msselect" subparam="true">
 		<description>Optional complex data selection (ignore for now)</description>
 		<value></value>
@@ -136,6 +142,7 @@ another visibility file.
 			<default param="uvrange"><value type="string"/></default>
 			<default param="antenna"><value type="string"/></default>
 			<default param="scan"><value type="string"/></default>
+			<default param="observation"><value type="string"/></default>
 			<default param="msselect"><value type="string"/></default>
 		</equals>
 		<equals type="bool" value="False"/>
@@ -222,6 +229,9 @@ another visibility file.
               antenna='05'; all baselines with antenna name 05--vla antenna 5.
               antenna='5,6,10'; all baselines with antennas 5,6 and 10
        scan -- Scan number range
+       observation -- Select by observation ID(s).
+                       default: '' = all
+                       example: '0~3,6'
        msselect -- Optional complex data selection (ignore for now)
 
        --- Calibration files to apply
