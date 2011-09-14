@@ -134,7 +134,7 @@ protected:
   Double        quack_si, quack_dt;
   String        quack_mode;
   Bool          quack_increment;
-  Vector<Int>   sel_scannumber,sel_arrayid;
+  Vector<Int>   sel_scannumber,sel_arrayid,sel_observation;
   String        sel_column;
 
   Bool select_fullrow,flag_everything, shadow, elevation;
