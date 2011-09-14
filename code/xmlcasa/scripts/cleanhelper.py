@@ -919,9 +919,11 @@ class cleanhelper:
                 # (set by baseframe in imager_cmt.cc) 
                 maskframe='LSRK'
         mycsys=ia.coordsys()
-        mycsys.setreferencecode(maskframe,'spectral',True)
+        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+            mycsys.setreferencecode(maskframe,'spectral',True)
         self.csys=mycsys.torecord()
-        self.csys['spectral2']['conversion']['system']=maskframe
+        if self.csys['spectral2']['conversion']['system']!=maskframe:
+            self.csys['spectral2']['conversion']['system']=maskframe
         ia.setcoordsys(self.csys)
         ##ia.setcoordsys(mycsys.torecord())
         ia.close()
@@ -1588,8 +1590,10 @@ class cleanhelper:
         if oldformat:
         #    f.close()
             self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
-            # do old to new data format conversion....
-            (phasecenters,imsizes,imageids)=self.readoutlier(self,outfilename)
+            # do old to new data format conversion....(watch out for different ordor of return parameters...)
+            (imsizes,phasecenters,imageids)=self.readoutlier(outlierfile)
+            for i in range(len(imageids)):
+                modelimages.append('')
         #f.seek(0)
         #content0 = f.read()
         #f.close()

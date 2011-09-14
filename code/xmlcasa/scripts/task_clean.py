@@ -349,14 +349,14 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 
                 # combine with the task parameter input
                 if type(imagename) == str:
-                    imageids.append(imagename)
-                    imsizes.append(imsize)
-                    phasecenters.append(phasecenter)
+                    if newformat: 
+                        imageids.append(imagename)
+                        imsizes.append(imsize)
+                        phasecenters.append(phasecenter)
                 else:
                     imageids=imagename
                     imsizes=imsize
                     phasecenters=phasecenter
-
                 # for mask, modelimage  task input 
                 # turn them into list or list of list 
                 if type(mask) !=  list:
@@ -372,8 +372,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     imageids.append(name)    
                     imsizes.append(f_imsizes[indx])    
                     phasecenters.append(f_phasecenters[indx])    
-                    mask.append(f_masks[indx])
-                    modelimage.append(f_modelimages[indx])
+                    if newformat:
+                        mask.append(f_masks[indx])
+                        modelimage.append(f_modelimages[indx])
+                    else:
+                        # append empty string list to match the size of modelimage list
+                        if indx!=0:
+                            modelimage.append(f_modelimages[indx])
                     
                 nfield=len(imageids)
                 if nfield > 1:
@@ -393,6 +398,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                  imsizes=imsize
                  phasecenters=phasecenter
                  imageids=imagename
+           
 #
 # Moved getAlgorithm() to here so that multifield is set using outlier file.
 #
