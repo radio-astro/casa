@@ -490,6 +490,16 @@ RFASelector::RFASelector ( RFChunkStats &ch,const RecordInterface &parm) :
     addString(desc_str,String(RF_ARRAY)+"="+ss);
     sel_arrayid -= (Int)indexingBase();
   }
+  // parse input arguments: Observation ID(s)
+    if( fieldType(parm,RF_OBSERVATION,TpInt,TpArrayInt))
+    {
+      parm.get(RF_OBSERVATION,sel_observation);
+      String ss;
+      for( uInt i=0; i<sel_observation.nelements(); i++)
+        addString(ss,String::toString(sel_observation(i)),",");
+      addString(desc_str,String(RF_OBSERVATION)+"="+ss);
+      sel_observation -= (Int)indexingBase();
+    }
 // parse input: specific time ranges 
   Array<Double> rng;
   Matrix<Double> timerng;
@@ -903,6 +913,11 @@ Bool RFASelector::newChunk (Int &maxmem)
   if( sel_arrayid.nelements() && !find(dum,chunk.visIter().arrayId(),sel_arrayid) )
   {
     if(verbose2) os<<"Array ID does not match in this chunk\n"<<LogIO::POST;
+    return active=False;
+  }
+  if( sel_observation.nelements() && !find(dum,chunk.visBuf().observationId()[0],sel_observation) )
+  {
+    if(verbose2) os<<"Observation ID does not match in this chunk\n"<<LogIO::POST;
     return active=False;
   }
   //Vector<Int> tempstateid(0);
