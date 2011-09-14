@@ -199,6 +199,8 @@ casa_add_library( display
   implement/DisplayEvents/MWCRectTool.cc
   implement/DisplayEvents/MultiRectTool.cc
   implement/DisplayEvents/MultiRectToolImpl.cc
+  implement/DisplayEvents/MultiPolyTool.cc
+  implement/DisplayEvents/MultiPolyToolImpl.cc
   implement/DisplayEvents/MWCETRegion.cc
   implement/DisplayEvents/MWCRTRegion.cc
   implement/DisplayEvents/MWCRTZoomer.cc
@@ -336,6 +338,7 @@ casa_add_library( display
   implement/Utilities/Lowlevel.cc
   implement/region/QtRegion.cc
   implement/region/QtRectangle.cc
+  implement/region/QtPolygon.cc
   implement/region/RegionSource.cc
   implement/region/QtRegionSource.cc
   implement/region/QtRegionSourceFactory.cc
@@ -343,6 +346,7 @@ casa_add_library( display
   implement/region/QtRegionState.cc
   implement/region/QtRegionStats.cc
   implement/region/Rectangle.cc
+  implement/region/Polygon.cc
   implement/region/Region.cc
   )
 

@@ -463,13 +463,14 @@ class clean_test2(unittest.TestCase):
 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
 
-class clean_test3(unittest.TestCase):
+class clean_multifield_test(unittest.TestCase):
 
     # Input and output names#    msfile = 'ngc7538_ut.ms'
     #msfile = '0556kf.ms'
     msfile = 'outlier_ut.ms'
     res = None
     img = ['cleantest3a','cleantest3b']
+    newoutlierfile='newoutlier4cleantest.txt'
 
     def setUp(self):
         self.res = None
@@ -487,8 +488,10 @@ class clean_test3(unittest.TestCase):
         #os.system('rm -rf ' + self.img[0]+'* ')
         #os.system('rm -rf ' + self.img[1]+'* ')
 	for imext in ['.image','.model','.residual','.psf']:
-	    shutil.rmtree(self.img[0]+imext)
-	    shutil.rmtree(self.img[1]+imext)
+            if (os.path.exists(self.img[0]+imext)):
+	        shutil.rmtree(self.img[0]+imext)
+            if (os.path.exists(self.img[1]+imext)):
+	        shutil.rmtree(self.img[1]+imext)
 
     #def testCAS1972(self):
     #    """Clean test3:test bug fixes: CAS-1972"""
@@ -525,8 +528,37 @@ class clean_test3(unittest.TestCase):
 
         self.assertEqual(self.res,None)
         # quick check on the peaks apear at the location as expected
-        for im in self.img:
-            self.assertTrue(os.path.exists(im+'.image'))
+        for img in self.img:
+            self.assertTrue(os.path.exists(img+".image"))
+        stat0 = imstat(self.img[0]+'.model')
+        stat1 = imstat(self.img[1]+'.model')
+        #self.assertEqual(stat0['max'],stat1['max'])
+        self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
+               all(stat1['maxpos']==numpy.array([256,356,0,0])))
+
+    def testOutlier2(self):
+        """Clean test3:test task parm input with outlier file (CAS-3221)"""
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copy(datapath+self.newoutlierfile,self.newoutlierfile)
+        self.res= clean(vis=self.msfile,
+                        imagename=self.img[0],
+                        outlierfile=self.newoutlierfile,
+                        mode="mfs",
+                        interpolation="linear",
+                        niter=100, psfmode="clark",
+                        mask=[250, 250, 262, 262],
+                        imsize=[512, 512],
+                        cell="0.0001arcsec",
+                        phasecenter='J2000 05h59m32.03313 23d53m53.9267',
+                        weighting="natural",
+                        pbcor=False,
+                        minpb=0.1)
+
+        #print "DONE clean"
+        self.assertEqual(self.res,None)
+        # quick check on the peaks apear at the location as expected
+        for img in self.img:
+            self.assertTrue(os.path.exists(img+".image"))
         stat0 = imstat(self.img[0]+'.model')
         stat1 = imstat(self.img[1]+'.model')
         #self.assertEqual(stat0['max'],stat1['max'])
@@ -632,5 +664,5 @@ class clean_multims_test(unittest.TestCase):
 
 def suite():
     #return [clean_test1]
-    return [clean_test1,clean_multims_test]
+    return [clean_test1,clean_multifield_test,clean_multims_test]
 

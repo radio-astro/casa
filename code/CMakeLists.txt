@@ -170,11 +170,15 @@ if( APPLE )
         if( NOT arch )
         	set( arch darwin )
         endif()
-    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 )
+    elseif( CMAKE_SYSTEM MATCHES ^Darwin-10 OR
+		CMAKE_SYSTEM MATCHES ^Darwin-11 )
         if( NOT arch )
         	set( arch darwin64 )
         endif()
         if( NOT archflag )
+            set( archflag x86_64 )
+            if( EXISTS /opt/casa/darwin11 )
+                set( archflag x86_64 )
             if( EXISTS /opt/casa/darwin10-64b )
                 set( archflag x86_64 )
             elseif( EXISTS /opt/casa/core2-apple-darwin10 )
@@ -193,11 +197,18 @@ if( APPLE )
             endif()
         endif()
         if( archflag STREQUAL x86_64 )
-            set ( casa_packages /opt/casa/darwin10-64b )
-            add_definitions( -DAIPS_64B )
-        else()
-            set( casa_packages /opt/casa/core2-apple-darwin10 )
+	      if(CMAKE_SYSTEM MATCHES ^Darwin-11)
+                  set ( casa_packages /opt/casa/darwin11 )
+                  set( PYTHON_ROOT_DIR /opt/casa/darwin11 )
+	      else()
+                  set ( casa_packages /opt/casa/darwin10-64b )
+                  set( PYTHON_ROOT_DIR /opt/casa/darwin10-64b )
+	      endif()
+              add_definitions( -DAIPS_64B )
 	endif()
+    else()
+        set( casa_packages /opt/casa/core2-apple-darwin10 )
+    endif()
 	execute_process( COMMAND ${CMAKE_Fortran_COMPILER} --version
 			 COMMAND head -1
 			 COMMAND perl -pe "s|.*?(\\d+\\.\\d+)\\.\\d+$|$1|"
@@ -224,13 +235,14 @@ if( APPLE )
 
 	
 	message( STATUS "$_gfortran_version = ${_gfortran_version}" )
+	message( STATUS "$_gcc_machine = ${_gcc_machine}" )
         message( STATUS "cxxversion (${_cxx_version})" )
 	if( NOT _gfortran_version STREQUAL "4.4" AND
 	    NOT _gfortran_version STREQUAL "4.2" )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
 	else()
-	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit" )
+	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -arch ${archflag} -framework AppKit"  )
         endif()
         # Which part of CASA needs -framework AppKit to run? This should probably *not* be added
         # as a generic linker flag.
@@ -511,6 +523,9 @@ if( NOT SKIP_PGPLOT )
   else()
     set( _deps X11 FORTRAN )
   endif()
+  if (CMAKE_SYSTEM MATCHES ^Darwin-11)
+     set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran" )
+  endif()
   casa_find( PGPLOT
     VERSION 5.3.1
     PREFIX_HINTS ${PGPLOT_ROOT_DIR}
@@ -611,7 +626,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.79
+           VERSION 1.0.80
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -698,11 +713,21 @@ else()
   set( python_prefix ${casa_packages} )
 endif()
 
+#
+# For some unknown reason cmake sets the /usr for Lion
+#
+if( APPLE )
+   set( python_prefix ${casa_packages} )
+endif()
+
+
 # The python version and prefix is known, do the actual search
 if( NOT PYTHON_FOUND )
   message( STATUS "Looking for PYTHON version ${PYTHONV}.x in ${python_prefix}" )
 endif()
 
+message( "${python_prefix}/Library/Frameworks/Python.framework/Versions/${PYTHONV}/lib/python${PYTHONV}/site-packages/numpy/core")
+message( "${NUMPY_ROOT_DIR}" )
 casa_find( PYTHON
   VERSION 2.5    # minimum required
   INCLUDES Python.h 
@@ -817,7 +842,6 @@ casa_find( LIBXSLT
   RUN_VERSION "LIBXSLT_DOTTED_VERSION; LIBXSLT_VERSION;" 
   )
 
-
 # Do not reuse FindLibXml2.cmake, except this excerpt
 IF (NOT WIN32)
    # use pkg-config to get the directories and then use these values
@@ -914,6 +938,7 @@ casa_find( QWT
     ${QWT_ROOT_DIR}
     ${casa_packages}/qwt-5.2.0
     ${casa_packages}/qwt-5.2.1-svn
+    ${casa_packages}/qwt-5.2.3-svn
   LIBS qwt
   CPP_VERSION QWT_VERSION_STR
   DEPENDS QT4 )

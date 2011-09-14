@@ -78,7 +78,7 @@ class QtPolyTool: public QtPTRegion,  public QtMWCTool
   Q_OBJECT
 
 public: 
-  QtPolyTool(PanelDisplay* pd);
+  QtPolyTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
   virtual ~QtPolyTool() {}
  
 public slots:

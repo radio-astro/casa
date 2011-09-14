@@ -137,6 +137,7 @@ ROVisibilityIteratorAsync::~ROVisibilityIteratorAsync ()
     if (! vbaWrapperStack_p.empty()){
         VisBufferAsync * vba = vbaWrapperStack_p.top()->releaseVba ();
         assert (vba == visBufferAsync_p);
+        vba = NULL; // prevent warning when in non425debug build
         delete visBufferAsync_p;
     }
     else if (visBufferAsync_p != NULL){
@@ -227,8 +228,12 @@ ROVisibilityIteratorAsync::construct (const PrefetchColumns & prefetchColumns, I
          nReadAheadBuffers = getDefaultNBuffers ();
     }
 
+    // Create and initialize the shared data object VlaData
+
     impl_p->vlaData_p = new VlaData (nReadAheadBuffers);
     impl_p->vlaData_p->initialize ();
+
+    // Create the lookahead thread object
 
     impl_p->vlat_p = new VLAT (impl_p->vlaData_p);
 
@@ -248,13 +253,13 @@ ROVisibilityIteratorAsync::construct (const PrefetchColumns & prefetchColumns, I
     if (contains (Feed1_pa, prefetchColumns_p)){
         prefetchColumns_p.insert (Feed1);
         prefetchColumns_p.insert (Ant1);
-        prefetchColumns_p.insert (Time);
+        prefetchColumns_p.insert (casa::asyncio::Time);
     }
 
     if (contains (Feed2_pa, prefetchColumns_p)){
         prefetchColumns_p.insert (Feed2);
         prefetchColumns_p.insert (Ant2);
-        prefetchColumns_p.insert (Time);
+        prefetchColumns_p.insert (casa::asyncio::Time);
     }
 
     impl_p->vlat_p->setPrefetchColumns (prefetchColumns_p);
@@ -420,6 +425,7 @@ ROVisibilityIteratorAsync::detachVisBuffer (VisBuffer & vb0)
 
         VisBufferAsync * vba = vb->releaseVba ();
         Assert (vba == visBufferAsync_p);
+        vba = NULL; // prevent warning in nondebug builds
 
         vbaWrapperStack_p.pop ();
 

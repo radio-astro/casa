@@ -44,6 +44,8 @@
 
 namespace casa {
 
+const Double ImageProfileFitter::integralConst = casa::sqrt(C::pi/4/casa::log(2));
+
 const String ImageProfileFitter::_class = "ImageProfileFitter";
 
 ImageProfileFitter::ImageProfileFitter(
@@ -55,7 +57,8 @@ ImageProfileFitter::ImageProfileFitter(
 	const Int polyOrder, const String& estimatesFilename, const String& ampName,
 	const String& ampErrName, const String& centerName,
 	const String& centerErrName, const String& fwhmName,
-	const String& fwhmErrName, const uInt minGoodPoints
+	const String& fwhmErrName, const String& integralName,
+	const String& integralErrName, const uInt minGoodPoints
 ) : ImageTask(
 		image, region, regionPtr, box, chans, stokes,
 		mask, "", False
@@ -64,6 +67,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_centerName(centerName), _centerErrName(centerErrName),
 	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
 	_ampName(ampName), _ampErrName(ampErrName),
+	_integralName(integralName), _integralErrName(integralErrName),
 	_multiFit(multiFit), _deleteImageOnDestruct(False),
 	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
 	_minGoodPoints(minGoodPoints), _results(Record()),
@@ -200,9 +204,13 @@ void ImageProfileFitter::_setResults() {
     Matrix<Double> centerMat(_fitters.size(), nComps, fNAN);
 	Matrix<Double> fwhmMat(_fitters.size(), nComps, fNAN);
 	Matrix<Double> ampMat(_fitters.size(), nComps, fNAN);
+	Matrix<Double> integralMat(_fitters.size(), nComps, fNAN);
+
 	Matrix<Double> centerErrMat(_fitters.size(), nComps, fNAN);
 	Matrix<Double> fwhmErrMat(_fitters.size(), nComps, fNAN);
 	Matrix<Double> ampErrMat(_fitters.size(), nComps, fNAN);
+	Matrix<Double> integralErrMat(_fitters.size(), nComps, fNAN);
+
 	Matrix<String> typeMat(_fitters.size(), nComps, "UNDEF");
 	Array<Bool> mask(IPosition(1, _fitters.size()), False);
 	Array<Int> nCompArr(IPosition(1, _fitters.size()), -1);
@@ -235,6 +243,10 @@ void ImageProfileFitter::_setResults() {
 					centerErrMat(count, i) = solutions[i].getCenterErr();
 					fwhmErrMat(count, i) = solutions[i].getFWHMErr();
 					ampErrMat(count, i) = solutions[i].getAmplErr();
+					integralMat(count, i) = integralConst * ampMat(count, i) * fwhmMat(count, i);
+					Double ampFErr = ampErrMat(count, i)/ampMat(count, i);
+					Double fwhmFErr = fwhmErrMat(count, i)/fwhmMat(count, i);
+					integralErrMat(count, i) = integralMat(count, i) * sqrt(ampFErr*ampFErr + fwhmFErr*fwhmFErr);
 				}
 			}
 		}
@@ -263,6 +275,7 @@ void ImageProfileFitter::_setResults() {
 			! _centerName.empty() || ! _centerErrName.empty()
 			|| ! _fwhmName.empty() || ! _fwhmErrName.empty()
 			|| ! _ampName.empty() || ! _ampErrName.empty()
+			|| ! _integralName.empty() || ! _integralErrName.empty()
 		)
 	) {
 		*_getLog() << LogIO::WARN << "This was not a multi-pixel fit request so solution "
@@ -273,6 +286,7 @@ void ImageProfileFitter::_setResults() {
 			! _centerName.empty() || ! _centerErrName.empty()
 			|| ! _fwhmName.empty() || ! _fwhmErrName.empty()
 			|| ! _ampName.empty() || ! _ampErrName.empty()
+			|| ! _integralName.empty() || ! _integralErrName.empty()
 		)
 	) {
 		*_getLog() << LogIO::WARN << "No solutions converged, solution images will not be written"
@@ -288,12 +302,16 @@ void ImageProfileFitter::_setResults() {
 		_results.define(key, fwhmMat.column(i).reform(shape));
 		key = "amp" + num;
 		_results.define(key, ampMat.column(i).reform(shape));
+		key = "integral" + num;
+		_results.define(key, integralMat.column(i).reform(shape));
 		key = "centerErr" + num;
 		_results.define(key, centerErrMat.column(i).reform(shape));
 		key = "fwhmErr" + num;
 		_results.define(key, fwhmErrMat.column(i).reform(shape));
 		key = "ampErr" + num;
 		_results.define(key, ampErrMat.column(i).reform(shape));
+		key = "integralErr" + num;
+		_results.define(key, integralErrMat.column(i).reform(shape));
 		key = "type" + num;
 		_results.define(key, typeMat.column(i).reform(shape));
 		if (
@@ -309,6 +327,8 @@ void ImageProfileFitter::_setResults() {
 			mymap["fwhmErr"] = _fwhmErrName;
 			mymap["amp"] = _ampName;
 			mymap["ampErr"] = _ampErrName;
+			mymap["integral"] = _integralName;
+			mymap["integralErr"] = _integralErrName;
 			for (
 				map<String, String>::const_iterator iter=mymap.begin();
 				iter!=mymap.end(); iter++
@@ -399,28 +419,28 @@ String ImageProfileFitter::_resultsToString() const {
 	) {
 		subimPos = inIter.position();
 		if (csysSub.toWorld(world, subimPos)) {
-			summary << "Fit centered at:" << endl;
+			summary << "Fit   :" << endl;
 			for (uInt i=0; i<world.size(); i++) {
 				if ((Int)i != _fitAxis) {
 					if (axesNames[i].startsWith("RIG")) {
 						// right ascension
-						summary << "    RA         :   "
+						summary << "    RA           :   "
 								<< _radToRa(world[i]) << endl;
 					}
 					else if (axesNames[i].startsWith("DEC")) {
 						// declination
-						summary << "    Dec        : "
+						summary << "    Dec          : "
 								<< MVAngle(world[i]).string(MVAngle::ANGLE_CLEAN, 8) << endl;
 					}
 					else if (axesNames[i].startsWith("FREQ")) {
 						// frequency
-						summary << "    Freq       : "
+						summary << "    Freq         : "
 								<< world[i]
 								         << csysSub.spectralCoordinate(i).formatUnit() << endl;
 					}
 					else if (axesNames[i].startsWith("STO")) {
 						// stokes
-						summary << "    Stokes     : "
+						summary << "    Stokes       : "
 								<< Stokes::name(Stokes::type((Int)world[i])) << endl;
 					}
 				}
@@ -434,7 +454,7 @@ String ImageProfileFitter::_resultsToString() const {
 		}
 
 		summary.setf(ios::fixed);
-		summary << setprecision(pixPrecision) << "    Pixel      : [";
+		summary << setprecision(pixPrecision) << "    Pixel        : [";
 		for (uInt i=0; i<imPix.size(); i++) {
 			if (i == (uInt)_fitAxis) {
 				summary << " *";
@@ -449,14 +469,14 @@ String ImageProfileFitter::_resultsToString() const {
 		summary << "]" << setprecision(basePrecision) << endl;
 		summary.unsetf(ios::fixed);
 		Bool attempted = fitter->getList().nelements() > 0;
-		summary << "    Attempted  : "
+		summary << "    Attempted    : "
 			<< (attempted ? "YES" : "NO") << endl;
 		if (attempted) {
 			String converged = fitter->converged() ? "YES" : "NO";
-			summary << "    Converged  : " << converged << endl;
+			summary << "    Converged    : " << converged << endl;
 			if (fitter->converged()) {
 				solutions = fitter->getList();
-				summary << "    Iterations : " << fitter->getNumberIterations() << endl;
+				summary << "    Iterations   : " << fitter->getNumberIterations() << endl;
 				for (uInt i=0; i<solutions.nelements(); i++) {
 					summary << "    Results for component " << i << ":" << endl;
 					if (solutions[i].getType() == SpectralElement::GAUSSIAN) {
@@ -546,8 +566,8 @@ String ImageProfileFitter::_gaussianToString(
 	Vector<Double> myWorld = world;
     String yUnit = _getImage()->units().getName();
 	ostringstream summary;
-	summary << "        Type   : GAUSSIAN" << endl;
-	summary << "        Peak   : "
+	summary << "        Type     : GAUSSIAN" << endl;
+	summary << "        Peak     : "
 		<< _elementToString(
 			gauss.getAmpl(), gauss.getAmplErr(), yUnit
 		)
@@ -597,35 +617,45 @@ String ImageProfileFitter::_gaussianToString(
     	pFWHM = fwhm/delta;
     	pFWHMErr = fwhmErr/delta;
     }
-	summary << "        Center : "
+	summary << "        Center   : "
 		<< _elementToString(
 			center, centerErr, _xUnit
 		)
 		<< endl;
 	if (convertedCenterToPix) {
-		summary << "                 "
+		summary << "                   "
 			<< _elementToString(
 				pCenter, pCenterErr, "pixel"
 			)
 			<< endl;
 	}
 	else {
-		summary << "                Could not convert world to pixel for center" << endl;
+		summary << "                  Could not convert world to pixel for center" << endl;
 	}
-	summary << "        FWHM   : "
+	summary << "        FWHM     : "
 		<< _elementToString(
 			fwhm, fwhmErr, _xUnit
 		)
 		<< endl;
 	if (convertedFWHMToPix) {
-		summary << "                 " << _elementToString(
+		summary << "                   " << _elementToString(
 			pFWHM, pFWHMErr, "pixel"
 		)
 		<< endl;
 	}
 	else {
-		summary << "                Could not convert FWHM to pixel" << endl;
+		summary << "                  Could not convert FWHM to pixel" << endl;
 	}
+	Double integral = integralConst * gauss.getAmpl() * fwhm;
+	Double ampFErr = gauss.getAmplErr()/gauss.getAmpl();
+	Double fwhmFErr = fwhmErr/fwhm;
+	Double integralErr = integral * sqrt(ampFErr*ampFErr + fwhmFErr*fwhmFErr);
+	String integUnit = (Quantity(1.0 ,yUnit)*Quantity(1.0, _xUnit)).getUnit();
+	summary << "        Integral : "
+		<< _elementToString(
+			integral, integralErr, integUnit
+		)
+		<< endl;
 	return summary.str();
 }
 

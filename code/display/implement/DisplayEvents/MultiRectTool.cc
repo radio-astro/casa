@@ -114,8 +114,8 @@ void MultiRectTool::disable() {
 
 	if (ev.worldCanvas() != itsCurrentWC) return;  // shouldn't happen
 
-	uInt x = ev.pixX();
-	uInt y = ev.pixY();
+	Int x = ev.pixX();
+	Int y = ev.pixY();
 
 	double linx, liny;
 	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
@@ -126,15 +126,15 @@ void MultiRectTool::disable() {
 	    // resize the rectangle
 	    double linx1, liny1;
 	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
-	    resizing_region_handle = resizing_region->resize( resizing_region_handle, linx1, liny1 );
+	    resizing_region_handle = resizing_region->moveHandle( resizing_region_handle, linx1, liny1 );
 	    refresh_needed = true;
 	    // return;
 	}
 
 	for ( rectanglelist::reverse_iterator iter = rectangles.rbegin(); iter != rectangles.rend(); ++iter ) {
 	    int result = (*iter)->mouseMovement(linx,liny,region_selected);
-	    refresh_needed = refresh_needed | viewer::Rectangle::refreshNeeded(result);
-	    region_selected = region_selected | viewer::Rectangle::regionSelected(result);
+	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
+	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
 
 	if ( refresh_needed ) {
@@ -262,7 +262,7 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
 	    if ( (*iter)->regionVisible( ) ) {
 		int result = (*iter)->mouseMovement(linx,liny,false);
-		if ( viewer::Rectangle::regionSelected(result) ) {
+		if ( viewer::Region::regionSelected(result) ) {
 		    rectangles.erase( iter );
 		    region_removed = true;
 		}
@@ -294,10 +294,10 @@ void MultiRectTool::get(Int &x1, Int &y1) const {
   x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
 
 
-void MultiRectTool::draw(const WCRefreshEvent &ev) {
-    for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter )
-	(*iter)->draw( );
-}
+    void MultiRectTool::draw(const WCRefreshEvent &ev) {
+	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter )
+	    (*iter)->draw( );
+    }
 
 void MultiRectTool::reset(Bool skipRefresh) {
   itsActive = False;
@@ -814,6 +814,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	double linx, liny;
 	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
 	resizing_region = (rfactory->rectangle( wc, linx, liny, linx, liny ));
+
 	resizing_region_handle = 1;
 	rectangles.push_back( resizing_region );
 	set(x,y, x,y);

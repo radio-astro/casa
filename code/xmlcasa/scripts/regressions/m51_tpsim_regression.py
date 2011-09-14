@@ -46,7 +46,6 @@ mapsize = ''
 maptype = 'square'
 pointingspacing = '9arcsec'
 
-#predict = True
 observe = True
 # you should explicitly empty antennalist to avoid synthesis simulation
 antennalist = ''
@@ -97,23 +96,37 @@ ia.close()
 
 # reference statistic values for simulated image
 #rev.15394 (2001-06-16 After Trx update)
-refstats = {'sum':15959,
-            'max':1.6241,
-            'min':-0.50853,
-            'rms':0.18486,
-            'sigma':0.17455}
+# refstats = {'sum':15959,
+#             'max':1.6241,
+#             'min':-0.50853,
+#             'rms':0.18486,
+#             'sigma':0.17455}
+
+# rev.15907 (2011-08-16 proper handling of epoch)
+refstats = {'max': 1.544,
+            'min': -0.53458,
+            'rms': 0.17651,
+            'sigma':0.16696,
+            'sum': 15013}
 
 ia.open(project+"/"+project + '.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # reference statistic values for diff image
-#rev.15394 (2001-06-16 After Trx update)
-diffstats = {'sum':35091,
-             'max':2.7172,
-             'min':-0.47044,
-             'rms':0.30265,
-             'sigma':0.27144}
+#rev.15394 (2011-06-16 After Trx update)
+# diffstats = {'sum':35091,
+#              'max':2.7172,
+#              'min':-0.47044,
+#              'rms':0.30265,
+#              'sigma':0.27144}
+
+# rev.15907 (2011-08-16 proper handling of epoch)
+diffstats = {'max':2.7944,
+             'min':-0.4701,
+             'rms':0.31019,
+             'sigma':0.27807,
+             'sum':36037}
 
 
 # relative tolerances to reference values

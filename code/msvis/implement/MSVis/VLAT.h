@@ -30,6 +30,10 @@
 #define VLAT_H_
 
 #include "AsynchronousTools.h"
+using casa::async::Mutex;
+#include "UtilJ.h"
+using casa::utilj::ThreadTimes;
+using casa::utilj::DeltaThreadTimes;
 #include "VisBuffer.h"
 #include "VisibilityIterator.h"
 #include "VisibilityIteratorAsync.h"
@@ -275,75 +279,40 @@ protected:
 
 private:
 
-	class Stats {
-	public:
-
-	    typedef enum {Request=1, Begin=2, End=4, Fill=8} Type;
-        enum {Wait,Operate,Cycle} ;
-
-	    Stats ();
-
-	    void addEvent (Int e);
-	    Bool isEnabled () const { return enabled_p;}
-	    String makeReport ();
-	    void reserve (Int size);
-
-	private:
-
-	    typedef boost::tuple <Int,Double> Event;
-	    typedef vector<Event> Events;
-
-	    class OpStats {
-	    public:
-
-	        OpStats ();
-
-	        Double & operator[] (Int i) { return events_p [i];}
-
-	        void accumulate (Double wait, Double operate, Double cycle);
-	        Double getAvg (Int i) { return (n_p != 0) ? sum_p [i] / n_p : 0;}
-	        Int getN () const { return n_p;}
-	        String format (Int component);
-            void update (Int type, Double t);
-
-            static Double dmax (Double a, Double b) { return max (a, b);}
-            static Double dmin (Double a, Double b) { return min (a, b);}
-
-	    private:
-
-	        vector<Double> events_p;
-	        vector<Double> max_p;
-	        vector<Double> min_p;
-	        Int n_p;
-	        vector<Double> ssq_p;
-	        vector<Double> sum_p;
-	    };
-
-	    Bool enabled_p;
-	    Events events_p;
-
-	};
-
-
     typedef queue<VlaDatum *> Data;
     typedef queue<Int> ValidChunks;
     typedef queue<SubChunkPair> ValidSubChunks;
 
     asyncio::ChannelSelection channelSelection_p; // last channels selected for the VI in use
-	Data    data_p;       // Buffer queue
+	Data       data_p;       // Buffer queue
+    ThreadTimes      fill1_p;
+    ThreadTimes      fill2_p;
+    ThreadTimes      fill3_p;
+    DeltaThreadTimes fillCycle_p;
+    DeltaThreadTimes fillOperate_p;
+    DeltaThreadTimes fillWait_p;
     volatile Bool lookaheadTerminationRequested_p;
     const Int MaxNBuffers_p;
+    ThreadTimes      read1_p;
+    ThreadTimes      read2_p;
+    ThreadTimes      read3_p;
+    DeltaThreadTimes readCycle_p;
+    DeltaThreadTimes readOperate_p;
+    DeltaThreadTimes readWait_p;
 	asyncio::RoviaModifiers roviaModifiers_p;
-	Stats   stats_p;
     volatile Bool sweepTerminationRequested_p;
+    ThreadTimes timeStart_p;
+    ThreadTimes timeStop_p;
 	volatile Bool viResetRequested_p;
     volatile Bool viResetComplete_p;
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
 	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
 	mutable Condition vlaDataChanged_p;
-	mutable Mutex vlaDataMutex_p;
+	mutable async::Mutex vlaDataMutex_p;
 
     Int clock (Int arg, Int base);
+    String makeReport ();
+
     void resetBufferData ();
     Bool statsEnabled () const;
 	void terminateSweep ();
@@ -376,15 +345,15 @@ class VlatFunctor {
 public:
 
 	VlatFunctor (Int precedence = 0)
-	: id_p (ROVisibilityIteratorAsync::N_PrefetchColumnIds), precedence_p (precedence)
+	: id_p (casa::asyncio::N_PrefetchColumnIds), precedence_p (precedence)
 	{}
 	virtual ~VlatFunctor () {}
 
-	virtual void operator() (VisBuffer *) { throw AipsError ("Illegal Vlat Functor");}
-	virtual VlatFunctor * clone () { return new VlatFunctor (* this);}
+	virtual void operator() (VisBuffer *) = 0;
+	virtual VlatFunctor * clone () = 0;
 
-	ROVisibilityIteratorAsync::PrefetchColumnIds getId () const { return id_p;}
-	void setId (ROVisibilityIteratorAsync::PrefetchColumnIds id) { id_p = id;}
+	casa::asyncio::PrefetchColumnIds getId () const { return id_p;}
+	void setId (casa::asyncio::PrefetchColumnIds id) { id_p = id;}
 	void setPrecedence (Int precedence) { precedence_p = precedence; }
 
 	static Bool byDecreasingPrecedence (const VlatFunctor * a, const VlatFunctor * b)
@@ -395,22 +364,22 @@ public:
 	}
 private:
 
-	ROVisibilityIteratorAsync::PrefetchColumnIds id_p;
+	casa::asyncio::PrefetchColumnIds id_p;
 	Int precedence_p;
 
 };
 
-template <typename Ret>
+template <typename Ret, typename VbType>
 class VlatFunctor0 : public VlatFunctor {
 
 public:
 
-	typedef Ret (VisBuffer::* Nullary) ();
+	typedef Ret (VbType::* Nullary) ();
 
 	VlatFunctor0 (Nullary nullary, Int precedence = 0) : VlatFunctor (precedence), f_p (nullary) {}
 	virtual ~VlatFunctor0 () {}
 
-	void operator() (VisBuffer * c) { (c->*f_p)(); }
+	void operator() (VisBuffer * c) { (dynamic_cast<VbType *> (c)->*f_p)(); }
 	virtual VlatFunctor * clone () { return new VlatFunctor0 (* this); }
 
 private:
@@ -418,9 +387,9 @@ private:
 	Nullary f_p;
 };
 
-template <typename Ret>
-VlatFunctor0<Ret> * vlatFunctor0 (Ret (VisBuffer::* f) ())
-{ return new VlatFunctor0<Ret> (f);}
+template <typename Ret, typename VbType>
+VlatFunctor0<Ret, VbType> * vlatFunctor0 (Ret (VbType::* f) ())
+{ return new VlatFunctor0<Ret, VbType> (f);}
 
 template <typename Ret, typename Arg>
 class VlatFunctor1 : public VlatFunctor {
@@ -542,10 +511,10 @@ public:
 
 protected:
 
-	class FillerDictionary : public map<ROVisibilityIteratorAsync::PrefetchColumnIds, VlatFunctor *> {
+	class FillerDictionary : public map<casa::asyncio::PrefetchColumnIds, VlatFunctor *> {
 
 	public:
-	    void add (ROVisibilityIteratorAsync::PrefetchColumnIds id, VlatFunctor * f)
+	    void add (casa::asyncio::PrefetchColumnIds id, VlatFunctor * f)
 	    {
 	        f->setId (id);
 	        assert (find(id) == end()); // shouldn't already have one for this ID
@@ -557,6 +526,7 @@ protected:
 	typedef vector<VlatFunctor *> Fillers;
 
     void applyModifiers (ROVisibilityIterator * rovi);
+    void checkFiller (asyncio::PrefetchColumnIds id);
 	void createFillerDictionary ();
     void fillDatum (VlaDatum * datum);
     void fillDatumMiscellanyAfter (VlaDatum * datum);

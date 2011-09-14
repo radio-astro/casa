@@ -95,6 +95,7 @@ private:
 		Vector<MFrequency> freqRange;
 		Vector<Stokes::StokesTypes> stokes;
 		AnnotationBase::RGB color;
+		vector<Int> intVec;
 	};
 
 	typedef std::map<AnnotationBase::Keyword, ParamValue> ParamSet;
@@ -106,7 +107,7 @@ private:
 	const static Regex startNPair;
 
 	CoordinateSystem _csys;
-	LogIO *_log;
+	std::auto_ptr<LogIO> _log;
 	ParamSet _currentGlobals;
 	Vector<AsciiAnnotationFileLine> _lines;
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;
@@ -116,6 +117,7 @@ private:
 
 	Array<String> _extractTwoPairs(uInt& end, const String& string) const;
 
+	// extract s1 and s2 from a string of the form "[s1, s2]"
 	Vector<String> _extractSinglePair(const String& string) const;
 
 	void _addLine(const AsciiAnnotationFileLine& line);

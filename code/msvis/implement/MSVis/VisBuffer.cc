@@ -37,6 +37,8 @@
 #include <ms/MeasurementSets/MSColumns.h>
 
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
+#define CheckVisIter1(s) checkVisIter (__func__, __FILE__, __LINE__,s)
+
 
 // For debugging; remove/comment-out when working
 //#include "VLAT.h"
@@ -102,9 +104,9 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
 
         if (visIter_p == static_cast<ROVisibilityIterator *>(0)) {
             validate();
-            copyCache (other);
+            copyCache (other, True);  // force copying
         } else if (copy) {
-            copyCache (other);
+            copyCache (other, False); // copy only if there's something there
         } else {
             invalidate();
         }
@@ -114,7 +116,7 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
 }
 
 void
-VisBuffer::copyCache (const VisBuffer & other)
+VisBuffer::copyCache (const VisBuffer & other, Bool force)
 {
     // Copies cache status from the other VisBuffer and if the status is true
     // then the cached values are copied over from the other VisBuffer as well.
@@ -122,61 +124,61 @@ VisBuffer::copyCache (const VisBuffer & other)
     // Keep in order so that finding omitted ones will be easier
     // in the future
 
-    cacheCopyArray  (antenna1OK_p, other.antenna1OK_p, antenna1_p, other.antenna1_p);
-    cacheCopyArray  (antenna2OK_p, other.antenna2OK_p, antenna2_p, other.antenna2_p);
-    cacheCopyNormal (arrayIdOK_p, other.arrayIdOK_p, arrayId_p, other.arrayId_p);
-    ////cacheCopyArray  (chanAveBoundsOK_p, other.chanAveBoundsOK_p, chanAveBounds_p, other.chanAveBounds_p);
-    cacheCopyArray  (channelOK_p, other.channelOK_p, channel_p, other.channel_p);
-    cacheCopyArray  (cjonesOK_p, other.cjonesOK_p, cjones_p, other.cjones_p);
+    cacheCopyArray  (antenna1OK_p, other.antenna1OK_p, antenna1_p, other.antenna1_p, force);
+    cacheCopyArray  (antenna2OK_p, other.antenna2OK_p, antenna2_p, other.antenna2_p, force);
+    cacheCopyNormal (arrayIdOK_p, other.arrayIdOK_p, arrayId_p, other.arrayId_p, force);
+    ////cacheCopyArray  (chanAveBoundsOK_p, other.chanAveBoundsOK_p, chanAveBounds_p, other.chanAveBounds_p, force);
+    cacheCopyArray  (channelOK_p, other.channelOK_p, channel_p, other.channel_p, force);
+    cacheCopyArray  (cjonesOK_p, other.cjonesOK_p, cjones_p, other.cjones_p, force);
     cacheCopyArray  (correctedVisCubeOK_p, other.correctedVisCubeOK_p,
-                     correctedVisCube_p, other.correctedVisCube_p);
+                     correctedVisCube_p, other.correctedVisCube_p, force);
     cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK_p,
-                     correctedVisibility_p, other.correctedVisibility_p);
-    cacheCopyArray  (corrTypeOK_p, other.corrTypeOK_p, corrType_p, other.corrType_p);
-    cacheCopyArray  (direction1OK_p, other.direction1OK_p, direction1_p, other.direction1_p);
-    cacheCopyArray  (direction2OK_p, other.direction2OK_p, direction2_p, other.direction2_p);
-    cacheCopyArray  (exposureOK_p, other.exposureOK_p, exposure_p, other.exposure_p);
-    cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p);
-    cacheCopyArray  (feed1_paOK_p, other.feed1_paOK_p, feed1_pa_p, other.feed1_pa_p);
-    cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p);
-    cacheCopyArray  (feed2_paOK_p, other.feed2_paOK_p, feed2_pa_p, other.feed2_pa_p);
-    cacheCopyNormal (fieldIdOK_p, other.fieldIdOK_p, fieldId_p, other.fieldId_p);
-    cacheCopyArray  (flagOK_p, other.flagOK_p, flag_p, other.flag_p);
-    cacheCopyArray  (flagCategoryOK_p, other.flagCategoryOK_p, flagCategory_p, other.flagCategory_p);
-    cacheCopyArray  (flagCubeOK_p, other.flagCubeOK_p, flagCube_p, other.flagCube_p);
-    cacheCopyArray  (flagRowOK_p, other.flagRowOK_p, flagRow_p, other.flagRow_p);
-    cacheCopyArray  (floatDataCubeOK_p, other.floatDataCubeOK_p, floatDataCube_p, other.floatDataCube_p);
-    cacheCopyArray  (frequencyOK_p, other.frequencyOK_p, frequency_p, other.frequency_p);
-    cacheCopyArray  (imagingWeightOK_p, other.imagingWeightOK_p, imagingWeight_p, other.imagingWeight_p);
-    cacheCopyArray  (lsrFrequencyOK_p, other.lsrFrequencyOK_p, lsrFrequency_p, other.lsrFrequency_p);
-    cacheCopyArray  (modelVisCubeOK_p, other.modelVisCubeOK_p, modelVisCube_p, other.modelVisCube_p);
+                     correctedVisibility_p, other.correctedVisibility_p, force);
+    cacheCopyArray  (corrTypeOK_p, other.corrTypeOK_p, corrType_p, other.corrType_p, force);
+    cacheCopyArray  (direction1OK_p, other.direction1OK_p, direction1_p, other.direction1_p, force);
+    cacheCopyArray  (direction2OK_p, other.direction2OK_p, direction2_p, other.direction2_p, force);
+    cacheCopyArray  (exposureOK_p, other.exposureOK_p, exposure_p, other.exposure_p, force);
+    cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p, force);
+    cacheCopyArray  (feed1_paOK_p, other.feed1_paOK_p, feed1_pa_p, other.feed1_pa_p, force);
+    cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p, force);
+    cacheCopyArray  (feed2_paOK_p, other.feed2_paOK_p, feed2_pa_p, other.feed2_pa_p, force);
+    cacheCopyNormal (fieldIdOK_p, other.fieldIdOK_p, fieldId_p, other.fieldId_p, force);
+    cacheCopyArray  (flagOK_p, other.flagOK_p, flag_p, other.flag_p, force);
+    cacheCopyArray  (flagCategoryOK_p, other.flagCategoryOK_p, flagCategory_p, other.flagCategory_p, force);
+    cacheCopyArray  (flagCubeOK_p, other.flagCubeOK_p, flagCube_p, other.flagCube_p, force);
+    cacheCopyArray  (flagRowOK_p, other.flagRowOK_p, flagRow_p, other.flagRow_p, force);
+    cacheCopyArray  (floatDataCubeOK_p, other.floatDataCubeOK_p, floatDataCube_p, other.floatDataCube_p, force);
+    cacheCopyArray  (frequencyOK_p, other.frequencyOK_p, frequency_p, other.frequency_p, force);
+    cacheCopyArray  (imagingWeightOK_p, other.imagingWeightOK_p, imagingWeight_p, other.imagingWeight_p, force);
+    //cacheCopyArray  (lsrFrequencyOK_p, other.lsrFrequencyOK_p, lsrFrequency_p, other.lsrFrequency_p, force);
+    cacheCopyArray  (modelVisCubeOK_p, other.modelVisCubeOK_p, modelVisCube_p, other.modelVisCube_p, force);
     cacheCopyArray  (modelVisibilityOK_p, other.modelVisibilityOK_p,
-                     modelVisibility_p, other.modelVisibility_p);
-    cacheCopyNormal (nChannelOK_p, other.nChannelOK_p, nChannel_p, other.nChannel_p);
-    cacheCopyNormal (nCorrOK_p, other.nCorrOK_p, nCorr_p, other.nCorr_p);
-    cacheCopyNormal (nRowOK_p, other.nRowOK_p, nRow_p, other.nRow_p);
-    cacheCopyArray  (observationIdOK_p, other.observationIdOK_p, observationId_p, other.observationId_p);
-    cacheCopyNormal (phaseCenterOK_p, other.phaseCenterOK_p, phaseCenter_p, other.phaseCenter_p);
-    cacheCopyNormal (polFrameOK_p, other.polFrameOK_p, polFrame_p, other.polFrame_p);
-    cacheCopyArray  (processorIdOK_p, other.processorIdOK_p, processorId_p, other.processorId_p);
-    cacheCopyArray  (rowIdsOK_p, other.rowIdsOK_p, rowIds_p, other.rowIds_p);
-    cacheCopyArray  (scanOK_p, other.scanOK_p, scan_p, other.scan_p);
-    cacheCopyArray  (sigmaOK_p, other.sigmaOK_p, sigma_p, other.sigma_p);
-    cacheCopyArray  (sigmaMatOK_p, other.sigmaMatOK_p, sigmaMat_p, other.sigmaMat_p);
-    cacheCopyNormal (spectralWindowOK_p, other.spectralWindowOK_p, spectralWindow_p, other.spectralWindow_p);
-    cacheCopyArray  (stateIdOK_p, other.stateIdOK_p, stateId_p, other.stateId_p);
-    cacheCopyArray  (timeOK_p, other.timeOK_p, time_p, other.time_p);
-    cacheCopyArray  (timeCentroidOK_p, other.timeCentroidOK_p, timeCentroid_p, other.timeCentroid_p);
-    cacheCopyArray  (timeIntervalOK_p, other.timeIntervalOK_p, timeInterval_p, other.timeInterval_p);
-    cacheCopyArray  (uvwOK_p, other.uvwOK_p, uvw_p, other.uvw_p);
-    cacheCopyArray  (uvwMatOK_p, other.uvwMatOK_p, uvwMat_p, other.uvwMat_p);
-    cacheCopyArray  (visCubeOK_p, other.visCubeOK_p, visCube_p, other.visCube_p);
-    cacheCopyArray  (visibilityOK_p, other.visibilityOK_p, visibility_p, other.visibility_p);
-    cacheCopyArray  (weightOK_p, other.weightOK_p, weight_p, other.weight_p);
-    ////cacheCopyArray  (weightCubeOK_p, other.weightCubeOK_p, weightCube_p, other.weightCube_p);
-    cacheCopyArray  (weightMatOK_p, other.weightMatOK_p, weightMat_p, other.weightMat_p);
+                     modelVisibility_p, other.modelVisibility_p, force);
+    cacheCopyNormal (nChannelOK_p, other.nChannelOK_p, nChannel_p, other.nChannel_p, force);
+    cacheCopyNormal (nCorrOK_p, other.nCorrOK_p, nCorr_p, other.nCorr_p, force);
+    cacheCopyNormal (nRowOK_p, other.nRowOK_p, nRow_p, other.nRow_p, force);
+    cacheCopyArray  (observationIdOK_p, other.observationIdOK_p, observationId_p, other.observationId_p, force);
+    cacheCopyNormal (phaseCenterOK_p, other.phaseCenterOK_p, phaseCenter_p, other.phaseCenter_p, force);
+    cacheCopyNormal (polFrameOK_p, other.polFrameOK_p, polFrame_p, other.polFrame_p, force);
+    cacheCopyArray  (processorIdOK_p, other.processorIdOK_p, processorId_p, other.processorId_p, force);
+    cacheCopyArray  (rowIdsOK_p, other.rowIdsOK_p, rowIds_p, other.rowIds_p, force);
+    cacheCopyArray  (scanOK_p, other.scanOK_p, scan_p, other.scan_p, force);
+    cacheCopyArray  (sigmaOK_p, other.sigmaOK_p, sigma_p, other.sigma_p, force);
+    cacheCopyArray  (sigmaMatOK_p, other.sigmaMatOK_p, sigmaMat_p, other.sigmaMat_p, force);
+    cacheCopyNormal (spectralWindowOK_p, other.spectralWindowOK_p, spectralWindow_p, other.spectralWindow_p, force);
+    cacheCopyArray  (stateIdOK_p, other.stateIdOK_p, stateId_p, other.stateId_p, force);
+    cacheCopyArray  (timeOK_p, other.timeOK_p, time_p, other.time_p, force);
+    cacheCopyArray  (timeCentroidOK_p, other.timeCentroidOK_p, timeCentroid_p, other.timeCentroid_p, force);
+    cacheCopyArray  (timeIntervalOK_p, other.timeIntervalOK_p, timeInterval_p, other.timeInterval_p, force);
+    cacheCopyArray  (uvwOK_p, other.uvwOK_p, uvw_p, other.uvw_p, force);
+    cacheCopyArray  (uvwMatOK_p, other.uvwMatOK_p, uvwMat_p, other.uvwMat_p, force);
+    cacheCopyArray  (visCubeOK_p, other.visCubeOK_p, visCube_p, other.visCube_p, force);
+    cacheCopyArray  (visibilityOK_p, other.visibilityOK_p, visibility_p, other.visibility_p, force);
+    cacheCopyArray  (weightOK_p, other.weightOK_p, weight_p, other.weight_p, force);
+    ////cacheCopyArray  (weightCubeOK_p, other.weightCubeOK_p, weightCube_p, other.weightCube_p, force);
+    cacheCopyArray  (weightMatOK_p, other.weightMatOK_p, weightMat_p, other.weightMat_p, force);
     cacheCopyArray  (weightSpectrumOK_p, other.weightSpectrumOK_p,
-                     weightSpectrum_p, other.weightSpectrum_p);
+                     weightSpectrum_p, other.weightSpectrum_p, force);
 }
 
 VisBuffer::~VisBuffer()
@@ -276,7 +278,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     floatDataCubeOK_p  = status;
     frequencyOK_p = status;
     imagingWeightOK_p = status;
-    lsrFrequencyOK_p = status;
+    ///////////lsrFrequencyOK_p = status;
     modelVisCubeOK_p = status;
     modelVisibilityOK_p = status;
     msOK_p = status;
@@ -745,6 +747,9 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     uInt nCor = nCorr();
     uInt nrows = nRow();
     Matrix<Float> rowWtFac(nCor, nrows);
+
+    Double selChanFac = 1.0;
+
     if(doWtSp){                                    // Get the total weight spectrum
       const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
       uInt nch = wtsp.shape()(1);
@@ -752,13 +757,17 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
       for(uInt row = 0; row < nrows; ++row){
         for(uInt icor = 0; icor < nCor; ++icor){
           rowWtFac(icor, row) = 0.0;
-          for(Int ichan = 0; ichan < nch; ++ichan)
+          for(uInt ichan = 0; ichan < nch; ++ichan)
             // Presumably the input row weight was set without taking flagging
             // into account.
             rowWtFac(icor, row) += wtsp(icor, ichan, row);
         }
       }
-    }
+      if(nAllChan0 > 0)                 // This is slightly fudgy.
+        selChanFac = nch / nAllChan0;   // Now that selection is applied to
+    }                                   // weightSpectrum(), we can't get at
+    else                                // the unselected channel weights.
+      rowWtFac = 1.0;
 
     // The false makes it leave weightSpectrum() averaged if it is present.
     if(flagCubeOK_p)          chanAveFlagCube(flagCube(), nChanOut, false);
@@ -819,17 +828,15 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
           }
         }
       }
-      else{
-        rowWtFac = static_cast<Float>(totn) / nAllChan0;
-      }
+      selChanFac = static_cast<Float>(totn) / nAllChan0;
 
       for(uInt row = 0; row < nrows; ++row){
         for(uInt icor = 0; icor < nCor; ++icor){
           Float rwfcr = rowWtFac(icor, row);
 
-          weightMat()(icor, row) *= rwfcr;
-          if(rwfcr > 0.0)
-            sigmaMat()(icor, row) /= sqrt(rwfcr);
+          weightMat()(icor, row) *= selChanFac * rwfcr;
+          if(rwfcr > 0.0)                               // Unlike WEIGHT, SIGMA
+            sigmaMat()(icor, row) /= sqrt(rwfcr);       // is for a single chan
         }
       }
     }
@@ -1450,7 +1457,7 @@ Vector<uInt>& VisBuffer::rowIds()
 }
 
 
-void VisBuffer::updateCoordInfo(const VisBuffer * /*vb*/)
+void VisBuffer::updateCoordInfo(const VisBuffer *, const  Bool dirDependent )
 {
   antenna1();
   antenna2();
@@ -1463,10 +1470,12 @@ void VisBuffer::updateCoordInfo(const VisBuffer * /*vb*/)
   checkMSId();
   feed1();
   feed2();
-  feed1_pa();
-  feed2_pa();
-  direction1();
-  direction2();
+  if(dirDependent){
+    feed1_pa();
+    feed2_pa();
+    direction1();
+    direction2();
+  }
 }
 
 void VisBuffer::setVisCube(Complex c)
@@ -1586,6 +1595,14 @@ void VisBuffer::setModelVisCube(const Vector<Float>& stokes)
 
 }
 
+Int
+VisBuffer::nRowChunk() const
+{
+    CheckVisIter ();
+    return visIter_p->nRowChunk ();
+}
+
+
 Int VisBuffer::numberCoh () const
 {
   CheckVisIter ();
@@ -1594,10 +1611,12 @@ Int VisBuffer::numberCoh () const
 }
 
 
-void VisBuffer::checkVisIter (const char *, const char * file, int line) const
+void
+VisBuffer::checkVisIter (const char * func, const char * file, int line, const char * extra) const
 {
   if (visIter_p == NULL) {
-    throw AipsError ("No VisibilityIterator is attached.", file, line);
+    throw AipsError (String ("No VisibilityIterator is available to fill this field in (") +
+                     func + extra + ")", file, line);
   }
 }
 
@@ -1751,6 +1770,7 @@ Vector<Float>& VisBuffer::fillFeed1_pa()
     // ROVisibilityIterator, if the time doesn't change. Otherwise
     // we should probably fill both buffers for feed1 and feed2
     // simultaneously to speed up things.
+
     DebugAssert((uInt(antenna1_p(row)) < ant_pa.nelements()), AipsError);
     DebugAssert(antenna1_p(row) >= 0, AipsError);
     feed1_pa_p(row) = ant_pa(antenna1_p(row));
@@ -1955,12 +1975,12 @@ Vector<Double>& VisBuffer::fillFreq()
   return visIter_p->frequency(frequency_p);
 }
 
-Vector<Double>& VisBuffer::fillLSRFreq()
-{
-  CheckVisIter ();
-  lsrFrequencyOK_p = True;
-  return visIter_p->lsrFrequency(lsrFrequency_p);
-}
+//Vector<Double>& VisBuffer::fillLSRFreq()
+//{
+//  CheckVisIter ();
+//  lsrFrequencyOK_p = True;
+//  return visIter_p->lsrFrequency(lsrFrequency_p);
+//}
 
 MDirection& VisBuffer::fillPhaseCenter()
 {
@@ -2047,18 +2067,20 @@ Matrix<Double>& VisBuffer::filluvwMat()
 
 Matrix<CStokesVector>& VisBuffer::fillVis(VisibilityIterator::DataColumn whichOne)
 {
-  CheckVisIter ();
   switch (whichOne) {
   case VisibilityIterator::Model:
+    CheckVisIter1 (" (Model)");
     modelVisibilityOK_p = True;
     return visIter_p->visibility(modelVisibility_p, whichOne);
     break;
   case VisibilityIterator::Corrected:
+    CheckVisIter1 (" (Corrected)");
     correctedVisibilityOK_p = True;
     return visIter_p->visibility(correctedVisibility_p, whichOne);
     break;
   case VisibilityIterator::Observed:
   default:
+    CheckVisIter1 (" (Observed)");
     visibilityOK_p = True;
     return visIter_p->visibility(visibility_p, whichOne);
     break;
@@ -2067,18 +2089,20 @@ Matrix<CStokesVector>& VisBuffer::fillVis(VisibilityIterator::DataColumn whichOn
 
 Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
 {
-  CheckVisIter ();
   switch (whichOne) {
   case VisibilityIterator::Model:
+    CheckVisIter1 (" (Model)");
     modelVisCubeOK_p = True;
     return visIter_p->visibility(modelVisCube_p, whichOne);
     break;
   case VisibilityIterator::Corrected:
+    CheckVisIter1 (" (Corrected)");
     correctedVisCubeOK_p = True;
     return visIter_p->visibility(correctedVisCube_p, whichOne);
     break;
   case VisibilityIterator::Observed:
   default:
+    CheckVisIter1 (" (Observed)");
     visCubeOK_p = True;
     return visIter_p->visibility(visCube_p, whichOne);
     break;

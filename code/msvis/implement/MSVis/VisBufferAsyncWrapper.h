@@ -226,8 +226,8 @@ public:
     Vector<Double>& frequency();
     const Vector<Double>& frequency() const;
 
-    Vector<Double>& lsrFrequency();
-    const Vector<Double>& lsrFrequency() const;
+//    Vector<Double>& lsrFrequency();
+//    const Vector<Double>& lsrFrequency() const;
 
 
     //the following method is to convert the observed frequencies
@@ -451,7 +451,7 @@ protected:
 
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line) const;
-    void copyCache (const VisBuffer & other);
+    void copyCache (const VisBuffer & other, Bool force);
     VisBufferAsync * releaseVba ();
 
 private:
@@ -516,7 +516,7 @@ private:
     Cube<Float>& fillFloatDataCube();
     Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
     Matrix<Float>& fillImagingWeight();
-    Vector<Double>& fillLSRFreq();
+    //Vector<Double>& fillLSRFreq();
     Int & fillnChannel();
     Int & fillnCorr();
     Int & fillnRow();

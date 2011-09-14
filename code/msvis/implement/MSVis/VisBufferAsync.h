@@ -16,6 +16,7 @@ class ROVisibilityIteratorAsync;
 
 class VisBufferAsync : public VisBuffer {
 
+    friend class Rovia_Test;
     friend class ROVisibilityIteratorAsync;
     friend class VisBufferAsyncWrapper;
     friend class VisBufferAutoPtr;
@@ -34,18 +35,23 @@ public:
     virtual VisBufferAsync & assign (const VisBuffer & vb, Bool copy);
     virtual Vector<MDirection> azel(Double time) const;
     virtual MDirection azel0(Double time) const;
+    virtual VisBuffer * clone ();
     virtual Int dataDescriptionId() const;
     virtual void detachFromVisIter ();
     virtual Vector<Float> feed_pa(Double time) const;
     virtual Double hourang(Double time) const;
     virtual void invalidate (); // This one is booby-trapped right now
     virtual void invalidateAsync (); // Use this one in async code
-    virtual Vector<Double> & lsrFrequency ();
-    virtual const Vector<Double> & lsrFrequency () const;
+//    virtual Vector<Double> & lsrFrequency ();
+//    virtual const Vector<Double> & lsrFrequency () const;
     virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const;
     virtual const ROMSColumns& msColumns() const;
     Int msId () const;
     Bool newMS() const;
+    Int nRowChunk() const{
+      return nRowChunk_p;
+    }
+
     Int numberAnt () const;
     Int numberCoh () const;
     virtual Vector<Float> parang(Double time) const;
@@ -60,10 +66,6 @@ public:
     virtual void setVisCube(Complex c);
     virtual void setVisCube (const Cube<Complex>& vis);
 
-    //static VisBuffer * create (const VisBuffer & other);
-//    static VisBuffer * create (ROVisibilityIterator & iter);
-//    static VisBuffer * create (ROVisibilityIterator * iter);
-
 protected:
 
     // The constructors are not public because creation should be performed
@@ -76,60 +78,62 @@ protected:
     VisBufferAsync (ROVisibilityIteratorAsync & iter);
 
     void attachToVisIter(ROVisibilityIterator & iter);
-    void checkVisIter (const char * func, const char * file, int line) const;
+    void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
     void clear ();
     void construct ();
     virtual void copyAsyncValues (const VisBufferAsync & other);
-    virtual void copyCache (const VisBuffer & other);
+    virtual void copyCache (const VisBuffer & other, Bool force);
     template<typename T> void copyVector (const Vector<T> & from, Vector<T> & to);
-    void fillFrom (const VisBufferAsync & other);
     Vector<MDirection>& fillDirection1();
     Vector<MDirection>& fillDirection2();
+    void fillFrom (const VisBufferAsync & other);
     MDirection & fillPhaseCenter();
     void setDataDescriptionId (Int id);
     void setFilling (Bool isFilling);
-    void setLsrInfo (const Block<Int> & channelStart,
-                     const Block<Int> & channelWidth,
-                     const Block<Int> & channelIncrement,
-                     const Block<Int> & channelGroupNumber,
-                     const ROArrayColumn <Double> * chanFreqs,
-                     const ROScalarColumn<Int> * obsMFreqTypes,
-                     const MPosition & observatoryPositon,
+    void setLsrInfo (const Block <Int> & channelGroupNumber,
+                     const Block <Int> & channelIncrement,
+                     const Block <Int> & channelStart,
+                     const Block <Int> & channelWidth,
+                     const MPosition & observatoryPosition,
                      const MDirection & phaseCenter,
                      Bool velocitySelection);
     void setMeasurementSet (const MeasurementSet & ms);
     void setMeasurementSetId (Int id, bool isNew);
     void setMEpoch (const MEpoch & mEpoch);
+    void setMSD (const MSDerivedValues & msd);
     void setNAntennas (Int);
     void setNCoh (Int);
+    void setNRowChunk (Int);
     void setReceptor0Angle (const Vector<Float> & receptor0Angle);
     void setRowIds (const Vector<uInt> & rowIds);
     void setSelectedNVisibilityChannels (const Vector<Int> & nVisibilityChannels);
     void setSelectedSpectralWindows (const Vector<Int> & spectralWindows);
     void setTopoFreqs (const Vector<Double> & lsrFreq, const Vector<Double> & selFreq_p);
     void setVisibilityShape (const IPosition & pvisibilityShape);
-    void updateCoordInfo (const VisBuffer *);
+    void updateCoordInfo (const VisBuffer *, const Bool dirDependent=True);
 
     static MDirection unsharedCopyDirection (const MDirection & direction);
+    static void unsharedCopyDirectionVector (Vector<MDirection> & direction);
     static MEpoch unsharedCopyEpoch (const MEpoch & mEpoch);
     static MPosition unsharedCopyPosition (const MPosition & position);
 
 private:
 
-    const ROArrayColumn <Double> * chanFreqs_p;  // [use]
     Block<Int>                     channelGroupNumber_p;
     Block<Int>                     channelIncrement_p;
     Block<Int>                     channelStart_p;
     Block<Int>                     channelWidth_p;
     Int                            dataDescriptionId_p;
     Bool                           isFilling_p;
+    Vector<Double>                 lsrFrequency_p; // calculated by getTopoFreqs if velSelection_p
     MEpoch                         mEpoch_p;
     const MeasurementSet *         measurementSet_p;  // [use]
     mutable ROMSColumns *          msColumns_p; // [own]
-    Int                            msID_p;
+    MSDerivedValues *              msd_p; // [own]
     Int                            nAntennas_p;
     Int                            nCoh_p;
-    const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
+    Int                            nRowChunk_p;
+    //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
     Vector<Float>                  receptor0Angle_p;
     Vector<Double>                 selFreq_p;

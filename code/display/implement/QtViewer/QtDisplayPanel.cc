@@ -67,7 +67,8 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		zoom_(0), panner_(0), crosshair_(0),
 		rtregion_(0), ortregion_(0),
 		elregion_(0),
-		ptregion_(0), polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
+		ptregion_(0), optregion_(0),
+		polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
 		tracking_(True),
 		modeZ_(True),
@@ -226,19 +227,28 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   //crosshair_ = new MWCCrosshairTool;  pd_->addTool(POSITION, crosshair_);
   crosshair_ = new QtCrossTool;  pd_->addTool(POSITION, crosshair_);
   //ptregion_  = new MWCPTRegion;       pd_->addTool(POLYGON, ptregion_);
-  ptregion_  = new QtPolyTool(pd_);   pd_->addTool(POLYGON, ptregion_);
   //rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
   if ( new_region_tools ) {
+      ptregion_  = new QtPolyTool(region_source_factory,pd_);   pd_->addTool(POLYGON, ptregion_);
       rtregion_  = new QtRectTool(region_source_factory,pd_);   pd_->addTool(RECTANGLE, rtregion_);
       connect( rtregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( rtregion_, SIGNAL(echoClicked(Record)),
 			  SLOT(clicked(Record)) );
+      connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( ptregion_, SIGNAL(echoClicked(Record)),
+			  SLOT(clicked(Record)) );
   } else {
+      optregion_  = new QtOldPolyTool(pd_);   pd_->addTool(POLYGON, optregion_);
       ortregion_  = new QtOldRectTool(pd_);   pd_->addTool(RECTANGLE, ortregion_);
       connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( ortregion_, SIGNAL(echoClicked(Record)),
+			   SLOT(clicked(Record)) );
+      connect( optregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( optregion_, SIGNAL(echoClicked(Record)),
 			   SLOT(clicked(Record)) );
   }
 
@@ -264,15 +274,10 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   connect( elregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
 
-  connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
   
   connect( elregion_, SIGNAL(echoClicked(Record)),
 		        SLOT(clicked(Record)) );
 
-  connect( ptregion_, SIGNAL(echoClicked(Record)),
-		        SLOT(clicked(Record)) );
-  
   QtMouseToolState* mBtns = panel_->viewer()->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
@@ -396,7 +401,10 @@ void QtDisplayPanel::resetRTRegion()  {
 
 void QtDisplayPanel::resetETRegion()  { elregion_->reset();  }
 
-void QtDisplayPanel::resetPTRegion()  { ptregion_->reset();  }
+void QtDisplayPanel::resetPTRegion()  {
+    if ( ptregion_ ) ptregion_->reset( );
+    if ( optregion_ ) optregion_->reset( );
+}
 
 void QtDisplayPanel::resetZoomer()    { zoom_->reset();  }
 

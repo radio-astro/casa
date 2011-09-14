@@ -45,12 +45,15 @@
 #include <synthesis/MeasurementEquations/CubeSkyEquation.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
-#include <synthesis/MeasurementComponents/GridFT.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
+#include <synthesis/MeasurementComponents/rGridFT.h>
 #include <synthesis/MeasurementComponents/MosaicFT.h>
 #include <synthesis/MeasurementComponents/MultiTermFT.h>
 #include <synthesis/MeasurementComponents/GridBoth.h>
 #include <synthesis/MeasurementComponents/WProjectFT.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
+#include <synthesis/MeasurementComponents/AWProjectFT.h>
+#include <synthesis/MeasurementComponents/AWProjectWBFT.h>
 #include <synthesis/MeasurementComponents/PBMosaicFT.h>
 #include <synthesis/MeasurementComponents/WPConvFunc.h>
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
@@ -68,6 +71,7 @@
 #include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisBufferAsync.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -94,55 +98,6 @@ CubeSkyEquation::CubeSkyEquation(SkyModel& sm, ROVisibilityIterator& vi, FTMachi
   firstOneChangesPut_p(False),
   firstOneChangesGet_p(False)
 {
-
-    Block<Int> sort(0);
-    sort.resize(4);
-    sort[0] = MS::ARRAY_ID;
-    sort[1] = MS::FIELD_ID;
-    sort[2] = MS::DATA_DESC_ID;
-    sort[3] = MS::TIME;
-
-    // Create a visibility iterator.  If the
-
-    ROVIA::PrefetchColumns prefetchColumns =
-        ROVIA::prefetchColumns (ROVIA::Ant1,
-                                ROVIA::Ant2,
-                                ROVIA::ArrayId,
-                                ROVIA::CorrectedCube,
-                                ROVIA::CorrType,
-                                ROVIA::Direction1,
-                                ROVIA::Direction2,
-                                ROVIA::Feed1,
-                                ROVIA::Feed1_pa,
-                                ROVIA::Feed2,
-                                ROVIA::Feed2_pa,
-                                ROVIA::FieldId,
-                                ROVIA::FlagCube,
-                                ROVIA::FlagRow,
-                                ROVIA::Freq,
-                                ROVIA::ImagingWeight,
-                                ROVIA::LSRFreq,
-                                ROVIA::NChannel,
-                                ROVIA::NCorr,
-                                ROVIA::NRow,
-                                ROVIA::PhaseCenter,
-                                ROVIA::PolFrame,
-                                ROVIA::SpW,
-                                ROVIA::Time,
-                                ROVIA::Uvw,
-                                -1);
-
-//    if (vi.isAsyncEnabled () && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()) {
-//
-//        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
-////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
-////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
-////        }
-//        destroyVisibilityIterator_p = True;
-//        vb_p.set (rvi_p); // replace existing VB with a potentially async one
-//
-//    }
-
     init(ft);
 }
 
@@ -219,6 +174,44 @@ void CubeSkyEquation::init(FTMachine& ft){
       iftm_p[k]=new nPBWProjectFT(static_cast<nPBWProjectFT &>(*ift_));
     }
   }
+  else if(ft.name()== "AWProjectFT"){
+     ft_=new AWProjectFT(static_cast<AWProjectFT &>(ft));
+     ift_=new AWProjectFT(static_cast<AWProjectFT &>(ft));
+     //     ift_=ft_;
+     ftm_p[0]=ft_;
+     iftm_p[0]=ift_;
+     if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+       throw(AipsError("No multifield with a-projection allowed"));
+     for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new AWProjectFT(static_cast<AWProjectFT &>(*ft_));
+      iftm_p[k]=new AWProjectFT(static_cast<AWProjectFT &>(*ift_));
+      //      iftm_p[k]=ftm_p[k];
+    }
+  }
+  else if(ft.name()== "AWProjectWBFT"){
+     ft_=new AWProjectWBFT(static_cast<AWProjectWBFT &>(ft));
+     ift_=new AWProjectWBFT(static_cast<AWProjectWBFT &>(ft));
+     //     ift_=ft_;
+     ftm_p[0]=ft_;
+     iftm_p[0]=ift_;
+     // if(nmod != (2 * sm_->numberOfTaylorTerms() - 1)) /* MFS */
+     //   throw(AipsError("No multifield with a-projection allowed"));
+     for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new AWProjectWBFT(static_cast<AWProjectWBFT &>(*ft_));
+      iftm_p[k]=new AWProjectWBFT(static_cast<AWProjectWBFT &>(*ift_));
+      if(sm_->numberOfTaylorTerms()>1) 
+	{
+	  for (Int model=0; model < (sm_->numberOfModels()) ; ++model)
+	    {
+	      ftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
+	      iftm_p[model]->setMiscInfo(sm_->getTaylorIndex(model));
+	    }
+	}
+      //      iftm_p[k]=ftm_p[k];
+      // if (rvi_p != NULL) cerr << rvi_p->getMSSelectionObj(0).getChanList();
+      // if (wvi_p != NULL) cerr << rvi_p->getMSSelectionObj(0).getChanList();
+    }
+  }
   else if(ft.name()== "PBMosaicFT"){
      ft_=new PBMosaicFT(static_cast<PBMosaicFT &>(ft));
      ift_=new PBMosaicFT(static_cast<PBMosaicFT &>(ft));
@@ -229,6 +222,17 @@ void CubeSkyEquation::init(FTMachine& ft){
      for (Int k=1; k < (nmod); ++k){ 
       ftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ft_));
       iftm_p[k]=new PBMosaicFT(static_cast<PBMosaicFT &>(*ift_));
+    }
+  }
+  else if (ft.name() == "rGridFT") {
+    ft_=new rGridFT(static_cast<rGridFT &>(ft));
+    ift_=new rGridFT(static_cast<rGridFT &>(ft));
+    // ftm_p[0]=CountedPtr<FTMachine>(ft_, False);
+    ftm_p[0]=ft_;
+    iftm_p[0]=ift_;
+    for (Int k=1; k < (nmod); ++k){ 
+      ftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ft_));
+      iftm_p[k]=new rGridFT(static_cast<rGridFT &>(*ift_));
     }
   }
   else if (ft.name() == "MultiTermFT") {
@@ -469,7 +473,6 @@ void CubeSkyEquation::makeMosaicPSF(PtrBlock<TempImage<Float> * >& psfs){
 
 void CubeSkyEquation::makeSimplePSF(PtrBlock<TempImage<Float> * >& psfs) {
 
-
     Int nmodels=psfs.nelements();
     LogIO os(LogOrigin("CubeSkyEquation", "makeSimplePSF"));
     ft_->setNoPadding(noModelCol_p);
@@ -620,33 +623,41 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     predictComponents(incremental, initialized);
     Bool predictedComp=initialized;
 
-    ROVIA::PrefetchColumns prefetchColumns =
-        ROVIA::prefetchColumns (ROVIA::Ant1,
-                                ROVIA::Ant2,
-                                ROVIA::ArrayId,
-                                ROVIA::CorrectedCube,
-                                ROVIA::CorrType,
-                                ROVIA::Direction1,
-                                ROVIA::Direction2,
-                                ROVIA::Feed1,
-                                ROVIA::Feed1_pa,
-                                ROVIA::Feed2,
-                                ROVIA::Feed2_pa,
-                                ROVIA::FieldId,
-                                ROVIA::FlagCube,
-                                ROVIA::FlagRow,
-                                ROVIA::Freq,
-                                ROVIA::ImagingWeight,
-                                ROVIA::LSRFreq,
-                                ROVIA::NChannel,
-                                ROVIA::NCorr,
-                                ROVIA::NRow,
-                                ROVIA::PhaseCenter,
-                                ROVIA::PolFrame,
-                                ROVIA::SpW,
-                                ROVIA::Time,
-                                ROVIA::Uvw,
-                                -1);
+    using namespace casa::asyncio;
+
+    PrefetchColumns prefetchColumns = ROVIA::prefetchColumns (Ant1,
+                                                              Ant2,
+                                                              ArrayId,
+                                                              Direction1,
+                                                              Direction2,
+                                                              Feed1,
+                                                              Feed1_pa,
+                                                              Feed2,
+                                                              Feed2_pa,
+                                                              FieldId,
+                                                              FlagCube,
+                                                              FlagRow,
+                                                              Freq,
+                                                              ImagingWeight,
+                                                              NChannel,
+                                                              NCorr,
+                                                              NRow,
+                                                              ObservedCube,
+                                                              PhaseCenter,
+                                                              PolFrame,
+                                                              SpW,
+                                                              casa::asyncio::Time,
+                                                              Uvw,
+                                                              -1);
+
+        Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
+
+        if (addCorrectedVisCube){
+            prefetchColumns.insert (CorrectedCube);
+            // This can cause an error if a multi-MS has a mixture of MSs with corrected
+            // and without corrected data columns.
+        }
+
 
 //        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
 ////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
@@ -662,15 +673,19 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         rvi_p = ROVisibilityIteratorAsync::create (* rvi_p, prefetchColumns);
         vb_p.set (rvi_p);  // detach from current vi
     }
-
+    //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
     // Initialize
     //ROVisIter& vi=*rvi_p;
     //Lets get the channel selection for later use
+    //    Timers tGetChanSel=Timers::getTime();
     rvi_p->getChannelSelection(blockNumChanGroup_p, blockChanStart_p,
                                blockChanWidth_p, blockChanInc_p, blockSpw_p);
+    //    Timers tCheckVisRows=Timers::getTime();
     checkVisIterNumRows(*rvi_p);
     VisBufferAutoPtr vb (rvi_p);
+    //    Timers tVisAutoPtr=Timers::getTime();
+    
     /**** Do we need to do this
   if( (sm_->isEmpty(0))  && !initialized && !incremental){ 
     // We are at the begining with an empty model as starting point
@@ -685,10 +700,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     Bool isEmpty=True;
     for (Int model=0; model < (sm_->numberOfModels());++model){
         isEmpty=isEmpty &&  sm_->isEmpty(model);
-
     }
-
     // Now do the images
+
     for (Int model=0;model< (sm_->numberOfModels()); ++model) {
         // Don't bother with empty images
         // Change the model polarization frame
@@ -705,6 +719,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         scaleImage(model);
         // Reset the various SkyJones
     }
+    //    Timers tChangeStokes=Timers::getTime();
+
     ft_=&(*ftm_p[0]);
     resetSkyJones();
     firstOneChangesPut_p=False;
@@ -714,6 +730,11 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
     isLargeCube(sm_->cImage(0), nCubeSlice);
 
+    // aInitGrad += tGetChanSel - tInitGrad;
+    // aGetChanSel += tCheckVisRows - tGetChanSel;
+    // aCheckVisRows += tVisAutoPtr - tCheckVisRows;
+    // aChangeStokes += tChangeStokes - tVisAutoPtr;
+
     for (Int cubeSlice=0; cubeSlice< nCubeSlice; ++cubeSlice){
 
         //      vi.originChunks();
@@ -721,53 +742,86 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
         //Redo the channel selection in case of chunked cube to match
         //data needed for gridding.
+      //        Timers tGetFreqRange=Timers::getTime();
         changedVI= getFreqRange(*rvi_p, sm_->cImage(0).coordinates(),
                                 cubeSlice, nCubeSlice) || changedVI;
 
+	//	Timers tOrigChunks=Timers::getTime();
         rvi_p->originChunks();
         rvi_p->origin();
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
+	//	Timers tVBInValid=Timers::getTime();
         vb->invalidate();
+
+	//	Timers tInitGetSlice=Timers::getTime();
         if(!isEmpty){
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
+	//	Timers tInitPutSlice=Timers::getTime();
         initializePutSlice(* vb, cubeSlice, nCubeSlice);
+	//	Timers tDonePutSlice=Timers::getTime();
         Int cohDone=0;
         ProgressMeter pm(1.0, Double(vb->numberCoh()),
                          "Gridding residual",
                          "", "", "", True);
+	// aGetFreq += tOrigChunks - tGetFreqRange;
+	// aOrigChunks += tVBInValid - tOrigChunks;
+	// aVBInValid += tInitGetSlice - tVBInValid;
+	// aInitGetSlice += tInitPutSlice - tInitGetSlice;
+	// aInitPutSlice += tDonePutSlice - tInitPutSlice;
+
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
+
+	      //	      Timers tInitModel=Timers::getTime();
                 if(!incremental && !predictedComp) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
                 // get the model visibility and write it to the model MS
+		//	Timers tGetSlice=Timers::getTime();
+		//		Timers tgetSlice=Timers::getTime();
                 if(!isEmpty)
                     getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
                 //saving the model for self-cal most probably
+		//	Timers tSetModel=Timers::getTime();
+		//		Timers tsetModel=Timers::getTime();
                 if(commitModel && !noModelCol_p)
                     wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
-                if(!useCorrected){
-                    vb->modelVisCube()-=vb->visCube();
-                }
-                else{
-                    vb->modelVisCube()-=vb->correctedVisCube();
-                }
+		//		Timers tGetRes=Timers::getTime();
+		if (!iftm_p[0]->canComputeResiduals())
+		  if(!useCorrected) vb->modelVisCube()-=vb->visCube();
+		  else              vb->modelVisCube()-=vb->correctedVisCube();
+		else
+		  iftm_p[0]->ComputeResiduals(*vb,useCorrected);
+
+
+		//		Timers tPutSlice = Timers::getTime();
                 putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
-
+		// Timers tDoneGridding=Timers::getTime();
+		// aInitModel += tgetSlice - tInitModel;
+		// aGetSlice += tsetModel - tgetSlice;
+		// aSetModel += tGetRes - tsetModel;
+		// aGetRes += tPutSlice - tGetRes;
+		// aPutSlice += tDoneGridding - tPutSlice;
+		// aExtra += tDoneGridding - tInitModel;
             }
         }
 
+	//	Timers tFinalizeGetSlice=Timers::getTime();
         finalizeGetSlice();
         if(!incremental&&!initialized) initialized=True;
+	//	Timers tFinalizePutSlice=Timers::getTime();
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
-
+	//	Timers tDoneFinalizePutSlice=Timers::getTime();
+	
+	// aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
+	// aFinalizePutSlice += tDoneFinalizePutSlice - tFinalizePutSlice;
     }
 
     for (Int model=0;model<sm_->numberOfModels();model++) {
@@ -792,7 +846,29 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         delete rvi_p;        // kill the new vi
         rvi_p = oldRvi;      // make the old vi the current vi
     }
-
+   // cerr << "gradChiSq: "
+   // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " " 
+   // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " " 
+   // 	<< "ChangeStokes = " << aChangeStokes.formatAverage().c_str() << " " 
+   // 	<< "CheckVisRows = " << aCheckVisRows.formatAverage().c_str() << " " 
+   // 	<< "GetFreq = " << aGetFreq.formatAverage().c_str() << " " 
+   // 	<< "OrigChunks = " << aOrigChunks.formatAverage().c_str() << " " 
+   // 	<< "VBInValid = " << aVBInValid.formatAverage().c_str() << " " 
+   // 	<< "InitGetSlice = " << aInitGetSlice.formatAverage().c_str() << " " 
+   // 	<< "InitPutSlice = " << aInitPutSlice.formatAverage().c_str() << " " 
+   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
+   // 	<< "FinalGetSlice = " << aFinalizeGetSlice.formatAverage().c_str() << " " 
+   // 	<< "FinalPutSlice = " << aFinalizePutSlice.formatAverage().c_str() << " " 
+   // 	<< endl;
+   
+   // cerr << "VB loop: " 
+   // 	<< "InitModel = " << aInitModel.formatAverage().c_str() << " " 
+   // 	<< "GetSlice = " << aGetSlice.formatAverage().c_str() << " " 
+   // 	<< "SetModel = " << aSetModel.formatAverage().c_str() << " " 
+   // 	<< "GetRes = " << aGetRes.formatAverage().c_str() << " " 
+   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
+   // 	<< "Extra = " << aExtra.formatAverage().c_str() << " " 
+   // 	<< endl;
 }
 
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
@@ -843,6 +919,7 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
 void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, 
 					 Int cubeSlice, Int nCubeSlice) {
   AlwaysAssert(ok(),AipsError);
+  Bool dirDep= (ej_ != NULL);
   for(Int model=0; model < (sm_->numberOfModels()) ; ++model){
     sliceCube(imPutSlice_p[model], model, cubeSlice, nCubeSlice, 0);
     weightSlice_p[model].resize();
@@ -851,11 +928,12 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb,
     }
     iftm_p[model]->initializeToSky(*(imPutSlice_p[model]),weightSlice_p[model],
 				   vb);
+    dirDep= dirDep || (ftm_p[model]->name() == "MosaicFT");
   }
   assertSkyJones(vb, -1);
   //vb_p is used to finalize things if vb has changed propoerties
   vb_p->assign(vb, False);
-  vb_p->updateCoordInfo(& vb);
+  vb_p->updateCoordInfo(& vb, dirDep);
 }
 
 void CubeSkyEquation::getCoverageImage(Int model, ImageInterface<Float>& im){
@@ -872,9 +950,8 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
     Int nRow=vb.nRow();
     internalChangesPut_p=False;  // Does this VB change inside itself?
     firstOneChangesPut_p=False;  // Has this VB changed from the previous one?
-    if((ftm_p[0]->name() != "MosaicFT") &&
-            (ftm_p[0]->name() != "PBWProjectFT")) {
-
+    if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
+       (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
         changedSkyJonesLogic(vb, firstOneChangesPut_p, internalChangesPut_p);
     }
     //First ft machine change should be indicative
@@ -1065,10 +1142,11 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
   // avoid this if possible.
   internalChangesGet_p=False;  // Does this VB change inside itself?
   firstOneChangesGet_p=False;  // Has this VB changed from the previous one?
-  if((ftm_p[0]->name()!="MosaicFT") &&
-     (ftm_p[0]->name() != "PBWProjectFT")) {
+  if((ftm_p[0]->name() != "MosaicFT")    && (ftm_p[0]->name() != "PBWProjectFT") &&
+     (ftm_p[0]->name() != "AWProjectFT") && (ftm_p[0]->name() != "AWProjectWBFT")) {
     changedSkyJonesLogic(result, firstOneChangesGet_p, internalChangesGet_p);
-  } 
+  }
+
   if(internalChangesGet_p || internalChangesPut_p) {
     if(internalChangesPut_p)
       internalChangesPut_p=False;

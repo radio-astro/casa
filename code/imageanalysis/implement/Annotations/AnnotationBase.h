@@ -28,11 +28,8 @@
 #ifndef ANNOTATIONS_ANNOTATIONBASE_H
 #define ANNOTATIONS_ANNOTATIONBASE_H
 
-#include <casa/aips.h>
-
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <boost/regex.hpp>
-#include <list>
 
 namespace casa {
 
@@ -91,6 +88,9 @@ public:
 		FONTSTYLE,
 		USETEX,
 		LABEL,
+		LABELCOLOR,
+		LABELPOS,
+		LABELOFF,
 		UNKNOWN_KEYWORD,
 		N_KEYS
 	};
@@ -130,6 +130,9 @@ public:
 	static const uInt DEFAULT_FONTSIZE;
 	static const FontStyle DEFAULT_FONTSTYLE;
 	static const Bool DEFAULT_USETEX;
+	static const RGB DEFAULT_LABELCOLOR;
+	static const String DEFAULT_LABELPOS;
+	static const vector<Int> DEFAULT_LABELOFF;
 
 	static const boost::regex rgbHexRegex;
 
@@ -209,11 +212,39 @@ public:
 	// before creating quantities which have pixel units.
 	static void unitInit();
 
+    // <src>color</src> must either be a recognized color name or
+    // a valid rgb hex string, else an expection is thrown
+	void setLabelColor(const String& color);
+
+    // color must have three elements all with values between 0 and 255 inclusive
+    // or an exception is thrown.
+    void setLabelColor(const RGB& color);
+
+    // returns the color name if it is recognized or its rgb hex string
+
+	String getLabelColorString() const;
+
+    // get the color associated with this object's label
+    RGB getLabelColor() const;
+
+    // returns one of top, bottom, left, or right.
+	String getLabelPosition() const;
+
+	// <src>position</src> must have a value in top, bottom, left, or right.
+	// case is ignored.
+	void setLabelPosition(const String& position);
+
+	// <src>offset</src> must have two elements
+	void setLabelOffset(const vector<Int>& offset);
+
+	vector<Int> getlabelOffset() const;
+
 	virtual ostream& print(ostream &os) const = 0;
 
 	// These parameters are included at the global scope. Multiple runs
-	// on the same object are cumulative; the previous global settings
-	// remain in tact.
+	// on the same object are cumulative; if a key exists in the current
+	// settings but not in <src>globalKeys</src> that key will still exist
+	// in the globals after setGlobals has run.
 	void setGlobals(const Vector<Keyword>& globalKeys);
 
 	// print a set of keyword value pairs
@@ -280,8 +311,8 @@ private:
 	MDirection::Types _directionRefFrame;
 	CoordinateSystem _csys;
 	IPosition _directionAxes;
-	String _label, _font;
-    RGB _color;
+	String _label, _font, _labelPos;
+    RGB _color, _labelColor;
 	FontStyle _fontstyle;
 	LineStyle _linestyle;
 	uInt _fontsize, _linewidth, _symbolsize,
@@ -291,6 +322,7 @@ private:
 	map<Keyword, Bool> _globals;
 	map<Keyword, String> _params;
 	Bool _printGlobals;
+	vector<Int> _labelOff;
 
 	static Bool _doneUnitInit, _doneColorInit;
 	static map<String, LineStyle> _lineStyleMap;
@@ -305,6 +337,10 @@ private:
 	void _initParams();
 
 	static void _initColors();
+
+	static RGB _colorStringToRGB(const String& s);
+
+	static Bool _isRGB(const RGB& rgb);
 
 };
 

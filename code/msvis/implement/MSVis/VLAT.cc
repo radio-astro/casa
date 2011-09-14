@@ -33,6 +33,7 @@
 #include "VLAT.h"
 #include "VisBufferAsync.h"
 #include "VisibilityIteratorAsync.h"
+#include <casa/Logging/LogIO.h>
 #include <casa/System/AipsrcValue.h>
 
 #include "AsynchronousTools.h"
@@ -48,14 +49,14 @@ using namespace casa::async;
 #include <boost/function.hpp>
 
 using namespace boost;
-
+using namespace casa::utilj;
 using namespace std;
 
 #include "UtilJ.h"
 
 #define Log(level, ...) \
-    {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
-         Logger::get()->log (__VA_ARGS__);};
+        {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
+    Logger::get()->log (__VA_ARGS__);};
 
 using namespace casa::utilj;
 using namespace casa::asyncio;
@@ -63,21 +64,21 @@ using namespace casa::asyncio;
 namespace casa {
 
 //  **********************************************
-//	*                                            *
-//	* ROVisibilityIteratorAsyncImpl Implementation *
-//	*                                            *
+//  *                                            *
+//  * ROVisibilityIteratorAsyncImpl Implementation *
+//  *                                            *
 //  **********************************************
 
 ROVisibilityIteratorAsyncImpl::ROVisibilityIteratorAsyncImpl ()
- : vlaData_p (NULL),
-   vlat_p (NULL)
+: vlaData_p (NULL),
+  vlat_p (NULL)
 {
 }
 
 //  **************************
-//	*                        *
-//	* VlaData Implementation *
-//	*                        *
+//  *                        *
+//  * VlaData Implementation *
+//  *                        *
 //  **************************
 
 //Semaphore VlaData::debugBlockSemaphore_p (0); // used to block a thread for debugging
@@ -85,8 +86,15 @@ Bool VlaData::loggingInitialized_p = False;
 Int VlaData::logLevel_p = -1;
 
 VlaData::VlaData (Int maxNBuffers)
- : MaxNBuffers_p (maxNBuffers)
+: fillCycle_p (True),
+  fillOperate_p (True),
+  fillWait_p (True),
+  MaxNBuffers_p (maxNBuffers),
+  readCycle_p (True),
+  readOperate_p (True),
+  readWait_p (True)
 {
+    timeStart_p = ThreadTimes();
     lookaheadTerminationRequested_p = False;
     sweepTerminationRequested_p = False;
     viResetComplete_p = False;
@@ -99,8 +107,10 @@ VlaData::VlaData (Int maxNBuffers)
 
 VlaData::~VlaData ()
 {
-    if (stats_p.isEnabled()){
-        Log (1, "VlaData stats:\n%s", stats_p.makeReport ().c_str());
+    timeStop_p = ThreadTimes();
+
+    if (statsEnabled()){
+        Log (1, "VlaData stats:\n%s", makeReport ().c_str());
     }
 
     resetBufferData ();
@@ -119,36 +129,36 @@ VlaData::addModifier (RoviaModifier * modifier)
 Int
 VlaData::clock (Int arg, Int base)
 {
-	Int r = arg % base;
+    Int r = arg % base;
 
-	if (r < 0){
-		r += base;
-	}
+    if (r < 0){
+        r += base;
+    }
 
-	return r;
+    return r;
 }
 
 void
 VlaData::debugBlock ()
 {
-//    Log (1, "VlaData::debugBlock(): Blocked\n");
-//
-//    debugBlockSemaphore_p.wait ();
-//
-//    Log (1, "VlaData::debugBlock(): Unblocked\n");
+    //    Log (1, "VlaData::debugBlock(): Blocked\n");
+    //
+    //    debugBlockSemaphore_p.wait ();
+    //
+    //    Log (1, "VlaData::debugBlock(): Unblocked\n");
 }
 
 void
 VlaData::debugUnblock ()
 {
-//    int v = debugBlockSemaphore_p.getValue();
-//
-//    if (v == 0){
-//        Log (1, "VlaData::debugUnblock()\n");
-//        debugBlockSemaphore_p.post ();
-//    }
-//    else
-//        Log (1, "VlaData::debugUnblock(): already unblocked; v=%d\n", v);
+    //    int v = debugBlockSemaphore_p.getValue();
+    //
+    //    if (v == 0){
+    //        Log (1, "VlaData::debugUnblock()\n");
+    //        debugBlockSemaphore_p.post ();
+    //    }
+    //    else
+    //        Log (1, "VlaData::debugUnblock(): already unblocked; v=%d\n", v);
 }
 
 
@@ -157,15 +167,20 @@ VlaData::fillComplete (VlaDatum * datum)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::Fill|Stats::End);
+    if (statsEnabled()){
+        fill3_p = ThreadTimes();
+        fillWait_p += fill2_p - fill1_p;
+        fillOperate_p += fill3_p - fill2_p;
+        fillCycle_p += fill3_p - fill1_p;
+    }
 
     data_p.push (datum);
 
-	Log (2, "VlaData::fillComplete on %s\n", datum->getSubChunkPair ().toString().c_str());
+    Log (2, "VlaData::fillComplete on %s\n", datum->getSubChunkPair ().toString().c_str());
 
-	assert ((Int)data_p.size() <= MaxNBuffers_p);
+    assert ((Int)data_p.size() <= MaxNBuffers_p);
 
-	vlaDataChanged_p.broadcast ();
+    vlaDataChanged_p.broadcast ();
 }
 
 VlaDatum *
@@ -173,29 +188,29 @@ VlaData::fillStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::Fill|Stats::Request);
+    statsEnabled () && (fill1_p = ThreadTimes(), True);
 
-	while ((int) data_p.size() >= MaxNBuffers_p && ! sweepTerminationRequested_p){
-	    vlaDataChanged_p.wait (vlaDataMutex_p);
-	}
+    while ((int) data_p.size() >= MaxNBuffers_p && ! sweepTerminationRequested_p){
+        vlaDataChanged_p.wait (vlaDataMutex_p);
+    }
 
-	VlaDatum * datum = new VlaDatum (chunkNumber, subChunkNumber);
+    VlaDatum * datum = new VlaDatum (chunkNumber, subChunkNumber);
 
-	Log (2, "VlaData::fillStart on %s\n", datum->getSubChunkPair().toString().c_str());
+    Log (2, "VlaData::fillStart on %s\n", datum->getSubChunkPair().toString().c_str());
 
-	if (validChunks_p.empty() || validChunks_p.back() != chunkNumber)
-	    insertValidChunk (chunkNumber);
+    if (validChunks_p.empty() || validChunks_p.back() != chunkNumber)
+        insertValidChunk (chunkNumber);
 
-	insertValidSubChunk (chunkNumber, subChunkNumber);
+    insertValidSubChunk (chunkNumber, subChunkNumber);
 
-    stats_p.addEvent (Stats::Fill|Stats::Begin);
+    statsEnabled () && (fill2_p = ThreadTimes(), True);
 
-	if (sweepTerminationRequested_p){
-	    delete datum;
-	    datum = NULL; // datum may not be ready to fill and shouldn't be anyway
-	}
+    if (sweepTerminationRequested_p){
+        delete datum;
+        datum = NULL; // datum may not be ready to fill and shouldn't be anyway
+    }
 
-	return datum;
+    return datum;
 }
 
 asyncio::ChannelSelection
@@ -209,40 +224,38 @@ VlaData::getChannelSelection () const
 void
 VlaData::initialize ()
 {
-	resetBufferData ();
+    resetBufferData ();
 
-    if (statsEnabled())
-        stats_p.reserve (10000);
 }
 
 Bool
 VlaData::initializeLogging()
 {
-	// If the log file variable is defined then start
-	// up the logger
+    // If the log file variable is defined then start
+    // up the logger
 
-	const String logFileVariable = "Casa_VIA_LogFile";
-	const String logLevelVariable = "Casa_VIA_LogLevel";
+    const String logFileVariable = "Casa_VIA_LogFile";
+    const String logLevelVariable = "Casa_VIA_LogLevel";
 
-	String logFilename;
-	Bool logFileFound = AipsrcValue<String>::find (logFilename,
-	                                               ROVisibilityIteratorAsync::getAipsRcBase () + ".debug.logFile",
-	                                               "");
+    String logFilename;
+    Bool logFileFound = AipsrcValue<String>::find (logFilename,
+                                                   ROVisibilityIteratorAsync::getAipsRcBase () + ".debug.logFile",
+                                                   "");
 
-	if (logFileFound && ! logFilename.empty() && downcase (logFilename) != "null" &&
-	    downcase (logFilename) != "none"){
+    if (logFileFound && ! logFilename.empty() && downcase (logFilename) != "null" &&
+            downcase (logFilename) != "none"){
 
-		Logger::get()->start (logFilename.c_str());
-		AipsrcValue<Int>::find (logLevel_p, ROVisibilityIteratorAsync::getAipsRcBase () + ".debug.logLevel", 1);
-		Logger::get()->log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n", logLevel_p,
-		                    ROVisibilityIteratorAsync::isAsynchronousIoEnabled() ? "enabled" : "disabled",
-		                    ROVisibilityIteratorAsync::getDefaultNBuffers() );
+        Logger::get()->start (logFilename.c_str());
+        AipsrcValue<Int>::find (logLevel_p, ROVisibilityIteratorAsync::getAipsRcBase () + ".debug.logLevel", 1);
+        Logger::get()->log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n", logLevel_p,
+                            ROVisibilityIteratorAsync::isAsynchronousIoEnabled() ? "enabled" : "disabled",
+                                                                                 ROVisibilityIteratorAsync::getDefaultNBuffers() );
 
-		return True;
+        return True;
 
-	}
+    }
 
-	return False;
+    return False;
 }
 
 void
@@ -252,7 +265,7 @@ VlaData::insertValidChunk (Int chunkNumber)
 
     validChunks_p.push (chunkNumber);
 
-	vlaDataChanged_p.broadcast ();
+    vlaDataChanged_p.broadcast ();
 }
 
 void
@@ -260,9 +273,9 @@ VlaData::insertValidSubChunk (Int chunkNumber, Int subChunkNumber)
 {
     // Caller locks mutex.
 
-	validSubChunks_p.push (SubChunkPair (chunkNumber, subChunkNumber));
+    validSubChunks_p.push (SubChunkPair (chunkNumber, subChunkNumber));
 
-	vlaDataChanged_p.broadcast ();
+    vlaDataChanged_p.broadcast ();
 }
 
 Bool
@@ -300,14 +313,14 @@ VlaData::isValidChunk (Int chunkNumber) const
 
     Log (3, "isValidChunk (%d) --> %s\n", chunkNumber, validChunk ? "true" : "false");
 
-	return validChunk;
+    return validChunk;
 }
 
 Bool
 VlaData::isValidSubChunk (Int chunkNumber, Int subChunkNumber) const
 {
-	SubChunkPair subChunk (chunkNumber, subChunkNumber);
-	SubChunkPair s;
+    SubChunkPair subChunk (chunkNumber, subChunkNumber);
+    SubChunkPair s;
 
     bool validSubChunk = False;
 
@@ -335,17 +348,50 @@ VlaData::isValidSubChunk (Int chunkNumber, Int subChunkNumber) const
 
     Log (3, "isValidSubChunk (%d, %d) --> %s\n", chunkNumber, subChunkNumber, validSubChunk ? "true" : "false");
 
-	return validSubChunk;
+    return validSubChunk;
 }
+
+String
+VlaData::makeReport ()
+{
+    String report;
+
+    DeltaThreadTimes duration = (timeStop_p - timeStart_p); // seconds
+    report += format ("\nLookahead Stats: nCycles=%d, duration=%.3f sec\n...\n",
+                      readWait_p.n(), duration.elapsed());
+    report += "...ReadWait:    " + readWait_p.formatAverage () + "\n";
+    report += "...ReadOperate: " + readOperate_p.formatAverage() + "\n";
+    report += "...ReadCycle:   " + readCycle_p.formatAverage() + "\n";
+
+    report += "...FillWait:    " + fillWait_p.formatAverage() + "\n";
+    report += "...FillOperate: " + fillOperate_p.formatAverage () + "\n";
+    report += "...FillCycle:   " + fillCycle_p.formatAverage () + "\n";
+
+    Double syncCycle = fillOperate_p.elapsedAvg() + readOperate_p.elapsedAvg();
+    Double asyncCycle = max (fillCycle_p.elapsedAvg(), readCycle_p.elapsedAvg());
+    report += format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
+    report += format ("...Speedup is %5.1f%%\n", (syncCycle / asyncCycle  - 1) * 100);
+    report += format ("...Total time savings estimate is %7.3f seconds\n",
+                      (syncCycle - asyncCycle) * readWait_p.n());
+
+    return report;
+
+}
+
 
 void
 VlaData::readComplete (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::End);
+    if (statsEnabled()){
+        read3_p = ThreadTimes();
+        readWait_p += read2_p - read1_p;
+        readOperate_p += read3_p - read2_p;
+        readCycle_p += read3_p - read1_p;
+    }
 
-	Log (2, "VlaData::readComplete on (%d,%d)\n", chunkNumber, subChunkNumber);
+    Log (2, "VlaData::readComplete on (%d,%d)\n", chunkNumber, subChunkNumber);
 }
 
 VisBufferAsync *
@@ -353,34 +399,34 @@ VlaData::readStart (Int chunkNumber, Int subChunkNumber)
 {
     MutexLocker ml (vlaDataMutex_p);
 
-    stats_p.addEvent (Stats::Request);
+    statsEnabled () && (read1_p = ThreadTimes(), True);
 
     // Wait for a subchunk's worth of data to be available.
 
-	while (data_p.empty()){
-	    vlaDataChanged_p.wait(vlaDataMutex_p);
-	}
+    while (data_p.empty()){
+        vlaDataChanged_p.wait(vlaDataMutex_p);
+    }
 
-	// Get the data off the queue and notify world of change in VlaData.
+    // Get the data off the queue and notify world of change in VlaData.
 
-	VlaDatum * datum = data_p.front();
-	data_p.pop ();
-	vlaDataChanged_p.broadcast ();
+    VlaDatum * datum = data_p.front();
+    data_p.pop ();
+    vlaDataChanged_p.broadcast ();
 
-	ThrowIf (! datum->isSubChunk (chunkNumber, subChunkNumber),
-	         utilj::format ("Reader wanted subchunk (%d,%d) while next subchunk is %s",
-	                        chunkNumber, subChunkNumber, datum->getSubChunkPair().toString().c_str()));
+    ThrowIf (! datum->isSubChunk (chunkNumber, subChunkNumber),
+             utilj::format ("Reader wanted subchunk (%d,%d) while next subchunk is %s",
+                            chunkNumber, subChunkNumber, datum->getSubChunkPair().toString().c_str()));
 
-	Log (2, "VlaData::readStart on (%d, %d)\n", chunkNumber, subChunkNumber);
+    Log (2, "VlaData::readStart on (%d, %d)\n", chunkNumber, subChunkNumber);
 
-    stats_p.addEvent (Stats::Begin);
+    statsEnabled () && (read2_p = ThreadTimes(), True);
 
     // Extract the VisBufferAsync enclosed in the datum for return to caller,
     // then destroy the rest of the datum object
 
     VisBufferAsync * vba = datum->releaseVisBufferAsync ();
     delete datum;
-	return vba;
+    return vba;
 }
 
 void
@@ -415,19 +461,19 @@ VlaData::resetBufferData ()
 
     // Flush any accumulated buffers
 
-	while (! data_p.empty()){
-		VlaDatum * datum = data_p.front();
-		data_p.pop ();
-		delete datum;
-	}
+    while (! data_p.empty()){
+        VlaDatum * datum = data_p.front();
+        data_p.pop ();
+        delete datum;
+    }
 
-	// Flush the chunk and subchunk indices
+    // Flush the chunk and subchunk indices
 
-	while (! validChunks_p.empty())
-	    validChunks_p.pop();
+    while (! validChunks_p.empty())
+        validChunks_p.pop();
 
-	while (! validSubChunks_p.empty())
-	    validSubChunks_p.pop();
+    while (! validSubChunks_p.empty())
+        validSubChunks_p.pop();
 }
 
 void
@@ -450,7 +496,6 @@ VlaData::statsEnabled () const
 
     return doStats;
 }
-
 
 void
 VlaData::storeChannelSelection (const asyncio::ChannelSelection & channelSelection)
@@ -497,7 +542,7 @@ VlaData::waitForViReset()
     }
     else {
         Log (1, "Carrying out VI reset\n")
-        viResetRequested_p = False;
+                viResetRequested_p = False;
 
         resetBufferData ();
 
@@ -512,149 +557,10 @@ VlaData::waitForViReset()
     }
 }
 
-VlaData::Stats::Stats ()
-{
-    enabled_p = false;
-}
-
-void
-VlaData::Stats::addEvent (Int type)
-{
-    if (enabled_p){
-        struct timeval tVal;
-        gettimeofday (& tVal, NULL);
-
-        Double t = tVal.tv_sec + tVal.tv_usec * 1e-6;
-
-        events_p.push_back (Event (type, t));
-    }
-}
-
-
-String
-VlaData::Stats::makeReport ()
-{
-    String report;
-
-    if (enabled_p) {
-
-        OpStats readStats, fillStats;
-
-        for (Events::iterator event = events_p.begin(); event != events_p.end(); ++ event){
-
-            Int type = event->get<0>();
-
-            if ((type & Fill) != 0){
-                fillStats.update (type, event->get<1>());
-            }
-            else {
-                readStats.update (type, event->get<1>());
-            }
-        }
-
-        report += format ("\nLookahead Stats: nCycles=%d\n...\n", readStats.getN());
-        report += "...ReadWait:    " + readStats.format(Wait) + "\n";
-        report += "...ReadOperate: " + readStats.format(Operate) + "\n";
-        report += "...ReadCycle:   " + readStats.format(Cycle) + "\n";
-
-        report += "...FillWait:    " + fillStats.format(Wait) + "\n";
-        report += "...FillOperate: " + fillStats.format(Operate) + "\n";
-        report += "...FillCycle:   " + fillStats.format(Cycle) + "\n";
-
-        Double syncCycle = fillStats.getAvg (Operate) + readStats.getAvg (Operate);
-        report += format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
-        report += format ("...Speedup is %5.1f%%\n", (syncCycle / readStats.getAvg (Cycle) - 1) * 100);
-
-    }
-
-    return report;
-
-}
-
-void
-VlaData::Stats::reserve (Int size)
-{
-    events_p.reserve (size);
-    enabled_p = True;
-}
-
-VlaData::Stats::OpStats::OpStats ()
-: events_p (End + 1, 0),
-  max_p (3, -1E20),
-  min_p (3, 1E20),
-  n_p (0),
-  ssq_p (3, 0),
-  sum_p (3, 0)
-{}
-
-void
-VlaData::Stats::OpStats::accumulate (Double wait, Double operate, Double cycle)
-{
-    ++ n_p;
-    vector<Double> s (3);
-    s [Wait] = wait;
-    s [Operate] = operate;
-    s [Cycle] = cycle;
-
-    using namespace boost::lambda;
-    //using boost::lambda::_1;
-    //using boost::lambda::_2;
-
-    // Compute the sum for all periods.
-
-    transform (sum_p.begin(), sum_p.end(), s.begin(), sum_p.begin(), _1 + _2);
-
-    // Compute the sum of squares for all periods.
-
-    transform (ssq_p.begin(), ssq_p.end(), s.begin(), ssq_p.begin(), _1 + _2 * _2);
-
-    // Compute the min for all periods using simple wrapper of min function.
-
-    transform (min_p.begin(), min_p.end(), s.begin(), min_p.begin(), dmin);
-
-    // Compute the max for all periods using simple wrapper of max function.
-
-    transform (max_p.begin(), max_p.end(), s.begin(), max_p.begin(), dmax);
-}
-
-String
-VlaData::Stats::OpStats::format (Int component)
-{
-    Double avg = (n_p != 0) ? sum_p [component] / n_p : 0;
-    Double stdev = (n_p != 0) ? sqrt (ssq_p[component] / n_p - avg * avg) : 0;
-
-    String s = utilj::format ("avg=%6.1f ms, stdev=%6.1f, range=[%6.1f, %6.1f]", avg*1000, stdev * 1000,
-                              min_p[component] * 1000, max_p[component] * 1000);
-
-    return s;
-}
-
-
-void
-VlaData::Stats::OpStats::update (Int type, Double t)
-{
-    Int masked = type & (~Fill);
-
-    events_p [masked] = t;
-
-    if (masked == End){
-
-        Double wait = events_p [Begin] - events_p [Request];
-        Double operate = events_p [End] - events_p [Begin];
-        Double cycle = events_p [End] - events_p [Request];
-
-        accumulate (wait, operate, cycle);
-
-        events_p [Begin] = 0;
-        events_p [Request] = 0;
-        events_p [End] = 0;
-    }
-}
-
 //  ***************************
-//	*                         *
-//	* VlaDatum Implementation *
-//	*                         *
+//  *                         *
+//  * VlaDatum Implementation *
+//  *                         *
 //  ***************************
 
 VlaDatum::VlaDatum (Int chunkNumber, Int subChunkNumber)
@@ -671,13 +577,13 @@ VlaDatum::~VlaDatum()
 SubChunkPair
 VlaDatum::getSubChunkPair () const
 {
-	return SubChunkPair (chunkNumber_p, subChunkNumber_p);
+    return SubChunkPair (chunkNumber_p, subChunkNumber_p);
 }
 
 VisBufferAsync *
 VlaDatum::getVisBuffer ()
 {
-	return visBuffer_p;
+    return visBuffer_p;
 }
 
 //const VisBufferAsync *
@@ -691,8 +597,8 @@ VlaDatum::getVisBuffer ()
 Bool
 VlaDatum::isSubChunk (Int chunkNumber, Int subChunkNumber) const
 {
-	return chunkNumber == chunkNumber_p &&
-		   subChunkNumber == subChunkNumber_p;
+    return chunkNumber == chunkNumber_p &&
+            subChunkNumber == subChunkNumber_p;
 }
 
 VisBufferAsync *
@@ -705,36 +611,36 @@ VlaDatum::releaseVisBufferAsync ()
 }
 
 //  ***********************
-//	*                     *
-//	* VLAT Implementation *
-//	*                     *
+//  *                     *
+//  * VLAT Implementation *
+//  *                     *
 //  ***********************
 
 VLAT::VLAT (VlaData * vd)
 {
-	vlaData_p = vd;
-	visibilityIterator_p = NULL;
-	threadTerminated_p = False;
+    vlaData_p = vd;
+    visibilityIterator_p = NULL;
+    threadTerminated_p = False;
 }
 
 VLAT::~VLAT ()
 {
 
-	// Free up storage
+    // Free up storage
 
-	for (FillerDictionary::iterator f = fillerDictionary_p.begin();
-		 f != fillerDictionary_p.end();
-		 f++){
-		delete (f->second);
-	}
+    for (FillerDictionary::iterator f = fillerDictionary_p.begin();
+            f != fillerDictionary_p.end();
+            f++){
+        delete (f->second);
+    }
 
-	for (Fillers::iterator f = fillers_p.begin();
-		 f != fillers_p.end();
-		 f++){
-		delete (* f);
-	}
+    for (Fillers::iterator f = fillers_p.begin();
+            f != fillers_p.end();
+            f++){
+        delete (* f);
+    }
 
-	delete visibilityIterator_p;
+    delete visibilityIterator_p;
 }
 
 void
@@ -756,116 +662,148 @@ VLAT::applyModifiers (ROVisibilityIterator * rovi)
 }
 
 void
+VLAT::checkFiller (PrefetchColumnIds fillerId)
+{
+    switch (fillerId){
+
+    case Corrected:
+    case CorrectedCube:
+
+        ThrowIf (visibilityIterator_p ->colCorrVis.isNull(),
+                 utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+                                ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str()));
+        break;
+
+    case Model:
+    case ModelCube:
+
+        ThrowIf (visibilityIterator_p ->colModelVis.isNull(),
+                 utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+                                ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str()));
+        break;
+
+    case Observed:
+    case ObservedCube:
+
+        ThrowIf (visibilityIterator_p ->colVis.isNull() && visibilityIterator_p ->colFloatVis.isNull(),
+                 utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+                                ROVisibilityIteratorAsync::prefetchColumnName (fillerId).c_str()));
+        break;
+
+    default:
+        ; // do nothing
+    }
+}
+
+void
 VLAT::createFillerDictionary ()
 {
-	// Create a dictionary of all the possible fillers using the
-	// ROVisibilityIteratorAsync::PrefetchColumnIds as the keys
+    // Create a dictionary of all the possible fillers using the
+    // ROVisibilityIteratorAsync::PrefetchColumnIds as the keys
 
-	fillerDictionary_p.clear();
+    fillerDictionary_p.clear();
 
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Ant1,
-	                       vlatFunctor0 (& VisBuffer::fillAnt1));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Ant2,
-	                       vlatFunctor0 (& VisBuffer::fillAnt2));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ArrayId,
-	                       vlatFunctor0 (& VisBuffer::fillArrayId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Channel,
-	                       vlatFunctor0 (& VisBuffer::fillChannel));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Cjones,
-	                       vlatFunctor0 (& VisBuffer::fillCjones));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::CorrType,
-	                       vlatFunctor0 (& VisBuffer::fillCorrType));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Corrected,
-	                       vlatFunctor1(& VisBuffer::fillVis,
-	                                    VisibilityIterator::Corrected));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::CorrectedCube,
-	                       vlatFunctor1(& VisBuffer::fillVisCube,
-	                                    VisibilityIterator::Corrected));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Direction1,
-	                       vlatFunctor0 (& VisBuffer::fillDirection1));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Direction2,
-	                       vlatFunctor0 (& VisBuffer::fillDirection2));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Exposure,
-	                       vlatFunctor0 (& VisBuffer::fillExposure));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed1,
-	                       vlatFunctor0 (& VisBuffer::fillFeed1));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed1_pa,
-	                       vlatFunctor0 (& VisBuffer::fillFeed1_pa));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed2,
-	                       vlatFunctor0 (& VisBuffer::fillFeed2));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Feed2_pa,
-	                       vlatFunctor0 (& VisBuffer::fillFeed2_pa));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FieldId,
-	                       vlatFunctor0 (& VisBuffer::fillFieldId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Flag,
-	                       vlatFunctor0 (& VisBuffer::fillFlag));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FlagCategory,
-	                       vlatFunctor0 (& VisBuffer::fillFlagCategory));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FlagCube,
-	                       vlatFunctor0 (& VisBuffer::fillFlagCube));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::FlagRow,
-	                       vlatFunctor0 (& VisBuffer::fillFlagRow));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Freq,
-	                       vlatFunctor0 (& VisBuffer::fillFreq));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ImagingWeight,
-	                       vlatFunctor0 (& VisBuffer::fillImagingWeight));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::LSRFreq,
-	                       vlatFunctor0 (& VisBuffer::fillLSRFreq));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Model,
-	                       vlatFunctor1(& VisBuffer::fillVis,
-	                                    VisibilityIterator::Model));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ModelCube,
-	                       vlatFunctor1(& VisBuffer::fillVisCube,
-	                                    VisibilityIterator::Model));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::NChannel,
-	                       vlatFunctor0 (& VisBuffer::fillnChannel));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::NCorr,
-	                       vlatFunctor0 (& VisBuffer::fillnCorr));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::NRow,
-	                       vlatFunctor0 (& VisBuffer::fillnRow));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ObservationId,
-	                       vlatFunctor0 (& VisBuffer::fillObservationId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Observed,
-	                       vlatFunctor1(& VisBuffer::fillVis,
-	                                    VisibilityIterator::Observed));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ObservedCube,
-	                       vlatFunctor1(& VisBuffer::fillVisCube,
-	                                    VisibilityIterator::Observed));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::PhaseCenter,
-	                       vlatFunctor0 (& VisBuffer::fillPhaseCenter));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::PolFrame,
-	                       vlatFunctor0 (& VisBuffer::fillPolFrame));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::ProcessorId,
-	                       vlatFunctor0 (& VisBuffer::fillProcessorId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Scan,
-	                       vlatFunctor0 (& VisBuffer::fillScan));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Sigma,
-	                       vlatFunctor0 (& VisBuffer::fillSigma));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::SigmaMat,
-	                       vlatFunctor0 (& VisBuffer::fillSigmaMat));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::SpW,
-	                       vlatFunctor0 (& VisBuffer::fillSpW));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::StateId,
-	                       vlatFunctor0 (& VisBuffer::fillStateId));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Time,
-	                       vlatFunctor0 (& VisBuffer::fillTime));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::TimeCentroid,
-	                       vlatFunctor0 (& VisBuffer::fillTimeCentroid));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::TimeInterval,
-	                       vlatFunctor0 (& VisBuffer::fillTimeInterval));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Uvw,
-	                       vlatFunctor0 (& VisBuffer::filluvw));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::UvwMat,
-	                       vlatFunctor0 (& VisBuffer::filluvwMat));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::Weight,
-	                       vlatFunctor0 (& VisBuffer::fillWeight));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::WeightMat,
-	                       vlatFunctor0 (& VisBuffer::fillWeightMat));
-	fillerDictionary_p.add(ROVisibilityIteratorAsync::WeightSpectrum,
-	                       vlatFunctor0 (& VisBuffer::fillWeightSpectrum));
+    fillerDictionary_p.add(Ant1,
+                           vlatFunctor0 (& VisBuffer::fillAnt1));
+    fillerDictionary_p.add(Ant2,
+                           vlatFunctor0 (& VisBuffer::fillAnt2));
+    fillerDictionary_p.add(ArrayId,
+                           vlatFunctor0 (& VisBuffer::fillArrayId));
+    fillerDictionary_p.add(Channel,
+                           vlatFunctor0 (& VisBuffer::fillChannel));
+    fillerDictionary_p.add(Cjones,
+                           vlatFunctor0 (& VisBuffer::fillCjones));
+    fillerDictionary_p.add(CorrType,
+                           vlatFunctor0 (& VisBuffer::fillCorrType));
+    fillerDictionary_p.add(Corrected,
+                           vlatFunctor1(& VisBuffer::fillVis,
+                                        VisibilityIterator::Corrected));
+    fillerDictionary_p.add(CorrectedCube,
+                           vlatFunctor1(& VisBuffer::fillVisCube,
+                                        VisibilityIterator::Corrected));
+    fillerDictionary_p.add(Direction1,
+                           vlatFunctor0 (& VisBuffer::fillDirection1));
+    fillerDictionary_p.add(Direction2,
+                           vlatFunctor0 (& VisBuffer::fillDirection2));
+    fillerDictionary_p.add(Exposure,
+                           vlatFunctor0 (& VisBuffer::fillExposure));
+    fillerDictionary_p.add(Feed1,
+                           vlatFunctor0 (& VisBuffer::fillFeed1));
+    fillerDictionary_p.add(Feed1_pa,
+                           vlatFunctor0 (& VisBuffer::fillFeed1_pa));
+    fillerDictionary_p.add(Feed2,
+                           vlatFunctor0 (& VisBuffer::fillFeed2));
+    fillerDictionary_p.add(Feed2_pa,
+                           vlatFunctor0 (& VisBuffer::fillFeed2_pa));
+    fillerDictionary_p.add(FieldId,
+                           vlatFunctor0 (& VisBuffer::fillFieldId));
+    fillerDictionary_p.add(Flag,
+                           vlatFunctor0 (& VisBuffer::fillFlag));
+    fillerDictionary_p.add(FlagCategory,
+                           vlatFunctor0 (& VisBuffer::fillFlagCategory));
+    fillerDictionary_p.add(FlagCube,
+                           vlatFunctor0 (& VisBuffer::fillFlagCube));
+    fillerDictionary_p.add(FlagRow,
+                           vlatFunctor0 (& VisBuffer::fillFlagRow));
+    fillerDictionary_p.add(Freq,
+                           vlatFunctor0 (& VisBuffer::fillFreq));
+    fillerDictionary_p.add(ImagingWeight,
+                           vlatFunctor0 (& VisBuffer::fillImagingWeight));
+    fillerDictionary_p.add(Model,
+                           vlatFunctor1(& VisBuffer::fillVis,
+                                        VisibilityIterator::Model));
+    fillerDictionary_p.add(ModelCube,
+                           vlatFunctor1(& VisBuffer::fillVisCube,
+                                        VisibilityIterator::Model));
+    fillerDictionary_p.add(NChannel,
+                           vlatFunctor0 (& VisBuffer::fillnChannel));
+    fillerDictionary_p.add(NCorr,
+                           vlatFunctor0 (& VisBuffer::fillnCorr));
+    fillerDictionary_p.add(NRow,
+                           vlatFunctor0 (& VisBuffer::fillnRow));
+    fillerDictionary_p.add(ObservationId,
+                           vlatFunctor0 (& VisBuffer::fillObservationId));
+    fillerDictionary_p.add(Observed,
+                           vlatFunctor1(& VisBuffer::fillVis,
+                                        VisibilityIterator::Observed));
+    fillerDictionary_p.add(ObservedCube,
+                           vlatFunctor1(& VisBuffer::fillVisCube,
+                                        VisibilityIterator::Observed));
+    fillerDictionary_p.add(PhaseCenter,
+                           vlatFunctor0 (& VisBuffer::fillPhaseCenter));
+    fillerDictionary_p.add(PolFrame,
+                           vlatFunctor0 (& VisBuffer::fillPolFrame));
+    fillerDictionary_p.add(ProcessorId,
+                           vlatFunctor0 (& VisBuffer::fillProcessorId));
+    fillerDictionary_p.add(Scan,
+                           vlatFunctor0 (& VisBuffer::fillScan));
+    fillerDictionary_p.add(Sigma,
+                           vlatFunctor0 (& VisBuffer::fillSigma));
+    fillerDictionary_p.add(SigmaMat,
+                           vlatFunctor0 (& VisBuffer::fillSigmaMat));
+    fillerDictionary_p.add(SpW,
+                           vlatFunctor0 (& VisBuffer::fillSpW));
+    fillerDictionary_p.add(StateId,
+                           vlatFunctor0 (& VisBuffer::fillStateId));
+    fillerDictionary_p.add(casa::asyncio::Time,
+                           vlatFunctor0 (& VisBuffer::fillTime));
+    fillerDictionary_p.add(TimeCentroid,
+                           vlatFunctor0 (& VisBuffer::fillTimeCentroid));
+    fillerDictionary_p.add(TimeInterval,
+                           vlatFunctor0 (& VisBuffer::fillTimeInterval));
+    fillerDictionary_p.add(Uvw,
+                           vlatFunctor0 (& VisBuffer::filluvw));
+    fillerDictionary_p.add(UvwMat,
+                           vlatFunctor0 (& VisBuffer::filluvwMat));
+    fillerDictionary_p.add(Weight,
+                           vlatFunctor0 (& VisBuffer::fillWeight));
+    fillerDictionary_p.add(WeightMat,
+                           vlatFunctor0 (& VisBuffer::fillWeightMat));
+    fillerDictionary_p.add(WeightSpectrum,
+                           vlatFunctor0 (& VisBuffer::fillWeightSpectrum));
 
-    assert (fillerDictionary_p.size() == ROVisibilityIteratorAsync::N_PrefetchColumnIds);
-                // Every supported prefetch column needs a filler
+    assert (fillerDictionary_p.size() == N_PrefetchColumnIds);
+    // Every supported prefetch column needs a filler
 
     //fillerDependencies_p.add ();
 
@@ -876,7 +814,7 @@ void
 VLAT::fillDatum (VlaDatum * datum)
 {
 
-    Int fillerId = -1;
+    PrefetchColumnIds fillerId = Unknown;
     try{
         VisBufferAsync * vb = datum->getVisBuffer();
 
@@ -891,10 +829,9 @@ VLAT::fillDatum (VlaDatum * datum)
             //Log (2, "Filler id=%d name=%s starting\n", (* filler)->getId(), ROVisibilityIteratorAsync::prefetchColumnName((* filler)->getId()).c_str());
 
             fillerId = (* filler)->getId();
+            checkFiller (fillerId);
             (** filler) (vb);
         }
-
-        fillerId = -1; //
 
         fillDatumMiscellanyAfter (datum);
 
@@ -921,15 +858,13 @@ VLAT::fillDatum (VlaDatum * datum)
 void
 VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
 {
-	datum->getVisBuffer()->setVisibilityShape (visibilityIterator_p->visibilityShape ());
+    datum->getVisBuffer()->setVisibilityShape (visibilityIterator_p->visibilityShape ());
 
+    datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
 
+    datum->getVisBuffer()->setNCoh(visibilityIterator_p->numberCoh ());
 
-	datum->getVisBuffer()->setDataDescriptionId (visibilityIterator_p->getDataDescriptionId());
-
-	//////////////datum->getVisBuffer()->setRowIds (visibilityIterator_p->getRowIds());
-
-	datum->getVisBuffer()->setNCoh(visibilityIterator_p->numberCoh ());
+    datum->getVisBuffer()->setNRowChunk (visibilityIterator_p->nRowChunk());
 
     Vector<Int> nvischan;
     Vector<Int> spw;
@@ -939,56 +874,53 @@ VLAT::fillDatumMiscellanyAfter (VlaDatum * datum)
     datum->getVisBuffer()->setSelectedNVisibilityChannels (nvischan);
     datum->getVisBuffer()->setSelectedSpectralWindows (spw);
 
-    Vector<Double> lsrFreq, selFreq;
-    visibilityIterator_p->getTopoFreqs (lsrFreq, selFreq);
-    datum->getVisBuffer()->setTopoFreqs (lsrFreq, selFreq);
-
-    fillLsrInfo (datum);
-
+    datum->getVisBuffer()->setMSD (visibilityIterator_p->getMSD ()); // ought to be last
 }
 
 void
 VLAT::fillDatumMiscellanyBefore (VlaDatum * datum)
 {
-	datum->getVisBuffer()->setMeasurementSet (visibilityIterator_p->getMeasurementSet());
-	datum->getVisBuffer()->setMeasurementSetId (visibilityIterator_p->getMeasurementSetId(),
-			                                    datum->getSubChunkPair().second == 0);
+    datum->getVisBuffer()->setMeasurementSet (visibilityIterator_p->getMeasurementSet());
+    datum->getVisBuffer()->setMeasurementSetId (visibilityIterator_p->getMeasurementSetId(),
+                                                datum->getSubChunkPair().second == 0);
 
-	datum->getVisBuffer()->setNAntennas (visibilityIterator_p->getNAntennas ());
-	datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getMEpoch ());
-	datum->getVisBuffer()->setReceptor0Angle (visibilityIterator_p->getReceptor0Angle());
+    datum->getVisBuffer()->setNAntennas (visibilityIterator_p->getNAntennas ());
+    datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getMEpoch ());
+    datum->getVisBuffer()->setReceptor0Angle (visibilityIterator_p->getReceptor0Angle());
+
+    fillLsrInfo (datum);
+
+    Vector<Double> lsrFreq, selFreq;
+    visibilityIterator_p->getTopoFreqs (lsrFreq, selFreq);
+    datum->getVisBuffer()->setTopoFreqs (lsrFreq, selFreq);
 }
 
 
 void
 VLAT::fillLsrInfo (VlaDatum * datum)
 {
-    Block<Int> channelStart;
-    Block<Int> channelWidth;
-    Block<Int> channelIncrement;
-    Block<Int> channelGroupNumber;
-    const ROArrayColumn <Double> * chanFreqs;
-    const ROScalarColumn<Int> * obsMFreqTypes;
     MPosition observatoryPositon;
     MDirection phaseCenter;
     Bool velocitySelection;
 
-    visibilityIterator_p->getLsrInfo (channelStart,
-                                      channelWidth,
+
+    Block<Int> channelGroupNumber;
+    Block<Int> channelIncrement;
+    Block<Int> channelStart;
+    Block<Int> channelWidth;
+
+    visibilityIterator_p->getLsrInfo (channelGroupNumber,
                                       channelIncrement,
-                                      channelGroupNumber,
-                                      chanFreqs,
-                                      obsMFreqTypes,
+                                      channelStart,
+                                      channelWidth,
                                       observatoryPositon,
                                       phaseCenter,
                                       velocitySelection);
 
-    datum->getVisBuffer()->setLsrInfo (channelStart,
-                                       channelWidth,
+    datum->getVisBuffer()->setLsrInfo (channelGroupNumber,
                                        channelIncrement,
-                                       channelGroupNumber,
-                                       chanFreqs,
-                                       obsMFreqTypes,
+                                       channelStart,
+                                       channelWidth,
                                        observatoryPositon,
                                        phaseCenter,
                                        velocitySelection);
@@ -997,61 +929,61 @@ VLAT::fillLsrInfo (VlaDatum * datum)
 void
 VLAT::initialize (const ROVisibilityIterator & rovi)
 {
-	ThrowIf (isStarted(), "VLAT::initialize: thread already started");
+    ThrowIf (isStarted(), "VLAT::initialize: thread already started");
 
-	visibilityIterator_p = new ROVisibilityIterator (rovi);
+    visibilityIterator_p = new ROVisibilityIterator (rovi);
 
-	//Bool newMS = visibilityIterator_p->msIter_p.newMS();
+    //Bool newMS = visibilityIterator_p->msIter_p.newMS();
 
-	visibilityIterator_p->originChunks (True);
-	    // force the MSIter, etc., to be rewound, reinitialized, etc.
+    visibilityIterator_p->originChunks (True);
+    // force the MSIter, etc., to be rewound, reinitialized, etc.
 
-	//newMS = visibilityIterator_p->msIter_p.newMS();
-	//visibilityIterator_p->originChunks (True);
-	    // do it twice??
+    //newMS = visibilityIterator_p->msIter_p.newMS();
+    //visibilityIterator_p->originChunks (True);
+    // do it twice??
 
 }
 
 void
 VLAT::initialize (const MeasurementSet & ms,
-				  const Block<Int> & sortColumns,
-		          Double timeInterval)
+                  const Block<Int> & sortColumns,
+                  Double timeInterval)
 {
-	ThrowIf (isStarted(), "VLAT::initialize: thread already started");
+    ThrowIf (isStarted(), "VLAT::initialize: thread already started");
 
-	visibilityIterator_p = new ROVisibilityIterator (ms, sortColumns, timeInterval);
+    visibilityIterator_p = new ROVisibilityIterator (ms, sortColumns, timeInterval);
 }
 
 void
 VLAT::initialize (const MeasurementSet & ms,
-			      const Block<Int> & sortColumns,
-	              const Bool addDefaultSortCols,
-	              Double timeInterval)
+                  const Block<Int> & sortColumns,
+                  const Bool addDefaultSortCols,
+                  Double timeInterval)
 {
-	ThrowIf (isStarted(), "VLAT::initialize: thread already started");
+    ThrowIf (isStarted(), "VLAT::initialize: thread already started");
 
-	visibilityIterator_p = new ROVisibilityIterator (ms, sortColumns, addDefaultSortCols, timeInterval);
+    visibilityIterator_p = new ROVisibilityIterator (ms, sortColumns, addDefaultSortCols, timeInterval);
 }
 
 void
 VLAT::initialize (const Block<MeasurementSet> & mss,
-	              const Block<Int> & sortColumns,
-	              Double timeInterval)
+                  const Block<Int> & sortColumns,
+                  Double timeInterval)
 {
-	ThrowIf (isStarted(), "VLAT::initialize: thread already started");
+    ThrowIf (isStarted(), "VLAT::initialize: thread already started");
 
-	visibilityIterator_p = new ROVisibilityIterator (mss, sortColumns, timeInterval);
+    visibilityIterator_p = new ROVisibilityIterator (mss, sortColumns, timeInterval);
 }
 
 void
 VLAT::initialize (const Block<MeasurementSet> & mss,
-	              const Block<Int> & sortColumns,
-	              const Bool addDefaultSortCols,
-	              Double timeInterval)
+                  const Block<Int> & sortColumns,
+                  const Bool addDefaultSortCols,
+                  Double timeInterval)
 {
-	ThrowIf (isStarted(), "VLAT::initialize: thread already started");
+    ThrowIf (isStarted(), "VLAT::initialize: thread already started");
 
-	visibilityIterator_p = new ROVisibilityIterator (mss, sortColumns, addDefaultSortCols, timeInterval);
+    visibilityIterator_p = new ROVisibilityIterator (mss, sortColumns, addDefaultSortCols, timeInterval);
 }
 
 Bool
@@ -1063,21 +995,21 @@ VLAT::isTerminated () const
 void *
 VLAT::run ()
 {
-	Log (1, "VLAT starting execution; tid=%d\n", gettid());
+    LogIO logIo (LogOrigin ("VLAT"));
+    Log (1, "VLAT starting execution; tid=%d\n", gettid());
+    logIo << "starting execution; tid=" << gettid() << endl << LogIO::POST;
 
     if (VlaData::loggingInitialized_p){
         Logger::get()->registerName ("VLAT");
     }
 
-	try {
+    try {
+        do{
+            Log (1, "VLAT starting VI sweep\n");
 
-	    do{
-
-	        Log (1, "VLAT starting VI sweep\n");
-
-	        // Start sweeping the real VI over its entire range
-	        // (subject to the number of free buffers).  The sweep
-	        // can be ended abruptly if
+            // Start sweeping the real VI over its entire range
+            // (subject to the number of free buffers).  The sweep
+            // can be ended abruptly if
 
             sweepVi ();
 
@@ -1090,33 +1022,37 @@ VLAT::run ()
                 setModifiers (resetVi.second);
             }
 
-	    } while (True);
+        } while (True);
 
-		threadTerminated_p = true;
-     	Log (1, "VLAT stopping execution.\n");
-		return NULL;
+        threadTerminated_p = true;
+        Log (1, "VLAT stopping execution.\n");
+        logIo << "stopping execution normally; tid=" << gettid() << endl << LogIO::POST;
 
-	}
-	catch (std::exception & e){
+        return NULL;
 
-		cerr << "VLAT thread caught exception: " << e.what() << endl;
-		cerr.flush();
+    }
+    catch (std::exception & e){
 
-     	Log (1, "VLAT caught exception: %s.\n", e.what());
+        cerr << "VLAT thread caught exception: " << e.what() << endl;
+        cerr.flush();
 
-		threadTerminated_p = true;
-		throw;
-	}
-	catch (...){
+        Log (1, "VLAT caught exception: %s.\n", e.what());
+        logIo << "caught exception; tid=" << gettid() << "-->" << e.what() << endl << LogIO::POST;
 
-		cerr << "VLAT thread caught unknown exception: " << endl;
-		cerr.flush();
+        threadTerminated_p = true;
+        throw;
+    }
+    catch (...){
 
-     	Log (1, "VLAT caught unknown exception:\n");
+        cerr << "VLAT thread caught unknown exception: " << endl;
+        cerr.flush();
 
-		threadTerminated_p = true;
-		throw;
-	}
+        Log (1, "VLAT caught unknown exception:\n");
+        logIo << "caught unknown exception; tid=" << gettid() << endl << LogIO::POST;
+
+        threadTerminated_p = true;
+        throw;
+    }
 }
 
 void
@@ -1129,23 +1065,23 @@ VLAT::setModifiers (asyncio::RoviaModifiers & modifiers)
 void
 VLAT::setPrefetchColumns (const ROVisibilityIteratorAsync::PrefetchColumns & columns)
 {
-	ThrowIf (isStarted(), "VLAT::setColumns: cannot do this after thread started");
-	ThrowIf (! fillers_p.empty(), "VLAT::setColumns:: has already been done");
+    ThrowIf (isStarted(), "VLAT::setColumns: cannot do this after thread started");
+    ThrowIf (! fillers_p.empty(), "VLAT::setColumns:: has already been done");
 
-	createFillerDictionary ();
+    createFillerDictionary ();
 
-	for (ROVisibilityIteratorAsync::PrefetchColumns::const_iterator c = columns.begin();
-		 c != columns.end();
-		 c ++){
+    for (ROVisibilityIteratorAsync::PrefetchColumns::const_iterator c = columns.begin();
+            c != columns.end();
+            c ++){
 
-	    ThrowIf (! contains (*c, fillerDictionary_p), format ("Unknown prefetch column id (%d)", *c));
+        ThrowIf (! containsKey (*c, fillerDictionary_p), format ("Unknown prefetch column id (%d)", *c));
 
-		fillers_p.push_back (fillerDictionary_p [*c]->clone());
-	}
+        fillers_p.push_back (fillerDictionary_p [*c]->clone());
+    }
 
-//	sort (fillers_p.begin(),
-//	      fillers_p.end(),
-//	      VlatFunctor::byDecreasingPrecedence);
+    //	sort (fillers_p.begin(),
+    //	      fillers_p.end(),
+    //	      VlatFunctor::byDecreasingPrecedence);
 }
 
 void
@@ -1156,16 +1092,16 @@ VLAT::sweepVi ()
 
     applyModifiers (visibilityIterator_p);
 
-    for (visibilityIterator_p->originChunks();
-          visibilityIterator_p->moreChunks();
-          visibilityIterator_p->nextChunk()){
+    for (visibilityIterator_p->originChunks(True);
+            visibilityIterator_p->moreChunks();
+            visibilityIterator_p->nextChunk()){
 
         chunkNumber ++;
         subChunkNumber = -1;
 
         for (visibilityIterator_p->origin();
-             visibilityIterator_p->more();
-             ++ (* visibilityIterator_p)){
+                visibilityIterator_p->more();
+                ++ (* visibilityIterator_p)){
 
             subChunkNumber ++;
 
@@ -1193,9 +1129,9 @@ VLAT::sweepVi ()
 
     vlaData_p -> setNoMoreData ();
 
-done:
+    done:
 
-    Log (1, "VLAT stopping execution.\n");
+    Log (1, "VLAT: stopping VI sweep.\n");
 
 }
 

@@ -93,7 +93,6 @@ namespace casa {
 
 		// user specified name
 		virtual const std::string name( ) const = 0;
-		virtual bool modified( ) const = 0;
 
 		virtual std::string lineColor( ) const = 0;
 		virtual int lineWidth( ) const = 0;
@@ -140,9 +139,8 @@ namespace casa {
 		// duplicate of MultiWCTool::refresh( )
 		void refresh( );
 
-		// returns true when refresh is needed
-		virtual bool mouseMovement( int x, int y ) { return false; }
-		virtual void move( double dx, double dy ) = 0;
+		/* // returns true when refresh is needed */
+		/* virtual bool mouseMovement( int x, int y ) { return false; } */
 
 		typedef ImageStatistics<Float>::stat_list getLayerStats_t;
 		typedef std::list<std::pair<String,memory::cptr<getLayerStats_t> > > StatisticsList;
@@ -154,10 +152,23 @@ namespace casa {
 
 		bool selected( ) const { return selected_; }
 
+		// indicates that the user has selected this rectangle...
+		// ...may need to scroll region dock
+		virtual void selectedInCanvas( ) = 0;
+
 		// blank out the statistics for this region
 		virtual void clearStatistics( ) = 0;
 
+		virtual bool clickWithin( double x, double y ) const = 0;
+		virtual int clickHandle( double x, double y ) const = 0;
+		// for rectangles, resizing can change the handle...
+		// for rectangles, moving a handle is resizing...
+		virtual int moveHandle( int handle, double x, double y ) = 0;
+		virtual void move( double dx, double dy ) = 0;
+
+
 	    protected:
+		static Int getAxisIndex( ImageInterface<Float> *image, String axtype );
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
 

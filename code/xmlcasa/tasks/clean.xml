@@ -663,8 +663,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: none; 
                example: vis='ngc5921.ms'
                         vis=['ngc5921a.ms','ngc5921b.ms']; multiple MSes
-                        NOTE: the specification of multiple MSes does not work
-                              for mode='mfs' yet.
        imagename -- Pre-name of output images:
                default: none; example: imagename='m2'
                output images are:
@@ -795,7 +793,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                which the Taylor expansion is done. If reffreq='' it
 	       defaults to the middle frequency of the selected range.
 	       ** Note that the software implementation of the algorithm
-	       for nterms>1 is still experimental and fill be fully
+	       for nterms>1 is still experimental and will be fully
 	       available in a later release **
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
@@ -897,6 +895,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        imagermode -- Advanced imaging e.g. mosaic or Cotton-Schwab clean
                default: imagermode='': Options: '', 'csclean', 'mosaic'
                default ''  =&gt; psfmode cleaning algorithm used
+	       NOTE: imagermode 'mosaic' and/or any gridmode not blank will
+               always use CS style clean. 
 
   &gt;&gt;&gt; gridmode='' expandable parameters
                The default value of '' has no effect.

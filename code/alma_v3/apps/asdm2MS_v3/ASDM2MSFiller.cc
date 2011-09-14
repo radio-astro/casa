@@ -1858,6 +1858,7 @@ void ASDM2MSFiller::addSource(int             source_id_,
 			      int             calibration_group_,
 			      string&         code_,
 			      vector<double>& direction_,
+			      string&         direction_code_,
 			      vector<double>& position_,
 			      vector<double>& proper_motion_,
 			      vector<string>& transition_,
@@ -1866,12 +1867,46 @@ void ASDM2MSFiller::addSource(int             source_id_,
   MSSource mssource = itsMS -> source();
   MSSourceColumns mssourceCol(mssource);
 
-      
+  String s(direction_code_);
+  if(s==""){
+    cout << "SOURCE table: directionCode doesn't exist or is empty. Will assume J2000." << endl;
+    s="J2000";
+  }
+  s.trim(); s.upcase();
+  map<string, MDirection::Types>::const_iterator iter = string2MDirection.find(s);
+
+  MDirection directionMD;
+
+  if (iter == string2MDirection.end()) {
+    //cout << "Could not determine directionCode. Assuming J2000 ..." << endl;
+    directionMD    = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), MDirection::J2000);
+  }
+  else {
+    //cout << "directionCode is " << s << " (" << (int)iter->second << ")" << endl;
+    directionMD    = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), iter->second);
+  }
+
+  MDirection::Types theType;
+  MDirection::getType(theType, directionMD.getRefString());
+  if(mssource.nrow()==0){ // setDescRefCode works only with empty table 
+    //cout << "Setting Source table direction reference to " << (int)theType << endl;
+    mssourceCol.directionMeas().setDescRefCode((int)theType, True); 
+  }
+  else{
+    MDirection mD;
+    mssourceCol.directionMeas().get(0, mD);
+    MDirection::Types theFirstType;
+    MDirection::getType(theFirstType, mD.getRefString());
+    if(theType != theFirstType){
+      cout << "Inconsistent directionCodes in Source table: " << theType << " and " <<  theFirstType << endl;
+      cout << "Will convert all directions to type " << theFirstType << " (" << MDirection::showType(theFirstType) << ")" << endl;  
+    }
+  }
+    
   // Add a new row.
   int crow = mssource.nrow();
   mssource.addRow();
 
-  Vector<Double> direction(IPosition(1, 2), &direction_[0], SHARE);
   Vector<Double> properMotion(IPosition(1, 2), &proper_motion_[0], SHARE);
 
   // Fill the new row
@@ -1883,7 +1918,7 @@ void ASDM2MSFiller::addSource(int             source_id_,
   mssourceCol.name().put(crow,String(name_));
   mssourceCol.calibrationGroup().put(crow,calibration_group_);
   mssourceCol.code().put(crow,String(code_));
-  mssourceCol.direction().put(crow,direction);
+  mssourceCol.directionMeas().put(crow,directionMD);
   if (position_.size() > 0) mssourceCol.position().put(crow,Vector<Double>(IPosition(1, 3), &position_[0], SHARE));
   mssourceCol.properMotion().put(crow,properMotion);
   if ( transition_.size() > 0 ) {

@@ -90,6 +90,8 @@ void VisBuffer::chanAveVisCube(Cube<T>& data, Int nChanOut)
 	  if(totwt[icor] > 0.0)
 	    //newCube(icor, ochan, row) *= T(1.0 / totwt[icor]);
 	    newCube(icor, ochan, row) *= 1.0 / totwt[icor];
+          // else...don't do any flag setting yet, flag needs to stay pristine
+          // for now.  It will be updated by chanAveFlagCube().
 	}
       }
     }

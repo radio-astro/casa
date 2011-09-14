@@ -18,7 +18,12 @@ class cleanhelper_test(unittest.TestCase):
     # use simulated data with 3 point sources
     msfile = 'simptsrcs.ms'
     outlierfilename='outlier.txt'
+    newoutlierfilename='newoutlier_v0.txt'
+    newoutlierreffilename='newoutlier_ref.txt'
     boxfilename='cleanhelpertest-sf.box'
+    boxfilename2='boxf.txt'
+    rgnfilename='box0.rgn'
+    rgntextfilename='regmask.txt'
     imgname='cleanhelpertest'
     # some other fixed parameters
     imsize=[300,300]
@@ -35,7 +40,12 @@ class cleanhelper_test(unittest.TestCase):
     refpath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/reference/'
     datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/'
     outlierfile=datapath+outlierfilename 
+    newoutlierfile=datapath+newoutlierfilename 
+    newoutlierreffile=refpath+newoutlierreffilename 
     boxfile=datapath+boxfilename
+    boxfile2=datapath+boxfilename2
+    rgnfile=datapath+rgnfilename
+    rgntextfile=datapath+rgntextfilename
     res = None
 
     def setUp(self):
@@ -64,6 +74,7 @@ class cleanhelper_test(unittest.TestCase):
         """
         compare the input image with reference image
         return true if pix values are identical
+
         """
         ia.open(maskimage)
         maskvals = ia.getchunk()
@@ -75,7 +86,7 @@ class cleanhelper_test(unittest.TestCase):
         return (numpy.all(diff==0)) 
  
     def testDefineimages(self):
-        """Cleanhelper defineimages test"""
+        """[Cleanhelper defineimages test]"""
         self.imset.defineimages(imsize=self.imsize, cell=self.cell, 
                        stokes=self.stokes, mode=self.mode, 
                        spw=self.spw, nchan=self.nchan,
@@ -87,7 +98,7 @@ class cleanhelper_test(unittest.TestCase):
         self.assertTrue(self.res)
 
     def testDefinemultimages(self):
-        """Cleanhelper definemultimages test"""
+        """[Cleanhelper definemultimages test]"""
 
         self.run_defineimages()
         self.res=im.summary()
@@ -113,7 +124,7 @@ class cleanhelper_test(unittest.TestCase):
 
         
     def testReadoutlier(self):
-        """Cleanhelper readoutlier test"""
+        """[Cleanhelper readoutlier test (reader for older format)]"""
         imsizes, phasecenters, imageids=self.imset.readoutlier(self.outlierfile)
         f = open(self.outlierfile,'r')
         lines=f.readlines()
@@ -127,9 +138,29 @@ class cleanhelper_test(unittest.TestCase):
         else:
           self.res=False
         self.assertTrue(self.res) 
-        
+       
+    def testNewreadoutlier(self):
+        """[Cleanhelper newreadoutlier test (reader for new outlier file format)]"""
+        imageids, imsizes, phasecenters, masks, models, paramdic, newformat=self.imset.newreadoutlier(self.newoutlierfile)
+        # the reference outlier file contains each field's paramaters per line
+        f = open(self.newoutlierreffile,'r')
+        lines=f.readlines()
+        f.close()
+        cnt = 0
+        for elm in lines:
+          if len(elm.split())!=0 and elm.split()[0]!='#' :
+            cnt +=1
+        print "N fields=",cnt
+        print "imsizes=",imsizes," phasecenters=",phasecenters
+        if len(imsizes) == len(phasecenters) == len(imageids) == len(masks) == len(models) == cnt:
+          self.res=True
+        else:
+          self.res=False
+        self.assertTrue(self.res)
+
+ 
     def testMakemultifieldmaskbox(self):
-        """Cleanhelper makemultfieldmask2 test: boxes given in argument"""
+        """[Cleanhelper makemultfieldmask2 test: boxes given in argument]"""
         self.imset.maskimages={}
         mmask=[[[55,55,65,65],[40,70,50,75]],[20,20,40,40],[5,5,15,10]]
         self.run_defineimages()
@@ -145,7 +176,7 @@ class cleanhelper_test(unittest.TestCase):
           os.system('rm -rf ' + maskimg)
 
     def testMakemultifieldmaskboxfile(self):
-        """Cleanhelper makemultfieldmask2 test: boxes given as a AIPS boxfile"""
+        """[Cleanhelper makemultfieldmask2 test: boxes given as a AIPS boxfile]"""
         self.imset.maskimages={}
         self.run_defineimages()
         self.imset.makemultifieldmask2(maskobject=self.outlierfile)
@@ -160,7 +191,7 @@ class cleanhelper_test(unittest.TestCase):
           os.system('rm -rf ' + maskimg)
 
     def testMakemaskimagebox(self):
-        """Cleanhelper makemaskimage test: 2 boxes"""
+        """[Cleanhelper makemaskimage test: 2 boxes]"""
         self.run_defineimages(sf=True)
         print "int boxes"
         ibmask=[[100,85,120,95],[145,145,155,155]]
@@ -204,9 +235,9 @@ class cleanhelper_test(unittest.TestCase):
         self.assertTrue(retval,"test on numpy.float boxes failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
  
-
+        
     def testMakemaskimageboxfile(self):
-        """Cleanhelper makemaskimage test: make mask from boxfile ("worldbox")"""
+        """[Cleanhelper makemaskimage test: make mask from boxfile ("worldbox")]"""
         self.run_defineimages(sf=True)
         boxfile=self.boxfile
         maskimage=self.imset.imagelist[0]+'.mask'
@@ -215,7 +246,19 @@ class cleanhelper_test(unittest.TestCase):
         retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
         self.assertTrue(retval,"test on box mask failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
-        #
+
+    def testMakemaskimagemixed(self):
+        """[Mixed input to mask parameter (single field)] """
+        self.run_defineimages(sf=True)
+        maskimage=self.imset.imagelist[0]+'_mixed.mask'
+        masks = ['circle [ [ 220pix , 30pix] ,15pix ]', self.boxfile2, self.rgnfile,self.rgntextfile]
+        self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=masks)
+        self.assertTrue(os.path.exists(maskimage)," boxfile  maskimage does not exist")
+        retval=self.comparemask(maskimage, self.refpath+'ref-'+maskimage)
+        self.assertTrue(retval,"test on box mask failed")
+        os.system('rm -rf ' + self.imset.imagelist[0]+'*')
+
+        
 
 def suite():
     return [cleanhelper_test]

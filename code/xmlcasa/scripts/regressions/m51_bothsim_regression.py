@@ -98,20 +98,35 @@ ia.open(project+"/"+project + '.diff')
 m51both_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# KS - updated 2010-12-17 (13767@active)
+# # KS - updated 2010-12-17 (13767@active)
+# # reference statistic values for simulated image
+# refstats = { 'sum': 531.76,
+#              'max': 0.11337,
+#              'min': -0.032224,
+#              'rms': 0.013376,
+#              'sigma': 0.012521 }
+
+# # reference statistic values for diff image
+# diffstats = {'sum': 335.78,
+#              'max': 0.053222,
+#              'min': -0.042831,
+#              'rms': 0.0094158,
+#              'sigma': 0.0089342 }
+
+# KS - updated 2011-08-16 (15907@active)
 # reference statistic values for simulated image
-refstats = { 'sum': 531.76,
-             'max': 0.11337,
-             'min': -0.032224,
-             'rms': 0.013376,
-             'sigma': 0.012521 }
+refstats = { 'max': 0.1126,
+             'min': -0.032491,
+             'rms': 0.013248,
+             'sigma': 0.012456,
+             'sum': 510.06 }
 
 # reference statistic values for diff image
-diffstats = {'sum': 335.78,
-             'max': 0.053222,
-             'min': -0.042831,
-             'rms': 0.0094158,
-             'sigma': 0.0089342 }
+diffstats = {'max': 0.053971,
+             'min': -0.049349,
+             'rms': 0.0095375,
+             'sigma': 0.0089992,
+             'sum': 357.14 }
 
 
 # relative tolerances to reference values

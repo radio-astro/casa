@@ -100,7 +100,7 @@ VisBufferAsync::~VisBufferAsync ()
                                 // synchronous level
 
     delete msColumns_p;
-    //delete msd_p;
+    delete msd_p;
 }
 
 VisBufferAsync &
@@ -146,7 +146,7 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
             // Let the standard VisBuffer to the copying of values
             // from the old VisBuffer
 
-            copyCache (other);
+            copyCache (other, False);
 
             // Copy over the async values
 
@@ -177,10 +177,10 @@ VisBufferAsync::azel(Double time) const
 {
     Vector<MDirection> azel;
 
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    ROVisibilityIteratorAsync::azelCalculate (time, msd, azel, nAntennas_p, mEpoch_p);
+    ROVisibilityIteratorAsync::azelCalculate (time, * msd_p, azel, nAntennas_p, mEpoch_p);
 
     return azel;
 }
@@ -189,26 +189,26 @@ MDirection
 VisBufferAsync::azel0(Double time) const
 {
     MDirection azel0;
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
 
-    ROVisibilityIteratorAsync::azel0Calculate (time, msd, azel0, mEpoch_p);
+    ROVisibilityIteratorAsync::azel0Calculate (time, * msd_p, azel0, mEpoch_p);
 
     return azel0;
 }
 
 void
-VisBufferAsync::checkVisIter (const char * func, const char * file, int line) const
+VisBufferAsync::checkVisIter (const char * func, const char * file, int line, const char * extra) const
 {
     // This is called from a VisBuffer fill method.  Throw an error if the this is not
     // part of the VLAT filling operation or if there is not visibility iterator attached
 
     if (! isFilling_p || visIter_p == NULL){
-        Log (1, "VisBufferAsync: request for column not in prefetched set (in call to %s)\n)",
-             func);
+        Log (1, "VisBufferAsync: request for column not in prefetched set (in call to %s (%s))\n)",
+             func, extra);
         throw AipsErrorTrace ("VisBufferAsync: request for column not in prefetched set (in call to "
-                              + String (func) + ")", file, line);
+                              + String (func) + String (extra) + ")", file, line);
     }
 }
 
@@ -239,7 +239,7 @@ VisBufferAsync::clear ()
     if (antenna2OK_p)
         antenna2_p.resize();
     chanAveBounds_p.resize();
-    chanFreqs_p = NULL;
+    //chanFreqs_p = NULL;
     if (channelOK_p)
         channel_p.resize();
     if (cjonesOK_p)
@@ -272,8 +272,8 @@ VisBufferAsync::clear ()
         frequency_p.resize();
     if (imagingWeightOK_p)
         imagingWeight_p.resize();
-    if (lsrFrequencyOK_p)
-        lsrFrequency_p.resize();
+//    if (lsrFrequencyOK_p)
+//        lsrFrequency_p.resize();
     measurementSet_p = NULL;
     if (modelVisCubeOK_p)
         modelVisCube_p.resize();
@@ -281,7 +281,6 @@ VisBufferAsync::clear ()
         modelVisibility_p.resize();
     delete msColumns_p;
     msColumns_p = NULL;
-    msID_p = -1;
     nAntennas_p = -1;
     nCoh_p = -1;
     phaseCenter_p = MDirection ();
@@ -334,6 +333,13 @@ VisBufferAsync::clear ()
     visibilityShape_p.resize (0, False);
 }
 
+VisBuffer *
+VisBufferAsync::clone ()
+{
+    return new VisBufferAsync (* this);
+}
+
+
 void
 VisBufferAsync::construct ()
 {
@@ -341,14 +347,17 @@ VisBufferAsync::construct ()
     msColumns_p = NULL;
     visIter_p = NULL;
     isFilling_p = False;
+    msd_p = new MSDerivedValues();
 
     clear ();
 }
 
 void
-VisBufferAsync::copyCache (const VisBuffer & other)
+VisBufferAsync::copyCache (const VisBuffer & other, Bool force)
 {
-    VisBuffer::copyCache (other);
+    assert (! force);
+
+    VisBuffer::copyCache (other, False);
 }
 
 
@@ -356,7 +365,6 @@ void
 VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
 {
 
-    chanFreqs_p = other.chanFreqs_p;
     channelGroupNumber_p = other.channelGroupNumber_p;
     channelIncrement_p = other.channelIncrement_p;
     channelStart_p = other.channelStart_p;
@@ -370,9 +378,9 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     delete msColumns_p; // kill the current one
     msColumns_p = NULL;
 
-    msID_p = other.msID_p;
     nAntennas_p = other.nAntennas_p;
-    obsMFreqTypes_p = other.obsMFreqTypes_p;
+    nRowChunk_p = other.nRowChunk_p;
+//    obsMFreqTypes_p = other.obsMFreqTypes_p;
     observatoryPosition_p = other.observatoryPosition_p;
     phaseCenter_p = other.phaseCenter_p;
     receptor0Angle_p = other.receptor0Angle_p;
@@ -489,10 +497,10 @@ VisBufferAsync::feed_pa(Double time) const
     }
     else{
 
-        MSDerivedValues msd;
-        msd.setMeasurementSet (* measurementSet_p);
+        //MSDerivedValues msd;
+        //msd.setMeasurementSet (* measurementSet_p);
 
-        feedpa.assign (ROVisibilityIteratorAsync::feed_paCalculate (time, msd, nAntennas_p,
+        feedpa.assign (ROVisibilityIteratorAsync::feed_paCalculate (time, * msd_p, nAntennas_p,
                                                                     mEpoch_p, receptor0Angle_p));
     }
 
@@ -508,7 +516,7 @@ VisBufferAsync::fillFrom (const VisBufferAsync & other)
 
     Log (2, "Fill from VisBufferAsync @ 0x%08x to VisBufferAsync @ 0x%08x\n", & other, this);
 
-    copyCache (other);
+    copyCache (other, False);
     copyAsyncValues (other);
 
 }
@@ -521,14 +529,13 @@ VisBufferAsync::fillDirection1()
     VisBuffer::fillDirection1();
 
     // Now install unshared copies of the direction objects
-    //
-    // 3/29/11 Don't try to break the sharing and see if the new approach to
-    //         passing the VB one-way fixes the sharing problem this addresses
 
-    ////transform (direction1_p.begin(), direction1_p.end(), direction1_p.begin(), unsharedCopyDirection);
+    unsharedCopyDirectionVector (direction1_p);
 
     return direction1_p;
 }
+
+
 
 Vector<MDirection>&
 VisBufferAsync::fillDirection2()
@@ -538,13 +545,10 @@ VisBufferAsync::fillDirection2()
     VisBuffer::fillDirection2();
 
     // Now install unshared copies of the direction objects
-    //
-    // 3/29/11 Don't try to break the sharing and see if the new approach to
-    //         passing the VB one-way fixes the sharing problem this addresses
 
-    ////transform (direction2_p.begin(), direction2_p.end(), direction2_p.begin(), unsharedCopyDirection);
+    unsharedCopyDirectionVector (direction2_p);
 
-    return direction2 ();
+    return direction2_p;
 }
 
 MDirection &
@@ -561,14 +565,13 @@ VisBufferAsync::fillPhaseCenter()
     return phaseCenter_p;
 }
 
-
 Double
 VisBufferAsync::hourang(Double time) const
 {
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    Double hourang = ROVisibilityIteratorAsync::hourangCalculate (time, msd, mEpoch_p);
+    Double hourang = ROVisibilityIteratorAsync::hourangCalculate (time, * msd_p, mEpoch_p);
 
     return hourang;
 }
@@ -590,43 +593,23 @@ VisBufferAsync::invalidateAsync ()
     VisBuffer::invalidate ();
 }
 
-Vector<Double>&
-VisBufferAsync::lsrFrequency ()
-{
-    return VisBuffer::lsrFrequency();
-}
-
-const Vector<Double>&
-VisBufferAsync::lsrFrequency () const
-{
-    return VisBuffer::lsrFrequency();
-}
-
-
 void
-VisBufferAsync::lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const
+VisBufferAsync::lsrFrequency (const Int& spw, Vector<Double>& freq, Bool& convert) const
 {
-
     if (velSelection_p) {
         freq.assign (lsrFrequency_p);
+        convert = False;
         return;
     }
 
-    // Calculate the values using stored information and the static calculation
-    // function provided by ROVI.
+    const ROArrayColumn <Double> & chanFreqs = msColumns().spectralWindow().chanFreq();
+    const ROScalarColumn<Int> & obsMFreqTypes= msColumns().spectralWindow().measFreqRef();
 
-    ROVisibilityIterator::lsrFrequency(spw,
-                                       freq,
-                                       convert,
-                                       channelStart_p,
-                                       channelWidth_p,
-                                       channelIncrement_p,
-                                       channelGroupNumber_p,
-                                       * chanFreqs_p,
-                                       * obsMFreqTypes_p,
-                                       mEpoch_p,
-                                       observatoryPosition_p,
-                                       phaseCenter_p);
+    MPosition obsPos = observatoryPosition_p;
+    MDirection dir = phaseCenter_p;
+
+    ROVisibilityIterator::lsrFrequency (spw, freq, convert, channelStart_p, channelWidth_p, channelIncrement_p,
+                                        channelGroupNumber_p, chanFreqs, obsMFreqTypes, mEpoch_p, obsPos, dir);
 }
 
 const ROMSColumns &
@@ -653,7 +636,7 @@ VisBufferAsync::msColumns() const
 Int
 VisBufferAsync::msId () const
 {
-    return msID_p;
+    return oldMSId_p;
 }
 
 Bool
@@ -679,10 +662,10 @@ VisBufferAsync::numberCoh () const
 Vector<Float>
 VisBufferAsync::parang(Double time) const
 {
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    Vector<Float> parang = ROVisibilityIteratorAsync::parangCalculate (time, msd, nAntennas_p, mEpoch_p);
+    Vector<Float> parang = ROVisibilityIteratorAsync::parangCalculate (time, * msd_p, nAntennas_p, mEpoch_p);
 
     return parang;
 }
@@ -690,10 +673,10 @@ VisBufferAsync::parang(Double time) const
 Float
 VisBufferAsync::parang0(Double time) const
 {
-    MSDerivedValues msd;
-    msd.setMeasurementSet (* measurementSet_p);
+    //MSDerivedValues msd;
+    //msd.setMeasurementSet (* measurementSet_p);
 
-    Float parang0 = ROVisibilityIteratorAsync::parang0Calculate (time, msd, mEpoch_p);
+    Float parang0 = ROVisibilityIteratorAsync::parang0Calculate (time, * msd_p, mEpoch_p);
 
     return parang0;
 }
@@ -738,6 +721,12 @@ VisBufferAsync::setModelVisCube (const Vector<Float> & stokes)
     VisBuffer::setModelVisCube (stokes);
 }
 
+void
+VisBufferAsync::setNRowChunk (Int nRowChunk)
+{
+    nRowChunk_p = nRowChunk;
+}
+
 
 void
 VisBufferAsync::setFilling (Bool isFilling)
@@ -746,22 +735,18 @@ VisBufferAsync::setFilling (Bool isFilling)
 }
 
 void
-VisBufferAsync::setLsrInfo (const Block<Int> & channelStart,
-                            const Block<Int> & channelWidth,
-                            const Block<Int> & channelIncrement,
-                            const Block<Int> & channelGroupNumber,
-                            const ROArrayColumn <Double> * chanFreqs,
-                            const ROScalarColumn<Int> * obsMFreqTypes,
+VisBufferAsync::setLsrInfo (const Block <Int> & channelGroupNumber,
+                            const Block <Int> & channelIncrement,
+                            const Block <Int> & channelStart,
+                            const Block <Int> & channelWidth,
                             const MPosition & observatoryPosition,
                             const MDirection & phaseCenter,
                             Bool velocitySelection)
 {
+    channelGroupNumber_p = channelGroupNumber;
+    channelIncrement_p = channelIncrement;
     channelStart_p = channelStart;
     channelWidth_p = channelWidth;
-    channelIncrement_p = channelIncrement;
-    chanFreqs_p = chanFreqs;
-    channelGroupNumber_p = channelGroupNumber;
-    obsMFreqTypes_p = obsMFreqTypes;
     observatoryPosition_p = unsharedCopyPosition (observatoryPosition);
     phaseCenter_p = unsharedCopyDirection (phaseCenter);
     velSelection_p = velocitySelection;
@@ -796,6 +781,37 @@ VisBufferAsync::setModelVisCube(Complex c)
     modelVisCube_p.resize(visibilityShape_p);
     modelVisCube_p.set(c);
     modelVisCubeOK_p=True;
+}
+
+void
+VisBufferAsync::setMSD (const MSDerivedValues & msd)
+{
+
+    msd_p->setEpoch (mEpoch_p);
+
+    if (newMS_p){
+        // set antennas
+
+        const Vector<MPosition> & antennaPositions = msd.getAntennaPositions();
+        Vector<MPosition> unsharedAntennaPositions (antennaPositions.nelements());
+
+        for (Vector<MPosition>::const_iterator ap = antennaPositions.begin();
+             ap != antennaPositions.end();
+             ap ++){
+
+            unsharedAntennaPositions = unsharedCopyPosition (* ap);
+
+        }
+
+        msd_p->setAntennaPositions (unsharedAntennaPositions);
+    }
+
+    msd_p->setObservatoryPosition (observatoryPosition_p);
+
+    msd_p->setFieldCenter (phaseCenter_p);
+
+    msd_p->setVelocityFrame (msd.getRadialVelocityType ());
+
 }
 
 
@@ -844,7 +860,6 @@ VisBufferAsync::setTopoFreqs (const Vector<Double> & lsrFreq, const Vector<Doubl
     selFreq_p.assign (selFreq);
 }
 
-
 void
 VisBufferAsync::setVisCube(Complex c)
 {
@@ -872,6 +887,51 @@ VisBufferAsync::unsharedCopyDirection (const MDirection & direction)
     return asyncio::unsharedCopyMeasure (direction, & MeasureHolder::asMDirection);
 }
 
+void
+VisBufferAsync::unsharedCopyDirectionVector (Vector<MDirection> & direction)
+{
+    // The MDirection object consists of the actual direction a frame of reference
+    // object.  The direction component follows copy semnatics while the frame of
+    // reference uses a counter pointer and is shared across multiple MDirections.
+    // This causes problems now that values are being shared across threads.  Modify
+    // the direction vector so that the frame of reference object is only shared
+    // within this vector.  N.B., this could cause a problem if there is comparison
+    // between the reference frames of the two direction.  Each element doesn't get
+    // its own copy because the unsharing operation is klugy and somewhat compute
+    // intensive.
+
+    int nElements = direction.shape () [0];
+
+    if (nElements > 0){
+
+        // Take the first reference frame object, make an unshared copy and provide it to
+        // any of the other direction components which use the same reference.  If a
+        // direction uses a different reference give it its own unshared copy.
+
+        MeasRef<MDirection> uncleanRef = direction[0].getRef ();
+        MDirection cleanDirection = unsharedCopyDirection (direction[0]);
+        MeasRef<MDirection> cleanRef = cleanDirection.getRef ();
+            // Since cleanRef uses a counted pointer to an underlying object
+            // the above construction does not cause a dangling pointer problem.
+
+        for (int i = 0; i < nElements; i++){
+
+            // If this element of the direction uses the same reference as the
+            // original, then just install a reference to our "clean" reference.
+            // N.B., the == comparasion just compares the pointer to the underlying
+            // reference frame object!
+
+            if (uncleanRef == direction[i].getRef()){
+
+                direction[i].set (cleanRef);
+            }
+            else {
+                direction[i] = unsharedCopyDirection (direction[i]);
+            }
+        }
+    }
+}
+
 MEpoch
 VisBufferAsync::unsharedCopyEpoch (const MEpoch & epoch)
 {
@@ -885,7 +945,7 @@ VisBufferAsync::unsharedCopyPosition (const MPosition & position)
 }
 
 void
-VisBufferAsync::updateCoordInfo(const VisBuffer * other)
+VisBufferAsync::updateCoordInfo(const VisBuffer * other, const Bool dirDepend)
 {
     clear ();
     copyVector (other->antenna1_p, antenna1_p);
@@ -900,12 +960,20 @@ VisBufferAsync::updateCoordInfo(const VisBuffer * other)
     feed1OK_p = true;
     copyVector (other->feed2_p, feed2_p);
     feed2OK_p = true;
-    copyVector (other->feed1_pa_p, feed1_pa_p);
-    feed1_paOK_p = true;
-    copyVector (other->feed2_pa_p, feed2_pa_p);
-    feed2_paOK_p = true;
-    //copyVector (direction1_p);
-    //copyVector (direction2_p);
+    if(dirDepend){
+      copyVector (other->feed1_pa_p, feed1_pa_p);
+      feed1_paOK_p = true;
+      copyVector (other->feed2_pa_p, feed2_pa_p);
+      feed2_paOK_p = true;
+      //copyVector (direction1_p);
+      //copyVector (direction2_p);
+    }
+    else{
+      feed1_paOK_p=False; 
+      feed2_paOK_p=False;
+      direction1OK_p=False;
+      direction2OK_p=False;
+    }
 }
 
 
@@ -1081,3 +1149,5 @@ VisBufferAutoPtr::set (ROVisibilityIterator & rovi)
 
 
 } // end namespace casa
+
+

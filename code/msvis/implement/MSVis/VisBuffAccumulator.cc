@@ -67,7 +67,7 @@ VisBuffAccumulator::VisBuffAccumulator(const Int& nAnt, const Double& interval,
   // Reset the averager
   reset();
 
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -76,7 +76,7 @@ VisBuffAccumulator::~VisBuffAccumulator()
 // Null default destructor
 //
   if (prtlev()>2) cout << "VBA::~VBA()" << endl;
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ void VisBuffAccumulator::reset()
 
   if (prtlev()>2) cout << " VBA::reset()" << endl;
 
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -146,7 +146,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
     //   without copy (nothing accumulated yet)
     initialize(False);
 
-  };
+  }
 
   // Iterate through the current VisBuffer
   Int row = 0;
@@ -154,7 +154,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
     // Find the next unflagged time
     while (row < vb.nRow() && vb.flagRow()(row)) {
       row++;
-    };
+    }
     if (row < vb.nRow()) {
       Double thisTime = vb.time()(row);
 
@@ -162,12 +162,11 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
       if (firstInterval_p) {
 	tStart_p = thisTime;
 	firstInterval_p = False;
-      };
+      }
 
       // Check for end of the current accumulation interval
 
       if ((vb.time()(row) - tStart_p) > (interval_p-DBL_EPSILON)) {
-
 	// Normalize
 	normalize();
 	// Advance indices to the next accumulation interval
@@ -176,7 +175,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 	// Initialize the next accumulation interval
 	//  (copy prior preavg'd intervals)
 	initialize(True);
-      };
+      }
 
       // Add the VisBuffer row to the current accumulation
       // 
@@ -184,7 +183,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
       Int nCorr=vb.corrType().nelements();
       if (vb.nChannel() != nChan_p || nCorr != nCorr_p) {
 	throw(AipsError("VisBuffAccumulator: data shape does not conform"));
-      };
+      }
 
       Int ant1 = vb.antenna1()(row);
       Int ant2 = vb.antenna2()(row);
@@ -221,7 +220,7 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 	      (wtM(cor)*vb.modelVisCube()(cor,chn,row));
 	  }
 	}
-      };
+      }
 
       // Only if there is any good channels this row
       if (goodChan > 0) {
@@ -244,10 +243,10 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 
       // Increment the row number
       row++;
-    }; // if (row < vb.nRow())
-  }; // while (row < vb.nRow())
+    } // if (row < vb.nRow())
+  } // while (row < vb.nRow())
   ++nBuf_p;
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -263,7 +262,7 @@ void VisBuffAccumulator::finalizeAverage ()
   // Normalize the current (final) accumulation interval
   normalize();
 
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -324,17 +323,17 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
 	avBuf_p.visCube()(cor,chn,row) = Complex(0.0);
 	avBuf_p.modelVisCube()(cor,chn,row) = Complex(0.0);
       }
-    };
+    }
     avBuf_p.weight()(row) = 0.0f;
     avBuf_p.weightMat().column(row) = 0.0f;
     avBuf_p.flagRow()(row) = True;
-  };
+  }
 
   // Init global timestamp
   aveTime_p = 0.0;
   aveTimeWt_p = 0.0;
 
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -395,7 +394,7 @@ void VisBuffAccumulator::normalize()
       avBuf_p.weightMat().column(row)=0.0f;
     }
   }
-};
+}
 
 //----------------------------------------------------------------------------
 
@@ -412,7 +411,7 @@ Int VisBuffAccumulator::hashFunction (const Int& ant1, const Int& ant2)
   Int index;
   index = nAnt_p * ant1 - (ant1 * (ant1 - 1)) / 2 + ant2 - ant1;
   return index;
-};
+}
 
 //----------------------------------------------------------------------------
 

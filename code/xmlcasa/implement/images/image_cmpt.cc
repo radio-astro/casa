@@ -1118,7 +1118,8 @@ record* image::fitprofile(const string& box, const string& region,
 	const int minpts, const bool multifit,	const string& model,
 	const string& residual, const string& amp,
 	const string& amperr, const string& center, const string& centererr,
-	const string& fwhm, const string& fwhmerr
+	const string& fwhm, const string& fwhmerr,
+	const string& integral, const string& integralerr
 ) {
 	*_log << LogOrigin("image", __FUNCTION__);
 	if (detached()) {
@@ -1140,7 +1141,8 @@ record* image::fitprofile(const string& box, const string& region,
 			_image->getImage(), region, 0,
 			box, chans, stokes, mask, axis,
 			multifit, residual, model, ngauss, poly, estimates,
-			amp, amperr, center, centererr, fwhm, fwhmerr, minpts
+			amp, amperr, center, centererr, fwhm, fwhmerr,
+			integral, integralerr, minpts
 		);
 		rstat = fromRecord(fitter.fit());
 	} catch (AipsError x) {

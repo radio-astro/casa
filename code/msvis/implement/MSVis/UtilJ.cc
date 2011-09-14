@@ -15,6 +15,11 @@
 #include <casa/BasicSL/String.h>
 #include <sys/time.h>
 #include <execinfo.h>
+#include <algorithm>
+#include <math.h>
+
+using std::max;
+using std::min;
 
 using namespace casa;
 
@@ -23,6 +28,19 @@ using namespace casa;
 namespace casa {
 
 namespace utilj {
+
+String
+formatV (const String & formatString, va_list vaList)
+{
+	char buffer [4096];
+	int nPrinted = vsnprintf (buffer, sizeof (buffer), formatString.c_str(), vaList);
+
+	if (nPrinted >= (int) sizeof (buffer) - 1){
+		buffer [sizeof (buffer) - 2] = '|'; // mark as truncated
+	}
+
+	return buffer;
+}
 
 String
 format (const char * formatString, ...)
@@ -36,17 +54,13 @@ format (const char * formatString, ...)
 
 	va_start (vaList, formatString);
 
-	char buffer [4096];
-	int nPrinted = vsnprintf (buffer, sizeof (buffer), formatString, vaList);
-
-	if (nPrinted >= (int) sizeof (buffer) - 1){
-		buffer [sizeof (buffer) - 2] = '|'; // mark as truncated
-	}
+	String result = formatV (formatString, vaList);
 
 	va_end (vaList);
 
-	return buffer;
+	return result;
 }
+
 
 Bool
 getEnv (const String & name, const Bool & defaultValue)
@@ -218,6 +232,78 @@ throwIfError (int errorCode, const String & prefix, const String & file, Int lin
 	}
 }
 
+DeltaThreadTimes
+ThreadTimes::operator- (const ThreadTimes & tEarlier) const
+{
+    return DeltaThreadTimes (this->elapsed() - tEarlier.elapsed(),
+                             this->cpu() - tEarlier.cpu());
+}
+
+DeltaThreadTimes &
+DeltaThreadTimes::operator+= (const DeltaThreadTimes & other)
+{
+    cpu_p += other.cpu();
+    elapsed_p += other.elapsed();
+    n_p += 1;
+
+    if (doStats_p){
+        cpuSsq_p += other.cpu() * other.cpu();
+        cpuMin_p = min (cpuMin_p, other.cpu());
+        cpuMax_p = max (cpuMax_p, other.cpu());
+        elapsedSsq_p += other.elapsed() * other.elapsed();
+        elapsedMin_p = min (elapsedMin_p, other.elapsed());
+        elapsedMax_p = max (elapsedMax_p, other.elapsed());
+    }
+
+    return * this;
+}
+
+
+String
+DeltaThreadTimes::formatAverage (const String & floatFormat,
+                           Double scale,
+                           const String & units) const // to convert to ms
+{
+    String realFormat = casa::utilj::format ("(el=%s,cp=%s,%%4.1f%%%%) %s",
+                                             floatFormat.c_str(), floatFormat.c_str(), units.c_str());
+    Int n = n_p != 0 ? n_p : 1;
+    Double c = cpu_p / n * scale;
+    Double e = elapsed_p / n * scale;
+    Double p = c / e * 100;
+
+    String result = casa::utilj::format (realFormat.c_str(), e, c, p);
+
+    return result;
+}
+
+String
+DeltaThreadTimes::formatStats (const String & floatFormat,
+                         Double scale,
+                         const String & units) const  // to convert to ms
+{
+    String realFormat = casa::utilj::format ("(el=%s {%s-%s,%s}, cp=%s {%s-%s,%s}, %%4.1f%%%%) %s",
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             floatFormat.c_str(),
+                                             units.c_str());
+    Int n = n_p != 0 ? n_p : 1;
+    Double c = cpu_p / n * scale;
+    Double cS = sqrt (cpuSsq_p / n_p - c * c);
+    Double e = elapsed_p / n * scale;
+    Double eS = sqrt (elapsedSsq_p / n_p - e * e);
+    Double p = c / e * 100;
+
+    String result = casa::utilj::format (realFormat.c_str(), e, elapsedMin_p, elapsedMax_p, eS,
+                                         c, cpuMin_p, cpuMax_p, cS, p);
+
+    return result;
+}
+
 AipsErrorTrace::AipsErrorTrace ( const String &msg, const String &filename, uInt lineNumber,
                                  Category c)
 : AipsError (msg, filename, lineNumber, c)
@@ -230,7 +316,7 @@ AipsErrorTrace::AipsErrorTrace ( const String &msg, const String &filename, uInt
     for (int i = 0; i < n; i++){
         message += trace[i] + String ("\n");
     }
-    delete trace;
+    free (trace);
 }
 
 } // end namespace utilj

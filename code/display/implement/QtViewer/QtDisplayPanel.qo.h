@@ -765,6 +765,7 @@ public:
   //# MWCPTRegion* ptregion_;
   //# QtPTRegion* ptregion_;
   QtPolyTool* ptregion_;
+  QtOldPolyTool* optregion_;
 
   viewer::QtRegionSourceFactory *region_source_factory;
 

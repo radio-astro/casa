@@ -43,12 +43,13 @@ namespace casa {
 
 	class RegionSource {
 	    public:
-		virtual memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) = 0;
-		virtual memory::cptr<Rectangle> rectangle( WorldCanvas *wc, int blc_x, int blc_y, int trc_x, int trc_y ) = 0;
+		/* virtual memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) = 0; */
+		virtual memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
+		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) = 0;
 
 		virtual void revokeRegion( Region *r ) { region_creator->revokeRegion(r); }
+
 #if 0
-		virtual const polygon &polygon( const std::vector<int> &x, const std::vector<int> &y ) = 0;
 		virtual const region &ellipse( const std::vector<int> &x, const std::vector<int> &y ) = 0;
 #endif
 		RegionSource( RegionCreator *rc ) : region_creator(rc) { }

@@ -360,11 +360,13 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
    	  SpectralCoordinate spec_coord = itsPosTrackCoordSys.spectralCoordinate(coordNum);
    	  MFrequency::Types freq_type = spec_coord.frequencySystem(true);		// effective type (passing false would return the native type)
    	  String frequency = MFrequency::showType(freq_type);
-   	  std::transform(frequency.begin(), frequency.end(), frequency.begin(), tolower);
+	  frequency.downcase();
+   	  //std::transform(frequency.begin(), frequency.end(), frequency.begin(), tolower);
    	  MDoppler::Types velocity_type = spec_coord.velocityDoppler( );
    	  //String velocity = MDoppler::showType(velocity_type);
    	  String velocity = itsSpectralQuantity;
-   	  std::transform(velocity.begin(), velocity.end(), velocity.begin(), tolower);
+	  velocity.downcase();
+   	  //std::transform(velocity.begin(), velocity.end(), velocity.begin(), tolower);
    	  retval += " (" + frequency + "/" + velocity + ") ";
      }
 

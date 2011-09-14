@@ -85,7 +85,7 @@ class imagecont():
 
 
  ####
-    def imagecont(self, msname='spw00_4chan351rowTile.ms', start=0, numchan=1, spw=0, field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
+    def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
             self.imageparamset=False
@@ -114,6 +114,8 @@ class imagecont():
 ####
         #imname=imname+'_%02d'%(j)               
             self.setparamcont(im, freq, band)
+            if(self.ft=='mosaic'):
+                im.setmfcontrol(fluxscale=[imname+'.flux'])
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
         self.makecontimage(im, self.novaliddata[msname], imname)
@@ -503,13 +505,23 @@ class imagecont():
         #immask=ia.getchunk(getmask=True)
         ##############
         #ia.done()
+
+        ####get the shape of an image
+        for k in range(len(inim)):
+            if(os.path.exists(inim[k])):
+                break
+        ia.open(inim[k])
+        subshape=ia.shape()
+        ia.done()
+        ##############
+
         ibig.open(cubimage)
         cubeshape=ibig.shape()
         chanstart=0
         blc=np.array([0,0,0,0])
         #if inimshape[0:3]!=cubeshape[0:3]: 
         #        return False
-        nchTile=ibig.summary()['header']['tileshape'][3]
+        nchTile=max(ibig.summary()['header']['tileshape'][3], subshape[3])
         trc=np.array([int(cubeshape[0]-1),int(cubeshape[1]-1),int(cubeshape[2]-1),nchTile-1])
         arr=ibig.getchunk(blc=blc.tolist(), trc=trc.tolist())
         nchanchunk=cubeshape[3]/nchTile

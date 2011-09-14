@@ -29,17 +29,23 @@
 #include <display/region/QtRegionSource.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/region/QtRectangle.qo.h>
+#include <display/region/QtPolygon.qo.h>
 
 namespace casa {
     namespace viewer {
 
 	QtRegionSource::~QtRegionSource( ) { }
 
-	memory::cptr<Rectangle> QtRegionSource::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
-	    return memory::cptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
-	}
-	memory::cptr<Rectangle> QtRegionSource::rectangle( WorldCanvas *wc, int blc_x, int blc_y, int trc_x, int trc_y ) {
+	// memory::cptr<Rectangle> QtRegionSource::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
+	//     return memory::cptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
+	// }
+	memory::cptr<Rectangle> QtRegionSource::rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    return memory::cptr<Rectangle>(new QtRectangle( this, wc, blc_x, blc_y, trc_x, trc_y ));
+	}
+
+	memory::cptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, double x1, double y1 ) {
+	    return memory::cptr<Polygon>(new QtPolygon( this, wc, x1, y1 ));
+	    // return memory::cptr<Polygon>( );
 	}
 
 	QtRegionDock *QtRegionSource::dock( ) { return panel_->regionDock( ); }

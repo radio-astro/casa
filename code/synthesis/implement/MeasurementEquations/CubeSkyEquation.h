@@ -28,6 +28,7 @@
 #define SYNTHESIS_CUBESKYEQUATION_H
 
 #include <synthesis/MeasurementEquations/SkyEquation.h>
+//#include <synthesis/Utilities/ThreadTimers.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -110,6 +111,8 @@ class CubeSkyEquation : public SkyEquation {
   Block<Vector<Int> > blockSpw_p;
   Block<CountedPtr<FTMachine> > ftm_p;
   Block<CountedPtr<FTMachine> > iftm_p;
+
+  // DT aInitGrad, aGetChanSel, aCheckVisRows, aGetFreq, aOrigChunks, aVBInValid, aInitGetSlice, aInitPutSlice, aPutSlice, aFinalizeGetSlice, aFinalizePutSlice, aChangeStokes, aInitModel, aGetSlice, aSetModel, aGetRes, aExtra;
 
 };
 

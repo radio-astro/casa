@@ -33,7 +33,7 @@ Table column descriptions:
 
 COLUMN NAME       DESCRIPTION
 -----------       -----------
-Date/Time         Time stamp of data sample
+Date/Time         Time stamp of data sample (YYMMDD/HH:MM:SS UT)
 Intrf             Interferometer baseline (antenna names)
 UVDist            uv-distance (units of wavelength)
 Fld               Field ID (if more than 1)
@@ -45,6 +45,7 @@ Amp               Visibility amplitude
 Phs               Visibility phase (deg)
 Wt                Weight of visibility measurement
 F                 Flag: 'F' = flagged datum; ' ' = unflagged
+UVW               UVW coordinates (meters)
 
 
 Input Parameters:
@@ -256,7 +257,7 @@ Table column descriptions:
 
 COLUMN NAME       DESCRIPTION
 -----------       -----------
-Date/Time         Time stamp of data sample
+Date/Time         Time stamp of data sample (YYMMDD/HH:MM:SS UT)
 Intrf             Interferometer baseline (antenna names)
 UVDist            uv-distance (units of wavelength)
 Fld               Field ID (if more than 1)
@@ -268,6 +269,7 @@ Amp               Visibility amplitude
 Phs               Visibility phase (deg)
 Wt                Weight of visibility measurement
 F                 Flag: 'F' = flagged datum; ' ' = unflagged
+UVW               UVW coordinates (meters)
 
 
 Input Parameters:

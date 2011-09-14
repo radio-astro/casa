@@ -1,4 +1,4 @@
-//# rectangle.h: base class for statistical regions
+//# polygon.h: base class for statistical regions
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,61 +26,88 @@
 //# $Id$
 
 
-#ifndef REGION_RECTANGLE_H_
-#define REGION_RECTANGLE_H_
+#ifndef REGION_POLYGON_H_
+#define REGION_POLYGON_H_
 
 #include <display/region/Region.h>
 #include <casa/BasicSL/String.h>
 #include <casadbus/types/ptr.h>
-#include <list>
+#include <vector>
 
 namespace casa {
 
-    class PanelDisplay;
     class AnnRegion;
 
     namespace viewer {
 
-	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
-	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
-	// this means that coordinate transformation is required each time the region is drawn.
-	class Rectangle : public Region {
+	class Polygon : public Region {
 	    public:
-		~Rectangle( );
-		Rectangle( WorldCanvas *wc, double x1, double y1, double x2, double y2) : Region( wc ),
-		    blc_x(x1<x2?x1:x2), blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) { }
 
-		bool clickWithin( double x, double y ) const
-		    { return x > blc_x && x < trc_x && y > blc_y && y < trc_y; }
+		Polygon( WorldCanvas *wc, double x1, double y1 ) : Region( wc ), closed(false),
+				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
+				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
+		~Polygon( ) { }
 
+		bool clickWithin( double x, double y ) const;
 		int clickHandle( double x, double y ) const;
-
-		// returns mouse movement state
-		int mouseMovement( double x, double y, bool other_selected );
-
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
 		int moveHandle( int handle, double x, double y );
-		void move( double dx, double dy )
-		    { blc_x += dx; trc_x += dx; blc_y += dy; trc_y += dy; updateStateInfo( true ); }
+		void move( double dx, double dy );
+		int mouseMovement( double x, double y, bool other_selected );
 
 		void regionCenter( double &x, double &y ) const;
+
+		void closeFigure( );
+		void addVertex( double x, double y, bool rewrite_last_point=false );
 
 		AnnRegion *annotation( ) const;
 
 	    protected:
+		enum YScaleTo { ScaleTop, ScaleBottom };
+		enum XScaleTo { ScaleLeft, ScaleRight };
+		enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
+
 		StatisticsList *generate_statistics_list( );
 
+		void drawRegion( bool );
+
+		// return the *drawing* bounding rectangle...
 		// in "linear" coordinates...
 		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
-		void drawRegion( bool );
-		/* void drawHandles( ); */
+	    private:
+		bool closed;
 
-		double blc_x, blc_y;
-		double trc_x, trc_y;
+		bool within_vertex_handle( double x, double y ) const;
+
+		int move_sizing_rectangle_handle( int handle, double x, double y );
+		int move_vertex( int handle, double x, double y );
+
+		void update_drawing_bounds_rectangle( );
+		void update_reference_bounds_rectangle( );
+
+		void update_drawing_state( );
+		void update_reference_state( int transformations, int handle, int new_handle );
+
 		double handle_delta_x, handle_delta_y;
 
+		typedef std::pair<double,double> pt;
+		typedef std::vector<pt> point_list;
+
+		point_list _ref_points_;
+		double _ref_blc_x_, _ref_blc_y_;
+		double _ref_trc_x_, _ref_trc_y_;
+		double _ref_width_, _ref_height_;
+
+		point_list _drawing_points_;
+		double _drawing_blc_x_, _drawing_blc_y_;
+		double _drawing_trc_x_, _drawing_trc_y_;
+		double _drawing_width_, _drawing_height_;
+
+		XScaleTo _x_origin_;
+		YScaleTo _y_origin_;
 	};
     }
 }

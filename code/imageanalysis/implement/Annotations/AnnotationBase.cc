@@ -60,6 +60,10 @@ const String AnnotationBase::DEFAULT_FONT = "Helvetica";
 const uInt AnnotationBase::DEFAULT_FONTSIZE = 10;
 const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = BOLD;
 const Bool AnnotationBase::DEFAULT_USETEX = False;
+const AnnotationBase::RGB AnnotationBase::DEFAULT_LABELCOLOR = AnnotationBase::GREEN;
+const String AnnotationBase::DEFAULT_LABELPOS = "top";
+const vector<Int> AnnotationBase::DEFAULT_LABELOFF = vector<Int>(2, 0);
+
 const String AnnotationBase::_class = "AnnotationBase";
 
 std::list<string> AnnotationBase::_colorNames;
@@ -80,12 +84,13 @@ AnnotationBase::AnnotationBase(
 	const CoordinateSystem& csys
 )
 : _type(type), _csys(csys), _label(DEFAULT_LABEL),
-  _font(DEFAULT_FONT), _color(DEFAULT_COLOR), _fontstyle(DEFAULT_FONTSTYLE),
+  _font(DEFAULT_FONT), _labelPos(DEFAULT_LABELPOS), _color(DEFAULT_COLOR),
+  _labelColor(DEFAULT_LABELCOLOR), _fontstyle(DEFAULT_FONTSTYLE),
   _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
-  _printGlobals(False) {
+  _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		throw AipsError(
@@ -105,12 +110,14 @@ AnnotationBase::AnnotationBase(
 	const Type type, const CoordinateSystem& csys
 )
 : _type(type), _csys(csys), _label(DEFAULT_LABEL),
-  _font(DEFAULT_FONT), _color(DEFAULT_COLOR), _fontstyle(DEFAULT_FONTSTYLE),
-  _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
+  _font(DEFAULT_FONT), _labelPos(DEFAULT_LABELPOS),
+  _color(DEFAULT_COLOR), _labelColor(DEFAULT_LABELCOLOR),
+  _fontstyle(DEFAULT_FONTSTYLE), _linestyle(DEFAULT_LINESTYLE),
+  _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
-  _printGlobals(False) {
+  _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
 	String preamble = String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		throw AipsError(
@@ -315,29 +322,54 @@ String AnnotationBase::getLabel() const {
 	return _label;
 }
 
-void AnnotationBase::setColor(const String& s) {
+Bool AnnotationBase::_isRGB(const AnnotationBase::RGB& rgb) {
+	if (rgb.size() != 3) {
+		return False;
+	}
+	for (RGB::const_iterator iter=rgb.begin(); iter!=rgb.end(); iter++) {
+		if (*iter < 0 || *iter > 255) {
+			return False;
+		}
+	}
+	return True;
+}
+
+AnnotationBase::RGB AnnotationBase::_colorStringToRGB(const String& s) {
     String c = s;
     c.trim();
     c.downcase();
     if (_colors.find(c) != _colors.end()) {
-    	_color = _colors.find(c)->second;
+    	return _colors.find(c)->second;
     }
     else if (boost::regex_match(c.c_str(), rgbHexRegex)) {
-    	String red = s.substr(0, 2);
-    	int hexInt;
-    	sscanf(red.c_str(), "%x", &hexInt );
-    	_color[0] = hexInt;
-    	String green = s.substr(2, 2);
-    	sscanf(green.c_str(), "%x", &hexInt );
-    	_color[1] = hexInt;
-    	String blue = s.substr(4, 2);
-    	sscanf(blue.c_str(), "%x", &hexInt );
-    	_color[2] = hexInt;
+    	RGB rgb(3);
+    	for (uInt i=0; i<3; i++) {
+    		String comp = s.substr(2*i, 2);
+    		int hexInt;
+    		sscanf(comp.c_str(), "%x", &hexInt );
+    		rgb[i] = hexInt;
+    	}
+    	return rgb;
     }
     else {
         throw AipsError("Unrecognized color specification " + s);
     }
-	_params[COLOR] = getColorString();
+}
+
+void AnnotationBase::setColor(const String& s) {
+	_color = _colorStringToRGB(s);
+	_params[COLOR] = colorToString(_color);
+}
+
+void AnnotationBase::setColor(const RGB& rgb) {
+	if (! _isRGB(rgb)) {
+		throw AipsError(
+			_class + "::" + __FUNCTION__
+				+ ": input vector is not a valid RGB representation"
+		);
+	}
+	_color = rgb;
+	_params[COLOR] = colorToString(_color);
 }
 
 AnnotationBase::RGB AnnotationBase::getColor() const {
@@ -349,6 +381,12 @@ String AnnotationBase::getColorString() const {
 }
 
 String AnnotationBase::colorToString(const AnnotationBase::RGB& color) {
+	if (! _isRGB(color)) {
+		throw AipsError(
+			_class + "::" + __FUNCTION__
+				+ ": input vector is not a valid RGB representation"
+		);
+	}
 	if (_rgbNameMap.find(color) != _rgbNameMap.end()) {
 		return _rgbNameMap.find(color)->second;
 	}
@@ -363,10 +401,29 @@ String AnnotationBase::colorToString(const AnnotationBase::RGB& color) {
 	}
 }
 
+void AnnotationBase::setLabelColor(const String& color) {
+	_labelColor = _colorStringToRGB(color);
+	_params[LABELCOLOR] = color;
+}
 
+void AnnotationBase::setLabelColor(const RGB& color) {
+	if (! _isRGB(color)) {
+		throw AipsError(
+			_class + "::" + __FUNCTION__
+				+ ": input vector is not a valid RGB representation"
+		);
+	}
+	_labelColor = color;
+	_params[LABELCOLOR] = colorToString(_labelColor);
+}
 
-AnnotationBase::RGB rgbFromHex(String& s);
+String AnnotationBase::getLabelColorString() const {
+	return colorToString(_labelColor);
+}
 
+AnnotationBase::RGB AnnotationBase::getLabelColor() const {
+	return _labelColor;
+}
 
 void AnnotationBase::setLineStyle(const LineStyle s) {
 	_linestyle = s;
@@ -389,7 +446,6 @@ uInt AnnotationBase::getLineWidth() const {
 void AnnotationBase::setSymbolSize(const uInt s) {
 	_symbolsize = s;
 	_params[SYMSIZE] = String::toString(_symbolsize);
-
 }
 
 uInt AnnotationBase::getSymbolSize() const {
@@ -441,6 +497,41 @@ Bool AnnotationBase::isUseTex() const {
 	return _usetex;
 }
 
+String AnnotationBase::getLabelPosition() const {
+	return _labelPos;
+}
+
+void AnnotationBase::setLabelPosition(const String& position) {
+	String c = position;
+	c.trim();
+	c.downcase();
+	if (
+		c != "top" && c != "bottom"
+		&& c != "left" && c != "right"
+	) {
+		throw AipsError(
+			_class + "::" + __FUNCTION__
+				+ ": Unknown label position " + position
+		);
+	}
+	_labelPos = c;
+}
+
+void AnnotationBase::setLabelOffset(const vector<Int>& offset) {
+	if (offset.size() != 2) {
+		throw AipsError(
+			_class + "::" + __FUNCTION__
+				+ ": Number of elements in label offset must be exactly 2, not "
+				+ String(offset.size())
+		);
+	}
+	_labelOff = offset;
+}
+
+vector<Int> AnnotationBase::getlabelOffset() const {
+	return _labelOff;
+}
+
 Bool AnnotationBase::isRegion() const {
 	return False;
 }
@@ -475,10 +566,16 @@ String AnnotationBase::keywordToString(
 	case FONTSTYLE: return "fontstyle";
 	case USETEX: return "usetex";
 	case LABEL: return "label";
+	case LABELCOLOR: return "labelcolor";
+	case LABELPOS: return "labelpos";
+	case LABELOFF: return "labeloff";
 	case UNKNOWN_KEYWORD:
 	case N_KEYS:
 	default:
-		throw AipsError("Logic error: No string representation");
+		throw AipsError(
+			_class + "::" + __FUNCTION__
+			+ ": Logic error: No string representation for Keyword " + String(key)
+		);
 	}
 }
 

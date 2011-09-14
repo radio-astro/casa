@@ -40,7 +40,7 @@
 namespace casa {
 
 //////////////poly tool//////////////////
-QtPolyTool::QtPolyTool(PanelDisplay *pd) : QtPTRegion(pd)
+QtPolyTool::QtPolyTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPTRegion(rf,pd)
 {
   setObjectName("PolyTool"); 
 }

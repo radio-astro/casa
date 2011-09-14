@@ -195,15 +195,11 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
 
                 # output
                 polyimage.rename( outfile, overwrite=overwrite )
-                #convimage.rename( outfile, overwrite=overwrite )
 
-                polyimage.close()
+                polyimage.done()
                 convimage.done( remove=True )
-                convimage.close()
                 image.done( remove=True )
-                image.close()
                 imageorg.done( remove=True )
-                imageorg.close()
             elif mode == 'basket':
                 ###
                 # Basket-Weaving (Emerson & Grave 1988)

@@ -115,6 +115,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
             <example>fwhmerr="fwhmErr"</example>
         </param>
+        <param type="string" direction="in" name="integral" subparam="true">
+            <description>Prefix of ame of integral solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value/>
+            <example>integral="integral"</example>
+        </param>
+        <param type="string" direction="in" name="integralerr" subparam="true">
+            <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
+            <value/>
+            <example>integralerr="integralErr"</example>
+        </param>
+        
         <param type="bool" name="wantreturn">
             <description>Should a record summarizing the results be returned?</description>
             <value>True</value>
@@ -148,7 +159,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <default param="fwhmerr">
                         <value>""</value>
                     </default>
-
+                   <default param="integral">
+                        <value>""</value>
+                    </default>
+                    <default param="integralerr">
+                        <value>""</value>
+                    </default>
             </equals>
         </when>
     </constraints>
@@ -161,33 +177,35 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 This task simultaneously fits one or more gaussians and/or a polynomial to one dimensional profiles.
 
 ARAMETER SUMMARY
-imagename   Name of the input (CASA, FITS, MIRIAD) image
-box         Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
-            may be specified. If not specified, region is used if specified. If region
-            is also not specified, entire directional plane unioned with any chans and
-            stokes specification determines the region.
-region      Optional region file to use.
-chans       Optional contiguous frequency channel number specification. Not used if
-            region is specified. Default is all channels.
-stokes      Contiguous stokes planes specification. Not used if region is specified.
-            Default is all stokes.     
-axis        Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
-            zeroth axis if a spectral axis is not present.
-mask        Optional mask specification.
-ngauss      Maximum number of gaussians to fit.
-poly        Order of polynomial to fit. &lt;0 means do not fit a polynomial.
-estimates   Name of file containing initial gaussian estimates.
-minpts      Minimum number of points necessary to attempt a fit.
-multifit    Fit models at each pixel in region (true) or average profiles and fit a single model (false).
-model       Name of model image to write.
-residual    Name of residual image to write.
-amp         Name of amplitude solution image. Default: do not write the image ("")
-amperr      Name of amplitude solution error image. Default: do not write the image ("")
-center      Name of center solution image. Default: do not write the image ("")
-centererr   Name of center solution error image. Default: do not write the image ("")
-fwhm        Name of fwhm solution image. Default: do not write the image ("")
-fwhmerr     Name of fwhm solution error image. Default: do not write the image ("")
-wantreturn  If true, return a record summarizing the fit results, if false, return false.
+imagename    Name of the input (CASA, FITS, MIRIAD) image
+box          Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
+             may be specified. If not specified, region is used if specified. If region
+             is also not specified, entire directional plane unioned with any chans and
+             stokes specification determines the region.
+region       Optional region file to use.
+chans        Optional contiguous frequency channel number specification. Not used if
+             region is specified. Default is all channels.
+stokes       Contiguous stokes planes specification. Not used if region is specified.
+             Default is all stokes.     
+axis         Axis along which to do the fit(s). &lt;0 means use the spectral axis or the
+             zeroth axis if a spectral axis is not present.
+mask         Optional mask specification.
+ngauss       Maximum number of gaussians to fit.
+poly         Order of polynomial to fit. &lt;0 means do not fit a polynomial.
+estimates    Name of file containing initial gaussian estimates.
+minpts       Minimum number of points necessary to attempt a fit.
+multifit     Fit models at each pixel in region (true) or average profiles and fit a single model (false).
+model        Name of model image to write.
+residual     Name of residual image to write.
+amp          Name of amplitude solution image. Default: do not write the image ("")
+amperr       Name of amplitude solution error image. Default: do not write the image ("")
+center       Name of center solution image. Default: do not write the image ("")
+centererr    Name of center solution error image. Default: do not write the image ("")
+fwhm         Name of fwhm solution image. Default: do not write the image ("")
+fwhmerr      Name of fwhm solution error image. Default: do not write the image ("")
+integral     Name of integral solution image. Default: do not write the image ("")
+integralerr  Name of integral solution error image. Default: do not write the image ("")
+wantreturn   If true, return a record summarizing the fit results, if false, return false.
 
 The axis parameter indicates on which axis profiles should be fit; a value &lt;0 indicates the spectral axis should be used, or if one does not exist,
 that the zeroth axis should be used.
@@ -221,7 +239,8 @@ type[0,1,...] The type of component (GAUSSIAN or POLYNOMIAL)
 center[0,1,...] The fitted center value for the nth component which is a gaussian.
 fwhm[0,1,...] The fitted FWHM value for the nth component which is a gaussian.
 amp[0,1,...] The fitted amplitude value for the nth component which is a gaussian.
-centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...] The associated errors for the nth component which is a gaussian.
+integral[0,1,...] The integral value for the nth component which is a gaussian.
+centerErr[0,1,...], fwhmErr[0,1,...], ampErr[0,1,...], integralErr[0,1,...] The associated errors for the nth component which is a gaussian.
 
 One can also write none, any or all of the solution and error images for gaussian fits via the parameters amp, amperr, center, centererr,
 fwhm, and fwhmerr when doing multi-pixel fits. The specified parameter value will by appended by "_n" where n is the gaussian

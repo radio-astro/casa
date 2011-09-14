@@ -150,6 +150,8 @@ public:
         return This->nRow();
     }
 
+    virtual Int nRowChunk() const;
+
     virtual Vector<Int>& antenna1() {
         return antenna1OK_p ? antenna1_p : fillAnt1();
     }
@@ -321,12 +323,12 @@ public:
         return This->frequency();
     }
 
-    virtual Vector<Double>& lsrFrequency() {
-        return lsrFrequencyOK_p ? lsrFrequency_p : fillLSRFreq();
-    }
-    virtual const Vector<Double>& lsrFrequency() const {
-        return This->lsrFrequency();
-    }
+//    virtual Vector<Double>& lsrFrequency() {
+//        return lsrFrequencyOK_p ? lsrFrequency_p : fillLSRFreq();
+//    }
+//    virtual const Vector<Double>& lsrFrequency() const {
+//        return This->lsrFrequency();
+//    }
 
 
     //the following method is to convert the observed frequencies
@@ -612,8 +614,11 @@ public:
     // Update coordinate info - useful for copied VisBuffers that need
     // to retain some state for later reference.
     // Presently this fills antenna, array, field and spectralWindow ids, time,
-    // frequency and number of rows. Add more as needed.
-    virtual void updateCoordInfo(const VisBuffer * vb = NULL);
+    // frequency and number of rows. 
+    // if dirDependent is set to False the expensive direction dependent calculation of parallactic or direction of
+    // antenna from pointing table is avoided
+    //Add more as needed.
+    virtual void updateCoordInfo(const VisBuffer * vb = NULL, const Bool dirDependent=True);
 
     // Set the visibility to a constant, note that this only changes the buffer,
     // no values are written back to tables from here.
@@ -682,8 +687,8 @@ public:
 protected:
 
     virtual Bool checkMSId();
-    virtual void checkVisIter (const char * func, const char * file, int line) const;
-    virtual void copyCache (const VisBuffer & other);
+    virtual void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
+    virtual void copyCache (const VisBuffer & other, Bool force);
 
 private:
 
@@ -692,28 +697,43 @@ private:
 
     template<typename T>
     static void cacheCopyArray (Bool & newStatus, Bool oldStatus, T & newCache,
-                                const T & oldCache) {
+                                const T & oldCache, Bool force) {
+
+        // Leave things unchanged if the old status is false.  This will often
+        // leave the value with an empty data structure and an OK status which
+        // is needed in many cases.
+        //
         // For copying Array<T> derived objects since the assign operator
         // doesn't work for these.
 
-        newStatus = oldStatus;
+        newStatus = force || oldStatus;
+
         if (newStatus) {
+
             newCache.assign (oldCache);
         }
     }
 
     template<typename T>
-    static void cacheCopyNormal (Bool & newStatus, Bool oldStatus, T & newCache, const T & oldCache) {
+    static void cacheCopyNormal (Bool & newStatus, Bool oldStatus, T & newCache, const T & oldCache,
+                                 Bool force) {
+
+        // Leave things unchanged if the old status is false.  This will often
+        // leave the value with an empty data structure and an OK status which
+        // is needed in many cases.
+        //
         // For copying "normal" cache status and values.  Normal means
         // the assign operator works (which it doesn't for classes based on Array<T>)
-        newStatus = oldStatus;
+
+        newStatus = force || oldStatus;
+
         if (newStatus) {
+
             newCache = oldCache;
         }
     }
 
     virtual void setAllCacheStatuses (bool status);
-
 
     virtual Bool nonCanonCorr(); // Are correlations in non-canonical order?
 
@@ -773,7 +793,7 @@ private:
     virtual Cube<Float>& fillFloatDataCube();
     virtual Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
     virtual Matrix<Float>& fillImagingWeight();
-    virtual Vector<Double>& fillLSRFreq();
+    //virtual Vector<Double>& fillLSRFreq();
     virtual Int & fillnChannel();
     virtual Int & fillnCorr();
     virtual Int & fillnRow();
@@ -822,7 +842,7 @@ private:
     Bool floatDataCubeOK_p;
     Bool frequencyOK_p;
     Bool imagingWeightOK_p;
-    Bool lsrFrequencyOK_p;
+    /////Bool lsrFrequencyOK_p;
     Bool modelVisCubeOK_p;
     Bool modelVisibilityOK_p;
     Bool msOK_p;
@@ -877,7 +897,7 @@ private:
     Cube<Float> floatDataCube_p;
     Vector<Double> frequency_p;
     Matrix<Float> imagingWeight_p;
-    Vector<Double> lsrFrequency_p;
+    //Vector<Double> lsrFrequency_p;
     Cube<Complex> modelVisCube_p;
     Matrix<CStokesVector> modelVisibility_p;
     Int nChannel_p;
