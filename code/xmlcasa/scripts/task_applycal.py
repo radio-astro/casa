@@ -129,8 +129,8 @@ def applycal(vis=None,
                 try:
                         param_names = applycal.func_code.co_varnames[:applycal.func_code.co_argcount]
                         param_vals = [eval(p) for p in param_names]
-                        retval &= write_history(mstool.create(), vis, 'applycal', param_names,
-                                                param_vals, casalog)
+                        write_history(mstool.create(), vis, 'applycal', param_names,
+                                      param_vals, casalog)
                 except Exception, instance:
                         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                                      'WARN')
