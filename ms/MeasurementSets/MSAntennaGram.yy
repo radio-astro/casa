@@ -66,7 +66,6 @@
 %type <node> indexcombexpr
 %type <node> baseline
 %type <node> gbaseline
-%type <node> prettybaseline
 %type <str> ident
 %type <dval> flt
 %type <dval> flint
@@ -98,17 +97,13 @@ antennastatement: indexcombexpr                {$$ = $1;}
                  | LPAREN indexcombexpr RPAREN {$$ = $2;}
                 ;
 
-indexcombexpr: gbaseline                         {$$ = $1;}
+
+indexcombexpr: gbaseline                         {$$=$1;}
              | indexcombexpr SEMICOLON gbaseline {$$ = $1;}
              ;
 
-gbaseline: NOT {MSAntennaGramNegate=True;}  prettybaseline {$$=$3;}
-         |     {MSAntennaGramNegate=False;} prettybaseline {$$=$2;}
-         ;
-
-prettybaseline: baseline                {$$=$1;}
-              | LPAREN baseline RPAREN  {$$=$2;}
-              ;
+gbaseline: NOT {MSAntennaGramNegate=True;}  baseline {$$=$3;}
+         |     {MSAntennaGramNegate=False;} baseline {$$=$2;}
 
 baseline: indexlist AMPERSAND indexlist 
             {
@@ -131,11 +126,9 @@ baseline: indexlist AMPERSAND indexlist
         | indexlist           //Match INDEXLIST & ALLANTENNAS
             {
 	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)),a2; 
- 	      // $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-              //   (a1,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
+	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
  	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,a2,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
+                (a1,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
 	      delete $1;
 	    }
         | indexlist AMPERSAND AMPERSAND indexlist // Include self-correlations
@@ -159,11 +152,9 @@ baseline: indexlist AMPERSAND indexlist
         | indexlist AMPERSAND AMPERSAND AMPERSAND // Only self-correlations :-)
             {
 	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)),a2; 
- 	      // $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-              //   (a1,MSAntennaParse::AutoCorrOnly, MSAntennaGramNegate); 
+	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
  	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,a2,MSAntennaParse::AutoCorrOnly, MSAntennaGramNegate); 
+                (a1,MSAntennaParse::AutoCorrOnly, MSAntennaGramNegate); 
 	      delete $1;
 	    }
         | blengthlist  // baseline length list
@@ -180,8 +171,8 @@ ident:   IDENTIFIER
            { $$ = $1; }
 
 antid: ident  // A single antenna name (this could be a regex and
-              // hence produce a list of indices)
-              // 
+		   // hence produce a list inf indices)
+                   // 
         { // Use the string as-is.  This cannot include patterns/regex
 	  // which has characters that are part of range or list
 	  // syntax (',', '-') (that's all I think).
