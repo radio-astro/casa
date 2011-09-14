@@ -113,6 +113,9 @@ public:
 // Set the required field Ids and return the # of selected fields.
   uInt setFields(const Vector<Int>& fieldIds);
 
+  //// Select by observationIDs (problematic at best)
+  //void setObsIDs(const String& obs) {obsString_p = obs;}
+
   // Specifies new phase tracking centers for the selected fields
   void setPhaseDirs(const Vector<MDirection>& phaseDirs);
 
@@ -136,7 +139,7 @@ public:
   Bool fixvis(const String& refcode, const String& dataColName);
   virtual void setMiscInfo(const Int qualifier){(void)qualifier;};
   virtual void ComputeResiduals(VisBuffer&, Bool //useCorrected
-                                ) {};
+                                ) {}
 
 private:
   // Interpret field indices (MSSelection)
@@ -222,6 +225,7 @@ private:
   Bool             antennaSel_p;        // Is selection being done by antenna?
   Bool             freqFrameValid_p;    // Freq frame is good and valid
                                         // conversions can be done (or not)
+  //String           obsString_p;       // obsID selection
   Vector<Int>      antennaId_p;         // MSSelection::indexExprStr() doesn't
                                         // work with Vector<uInt>.
   Vector<String>   antennaSelStr_p;
