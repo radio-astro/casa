@@ -14,11 +14,11 @@
 <xsl:param name="taskname"><xsl:value-of select="@name"/></xsl:param>
 <xsl:param name="taskdescription"><xsl:value-of select="aps:shortdescription"/></xsl:param>
 <xsl:choose>
-<xsl:when test="@visibility='hidden'">
+<xsl:when test="lower-case(@visibility)='hidden'">
 #tlist['<xsl:value-of select="$taskname"/>'] = '<xsl:value-of select="@category"/>' </xsl:when>
-<xsl:when test="@visibility='experimental'">
+<xsl:when test="lower-case(@visibility)='experimental'">
 tlist['(<xsl:value-of select="$taskname"/>)'] = '<xsl:value-of select="@category"/>' </xsl:when>
-<xsl:when test="@visibility='test'">
+<xsl:when test="lower-case(@visibility)='test'">
 tlist['(<xsl:value-of select="$taskname"/>)'] = '<xsl:value-of select="@category"/>' </xsl:when>
 <xsl:otherwise>
 tlist['<xsl:value-of select="$taskname"/>'] = '<xsl:value-of select="@category"/>' </xsl:otherwise>

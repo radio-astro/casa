@@ -34,7 +34,7 @@ module casac
    
    interface <xsl:value-of select="@name"/>  {
 <xsl:for-each select="aps:method">
-<xsl:if test="@type!='constructor'">
+<xsl:if test="lower-case(@type)!='constructor'">
  <xsl:text>         </xsl:text><xsl:apply-templates select="aps:returns"/> <xsl:value-of select="@name"/>(<xsl:apply-templates select="aps:output"></xsl:apply-templates> <xsl:if test="aps:output and aps:input">, </xsl:if>
               <xsl:apply-templates select="aps:input">
 </xsl:apply-templates>);
@@ -73,21 +73,21 @@ module casac
     <xsl:param name="ioflag"/>
      <xsl:for-each select="aps:param">
               <xsl:choose>           
-                 <xsl:when test="@xsi:type='string'"><xsl:value-of select="$ioflag"/> string <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='int'"><xsl:value-of select="$ioflag"/> long <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='bool'"><xsl:value-of select="$ioflag"/> boolean <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='float'"><xsl:value-of select="$ioflag"/> float <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='double'"><xsl:choose>
+                 <xsl:when test="lower-case(@xsi:type)='string'"><xsl:value-of select="$ioflag"/> string <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='int'"><xsl:value-of select="$ioflag"/> long <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='bool'"><xsl:value-of select="$ioflag"/> boolean <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='float'"><xsl:value-of select="$ioflag"/> float <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='double'"><xsl:choose>
                  <xsl:when test="@units">
                  <xsl:value-of select="$ioflag"/> casac::Quantity <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
                  </xsl:when><xsl:otherwise>
                  <xsl:value-of select="$ioflag"/> double <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise></xsl:choose></xsl:when>   
-                 <xsl:when test="@xsi:type='stringArray'"><xsl:value-of select="$ioflag"/> casac::StringVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='intArray'"><xsl:value-of select="$ioflag"/> casac::IntVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='boolArray'"><xsl:value-of select="$ioflag"/> casac::BoolVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='floatArray'"><xsl:value-of select="$ioflag"/> casac::FloatVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='complexArray'"><xsl:value-of select="$ioflag"/> casac::ComplexVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
-                 <xsl:when test="@xsi:type='doubleArray'"><xsl:choose>
+                 <xsl:when test="lower-case(@xsi:type)='stringarray'"><xsl:value-of select="$ioflag"/> casac::StringVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='intarray'"><xsl:value-of select="$ioflag"/> casac::IntVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='boolarray'"><xsl:value-of select="$ioflag"/> casac::BoolVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='floatarray'"><xsl:value-of select="$ioflag"/> casac::FloatVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='complexarray'"><xsl:value-of select="$ioflag"/> casac::ComplexVec <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='doublearray'"><xsl:choose>
                  <xsl:when test="@units">
                  <xsl:value-of select="$ioflag"/> casac::Quantity <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
                  </xsl:when><xsl:otherwise>
@@ -100,19 +100,19 @@ module casac
 </xsl:template>
      <xsl:template match="aps:returns">  
               <xsl:choose>
-                <xsl:when test="@xsi:type='string'">string </xsl:when>
-                 <xsl:when test="@xsi:type='int'">long </xsl:when>
-                  <xsl:when test="@xsi:type='bool'">boolean </xsl:when>
-                 <xsl:when test="@xsi:type='float'">float </xsl:when>
-                 <xsl:when test="@xsi:type='double'">double </xsl:when>
-                 <xsl:when test="@xsi:type='stringArray'">casac::StringVec </xsl:when>
-                 <xsl:when test="@xsi:type='intArray'">casac::IntVec </xsl:when>
-                 <xsl:when test="@xsi:type='boolArray'">casac::BoolVec </xsl:when>
-                 <xsl:when test="@xsi:type='floatArray'">casac::FloatVec </xsl:when>
-                 <xsl:when test="@xsi:type='doubleArray'">casac::DoubleVec </xsl:when>
-                 <xsl:when test="@xsi:type='complexArray'">casac::DoubleVec </xsl:when>
-                 <xsl:when test="@xsi:type='record'">casac::record </xsl:when>
-                 <xsl:when test="@xsi:type='void'">void </xsl:when>
+                <xsl:when test="lower-case(@xsi:type)='string'">string </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='int'">long </xsl:when>
+                  <xsl:when test="lower-case(@xsi:type)='bool'">boolean </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='float'">float </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='double'">double </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='stringarray'">casac::StringVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='intarray'">casac::IntVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='boolarray'">casac::BoolVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='floatarray'">casac::FloatVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='doublearray'">casac::DoubleVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='complexarray'">casac::DoubleVec </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='record'">casac::record </xsl:when>
+                 <xsl:when test="lower-case(@xsi:type)='void'">void </xsl:when>
                   <xsl:when test="@xsi:type=''">void </xsl:when>
                  <xsl:otherwise>
                    <xsl:choose>

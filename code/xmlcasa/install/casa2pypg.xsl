@@ -104,16 +104,16 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:apply-templates select="aps:param"/>
 <xsl:for-each select="aps:param">
 <xsl:choose>
-<xsl:when test="@type='boolArray'">
+<xsl:when test="lower-case(@type)='boolarray'">
         if type(<xsl:value-of select="@name"/>)==bool: <xsl:value-of select="@name"/>=[<xsl:value-of select="@name"/>]<xsl:text/>
 </xsl:when>
-<xsl:when test="@type='intArray'">
+<xsl:when test="lower-case(@type)='intarray'">
         if type(<xsl:value-of select="@name"/>)==int: <xsl:value-of select="@name"/>=[<xsl:value-of select="@name"/>]<xsl:text/>
 </xsl:when>
-<xsl:when test="@type='stringArray'">
+<xsl:when test="lower-case(@type)='stringarray'">
         if type(<xsl:value-of select="@name"/>)==str: <xsl:value-of select="@name"/>=[<xsl:value-of select="@name"/>]<xsl:text/>
 </xsl:when>
-<xsl:when test="@type='doubleArray'">
+<xsl:when test="lower-case(@type)='doublearray'">
         if type(<xsl:value-of select="@name"/>)==float: <xsl:value-of select="@name"/>=[<xsl:value-of select="@name"/>]<xsl:text/>       
 </xsl:when>
 </xsl:choose>
@@ -218,7 +218,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:for-each select="aps:input">
 <xsl:call-template name="setdefaults"/>
 <xsl:choose>
-   <xsl:when test="$async='true'">
+   <xsl:when test="lower-case($async)='true'">
    <xsl:text disable-output-escaping="yes">
         a['async']=True</xsl:text>
    </xsl:when>
@@ -359,32 +359,32 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:template name="setdefaults">
 <xsl:for-each select="aps:param">
 <xsl:choose>
-<xsl:when test="@subparam='yes'"></xsl:when>
-<xsl:when test="@subparam='true'"></xsl:when>
+<xsl:when test="lower-case(@subparam)='yes'"></xsl:when>
+<xsl:when test="lower-case(@subparam)='true'"></xsl:when>
 <xsl:otherwise>
 <xsl:choose>
-<xsl:when test="@type='any'">
+<xsl:when test="lower-case(@type)='any'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:call-template name="handlevalue"/><xsl:text>&#10;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='variant'">
+<xsl:when test="lower-case(@type)='variant'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:call-template name="handlevalue"/><xsl:text>&#10;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='record'">
+<xsl:when test="lower-case(@type)='record'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:call-template name="handlevalue"/><xsl:text>&#10;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = &apos;<xsl:value-of select="aps:value"/>&apos;<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='boolArray'">
+<xsl:when test="lower-case(@type)='boolarray'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:value-of select="aps:value"/>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='stringArray'">
+<xsl:when test="lower-case(@type)='stringarray'">
 	<xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:apply-templates select="aps:value"><xsl:with-param name="arraytype"><xsl:value-of>string</xsl:value-of></xsl:with-param></xsl:apply-templates>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='intArray'">
+<xsl:when test="lower-case(@type)='intarray'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:apply-templates select="aps:value"><xsl:with-param name="unitsare"><xsl:if test="@units"><xsl:value-of select="@units"/></xsl:if></xsl:with-param></xsl:apply-templates>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='doubleArray'">
+<xsl:when test="lower-case(@type)='doublearray'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:apply-templates select="aps:value"><xsl:with-param name="unitsare"><xsl:if test="@units"><xsl:value-of select="@units"/></xsl:if></xsl:with-param></xsl:apply-templates>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
 <xsl:otherwise>
@@ -413,7 +413,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:choose>
 <xsl:when test="aps:default">
 <xsl:choose>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text disable-output-escaping="yes">
                     </xsl:text><xsl:value-of select="position()-1"/><xsl:text disable-output-escaping="yes">:odict([{&apos;value&apos;:&apos;</xsl:text><xsl:value-of select="@value"/><xsl:call-template name="handlevalue"></xsl:call-template><xsl:text disable-output-escaping="yes">&apos;}, </xsl:text>
 </xsl:when>
@@ -434,12 +434,12 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 </xsl:when>
 <xsl:otherwise>
 <xsl:choose>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text disable-output-escaping="yes">
                     </xsl:text><xsl:value-of select="position()-1"></xsl:value-of><xsl:text disable-output-escaping="yes">:{&apos;value&apos;:&apos;</xsl:text><xsl:value-of select="@value"/><xsl:text disable-output-escaping="yes">&apos;}</xsl:text><xsl:if test="position()&lt;last()">, </xsl:if> 
 </xsl:when>
 <xsl:when test="@type">
-<xsl:if test="@type!='string'">
+<xsl:if test="lower-case(@type)!='string'">
 <xsl:text disable-output-escaping="yes">
                     </xsl:text><xsl:value-of select="position()-1"></xsl:value-of><xsl:text disable-output-escaping="yes">:{&apos;value&apos;:</xsl:text><xsl:value-of select="@value"/><xsl:text disable-output-escaping="yes">}</xsl:text><xsl:if test="position()&lt;last()">, </xsl:if> 
 </xsl:if>
@@ -457,7 +457,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:choose>
 <xsl:when test="aps:default">
 <xsl:choose>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text disable-output-escaping="yes">
                     </xsl:text><xsl:value-of select="position()-1"/><xsl:text disable-output-escaping="yes">:odict([{&apos;notvalue&apos;:&apos;</xsl:text><xsl:value-of select="@value"/><xsl:call-template name="handlevalue"></xsl:call-template><xsl:text disable-output-escaping="yes">&apos;}, </xsl:text>
 </xsl:when>
@@ -478,12 +478,12 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 </xsl:when>
 <xsl:otherwise>
 <xsl:choose>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text disable-output-escaping="yes">
                     </xsl:text><xsl:value-of select="position()-1"></xsl:value-of><xsl:text disable-output-escaping="yes">:{&apos;notvalue&apos;:&apos;</xsl:text><xsl:value-of select="@value"/><xsl:text disable-output-escaping="yes">&apos;}</xsl:text><xsl:if test="position()&lt;last()">, </xsl:if> 
 </xsl:when>
 <xsl:when test="@type">
-<xsl:if test="@type!='string'">
+<xsl:if test="lower-case(@type)!='string'">
 <xsl:text disable-output-escaping="yes">
                     </xsl:text><xsl:value-of select="position()-1"></xsl:value-of><xsl:text disable-output-escaping="yes">:{&apos;notvalue&apos;:</xsl:text><xsl:value-of select="@value"/><xsl:text disable-output-escaping="yes">}</xsl:text><xsl:if test="position()&lt;last()">, </xsl:if> 
 </xsl:if>
@@ -503,10 +503,10 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:template name="handlevalue">
 <xsl:for-each select="aps:value">
 <xsl:choose>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text>&apos;</xsl:text><xsl:value-of select="." disable-output-escaping="yes"></xsl:value-of><xsl:text>&apos;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='vector' or ends-with(@type, 'Array')">
+<xsl:when test="lower-case(@type)='vector' or ends-with(lower-case(@type), 'array')">
 <xsl:text>[</xsl:text><xsl:choose>
 <xsl:when test="count(aps:value)">
 <xsl:for-each select="aps:value"><xsl:value-of select="."/><xsl:if test="position()&lt;last()">, </xsl:if></xsl:for-each>
@@ -516,7 +516,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 </xsl:otherwise>
 </xsl:choose><xsl:text>]</xsl:text>
 </xsl:when>
-<xsl:when test="@type='record'">
+<xsl:when test="lower-case(@type)='record'">
 <xsl:text>[</xsl:text><xsl:choose>
 <xsl:when test="count(aps:value)">
 <xsl:call-template name="handlevalue"/>
@@ -537,28 +537,28 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 <xsl:template name="setdefaults3">
 <xsl:for-each select="aps:param">
 <xsl:choose>
-<xsl:when test="@type='any'">
+<xsl:when test="lower-case(@type)='any'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:call-template name="handlevalue"/><xsl:text>&#10;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='variant'">
+<xsl:when test="lower-case(@type)='variant'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:call-template name="handlevalue"/><xsl:text>&#10;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='record'">
+<xsl:when test="lower-case(@type)='record'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = <xsl:call-template name="handlevalue"/><xsl:text>&#10;</xsl:text>
 </xsl:when>
-<xsl:when test="@type='string'">
+<xsl:when test="lower-case(@type)='string'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = &apos;<xsl:value-of select="aps:value"/>&apos;<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='boolArray'">
+<xsl:when test="lower-case(@type)='boolarray'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:value-of select="aps:value"/>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='stringArray'">
+<xsl:when test="lower-case(@type)='stringarray'">
 	<xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:apply-templates select="aps:value"><xsl:with-param name="arraytype"><xsl:value-of>string</xsl:value-of></xsl:with-param></xsl:apply-templates>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='intArray'">
+<xsl:when test="lower-case(@type)='intarray'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:apply-templates select="aps:value"><xsl:with-param name="unitsare"><xsl:if test="@units"><xsl:value-of select="@units"/></xsl:if></xsl:with-param></xsl:apply-templates>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
-<xsl:when test="@type='doubleArray'">
+<xsl:when test="lower-case(@type)='doublearray'">
 <xsl:text>        a[&apos;</xsl:text><xsl:value-of select="@name"/>&apos;]  = [<xsl:apply-templates select="aps:value"><xsl:with-param name="unitsare"><xsl:if test="@units"><xsl:value-of select="@units"/></xsl:if></xsl:with-param></xsl:apply-templates>]<xsl:text>&#10;</xsl:text>        
 </xsl:when>
 <xsl:otherwise>
@@ -576,7 +576,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 	<xsl:for-each select="aps:value">
         <xsl:choose>
 		<xsl:when test="$unitsare!=''">&apos;<xsl:value-of select="."/><xsl:value-of select="$unitsare"></xsl:value-of>&apos;<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>	
-		<xsl:when test="@type='string'">&apos;<xsl:value-of select="."/>&apos;<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
+		<xsl:when test="lower-case(@type)='string'">&apos;<xsl:value-of select="."/>&apos;<xsl:if test="position()&lt;last()">, </xsl:if></xsl:when>
 		<xsl:otherwise><xsl:if test="$arraytype='string'">&apos;</xsl:if><xsl:value-of select="."/><xsl:if test="$arraytype='string'">&apos;</xsl:if><xsl:if test="position()&lt;last()">, </xsl:if></xsl:otherwise>
 	</xsl:choose>
 </xsl:for-each>
