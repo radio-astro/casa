@@ -37,7 +37,7 @@ def sim_analyze(
     if verbose: util.verbose = True
     msg = util.msg
 
-    # output is in directory called "project"
+    # put output in directory called "project"
     fileroot = project
     if not os.path.exists(fileroot):
         msg(fileroot+" directory doesn't exist - the task expects to find results from creating the datasets there, like the skymodel.",priority="error")
@@ -84,7 +84,7 @@ def sim_analyze(
                     msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image "+imagename+".image has been created, but comparison with the input model is not possible.",priority="error")
                     return False
 
-        modelflat=skymodel+".flat"
+        modelflat = fileroot + "/" + project + ".skymodel.flat"
         if not os.path.exists(modelflat):
             util.flatimage(skymodel,verbose=verbose)
 
@@ -137,6 +137,13 @@ def sim_analyze(
             if imsize0 <= 0:
                 imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
                           int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
+            else:
+                imsize=[imsize0,imsize0]
+
+            # this is primarily for sim-from-components but useful elsewhere as a minimum
+            # image size:
+            if imsize[0] < minimsize: imsize[0] = minimsize
+            if imsize[1] < minimsize: imsize[1] = minimsize
 
             
 
@@ -235,15 +242,12 @@ def sim_analyze(
                     tb.open(msfile)
                     rawdata = tb.getcol("UVW")
                     tb.done()
-                    maxbase = max([maxbase,max(rawdata[0,]),max(rawdata[1,])])  # in m
-                minscale = 0.3/qa.convert(model_center,'GHz')['value']/maxbase*3600*180/pl.pi
-                pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                psfsize = 100.*minscale/pixsize
-                
-                # verify image size large enough
-#                if imsize[0]<8*psfsize: imsize[0]=int(8*psfsize)
-#                if imsize[1]<8*psfsize: imsize[1]=int(8*psfsize)
+                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
+                    psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
+                    minimsize = 8* int(psfsize/cell_asec)
 
+                if imsize[0] < minimsize: imsize[0] = minimsize
+                if imsize[1] < minimsize: imsize[1] = minimsize                
 
 
             # Do single dish imaging first if tpmstoimage exists.
@@ -411,17 +415,8 @@ def sim_analyze(
                 discard = util.statim(modelflat+".regrid",disprange=disprange)
                 util.nextfig()
 
-                # disprange from skymodel.regrid is in Jy/pix, but convolved im is in Jy/bm
-                # bmarea is in units of output image pixels
-                # unless we simulated from components in which case things 
-                # are off
-                if components_only:
-                    disprange = []
-                else:
-                    disprange = [disprange[0]*bmarea,disprange[1]*bmarea]
-
                 # convolved sky model - units of Jy/bm
-                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)                
+                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                 util.nextfig()
                 
                 # clean image - also in Jy/beam
@@ -430,8 +425,11 @@ def sim_analyze(
                 discard = util.statim(imagename+".image.flat",disprange=disprange)
                 util.nextfig()
 
-                # clean residual image - Jy/bm
-                discard = util.statim(imagename+".residual.flat",disprange=disprange)
+                if len(mstoimage) > 0:
+                    util.nextfig()
+
+                    # clean residual image - Jy/bm
+                    discard = util.statim(imagename+".residual.flat",disprange=disprange)
                 util.endfig(show=grscreen,filename=file)
         
 
@@ -449,9 +447,7 @@ def sim_analyze(
                 msg("Can't find a simulated image - expecting "+imagename,priority="error")
                 return False
 
-
-            modelim = skymodel
-            # we should have modelim and modelim.flat created above 
+            # we should have skymodel.flat created above 
 
             if not image:
                 if not os.path.exists(imagename+".image"):
@@ -489,14 +485,14 @@ def sim_analyze(
                 
             # regridded and convolved input:?
             if not convsky_current:
-                util.convimage(modelim+".flat",imagename+".image.flat")
+                util.convimage(modelflat,imagename+".image.flat")
                 convsky_current = True
             
             # now should have all the flat, convolved etc even if didn't run "image" 
 
             # make difference image.
             # immath does Jy/bm if image but only if ia.setbrightnessunit("Jy/beam") in convimage()
-            convolved = modelim + ".flat.regrid.conv"
+            convolved = modelflat + ".regrid.conv"
             difference = imagename + '.diff'
             ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
             
@@ -599,7 +595,6 @@ def sim_analyze(
                     util.nextfig()
 
                 if showpsf:
-                    pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
                     if image: 
                         psfim = imagename + ".psf"
                     else:
@@ -609,10 +604,7 @@ def sim_analyze(
                                 msg("Using only "+msfile+" for psf generation",priority="warn")
                             im.open(msfile)  
                             # TODO spectral parms
-                            # defineim needs to be larger than synth beam
-                            psfsize = 200.*klam_m/maxbase/pixsize
-                            if psfsize < 32: psfsize = 32
-                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=psfsize*8)
+                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=max([minimsize,128]))
                             if os.path.exists(psfim):
                                 shutil.rmtree(psfim)
                             im.approximatepsf(psf=psfim)
@@ -625,9 +617,9 @@ def sim_analyze(
                     beamcs = ia.coordsys()
                     beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
                     nn = beam_array.shape
-                    xextent = nn[0]*pixsize*0.5
+                    xextent = nn[0]*cell_asec*0.5
                     xextent = [xextent,-xextent]
-                    yextent = nn[1]*pixsize*0.5
+                    yextent = nn[1]*cell_asec*0.5
                     yextent = [-yextent,yextent]
                     flipped_array = beam_array.transpose()
                     ttrans_array = flipped_array.tolist()
@@ -690,10 +682,6 @@ def sim_analyze(
 
 
         # cleanup - delete newmodel, newmodel.flat etc
-        if os.path.exists(modelflat+".regrid"):
-            shutil.rmtree(modelflat+".regrid")  
-#        if os.path.exists(modelflat+".regrid.conv"):
-#            shutil.rmtree(modelflat+".regrid.conv")  
         if os.path.exists(imagename+".image.flat"):
             shutil.rmtree(imagename+".image.flat")  
         if os.path.exists(imagename+".residual.flat"):
