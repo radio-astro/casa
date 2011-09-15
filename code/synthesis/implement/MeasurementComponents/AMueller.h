@@ -107,7 +107,7 @@ public:
 
   // Specialize corrupt to pre-zero model for corruption
   using VisMueller::corrupt;
-  virtual void corrupt(VisBuffer& vb);
+  virtual void corrupt(VisBuffer& vb, Bool avoidACs);
 
   // Set (repeatedly, unfortunately) whether or not subtraction is being done,
   // and IF fitorder == 0, sync matrices for current meta data (VisMueller
