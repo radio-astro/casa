@@ -126,8 +126,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		     TIME_EXPR,
 		     UVDIST_EXPR,
 		     POLN_EXPR,
-		     TAQL_EXPR,
 		     STATE_EXPR,
+		     OBSERVATION_EXPR,
+		     TAQL_EXPR,
 		     MAX_EXPR = TAQL_EXPR};
     enum MSSMode {PARSE_NOW=0, PARSE_LATE};
 
@@ -150,7 +151,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const String& polnExpr="",
 		const String& scanExpr="",
 		const String& arrayExpr="",
-		const String& stateExpr="");
+		const String& stateExpr="",
+		const String& observationExpr="");
     
     // Construct from a record representing a selection item at the
     // CLI or user interface level.  This is functionally same as the
@@ -182,6 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool setTaQLExpr(const String& taqlExpr);
     Bool setPolnExpr(const String& polnExpr);
     Bool setStateExpr(const String& stateExpr);
+    Bool setObservationExpr(const String& obervationExpr);
     
     // Accessor for result of parsing all of the selection
     // expressions.  The final TableExprNode (TEN) is the result of
@@ -191,6 +194,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Accessor for the list of the selected scan IDs.
     inline Vector<Int> getScanList(const MeasurementSet* ms=NULL) 
     {getTEN(ms); return scanIDs_p.copy();}
+
+    // Accessor for the list of the selected observation IDs.
+    inline Vector<Int> getObservationList(const MeasurementSet* ms=NULL) 
+    {getTEN(ms); return observationIDs_p.copy();}
 
     // Accessor for the list of selected sub-array IDs.
     inline Vector<Int> getSubArrayList(const MeasurementSet* ms=NULL) 
@@ -329,9 +336,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	       const String& polnExpr="",
 	       const String& scanExpr="",
 	       const String& arrayExpr="",
-	       const String& stateExpr="");
+	       const String& stateExpr="",
+	       const String& observationExpr="");
     
-    void setMaxScan(const Int& n) {maxScans_p=n;};
+    void setMaxScans(const Int& n) {maxScans_p=n;};
+    void setMaxObs(const Int& n) {maxObs_p=n;};
     
   private:
     // Set into the order of the selection expression
@@ -360,10 +369,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String polnExpr_p;
     String taqlExpr_p;
     String stateExpr_p;
+    String observationExpr_p;
     // Priority
     Vector<Int> exprOrder_p;
     Vector<Int> antenna1IDs_p,antenna2IDs_p,fieldIDs_p, spwIDs_p, scanIDs_p, arrayIDs_p,
-      ddIDs_p,stateObsModeIDs_p;
+      ddIDs_p,stateObsModeIDs_p, observationIDs_p;
     Matrix<Int> chanIDs_p;
     Matrix<Int> baselineIDs_p;
     Matrix<Double> selectedTimesList_p;
@@ -371,7 +381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Bool> selectedUVUnits_p;
     OrderedMap<Int, Vector<Int> > selectedPolMap_p;
     OrderedMap<Int, Vector<Vector<Int> > > selectedSetupMap_p;
-    Int maxScans_p, maxArray_p;
+    Int maxScans_p, maxObs_p, maxArray_p;
   };
   
 } //# NAMESPACE CASA - END

@@ -37,6 +37,7 @@
 #include <ms/MeasurementSets/MSUvDistGram.h>
 #include <ms/MeasurementSets/MSPolnGram.h>
 #include <ms/MeasurementSets/MSStateGram.h>
+#include <ms/MeasurementSets/MSObservationGram.h>
 #include <ms/MeasurementSets/MSRange.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/RecordGram.h>
@@ -61,26 +62,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   MSSelection::MSSelection() : 
     fullTEN_p(),ms_p(NULL), antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
-    polnExpr_p(""), taqlExpr_p(""), stateExpr_p(""),exprOrder_p(MAX_EXPR, NO_EXPR),
-    antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
-    scanIDs_p(),arrayIDs_p(), ddIDs_p(), baselineIDs_p(),selectedTimesList_p(),
-    selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
-    selectedSetupMap_p(Vector<Vector<Int> >(0)),
-    maxScans_p(1000), maxArray_p(1000)
+    polnExpr_p(""), taqlExpr_p(""), stateExpr_p(""), observationExpr_p(""),
+    exprOrder_p(MAX_EXPR, NO_EXPR), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
+    spwIDs_p(), scanIDs_p(), arrayIDs_p(), ddIDs_p(), observationIDs_p(), baselineIDs_p(),
+    selectedTimesList_p(), selectedUVRange_p(),selectedUVUnits_p(),
+    selectedPolMap_p(Vector<Int>(0)), selectedSetupMap_p(Vector<Vector<Int> >(0)),
+    maxScans_p(1000), maxObs_p(1000), maxArray_p(1000)
   {
     clear();
-    // Default null constructor 
-    // Output to private data:
-    //    antennaExpr_p             String   Antenna STaQL expression
-    //    polnExpr_p                String   Polarization STaQL expression
-    //    fieldExpr_p               String   Field STaQL expression
-    //    spwExpr_p                 String   SPW STaQL expression
-    //    scanExpr_p                String   Scan STaQL expression
-    //    arrayExpr_p               String   Array_ID STaQL expression
-    //    timeExpr_p                String   Time STaQL expression
-    //    uvDistExpr_p              String   UV Distribution STaQL expression
-    //    taqlExpr_p                String   TaQL expression
-    //
   }
   
   //----------------------------------------------------------------------------
@@ -96,15 +85,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   const String& polnExpr,
 			   const String& scanExpr,
 			   const String& arrayExpr,
-			   const String& stateExpr):
+			   const String& stateExpr,
+			   const String& observationExpr):
     fullTEN_p(), ms_p(&ms), antennaExpr_p(""), fieldExpr_p(""),
     spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
-    polnExpr_p(""),taqlExpr_p(""), stateExpr_p(""),exprOrder_p(MAX_EXPR, NO_EXPR),
-    antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(), 
-    scanIDs_p(),ddIDs_p(),baselineIDs_p(), selectedTimesList_p(),
+    polnExpr_p(""),taqlExpr_p(""), stateExpr_p(""), observationExpr_p(""),
+    exprOrder_p(MAX_EXPR, NO_EXPR), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
+    spwIDs_p(), scanIDs_p(),ddIDs_p(),baselineIDs_p(), selectedTimesList_p(),
     selectedUVRange_p(),selectedUVUnits_p(),selectedPolMap_p(Vector<Int>(0)),
     selectedSetupMap_p(Vector<Vector<Int> >(0)),
-    maxScans_p(1000), maxArray_p(1000)
+    maxScans_p(1000), maxObs_p(1000), maxArray_p(1000)
   {
     //
     // Do not initialize the private string variables directly. Instead
@@ -121,7 +111,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  polnExpr,
 	  scanExpr,
 	  arrayExpr,
-	  stateExpr);
+	  stateExpr,
+	  observationExpr);
   }
   
   
@@ -138,7 +129,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const String& polnExpr,
 			  const String& scanExpr,
 			  const String& arrayExpr,
-			  const String& stateExpr)
+			  const String& stateExpr,
+			  const String& observationExpr)
   {
     //
     // Do not initialize the private string variables directly. Instead
@@ -158,6 +150,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     setPolnExpr(polnExpr);
     setTaQLExpr(taqlExpr);
     setStateExpr(stateExpr);
+    setObservationExpr(observationExpr);
 
     if (mode==PARSE_NOW)
       fullTEN_p = toTableExprNode(ms_p);
@@ -174,10 +167,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
   
   MSSelection::MSSelection(const Record& selectionItem) : 
-    antennaExpr_p(""), fieldExpr_p(""),
-    spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), timeExpr_p(""), uvDistExpr_p(""),
-    polnExpr_p(""),taqlExpr_p(""),stateExpr_p(""),antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), 
-    spwIDs_p(),ddIDs_p(),baselineIDs_p(), selectedPolMap_p(Vector<Int>(0)),
+    antennaExpr_p(""), fieldExpr_p(""), spwExpr_p(""), scanExpr_p(""), arrayExpr_p(""), 
+    timeExpr_p(""), uvDistExpr_p(""), polnExpr_p(""),taqlExpr_p(""),stateExpr_p(""), 
+    observationExpr_p(""), antenna1IDs_p(), antenna2IDs_p(), fieldIDs_p(), spwIDs_p(),
+    ddIDs_p(),baselineIDs_p(), selectedPolMap_p(Vector<Int>(0)), 
     selectedSetupMap_p(Vector<Vector<Int> >(0))
     
   {
@@ -191,6 +184,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    arrayExpr_p               String   Array_ID STaQL expression
     //    timeExpr_p                String   Time STaQL expression
     //    uvDistExpr_p              String   UV Distribution STaQL expression
+    //    observation_p             String   Observation ID STaQL expression
     //    taqlExpr_p                String   TaQL expression
     //
     // Extract fields from the selection item record
@@ -214,6 +208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       this->fieldExpr_p   = other.fieldExpr_p;
       this->spwExpr_p     = other.spwExpr_p;
       this->scanExpr_p    = other.scanExpr_p;
+      this->observationExpr_p    = other.observationExpr_p;
       this->arrayExpr_p   = other.arrayExpr_p;
       this->timeExpr_p    = other.timeExpr_p;
       this->uvDistExpr_p  = other.uvDistExpr_p;
@@ -238,6 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       this->fieldExpr_p   = other.fieldExpr_p;
       this->spwExpr_p     = other.spwExpr_p;
       this->scanExpr_p    = other.scanExpr_p;
+      this->observationExpr_p    = other.observationExpr_p;
       this->arrayExpr_p   = other.arrayExpr_p;
       this->timeExpr_p    = other.timeExpr_p;
       this->uvDistExpr_p  = other.uvDistExpr_p;
@@ -361,6 +357,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      if(scanExpr_p != "" && 
 		 msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p) == 0)
 		node = *(msScanGramParseNode());
+	      break;
+	    }
+	  case OBSERVATION_EXPR:
+	    {
+	      observationIDs_p.resize(0);
+	      if(observationExpr_p != "")
+		node = msObservationGramParseCommand(ms, observationExpr_p, 
+						     observationIDs_p, maxObs_p);
 	      break;
 	    }
 	  case ARRAY_EXPR:
@@ -498,6 +502,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	taqlExpr_p    = "";
 	polnExpr_p    = "";
 	stateExpr_p    = "";
+	observationExpr_p    = "";
 	exprOrder_p = Vector<Int>(MAX_EXPR, NO_EXPR);
       }
     else
@@ -518,6 +523,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		case TAQL_EXPR:    taqlExpr_p    = "";break;
 		case POLN_EXPR:    polnExpr_p    = "";break;
 		case STATE_EXPR:   stateExpr_p   = "";break;
+		case OBSERVATION_EXPR:    observationExpr_p    = "";break;
 		default:;
 		};
 	    }
@@ -539,7 +545,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    break;
 	  }
       }
-    
     return ret;
   }
   
@@ -636,6 +641,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(setOrder(SCAN_EXPR))
       {
 	scanExpr_p = scanExpr;
+	resetTEN();
+	return True;
+      }
+    
+    return False;
+  }
+
+  //----------------------------------------------------------------------------
+  
+  Bool MSSelection::setObservationExpr(const String& observationExpr)
+  {
+    // Set the scan
+    // Input:
+    //    scanExpr          const String&  Supplementary scan expression
+    // Output to private data:
+    //    scanExpr_p        String         Supplementary scan expression
+    //
+    if(setOrder(OBSERVATION_EXPR))
+      {
+	observationExpr_p = observationExpr;
 	resetTEN();
 	return True;
       }
@@ -889,6 +914,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if (definedAndSet(selectionItem,"scan")) {
       setScanExpr(selectionItem.asString("scan"));
       //    cout << scanExpr_p << ", scan" << endl;
+    }
+    
+    // Observation expression
+    if (definedAndSet(selectionItem,"obsrevation")) {
+      setObservationExpr(selectionItem.asString("observation"));
     }
     
     // Array expression

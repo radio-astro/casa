@@ -1,4 +1,4 @@
-//# MSParse.h: Classes to hold results from an ms grammar parser
+//# MSObservationParse.h: Classes to hold results from scan grammar parser
 //# Copyright (C) 1994,1995,1997,1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -23,27 +23,21 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: MSParse.h 20266 2008-02-26 00:43:05Z gervandiepen $
+//# $Id: MSObservationParse.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
-#ifndef MS_MSPARSE_H
-#define MS_MSPARSE_H
+#ifndef MS_MSOBSERVATIONPARSE_H
+#define MS_MSOBSERVATIONPARSE_H
 
 //# Includes
-#include <casa/aips.h>
-#include <tables/Tables/ExprNode.h>
-#include <tables/Tables/ExprNodeSet.h>
-
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <casa/BasicSL/String.h>
+#include <ms/MeasurementSets/MSParse.h>
+#include <measures/Measures/MEpoch.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-class AipsIO;
-
 
 // <summary>
-// Class to hold values from an ms grammar parser
+// Class to hold values from scan grammar parser
 // </summary>
 
 // <use visibility=local>
@@ -56,24 +50,24 @@ class AipsIO;
 // </prerequisite>
 
 // <etymology>
-// MSParse is the class used to parse an ms command.
+// MSObservationParse is the class used to parse a scan command.
 // </etymology>
 
 // <synopsis>
-// MSParse is used by the parser of an ms sub-expression statements.
-// The parser is written in Bison and Flex in files MSXXXGram.y and .l.
+// MSObservationParse is used by the parser of scan sub-expression statements.
+// The parser is written in Bison and Flex in files MSObservationGram.y and .l.
 // The statements in there use the routines in this file to act
 // upon a reduced rule.
 // Since multiple tables can be given (with a shorthand), the table
 // names are stored in a list. The variable names can be qualified
 // by the table name and will be looked up in the appropriate table.
 //
-// The class MSParse only contains information about an ms
-// used in the ms command. Global variables (like a list and a vector)
-// are used in MSParse.cc to hold further information.
+// The class MSObservationParse only contains information about a table
+// used in the table command. Global variables (like a list and a vector)
+// are used in MSObservationParse.cc to hold further information.
 //
 // Global functions are used to operate on the information.
-// The main function is the global function msXXXCommand.
+// The main function is the global function msScanCommand.
 // It executes the given STaQL command and returns the resulting ms.
 // This is, in fact, the only function to be used by a user.
 // </synopsis>
@@ -89,42 +83,44 @@ class AipsIO;
 //# </todo>
 
 
-class MSParse
+class MSObservationParse : public MSParse
 {
-// Dummy AipsIO routines; they are needed for the List container.
-// <group>
-friend AipsIO& operator<< (AipsIO&, const MSParse&);
-friend AipsIO& operator>> (AipsIO&, MSParse&);
-// </group>
 
 public:
-    // Default constructor for List container class.
-    MSParse ();
+  // Default constructor
+  MSObservationParse ();
+  
+  // Associate the ms and the shorthand.
+  MSObservationParse (const MeasurementSet* ms);
+  //  ~MSObservationParse() {if (node_p) delete node_p;node_p=0x0;};
+  const TableExprNode *selectRangeGTAndLT(const Int& n0, const Int& n1);
+  const TableExprNode *selectRangeGEAndLE(const Int& n0, const Int& n1);
+  const TableExprNode *selectObservationIds(const Vector<Int>& scanids);
+  inline const TableExprNode *selectObservationIds() {return selectObservationIds(parsedIDList_p);};
+  const TableExprNode *selectObservationIdsGT(const Vector<Int>& scanids);
+  const TableExprNode *selectObservationIdsLT(const Vector<Int>& scanids);
+  const TableExprNode *selectObservationIdsGTEQ(const Vector<Int>& scanids);
+  const TableExprNode *selectObservationIdsLTEQ(const Vector<Int>& scanids);
+  std::vector<Int>& accumulateIDs(const Int id0, const Int id1=-1);
 
-    // Copy constructor (copy semantics).
-    MSParse (const MSParse&);
+    // Get table expression node object.
+  const TableExprNode node();
 
-    // Assignment (copy semantics).
-    MSParse& operator= (const MSParse&);
+  Vector<Int> selectedIDs() {return idList;};
+  void reset(){idList.resize(0);parsedIDList_p.resize(0);};
+  void cleanup() {};
 
-    // Associate the ms and the shorthand.
-    MSParse (const MeasurementSet* ms, const String& shorthand);
+  void setMaxObs(const Int& n) {maxObs_p=n;};
 
-    // Test if shorthand matches.
-    Bool test (const String& shortHand) const;
-
-    // Get the shorthand.
-    String& shorthand();
-
-    // Get ms object.
-    MeasurementSet* ms();
-
-  void setMS(MeasurementSet* ms) {ms_p=ms;};
-  static MeasurementSet *ms_p;
-  void addCondition(TableExprNode& target, TableExprNode& source);
+  static MSObservationParse* thisMSObsParser;
 
 private:
-    String shorthand_p;
+  TableExprNode node_p;
+  Vector<Int> idList;
+  std::vector<Int> parsedIDList_p;
+  const String colName;
+  void appendToIDList(const Vector<Int>& v);
+  Int maxObs_p;
 };
 
 } //# NAMESPACE CASA - END

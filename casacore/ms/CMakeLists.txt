@@ -8,6 +8,7 @@ MSAntennaGram
 MSArrayGram
 MSCorrGram
 MSFieldGram
+MSObservationGram
 MSScanGram
 MSSpwGram
 MSTimeGram
@@ -45,6 +46,7 @@ MeasurementSets/MSDataDescIndex.cc
 MeasurementSets/MSPolColumns.cc
 MeasurementSets/MSSysCal.cc
 MeasurementSets/MSAntennaGram.cc
+MeasurementSets/MSObservationGram.cc
 MeasurementSets/MSScanGram.cc
 MeasurementSets/MSState.cc
 MeasurementSets/MSReader.cc
@@ -56,6 +58,7 @@ MeasurementSets/MSPointingColumns.cc
 MeasurementSets/MSSummary.cc
 MeasurementSets/MSSysCalIndex.cc
 MeasurementSets/MSAntenna.cc
+MeasurementSets/MSObservationParse.cc
 MeasurementSets/MSScanParse.cc
 MeasurementSets/MSSpWindowIndex.cc
 MeasurementSets/MSCorrGram.cc
@@ -137,6 +140,8 @@ ${BISON_MSFieldGram_OUTPUTS}
 ${FLEX_MSFieldGram_OUTPUTS}
 ${BISON_MSScanGram_OUTPUTS}
 ${FLEX_MSScanGram_OUTPUTS}
+${BISON_MSObservationGram_OUTPUTS}
+${FLEX_MSObservationGram_OUTPUTS}
 ${BISON_MSSpwGram_OUTPUTS}
 ${FLEX_MSSpwGram_OUTPUTS}
 ${BISON_MSTimeGram_OUTPUTS}
@@ -228,6 +233,8 @@ MeasurementSets/MSProcessorColumns.h
 MeasurementSets/MSProcessorEnums.h
 MeasurementSets/MSRange.h
 MeasurementSets/MSReader.h
+MeasurementSets/MSObservationGram.h
+MeasurementSets/MSObservationParse.h
 MeasurementSets/MSScanGram.h
 MeasurementSets/MSScanParse.h
 MeasurementSets/MSSelUtil.h
