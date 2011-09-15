@@ -234,9 +234,18 @@ String QtViewerBase::fileType(const String pathname) {
   if(isRestoreFile(pathname, restoredoc)) return "Restore File";
    
   QString pathName = pathname.chars();
-  
   QFileInfo fileInfo(pathName);
-    
+
+
+  if (!fileInfo.isFile() && !fileInfo.isDir()){
+	  // try to cut any possible FITS extension specified
+	  // as part of the input
+	  if (!(int)pathname.compare(pathname.length()-1, 1, "]", 1) && (int)pathname.rfind("[", pathname.length()) > -1){
+		  pathName = String(pathname, 0, pathname.rfind("[", pathname.length())).chars();
+		  fileInfo = QFileInfo(pathName);
+	  }
+  }
+
   if (fileInfo.isFile()) {
     QFile file(pathName);
     if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {

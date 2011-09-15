@@ -7,10 +7,9 @@ def importvla(archivefiles,vis,
 	      starttime,stoptime,
 	      applytsys,
 	      autocorr,antnamescheme,keepblanks,evlabands):
-
-	#Python script
 	i=0
 	overwrite=True
+        ok = True
 	try:
 		casalog.origin('importvla')
 		if ((type(vis)!=str) | (vis=='') | (os.path.exists(vis))): 
@@ -28,32 +27,33 @@ def importvla(archivefiles,vis,
 					  antnamescheme=antnamescheme,
 					  keepblanks=keepblanks,
 					  evlabands=evlabands)
-				i=i+1
+				i += 1
 			else:
 				raise Exception, 'Archive file not found - please verify the name'
-
-	        #write history
-                if ((type(vis)==str) & (os.path.exists(vis))):
-                        ms.open(vis,nomodify=False)
-                	ms.writehistory(message='taskname = importvla',origin='imporvla')
-                	ms.writehistory(message='archivefiles= '+str(archivefiles),origin='imporvla')
-                	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='imporvla')
-                	ms.writehistory(message='bandname    = "'+str(bandname)+'"',origin='imporvla')
-                	ms.writehistory(message='frequencytol= '+str(frequencytol),origin='imporvla')
-                	ms.writehistory(message='applytsys= '+str(applytsys),origin='imporvla')
-                	ms.writehistory(message='keepblanks= '+str(keepblanks),origin='imporvla')
-                	ms.close()
-
-                else:
-                        raise Exception, 'Visibility data set not found - please verify the name'
-
-                # write initial flag version
-                ok=fg.open(vis);
-                ok=fg.saveflagversion('Original',comment='Original flags at import into CASA',merge='replace')
-                ok=fg.done();
-
-
-	except Exception, instance:
-		print '*** Error ***',instance
+        except Exception, instance:
+		print '*** Error importing %s to %s:' % (archivefiles, vis)
 		raise Exception, instance
+
+        # Write history
+        try:
+                param_names = importvla.func_code.co_varnames[:importvla.func_code.co_argcount]
+                param_vals = [eval(p) for p in param_names]
+                ok &= write_history(mstool.create(), vis, 'importvla', param_names,
+                                    param_vals, casalog)
+        except Exception, instance:
+                casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                             'WARN')
+
+        # write initial flag version
+        try:
+                myfg = fgtool.create()
+                ok &= myfg.open(vis);
+                ok &= myfg.saveflagversion('Original',
+                                           comment='Original flags at import into CASA',
+                                           merge='replace')
+                ok &= myfg.done();
+        except Exception, instance:
+		print '*** Error writing initial flag version of %s:' % vis
+		raise Exception, instance
+
 

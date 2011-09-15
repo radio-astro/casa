@@ -149,27 +149,27 @@ Record WCAxisLabeller::getOptions() const
   
   Record axislabelswitch;
   axislabelswitch.define("dlformat", "axislabelswitch");
-  axislabelswitch.define("listname", "Axis labelling & annotation?");
+  axislabelswitch.define("listname", "axis labelling & annotation?");
   axislabelswitch.define("ptype", "boolean");
   axislabelswitch.define("default", itsDefaultSwitch);
   axislabelswitch.define("value", itsOptionsAxisLabelSwitch);
   axislabelswitch.define("allowunset", False);
-  axislabelswitch.define("context", "Axis_labels");
+  axislabelswitch.define("context", "axis_labels");
   rec.defineRecord("axislabelswitch", axislabelswitch);
 
   Record titletext;
   titletext.define("dlformat", "titletext");
-  titletext.define("listname", "Title");
+  titletext.define("listname", "title");
   titletext.define("ptype", "string");
   titletext.define("default", String(""));
   titletext.define("value", itsOptionsTitleText);
   titletext.define("allowunset", False);
-  titletext.define("context", "Axis_labels");
+  titletext.define("context", "axis_labels");
   rec.defineRecord("titletext", titletext);
 
   Record titletextcolor;
   titletextcolor.define("dlformat", "titletextcolor");
-  titletextcolor.define("listname", "Title color");
+  titletextcolor.define("listname", "title color");
   titletextcolor.define("ptype", "userchoice");
   Vector<String> vcolor(11);
   vcolor(0) = "foreground"; vcolor(1) = "background";
@@ -182,12 +182,12 @@ Record WCAxisLabeller::getOptions() const
   titletextcolor.define("default", "foreground");
   titletextcolor.define("value", itsOptionsTitleTextColor);
   titletextcolor.define("allowunset", False);
-  titletextcolor.define("context", "Axis_label_properties");
+  titletextcolor.define("context", "axis_label_properties");
   rec.defineRecord("titletextcolor", titletextcolor);
 
   Record xaxistext;
   xaxistext.define("dlformat", "xaxistext");
-  xaxistext.define("listname", "X axis label");
+  xaxistext.define("listname", "x axis label");
   xaxistext.define("ptype", "string");
   //xaxistext.define("default", String("X axis"));
   //Record unset;
@@ -199,23 +199,23 @@ Record WCAxisLabeller::getOptions() const
     xaxistext.define("value", itsOptionsXAxisText);
   }
   xaxistext.define("allowunset", True);
-  xaxistext.define("context", "Axis_labels");
+  xaxistext.define("context", "axis_labels");
   rec.defineRecord("xaxistext", xaxistext);
 
   Record xaxistextcolor;
   xaxistextcolor.define("dlformat", "xaxistextcolor");
-  xaxistextcolor.define("listname", "X axis label color");
+  xaxistextcolor.define("listname", "x axis label color");
   xaxistextcolor.define("ptype", "userchoice");
   xaxistextcolor.define("popt", vcolor);
   xaxistextcolor.define("default", "foreground");
   xaxistextcolor.define("value", itsOptionsXAxisTextColor);
   xaxistextcolor.define("allowunset", False);
-  xaxistextcolor.define("context", "Axis_label_properties");
+  xaxistextcolor.define("context", "axis_label_properties");
   rec.defineRecord("xaxistextcolor", xaxistextcolor);
 
   Record yaxistext;
   yaxistext.define("dlformat", "yaxistext");
-  yaxistext.define("listname", "Y axis label");
+  yaxistext.define("listname", "y axis label");
   yaxistext.define("ptype", "string");
   //yaxistext.define("default", String("Y axis"));
   yaxistext.defineRecord("default", unset());
@@ -225,23 +225,23 @@ Record WCAxisLabeller::getOptions() const
     yaxistext.define("value", itsOptionsYAxisText);
   }
   yaxistext.define("allowunset", True);
-  yaxistext.define("context", "Axis_labels");
+  yaxistext.define("context", "axis_labels");
   rec.defineRecord("yaxistext", yaxistext);
   
   Record yaxistextcolor;
   yaxistextcolor.define("dlformat", "yaxistextcolor");
-  yaxistextcolor.define("listname", "Y axis label color");
+  yaxistextcolor.define("listname", "y axis label color");
   yaxistextcolor.define("ptype", "userchoice");
   yaxistextcolor.define("popt", vcolor);
   yaxistextcolor.define("default", "foreground");
   yaxistextcolor.define("value", itsOptionsYAxisTextColor);
   yaxistextcolor.define("allowunset", False);
-  yaxistextcolor.define("context", "Axis_label_properties");
+  yaxistextcolor.define("context", "axis_label_properties");
   rec.defineRecord("yaxistextcolor", yaxistextcolor);
 
   Record xgridtype;
   xgridtype.define("dlformat", "xgridtype");
-  xgridtype.define("listname", "X grid type");
+  xgridtype.define("listname", "x grid type");
   xgridtype.define("ptype", "choice");
   Vector<String> vgridtype(3);
   vgridtype(0) = "None"; vgridtype(1) = "Tick marks";
@@ -250,45 +250,45 @@ Record WCAxisLabeller::getOptions() const
   xgridtype.define("default", "Tick marks");
   xgridtype.define("value", itsOptionsXGridType);
   xgridtype.define("allowunset", False);
-  xgridtype.define("context", "Axis_labels");
+  xgridtype.define("context", "axis_labels");
   rec.defineRecord("xgridtype", xgridtype);
 
   Record xgridcolor;
   xgridcolor.define("dlformat", "xgridcolor");
-  xgridcolor.define("listname", "X grid/tick color");
+  xgridcolor.define("listname", "x grid/tick color");
   xgridcolor.define("ptype", "userchoice");
   xgridcolor.define("popt", vcolor);
   xgridcolor.define("default", "foreground");
   xgridcolor.define("value", itsOptionsXGridColor);
   xgridcolor.define("allowunset", False);
-  xgridcolor.define("context", "Axis_label_properties");
+  xgridcolor.define("context", "axis_label_properties");
   rec.defineRecord("xgridcolor", xgridcolor);
 
   Record ygridtype;
   ygridtype.define("dlformat", "ygridtype");
-  ygridtype.define("listname", "Y grid type");
+  ygridtype.define("listname", "y grid type");
   ygridtype.define("ptype", "choice");
   ygridtype.define("popt", vgridtype);
   ygridtype.define("default", "Tick marks");
   ygridtype.define("value", itsOptionsYGridType);
   ygridtype.define("allowunset", False);
-  ygridtype.define("context", "Axis_labels");
+  ygridtype.define("context", "axis_labels");
   rec.defineRecord("ygridtype", ygridtype);
 
   Record ygridcolor;
   ygridcolor.define("dlformat", "ygridcolor");
-  ygridcolor.define("listname", "Y grid/tick color");
+  ygridcolor.define("listname", "y grid/tick color");
   ygridcolor.define("ptype", "userchoice");
   ygridcolor.define("popt", vcolor);
   ygridcolor.define("default", "foreground");
   ygridcolor.define("value", itsOptionsYGridColor);
   ygridcolor.define("allowunset", False);
-  ygridcolor.define("context", "Axis_label_properties");
+  ygridcolor.define("context", "axis_label_properties");
   rec.defineRecord("ygridcolor", ygridcolor);
 
   Record ticklength;
   ticklength.define("dlformat", "ticklength");
-  ticklength.define("listname", "Tick mark length");
+  ticklength.define("listname", "tick mark length");
   ticklength.define("ptype", "floatrange");
   ticklength.define("pmin", Float(0.0));
   ticklength.define("pmax", Float(20.0));
@@ -296,33 +296,33 @@ Record WCAxisLabeller::getOptions() const
   ticklength.define("default", Float(4.0));
   ticklength.define("value", itsOptionsTickLength);
   ticklength.define("allowunset", False);
-  ticklength.define("context", "Axis_labels");
+  ticklength.define("context", "axis_labels");
   rec.defineRecord("ticklength", ticklength);
 
   Record plotoutline;
   plotoutline.define("dlformat", "plotoutline");
-  plotoutline.define("listname", "Plot border?");
+  plotoutline.define("listname", "plot border?");
   plotoutline.define("ptype", "boolean");
   plotoutline.define("default", Bool(True));
   plotoutline.define("value", itsOptionsPlotOutline);
   plotoutline.define("allowunset", False);
-  plotoutline.define("context", "Axis_labels");
+  plotoutline.define("context", "axis_labels");
   rec.defineRecord("plotoutline", plotoutline);
 
   Record plotoutlinecolor;
   plotoutlinecolor.define("dlformat", "plotoutlinecolor");
-  plotoutlinecolor.define("listname", "Plot border color");
+  plotoutlinecolor.define("listname", "plot border color");
   plotoutlinecolor.define("ptype", "userchoice");
   plotoutlinecolor.define("popt", vcolor);
   plotoutlinecolor.define("default", "foreground");
   plotoutlinecolor.define("value", itsOptionsPlotOutlineColor);
   plotoutlinecolor.define("allowunset", False);
-  plotoutlinecolor.define("context", "Axis_label_properties");
+  plotoutlinecolor.define("context", "axis_label_properties");
   rec.defineRecord("plotoutlinecolor", plotoutlinecolor);
 
   Record labelposition;
   labelposition.define("dlformat", "labelposition");
-  labelposition.define("listname", "Label position");
+  labelposition.define("listname", "label position");
   labelposition.define("ptype", "choice");
   Vector<String> lblencod(5);
   lblencod(0) = "Auto"; lblencod(1) = "bottom-left";
@@ -332,12 +332,12 @@ Record WCAxisLabeller::getOptions() const
   labelposition.define("default", "Auto");
   labelposition.define("value", itsOptionsLabelPos);
   labelposition.define("allowunset", False);
-  labelposition.define("context", "Axis_label_properties");
+  labelposition.define("context", "axis_label_properties");
   rec.defineRecord("labelposition", labelposition);
 
   Record labelcharsize;
   labelcharsize.define("dlformat", "labelcharsize");
-  labelcharsize.define("listname", "Character size");
+  labelcharsize.define("listname", "character size");
   labelcharsize.define("ptype", "floatrange");
   labelcharsize.define("pmin", Float(0.2));
   labelcharsize.define("pmax", Float(4.0));
@@ -345,12 +345,12 @@ Record WCAxisLabeller::getOptions() const
   labelcharsize.define("default", itsDefaultCharSize);
   labelcharsize.define("value", itsOptionsCharSize);
   labelcharsize.define("allowunset", False);
-  labelcharsize.define("context", "Axis_label_properties");
+  labelcharsize.define("context", "axis_label_properties");
   rec.defineRecord("labelcharsize", labelcharsize);
   
   Record labelcharfont;
   labelcharfont.define("dlformat", "labelcharfont");
-  labelcharfont.define("listname", "Character font");
+  labelcharfont.define("listname", "character font");
   labelcharfont.define("ptype", "choice");
   Vector<String> vlabelcharfont(4);
   vlabelcharfont(0) = "normal"; 
@@ -361,12 +361,12 @@ Record WCAxisLabeller::getOptions() const
   labelcharfont.define("default", String("normal"));
   labelcharfont.define("value", itsOptionsCharFont);
   labelcharfont.define("allowunset", False);
-  labelcharfont.define("context", "Axis_label_properties");
+  labelcharfont.define("context", "axis_label_properties");
   rec.defineRecord("labelcharfont", labelcharfont);
 
   Record labellinewidth;
   labellinewidth.define("dlformat", "labellinewidth");
-  labellinewidth.define("listname", "Line width");
+  labellinewidth.define("listname", "line width");
   labellinewidth.define("ptype", "floatrange");
   labellinewidth.define("pmin", Float(0.0));
   labellinewidth.define("pmax", Float(5.0));
@@ -374,7 +374,7 @@ Record WCAxisLabeller::getOptions() const
   labellinewidth.define("default", Float(0.5));
   labellinewidth.define("value", itsOptionsLineWidth);
   labellinewidth.define("allowunset", False);
-  labellinewidth.define("context", "Axis_label_properties");
+  labellinewidth.define("context", "axis_label_properties");
   rec.defineRecord("labellinewidth", labellinewidth);
 
   return rec;

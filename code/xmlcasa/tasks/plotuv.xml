@@ -30,13 +30,15 @@
 	<any type="variant" limittypes="string stringArray int intArray"/>
 	<value type="string"></value>
       </param>
-      <param type="string" name="observation">
+      <param type="any" name="observation">
 	<description>Select by observation ID(s)</description>
-	<value></value>
+	<any type="variant" limittypes="string int"/>
+	<value type="string"></value>
       </param>
-      <param type="string" name="array">
+      <param type="any" name="array">
 	<description>Select (sub)array(s) by array ID number</description>
-	<value></value>
+	<any type="variant" limittypes="string int"/>
+	<value type="string"></value>
       </param>
       <param type="int" name="maxnpts">
 	<description>Maximum number of points per plot.</description>

@@ -699,14 +699,15 @@ simulator::setvp(const bool dovp, const bool usedefaultvp,
 }
 
 bool
-simulator::corrupt()
+// simulator::corrupt()
+simulator::corrupt(const bool avoidauto)
 {
 
   Bool rstat(False);
   try {
     
     if(itsSim !=0){
-      rstat=itsSim->corrupt();
+      rstat=itsSim->corrupt(avoidauto);
     }
     
     
@@ -963,11 +964,12 @@ simulator::setnoise(const std::string& mode,
 		    // antenna parameters
 		    const double antefficiency, 
 		    const double spillefficiency, 
-		    const double correfficiency,	    
+		    const double correfficiency,    
 		    const double trx, 
 		    const double tground, 
 		    const double tcmb,
-		    const bool OTF
+		    const bool OTF,
+		    const double senscoeff
 		    ) {
   Bool rstat(False);
   try {
@@ -984,7 +986,7 @@ simulator::setnoise(const std::string& mode,
 			     qpress,relhum,qalt,qwaterht,qpwv,
 			     tatmos,tau,
 			     antefficiency, spillefficiency, correfficiency, 
-			     trx, tground, tcmb, OTF);
+			     trx, tground, tcmb, OTF, senscoeff);
     }    
  } catch  (AipsError x) {
    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

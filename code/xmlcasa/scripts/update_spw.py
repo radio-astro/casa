@@ -484,6 +484,7 @@ def expand_tilde(tstr, conv_multiranges=False):
     >>> expand_tilde('3~7^2;9~11', True)
     '*'
     """
+    tstr = str(tstr)  # Allows bare ints.
     if (not tstr) or (conv_multiranges and tstr.find(';') > -1):
         return '*'
 

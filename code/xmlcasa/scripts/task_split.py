@@ -165,7 +165,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                    scan=scan,          uvrange=uvrange,
                    combine=combine,
                    correlation=correlation, intent=intent,
-                   obs=observation)
+                   obs=str(observation))
         
         # The selection was already made, so blank them before time averaging.
         field = ''
@@ -198,7 +198,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              combine=combine,
              correlation=correlation,
              taql=taqlstr, intent=intent,
-               obs=observation)
+               obs=str(observation))
     myms.close()
 
     if do_both_chan_and_time_mod:

@@ -128,16 +128,16 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
       
       if(dataType_=="image") {
 
-    	// check for a FITS extension in the path name
-    	String tmp_path, ext_expr;
-    	if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
-    		// create a string with the file path name only
-    		tmp_path = String(path, 0, path.rfind("[", path.length()));
-    		ext_expr = String(path, path.rfind("[", path.length()), path.length());
-    	}
-    	else{
-    		// copy the path name
-    		tmp_path = path;
+      // check for a FITS extension in the path name
+      File fin(path);
+      String tmp_path, ext_expr;
+      tmp_path = path;
+    	if (!fin.exists() && !fin.isDirectory()){
+    		if (!(int)path.compare(path.length()-1, 1, "]", 1) && (int)path.rfind("[", path.length()) > -1){
+    			// create a string with the file path name only
+    			tmp_path = String(path, 0, path.rfind("[", path.length()));
+    			ext_expr = String(path, path.rfind("[", path.length()), path.length());
+    		}
     	}
 
     	// use the file path name for the opener
@@ -356,7 +356,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     setColormap_(initialCMName);
     
     
-    clrMapOpt_ = new DParameterChoice("colormap", "Colormap",
+    clrMapOpt_ = new DParameterChoice("colormap", "colormap",
                  "Name of the mapping from data values to color",
                  clrMapNames_, initialCMName, initialCMName, "");  }
 	// (For parsing user colormap selection via
@@ -379,36 +379,36 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
     String orientation = panel_->colorBarsVertical()? vertHor[0] : vertHor[1];
     
     colorBarDisplayOpt_ = new DParameterChoice("wedge",
-            "Display Color Wedge?",
+            "display color wedge?",
             "Whether to display a 'color bar' that indicates\n"
 	    "the current mapping of colors to data values.",
-            yesNo, yesNo[1], yesNo[1], "Color_Wedge");
+            yesNo, yesNo[1], yesNo[1], "color_wedge");
     
     colorBarThicknessOpt_ = new DParameterRange<Float>("wedgethickness",
-            "Wedge Thickness",
+            "wedge thickness",
             "Manual adjustment factor for thickness of colorbar.\n"
 	    "Vary this if automatic thickness choice is not satisfactory.",
-	    .3, 5.,  .1,  1., 1.,  "Color_Wedge");
+	    .3, 5.,  .1,  1., 1.,  "color_wedge");
     
     colorBarLabelSpaceOpt_ = new DParameterRange<Float>("wedgelabelspace",
-            "Wedge Label Space",
+            "wedge label space",
 	    "Manual adjustment factor for colorbar's label space.\n"
 	    "Vary this if automatic margin choice is not satisfactory.",
-	    .1, 2.,  .05,  1., 1.,  "Color_Wedge");
+	    .1, 2.,  .05,  1., 1.,  "color_wedge");
     
     colorBarOrientationOpt_ = new DParameterChoice("orientation",
-            "Wedge Orientation",
+            "wedge orientation",
             "Whether to display color bars vertically or horizontally.\n"
 	    "(Note: orientation will be the same for all color bars\n"
 	    "in all display panels).",
-            vertHor, orientation, orientation, "Color_Wedge");
+            vertHor, orientation, orientation, "color_wedge");
       
     // (This one is just used to monitor changes to the "wedgelabelcharsize"
     // parameter during setOptions().  getOptions() uses the values
     // from colorBar_ (the WedgeDD)).
     colorBarCharSizeOpt_ = new DParameterRange<Float>(
-            "wedgelabelcharsize", "Character size", "",
-	    0.2, 4.,  .05,  1.2, 1.2, "Color_Wedge");
+            "wedgelabelcharsize", "character size", "",
+	    0.2, 4.,  .05,  1.2, 1.2, "color_wedge");
     
     // Initialize colorBarCharSizeOpt_'s value from colorBar_.
     Record cbopts = colorBar_->getOptions();

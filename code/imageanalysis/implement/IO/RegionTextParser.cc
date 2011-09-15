@@ -51,13 +51,14 @@ const Regex RegionTextParser::startNPair("^" + sNPair);
 
 RegionTextParser::RegionTextParser(
 	const String& filename, const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Int requireAtLeastThisVersion
 ) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
-	_fileVersion(-1) {
+	_fileVersion(-1), _imShape(imShape) {
 	String preamble = String(__FUNCTION__) + ": ";
 	RegularFile file(filename);
 	if (! file.exists()) {
@@ -75,7 +76,7 @@ RegionTextParser::RegionTextParser(
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
 			preamble
-			+ "Coordinate system has not have a direction coordintate"
+			+ "Coordinate system does not have a direction coordintate"
 		);
 	}
 	_setInitialGlobals();
@@ -102,19 +103,20 @@ RegionTextParser::RegionTextParser(
 }
 
 RegionTextParser::RegionTextParser(
-	const CoordinateSystem& csys, const String& text
+	const CoordinateSystem& csys, const IPosition& imShape,
+	const String& text
 ) : _csys(csys),
 	_log(new LogIO()),
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
-	_fileVersion(-1) {
+	_fileVersion(-1), _imShape(imShape) {
 	String preamble = String(__FUNCTION__) + ": ";
 
 	if (! _csys.hasDirectionCoordinate()) {
 		throw AipsError(
 			preamble
-			+ "Coordinate system has not direction coordintate"
+			+ "Coordinate system has no direction coordintate"
 		);
 	}
 	_setInitialGlobals();
@@ -562,7 +564,7 @@ RegionTextParser::_getCurrentParamSet(
 				key = AnnotationBase::COORD;
 			}
 			else if (keyword == "corr") {
-				if (_csys.hasPolarizationAxis()) {
+				if (_csys.hasPolarizationCoordinate()) {
 					key = AnnotationBase::CORR;
 					paramValue.stokes = _stokesFromString(
 							paramValue.stringVal, preamble
@@ -759,7 +761,7 @@ void RegionTextParser::_createAnnotation(
 	Vector<Stokes::StokesTypes> stokes(0);
 	if (
 		currentParamSet.find(AnnotationBase::CORR) != currentParamSet.end()
-		&& _csys.hasPolarizationAxis()
+		&& _csys.hasPolarizationCoordinate()
 	) {
 		stokes.resize(currentParamSet.at(AnnotationBase::CORR).stokes.size());
 		stokes = currentParamSet.at(AnnotationBase::CORR).stokes;
@@ -785,7 +787,7 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::RECT_BOX:
 			annotation = new AnnRectBox(
 				qDirs[0], qDirs[1], qDirs[2], qDirs[3],
-				dirRefFrame, _csys, qFreqs[0], qFreqs[1],
+				dirRefFrame, _csys, _imShape, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq, stokes,
 				annOnly
 			);
@@ -793,7 +795,7 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::CENTER_BOX:
 			annotation = new AnnCenterBox(
 				qDirs[0], qDirs[1], quantities[0], quantities[1],
-				dirRefFrame, _csys, qFreqs[0], qFreqs[1],
+				dirRefFrame, _csys, _imShape, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq, stokes,
 				annOnly
 			);
@@ -801,7 +803,7 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::ROTATED_BOX:
 			annotation = new AnnRotBox(
 				qDirs[0], qDirs[1], quantities[0], quantities[1],
-				quantities[2], dirRefFrame, _csys, qFreqs[0], qFreqs[1],
+				quantities[2], dirRefFrame, _csys, _imShape, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
@@ -814,7 +816,7 @@ void RegionTextParser::_createAnnotation(
 					y[i] = qDirs[2*i + 1];
 				}
 				annotation = new AnnPolygon(
-					x, y, dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
+					x, y, dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
 					freqRefFrame, doppler, restfreq,  stokes, annOnly
 				);
 			}
@@ -822,21 +824,21 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::CIRCLE:
 			annotation = new AnnCircle(
 				qDirs[0], qDirs[1], quantities[0],
-				dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
+				dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
 		case AnnotationBase::ANNULUS:
 			annotation = new AnnAnnulus(
 				qDirs[0], qDirs[1], quantities[0], quantities[1],
-				dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
+				dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
 		case AnnotationBase::ELLIPSE:
 			annotation = new AnnEllipse(
 				qDirs[0], qDirs[1], quantities[0], quantities[1], quantities[2],
-				dirRefFrame,  _csys, qFreqs[0], qFreqs[1],
+				dirRefFrame,  _csys, _imShape, qFreqs[0], qFreqs[1],
 				freqRefFrame, doppler, restfreq,  stokes, annOnly
 			);
 			break;
@@ -870,6 +872,14 @@ void RegionTextParser::_createAnnotation(
 					+  String::toString(annType) + " in switch statement"
 			);
 	}
+	}
+	catch (WorldToPixelConversionError x) {
+		*_log << LogIO::WARN << preamble
+			<< "Error converting one or more world coordinates to pixel coordinates. "
+			<< "This could mean, among other things, that (part of) the region or "
+			<< "annotation lies far outside the "
+			<< "image. This region/annotation will be ignored" << LogIO::POST;
+		return;
 	}
 	catch (AipsError x) {
 		*_log << preamble << x.getMesg() << LogIO::EXCEPTION;

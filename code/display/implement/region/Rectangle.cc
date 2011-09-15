@@ -149,10 +149,13 @@ namespace casa {
 	    Quantity qtrc_x( wtrc_x, units[0] );
 	    Quantity qtrc_y( wtrc_y, units[1] );
 
+	    const DisplayData *dd = wc_->displaylist().front();
+
+
 	    Vector<Stokes::StokesTypes> stokes;
 	    Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
 
-	    AnnRectBox *box = new AnnRectBox( qblc_x, qblc_y, qtrc_x, qtrc_y, cs, stokes );
+	    AnnRectBox *box = new AnnRectBox( qblc_x, qblc_y, qtrc_x, qtrc_y, cs, dd->dataShape(), stokes );
 
 	    return box;
 	}

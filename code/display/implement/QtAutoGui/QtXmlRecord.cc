@@ -62,7 +62,7 @@ void QtXmlRecord::formatXml(QDomDocument &domDocument)
         QDomElement e = n.toElement();
         if(!e.isNull())
         {
-            QString attr = e.attribute("context", "Basic_Settings");
+            QString attr = e.attribute("context", "basic_settings");
             if (root.elementsByTagName(attr).count() == 0)
             {
                 root.appendChild(domDocument.createElement(attr));

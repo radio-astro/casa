@@ -1052,7 +1052,8 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float trx=150.0, 
 			 const Float tground=270.0, 
 			 const Float tcmb=2.73, 
-			 const Bool OTF=True
+			 const Bool OTF=True,
+			 const Float senscoeff=0.0
 			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
@@ -1082,6 +1083,7 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("trx"		  ,TpFloat);
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
+    simparDesc.addField ("senscoeff"      ,TpFloat);
 
     // user-override of ATM calculated tau
     simparDesc.addField ("tatmos"	  ,TpFloat);
@@ -1132,9 +1134,9 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("mode", "simple");
 
     } else if (mode=="tsys-atm" or mode=="tsys-manual") {
-      os << "adding noise with unity amplitude" << LogIO::POST;
       // do be scaled in a minute by a Tsys-derived M below
       simpar.define ("amplitude", Float(1.0) );
+//       os << "adding noise with unity amplitude" << LogIO::POST;
       simpar.define ("mode", mode);
 
     } else {
@@ -1159,6 +1161,14 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("trx"	      ,trx	      );
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
+
+      if ( senscoeff > 0.0 ) {
+	simpar.define ("senscoeff", Float(senscoeff) );
+	os << "adding noise with the sensitivity constant of " << senscoeff << LogIO::POST;
+      } else {
+	simpar.define("senscoeff", Float(1./ sqrt(2.)));
+	os << "adding noise with the sensitivity constant of 1/sqrt(2)" << LogIO::POST;
+      }
 
       if (pwv.getValue("mm")>0.) {
 	if (pwv.getValue("mm")>100.) 
@@ -1821,7 +1831,8 @@ Bool Simulator::setapply(const String& type,
 
 
 
-Bool Simulator::corrupt() {
+// Bool Simulator::corrupt() {
+Bool Simulator::corrupt(const Bool avoidauto=True) {
 
   // VIS-plane (only) corruption
   
@@ -1895,7 +1906,7 @@ Bool Simulator::corrupt() {
 	  for (vi.origin(); vi.more(); vi++) {
 
 	    // corrupt model to pivot, correct data up to pivot
-	    ve_p.collapseForSim(vb);	    
+	    ve_p.collapseForSim(vb, avoidauto);
 
 	    // Deposit corrupted visibilities into DATA
 	    // vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);

@@ -791,55 +791,55 @@ void MSAsRaster::constructParameters_() {
   visCompName_(AMPDIFF)="Amp Diff"; visCompName_(AMPRMS)="Amp RMS";
   visCompName_(PHDIFF)="Phase Diff"; visCompName_(PHRMS)="Phase RMS";
 
-  itsVisType = new DParameterChoice("vistype", "Visibility Type",
+  itsVisType = new DParameterChoice("vistype", "visibility type",
                "The visibility process stage you wish to view",
                visTypeName_, visTypeName_(visType_), visTypeName_(visType_),
-	       "MS_and_Visibility_Selection");
+	       "ms_and_visibility_selection");
 
-  itsVisComp = new DParameterChoice("viscomp", "Visibility Component",
+  itsVisComp = new DParameterChoice("viscomp", "visibility component",
                "Real portion of the visibilities to display as color",
                visCompName_, visCompName_(visComp_), visCompName_(visComp_),
-	       "MS_and_Visibility_Selection");
+	       "ms_and_visibility_selection");
 
-  itsNAvg  =  new DParameterRange<Int>("navg", "Average Size",
+  itsNAvg  =  new DParameterRange<Int>("navg", "average size",
               "Number of cube planes to include in the average",
-              1, msShape_[axisOn_(Z)], 1, nPAvg_, nPAvg_, "MS_and_Visibility_Selection",
+              1, msShape_[axisOn_(Z)], 1, nPAvg_, nPAvg_, "ms_and_visibility_selection",
               true, false, true );
 
 //   itsNAvg  =  new DParameterRange<Int>("navg", "RMS/Diff Moving Average Size",
 //               "The number of time slots in moving\n"
 //          "averages, for visibility difference\n"
 //          "or RMS displays",
-//               2, 15, 1, nDAvg_, nDAvg_, "MS_and_Visibility_Selection");
+//               2, 15, 1, nDAvg_, nDAvg_, "ms_and_visibility_selection");
 
-  itsXAxis =  new DParameterChoice("xaxis", "X Axis",
+  itsXAxis =  new DParameterChoice("xaxis", "x axis",
               "Axis to show horizontally in the display",
               axisName_, axisName_(axisOn_(X)), axisName_(axisOn_(X)),
-	      "Display_Axes");
-  itsYAxis =  new DParameterChoice("yaxis", "Y Axis", 
+	      "display_axes");
+  itsYAxis =  new DParameterChoice("yaxis", "y axis", 
               "Axis to show vertically in the display",
               axisName_, axisName_(axisOn_(Y)), axisName_(axisOn_(Y)),
-	      "Display_Axes");
-  itsZAxis =  new DParameterChoice("zaxis", "Animation Axis", 
+	      "display_axes");
+  itsZAxis =  new DParameterChoice("zaxis", "animation axis", 
               "Coordinate which varies during animation",
               axisName_, axisName_(axisOn_(Z)), axisName_(axisOn_(Z)),
-	      "Display_Axes");
+	      "display_axes");
 
   itsSL0Pos =  new DParameterRange<Int>("sl0pos", axisName_(axisOn_(SL0)),
                "Varies the position (frame number) on this axis",
                uiBase(), msShape_[axisOn_[SL0]]-1+uiBase(), 1,
-	       uiBase(), pos_[axisOn_[SL0]]+uiBase(),  "Display_Axes");
+	       uiBase(), pos_[axisOn_[SL0]]+uiBase(),  "display_axes");
   itsSL1Pos =  new DParameterRange<Int>("sl1pos", axisName_(axisOn_(SL1)),
                "Varies the position (frame number) on this axis",
                uiBase(), msShape_[axisOn_[SL1]]-1+uiBase(), 1,
-	       uiBase(), pos_[axisOn_[SL1]]+uiBase(),  "Display_Axes");
+	       uiBase(), pos_[axisOn_[SL1]]+uiBase(),  "display_axes");
 
   Vector<String> antLen(2); antLen[0]="Antenna"; antLen[1]="Baseline Length";
-  itsBslnSort = new DParameterChoice("antvslen", "Baseline Sort",
+  itsBslnSort = new DParameterChoice("antvslen", "baseline sort",
               "Sort baselines by Antenna1-Antenna2 or by (unprojected) "
 	      "baseline length?\n(You must save or discard pending edits "
 	      "before changing baseline order).",
-	      antLen, antLen[0], antLen[0],  "Display_Axes");
+	      antLen, antLen[0], antLen[0],  "display_axes");
   
 
   // Default maximum vis_ size: 30% of (physical memory-60mb)
@@ -853,17 +853,17 @@ void MSAsRaster::constructParameters_() {
   itsVisMb  =  new DParameterRange<Int>("vismb", visMbLabel_(),
                "Varies the maximum memory used to hold\n"
 	       "MS visibility data (in Megabytes).",
-               minMb, maxMb, 1, mb, mb, "Advanced");
+               minMb, maxMb, 1, mb, mb, "advanced");
 
 
   // These really belong with the Scale Handler; they would have
   // to be moved from LatticeAsRaster as well...
-  itsDataMin = new DParameterRange<Float>("datamin", "Data minimum", 
+  itsDataMin = new DParameterRange<Float>("datamin", "data minimum", 
                "Colors will be mapped between this value and Data max.",
                dataRngMin_, dataRngMax_, 0.001f, dataRngMin_, dataRngMin_,
 	       "", True, True);
 
-  itsDataMax = new DParameterRange<Float>("datamax", "Data maximum",
+  itsDataMax = new DParameterRange<Float>("datamax", "data maximum",
                "Colors will be mapped between this value and Data min.",
                dataRngMin_, dataRngMax_, 0.001f, dataRngMax_, dataRngMax_,
 	       "", True, True);
@@ -876,58 +876,58 @@ void MSAsRaster::constructParameters_() {
 		     "No" : "Yes";
   Vector<String> yesNo(2); yesNo[0]="No"; yesNo[1]="Yes";
   itsAxisLabelling = new DParameterChoice("axislabelling",
-	      "Draw and Label Axes?",
+	      "draw and label axes?",
               "Should axes, axis labels and/or titles be shown?",
-              yesNo, defaultval, defaultval, "Axis_Drawing_and_Labels");
+              yesNo, defaultval, defaultval, "axis_drawing_and_labels");
 
   Vector<String> maskClr(2); maskClr(0)="Masked to Background";
 			     maskClr(1)="In Color";
   Int initOpt = (flagsInClr_)? 1:0;
   itsFlagColor = new DParameterChoice("flagcolor",
-     "Show Flagged Regions...",
+     "show flagged regions...",
      "Show flags as background (slightly faster) or highlighted with color?",
-     maskClr, maskClr(initOpt), maskClr(initOpt), "Flagging_Options");
+     maskClr, maskClr(initOpt), maskClr(initOpt), "flagging_options");
 
   Vector<String> flgUnflg(2); flgUnflg(0)="Flag"; flgUnflg(1)="Unflag";
   itsUnflag = new DParameterChoice("unflg",
-     "Should new edits flag or unflag?",
+     "should new edits flag or unflag?",
      "This determines whether edits you make with the mouse, "
      "_after_ setting this, will flag or unflag.",
-     flgUnflg, flgUnflg(0), flgUnflg(0), "Flagging_Options");
+     flgUnflg, flgUnflg(0), flgUnflg(0), "flagging_options");
 
   itsEntireAnt = new DParameterChoice("entireant",
-	      "Flag/Unflag Entire Antenna?",
+	      "flag/unflag entire antenna?",
               "Should subsequent edits apply to all baselines "
 	      "which include the selected antenna[s]?",
-              yesNo, yesNo[0], yesNo[0], "Flagging_Options");
+              yesNo, yesNo[0], yesNo[0], "flagging_options");
 
   itsUndoOne = new DParameterButton("undoone",
-	"Undo Last Unsaved Edit (if any)", "Undo One",
+	"undo last unsaved edit (if any)", "Undo One",
 	"Undo the last unsaved Flag/Unflag edit (if any).  "
 	"Saved edits cannot be undone, except by making the "
-	"reverse edits manually.", "Flagging_Options");
+	"reverse edits manually.", "flagging_options");
 
   itsUndoAll = new DParameterButton("undoall",
-	"Undo All Unsaved Edits (if any)", "Undo All",
+	"undo all unsaved edits (if any)", "Undo All",
 	"Undo all unsaved Flag/Unflag edits (if any).  "
 	"Saved edits cannot be undone, except by making the "
-	"reverse edits manually.", "Flagging_Options");
+	"reverse edits manually.", "flagging_options");
 
   itsEditEntireMS = new DParameterChoice("entirems",
-	"Use Entire MS When Saving Edits?",
+	"use entire ms when saving edits?",
         "Should edits apply to the enitre MS when saved?\n"
 	"If \"Yes\", unselected fields within an edit's\n"
 	"time range will be edited; unselected spectral\n"
 	"windows will only be edited if \"Flag/Unflag All\"\n"
 	"is also checked for them.",
-        yesNo, yesNo[1], yesNo[1], "Flagging_Options");
+        yesNo, yesNo[1], yesNo[1], "flagging_options");
 
   itsSaveEdits = new DParameterButton("saveedits",
-	"Save Edits to Disk", "Save Edits",
+	"save edits to disk", "Save Edits",
 	"Save Flag/Unflag edits permanently to the MS.  "
 	"You must save your edits or they will be discarded.  "
 	"After saving, the only way to undo is to make the "
-	"reverse edits manually.", "Flagging_Options");  }
+	"reverse edits manually.", "flagging_options");  }
 
 
 //--------------------------------------------------------------------------
@@ -1121,7 +1121,7 @@ Record MSAsRaster::getOptions() {
 
   Record fieldids;
   fieldids.define("dlformat", "fieldids");
-  fieldids.define("listname", "Field IDs");
+  fieldids.define("listname", "field ids");
   fieldids.define("help", "Enter a set of (integer) field IDs,\n"
   		          "to select data only for those fields.\n"
 			  "Separate with spaces or commas.  Leave\n"
@@ -1133,14 +1133,14 @@ Record MSAsRaster::getOptions() {
   fieldids.define("default",allFieldIds);
   fieldids.define("value", Vector<Int>(fieldIds_+uiBase()));
   fieldids.define("allowunset", True);
-  fieldids.define("context", "MS_and_Visibility_Selection");
+  fieldids.define("context", "ms_and_visibility_selection");
   rec.defineRecord("fieldids", fieldids);
 
   // Spectral Window IDs entry box.
 
   Record spwids;
   spwids.define("dlformat", "spwids");
-  spwids.define("listname", "Spectral Windows");
+  spwids.define("listname", "spectral windows");
   spwids.define("help", "Enter a set of (integer) spectral\n"
   		        "window ID numbers, to select data only\n"
 			"for those spectral windows.  Separate\n"
@@ -1153,7 +1153,7 @@ Record MSAsRaster::getOptions() {
   spwids.define("default",allSpwIds);
   spwids.define("value", Vector<Int>(spwIds_+uiBase()));
   spwids.define("allowunset", True);
-  spwids.define("context", "MS_and_Visibility_Selection");
+  spwids.define("context", "ms_and_visibility_selection");
   rec.defineRecord("spwids", spwids);
 
 
@@ -1195,7 +1195,7 @@ Record MSAsRaster::getOptions() {
   		// (form plurals of axis names for this use).
   Record flgall;
   flgall.define("dlformat", "flgall");
-  flgall.define("listname", "Flag/Unflag All...");
+  flgall.define("listname", "flag/unflag all...");
   flgall.define("help", "Check these boxes to extend edits over\n"
   			"the entire range of the corresponding axes.\n"
 			"(These will apply (only) to edits made\n"
@@ -1217,7 +1217,7 @@ Record MSAsRaster::getOptions() {
   
   
   flgall.define("allowunset", False);
-  flgall.define("context", "Flagging_Options");
+  flgall.define("context", "flagging_options");
   rec.defineRecord("flgall", flgall);
 
   
@@ -4432,7 +4432,7 @@ String MSAsRaster::visMbLabel_() {
   mbVis = ceil(mbVis / 1024. / 1024.);
   ostringstream os;
   os << setprecision(6);
-  os << "Max. Visibility Memory (whole MS: "<<Int(mbVis)<< " MB)";
+  os << "max vis memory (whole ms: "<<Int(mbVis)<< " mb)";
   return String(os);  }
 
 
@@ -5114,7 +5114,7 @@ bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec, bool force ) {
 	navg.define("value",nDAvg_);
 	navg.define("pmin",2);
 	navg.define("pmax",15);
-	navg.define("listname","RMS/Diff Moving Average Size");
+	navg.define("listname","rms/diff moving average size");
 	navg.define("help",help);
 	outrec.defineRecord( "navg", navg );
 	return true;
@@ -5132,7 +5132,7 @@ bool MSAsRaster::adjustAvgRange( VisDev newstate, Record &outrec, bool force ) {
 	navg.define("pmin",1);
 	navg.define("pmax",zlen);
 	navg.define("help",help);
-	navg.define("listname","Average Size");
+	navg.define("listname","average size");
 	outrec.defineRecord( "navg", navg );
 	return true;
     }

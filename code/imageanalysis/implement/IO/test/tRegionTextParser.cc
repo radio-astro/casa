@@ -34,8 +34,19 @@
 int main() {
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+		Vector<Double> refVal = csys.referenceValue();
+		cout << refVal << endl;
+		Vector<String> units = csys.worldAxisUnits();
+		units[0] = units[1] = "rad";
+		csys.setWorldAxisUnits(units);
+		refVal[0] = 4.296556;
+		refVal[1] = 0.240673;
+		csys.setReferenceValue(refVal);
 		try {
-			RegionTextParser parser("x", csys, RegionTextParser::CURRENT_VERSION);
+			RegionTextParser parser(
+				"x", csys, IPosition(4, 2000, 2000, 4, 2000),
+				RegionTextParser::CURRENT_VERSION
+			);
 			AlwaysAssert(False, AipsError);
 		}
 		catch(AipsError x) {
@@ -47,7 +58,10 @@ int main() {
 		    + "/data/regression/unittest/imageanalysis/IO/goodAsciiAnnotationsFile.txt";
 		delete [] parts;
 
-		RegionTextParser parser(goodFile, csys, RegionTextParser::CURRENT_VERSION);
+		RegionTextParser parser(
+			goodFile, csys, IPosition(4, 2000, 2000, 4, 2000),
+			RegionTextParser::CURRENT_VERSION
+		);
 		cout << parser.getLines() << endl;
 
     }

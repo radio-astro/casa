@@ -36,6 +36,7 @@
 int main () {
 	try {
 		LogIO log;
+		IPosition shape(4, 400, 400, 1, 5500);
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
 		{
@@ -66,7 +67,7 @@ int main () {
 			try {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -105,7 +106,7 @@ int main () {
 			try {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -145,7 +146,7 @@ int main () {
 			try {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -184,7 +185,7 @@ int main () {
 			try {
 				AnnEllipse ellipse(
 					centerx, centery, ma, mi, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -223,7 +224,7 @@ int main () {
 
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -291,7 +292,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			MDirection center = ellipse.getCenter();
@@ -362,7 +363,7 @@ int main () {
 
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -409,7 +410,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -451,7 +452,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -495,7 +496,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -539,7 +540,7 @@ int main () {
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -579,7 +580,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << ellipse << endl;
@@ -621,7 +622,7 @@ int main () {
 
 			AnnEllipse ellipse(
 				centerx, centery, ma, mi, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 

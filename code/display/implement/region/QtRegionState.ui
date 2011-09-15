@@ -136,7 +136,7 @@
       <item>
        <widget class="QTabWidget" name="states">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="coordinateTab">
          <attribute name="title">
@@ -146,7 +146,7 @@
           <property name="geometry">
            <rect>
             <x>3</x>
-            <y>-6</y>
+            <y>-2</y>
             <width>180</width>
             <height>50</height>
            </rect>
@@ -208,7 +208,7 @@
           <property name="geometry">
            <rect>
             <x>195</x>
-            <y>-7</y>
+            <y>-3</y>
             <width>180</width>
             <height>50</height>
            </rect>
@@ -260,7 +260,7 @@
           <property name="geometry">
            <rect>
             <x>5</x>
-            <y>36</y>
+            <y>43</y>
             <width>121</width>
             <height>41</height>
            </rect>
@@ -286,7 +286,7 @@
           <property name="geometry">
            <rect>
             <x>130</x>
-            <y>36</y>
+            <y>43</y>
             <width>121</width>
             <height>41</height>
            </rect>
@@ -312,7 +312,7 @@
           <property name="geometry">
            <rect>
             <x>260</x>
-            <y>36</y>
+            <y>43</y>
             <width>131</width>
             <height>41</height>
            </rect>
@@ -356,7 +356,7 @@
           <property name="geometry">
            <rect>
             <x>357</x>
-            <y>83</y>
+            <y>90</y>
             <width>81</width>
             <height>31</height>
            </rect>
@@ -369,7 +369,7 @@
           <property name="geometry">
            <rect>
             <x>275</x>
-            <y>83</y>
+            <y>90</y>
             <width>81</width>
             <height>31</height>
            </rect>
@@ -876,7 +876,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>-5</y>
+         <y>0</y>
          <width>441</width>
          <height>51</height>
         </rect>
@@ -915,7 +915,7 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>39</y>
+         <y>50</y>
          <width>171</width>
          <height>51</height>
         </rect>
@@ -945,8 +945,8 @@
       <widget class="QPushButton" name="save_now">
        <property name="geometry">
         <rect>
-         <x>313</x>
-         <y>114</y>
+         <x>327</x>
+         <y>120</y>
          <width>114</width>
          <height>31</height>
         </rect>
@@ -962,7 +962,7 @@
        <property name="geometry">
         <rect>
          <x>190</x>
-         <y>39</y>
+         <y>50</y>
          <width>151</width>
          <height>81</height>
         </rect>

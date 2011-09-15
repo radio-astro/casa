@@ -109,6 +109,7 @@ protected:
 		const Type shape,
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Quantity& beginFreq,
 		const Quantity& endFreq,
 		const String& freqRefFrame,
@@ -126,6 +127,7 @@ protected:
 	AnnRegion(
 		const Type shape,
 		const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 
@@ -165,6 +167,7 @@ private:
 	MFrequency::Types _freqRefFrame;
 	MDoppler::Types _dopplerType;
 	Bool _isDifference, _constructing;
+	IPosition _imShape;
 	static const String _class;
 
 	WCBox _makeExtensionBox(

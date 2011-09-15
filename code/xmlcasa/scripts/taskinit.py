@@ -98,14 +98,12 @@ def gentools(tools=None):
 		 'cl': 'cltool.create()', 'cs' :'coordsystool.create()', 'rg':'rgtool.create()',
 		 'sl':'sltool.create()', 'dc':'dctool.create()', 'vp':'vptool.create()'}
 	reqtools=[]
-	retval=[]
-	if((tools==None) or (len(tools)==0) or (type(tools) != list)):
-		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po', 'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp']
+        if (not tools) or not hasattr(tools, '__iter__'):
+		reqtools=['im', 'cb', 'ms','tb', 'fg', 'me', 'ia', 'po',
+                          'sm', 'cl', 'cs', 'rg','sl', 'dc', 'vp']
 	else:
 		reqtools=tools
-	for k in range(len(reqtools)):
-		retval.append(eval(tooldic[reqtools[k]]))
-	return tuple(retval)
+	return tuple([eval(tooldic[reqtool]) for reqtool in reqtools])
 
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 

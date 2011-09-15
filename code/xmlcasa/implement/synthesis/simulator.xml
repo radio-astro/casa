@@ -1123,15 +1123,27 @@ sm.setvp(dovp=T, usedefaultvp=F, vptable='MyAlternateVLAPBModel.TAB', dosquint=F
    
 <description>
 Add errors specified by the {\tt set} functions (such as noise, 
-gains, polarization leakage, bandpass, etc) to the synthesis data.
+gains, polarization leakage, bandpass, etc) to the visibility data.
 The errors are applied to the MODEL_DATA, and written to the
 DATA and CORRECTED_DATA columns.   Note that {\tt corrupt} handles
 only visibility-plane effects, not image-plane effects such as
 pointing errors and voltage patterns, which get applied in {\tt predict}.
-
+Note, the function applies errors only to cross-correlation data when 
+{\tt avoidauto = True} (defalut). Though the auto-correlation data are
+corrupted if {\tt avoidauto = False}, it so far works properly only for
+the thermalnoise set by {\tt setnoise}.
 
 
 </description>
+<input>
+
+     <param type="bool" name="avoidauto">
+     <description>Do not apply errors to auto-correlation data</description>
+     <value>true</value>
+     </param>
+
+</input>
+
 <returns type="bool">Boolean</returns>
 <example>
 
@@ -1623,7 +1635,10 @@ the {\it Brown Equation} (ie, R.L. Brown's calculation of MMA sensitivity, 3Oct9
      <value type="bool">true</value>
      </param>
 
-
+     <param type="double" name="senscoeff">
+     <description>sensitivity constant (1./sqrt(2) for interferometer [default]; 1. for total power)</description>
+     <value>0.</value>
+     </param>
 
 
 </input>

@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 QtAutoGui::QtAutoGui(Record rec, String dataName, String dataType, QWidget
                      *parent)
-        : QWidget(parent), recordLoaded_(False), mutex()
+        : QWidget(parent), recordLoaded_(False), mutex(), auto_apply_(true)
 {
     initialize();
     loadRecord(rec);
@@ -58,7 +58,7 @@ QtAutoGui::QtAutoGui(Record rec, String dataName, String dataType, QWidget
 QtAutoGui::QtAutoGui(QWidget *parent)
         : QWidget(parent),
         m_file_name("casa.opts"),m_data_type("Unknown"),
-        recordLoaded_(False), m_lockItem("")
+        recordLoaded_(False), m_lockItem(""), auto_apply_(true)
 {
     initialize();
 }
@@ -162,6 +162,7 @@ bool QtAutoGui::load(QDomDocument &doc)
         button->setCheckable(true);
         button->setText(cat_elt.tagName().replace('_', ' '));
         button->setChecked(button->text()=="Basic Settings");
+	button->setMinimumWidth(438);
         vboxLayout->addWidget(button);
 
         QWidget *wgt = new QWidget();
@@ -598,7 +599,7 @@ void QtAutoGui::itemValueChanged(QString name, QString value,
                 {
                     ele.setAttribute("value", value);
                 }
-                if (autoApply)
+                if (auto_apply_ && autoApply)
                 {		  
                     QtXmlRecord xmlRecord;
                     Record rec;

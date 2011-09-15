@@ -110,7 +110,7 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 	*itsLog << origin;
 
 	vector<uInt> ranges(0);
-	if (! itsCSys->hasPolarizationAxis()) {
+	if (! itsCSys->hasPolarizationCoordinate()) {
 		return ranges;
 	}
 	specification.trim();
@@ -274,7 +274,7 @@ Record CasacRegionManager::fromBCS(
 					<< _pairsToString(chanEndPts) << LogIO::POST;
 			}
 		}
-		if (itsCSys->hasPolarizationAxis()) {
+		if (itsCSys->hasPolarizationCoordinate()) {
 			if (stokes.empty()) {
 				switch (stokesControl) {
 				case USE_ALL_STOKES:
@@ -507,7 +507,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 	if (itsCSys->hasLinearCoordinate())  {
 		nRegions *= boxCorners.size()/4;
 	}
-	if (itsCSys->hasPolarizationAxis()) {
+	if (itsCSys->hasPolarizationCoordinate()) {
 		nRegions *= polEndPts.size()/2;
 	}
 	if (itsCSys->hasSpectralAxis()) {
@@ -531,7 +531,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 					extYCorners[2*count] = yCorners[2*i];
 					extYCorners[2*count + 1] = yCorners[2*i + 1];
 				}
-				if (itsCSys->hasPolarizationAxis()) {
+				if (itsCSys->hasPolarizationCoordinate()) {
 					extPolEndPts[2*count] = polEndPtsDouble[2*j];
 					extPolEndPts[2*count + 1] = polEndPtsDouble[2*j + 1];
 				}
@@ -610,7 +610,7 @@ ImageRegion CasacRegionManager::_fromBCS(
 	if (itsCSys->hasSpectralAxis()) {
 		os << "    spectral channel ranges: " << _pairsToString(chanEndPts);
 	}
-	if (itsCSys->hasPolarizationAxis()) {
+	if (itsCSys->hasPolarizationCoordinate()) {
 		os << "    polarization pixel ranges: " << _pairsToString(polEndPts);
 	}
 	diagnostics = os.str();
@@ -635,7 +635,7 @@ String CasacRegionManager::_stokesFromRecord(
 	// FIXME This implementation is incorrect for complex, recursive records
 	String stokes = "";
 
-	if(! itsCSys->hasPolarizationAxis()) {
+	if(! itsCSys->hasPolarizationCoordinate()) {
 		return stokes;
 	}
 	Int polAxis = itsCSys->polarizationAxisNumber();

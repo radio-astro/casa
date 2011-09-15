@@ -31,9 +31,6 @@
 # </author>
 #
 # <summary>
-# CASA task for finding moments along a specified axis of a 
-# multi-dimentional CASA image.
-# contents
 # </summary>
 #
 # <reviewed reviwer="" date="" tests="" demos="">
@@ -120,7 +117,7 @@ def importgmrt( fitsfile, flagfile, vis ):
     for i in range( len( flagfile ) ):
         if ( not os.path.exists( flagfile[i] ) ):
             casalog.post( 'Unable to locate FLAG file '+ flagfile[i],
-                          'SEVER' )
+                          'SEVERE' )
             ok = False
         
     if ( not ok ):
@@ -136,8 +133,17 @@ def importgmrt( fitsfile, flagfile, vis ):
         casalog.post( str(instance), 'SEVERE' )
         return retValue
 
+    mytb, myms, myfg = gentools(['tb', 'ms', 'fg'])
 
-
+    # Write history
+    try:
+        param_names = importgmrt.func_code.co_varnames[:importgmrt.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+        ok &= write_history(myms, vis, 'importgmrt', param_names,
+                            param_vals, casalog)
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                     'WARN')
     
     # CASA's importuvfits doesn't understand the GMRT antenna
     # names very well and/or the FITS files tend to put the
@@ -146,37 +152,32 @@ def importgmrt( fitsfile, flagfile, vis ):
     # information.  So let's fix up the Name column.
     casalog.post( 'Correcting GMRT Antenna names.', 'NORMAL1' )
     try:
-        tb.open( vis+'/ANTENNA', nomodify=False )
-        stations = tb.getcol('STATION')
+        mytb.open( vis+'/ANTENNA', nomodify=False )
+        stations = mytb.getcol('STATION')
         names    = []
         for idx in range( 0, len( stations ) ):
             names.append( stations[idx].split(':')[0] )
-        tb.putcol( 'NAME', numpy.array( names ) )
-        tb.done()
+        mytb.putcol( 'NAME', numpy.array( names ) )
+        mytb.done()
     except Exception, instance:
         casalog.post( 'Unable to properly name the antennas, but continuing')
         casalog.post( str(instance), 'WARN' )
-
-
-
 
     # If we don't have a flagfile then we are done!
     # Yippee awe eh!
     if ( len( flagfile ) < 1 ):
         return True
 
-    
-    
-    # We've imported lets find out the observation start
+    # We've imported let's find out the observation start
     # and end times, this will be needed for flagging.
     # We use it to find the different days the observation
     # was done on.
     startObs = ''
     endObs   = ''
     try: 
-        ms.open( vis )
-        trange=ms.range( 'time' )['time']
-        ms.done()
+        myms.open( vis )
+        trange=myms.range( 'time' )['time']
+        myms.done()
 
         # Now have the observation time range in a numpy array.
         startObs = qa.time( str( trange[0] )+'s', prec=8, form='ymd' )
@@ -187,8 +188,6 @@ def importgmrt( fitsfile, flagfile, vis ):
         casalog.post( str(instance), 'SEVERE' )
         return retValue
     
-
-
     days=[]
     startYY = startObs.split('/')[0]
     startMM = startObs.split('/')[1]
@@ -219,9 +218,9 @@ def importgmrt( fitsfile, flagfile, vis ):
 					  
 	# First lets save the flag information as we got it from the
 	# flag file.
-    fg.open( vis )
-    fg.saveflagversion( 'none', 'No flagging performed yet' )
-    fg.done()
+    myfg.open( vis )
+    myfg.saveflagversion( 'none', 'No flagging performed yet' )
+    myfg.done()
 
     for file in flagfile:
         casalog.post( 'Reading flag file '+file, 'NORMAL2' )
@@ -334,7 +333,7 @@ def importgmrt( fitsfile, flagfile, vis ):
             #elif ( len( antennas ) > 0 ):
             #    antStr=str(int(antennas)-1)
             #    # A hack to make sure we always have some unflagged data.
-            #    # CASA seg faults if the fg.setdata() results in no data.
+            #    # CASA seg faults if the myfg.setdata() results in no data.
             #    selectAntStr+=antStr+','+antennas
 
             
@@ -356,13 +355,13 @@ def importgmrt( fitsfile, flagfile, vis ):
                 #flagdata( vis, mode='manualflag', selectdata=True, \
                 #            antenna=antStr, timerange=timerange, \
                 #            flagbackup=False )
-                fg.open( vis )
-                #print "fg.setdata( time='",timerange,"' )"
-                fg.setdata( time=timerange )
-                #print "fg.setmanualflags( baseline='",antStr,"', time='",timerange,"' )"
-                fg.setmanualflags( baseline=antStr, time=timerange, unflag=False, clipexpr='' )
-                fg.run()
-                fg.done()
+                myfg.open( vis )
+                #print "myfg.setdata( time='",timerange,"' )"
+                myfg.setdata( time=timerange )
+                #print "myfg.setmanualflags( baseline='",antStr,"', time='",timerange,"' )"
+                myfg.setmanualflags( baseline=antStr, time=timerange, unflag=False, clipexpr='' )
+                myfg.run()
+                myfg.done()
             except Exception, instance:
                 casalog.post( 'Unable to flag data from flag file '+file\
                               +'.\nAntennas='+antennas+' and timerage='\
@@ -375,9 +374,9 @@ def importgmrt( fitsfile, flagfile, vis ):
         FLAG_FILE.close()
 
 	# Save a Flag version so we can revert back to it if we wish
-    fg.open( vis )
-    fg.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
-    fg.done()
+    myfg.open( vis )
+    myfg.saveflagversion( 'import', 'Flagged the data from the GMRT flag file' )
+    myfg.done()
 
     retValue = True
     return retValue

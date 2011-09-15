@@ -158,7 +158,7 @@ String ImageInputProcessor::_stokesFromRecord(
 ) const {
 	// FIXME This implementation is incorrect for complex, recursive records
     String stokes = "";
- 	if(csys.hasPolarizationAxis()) {
+ 	if(csys.hasPolarizationCoordinate()) {
  		Int polAxis = csys.polarizationAxisNumber();
  		uInt stokesBegin, stokesEnd;
  		ImageRegion *imreg = ImageRegion::fromRecord(region, "");

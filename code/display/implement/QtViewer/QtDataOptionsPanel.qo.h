@@ -57,6 +57,8 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
   QtDataOptionsPanel(QtDisplayPanelGui* panel=0, QWidget* parent=0 );
   ~QtDataOptionsPanel();
   
+ signals:
+  void setAutoApply(bool);
 
  protected:
 
@@ -67,7 +69,6 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
   QWidget *parent_;
   QtDisplayPanelGui *panel_;
  
- 
  protected slots:
  
   // These respond to DD creation/removal signals from viewer_
@@ -75,6 +76,7 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
   virtual void createDDTab_(QtDisplayData*);
   virtual void removeDDTab_(QtDisplayData*);
   // </group> 
+  virtual void auto_apply_state_change(bool);
   
  private:
   

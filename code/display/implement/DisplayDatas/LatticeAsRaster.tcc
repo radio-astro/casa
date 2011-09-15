@@ -213,7 +213,7 @@ Record LatticeAsRaster<T>::getOptions() {
   
   Record minmaxhist;
   minmaxhist.define("dlformat", "minmaxhist");
-  minmaxhist.define("listname", "Data range");
+  minmaxhist.define("listname", "data range");
   minmaxhist.define("ptype", "minmaxhist");
   minmaxhist.define("pmin", Float(getDataMin()));
   minmaxhist.define("pmax", Float(getDataMax()));
@@ -227,7 +227,7 @@ Record LatticeAsRaster<T>::getOptions() {
   /*
   Record power;
   power.define("dlformat", "power");
-  power.define("listname", "Scaling power");
+  power.define("listname", "scaling power");
   power.define("ptype", "floatrange");
   power.define("pmin", Float(-5.0));
   power.define("pmax", Float(5.0));

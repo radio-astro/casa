@@ -5,7 +5,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-
 <!-- This is the param set for listvis -->
 <!-- This does the equivalent of -->
 <!-- ms.open('anyfile.ms'); -->
@@ -96,6 +95,8 @@ selectdata  Toggle the following 7 selection parameters.
       feed        (not yet implemented)
       
       array       (not yet implemented)
+
+      observation Select by observation ID.
       
       uvrange     Select baseline lengths to list.
                   default: ''--> all; examples:
@@ -188,6 +189,12 @@ async       Run asynchronously
 	    <value></value>
     </param>
 
+    <param type="any" name="observation">
+      <description>Select by observation ID(s)</description>
+      <any type="variant" limittypes="string int"/>
+      <value type="string"></value>
+    </param>
+
     <param type="string" name="uvrange" subparam="true">
 	    <description>uv range: \'\'==>all; not yet implemented </description>
 	    <value></value>
@@ -230,6 +237,7 @@ async       Run asynchronously
                    <default param="scan"><value type="string"/></default>
                    <default param="feed"><value type="string"/></default>
                    <default param="array"><value type="string"/></default>
+                   <default param="observation"><value type="string"/></default>
                    <default param="uvrange"><value type="string"/></default>
              </equals>
           </when>
@@ -320,6 +328,10 @@ selectdata  Toggle the following 7 selection parameters.
       feed        (not yet implemented)
       
       array       (not yet implemented)
+
+      observation Select by observation ID(s).
+                  default: ''-->all;
+		  example: observation='0' (select obsID 0)
       
       uvrange     Select baseline lengths to list.
                   default: ''--> all; examples:

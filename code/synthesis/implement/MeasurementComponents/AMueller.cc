@@ -434,6 +434,70 @@ ANoise::~ANoise() {
 }
 
 
+// Calculate Mueller matrices for all baselines
+void ANoise::calcAllMueller() {
+
+  if (prtlev()>6) cout << "        AN::calcAllMueller" << endl;
+
+  // Should handle OK flags in this method, and only
+  //  do Mueller calc if OK
+
+  Vector<Complex> oneMueller;
+  Vector<Bool> oneMOK;
+  Vector<Complex> onePar;
+  Vector<Bool> onePOK;
+
+  ArrayIterator<Complex> Miter(currMElem(),1);
+  ArrayIterator<Bool>    MOKiter(currMElemOK(),1);
+  ArrayIterator<Complex> Piter(currCPar(),1);
+  ArrayIterator<Bool>    POKiter(currParOK(),1);
+  
+  // All required baselines
+  Int iant1(0), iant2(-1);
+  for (Int ibln=0; ibln<nCalMat(); ibln++) {
+    // update antenna numbers of the current baseline (assumes iant1 <= iant2)
+    iant2++;
+    if (iant2 == nAnt()) {
+      iant1++;
+      iant2 = iant1;
+    }
+    corruptor_p->currAnt()=iant1;
+    corruptor_p->currAnt2()=iant2;
+
+    // The following assumes that nChanPar()=1 or nChanMat()
+
+    for (Int ich=0; ich<nChanMat(); ich++) {
+
+      oneMueller.reference(Miter.array());
+      oneMOK.reference(MOKiter.array());
+      onePar.reference(Piter.array());
+      onePOK.reference(POKiter.array());
+      
+      // TBD  What if calcOneMueller needs freq value info?
+      
+      calcOneMueller(oneMueller,oneMOK,onePar,onePOK);
+
+      // Advance iterators, as required
+      Miter.next();
+      MOKiter.next();
+      if (freqDepPar()) {
+	Piter.next();
+	POKiter.next();
+      }
+
+    }
+
+    // Step to next baseline's pars if we didn't in channel loop
+    if (!freqDepPar()) {
+      Piter.next();
+      POKiter.next();
+    }
+  }
+
+}
+
+
+
 
 void ANoise::calcOneMueller(Vector<Complex>& mat, Vector<Bool>& mOk,
 			    const Vector<Complex>& par, const Vector<Bool>& pOk) {

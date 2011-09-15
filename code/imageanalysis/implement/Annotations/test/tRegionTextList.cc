@@ -38,6 +38,14 @@ int main () {
 	LogIO log;
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+		Vector<Double> refVal = csys.referenceValue();
+		cout << refVal << endl;
+		Vector<String> units = csys.worldAxisUnits();
+		units[0] = units[1] = "rad";
+		csys.setWorldAxisUnits(units);
+		refVal[0] = 4.296556;
+		refVal[1] = 0.240673;
+		csys.setReferenceValue(refVal);
 		AnnotationBase::unitInit();
 		String *parts = new String[2];
 		split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
@@ -47,7 +55,7 @@ int main () {
 
 		RegionTextList list(
 			goodFile, csys,
-			IPosition(0, csys.nPixelAxes())
+			IPosition(csys.nPixelAxes(), 2000, 2000, 4, 2000)
 		);
 		cout << std::setprecision(9) << list << endl;
 		AlwaysAssert(list.nLines() == 33, AipsError);

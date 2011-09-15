@@ -152,6 +152,12 @@ public slots:
 
     // (called only once, during or soon after construction.  Sets up contents of
     // the gui from rec).
+
+    void autoApplyState( bool auto_apply ) { auto_apply_ = auto_apply; }
+
+protected:
+    bool auto_apply_;
+
 private:
     QDomDocument m_doc;	
     QString m_file_name;

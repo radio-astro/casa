@@ -98,33 +98,33 @@ ia.open(project+"/"+project + '.diff')
 hiidiff_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# # KS - updated 2010-12-17 (13767@active)
-# refstats = { 'sum': 1060.,
-#              'max': 0.6777,
-#              'min': -0.05212,
-#              'rms': 0.04411,
-#              'sigma': 0.04360 }
+# # KS - updated 2011-08-16 (15907@active)
+# refstats = { 'max': 0.67758,
+#              'min': -0.051297,
+#              'rms': 0.044102,
+#              'sigma': 0.043592,
+#              'sum':  1060.1}
 
-# diffstats = {'sum': 3290.,
-#              'max': 0.1087,
-#              'min': -0.01149,
-#              'rms': 0.03742,
-#              'sigma': 0.02183 }
+# diffstats = {'max': 0.10783,
+#              'min': -0.011648,
+#              'rms': 0.037425,
+#              'sigma': 0.021848,
+#              'sum': 3289.}
 
-# KS - updated 2011-08-16 (15907@active)
-refstats = { 'max': 0.67758,
-             'min': -0.051297,
-             'rms': 0.044102,
-             'sigma': 0.043592,
-             'sum':  1060.1}
+# KS - updated 2011-09-09 (different realization of ANoise)
+refstats = { 'max': 0.67727,
+             'min': -0.05232,
+             'rms': 0.044101,
+             'sigma': 0.043591,
+             'sum': 1060.6 }
 
-diffstats = {'max': 0.10783,
-             'min': -0.011648,
-             'rms': 0.037425,
+diffstats = {'max': 0.10808,
+             'min': -0.010062,
+             'rms': 0.037421,
              'sigma': 0.021848,
-             'sum': 3289.}
+             'sum': 3288.4 }
 
-
+# Allowed tolerance
 reftol   = {'sum':  0.1,
             'max':  0.04,
             'min':  0.04,

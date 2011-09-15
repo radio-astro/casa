@@ -77,7 +77,7 @@ Record CachingDisplayData::getOptions() {
 
   Record cachesize;
   cachesize.define("dlformat", "cachesize");
-  cachesize.define("listname", "Cache size");
+  cachesize.define("listname", "cache size");
   cachesize.define("help", "Controls the number of drawings this\n"
 			   "DisplayData may save/reuse.  For fast\n"
 			   "animation replay, set to the number of\n"
@@ -89,7 +89,7 @@ Record CachingDisplayData::getOptions() {
   cachesize.define("default", itsDefaultMaximumCacheSize);
   cachesize.define("value", itsOptionsMaximumCacheSize);
   cachesize.define("allowunset", False);
-  cachesize.define("context", "Advanced");
+  cachesize.define("context", "advanced");
   rec.defineRecord("cachesize", cachesize);
 
   return rec;

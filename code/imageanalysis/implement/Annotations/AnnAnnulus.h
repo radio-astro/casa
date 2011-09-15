@@ -57,6 +57,7 @@ public:
 		const Quantity& outerRadius,
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Quantity& beginFreq,
 		const Quantity& endFreq,
 		const String& freqRefFrameString,
@@ -78,6 +79,7 @@ public:
 		const Quantity& innerRadius,
 		const Quantity& outerRadius,
 		const CoordinateSystem& csys,
+		const IPosition& imShape,
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 

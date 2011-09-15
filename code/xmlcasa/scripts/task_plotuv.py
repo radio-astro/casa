@@ -1,5 +1,6 @@
 from matplotlib.widgets import Button
 from taskinit import ms, tbtool, casalog
+from update_spw import expand_tilde
 
 #from taskutil import get_global_namespace
 #my_globals = get_global_namespace()
@@ -27,7 +28,7 @@ def plotuv(vis, field='*', antenna='*', spw='*', observation='', array='',
     """
     casalog.origin('plotuv')
     try:
-        uvplotinfo = UVPlotInfo(vis, spw, field, antenna, observation,
+        uvplotinfo = UVPlotInfo(vis, spw, field, antenna, observation, array,
                                 ncycles, colors, symb, figfile, maxnpts)
     except Exception, e:
         casalog.post("Error plotting the UVWs of %s:" % vis, 'SEVERE')
@@ -49,8 +50,8 @@ def plotuv(vis, field='*', antenna='*', spw='*', observation='', array='',
 
 class UVPlotInfo:
     """Gathers and holds info for a uv plot or set of them."""
-    def __init__(self, vis, spw, field, antenna, observation, ncycles,
-                 colors, symb, figfile, maxnpts):
+    def __init__(self, vis, spw, field, antenna, observation, array,
+                 ncycles, colors, symb, figfile, maxnpts):
         self.ncolors = ncycles * len(colors)
         try:
             self.symbs = [c + symb for c in colors]
@@ -79,7 +80,8 @@ class UVPlotInfo:
         if not antenna:
             antenna = '*'
         self.selindices = ms.msseltoindex(vis, field=field, spw=spw,
-                                          baseline=antenna, observation=observation)
+                                          baseline=antenna,
+                                          observation=str(observation))
         basequery = ""
         if observation:
             basequery += 'OBSERVATION_ID in %s' % self.selindices['obsids']
@@ -89,6 +91,11 @@ class UVPlotInfo:
             basequery += 'ANTENNA1 in [%s] and ANTENNA2 in [%s]' % (
                 ','.join(map(str, self.selindices['antenna1'])),
                 ','.join(map(str, self.selindices['antenna2'])))
+        if array != '*':
+            if basequery:
+                basequery += ' and '
+            arrids = expand_tilde(array)
+            basequery += 'ARRAY_ID in [%s]' % ','.join(map(str, arrids))
         self.basequery = basequery
 
         try:
@@ -108,7 +115,7 @@ class UVPlotInfo:
                     subtitles.append("spw='%s'" % spw)
                 if antenna != '*':
                     subtitles.append("antenna='%s'" % antenna)
-                if observation != '*':
+                if observation:
                     subtitles.append("observation='%s'" % observation)
                 self.subtitle = '(' + ', '.join(subtitles) + ')'
         except Exception, e:

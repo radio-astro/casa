@@ -33,10 +33,12 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 
 #include <casa/namespace.h>
+#include <iomanip>
 
 
 int main () {
 	try {
+		IPosition shape(4, 4000, 4000, 1, 1420601);
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
 		LogIO log;
@@ -73,7 +75,7 @@ int main () {
 			try {
 				AnnPolygon poly(
 					x, y, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -115,7 +117,7 @@ int main () {
 			try {
 				AnnPolygon poly(
 					x, y, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, shape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -132,12 +134,12 @@ int main () {
 				<< LogIO::POST;
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
-			x[0] = Quantity(0.05, "deg");
-			y[0] = Quantity(0, "deg");
-			x[1] = Quantity(0.015, "deg");
+			x[0] = Quantity(-0.05, "deg");
+			y[0] = Quantity(0.05, "deg");
+			x[1] = Quantity(-0.015, "deg");
 			y[1] = Quantity(0.01, "deg");
-			x[2] = Quantity(0.015, "deg");
-			y[2] = Quantity(0, "deg");
+			x[2] = Quantity(-0.015, "deg");
+			y[2] = Quantity(0.05, "deg");
 
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
@@ -155,7 +157,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -188,6 +190,10 @@ int main () {
 			);
 			cout << poly.getCorners() << endl;
 		}
+		Vector<Double> refVal = csys.referenceValue();
+		refVal[0] = 100;
+		refVal[1] = 0.0;
+		csys.setReferenceValue(refVal);
 		{
 			log << LogIO::NORMAL
 				<< "Test precessing from B1950 to J2000"
@@ -216,7 +222,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			Vector<MDirection> corners = poly.getCorners();
@@ -280,7 +286,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -294,6 +300,7 @@ int main () {
 				AipsError
 			);
 		}
+		csys.setReferenceValue(Vector<Double>(4, 0));
 
 		{
 			log << LogIO::NORMAL
@@ -302,11 +309,11 @@ int main () {
 
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
-			x[0] = Quantity(0.05, "deg");
+			x[0] = Quantity(-0.05, "deg");
 			y[0] = Quantity(0, "deg");
-			x[1] = Quantity(0.015, "deg");
+			x[1] = Quantity(-0.015, "deg");
 			y[1] = Quantity(0.01, "deg");
-			x[2] = Quantity(0.015, "deg");
+			x[2] = Quantity(-0.015, "deg");
 			y[2] = Quantity(0, "deg");
 
 			Quantity beginFreq(1415, "MHz");
@@ -325,11 +332,12 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
+			cout << std::setprecision(10) << "freqs " << freqs[0].get("Hz").getValue() << endl;
 			AlwaysAssert(
 				near(freqs[0].get("Hz").getValue(), 1415508785.4853702),
 				AipsError
@@ -347,15 +355,15 @@ int main () {
 
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
-			x[0] = Quantity(0.05, "deg");
+			x[0] = Quantity(-0.05, "deg");
 			y[0] = Quantity(0, "deg");
-			x[1] = Quantity(0.015, "deg");
+			x[1] = Quantity(-0.015, "deg");
 			y[1] = Quantity(0.01, "deg");
-			x[2] = Quantity(0.015, "deg");
+			x[2] = Quantity(-0.015, "deg");
 			y[2] = Quantity(0, "deg");
 
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity beginFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -372,17 +380,17 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
@@ -394,15 +402,15 @@ int main () {
 
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
-			x[0] = Quantity(0.05, "deg");
+			x[0] = Quantity(-0.05, "deg");
 			y[0] = Quantity(0, "deg");
-			x[1] = Quantity(0.015, "deg");
+			x[1] = Quantity(-0.015, "deg");
 			y[1] = Quantity(0.01, "deg");
-			x[2] = Quantity(0.015, "deg");
+			x[2] = Quantity(-0.015, "deg");
 			y[2] = Quantity(0, "deg");
 
-			Quantity beginFreq(-20, "km/s");
-			Quantity endFreq(20000, "m/s");
+			Quantity beginFreq(20000, "m/s");
+			Quantity endFreq(-20, "km/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -419,17 +427,16 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
 			Vector<MFrequency> freqs = poly.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1420500511.0578821),
+				near(freqs[1].get("Hz").getValue(), 1420500511.0578821),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1420310992.5141187),
+				near(freqs[0].get("Hz").getValue(), 1420310992.5141187),
 				AipsError
 			);
 		}
@@ -440,11 +447,11 @@ int main () {
 				<< LogIO::POST;
 			Vector<Quantity> x(3);
 			Vector<Quantity> y(3);
-			x[0] = Quantity(0.05, "deg");
+			x[0] = Quantity(-0.05, "deg");
 			y[0] = Quantity(0, "deg");
-			x[1] = Quantity(0.015, "deg");
+			x[1] = Quantity(-0.015, "deg");
 			y[1] = Quantity(0.01, "deg");
-			x[2] = Quantity(0.015, "deg");
+			x[2] = Quantity(-0.015, "deg");
 			y[2] = Quantity(0, "deg");
 
 			Quantity beginFreq(2013432.1736247784, "m/s");
@@ -463,7 +470,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnPolygon poly(
 				x, y, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << poly << endl;

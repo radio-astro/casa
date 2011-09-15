@@ -27,6 +27,7 @@ AnnEllipse::AnnEllipse(
 	const Quantity& minorAxis, const Quantity& positionAngle,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -35,7 +36,7 @@ AnnEllipse::AnnEllipse(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
-		ELLIPSE, dirRefFrameString, csys, beginFreq,
+		ELLIPSE, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 ), _inputCenter(Vector<Quantity>(2)), _inputMajorAxis(majorAxis),
@@ -49,8 +50,9 @@ AnnEllipse::AnnEllipse(
 	const Quantity& majorAxis,
 	const Quantity& minorAxis, const Quantity& positionAngle,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(ELLIPSE, csys, stokes),
+) : AnnRegion(ELLIPSE, csys, imShape, stokes),
 	_inputCenter(Vector<Quantity>(2)), _inputMajorAxis(majorAxis),
 	_inputMinorAxis(minorAxis),
 	_inputPositionAngle(positionAngle) {

@@ -30,6 +30,7 @@ AnnAnnulus::AnnAnnulus(
 	const Quantity& outerRadius,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrameString,
@@ -38,7 +39,7 @@ AnnAnnulus::AnnAnnulus(
 	const Vector<Stokes::StokesTypes> stokes,
 	const Bool annotationOnly
 ) : AnnRegion(
-		ANNULUS, dirRefFrameString, csys, beginFreq,
+		ANNULUS, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
 	), _convertedRadii(Vector<Quantity>(2)),
@@ -53,8 +54,9 @@ AnnAnnulus::AnnAnnulus(
 	const Quantity& innerRadius,
 	const Quantity& outerRadius,
 	const CoordinateSystem& csys,
+	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
-) : AnnRegion(ANNULUS, csys, stokes),
+) : AnnRegion(ANNULUS, csys, imShape, stokes),
 _convertedRadii(Vector<Quantity>(2)),
 	_xcenter(xcenter), _ycenter(ycenter),
 	_innerRadius(innerRadius), _outerRadius(outerRadius) {
@@ -108,6 +110,7 @@ void AnnAnnulus::_init() {
 			+ "outer radius"
 		);
 	}
+
 	Vector<Quantity> inputCenter(2);
 	inputCenter[0] = _xcenter;
 	inputCenter[1] = _ycenter;
@@ -119,12 +122,12 @@ void AnnAnnulus::_init() {
 	Vector<Quantity> qCenter(2);
 	qCenter[0] = Quantity(coords[0], "rad");
 	qCenter[1] = Quantity(coords[1], "rad");
-
 	WCEllipsoid inner(qCenter, _innerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
 	WCEllipsoid outer(qCenter, _outerRadius, _getDirectionAxes(), _getCsys(), RegionType::Abs);
 	WCDifference annulus(outer, inner);
 	_setDirectionRegion(annulus);
 	_extend();
+
 }
 
 }

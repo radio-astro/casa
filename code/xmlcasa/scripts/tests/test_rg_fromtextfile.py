@@ -86,25 +86,34 @@ cas_3260r = "CAS-3260.rgn"
 
 def deep_equality(a, b):
     if (type(a) != type(b)):
+        print "types don't match, a is a " + str(type(a)) + " b is a " + str(type(b))
         return False
     if (type(a) == dict):
         if (a.keys() != b.keys()):
+            print "keys don't match, a is " + str(a.keys()) + " b is " + str(b.keys())
             return False
         for k in a.keys():
-            return deep_equality(a[k], b[k])
+            if (not deep_equality(a[k], b[k])):
+                print "dictionary member inequality a[" + str(k) \
+                    + "] is " + str(a[k]) + " b[" + str(k) + "] is " + str(b[k])
+                return False
+        return True
     if (type(a) == float):
-        if(abs((a-b)/a > 1e-6)):
-            return False
+        if not (a == b or abs((a-b)/a) <= 1e-6):
+            print "float mismatch, a is " + str(a) + ", b is " + str(b)
+        return a == b or abs((a-b)/a) <= 1e-6
     if (type(a) == numpy.ndarray):
-        if (a.shape() != b.shape()):
+        if (a.shape != b.shape):
+            print "shape mismatch a is " + str(a.shape) + " b is " + str(b.shape)
             return False
         x = a.tolist()
         y = b.tolist()
         for i in range(len(x)):
-            return deep_equality(x[i], y[i])
-    if (a != b):
-        return False
-    return True
+            if (not deep_equality(x[i], y[i])):
+                print "array element mismatch, x is " + str(x[i]) + " y is " + str(y[i])
+                return False
+        return True
+    return a == b
 
 class rg_fromtextfile_test(unittest.TestCase):
     
@@ -156,7 +165,7 @@ class rg_fromtextfile_test(unittest.TestCase):
         
     def test_CAS_3258(self):
         """Verify fix to CAS-3258"""
-        self.ia.maketestimage()
+        self.ia.fromshape("", [250,250])
         self._testit(cas_3258t, cas_3258r)
         
     def test_CAS_3259(self):
@@ -166,7 +175,7 @@ class rg_fromtextfile_test(unittest.TestCase):
         
     def test_CAS_3260(self):
         """Verify fix to CAS-3260"""
-        self.ia.maketestimage()
+        self.ia.fromshape("", [250,250])
         self._testit(cas_3260t, cas_3260r)
 
 def suite():

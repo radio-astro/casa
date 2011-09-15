@@ -311,7 +311,7 @@ Record WedgeDD::getOptions() {
       tmp.define(String("listname"),lname);
     }
     tmp.define(field,String("wedge"+fnames(i)));
-    tmp.define(field2,String("Color_Wedge"));
+    tmp.define(field2,String("color_wedge"));
     rec.defineRecord(prefix+fnames(i),tmp);
     rec.renameField("wedge"+fnames(i),prefix+fnames(i));   
   }
