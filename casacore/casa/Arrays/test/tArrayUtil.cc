@@ -383,6 +383,150 @@ Bool testReorderArray (Bool doExcp)
   return ok;
 }
 
+Bool testReverseArray() {
+	IPosition shape(3, 2, 3, 4);
+	Array<Int> arr(shape);
+	Bool res = True;
+	indgen(arr);
+	IPosition axes(0);
+	Array<Int> rev = reverseArray(arr, axes);
+	res = res && allTrue(arr == rev);
+	rev = reverseArray(arr, 0);
+	for (uInt i=0; i<shape[2]; i++) {
+		for (uInt j=0; j<shape[1]; j++) {
+			for (uInt k=0; k<shape[0]; k++) {
+				res = res
+					&& (
+						arr(IPosition(3, k, j, i))
+						== rev(IPosition(3, shape[0] - 1- k, j, i))
+					);
+			}
+		}
+	}
+	for (uInt x=0; x<2; x++) {
+		rev = x == 0 ? reverseArray(arr, 1) : reverseArray(arr, IPosition(1, 1));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+							arr(IPosition(3, k, j, i))
+							== rev(IPosition(3, k, shape[1] - 1 - j, i))
+						);
+				}
+			}
+		}
+	}
+	for (uInt x=0; x<2; x++) {
+		rev = x == 0 ? reverseArray(arr, 2) : reverseArray(arr, IPosition(1,2));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+							arr(IPosition(3, k, j, i))
+							== rev(IPosition(3, k, j, shape[2] - 1 - i))
+						);
+				}
+			}
+		}
+	}
+	//axes.resize(2);
+	for (uInt x=0; x<2; x++) {
+
+		rev = x == 0
+			? reverseArray(reverseArray(arr, 0), 1)
+			: reverseArray(arr, IPosition(2, 0, 1));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+							arr(IPosition(3, k, j, i))
+							== rev(IPosition(
+								3, shape[0] - 1 - k, shape[1] - 1 - j, i)
+							)
+						);
+				}
+			}
+		}
+	}
+	for (uInt x=0; x<2; x++) {
+		rev = x == 0
+			? reverseArray(reverseArray(arr, 0), 2)
+			: reverseArray(arr, IPosition(2, 0, 2));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+							arr(IPosition(3, k, j, i))
+							== rev(IPosition(
+								3, shape[0] - 1 - k, j, shape[2] - 1 - i)
+							)
+						);
+				}
+			}
+		}
+	}
+	for (uInt x=0; x<2; x++) {
+		rev = x == 0
+			? reverseArray(reverseArray(arr, 1), 2)
+			: reverseArray(arr, IPosition(2, 1, 2));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+							arr(IPosition(3, k, j, i))
+							== rev(IPosition(
+								3, k, shape[1] - 1 - j, shape[2] - 1 - i)
+							)
+						);
+				}
+			}
+		}
+	}
+	for (uInt x=0; x<2; x++) {
+		rev = x == 0
+			? reverseArray(reverseArray(reverseArray(arr, 0), 1), 2)
+			: reverseArray(arr, IPosition(3, 0, 1, 2));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+							arr(IPosition(3, k, j, i))
+							== rev(IPosition(
+								3, shape[0] - 1 - k,
+								shape[1] - 1 - j, shape[2] - 1 - i)
+							)
+						);
+				}
+			}
+		}
+	}
+	for (uInt x=0; x<2; x++) {
+		rev = x == 0
+			? reverseArray(reverseArray(reverseArray(arr, 2), 0), 1)
+			: reverseArray(arr, IPosition(3, 2, 0, 1));
+		for (uInt i=0; i<shape[2]; i++) {
+			for (uInt j=0; j<shape[1]; j++) {
+				for (uInt k=0; k<shape[0]; k++) {
+					res = res
+						&& (
+						arr(IPosition(3, k, j, i))
+						== rev(IPosition(
+							3, shape[0] - 1 - k,
+							shape[1] - 1 - j, shape[2] - 1 - i)
+						)
+					);
+				}
+			}
+		}
+	}
+	return res;
+}
 
 int main (int argc, const char*[])
 {
@@ -399,6 +543,9 @@ int main (int argc, const char*[])
     }
     if (! testReorderArray( (argc < 2))) {
       ok = False;
+    }
+    if (! testReverseArray()) {
+    	ok = False;
     }
   } catch (AipsError x) {
     cout << "Caught an exception: " << x.getMesg() << endl;

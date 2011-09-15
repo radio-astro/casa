@@ -1320,15 +1320,15 @@ Bool CoordinateUtil::setRestFrequency (String& errorMsg, CoordinateSystem& cSys,
 // Check for weird value
 
       if (value < 0.0){
-      	errorMsg = String("The rest value is below zero!");
+      	errorMsg = String("The rest frequency/wavelength is below zero!");
       	return False;
       }
       else if (isNaN(value)){
-      	errorMsg = String("The rest value is NaN!");
+      	errorMsg = String("The rest frequency/wavelength is NaN!");
       	return False;
       }
       else if (isInf(value)){
-      	errorMsg = String("The rest value is InF!");
+      	errorMsg = String("The rest frequency/wavelength is InF!");
       	return False;
       }
 
@@ -1357,11 +1357,11 @@ Bool CoordinateUtil::setRestFrequency (String& errorMsg, CoordinateSystem& cSys,
 // Exclude weird numbers
 
 	      if (isNaN(newValue)){
-	      	errorMsg = String("The new rest frequency is NaN!");
+	      	errorMsg = String("The new rest frequency/wavelength is NaN!");
 	      	return False;
 	      }
 	      else if (isInf(newValue)){
-	      	errorMsg = String("The new rest frequency is InF!");
+	      	errorMsg = String("The new rest frequency/wavelength is InF!");
 	      	return False;
 	      }
 
