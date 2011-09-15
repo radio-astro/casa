@@ -65,11 +65,6 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   
   setupUi(this);
   
-  toolButton_->setCheckable(true);
-  toolButton_->setChecked(false);
-  showTools(false);
-  toolButton_->hide();	//#dk (shouldn't show until 'tools' exist).
-  
   //updateButton_->setEnabled(false);	//#dk until this works.
 
   lelEdit_->setToolTip("Enter an image expression, such as\n"
@@ -160,11 +155,6 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   connect(treeWidget_, SIGNAL(itemExpanded(QTreeWidgetItem*)),
 			SLOT(expandItem(QTreeWidgetItem*)));
   
-  connect(toolButton_,    SIGNAL(toggled(bool)),  SLOT(showTools(bool)));
-  
-  connect(toolButton_,    SIGNAL(clicked(bool)),
-	  toolGroupBox_,  SLOT(setVisible(bool)));
-
   connect(panel_, SIGNAL(createDDFailed(String, String, String, String)),
 		     SLOT(showDDCreateError_(String)));
   
@@ -538,27 +528,6 @@ void QtDataManager::restoreTo_(QtDisplayPanel* dp) {
 
     
   
-  
-  
-  
-  
-void QtDataManager::showTools(bool show) {
-   if (show) {
-      //resize(QSize(537, 386).expandedTo(minimumSizeHint()));
-      toolButton_->setText(QApplication::translate("QtDataManager",
-						  "Hide Tools"));
-   }
-   else {
-      //resize(QSize(537, 260).expandedTo(minimumSizeHint()));
-      toolButton_->setText(QApplication::translate("QtDataManager",
-						  "Show Tools"));
-   }
-   
-   toolGroupBox_->setVisible(show);      
-}
-
-
-
 void QtDataManager::lelGotFocus_() {
   treeWidget_->clearSelection();
   showDisplayButtons(IMAGE);  }

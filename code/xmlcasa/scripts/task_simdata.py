@@ -98,6 +98,8 @@ def simdata(
         skymodel = skymodel[0]
     skymodel = skymodel.replace('$project',project)
 
+    if type(complist) == type([]):
+        complist = complist[0]
 
     if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
         msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
@@ -119,9 +121,6 @@ def simdata(
     
     try:
 #    if True:
-
-        if type(complist) == type([]):
-            complist = complist[0]
 
         ##################################################################
         # set up skymodelimage
@@ -330,17 +329,18 @@ def simdata(
                 msg("Only single-dish observation is predicted",priority="info")
                 sd_only = True
             # check for image size (need to be > 2*pb)
+            sdpb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
+            if pb == 0:
+                pb = 0.5*sdpb2 #arcsec
             if not components_only:
-                pb2 = 2.*1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/tp_aveant*3600.*180/pl.pi
                 minsize = min(qa.convert(model_size[0],'arcsec')['value'],\
                               qa.convert(model_size[1],'arcsec')['value'])
-                if pb == 0:
-                    pb = 0.5*pb2 #arcsec
-                if minsize < pb2:
-                    msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, pb2),priority="error")
-                    del minsize,pb2
-                    return False            
-                del minsize,pb2
+                if minsize < sdpb2:
+                    msg("skymodel should be larger than 2*primary beam. Your skymodel: %.3f arcsec < %.3f arcsec: 2*primary beam" % (minsize, sdpb2),priority="error")
+                    del minsize,sdpb2
+                    return False
+                del minsize
+            del sdpb2
 
 
 
@@ -425,8 +425,8 @@ def simdata(
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
-        xmax = qa.convert(model_size[0],'deg')['value']
-        ymax = qa.convert(model_size[1],'deg')['value']
+        xmax = qa.convert(model_size[0],'deg')['value']*0.5
+        ymax = qa.convert(model_size[1],'deg')['value']*0.5
         overlap = False        
         for i in xrange(offsets.shape[1]):
             xc = pl.absolute(offsets[0,i]+shift[0])  # offsets and shift are in degrees
@@ -720,7 +720,7 @@ def simdata(
 
                 # do actual calculation of visibilities:
 
-                if not components_only:                
+                if not components_only:
                     if len(complist) > 1:
                         if verbose:
                             msg("predicting from "+newmodel+" and "+complist,priority="warn")
@@ -794,7 +794,6 @@ def simdata(
                 nscan = int(totalsec/totalscansec)
                 kfld = 0
 
-                #if nscan < nfld:
                 if totalsec < totalscansec:
                     msg("Not all pointings in the mosaic will be observed - check mosaic setup and exposure time parameters!",priority="warn")
         
@@ -811,9 +810,10 @@ def simdata(
                 else:
                     sttime = 0. # leave start at the reftime
                 sttime=sttime+haoffset
+                scanstart=sttime
 
-                while sttime<totalsec: # the last scan could exceed totaltime
-                    endtime = sttime + etime[k % nfld]
+                while (sttime-scanstart) < totalsec: # the last scan could exceed totaltime
+                    endtime = sttime + etime[kfld]
                     src = project + '_%d' % kfld
                     #if observemany:
                     srces.append(src)
@@ -853,7 +853,7 @@ def simdata(
                 # if directions is unset, NewMSSimulator::observemany 
                 # looks up the direction in the field table.
                 #if observemany:
-                sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes)
+                sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
 
                 sm.setdata(fieldid=range(0,nfld))
                 sm.setvp()
@@ -1101,10 +1101,14 @@ def simdata(
             # (predict=predict_sd=T => sd_any=T) or not predicted but 
             # sdantlist is specified (predict=F, predict_sd=T).
             if (predict_sd or sd_any) and os.path.exists(sdmsfile):
-                #msg('copying '+msroot+'.sd.ms to ' +
-                msg('copying '+sdmsfile+' to ' + 
-                    noisymsroot+'.sd.ms and adding thermal noise',
-                    origin="noise",priority="warn")
+                if verbose:
+                    msg('copying '+sdmsfile+' to ' + 
+                        noisymsroot+'.sd.ms and adding thermal noise',
+                        origin="noise",priority="warn")
+                else:
+                    msg('copying '+sdmsfile+' to ' + 
+                        noisymsroot+'.sd.ms and adding thermal noise',
+                        origin="noise")
                 
                 if os.path.exists(noisymsroot+".sd.ms"):
                     shutil.rmtree(noisymsroot+".sd.ms")
@@ -1135,6 +1139,7 @@ def simdata(
 
                 sm.openfromms(noisymsroot+".sd.ms")    # an existing MS
                 sm.setdata(fieldid=[]) # force to get all fields
+                #sm.setseed(seed)
                 if thermalnoise == "tsys-manual":
                     if verbose:
                         msg("sm.[old]setnoise(spillefficiency="+str(eta_s)+
@@ -1189,64 +1194,15 @@ def simdata(
 
 
 
-        # create fake model from components for analysis
-        if components_only:
-            modelflat = fileroot + "/" + project + ".compskymodel.flat"
-
-        if components_only and (image or analyze):
-            newmodel = fileroot + "/" + project + ".compskymodel"
-            if not os.path.exists(imagename+".image"):
-                msg("must image before analyzing",priority="error")
-                return False
-            ia.imagecalc(pixels="'"+imagename+".image' * 0",outfile=newmodel,overwrite=True)
-            ia.open(newmodel)
-            cl.open(complist)
-            ia.setbrightnessunit("Jy/pixel")
-            ia.modify(cl.torecord(),subtract=False)
-            cl.done()
-            modelcsys = ia.coordsys()
-            modelshape = ia.shape()
-
-            # TODO should be able to simplify degen axes code using new
-            # image anal tools.
-            inspectax = modelcsys.findcoordinate('spectral')['pixel']
-            innchan = modelshape[inspectax]
-            
-            stokesax = modelcsys.findcoordinate('stokes')['pixel']
-            innstokes = modelshape[stokesax]
-
-            if innchan > 1:
-                # actually run ia.moments
-                ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
-                ia.done()
-            else:   
-                ia.done()
-
-                # just remove degenerate axes from modelimage4d
-                ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
-                if innstokes <= 1:
-                    os.rename(modelflat,modelflat+".tmp")
-                    ia.open(modelflat+".tmp")
-                    ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
-                    ia.done()
-                    shutil.rmtree(modelflat+".tmp")
-            if innstokes > 1:
-                os.rename(modelflat,modelflat+".tmp")
-                po.open(modelflat+".tmp")
-                foo = po.stokesi(outfile=modelflat,stokes='I')
-                foo.done()
-                po.done()
-                shutil.rmtree(modelflat+".tmp")
-
-            
-
-
-
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
 
         #####################################################################
+        outflat_current = False
+        convsky_current = False
+        beam_current = False
+        imagename = fileroot + "/" + project
         if image:
 
             # make sure cell is defined
@@ -1365,10 +1321,9 @@ def simdata(
             if tpmstoimage and os.path.exists(tpmstoimage):
                 msg('creating image from generated ms: '+tpmstoimage)
                 if len(mstoimage):
-                    tpimage = project + '.sd.image'
+                    tpimage = imagename + '.sd.image'
                 else:
-                    tpimage = project + '.image'
-                tpimage = fileroot + "/" + tpimage
+                    tpimage = imagename + '.image'
                 #if sd_only:
                 #    # for analysis step -> do it later
                 #    msfile=tpmstoimage
@@ -1394,7 +1349,7 @@ def simdata(
 
                 im.open(tpmstoimage)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
-                im.defineimage(mode='channel',nx=sdimsize[0],ny=sdimsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
+                im.defineimage(mode='channel',nx=sdimsize[0],ny=sdimsize[1],cellx=cell[0],celly=cell[1],phasecenter=imcenter,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.makeimage(type='singledish',image=tpimage)
@@ -1421,17 +1376,18 @@ def simdata(
                 ia.done()
                 del beam
 
+                # create tpimagee.flat:
+                util.flatimage(tpimage,verbose=verbose)
+                outflat_current = True
+
                 msg('generation of total power image '+tpimage+' complete.')
+                
                 # update TP ms name the for following steps
                 sdmsfile = tpmstoimage
                 sd_any = True
                 
                 # End of single dish imaging part
 
-        outflat_current = False
-        convsky_current = False
-        beam_current = False
-        imagename = fileroot + "/" + project
 
         if image and len(mstoimage) > 0:
             if not predict:
@@ -1474,6 +1430,60 @@ def simdata(
             outflat_current = True
 
             msg("done inverting and cleaning")
+
+        # create fake model from components for analysis
+        if components_only:
+            # needed to be specified even if neigher image nor analyze
+            modelflat = fileroot + "/" + project + ".compskymodel.flat"
+            
+            if image or analyze:
+                newmodel = fileroot + "/" + project + ".compskymodel"
+                if not os.path.exists(imagename+".image"):
+                    msg("must image before analyzing",priority="error")
+                    return False
+                ia.imagecalc(pixels="'"+imagename+".image' * 0",outfile=newmodel,overwrite=True)
+                ia.open(newmodel)
+                cl.open(complist)
+                ia.setbrightnessunit("Jy/pixel")
+                ia.modify(cl.torecord(),subtract=False)
+                cl.done()
+                modelcsys = ia.coordsys()
+                modelshape = ia.shape()
+            
+                # TODO should be able to simplify degen axes code using new
+                # image anal tools.
+                inspectax = modelcsys.findcoordinate('spectral')['pixel']
+                innchan = modelshape[inspectax]
+                
+                stokesax = modelcsys.findcoordinate('stokes')['pixel']
+                innstokes = modelshape[stokesax]
+            
+                if innchan > 1:
+                    # actually run ia.moments
+                    ia.moments(moments=[-1],outfile=modelflat,overwrite=True)
+                    ia.done()
+                else:   
+                    ia.done()
+            
+                    # just remove degenerate axes from modelimage4d
+                    ia.newimagefromimage(infile=newmodel,outfile=modelflat,dropdeg=True,overwrite=True)
+                    if innstokes <= 1:
+                        os.rename(modelflat,modelflat+".tmp")
+                        ia.open(modelflat+".tmp")
+                        ia.adddegaxes(outfile=modelflat,stokes='I',overwrite=True)
+                        ia.done()
+                        shutil.rmtree(modelflat+".tmp")
+                if innstokes > 1:
+                    os.rename(modelflat,modelflat+".tmp")
+                    po.open(modelflat+".tmp")
+                    foo = po.stokesi(outfile=modelflat,stokes='I')
+                    foo.done()
+                    po.done()
+                    shutil.rmtree(modelflat+".tmp")
+
+
+
+        if image:
             if not type(cell) == type([]):
                 cell = [cell,cell]
             if len(cell) <= 1:
@@ -1501,9 +1511,6 @@ def simdata(
             else:
                 file = ""
 
-
-
-        if image and len(mstoimage) > 0:
             if grscreen or grfile:
                 util.newfig(multi=[2,2,1],show=grscreen)
 
@@ -1534,10 +1541,12 @@ def simdata(
                 # although because of DC offset, better to reset disprange
                 disprange = []
                 discard = util.statim(imagename+".image.flat",disprange=disprange)
-                util.nextfig()
 
-                # clean residual image - Jy/bm
-                discard = util.statim(imagename+".residual.flat",disprange=disprange)
+                if len(mstoimage) > 0:
+                    util.nextfig()
+
+                    # clean residual image - Jy/bm
+                    discard = util.statim(imagename+".residual.flat",disprange=disprange)
                 util.endfig(show=grscreen,filename=file)
         
 

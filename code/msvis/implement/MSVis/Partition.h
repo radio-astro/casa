@@ -98,7 +98,8 @@ public:
   Bool setmsselect(const String& spw="", const String& field="", 
 		   const String& baseline="", const String& scan="",
                    const String& uvrange="", const String& taql="", 
-		   const String& subarray="");
+		   const String& subarray="", const String& intent="",
+                   const String& obs="");
 
   // Select source or field
   Bool selectSource(const Vector<Int>& fieldid);
@@ -208,7 +209,10 @@ private:
   ROMSColumns * mscIn_p;
   Bool   antennaSel_p;		// Selecting by antenna?
   Double timeBin_p;
-  String scanString_p, uvrangeString_p, taqlString_p;
+  String scanString_p,          // Selects scans by #number#.  Historically named.
+         intentString_p,        // Selects scans by string.  scanString_p was taken.
+         obsString_p,           // String for observationID selection.
+         uvrangeString_p, taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
   String combine_p;          // Should time averaging not split bins by
                              // scan #, observation, and/or state ID?

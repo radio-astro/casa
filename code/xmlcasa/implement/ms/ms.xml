@@ -2892,6 +2892,11 @@ for i in range(len(tcoord)):
      <description>Only use the requested scan intents.</description>
      <value></value>
      </param>
+
+     <param type="string" direction="in" name="obs">
+     <description>Only use the requested observation IDs.</description>
+     <value></value>
+     </param>
   </input>
   <returns type="bool"/>
 
@@ -3028,6 +3033,16 @@ from spwid 1 of the input data, starting at channel 4, and every
 
      <param type="string" direction="in" name="combine">
      <description>Ignore changes in these columns (scan, and/or state) when time averaging.</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="intent">
+     <description>Only use the requested scan intents.</description>
+     <value></value>
+     </param>
+
+     <param type="string" direction="in" name="obs">
+     <description>Only use the requested observation IDs.</description>
      <value></value>
      </param>
   </input>

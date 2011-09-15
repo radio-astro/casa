@@ -2231,7 +2231,8 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
           const ::casac::variant& uvrange,    const std::string&      taql,
           const std::string&      whichcol,   const ::casac::variant& tileShape,
           const ::casac::variant& subarray,   const std::string&      combine,
-          const std::string& correlation,     const std::string&      intent)
+          const std::string& correlation,     const std::string&      intent,
+          const std::string&      obs)
 {
   Bool rstat(False);
   try {
@@ -2246,6 +2247,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
     String t_antenna = toCasaString(antenna);
     String t_scan    = toCasaString(scan);
     String t_intent  = toCasaString(intent);
+    String t_obs     = toCasaString(obs);
     String t_uvrange = toCasaString(uvrange);
     String t_taql(taql);
     const String t_subarray = toCasaString(subarray);
@@ -2255,7 +2257,7 @@ ms::split(const std::string&      outputms,   const ::casac::variant& field,
      
     if(!splitter->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange, 
 			      t_taql, Vector<Int>(step), t_subarray, t_correlation,
-                              t_intent)){
+                              t_intent, t_obs)){
       *itsLog << LogIO::SEVERE
 	      << "Error selecting data."
 	      << LogIO::POST;
@@ -2312,7 +2314,8 @@ ms::partition(const std::string&      outputms,   const ::casac::variant& field,
 	      const ::casac::variant& scan,       const ::casac::variant& uvrange,
 	      const std::string&      taql,       const std::string&      whichcol,
 	      const ::casac::variant& tileShape,  const ::casac::variant& subarray,
-	      const std::string&      combine)
+	      const std::string&      combine,    const std::string&      intent,
+              const std::string&      obs)
 {
   Bool rstat(False);
   try {
@@ -2326,12 +2329,14 @@ ms::partition(const std::string&      outputms,   const ::casac::variant& field,
 
     String t_antenna = toCasaString(antenna);
     String t_scan    = toCasaString(scan);
+    String t_intent  = toCasaString(intent);
+    String t_obs     = toCasaString(obs);
     String t_uvrange = toCasaString(uvrange);
     String t_taql(taql);
     const String t_subarray = toCasaString(subarray);
      
     if(!partitioner->setmsselect(t_spw, t_field, t_antenna, t_scan, t_uvrange,
-				 t_taql, t_subarray)){
+				 t_taql, t_subarray, t_intent, t_obs)){
       *itsLog << LogIO::SEVERE
 	      << "Error selecting data."
 	      << LogIO::POST;

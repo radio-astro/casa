@@ -105,6 +105,8 @@ Partition::Partition(String& theMS, Table::TableOption option) :
   antennaSel_p(False),
   timeBin_p(-1.0),
   scanString_p(""),
+  intentString_p(""),
+  obsString_p(""),
   uvrangeString_p(""),
   taqlString_p(""),
   timeRange_p(""),
@@ -124,6 +126,8 @@ Partition::Partition(MeasurementSet& ms) :
   antennaSel_p(False),
   timeBin_p(-1.0),
   scanString_p(""),
+  intentString_p(""),
+  obsString_p(""),
   uvrangeString_p(""),
   taqlString_p(""),
   timeRange_p(""),
@@ -217,7 +221,8 @@ Bool Partition::selectSpw(const String& spwstr)
 Bool Partition::setmsselect(const String& spw, const String& field,
 			    const String& baseline, const String& scan,
 			    const String& uvrange, const String& taql,
-			    const String& subarray)
+			    const String& subarray, const String& intent,
+                            const String& obs)
 {
   LogIO os(LogOrigin("Partition", "setmsselect()"));
   Bool  ok;
@@ -244,6 +249,8 @@ Bool Partition::setmsselect(const String& spw, const String& field,
     selectAntenna(antid, antstr);
   }
   scanString_p    = scan;
+  intentString_p  = intent;
+  obsString_p     = obs;
   uvrangeString_p = uvrange;
   taqlString_p    = taql;
 
@@ -608,6 +615,8 @@ Bool Partition::makeSelection()
     
   thisSelection.setUvDistExpr(uvrangeString_p);
   thisSelection.setScanExpr(scanString_p);
+  thisSelection.setStateExpr(intentString_p);
+  thisSelection.setObservationExpr(obsString_p);
   if(arrayExpr_p != "")
     thisSelection.setArrayExpr(arrayExpr_p);
   if(corrString_p != "")

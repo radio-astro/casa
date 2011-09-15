@@ -380,9 +380,12 @@ srcb=3.260
 # The values are from the run on 64b RHEL(rishi), 
 # with active # r.14436. Lower max values but 
 # slightly better rms # as compared to ones get with casa3.1 
-coa=0.4172
+#coa=0.4172
 cob=0.3712
 coc=0.3362
+
+# 2011-09-01: co10a is back up.
+coa = 0.4819
 
 contmax=0.00963
 
@@ -398,21 +401,21 @@ datestring=datetime.datetime.isoformat(datetime.datetime.today())
 outfile='h121.'+datestring+'.log'
 logfile=open(outfile,'w')
 
+passfail = {True: '* Passed', False: '* FAILED'}
 print >>logfile,'********** Regression ***********'
 print >>logfile,'*                               *'
-if (diff_3mma<0.05): print >>logfile,'* Passed 3mm (5may) max amplitude test '
+print >>logfile, passfail[diff_3mma < 0.05], '3mm (5may) max amplitude test '
 print >>logfile,'--3mm max (5may) amp '+str(thistest_3mm)
-if (diff_3mmb<0.05): print >>logfile,'* Passed 3mm (9may) max amplitude test '
+print >>logfile, passfail[diff_3mmb < 0.05], '3mm (9may) max amplitude test '
 print >>logfile,'--3mm max (9may) amp '+str(thistest_3mmb)
-if (diff_co10a<0.05): print >>logfile,'* Passed CO 1-0 image max (5may) test '
+print >>logfile, passfail[diff_co10a < 0.05], 'CO 1-0 image max (5may) test '
 print >>logfile,'--CO 1-0 (5may) image max '+str(co10a)
-if (diff_co10b<0.05): print >>logfile,'* Passed CO 1-0 image max (9may) test '
+print >>logfile, passfail[diff_co10b < 0.05], 'CO 1-0 image max (9may) test '
 print >>logfile,'--CO 1-0 (9may) image max '+str(co10b)
-if (diff_co10c<0.05): print >>logfile,'* Passed CO 1-0 image max (combined) test '
+print >>logfile, passfail[diff_co10c < 0.05], 'CO 1-0 image max (combined) test '
 print >>logfile,'--CO 1-0 (combine) image max '+str(co10c)
-if (diff_cont<0.05): print >>logfile,'* Passed 3mm image max test '
+print >>logfile, passfail[diff_cont < 0.05], '3mm image max test '
 print >>logfile,'--3mm image max  '+str(cont3mmmax)
-
 
 
 if ((diff_3mma<0.05) & (diff_3mmb<0.05) & (diff_co10a<0.05) & (diff_co10b<0.05) & (diff_co10c<0.05) & (diff_cont<0.05)):

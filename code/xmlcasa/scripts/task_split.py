@@ -5,7 +5,7 @@ from update_spw import update_spwchan
 
 def split(vis, outputvis, datacolumn, field, spw, width, antenna,
           timebin, timerange, scan, intent, array, uvrange,
-          correlation, combine, keepflags):
+          correlation, observation, combine, keepflags):
     """Create a visibility subset from an existing visibility set:
 
     Keyword arguments:
@@ -51,6 +51,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     uvrange -- uv distance range to select.
                default '' (all).
     correlation -- Select correlations, e.g. 'rr, ll' or ['XY', 'YX'].
+                   default '' (all).
+    observation -- Select by observation ID(s).
                    default '' (all).
     combine -- Data descriptors that time averaging can ignore:
                   scan, and/or state
@@ -162,7 +164,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
                    whichcol=datacolumn,
                    scan=scan,          uvrange=uvrange,
                    combine=combine,
-                   correlation=correlation, intent=intent)
+                   correlation=correlation, intent=intent,
+                   obs=observation)
         
         # The selection was already made, so blank them before time averaging.
         field = ''
@@ -175,6 +178,7 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         scan = ''
         intent = ''
         uvrange = ''
+        observation = ''
 
         myms.close()
         myms.open(cavms)
@@ -193,7 +197,8 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
              scan=scan,           uvrange=uvrange,
              combine=combine,
              correlation=correlation,
-             taql=taqlstr, intent=intent)
+             taql=taqlstr, intent=intent,
+               obs=observation)
     myms.close()
 
     if do_both_chan_and_time_mod:

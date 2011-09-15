@@ -515,7 +515,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                   #                outputmodel=imset.imagelist.values()[0]+'.model')
                         if modelimage[j] != '' and modelimage[j] != []:
                             imset.convertmodelimage(modelimages=modelimage[j],
-                                             outputmodel=imset.imagelist.values()[j]+'.model')
+                                             outputmodel=imset.imagelist.values()[j]+'.model',imindex=j)
             modelimages=[]
             restoredimage=[]
             residualimage=[]

@@ -141,7 +141,7 @@ class SubMS
                    const String& uvrange="", const String& taql="", 
 		   const Vector<Int>& step=Vector<Int> (1,1),
 		   const String& subarray="", const String& correlation="",
-                   const String& intent="");
+                   const String& intent="", const String& obs="");
 
   // This older version does not return a success value, and does need nchan,
   // start, and step.  It is used elsewhere (i.e. ImagerMultiMS).
@@ -167,7 +167,7 @@ class SubMS
 			   const Vector<String>& antennaSel);
   
   // Select array IDs to use.
-  void selectArray(const String& subarray);
+  void selectArray(const String& subarray) {arrayExpr_p = subarray;}
 
   //select time parameters
   void selectTime(Double timeBin=-1.0, String timerng="");
@@ -267,7 +267,8 @@ class SubMS
 			  const Bool areSelecting=false);
   
   // Replaces col[i] with mapper[col[i]] for each element of col.
-  // Does NOT check whether mapper[col[i]] is defined.
+  // Does NOT check whether mapper[col[i]] is defined, but it does return
+  // right away (i.e. a no-op) if mapper is empty.
   static void remap(Vector<Int>& col, const Vector<Int>& mapper);
   static void remap(Vector<Int>& col, const std::map<Int, Int>& mapper);
 
@@ -556,10 +557,28 @@ class SubMS
   void relabelSources();
 
   void relabelIDs();
-  void remapColumn(const ROScalarColumn<Int>& incol, ScalarColumn<Int>& outcol);
-  static void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
-  static void make_map(const ROScalarColumn<Int>& mscol,
-		       std::map<Int, Int>& mapper);
+
+  // Sets outcol to the indices of selvals that correspond to incol, i.e.
+  // outcol(i) = j s.t. selvals[j] == incol(i).
+  //
+  // Ideally selvals is set up so that outcol's values will be row numbers in
+  // the corresponding subtable of its ms.
+  //
+  // Throws an exception if incol and outcol do not have the same # of rows, or
+  // incol has a value that is not in selvals.
+  void remapColumn(ScalarColumn<Int>& outcol, const ROScalarColumn<Int>& incol,
+                   const Vector<Int>& selvals);
+
+  // Equivalent to but slightly more efficient than
+  // remapColumn(outcol, incol, incol.getColumn()).
+  void remapColumn(ScalarColumn<Int>& outcol, const ROScalarColumn<Int>& incol);
+
+  //static void make_map(const Vector<Int>& mscol, Vector<Int>& mapper);
+
+  // Sets mapper to to a map from the distinct values of inv, in increasing
+  // order, to 0, 1, 2, ..., mapper.size() - 1.
+  static void make_map(std::map<Int, Int>& mapper, const Vector<Int>& inv);
+
   uInt remapped(const Int ov, const Vector<Int>& mapper, uInt i);
 
   // Sets up the stub of a POINTING, enough to create an MSColumns.
@@ -580,6 +599,7 @@ class SubMS
   Double timeBin_p;
   String scanString_p,          // Selects scans by #number#.  Historically named.
          intentString_p,        // Selects scans by string.  scanString_p was taken.
+         obsString_p,           // String for observationID selection.
          uvrangeString_p,
          taqlString_p;
   String timeRange_p, arrayExpr_p, corrString_p;
@@ -610,14 +630,14 @@ class SubMS
   Vector<Int> antIndexer_p;
   Vector<Int> antNewIndex_p;
 
-  Vector<Int> arrayId_p;
+  Vector<Int> selObsId_p;  // List of selected OBSERVATION_IDs.
   Vector<Int> polID_p;	       // Map from input DDID to input polID, filled in fillDDTables(). 
   Vector<uInt> spw2ddid_p;
 
   // inCorrInd = outPolCorrToInCorrMap_p[polID_p[ddID]][outCorrInd]
   Vector<Vector<Int> > inPolOutCorrToInCorrMap_p;
 
-  std::map<Int, Int> arrayRemapper_p, stateRemapper_p; 
+  std::map<Int, Int> stateRemapper_p; 
 
   Vector<Vector<Slice> > chanSlices_p;  // Used by VisIterator::selectChannel()
   Vector<Slice> corrSlice_p;
