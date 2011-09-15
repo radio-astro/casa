@@ -59,11 +59,19 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
 		QWidget *parent ) :
 		QWidget(parent),
 		parent_(parent),
-		panel_(panel) {
+		panel_(panel),
+		ms_selection(new Ui::QtDataMgrMsSelect) {
   
   setWindowTitle(name);
   
   setupUi(this);
+  ms_selection->setupUi(ms_selection_scroll_widget);
+  // Tue Sep  6 12:17:21 EDT 2011
+  // don't think people really use the lel entry, and while it's removal wasn't
+  // required (with the addition of the ms selection to the "loading options"),
+  // originally the lel expression was supposed to be replace with ms selection
+  // options... so we'll remove it and see what happens <drs>...
+  lelGB_->hide( );
   
   //updateButton_->setEnabled(false);	//#dk until this works.
 
@@ -381,7 +389,8 @@ void QtDataManager::showDisplayButtons(int ddtp) {
         markerButton_->show();
         break;      
      case MEASUREMENT_SET :
-        rasterButton_->show();        
+        rasterButton_->show();
+	ms_selection_box->show();
         break;
      case SKY_CATALOG:        
         catalogButton_->show();
@@ -417,6 +426,7 @@ void QtDataManager::hideDisplayButtons(){
   catalogButton_->hide();
   oldPanelButton_->hide();
   newPanelButton_->hide();
+  ms_selection_box->hide();
 }
 
 
@@ -427,45 +437,58 @@ void QtDataManager::returnPressed(){
 
 
 
-void QtDataManager::createButtonClicked() {
+    void QtDataManager::createButtonClicked() {
   
-  QPushButton* button = dynamic_cast<QPushButton*>(sender());
+	QPushButton* button = dynamic_cast<QPushButton*>(sender());
   
-  if(panel_==0 || button==0) return;
+	if(panel_==0 || button==0) return;
   
-  String path, datatype, displaytype;
+	String path, datatype, displaytype;
   
-  displaytype = (displayType_.key(uiDisplayType_[button->text()]))
-		.toStdString();
+	displaytype = (displayType_.key(uiDisplayType_[button->text()])).toStdString();
   
-  if(lelEdit_->isActive()) {
+	if(lelEdit_->isActive()) {
+
+	    // Display LEL expression.
+	    path = lelEdit_->text().trimmed().toStdString();
+	    datatype = "lel";
+
+	} else if (treeWidget_->currentItem() > 0) {
+  
+	    // Display selected file.
+	    path = (dir_.path() + "/" + treeWidget_->currentItem()->text(0)).toStdString();
+
+	    datatype = dataType_.key(uiDataType_[treeWidget_->currentItem()->text(1)]).toStdString();
+	}
+
+	if(path=="" || datatype=="" || displaytype=="") return;
+
+	viewer::DisplayDataOptions ddo;
+	if ( datatype == "ms" ) {
+	    if ( ms_selection->select_field->text( ) != "" )
+		ddo.insert( "field", ms_selection->select_field->text( ).toStdString( ) );
+	    if ( ms_selection->select_spw->text( ) != "" )
+		ddo.insert( "spw", ms_selection->select_spw->text( ).toStdString( ) );
+	    if ( ms_selection->select_time->text( ) != "" )
+		ddo.insert( "time", ms_selection->select_time->text( ).toStdString( ) );
+	    if ( ms_selection->select_uvrange->text( ) != "" )
+		ddo.insert( "uvrange", ms_selection->select_uvrange->text( ).toStdString( ) );
+	    if ( ms_selection->select_antenna->text( ) != "" )
+		ddo.insert( "antenna", ms_selection->select_antenna->text( ).toStdString( ) );
+	    if ( ms_selection->select_scan->text( ) != "" )
+		ddo.insert( "scan", ms_selection->select_scan->text( ).toStdString( ) );
+	    if ( ms_selection->select_corr->text( ) != "" )
+		ddo.insert( "corr", ms_selection->select_corr->text( ).toStdString( ) );
+	    if ( ms_selection->select_array->text( ) != "" )
+		ddo.insert( "array", ms_selection->select_array->text( ).toStdString( ) );
+	    if ( ms_selection->select_msexpr->text( ) != "" )
+		ddo.insert( "msexpr", ms_selection->select_msexpr->text( ).toStdString( ) );
+	}
+
+	panel_->createDD( path, datatype, displaytype, True, ddo );
     
-    // Display LEL expression.
-    
-    path = lelEdit_->text().trimmed().toStdString();
-    datatype = "lel";  } 
-  
-
-  
-  else if (treeWidget_->currentItem() > 0) {
-  
-    // Display selected file.
-  
-    path = (dir_.path() + "/" + treeWidget_->currentItem()->text(0))
-	   .toStdString();
-
-    datatype = dataType_.key(uiDataType_[treeWidget_->currentItem()->text(1)])
-		        .toStdString();  }
-
-  if(path=="" || datatype=="" || displaytype=="") return;
-    
-
-  panel_->createDD(path, datatype, displaytype);
-  
-    
-  if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
-
-}
+	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
+    }
 
 
 //<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)

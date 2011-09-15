@@ -64,6 +64,7 @@ QtCanvas::QtCanvas(QWidget *parent)
     setMarkMode(false);
     autoScaleX = 2;
     autoScaleY = 2;
+    plotError  = 2;
     
 }
 
@@ -141,74 +142,97 @@ CurveData* QtCanvas::getCurveData(int id)
 {
     return &curveMap[id];
 }
+ErrorData* QtCanvas::getCurveError(int id)
+{
+    return &errorMap[id];
+}
 QString QtCanvas::getCurveName(int id)
 {
     return legend[id];
 }
-void QtCanvas::setCurveData(int id, const CurveData &data, 
+void QtCanvas::setCurveData(int id, const CurveData &data, const ErrorData &error,
                                     const QString& lbl)
 {
     curveMap[id] = data;
-    legend[id] = lbl;
+    errorMap[id] = error;
+    legend[id]   = lbl;
+
     refreshPixmap();
 }
 void QtCanvas::setDataRange()
 {
-    if (autoScaleX == 0 && autoScaleY == 0)
-       return;
+	if (autoScaleX == 0 && autoScaleY == 0)
+		return;
 
-    double xmin = 1000000000000000000000000.;
-    double xmax = -xmin;
-    double ymin = 1000000000000000000000000.;
-    double ymax = -ymin;
-    std::map<int, CurveData>::const_iterator it = curveMap.begin();
-    while (it != curveMap.end())
-    {
-        const CurveData &data = (*it).second;
-        int maxPoints = data.size() / 2;
+	double xmin = 1000000000000000000000000.;
+	double xmax = -xmin;
+	double ymin = 1000000000000000000000000.;
+	double ymax = -ymin;
+	std::map<int, CurveData>::const_iterator it = curveMap.begin();
+	while (it != curveMap.end())
+	{
+		int id = (*it).first;
+		const CurveData &data = (*it).second;
+		int maxPoints = data.size() / 2;
 
-        for (int i = 0; i < maxPoints; ++i)
-        {
-            double dx = data[2 * i];
-            double dy = data[2 * i + 1];
-            xmin = (xmin > dx) ? dx : xmin;
-            xmax = (xmax < dx) ? dx : xmax;
-            ymin = (ymin > dy) ? dy : ymin;
-            ymax = (ymax < dy) ? dy : ymax;
-        }
-        ++it;
-    }
+		const ErrorData &error=errorMap[id];
+		int nErrPoints=error.size();
 
-    QtPlotSettings settings;
+		//if (plotError && nErrPoints>1){
+		if (plotError && nErrPoints>0){
+			for (int i = 0; i < maxPoints; ++i){
+				double dx = data[2 * i];
+				double dyl = data[2 * i + 1] - error[i];
+				double dyu = data[2 * i + 1] + error[i];
+				xmin = (xmin > dx)  ? dx : xmin;
+				xmax = (xmax < dx)  ? dx : xmax;
+				ymin = (ymin > dyl) ? dyl : ymin;
+				ymax = (ymax < dyu) ? dyu : ymax;
+			}
+		}
+		else {
+			for (int i = 0; i < maxPoints; ++i){
+				double dx = data[2 * i];
+				double dy = data[2 * i + 1];
+				xmin = (xmin > dx) ? dx : xmin;
+				xmax = (xmax < dx) ? dx : xmax;
+				ymin = (ymin > dy) ? dy : ymin;
+				ymax = (ymax < dy) ? dy : ymax;
+			}
+		}
+		++it;
+	}
 
-    if (fabs(xmax - xmin) < 0.0001)
-    {
-        xmax = xmax + 0.00001;
-        xmin = xmin - 0.00001;
-    }
-    if (fabs(ymax - ymin) < 0.0001)
-    {
-        ymax = ymax + 0.00001;
-        ymin = ymin - 0.00001;
-    }
-    if (autoScaleX) {
-       settings.minX = xmin;
-       settings.maxX = xmax;
-    }
-    if (autoScaleY) {
-       settings.minY = ymin;
-       settings.maxY = ymax;
-    }
-    settings.adjust();
+	QtPlotSettings settings;
 
-    if ( curZoom > 0 ) {
-	// if the canvas is zoomed, keep the zoom level, update unzoomed state...
-	zoomStack[0] = settings;
-	refreshPixmap();
-    } else {
-	// reset the canvas, zoom, etc.
-	setPlotSettings(settings);
-    }
+	if (fabs(xmax - xmin) < 0.0001)
+	{
+		xmax = xmax + 0.00001;
+		xmin = xmin - 0.00001;
+	}
+	if (fabs(ymax - ymin) < 0.0001)
+	{
+		ymax = ymax + 0.00001;
+		ymin = ymin - 0.00001;
+	}
+	if (autoScaleX) {
+		settings.minX = xmin;
+		settings.maxX = xmax;
+	}
+	if (autoScaleY) {
+		settings.minY = ymin;
+		settings.maxY = ymax;
+	}
+	settings.adjust();
+
+	if ( curZoom > 0 ) {
+		// if the canvas is zoomed, keep the zoom level, update unzoomed state...
+		zoomStack[0] = settings;
+		refreshPixmap();
+	} else {
+		// reset the canvas, zoom, etc.
+		setPlotSettings(settings);
+	}
 }
 
 void QtCanvas::clearData()
@@ -253,6 +277,8 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     if (rubberBandIsShown)
     {
         painter.setPen(Qt::yellow);
+        //painter.fillRect(rubberBandRect, Qt::transparent);
+        //painter.fillRect(rubberBandRect, QColor(100,100,100,100));
         painter.drawRect(rubberBandRect.normalized());
     }
     if (hasFocus())
@@ -273,46 +299,49 @@ void QtCanvas::resizeEvent(QResizeEvent *)
 
 void QtCanvas::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton)
-    {
-        rubberBandIsShown = true;
-        rubberBandRect.setTopLeft(event->pos());
-        rubberBandRect.setBottomRight(event->pos());
-        updateRubberBandRegion();
-        setCursor(Qt::CrossCursor);
-    }
-    if (event->button() == Qt::RightButton)
-    {
-      int x = event->pos().x() - Margin;
-      int y = event->pos().y() - Margin;
-      //cout << "x=" << x << " y=" << y << endl;
-     QtPlotSettings prevSettings = zoomStack[curZoom];
-        QtPlotSettings settings;
-
-        double dx = prevSettings.spanX() / (width() - 2 * Margin);
-        double dy = prevSettings.spanY() / (height() - 2 * Margin);
-        x = (int)(prevSettings.minX + dx * x);        
-        y = (int)(prevSettings.maxY - dy * y);
-        //cout << "x=" << x << " y=" << y << endl;
-		
-    std::map<int, CurveData>::const_iterator it = markerStack.begin();
-
-    while (it != markerStack.end())
-    {
-        int id = (*it).first;
-        const CurveData &data = (*it).second;
-        //cout << " " << data[0] << " " << data[2] 
-	//        << " " << data[1] << " " << data[3] << endl;
-	if ( x >= data[0] && x < data[2] && 
-	     y <= data[1] && y > data[3]) {
-	     markerStack[id] = markerStack[markerStack.size() - 1];
-            markerStack.erase(markerStack.size() - 1);
-	    refreshPixmap();
-	    break;
+	//cout << "Mouse pressed event-->" << endl;
+	if (event->button() == Qt::LeftButton)
+	{
+		//cout << "Left button! " << endl;
+		rubberBandIsShown = true;
+		rubberBandRect.setTopLeft(event->pos());
+		rubberBandRect.setBottomRight(event->pos());
+		updateRubberBandRegion();
+		setCursor(Qt::CrossCursor);
 	}
-        ++it;
-    }
-}
+	if (event->button() == Qt::RightButton)
+	{
+		//cout << "Right button! " << endl;
+		int x = event->pos().x() - Margin;
+		int y = event->pos().y() - Margin;
+		//cout << "x=" << x << " y=" << y << endl;
+		QtPlotSettings prevSettings = zoomStack[curZoom];
+		QtPlotSettings settings;
+
+		double dx = prevSettings.spanX() / (width() - 2 * Margin);
+		double dy = prevSettings.spanY() / (height() - 2 * Margin);
+		x = (int)(prevSettings.minX + dx * x);
+		y = (int)(prevSettings.maxY - dy * y);
+		//cout << "x=" << x << " y=" << y << endl;
+
+		std::map<int, CurveData>::const_iterator it = markerStack.begin();
+
+		while (it != markerStack.end())
+		{
+			int id = (*it).first;
+			const CurveData &data = (*it).second;
+			//cout << " " << data[0] << " " << data[2]
+			//        << " " << data[1] << " " << data[3] << endl;
+			if ( x >= data[0] && x < data[2] &&
+					y <= data[1] && y > data[3]) {
+				markerStack[id] = markerStack[markerStack.size() - 1];
+				markerStack.erase(markerStack.size() - 1);
+				refreshPixmap();
+				break;
+			}
+			++it;
+		}
+	}
 }
 void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 {
@@ -326,8 +355,7 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 
 void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    //qDebug() << "mouse release" << event->button()
-    //         << Qt::LeftButton;
+    //qDebug() << "mouse release" << event->button() << Qt::LeftButton;
     if (event->button() == Qt::LeftButton)
     {
         rubberBandIsShown = false;
@@ -721,59 +749,105 @@ void QtCanvas::drawCurves(QPainter *painter)
 
     while (it != curveMap.end())
     {
-        int id = (*it).first;
-        const CurveData &data = (*it).second;
-        int maxPoints = data.size() / 2;
-        QPainterPath points;
-        double n = (double)id / sz;
+   	 int id = (*it).first;
+   	 const CurveData &data = (*it).second;
+   	 const ErrorData &error = errorMap[id];
 
-        colorFolds[id] = getLinearColor(n);
+   	 int maxPoints = data.size() / 2;
+   	 QPainterPath points;
+   	 double n = (double)id / sz;
 
-        //cout << "maxPoints=" << maxPoints << endl;
-        if (maxPoints == 1) {
-        //cout << "x=" << data[0] << " y=" << data[1] << endl;
-            double dx = data[0] - settings.minX;
-            double dy = data[1] - settings.minY;
-            double x = rect.left() + (dx * (rect.width() - 1)
-                                      / settings.spanX());
-            double y = rect.bottom() - (dy * (rect.height() - 1)
-                                        / settings.spanY());
-            if (fabs(x) < 32768 && fabs(y) < 32768)
-            {
-                points.moveTo((int)x + 1, (int)y);
-                points.lineTo((int)x, (int)y - 1);
-                points.lineTo((int)x - 1, (int)y);
-                points.lineTo((int)x, (int)y + 1);
-                points.lineTo((int)x + 1, (int)y);
-            }
-        }
-        else {
-        for (int i = 0; i < maxPoints; ++i)
-        {
-            double dx = data[2 * i] - settings.minX;
-            double dy = data[2 * i + 1] - settings.minY;
-            double x = rect.left() + (dx * (rect.width() - 1)
-                                      / settings.spanX());
-            double y = rect.bottom() - (dy * (rect.height() - 1)
-                                        / settings.spanY());
-            if (fabs(x) < 32768 && fabs(y) < 32768)
-            {
-                if (i == 0)
-                    points.moveTo((int)x, (int)y);
-                points.lineTo((int)x, (int)y);
-            }
-        }
-        }
-        painter->setPen(colorFolds[(uint)id % 6]);
-        painter->drawPath(points);
-   
-        if (siz > 1) {
-           painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));  
-           painter->drawText(Margin + 4, Margin + (5 + id * 15), 
-                          width() - 2 * Margin, Margin / 2,
-                          Qt::AlignLeft | Qt::AlignTop, legend[id]);
-        }                                  
-        ++it;
+   	 colorFolds[id] = getLinearColor(n);
+
+   	 if (maxPoints == 1) {
+
+   		 double dx = data[0] - settings.minX;
+   		 double dy = data[1] - settings.minY;
+   		 double x = rect.left() + (dx * (rect.width() - 1)
+   				 / settings.spanX());
+   		 double y = rect.bottom() - (dy * (rect.height() - 1)
+   				 / settings.spanY());
+   		 if (fabs(x) < 32768 && fabs(y) < 32768)
+   		 {
+   			 // plots a diamond in order to have
+   			 // a 2D item at all
+   			 points.moveTo((int)x + 1, (int)y);
+   			 points.lineTo((int)x, (int)y - 1);
+   			 points.lineTo((int)x - 1, (int)y);
+   			 points.lineTo((int)x, (int)y + 1);
+   			 points.lineTo((int)x + 1, (int)y);
+   		 }
+
+   		 if (plotError && (error.size() > 0)){
+
+   			 double dx = data[0] - settings.minX;
+   			 double dy = data[1] - settings.minY;
+   			 double de = error[0];
+
+   			 double x = rect.left() + (dx * (rect.width() - 1)
+   					 / settings.spanX());
+   			 double yl = rect.bottom() - ((dy-de) * (rect.height() - 1)
+   					 / settings.spanY());
+   			 double yu = rect.bottom() - ((dy+de) * (rect.height() - 1)
+   					 / settings.spanY());
+
+   			 if (fabs(x) < 32768 && fabs(yl) < 32768 && fabs(yu) < 32768)
+   			 {
+   				 points.moveTo((int)x, (int)yl);
+   				 points.lineTo((int)x, (int)yu);
+   			 }
+   		 }
+
+   	 }
+   	 else {
+   		 for (int i = 0; i < maxPoints; ++i)
+   		 {
+   			 double dx = data[2 * i] - settings.minX;
+   			 double dy = data[2 * i + 1] - settings.minY;
+   			 double x = rect.left() + (dx * (rect.width() - 1)
+   					 / settings.spanX());
+   			 double y = rect.bottom() - (dy * (rect.height() - 1)
+   					 / settings.spanY());
+   			 if (fabs(x) < 32768 && fabs(y) < 32768)
+   			 {
+   				 if (i == 0)
+   					 points.moveTo((int)x, (int)y);
+   				 points.lineTo((int)x, (int)y);
+   			 }
+   		 }
+
+   		 if (plotError && (error.size() > 0)){
+   			 for (int i = 0; i < maxPoints; ++i)
+   			 {
+   				 double dx = data[2 * i] - settings.minX;
+   				 double dy = data[2 * i + 1] - settings.minY;
+   				 double de = error[i];
+   				 double x = rect.left() + (dx * (rect.width() - 1)
+   						 / settings.spanX());
+   				 double yl = rect.bottom() - ((dy-de) * (rect.height() - 1)
+   						 / settings.spanY());
+   				 double yu = rect.bottom() - ((dy+de) * (rect.height() - 1)
+   						 / settings.spanY());
+
+   				 if (fabs(x) < 32768 && fabs(yl) < 32768 && fabs(yu) < 32768)
+   				 {
+   					 points.moveTo((int)x, (int)yl);
+   					 points.lineTo((int)x, (int)yu);
+   				 }
+   			 }
+   		 }
+
+   	 }
+   	 painter->setPen(colorFolds[(uint)id % 6]);
+   	 painter->drawPath(points);
+
+   	 if (siz > 1) {
+   		 painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));
+   		 painter->drawText(Margin + 4, Margin + (5 + id * 15),
+   				 width() - 2 * Margin, Margin / 2,
+   				 Qt::AlignLeft | Qt::AlignTop, legend[id]);
+   	 }
+   	 ++it;
     }
 
     painter->setPen(pen);                   
@@ -802,7 +876,7 @@ void QtCanvas::addPolyLine(const Vector<Float> &x,
     }
     int j = curveMap.size();
     //qDebug() << "j:" << j;
-    setCurveData(j, data, lb);
+    setCurveData(j, data, ErrorData(), lb);
 
     setDataRange();
     return;
@@ -864,23 +938,29 @@ void QtCanvas::plotPolyLines(QString path)
     setDataRange();
     return;
 }
-void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
                             const QString& lb)
 {
 
     //qDebug() << "plot poly line float";
     //for (int i=0; i< x.nelements(); i++)
-    //   cout << x(i) << " " << y(i) << endl;
-    Int xl, yl;
+       //cout << x(i) << " " << y(i) << endl;
+    Int xl, yl, el;
     x.shape(xl);
     y.shape(yl);
+    e.shape(el);
     CurveData data;
+    ErrorData error;
     for (uInt i = 0; i < (uInt)min(xl, yl); i++)
     {
         data.push_back(x[i]);
         data.push_back(y[i]);
     }
-    setCurveData(0, data, lb);
+
+    for (uInt i = 0; i < (uint)el; i++)
+        error.push_back(e[i]);
+
+    setCurveData(0, data, error, lb);
 
     setDataRange();
     return;

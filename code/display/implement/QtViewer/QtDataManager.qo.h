@@ -36,14 +36,15 @@
 #include <display/QtViewer/QtLELEdit.qo.h>
 
 #include <graphics/X11/X_enter.h>
-#  include <QDir>
-#  include <QColor>
-#  include <QHash>
-#  include <QWidget>
+#include <QDir>
+#include <QColor>
+#include <QHash>
+#include <QWidget>
    //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
    //#   because they'll have Qt includes.
    //#   E.g. <QApplication> needs the X11 definition of 'Display'
-#  include <display/QtViewer/QtDataManager.ui.h>
+#include <display/QtViewer/QtDataManager.ui.h>
+#include <display/QtViewer/QtDataMgrMsSelect.ui.h>
 #include <graphics/X11/X_exit.h>
 
  
@@ -118,7 +119,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   
   QWidget *parent_;
   QtDisplayPanelGui* panel_;
-  QDir dir_;  
+  QDir dir_;
+  Ui::QtDataMgrMsSelect *ms_selection;
   
 };
 

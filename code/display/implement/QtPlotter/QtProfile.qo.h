@@ -71,13 +71,37 @@ inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 
 namespace casa { 
 
-//class casa::Stokes;
+class LogIO;
 
 class QtProfile : public QWidget//, public MWCCrosshairTool
 {
     Q_OBJECT
 public:
-    QtProfile(ImageInterface<Float>* img, const char *name = 0, 
+
+    enum ExtrType {
+		 MEAN     =0,
+		 MEDIAN   =1,
+		 SUM      =2,
+		 MSE      =3,
+		 RMSE     =4,
+		 SQRTSUM  =5,
+		 NSQRTSUM =6,
+	 };
+
+    enum PlotType {
+		 PMEAN,
+		 PMEDIAN,
+		 PSUM,
+		 //PVRMSE,
+	 };
+
+    enum ErrorType {
+		 PNOERROR,
+		 PERMSE,
+		 PPROPAG
+    };
+
+	 QtProfile(ImageInterface<Float>* img, const char *name = 0,
 	      QWidget *parent = 0, std::string rcstr="prf");
     ~QtProfile();
     MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
@@ -100,11 +124,15 @@ public slots:
     void setRelativeProfile(int);
     void setAutoScaleX(int);
     void setAutoScaleY(int);
+    void setPlotError(int);
+    //void setImgCollapse(int);
     void changeCoordinate(const QString &text); 
     void changeFrame(const QString &text);
     void changeCoordinateType(const QString &text); 
     void updateZoomer();
     //virtual void crosshairReady(const String& evtype);
+    void changePlotType(const QString &text);
+    void changeErrorType(const QString &text);
     virtual void closeEvent ( QCloseEvent *); 
     void resetProfile(ImageInterface<Float>* img, const char *name = 0);
     void wcChanged( const String,
@@ -115,13 +143,22 @@ public slots:
     void changeAxis(String, String, String, std::vector<int> );
 
     void overplot(QHash<QString, ImageInterface<float>*>);
+
 signals:
     void hideProfile();
     void coordinateChange(const String&);
 
+    void add2DImage(String path, String dataType, String displayType, Bool autoRegister);
+
 private:
 
+    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
+    void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
+    void fillPlotTypes();
+    void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
+    //void doImgCollapse();
     void printIt(QPrinter*);
+
     QToolButton *zoomInButton;
     QToolButton *zoomOutButton;
     QToolButton *leftButton;
@@ -132,6 +169,7 @@ private:
     QCheckBox *relative;
     QCheckBox *autoScaleX;
     QCheckBox *autoScaleY;
+    //QCheckBox *collapseImg;
     
     QToolButton *printButton;
     QToolButton *saveButton;
@@ -143,6 +181,8 @@ private:
     QLineEdit *te;
     QComboBox *chk;
     QComboBox *ctype;
+    QComboBox *plotMode;
+    QComboBox *errorMode;
     QComboBox *frameButton_p;
     
     ImageAnalysis* analysis;
@@ -151,6 +191,8 @@ private:
     QHash<QString, ImageAnalysis*> *over;
     String coordinate;
     String coordinateType;
+    String xaxisUnit;
+    String ctypeUnit;
     String frameType_p;
     QString fileName;
     QString position;
@@ -161,10 +203,14 @@ private:
     QString ypos;
     int cube;
 
+    int npoints;
+    int npoints_old;
+
     Vector<Double> lastPX, lastPY;
     Vector<Double> lastWX, lastWY;
     Vector<Float> z_xval;
     Vector<Float> z_yval;
+    Vector<Float> z_eval;
     QString region;
 
     QString getRaDec(double x, double y);
@@ -173,11 +219,14 @@ private:
     Vector<Double> last_event_px, last_event_py;
     Vector<Double> last_event_wx, last_event_wy;
 
-
     // connection to rc file
     Casarc &rc;
     // rc id for this panel type
     std::string rcid_;
+
+    QtProfile::PlotType  itsPlotType;
+    QtProfile::ErrorType itsErrorType;
+    LogIO *itsLog;
 };
 
 }

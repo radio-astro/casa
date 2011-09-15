@@ -56,6 +56,7 @@
 namespace casa { 
 
 typedef std::vector<double> CurveData;
+typedef std::vector<double> ErrorData;
 
 class GraphLabel
 {
@@ -74,8 +75,9 @@ public:
     QtCanvas(QWidget *parent = 0);
 
     void setPlotSettings(const QtPlotSettings &settings);
-    void setCurveData(int id, const CurveData &data, const QString& lb="");
+    void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
     CurveData* getCurveData(int);
+    ErrorData* getCurveError(int id);
     QString getCurveName(int);
     int getLineCount();
     void clearCurve(int id = -1);
@@ -87,7 +89,7 @@ public:
     void drawBackBuffer(QPainter *);
     void plotPolyLines(QString);    
     void plotPolyLine(const Vector<Int>&, const Vector<Int>&);
-    void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+    void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
                       const QString& lb="");
     void plotPolyLine(const Vector<Double>&, const Vector<Double>&);
     void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
@@ -119,6 +121,7 @@ public:
                     const QString &font = "Helvetica [Cronyx]");
     void setAutoScaleX(int a) {autoScaleX = a; }
     void setAutoScaleY(int a) {autoScaleY = a; }
+    void setPlotError(int a)  {plotError = a; setDataRange();}
 
 public slots:
     void zoomIn();
@@ -157,6 +160,7 @@ protected:
     
     std::map<int, QString> legend;
     std::map<int, CurveData> curveMap;
+    std::map<int, ErrorData> errorMap;
     std::vector<QtPlotSettings> zoomStack;
     std::map<int, CurveData> markerStack;
     int curZoom;
@@ -171,6 +175,7 @@ protected:
 
     int autoScaleX;
     int autoScaleY;
+    int plotError;
 
 };
 

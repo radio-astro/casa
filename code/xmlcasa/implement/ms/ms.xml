@@ -3896,6 +3896,12 @@ in spectral window 1.
      <value></value>
      </param>
 
+     <param type="any" name="observation">
+     <description>Select data by observation ID(s).  The syntax is the same as for scan numbers.</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+     
      <param type="string" name="taql">
      <description>For the TAQL experts, flexible data selection using the TAQL syntax</description>
      <value></value>
@@ -3908,7 +3914,6 @@ in spectral window 1.
  Utility function that will return the ids of the selection used. 
   </description>
   <example>
-    
      a= ms.msseltoindex(vis='3C273XC1.MS', field='3C*')
      print a['field']
      # [0]
@@ -3918,11 +3923,23 @@ in spectral window 1.
      #  'channel': array([], shape=(0, 0), dtype=int32),
      #  'field': array([0]),
      #  'scan': array([], dtype=int32),
-     #  'spw': array([], dtype=int32)}
+     #  'spw': array([], dtype=int32),
+     #  'obsids': array([], dtype=int32)}
     
 
   Field name '3C*', in this case 3C273, corresponds to field id 0.
 
+  N.B.: The return values of unspecified fields (like antenna* and spw in the
+        above example) will be left empty - this does not mean that selection
+        excludes all antennas!
+
+        Some fields (like 'field') are checked against the subtables of vis,
+        but others are not.  For example, field='123~132' will produce an error
+        if vis does not have fields 123 to 132, but for scan and obsids
+        '123~132' would just return an array of integers from 123 to 132
+        regardless of whether vis has those scan or observation IDs.  (The
+        difference comes from it being quicker to check a subtable than the
+        main table.)
   </example>
 </method>
 

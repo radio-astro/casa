@@ -377,6 +377,9 @@ public:
     virtual Int spectralWindow() const {
         return spectralWindowOK_p ? spectralWindow_p : This->fillSpW();
     }
+    virtual Int polarizationId() const {
+      return visIter_p->polarizationId();
+    } 
     virtual Int dataDescriptionId() const {
         return visIter_p->dataDescriptionId();
     }

@@ -36,11 +36,11 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  VisImagingWeight::VisImagingWeight() : multiFieldMap_p(-1), wgtType_p("none"), doFilter_p(False) {
+  VisImagingWeight::VisImagingWeight() : multiFieldMap_p(-1), wgtType_p("none"), doFilter_p(False), robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
 
     }
 
-  VisImagingWeight::VisImagingWeight(const String& type) : multiFieldMap_p(-1),doFilter_p(False) {
+  VisImagingWeight::VisImagingWeight(const String& type) : multiFieldMap_p(-1),doFilter_p(False),  robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
 
         wgtType_p=type;
         wgtType_p.downcase();
@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
                                        const Double robust, const Int nx, const Int ny,
                                        const Quantity& cellx, const Quantity& celly,
-                                       const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False) {
+                                       const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
   
         LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
   
@@ -401,6 +401,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         return wgtType_p;
 
     }
+  Bool VisImagingWeight::getWeightDensity (Block<Matrix<Float> >& density){
+    if(wgtType_p != "uniform"){
+      density.resize(0, True, False);
+      return False;
+    }
+    density.resize(gwt_p.nelements(), True, False);
+    for (uInt k=0; k < gwt_p.nelements(); ++k){
+      density[k].resize();
+      density[k]=gwt_p[k];
+    }
+    return True;
+  }
+  void VisImagingWeight::setWeightDensity(const Block<Matrix<Float> >& density){
+    if(wgtType_p=="uniform"){
+      gwt_p.resize(density.nelements(), True, False);
+      for (uInt k=0; k < gwt_p.nelements(); ++k){
+	gwt_p[k].resize();
+	gwt_p[k]=density[k];
+      }
+       //Float f2, d2;
+      for(uInt fid=0; fid < gwt_p.nelements(); ++fid){
+	if (rmode_p=="norm") {
+	  Double sumlocwt = 0.;
+	  for(Int vgrid=0;vgrid<gwt_p[fid].shape()(1);vgrid++) {
+	      for(Int ugrid=0;ugrid<gwt_p[fid].shape()(0);ugrid++) {
+		if(gwt_p[fid](ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p[fid](ugrid,vgrid));
+	      }
+	  }
+	  Double sumwt_fid=sum(gwt_p[fid]);
+	  f2_p[fid] = square(5.0*pow(10.0,Double(-robust_p))) / (sumlocwt / sumwt_fid);
+	  d2_p[fid] = 1.0;
+	}
+	  else if (rmode_p=="abs") {
+	    f2_p[fid] = square(robust_p);
+	    d2_p[fid] = 2.0 * square(noise_p.get("Jy").getValue());
+	    
+	  }
+	  else {
+            f2_p[fid] = 1.0;
+            d2_p[fid] = 0.0;
+	  }
+      }
+    }
+    
+  }
 
 
 }//# NAMESPACE CASA - END
+
+

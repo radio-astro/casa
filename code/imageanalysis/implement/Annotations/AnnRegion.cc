@@ -231,10 +231,10 @@ void AnnRegion::_extend() {
 		nBoxes = 1;
 	}
 	vector<Stokes::StokesTypes> stokesRanges;
-	if (_getCsys().hasPolarizationAxis() && _stokes.size() > 0) {
-		StokesCoordinate stokesCoord = _getCsys().stokesCoordinate(
-			_getCsys().polarizationCoordinateNumber()
-		);
+	if (
+		_getCsys().hasPolarizationAxis() && _stokes.size() > 0
+		&& (stokesAxis = _getCsys().polarizationAxisNumber()) >= 0
+	) {
 		vector<uInt> stokesNumbers(2*_stokes.size());
 		for (uInt i=0; i<_stokes.size(); i++) {
 			stokesNumbers[2*i] = (uInt)_stokes[i];
@@ -246,7 +246,6 @@ void AnnRegion::_extend() {
 		for (uInt i=0; i<orderedRanges.size(); i++) {
 			stokesRanges.push_back(Stokes::type(orderedRanges[i]));
 		}
-		stokesAxis = _getCsys().polarizationAxisNumber();
 		nBoxes = stokesRanges.size()/2;
 	}
 	if (nBoxes == 0) {

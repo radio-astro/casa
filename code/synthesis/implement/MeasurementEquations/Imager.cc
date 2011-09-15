@@ -2814,6 +2814,30 @@ Bool Imager::weight(const String& type, const String& rmode,
 }
 
 
+Bool Imager::getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type){
+
+  if(type=="imaging"){
+    weightgrid.resize(0, True, False);
+    if(imwgt_p.getType()!="uniform")
+      return False;
+    imwgt_p.getWeightDensity(weightgrid);
+    return True;
+  }
+        
+  return False;
+}
+
+Bool Imager::setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type){
+
+  if(type=="imaging"){
+    if(imwgt_p.getType()!="uniform")
+      return False;
+    imwgt_p.setWeightDensity(weightgrid);
+    rvi_p->useImagingWeight(imwgt_p);
+  }
+
+  return True;
+}
 
 // Filter the MeasurementSet
 Bool Imager::filter(const String& type, const Quantity& bmaj,

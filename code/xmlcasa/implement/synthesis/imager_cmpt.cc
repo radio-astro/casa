@@ -787,6 +787,85 @@ imager::plotvis(const std::string& type, const int increment)
     return rstat;
  }
 
+ ::casac::variant*
+ imager::getweightgrid(const std::string& type)
+ {
+   ::casac::variant *rstat = 0;
+   if(hasValidMS_p){
+       try {
+         
+	 Cube<Float> weight;
+	 Block<Matrix<Float> > blockOGrid;
+	 if(itsImager->getWeightGrid(blockOGrid, String(type))){
+	   weight.resize(blockOGrid[0].shape()(0), blockOGrid[0].shape()(0), blockOGrid.nelements());
+	   for (uInt k=0; k < blockOGrid.nelements(); ++k){
+	     weight.xyPlane(k)= blockOGrid[k];
+	   }
+	   std::vector<int> s_shape;
+	   weight.shape().asVector().tovector(s_shape);
+	   std::vector<double> d_weight(weight.nelements());
+	   {
+	     Cube<Double> temp(weight.shape());
+	     casa::convertArray(temp, weight); 
+	     temp.tovector(d_weight);
+	   }
+	   rstat = new ::casac::variant(d_weight, s_shape);
+	 }
+
+      } catch  (AipsError x) {
+          *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+ 	 RETHROW(x);
+       }
+    } else {
+       *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open." << LogIO::POST;
+    }
+    return rstat;
+ }
+
+bool
+imager::setweightgrid(const ::casac::variant& d_weight, const std::string& type){
+Bool rstat(False);
+   if(hasValidMS_p){
+      try {
+	Vector<Float> weight;
+	Vector<Int> shape;
+	if (d_weight.type() == ::casac::variant::DOUBLEVEC) {
+	  shape = d_weight.arrayshape();
+	  weight.resize(casa::product(shape));
+	  casa::convertArray(weight, Vector<Double>(d_weight.getDoubleVec()));
+	} else if (d_weight.type() == ::casac::variant::INTVEC) {
+	  shape = d_weight.arrayshape();
+	  weight.resize(casa::product(shape));
+	  casa::convertArray(weight, Vector<Int>(d_weight.getIntVec()));
+	  
+	} else {
+	  *itsLog << LogIO::SEVERE
+		<< "pixels is not understood, try using an array "
+		<< LogIO::POST;
+	  return rstat;
+	}
+	Block<Matrix<Float> > blocko(shape(2));
+	Cube<Float> elcube(weight.reform(IPosition(shape)));
+	for (Int k=0; k< shape(2); ++k){
+	  blocko[k]=elcube.xyPlane(k);
+	}
+	rstat = itsImager->setWeightGrid(blocko, type);	
+
+      } catch  (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	RETHROW(x);
+      }
+   } else {
+     *itsLog << LogIO::SEVERE << "No MeasurementSet has been assigned, please run open or selectvis" << LogIO::POST;
+   }
+
+
+   return rstat;
+
+}
+
+
+
 bool
 imager::regionmask(const std::string& mask, const ::casac::record& region, 
 		   const ::casac::variant& boxes,const ::casac::variant& circles,  const double value)

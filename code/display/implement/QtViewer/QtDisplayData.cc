@@ -73,8 +73,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
-			     String dataType, String displayType) :
+QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
+			      String displayType, const viewer::DisplayDataOptions &ddo ) :
 	       panel_(panel), 
 	       path_(path),
 	       dataType_(dataType),
@@ -120,7 +120,7 @@ QtDisplayData::QtDisplayData(QtDisplayPanelGui *panel, String path,
 
       
     else if(dataType_=="ms" && displayType_=="raster") {
-      dd_ = new MSAsRaster(path_);  }
+      dd_ = new MSAsRaster( path_, ddo );  }
       
       
 

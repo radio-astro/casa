@@ -84,6 +84,7 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtViewer/QtDataManager.ui
   implement/QtViewer/QtDataOptionsPanel.ui
   implement/QtViewer/QtRegionMgr.ui
+  implement/QtViewer/QtDataMgrMsSelect.ui
   implement/RegionShapes/QtDS9WriteOptions.ui
   implement/RegionShapes/QtEditRegionShape.ui
   implement/RegionShapes/QtNewRegionShape.ui

@@ -1505,6 +1505,44 @@ and then adds the visibility due to 3C273XC1.another.model
 </comments>
 </method>
 
+<method type="function" name="getweightgrid">
+  <shortdescription>get the requested weight grids</shortdescription>
+   
+<description>
+
+This is a utility function when running multi imager processes in parallel on subsection of an ms/data independently
+One would wish to weight the dirty image before averaging or set the imaging weight density (when using unform or
+Brigg's style weighting) to account for all the data being used. This is {\bf NOT} for the general user but for people who 
+are parallelizing at the scripting level.
+
+
+</description>
+
+<input>
+
+     <param type="string" name="type">
+     <description>Type of weight requested</description>
+     <value>imaging</value>
+     </param>
+
+ </input>
+
+<example>
+
+wght=im.getweightgrid('imaging')
+wght2=im2.getweightgrid('imaging')
+wght=wght+wght2
+
+im.setweightgrid(weight=wght, type='imaging')
+
+
+</example>
+<comments>
+</comments>
+<returns type="any"><any type="variant"/></returns>
+</method>
+
+
  
    <method type="function" name="linearmosaic">
    <shortdescription>Make a linear mosaic of several images</shortdescription>
@@ -3808,6 +3846,51 @@ This will be corrected shortly.
 </example>
 
 </method>
+
+<method type="function" name="setweightgrid">
+  <shortdescription>set the requested weight grids</shortdescription>
+   
+<description>
+
+This is a utility function when running multi imager processes in parallel on subsection of an ms/data independently
+One would wish to weight the dirty image before averaging or set the imaging weight density (when using unform or
+Brigg's style weighting) to account for all the data being used. This is {\bf NOT} for the general user but for people who 
+are parallelizing at the scripting level.
+
+
+</description>
+
+<input>
+
+     <param type="any" direction="in" name="weight">
+	     <any type="variant"/>
+     <description>Numeric array.  Required input.</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="type">
+     <description>Type of weight requested</description>
+     <value>imaging</value>
+     </param>
+
+ </input>
+
+<example>
+
+wght=im.getweightgrid('imaging')
+wght2=im2.getweightgrid('imaging')
+wght=wght+wght2
+
+im.setweightgrid(weight=wght, type='imaging')
+im2.setweightgrid(weight=wght, type='imaging')
+
+
+</example>
+<comments>
+</comments>
+<returns type="bool"/>
+</method>
+
 
 
  

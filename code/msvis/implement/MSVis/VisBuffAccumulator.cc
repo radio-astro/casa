@@ -40,10 +40,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 VisBuffAccumulator::VisBuffAccumulator(const Int& nAnt, const Double& interval,
 				       const Bool& prenorm) 
-  : nAnt_p(nAnt), 
+  : avBuf_p(),
+    nAnt_p(nAnt), 
     interval_p(interval), 
     prenorm_p(prenorm),
-    avBuf_p(),
     prtlev_(PRTLEV_VBA),
     nBuf_p(0)
 {
