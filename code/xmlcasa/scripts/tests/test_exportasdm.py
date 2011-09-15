@@ -187,6 +187,50 @@ class exportasdm_test(unittest.TestCase):
         os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
         self.verify_asdm(omsname, True)
 
+    def test7(self):
+        '''Test 7: v3, simulated input MS, default output'''
+        myvis = self.vis_f
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(vis = 'myinput.ms',asdm = self.out,archiveid="S1", useversion='v3')
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(7)+self.out
+        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
+        self.verify_asdm(omsname, True)
+
+    def test8(self):
+        '''Test 8: v3, real input MS, default output'''
+        myvis = self.vis_d
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
+            vis = 'myinput.ms',
+            asdm = self.out,
+            archiveid="S1",
+            apcorrected=False,
+            useversion='v3'
+            )
+
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(8)+self.out
+        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
+        self.verify_asdm(omsname, False)
+
+    def test9(self):
+        '''Test 9: v3, simulated input MS with pointing table, default output'''
+        myvis = self.vis_g
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        self.rval = exportasdm(
+            vis = 'myinput.ms',
+            asdm = self.out,
+            archiveid="S002",
+            apcorrected=False,
+            useversion='v3'
+            )
+
+        self.assertNotEqual(self.rval,False)
+        omsname = "test"+str(9)+self.out
+        os.system('rm -rf '+omsname+'; mv exportasdm-output.asdm '+omsname)
+        self.verify_asdm(omsname, True)
+
 
 class exportasdm_test2(unittest.TestCase):
     

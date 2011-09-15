@@ -3,7 +3,7 @@ from taskinit import *
 
 def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=None,
 	       subscanduration=None, sbduration=None, apcorrected=None,
-	       verbose=None, showversion=None):
+	       verbose=None, showversion=None, useversion=None):
 	""" Convert a CASA visibility file (MS) into an ALMA Science Data Model.
                                           
 	Keyword arguments:
@@ -36,6 +36,10 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 
 	showversion -- report the version of the ASDM class set, 
                  default: True
+
+	useversion -- Selects the version of MS2asdm to be used (\'v2\' (default) or \'v3\' (use for ALMA data))
+              default: v2
+
 	"""
 	#Python script
 
@@ -49,7 +53,9 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		casalog.post(parsummary)
 		parsummary = 'archiveid=\"'+str(archiveid)+'\", rangeid=\"'+str(rangeid)+'\", subscanduration=\"'+str(subscanduration)+'\",'
 		casalog.post(parsummary)
-		parsummary = 'sbduration=\"'+str(sbduration)+'\", apcorrected='+str(apcorrected)+'\", verbose='+str(verbose)+', showversion='+str(showversion)
+		parsummary = 'sbduration=\"'+str(sbduration)+'\", apcorrected='+str(apcorrected)+', verbose='+str(verbose)+','
+		casalog.post(parsummary)
+		parsummary = 'showversion='+str(showversion)+', useversion=\"'+str(useversion)+'\"'
 		casalog.post(parsummary)
 
 		if not (type(vis)==str) or not (os.path.exists(vis)):
@@ -95,12 +101,16 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if(showversion):
 			execute_string+= ' --revision'
 
+		theexecutable = 'MS2asdm'
+		if (useversion == 'v3'):
+			theexecutable = 'MS2asdm_v3'
+
 		execute_string += ' ' + vis + '-tsorted ' + asdm
 
-		execute_string = 'MS2asdm '+execute_string
+		execute_string = theexecutable+' '+execute_string
 
 		if(verbose):
-			casalog.post('Running MS2asdm standalone invoked as:')
+			casalog.post('Running '+theexecutable+' standalone invoked as:')
 			casalog.post(execute_string)
 		print execute_string
 
@@ -111,6 +121,7 @@ def exportasdm(vis=None, asdm=None, datacolumn=None, archiveid=None, rangeid=Non
 		if(rval == 0):
 			return True
 		else:
+			casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
 			return False
 	
 	except Exception, instance:

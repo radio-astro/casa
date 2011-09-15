@@ -1,7 +1,7 @@
 #############################################################################
 # $Id:$
 # Test Name:                                                                #
-#    Regression Test Script for ASDM version 1.0 import to MS               #
+#    Regression Test Script for ASDM version 1 import to MS                 #
 #    and the "inverse filler" task exportasdm, and subsequent               #
 #    data analysis.                                                         #
 #                                                                           # 
@@ -22,7 +22,7 @@
 #       re-imported MS pass the same analysis with the same results?        #
 #                                                                           #
 # Input data:                                                               #
-#     two datasets for the filler of ASDM 1.0                               #
+#     two datasets for the filler of ASDM 1                                 #
 #     one WVR correction cal table                                          #
 #     one simulated MS dataset                                              #
 #                                                                           #
@@ -194,7 +194,8 @@ def analyseASDM(basename, caltablename0):
         srt="all",
         time_sampling="all",ocorr_mode="ca",compression=False,asis="",
         wvr_corrected_data="no",
-        verbose=False,showversion=False,
+        verbose=True,
+        showversion=False,
         useversion='v3'
         )
     
@@ -681,7 +682,8 @@ try:
         vis = 'myinput.ms',
         asdm = 'exportasdm-output.asdm',
         archiveid="S002",
-        apcorrected=False
+        apcorrected=False,
+        useversion='v3'
         )
     print "rval is ", rval
     if not rval:
@@ -764,7 +766,8 @@ if dopart4:
             asdm = myasdm_dataset2_name+'-re-exported',
             archiveid="X001",
             apcorrected=False,
-            datacolumn='DATA' # the default
+            datacolumn='DATA', # the default
+            useversion='v3'
             )
         print "rval is ", rval
         if not rval:
