@@ -9,21 +9,21 @@ from tests.test_split import check_eq, SplitChecker
 import unittest
 
 '''
-Unit tests for task uvcontsub2.
+Unit tests for task uvcontsub.
 
 Features tested:
-  1. uvcontsub2 will use DATA if CORRECTED_DATA is absent.
+  1. uvcontsub will use DATA if CORRECTED_DATA is absent.
   2. It gets the right answer for a known line + 0th order continuum.
   3. It gets the right answer for a known line + 4th order continuum.
   4. It gets the right answer for a known line + 0th order continuum,
      even when fitorder = 4.
 '''
 
-uvcdatadir = 'unittest/uvcontsub2/'  # in SplitChecker.datapath/
+uvcdatadir = 'unittest/uvcontsub/'  # in SplitChecker.datapath/
 
 class UVContChecker(SplitChecker):
     """
-    Base class for uvcontsub2 unit testing.
+    Base class for uvcontsub unit testing.
     """
     need_to_initialize = True
     records = {}
@@ -31,16 +31,16 @@ class UVContChecker(SplitChecker):
     def do_split(self, corrsel):
         """
         This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub2 in this case) would have been a better name.
+        run_task (uvcontsub in this case) would have been a better name.
         """
         record = {}
         try:
-            print "\nRunning uvcontsub2"
-            uvran = uvcontsub2(self.inpms, fitspw='0:0~5;18~23',
+            print "\nRunning uvcontsub"
+            uvran = uvcontsub(self.inpms, fitspw='0:0~5;18~23',
                                fitorder=corrsel, want_cont=True,
                                async=False)
         except Exception, e:
-            print "Error running uvcontsub2"
+            print "Error running uvcontsub"
             raise e
         for spec in ('cont', 'contsub'):
             specms = self.inpms + '.' + spec
@@ -141,17 +141,17 @@ class combspw(UVContChecker):
     def do_split(self, corrsel):
         """
         This is only called do_split because it comes from SplitChecker.
-        run_task (uvcontsub2 in this case) would have been a better name.
+        run_task (uvcontsub in this case) would have been a better name.
         """
         record = {}
         try:
-            print "\nRunning uvcontsub2"
-            uvran = uvcontsub2(self.inpms, fitspw='1~10:5~122,15~22:5~122',
+            print "\nRunning uvcontsub"
+            uvran = uvcontsub(self.inpms, fitspw='1~10:5~122,15~22:5~122',
                                spw='6~14', combine='spw',
                                fitorder=corrsel, want_cont=False,
                                async=False)
         except Exception, e:
-            print "Error running uvcontsub2"
+            print "Error running uvcontsub"
             raise e
         specms = self.inpms + '.contsub'
         tb.open(specms)

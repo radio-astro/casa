@@ -15,6 +15,8 @@ mycb, myms, mytb = gentools(['cb', 'ms', 'tb'])
 def uvcontsub2(vis, field, fitspw, combine, solint, fitorder, spw, want_cont):
     try:
         casalog.origin('uvcontsub2')
+        casalog.post('uvcontsub is now the same as uvcontsub2 and should meet your needs.', 'INFO')
+        casalog.post('In the future, the uvcontsub2 task may be retired or used for experimentation.', 'INFO')
 
         # Get these checks done and out of the way.
         # This one is redundant - it is already checked at the XML level.

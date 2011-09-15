@@ -5,8 +5,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="uvcontsub2" category="modeling, manipulation" visibility="experimental">
-<shortdescription>Continuum fitting and subtraction in the uv plane CALIBRATION VERSION</shortdescription>
+<task type="function" name="uvcontsub2" category="modeling, manipulation" visibility="deprecated">
+<shortdescription>Temporarily a clone of uvcontsub</shortdescription>
 <description>
 <!-- description is a decoy!  Use the example tag for now. -->
 </description>
