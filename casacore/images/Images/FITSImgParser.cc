@@ -580,6 +580,7 @@ Bool FITSImgParser::get_extlist(const String &extexpr, Vector<String> &extlist){
 	}
 	String tmp = String(extexpr_b, f_start, extexpr_b.size()-f_start);
 	tmp.trim();
+	tmp.upcase();
 
 	// extend the list and append the substring
 	extlist.resize(extlist.size()+1, True);
@@ -621,6 +622,7 @@ String FITSImgParser::get_errorext(const Int &ext_index){
 		// convert the keyword to string
 		String kw_error = String(actkeyw->asString());
 		kw_error.trim();
+		kw_error.upcase();
 
 		// check whether the HDUtype keyword
 		// has the correct value
@@ -652,6 +654,7 @@ String FITSImgParser::get_maskext(const Int &ext_index){
 		// convert the keyword to string
 		String kw_mask = String(actkeyw->asString());
 		kw_mask.trim();
+		kw_mask.upcase();
 
 		// check whether the HDUtype keyword
 		// has the correct value

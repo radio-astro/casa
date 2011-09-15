@@ -28,17 +28,39 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/stdlib.h>
 #include <casa/iostream.h>
+#include <casa/System/AipsrcValue.h>
 #include <casa/string.h>      //# needed for strerror
+#include <execinfo.h> //# needed for backtrace
+
+#define AipsError_StackTracing
+#define AipsError_StackTracing_Default False
+
+#if defined (AipsError_StackTracing)
+#    define AddStackTrace() addStackTrace()
+#else
+#    define AddStackTrace()
+#endif
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+AipsError::AipsError (Category c)
+: message(), category(c)
+{
+    AddStackTrace();
+}
+
+
 AipsError::AipsError(const Char *str,Category c)
   : message(str), category(c)
-{}
+{
+    AddStackTrace();
+}
 
 AipsError::AipsError(const String &str,Category c)
   : message(str), category(c)
-{}
+{
+    AddStackTrace();
+}
 
 AipsError::AipsError (const String &msg, const String& filename,
                       uInt lineNumber, Category c)
@@ -47,10 +69,47 @@ AipsError::AipsError (const String &msg, const String& filename,
   ostringstream os;
   os << msg << " at File: " << filename << ", line: " << lineNumber;
   message = os.str();
+
+  AddStackTrace ();
 }
 
 AipsError::~AipsError() throw()
 {}
+
+void
+AipsError::addStackTrace ()
+{
+    Bool enabled;
+    AipsrcValue<Bool>::find (enabled, "AipsError.enableStackTrace", AipsError_StackTracing_Default);
+
+    if (enabled) {
+
+        String trace = generateStackTrace();
+
+        message += trace;
+    }
+}
+
+String
+AipsError::generateStackTrace()
+{
+
+    String stackTrace;
+
+    void * stack [512];
+    int n = backtrace (stack, 512);
+    char ** trace = backtrace_symbols (stack, n);
+
+    stackTrace += "\nStack trace (use c++filt to demangle):\n";
+
+    for (int i = 0; i < n; i++){
+        stackTrace += trace[i] + String ("\n");
+    }
+
+    free (trace);
+
+    return stackTrace;
+}
 
 
 AllocError::~AllocError() throw()

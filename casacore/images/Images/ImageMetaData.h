@@ -119,7 +119,7 @@ class ImageMetaData {
         Int polarizationAxisNumber() const;
 
         // Does this image have a polarization axis?
-        Bool hasPolarizationAxis() const;
+       // Bool hasPolarizationAxis() const;
 
         // Get the pixel number on the polarization axis of the specified stokes parameter.
         // If the specified stokes parameter does not exist in the image, the value returned

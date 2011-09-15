@@ -879,6 +879,9 @@ Int MSConcat::copyObservation(const MSObservation& otherObs,
 Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 					 const MSFeed& otherFeed) {
   // uses newSPWIndex_p; to be called after copySpwAndPol
+
+  LogIO os(LogOrigin("MSConcat", "copyAntennaAndFeed"));
+
   const uInt nAntIds = otherAnt.nrow();
   Block<uInt> antMap(nAntIds);
 
@@ -888,6 +891,8 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
   const Quantum<Double> tol(1, "m");
   const ROTableRow otherAntRow(otherAnt);
   TableRow antRow(ant);
+  TableRecord antRecord;
+  RecordFieldId nameAnt(MSAntenna::columnName(MSAntenna::NAME));
 
   MSFeedColumns& feedCols = feed();
   const ROMSFeedColumns otherFeedCols(otherFeed);
@@ -913,9 +918,9 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
     
     Bool addNewEntry = True;
 
-    if (newAntId >= 0 && 
-	antCols.station()(newAntId)==otherAntCols.station()(a) ) { // require that also the STATION matches
-
+    if (newAntId >= 0
+	&& antCols.station()(newAntId)==otherAntCols.station()(a) ) { // require that also the STATION matches
+      
       // Check that the FEED table contains all the entries for
       // this antenna and that they are the same.      
 
@@ -1023,10 +1028,32 @@ Block<uInt> MSConcat::copyAntennaAndFeed(const MSAntenna& otherAnt,
 
     }
 
+
     if(addNewEntry){ // need to add a new entry in the ANTENNA subtable
+
       antMap[a] = ant.nrow();
       ant.addRow();
-      antRow.putMatchingFields(antMap[a], otherAntRow.get(a));
+      antRecord = otherAntRow.get(a);
+
+      // determine if the antenna was just moved
+      Int movedAntId=-1;
+      if( (movedAntId=antCols.matchAntenna(otherAntCols.name()(a), 
+					   otherAntCols.positionMeas()(a), Quantum<Double>(100, "AU")))
+	  >= 0){
+	String newName = otherAntCols.name()(a)+"m";
+	Int secondMovedAntId = -1;
+	while((secondMovedAntId=antCols.matchAntenna(newName, 
+						     otherAntCols.positionMeas()(a), Quantum<Double>(100, "AU")))
+	      >= 0){ // append "m"s until there is no match
+	  newName = newName+"m";
+	  movedAntId = secondMovedAntId;
+	}
+	os << "Antenna " << antCols.name()(movedAntId)  << " (ID " << movedAntId << ") has changed its position between MSs."  
+	   << " Moved antenna will be named " << newName << " (ID " << antMap[a] << ")" << LogIO::POST;
+	antRecord.define(nameAnt, newName); // append an "m" to the name to make it unique
+      }
+
+      antRow.putMatchingFields(antMap[a], antRecord);
       // Copy all the feeds associated with the antenna into the feed
       // table. I'm assuming that they are not already there.
       *antInd = a;

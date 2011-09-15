@@ -35,6 +35,7 @@
 #include <casa/BasicSL/String.h>
 #include <exception>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Throw an exception with a string composed of various arguments.
@@ -115,7 +116,7 @@ public:
   AipsError (const String &str, Category c = GENERAL);
   AipsError (const String &msg, const String &filename, uInt lineNumber,
              Category c = GENERAL);
-  AipsError (Category c = GENERAL) : message(), category(c) {};
+  AipsError (Category c = GENERAL);
   // </group>
 
   //
@@ -123,7 +124,12 @@ public:
   //
   ~AipsError() throw();
 
+  String generateStackTrace ();
+
 protected:
+
+  void addStackTrace ();
+
   String message;
   Category category;
 

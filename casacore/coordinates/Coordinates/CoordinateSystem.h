@@ -785,8 +785,8 @@ public:
    Int spectralCoordinateNumber() const;
 
 
-   // does this coordinate system have a polarizaion/stokes axis?
-   Bool hasPolarizationAxis() const;
+   // does this coordinate system have a polarizaion/stokes coordinate?
+   Bool hasPolarizationCoordinate() const;
 
    // Given a stokes or polarization parameter, find the pixel location.
    // Note the client is responsible for any boundedness checks

@@ -5787,6 +5787,17 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 		if (!zyaxismask[kk]) {
 			zyaxisval[kk] = 0.;
 		}
+
+		// check for error arrays
+		if (whichQuality > 0){
+			if (zyaxisval[kk] < 0.){
+				*itsLog << LogIO::WARN << "Value set to 0.0, sqrt(<0.0) not allowed!" << LogIO::POST;
+				zyaxisval[kk] = 0.0;
+			}
+			else{
+				zyaxisval[kk] = sqrt(zyaxisval[kk]);
+			}
+		}
 	}
 
 	// get the spectral values
@@ -5876,7 +5887,7 @@ Bool ImageAnalysis::getFreqProfile(
 	if (imagreg != 0) {
 		try{
 			SubImage<Float> subim(*pImage_p, *imagreg, False);
-			maskArr = (imagreg->toLatticeRegion(cSys, pImage_p->shape())).get();
+			maskArr = subim.getMask();
 			dataArr = subim.get();
 		} catch (AipsError x) {
 			*itsLog << "Error in extraction: " << x.getMesg() << LogIO::POST;
@@ -5913,6 +5924,7 @@ Bool ImageAnalysis::getFreqProfile(
 		trc(dirPixelAxis[0]) = dataArr.shape()(dirPixelAxis[0]) - 1;
 		trc(dirPixelAxis[1]) = dataArr.shape()(dirPixelAxis[1]) - 1;
 		zyaxisval.resize(nchan);
+		zyaxisval = 0.0;
 
 		// branch the various
 		// combine types
@@ -5924,7 +5936,8 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = mean(planedat);
+				if (planedat.nelementsValid() >0)
+					zyaxisval(k) = mean(planedat);
 			}
 			break;
 		case 1:
@@ -5933,7 +5946,8 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = median(planedat);
+				if (planedat.nelementsValid() >0)
+					zyaxisval(k) = median(planedat);
 			}
 			break;
 		case 2:
@@ -5942,7 +5956,8 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = sum(planedat);
+				if (planedat.nelementsValid() >0)
+					zyaxisval(k) = sum(planedat);
 			}
 			break;
 		case 3:
@@ -5951,7 +5966,8 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = variance(planedat);
+				if (planedat.nelementsValid() >0)
+					zyaxisval(k) = variance(planedat);
 			}
 			break;
 		case 4:
@@ -5960,7 +5976,8 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = stddev(planedat);
+				if (planedat.nelementsValid() >0)
+					zyaxisval(k) = stddev(planedat);
 			}
 			break;
 		case 5:
@@ -5969,7 +5986,17 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = sqrt(sumsquares(planedat));
+				if (planedat.nelementsValid() >0){
+					zyaxisval(k) = sum(planedat);
+					if (zyaxisval(k) < 0.0) {
+						zyaxisval(k) = 0.0;
+						*itsLog << LogIO::WARN << "Value set to 0.0, sqrt(<0.0) not allowed!" << LogIO::POST;
+					}
+					else {
+						zyaxisval(k) = sqrt(zyaxisval(k));
+					}
+					//zyaxisval(k) = sqrt(sum(planedat));
+				}
 			}
 			break;
 		case 6:
@@ -5979,10 +6006,18 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				fnpix = Float(planedat.size());
-				zyaxisval(k) = sqrt(sumsquares(planedat));
-				if (fnpix >0.0)
-					zyaxisval(k) = zyaxisval(k) / fnpix;
+				fnpix = Float(planedat.nelementsValid());
+				if (fnpix >0.0){
+					zyaxisval(k) = sum(planedat);
+					if (zyaxisval(k) < 0.0) {
+						zyaxisval(k) = 0.0;
+						*itsLog << LogIO::WARN << "Value set to 0.0, sqrt(<0.0) not allowed!" << LogIO::POST;
+					}
+					else {
+						zyaxisval(k) = sqrt(zyaxisval(k)) / fnpix;
+					}
+					//zyaxisval(k) = sqrt(sum(planedat)) / fnpix;
+				}
 			}
 			break;
 		default:
@@ -5991,7 +6026,8 @@ Bool ImageAnalysis::getFreqProfile(
 				blc(pixSpecAx) = k;
 				trc(pixSpecAx) = k;
 				MaskedArray<Float> planedat(dataArr(blc, trc), maskArr(blc, trc));
-				zyaxisval(k) = mean(planedat);
+				if (planedat.nelementsValid() >0)
+					zyaxisval(k) = mean(planedat);
 			}
 		}
 	} catch (AipsError x) {
