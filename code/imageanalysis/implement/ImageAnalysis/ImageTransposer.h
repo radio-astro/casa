@@ -59,16 +59,20 @@ class ImageTransposer : public ImageTask {
       // </srcblock>
       // </example>
 public:
+	// This constructor only allows transposing of axes, it does
+	// not allow inverting.
 	ImageTransposer(
 		const ImageInterface<Float> *const &image,
 		uInt order, const String& outputImage
 	);
 
+	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
 		const ImageInterface<Float> *const &image,
 		const String& order, const String& outputImage
 	);
 
+	// This constructor allows both transposing and inverting of axes
 	ImageTransposer(
 		const ImageInterface<Float> *const &image,
 		const Vector<String> order, const String& outputImage
@@ -94,14 +98,12 @@ protected:
 
 private:
 	Vector<Int> _order;
-	//String _outputImage;
+	IPosition _reverse;
 	static const String _class;
-
-	// void _construct();
 
 	Vector<Int> _getOrder(uInt order) const;
 
-	Vector<Int> _getOrder(const String& order) const;
+	Vector<Int> _getOrder(const String& order);
 };
 }
 
