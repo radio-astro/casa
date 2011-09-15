@@ -420,10 +420,15 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
     MeasurementSet ms(msname_);
     ROMSColumns msCol(ms);
     antnames_.resize();
+    stanames_.resize();
+    antstanames_.resize();
     fldnames_.resize();
     antnames_=msCol.antenna().name().getColumn(); 	 
+    stanames_=msCol.antenna().station().getColumn(); 	 
     fldnames_=msCol.field().name().getColumn(); 	 
     
+    antstanames_=antnames_+String("@")+stanames_;
+
     vm_.reset(); // ensures assign will work!
     vm_= PMSCacheVolMeter(ms,averaging_);
   } 	 
@@ -921,6 +926,8 @@ void PlotMSCache2::deleteCache() {
 
     // zero the meta-name containers
     antnames_.resize();
+    stanames_.resize();
+    antstanames_.resize();
     fldnames_.resize();
 
 }

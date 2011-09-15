@@ -387,7 +387,7 @@ static void numpy2vector( PyObject *obj, std::vector<TYPE > &vec, std::vector<in
 }
 #endif
 
-NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE(obj) == NPY_INT || PyArray_TYPE(obj) == NPY_LONG),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
+NUMPY2VECTOR(int,int,npy_int32,(PyArray_TYPE(obj) == NPY_INT),? 1 : 0,COPY_BUILTIN,stringtoint,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(double,double,npy_double,(PyArray_TYPE(obj) == NPY_DOUBLE),? 1 : 0,COPY_BUILTIN,stringtodouble,CPXREALPART,NODOCOMPLEX,,,,,*to = *from, 1)
 NUMPY2VECTOR(bool,bool,npy_bool,(PyArray_TYPE(obj) == NPY_BOOL),? 1 : 0,COPY_BUILTIN,stringtobool,CPXNONZERO,NODOCOMPLEX,,,,,*to = (bool) *from,1)
 

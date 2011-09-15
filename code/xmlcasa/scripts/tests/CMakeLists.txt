@@ -48,6 +48,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_immoments.py
   test_impbcor.py
   test_importasdm.py
+  test_importasdm_sd.py
   test_importevla.py
   test_importfitsidi.py
   test_importoldasdm.py
@@ -93,7 +94,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_splattotable.py
   test_split.py
   test_testconcat.py
-  test_uvcontsub2.py
+  test_uvcontsub.py
   test_viewer.py
   test_vishead.py
   test_visstat.py

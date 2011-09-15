@@ -67,9 +67,9 @@
 <xsl:text>
 </xsl:text>
   <xsl:choose>
-  <xsl:when test="$hasunits='F'">
+  <xsl:when test="lower-case($hasunits)='f'">
   <xsl:choose>
-	  <xsl:when test="@type='vector'">
+	  <xsl:when test="lower-case(@type)='vector'">
 		  <xsl:element name="{$label}"><xsl:attribute name="type">vector</xsl:attribute>
               <xsl:for-each select="aps:value"><xsl:call-template name="dovalue"><xsl:with-param name="label">value</xsl:with-param><xsl:with-param name="hasunits">F</xsl:with-param></xsl:call-template></xsl:for-each>
 </xsl:element>

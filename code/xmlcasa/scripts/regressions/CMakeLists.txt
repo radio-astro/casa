@@ -52,7 +52,6 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   ngc4826_regression.py
   ngc4826_tutorial_regression.py
   ngc5921_regression.py
-  ngc5921_uvcontsub2.py
   ori_hc3n_task_regression.py
   orion_regression.py
   ori_sio_task_regression.py

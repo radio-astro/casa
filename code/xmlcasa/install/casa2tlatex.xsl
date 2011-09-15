@@ -82,7 +82,7 @@ Requires:
 
 <xsl:template match="aps:task">
 <xsl:choose>
-<xsl:when test="@visibility='hidden'"/>
+<xsl:when test="lower-case(@visibility)='hidden'"/>
 <xsl:otherwise>
 \newpage
 \NextFile{<xsl:value-of select="@name"/>-task.html}
@@ -187,9 +187,9 @@ Requires:
 <xsl:text>
 </xsl:text>
   <xsl:choose>
-  <xsl:when test="$hasunits='F'">
+  <xsl:when test="lower-case($hasunits)='F'">
   <xsl:choose>
-	  <xsl:when test="@type='vector'">		  
+	  <xsl:when test="lower-case(@type)='vector'">		  
               <xsl:for-each select="aps:value"><xsl:call-template name="dovalue"><xsl:with-param name="label">value</xsl:with-param><xsl:with-param name="hasunits">F</xsl:with-param></xsl:call-template></xsl:for-each>
 	  </xsl:when>
 	  <xsl:otherwise>

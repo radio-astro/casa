@@ -486,42 +486,22 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   vpad.set(Complex(0.0));
   vpad(sl1)=slvis(sl0);
 
-  //  cout << "vpad.shape() = " << vpad.shape() << endl;
-  //  cout << "vpad(sl1).shape() = " << vpad(sl1).shape() << endl;
-
-
-  //  cout << "Starting ffts..." << flush;
-
-  if (False) {
-    Vector<Complex> testf(64,Complex(1.0));
-    FFTServer<Float,Complex> ffts;
-    cout << "FFTServer..." << flush;
-    ffts.fft(testf,True);
-    cout << "done." << endl;
-    
-    ArrayLattice<Complex> tf(testf);
-    cout << "tf.isWritable() = " << boolalpha << tf.isWritable() << endl;
-    
-    LatticeFFT::cfft(tf,False);
-    cout << "testf = " << testf << endl;
-  }  
-
   // We will only transform frequency axis of 3D array
   Vector<Bool> ax(3,False);
   ax(1)=True;
   
   // Do the FFT
   ArrayLattice<Complex> c(vpad);
-  //  cout << "c.shape() = " << c.shape() << endl;
   LatticeFFT::cfft(c,ax);        
-  //LatticeFFT::cfft2d(c,False);   
-      
-  //  cout << "done." << endl;
 
   // Find peak in each FFT
   Int ipk=0;
   Float amax(0.0);
   Vector<Float> amp;
+
+  //  cout << "Time=" << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+  //       << " Spw=" << currSpw() << ":" << endl;
+
   for (Int irow=0;irow<vb.nRow();++irow) {
     if (!vb.flagRow()(irow) &&
 	vb.antenna1()(irow)!=vb.antenna2()(irow) &&
@@ -549,28 +529,28 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 
 	  Float fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/denom;
 	    
-	    // Handle FFT offset and scale
-	    Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
+	  // Handle FFT offset and scale
+	  Float delay=(fipk-Float(nPadChan/2))/Float(nPadChan); // cycles/sample
 	  
 	  // Convert to cycles/Hz and then to nsec
 	  Double df=vb.frequency()(1)-vb.frequency()(0);
 	  delay/=df;
 	  delay/=1.0e-9;
 	  
-	  cout << "Antenna ID=";
+	  //	  cout << " Antenna ID=";
 	  if (vb.antenna1()(irow)==refant()) {
-	    cout << vb.antenna2()(irow) 
-		 << ", spw=" << currSpw() 
-		 << ", pol=" << icor << " delay(nsec)="<< -delay; 
+	    //	    cout << vb.antenna2()(irow) 
+	    //		 << ", pol=" << icor << " delay(nsec)="<< -delay; 
 	    solveCPar()(icor,0,vb.antenna2()(irow))=-Complex(delay);
 	    solveParOK()(icor,0,vb.antenna2()(irow))=True;
 	  }
 	  else if (vb.antenna2()(irow)==refant()) {
-	    cout << vb.antenna1()(irow) << ", pol=" << icor << " delay(nsec)="<< delay;
+	    //	    cout << vb.antenna1()(irow) 
+	    //		 << ", pol=" << icor << " delay(nsec)="<< delay;
 	    solveCPar()(icor,0,vb.antenna1()(irow))=Complex(delay);
 	    solveParOK()(icor,0,vb.antenna1()(irow))=True;
 	  }
-	  cout << " (refant ID=" << refant() << ")" << endl;
+	  //	  cout << " (refant ID=" << refant() << ")" << endl;
 
 	  /*	  
 	  cout << irow << " " 
@@ -583,6 +563,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	       << endl;
 	  */
 	} // amax > 0
+    /*
 	else {
 	  cout << "No solution found for antenna ID= ";
 	  if (vb.antenna1()(irow)==refant())
@@ -591,6 +572,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	    cout << vb.antenna1()(irow);
 	  cout << " in polarization " << icor << endl;
 	}
+    */
 	
       } // icor
     } // !flagrRow, etc.
@@ -600,7 +582,8 @@ void KJones::solveOneVB(const VisBuffer& vb) {
   // Ensure refant has zero delay and is NOT flagged
   solveCPar()(Slice(),Slice(),Slice(refant(),1,1)) = 0.0;
   solveParOK()(Slice(),Slice(),Slice(refant(),1,1)) = True;
-  
+
+  /*  
   if (nfalse(solveParOK())>0) {
     cout << "NB: No delay solutions found for antenna IDs: ";
     Int nant=solveParOK().shape()(2);
@@ -609,6 +592,7 @@ void KJones::solveOneVB(const VisBuffer& vb) {
 	cout << iant << " ";
     cout << endl;
   }
+  */
 
 }
 
@@ -630,10 +614,6 @@ KcrossJones::KcrossJones(VisSet& vs) :
   msCol.refFrequency().getColumn(KrefFreqs_,True);
   KrefFreqs_/=1.0e9;  // in GHz
 
-  cout << boolalpha 
-       << " freqDepMat() = " << freqDepMat()
-       << " freqDepPar() = " << freqDepPar() << endl;
-
 }
 
 KcrossJones::KcrossJones(const Int& nAnt) :
@@ -653,7 +633,6 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
 
   solveCPar()=Complex(0.0);
   solveParOK()=False;
-
 
   Int fact(8);
   Int nChan=vb.nChannel();
@@ -689,19 +668,12 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
     else
       slsumvis(ich)=Complex(0.0);
   
-  cout << "Starting ffts..." << flush;
-
   // Do the FFT
   ArrayLattice<Complex> c(sumvis);
-  cout << "c.shape() = " << c.shape() << endl;
   LatticeFFT::cfft(c,True);        
       
-  cout << "done." << endl;
-
   // Find peak in each FFT
   Vector<Float> amp=amplitude(sumvis);
-  cout << "amp = " << amp << endl;
-
 
   Int ipk=0;
   Float amax(0.0);
@@ -719,11 +691,7 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
   if (ipk>0 && ipk<(nPadChan-1)) {
     Vector<Float> amp3(amp(IPosition(1,ipk-1),IPosition(1,ipk+1)));
     fipk=Float(ipk)+0.5-(amp3(2)-amp3(1))/(amp3(0)-2.0*amp3(1)+amp3(2));
-
     Vector<Float> pha3=phase(sumvis(IPosition(1,ipk-1),IPosition(1,ipk+1)));
-    cout << "amp3 = " << amp3 << endl;
-    cout << "pha3 = " << pha3 << endl;
-
   }
 
   // Handle FFT offset and scale
@@ -737,15 +705,11 @@ void KcrossJones::solveOneVB(const VisBuffer& vb) {
   solveCPar()(Slice(0,1,1),Slice(),Slice())=Complex(delay);
   solveParOK()=True;
 
-  cout 	     << ipk << " "
-	     << fipk << " "
-	     << delay << " "
-	     << endl;
-  
+  logSink() << " Time="<< MVTime(refTime()/C::day).string(MVTime::YMD,7)
+	    << " Spw=" << currSpw()
+	    << " Global cross-hand delay=" << delay << " nsec"
+	    << LogIO::POST;
 }
-
-
-
 
 // **********************************************************
 //  KMBDJones Implementations

@@ -1,7 +1,7 @@
 #############################################################################
 # $Id:$
 # Test Name:                                                                #
-#    Regression Test Script for ASDM version 1.0 import to MS               #
+#    Regression Test Script for ASDM version 1.2, 1.3 import to MS          #
 #    and the "inverse filler" task exportasdm 
 #                                                                           #
 # Rationale for Inclusion:                                                  #
@@ -165,7 +165,7 @@ class asdmv1_import(unittest.TestCase):
         shutil.rmtree(msname+'.flagversions',ignore_errors=True)
         
     def test1(self):
-        '''Asdmv1-import: Test good v1.2 input with filler v2 '''
+        '''Asdmv1-import: Test good v1.2 input with filler v2 and reverse filler v2 '''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
         self.res = importasdm(myasdm_dataset_name)
@@ -453,6 +453,173 @@ class asdmv1_import(unittest.TestCase):
                 
         self.assertTrue(retValue['success'],retValue['error_msgs'])
                 
+    def test3(self):
+        '''Asdmv1-import: Test good v1.2 input with filler v3 and inverse filler v3 '''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+
+        self.res = importasdm(myasdm_dataset_name, useversion='v3')
+        self.assertEqual(self.res, None)
+        print myname, ": Success! Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f0",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "SYSCAL/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0",
+                            "SYSCAL/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", msname
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+msname
+        else:
+            ms.close()
+            print myname, ": OK. Checking tables in detail ..."
+    
+            # check main table first
+            name = ""
+            #             col name, row number, expected value, tolerance
+            expected = [
+                         ['UVW',       42, [ 0., 0., 0. ], 1E-8],
+                         ['EXPOSURE',  42, 1.008, 0],
+                         ['DATA',      42, [ [10.5526886+0.0j] ], 1E-7]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
+            else:
+                retValue['success']=True
+    
+            expected = [
+    # old values using TAI     ['UVW',       638, [-65.07623467,   1.05534109, -33.65801386], 1E-8],
+                         ['UVW',       638, [-65.14758508, 1.13423277, -33.51712451], 1E-8],
+                         ['EXPOSURE',  638, 1.008, 0],
+                         ['DATA',      638, [ [0.00362284+0.00340279j] ], 1E-8]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table MAIN failed'
+            else:
+                retValue['success']=True
+            
+            name = "ANTENNA"
+            expected = [ ['OFFSET',       1, [ 0.,  0.,  0.], 0],
+                         ['POSITION',     1, [2202242.5520, -5445215.1570, -2485305.0920], 0.0001],
+                         ['DISH_DIAMETER',1, 12.0, 0]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table ANTENNA failed'
+            else:
+                retValue['success']=True
+            
+            name = "POINTING"
+            expected = [ ['DIRECTION',       10, [[ 1.94681283],[ 1.19702955]], 1E-8],
+                         ['INTERVAL',        10, 0.048, 0],
+                         ['TARGET',          10, [[ 1.94681283], [ 1.19702955]], 1E-8],
+                         ['TIME',            10, 4758823736.016000, 1E-6],
+                         ['TIME_ORIGIN',     10, 0., 0],
+                         ['POINTING_OFFSET', 10, [[ 0.],[ 0.]], 0],
+                         ['ENCODER',         10, [ 1.94851533,  1.19867576], 1E-8 ]
+                         ]
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table POINTING failed'
+            else:
+                retValue['success']=True
+                
+        self.assertTrue(retValue['success'],retValue['error_msgs'])
+                
+        myvis = myms_dataset_name
+        os.system('rm -rf exportasdm-output.asdm myinput.ms')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        default('exportasdm')
+        try:
+            print "\n>>>> Test of exportasdm v3: input MS  is ", myvis
+            print "(a simulated input MS with pointing table)"
+            rval = exportasdm(
+                vis = 'myinput.ms',
+                asdm = 'exportasdm-output.asdm',
+                archiveid="S002",
+                apcorrected=False,
+                useversion='v3'
+                )
+            print "rval is ", rval
+            if not rval:
+                raise Exception
+            os.system('rm -rf '+asdmname+'; mv exportasdm-output.asdm '+asdmname)
+            verify_asdm(asdmname, True)
+        except:
+            print myname, ': *** Unexpected error exporting MS to ASDM, regression failed ***'   
+            raise
+            
+        try:
+            print "Reimporting the created ASDM (v3)...."
+            importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no', useversion='v3')
+            print "Testing existence of reimported MS ...."
+            if(not os.path.exists(reimp_msname)):
+                print "MS ", reimp_msname, " doesn't exist."
+                raise Exception
+            print "Testing equivalence of the original and the reimported MS."
+            tb.open(myms_dataset_name)
+            nrowsorig = tb.nrows()
+            print "Original MS contains ", nrowsorig, "integrations."
+            tb.close()
+            tb.open(reimp_msname)
+            nrowsreimp = tb.nrows()
+            tb.close()
+            print "Reimported MS contains ", nrowsreimp, "integrations."
+            if(not nrowsreimp==nrowsorig):
+                print "Numbers of integrations disagree."
+                raise Exception
+        except:
+            print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
+            raise
     
 def suite():
     return [asdmv1_import]        

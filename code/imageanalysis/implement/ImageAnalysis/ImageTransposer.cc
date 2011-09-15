@@ -25,12 +25,12 @@ ImageTransposer::ImageTransposer(
 		image, "", 0, "", "", "",
 		"", outputImage, False
 	),
-	_order(Vector<Int>(0)) {
+	_order(Vector<Int>(0)), _reverse(IPosition(0)) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_1");
 	*_getLog() << origin;
-	_construct();
+	//_construct();
 	*_getLog() << origin;
-	Regex intRegex("^[0-9]+$");
+	Regex intRegex("^(-?[0-9])+$");
 	if (order.matches(intRegex)) {
 		_order = _getOrder(order);
 	}
@@ -41,31 +41,56 @@ ImageTransposer::ImageTransposer(
 }
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, const Vector<String> order, const String& outputImage
+	const ImageInterface<Float> *const &image, const Vector<String> order,
+	const String& outputImage
 )
 :  ImageTask(
 		image, "", 0, "", "", "",
 		"", outputImage, False
-	), _order(Vector<Int>()) {
+	), _order(Vector<Int>()), _reverse(IPosition(0)) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_2");
 	*_getLog() << origin;
-	_construct();
+	//_construct();
 	*_getLog() << origin;
 	Vector<String> orderCopy = order;
+	std::vector<Bool> rev(orderCopy.size());
+	uInt nRev = 0;
+
+	for (uInt i=0; i<orderCopy.size(); i++) {
+		if (orderCopy[i].startsWith("-")) {
+			orderCopy[i] = orderCopy[i].substr(1);
+			rev[i] = True;
+			nRev++;
+		}
+		else {
+			rev[i] = False;
+		}
+	}
 	_order = _getImage()->coordinates().getWorldAxesOrder(orderCopy, True);
+	uInt n = 0;
+	if (nRev > 0) {
+		_reverse.resize(nRev);
+		for (uInt i=0; i<orderCopy.size(); i++) {
+			if (rev[i]) {
+				_reverse[n] = _order[i];
+				n++;
+			}
+		}
+	}
 	*_getLog() << "Old to new axis mapping is " << _order << LogIO::NORMAL;
 }
 
 ImageTransposer::ImageTransposer(
-	const ImageInterface<Float> *const &image, uInt order, const String& outputImage
+	const ImageInterface<Float> *const &image, uInt order,
+	const String& outputImage
 )
 :  ImageTask(
 		image, "", 0, "", "", "",
 		"", outputImage, False
-	), _order(Vector<Int>()) {
+	), _order(Vector<Int>()), _reverse(IPosition(0)) {
 	LogOrigin origin(_class, String(__FUNCTION__) + "_3");
 	*_getLog() << origin;
-	_construct();
+	//_construct();
 	*_getLog() << origin;
 	_order = _getOrder(order);
 }
@@ -75,23 +100,43 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	// get the image data
 	Array<Float> dataCopy = _getImage()->get();
 
-	CoordinateSystem csys = _getImage()->coordinates();
-	CoordinateSystem newCsys = csys;
-	newCsys.transpose(_order, _order);
+	CoordinateSystem newCsys = _getImage()->coordinates();
 	IPosition shape = _getImage()->shape();
+	if (_reverse.size() > 0) {
+		Vector<Double> refPix = newCsys.referencePixel();
+		Vector<Double> inc = newCsys.increment();
+		for (
+			IPosition::const_iterator iter=_reverse.begin();
+			iter!=_reverse.end(); iter++
+		) {
+			refPix[*iter] = shape[*iter] - 1 - refPix[*iter];
+			inc[*iter] *= -1;
+		}
+		newCsys.setReferencePixel(refPix);
+		newCsys.setIncrement(inc);
+	}
+	newCsys.transpose(_order, _order);
 	IPosition newShape(_order.size());
+
 	for (uInt i=0; i<newShape.size(); i++) {
 		newShape[i] = shape[_order[i]];
 	}
 	std::auto_ptr<ImageInterface<Float> > output(
 		new TempImage<Float>(TiledShape(newShape), newCsys)
 	);
+
+	if (_reverse.size() > 0) {
+		dataCopy = reverseArray(dataCopy, _reverse);
+	}
 	output->put(reorderArray(dataCopy, _order));
 	if (_getImage()->hasPixelMask()) {
 		std::auto_ptr<Lattice<Bool> > maskLattice(
 			_getImage()->pixelMask().clone()
 		);
 		Array<Bool> maskCopy = maskLattice->get();
+		if (_reverse.size() > 0) {
+			maskCopy = reverseArray(maskCopy, _reverse);
+		}
 		dynamic_cast<TempImage<Float> *>(output.get())->attachMask(
 			ArrayLattice<Bool>(reorderArray(maskCopy, _order))
 		);
@@ -159,8 +204,22 @@ Vector<Int> ImageTransposer::_getOrder(uInt order) const {
 	return myorder;
 }
 
-Vector<Int> ImageTransposer::_getOrder(const String& order) const {
-	return _getOrder(String::toInt(order));
+Vector<Int> ImageTransposer::_getOrder(const String& order) {
+	String orderCopy = order;
+	if (orderCopy.contains('-', 0)) {
+		uInt maxn = orderCopy.freq('-') + 1;
+		String parts[maxn];
+		split(order, parts, maxn, '-');
+		// disregard the first element because that won't have a -
+		_reverse.resize(maxn - 1);
+		orderCopy = parts[0];
+		for (uInt i=1; i<maxn; i++) {
+			_reverse[i-1] = String::toInt(parts[i].substr(0, 1));
+			orderCopy += parts[i];
+		}
+
+	}
+	return _getOrder(String::toInt(orderCopy));
 }
 
 }

@@ -13,6 +13,7 @@ def applycal(vis=None,
 	     uvrange=None,
 	     antenna=None,
 	     scan=None,
+             observation=None,
 	     msselect=None,
 	     gaintable=None,
 	     gainfield=None,
@@ -36,9 +37,9 @@ def applycal(vis=None,
                 return
 
 	try:
-
+                mycb = cbtool.create()
                 if ((type(vis)==str) & (os.path.exists(vis))):
-                        cb.open(vis)
+                        mycb.open(vis)
                 else:
                         raise Exception, 'Visibility data set not found - please verify the name'
 		# Back up the flags, if requested
@@ -51,16 +52,16 @@ def applycal(vis=None,
 		# Do data selection according to selectdata
 		if (selectdata):
 			# pass all data selection parameters in as specified
-			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent,
+			mycb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
+				     intent=intent, observation=str(observation),
 				     baseline=antenna,uvrange=uvrange,chanmode='none',
 				     msselect=msselect);
 		else:
 			# selectdata=F, so time,scan,baseline,uvrange,msselect=''
 			# using spw and field specifications only
-			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
-				     baseline='',uvrange='',chanmode='none',
-				     msselect='');
+			mycb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
+                                     observation='', baseline='',uvrange='',
+                                     chanmode='none', msselect='')
 
 		# Arrange all of the applies
 		# NB: calwt and interp apply to all; spwmap to gain only
@@ -104,7 +105,7 @@ def applycal(vis=None,
 						interp[igt]=thisinterp;
 					thisinterp=interp[igt];
 					
-				cb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
+				mycb.setapply(t=0.0,table=gaintable[igt],field=thisgainfield,
 					    calwt=calwt,spwmap=thisspwmap,interp=thisinterp)
 
 		# ...and now the specialized terms
@@ -114,33 +115,29 @@ def applycal(vis=None,
 		opacarr=np.array(opacity)   # as numpy array for uniformity
 		if (np.sum(opacarr)>0.0):
 			# opacity transmitted as a list in all cases
-			cb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=calwt)
+			mycb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=calwt)
 
-		if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=calwt)
+		if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=calwt)
 
 		# Apply parallactic angle, if requested
-		if parang: cb.setapply(type='P')
+		if parang: mycb.setapply(type='P')
 
-		cb.correct()
-		cb.close()
+		mycb.correct()
+		mycb.close()
 
 	        #write history
-        	ms.open(vis,nomodify=False)
-        	ms.writehistory(message='taskname = applycal',origin='applycal')
-        	ms.writehistory(message='vis         = "'+str(vis)+'"',origin='applycal')
-        	ms.writehistory(message='msselect    = "'+str(msselect)+'"',origin='applycal')
-        	ms.writehistory(message='gaintable   = "'+str(gaintable)+'"',origin='applycal')
-        	ms.writehistory(message='gainfield   = "'+str(gainfield)+'"',origin='applycal')
-		ms.writehistory(message='interp      = "'+str(interp)+'"',origin='applycal')
-		ms.writehistory(message='spwmap      = '+str(spwmap),origin='applycal')
-        	ms.writehistory(message='calwt       = '+str(calwt),origin='applycal')
-        	ms.writehistory(message='gaincurve   = '+str(gaincurve),origin='applycal')
-        	ms.writehistory(message='opacity     = '+str(opacity),origin='applycal')
-        	ms.close()
+                try:
+                        param_names = applycal.func_code.co_varnames[:applycal.func_code.co_argcount]
+                        param_vals = [eval(p) for p in param_names]
+                        write_history(mstool.create(), vis, 'applycal', param_names,
+                                      param_vals, casalog)
+                except Exception, instance:
+                        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                                     'WARN')
 
 	except Exception, instance:
 		print '*** Error ***',instance
-		cb.close()
+		mycb.close()
 		raise Exception, instance
 
 

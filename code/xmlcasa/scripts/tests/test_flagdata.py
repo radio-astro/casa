@@ -62,6 +62,19 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         flagdata(vis=self.vis, unflag=True)
         
+    def setUp_multi(self):
+        self.vis = "multiobs.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata(vis=self.vis, unflag=True)
 
 
 class test_rfi(test_base):
@@ -600,7 +613,28 @@ class test_selections_alma(test_base):
         # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
         flagdata(vis=self.vis, intent='CAL*POINT*')
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 377280, 26200)
+
+class test_selections2(test_base):
+    '''Test other selections'''
+    
+    def setUp(self):
+        self.setUp_multi()
         
+    def test_observation(self):
+        # string
+        flagdata(vis=self.vis, observation='1')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+
+        # integer
+        flagdata(vis=self.vis, unflag=True)
+        flagdata(vis=self.vis, observation=1)
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 28500)
+        
+        # non-existing ID
+        flagdata(vis=self.vis, unflag=True)
+        flagdata(vis=self.vis, observation='10')
+        test_eq(flagdata(vis=self.vis, mode='summary'), 2882778, 0)
+                
 
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -611,6 +645,7 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest.ms')
         os.system('rm -rf flagdatatest.ms.flagversions')
         os.system('rm -rf missing-baseline.ms')
+        os.system('rm -rf multiobs.ms')
 
     def test1(self):
         '''flagdata: Cleanup'''
@@ -619,6 +654,7 @@ class cleanup(test_base):
 
 def suite():
     return [test_selections,
+            test_selections2,
             test_selections_alma,
             test_statistics_queries,
             test_vector,

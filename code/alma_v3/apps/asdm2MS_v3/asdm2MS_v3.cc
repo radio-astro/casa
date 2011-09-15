@@ -2263,7 +2263,10 @@ int main(int argc, char *argv[]) {
       }
 
       string fieldName = r->getFieldName();
-      string code = r->getCode();
+      string code = "";
+      if(r->isCodeExists()){
+	r->getCode();
+      }
       DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
       if(r->isDirectionCodeExists()){
 	dirRefCode = r->getDirectionCode();

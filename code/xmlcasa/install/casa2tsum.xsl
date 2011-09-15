@@ -18,7 +18,7 @@
 <xsl:param name="taskvisibility"><xsl:value-of select="@visibility"/></xsl:param>
 <xsl:param name="taskdescription"><xsl:value-of select="aps:shortdescription"/></xsl:param>
 <xsl:choose>
-<xsl:when test="@startup='false'">
+<xsl:when test="lower-case(@startup)='false'">
 #from <xsl:value-of select="$taskname"/> import *
 </xsl:when>
 <xsl:otherwise>

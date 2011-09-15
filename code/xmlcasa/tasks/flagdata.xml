@@ -113,6 +113,12 @@
                         <value type="string"></value>
                 </param>
 
+                <param type="any" name="observation" subparam="true">
+                        <description>Select data based on observation ID: \'\'==>all</description>
+                        <any type="variant" limittypes="string int"/>
+                        <value type="string"></value>
+                </param>
+
                 <param type="any" name="clipexpr" subparam="true">
                         <description>Expression to clip on</description>
                         <any type="variant" limittypes="string stringArray"/>
@@ -335,6 +341,7 @@
                                         <default param="feed"><value type="string"></value></default>
                                         <default param="array"><value type="string"></value></default>
                                         <default param="uvrange"><value type="string"></value></default>
+                                        <default param="observation"><value type="string"></value></default>
                                 </equals>
                                 <equals type="bool" value="False"/>
                         </when>
@@ -554,6 +561,8 @@
                 default: '' (all); example: intent='*CAL*,*BAND*'
         feed -- Selection based on the feed - NOT IMPLEMENTED YET
         array -- Selection based on the antenna array
+        observation -- Selection based on the observation ID
+                default: '' (all); example: observation='1' or observation=1
 
         -- Vector mode --
 

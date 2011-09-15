@@ -1890,16 +1890,27 @@ void ASDM2MSFiller::addSource(int             source_id_,
   MDirection::getType(theType, directionMD.getRefString());
   if(mssource.nrow()==0){ // setDescRefCode works only with empty table 
     //cout << "Setting Source table direction reference to " << (int)theType << endl;
-    mssourceCol.directionMeas().setDescRefCode((int)theType, True); 
+    if( ((int)theType) >= MDirection::N_Types ){
+      cout << "Solar system object reference frame handling in Source table not yet implemented. Falling back to J2000." << endl;
+      mssourceCol.directionMeas().setDescRefCode((int)MDirection::J2000, True); 
+    }
+    else{
+      mssourceCol.directionMeas().setDescRefCode((int)theType, True); 
+    }
   }
   else{
-    MDirection mD;
+    casa::MDirection mD;
     mssourceCol.directionMeas().get(0, mD);
-    MDirection::Types theFirstType;
-    MDirection::getType(theFirstType, mD.getRefString());
+    casa::MDirection::Types theFirstType;
+    casa::MDirection::getType(theFirstType, mD.getRefString());
     if(theType != theFirstType){
-      cout << "Inconsistent directionCodes in Source table: " << theType << " and " <<  theFirstType << endl;
-      cout << "Will convert all directions to type " << theFirstType << " (" << MDirection::showType(theFirstType) << ")" << endl;  
+      cout << "Inconsistent directionCodes in Source table: " << theType << " (" << MDirection::showType(theType) << ") and "
+	   << theFirstType << " (" << MDirection::showType(theFirstType) << ")"<< endl;
+      cout << "Will convert all directions to type " << theFirstType << " (" << MDirection::showType(theFirstType) << ")" << endl;
+      if( ((int)theType) >= MDirection::N_Types ){
+	cout << "(Proper conversion not yet implemented for solar system objects.)" << endl;
+	directionMD = MDirection(Quantity(direction_[0], "rad"), Quantity(direction_[1], "rad"), theFirstType);
+      }
     }
   }
     

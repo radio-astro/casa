@@ -456,10 +456,10 @@ Record WCCSAxisLabeller::getOptions() const
       	  restvalue.define("default", String(rfstring));
         }
         else{
-      	  restvalue.define("default", String(""));
-	}
-	restvalue.define("value", itsRestValue);
-	restvalue.define("allowunset", False);
+      	  restvalue.define("default", String("0.0e+00Hz"));
+        }
+        restvalue.define("value", itsRestValue);
+        restvalue.define("allowunset", False);
         rec.defineRecord("axislabelrestvalue", restvalue);
      }
   }
@@ -697,18 +697,21 @@ void WCCSAxisLabeller::setSpectralState (CoordinateSystem& cs) const
    ok = Quantity::read(restQuant, itsRestValue);
    if (!ok) {
    	errorMsg = "Can not convert value to rest wavelength/frequency: " + itsRestValue;
-      os << errorMsg << LogIO::EXCEPTION;
+      //os << errorMsg << LogIO::EXCEPTION;
+      os << LogIO::WARN << errorMsg << LogIO::POST;
    }
    else if (restQuant.getValue() > 0 && restQuant.getUnit().empty()){
    	errorMsg = "Can not retrieve unit for rest wavelength/frequency in: " + itsRestValue;
-      os << errorMsg << LogIO::EXCEPTION;
+      //os << errorMsg << LogIO::EXCEPTION;
+      os << LogIO::WARN << errorMsg << LogIO::POST;
    }
 
 // Set the new rest frequency
 
    if (!CoordinateUtil::setRestFrequency (errorMsg, cs,
    	                                    restQuant.getUnit(), restQuant.getValue())) {
-   	os << errorMsg << LogIO::EXCEPTION;
+   	//os << errorMsg << LogIO::EXCEPTION;
+   	os << LogIO::WARN << errorMsg << LogIO::POST;
    }
 
 // Set velocity and/or world unit state in SpectralCoordinate

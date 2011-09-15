@@ -86,6 +86,7 @@ calibrater::selectvis(const ::casac::variant& time,
 		      const ::casac::variant& scan,
 		      const ::casac::variant& field,
 		      const ::casac::variant& intent,
+		      const ::casac::variant& observation,
 		      const ::casac::variant& baseline,
 		      const ::casac::variant& uvrange,
 		      const std::string& chanmode,
@@ -139,6 +140,8 @@ calibrater::selectvis(const ::casac::variant& time,
     //    cout << "fieldS    = " << fieldS << " " << field.typeString() << endl;
     String intentS=toCasaString(intent);
     //    cout << "intentS     = " << intentS << " " << scan.typeString() << endl;
+    String observationS=toCasaString(observation);
+    //    cout << "observationS     = " << observationS << " " << scan.typeString() << endl;
     String baselineS=toCasaString(baseline);
     //    cout << "baselineS = " << baselineS << " " << baseline.typeString() << endl;
     String uvrangeS=toCasaString(uvrange);
@@ -150,6 +153,7 @@ calibrater::selectvis(const ::casac::variant& time,
 			     scanS,
 			     fieldS,
 			     intentS,
+                             observationS,
 			     baselineS,
 			     uvrangeS,
 			     chanmode, 
@@ -203,8 +207,6 @@ calibrater::setptmodel(const std::vector<double>& stokes) {
     }
   return true;
 }
-
-
 
 
 bool 

@@ -18,7 +18,7 @@
 <xsl:param name="taskcategory"><xsl:value-of select="@category"/></xsl:param>
 <xsl:param name="taskvisibility"><xsl:value-of select="@visibility"/></xsl:param>
 <xsl:choose>
-<xsl:when test="@startup='false'">
+<xsl:when test="lower-case(@startup)='false'">
 #from <xsl:value-of select="$taskname"/>_cli import <xsl:value-of select="$taskname"/>_cli as <xsl:value-of select="$taskname"/>
 </xsl:when>
 <xsl:otherwise>

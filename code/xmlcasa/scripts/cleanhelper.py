@@ -637,7 +637,7 @@ class cleanhelper:
                     # make an empty mask
                     ia.set(pixels=0.0)
 
-    def makemultifieldmask3(self, maskobject='',slice=-1):
+    def makemultifieldmask3(self, maskobject='',slice=-1, newformat=True):
 
         """
         refactored version of makemultifieldmask2 - make use of makemaskimage()
@@ -660,6 +660,9 @@ class cleanhelper:
         if (not hasattr(maskobject, '__len__')) \
            or (len(maskobject) == 0) or (maskobject == ['']):
             return
+        # for empty maskobject list 
+        if all([msk==[''] or msk==[] for msk in maskobject]):
+            return
         # determine number of input elements
         if (type(maskobject)==str):
             maskobject=[maskobject]
@@ -681,6 +684,7 @@ class cleanhelper:
             for k in range(len(self.imageids)):
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
+
         # initialize maskimages
         # --- use outframe or dataframe for mask creation
         ##### duplicating with makemasimage?
@@ -717,11 +721,7 @@ class cleanhelper:
                         masktext.append(masklets)
 
         #group circles and boxes in dic for each image field 
-        # new behavior should be:
-        # 1. if the boxfile is in list of list, treat it apply only to the specific field???
-        # 2. if it is in a single list, the field number is matched to each field...
         circles, boxes=self.readmultifieldboxfile(masktext)
-         
         # Loop over imagename
         # take out text file names contain multifield boxes and field info  
         # from maskobject and create updated one (updatedmaskobject)
@@ -737,34 +737,49 @@ class cleanhelper:
                         maskobject_tmp[maskid].remove(txtf)
             else:
 	        updatedmaskobject = maskobject 
+        #if newformat: 
+        #    nmaskobj=len(maskobject_tmp)
+        #else:
+        #    nmaskobj=len(maskobject_tmp)-1
+       
         for maskid in range(len(self.maskimages)):
             # for handling old format
-            if len(maskobject_tmp)-1 <= maskid:
-                # add circles,boxes back
-                if len(circles) != 0:
-                    for key in circles:
-                        if maskid == int(key):
-                            if len(circles[key])==1:
-                              incircles=circles[key][0]
-                            else: 
-                              incircles=circles[key]
-                            updatedmaskobject.append(incircles)
-                if len(boxes) != 0:
-                    for key in boxes:
-                        if maskid == int(key):
-                            if len(boxes[key])==1:
-                              inboxes=boxes[key][0]
-                            else: 
-                              inboxes=boxes[key]
-                            # add to maskobject (extra list bracket taken out)
-                            updatedmaskobject.append(inboxes)
-           
+            #if nmaskobj <= maskid:
+            # add circles,boxes back
+            if len(circles) != 0:
+                for key in circles:
+                    try: 
+                        keyindx=int(key)
+                    except:
+                        keyindx=boxes.keys().index(key)
+
+                    if maskid == keyindx:
+                        if len(circles[key])==1:
+                           incircles=circles[key][0]
+                        else: 
+                           incircles=circles[key]
+                        updatedmaskobject.append(incircles)
+            if len(boxes) != 0:
+                for key in boxes:
+                    try: 
+                        keyindx=int(key)
+                    except:
+                        keyindx=boxes.keys().index(key)
+                       
+                    if  maskid== keyindx:
+                    #if maskid == int(key):
+                        if len(boxes[key])==1:
+                            inboxes=boxes[key][0]
+                        else: 
+                            inboxes=boxes[key]
+                        # add to maskobject (extra list bracket taken out)
+                        updatedmaskobject.append(inboxes)
+       
         #print "Updated maskobject=",updatedmaskobject
 
         for maskid in range(len(self.maskimages)):
-            #print "maskid, mask=",maskid, updatedmaskobject[maskid]
+            self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
             self.outputmask=''
-            inoutputmask=self.maskimages[self.imagelist[maskid]]
             self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
             imagename=self.imagelist[maskid], maskobject=updatedmaskobject[maskid], slice=slice)
 

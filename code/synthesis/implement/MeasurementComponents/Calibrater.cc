@@ -232,6 +232,7 @@ void Calibrater::selectvis(const String& time,
 			   const String& scan,
 			   const String& field,
 			   const String& intent,
+			   const String& obsIDs,
 			   const String& baseline,
 			   const String& uvrange,
 			   const String& chanmode,
@@ -249,6 +250,7 @@ void Calibrater::selectvis(const String& time,
 //    scan
 //    field
 //    intent
+//    obsIDs
 //    baseline
 //    uvrange
 //    chanmode     const String&            Frequency/velocity selection mode
@@ -317,6 +319,8 @@ void Calibrater::selectvis(const String& time,
       logSink() << " Selecting on field: '" << field << "'" << endl;
     if (intent!="")
       logSink() << " Selecting on intent: '" << intent << "'" << endl;
+    if(obsIDs != "")
+      logSink() << " Selecting by observation IDs: '" << obsIDs << "'" << endl;
     if (baseline!="")
       logSink() << " Selecting on antenna/baseline: '" << baseline << "'" << endl;
     if (uvrange!="")
@@ -336,7 +340,7 @@ void Calibrater::selectvis(const String& time,
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
-			   "",scan,"",intent);
+			   "",scan,"",intent, obsIDs);
 
     // If non-trivial MSSelection invoked and nrow reduced:
     if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {

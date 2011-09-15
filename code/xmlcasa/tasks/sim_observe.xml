@@ -118,6 +118,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value type="string">hexagonal</value>
 	<value type="string">square</value>
 	<value type="string">hex</value>
+	<value type="string">ALMA</value>
+	<value type="string">alma</value>
+	<value type="string">ALMA-OT</value>
       </allowed>
     </param>
 
@@ -303,12 +306,14 @@ it'll do them for the same amount of time -->
 	    </value>
 	  </default>
 	  <default param="maptype" type="string">
-	    <value type="string">hexagonal</value>
+	    <value type="string">ALMA</value>
 	  </default>
 	  <default param="pointingspacing"><value type="string"></value></default>
 	</equals>
 	<equals type="bool" value="False">
 	  <default param="ptgfile"><value type="string">$project.ptg.txt</value></default>
+	  <default param="integration"><value type="string">10s</value>
+	  <description>integration time (see below)</description></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
@@ -398,14 +403,15 @@ mosaic simulation task:
     integration --- Time interval for each integration e.g '10s'
        * NOTE: to simulate a "scan" longer than one integration, use 
          setpointings to generate a pointing file, and then edit the 
-         file to repeat each pointing several times before moving to the 
-         next point.
+         file to increase the time at each point to be larger than 
+         the parameter integration time.
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
        * can optionally be a list of pointings
        * otherwise simdata will pack mapsize according to maptype
     mapsize -- angular size of map 
        * set to "" to span the model image
-    maptype -- hexagonal or linear 
+    maptype -- hexagonal, linear, or ALMA for the same hex algorithm as the
+         ALMA OT 
     pointingspacing -- spacing in between beams e.g '1arcsec'
          or "0.25PB" to use 1/4 of the primary beam FWHM, or 
          "" will use the primary beam HWHM.

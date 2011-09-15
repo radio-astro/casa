@@ -2,16 +2,86 @@ import os
 from taskinit import *
 
 def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, process_syspower=None, process_caldevice=None, verbose=None, overwrite=None, showversion=None, useversion=None):
-	""" Convert an ALMA Science Data Model observation into a CASA visibility file (MS)
-	The conversion of the ALMA SDM archive format into a measurement set.  This version
-	is under development and is geared to handling many spectral windows of different
-	shapes.
-	
-	Keyword arguments:
-	asdm -- Name of input ASDM file (directory)
-		default: none; example: asdm='ExecBlock3'
+	"""Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
+           The conversion of the ALMA SDM archive format into a measurement set.  This version
+           is under development and is geared to handling many spectral windows of different
+           shapes.
+				          
+           Keyword arguments:
+           asdm -- Name of input ASDM file (directory)
+               default: none; example: asdm='ExecBlock3'
 
-	"""
+	   vis       -- Root ms or scantable name, note a prefix (.ms or .asap) is NOT appended to this name
+               default: none
+
+	   singledish   -- Set True to write data as single-dish format (Scantable)
+               default: False
+
+            &gt;&gt;&gt; singledish expandable parameter
+                 antenna -- antenna name or id.
+ 
+	   corr_mode -- correlation mode to be considered on input. Could
+	         be one or more of the following, ao, co, ac, or all
+	       default: all
+
+	   srt       -- spectral resolution type. Could be one or more of
+	                the following, fr, ca, bw, or all
+	       default: all
+
+	   time_sampling -- specifies the time sampling, INTEGRATION and/or
+                            SUBINTEGRAION. could be one or more of the following
+                            i, si, or all.
+		 default: all
+
+	   ocorr_mode    -- output data for correlation mode AUTO_ONLY 
+                            (ao) or CROSS_ONLY (co) or CROSS_AND_AUTO (ca)
+		 default: ca
+		 
+	   compression  -- produces comrpressed columns in the resulting measurement set.
+                 default: False
+
+	   asis         --  creates verbatim copies of the ASDM tables in 
+	                    the output measurement set. The value given to
+		            this option must be a list of table names separated
+		            by space characters; the wildcard character '*' is 
+                            allowed in table names.
+
+	   wvr_corrected_data -- specifies wich values are considered in the 
+                      ASDM binary data to fill the DATA column in 
+                      the MAIN table of the MS. Expected values for 
+                      this option are 'no' for the uncorrected data 
+                      (this is the default), 'yes' for the corrected
+                      data and 'both' for corrected and uncorrected 
+                      data. In the latter case, two measurement sets
+                      are created, one containing the uncorrected 
+                      data and the other one, whose name is suffixed
+                      by '-wvr-corrected', containing the corrected 
+                      data.
+
+	   scans --	  processes only the scans specified in the option's value. This value is a semicolon 
+	              separated list of scan specifications. A scan specification consists in an exec bock index 
+                      followed by the character ':' followed by a comma separated list of scan indexes or scan 
+                      index ranges. A scan index is relative to the exec block it belongs to. Scan indexes are 
+                      1-based while exec blocks's are 0-based. "0:1" or "2:2~6" or "0:1,1:2~6,8;2:,3:24~30" "1,2" 
+                      are valid values for the option. "3:" alone will be interpreted as 'all the scans of the 
+                      exec block#3'. An scan index or a scan index range not preceded by an exec block index will
+                      be interpreted as 'all the scans with such indexes in all the exec blocks'.  By default 
+                      all the scans are considered.
+
+	   ignore_time -- All the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower,
+                      and Weather are processed independently of the time range of the selected exec block / scan.
+
+	   process_syspower -- The SysPower table is processed if and only if this parameter is set to True.
+
+	   process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
+
+	   verbose     -- produce log output as asdm2MS is being run
+
+	   showversion -- report the version of the asdm2MS being used.
+
+	   useversion -- Selects the version of asdm2MS to be used (\'v2\' (default) or \'v3\' (use for ALMA data))
+                     default: v2
+        """
 	#Python script
 
 	# make fg tool local 

@@ -69,6 +69,12 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 		<value></value>
 	</param>
 
+        <param type="any" name="observation">
+                <description>Select by observation ID(s)</description>
+		<any type="variant" limittypes="string int"/>
+		<value type="string"></value>
+        </param>
+
 	<param type="string" name="msselect" subparam="true">
 		<description>Optional complex data selection (ignore for now)</description>
 		<value></value>
@@ -131,7 +137,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 
 
 	<param type="string" name="calmode">
-		<description>Type of solution" (\'ap\', \'p\', \'a\')</description>
+		<description>Type of solution: (\'ap\', \'p\', \'a\')</description>
 		<value>ap</value>
 		<allowed kind="enum">
 			<value>a</value>
@@ -207,6 +213,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 			<default param="uvrange"><value type="string"/></default>
 			<default param="antenna"><value type="string"/></default>
 			<default param="scan"><value type="string"/></default>
+			<default param="observation"><value type="string"/></default>
 			<default param="msselect"><value type="string"/></default>
 		</equals>
 	</when>
@@ -299,6 +306,9 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
               antenna='5,6,10'; all baselines with antennas 5,6,10 index numbers
       scan -- Scan number range.
               Check 'go listobs' to insure the scan numbers are in order.
+      observation -- Observation ID(s).
+                     default: '' = all
+                     example: '0~2,4'
       msselect -- Optional complex data selection (ignore for now)
 
       --- Solution parameters

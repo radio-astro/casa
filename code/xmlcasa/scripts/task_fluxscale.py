@@ -57,28 +57,25 @@ def fluxscale(vis=None,caltable=None,fluxtable=None,reference=None,transfer=None
        """
 
        try:
-
                casalog.origin('fluxscale')
 
-               cb.open(vis)
-               cb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
-               transfer=transfer,append=append,refspwmap=refspwmap)
-               cb.close()
-
+               mycb = cbtool.create()
+               mycb.open(vis)
+               mycb.fluxscale(tablein=caltable,tableout=fluxtable,reference=reference,
+                              transfer=transfer,append=append,refspwmap=refspwmap)
+               mycb.close()
 
                #write history
-               ms.open(vis,nomodify=False)
-               ms.writehistory(message='taskname = fluxscale',origin='fluxscale')
-               ms.writehistory(message='vis         = "'+str(vis)+'"',origin='fluxscale')
-               ms.writehistory(message='caltable    = "'+str(caltable)+'"',origin='fluxscale')
-               ms.writehistory(message='fluxtable   = "'+str(fluxtable)+'"',origin='fluxscale')
-               ms.writehistory(message='reference   = '+str(reference),origin='fluxscale')
-               ms.writehistory(message='transfer    = '+str(transfer),origin='fluxscale')
-               ms.writehistory(message='append      = '+str(append),origin='fluxscale')
-               ms.writehistory(message='refspwmap   = '+str(refspwmap),origin='fluxscale')
-               ms.close()
+               try:
+                      param_names = fluxscale.func_code.co_varnames[:fluxscale.func_code.co_argcount]
+                      param_vals = [eval(p) for p in param_names]
+                      write_history(mstool.create(), vis, 'fluxscale', param_names,
+                                    param_vals, casalog)
+               except Exception, instance:
+                      casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                                   'WARN')
 
        except Exception, instance:
                print '*** Error ***',instance
-               cb.close()
+               mycb.close()
                raise Exception, instance

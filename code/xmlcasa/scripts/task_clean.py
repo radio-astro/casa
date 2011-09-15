@@ -331,6 +331,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             phasecenters=[]
             parms={}
             rootname=''
+            newformat=False
             # new handling:
             # need to combine task parameter inputs and outlier file input
             if len(outlierfile) != 0:
@@ -398,7 +399,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                  imsizes=imsize
                  phasecenters=phasecenter
                  imageids=imagename
-           
+            casalog.post("imsizes="+str(imsizes)+" imageids="+str(imageids), 'DEBUG1')
 #
 # Moved getAlgorithm() to here so that multifield is set using outlier file.
 #
@@ -482,7 +483,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
             else:
                 #imset.makemultifieldmask2(mask,chanslice)
-                imset.makemultifieldmask3(mask,chanslice)
+                imset.makemultifieldmask3(mask,chanslice,newformat)
                 maskimage=[]
                 for img in sorted(imset.maskimages):
                     maskimage.append(imset.maskimages[img])

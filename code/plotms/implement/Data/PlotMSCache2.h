@@ -391,6 +391,8 @@ protected:
 
   // meta info for locate output
   Vector<String> antnames_; 	 
+  Vector<String> stanames_; 	 
+  Vector<String> antstanames_; 	 
   Vector<String> fldnames_; 	 
 
   // A container for channel averaging bounds

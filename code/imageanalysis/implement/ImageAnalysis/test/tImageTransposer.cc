@@ -164,6 +164,52 @@ void test201Reordering(
 	testBeam(image, outImage);
 }
 
+void test_20_1Reordering(
+	const std::auto_ptr<ImageInterface<Float> > &image,
+	const String& outname
+) {
+	PagedImage<Float> outImage(outname);
+	IPosition inShape = image->shape();
+
+	IPosition outShape = outImage.shape();
+	IPosition outMap(3,2,0,1);
+
+	Array<Float> inData = image->get();
+	Array<Float> outData = outImage.get();
+	Cube<Float> inCube;
+	inCube.reference(inData);
+	Cube<Float> outCube;
+	outCube.reference(outData);
+
+	Vector<Double> inRefPix = image->coordinates().referencePixel();
+	Vector<Double> outRefPix = outImage.coordinates().referencePixel();
+	Vector<Double> inRefVal = image->coordinates().referenceValue();
+	Vector<Double> outRefVal = outImage.coordinates().referenceValue();
+
+	for(uInt i=0; i<inShape.size(); i++) {
+		AlwaysAssert(outShape[i] == inShape[outMap[i]], AipsError);
+		AlwaysAssert(outRefPix[0] == inShape[2] - 1 - inRefPix[2], AipsError);
+		AlwaysAssert(outRefPix[1] == inRefPix[0], AipsError);
+		AlwaysAssert(outRefPix[2] == inShape[1] - 1 - inRefPix[1], AipsError);
+
+		AlwaysAssert(outRefVal[i] == inRefVal[outMap[i]], AipsError);
+	}
+	vector<Float> inVec, outVec;
+	inData.tovector(inVec);
+	outData.tovector(outVec);
+	for(uInt i=0; i<inShape[0]; i++) {
+		for(uInt j=0; j<inShape[1]; j++) {
+			for(uInt k=0; k<inShape[2]; k++) {
+				AlwaysAssert(
+					inCube(i,j,k) == outCube(inShape[2] - 1 - k,i,inShape[1] - 1 - j),
+					AipsError
+				);
+			}
+		}
+	}
+	testBeam(image, outImage);
+}
+
 int main() {
     pid_t pid = getpid();
     ostringstream os;
@@ -177,6 +223,7 @@ int main() {
 	std::auto_ptr<ImageInterface<Float> > goodInputImage(
 		new FITSImage(datadir + "reorder_in.fits")
 	);
+
 	Bool ok = True;
 	try {
 		testException(
@@ -262,6 +309,13 @@ int main() {
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
+		{
+			writeTestString("test \"-20-1\" reordering using order string");
+			String outname = dirName +  "/reorder_-20-1_out.im";
+			ImageTransposer reorderer(goodInputImage.get(), "-20-1", outname);
+			reorderer.transpose();
+			test_20_1Reordering(goodInputImage, outname);
+		}
 
 		{
 			writeTestString("test no reordering using order int");
@@ -274,7 +328,7 @@ int main() {
 		{
 			writeTestString("test reordering using order int");
 			String outname = dirName +  "/reorder_201_x_out.im";
-			ImageTransposer reorderer(goodInputImage.get(), "201", outname);
+			ImageTransposer reorderer(goodInputImage.get(), 201, outname);
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
@@ -309,6 +363,22 @@ int main() {
 
 		{
 			Vector<String> order(3);
+			order[0] = "-f";
+			order[1] = "r";
+			order[2] = "-d";
+			ostringstream ostream;
+			ostream << dirName <<  "/reorder" << order << "_out.im";
+			String outname = ostream.str();
+			ostream.str("");
+			ostream << "test " << order << " reordering";
+			writeTestString(ostream.str());
+			ImageTransposer reorderer(goodInputImage.get(), order, outname);
+			reorderer.transpose();
+			test_20_1Reordering(goodInputImage, outname);
+		}
+
+		{
+			Vector<String> order(3);
 			order[0] = "fr";
 			order[1] = "rig";
 			order[2] = "decl";
@@ -321,6 +391,22 @@ int main() {
 			ImageTransposer reorderer(goodInputImage.get(), order, outname);
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
+		}
+
+		{
+			Vector<String> order(3);
+			order[0] = "-fr";
+			order[1] = "rig";
+			order[2] = "-decl";
+			ostringstream ostream;
+			ostream << dirName <<  "/reorder" << order << "_out.im";
+			String outname = ostream.str();
+			ostream.str("");
+			ostream << "test " << order << " reordering";
+			writeTestString(ostream.str());
+			ImageTransposer reorderer(goodInputImage.get(), order, outname);
+			reorderer.transpose();
+			test_20_1Reordering(goodInputImage, outname);
 		}
 
 		cout << "ok" << endl;
