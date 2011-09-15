@@ -48,6 +48,20 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         flagdata2(vis=self.vis, unflag=True)
 
+    def setUp_multi(self):
+        self.vis = "multiobs.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata2(vis=self.vis, unflag=True)
+
 
 class test_rfi(test_base):
     """Test of mode = 'rfi'"""
@@ -757,6 +771,32 @@ class test_shadow_ngc5921(test_base):
         # For antenna based flagging, it should be (to be uncommented when CAS-2399
         # is solved):
         #assert missingbl['antenna']['14']['flagged'] > 1000
+
+class test_selections2(test_base):
+    '''Test other selections'''
+    
+    def setUp(self):
+        self.setUp_multi()
+        
+    def test_observation(self):
+        # string
+        flagdata2(vis=self.vis, selectdata=True, observation='1',manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True), 2882778, 28500)
+
+        # integer
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis, selectdata=True, observation=1, manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True), 2882778, 28500)
+        
+        # non-existing ID
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis, selectdata=True, observation='10',manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True), 2882778, 0)
+        
+        # test using the mf_observation parameter instead
+        flagdata2(vis=self.vis, selectdata=False, mf_observation='1',manualflag=True)
+        test_eq(flagdata2(vis=self.vis, summary=True), 2882778, 28500)
+        
      
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -767,6 +807,8 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest.ms')
         os.system('rm -rf flagdatatest.ms.flagversions')
         os.system('rm -rf missing-baseline.ms')
+        os.system('rm -rf multiobs.ms')
+
 
     def test1(self):
         '''flagdata2: Cleanup'''
@@ -776,6 +818,7 @@ class cleanup(test_base):
 def suite():
     return [
             test_selections,
+            test_selections2,
             test_statistics_queries,
             test_vector,
             test_vector_ngc5921,
