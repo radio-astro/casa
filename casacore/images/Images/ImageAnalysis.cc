@@ -5730,6 +5730,11 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 	whatXY.downcase();
 	CoordinateSystem cSys = pImage_p->coordinates();
 	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
+	if (which < 0){
+		*itsLog << LogIO::WARN << "Image: " << pImage_p->name()
+				<< " does not have a DIRECTION coordinate system!" << LogIO::POST;
+		return False;
+	}
 
 	// if necessary, convert from
 	// world to pixel coordinates
@@ -5847,7 +5852,13 @@ Bool ImageAnalysis::getFreqProfile(
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
 	Int pixSpecAx = cSys.pixelAxes(specAx)[0];
 	Int nchan = pImage_p->shape()(pixSpecAx);
-	Vector<Int> dirPixelAxis = cSys.pixelAxes(cSys.findCoordinate(Coordinate::DIRECTION));
+	Int which = cSys.findCoordinate(Coordinate::DIRECTION);
+	if (which < 0){
+		*itsLog << LogIO::WARN << "Image: " << pImage_p->name()
+				<< " does not have a DIRECTION coordinate system!" << LogIO::POST;
+		return False;
+	}
+	Vector<Int> dirPixelAxis = cSys.pixelAxes(which);
 
 	// create the image region for
 	// a rectangle
