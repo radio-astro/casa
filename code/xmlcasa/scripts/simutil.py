@@ -319,107 +319,6 @@ class simutil:
 
     ###########################################################
 
-    # WARNING:  this will dissapear in favor of calc_pointings2
-
-    def calc_pointings(self, spacing, imsize, direction=None, relmargin=0.33):
-        """
-        If direction is a list, simply returns direction and the number of
-        pointings in it.
-        
-        Otherwise, returns a hexagonally packed list of pointings separated by
-        spacing and fitting inside an area specified by direction and imsize, 
-        as well as the number of pointings.  The hexagonal packing starts with a
-        horizontal row centered on direction, and the other rows alternate
-        being horizontally offset by a half spacing.  
-        """
-        # make imsize 2-dimensional:
-        if type(imsize) != type([]):
-            imsize=[imsize,imsize]
-        if len(imsize) <2:
-            imsize=[imsize[0],imsize[0]]
-        if direction==None:
-            # if no direction is specified, use the object's direction
-            direction=self.direction
-        else:
-            # if one is specified, use that to set the object's direction
-            # do we really want to do this?
-            self.direction=direction
-
-        # direction is always a list of strings (defined by .xml)
-        if type(direction)==type([]):
-            if len(direction) > 1:
-                if self.verbose: self.msg("You are inputing the precise pointings in 'direction' - if you want me to calculate a mosaic, give a single direction",priority="warn")
-                return len(direction), direction, [0.]*len(direction) #etime at end
-            else: direction=direction[0]        
-
-
-        # now its either a filename or a single direction:
-        # do we need this string check?  maybe it could be a quantity?
-        #if type(direction) == str:
-        # Assume direction as a filename and read lines if it exists
-        filename=os.path.expanduser(os.path.expandvars(direction))
-        if os.path.exists(filename):
-            self.msg('Reading direction information from the file, %s' % filename)
-            return self.read_pointings(filename)
-        
-        # haveing elimiated other options, we need to calculate:
-        epoch, centx, centy = self.direction_splitter()
-
-        spacing  = qa.quantity(spacing)
-        yspacing = qa.mul(0.866025404, spacing)
-    
-        xsize=qa.quantity(imsize[0])
-        ysize=qa.quantity(imsize[1])
-
-        nrows = 1+ int(pl.floor(qa.convert(qa.div(ysize, yspacing), '')['value']
-                                - 2.309401077 * relmargin))
-
-        availcols = 1 + qa.convert(qa.div(xsize, spacing),
-                                   '')['value'] - 2.0 * relmargin
-        ncols = int(pl.floor(availcols))
-
-        # By making the even rows shifted spacing/2 ahead, and possibly shorter,
-        # the top and bottom rows (nrows odd), are guaranteed to be short.
-        if availcols - ncols >= 0.5:                            # O O O
-            evencols = ncols                                    #  O O O
-            ncolstomin = 0.5 * (ncols - 0.5)
-        else:
-            evencols = ncols - 1                                #  O O 
-            ncolstomin = 0.5 * (ncols - 1)                      # O O O
-        pointings = []
-
-        # Start from the top because in the Southern hemisphere it sets first.
-        y = qa.add(centy, qa.mul(0.5 * (nrows - 1), yspacing))
-        for row in xrange(0, nrows):         # xrange stops early.
-            xspacing = qa.mul(1.0 / pl.cos(qa.convert(y, 'rad')['value']),spacing)
-            ystr = qa.formxxx(y, format='dms',prec=5)
-        
-            if row % 2:                             # Odd
-                xmin = qa.sub(centx, qa.mul(ncolstomin, xspacing))
-                stopcolp1 = ncols
-            else:                                   # Even (including 0)
-                xmin = qa.sub(centx, qa.mul(ncolstomin - 0.5,
-                                                 xspacing))
-                stopcolp1 = evencols
-            for col in xrange(0, stopcolp1):        # xrange stops early.
-                x = qa.formxxx(qa.add(xmin, qa.mul(col, xspacing)),
-                               format='hms',prec=5)
-                pointings.append("%s%s %s" % (epoch, x, ystr))
-            y = qa.sub(y, yspacing)
-        ####could not fit pointings then single pointing
-        if(len(pointings)==0):
-            pointings.append(direction)
-        self.msg("using %i generated pointing(s)" % len(pointings))
-        self.pointings=pointings
-        return len(pointings), pointings, [0.]*len(pointings)
-
-
-
-
-
-    ###########################################################
-    # new version - in simdata2, we don't need the file reading here
-
     def calc_pointings2(self, spacing, size, maptype="hex", direction=None, relmargin=0.5):
         """
         If direction is a list, simply returns direction and the number of
@@ -539,7 +438,29 @@ class simutil:
                                    format='hms',prec=5)
                     pointings.append("%s%s %s" % (epoch, x, ystr))
                 y = qa.sub(y, yspacing)
-        
+        if shorttype == "ALM": 
+            # OT algorithm
+            self.isquantity(spacing)
+            spacing  = qa.quantity(spacing)
+            xsize = qa.quantity(size[0])
+            ysize = qa.quantity(size[1])
+            angle = 0. # do we have to worry about rotation?
+
+            spacing_asec=qa.convert(spacing,'arcsec')['value']
+            xsize_asec=qa.convert(xsize,'arcsec')['value']
+            ysize_asec=qa.convert(ysize,'arcsec')['value']
+
+            x,y = self.getTrianglePoints(xsize_asec, ysize_asec, angle, spacing_asec)
+            pointings = []
+            nx=len(x)
+            for i in range(nx):
+            # Start from the top because in the Southern hemisphere it sets first.
+                y1=qa.add(centy, str(y[nx-i-1])+"arcsec")
+                ycos=pl.cos(qa.convert(y1,"rad")['value'])
+                ystr = qa.formxxx(y1, format='dms',prec=5)
+                xstr = qa.formxxx(qa.add(centx, str(x[nx-i-1]/ycos)+"arcsec"), format='hms',prec=5)
+                pointings.append("%s%s %s" % (epoch, xstr, ystr))
+            
 
         # if could not fit any pointings, then return single pointing
         if(len(pointings)==0):
@@ -2799,3 +2720,59 @@ class simutil:
 
 
 
+#######################################
+# ALMA calcpointings
+        
+    def applyRotate(self, x, y, tcos, tsin):     
+        return tcos*x-tsin*y, tsin*x+tcos*y
+    
+    def isEven(self, num):
+        return (num % 2) == 0
+
+
+    def getTrianglePoints(self, width, height, angle, spacing):
+        tcos = pl.cos(angle)
+        tsin = pl.sin(angle)
+
+        xx=[]
+        yy=[]
+
+        if (width >= height):
+            wSpacing = spacing
+            hSpacing = (pl.sqrt(3.) / 2) * spacing
+      
+            nwEven = int(pl.floor((width / 2) / wSpacing))
+            nwOdd  = int(pl.floor((width / 2) / wSpacing + 0.5))
+            nh     = int(pl.floor((height / 2) / hSpacing))
+
+            for ih in pl.array(range(nh*2+1))-nh:
+                if (self.isEven(ih)):
+                    for iw in pl.array(range(nwEven*2+1))-nwEven:
+                        x,y = self.applyRotate(iw*wSpacing, ih*hSpacing, tcos, tsin)
+                        xx.append(x)
+                        yy.append(y)          
+                else:
+                    for iw in pl.array(range(nwOdd*2+1))-nwOdd:
+                        x,y = self.applyRotate((iw+0.5)*wSpacing, ih*hSpacing, tcos, tsin)
+                        xx.append(x)
+                        yy.append(y)
+        else:
+            wSpacing = (pl.sqrt(3) / 2) * spacing
+            hSpacing = spacing
+      
+            nw     = int(pl.floor((width / 2) / wSpacing))
+            nhEven = int(pl.floor((height / 2) / hSpacing))
+            nhOdd  = int(pl.floor((height / 2) / hSpacing + 0.5))
+
+            for iw in pl.array(range(nw*2+1))-nw:                
+                if (self.isEven(iw)):
+                    for ih in pl.array(range(nhEven*2+1))-nhEven:
+                        x,y = self.applyRotate(iw*wSpacing, ih*hSpacing, tcos, tsin)
+                        xx.append(x)
+                        yy.append(y)          
+                else:                    
+                    for ih in pl.array(range(nhOdd*2+1))-nhOdd:
+                        x,y = self.applyRotate(iw*wSpacing, (ih+0.5)*hSpacing, tcos, tsin)
+                        xx.append(x)
+                        yy.append(y)          
+        return xx,yy

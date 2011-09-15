@@ -582,7 +582,7 @@ def sim_observe(
                 plotcolor = 'k'
 
             #if offsets.shape[1] > 16 or pb <= 0 or pb > pl.absolute(max(max(lims))):
-            if offsets.shape[1] > 16 or pb <= 0:
+            if offsets.shape[1] > 19 or pb <= 0:
                 lims = pl.xlim(),pl.ylim()
                 pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
                         plotcolor+'+',markeredgewidth=1)

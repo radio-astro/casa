@@ -118,6 +118,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<value type="string">hexagonal</value>
 	<value type="string">square</value>
 	<value type="string">hex</value>
+	<value type="string">ALMA</value>
+	<value type="string">alma</value>
+	<value type="string">ALMA-OT</value>
       </allowed>
     </param>
 
@@ -303,7 +306,7 @@ it'll do them for the same amount of time -->
 	    </value>
 	  </default>
 	  <default param="maptype" type="string">
-	    <value type="string">hexagonal</value>
+	    <value type="string">ALMA</value>
 	  </default>
 	  <default param="pointingspacing"><value type="string"></value></default>
 	</equals>
@@ -407,7 +410,8 @@ mosaic simulation task:
        * otherwise simdata will pack mapsize according to maptype
     mapsize -- angular size of map 
        * set to "" to span the model image
-    maptype -- hexagonal or linear 
+    maptype -- hexagonal, linear, or ALMA for the same hex algorithm as the
+         ALMA OT 
     pointingspacing -- spacing in between beams e.g '1arcsec'
          or "0.25PB" to use 1/4 of the primary beam FWHM, or 
          "" will use the primary beam HWHM.
