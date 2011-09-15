@@ -965,9 +965,10 @@ void MeasurementSet::checkVersion()
 }
 
 Record MeasurementSet::msseltoindex(const String& spw, const String& field, 
-		      const String& baseline, const String& time, 
-		      const String& scan, const String& uvrange, 
-				    const String& taql){
+                                    const String& baseline, const String& time, 
+                                    const String& scan, const String& uvrange, 
+                                    const String& observation, const String& taql)
+{
   Record retval;
   MSSelection thisSelection;
   thisSelection.setSpwExpr(spw);
@@ -976,11 +977,13 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
   thisSelection.setTimeExpr(time);
   thisSelection.setScanExpr(scan);
   thisSelection.setUvDistExpr(uvrange);
+  thisSelection.setObservationExpr(observation);
   thisSelection.setTaQLExpr(taql);
   TableExprNode exprNode=thisSelection.toTableExprNode(this);
   Vector<Int> fieldlist=thisSelection.getFieldList();
   Vector<Int> spwlist=thisSelection.getSpwList();
   Vector<Int> scanlist=thisSelection.getScanList();
+  Vector<Int> obslist=thisSelection.getObservationList();
   Vector<Int> antenna1list=thisSelection.getAntenna1List();
   Vector<Int> antenna2list=thisSelection.getAntenna2List();
   Matrix<Int> chanlist=thisSelection.getChanList();
@@ -991,17 +994,17 @@ Record MeasurementSet::msseltoindex(const String& spw, const String& field,
 
   retval.define("spw", spwlist);
   retval.define("field", fieldlist);
-  retval.define("scan",scanlist);
+  retval.define("scan", scanlist);
+  retval.define("obsids", obslist);
   retval.define("antenna1", antenna1list);
   retval.define("antenna2", antenna2list);
-  retval.define("baselines",baselinelist);
+  retval.define("baselines", baselinelist);
   retval.define("channel", chanlist);
-  retval.define("dd",ddIDList);
+  retval.define("dd", ddIDList);
   //  retval.define("polmap",polMap);
   // retrval.define("corrmap",corrMap);
 
   return retval;
-
 }
 
 const MrsEligibility MrsEligibility::allSubtables_p = allEligible ();
