@@ -686,7 +686,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                To include outlier fields: 
                  imagename=['n5921','outlier1','outlier2'] 
        outlierfile --- Text file name which contains image names, sizes, field
-                       centers
+                       centers (See 'HINTS ON CLEAN WITH FLANKING FIELDS' below 
+                       for two possible formats.)
        field -- Select fields to image or mosaic.  Use field id(s) or name(s).
                   ['go listobs' to obtain the list id's or names]
                default: ''= all fields
@@ -1242,48 +1243,78 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                 (a) Direct Method:
 
-                     cell = ['1.0arcsec', '1.0arcsec']
-                     imagename = ['M1_0','M1_1','M1_2]
-                     imsize = [[1024,1024],[128,128],[128,128]]
-                     phasecenter = ['J2000 13h27m20.98 43d26m28.0',
-                                    'J2000 13h30m52.159 43d23m08.02',
-                                    'J2000 13h24m08.16 43d09m48.0']
+                    cell = ['1.0arcsec', '1.0arcsec']
+                    imagename = ['M1_0','M1_1','M1_2]
+                    imsize = [[1024,1024],[128,128],[128,128]]
+                    phasecenter = ['J2000 13h27m20.98 43d26m28.0',
+                                   'J2000 13h30m52.159 43d23m08.02',
+                                   'J2000 13h24m08.16 43d09m48.0']
 	
                 (b) Text file method  (in outlier.txt)
 
-                   imagename = 'M1'
-                   outlierfile = 'outlier.txt'
+                    imagename = 'M1'
+                    outlierfile = 'outlier.txt'
                       Note : phasecenter, imsize are ignored.
 
-                   Contents of outlier.txt 
-                   C 0   1024 1024   13 27 20.98     43 26 28.0
-                   C 1    128  128   13 30 52.158    43 23 08.00
-                   C 2    128  128   13 24 08.163    43 09 48.00
+                    Contents of outlier.txt 
+                    C 0   1024 1024   13 27 20.98     43 26 28.0
+                    C 1    128  128   13 30 52.158    43 23 08.00
+                    C 2    128  128   13 24 08.163    43 09 48.00
 
-		   Note : field-ids (the number after 'C') must start from
-                          zero.
+		    Note : field-ids (the number after 'C') must start from
+                           zero.
 
-                In both cases the following images will be made:
+                (c) New: use both task inputs and outlier file 
+
+                    imagename = 'M1_0'
+                    outlierfile='newoutlier.txt'
+                    imsize = [1024,1024]
+                    phasecenter = 'J2000 13h27m20.98 43d26m28.0'
+                   
+                    Contents of newoutlier.txt:
+                    imagename = 'M1_1' imsize = [128,128] 
+                    phasecenter = 'J2000 13h30m52.159 43d23m08.02'
+                    imagename = 'M1_2' imsize = [128,128] 
+                    phasecenter = 'J2000 13h24m08.16 43d09m48.0'
+
+                    Note: if the outlier file is written in this format, both 
+                    imagename, imsize, and phasecenter from task inputs and
+                    outlier file in this format are combined. A set of the parameter
+                    for each field must begin with imagename and include imsize and
+                    phasecenter. It can be in single line or spanned to multiple lines.
+                    Also, mask and modelimage for outlier fields can be optionally specified. 
+                 
+                    e.g. using the above example, to include mask and modelimage
+                    for outlier field, M1_1, 
+                      imagename = 'M1_1' imsize = [128,128]
+                      phasecenter = 'J2000 13h30m52.159 43d23m08.02'
+                      mask = 'out1.mask' modelimage = 'out1.model'
+                      imagename = 'M1_2' imsize = [128,128]
+                      phasecenter = 'J2000 13h24m08.16 43d09m48.0'
+                    
+
+                In all cases above, the following images will be made:
                     M1_0.image, M1_1.image, M1_2.image     cleaned images
                     M1.0.model, M1_1.model, M1_2.model     model images
                     M1.0.residual, M1_1.residual, M1_2.residual     residual images
 
-		   
+		  
+                     
 	      2. Masks for central and flanking fields  
 
 	         (a)  Specify a list of masks, one for each field.
 		      Note : Number of masks must match the number of fields.
 
-	           masks = [ [200,200,700,700] , [30,30,70,70], [40,40,80,80] ]
+	           mask = [ [200,200,700,700] , [30,30,70,70], [40,40,80,80] ]
 		   (or)
-	           masks = [ 'image0.mask', 'region1.rgn', 'image2.mask' ]
+	           mask = [ 'image0.mask', 'region1.rgn', 'image2.mask' ]
 
 
-		  (b) Use a box-file to set masks.
+		 (b)  Use a box-file to set masks.
 		      This option allows mask-setting for only specified
                       fields. 
 	           
-		   masks = 'boxfile.txt'
+		   mask = 'boxfile.txt'
 	
 		   This text-file contains one entry per field (start with
                    index 0):
@@ -1301,6 +1332,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 		    If an outlier file is used, field-ids in the box-file 
 		    must match field-ids in the outlier-file.
+
+                 (c)  As noted in 1., with the new text file format, 
+                    masks for outlier fields in the outlierfile can be included
+                    in the file 
  		    
   </example>
 
