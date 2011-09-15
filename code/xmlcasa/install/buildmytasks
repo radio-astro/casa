@@ -44,9 +44,9 @@ function verbose
 }
 
 # File functions.
-function file-realname
+function filerealname
 {
- [ "$#" != 1 ] && echo "[file-realname] *** ERROR: Need exactly one argument!" 1>&2 && return -1
+ [ "$#" != 1 ] && echo "[filerealname] *** ERROR: Need exactly one argument!" 1>&2 && return -1
  if [ -a "$1" ]; then
    echo $(cd -P -- "$(dirname -- "$1")" && printf '%s\n' "$(pwd -P)/$(basename -- "$1")")
  else
@@ -55,11 +55,11 @@ function file-realname
 }
 
 # Directory functions.
-function dir-equal
+function direqual
 {
- [ "$#" != 2 ] && echo "[dir-equal] *** ERROR: Need exactly two arguments!" 1>&2 && return -1
- local dir1=`file-realname "$1"`
- local dir2=`file-realname "$2"`
+ [ "$#" != 2 ] && echo "[direqual] *** ERROR: Need exactly two arguments!" 1>&2 && return -1
+ local dir1=`filerealname "$1"`
+ local dir2=`filerealname "$2"`
  [ "$dir1" == "$dir2" ] && echo "$dir1"
 }
 
@@ -97,7 +97,7 @@ verbose "Casa version: $(casapyinfo --version 2>&1 | cut -d' ' -f1-2 | sed -e 's
 [ -z "$XMLFILES" ] && error "no tasks!"
 verbose "task(s) to process: $(echo "$XMLFILES" | sed 's/\(.\).xml/\1/g')"
 
-INSTALLDIR=`file-realname "$INSTALLDIR"`
+INSTALLDIR=`filerealname "$INSTALLDIR"`
 verbose "install directory: $INSTALLDIR"
 if [ ! -d "$INSTALLDIR" ]; then
   verbose "creating $INSTALLDIR ..."
