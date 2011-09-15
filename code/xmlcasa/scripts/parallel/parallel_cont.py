@@ -84,7 +84,14 @@ class imagecont():
 
 
 
- ####
+ #### uniform and brigg's weight combination functions
+    def getweightgrid(self, msname='', wgttype='imaging'):
+        if(self.imperms.has_key(msname) and (not self.novaliddata[msname])):
+            return self.imperms[msname].getweightgrid(type=wgttype)
+    def setweightgrid(self, msname='', weight=[], wgttype='imaging'):
+        if(self.imperms.has_key(msname) and (not self.novaliddata[msname])):
+            self.imperms[msname].setweightgrid(weight=weight, type=wgttype)   
+#### 
     def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel'):
         #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
@@ -115,7 +122,7 @@ class imagecont():
         #imname=imname+'_%02d'%(j)               
             self.setparamcont(im, freq, band)
             if(self.ft=='mosaic'):
-                im.setmfcontrol(fluxscale=[imname+'.flux'])
+                im.setmfcontrol(scaletype='SAULT', fluxscale=[imname+'.flux'])
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
         self.makecontimage(im, self.novaliddata[msname], imname)

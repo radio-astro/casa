@@ -194,6 +194,12 @@ MS Selection parameters
       <value />
     </param>
     
+    <param type="any" name="observation" subparam="true">
+      <description>Select by observation ID(s)</description>
+      <any type="variant" limittypes="string int"/>
+      <value type="string"></value>
+    </param>
+
     <param type="string" name="msselect" subparam="true">
       <description>MS selection (blank for all)</description>
       <value />
@@ -819,6 +825,7 @@ Constraints
         <default param="scan"><value type="string" /></default>
         <default param="correlation"><value type="string" /></default>
         <default param="array"><value type="string" /></default>
+	<default param="observation"><value type="string"/></default>
         <default param="msselect"><value type="string" /></default>
       </equals>
       <equals type="bool" value="False" />
@@ -1066,6 +1073,9 @@ Constraints
                                basis (R/L or X/Y) appropriate to the MS)
       array -- Select the array id
                default: ''  (all array ids)
+      observation Select by observation ID(s).
+                  default: ''-->all;
+		  example: observation='0' (select obsID 0)
       msselect -- Optional TaQL data selection
 
     averagedata -- data averaing parameters flag

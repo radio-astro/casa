@@ -1,4 +1,4 @@
-//# rectangle.h: base class for statistical regions
+//# ellipse.h: base class for statistical regions
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,10 +26,10 @@
 //# $Id$
 
 
-#ifndef REGION_RECTANGLE_H_
-#define REGION_RECTANGLE_H_
+#ifndef REGION_ELLIPSE_H_
+#define REGION_ELLIPSE_H_
 
-#include <display/region/Region.h>
+#include <display/region/Rectangle.h>
 #include <casa/BasicSL/String.h>
 #include <casadbus/types/ptr.h>
 #include <list>
@@ -44,46 +44,22 @@ namespace casa {
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.
-	class Rectangle : public Region {
+	class Ellipse : public Rectangle {
 	    public:
-		~Rectangle( );
-		Rectangle( WorldCanvas *wc, double x1, double y1, double x2, double y2) : Region( wc ),
-		    blc_x(x1<x2?x1:x2), blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) { }
-
-		bool clickWithin( double x, double y ) const
-		    { return x > blc_x && x < trc_x && y > blc_y && y < trc_y; }
-
-		int clickHandle( double x, double y ) const;
+		~Ellipse( );
+		Ellipse( WorldCanvas *wc, double x1, double y1, double x2, double y2) :
+		    Rectangle( wc, x1, y1, x2, y2 ) { }
 
 		// returns mouse movement state
 		int mouseMovement( double x, double y, bool other_selected );
-
-		// for rectangles, resizing can change the handle...
-		// for rectangles, moving a handle is resizing...
-		int moveHandle( int handle, double x, double y );
-		void move( double dx, double dy )
-		    { blc_x += dx; trc_x += dx; blc_y += dy; trc_y += dy; updateStateInfo( true ); }
-
-		void regionCenter( double &x, double &y ) const;
 
 		AnnRegion *annotation( ) const;
 
 	    protected:
 		StatisticsList *generate_statistics_list( );
 
-		// in "linear" coordinates...
-		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
-
 		void drawRegion( bool );
 		/* void drawHandles( ); */
-
-		double blc_x, blc_y;
-		double trc_x, trc_y;
-		double handle_delta_x, handle_delta_y;
-
-	    private:
-		bool within_vertex_handle( double x, double y ) const;
-
 
 	};
     }

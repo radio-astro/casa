@@ -1423,6 +1423,10 @@ the ms definition itself. -->
      <value></value>
      </param>
 
+     <param type="string" name="obs">
+     <description>Observation ID(s): examples : '' or '1~3'</description>
+     <value></value>
+     </param>
   </input>
   <returns type="any">
     <any type="record"/>
@@ -1772,7 +1776,7 @@ Date/Time:                         RR:                      RL:                 
 	 <description>
 	   Record with fields contain the selection experessions. Keys
 	   recognized in the record are: "spw", "time", "field",
-	   "baseline", "scan", "scanintent", "polarization" and
+	   "baseline", "scan", "scanintent", "polarization", "observation", and
 	   "uvdist".
 	 </description>
 	 <value></value>

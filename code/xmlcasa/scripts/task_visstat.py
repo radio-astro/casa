@@ -12,7 +12,8 @@ def visstat(vis=None,
             timerange=None,
             correlation=None,
             scan=None,
-            array=None):
+            array=None,
+            observation=None):
 
     casalog.origin('visstat')  
 
@@ -34,6 +35,7 @@ def visstat(vis=None,
         correlation=''
         scan=''
         array=''
+        observation = ''
         
     s = ms.statistics(column=col.upper(),
                       complex_value=complex_type,
@@ -45,7 +47,8 @@ def visstat(vis=None,
                       time=timerange,
                       correlation=correlation,
                       scan=scan,
-                      array=array)
+                      array=array,
+                      obs=str(observation))
 
     for stats in s.keys():
         casalog.post(stats + " values --- ", "NORMAL")

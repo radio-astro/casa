@@ -44,7 +44,7 @@ PlotMSPlotParameters PlotMSPlot::makeParameters(PlotMSApp* plotms) {
     return p;    
 }
 
-void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* plotms) {
+void PlotMSPlot::makeParameters(PlotMSPlotParameters& params, PlotMSApp* /*plotms*/) {
     // Add data parameters if needed.
     if(params.typedGroup<PMS_PP_MSData>() == NULL)
         params.setGroup<PMS_PP_MSData>();

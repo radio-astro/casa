@@ -82,6 +82,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         <value type="string"></value>
                 </param>
 
+                <param type="any" name="observation" subparam="true">
+                        <description>observation ID number(s): \'\' = all</description>
+			<any type="variant" limittypes="string int"/>
+                        <value type="string"></value>
+                </param>
     <constraints>
     <when param="axis">
       <equals type="string" value="amp">
@@ -111,6 +116,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                         <default param="correlation"><value type="string"></value></default>
                                         <default param="scan"><value type="string"></value></default>
                                         <default param="array"><value type="string"></value></default>
+                                        <default param="observation"><value type="string"></value></default>
                                         <default param="uvrange"><value type="string"></value></default>
                                 </equals>
                                 <equals type="bool" value="False"/>
@@ -211,6 +217,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         scan -- Select data based on scan number
                 default: '' (all); example: scan='&gt;3'
         array -- Selection based on the antenna array
+        observation -- Selection by observation ID(s).
+	               default: '' (all); example: observation='1~3'
 
 </example>
 

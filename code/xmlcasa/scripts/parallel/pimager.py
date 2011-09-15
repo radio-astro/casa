@@ -544,7 +544,8 @@ class pimager():
             for k in range(len(imlist)):
                 shutil.rmtree(imlist[k]+'.model', True)
         intmask=0
-        for maj in range(majorcycles):
+        ### do one major cycle at the end
+        for maj in range(majorcycles +1):
             for k in range(numcpu):
                 imnam='"%s"'%(imlist[k])
                 c.odo('a.cfcache='+'"'+str(cfcachelist[k])+'"',k);
@@ -602,61 +603,57 @@ class pimager():
                     else:
                         print 'DOING a full image mask'
                         self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
+           #########Things to be done after first major cycle only
+           #########
             if(maj==0):
     #            copyimage(inimage=residual, outimage='lala.mask', init=True, initval=1.0)
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
-                              init=True, initval=0.0)    
-            #ia.open(residual)
-            #for k in range(1, len(imlist)) :
-            #   ia.open(residual)
-            #    ia.calc('"'+residual+'" +  "'+imlist[k]+'.residual"')
-            #   ia.done()
-                ############
-            #    ia.open(imlist[k]+'.residual')
-            #    print 'residual of ', imlist[k], ia.statistics()['min'], ia.statistics()['max']
-            #    ia.done()
-                ##############
-            #ia.open(residual)
-            #print 'calc dvision', '"'+residual+'"'+'/'+str(len(imlist))
-            #ia.calc('"'+residual+'"'+'/'+str(len(imlist)))
-            #print 'Residual', ia.statistics() 
-            #ia.done()
-            if(maj==0):
+                              init=True, initval=0.0)     
                 self.averimages(psf, psfs)
                 if(self.ftmachine=='mosaic'):
                     self.averimages(fluxim, fluxims)
-            #incremental clean...get rid of tempmodel
-            shutil.rmtree(tempmodel, True)
-            rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
-            print 'Deconvolution command', rundecon
-            out[0]=c.odo(rundecon,0)
-            over=False
-            while(not over):
-                time.sleep(5)
-                over=c.check_job(out[0],False)
-            ###incremental added to total 
-            ia.open(model)
-            ia.calc('"'+model+'" +  "'+tempmodel+'"')
-            ia.done()
-            ia.open(tempmodel)
-            #arr=ia.getchunk()
-            imminmax= abs(ia.statistics()['min'])
-            imminmax=max(imminmax, ia.statistics()['max'])
-            print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
-            ia.done()
-            if(imminmax == 0.0):
-                print 'Threshold reached'
-                break
-            ia.open(model)
-            #arr=ia.getchunk()
-            print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
-            ia.done()
-            for k in range(len(imlist)):
-                ia.open(imlist[k]+'.model')
-                #ia.putchunk(arr)
-                ia.insert(infile=model, locate=[0,0,0,0])
+                if((self.weight=='uniform') or (self.weight=='briggs')):
+                    c.pgc('wtgrid=a.getweightgrid(msname="'+msname+'")')
+                    sumweight=c.pull('wtgrid', 0)[0]
+                    for jj in range(1,numcpu):
+                        sumweight += c.pull('wtgrid', jj)[jj]
+                        print 'Max min var of weight dens', np.max(sumweight), np.min(sumweight), np.var(sumweight)
+                    c.push(wtgrid=sumweight)
+                    c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
+            ####no need to do this in last major cycle
+            if(maj < majorcycles):
+                #incremental clean...get rid of tempmodel
+                shutil.rmtree(tempmodel, True)
+                rundecon='a.cleancont(alg="'+str(alg)+'", thr="'+str(threshold)+'", scales='+ str(scales)+', niter='+str(niterpercycle)+',psf="'+psf+'", dirty="'+residual+'", model="'+tempmodel+'", mask="'+str(maskimage)+'")'
+                print 'Deconvolution command', rundecon
+                out[0]=c.odo(rundecon,0)
+                over=False
+                while(not over):
+                    time.sleep(5)
+                    over=c.check_job(out[0],False)
+                ###incremental added to total 
+                ia.open(model)
+                ia.calc('"'+model+'" +  "'+tempmodel+'"')
                 ia.done()
+                ia.open(tempmodel)
+            #arr=ia.getchunk()
+                imminmax= abs(ia.statistics()['min'])
+                imminmax=max(imminmax, ia.statistics()['max'])
+                print 'min max of incrmodel', ia.statistics()['min'], ia.statistics()['max']
+                ia.done()
+                if(imminmax == 0.0):
+                    print 'Threshold reached'
+                    break
+                ia.open(model)
+            #arr=ia.getchunk()
+                print 'min max of model', ia.statistics()['min'], ia.statistics()['max']
+                ia.done()
+                for k in range(len(imlist)):
+                    ia.open(imlist[k]+'.model')
+                #ia.putchunk(arr)
+                    ia.insert(infile=model, locate=[0,0,0,0])
+                    ia.done()
         restored=imagename+'.image'
         #ia.open(restored)
         #for k in range(1, len(imlist)) :

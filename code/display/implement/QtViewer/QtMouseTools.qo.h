@@ -31,8 +31,9 @@
 
 #include <casa/aips.h>
 #include <display/DisplayEvents/MultiRectToolImpl.h>
-#include <display/DisplayEvents/MWCETRegion.h>
+#include <display/DisplayEvents/MultiEllipseToolImpl.h>
 #include <display/DisplayEvents/MultiPolyToolImpl.h>
+#include <display/DisplayEvents/MWCETRegion.h>
 #include <display/Display/PanelDisplay.h>
 #include <casa/Containers/Record.h>
 
@@ -114,7 +115,7 @@ class QtRTRegion: public QtMouseTool, public MultiRectToolImpl {
 // QtELRegion is the Ellipse Region mouse tool that sends a signal
 // when a new circle is ready.
 // </synopsis>
-class QtELRegion: public QtMouseTool, public MWCETRegion {
+class QtELRegion: public QtMouseTool, public MultiEllipseToolImpl {
 
   Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
@@ -122,7 +123,7 @@ class QtELRegion: public QtMouseTool, public MWCETRegion {
 
  public:
 
-  QtELRegion(PanelDisplay* pd) : QtMouseTool(), MWCETRegion(), pd_(pd) {  }
+  QtELRegion(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtMouseTool(), MultiEllipseToolImpl(rf, pd), pd_(pd) {  }
 
   ~QtELRegion() {  }
 

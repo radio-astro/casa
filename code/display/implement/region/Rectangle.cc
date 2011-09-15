@@ -205,13 +205,21 @@ namespace casa {
 
 	}
 
+	bool Rectangle::within_vertex_handle( double x, double y ) const {
+	    bool blc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= blc_y && y <= (blc_y + handle_delta_y);
+	    bool tlc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= (trc_y - handle_delta_y) && y <= trc_y;
+	    bool brc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= blc_y && y <= (blc_y + handle_delta_y);
+	    bool trc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= (trc_y - handle_delta_y) && y <= trc_y;
+	    return trc || brc || blc || tlc;
+	}
+
 	int Rectangle::mouseMovement( double x, double y, bool other_selected ) {
 	    int result = 0;
 
 	    if ( visible_ == false ) return result;
 
 	    //if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y ) {
-	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y ) {
+	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y || within_vertex_handle( x, y )) {
 		result |= MouseSelected;
 		result |= MouseRefresh;
 		selected_ = true;

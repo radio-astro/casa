@@ -79,13 +79,15 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   void hideDisplayButtons();
   QColor getDirColor(int);
   QStringList analyseFITSImage(QString path);
+  Bool isQualImg(const QString &extexpr);
+
 
   enum DATATYPE {UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
-                 DIRECTORY};
+                 DIRECTORY, QUALIMG};
   enum DISPLAYTYPE {RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
                     NEWPANEL, OLDPANEL};
 
-  QHash<QString, int> dataType_;
+  QHash<int, QString> dataType_;
   QHash<QString, int> uiDataType_;
   QHash<QString, int> displayType_;
   QHash<QString, int> uiDisplayType_;

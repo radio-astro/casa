@@ -794,6 +794,10 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	}
     }
 
+    memory::cptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
+	return rfactory->rectangle( wc, x1, y1, x2, y2 );
+    }
+
     void MultiRectTool::start_new_rectangle( WorldCanvas *wc, int x, int y ) {
 
 	// As originally requested by Kumar, any non-modified regions would be erased when a
@@ -813,7 +817,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
 	double linx, liny;
 	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
-	resizing_region = (rfactory->rectangle( wc, linx, liny, linx, liny ));
+	resizing_region = allocate_region( wc, linx, liny, linx, liny );
 
 	resizing_region_handle = 1;
 	rectangles.push_back( resizing_region );

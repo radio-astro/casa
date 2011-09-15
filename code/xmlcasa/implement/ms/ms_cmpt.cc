@@ -817,7 +817,8 @@ ms::statistics(const std::string& column,
                const std::string& time, 
                const std::string& correlation,
                const std::string& scan, 
-               const std::string& array)
+               const std::string& array,
+	       const std::string& obs)
 {
     *itsLog << LogOrigin("ms", "statistics");
 
@@ -840,7 +841,8 @@ ms::statistics(const std::string& column,
            "uvrange = " << uvrange << endl <<
            "correlation = " << correlation << endl <<
            "scan = " << scan << endl <<
-           "array = " << array << endl;
+	   "array = " << array <<
+	   "obs = " << obs << endl;
 
          MSSelection mssel(*itsMS,
                            MSSelection::PARSE_NOW, 
@@ -852,7 +854,9 @@ ms::statistics(const std::string& column,
                            dummyExpr,   // taqlExpr
                            correlation,
                            scan,
-                           array);
+                           array,
+			   "",		// stateExpr
+			   obs);
 
          MeasurementSet *sel_p;
          MeasurementSet sel;
@@ -2987,7 +2991,8 @@ bool ms::msselect(const ::casac::record& exprs)
     {
      *itsLog << LogOrigin("ms", "msselect");
       Record *casaRec = toRecord(exprs);
-      String spwExpr, timeExpr, fieldExpr, baselineExpr, scanExpr, scanIntentExpr, polnExpr, uvDistExpr;
+      String spwExpr, timeExpr, fieldExpr, baselineExpr, scanExpr, scanIntentExpr,
+	polnExpr, uvDistExpr, obsExpr;
       Int nFields = casaRec->nfields();
       for (Int i=0; i<nFields; i++)
 	{
@@ -2999,13 +3004,14 @@ bool ms::msselect(const ::casac::record& exprs)
 	  if (casaRec->name(i) == "scanintent")    {scanIntentExpr = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "polarization")  {polnExpr       = casaRec->asString(RecordFieldId(i));}
 	  if (casaRec->name(i) == "uvdist")        {uvDistExpr     = casaRec->asString(RecordFieldId(i));}
+	  if (casaRec->name(i) == "observation")   {obsExpr        = casaRec->asString(RecordFieldId(i));}
 	}
       // if (itsSelectedMS) delete itsSelectedMS;
       // itsSelectedMS = new MeasurementSet();
       retVal = mssSetData(*itsMS, *itsMS, "",/*outMSName*/
 			  timeExpr, baselineExpr, fieldExpr, spwExpr, uvDistExpr,
 			  "",/*taQLExpr*/ polnExpr, scanExpr,
-			  "",/*arrayExpr*/ scanIntentExpr, itsMSS);
+			  "",/*arrayExpr*/ scanIntentExpr, obsExpr, itsMSS);
       itsSel->setMS(*itsMS);
       return retVal;
     }

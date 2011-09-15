@@ -62,6 +62,8 @@ qt4_wrap_cpp( outfiles_qoh
   implement/RegionShapes/RSUtils.qo.h
   implement/region/QtRegion.qo.h
   implement/region/QtRectangle.qo.h
+  implement/region/QtPolygon.qo.h
+  implement/region/QtEllipse.qo.h
   implement/region/QtRegionSource.qo.h
   implement/region/QtRegionDock.qo.h
   implement/region/QtRegionState.qo.h
@@ -200,6 +202,8 @@ casa_add_library( display
   implement/DisplayEvents/MWCRectTool.cc
   implement/DisplayEvents/MultiRectTool.cc
   implement/DisplayEvents/MultiRectToolImpl.cc
+  implement/DisplayEvents/MultiEllipseTool.cc
+  implement/DisplayEvents/MultiEllipseToolImpl.cc
   implement/DisplayEvents/MultiPolyTool.cc
   implement/DisplayEvents/MultiPolyToolImpl.cc
   implement/DisplayEvents/MWCETRegion.cc
@@ -341,6 +345,7 @@ casa_add_library( display
   implement/region/QtRegion.cc
   implement/region/QtRectangle.cc
   implement/region/QtPolygon.cc
+  implement/region/QtEllipse.cc
   implement/region/RegionSource.cc
   implement/region/QtRegionSource.cc
   implement/region/QtRegionSourceFactory.cc
@@ -348,6 +353,7 @@ casa_add_library( display
   implement/region/QtRegionState.cc
   implement/region/QtRegionStats.cc
   implement/region/Rectangle.cc
+  implement/region/Ellipse.cc
   implement/region/Polygon.cc
   implement/region/Region.cc
   )

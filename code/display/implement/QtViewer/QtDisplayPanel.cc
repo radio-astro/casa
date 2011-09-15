@@ -66,7 +66,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		qdds_(),
 		zoom_(0), panner_(0), crosshair_(0),
 		rtregion_(0), ortregion_(0),
-		elregion_(0),
+		elregion_(0), oelregion_(0),
 		ptregion_(0), optregion_(0),
 		polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		mouseToolNames_(),
@@ -231,6 +231,7 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   if ( new_region_tools ) {
       ptregion_  = new QtPolyTool(region_source_factory,pd_);   pd_->addTool(POLYGON, ptregion_);
       rtregion_  = new QtRectTool(region_source_factory,pd_);   pd_->addTool(RECTANGLE, rtregion_);
+      elregion_  = new QtEllipseTool(region_source_factory,pd_); pd_->addTool(ELLIPSE, elregion_);
       connect( rtregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( rtregion_, SIGNAL(echoClicked(Record)),
@@ -239,9 +240,14 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( ptregion_, SIGNAL(echoClicked(Record)),
 			  SLOT(clicked(Record)) );
+      connect( elregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( elregion_, SIGNAL(echoClicked(Record)),
+			  SLOT(clicked(Record)) );
   } else {
-      optregion_  = new QtOldPolyTool(pd_);   pd_->addTool(POLYGON, optregion_);
-      ortregion_  = new QtOldRectTool(pd_);   pd_->addTool(RECTANGLE, ortregion_);
+      optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, optregion_);
+      ortregion_  = new QtOldRectTool(pd_);	pd_->addTool(RECTANGLE, ortregion_);
+      oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(RECTANGLE, oelregion_);
       connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( ortregion_, SIGNAL(echoClicked(Record)),
@@ -250,9 +256,12 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( optregion_, SIGNAL(echoClicked(Record)),
 			   SLOT(clicked(Record)) );
+      connect( oelregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( oelregion_, SIGNAL(echoClicked(Record)),
+			   SLOT(clicked(Record)) );
   }
 
-  elregion_  = new QtEllipseTool(pd_);   pd_->addTool(ELLIPSE, elregion_);
 
   polyline_  = new MWCPolylineTool;   pd_->addTool(POLYLINE, polyline_);
   
@@ -271,13 +280,6 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 	// over within the PC.
 
   
-  connect( elregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-		        SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-
-  
-  connect( elregion_, SIGNAL(echoClicked(Record)),
-		        SLOT(clicked(Record)) );
-
   QtMouseToolState* mBtns = panel_->viewer()->mouseBtns();
 	// Central storage for current active mouse button of each tool.
   
@@ -399,7 +401,10 @@ void QtDisplayPanel::resetRTRegion()  {
     if ( ortregion_ ) ortregion_->reset();
 }
 
-void QtDisplayPanel::resetETRegion()  { elregion_->reset();  }
+void QtDisplayPanel::resetETRegion()  {
+    if ( elregion_ ) elregion_->reset();
+    if ( oelregion_ ) oelregion_->reset();
+}
 
 void QtDisplayPanel::resetPTRegion()  {
     if ( ptregion_ ) ptregion_->reset( );
