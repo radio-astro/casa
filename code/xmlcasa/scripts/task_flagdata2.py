@@ -17,6 +17,7 @@ def flagdata2(vis = None,
              scan = None,
              feed = None, 
              array = None,
+             observation = None,
              manualflag = None,
              mf_spw = None, 
              mf_field = None,
@@ -26,6 +27,7 @@ def flagdata2(vis = None,
              mf_scan = None,
              mf_feed = None, 
              mf_array = None,
+             mf_observation = None,
              clip = None,
              clipexpr = None, 
              clipminmax = None,
@@ -106,8 +108,9 @@ def flagdata2(vis = None,
         if selectdata:
             if(debug):
                 print "field=%s, spw=%s, array=%s, feed=%s, scan=%s, baseline=%s, uvrange=%s,"\
-                      " time=%s, correlation=%s"%(field,spw,array,feed,scan,antenna,uvrange,timerange,
-                                                  correlation)
+                      " time=%s, correlation=%s, observation=%s"%(field,spw,array,feed,scan,antenna,
+                                                                   uvrange,timerange,correlation,
+                                                                   observation)
             fglocal.setdata(field = field, 
                            spw = spw, 
                            array = array, 
@@ -116,9 +119,10 @@ def flagdata2(vis = None,
                            baseline = antenna, 
                            uvrange = uvrange, 
                            time = timerange, 
-                           correlation = correlation)
+                           correlation = correlation,
+                           observation = str(observation))
         else:
-            field = antenna = timerange = correlation = scan = feed = array = uvrange = ''
+            field = antenna = timerange = correlation = scan = feed = array = uvrange = observation = ''
             fglocal.setdata()
 
         if manualflag:
@@ -136,6 +140,7 @@ def flagdata2(vis = None,
                          feed=mf_feed,
                          array=mf_array,
                          uvrange=mf_uvrange,
+                         observation=str(mf_observation),
                          clipminmax=[],   
                          clipcolumn="",   
                          clipoutside=False, 
@@ -160,7 +165,8 @@ def flagdata2(vis = None,
                          scan=scan,
                          feed=feed,
                          array=array,
-                         uvrange=uvrange)
+                         uvrange=uvrange,
+                         observation=str(observation))
             modestr = modestr+"clip_"
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
             
@@ -181,7 +187,8 @@ def flagdata2(vis = None,
                          scan=scan,
                          feed=feed,
                          array=array,
-                         uvrange=uvrange)
+                         uvrange=uvrange,
+                         observation=str(observation))
             modestr = modestr+"quack_"
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
             
@@ -196,6 +203,7 @@ def flagdata2(vis = None,
                         scan = scan, \
                         baseline = antenna, \
                         uvrange = uvrange, \
+                        observation = str(observation), \
                         time = timerange, \
                         correlation = correlation, \
                        diameter = diameter)
@@ -214,6 +222,7 @@ def flagdata2(vis = None,
                         scan = scan, \
                         baseline = antenna, \
                         uvrange = uvrange, \
+                        observation = str(observation), \
                         time = timerange, \
                         correlation = correlation, \
                         lowerlimit = lowerlimit,
@@ -225,15 +234,6 @@ def flagdata2(vis = None,
         if autoflag:
             mode = 'autoflag'
             casalog.post('Flagging in autoflag mode')
-#            fglocal.setdata(field = field, \
-#                           spw = spw, \
-#                           array = array, \
-#                           feed = feed, \
-#                           scan = scan, \
-#                           baseline = antenna, \
-#                           uvrange = uvrange, \
-#                           time = timerange, \
-#                           correlation = correlation)
             rec = fglocal.getautoflagparams(algorithm=algorithm)
             rec['expr'] = expr
             rec['thr'] = thr
@@ -252,15 +252,6 @@ def flagdata2(vis = None,
         if rfi:
             mode = 'rfi'
             casalog.post('Flagging in rfi mode')
-#            fglocal.setdata(field = field, \
-#                           spw = spw, \
-#                           array = array, \
-#                           feed = feed, \
-#                           scan = scan, \
-#                           baseline = antenna, \
-#                           uvrange = uvrange, \
-#                           time = timerange, \
-#                           correlation = correlation)
 
             # Get the detault parameters for a particular algorithm,
             # then modify them
@@ -327,7 +318,8 @@ def flagdata2(vis = None,
                          scan=scan,
                          feed=feed,
                          array=array,
-                         uvrange=uvrange)
+                         uvrange=uvrange,
+                         observation=str(observation))
             modestr = modestr+"unflag_"
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
@@ -349,7 +341,8 @@ def flagdata2(vis = None,
                                   baseline=antenna, \
                                   uvrange=uvrange, \
                                   time=timerange, \
-                                  correlation=correlation)
+                                  correlation=correlation,
+                                  observation=str(observation))
             fglocal.setflagsummary()
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
                             
@@ -475,92 +468,11 @@ def clip_quack(fglocal, mode, selectdata, **params):
     if debug: print params
 
     if not selectdata:
-        params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = ''
+        params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = params['observation'] = ''
 
     rename_params(params)
     fglocal.setmanualflags(**params)
     
-
-# VECTOR mode is not supported at this time for quack and clip
-            
-#    vector_mode = False         # Are we in vector mode?
-#    vector_length = -1          # length of all vectors
-#    vector_var = ''             # reference parameter
-#    is_vector_spec = {}         # is a variable a vector specification?
-#    for x in params.keys():
-#        is_vector_spec[x] = False
-##        print x, params[x], type(params[x])
-#        if x != 'clipminmax':
-#            if type(params[x]) == list:
-#                is_vector_spec[x] = True
-#
-#        else:
-#            # clipminmax is a special case
-#            if type(params[x]) == list and \
-#                    len(params[x]) > 0 and \
-#                    type(params[x][0]) == list:
-#                is_vector_spec[x] = True
-#
-#        if is_vector_spec[x]:
-#            vector_mode = True
-#            vector_length = len(params[x])
-#            vector_var = x
-#            if debug: print x, "is a vector => vector mode, length", vector_length
-#        else:
-#            if debug: print x, "is not a vector"
-#
-#    if not vector_mode:            
-##        fglocal.setdata()
-#        rename_params(params)
-#        fglocal.setmanualflags(**params)
-
-#    else:
-#        # Vector mode
-#        plural_s = ''
-#        if vector_length > 1:
-#            plural_s = 's'
-#            
-#        casalog.post('In parallel mode, will apply the following ' + str(vector_length) + \
-#                     ' flagging specification' + plural_s)
-        
-        # Check that parameters are consistent,
-        # i.e. if they are vectors, they must have the same length
-#        for x in params.keys():
-#            if is_vector_spec[x]:
-#                l = len(params[x])
-#
-#                if debug: print x, "has length", l
-#                if l != vector_length:
-#                    raise Exception(str(x) + ' has length ' + str(l) + \
-#                                    ', but ' + str(vector_var) + ' has length ' + str(vector_length))
-#            else:
-#                # vectorize this parameter (e.g.  '7' -> ['7', '7', '7']
-#                params[x] = [params[x]] * vector_length
-#
-#        if debug: print params
-        
-        # Input validation done.
-        # Now call setmanualflags for every specification
-
-#        fglocal.setdata()
-#        for i in range(vector_length):
-#            param_i = {}
-#            param_list = ''
-#            for e in params.keys():
-#                param_i[e] = params[e][i]
-#                if param_i[e] != '':
-#                    if param_list != '':
-#                        param_list += '; '
-#                            
-#                    param_list = param_list + e + ' = ' + str(param_i[e])
-#                    if(debug): print param_list
-#
-#            casalog.post(param_list)
-#            rename_params(param_i)
-#            if debug: print param_i
-#            
-#            fglocal.setmanualflags(**param_i)
-
         
 
 # rename some parameters,
@@ -580,6 +492,7 @@ def rename_params(params):
         params['cliprange']       = params['clipminmax']  ; del params['clipminmax']
     if params.has_key('clipoutside'):
         params['outside']         = params['clipoutside'] ; del params['clipoutside']
+
 
 def backup_flags(fglocal, modes):
 #    print "modes="+modes

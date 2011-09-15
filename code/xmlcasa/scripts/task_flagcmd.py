@@ -458,6 +458,7 @@ def applyflagcmd(
             ]
         # Keys to recognize uparams=Universal sparams=Selection
         uparams = []
+        # CAS-3320: added observation
         sparams = [
             'antenna',
             'timerange',
@@ -466,6 +467,7 @@ def applyflagcmd(
             'feed',
             'array',
             'uvrange',
+            'observation',
             'spw',
             'field',
             ]
@@ -1027,6 +1029,9 @@ def sortflags(
                         nselect += 1
                 if myd.has_key('uvrange'):
                     if myd['uvrange'] != '':
+                        nselect += 1
+                if myd.has_key('observation'):
+                    if myd['observation'] != '':
                         nselect += 1
                 # check if we can sort this by antenna
                 antsort = False

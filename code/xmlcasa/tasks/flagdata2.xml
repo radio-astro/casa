@@ -94,6 +94,12 @@
                    <value type="string"></value>
             </param>
 
+            <param type="any" name="observation" subparam="true">
+                   <description>Select data based on observation ID: \'\'==>all</description>
+                   <any type="variant" limittypes="string int"/>
+                   <value type="string"></value>
+            </param>
+
         <param type="bool" name="manualflag">
                <description>Flag by antenna, time, field, etc.</description>
                <value>False</value>
@@ -136,6 +142,12 @@
             <param type="any" name="mf_array" subparam="true">
                    <description>(sub)array numbers: \'\'==>all</description>
                    <any type="variant" limittypes="string stringArray"/>
+                   <value type="string"></value>
+            </param>
+
+            <param type="any" name="mf_observation" subparam="true">
+                   <description>Select data based on observation ID: \'\'==>all</description>
+                   <any type="variant" limittypes="string int"/>
                    <value type="string"></value>
             </param>
             
@@ -334,6 +346,7 @@
                 <default param="feed"><value type="string"></value></default>
                 <default param="array"><value type="string"></value></default>
                 <default param="uvrange"><value type="string"></value></default>
+                <default param="observation"><value type="string"></value></default>
             </equals>
             </when>
             <when param="manualflag">
@@ -347,6 +360,7 @@
                 <default param="mf_feed"><value type="string"></value></default>
                 <default param="mf_array"><value type="string"></value></default>
                 <default param="mf_uvrange"><value type="string"></value></default>
+                <default param="mf_observation"><value type="string"></value></default>
             </equals>
             </when>
             <when param="clip">
@@ -489,6 +503,8 @@
                     default: '' (all); example: scan='&gt;3'
               feed -- Selection based on the feed - NOT IMPLEMENTED YET
               array -- Selection based on the antenna array
+              observation -- Selection based on the observation ID
+                    default: '' (all); example: observation='1' or observation=1
 
 
         Available modes for flagging are shown below, with their specific subparameters:
@@ -537,6 +553,8 @@
                     default: '' (all); example: scan='&gt;3'
               mf_feed -- Selection based on the feed - NOT IMPLEMENTED YET
               mf_array -- Selection based on the antenna array
+              mf_observation -- Selection based on the observation ID
+                    default: '' (all); example: mf_observation='1' or mf_observation=1
                      
         clip --  Clip data according to values of the following subparameters.
                     default: False

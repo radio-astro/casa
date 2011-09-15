@@ -17,6 +17,7 @@ def flagdata(vis = None,
              scan = None,
              intent = None,
              feed = None, array = None,
+             observation = None,
              clipexpr = None, clipminmax = None,
              clipcolumn = None, clipoutside = None, channelavg = None,
              quackinterval = None, quackmode = None, quackincrement = None,
@@ -80,7 +81,8 @@ def flagdata(vis = None,
                                          intent=intent,
                                          feed=feed,
                                          array=array,
-                                         uvrange=uvrange)
+                                         uvrange=uvrange,
+                                         observation=str(observation))
                 elif mode == 'quack':
                         manualflag_quack(fglocal, mode, selectdata, flagbackup,
                                          autocorr=autocorr,
@@ -99,7 +101,8 @@ def flagdata(vis = None,
                                          intent=intent,
                                          feed=feed,
                                          array=array,
-                                         uvrange=uvrange)
+                                         uvrange=uvrange,
+                                         observation=str(observation))
                 elif ( mode == 'shadow' ):
                         fglocal.setdata()
                         fglocal.setshadowflags( \
@@ -113,6 +116,7 @@ def flagdata(vis = None,
                                 uvrange = uvrange, \
                                 time = timerange, \
                                 correlation = correlation, \
+                                observation=str(observation), \
                                 diameter = diameter)
 
                         if flagbackup:
@@ -128,7 +132,8 @@ def flagdata(vis = None,
                                    baseline = antenna, \
                                    uvrange = uvrange, \
                                    time = timerange, \
-                                   correlation = correlation)
+                                   correlation = correlation,
+                                   observation=str(observation))
                         rec = fglocal.getautoflagparams(algorithm=algorithm)
                         rec['expr'] = expr
                         rec['thr'] = thr
@@ -156,7 +161,8 @@ def flagdata(vis = None,
                                    baseline = antenna, \
                                    uvrange = uvrange, \
                                    time = timerange, \
-                                   correlation = correlation)
+                                   correlation = correlation,
+                                   observation=str(observation))
 
                         # Get the detault parameters for a particular algorithm,
                         # then modify them
@@ -225,7 +231,8 @@ def flagdata(vis = None,
                                           baseline=antenna, \
                                           uvrange=uvrange, \
                                           time=timerange, \
-                                          correlation=correlation)
+                                          correlation=correlation,
+                                          observation=str(observation))
                         
                         # do not backup existing flags
                         stats = fglocal.run()
@@ -268,7 +275,7 @@ def manualflag_quack(fglocal, mode, selectdata, flagbackup, **params):
         if debug: print params
 
         if not selectdata:
-                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['intent'] = params['feed'] = params['array'] = params['uvrange'] = ''
+                params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['intent'] = params['feed'] = params['array'] =  params['uvrange'] = params['observation'] = ''
         
         vector_mode = False         # Are we in vector mode?
         vector_length = -1          # length of all vectors
