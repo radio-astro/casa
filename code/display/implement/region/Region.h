@@ -126,7 +126,7 @@ namespace casa {
 
 		virtual ~Region( ){ }
 
-		Region( ) : wc_(0), selected_(false) { }
+		Region( ) : wc_(0), selected_(false), visible_(true) { }
 		Region( WorldCanvas *wc );
 
 		void setDrawingEnv( );

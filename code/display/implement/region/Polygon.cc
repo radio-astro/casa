@@ -89,6 +89,8 @@ namespace casa {
 		if ( _drawing_points_[i].second > _drawing_trc_y_ )
 		    _drawing_trc_y_ = _drawing_points_[i].second;
 	    }
+
+	    updateStateInfo( true ); 
 	}
 
 	bool Polygon::within_vertex_handle( double x, double y ) const {

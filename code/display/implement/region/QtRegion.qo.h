@@ -71,7 +71,7 @@ namespace casa {
 		int numFrames( ) const;
 		void zRange( int &x, int &y ) const;
 		virtual int zIndex( ) const = 0;
-		virtual bool regionVisible( ) const = 0;
+		virtual bool regionVisible( ) const { return true; }
 
 		virtual void regionCenter( double &x, double &y ) const = 0;
 

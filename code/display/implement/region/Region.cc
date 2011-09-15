@@ -12,7 +12,7 @@
 namespace casa {
     namespace viewer {
 
-	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false) {
+	Region::Region( WorldCanvas *wc ) :  wc_(wc), selected_(false), visible_(true) {
 	    last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	    // if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	    // 	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
