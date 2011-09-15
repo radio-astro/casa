@@ -239,6 +239,23 @@ Array<T> reorderArray (const Array<T>& array,
 // </group>
 
 
+// reverse specified axes in an array. <src>reverseAxes</src>
+// contains the list of axes to reverse.
+template<class T>
+Array<T> reverseArray (
+	const Array<T>& array,
+	const IPosition& reversedAxes,
+	Bool alwaysCopy = True
+);
+
+
+// reverse an array along a specified axis.
+template<class T>
+Array<T> reverseArray (
+	const Array<T>& array, const uInt axis,
+	Bool alwaysCopy = True
+);
+
 // <summary>
 // Helper function for function reorderArray.
 // </summary>

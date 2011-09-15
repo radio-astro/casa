@@ -121,5 +121,91 @@ Array<T> reorderArray (const Array<T>& array,
   return result;
 }
 
+
+template<class T> Array<T> reverseArray (
+	const Array<T>& array, const uInt axis,
+	Bool alwaysCopy
+) {
+	IPosition shape = array.shape();
+	Bool nothingToDo = shape[axis] == 1;
+
+	if (nothingToDo) {
+		if (alwaysCopy) {
+			return array.copy();
+	    }
+	    return array;
+	}
+	if (axis >= shape.size()) {
+		throw AipsError(
+			String(__FUNCTION__)
+				+ ": axis number is higher than number of axes in the array"
+		);
+	}
+	Bool deletein, deleteout;
+	const T *indata = array.getStorage(deletein);
+	Array<T> result(shape);
+	T *outdata = result.getStorage(deleteout);
+	uInt outerProduct = 1;
+	uInt innerProduct = 1;
+	for (uInt i=0; i<shape.size(); i++) {
+		if (i<axis) {
+			innerProduct *= shape[i];
+		}
+		else if (i>axis) {
+			outerProduct *= shape[i];
+		}
+	}
+	for (uInt j=0; j<outerProduct; j++) {
+		for (uInt i=0; i<innerProduct; i++) {
+			uInt idx = shape[axis]*innerProduct*j + i;
+			for (uInt k=0; k<shape[axis]; k++) {
+				outdata[idx + innerProduct*(shape[axis] - 1 - k)] = indata[idx + innerProduct*k];
+			}
+		}
+	}
+	array.freeStorage(indata, deletein);
+	result.putStorage(outdata, deleteout);
+	return result;
+}
+
+
+template<class T> Array<T> reverseArray (
+	const Array<T>& array,
+	const IPosition& reversedAxes,
+	Bool alwaysCopy
+) {
+	IPosition shape = array.shape();
+	Bool nothingToDo = True;
+	for (uInt i=0; i<reversedAxes.size(); i++) {
+		if (shape[reversedAxes[i]] > 1) {
+			nothingToDo = False;
+			break;
+		}
+	}
+
+	if (nothingToDo) {
+		if (alwaysCopy) {
+			return array.copy();
+	    }
+	    return array;
+	}
+	for (uInt i=0; i<reversedAxes.size(); i++) {
+
+		if (reversedAxes[i] >= shape.size()) {
+			throw AipsError(
+				String(__FUNCTION__)
+					+ ": axis number "
+					+ String::toString(reversedAxes[i])
+					+ " is higher than number of axes in the array"
+			);
+		}
+	}
+	Array<T> result = array.copy();
+	for (uInt i=0; i<reversedAxes.size(); i++) {
+		result = reverseArray(result, reversedAxes[i], alwaysCopy);
+	}
+	return result;
+}
+
 } //# NAMESPACE CASA - END
 
