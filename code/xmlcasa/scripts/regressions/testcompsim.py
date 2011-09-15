@@ -10,6 +10,7 @@ if not l.has_key("repodir"):
 print casa['build']
 print 'I think the data repository is at '+repodir
 datadir=repodir+"/data/regression/simdata/"
+if os.path.exists("6334.cl"): shutil.rmtree("6334.cl")
 shutil.copytree(datadir+"6334.cl","6334.cl")
 
 

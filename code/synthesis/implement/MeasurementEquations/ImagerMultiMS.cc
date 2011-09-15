@@ -91,7 +91,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,
-				      const String& scan){
+				      const String& scan,
+                                      const String& obs){
     useModelCol_p=False;
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
     if(!Table::isReadable(msname)){
@@ -104,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      Table::Old);
     SimpleSubMS splitter(thisms);
     //SubMS splitter(thisms);
-    splitter.setmsselect(spwstring, fieldnames, antnames, scan, uvdist, 
+    splitter.setmsselect(spwstring, fieldnames, antnames, scan, obs, uvdist,
 			 msSelect, nchan, start, step, "");
     splitter.selectCorrelations("");
     splitter.selectTime(-1.0, timerng);
@@ -131,7 +132,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,
-                                   const String& scan, const Bool useModel){
+                                   const String& scan,
+                                   const String& obs,
+                                   const Bool useModel){
     useModelCol_p=useModel;
     LogIO os(LogOrigin("imager", "setDataPerMS()"), logSink_p);
     if(!Table::isReadable(msname)){
@@ -152,7 +155,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      Table::Old);
       
       return setDataOnThisMS(thisms, mode, nchan, start, step, spectralwindowids, fieldids, msSelect, timerng, 
-			     fieldnames, antIndex, antnames, spwstring, uvdist, scan);  
+			     fieldnames, antIndex, antnames, spwstring, uvdist, scan, obs);  
       
     }
     
@@ -173,7 +176,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& antnames,
 				   const String& spwstring,
 				   const String& uvdist,
-                                   const String& scan) {
+                                      const String& scan,
+                                      const String& obs){
     LogIO os(LogOrigin("imager", "setDataOnThisMS()"), logSink_p);  
 
 
@@ -282,6 +286,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       if(scan != ""){
 	thisSelection.setScanExpr(scan);
+      }
+      if(obs != ""){
+	thisSelection.setObservationExpr(obs);
       }
       if(msSelect != ""){
 	thisSelection.setTaQLExpr(msSelect);

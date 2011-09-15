@@ -521,8 +521,8 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
 
   // This is the older version, used elsewhere.
   void SubMS::setmsselect(const String& spw, const String& field, 
-                          const String& baseline, 
-                          const String& scan, const String& uvrange, 
+                          const String& baseline, const String& scan,
+                          const String& obs, const String& uvrange, 
                           const String& taql, const Vector<Int>& nchan, 
                           const Vector<Int>& start, const Vector<Int>& step,
                           const String& subarray)
@@ -600,6 +600,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
       selectAntenna(antid, antstr);
     }
     scanString_p    = scan;
+    obsString_p    = obs;
     uvrangeString_p = uvrange;
     taqlString_p    = taql;
 

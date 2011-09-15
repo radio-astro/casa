@@ -70,13 +70,13 @@ namespace casa {
 
 		int numFrames( ) const;
 		void zRange( int &x, int &y ) const;
-		virtual int zIndex( ) const = 0;
-		virtual bool regionVisible( ) const { return true; }
+		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
+		virtual bool regionVisible( ) const DISPLAY_PURE_VIRTUAL(Region::regionVisible,true);
 
-		virtual void regionCenter( double &x, double &y ) const = 0;
+		virtual void regionCenter( double &x, double &y ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
 
-		virtual void refresh( ) = 0;
-		virtual AnnRegion *annotation( ) const = 0;
+		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
+		virtual AnnRegion *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( );
@@ -85,12 +85,12 @@ namespace casa {
 		void updateStateInfo( bool region_modified );
 		void clearStatistics( );
 
-		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const = 0;
+		virtual void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const DISPLAY_PURE_VIRTUAL(Region::getCoordinatesAndUnits,);
 		virtual void getPositionString( std::string &x, std::string &y, std::string &angle,
 						Region::Coord coord = Region::DefaultCoord,
-						Region::Units units = Region::DefaultUnits ) const = 0;
+						Region::Units units = Region::DefaultUnits ) const DISPLAY_PURE_VIRTUAL(Region::getPositionString,);
 		virtual void movePosition( const std::string &x, const std::string &y,
-					   const std::string &coord, const std::string &units ) = 0;
+					   const std::string &coord, const std::string &units ) DISPLAY_PURE_VIRTUAL(Region::movePosition,);
 
 	    public slots:
 		/* void name( const QString &newname ); */
@@ -109,12 +109,12 @@ namespace casa {
 		void output(std::list<QtRegionState*>,std::ostream&);
 
 	    protected:
-		virtual Region::StatisticsList *generate_statistics_list( ) = 0;
+		virtual Region::StatisticsList *generate_statistics_list( ) DISPLAY_PURE_VIRTUAL(Region::generate_statistics_list,0);
 		// At the base of this inheritance hierarchy is a class that uses
 		// multiple inheritance. We are QtRegion is one base class, and we
 		// need to be able to retrieve our peer (the non-GUI dependent)
 		// Region class pointer...
-		virtual Region *fetch_my_region( ) = 0;
+		virtual Region *fetch_my_region( ) DISPLAY_PURE_VIRTUAL(Region::fetch_my_region,0);
 
 		bool statistics_visible;
 		bool statistics_update_needed;

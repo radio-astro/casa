@@ -235,18 +235,6 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			}
 		}
 	}
-	/*
-	else {
-		Float (*function)(const Array<Float>&) = funcMap()->at(_aggType);
-		Array<Float> data = subImage.get(False);
-		for (uInt i=0; i<outShape.product(); i++) {
-			IPosition start = toIPositionInArray(i, outShape);
-			IPosition end = start + shape - 1;
-			Slicer s(start, end, Slicer::endIsLast);
-			outImage->putAt(function(data(s)), start);
-		}
-	}
-	*/
 	ImageUtilities::copyMiscellaneous(*outImage, subImage);
 
 	if (! _getOutname().empty()) {

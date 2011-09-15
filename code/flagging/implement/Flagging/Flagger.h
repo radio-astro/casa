@@ -163,12 +163,12 @@ public:
   Bool selectdata(Bool useoriginalms=False, 
                   String field="", String spw="", String array="", String feed="", String scan="",
 	          String baseline="", String uvrange="", String time="",
-	          String correlation="", String intent="");
+	          String correlation="", String intent="", String observation="");
 
   // Make a data selection
   Bool setdata(String field, String spw, String array, String feed, String scan,
 	       String baseline, String uvrange, String time,
-	       String correlation, String intent);
+	       String correlation, String intent, String observation="");
   
   // Make a selection for manual flagging
   Bool setmanualflags(Bool autocorr,

@@ -35,14 +35,14 @@ def sdflagmanager(infile, mode, versionname, oldname, comment, merge):
 			if os.path.exists(sdfverfile):
 				os.system('mv %s %s' % (sdfverfile, msfverfile))
 			
-			task_sdsave.sdsave(infilename, 0, [], [], '', [], [], False, False, 'none', False, 'none', msfilename, 'MS', False)
+			task_sdsave.sdsave(infilename, 0, True, [], [], '', [], [], False, False, 'none', False, 'none', msfilename, 'MS', False)
 			task_flagmanager.flagmanager(msfilename, mode, versionname, oldname, comment, merge)
 
 			if mode=='restore':
 				backupinfile = infilename + '-sdflagmanager-backup-' + dtstr + '.asap'
 				# if a directory with the same name as backupinfile exists, rename it for backup
 				os.system('mv %s %s' % (infilename, backupinfile))
-				task_sdsave.sdsave(msfilename, 0, [], [], '', [], [], False, False, 'none', False, 'none', infilename, 'ASAP', False)
+				task_sdsave.sdsave(msfilename, 0, True, [], [], '', [], [], False, False, 'none', False, 'none', infilename, 'ASAP', False)
 			
 			os.system('rm -rf %s' % (msfilename))
 			os.system('mv %s %s' % (msfverfile, sdfverfile))

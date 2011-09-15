@@ -181,6 +181,11 @@ private:
 
 };
 
+// Just need a identifable expection class, compiler can generate implementation implicitly
+class ToLCRegionConversionError : public AipsError {};
+
 }
+
+
 
 #endif

@@ -40,6 +40,7 @@ class cleanhelper:
         self.usescratch=usescratch
         self.dataspecframe='LSRK'
         self.usespecframe='' 
+        self.inframe=False
         # to use phasecenter parameter in initChannelizaiton stage
         # this is a temporary fix need. 
         self.srcdir=''
@@ -645,7 +646,7 @@ class cleanhelper:
         in clean with flanking fields (added by TT)
         required: definemultiimages has already run so that imagelist is defined 
         """
-        print "##########Calling makemultifieldmask3"
+        #print "Inside makemultifieldmask3"
         if((len(self.maskimages)==(len(self.imagelist)))):
             if(not self.maskimages.has_key(self.imagelist[0])):
                 self.maskimages={}
@@ -716,13 +717,16 @@ class cleanhelper:
                         masktext.append(masklets)
 
         #group circles and boxes in dic for each image field 
+        # new behavior should be:
+        # 1. if the boxfile is in list of list, treat it apply only to the specific field???
+        # 2. if it is in a single list, the field number is matched to each field...
         circles, boxes=self.readmultifieldboxfile(masktext)
          
         # Loop over imagename
         # take out text file names contain multifield boxes and field info  
         # from maskobject and create updated one (updatedmaskobject)
         # by adding boxlists to it instead.
-        # Use readmultifieldmaskbox to read old outlier/box text file format
+        # Use readmultifieldboxfile to read old outlier/box text file format
         maskobject_tmp = maskobject 
 	updatedmaskobject = [] 
         for maskid in range(len(maskobject_tmp)):
@@ -755,9 +759,10 @@ class cleanhelper:
                             # add to maskobject (extra list bracket taken out)
                             updatedmaskobject.append(inboxes)
            
-        # print "Updated maskobject=",updatedmaskobject
+        #print "Updated maskobject=",updatedmaskobject
 
         for maskid in range(len(self.maskimages)):
+            #print "maskid, mask=",maskid, updatedmaskobject[maskid]
             self.outputmask=''
             inoutputmask=self.maskimages[self.imagelist[maskid]]
             self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
@@ -908,8 +913,19 @@ class cleanhelper:
             maskframe=self.dataspecframe
         else:
             maskframe=self.usespecframe
-        self.csys['spectral2']['conversion']['system']=maskframe
+        if len(self.vis)!=1:
+            if  not self.inframe:
+                # for multi-ms case default output frame is default to LSRK
+                # (set by baseframe in imager_cmt.cc) 
+                maskframe='LSRK'
+        mycsys=ia.coordsys()
+        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+            mycsys.setreferencecode(maskframe,'spectral',True)
+        self.csys=mycsys.torecord()
+        if self.csys['spectral2']['conversion']['system']!=maskframe:
+            self.csys['spectral2']['conversion']['system']=maskframe
         ia.setcoordsys(self.csys)
+        ##ia.setcoordsys(mycsys.torecord())
         ia.close()
         if(len(maskimage) > 0):
             for ima in maskimage :
@@ -1037,7 +1053,7 @@ class cleanhelper:
 
     
     # split version of datselweightfilter
-    def datsel(self, field, spw, timerange, uvrange, antenna,scan,
+    def datsel(self, field, spw, timerange, uvrange, antenna, scan, observation,
                            calready, nchan=-1, start=0, width=1):
 
         # for multi-MSes, if field,spw,timerage,uvrange,antenna,scan are not
@@ -1045,7 +1061,8 @@ class cleanhelper:
         self.fieldindex=[]
         #nvislist=range(len(self.vis))
         vislist=self.sortedvisindx
-        self.paramlist={'field':field,'spw':spw,'timerange':timerange,'antenna':antenna,'scan':scan,'uvrange':uvrange}
+        self.paramlist={'field':field,'spw':spw,'timerange':timerange,'antenna':antenna,
+                        'scan':scan, 'observation': observation, 'uvrange':uvrange}
         for i in vislist:
           selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
           tempfield=selectedparams['field']
@@ -1073,14 +1090,16 @@ class cleanhelper:
           inspw=selectedparams['spw'] 
           intimerange=selectedparams['timerange'] 
           inantenna=selectedparams['antenna'] 
-          inscan=selectedparams['scan'] 
+          inscan=selectedparams['scan']
+          inobs = selectedparams['observation']
           inuvrange=selectedparams['uvrange'] 
 
           if len(self.vis)==1:
             #print "single ms case"
             self.im.selectvis(nchan=nchan,start=start,step=width,field=field,
                               spw=inspw,time=intimerange, baseline=inantenna,
-                              scan=inscan, uvrange=inuvrange, usescratch=calready)
+                              scan=inscan, observation=inobs, uvrange=inuvrange,
+                              usescratch=calready)
           else:
             #print "multims case: selectvis for vis[",i,"]: spw,field=", inspw, self.fieldindex[i]
             self.im.selectvis(vis=self.vis[i],nchan=nchan,start=start,step=width,
@@ -1116,7 +1135,9 @@ class cleanhelper:
         else:
           raise Exception, 'params must be a dictionary'
  
-    # weighting/filetering part of datselweightfilter
+    # weighting/filtering part of datselweightfilter.
+    # The scan parameter is not actually used, so observation is not included
+    # as a parameter.  Both are used via self._selectlistinputs().
     def datweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                         wgttype, robust, noise, npixels, mosweight,
                         innertaper, outertaper, calready, nchan=-1, start=0, width=1):
@@ -1142,14 +1163,17 @@ class cleanhelper:
           intimerange=selectedparams['timerange'] 
           inantenna=selectedparams['antenna'] 
           inscan=selectedparams['scan'] 
+          inobs=selectedparams['observation'] 
           inuvrange=selectedparams['uvrange'] 
           
           if len(self.vis) > 1:
             self.im.selectvis(vis=self.vis[i], field=self.fieldindex[i],spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan, uvrange=inuvrange, usescratch=calready)
+                              baseline=inantenna, scan=inscan, observation=inobs,
+                              uvrange=inuvrange, usescratch=calready)
           else: 
             self.im.selectvis(field=field,spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan, uvrange=inuvrange, usescratch=calready)
+                              baseline=inantenna, scan=inscan, observation=inobs,
+                              uvrange=inuvrange, usescratch=calready)
           self.im.weight(type=weighting,rmode=rmode,robust=robust, 
                          npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
      
@@ -1519,6 +1543,154 @@ class cleanhelper:
 
         f.close()
         return imsizes,phasecenters,imageids
+
+    def newreadoutlier(self, outlierfile): 
+        """
+	read a outlier file with a new format.
+	The format consists of a set of task parameter inputs.
+	imagename="outlier1" imsize=[128,128] phasecenter="J2000 hhmmss.s ddmmss.s" 
+	imagename="outlier2" imsize=[128,128] phasecenter="J2000 hhmmss.s ddmmss.s"
+	mask=['viewermask.rgn','box[[50,60],[50,60]]'] ...
+
+	Currently supported paramters are:
+	imagename (required: used to delinate a paramater set for each field)
+	imsize (required)
+	phasecenter (required)
+	mask (optional)
+        modelimage (optional) 
+	* other parameters can be included in the file but not parsed
+
+        """
+        import ast
+        import re
+
+        imsizes=[]
+        phasecenters=[]
+        imageids=[]
+        masks=[]
+        modelimages=[]
+        f=open(outlierfile)
+        keywd = "imagename"
+        oldformat=False
+        nchar= len(keywd)
+        content0=''
+        while 1:
+            try:
+                line=f.readline()
+                if len(line)!=0:
+                    if line.split()[0]=='C' or line.split()[0]=='c':
+                        oldformat=True
+                    elif line.split()[0]!='#':
+                        content0+=line     
+                else:
+                   raise Exception
+            except:
+                break
+        f.close()
+        if oldformat:
+        #    f.close()
+            self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
+            # do old to new data format conversion....(watch out for different ordor of return parameters...)
+            (imsizes,phasecenters,imageids)=self.readoutlier(outlierfile)
+            for i in range(len(imageids)):
+                modelimages.append('')
+        #f.seek(0)
+        #content0 = f.read()
+        #f.close()
+        content=content0.replace('\n',' ')
+        last = len(content)
+        # split the content using imagename as a key 
+        # and store each parameter set in pars dict
+        pars={}
+        initi = content.find(keywd)
+        if initi > -1:
+            i = 0
+            prevstart=initi
+            while True:
+                step = nchar*(i+1)
+                start = prevstart+step
+                nexti = content[start:].find(keywd)
+                #print "look at start=",start, " nexti=",nexti, " step=",step, " prevstart=",prevstart
+
+                if nexti == -1:
+                    pars[i]=content[prevstart:]
+                    #print "range=",prevstart, " to the end"
+                    break
+                pars[i]=content[prevstart:prevstart+nexti+step]
+                #print "range=",prevstart, " to", prevstart+nexti+step-1
+                prevstart=prevstart+nexti+step
+                i+=1
+
+        # for parsing of indiviual par (per field)
+        #print "pars=",pars
+        dparm ={}
+        indx=0
+        for key in pars.keys():
+            # do parsing
+            parstr = pars[key]
+            # clean up extra white spaces
+            parm=' '.join(parstr.split())
+            # more clean up
+            parm=parm.replace("[ ","[")
+            parm=parm.replace(" ]","]")
+            parm=parm.replace(" ,",",")
+            parm=parm.replace(", ",",")
+            parm=parm.replace(" =","=")
+            parm=parm.replace("= ","=")
+            #print "parm=",parm
+            subdic={}
+            # final parameter sets 
+            values=re.compile('\w+=').split(parm)
+            values=values[1:len(values)]
+           
+            ipar = 0 
+            for pv in parm.split():
+                if pv.find('=') != -1:
+                    if ipar >= len(values):
+                        raise Exception, TypeError("mismath in no. parameters in parsing outlier file.")
+                    (k,v) = pv.split('=')
+                    # fix a string to proper litral value
+                    # take out any commas at end which will
+                    # confuse literal_eval function
+                    pat = re.compile(',+$')
+                    subdic[k]=ast.literal_eval(pat.sub('',values[ipar]))
+                    ipar += 1
+            dparm[indx]=subdic
+            indx+=1
+        #print "DONE for parsing parm for each field"
+        # put into list of parameters
+        # imsizes, phasecenters, imagenames(imageids)
+        # mask is passed to other function for forther processing
+        if not oldformat:
+            #pack them by parameter name
+            for fld in dparm.keys():
+                # before process, check if it contains all required keys
+                # namely, imagename, phasecenter, imsize
+                #print "dparm[",fld,"]=",dparm[fld]
+                if not (dparm[fld].has_key("imagename") and\
+                        dparm[fld].has_key("phasecenter") and\
+                        dparm[fld].has_key("imsize")):
+                    raise Exception, TypeError("Missing one or more of the required parameters: \
+                     imagename, phasecenter, and imsize in the outlier file. Please check the input outlier file.") 
+                for key in dparm[fld].keys():  
+                    if key == "imagename":
+                        imageids.append(dparm[fld][key])
+                    if key == "phasecenter":
+                        phasecenters.append(dparm[fld][key])
+                    if key == "imsize":
+                        imsizes.append(dparm[fld][key])
+                    if key == "mask":
+                        masks.append(dparm[fld][key])
+                    if key == "modelimage":
+                        modelimages.append(dparm[fld][key])
+                if not dparm[fld].has_key("mask"):
+                    masks.append([])
+                if not dparm[fld].has_key("modelimage"):
+                    modelimages.append('')
+                
+                 
+        return (imageids,imsizes,phasecenters,masks,modelimages,dparm, not oldformat) 
+
 
     def copymaskimage(self, maskimage, shp, outfile):
         if outfile == maskimage:     # Make it a no-op,
@@ -2256,6 +2428,7 @@ class cleanhelper:
         # set usespecframe:  user's frame if set, otherwise data's frame
         if(frame != ''):
             self.usespecframe=frame
+            self.inframe=True
         else:
             self.usespecframe=self.dataspecframe
 
@@ -2796,7 +2969,7 @@ class cleanhelper:
 
 
     def makeTemplateCubes(self, imagename,outlierfile, field, spw, selectdata, timerange,
-          uvrange, antenna, scan, mode, facets, cfcache, interpolation, 
+          uvrange, antenna, scan, observation, mode, facets, cfcache, interpolation, 
           imagermode, localFTMachine, mosweight, locnchan, locstart, locwidth, outframe,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
@@ -2811,11 +2984,41 @@ class cleanhelper:
         multifield=False
 
         if len(outlierfile) != 0:
-            imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
-            if type(imagename) == list:
-                rootname = imagename[0]
+            #imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
+            f_imageids,f_imsizes,f_phasecenters,f_masks,f_modelimages,parms,newformat=self.newreadoutlier(outlierfile)
+            if type(imagename) == list or newformat:
+                #rootname = imagename[0]
+                rootname = ''
             else:
                 rootname = imagename
+
+            # combine with the task parameter input
+            if type(imagename) == str:
+                imageids.append(imagename)
+                imsizes.append(imsize)
+                phasecenters.append(phasecenter)
+            else:
+                imageids=imagename
+                imsizes=imsize
+                phasecenters=phasecenter
+
+            if type(mask) !=  list:
+                mask=[mask]
+            elif type(mask[0]) != list:
+                mask=[mask]
+            if type(modelimage) != list:
+                modelimage=[modelimage]
+            elif type(modelimage[0]) != list and type(imagename) != str:
+                modelimage=[modelimage]
+
+            # now append readoutlier content
+            for indx, name in enumerate(f_imageids):
+                imageids.append(name)
+                imsizes.append(f_imsizes[indx])
+                phasecenters.append(f_phasecenters[indx])
+                mask.append(f_masks[indx])
+                modelimage.append(f_modelimages[indx])
+
             if len(imageids) > 1:
                 multifield=True
         else:
@@ -2827,7 +3030,8 @@ class cleanhelper:
         # readoutlier need to be run first....
         #pdb.set_trace() 
         self.datsel(field=field, spw=spw, timerange=timerange, uvrange=uvrange, 
-                    antenna=antenna,scan=scan, calready=calready, nchan=-1, start=0, width=1)
+                    antenna=antenna,scan=scan, observation=observation, calready=calready,
+                    nchan=-1, start=0, width=1)
 
         self.definemultiimages(rootname=rootname,imsizes=imsizes,cell=cell,
                                 stokes=stokes,mode=mode,
@@ -2880,12 +3084,18 @@ class cleanhelper:
         psfimage=[]
         fluximage=[]
         for k in range(len(self.imagelist)):
-            ia.open(self.imagelist[k])
-            if (modelimage =='' or modelimage==[]) and multifield:
-                ia.rename(self.imagelist[k]+'.model',overwrite=True)
+            #ia.open(self.imagelist[k])
+            #if (modelimage =='' or modelimage==[]) and multifield:
+            #    ia.rename(self.imagelist[k]+'.model',overwrite=True)
+            #else:
+            #    ia.remove(verbose=False)
+            if ((modelimage =='' or modelimage==[]) or \
+                (type(modelimage)==list and modelimage[k]=='')) and multifield:
+                ia.rename(imset.imagelist[k]+'.model',overwrite=True)
             else:
                 ia.remove(verbose=False)
             ia.close()
+
             modelimages.append(self.imagelist[k]+'.model')
             restoredimage.append(self.imagelist[k]+'.image')
             residualimage.append(self.imagelist[k]+'.residual')

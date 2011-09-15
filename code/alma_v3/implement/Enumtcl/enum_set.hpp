@@ -8,7 +8,8 @@ using namespace std;
 template<typename type>
 struct enum_set_traits
 {
-  friend struct enum_set_traiter;
+  // commented out so things will build with the Intel compiler
+  // friend struct enum_set_traiter;
   typedef type enum_type;
   static const bool         is_specialized = false;
   static const type         first = type();

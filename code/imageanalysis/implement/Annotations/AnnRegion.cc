@@ -271,7 +271,12 @@ void AnnRegion::_extend() {
 			_imageRegion = ImageRegion(WCUnion(True, regions));
 		}
 	}
-	_imageRegion.asWCRegionPtr()->toLCRegion(_getCsys(), _imShape);
+	try {
+		_imageRegion.asWCRegionPtr()->toLCRegion(_getCsys(), _imShape);
+	}
+	catch (AipsError x) {
+		throw (ToLCRegionConversionError());
+	}
 }
 
 WCBox AnnRegion::_makeExtensionBox(

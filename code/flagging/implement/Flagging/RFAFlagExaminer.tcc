@@ -263,6 +263,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         const Vector<Int> &antenna1( chunk.visBuf().antenna1() );
         const Vector<Int> &antenna2( chunk.visBuf().antenna2() );
         const Vector<Int> &scan    ( chunk.visBuf().scan() );
+        const Vector<Int> &observation    ( chunk.visBuf().observationId() );
+        Int array    ( chunk.visBuf().arrayId() );
 
         const Vector<String> &antenna_names( chunk.antNames()) ;
 
@@ -352,6 +354,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
                   scan_string << scan(i);
                   accumflags["scan"][scan_string.str()] += f;
                   accumtotal["scan"][scan_string.str()] += c;
+                }
+                /* histogram observation */
+                {
+                  stringstream observation_string;
+                  observation_string << observation(i);
+                  accumflags["observation"][observation_string.str()] += f;
+                  accumtotal["observation"][observation_string.str()] += c;
+                }
+                /* histogram array */
+                {
+                  stringstream array_string;
+                  array_string << array;
+                  accumflags["array"][array_string.str()] += f;
+                  accumtotal["array"][array_string.str()] += c;
                 }
               }
         }

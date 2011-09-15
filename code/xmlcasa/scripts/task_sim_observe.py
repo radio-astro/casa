@@ -88,9 +88,6 @@ def sim_observe(
         return False
 
 
-    # handle '$project' in modelimage
-    modelimage = modelimage.replace('$project',project)
-
     grscreen = False
     grfile = False
     if graphics == "both":
@@ -147,7 +144,10 @@ def sim_observe(
                 util.flatimage(newmodel,complist=complist,verbose=verbose)
                 # we want the skymodel.flat image to be called that no matter what 
                 # the skymodel image is called, since that's what used in analysis
-                shutil.move(newmodel+".flat",modelflat)
+                if modelflat != newmodel+".flat":
+                    if os.path.exists(modelflat):
+                        shutil.rmtree(modelflat)
+                    shutil.move(newmodel+".flat",modelflat)
 
             casalog.origin('simdata')
 
@@ -322,21 +322,6 @@ def sim_observe(
             # first set based on psfsize:
             model_cell = [ str(psfsize/5)+"arcsec", str(psfsize/5)+"arcsec" ]
             
-            # if the user has set cell for imaging, we'll use that
-            if type(cell) == type([]):
-                if len(cell) > 0:
-                    cell0 = cell[0]
-                else:
-                    cell0 = ""
-            else:
-                cell0 = cell
-
-            if len(cell0) > 0:
-                # we would like to warn the user if they're not likely to sample the
-                # psf, but we don't have a psf estimate yet until we read antennas.
-                msg("Setting cell size for component generated skymodel image to user supplied cell size "+str(cell0),priority="warn")
-                model_cell = [cell0,cell0]                
-
             # XXX if the user has set direction should we center the compskymodel there?
             # if len(direction)>0: model_refdir = direction
 
@@ -396,10 +381,13 @@ def sim_observe(
                 csmodel.done()
                 # as noted, compskymodel doesn't need to exist, only skymodel.flat
                 # flatimage adds in components if complist!=None
-                util.flatimage(newmodel,complist=complist,verbose=verbose)
+                #util.flatimage(newmodel,complist=complist,verbose=verbose)
+                util.flatimage(newmodel,verbose=verbose)
                 modelflat = fileroot + "/" + project + ".skymodel.flat"
-                shutil.move(newmodel+".flat",modelflat)
-                # XXX remove compskymodel here
+                if modelflat != newmodel+".flat":
+                    if os.path.exists(modelflat):
+                        shutil.rmtree(modelflat)
+                    shutil.move(newmodel+".flat",modelflat)
 
 
         # and finally, with model_cell set either from an actual skymodel, 
@@ -478,6 +466,12 @@ def sim_observe(
             # if a longer etime is in the file, it'll do multiple integrations
             # per scan
             # expects that the cal is separate, and this is just one round of the mosaic
+            # furthermore, the cal will use _integration_ from the inputs, and that
+            # needs to be less than the min etime:
+            if min(etime) < integration:
+                integration = min(etime)
+                msg("Setting integration to "+str(integration)+"s to match the shortest time in the pointing file.",priority="warn")
+
 
         # find imcenter - phase center
         imcenter , offsets = util.average_direction(pointings)        
@@ -655,6 +649,16 @@ def sim_observe(
             refdate=refdate+"/00:00:00"
             usehourangle=True
 
+            # totaltime as an integer for # times through the mosaic:
+            if qa.quantity(totaltime)['unit'] == '':
+                # assume it means number of maps, or # repetitions.
+                totalsec = sum(etime)
+                if docalibrator:
+                    totalsec = totalsec + integration # cal gets one int-time
+                totalsec = float(totaltime) * totalsec
+                msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
+            else:                
+                totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
 
             if predict_uv: 
                 if os.path.exists(msfile):
@@ -706,10 +710,9 @@ def sim_observe(
 
                 mereftime = me.epoch('TAI', refdate)
                 # integration is a scalar quantity, etime is a vector of seconds
-                # if etimes are not all the same, integration is their max
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
-                totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
+
                 # time required to observe all planned scanes in etime array:
                 totalscansec = sum(etime)
                 kfld = 0
@@ -859,7 +862,6 @@ def sim_observe(
                 mereftime = me.epoch('TAI', refdate)
                 sm.settimes(integrationtime=integration, usehourangle=usehourangle, 
                             referencetime=mereftime)
-                totalsec = qa.convert(qa.quantity(totaltime),'s')['value']
                 totalscansec = sum(etime)
                 nscan = int(totalsec/totalscansec)
                 kfld = 0
@@ -1004,9 +1006,8 @@ def sim_observe(
                     # show dirty beam from observed uv coverage
                     util.nextfig()
                     im.open(msfile)  
-                    # TODO spectral parms
-                    if not image:
-                        msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
+                    # TODO spectral parms                    
+                    msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):
                         shutil.rmtree(fileroot+"/"+project+".quick.psf")
@@ -1035,28 +1036,6 @@ def sim_observe(
                     ia.done()
                 util.endfig(show=grscreen,filename=file)
 
-
-
-        else:
-            # if not predicting this time, but are imageing or analyzing, 
-            # get telescopename from ms
-            # KS - telescopename seems not used in image and analyze
-            # RI - possibly indirectly, through the util() object 4/8/11; 
-            if (image or analyze):
-                if os.path.exists(fileroot+"/"+project+'.ms'):
-                    tb.open(fileroot+"/"+project+".ms/OBSERVATION")
-                    n = tb.getcol("TELESCOPE_NAME")
-                    telescopename = n[0]
-                    util.telescopename = telescopename
-                    # todo add check that entire column is the same
-                    tb.done()
-                    # set psfsize from uv coverage
-                    tb.open(msfile)  
-                    rawdata = tb.getcol("UVW")
-                    tb.done()
-                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    psfsize = 0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/maxbase*3600.*180/pl.pi # lambda/b converted to arcsec
-                    minimsize = 8* int(psfsize/cell_asec)
 
         ######################################################################
         # noisify
@@ -1259,589 +1238,13 @@ def sim_observe(
 
                 
 
-
-
-        #####################################################################
-        # clean if desired, use noisy image for further calculation if present
-        # todo suggest a cell size from psf?
-
-        #####################################################################
-        outflat_current = False
-        convsky_current = False
-        beam_current = False
-        imagename = fileroot + "/" + project
-        if image:
-
-            # make sure cell is defined
-            if type(cell) == type([]):
-                if len(cell) > 0:
-                    cell0 = cell[0]
-                else:
-                    cell0 = ""
-            else:
-                cell0 = cell
-            if len(cell0) <= 0:
-                cell = model_cell
-            if type(cell) == type([]):
-                if len(cell) == 1:
-                    cell = [cell[0],cell[0]]
-            else:
-                cell = [cell,cell]
-            
-            # cells are positive by convention
-            cell = [qa.abs(cell[0]),qa.abs(cell[1])]
-
-            # use this hereafter instead of model_cell
-            cell_asec=qa.convert(cell[0],'arcsec')['value']
-            
-            # and imsize
-            if type(imsize) == type([]):
-                if len(imsize) > 0:
-                    imsize0 = imsize[0]
-                else:
-                    imsize0 = -1
-            else:
-                imsize0 = imsize
-            if imsize0 <= 0:
-                imsize = [int(pl.ceil(qa.convert(qa.div(model_size[0],cell[0]),"")['value'])),
-                          int(pl.ceil(qa.convert(qa.div(model_size[1],cell[1]),"")['value']))]
-            else:
-                imsize=[imsize0,imsize0]
-            # this is primarily for sim-from-components but useful elsewhere as a minimum
-            # image size:
-            if imsize[0] < minimsize: imsize[0] = minimsize
-            if imsize[1] < minimsize: imsize[1] = minimsize
-            
-
-
-            # if you neither predict nor noisify this time and already
-            # have modelimage generated, set the name to tpimage
-            #if not tpset and os.path.exists(modelimage):
-            #    # should be CASA image so far. 
-            #    tpimage=modelimage # KS-don't think this is necessary
-            #    tpset=True
-
-            # Set proper MS name(s) automatically if vis='default'
-            if vis == "default":
-                vis = ""
-                msg("Parameter vis is set to 'default'. Trying to set MS name(s) to image automatically.")
-                if noise_any:
-                    if sd_any: vis = noisymsroot+".sd.ms"
-                    if antennalist != "": vis += min(1,len(vis))*"," + noisymsroot+".ms"
-                elif predict:
-                    if predict_sd: vis = "$project.sd.ms"
-                    if predict_uv: vis += min(1,len(vis))*"," + "$project.ms"
-                else:
-                    # neither predict nor any_noise
-                    msg("Cannot resolve MS name(s) for 'vis'. You should specify 'vis' explicitly when are neither predicting nor corrupting.",priority="error")
-                msg("Automatic resolution of MS name(s): vis='%s'" % vis)
-
-            # parse ms parameter and check for existance;
-            # if noise_any
-            #     mstoimage = noisymsfile
-            # else:
-            #     mstoimage = msfile
-            mslist = vis.split(',')
-            mstoimage = []
-            tpmstoimage = None
-            for ms0 in mslist:
-                if not len(ms0): continue
-                # if noisy ms was created, check for defaults:
-                if (ms0 == "$project.ms" or ms0 == "$project.sd.ms") and noise_any:
-                    msg("you are requesting to image $project[.sd].ms, but have created a corrupted $project.noisy[.sd].ms",priority="error");
-                    msg("If you want to image the corrupted visibilites, you need to set vis=$project.noisy[.sd].ms in the image subtask",priority="error");
-
-                ms1 = ms0.replace('$project',project)
-                # MSes in fileroot/ have priority
-                if os.path.exists(fileroot+"/"+ms1):
-                    ms1 = fileroot + "/" + ms1
-                if os.path.exists(ms1):
-                    # check if the ms is tp data or not.
-                    #if util.ismstp(ms1,halt=False) and tpset:
-                    if util.ismstp(ms1,halt=False):
-                        # if any SD operation in previous steps, check for vis
-                        if sd_any and ms1 != sdmsfile:
-                            msg("inconsistent vis name. you have generated a total power MS "+sdmsfile+", but are requesting vis="+ms1+" for imaging",priority="error")
-                            return False
-                        tpmstoimage = ms1
-                        msg("Found a total power measurement set, %s." % ms1)
-                    else:
-                        mstoimage.append(ms1)
-                        msg("Found a synthesis measurement set, %s." % ms1)
-                else:
-                    if verbose:
-                        msg("measurement set "+ms1+" not found -- removing from imaging list",priority="warn")
-
-                    else:
-                        msg("measurement set "+ms1+" not found -- removing from imaging list")
-
-            if not tpmstoimage and sd_any and os.path.exists(sdmsfile):
-                msg("you have generated a total power MS "+sdmsfile+", but not specified it in 'vis' for imaging",priority="warn")
-                msg("assuming you want to image it and creating a total power image",priority="warn")
-                tpmstoimage = sdmsfile
-
-            if len(mstoimage) == 0:
-                if tpmstoimage:
-                    sd_only = True
-                else:
-                    msg("no measurement sets found to image",priority="warn")
-                    image = False
-            else:
-                sd_only = False
-
-            # Do single dish imaging first if tpmstoimage exists.
-            if tpmstoimage and os.path.exists(tpmstoimage):
-                msg('creating image from generated ms: '+tpmstoimage)
-                if len(mstoimage):
-                    tpimage = imagename + '.sd.image'
-                else:
-                    tpimage = imagename + '.image'
-                #if sd_only:
-                #    # for analysis step -> do it later
-                #    msfile=tpmstoimage
-                #else:
-                # check for modelimage
-                if len(mstoimage):
-                    if len(modelimage) and tpimage != modelimage and \
-                           tpimage != fileroot+"/"+modelimage:
-                        msg("modelimage parameter set to "+modelimage+" but also creating a new total power image "+tpimage,priority="warn")
-                        msg("assuming you know what you want, and using modelimage="+modelimage+" in deconvolution",priority="warn")
-                    else:
-                        # This forces to use TP image as a model for clean
-                        if len(modelimage) <= 0:
-                            msg("you are generating total power image "+tpimage+". this is used as a model image for clean",priority="warn")
-                        modelimage = tpimage
-                
-                # format image size properly
-                sdimsize = imsize
-                if not isinstance(imsize,list):
-                    sdimsize = [imsize,imsize]
-                elif len(imsize) == 1:
-                    sdimsize = [imsize[0],imsize[0]]
-
-                im.open(tpmstoimage)
-                im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
-                im.defineimage(mode='channel',nx=sdimsize[0],ny=sdimsize[1],cellx=cell[0],celly=cell[1],phasecenter=imcenter,nchan=model_nchan,start=0,step=1,spw=0)
-                #im.setoptions(ftmachine='sd',gridfunction='pb')
-                im.setoptions(ftmachine='sd',gridfunction='pb')
-                im.makeimage(type='singledish',image=tpimage)
-                im.close()
-                del sdimsize
-
-                # For single dish: manually set the primary beam
-                ia.open(tpimage)
-                beam = ia.restoringbeam()
-                if len(beam) == 0:
-                    msg('setting primary beam information to image.')
-                    # !! aveant will only be set if modifymodel or setpointings and in 
-                    # any case it will the the aveant of the INTERFM array - we want the SD
-                    tb.open(tpmstoimage+"/ANTENNA")
-                    diams = tb.getcol("DISH_DIAMETER")
-                    tb.done()
-                    aveant = pl.mean(diams)
-                    # model_center should be set even if we didn't predict this execution
-                    pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi
-                    beam['major'] = beam['minor'] = qa.quantity(pb,'arcsec')
-                    beam['positionangle'] = qa.quantity(0.0,'deg')
-                    msg('Primary beam: '+str(beam['major']))
-                    ia.setrestoringbeam(beam=beam)
-                ia.done()
-                del beam
-
-                # create tpimagee.flat:
-                util.flatimage(tpimage,verbose=verbose)
-                outflat_current = True
-
-                msg('generation of total power image '+tpimage+' complete.')
-                
-                # update TP ms name the for following steps
-                sdmsfile = tpmstoimage
-                sd_any = True
-                
-                # End of single dish imaging part
-
-
-        if image and len(mstoimage) > 0:
-            if not predict:
-                # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
-                tb.open(mstoimage[0]+"/SOURCE")
-                code = tb.getcol("CODE")
-                sourcefieldlist = pl.where(code=='OBJ')[0]
-                nfld = len(sourcefieldlist)
-                tb.done()
-                msfile = mstoimage[0]
-
-            # set cleanmode automatically (for interfm)
-            if nfld == 1:
-                cleanmode = "csclean"
-            else:
-                cleanmode = "mosaic"
-
-            if not docalibrator:
-                sourcefieldlist = ""  # sourcefieldlist should be ok, but this is safer
-            
-            # clean insists on using an existing model if its present
-            if os.path.exists(imagename+".image"): shutil.rmtree(imagename+".image")
-            if os.path.exists(imagename+".model"): shutil.rmtree(imagename+".model")
-
-            # An image in fileroot/ has priority
-            if len(modelimage) > 0 and os.path.exists(fileroot+"/"+modelimage):
-                modelimage = fileroot + "/" + modelimage
-                msg("Found modelimage, %s." % modelimage)
-
-            # use imcenter instead of model_refdir
-            util.image(mstoimage,imagename,
-                       cleanmode,cell,imsize,imcenter,
-                       niter,threshold,weighting,
-                       outertaper,stokes,sourcefieldlist=sourcefieldlist,
-                       modelimage=modelimage,mask=mask)
-
-            # create imagename.flat and imagename.residual.flat:
-            util.flatimage(imagename+".image",verbose=verbose)
-            util.flatimage(imagename+".residual",verbose=verbose)
-            outflat_current = True
-
-            msg("done inverting and cleaning")
-
-
-
-        if image:
-            if not type(cell) == type([]):
-                cell = [cell,cell]
-            if len(cell) <= 1:
-                cell = [qa.quantity(cell[0]),qa.quantity(cell[0])]
-            else:
-                cell = [qa.quantity(cell[0]),qa.quantity(cell[1])]
-            cell = [qa.abs(cell[0]),qa.abs(cell[0])]
-
-            # get beam from output clean image
-            if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
-            ia.open(imagename+".image")
-            beam = ia.restoringbeam()
-            beam_current = True
-            ia.done()
-            # model has units of Jy/pix - calculate beam area from clean image
-            # (even if we are not plotting graphics)
-            bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-            bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
-            msg("synthesized beam area in output pixels = %f" % bmarea)
-
-
-            # show model, convolved model, clean image, and residual 
-            if grfile:            
-                file = fileroot + "/" + project + ".image.png"
-            else:
-                file = ""
-
-            if grscreen or grfile:
-                util.newfig(multi=[2,2,1],show=grscreen)
-
-                # create regridded and convolved sky model image
-                util.convimage(modelflat,imagename+".image.flat")
-                convsky_current = True # don't remake this for analysis in this run
-
-                disprange = []  # passing empty list causes return of disprange
-
-                # original sky regridded to output pixels but not convolved with beam
-                discard = util.statim(modelflat+".regrid",disprange=disprange)
-                util.nextfig()
-
-                # convolved sky model - units of Jy/bm
-                discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
-                util.nextfig()
-                
-                # clean image - also in Jy/beam
-                # although because of DC offset, better to reset disprange
-                disprange = []
-                discard = util.statim(imagename+".image.flat",disprange=disprange)
-
-                if len(mstoimage) > 0:
-                    util.nextfig()
-
-                    # clean residual image - Jy/bm
-                    discard = util.statim(imagename+".residual.flat",disprange=disprange)
-                util.endfig(show=grscreen,filename=file)
-        
-
-
-
-        #####################################################################
-        # analysis
-
-        if analyze:
-            if not os.path.exists(modelflat):
-                msg("sky model image "+str(modelflat)+" not found",priority="error")
-                return False
-
-            if not image:
-                if not os.path.exists(imagename+".image"):
-                    msg("you must image before analyzing.",priority="error")
-                    return False
-
-                # get beam from output clean image
-                if verbose: msg("getting beam from "+imagename+".image",origin="analysis")
-                ia.open(imagename+".image")
-                beam = ia.restoringbeam()
-                beam_current = True
-                ia.done()
-                # model has units of Jy/pix - calculate beam area from clean image
-                # (even if we are not plotting graphics)
-                bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
-                bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
-                msg("synthesized beam area in output pixels = %f" % bmarea)
-
-
-            # what about the output image?
-            outim = imagename + ".image"
-            if not os.path.exists(outim):
-                msg("output image"+str(outim)+" not found",priority="warn")
-                msg("you may need to run simdata.image, or if you deconvolved manually, rename your output to "+outim,priority="error")
-                return False
-
-            # flat output:?  if the user manually cleaned, this may not exist
-            outflat = imagename + ".image.flat"
-            if (not outflat_current) or (not os.path.exists(outflat)):
-                # create imagename.flat and imagename.residual.flat
-                if not image:
-                    # get cell from outim
-                    cell = util.cellsize(outim)
-                util.flatimage(imagename+".image",verbose=verbose)
-                if os.path.exists(imagename+".residual"):
-                    util.flatimage(imagename+".residual",verbose=verbose)
-                else:
-                    if showresidual:
-                        msg(imagename+".residual not found -- residual will not be plotted",priority="warn")
-                    showresidual = False
-                outflat_current = True
-                
-            # regridded and convolved input:?
-            if not convsky_current:
-                util.convimage(modelflat,imagename+".image.flat")
-                convsky_current = True
-            
-            # now should have all the flat, convolved etc even if didn't run "image" 
-
-            # make difference image.
-            # immath does Jy/bm if image but only if ia.setbrightnessunit("Jy/beam") in convimage()
-            convolved = modelflat + ".regrid.conv"
-            difference = imagename + '.diff'
-            ia.imagecalc(difference, "'%s' - '%s'" % (convolved, outflat), overwrite=True)
-            
-            # get rms of difference image for fidelity calculation
-            ia.open(difference)
-            diffstats = ia.statistics(robust=True, verbose=False,list=False)
-            maxdiff = diffstats['medabsdevmed']            
-            if maxdiff != maxdiff: maxdiff = 0.
-            if type(maxdiff) != type(0.):
-                if maxdiff.__len__() > 0: 
-                    maxdiff = maxdiff[0]
-                else:
-                    maxdiff = 0.
-            # Make fidelity image.
-            absdiff = imagename + '.absdiff'
-            ia.imagecalc(absdiff, "max(abs('%s'), %f)" % (difference,
-                                                          maxdiff/pl.sqrt(2.0)), overwrite=True)
-            fidelityim = imagename + '.fidelity'
-            ia.imagecalc(fidelityim, "abs('%s') / '%s'" % (convolved, absdiff), overwrite=True)
-            msg("fidelity image calculated",origin="analysis")
-
-            # scalar fidelity
-            absconv = imagename + '.absconv'
-            ia.imagecalc(absconv, "abs('%s')" % convolved, overwrite=True)
-            ia.done()
-            
-            ia.open(absconv)
-            modelstats = ia.statistics(robust=True, verbose=False,list=False)
-            maxmodel = modelstats['max']            
-            if maxmodel != maxmodel: maxmodel = 0.
-            if type(maxmodel) != type(0.):
-                if maxmodel.__len__() > 0: 
-                    maxmodel = maxmodel[0]
-                else:
-                    maxmodel = 0.
-            ia.done()
-            scalarfidel = maxmodel/maxdiff
-            msg("fidelity range (max model / rms difference) = "+str(scalarfidel),origin="analysis")
-
-
-            # now, what does the user want to actually display?
-            if len(stnx) <= 0:
-                # array configuration is read from antenna list.
-                # no use for SD only
-                if showarray: msg("input data is not an array -- the array will not be plotted",priority="warn")
-                showarray = False
-            # need MS for showuv and showpsf
-            if not (predict or image):
-                msfile = fileroot + "/" + project + ".ms"
-            if sd_only and os.path.exists(sdmsfile):
-                # use TP ms for UV plot if only SD sim, i.e.,
-                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
-                msfile = sdmsfile
-            # psf is not available for SD only sim
-            #if sd_only or util.ismstp(msfile,halt=False):
-            if util.ismstp(msfile,halt=False):
-                if showpsf: msg("single dish simulation -- psf will not be plotted",priority='warn')
-                showpsf = False
-
-            # if the order in the task input changes, change it here too
-            figs = [showarray,showuv,showpsf,showmodel,showconvolved,showclean,showresidual,showdifference,showfidelity]
-            nfig = figs.count(True)
-            if nfig > 6:
-                msg("only displaying first 6 selected panels in graphic output",priority="warn")
-            if nfig <= 0:
-                return True
-            if nfig < 4:
-                multi = [1,nfig,1]
-            else:
-                if nfig == 4:
-                    multi = [2,2,1]
-                else:
-                    multi = [2,3,1]
-                    
-            if grfile:            
-                file = fileroot + "/" + project + ".analysis.png"
-            else:
-                file = ""
-
-            if grscreen or grfile:
-                util.newfig(multi=multi,show=grscreen)
-
-                # if order in task parameters changes, change here too
-                if showarray:
-                    util.plotants(stnx, stny, stnz, stnd, padnames)
-                    if predict_sd:
-                        msg("The total power antenna will not be shown on the array configuration")
-                    util.nextfig()
-
-                if showuv:
-                    tb.open(msfile)
-                    rawdata = tb.getcol("UVW")
-                    tb.done()
-                    pl.box()
-                    maxbase = max([max(rawdata[0,]),max(rawdata[1,])])  # in m
-                    klam_m = 300/qa.convert(model_center,'GHz')['value']
-                    pl.plot(rawdata[0,]/klam_m,rawdata[1,]/klam_m,'b,')
-                    pl.plot(-rawdata[0,]/klam_m,-rawdata[1,]/klam_m,'b,')
-                    ax = pl.gca()
-                    ax.yaxis.LABELPAD = -4
-                    pl.xlabel('u[klambda]',fontsize='x-small')
-                    pl.ylabel('v[klambda]',fontsize='x-small')
-                    pl.axis('equal')
-                    # Add zero-spacing (single dish) if not yet plotted
-                    if predict_sd and not util.ismstp(msfile,halt=False):
-                        pl.plot([0.],[0.],'r,')
-                    util.nextfig()
-
-                if showpsf:
-                    pixsize = (qa.convert(qa.quantity(model_cell[0]),'arcsec')['value'])
-                    if image: 
-                        psfim = imagename + ".psf"
-                    else:
-                        psfim = project + ".quick.psf"
-                        if not quickpsf_current:
-                            im.open(msfile)  
-                            # TODO spectral parms
-                            im.defineimage(cellx=qa.tos(model_cell[0]),nx=max([minimsize,128]))
-                            if os.path.exists(psfim):
-                                shutil.rmtree(psfim)
-                            im.approximatepsf(psf=psfim)
-                            # beam is set above (even in "analyze" only)
-                            # note that if image, beam has fields 'major' whereas if not, it 
-                            # has fields like 'bmaj'.  
-                            # beam=im.fitpsf(psf=psfim)  
-                            im.done()
-                    ia.open(psfim)            
-                    beamcs = ia.coordsys()
-                    beam_array = ia.getchunk(axes=[beamcs.findcoordinate("spectral")['pixel'],beamcs.findcoordinate("stokes")['pixel']],dropdeg=True)
-                    nn = beam_array.shape
-                    xextent = nn[0]*pixsize*0.5
-                    xextent = [xextent,-xextent]
-                    yextent = nn[1]*pixsize*0.5
-                    yextent = [-yextent,yextent]
-                    flipped_array = beam_array.transpose()
-                    ttrans_array = flipped_array.tolist()
-                    ttrans_array.reverse()
-                    pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
-                    pl.title(psfim,fontsize="x-small")
-                    b = qa.convert(beam['major'],'arcsec')['value']
-                    pl.xlim([-3*b,3*b])
-                    pl.ylim([-3*b,3*b])
-                    ax = pl.gca()
-                    pl.text(0.05,0.95,"bmaj=%7.1e\nbmin=%7.1e" % (beam['major']['value'],beam['minor']['value']),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
-                    ia.done()
-                    util.nextfig()
-
-                disprange = []  # first plot will define range
-                if showmodel:
-                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange)
-                    util.nextfig()
-
-                if showconvolved:
-                    discard = util.statim(modelflat+".regrid.conv")
-                    # if disprange gets set here, it'll be Jy/bm
-                    util.nextfig()
-                
-                if showclean:
-                    # own scaling because of DC/zero spacing offset
-                    discard = util.statim(imagename+".image.flat")
-                    util.nextfig()
-
-                if showresidual:
-                    # it gets its own scaling
-                    discard = util.statim(imagename+".residual.flat")
-                    util.nextfig()
-
-                if showdifference:
-                    # it gets its own scaling.
-                    discard = util.statim(imagename+".diff")
-                    util.nextfig()
-
-                if showfidelity:
-                    # it gets its own scaling.
-                    discard = util.statim(imagename+".fidelity")
-                    util.nextfig()
-
-                util.endfig(show=grscreen,filename=file)
-            else:
-                sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
-                # if not displaying still print stats:
-                # 20100505 ia.stats changed to return Jy/bm:
-                msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
-                    str(sim_rms)+" Jy/bm",origin="analysis")
-                msg('Simulation max: '+str(sim_max/bmarea)+" Jy/pix = "+
-                    str(sim_max)+" Jy/bm",origin="analysis")
-                #msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
-                #    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
-                #msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
-                #    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
-                msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
-
-
-
         # cleanup - delete newmodel, newmodel.flat etc
 #        if os.path.exists(modelflat):
 #            shutil.rmtree(modelflat)  
         if os.path.exists(modelflat+".regrid"):
             shutil.rmtree(modelflat+".regrid")  
-        if os.path.exists(imagename+".image.flat"):
-            shutil.rmtree(imagename+".image.flat")  
-        if os.path.exists(imagename+".residual.flat"):
-            shutil.rmtree(imagename+".residual.flat")  
-        if os.path.exists(imagename+".flux"):
-            shutil.rmtree(imagename+".flux")  
-        absdiff = imagename + '.absdiff'        
-        if os.path.exists(absdiff):
-            shutil.rmtree(absdiff)   
-        absconv = imagename + '.absconv'        
-        if os.path.exists(absconv):
-            shutil.rmtree(absconv)  
-#        if os.path.exists(imagename+".diff"):
-#            shutil.rmtree(imagename+".diff")  
         if os.path.exists(fileroot+"/"+project+".noisy.T.cal"):
             shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
-        if os.path.exists(imagename+".quick.psf") and os.path.exists(imagename+".psf"):
-            shutil.rmtree(imagename+".quick.psf")  
-
 
     except TypeError, e:
         msg("task_simdata -- TypeError: %s" % e,priority="error")

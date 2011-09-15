@@ -25,7 +25,7 @@
 //#
 //# $Id: $
 
-#include <imageanalysis/ImageAnalysis/ImageReorderer.h>
+#include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 
 #include <casa/OS/Directory.h>
 #include <casa/OS/EnvVar.h>
@@ -48,7 +48,7 @@ void testException(
 ) {
 	writeTestString(test);
 	try {
-		ImageReorderer reorderer(image.get(), order, outname);
+		ImageTransposer reorderer(image.get(), order, outname);
 		// should not get here, fail if we do.
 		AlwaysAssert(false, AipsError);
 	}
@@ -61,7 +61,7 @@ void testException(
 ) {
 	writeTestString(test);
 	try {
-		ImageReorderer reorderer(image.get(), order, outname);
+		ImageTransposer reorderer(image.get(), order, outname);
 		// should not get here, fail if we do.
 		AlwaysAssert(false, AipsError);
 	}
@@ -74,7 +74,7 @@ void testException(
 ) {
 	writeTestString(test);
 	try {
-		ImageReorderer reorderer(image.get(), order, outname);
+		ImageTransposer reorderer(image.get(), order, outname);
 		// should not get here, fail if we do.
 		AlwaysAssert(false, AipsError);
 	}
@@ -180,9 +180,6 @@ int main() {
 	Bool ok = True;
 	try {
 		testException(
-			"test no specified output image will throw an exception", goodInputImage, "", ""
-		);
-		testException(
 			"test non-writable output image will throw an exception",
 			goodInputImage, "012", "/x.im"
 		);
@@ -253,7 +250,7 @@ int main() {
 		{
 			writeTestString("test no reordering using string of digits");
 			String outname = dirName + "/reorder_012_out.im";
-			ImageReorderer reorderer(goodInputImage.get(), "012", outname);
+			ImageTransposer reorderer(goodInputImage.get(), "012", outname);
 			reorderer.transpose();
 			testNoReorder(goodInputImage, outname);
 		}
@@ -261,7 +258,7 @@ int main() {
 		{
 			writeTestString("test \"201\" reordering using order string");
 			String outname = dirName +  "/reorder_201_out.im";
-			ImageReorderer reorderer(goodInputImage.get(), "201", outname);
+			ImageTransposer reorderer(goodInputImage.get(), "201", outname);
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
@@ -269,7 +266,7 @@ int main() {
 		{
 			writeTestString("test no reordering using order int");
 			String outname = dirName + "/reorder_12_out.im";
-			ImageReorderer reorderer(goodInputImage.get(), 12, outname);
+			ImageTransposer reorderer(goodInputImage.get(), 12, outname);
 			reorderer.transpose();
 			testNoReorder(goodInputImage, outname);
 		}
@@ -277,7 +274,7 @@ int main() {
 		{
 			writeTestString("test reordering using order int");
 			String outname = dirName +  "/reorder_201_x_out.im";
-			ImageReorderer reorderer(goodInputImage.get(), "201", outname);
+			ImageTransposer reorderer(goodInputImage.get(), "201", outname);
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
@@ -289,7 +286,7 @@ int main() {
 			order[0] = "r";
 			order[1] = "d";
 			order[2] = "f";
-			ImageReorderer reorderer(goodInputImage.get(), order, outname);
+			ImageTransposer reorderer(goodInputImage.get(), order, outname);
 			reorderer.transpose();
 			testNoReorder(goodInputImage, outname);
 		}
@@ -305,7 +302,7 @@ int main() {
 			ostream.str("");
 			ostream << "test " << order << " reordering";
 			writeTestString(ostream.str());
-			ImageReorderer reorderer(goodInputImage.get(), order, outname);
+			ImageTransposer reorderer(goodInputImage.get(), order, outname);
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}
@@ -321,7 +318,7 @@ int main() {
 			ostream.str("");
 			ostream << "test " << order << " reordering";
 			writeTestString(ostream.str());
-			ImageReorderer reorderer(goodInputImage.get(), order, outname);
+			ImageTransposer reorderer(goodInputImage.get(), order, outname);
 			reorderer.transpose();
 			test201Reordering(goodInputImage, outname);
 		}

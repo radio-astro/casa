@@ -147,9 +147,10 @@ class SubMS
   // start, and step.  It is used elsewhere (i.e. ImagerMultiMS).
   void setmsselect(const String& spw,        const String& field, 
                    const String& baseline,   const String& scan,
-                   const String& uvrange,    const String& taql,
-                   const Vector<Int>& nchan, const Vector<Int>& start,
-                   const Vector<Int>& step,  const String& subarray);
+                   const String& obs,        const String& uvrange,
+                   const String& taql,       const Vector<Int>& nchan,
+                   const Vector<Int>& start, const Vector<Int>& step,
+                   const String& subarray);
 
   // Select source or field
   Bool selectSource(const Vector<Int>& fieldid);

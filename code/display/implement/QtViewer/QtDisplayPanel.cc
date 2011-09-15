@@ -64,7 +64,8 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		panel_(panel),
 		pd_(0), pc_(0),
 		qdds_(),
-		zoom_(0), panner_(0), crosshair_(0),
+		zoom_(0), panner_(0),
+		crosshair_(0), ocrosshair_(0),
 		rtregion_(0), ortregion_(0),
 		elregion_(0), oelregion_(0),
 		ptregion_(0), optregion_(0),
@@ -225,10 +226,10 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   zoom_      = new MWCRTZoomer;       pd_->addTool(ZOOM, zoom_);
   panner_    = new MWCPannerTool;     pd_->addTool(PAN, panner_);
   //crosshair_ = new MWCCrosshairTool;  pd_->addTool(POSITION, crosshair_);
-  crosshair_ = new QtCrossTool;  pd_->addTool(POSITION, crosshair_);
   //ptregion_  = new MWCPTRegion;       pd_->addTool(POLYGON, ptregion_);
   //rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
   if ( new_region_tools ) {
+      crosshair_ = new QtCrossTool(region_source_factory,pd_);  pd_->addTool(POSITION, crosshair_);
       ptregion_  = new QtPolyTool(region_source_factory,pd_);   pd_->addTool(POLYGON, ptregion_);
       rtregion_  = new QtRectTool(region_source_factory,pd_);   pd_->addTool(RECTANGLE, rtregion_);
       elregion_  = new QtEllipseTool(region_source_factory,pd_); pd_->addTool(ELLIPSE, elregion_);
@@ -244,10 +245,15 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
 			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( elregion_, SIGNAL(echoClicked(Record)),
 			  SLOT(clicked(Record)) );
+      connect( crosshair_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
+      connect( crosshair_, SIGNAL(echoClicked(Record)),
+			   SLOT(clicked(Record)) );
   } else {
+      ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POSITION, ocrosshair_);
       optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, optregion_);
       ortregion_  = new QtOldRectTool(pd_);	pd_->addTool(RECTANGLE, ortregion_);
-      oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(RECTANGLE, oelregion_);
+      oelregion_  = new QtOldEllipseTool(pd_);	pd_->addTool(ELLIPSE, oelregion_);
       connect( ortregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
 			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
       connect( ortregion_, SIGNAL(echoClicked(Record)),
@@ -413,7 +419,10 @@ void QtDisplayPanel::resetPTRegion()  {
 
 void QtDisplayPanel::resetZoomer()    { zoom_->reset();  }
 
-void QtDisplayPanel::resetCrosshair() { crosshair_->reset();  }
+void QtDisplayPanel::resetCrosshair() {
+    if ( crosshair_ ) crosshair_->reset();
+    if ( ocrosshair_ ) ocrosshair_->reset();
+}
 
 void QtDisplayPanel::resetPolyline()  { polyline_->reset();  }
 

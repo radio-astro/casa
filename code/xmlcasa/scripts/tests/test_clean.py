@@ -417,7 +417,19 @@ class clean_test1(unittest.TestCase):
                         "mask mismatch for applying a wider chan. range mask to narrower chan. range clean")
         self.assertTrue(self.compareimages(self.img+'.wide.mask', self.img+'.ref.mask'), 
                         "mask mismatch for applying a narrower chan. range mask to wider chan. range clean")
- 
+
+    def test45(self):
+        """Clean 45: Test selection of obs ID 0 (present)"""
+        self.res = clean(vis=self.msfile, imagename=self.img + '0',
+                         selectdata=True, observation='0', niter=10)
+        self.assertTrue(os.path.exists(self.img + '0.image'))
+
+    def test46(self):
+        """Clean 46: Test selection of obs ID 2 (absent)"""
+        self.res = clean(vis=self.msfile, imagename=self.img + '2',
+                         selectdata=True, observation='2', niter=10)
+        self.assertFalse(os.path.exists(self.img + '2.image'))
+        
      
 class clean_test2(unittest.TestCase):
     
@@ -571,6 +583,7 @@ class clean_multims_test(unittest.TestCase):
     msfiles = ['point_spw1.ms', 'point_spw2.ms']
     res = None
     img = 'cleantest_multims'
+    mask = 'multims-mfs.topo.mask'
 
     def setUp(self):
         self.res = None
@@ -587,8 +600,9 @@ class clean_multims_test(unittest.TestCase):
           if (os.path.exists(msfile)):
             os.system('rm -rf ' + msfile)
 
-        for imext in ['.image','.model','.residual','.psf']:
-            shutil.rmtree(self.img+imext)
+        for imext in ['.image','.model','.residual','.psf','.flux','.mask']:
+            if (os.path.exists(self.img+imext)):
+                shutil.rmtree(self.img+imext)
 
     def test_multims1(self):
         '''Clean multims test1: Test two cases with wrong numbers of spw or field given)'''
@@ -661,6 +675,27 @@ class clean_multims_test(unittest.TestCase):
         self.assertTrue(imbwrdiff < 1.0e-9)
         self.assertTrue(imfreqrdiff < 1.0e-9)
         self.assertTrue(maxrdiff < 0.01)
+
+    def test_multims5(self):
+        '''Clean multims test5: Test multiple MSes input with a mask in different spectral frame (mfs mode)'''
+        # expected reference values on r.16164
+        refimbandw=1.0e+09
+        refimmax=1.19606661797
+        refimfreq=1.49e+09
+
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        if not os.path.exists(self.mask):
+            shutil.copytree(datapath+self.mask, self.mask)
+        self.res=clean(vis=self.msfiles,mode='mfs', spw='', field='',imsize=[200],
+                       cell=['4.0arcsec', '4.0arcsec'], imagename=self.img, mask=self.mask)
+        self.assertEqual(self.res,None)
+        imhout=imhead(imagename=self.img+'.image',mode='list')
+        imbwrdiff = abs(refimbandw-float(imhout['cdelt4']))/refimbandw
+        imfreqrdiff = abs(refimfreq-float(imhout['crval4']))/refimfreq
+        maxrdiff = abs(refimmax-float(imhout['datamax']))/refimmax
+        # 
+        shutil.rmtree(self.mask)
+        
 
 def suite():
     #return [clean_test1]

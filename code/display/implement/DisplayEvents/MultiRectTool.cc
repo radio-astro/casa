@@ -106,6 +106,7 @@ void MultiRectTool::disable() {
 
 	// start new rectangle
 	start_new_rectangle( wc, x, y );		// enter resizing state
+	refresh( );
 	rectangleReady();
 	return;
     }

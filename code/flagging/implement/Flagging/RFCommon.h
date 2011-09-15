@@ -92,6 +92,7 @@ const char
     RF_INTENT[] = "intent",
     RF_SCAN[]    = "scan",
     RF_ARRAY[]   = "array",
+    RF_OBSERVATION[] = "observation",
     RF_FEED[]    = "feed",
     RF_UVRANGE[] = "uvrange",
     RF_DIAMETER[] = "diameter",

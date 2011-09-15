@@ -31,6 +31,7 @@
 #include <display/region/QtRectangle.qo.h>
 #include <display/region/QtPolygon.qo.h>
 #include <display/region/QtEllipse.qo.h>
+#include <display/region/QtPoint.qo.h>
 
 namespace casa {
     namespace viewer {
@@ -51,6 +52,10 @@ namespace casa {
 
 	memory::cptr<Rectangle> QtRegionSource::ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    return memory::cptr<Rectangle>(new QtEllipse( this, wc, blc_x, blc_y, trc_x, trc_y ));
+	}
+
+	memory::cptr<Rectangle> QtRegionSource::point( WorldCanvas *wc, double x, double y ) {
+	    return memory::cptr<Rectangle>(new QtPoint( this, wc, x, y ));
 	}
 
 	QtRegionDock *QtRegionSource::dock( ) { return panel_->regionDock( ); }

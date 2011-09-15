@@ -6,10 +6,11 @@ im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp=gentools()
 #import pdb
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
-          uvrange, antenna, scan, mode, gridmode, wprojplanes, facets, cfcache,
-          painc, epjtable, interpolation, niter, gain, threshold, psfmode,
-          imagermode, ftmachine, mosweight, scaletype, multiscale, negcomponent,
-          smallscalebias, interactive, mask, nchan, start, width, outframe,
+          uvrange, antenna, scan, observation, mode, gridmode,
+          wprojplanes, facets, cfcache, painc, epjtable, interpolation,
+          niter, gain, threshold, psfmode, imagermode, ftmachine, mosweight,
+          scaletype, multiscale, negcomponent, smallscalebias,
+          interactive, mask, nchan, start, width, outframe,
           veltype, imsize, cell, phasecenter, restfreq, stokes, weighting,
           robust, uvtaper, outertaper, innertaper, modelimage, restoringbeam,
           pbcor, minpb, calready, noise, npixels, npercycle, cyclefactor,
@@ -26,7 +27,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
     #
     #######################################################################  
     #paralist=[vis, imagename,outlierfile, field, spw, selectdata, \
-    #         timerange, uvrange, antenna, scan, mode, gridmode, \
+    #         timerange, uvrange, antenna, scan, observation, mode, gridmode, \
     #         wprojplanes, facets, cfcache, painc, epjtable, \
     #         interpolation, niter, gain, threshold, psfmode, \
     #         imagermode, ftmachine, mosweight, scaletype, multiscale, \
@@ -118,7 +119,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     os.system('rm -rf '+imname+'*')
                     clean(vis=vis,imagename=imname,outlierfile=outlierfile,field=field,
                           spw=spw,selectdata=selectdata,timerange=timerange,uvrange=uvrange,
-                          antenna=antenna,scan=scan,mode=mode,gridmode=gridmode, 
+                          antenna=antenna,scan=scan, observation=str(observation),
+                          mode=mode,gridmode=gridmode, 
                           wprojplanes=wprojplanes,facets=facets,cfcache=cfcache,painc=painc,
                           epjtable=epjtable,interpolation=interpolation,niter=niter,
                           gain=gain,
@@ -190,6 +192,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         uvrange=''
         antenna=''
         scan=''
+        observation = ''
 
     # handle mode='mfs' explicitly
     if (mode=='mfs'):
@@ -264,10 +267,11 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         # make a template cube for interactive chanter=T
         if dochaniter:
             imset.makeTemplateCubes(imagename,outlierfile, field, spw, selectdata,
-                                    timerange, uvrange, antenna, scan, mode, facets, cfcache, 
+                                    timerange, uvrange, antenna, scan, str(observation),
+                                    mode, facets, cfcache, 
                                     interpolation, imagermode, localFTMachine, mosweight, 
-                                    localnchan, localstart, localwidth, outframe, veltype, imsize, cell, 
-                                    phasecenter, restfreq, stokes, weighting,
+                                    localnchan, localstart, localwidth, outframe, veltype,
+                                    imsize, cell,  phasecenter, restfreq, stokes, weighting,
                                     robust, uvtaper, outertaper, innertaper, modelimage, 
                                     restoringbeam, calready, noise, npixels, padding)
 
@@ -345,14 +349,14 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 
                 # combine with the task parameter input
                 if type(imagename) == str:
-                    imageids.append(imagename)
-                    imsizes.append(imsize)
-                    phasecenters.append(phasecenter)
+                    if newformat: 
+                        imageids.append(imagename)
+                        imsizes.append(imsize)
+                        phasecenters.append(phasecenter)
                 else:
                     imageids=imagename
                     imsizes=imsize
                     phasecenters=phasecenter
-
                 # for mask, modelimage  task input 
                 # turn them into list or list of list 
                 if type(mask) !=  list:
@@ -368,8 +372,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     imageids.append(name)    
                     imsizes.append(f_imsizes[indx])    
                     phasecenters.append(f_phasecenters[indx])    
-                    mask.append(f_masks[indx])
-                    modelimage.append(f_modelimages[indx])
+                    if newformat:
+                        mask.append(f_masks[indx])
+                        modelimage.append(f_modelimages[indx])
+                    else:
+                        # append empty string list to match the size of modelimage list
+                        if indx!=0:
+                            modelimage.append(f_modelimages[indx])
                     
                 nfield=len(imageids)
                 if nfield > 1:
@@ -389,6 +398,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                  imsizes=imsize
                  phasecenters=phasecenter
                  imageids=imagename
+           
 #
 # Moved getAlgorithm() to here so that multifield is set using outlier file.
 #
@@ -424,7 +434,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             # data selection only 
             imset.datsel(field=field, spw=spw,
                          timerange=timerange, uvrange=uvrange,
-                         antenna=antenna, scan=scan,
+                         antenna=antenna,
+                         scan=scan, observation=str(observation),
                          calready=calready, nchan=visnchan,
                          start=visstart, width=1)
 

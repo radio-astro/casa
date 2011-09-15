@@ -35,6 +35,9 @@
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MDirection.h>
 
+#define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
+	{ fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", __FILE__, __LINE__, #FUNCTION ); return RESULT; }
+
 namespace casa {
 
     class WorldCanvas;
@@ -92,20 +95,20 @@ namespace casa {
 		static bool handleSelected( int v ) { return v & MouseHandle ? true : false; }
 
 		// user specified name
-		virtual const std::string name( ) const = 0;
+		virtual const std::string name( ) const DISPLAY_PURE_VIRTUAL(Region::name,"");
 
-		virtual std::string lineColor( ) const = 0;
-		virtual int lineWidth( ) const = 0;
-		virtual LineStyle lineStyle( ) const = 0;
+		virtual std::string lineColor( ) const DISPLAY_PURE_VIRTUAL(Region::lineColor,"cyan");
+		virtual int lineWidth( ) const DISPLAY_PURE_VIRTUAL(Region::lineWidth,1);
+		virtual LineStyle lineStyle( ) const DISPLAY_PURE_VIRTUAL(Region::lineStyle,SolidLine);
 
 
-		virtual std::string textColor( ) const = 0;
-		virtual std::string textFont( ) const = 0;
-		virtual int textFontSize( ) const = 0;
-		virtual int textFontStyle( ) const = 0;
-		virtual std::string textValue( ) const = 0;
-		virtual TextPosition textPosition( ) const = 0;
-		virtual void textPositionDelta( int &x, int &y ) const = 0;
+		virtual std::string textColor( ) const DISPLAY_PURE_VIRTUAL(Region::textColor,"cyan");
+		virtual std::string textFont( ) const DISPLAY_PURE_VIRTUAL(Region::textFont,"Courier");
+		virtual int textFontSize( ) const DISPLAY_PURE_VIRTUAL(Region::textFontSize,12);
+		virtual int textFontStyle( ) const DISPLAY_PURE_VIRTUAL(Region::textFontStyle,0);
+		virtual std::string textValue( ) const DISPLAY_PURE_VIRTUAL(Region::textValue,"");
+		virtual TextPosition textPosition( ) const DISPLAY_PURE_VIRTUAL(Region::textPosition,BottomText);
+		virtual void textPositionDelta( int &x, int &y ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
 
 		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const;
 		void getPositionString( std::string &x, std::string &y, std::string &angle,
@@ -119,12 +122,12 @@ namespace casa {
 		// multiple images) to be contained in the non-GUI portion of the viewer
 		// hierarchy, but rather it is within the Qt portion... thus this function
 		// to fetch it...   <drs>
-		virtual int numFrames( ) const = 0;
-		virtual void zRange( int &min, int &max ) const = 0;
+		virtual int numFrames( ) const DISPLAY_PURE_VIRTUAL(Region::numFrames,0);
+		virtual void zRange( int &min, int &max ) const DISPLAY_PURE_VIRTUAL(Region::zRange,);
 		int zIndex( ) const;
 		bool regionVisible( ) const { return visible_; }
 
-		virtual ~Region( ){ }
+		virtual ~Region( ) { }
 
 		Region( ) : wc_(0), selected_(false), visible_(true) { }
 		Region( WorldCanvas *wc );
@@ -139,8 +142,8 @@ namespace casa {
 		// duplicate of MultiWCTool::refresh( )
 		void refresh( );
 
-		/* // returns true when refresh is needed */
-		/* virtual bool mouseMovement( int x, int y ) { return false; } */
+		// returns OR'ed set of MouseState...
+		virtual int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
 		typedef ImageStatistics<Float>::stat_list getLayerStats_t;
 		typedef std::list<std::pair<String,memory::cptr<getLayerStats_t> > > StatisticsList;
@@ -148,23 +151,23 @@ namespace casa {
 		virtual void draw( );
 
 		// indicates that region movement requires that the statistcs be updated...
-		virtual void updateStateInfo( bool region_modified ) = 0;
+		virtual void updateStateInfo( bool region_modified ) DISPLAY_PURE_VIRTUAL(Region::updateStateInfo,);
 
 		bool selected( ) const { return selected_; }
 
 		// indicates that the user has selected this rectangle...
 		// ...may need to scroll region dock
-		virtual void selectedInCanvas( ) = 0;
+		virtual void selectedInCanvas( ) DISPLAY_PURE_VIRTUAL(Region::selectedInCanvas,);
 
 		// blank out the statistics for this region
-		virtual void clearStatistics( ) = 0;
+		virtual void clearStatistics( ) DISPLAY_PURE_VIRTUAL(Region::clearStatistics,);
 
-		virtual bool clickWithin( double x, double y ) const = 0;
-		virtual int clickHandle( double x, double y ) const = 0;
+		virtual bool clickWithin( double x, double y ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
+		virtual int clickHandle( double x, double y ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
-		virtual int moveHandle( int handle, double x, double y ) = 0;
-		virtual void move( double dx, double dy ) = 0;
+		virtual int moveHandle( int handle, double x, double y ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
+		virtual void move( double dx, double dy ) DISPLAY_PURE_VIRTUAL(Region::move,);
 
 
 	    protected:
@@ -179,9 +182,10 @@ namespace casa {
 		MDirection::Types current_casa_coordsys( ) const;
 
 		// in "linear" coordinates...
-		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const = 0;
+		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const
+			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
-		virtual void drawRegion( bool selected ) = 0;
+		virtual void drawRegion( bool selected ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );
 
 		LineStyle current_ls;
