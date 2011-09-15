@@ -847,7 +847,6 @@ inline PyObject *map_array( const std::vector<std::string> &vec, const std::vect
 
 #define HANDLE_NUMPY_ARRAY							\
 else if ( pyarray_check(obj) ) {						\
-fprintf (stderr, "*** HANDLE_NUMPY_ARRAY: type is %d && ftn=%d\n", PyArray_TYPE(obj), PyArray_CHKFLAGS(obj,NPY_FORTRAN)); \
     switch ( PyArray_TYPE(obj) ) {						\
     HANDLE_NUMPY_ARRAY_CASE(NPY_BOOL,Bool)					\
     HANDLE_NUMPY_ARRAY_CASE(NPY_BYTE,Int)					\
