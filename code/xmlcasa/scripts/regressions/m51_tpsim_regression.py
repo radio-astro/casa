@@ -51,6 +51,7 @@ observe = True
 antennalist = ''
 refdate='2012/11/21/20:00:00'
 totaltime = '31360s'
+# totaltime = '314s'
 sdantlist = cfgdir+'aca.tp.cfg'
 sdant = 0
 

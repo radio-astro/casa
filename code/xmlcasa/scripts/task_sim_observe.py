@@ -446,20 +446,29 @@ def sim_observe(
             if type(ptgfile) == type([]):
                 ptgfile = ptgfile[0]
             ptgfile = ptgfile.replace('$project',project)
-            if os.path.exists(fileroot+"/"+ptgfile):
-                ptgfile = fileroot + "/" + ptgfile
+            # precedence to ptg file outside the project dir
+            if os.path.exists(ptgfile):
+                shutil.copyfile(ptgfile,fileroot+"/"+project + ".ptg.txt")
+                ptgfile = fileroot + "/" + project + ".ptg.txt"
             else:
-                if os.path.exists(ptgfile):
-                    shutil.copyfile(ptgfile,fileroot+"/"+project + ".ptg.txt")
-                    ptgfile = fileroot + "/" + project + ".ptg.txt"
+                if os.path.exists(fileroot+"/"+ptgfile):
+                    ptgfile = fileroot + "/" + ptgfile
                 else:
                     util.msg("Can't find pointing file "+ptgfile,priority="error")
                     return False
 
             nfld, pointings, etime = util.read_pointings(ptgfile)
+            # if the integration time is a real time quantity
+            if qa.quantity(integration)['unit'] != '':
+                intsec = qa.convert(qa.quantity(integration),"s")['value']
+            else:
+                if len(integration)>0:
+                    intsec = float(integration)
+                else:
+                    intsec = 0
             if max(etime) <= 0:
-                # integration is a scalar in input params
-                etime = qa.convert(qa.quantity(integration),"s")['value']
+                # integration is a string in input params
+                etime = intsec
                 # make etime into an array
                 etime = etime + pl.zeros(nfld)
             # etimes determine stop/start i.e. the scan
@@ -468,9 +477,9 @@ def sim_observe(
             # expects that the cal is separate, and this is just one round of the mosaic
             # furthermore, the cal will use _integration_ from the inputs, and that
             # needs to be less than the min etime:
-            if min(etime) < integration:
-                integration = min(etime)
-                msg("Setting integration to "+str(integration)+"s to match the shortest time in the pointing file.",priority="warn")
+            if min(etime) < intsec:
+                integration = str(min(etime))+"s"
+                msg("Setting integration to "+integration+" to match the shortest time in the pointing file.",priority="warn")
 
 
         # find imcenter - phase center

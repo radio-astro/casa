@@ -309,6 +309,8 @@ it'll do them for the same amount of time -->
 	</equals>
 	<equals type="bool" value="False">
 	  <default param="ptgfile"><value type="string">$project.ptg.txt</value></default>
+	  <default param="integration"><value type="string">10s</value>
+	  <description>integration time (see below)</description></default>
 	</equals>
       </when>
       <!-- **********************************************************  -->
@@ -398,8 +400,8 @@ mosaic simulation task:
     integration --- Time interval for each integration e.g '10s'
        * NOTE: to simulate a "scan" longer than one integration, use 
          setpointings to generate a pointing file, and then edit the 
-         file to repeat each pointing several times before moving to the 
-         next point.
+         file to increase the time at each point to be larger than 
+         the parameter integration time.
     direction -- mosaic center direction e.g 'J2000 19h00m00 -40d00m00'
        * can optionally be a list of pointings
        * otherwise simdata will pack mapsize according to maptype
