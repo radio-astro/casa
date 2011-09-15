@@ -660,6 +660,9 @@ class cleanhelper:
         if (not hasattr(maskobject, '__len__')) \
            or (len(maskobject) == 0) or (maskobject == ['']):
             return
+        # for empty maskobject list 
+        if all([msk==[''] or msk==[] for msk in maskobject]):
+            return
         # determine number of input elements
         if (type(maskobject)==str):
             maskobject=[maskobject]
@@ -681,6 +684,7 @@ class cleanhelper:
             for k in range(len(self.imageids)):
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
+
         # initialize maskimages
         # --- use outframe or dataframe for mask creation
         ##### duplicating with makemasimage?
@@ -776,7 +780,6 @@ class cleanhelper:
         for maskid in range(len(self.maskimages)):
             self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
             self.outputmask=''
-            inoutputmask=self.maskimages[self.imagelist[maskid]]
             self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
             imagename=self.imagelist[maskid], maskobject=updatedmaskobject[maskid], slice=slice)
 
