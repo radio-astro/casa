@@ -328,7 +328,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				datetime.replace(25+timeref.length(),1,")");
 				os << datetime;
 				os << "Scan  FldId FieldName "
-				<<"          nVis   Int(s)   SpwIds      ScanIntent" << endl;
+				<<"          nRows   Int(s)   SpwIds      ScanIntent" << endl;
 
 				/* CAS-2751. Sort the table by scan then field (not timestamp)
 				 * so that scans are not listed for every different DDID
