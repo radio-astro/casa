@@ -345,7 +345,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     chanMap.resize();
     
-    //  cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
+    cout << "VBSPW " << vb.spectralWindow() << "  " << multiChanMap_p[vb.spectralWindow()] << endl;
     chanMap=multiChanMap_p[vb.spectralWindow()];
     if(chanMap.nelements() == 0)
       chanMap=Vector<Int>(vb.frequency().nelements(), -1);
@@ -1243,7 +1243,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // hoping the user made the right choice
     if (!anymatchChan && !anyTopo){
       logIO() << "No overlap in frequency between image channels and selected data found "
-	      << " Check your data selection and image parameters" 
+ 	      << " Check your data selection and image parameters [" << anyTopo << "]"
 	      << LogIO::EXCEPTION;
       return False;
       
