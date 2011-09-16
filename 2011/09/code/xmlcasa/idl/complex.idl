@@ -1,0 +1,13 @@
+#ifndef casa_complex_idl__
+#define casa_complex_idl__
+
+module casac {
+
+    struct complex {
+        double re;
+        double im;
+    };
+
+};
+
+#endif

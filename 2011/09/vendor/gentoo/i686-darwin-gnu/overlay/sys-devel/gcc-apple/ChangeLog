@@ -1,0 +1,170 @@
+# ChangeLog for sys-devel/gcc-apple
+# Copyright 1999-2009 Gentoo Foundation; Distributed under the GPL v2
+# $Id: ChangeLog 37014 2009-01-18 09:40:15Z grobian $
+
+  18 Jan 2009; Fabian Groffen <grobian@gentoo.org>
+  -gcc-apple-4.0.1_p5363-r1.ebuild, -gcc-apple-4.0.1_p5465-r1.ebuild,
+  -gcc-apple-4.0.1_p5484.ebuild, -gcc-apple-4.0.1_p5488.ebuild,
+  -gcc-apple-4.2.1_p5564.ebuild:
+  Remove old
+
+  30 Dec 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.2.1_p5564.ebuild, gcc-apple-4.2.1_p5566.ebuild:
+  Fix nasty problem caught by fafhrd in #gentoo-prefix: don't overwrite
+  /dev/null, that truely ain't cool
+
+*gcc-apple-4.2.1_p5566 (21 Dec 2008)
+*gcc-apple-4.0.1_p5490 (21 Dec 2008)
+
+  21 Dec 2008; Fabian Groffen <grobian@gentoo.org>
+  +gcc-apple-4.0.1_p5490.ebuild, +gcc-apple-4.2.1_p5566.ebuild:
+  Version bump to Xcode Tools 3.1.2
+
+  16 Nov 2008; Fabian Groffen <grobian@gentoo.org>
+  files/gcc-apple-4.2.1-dsymutil.patch:
+  Remove stray }, according to John Gibson on alt ML
+
+  10 Nov 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.2.1_p5564.ebuild:
+  Add fix from David Hubbard to get around a bootstrapping problem on 10.4/x86
+
+  09 Nov 2008; Fabian Groffen <grobian@gentoo.org>
+  +files/gcc-apple-4.2.1-dsymutil.patch, gcc-apple-4.2.1_p5564.ebuild:
+  Add patch for 10.4/x86 peeps, thanks David Hubbard for the research
+
+  12 Oct 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5465-r1.ebuild, gcc-apple-4.0.1_p5484.ebuild,
+  gcc-apple-4.0.1_p5488.ebuild, gcc-apple-4.2.1_p5564.ebuild:
+  Fix double prefix errors, bad me
+
+  12 Oct 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5465-r1.ebuild, gcc-apple-4.0.1_p5484.ebuild,
+  gcc-apple-4.0.1_p5488.ebuild, gcc-apple-4.2.1_p5564.ebuild:
+  Don't remove install-tools, it causes hickups
+
+*gcc-apple-4.0.1_p5488 (12 Oct 2008)
+
+  12 Oct 2008; Fabian Groffen <grobian@gentoo.org>
+  +gcc-apple-4.0.1_p5488.ebuild:
+  Bump 4.0.1 to revision of iPhone 2.1 + SDK
+
+  11 Oct 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5465-r1.ebuild, gcc-apple-4.0.1_p5484.ebuild,
+  gcc-apple-4.2.1_p5564.ebuild:
+  Align with toolchain.eclass, do create versioned links, e.g. gcc-4.2.1
+
+  08 Oct 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-3.5.0_p3506-r1.ebuild, gcc-apple-4.0.1_p5363-r1.ebuild,
+  gcc-apple-4.0.1_p5465-r1.ebuild, gcc-apple-4.0.1_p5484.ebuild,
+  gcc-apple-4.2.1_p5564.ebuild:
+  Change dep from odcctools to binutils-apple
+
+*gcc-apple-4.2.1_p5564 (21 Aug 2008)
+
+  21 Aug 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5484.ebuild, -gcc-apple-4.2.1_p5553.ebuild,
+  +gcc-apple-4.2.1_p5564.ebuild:
+  Version bump to Xcode Tools 3.1
+
+*gcc-apple-4.0.1_p5484 (20 Jun 2008)
+
+  20 Jun 2008; Fabian Groffen <grobian@gentoo.org>
+  -gcc-apple-4.0.1_p5483.ebuild, +gcc-apple-4.0.1_p5484.ebuild:
+  Bump to iPhone SDK Beta 7
+
+*gcc-apple-4.2.1_p5553 (28 Mar 2008)
+*gcc-apple-4.0.1_p5470 (28 Mar 2008)
+
+  28 Mar 2008; Fabian Groffen <grobian@gentoo.org>
+  files/gcc-apple-4.0.1_p5465-default-altivec.patch,
+  +gcc-apple-4.0.1_p5470.ebuild, +gcc-apple-4.2.1_p5553.ebuild:
+  Bump to Xcode Tools 3.1 Beta version
+
+  07 Mar 2008; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5465-r1.ebuild, -gcc-apple-4.0.1_p5465-r2.ebuild,
+  gcc-apple-4.2.1_p5531.ebuild:
+  Cleaned up latest 4.0.1 and 4.2.1 ebuilds. Don't do multilib any more, its
+  broken by (partially our) design and quite useless.  Removed -r2 as it
+  was not a good idea.
+
+*gcc-apple-4.0.1_p5465-r2 (02 Mar 2008)
+
+  02 Mar 2008; Fabian Groffen <grobian@gentoo.org>
+  +gcc-apple-4.0.1_p5465-r2.ebuild:
+  Add new revision (masked) that puts the libs by itself in usr/lib, which we
+  move out of the way and gcc-config should move back again.
+
+  20 Jan 2008; Elias Pipping <pipping@gentoo.org>
+  files/gcc-apple-4.2.1-texinfo.patch, gcc-apple-4.2.1_p5531.ebuild,
+  gcc-apple-4.2.1_p5531.ebuild:
+  enable manpages while not breaking libgomp
+
+*gcc-apple-4.0.1_p5465-r1 (12 Jan 2008)
+
+  12 Jan 2008; Fabian Groffen <grobian@gentoo.org>
+  +files/gcc-apple-4.0.1_p5465-default-altivec.patch,
+  -files/gcc-apple-5363-native-64bits.patch, -gcc-apple-4.0.1_p5465.ebuild,
+  +gcc-apple-4.0.1_p5465-r1.ebuild:
+  Add a patch to have 10.5's gcc default to AltiVec like 10.4's gcc did, as it
+  causes too much trouble
+
+  09 Nov 2007; Elias Pipping <pipping@gentoo.org>
+  gcc-apple-4.0.1_p5465.ebuild:
+  re-enable multilib on 64bit systems
+
+  06 Nov 2007; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5465.ebuild:
+  Set odcctools dependency to the 10.5 released one for 4.0.1_p5465, otherwise
+  it won't compile.  Marked ~ppc-macos.
+
+  05 Nov 2007; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5363-r1.ebuild, gcc-apple-4.0.1_p5465.ebuild,
+  gcc-apple-4.2.1_p5531.ebuild:
+  Cleaned up ebuilds, keyworded 4.2.1_p5531 ~ppc-macos, compiles on 10.4 after
+  removing any -m* flags.
+
+*gcc-apple-4.2.0_p5531 (02 Nov 2007)
+*gcc-apple-4.0.1_p5465 (02 Nov 2007)
+
+  02 Nov 2007; Fabian Groffen <grobian@gentoo.org>
+  +gcc-apple-4.0.1_p5465.ebuild, +gcc-apple-4.2.0_p5531.ebuild:
+  Adding gcc-apple versions as released in 10.5, both don't compile on 10.4,
+  removed all keywords
+
+  19 Oct 2007; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5363-r1.ebuild:
+  Slight change to make gcc use Darwin libtool also in a cross-compile
+  environment.
+
+  10 Dec 2006; Fabian Groffen <grobian@gentoo.org> +metadata.xml:
+  Add metadata.xml
+
+  24 Nov 2006; Fabian Groffen <grobian@gentoo.org>
+  gcc-apple-4.0.1_p5363-r1.ebuild:
+  Don't install libiberty.a as this prevents installing multiple compilers
+  and isn't stricktly necessary.
+
+*gcc-apple-4.0.1_p5363-r1 (23 Nov 2006)
+*gcc-apple-3.5.0_p3506-r1 (23 Nov 2006)
+
+  23 Nov 2006; Fabian Groffen <grobian@gentoo.org>
+  -gcc-apple-3.3_p1819.ebuild, -gcc-apple-3.5.0_p3506.ebuild,
+  +gcc-apple-3.5.0_p3506-r1.ebuild, -gcc-apple-4.0.1_p5363.ebuild,
+  +gcc-apple-4.0.1_p5363-r1.ebuild:
+  Removed 3.3 as it doesn't compile anyway, fixed 3.5.0 and 4.0.1 to use
+  --enable-version-specific-runtime-libs which installs runtime-libs, such as
+  libstdc++ and libgcc_s into usr/lib/${CHOST}/gcc/${VER}
+
+*gcc-apple-4.0.1_p5363 (10 Nov 2006)
+*gcc-apple-3.5.0_p3506 (10 Nov 2006)
+*gcc-apple-3.3_p1819 (10 Nov 2006)
+
+  10 Nov 2006; Fabian Groffen <grobian@gentoo.org>
+  +files/gcc-apple-5363-native-64bits.patch, +gcc-apple-3.3_p1819.ebuild,
+  +gcc-apple-3.5.0_p3506.ebuild, +gcc-apple-4.0.1_p5363.ebuild,
+  -gcc-apple-5247.ebuild, -gcc-apple-5341.ebuild, -gcc-apple-5341-r2.ebuild,
+  -gcc-apple-5363.ebuild:
+  New organisation of Apple's GCC ebuilds.  Ebuilds now carry the GCC
+  version in their name.  All ebuilds rely on gcc-config, and appropriate
+  slotting is applied.
+

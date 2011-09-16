@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="listobs" category="information">
+	<shortdescription>List data set summary in the logger or in a file</shortdescription>
+	<description>
+       List data set summary in the logger or in a file:
+
+       Lists following properties of a measurement set:
+       scan list, field list, spectral window list with
+       correlators, antenna locations, ms table information.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of input visibility file (MS)</description>
+			<value></value>
+		</param>
+
+		<param type="bool" name="verbose">
+			<description></description>
+			<value>True</value>
+		</param>
+		
+		<param type="string" name="listfile">
+			<description>Name of disk file to write output: \'\'==>to terminal</description>
+			<value></value>
+		</param>
+
+	</input>
+<returns type="void"/>
+
+<example>
+
+       Lists following properties of a measurement set:
+       scan list, field list, spectral window list with
+       correlators, antenna locations, ms table information.
+
+       Keyword arguments:
+       vis -- Name of input visibility file
+               default: none. example: vis='ngc5921.ms'
+       verbose -- level of detail
+             verbose=True: (default); scan and antenna lists
+             verbose=False: less information
+       listfile -- name of disk file to write output.
+               default: None. Example: listfile='list.txt'
+
+
+      The 'Int (s)' column is the average of the MS's INTERVAL column
+      for each scan, so in a time-averaged MS 'Int' = 9.83s more likely
+      means 5 10s integrations and 1 9s integration (timebin) than 6
+      9.83s integrations. 
+ </example>
+ </task>
+ </casaxml>
