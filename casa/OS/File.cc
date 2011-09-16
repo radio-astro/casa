@@ -31,7 +31,7 @@
 #include <casa/OS/SymLink.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions.h>
-
+#include <casa/Logging/LogIO.h>
 #include <unistd.h>                 // needed for access, etc.
 #include <sys/stat.h>               // needed for lstat or lstat64
 #include <utime.h>                  // needed for utimbuf
@@ -183,7 +183,26 @@ Bool File::exists() const
     // The function access always substitutes symlinks.
     // Therefore use lstat instead.
     struct fileSTAT buf;
-    return  (mylstat((itsPath.expandedName()).chars(), &buf) == 0);
+    int status = mylstat((itsPath.expandedName()).chars(), &buf);
+
+    if (status != 0 && errno != ENOENT){
+        LogIO logIo (LogOrigin ("File", "exists"));
+
+        logIo << LogIO::WARN;
+
+        logIo << "***************************************\n";
+        logIo << "***************************************\n";
+
+        logIo << "lstat failed for " << itsPath.expandedName()
+              << ": errno=" << errno << "'" << strerror (errno)
+              << "'\n";
+
+        logIo << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+        logIo << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+
+        logIo << LogIO::POST;
+    }
+    return status == 0;
 }
 
 Bool File::isReadable() const
