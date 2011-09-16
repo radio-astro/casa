@@ -72,6 +72,7 @@
 
 using asdm::ASDM;
 using asdm::TagType;
+using namespace asdm;
 using namespace asdmbinaries;
 
 namespace casa {
