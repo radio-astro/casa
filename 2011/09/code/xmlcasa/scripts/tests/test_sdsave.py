@@ -264,7 +264,11 @@ class sdsave_test2(unittest.TestCase,sdsave_unittest_base):
         self.res=sdsave(infile=self.infile,outfile=self.outfile3,outform='ASCII')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare(self.outfile3))
-        
+
+    def test204(self):
+        """Test 204: test failure case that unexisting antenna is specified"""
+        self.res=sdsave(infile=self.infile,antenna='ROSWELL',outfile=self.outfile0,outform='ASAP')
+        self.assertFalse(self.res,False)
 
 ###
 # Test to read ATNF SDFITS and write various types of format

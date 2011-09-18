@@ -2229,7 +2229,6 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    os << "About to open model " << model+1 << " named "
 	       << image(model) << LogIO::POST;
 	    images_p[model]=new PagedImage<Float>(image(model));
-
 	    AlwaysAssert(images_p[model], AipsError);
 	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
@@ -2240,6 +2239,23 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	      info.define("distance", distance_p[nField-1].get("m").getValue());
 	      images_p[model]->setMiscInfo(info);
 	    }
+
+	    // FTMachine only works in Hz and LSRK, so 
+	    CoordinateSystem cs = images_p[model]->coordinates();
+	    String errorMsg;
+	    CoordinateUtil::setSpectralConversion(errorMsg,cs,MFrequency::showType(MFrequency::LSRK));
+	    Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
+	    AlwaysAssert(spectralIndex>=0, AipsError);
+	    SpectralCoordinate spectralCoord=cs.spectralCoordinate(spectralIndex);
+	    Vector<String> units(1); units = "Hz";
+	    // doesn't work: cs.spectralCoordinate(spectralIndex).setWorldAxisUnits(units);	
+	    spectralCoord.setWorldAxisUnits(units);
+	    // put spectralCoord back into cs
+	    cs.replaceCoordinate(spectralCoord,spectralIndex);
+	    // and cs into image
+	    images_p[model]->setCoordinateInfo(cs);
+
+
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
 	      return False;
@@ -2383,6 +2399,12 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       }
     }
     AlwaysAssert(ft_p, AipsError);
+
+    // do we need to tell ftmachine about the transformations in model images above?
+    Vector<Int> dataspectralwindowids_p;
+    Bool freqFrameValid_p = True;
+    ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+
     
     se_p = new SkyEquation ( *sm_p, *vs_p, *ft_p, *cft_p );
     

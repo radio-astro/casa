@@ -342,7 +342,7 @@ casa_add_library( alma_v3
   implement/Enumtcl/WindowFunction.cc
   implement/Enumtcl/WeightType.cc
   implement/Enumtcl/WVRMethod.cc
-#  implement/MS2ASDM/MS2ASDM.cc
+  implement/MS2ASDM/MS2ASDM.cc
   )
 
 casa_add_executable( alma_v3 asdm2MS_v3 
@@ -355,6 +355,6 @@ casa_add_executable( alma_v3 asdm2MS_v3
   apps/asdm2MS_v3/UvwCoords.cc
   )
 
-# casa_add_executable( alma_v3 MS2asdm_v3
-#   apps/MS2asdm_v3/MS2asdm_v3.cc 
-#   )
+casa_add_executable( alma_v3 MS2asdm_v3
+  apps/MS2asdm_v3/MS2asdm_v3.cc 
+  )
