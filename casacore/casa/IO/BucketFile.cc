@@ -31,6 +31,7 @@
 #include <casa/IO/BucketFile.h>
 #include <casa/IO/MMapfdIO.h>
 #include <casa/IO/LargeFilebufIO.h>
+#include <casa/Logging/LogIO.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/DOos.h>
 #include <casa/Utilities/Assert.h>
@@ -199,10 +200,33 @@ Int64 BucketFile::fileSize () const
 {
     // If a buffered file is used, seek in there. Otherwise its internal
     // offset is wrong.
+
+    Int64 size;
     if (bufferedFile_p != 0) {
-        return bufferedFile_p->seek (0, ByteIO::End);
+        size = bufferedFile_p->seek (0, ByteIO::End);
     }
-    return ::traceLSEEK (fd_p, 0, SEEK_END);
+    else{
+        size = ::traceLSEEK (fd_p, 0, SEEK_END);
+    }
+
+    if (size < 0){
+        LogIO logIo (LogOrigin ("BucketFile", "fileSize"));
+
+        logIo << LogIO::WARN;
+
+        logIo << "***************************************\n";
+        logIo << "***************************************\n";
+
+        logIo << "lseek failed for " << name() << ": errno=" << errno << "'" << strerror (errno)
+              << "'\n";
+
+        logIo << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+        logIo << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+
+        logIo << LogIO::POST;
+    }
+
+    return size;
 }
 
 } //# NAMESPACE CASA - END
