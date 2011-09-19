@@ -814,12 +814,15 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 								majFit, minFit, paFit, fitSuccess,
 								*_log, sourceIn, beam, False
 							);
+							while (paFit.getValue() < 0) {
+								paFit += Quantity(180, "deg");
+							}
 							if (fitSuccess) {
 								Quantity errMaj = bestFit[0] - majFit;
 								errMaj.convert(emaj.getUnit());
 								Quantity errMin = bestFit[1] - minFit;
 								errMin.convert(emin.getUnit());
-								Quantity errPA = bestFit[2] - paFit;
+								Quantity errPA = abs(bestFit[2] - paFit);
 								errPA.convert("deg");
 								errPA.setValue(fmod(errPA.getValue(), 180.0));
 								errPA.convert(epa.getUnit());
