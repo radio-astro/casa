@@ -399,6 +399,9 @@ StateRow* StateTable::lookup(CalibrationDeviceMod::CalibrationDevice calDeviceNa
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::StateTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

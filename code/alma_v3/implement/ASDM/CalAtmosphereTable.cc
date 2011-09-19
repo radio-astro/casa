@@ -622,6 +622,9 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalAtmosphereTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

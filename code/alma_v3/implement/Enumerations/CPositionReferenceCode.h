@@ -78,8 +78,6 @@ namespace PositionReferenceCodeMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration PositionReferenceCode.
   * 
@@ -116,7 +114,7 @@ class CPositionReferenceCode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -170,8 +168,8 @@ class CPositionReferenceCode {
     CPositionReferenceCode(const CPositionReferenceCode&);
     CPositionReferenceCode& operator=(const CPositionReferenceCode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

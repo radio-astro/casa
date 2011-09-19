@@ -438,6 +438,9 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FocusTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

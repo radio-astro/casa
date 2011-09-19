@@ -34,6 +34,19 @@
 #include <algorithm> //required for std::swap
 #include <iostream>
 
+#include <libxml/xmlmemory.h>
+#include <libxml/debugXML.h>
+#include <libxml/HTMLtree.h>
+#include <libxml/xmlIO.h>
+#include <libxml/parser.h>
+#include <libxml/xinclude.h>
+#include <libxml/catalog.h>
+
+#include <libxslt/xslt.h>
+#include <libxslt/xsltInternals.h>
+#include <libxslt/transform.h>
+#include <libxslt/xsltutils.h>
+
 using namespace std;
 
 using namespace boost::filesystem;
@@ -147,9 +160,15 @@ namespace asdm {
     return result;
   }
 
+  ASDMUtilsException::ASDMUtilsException():message("ASDMUtilsException:") {;}
+
+  ASDMUtilsException::ASDMUtilsException(const string & message): message("ASDMUtilsException:" + message) {;}   
+
+  const string& ASDMUtilsException::getMessage() { return message; }
+
   ASDMUtils::DotXMLFilter::DotXMLFilter(vector<string>& filenames) {this->filenames = &filenames;}
+
   void ASDMUtils::DotXMLFilter::operator()(directory_entry& p) {
-    cout << "Entering () with path = " << p.string() << endl;
     if (!extension(p).compare(".xml")) {
       filenames->push_back(p.string());
     }
@@ -165,8 +184,8 @@ namespace asdm {
     string evlaValidNames_a[] = {"EVLA"};
     evlaValidNames = set<string>(evlaValidNames_a, evlaValidNames_a + 1);
 
-    string almaValidNames_a[] = {"ALMA", "AOS", "OSF"};
-    almaValidNames = set<string>(almaValidNames_a, almaValidNames_a + 3);
+    string almaValidNames_a[] = {"ALMA", "AOS", "OSF", "IRAM_PDB"};
+    almaValidNames = set<string>(almaValidNames_a, almaValidNames_a + 4);
 
     filenameOfV2V3xslTransform[ASDMUtils::ALMA]    = "sdm-v2v3-alma.xsl";
     filenameOfV2V3xslTransform[ASDMUtils::EVLA]    = "sdm-v2v3-evla.xsl";
@@ -180,33 +199,83 @@ namespace asdm {
   }
 
   string ASDMUtils::version(const string& asdmPath) {
+
+    string result;
+
     string ASDMPath = trim_copy(asdmPath);
     if (!ends_with(ASDMPath, "/")) ASDMPath+="/";
     ASDMPath += "ASDM.xml";
 
     // Does ASDMPath exist ?
     if (!exists(path(ASDMPath))) {
-      cout << "Could not find a file 'ASDM.xml' in " << asdmPath << "'." << endl;
-      exit(1);
+      throw ASDMUtilsException("File not found '"+asdmPath+"'.");
     }
 
     // Read and parse ASDM.xml
-    xmlDocPtr ASDMdoc = xmlParseFile(ASDMPath.c_str());
+    xmlDocPtr ASDMDoc = xmlParseFile(ASDMPath.c_str());
   
-    if (ASDMdoc == NULL ) {
-      fprintf(stderr,"Document not parsed successfully. \n");
-      exit(1);
+    if (ASDMDoc == NULL ) {
+      throw ASDMUtilsException("Error while parsing '"+ASDMPath+"'.");
     }
   
-    xmlNodePtr cur = xmlDocGetRootElement(ASDMdoc);
+    /*
+     * Can we find an attribute schemaVersion in the top level element ?
+     */
+    xmlNodePtr cur = xmlDocGetRootElement(ASDMDoc);
     xmlChar* version_ = xmlGetProp(cur, (const xmlChar *) "schemaVersion");
-    if (version_ == NULL) {
-      return "UNKNOWN";
+
+    // Yes ? then return its value.
+    if (version_ != NULL) {
+      result = string((char *) version_);
+      xmlFree(version_);
+      xmlFreeDoc(ASDMDoc);
+      return result;
     }
 
-    string result((char *) version_);
-    xmlFree(version_);
-    return result;
+    // Let's do some housecleaning
+    xmlFreeDoc(ASDMDoc);
+
+    // No ? then try another approach ... Can we find a dataUID element in the row elements of the Main table and in such a case
+    // make the assumption that it's a v3 ASDM.
+    string MainPath = trim_copy(asdmPath);
+    if (!ends_with(MainPath, "/")) MainPath+="/";
+    MainPath += "Main.xml";    
+
+    // Does MainPath exist ?
+    if (exists(path(MainPath))) {
+      xmlDocPtr MainDoc =  xmlParseFile(MainPath.c_str());
+  
+      if (MainDoc == NULL ) {
+	throw ASDMUtilsException("Error while parsing '"+MainPath+"'.");
+      }
+
+      // Here we make the reasonable assumption that there will be
+      // row elements (at least one).
+      //
+      // Send an alarm though if no row element is found.
+      xmlNodePtr cur = xmlDocGetRootElement(MainDoc)->xmlChildrenNode;
+      int nRow = 0;
+      while (cur != NULL) {
+	if (!xmlStrcmp(cur->name, (const xmlChar*) "row")) {
+	  nRow++;
+	  string dummy = parseRow(MainDoc, cur, (const xmlChar *) "dataUID");
+	}
+	cur = cur -> next;
+      }
+
+      xmlFreeDoc(MainDoc);      
+      if (nRow == 0) {
+	throw ASDMUtilsException("No 'row' elements present in '"+MainPath+"'.");
+      }
+
+      // Ok we are here and we found a dataUID element on each row of the Main table then
+      // decide that we have a version 3 dataset.
+      //
+      return "3";
+    }
+    
+    // Sadly return UKNOWN.
+    return "UNKNOWN";
   }
 
   string ASDMUtils::parseRow(xmlDocPtr doc, xmlNodePtr node, const xmlChar* childName) {
@@ -221,14 +290,12 @@ namespace asdm {
 	xmlChar* content = xmlNodeListGetString(doc, node->xmlChildrenNode, 1);
 	string result((char *) content);
 	xmlFree(content);
-	return trim_copy(result);
+	return result;
       }
       node = node->next;
     }
-
-    // If we are here , it's because we have not found telescopeName.
-    cout << "Could not find a 'telescopeName' element." << endl;
-    exit(1);
+    // If we are here , it's because we have not found childName as an element in node.
+    throw ASDMUtilsException("Element '"+string((char *)childName)+"' not found.");
   }
  
   vector<string> ASDMUtils::telescopeNames(const string& asdmPath) {
@@ -240,8 +307,7 @@ namespace asdm {
 
     // Does execBlockPath exist ?
     if (!exists(path(execBlockPath))) {
-      cout << "Could not find a file 'ExecBlock.xml' in '" << asdmPath << "'." << endl;
-      exit(1);
+      throw ASDMUtilsException("File not found '"+execBlockPath+"'.");
     }
 
     // Read and parse ExecBlock.xml
@@ -250,19 +316,17 @@ namespace asdm {
 
     execBlockDoc = xmlParseFile(execBlockPath.c_str());
     if (execBlockDoc == NULL) {
-      cout << "'" << execBlockPath << "' was not parsed successfully." << endl;
-      exit (0);
+      throw ASDMUtilsException("Error while parsing '"+execBlockPath+"'.");
     }
 
     cur = xmlDocGetRootElement(execBlockDoc)->xmlChildrenNode;
     while (cur != NULL) {
       if (!xmlStrcmp(cur->name, (const xmlChar*) "row")) {
-	result.push_back(parseRow(execBlockDoc, cur, (const xmlChar *) "telescopeName"));
+	result.push_back(trim_copy(parseRow(execBlockDoc, cur, (const xmlChar *) "telescopeName")));
       }
       cur = cur -> next;
     }
 
-    
     return result;
   }
 
@@ -291,8 +355,6 @@ namespace asdm {
     path p(asdmPath);
     DotXMLFilter dotXMLFilter(result);
     std::for_each(directory_iterator(p), directory_iterator(), dotXMLFilter);
-    //result = dotXMLFilter.xmlFilenames();
-    cout << "size of result " << result.size() << endl;
     return result;
   }
 
@@ -300,7 +362,7 @@ namespace asdm {
 
     char * envVars[] = {"INTROOT", "ACSROOT", "CASAPATH"};
     char * rootDir_p;
-    for (int i = 0; i < sizeof(envVars) ; i++) 
+    for (unsigned int i = 0; i < sizeof(envVars) ; i++) 
       if ((rootDir_p = getenv(envVars[i])) != 0) {
 	string rootPath(rootDir_p);
 	vector<string> rootPathElements;
@@ -324,6 +386,23 @@ namespace asdm {
     return filenameOfV2V3xslTransform[origin];
   }
 
+  ASDMParseOptions::ASDMParseOptions() {
+    origin_		= ASDMUtils::UNKNOWN;
+    detectOrigin_       = true;
+    version_    	= "UNKNOWN";
+    detectVersion_      = true;
+    loadTablesOnDemand_ = true;
+  }
+
+  ASDMParseOptions::~ASDMParseOptions() {;}
+
+  ASDMParseOptions& ASDMParseOptions::asALMA() { origin_ = ASDMUtils::ALMA; detectOrigin_ = false; return *this; }
+  ASDMParseOptions& ASDMParseOptions::asIRAM_PDB() { origin_ = ASDMUtils::ALMA; detectOrigin_ = false; return *this; }
+  ASDMParseOptions& ASDMParseOptions::asEVLA() { origin_ = ASDMUtils::EVLA; detectOrigin_ = false; return *this; }
+  ASDMParseOptions& ASDMParseOptions::asV2() { version_ = "2"; detectVersion_ = false; return *this; }
+  ASDMParseOptions& ASDMParseOptions::asV3() { version_ = "3"; detectVersion_ = false; return *this; }
+  ASDMParseOptions& ASDMParseOptions::loadTablesOnDemand(bool b) { loadTablesOnDemand_ = b;  return *this; }
+
   XSLTransformer::XSLTransformer() : cur(NULL) {
     xmlSubstituteEntitiesDefault(1);
     xmlLoadExtDtdDefaultValue = 1;
@@ -338,8 +417,7 @@ namespace asdm {
     
     cur = xsltParseStylesheetFile((const xmlChar*) xsltPath.c_str());
     if (cur == NULL)
-      cout << "Could not parse the XSL stylecheet contained in '" << xsltPath << "'." << endl;
-    // cout << "XSLTransformer::XSLTransformer(const string& xsltPath) exiting " << endl;
+      throw XSLTransformerException("Failed to  parse the XSL stylecheet contained in '" + xsltPath + "'.");
   }
 
   void XSLTransformer::setTransformation(const string& xsltPath) {
@@ -354,8 +432,7 @@ namespace asdm {
       
     cur = xsltParseStylesheetFile((const xmlChar*) xsltPath.c_str());
     if (cur == NULL)
-      cout << "Could not parse the XSL stylecheet contained in '" << xsltPath << "'." << endl;
-    // cout << "XSLTransformer::setTransformation(const string& xsltPath) exiting " << endl;
+      throw XSLTransformerException("Failed to parse the XSL stylecheet contained in '" + xsltPath + "'." );
   }
 
 
@@ -377,7 +454,7 @@ namespace asdm {
     // cout << "About to read and parse " << xmlPath << endl;
     doc = xmlParseFile(xmlPath.c_str());
     if (doc == NULL) {
-      cout << "Could not parse the XML file '" << xmlPath << "'." << endl;
+      throw XSLTransformerException("Could not parse the XML file '" + xmlPath + "'." );
     }
 
     if (!cur) {
@@ -386,14 +463,14 @@ namespace asdm {
     else {
       res = xsltApplyStylesheet(cur, doc, NULL);
       if ( res == NULL ) {
-	cout << "Could not apply the XSLT tranformation to the XML document contained in '" << xmlPath << "'." << endl;
+	throw XSLTransformerException("Failed to apply the XSLT tranformation to the XML document contained in '" + xmlPath + "'.");
       }
       int status = xsltSaveResultToString(&docTxtPtr,
 					  &docTxtLen,
 					  res,
 					  cur);
       if (status == -1) 
-	cout << "Could not dump the result of the XSL transformation into memory." << endl;
+	throw XSLTransformerException("Could not dump the result of the XSL transformation into memory.");
     }
 
     // cout << "Making a string out of the result of applying the XSL transformation" << endl;

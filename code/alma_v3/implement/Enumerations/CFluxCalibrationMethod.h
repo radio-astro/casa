@@ -71,8 +71,6 @@ namespace FluxCalibrationMethodMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration FluxCalibrationMethod.
   * 
@@ -103,7 +101,7 @@ class CFluxCalibrationMethod {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +155,8 @@ class CFluxCalibrationMethod {
     CFluxCalibrationMethod(const CFluxCalibrationMethod&);
     CFluxCalibrationMethod& operator=(const CFluxCalibrationMethod&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

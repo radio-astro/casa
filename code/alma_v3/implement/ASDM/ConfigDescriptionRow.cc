@@ -110,6 +110,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::ConfigDescriptionRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

@@ -516,6 +516,9 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPositionTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

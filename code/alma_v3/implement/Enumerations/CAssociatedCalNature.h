@@ -67,8 +67,6 @@ namespace AssociatedCalNatureMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration AssociatedCalNature.
   * 
@@ -95,7 +93,7 @@ class CAssociatedCalNature {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -149,8 +147,8 @@ class CAssociatedCalNature {
     CAssociatedCalNature(const CAssociatedCalNature&);
     CAssociatedCalNature& operator=(const CAssociatedCalNature&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

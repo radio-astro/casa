@@ -92,6 +92,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::FieldRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

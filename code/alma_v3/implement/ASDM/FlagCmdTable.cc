@@ -347,6 +347,9 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FlagCmdTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

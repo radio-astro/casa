@@ -445,6 +445,9 @@ CalDataRow* CalDataTable::lookup(ArrayTime startTimeObserved, ArrayTime endTimeO
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalDataTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

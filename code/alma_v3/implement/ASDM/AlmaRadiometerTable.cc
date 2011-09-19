@@ -316,6 +316,9 @@ AlmaRadiometerRow* AlmaRadiometerTable::newRow(AlmaRadiometerRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::AlmaRadiometerTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

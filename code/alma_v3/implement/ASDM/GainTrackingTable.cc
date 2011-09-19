@@ -464,6 +464,9 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::GainTrackingTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

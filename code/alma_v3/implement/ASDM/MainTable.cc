@@ -462,6 +462,9 @@ MainRow* MainTable::newRow(MainRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::MainTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

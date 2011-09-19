@@ -596,6 +596,9 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SourceTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

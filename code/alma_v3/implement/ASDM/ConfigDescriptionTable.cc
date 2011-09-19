@@ -513,6 +513,9 @@ ConfigDescriptionRow* ConfigDescriptionTable::lookup(int numAntenna, int numData
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ConfigDescriptionTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

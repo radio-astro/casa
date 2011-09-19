@@ -546,6 +546,9 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPointingTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

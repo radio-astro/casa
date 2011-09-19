@@ -424,6 +424,9 @@ ScanRow* ScanTable::lookup(Tag execBlockId, int scanNumber, ArrayTime startTime,
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ScanTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

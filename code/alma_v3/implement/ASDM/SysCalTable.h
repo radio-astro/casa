@@ -37,21 +37,14 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
 
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Temperature.h>
-using  asdm::Temperature;
 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
 
 
 
@@ -97,14 +90,10 @@ using  asdm::ArrayTimeInterval;
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
+
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SysCalTableIDL;
 #endif
 
 #include <Representable.h>
@@ -302,7 +291,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~SysCalTable();
@@ -326,20 +315,20 @@ public:
 	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
+	std::string getName() const;
 	
 	/**
 	 * Return the version information about this table.
 	 *
 	 */
-	 string getVersion() const ;
+	 std::string getVersion() const ;
 	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
 	/**
 	 * Return this table's Entity.
@@ -359,7 +348,7 @@ public:
 	 * @returns a string containing the XML representation.
 	 * @throws ConversionException
 	 */
-	string toXML()  ;
+	std::string toXML()  ;
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
@@ -368,7 +357,7 @@ public:
 	 *
 	 * @return a pointer to a SysCalTableIDL
 	 */
-	SysCalTableIDL *toIDL() ;
+	asdmIDL::SysCalTableIDL *toIDL() ;
 #endif
 
 #ifndef WITHOUT_ACS
@@ -378,7 +367,7 @@ public:
 	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
 	 * @throws ConversionException
 	 */	
-	void fromIDL(SysCalTableIDL x) ;
+	void fromIDL(asdmIDL::SysCalTableIDL x) ;
 #endif
 	
 	//
@@ -463,7 +452,7 @@ public:
 	 * @return Alls rows in a vector of pointers of SysCalRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the SysCalTable.
 	 */
-	vector<SysCalRow *> get() ;
+	std::vector<SysCalRow *> get() ;
 	
 	/**
 	 * Get a const reference on the collection of rows pointers internally hold by the table.
@@ -471,7 +460,7 @@ public:
 	 * in which they have been added to the SysCalTable.
 	 *
 	 */
-	 const vector<SysCalRow *>& get() const ;
+	 const std::vector<SysCalRow *>& get() const ;
 	
 
 	/**
@@ -481,7 +470,7 @@ public:
 	 * @return a pointer on a vector<SysCalRow *>. A null returned value means that the table contains
 	 * no SysCalRow for the given ( antennaId, spectralWindowId, feedId ).
 	 */
-	 vector <SysCalRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
+	 std::vector <SysCalRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
 
 
@@ -530,8 +519,8 @@ public:
 	SysCalRow* lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterval timeInterval, int feedId, int numReceptor, int numChan); 
 
 
-	void setUnknownAttributeBinaryReader(const string& attributeName, BinaryAttributeReaderFunctor* barFctr);
-	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const string& attributeName) const;
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
 
 private:
 
@@ -550,7 +539,7 @@ private:
 	bool archiveAsBin; // If true archive binary else archive XML
 	bool fileAsBin ; // If true file binary else file XML	
 	
-	string version ; 
+	std::string version ; 
 	
 	Entity entity;
 	
@@ -559,23 +548,23 @@ private:
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
+	static std::string tableName;
 	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
+	static const std::vector<std::string> attributesNames;
 	
 	/**
 	 * A method to fill attributesNames;
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> initAttributesNames();
 
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
@@ -597,14 +586,14 @@ private:
 	 * @param vector <SysCalRow*>& row . A reference to the vector where to insert x.
 	 *
 	 */
-	 SysCalRow * insertByStartTime(SysCalRow* x, vector<SysCalRow* >& row);
+	 SysCalRow * insertByStartTime(SysCalRow* x, std::vector<SysCalRow* >& row);
 	  
 
 
 // A data structure to store the pointers on the table's rows.
 
 // In all cases we maintain a private vector of SysCalRow s.
-   vector<SysCalRow * > privateRows;
+   std::vector<SysCalRow * > privateRows;
    
 
 	
@@ -613,14 +602,14 @@ private:
 	
 		
 				
-	typedef vector <SysCalRow* > TIME_ROWS;
-	map<string, TIME_ROWS > context;
+	typedef std::vector <SysCalRow* > TIME_ROWS;
+	std::map<std::string, TIME_ROWS > context;
 		
 	/** 
 	 * Returns a string built by concatenating the ascii representation of the
 	 * parameters values suffixed with a "_" character.
 	 */
-	 string Key(Tag antennaId, Tag spectralWindowId, int feedId) ;
+	 std::string Key(Tag antennaId, Tag spectralWindowId, int feedId) ;
 		 
 		
 	
@@ -630,7 +619,7 @@ private:
 	 * whose attributes are equal to the corresponding parameters of the method.
 	 *
 	 */
-	void getByKeyNoAutoIncNoTime(vector <SysCalRow*>& vin, vector <SysCalRow*>& vout,  Tag antennaId, Tag spectralWindowId, int feedId);
+	void getByKeyNoAutoIncNoTime(std::vector <SysCalRow*>& vin, std::vector <SysCalRow*>& vout,  Tag antennaId, Tag spectralWindowId, int feedId);
 	
 
 	
@@ -643,16 +632,16 @@ private:
 	 * @throws ConversionException
 	 * 
 	 */
-	void fromXML(string& xmlDoc) ;
+	void fromXML(std::string& xmlDoc) ;
 		
-	map<string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
 
 	/**
 	  * Private methods involved during the build of this table out of the content
 	  * of file(s) containing an external representation of a SysCal table.
 	  */
-	void setFromMIMEFile(const string& directory);
-	void setFromXMLFile(const string& directory);
+	void setFromMIMEFile(const std::string& directory);
+	void setFromXMLFile(const std::string& directory);
 	
 		 /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
@@ -661,7 +650,7 @@ private:
 	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
 	 * 
 	 */
-	string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
   
 	
    /** 
@@ -670,12 +659,12 @@ private:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);
+	 void setFromMIME(const std::string & mimeMsg);
 	
 	/**
 	  * Private methods involved during the export of this table into disk file(s).
 	  */
-	string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
 	
 	/**
 	  * Stores a representation (binary or XML) of this table into a file.
@@ -686,7 +675,7 @@ private:
 	 * @param directory The name of directory  where the file containing the table's representation will be saved.
 	  * 
 	  */
-	  void toFile(string directory);
+	  void toFile(std::string directory);
 	  
 	  /**
 	   * Load the table in memory if necessary.
@@ -708,7 +697,7 @@ private:
 	 * files in the directory or parsing them.
 	 *
 	 */
-	 void setFromFile(const string& directory);	
+	 void setFromFile(const std::string& directory);	
  
 };
 

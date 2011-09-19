@@ -523,6 +523,9 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SBSummaryTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

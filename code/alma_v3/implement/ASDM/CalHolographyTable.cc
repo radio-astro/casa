@@ -518,6 +518,9 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalHolographyTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
