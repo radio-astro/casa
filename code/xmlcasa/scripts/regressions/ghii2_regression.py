@@ -47,6 +47,7 @@ setpointings=True
 integration="10s"
 totaltime="7200s"
 direction="J2000 05h18m48.0s -68d42m00s"
+maptype="hex"
 mapsize="17arcsec"  # input is 16.3, relmargin=0.5
 pointingspacing="4.5arcsec"
 
