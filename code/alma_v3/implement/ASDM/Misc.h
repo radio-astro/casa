@@ -179,6 +179,7 @@ namespace asdm {
   private :
     static bool initialize();
     static bool initialized;
+    static bool hasChild(xmlDocPtr, xmlNodePtr node, const xmlChar* childName);
     static std::string parseRow(xmlDocPtr, xmlNodePtr node, const xmlChar* childName);
     static std::set<std::string> evlaValidNames;
     static std::set<std::string> almaValidNames;

@@ -241,6 +241,7 @@ namespace asdm {
     if (!ends_with(MainPath, "/")) MainPath+="/";
     MainPath += "Main.xml";    
 
+    result = "UNKNOWN";
     // Does MainPath exist ?
     if (exists(path(MainPath))) {
       xmlDocPtr MainDoc =  xmlParseFile(MainPath.c_str());
@@ -258,7 +259,15 @@ namespace asdm {
       while (cur != NULL) {
 	if (!xmlStrcmp(cur->name, (const xmlChar*) "row")) {
 	  nRow++;
-	  string dummy = parseRow(MainDoc, cur, (const xmlChar *) "dataUID");
+	  if (hasChild (MainDoc, cur, (const xmlChar *) "dataUID")) {
+	    result = "3";
+	    break;
+	  }
+
+	  if (hasChild (MainDoc, cur, (const xmlChar *) "dataOid")) {
+	    result = "2";
+	    break;
+	  }
 	}
 	cur = cur -> next;
       }
@@ -267,15 +276,20 @@ namespace asdm {
       if (nRow == 0) {
 	throw ASDMUtilsException("No 'row' elements present in '"+MainPath+"'.");
       }
-
-      // Ok we are here and we found a dataUID element on each row of the Main table then
-      // decide that we have a version 3 dataset.
-      //
-      return "3";
     }
     
-    // Sadly return UKNOWN.
-    return "UNKNOWN";
+    return result;
+  }
+
+  bool ASDMUtils::hasChild(xmlDocPtr doc, xmlNodePtr node, const xmlChar* childName) {
+    node = node->xmlChildrenNode;
+
+    while (node != NULL) {
+      if (!xmlStrcmp(node->name , childName))
+	break; 
+      node = node->next;
+    }
+    return node;      
   }
 
   string ASDMUtils::parseRow(xmlDocPtr doc, xmlNodePtr node, const xmlChar* childName) {
