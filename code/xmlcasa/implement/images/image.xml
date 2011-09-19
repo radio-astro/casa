@@ -6979,6 +6979,7 @@ ia.close()
     </input>
     <returns type="casaimage"/>
     <description>
+        THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD.
         See help for ia.transpose() for details.
     </description>
 </method>

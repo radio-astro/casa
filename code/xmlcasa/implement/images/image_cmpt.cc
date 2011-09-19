@@ -1188,8 +1188,18 @@ image* image::reorder(
 	const std::string& outfile,
 	const variant& order
 ) {
+	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogIO::WARN << "DEPRECATION WARNING: ia.reorder() has been deprecated and will be "
+		<< "removed in an upcoming version. Please use ia.transpose() instead." << LogIO::POST;
+	return transpose(outfile, order);
+}
+
+image* image::transpose(
+	const std::string& outfile,
+	const variant& order
+) {
 	try {
-		*_log << LogOrigin("image", "reorder");
+		*_log << LogOrigin("image", __FUNCTION__);
 		if (detached()) {
 			return 0;
 		}
@@ -1237,13 +1247,6 @@ image* image::reorder(
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-}
-
-image* image::transpose(
-	const std::string& outfile,
-	const variant& order
-) {
-	return reorder(outfile, order);
 }
 
 ::casac::record* image::fitcomponents(const string& box, const variant& region,
