@@ -391,15 +391,15 @@ FlagDataHandler::setDataSelection(Record record)
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
-	exists = record.fieldNumber ("baseline");
+	exists = record.fieldNumber ("antenna");
 	if (exists >= 0)
 	{
-		record.get (record.fieldNumber ("baseline"), baselineSelection_p);
-		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " baselineSelection_p selection is " << baselineSelection_p << LogIO::POST;
+		record.get (record.fieldNumber ("antenna"), baselineSelection_p);
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no baseline selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("uvw");
@@ -474,6 +474,7 @@ FlagDataHandler::selectData()
 	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
 	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
 	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
 	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected uvw range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
 
 	ostringstream polarizationListToPrint (ios::in | ios::out);
@@ -634,6 +635,12 @@ FlagDataHandler::generateIterator()
 		// Attach Visibility Buffer to Visibility Iterator
 		if (visibilityBuffer_p) delete visibilityBuffer_p;
 		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+
+		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
+		// NOTE: We have to do this before starting the flag agents,
+		// otherwise we have some seg. faults related with RegEx parser
+		// which is used when applying the ROVIA modifiers
+		roVisibilityIterator_p->originChunks();
 
 		// Finally, initialize Visibility Write Behind Thread
 		if (vwbt_p) delete vwbt_p;
@@ -934,7 +941,6 @@ FlagDataHandler::processBuffer(bool write, uShort rotateMode, uShort rotateViews
 	std::pair<Int,Int> antennaPair;
 	uShort processView = rotateViews;
 	IPosition flagCubeShape;
-	Cube<Bool> *flagCube;
 	CubeView<Bool> *flagCubeView;
 	switch (rotateMode)
 	{

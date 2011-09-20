@@ -68,7 +68,7 @@ template<class T> class CubeView
 
 public:
 
-	CubeView(Cube<T> *parentCube,std::vector<uInt> *rows = NULL)
+	CubeView(Cube<T> *parentCube, std::vector<uInt> *rows = NULL)
 	{
 		parentCube_p = parentCube;
 
@@ -91,7 +91,7 @@ public:
 
 			rows_p = new vector<uInt>(reducedLength_p(2));
 			rows_p->clear();
-			for (uInt i=0; i<reducedLength_p(2); i++ )
+			for (Int i=0; i<reducedLength_p(2); i++ )
 			{
 				rows_p->push_back(i);
 			}
@@ -107,6 +107,14 @@ public:
     const IPosition &shape() const
     {
     	return reducedLength_p;
+    }
+
+    void shape(Int &s1, Int &s2, Int &s3) const
+    {
+    	s1 = reducedLength_p(0);
+    	s2 = reducedLength_p(1);
+    	s3 = reducedLength_p(2);
+    	return;
     }
 
 protected:
