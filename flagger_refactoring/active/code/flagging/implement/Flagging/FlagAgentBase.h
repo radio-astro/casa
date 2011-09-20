@@ -49,7 +49,7 @@ class FlagAgentBase : public casa::async::Thread {
 
 public:
 
-	FlagAgentBase(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
+	FlagAgentBase(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool antennaMap = false, Bool flag = true);
 
 	~FlagAgentBase ();
 
@@ -66,11 +66,14 @@ public:
 
 	// Activate check mode to test that the flags were written to the MS
 	void setCheckMode() {applyFlag_p = &FlagAgentBase::checkFlags;}
-	void checkFlags(uInt row, uInt channel, uInt pol);
+
 
 protected:
 
 	void initialize();
+
+	// Convenience function to be shared by parallel/non-parallel mode
+	void runCore();
 
 	void setDataSelection(Record config);
 	// TODO: This class must be re-implemented in the derived classes
@@ -81,14 +84,20 @@ protected:
 	void generateChannelIndex(uInt nChannels);
 	void generatePolarizationIndex(uInt nPolarizations);
 
+	// Generate index for all rows
+	void indigen(vector<uInt> &index, uInt size);
+
 	// For checking ids
 	bool find(Vector<Int> validRange, Int element);
 
 	// For checking ranges
 	bool find(Matrix<Double> validRange, Double element);
 
-	// Generate index for all rows
-	void indigen(vector<uInt> &index, uInt size);
+	// For checking pairs
+	bool find(Matrix<Int> validPairs, Int element1, Int element2);
+
+	// Check if buffer has to be processed
+	bool checkIfProcessBuffer();
 
 	// Main iteration procedure to be called per buffer
 	void iterateRows();
@@ -96,11 +105,38 @@ protected:
 	// Compute flags for a given (row,channel,polarization)
 	virtual Bool computeFlag(uInt row, uInt channel, uInt pol);
 
+	// Create antenna map pairs
+	void generateAntennaPairMap();
+
+	// Main iteration procedure to be called per buffer
+	void iterateMaps();
+
+	// Compute flags for a given (time,freq) map
+	virtual void flagMap(Int antenna1,Int antenna2,CubeView<Complex> *visibilities);
+
+	// Mapping functions as requested by Urvashi
+	CubeView<Bool> * getCommonFlagsView(Int antenna1, Int antenna2);
+	CubeView<Bool> * getPrivateFlagsView(Int antenna1, Int antenna2);
+	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
+
 	// Apply flags to common flag cube
 	void applyCommonFlags(uInt row, uInt channel, uInt pol);
 
 	// Apply flags to common and private flag cubes
 	void applyPrivateFlags(uInt row, uInt channel, uInt pol);
+
+	// Apply flags to common flag cube view
+	void applyCommonFlagsView(uInt row, uInt channel, uInt pol);
+
+	// Apply flags to common and private flag cubes
+	void applyPrivateFlagsView(uInt row, uInt channel, uInt pol);
+
+	// Wrapper to avoid complexity of calling a function pointer
+	void applyFlag(uInt row, uInt channel, uInt pol);
+
+	// Check flags is a test function to check that the flags are set where they should
+	void checkFlags(uInt row, uInt channel, uInt pol);
+
 
 private:
 	
@@ -134,6 +170,7 @@ private:
 	Matrix<Int> channelList_p;
 	Vector<Int> antenna1List_p;
 	Vector<Int> antenna2List_p;
+	Matrix<Int> baselineList_p;
 	Matrix<Double> uvwList_p;
 	OrderedMap<Int, Vector<Int> > polarizationList_p;
 
@@ -141,6 +178,11 @@ private:
 	vector<uInt> rowsIndex_p;
 	vector<uInt> channelIndex_p;
 	vector<uInt> polarizationIndex_p;
+
+	// Antenna pair map as requested by Urvashi
+	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
+	CubeView<Bool> *privateFlagsView_p;
+	CubeView<Bool> *commonFlagsView_p;
 
 	// Thread state parameters
 	volatile Bool terminationRequested_p;
@@ -151,11 +193,39 @@ private:
 	void (casa::FlagAgentBase::*applyFlag_p)(uInt,uInt,uInt);
 	Bool writePrivateFlagCube_p;
 	Bool parallel_processing_p;
+	Bool antennaNegation_p;
+	Bool antennaMap_p;
 	Bool profiling_p;
 	Bool flag_p;
 
 	// Logger
 	casa::LogIO *logger_p;
+};
+
+class FlagAgentList
+{
+	public:
+		FlagAgentList();
+		~FlagAgentList();
+
+		// Methods to mimic vector
+		void push_back(FlagAgentBase *agent_i);
+		void pop_back();
+
+		// Methods to mimic FlagAgentBase
+		void start();
+		void terminate ();
+		void join ();
+		void queueProcess();
+		void completeProcess();
+		void setProfiling(bool enable);
+		void setCheckMode();
+
+	protected:
+
+	private:
+		vector<FlagAgentBase *> container_p;
+		vector<FlagAgentBase *>::iterator iterator_p;
 };
 
 } //# NAMESPACE CASA - END

@@ -24,10 +24,14 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+////////////////////////////////////
+/// FlagAgentBase implementation ///
+////////////////////////////////////
+
 // NOTE: We have to initialize the polarizationList_p here, which is a OrderedMap<Int, Vector<Int> >
 // because otherwise the compiler complains because we are calling a theoretical default constructor
 // OrderedMap() that does not exist.
-FlagAgentBase::FlagAgentBase(FlagDataHandler *dh,Record config, Bool writePrivateFlagCube, Bool flag): polarizationList_p(Vector<Int>(0))
+FlagAgentBase::FlagAgentBase(FlagDataHandler *dh,Record config, Bool writePrivateFlagCube, Bool antennaMap, Bool flag): polarizationList_p(Vector<Int>(0))
 {
 	// Initialize logger
 	logger_p = new LogIO();
@@ -50,15 +54,32 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh,Record config, Bool writePrivat
 		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " Parallel mode enabled" << LogIO::POST;
 	}
 
+	// Set antenna map flag (for RFI mode)
+	antennaMap_p = antennaMap;
+
 	// Set pointer to apply flag function
 	writePrivateFlagCube_p = writePrivateFlagCube;
 	if (writePrivateFlagCube_p)
 	{
-		applyFlag_p = &FlagAgentBase::applyPrivateFlags;
+		if (antennaMap_p)
+		{
+			applyFlag_p = &FlagAgentBase::applyPrivateFlagsView;
+		}
+		else
+		{
+			applyFlag_p = &FlagAgentBase::applyPrivateFlags;
+		}
 	}
 	else
 	{
-		applyFlag_p = &FlagAgentBase::applyCommonFlags;
+		if (antennaMap_p)
+		{
+			applyFlag_p = &FlagAgentBase::applyCommonFlagsView;
+		}
+		else
+		{
+			applyFlag_p = &FlagAgentBase::applyCommonFlags;
+		}
 	}
 
 	// Set flag data handler
@@ -113,11 +134,24 @@ FlagAgentBase::initialize()
    threadTerminated_p = false;
    processing_p = false;
 
-   // Initialize config
+   //// Initialize configuration ///
+
+   /// Running config
+   parallel_processing_p = true;
+   /// Antenna maps config
+   antennaPairMap_p = NULL;
+   privateFlagsView_p = NULL;
+   commonFlagsView_p = NULL;
+   antennaMap_p = false;
+   antennaNegation_p = false;
+   /// Flag/Unflag config
    writePrivateFlagCube_p = false;
    applyFlag_p = NULL;
-   profiling_p = false;
    flag_p = true;
+   /// Profiling and testing config
+   profiling_p = false;
+
+   /////////////////////////////////
 
    return;
 }
@@ -129,19 +163,7 @@ FlagAgentBase::run ()
 	{
 		if (processing_p)
 		{
-			// Set pointers to common and private flag cube
-			commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
-			if (writePrivateFlagCube_p)
-			{
-				if (privateFlagCube_p) delete privateFlagCube_p;
-				privateFlagCube_p = new Cube<Bool>(commonFlagCube_p->shape(),!flag_p);
-			}
-
-			// Generate indexes applying data selection filters
-			generateAllIndex();
-
-			// Compute flags
-			iterateRows();
+			runCore();
 
 			// Disable processing to enter in idle mode
 			processing_p = false;
@@ -158,9 +180,51 @@ FlagAgentBase::run ()
 }
 
 void
+FlagAgentBase::runCore()
+{
+	// Set pointer to common flag cube
+	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
+
+	// Generate indexes applying data selection filters
+	generateAllIndex();
+
+	if (!checkIfProcessBuffer())
+	{
+		// Disable processing to enter in idle mode
+		processing_p = false;
+	}
+	else
+	{
+		// Set pointer to private flag cube
+		if (writePrivateFlagCube_p)
+		{
+			if (privateFlagCube_p) delete privateFlagCube_p;
+			privateFlagCube_p = new Cube<Bool>(commonFlagCube_p->shape(),!flag_p);
+		}
+
+		// Iterate trough (time,freq) maps per antenna pair
+		if (antennaMap_p)
+		{
+			generateAntennaPairMap();
+			iterateMaps();
+		}
+		// Iterate trough rows (i.e. timesteps)
+		else
+		{
+			iterateRows();
+		}
+	}
+
+	return;
+}
+
+void
 FlagAgentBase::start()
 {
-	casa::async::Thread::startThread();
+	if (parallel_processing_p)
+	{
+		casa::async::Thread::startThread();
+	}
 
 	return;
 }
@@ -168,12 +232,15 @@ FlagAgentBase::start()
 void
 FlagAgentBase::terminate ()
 {
-	terminationRequested_p = true;
-	while (!threadTerminated_p)
+	if (parallel_processing_p)
 	{
-		sched_yield();
+		terminationRequested_p = true;
+		while (!threadTerminated_p)
+		{
+			sched_yield();
+		}
+		casa::async::Thread::terminate();
 	}
-	casa::async::Thread::terminate();
 
 	return;
 }
@@ -181,23 +248,20 @@ FlagAgentBase::terminate ()
 void
 FlagAgentBase::queueProcess()
 {
-	// Wait until we are done with previous buffer
-	while (processing_p)
+	if (parallel_processing_p)
 	{
-		sched_yield();
-	}
-
-	// Enable processing to trigger flagging
-	processing_p = true;
-
-	// If parallel processing mode is not activated we
-	// wait until the current buffer has been processed
-	if (!parallel_processing_p)
-	{
+		// Wait until we are done with previous buffer
 		while (processing_p)
 		{
 			sched_yield();
 		}
+
+		// Enable processing to trigger flagging
+		processing_p = true;
+	}
+	else
+	{
+		runCore();
 	}
 
 	return;
@@ -206,10 +270,13 @@ FlagAgentBase::queueProcess()
 void
 FlagAgentBase::completeProcess()
 {
-	// Wait until we are done with previous buffer
-	while (processing_p)
+	if (parallel_processing_p)
 	{
-		sched_yield();
+		// Wait until we are done with previous buffer
+		while (processing_p)
+		{
+			sched_yield();
+		}
 	}
 
 	return;
@@ -317,20 +384,30 @@ FlagAgentBase::setDataSelection(Record config)
 		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
-	exists = config.fieldNumber ("baseline");
+	exists = config.fieldNumber ("antenna");
 	if (exists >= 0)
 	{
-		config.get (config.fieldNumber ("baseline"), baselineSelection_p);
+		config.get (config.fieldNumber ("antenna"), baselineSelection_p);
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
+
+		// Remove antenna negation operator (!) and set antenna negation flag
+		size_t pos = baselineSelection_p.find(String("!"));
+		while (pos != String::npos)
+		{
+			antennaNegation_p = true;
+			baselineSelection_p.replace(pos,1,String(""));
+			*logger_p << LogIO::DEBUG1 << "FlagAgentBase::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
+			pos = baselineSelection_p.find(String("!"));
+		}
 
 		parser.setAntennaExpr(baselineSelection_p);
 		parser.toTableExprNode(selectedMeasurementSet_p);
 		antenna1List_p=parser.getAntenna1List();
 		antenna2List_p=parser.getAntenna2List();
+		baselineList_p=parser.getBaselineList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " baseline selection is " << baselineSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " antenna1 ids are " << antenna1List_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " antenna2 ids are " << antenna2List_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
 	}
 	else
 	{
@@ -422,15 +499,10 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				if (!find(scanList_p,visibilityBuffer_p->get()->scan()[row_i])) continue;
 			}
 
-			// Check baseline (NOTE: The antenna expressions are actually saved in antenna1)
-			if (antenna1List_p.size())
+			// Check baseline
+			if (baselineList_p.size())
 			{
-				if (!find(antenna1List_p,visibilityBuffer_p->get()->antenna1()[row_i])) continue;
-			}
-
-			if (antenna2List_p.size())
-			{
-				if (!find(antenna2List_p,visibilityBuffer_p->get()->antenna2()[row_i])) continue;
+				if (!find(baselineList_p,visibilityBuffer_p->get()->antenna1()[row_i],visibilityBuffer_p->get()->antenna2()[row_i])) continue;
 			}
 
 			// Check time range
@@ -438,7 +510,6 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 			{
 				if (!find(timeList_p,visibilityBuffer_p->get()->time()[row_i])) continue;
 			}
-
 
 			// Check uvw range
 			if (uvwList_p.size())
@@ -477,7 +548,7 @@ FlagAgentBase::generateChannelIndex(uInt nChannels)
 		Int currentSpw = visibilityBuffer_p->get()->spectralWindow();
 		Int nSpw,width;
 		bool spwFound = false;
-		Int channelStart = -1,channelStop = -1;
+		uInt channelStart = 0,channelStop = UINT_MAX;
 		channelList_p.shape(nSpw,width);
 		for (uShort spw_i=0;spw_i<nSpw;spw_i++)
 		{
@@ -553,14 +624,26 @@ FlagAgentBase::indigen(vector<uInt> &index, uInt size)
 }
 
 bool
+FlagAgentBase::find(Matrix<Int> validPairs, Int element1, Int element2)
+{
+	Int x,y;
+	validPairs.shape(x,y);
+
+	for (Int i=0;i<x;i++)
+	{
+		if ((validPairs(i,0) == element1) and (validPairs(i,1) == element2)) return !antennaNegation_p;
+		if ((validPairs(i,0) == element2) and (validPairs(i,1) == element1)) return !antennaNegation_p;
+	}
+
+	return antennaNegation_p;
+}
+
+bool
 FlagAgentBase::find(Vector<Int> validRange, Int element)
 {
 	for (uShort idx=0;idx<validRange.size(); idx++)
 	{
 		if (element == validRange[idx]) return true;
-		// NOTE: Antenna negation expressions return the antenna id with - sign
-		if (element == -validRange[idx]) return false;
-		if (validRange[idx]<0) return true;
 	}
 	return false;
 }
@@ -568,12 +651,34 @@ FlagAgentBase::find(Vector<Int> validRange, Int element)
 bool
 FlagAgentBase::find(Matrix<Double> validRange, Double element)
 {
-	if (element>=validRange(0,0) and element<=validRange(1,0))
+	if (element>=validRange(0,0) and element<=validRange(1,0)) return true;
+	return false;
+}
+
+bool
+FlagAgentBase::checkIfProcessBuffer()
+{
+	STARTCLOCK
+
+	// array,filed and spw are common and unique in a given vis buffer,
+	// so we can use them to discard all the rows in a vis buffer.
+	if (arrayList_p.size())
 	{
-		return true;
+		if (!find(arrayList_p,visibilityBuffer_p->get()->arrayId())) return false;
+	}
+	if (fieldList_p.size())
+	{
+		if (!find(fieldList_p,visibilityBuffer_p->get()->fieldId())) return false;
+	}
+	if (spwList_p.size())
+	{
+		if (!find(spwList_p,visibilityBuffer_p->get()->spectralWindow())) return false;
 	}
 
-	return false;
+	if ((!rowsIndex_p.size()) || (!channelIndex_p.size()) || (!polarizationIndex_p.size())) return false;
+
+	STOPCLOCK
+	return true;
 }
 
 void
@@ -581,32 +686,17 @@ FlagAgentBase::iterateRows()
 {
 	STARTCLOCK
 
-	Bool computedFlag;
-	vector<uInt>::iterator rowIter;
-	vector<uInt>::iterator channellIter;
-	vector<uInt>::iterator polarizationIter;
-
-	// array,filed and spw are common and unique in a given vis buffer,
-	// so we can use them to discard all the rows in a vis buffer.
-	if (arrayList_p.size())
-	{
-		if (!find(arrayList_p,visibilityBuffer_p->get()->arrayId())) return;
-	}
-	if (fieldList_p.size())
-	{
-		if (!find(fieldList_p,visibilityBuffer_p->get()->fieldId())) return;
-	}
-	if (spwList_p.size())
-	{
-		if (!find(spwList_p,visibilityBuffer_p->get()->spectralWindow())) return;
-	}
-
-	if ((!rowsIndex_p.size()) || (!channelIndex_p.size()) || (!polarizationIndex_p.size())) return;
+	if (!checkIfProcessBuffer()) return;
 
 	*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
 			rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 			channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
 			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+
+	Bool computedFlag;
+	vector<uInt>::iterator rowIter;
+	vector<uInt>::iterator channellIter;
+	vector<uInt>::iterator polarizationIter;
 
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
@@ -618,7 +708,7 @@ FlagAgentBase::iterateRows()
 
 				if (computedFlag == flag_p)
 				{
-					(*this.*applyFlag_p)(*rowIter,*channellIter,*polarizationIter);
+					applyFlag(*rowIter,*channellIter,*polarizationIter);
 				}
 			}
 		}
@@ -633,6 +723,132 @@ FlagAgentBase::computeFlag(uInt row, uInt channel, uInt pol)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return flag_p;
+}
+
+void
+FlagAgentBase::generateAntennaPairMap()
+{
+	STARTCLOCK
+
+	if (!checkIfProcessBuffer()) return;
+
+	// Free previous map and create a new one
+	if (antennaPairMap_p) delete antennaPairMap_p;
+	antennaPairMap_p = new antennaPairMap();
+
+	// Retrieve antenna vectors
+	Vector<Int> antenna1Vector = visibilityBuffer_p->get()->antenna1();
+	Vector<Int> antenna2Vector = visibilityBuffer_p->get()->antenna2();
+
+	// Fill map
+	Int ant1_i,ant2_i;
+	vector<uInt>::iterator rowIter;
+	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
+	{
+		ant1_i = antenna1Vector[*rowIter];
+		ant2_i = antenna2Vector[*rowIter];
+		if (antennaPairMap_p->find(std::make_pair(ant1_i,ant2_i)) == antennaPairMap_p->end())
+		{
+			std::vector<uInt> newPair;
+			newPair.push_back(*rowIter);
+			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)] = newPair;
+		}
+		else
+		{
+			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)].push_back(*rowIter);
+		}
+	}
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
+
+	STOPCLOCK
+	return;
+}
+
+void
+FlagAgentBase::iterateMaps()
+{
+	STARTCLOCK
+
+	antennaPairMapIterator myAntennaPairMapIterator;
+	std::pair<Int,Int> antennaPair;
+	CubeView<Complex> *visCubeView;
+	IPosition flagCubeShape;
+
+	for (myAntennaPairMapIterator=antennaPairMap_p->begin(); myAntennaPairMapIterator != antennaPairMap_p->end(); ++myAntennaPairMapIterator)
+	{
+		// Get antenna pair from map
+		antennaPair = myAntennaPairMapIterator->first;
+
+		// Create CubeView for common flags
+		commonFlagsView_p = getCommonFlagsView(antennaPair.first,antennaPair.second);
+
+		// Some logging info
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " Processing [pol,freq,time] data cube for baseline ("
+				<< antennaPair.first << "," << antennaPair.second << ") with shape " << commonFlagsView_p->shape() << LogIO::POST;
+
+		// Create CubeView for private flags
+		if (writePrivateFlagCube_p) privateFlagsView_p = getPrivateFlagsView(antennaPair.first,antennaPair.second);
+
+		// Create CubeView for Visibilities
+		visCubeView = getVisibilitiesView(antennaPair.first,antennaPair.second);
+
+		// Flag map
+		flagMap(antennaPair.first,antennaPair.second,visCubeView);
+
+		// Clean up Cube Views
+		delete visCubeView;
+		delete commonFlagsView_p;
+		if (writePrivateFlagCube_p) delete privateFlagsView_p;
+	}
+
+	STOPCLOCK
+	return;
+}
+
+CubeView<Bool> *
+FlagAgentBase::getCommonFlagsView(Int antenna1, Int antenna2)
+{
+	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
+	CubeView<Bool> *cube= new CubeView<Bool>(commonFlagCube_p,rows);
+	return cube;
+}
+
+CubeView<Bool> *
+FlagAgentBase::getPrivateFlagsView(Int antenna1, Int antenna2)
+{
+	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
+	CubeView<Bool> *cube= new CubeView<Bool>(privateFlagCube_p,rows);
+	return cube;
+}
+
+CubeView<Complex> *
+FlagAgentBase::getVisibilitiesView(Int antenna1, Int antenna2)
+{
+	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
+	CubeView<Complex> *cube= new CubeView<Complex>(&(visibilityBuffer_p->get()->visCube()),rows);
+	return cube;
+}
+
+void
+FlagAgentBase::flagMap(Int antenna1,Int antenna2,CubeView<Complex> *visibilities)
+{
+	IPosition flagCubeShape = visibilities->shape();
+	uInt nPolarizations,nChannels,nRows;
+	nPolarizations = flagCubeShape(0);
+	nChannels = flagCubeShape(1);
+	nRows = flagCubeShape(2);
+	for (uInt row_i=0;row_i<nRows;row_i++)
+	{
+		for (uInt chan_i=0;chan_i<nChannels;chan_i++)
+		{
+			for (uInt pol_i=0;pol_i<nPolarizations;pol_i++)
+			{
+				applyFlag(row_i,chan_i,pol_i);
+			}
+		}
+	}
+
+	return;
 }
 
 void
@@ -653,6 +869,28 @@ FlagAgentBase::applyPrivateFlags(uInt row, uInt channel, uInt pol)
 }
 
 void
+FlagAgentBase::applyCommonFlagsView(uInt row, uInt channel, uInt pol)
+{
+	// NOTE: Notice that the position is pol,channel,row, not the other way around
+	commonFlagsView_p->operator()(pol,channel,row) = flag_p;
+	return;
+}
+
+void
+FlagAgentBase::applyPrivateFlagsView(uInt row, uInt channel, uInt pol)
+{
+	// NOTE: Notice that the position is pol,channel,row, not the other way around
+	commonFlagsView_p->operator()(pol,channel,row) = flag_p;
+	privateFlagsView_p->operator()(pol,channel,row) = flag_p;
+	return;
+}
+
+void FlagAgentBase::applyFlag(uInt row, uInt channel, uInt pol)
+{
+	(*this.*applyFlag_p)(row,channel,pol);
+}
+
+void
 FlagAgentBase::checkFlags(uInt row, uInt channel, uInt pol)
 {
 	if (commonFlagCube_p->at(pol,channel,row) != flag_p)
@@ -663,7 +901,6 @@ FlagAgentBase::checkFlags(uInt row, uInt channel, uInt pol)
 					<< " polarization " << pol
 					<< " channel " << channel
 					<< " row " << row << LogIO::POST;
-
 	}
 	return;
 }
@@ -673,6 +910,106 @@ FlagAgentBase::create (Record config)
 {
 	FlagAgentBase *ret = NULL;
 	return ret;
+}
+
+////////////////////////////////////
+/// FlagAgentlist implementation ///
+////////////////////////////////////
+
+FlagAgentList::FlagAgentList()
+{
+	container_p.clear();
+}
+
+FlagAgentList::~FlagAgentList()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		delete (*iterator_p);
+	}
+	container_p.clear();
+}
+
+void FlagAgentList::push_back(FlagAgentBase *agent_i)
+{
+	container_p.push_back(agent_i);
+	return;
+}
+
+void FlagAgentList::pop_back()
+{
+	container_p.pop_back();
+	return;
+}
+
+void FlagAgentList::start()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->start();
+	}
+
+	return;
+}
+
+void FlagAgentList::terminate()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->terminate();
+	}
+
+	return;
+}
+
+void FlagAgentList::join()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->join();
+	}
+
+	return;
+}
+
+void FlagAgentList::queueProcess()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->queueProcess();
+	}
+
+	return;
+}
+
+void FlagAgentList::completeProcess()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->completeProcess();
+	}
+
+	return;
+}
+
+void FlagAgentList::setProfiling(bool enable)
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->setProfiling(enable);
+	}
+
+	return;
+}
+
+void FlagAgentList::setCheckMode()
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->setCheckMode();
+	}
+
+	return;
 }
 
 
