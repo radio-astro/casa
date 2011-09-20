@@ -25,7 +25,7 @@
 
 using namespace casa;
 
-void deleteFlags(string inputFile,Record record)
+void deleteFlags(string inputFile,Record record,vector<Record> recordList)
 {
 	// Stats variables declaration
 	bool fillBuffer = false;
@@ -35,7 +35,7 @@ void deleteFlags(string inputFile,Record record)
 	double elapsedTime = 0;
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -52,15 +52,15 @@ void deleteFlags(string inputFile,Record record)
 	// Generate iterators and vis buffers
 	dh->generateIterator();
 
-	// Now we can create the Flag Agent
+	// Now we can create a normal Flag Agent
 	Record dummyRecord;
-	FlagAgentBase *fa = new FlagAgentBase(dh,dummyRecord,false,false);
+	FlagAgentBase *flaggingAgent = new FlagAgentBase(dh,dummyRecord,false,true,false);
 
 	// Enable profiling in the Flag Agent
-	fa->setProfiling(false);
+	flaggingAgent->setProfiling(false);
 
 	// Start Flag Agent
-	fa->start();
+	flaggingAgent->start();
 
 	// Set cout precision
 	cout.precision(20);
@@ -192,10 +192,10 @@ void deleteFlags(string inputFile,Record record)
 			// cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2() << endl;
 
 			// Queue flagging process
-			fa->queueProcess();
+			flaggingAgent->queueProcess();
 
 			// Wait for completion of flagging process
-			fa->completeProcess();
+			flaggingAgent->completeProcess();
 
 			// Flush flags to MS
 			dh->flushFlags();
@@ -203,8 +203,8 @@ void deleteFlags(string inputFile,Record record)
 	}
 
 	// Stop Flag Agent
-	fa->terminate();
-	fa->join();
+	flaggingAgent->terminate();
+	flaggingAgent->join();
 
 	// Close MS
 	dh->close();
@@ -217,14 +217,14 @@ void deleteFlags(string inputFile,Record record)
 	cout << "Total Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 
 	// Delete Flag Agent
-	delete fa;
+	delete flaggingAgent;
 
 	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
 	delete dh;
 
 }
 
-void writeFlags(string inputFile,Record record)
+void writeFlags(string inputFile,Record record,vector<Record> recordList)
 {
 	// Stats variables declaration
 	bool fillBuffer = false;
@@ -234,7 +234,7 @@ void writeFlags(string inputFile,Record record)
 	double elapsedTime = 0;
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -248,14 +248,28 @@ void writeFlags(string inputFile,Record record)
 	// Generate iterators and vis buffers
 	dh->generateIterator();
 
-	// Now we can create the Flag Agent
-	FlagAgentBase *fa = new FlagAgentBase(dh,record);
+	// Now we can create the Flag Agent list
+	int antenna;
+	FlagAgentList *agentList = new FlagAgentList();
+	for (vector<Record>::iterator iter = recordList.begin();iter != recordList.end(); iter++)
+	{
+		antenna = (*iter).fieldNumber ("antenna");
+		FlagAgentBase *agent_i;
+		if (antenna >= 0)
+		{
+			agent_i= new FlagAgentBase(dh,*iter,false,true);
+		}
+		else
+		{
+			agent_i = new FlagAgentBase(dh,*iter,false,false);
+		}
+		agentList->push_back(agent_i);
+	}
 
-	// Enable profiling in the Flag Agent
-	fa->setProfiling(false);
+	agentList->setProfiling(false);
 
 	// Start Flag Agent
-	fa->start();
+	agentList->start();
 
 	// Set cout precision
 	cout.precision(20);
@@ -385,11 +399,11 @@ void writeFlags(string inputFile,Record record)
 
 			// Queue flagging process
 			// cout << "Put flag process in queue " << endl;
-			fa->queueProcess();
+			agentList->queueProcess();
 
 			// Wait for completion of flagging process
 			// cout << "Wait for completion of flagging process " << endl;
-			fa->completeProcess();
+			agentList->completeProcess();
 
 			// Flush flags to MS
 			// cout << "Flush flags to MS " << endl;
@@ -398,8 +412,8 @@ void writeFlags(string inputFile,Record record)
 	}
 
 	// Stop Flag Agent
-	fa->terminate();
-	fa->join();
+	agentList->terminate();
+	agentList->join();
 
 	// Close MS
 	dh->close();
@@ -412,14 +426,14 @@ void writeFlags(string inputFile,Record record)
 	cout << "Total Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 
 	// Delete Flag Agent
-	delete fa;
+	delete agentList;
 
 	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
 	delete dh;
 
 }
 
-void checkFlags(string inputFile,Record record)
+void checkFlags(string inputFile,Record record,vector<Record> recordList)
 {
 	// Stats variables declaration
 	bool fillBuffer = false;
@@ -429,7 +443,7 @@ void checkFlags(string inputFile,Record record)
 	double elapsedTime = 0;
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -447,17 +461,32 @@ void checkFlags(string inputFile,Record record)
 	dh->generateIterator();
 
 	// Now we can create the Flag Agent
-	Record dummyRecord;
-	FlagAgentBase *fa = new FlagAgentBase(dh,dummyRecord);
+	// Now we can create the Flag Agent list
+	int antenna;
+	FlagAgentList *agentList = new FlagAgentList();
+	for (vector<Record>::iterator iter = recordList.begin();iter != recordList.end(); iter++)
+	{
+		antenna = (*iter).fieldNumber ("antenna");
+		FlagAgentBase *agent_i;
+		if (antenna >= 0)
+		{
+			agent_i= new FlagAgentBase(dh,*iter,false,true);
+		}
+		else
+		{
+			agent_i = new FlagAgentBase(dh,*iter,false,false);
+		}
+		agentList->push_back(agent_i);
+	}
 
 	// Enable profiling in the Flag Agent
-	fa->setProfiling(false);
+	agentList->setProfiling(false);
 
 	// Enable check mode in the Flag Agent
-	fa->setCheckMode();
+	agentList->setCheckMode();
 
 	// Start Flag Agent
-	fa->start();
+	agentList->start();
 
 	// Set cout precision
 	cout.precision(20);
@@ -586,10 +615,10 @@ void checkFlags(string inputFile,Record record)
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
 			// Queue flagging process
-			fa->queueProcess();
+			agentList->queueProcess();
 
 			// Wait for completion of flagging process
-			fa->completeProcess();
+			agentList->completeProcess();
 
 			// Flush flags to MS
 			dh->flushFlags();
@@ -597,8 +626,8 @@ void checkFlags(string inputFile,Record record)
 	}
 
 	// Stop Flag Agent
-	fa->terminate();
-	fa->join();
+	agentList->terminate();
+	agentList->join();
 
 	// Close MS
 	dh->close();
@@ -611,7 +640,7 @@ void checkFlags(string inputFile,Record record)
 	cout << "Total Time [s]:" << elapsedTime/1000.0 << " Total number of rows:" << cumRows <<" Total number of Buffers:" << nBuffers <<endl;
 
 	// Delete Flag Agent
-	delete fa;
+	delete agentList;
 
 	// Delete Flag Data Handler (delete VisBuffer, therefore stop VLAT)
 	delete dh;
@@ -642,6 +671,7 @@ int main(int argc, char **argv)
 
 
 	// Parse input parameters
+	vector<Record> recordList;
 	Record record;
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -656,68 +686,98 @@ int main(int argc, char **argv)
 		else if (parameter == string("-observation"))
 		{
 			observation = value;
+			Record rec;
+			rec.define ("observation", casa::String(value));
 			record.define ("observation", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Observation selection is: " << observation << endl;
 		}
 		else if (parameter == string("-array"))
 		{
 			array = value;
+			Record rec;
+			rec.define ("array", casa::String(value));
 			record.define ("array", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Array selection is: " << array << endl;
 		}
 		else if (parameter == string("-scan"))
 		{
 			scan = value;
+			Record rec;
+			rec.define ("scan", casa::String(value));
 			record.define ("scan", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Scan selection is: " << scan << endl;
 		}
 		else if (parameter == string("-time"))
 		{
 			time = value;
+			Record rec;
+			rec.define ("time", casa::String(value));
 			record.define ("time", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Time selection is: " << time << endl;
 		}
 		else if (parameter == string("-field"))
 		{
 			field = value;
+			Record rec;
+			rec.define ("field", casa::String(value));
 			record.define ("field", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Field selection is: " << field << endl;
 		}
 		else if (parameter == string("-spw"))
 		{
 			spw = value;
+			Record rec;
+			rec.define ("spw", casa::String(value));
 			record.define ("spw", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "SPW selection is: " << spw << endl;
 		}
-		else if (parameter == string("-baseline"))
+		else if (parameter == string("-antenna"))
 		{
 			baseline = value;
-			record.define ("baseline", casa::String(value));
-			if (logLevel >= 3) cout << "Baseline selection is: " << baseline << endl;
+			Record rec;
+			rec.define ("antenna", casa::String(value));
+			record.define ("antenna", casa::String(value));
+			recordList.push_back(rec);
+			if (logLevel >= 3) cout << "Antenna selection is: " << baseline << endl;
 		}
 		else if (parameter == string("-uvw"))
 		{
 			uvw = value;
+			Record rec;
+			rec.define ("uvw", casa::String(value));
 			record.define ("uvw", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "UVW selection is: " << uvw << endl;
 		}
 		else if (parameter == string("-polarization"))
 		{
 			polarization = value;
+			Record rec;
+			rec.define ("polarization", casa::String(value));
 			record.define ("polarization", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Polarization selection is: " << polarization << endl;
 		}
 		else if (parameter == string("-mode"))
 		{
 			testMode = (unsigned short)atoi(value.c_str());
+			Record rec;
+			rec.define ("mode", casa::String(value));
 			record.define ("mode", casa::String(value));
+			recordList.push_back(rec);
 			if (logLevel >= 3) cout << "Test mode is: " << testMode << endl;
 		}
 	}
 
-	deleteFlags(inputFile,record);
-	writeFlags(inputFile,record);
-	checkFlags(inputFile,record);
+	deleteFlags(inputFile,record,recordList);
+	writeFlags(inputFile,record,recordList);
+	checkFlags(inputFile,record,recordList);
 
 	exit(-1);
 }
