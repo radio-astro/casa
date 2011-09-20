@@ -63,7 +63,13 @@ namespace casa {
 		~QtRegionSource( );
 
 	    signals:
-		void created( QtRegion * );
+		void regionCreated( int, const QString &shape, const QString &name,
+				    const QList<double> &world_x, const QList<double> &world_y,
+				    const QList<int> &pixel_x, const QList<int> &pixel_y,
+				    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+
+		void regionUpdate( int, const QList<double> &world_x, const QList<double> &world_y,
+				   const QList<int> &pixel_x, const QList<int> &pixel_y );
 
 	    private: 
 		QtDisplayPanelGui *panel_;

@@ -56,7 +56,11 @@ namespace casa {
 		AnnRegion *annotation( ) const;
 
 	    protected:
+
 		StatisticsList *generate_statistics_list( );
+
+		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const;
 
 		void drawRegion( bool );
 		/* void drawHandles( ); */

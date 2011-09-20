@@ -160,6 +160,33 @@ namespace casa {
 	    return box;
 	}
 
+
+	void Rectangle::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+					      std::vector<std::pair<double,double> > &world_pts ) const {
+	    if ( wc_ == 0 ) return;
+
+	    type = RectRegion;
+	    
+	    double wblc_x, wblc_y, wtrc_x, wtrc_y;
+	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+
+	    int pblc_x, pblc_y, ptrc_x, ptrc_y;
+	    linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y );
+
+	    pixel_pts.resize(2);
+	    pixel_pts[0].first = pblc_x;
+	    pixel_pts[0].second = pblc_y;
+	    pixel_pts[1].first = ptrc_x;
+	    pixel_pts[1].second = ptrc_y;
+
+	    world_pts.resize(2);
+	    world_pts[0].first = wblc_x;
+	    world_pts[0].second = wblc_y;
+	    world_pts[1].first = wtrc_x;
+	    world_pts[1].second = wtrc_y;
+	}
+
+
 	void Rectangle::drawRegion( bool selected ) {
 	    if ( wc_ == 0 ) return;
 

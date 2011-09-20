@@ -42,20 +42,60 @@ namespace casa {
 	//     return memory::cptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
 	// }
 	memory::cptr<Rectangle> QtRegionSource::rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
-	    return memory::cptr<Rectangle>(new QtRectangle( this, wc, blc_x, blc_y, trc_x, trc_y ));
+	    QtRectangle *result = new QtRectangle( this, wc, blc_x, blc_y, trc_x, trc_y, true );
+
+	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+
+	    result->releaseSignals( );
+	    return memory::cptr<Rectangle>(result);
 	}
 
 	memory::cptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, double x1, double y1 ) {
-	    return memory::cptr<Polygon>(new QtPolygon( this, wc, x1, y1 ));
+	    QtPolygon *result = new QtPolygon( this, wc, x1, y1, true );
+
+	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+
+	    result->releaseSignals( );
+	    return memory::cptr<Polygon>(result);
 	    // return memory::cptr<Polygon>( );
 	}
 
 	memory::cptr<Rectangle> QtRegionSource::ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
-	    return memory::cptr<Rectangle>(new QtEllipse( this, wc, blc_x, blc_y, trc_x, trc_y ));
+	    QtEllipse *result = new QtEllipse( this, wc, blc_x, blc_y, trc_x, trc_y, true );
+
+	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+
+	    result->releaseSignals( );
+	    return memory::cptr<Rectangle>(result);
 	}
 
 	memory::cptr<Rectangle> QtRegionSource::point( WorldCanvas *wc, double x, double y ) {
-	    return memory::cptr<Rectangle>(new QtPoint( this, wc, x, y ));
+	    QtPoint *result = new QtPoint( this, wc, x, y, true );
+
+	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+
+	    result->releaseSignals( );
+	    return memory::cptr<Rectangle>(result);
 	}
 
 	QtRegionDock *QtRegionSource::dock( ) { return panel_->regionDock( ); }

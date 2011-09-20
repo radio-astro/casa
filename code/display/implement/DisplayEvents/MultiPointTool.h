@@ -93,6 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 	    // Destructor
 	    virtual ~MultiPointTool() { }
+
+	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
   
 	protected:
 

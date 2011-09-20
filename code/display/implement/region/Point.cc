@@ -43,6 +43,27 @@ namespace casa {
 	    return box;
 	}
 
+	void Point::fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+					  std::vector<std::pair<double,double> > &world_pts ) const {
+	    if ( wc_ == 0 ) return;
+
+	    type = PointRegion;
+
+	    double wblc_x, wblc_y;
+	    linear_to_world( wc_, blc_x, blc_y, wblc_x, wblc_y );
+
+	    int pblc_x, pblc_y;
+	    linear_to_pixel( wc_, blc_x, blc_y, pblc_x, pblc_y );
+
+	    pixel_pts.resize(1);
+	    pixel_pts[0].first = pblc_x;
+	    pixel_pts[0].second = pblc_y;
+
+	    world_pts.resize(1);
+	    world_pts[0].first = wblc_x;
+	    world_pts[0].second = wblc_y;
+	}
+
 	void Point::drawRegion( bool selected ) {
 	    if ( wc_ == 0 ) return;
 
