@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="makecomp" category="modeling, calibration">
+	<shortdescription>Make a component list for a known calibrator</shortdescription>
+	<description>
+	  Writes a component list named clist to disk and returns a dict of
+	  {'clist': clist,
+	   'objname': objname,
+	   'standard': standard,
+	   'epoch': epoch,
+	   'freqs': pl.array of frequencies, in GHz,
+	   'uvrange': pl.array of baseline lengths, in m,
+	   'amps':  pl.array of predicted visibility amplitudes, in Jy,
+	   'savedfig': False or, if made, the filename of a plot.}
+	  or False on error.
+	</description>
+	<input>
+	  <param type="string" name="clist" mustexist="false">
+	    <description>Name of output component list.</description>
+	    <value></value>
+	  </param>
+	  <param type="string" name="objname">
+	    <description>Object name</description>
+	    <value></value>
+	  </param>
+	  <param type="string" name="standard">
+	    <description>Flux density standard</description>
+	    <value>Perley-Butler 2010</value>
+	    <allowed kind="enum">
+	      <value>Perley-Butler 2010</value>
+	      <value>Perley-Taylor 99</value>
+	      <value>Baars</value>
+	      <value>Perley 90</value>
+	      <value>Perley-Taylor 95</value>
+	      <value>Butler-JPL-Horizons 2010</value>
+	    </allowed>
+	  </param>
+	  <!-- <param type="bool" name="listknownobjs">
+	         <description>List the objects known to standard.</description>
+	         <value>False</value>
+	       </param> -->
+	  <param type="string" name="epoch" subparam="True">
+	    <description>Epoch</description>
+	    <value></value>
+	  </param>
+	  <param type="string" name="minfreq">
+	    <description>Minimum frequency</description>
+	    <value></value>
+	  </param>
+	  <param type="string" name="maxfreq">
+	    <description>Maximum frequency</description>
+	    <value></value>
+	  </param>
+	  <param type="int" name="nfreqs">
+	    <description>Number of frequencies</description>
+	    <value>2</value>
+	  </param>
+	  <param type="string" name="uvrange">
+	    <description>Range of baseline lengths</description>
+	    <value></value>
+	  </param>
+	  <param type="bool" name="doplot" subparam="True">
+	    <description>Plot S vs |u| to the screen?</description>
+	    <value>False</value>
+	  </param>
+	  <param type="any" name="savefig" subparam="true">
+	    <any type="variant" limittypes="bool String"/>
+	    <description>Save a plot of S vs |u|?</description>
+	    <value type="bool">False</value>
+	  </param>
+
+	  <constraints>
+	    <when param="uvrange">
+	      <notequals value="">
+		<default param="doplot"><value>True</value></default>
+		<default param="savefig"><value type="bool">False</value></default>
+	      </notequals>
+	    </when>
+	  </constraints>
+	</input>
+<returns type="record"/>
+
+<example>
+
+    Writes a component list named clist to disk and returns a dict of
+    {'clist': clist,
+     'objname': objname,
+     'angdiam': angular diameter in radians (if used in clist),
+     'standard': standard,
+     'epoch': epoch,
+     'freqs': pl.array of frequencies, in GHz,
+     'uvrange': pl.array of baseline lengths, in m,
+     'amps':  pl.array of predicted visibility amplitudes, in Jy,
+     'savedfig': False or, if made, the filename of a plot.}
+    or False on error.
+
+    clist: directory name of the component list.
+           Defaults to "%s%s_%s_%s.cl" % (objname, mjd(epoch),
+                                          0.5 * (minfreq + maxfreq),
+                                          uvrange)
+    objname: An object supported by standard.
+    standard: A standard for calculating flux densities, as in setjy.
+              Default: 'Butler-JPL-Horizons 2010'
+    epoch: The epoch to use for the calculations.   Irrelevant for
+           extrasolar standards.
+    minfreq: The minimum frequency to use.
+             Example: '342.0GHz'
+    maxfreq: The maximum frequency to use.
+             Default: minfreq
+             Example: '346.0GHz'
+             Example: '', anything &lt;= 0, or None: use minfreq.
+    nfreqs:  The number of frequencies to use.
+             Default: 1 if minfreq == maxfreq,
+                      2 otherwise.
+    uvrange: The range of baseline lengths to calculate for.
+             Default: '' (None, just make clist.)
+    doplot: Whether or not to show a plot of S vs. |u| on screen.
+            Subparameter of uvrange.
+            Default: Necessarily False if uvrange is not specified.
+                     True otherwise.
+    savefig: Filename for saving a plot of S vs. |u|.
+             Subparameter of uvrange.
+             Default: False (necessarily if uvrange is not specified)
+             Examples: True (save to clist with a .png extension instead of .cl)
+                       'myplot.png' (save to myplot.png) 
+
+            
+</example>
+</task>
+</casaxml>
