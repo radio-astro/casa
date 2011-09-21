@@ -556,6 +556,7 @@ simulator::setspwindow(const std::string& spwname,
 		       const ::casac::variant& freq,
 		       const ::casac::variant& deltafreq, 
 		       const ::casac::variant& freqresolution, 
+		       const std::string& refcode,
 		       const int nchannels, const std::string& stokes)
 {
 
@@ -567,8 +568,19 @@ Bool rstat(False);
      casa::Quantity qfreq(casaQuantity(freq));
      casa::Quantity qdeltafreq(casaQuantity(deltafreq));
      casa::Quantity qfreqres(casaQuantity(freqresolution));
-     rstat=itsSim->setspwindow(spwname, qfreq, qdeltafreq, qfreqres, nchannels,
-			       stokes);
+     MFrequency::Types freqType;
+     if (!refcode.empty()) {
+       String code = refcode;
+       code.upcase();
+       if (!MFrequency::getType(freqType, code)) {
+	 *itsLog << "Invalid frequency reference '" << code
+		 << "'" << LogIO::EXCEPTION;
+       }
+     } else {
+       freqType=MFrequency::TOPO;
+     }
+     rstat=itsSim->setspwindow(spwname, qfreq, qdeltafreq, qfreqres, freqType,
+			       nchannels,stokes);
    }
    
    
