@@ -39,8 +39,8 @@ def sdsmooth(infile, antenna, scanaverage, scanlist, field, iflist, pollist, ker
             if ( abs(plotlevel) > 1 ):
                     # print summary of input data
                     casalog.post( "Initial Scantable:" )
-                    casalog.post( s._summary() )
-                    casalog.post( "--------------------------------------------------------------------------------" )
+                    #casalog.post( s._summary() )
+                    s._summary()
 
 
             # Select scan and field

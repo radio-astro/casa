@@ -272,7 +272,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="verifybl">
-            <description>verify the results of baseline fitting</description>
+            <description>verify the results of baseline fitting (only for blfunc='poly')</description>
             <value>False</value>
     </param>
 
@@ -619,6 +619,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         verifybl -- verify the results of baseline fitting
                 options: (bool) True,False
                 default: False
+                NOTE: Currently available only when blfunc='poly'
         verbosebl -- output baseline fitting results to logger and a file as well
                 default: True
                 example: If False, the fitting results including coefficients, 
