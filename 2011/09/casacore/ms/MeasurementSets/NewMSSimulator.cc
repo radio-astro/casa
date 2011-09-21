@@ -69,6 +69,7 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasData.h>
+#include <measures/Measures/MFrequency.h>
 #include <measures/Measures.h>
 #include <casa/Utilities/CountedPtr.h>
 #include <casa/Utilities/Assert.h>
@@ -700,6 +701,7 @@ void NewMSSimulator::initSpWindows(const String& spWindowName,
 				   const Quantity& startFreq,
 				   const Quantity& freqInc,
 				   const Quantity&,
+				   const MFrequency::Types& freqType,
 				   const String& stokesString)
 {
   
@@ -742,7 +744,8 @@ void NewMSSimulator::initSpWindows(const String& spWindowName,
   spwc.freqGroup().fillColumn(0);
   spwc.freqGroupName().fillColumn("Group 1");
   spwc.flagRow().fillColumn(False);
-  spwc.measFreqRef().fillColumn(MFrequency::TOPO);
+  //  spwc.measFreqRef().fillColumn(MFrequency::TOPO);
+  spwc.measFreqRef().fillColumn(freqType);
   polc.flagRow().fillColumn(False);
   ddc.flagRow().fillColumn(False);
   polc.numCorr().put(baseSpWID, nCorr);
