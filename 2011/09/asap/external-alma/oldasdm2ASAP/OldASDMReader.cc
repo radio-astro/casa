@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "limits.h"
-#include "float.h"
+//#include "float.h"
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
@@ -1232,7 +1232,8 @@ vector<float> OldASDMReader::getOpacity()
     vector<CalAtmosphereRow *> atmrows = atmtab.get() ;
     //ReceiverBand rb = rrows[0]->getFrequencyBand() ;
     int row0 = -1 ;
-    double eps = DBL_MAX ;
+    //double eps = DBL_MAX ;
+    double eps = 1.0e10 ;
     for ( unsigned int irow = 0 ; irow < nrow ; irow++ ) {
       CalAtmosphereRow *atmrow = atmrows[irow] ;
       if ( casa::String(atmrow->getAntennaName()) != antennaName_ 
@@ -1363,7 +1364,8 @@ int OldASDMReader::getClosestWeatherStation()
   apos[1] = antennaPosition_[1].getValue( Unit("m") ) ;
   apos[2] = antennaPosition_[2].getValue( Unit("m") ) ;
   
-  double eps = DBL_MAX ;
+  //double eps = DBL_MAX ;
+  double eps = 1.0e10 ;
   int retval = -1 ;
   for ( unsigned int ir = 0 ; ir < weatherStation_.size() ; ir++ ) {
     StationRow *srow = stab.getRowByKey( weatherStation_[ir] ) ;
