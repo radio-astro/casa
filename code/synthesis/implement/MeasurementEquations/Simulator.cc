@@ -2215,7 +2215,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     
     nmodels_p = image.nelements();
     if (nmodels_p == 1 && image(0) == "") nmodels_p = 0;
-    
+
+    int models_found=0;
     if (nmodels_p > 0) {
       images_p.resize(nmodels_p); 
       
@@ -2263,10 +2264,17 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
 	      return False;
 	    }
+	    models_found++;
 	  }
 	}
       }
     }
+
+    if(models_found<=0) {
+      os << LogIO::SEVERE << "No model images found" << LogIO::POST;
+      return False;
+    }
+
     
     
     if(vs_p) {
