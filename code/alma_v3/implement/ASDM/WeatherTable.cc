@@ -438,6 +438,9 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::WeatherTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

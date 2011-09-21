@@ -444,6 +444,9 @@ DopplerRow* DopplerTable::lookup(int sourceId, int transitionIndex, DopplerRefer
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::DopplerTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

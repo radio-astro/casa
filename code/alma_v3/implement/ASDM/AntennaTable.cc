@@ -447,6 +447,9 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::AntennaTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

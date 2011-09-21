@@ -51,7 +51,10 @@ namespace casa {
 	class QtRegion : public QObject {
 	    Q_OBJECT
 	    public:
-		QtRegion( const QString &nme, QtRegionSource *factory );
+
+		enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeLabel };
+
+		QtRegion( const QString &nme, QtRegionSource *factory, bool hold_signals_=false );
 		virtual ~QtRegion( );
 
 		const std::string name( ) const { return name_.toStdString( ); }
@@ -92,10 +95,20 @@ namespace casa {
 		virtual void movePosition( const std::string &x, const std::string &y,
 					   const std::string &coord, const std::string &units ) DISPLAY_PURE_VIRTUAL(Region::movePosition,);
 
+		void holdSignals( ) { hold_signals++; }
+		void releaseSignals( );
+
 	    public slots:
 		/* void name( const QString &newname ); */
 		/* void color( const QString &newcolor ); */
 	    signals:
+		void regionCreated( int, const QString &shape, const QString &name,
+				    const QList<double> &world_x, const QList<double> &world_y,
+				    const QList<int> &pixel_x, const QList<int> &pixel_y,
+				    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+		void regionUpdate( int, const QList<double> &world_x, const QList<double> &world_y,
+				   const QList<int> &pixel_x, const QList<int> &pixel_y );
+
 		/* void updated( ); */
 		/* void deleted( const QtRegion * ); */
 
@@ -115,6 +128,13 @@ namespace casa {
 		// need to be able to retrieve our peer (the non-GUI dependent)
 		// Region class pointer...
 		virtual Region *fetch_my_region( ) DISPLAY_PURE_VIRTUAL(Region::fetch_my_region,0);
+		virtual void fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const 
+						DISPLAY_PURE_VIRTUAL(Region::fetch_region_details,);
+
+
+
+		void signal_region_change( RegionChanges change );
 
 		bool statistics_visible;
 		bool statistics_update_needed;
@@ -129,7 +149,12 @@ namespace casa {
 		QString name_;
 		QString color_;
 	    private:
+		std::map<RegionChanges,bool> held_signals;
+		void fetch_details( Region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );
+		void clear_signal_cache( );
+		int hold_signals;
 		bool z_index_within_range;
+		int id_;
 	};
     }
 }

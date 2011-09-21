@@ -452,6 +452,9 @@ CalSeeingRow* CalSeeingTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection a
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalSeeingTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

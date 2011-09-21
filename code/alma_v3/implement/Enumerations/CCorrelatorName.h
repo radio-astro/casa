@@ -85,8 +85,6 @@ namespace CorrelatorNameMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration CorrelatorName.
   * 
@@ -131,7 +129,7 @@ class CCorrelatorName {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -185,8 +183,8 @@ class CCorrelatorName {
     CCorrelatorName(const CCorrelatorName&);
     CCorrelatorName& operator=(const CCorrelatorName&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

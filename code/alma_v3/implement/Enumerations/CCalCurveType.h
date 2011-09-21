@@ -71,8 +71,6 @@ namespace CalCurveTypeMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration CalCurveType.
   * 
@@ -103,7 +101,7 @@ class CCalCurveType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +155,8 @@ class CCalCurveType {
     CCalCurveType(const CCalCurveType&);
     CCalCurveType& operator=(const CCalCurveType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

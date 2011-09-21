@@ -78,6 +78,28 @@ const TableDesc& ASDM_MAIN::tableDesc() const {
 #include "MainTable.h"
 #include "MainRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace TimeSamplingMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_MAIN::fill(const ASDM& asdm) {
 	vector<MainRow*> rows = asdm.getMain().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -197,6 +219,12 @@ const TableDesc& ASDM_ALMARADIOMETER::tableDesc() const {
 #include "AlmaRadiometerTable.h"
 #include "AlmaRadiometerRow.h"
 
+		
+			
+		
+			
+		
+	
 void ASDM_ALMARADIOMETER::fill(const ASDM& asdm) {
 	vector<AlmaRadiometerRow*> rows = asdm.getAlmaRadiometer().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -282,6 +310,38 @@ const TableDesc& ASDM_ANNOTATION::tableDesc() const {
 #include "AnnotationTable.h"
 #include "AnnotationRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_ANNOTATION::fill(const ASDM& asdm) {
 	vector<AnnotationRow*> rows = asdm.getAnnotation().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -438,6 +498,28 @@ const TableDesc& ASDM_ANTENNA::tableDesc() const {
 #include "AntennaTable.h"
 #include "AntennaRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+using namespace AntennaTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_ANTENNA::fill(const ASDM& asdm) {
 	vector<AntennaRow*> rows = asdm.getAntenna().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -562,6 +644,40 @@ const TableDesc& ASDM_CALAMPLI::tableDesc() const {
 #include "CalAmpliTable.h"
 #include "CalAmpliRow.h"
 
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALAMPLI::fill(const ASDM& asdm) {
 	vector<CalAmpliRow*> rows = asdm.getCalAmpli().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -754,6 +870,84 @@ const TableDesc& ASDM_CALATMOSPHERE::tableDesc() const {
 #include "CalAtmosphereTable.h"
 #include "CalAtmosphereRow.h"
 
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace SyscalMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALATMOSPHERE::fill(const ASDM& asdm) {
 	vector<CalAtmosphereRow*> rows = asdm.getCalAtmosphere().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1051,6 +1245,56 @@ const TableDesc& ASDM_CALBANDPASS::tableDesc() const {
 #include "CalBandpassTable.h"
 #include "CalBandpassRow.h"
 
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace NetSidebandMod;
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace CalCurveTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALBANDPASS::fill(const ASDM& asdm) {
 	vector<CalBandpassRow*> rows = asdm.getCalBandpass().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1244,6 +1488,48 @@ const TableDesc& ASDM_CALCURVE::tableDesc() const {
 #include "CalCurveTable.h"
 #include "CalCurveRow.h"
 
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace CalCurveTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALCURVE::fill(const ASDM& asdm) {
 	vector<CalCurveRow*> rows = asdm.getCalCurve().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1417,6 +1703,44 @@ const TableDesc& ASDM_CALDATA::tableDesc() const {
 #include "CalDataTable.h"
 #include "CalDataRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace CalDataOriginMod;
+			
+		
+			
+using namespace CalTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace AssociatedCalNatureMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ScanIntentMod;
+			
+		
+	
 void ASDM_CALDATA::fill(const ASDM& asdm) {
 	vector<CalDataRow*> rows = asdm.getCalData().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1584,6 +1908,56 @@ const TableDesc& ASDM_CALDELAY::tableDesc() const {
 #include "CalDelayTable.h"
 #include "CalDelayRow.h"
 
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverSidebandMod;
+			
+		
+	
 void ASDM_CALDELAY::fill(const ASDM& asdm) {
 	vector<CalDelayRow*> rows = asdm.getCalDelay().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1773,6 +2147,26 @@ const TableDesc& ASDM_CALDEVICE::tableDesc() const {
 #include "CalDeviceTable.h"
 #include "CalDeviceRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace CalibrationDeviceMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALDEVICE::fill(const ASDM& asdm) {
 	vector<CalDeviceRow*> rows = asdm.getCalDevice().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -1919,6 +2313,52 @@ const TableDesc& ASDM_CALFLUX::tableDesc() const {
 #include "CalFluxTable.h"
 #include "CalFluxRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace FluxCalibrationMethodMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace StokesParameterMod;
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SourceModelMod;
+			
+		
+	
 void ASDM_CALFLUX::fill(const ASDM& asdm) {
 	vector<CalFluxRow*> rows = asdm.getCalFlux().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2140,6 +2580,70 @@ const TableDesc& ASDM_CALFOCUS::tableDesc() const {
 #include "CalFocusTable.h"
 #include "CalFocusRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace FocusMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALFOCUS::fill(const ASDM& asdm) {
 	vector<CalFocusRow*> rows = asdm.getCalFocus().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2395,6 +2899,46 @@ const TableDesc& ASDM_CALFOCUSMODEL::tableDesc() const {
 #include "CalFocusModelTable.h"
 #include "CalFocusModelRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALFOCUSMODEL::fill(const ASDM& asdm) {
 	vector<CalFocusModelRow*> rows = asdm.getCalFocusModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2560,6 +3104,26 @@ const TableDesc& ASDM_CALGAIN::tableDesc() const {
 #include "CalGainTable.h"
 #include "CalGainRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALGAIN::fill(const ASDM& asdm) {
 	vector<CalGainRow*> rows = asdm.getCalGain().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2715,6 +3279,64 @@ const TableDesc& ASDM_CALHOLOGRAPHY::tableDesc() const {
 #include "CalHolographyTable.h"
 #include "CalHolographyRow.h"
 
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALHOLOGRAPHY::fill(const ASDM& asdm) {
 	vector<CalHolographyRow*> rows = asdm.getCalHolography().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -2962,6 +3584,54 @@ const TableDesc& ASDM_CALPHASE::tableDesc() const {
 #include "CalPhaseTable.h"
 #include "CalPhaseRow.h"
 
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPHASE::fill(const ASDM& asdm) {
 	vector<CalPhaseRow*> rows = asdm.getCalPhase().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3190,6 +3860,82 @@ const TableDesc& ASDM_CALPOINTING::tableDesc() const {
 #include "CalPointingTable.h"
 #include "CalPointingRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace PointingModelModeMod;
+			
+		
+			
+using namespace PointingMethodMod;
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPOINTING::fill(const ASDM& asdm) {
 	vector<CalPointingRow*> rows = asdm.getCalPointing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3476,6 +4222,52 @@ const TableDesc& ASDM_CALPOINTINGMODEL::tableDesc() const {
 #include "CalPointingModelTable.h"
 #include "CalPointingModelRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+using namespace PointingModelModeMod;
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPOINTINGMODEL::fill(const ASDM& asdm) {
 	vector<CalPointingModelRow*> rows = asdm.getCalPointingModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3675,6 +4467,52 @@ const TableDesc& ASDM_CALPOSITION::tableDesc() const {
 #include "CalPositionTable.h"
 #include "CalPositionRow.h"
 
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PositionMethodMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPOSITION::fill(const ASDM& asdm) {
 	vector<CalPositionRow*> rows = asdm.getCalPosition().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -3878,6 +4716,52 @@ const TableDesc& ASDM_CALPRIMARYBEAM::tableDesc() const {
 #include "CalPrimaryBeamTable.h"
 #include "CalPrimaryBeamRow.h"
 
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AntennaMakeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PrimaryBeamDescriptionMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALPRIMARYBEAM::fill(const ASDM& asdm) {
 	vector<CalPrimaryBeamRow*> rows = asdm.getCalPrimaryBeam().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4055,6 +4939,32 @@ const TableDesc& ASDM_CALREDUCTION::tableDesc() const {
 #include "CalReductionTable.h"
 #include "CalReductionRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace InvalidatingConditionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALREDUCTION::fill(const ASDM& asdm) {
 	vector<CalReductionRow*> rows = asdm.getCalReduction().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4186,6 +5096,36 @@ const TableDesc& ASDM_CALSEEING::tableDesc() const {
 #include "CalSeeingTable.h"
 #include "CalSeeingRow.h"
 
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALSEEING::fill(const ASDM& asdm) {
 	vector<CalSeeingRow*> rows = asdm.getCalSeeing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4350,6 +5290,42 @@ const TableDesc& ASDM_CALWVR::tableDesc() const {
 #include "CalWVRTable.h"
 #include "CalWVRRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace WVRMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_CALWVR::fill(const ASDM& asdm) {
 	vector<CalWVRRow*> rows = asdm.getCalWVR().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4529,6 +5505,42 @@ const TableDesc& ASDM_CONFIGDESCRIPTION::tableDesc() const {
 #include "ConfigDescriptionTable.h"
 #include "ConfigDescriptionRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace CorrelationModeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AtmPhaseCorrectionMod;
+			
+		
+			
+using namespace ProcessorTypeMod;
+			
+		
+			
+		
+			
+using namespace SpectralResolutionTypeMod;
+			
+		
+			
+		
+			
+using namespace SpectralResolutionTypeMod;
+			
+		
+	
 void ASDM_CONFIGDESCRIPTION::fill(const ASDM& asdm) {
 	vector<ConfigDescriptionRow*> rows = asdm.getConfigDescription().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4696,6 +5708,38 @@ const TableDesc& ASDM_CORRELATORMODE::tableDesc() const {
 #include "CorrelatorModeTable.h"
 #include "CorrelatorModeRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+		
+			
+using namespace AccumModeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace AxisNameMod;
+			
+		
+			
+using namespace FilterModeMod;
+			
+		
+			
+using namespace CorrelatorNameMod;
+			
+		
+	
 void ASDM_CORRELATORMODE::fill(const ASDM& asdm) {
 	vector<CorrelatorModeRow*> rows = asdm.getCorrelatorMode().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4797,6 +5841,10 @@ const TableDesc& ASDM_DATADESCRIPTION::tableDesc() const {
 #include "DataDescriptionTable.h"
 #include "DataDescriptionRow.h"
 
+		
+			
+		
+	
 void ASDM_DATADESCRIPTION::fill(const ASDM& asdm) {
 	vector<DataDescriptionRow*> rows = asdm.getDataDescription().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -4912,6 +5960,66 @@ const TableDesc& ASDM_DELAYMODEL::tableDesc() const {
 #include "DelayModelTable.h"
 #include "DelayModelRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_DELAYMODEL::fill(const ASDM& asdm) {
 	vector<DelayModelRow*> rows = asdm.getDelayModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5163,6 +6271,16 @@ const TableDesc& ASDM_DOPPLER::tableDesc() const {
 #include "DopplerTable.h"
 #include "DopplerRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace DopplerReferenceCodeMod;
+			
+		
+	
 void ASDM_DOPPLER::fill(const ASDM& asdm) {
 	vector<DopplerRow*> rows = asdm.getDoppler().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5224,6 +6342,10 @@ const TableDesc& ASDM_EPHEMERIS::tableDesc() const {
 #include "EphemerisTable.h"
 #include "EphemerisRow.h"
 
+		
+			
+		
+	
 void ASDM_EPHEMERIS::fill(const ASDM& asdm) {
 	vector<EphemerisRow*> rows = asdm.getEphemeris().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5323,6 +6445,60 @@ const TableDesc& ASDM_EXECBLOCK::tableDesc() const {
 #include "ExecBlockTable.h"
 #include "ExecBlockRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_EXECBLOCK::fill(const ASDM& asdm) {
 	vector<ExecBlockRow*> rows = asdm.getExecBlock().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5568,6 +6744,32 @@ const TableDesc& ASDM_FEED::tableDesc() const {
 #include "FeedTable.h"
 #include "FeedRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FEED::fill(const ASDM& asdm) {
 	vector<FeedRow*> rows = asdm.getFeed().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5718,6 +6920,32 @@ const TableDesc& ASDM_FIELD::tableDesc() const {
 #include "FieldTable.h"
 #include "FieldRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FIELD::fill(const ASDM& asdm) {
 	vector<FieldRow*> rows = asdm.getField().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5869,6 +7097,28 @@ const TableDesc& ASDM_FLAG::tableDesc() const {
 #include "FlagTable.h"
 #include "FlagRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+	
 void ASDM_FLAG::fill(const ASDM& asdm) {
 	vector<FlagRow*> rows = asdm.getFlag().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -5996,6 +7246,22 @@ const TableDesc& ASDM_FLAGCMD::tableDesc() const {
 #include "FlagCmdTable.h"
 #include "FlagCmdRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FLAGCMD::fill(const ASDM& asdm) {
 	vector<FlagCmdRow*> rows = asdm.getFlagCmd().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6089,6 +7355,20 @@ const TableDesc& ASDM_FOCUS::tableDesc() const {
 #include "FocusTable.h"
 #include "FocusRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FOCUS::fill(const ASDM& asdm) {
 	vector<FocusRow*> rows = asdm.getFocus().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6194,6 +7474,28 @@ const TableDesc& ASDM_FOCUSMODEL::tableDesc() const {
 #include "FocusModelTable.h"
 #include "FocusModelRow.h"
 
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_FOCUSMODEL::fill(const ASDM& asdm) {
 	vector<FocusModelRow*> rows = asdm.getFocusModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6299,6 +7601,12 @@ const TableDesc& ASDM_FREQOFFSET::tableDesc() const {
 #include "FreqOffsetTable.h"
 #include "FreqOffsetRow.h"
 
+		
+			
+		
+			
+		
+	
 void ASDM_FREQOFFSET::fill(const ASDM& asdm) {
 	vector<FreqOffsetRow*> rows = asdm.getFreqOffset().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6386,6 +7694,26 @@ const TableDesc& ASDM_GAINTRACKING::tableDesc() const {
 #include "GainTrackingTable.h"
 #include "GainTrackingRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_GAINTRACKING::fill(const ASDM& asdm) {
 	vector<GainTrackingRow*> rows = asdm.getGainTracking().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6509,6 +7837,24 @@ const TableDesc& ASDM_HISTORY::tableDesc() const {
 #include "HistoryTable.h"
 #include "HistoryRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_HISTORY::fill(const ASDM& asdm) {
 	vector<HistoryRow*> rows = asdm.getHistory().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6608,6 +7954,20 @@ const TableDesc& ASDM_HOLOGRAPHY::tableDesc() const {
 #include "HolographyTable.h"
 #include "HolographyRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace HolographyChannelTypeMod;
+			
+		
+	
 void ASDM_HOLOGRAPHY::fill(const ASDM& asdm) {
 	vector<HolographyRow*> rows = asdm.getHolography().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6675,6 +8035,10 @@ const TableDesc& ASDM_OBSERVATION::tableDesc() const {
 #include "ObservationTable.h"
 #include "ObservationRow.h"
 
+		
+			
+		
+	
 void ASDM_OBSERVATION::fill(const ASDM& asdm) {
 	vector<ObservationRow*> rows = asdm.getObservation().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6750,6 +8114,40 @@ const TableDesc& ASDM_POINTING::tableDesc() const {
 #include "PointingTable.h"
 #include "PointingRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_POINTING::fill(const ASDM& asdm) {
 	vector<PointingRow*> rows = asdm.getPointing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -6912,6 +8310,28 @@ const TableDesc& ASDM_POINTINGMODEL::tableDesc() const {
 #include "PointingModelTable.h"
 #include "PointingModelRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+		
+	
 void ASDM_POINTINGMODEL::fill(const ASDM& asdm) {
 	vector<PointingModelRow*> rows = asdm.getPointingModel().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7016,6 +8436,20 @@ const TableDesc& ASDM_POLARIZATION::tableDesc() const {
 #include "PolarizationTable.h"
 #include "PolarizationRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace StokesParameterMod;
+			
+		
+			
+using namespace PolarizationTypeMod;
+			
+		
+	
 void ASDM_POLARIZATION::fill(const ASDM& asdm) {
 	vector<PolarizationRow*> rows = asdm.getPolarization().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7083,6 +8517,20 @@ const TableDesc& ASDM_PROCESSOR::tableDesc() const {
 #include "ProcessorTable.h"
 #include "ProcessorRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace ProcessorTypeMod;
+			
+		
+			
+using namespace ProcessorSubTypeMod;
+			
+		
+	
 void ASDM_PROCESSOR::fill(const ASDM& asdm) {
 	vector<ProcessorRow*> rows = asdm.getProcessor().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7160,6 +8608,30 @@ const TableDesc& ASDM_RECEIVER::tableDesc() const {
 #include "ReceiverTable.h"
 #include "ReceiverRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+		
+			
+using namespace ReceiverSidebandMod;
+			
+		
+			
+using namespace NetSidebandMod;
+			
+		
+	
 void ASDM_RECEIVER::fill(const ASDM& asdm) {
 	vector<ReceiverRow*> rows = asdm.getReceiver().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7285,6 +8757,50 @@ const TableDesc& ASDM_SBSUMMARY::tableDesc() const {
 #include "SBSummaryTable.h"
 #include "SBSummaryRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ReceiverBandMod;
+			
+		
+			
+using namespace SBTypeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+	
 void ASDM_SBSUMMARY::fill(const ASDM& asdm) {
 	vector<SBSummaryRow*> rows = asdm.getSBSummary().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7441,6 +8957,26 @@ const TableDesc& ASDM_SCALE::tableDesc() const {
 #include "ScaleTable.h"
 #include "ScaleRow.h"
 
+		
+			
+		
+			
+using namespace TimeScaleMod;
+			
+		
+			
+using namespace DataScaleMod;
+			
+		
+			
+using namespace DataScaleMod;
+			
+		
+			
+using namespace WeightTypeMod;
+			
+		
+	
 void ASDM_SCALE::fill(const ASDM& asdm) {
 	vector<ScaleRow*> rows = asdm.getScale().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7536,6 +9072,46 @@ const TableDesc& ASDM_SCAN::tableDesc() const {
 #include "ScanTable.h"
 #include "ScanRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace ScanIntentMod;
+			
+		
+			
+using namespace CalDataOriginMod;
+			
+		
+			
+		
+			
+using namespace CalibrationFunctionMod;
+			
+		
+			
+using namespace CalibrationSetMod;
+			
+		
+			
+using namespace AntennaMotionPatternMod;
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SCAN::fill(const ASDM& asdm) {
 	vector<ScanRow*> rows = asdm.getScan().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7679,6 +9255,20 @@ const TableDesc& ASDM_SEEING::tableDesc() const {
 #include "SeeingTable.h"
 #include "SeeingRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SEEING::fill(const ASDM& asdm) {
 	vector<SeeingRow*> rows = asdm.getSeeing().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -7814,6 +9404,80 @@ const TableDesc& ASDM_SOURCE::tableDesc() const {
 #include "SourceTable.h"
 #include "SourceRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SourceModelMod;
+			
+		
+			
+using namespace FrequencyReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace StokesParameterMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace RadialVelocityReferenceCodeMod;
+			
+		
+	
 void ASDM_SOURCE::fill(const ASDM& asdm) {
 	vector<SourceRow*> rows = asdm.getSource().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8128,6 +9792,78 @@ const TableDesc& ASDM_SPECTRALWINDOW::tableDesc() const {
 #include "SpectralWindowTable.h"
 #include "SpectralWindowRow.h"
 
+		
+			
+		
+			
+using namespace BasebandNameMod;
+			
+		
+			
+using namespace NetSidebandMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace SidebandProcessingModeMod;
+			
+		
+			
+		
+			
+using namespace WindowFunctionMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace CorrelationBitMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace FrequencyReferenceCodeMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SpectralResolutionTypeMod;
+			
+		
+	
 void ASDM_SPECTRALWINDOW::fill(const ASDM& asdm) {
 	vector<SpectralWindowRow*> rows = asdm.getSpectralWindow().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8378,6 +10114,16 @@ const TableDesc& ASDM_SQUARELAWDETECTOR::tableDesc() const {
 #include "SquareLawDetectorTable.h"
 #include "SquareLawDetectorRow.h"
 
+		
+			
+		
+			
+		
+			
+using namespace DetectorBandTypeMod;
+			
+		
+	
 void ASDM_SQUARELAWDETECTOR::fill(const ASDM& asdm) {
 	vector<SquareLawDetectorRow*> rows = asdm.getSquareLawDetector().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8443,6 +10189,22 @@ const TableDesc& ASDM_STATE::tableDesc() const {
 #include "StateTable.h"
 #include "StateRow.h"
 
+		
+			
+		
+			
+using namespace CalibrationDeviceMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_STATE::fill(const ASDM& asdm) {
 	vector<StateRow*> rows = asdm.getState().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8525,6 +10287,20 @@ const TableDesc& ASDM_STATION::tableDesc() const {
 #include "StationTable.h"
 #include "StationRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace StationTypeMod;
+			
+		
+			
+		
+	
 void ASDM_STATION::fill(const ASDM& asdm) {
 	vector<StationRow*> rows = asdm.getStation().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8613,6 +10389,34 @@ const TableDesc& ASDM_SUBSCAN::tableDesc() const {
 #include "SubscanTable.h"
 #include "SubscanRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace SubscanIntentMod;
+			
+		
+			
+using namespace SwitchingModeMod;
+			
+		
+			
+		
+			
+		
+			
+using namespace CorrelatorCalibrationMod;
+			
+		
+	
 void ASDM_SUBSCAN::fill(const ASDM& asdm) {
 	vector<SubscanRow*> rows = asdm.getSubscan().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8732,6 +10536,26 @@ const TableDesc& ASDM_SWITCHCYCLE::tableDesc() const {
 #include "SwitchCycleTable.h"
 #include "SwitchCycleRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+using namespace DirectionReferenceCodeMod;
+			
+		
+			
+		
+	
 void ASDM_SWITCHCYCLE::fill(const ASDM& asdm) {
 	vector<SwitchCycleRow*> rows = asdm.getSwitchCycle().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -8857,6 +10681,42 @@ const TableDesc& ASDM_SYSCAL::tableDesc() const {
 #include "SysCalTable.h"
 #include "SysCalRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SYSCAL::fill(const ASDM& asdm) {
 	vector<SysCalRow*> rows = asdm.getSysCal().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -9042,6 +10902,18 @@ const TableDesc& ASDM_SYSPOWER::tableDesc() const {
 #include "SysPowerTable.h"
 #include "SysPowerRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_SYSPOWER::fill(const ASDM& asdm) {
 	vector<SysPowerRow*> rows = asdm.getSysPower().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -9160,6 +11032,32 @@ const TableDesc& ASDM_TOTALPOWER::tableDesc() const {
 #include "TotalPowerTable.h"
 #include "TotalPowerRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_TOTALPOWER::fill(const ASDM& asdm) {
 	vector<TotalPowerRow*> rows = asdm.getTotalPower().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -9310,6 +11208,24 @@ const TableDesc& ASDM_WVMCAL::tableDesc() const {
 #include "WVMCalTable.h"
 #include "WVMCalRow.h"
 
+		
+			
+		
+			
+using namespace WVRMethodMod;
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_WVMCAL::fill(const ASDM& asdm) {
 	vector<WVMCalRow*> rows = asdm.getWVMCal().get();
 	unsigned int rowIndex = table_p_->nrow();
@@ -9431,6 +11347,38 @@ const TableDesc& ASDM_WEATHER::tableDesc() const {
 #include "WeatherTable.h"
 #include "WeatherRow.h"
 
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+			
+		
+	
 void ASDM_WEATHER::fill(const ASDM& asdm) {
 	vector<WeatherRow*> rows = asdm.getWeather().get();
 	unsigned int rowIndex = table_p_->nrow();

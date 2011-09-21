@@ -82,7 +82,7 @@ namespace casa {
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Rectangle::regionCenter( x, y ); }
 
-		QtRectangle( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+		QtRectangle( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y, bool hold_signals=false );
 
 		// qt-event -> QtRegion -> QtRectangle -> Region::refresh( )
 		void refresh( ) { Rectangle::refresh( ); }
@@ -99,6 +99,9 @@ namespace casa {
 	    protected:
 		Region::StatisticsList *generate_statistics_list( ) { return Rectangle::generate_statistics_list( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
+		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const 
+				{ return Rectangle::fetch_region_details( type, pixel_pts, world_pts ); }
 
 
 	};

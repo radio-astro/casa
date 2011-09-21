@@ -516,6 +516,9 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FocusModelTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

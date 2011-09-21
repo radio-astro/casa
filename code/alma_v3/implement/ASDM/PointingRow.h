@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::PointingRowIDL;
 #endif
 
 
@@ -52,16 +48,12 @@ using asdmIDL::PointingRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Angle.h>
-using  asdm::Angle;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
 
 
 
@@ -92,7 +84,6 @@ using  asdm::ArrayTimeInterval;
 
 	
 #include "CDirectionReferenceCode.h"
-using namespace DirectionReferenceCodeMod;
 	
 
 	
@@ -844,7 +835,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a PointingRowIDL struct.
 	 */
-	PointingRowIDL *toIDL() const;
+	asdmIDL::PointingRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -853,14 +844,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (PointingRowIDL x) ;
+	void setFromIDL (asdmIDL::PointingRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -868,7 +859,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -1139,7 +1130,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, PointingAttributeFromBin> fromBinMethods;
+	std::map<std::string, PointingAttributeFromBin> fromBinMethods;
 void antennaIdFromBin( EndianISStream& eiss);
 void timeIntervalFromBin( EndianISStream& eiss);
 void numSampleFromBin( EndianISStream& eiss);
@@ -1173,7 +1164,7 @@ void sampledTimeIntervalFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table, const vector<string>& attributesSeq);	 
+	 static PointingRow* fromBin(EndianISStream& eiss, PointingTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

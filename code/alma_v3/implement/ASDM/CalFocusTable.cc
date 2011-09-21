@@ -532,6 +532,9 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalFocusTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

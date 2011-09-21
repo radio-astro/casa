@@ -460,6 +460,9 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalDeviceTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

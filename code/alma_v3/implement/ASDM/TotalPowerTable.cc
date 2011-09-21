@@ -476,6 +476,9 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::TotalPowerTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

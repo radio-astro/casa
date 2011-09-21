@@ -69,8 +69,6 @@ namespace AtmPhaseCorrectionMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration AtmPhaseCorrection.
   * 
@@ -99,7 +97,7 @@ class CAtmPhaseCorrection {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -153,8 +151,8 @@ class CAtmPhaseCorrection {
     CAtmPhaseCorrection(const CAtmPhaseCorrection&);
     CAtmPhaseCorrection& operator=(const CAtmPhaseCorrection&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

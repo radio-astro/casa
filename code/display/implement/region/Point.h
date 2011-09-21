@@ -62,6 +62,10 @@ namespace casa {
 	    protected:
 
 		static const int radius;
+
+		virtual void fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const;
+
 		void drawRegion( bool );
 
 	};

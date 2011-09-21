@@ -71,8 +71,6 @@ namespace AntennaTypeMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration AntennaType.
   * 
@@ -103,7 +101,7 @@ class CAntennaType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +155,8 @@ class CAntennaType {
     CAntennaType(const CAntennaType&);
     CAntennaType& operator=(const CAntennaType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

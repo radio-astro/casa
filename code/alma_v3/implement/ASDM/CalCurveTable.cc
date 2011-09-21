@@ -502,6 +502,9 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalCurveTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

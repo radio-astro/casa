@@ -464,6 +464,7 @@ def applyflagcmd(
             'timerange',
             'correlation',
             'scan',
+            'intent',
             'feed',
             'array',
             'uvrange',
@@ -1023,6 +1024,9 @@ def sortflags(
                         nselect += 1
                 if myd.has_key('scan'):
                     if myd['scan'] != '':
+                        nselect += 1
+                if myd.has_key('intent'):
+                    if myd['intent'] != '':
                         nselect += 1
                 if myd.has_key('feed'):
                     if myd['feed'] != '':

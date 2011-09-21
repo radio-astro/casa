@@ -144,6 +144,13 @@ public slots:
 
     void overplot(QHash<QString, ImageInterface<float>*>);
 
+    void newRegion( int, const QString &shape, const QString &name,
+		    const QList<double> &world_x, const QList<double> &world_y,
+		    const QList<int> &pixel_x, const QList<int> &pixel_y,
+		    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+
+    void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
+		       const QList<int> &pixel_x, const QList<int> &pixel_y );
 signals:
     void hideProfile();
     void coordinateChange(const String&);
@@ -227,6 +234,20 @@ private:
     QtProfile::PlotType  itsPlotType;
     QtProfile::ErrorType itsErrorType;
     LogIO *itsLog;
+
+    class spectra_info {
+	public:
+	    spectra_info( ) { }
+	    spectra_info( const QString &s ) : shape_(s) { }
+	    spectra_info( const spectra_info &other ) : shape_(other.shape_) { }
+	    const spectra_info &operator=( const spectra_info &other ) { shape_ = other.shape_; }
+	    const QString &shape( ) { return shape_; }
+	private:
+	    QString shape_;
+    };
+
+    typedef std::map<int,spectra_info> SpectraInfoMap;
+    SpectraInfoMap spectra_info_map;
 };
 
 }

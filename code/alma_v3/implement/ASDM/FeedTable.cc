@@ -610,6 +610,9 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FeedTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

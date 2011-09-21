@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalHolographyRowIDL;
 #endif
 
 
@@ -52,25 +48,18 @@ using asdmIDL::CalHolographyRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Temperature.h>
-using  asdm::Temperature;
 
 #include <Angle.h>
-using  asdm::Angle;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Length.h>
-using  asdm::Length;
 
 #include <Frequency.h>
-using  asdm::Frequency;
 
 #include <EntityRef.h>
-using  asdm::EntityRef;
 
 
 
@@ -79,7 +68,6 @@ using  asdm::EntityRef;
 
 	
 #include "CAntennaMake.h"
-using namespace AntennaMakeMod;
 	
 
 	
@@ -98,14 +86,12 @@ using namespace AntennaMakeMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -1238,7 +1224,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalHolographyRowIDL struct.
 	 */
-	CalHolographyRowIDL *toIDL() const;
+	asdmIDL::CalHolographyRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1247,14 +1233,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalHolographyRowIDL x) ;
+	void setFromIDL (asdmIDL::CalHolographyRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1262,7 +1248,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -1650,7 +1636,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, CalHolographyAttributeFromBin> fromBinMethods;
+	std::map<std::string, CalHolographyAttributeFromBin> fromBinMethods;
 void antennaNameFromBin( EndianISStream& eiss);
 void calDataIdFromBin( EndianISStream& eiss);
 void calReductionIdFromBin( EndianISStream& eiss);
@@ -1694,7 +1680,7 @@ void tempOptRangeFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static CalHolographyRow* fromBin(EndianISStream& eiss, CalHolographyTable& table, const vector<string>& attributesSeq);	 
+	 static CalHolographyRow* fromBin(EndianISStream& eiss, CalHolographyTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

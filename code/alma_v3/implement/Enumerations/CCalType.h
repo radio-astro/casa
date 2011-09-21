@@ -99,8 +99,6 @@ namespace CalTypeMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration CalType.
   * 
@@ -159,7 +157,7 @@ class CCalType {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -213,8 +211,8 @@ class CCalType {
     CCalType(const CCalType&);
     CCalType& operator=(const CCalType&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

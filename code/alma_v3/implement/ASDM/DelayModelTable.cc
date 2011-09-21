@@ -504,6 +504,9 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::DelayModelTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

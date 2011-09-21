@@ -462,6 +462,9 @@ CalFluxRow* CalFluxTable::lookup(string sourceName, Tag calDataId, Tag calReduct
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalFluxTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

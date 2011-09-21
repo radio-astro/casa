@@ -430,6 +430,9 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::HistoryTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

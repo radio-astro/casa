@@ -74,6 +74,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::EphemerisRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

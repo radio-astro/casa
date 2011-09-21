@@ -112,6 +112,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // called when the user (read GUI user) indicates that a region should be deleted...
 	    void revokeRegion( viewer::Region * );
 
+	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
+  
 	protected:
 
 	    // Functions called by the base class event handling operators--and

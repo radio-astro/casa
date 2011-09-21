@@ -428,6 +428,9 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalGainTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

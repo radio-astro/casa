@@ -479,6 +479,9 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SpectralWindowTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

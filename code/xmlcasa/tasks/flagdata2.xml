@@ -83,6 +83,11 @@
                    <any type="variant" limittypes="string stringArray"/>
                    <value type="string"></value>
             </param>
+            <param type="any" name="intent" subparam="true">
+                   <description>Select data based on observation intent: \'\'==>all</description>
+                   <any type="variant" limittypes="string stringArray"/>
+                   <value type="string"></value>
+            </param>
             <param type="any" name="feed" subparam="true">
                    <description>multi-feed numbers: Not yet implemented</description>
                    <any type="variant" limittypes="string stringArray"/>
@@ -131,6 +136,11 @@
             </param>
             <param type="any" name="mf_scan" subparam="true">
                    <description>scan numbers: \'\'==>all</description>
+                   <any type="variant" limittypes="string stringArray"/>
+                   <value type="string"></value>
+            </param>
+            <param type="any" name="mf_intent" subparam="true">
+                   <description>observation intent: \'\'==>all</description>
                    <any type="variant" limittypes="string stringArray"/>
                    <value type="string"></value>
             </param>
@@ -343,6 +353,7 @@
                 <default param="timerange"><value type="string"></value></default>
                 <default param="correlation"><value type="string"></value></default>
                 <default param="scan"><value type="string"></value></default>
+                <default param="intent"><value type="string"></value></default>
                 <default param="feed"><value type="string"></value></default>
                 <default param="array"><value type="string"></value></default>
                 <default param="uvrange"><value type="string"></value></default>
@@ -357,6 +368,7 @@
                 <default param="mf_antenna"><value type="string"></value></default>
                 <default param="mf_timerange"><value type="string"></value></default>
                 <default param="mf_scan"><value type="string"></value></default>
+                <default param="mf_intent"><value type="string"></value></default>
                 <default param="mf_feed"><value type="string"></value></default>
                 <default param="mf_array"><value type="string"></value></default>
                 <default param="mf_uvrange"><value type="string"></value></default>
@@ -501,6 +513,8 @@
                     timerange='09:44:00+00:13:00' #data 13 minutes after time
               scan -- Select data based on scan number
                     default: '' (all); example: scan='&gt;3'
+              intent -- Select data based on observation intent
+                    default: '' (all); example: intent='*CAL*,*BAND*'
               feed -- Selection based on the feed - NOT IMPLEMENTED YET
               array -- Selection based on the antenna array
               observation -- Selection based on the observation ID
@@ -551,6 +565,8 @@
                     timerange='09:44:00+00:13:00' #data 13 minutes after time
               mf_scan -- Select data based on scan number
                     default: '' (all); example: scan='&gt;3'
+              mf_intent -- Select data based on observation intent
+                    default: '' (all); example: intent='*CAL*,*BAND*'
               mf_feed -- Selection based on the feed - NOT IMPLEMENTED YET
               mf_array -- Selection based on the antenna array
               mf_observation -- Selection based on the observation ID

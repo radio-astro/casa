@@ -532,6 +532,9 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPhaseTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

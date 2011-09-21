@@ -89,6 +89,9 @@ namespace casa {
 
 		// state returned from mouse functions for regions...
 		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseHandle = 1 << 2 };
+
+		enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion };
+
 		// functions to query results from mouse functions...
 		static bool refreshNeeded( int v ) { return v & MouseRefresh ? true : false; }
 		static bool regionSelected( int v ) { return v & MouseSelected ? true : false; }

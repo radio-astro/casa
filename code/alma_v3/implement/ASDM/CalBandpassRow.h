@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalBandpassRowIDL;
 #endif
 
 
@@ -52,40 +48,32 @@ using asdmIDL::CalBandpassRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Frequency.h>
-using  asdm::Frequency;
 
 
 
 
 	
 #include "CBasebandName.h"
-using namespace BasebandNameMod;
 	
 
 	
 #include "CNetSideband.h"
-using namespace NetSidebandMod;
 	
 
 	
 #include "CAtmPhaseCorrection.h"
-using namespace AtmPhaseCorrectionMod;
 	
 
 	
 #include "CCalCurveType.h"
-using namespace CalCurveTypeMod;
 	
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
@@ -106,7 +94,6 @@ using namespace ReceiverBandMod;
 
 	
 #include "CPolarizationType.h"
-using namespace PolarizationTypeMod;
 	
 
 	
@@ -941,7 +928,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalBandpassRowIDL struct.
 	 */
-	CalBandpassRowIDL *toIDL() const;
+	asdmIDL::CalBandpassRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -950,14 +937,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalBandpassRowIDL x) ;
+	void setFromIDL (asdmIDL::CalBandpassRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -965,7 +952,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -1264,7 +1251,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, CalBandpassAttributeFromBin> fromBinMethods;
+	std::map<std::string, CalBandpassAttributeFromBin> fromBinMethods;
 void basebandNameFromBin( EndianISStream& eiss);
 void sidebandFromBin( EndianISStream& eiss);
 void atmPhaseCorrectionFromBin( EndianISStream& eiss);
@@ -1301,7 +1288,7 @@ void rmsFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static CalBandpassRow* fromBin(EndianISStream& eiss, CalBandpassTable& table, const vector<string>& attributesSeq);	 
+	 static CalBandpassRow* fromBin(EndianISStream& eiss, CalBandpassTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

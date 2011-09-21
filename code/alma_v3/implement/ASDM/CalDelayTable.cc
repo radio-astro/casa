@@ -512,6 +512,9 @@ CalDelayRow* CalDelayTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalDelayTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

@@ -100,14 +100,14 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   dataType_[MEASUREMENT_SET] = "ms";
   dataType_[SKY_CATALOG]     = "skycatalog";
   dataType_[RESTORE]         = "restore";
-  
-  uiDisplayType_["Raster Image"] = RASTER;
-  uiDisplayType_["Contour Map"] = CONTOUR;
-  uiDisplayType_["Vector Map"] = VECTOR;
-  uiDisplayType_["Marker Map"] = MARKER;
-  uiDisplayType_["Sky Catalog"] = SKY_CAT;
-  uiDisplayType_["To Old Window"] = OLDPANEL;
-  uiDisplayType_["To New Window"] = NEWPANEL;
+
+  uiDisplayType_["raster image"] = RASTER;
+  uiDisplayType_["contour map"] = CONTOUR;
+  uiDisplayType_["vector map"] = VECTOR;
+  uiDisplayType_["marker map"] = MARKER;
+  uiDisplayType_["sky catalog"] = SKY_CAT;
+  uiDisplayType_["old window"] = OLDPANEL;
+  uiDisplayType_["new window"] = NEWPANEL;
   
   displayType_["raster"] = RASTER;
   displayType_["contour"] = CONTOUR;
