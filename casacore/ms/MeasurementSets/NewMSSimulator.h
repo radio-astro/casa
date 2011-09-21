@@ -38,7 +38,9 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MDirection.h>
+
 #include <tables/Tables/TiledDataStManAccessor.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -153,6 +155,7 @@ public:
 		     const Quantity& startFreq,
 		     const Quantity& freqInc,
 		     const Quantity& freqRes,
+		     const MFrequency::Types& freqType,
 		     const String& stokesString);
 
   bool getSpWindows(Int& nSpw,
