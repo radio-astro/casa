@@ -185,8 +185,8 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="bool" name="verify">
-            <description>verify the results of baseline fitting (only for blfunce='poly')</description>
-            <val1ue>False</value>
+            <description>verify the results of baseline fitting (only for blfunc="poly")</description>
+            <value>False</value>
     </param>
 
     <param type="bool" name="verbose">

@@ -272,7 +272,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="bool" name="verifybl">
-            <description>verify the results of baseline fitting (only for blfunc='poly')</description>
+            <description>verify the results of baseline fitting (only for blfunc="poly")</description>
             <value>False</value>
     </param>
 
