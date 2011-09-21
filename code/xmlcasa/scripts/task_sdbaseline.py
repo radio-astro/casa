@@ -36,8 +36,8 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 		
 		if ( abs(plotlevel) > 1 ):
 			casalog.post( "Initial Raw Scantable:" )
-			casalog.post( s._summary() )
-			casalog.post( "--------------------------------------------------------------------------------" )
+			#casalog.post( s._summary() )
+			s._summary()
 		
 		# check if the data contains spectra
 		if (s.nchan()==1):
@@ -286,7 +286,7 @@ def sdbaseline(infile, antenna, fluxunit, telescopeparm, specunit, frame, dopple
 					new_mask.set_basemask(masklist=lmask,invert=False)
 				new_mask.select_mask(once=False,showmask=True)
 
-				finish = raw_input("Press return to calculate statistics.\n")
+				finish = raw_input("Press return to baseline spectra.\n")
 				new_mask.finish_selection()
 				
 				msk = new_mask.get_mask()

@@ -57,8 +57,8 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 
             if ( abs(plotlevel) > 1 ):
                     casalog.post( "Initial Scantable:" )
-                    casalog.post( s._summary() )
-                    casalog.post( '--------------------------------------------------------------------------------' )
+                    #casalog.post( s._summary() )
+                    s._summary()
 
             # Default file name
             #if ( outfile == '' ):
