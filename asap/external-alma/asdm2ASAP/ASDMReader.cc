@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "limits.h"
-#include "float.h"
+//#include "float.h"
 
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
@@ -865,9 +865,9 @@ void ASDMReader::getSourceProperty( string &srcname,
     srcdir[0] = limitedAngle( srcdirA[0].get() ) ;
     srcdir[1] = limitedAngle( srcdirA[1].get() ) ;
     if ( srow->isDirectionCodeExists() ) {
-      DirectionReferenceCode dircode = srow->getDirectionCode() ;
+      DirectionReferenceCodeMod::DirectionReferenceCode dircode = srow->getDirectionCode() ;
       //logsink_->postLocally( LogMessage("dircode="+CDirectionReferenceCode::toString(dircode),LogOrigin(className_,funcName,WHERE)) ) ;
-      if ( dircode != J2000 ) {
+      if ( dircode != DirectionReferenceCodeMod::J2000 ) {
         // if not J2000, need direction conversion
         String ref( CDirectionReferenceCode::toString( dircode ) ) ;
         double mjd = vmsData_->v_time[dataIndex_] * s2d ;
@@ -919,103 +919,103 @@ int ASDMReader::getSrcType( unsigned int scan,
 {
   int srctype = SrcType::NOTYPE ;
   ScanRow *scanrow = asdm_->getScan().getRowByKey( execBlockTag_, (int)scan ) ;
-  ScanIntent scanIntent = scanrow->getScanIntent()[0] ;
+  ScanIntentMod::ScanIntent scanIntent = scanrow->getScanIntent()[0] ;
   SubscanRow *subrow = asdm_->getSubscan().getRowByKey( execBlockTag_, (int)scan, (int)subscan ) ;
-  SubscanIntent subIntent = subrow->getSubscanIntent() ;
-  SwitchingMode swmode = NO_SWITCHING ;
+  SubscanIntentMod::SubscanIntent subIntent = subrow->getSubscanIntent() ;
+  SwitchingModeMod::SwitchingMode swmode = SwitchingModeMod::NO_SWITCHING ;
   if ( subrow->isSubscanModeExists() )
     swmode = subrow->getSubscanMode() ;
-  if ( scanIntent == OBSERVE_TARGET ) {
+  if ( scanIntent == ScanIntentMod::OBSERVE_TARGET ) {
     // on sky scan
-    if ( swmode == NO_SWITCHING || swmode == POSITION_SWITCHING ) {
+    if ( swmode == SwitchingModeMod::NO_SWITCHING || swmode == SwitchingModeMod::POSITION_SWITCHING ) {
       // position switching
       // tentatively set NO_SWITCHING = POSITION_SWITCHING
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::PSON ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::PSOFF ;
       }
     }
-    else if ( swmode == FREQUENCY_SWITCHING ) {
+    else if ( swmode == SwitchingModeMod::FREQUENCY_SWITCHING ) {
       // frequency switching
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::FSON ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::FSOFF ;
       }
     }
-    else if ( swmode == NUTATOR_SWITCHING ) {
+    else if ( swmode == SwitchingModeMod::NUTATOR_SWITCHING ) {
       // nutator switching
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::PSON ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::PSOFF ;
       }
     }
     else {
       // other switching mode
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::SIG ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::REF ;
       }
     }
   }
-  else if ( scanIntent == CALIBRATE_ATMOSPHERE ) {
-    if ( swmode == NO_SWITCHING || swmode == POSITION_SWITCHING ) {
+  else if ( scanIntent == ScanIntentMod::CALIBRATE_ATMOSPHERE ) {
+    if ( swmode == SwitchingModeMod::NO_SWITCHING || swmode == SwitchingModeMod::POSITION_SWITCHING ) {
       // position switching
       // tentatively set NO_SWITCHING = POSITION_SWITCHING
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::PONCAL ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::POFFCAL ;
       }
     }
-    else if ( swmode == FREQUENCY_SWITCHING ) {
+    else if ( swmode == SwitchingModeMod::FREQUENCY_SWITCHING ) {
       // frequency switching
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::FONCAL ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::FOFFCAL ;
       }
     }
-    else if ( swmode == NUTATOR_SWITCHING ) {
+    else if ( swmode == SwitchingModeMod::NUTATOR_SWITCHING ) {
       // nutator switching
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::PONCAL ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::POFFCAL ;
       }
     }
     else {
       // other switching mode
-      if ( subIntent == ON_SOURCE ) {
+      if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
         srctype = SrcType::CAL ;
       }
-      else if ( subIntent == OFF_SOURCE ) {
+      else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
         srctype = SrcType::CAL ;
       }
     }
   }
   else {
     // off sky (e.g. calibrator device) scan
-    if ( subIntent == ON_SOURCE ) {
+    if ( subIntent == SubscanIntentMod::ON_SOURCE ) {
       srctype = SrcType::SIG ;
     }
-    else if ( subIntent == OFF_SOURCE ) {
+    else if ( subIntent == SubscanIntentMod::OFF_SOURCE ) {
       srctype = SrcType::REF ;
     }
-    else if ( subIntent == HOT ) {
+    else if ( subIntent == SubscanIntentMod::HOT ) {
       srctype = SrcType::HOT ;
     }
-    else if ( subIntent == AMBIENT ) {
+    else if ( subIntent == SubscanIntentMod::AMBIENT ) {
       srctype = SrcType::SKY ;
     }
     else {
@@ -1232,13 +1232,14 @@ vector<float> ASDMReader::getOpacity()
     vector<CalAtmosphereRow *> atmrows = atmtab.get() ;
     //ReceiverBand rb = rrows[0]->getFrequencyBand() ;
     int row0 = -1 ;
-    double eps = DBL_MAX ;
+    //double eps = DBL_MAX ;
+    double eps = 1.0e10 ;
     for ( unsigned int irow = 0 ; irow < nrow ; irow++ ) {
       CalAtmosphereRow *atmrow = atmrows[irow] ;
       if ( casa::String(atmrow->getAntennaName()) != antennaName_ 
            //|| atmrow->getReceiverBand() != rb 
            //|| atmrow->getBasebandName() != bbname 
-           || atmrow->getCalDataUsingCalDataId()->getCalType() != CAL_ATMOSPHERE ) 
+           || atmrow->getCalDataUsingCalDataId()->getCalType() != CalTypeMod::CAL_ATMOSPHERE ) 
         continue ;
       else {
         double dt = timeInterval_.getStart().getMJD() - atmrow->getEndValidTime().getMJD() ; 
@@ -1341,11 +1342,11 @@ void ASDMReader::processStation()
   StationTable &stab = asdm_->getStation() ;
   vector<StationRow *> srows = stab.get() ;
   for ( unsigned int irow = 0 ; irow < srows.size() ; irow++ ) {
-    StationType stype = srows[irow]->getType() ;
+    StationTypeMod::StationType stype = srows[irow]->getType() ;
     Tag stag = srows[irow]->getStationId() ;
-    if ( stype == ANTENNA_PAD )
+    if ( stype == StationTypeMod::ANTENNA_PAD )
       antennaPad_.push_back( stag ) ;
-    else if ( stype == WEATHER_STATION )
+    else if ( stype == StationTypeMod::WEATHER_STATION )
       weatherStation_.push_back( stag ) ;
   }
 
@@ -1363,7 +1364,8 @@ int ASDMReader::getClosestWeatherStation()
   apos[1] = antennaPosition_[1].getValue( Unit("m") ) ;
   apos[2] = antennaPosition_[2].getValue( Unit("m") ) ;
   
-  double eps = DBL_MAX ;
+  //double eps = DBL_MAX ;
+  double eps = 1.0e10 ;
   int retval = -1 ;
   for ( unsigned int ir = 0 ; ir < weatherStation_.size() ; ir++ ) {
     StationRow *srow = stab.getRowByKey( weatherStation_[ir] ) ;
@@ -1723,7 +1725,7 @@ string ASDMReader::getFrame()
 
   SpectralWindowTable &spwtab = asdm_->getSpectralWindow() ;
   vector<SpectralWindowRow *> rows = spwtab.get() ;
-  vector<FrequencyReferenceCode> measFreqRef( rows.size() ) ;
+  vector<FrequencyReferenceCodeMod::FrequencyReferenceCode> measFreqRef( rows.size() ) ;
   int nref = 0 ;
   for ( unsigned int irow = 0 ; irow < rows.size() ; irow++ ) {
     int nchan = rows[irow]->getNumChan() ;
