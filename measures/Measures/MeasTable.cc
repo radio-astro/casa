@@ -6504,6 +6504,7 @@ Double MeasTable::dUTC(Double utc) {
       LogIO os(LogOrigin("MeasTable",
 			 String("dUTC(Double)"),
 			 WHERE));
+      // This error is unnecessarily severe for simulations in the future
       os << LogIO::SEVERE <<
 	String("Leap second table TAI_UTC seems out-of-date. \n") +
 	"Until table is updated (see aips++ manager) times and coordinates\n" +
