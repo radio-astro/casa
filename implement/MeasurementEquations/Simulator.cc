@@ -908,6 +908,7 @@ Bool Simulator::setspwindow(const String& spwName,
 			    const Quantity& freq,
 			    const Quantity& deltafreq,
 			    const Quantity& freqresolution,
+			    const MFrequency::Types& freqType,
 			    const Int nChan,
 			    const String& stokes) 
 
@@ -940,9 +941,11 @@ Bool Simulator::setspwindow(const String& spwName,
     os << "sending init to MSSim for spw = " << spWindowName_p[nSpw-1] << LogIO::POST;  
 #endif
 
+    //freqType=MFrequency::TOPO;
     sim_p->initSpWindows(spWindowName_p[nSpw-1], nChan_p[nSpw-1], 
 			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
-			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
+			 freqRes_p[nSpw-1], freqType,
+			 stokesString_p[nSpw-1]);
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;

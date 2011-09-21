@@ -161,6 +161,7 @@ public:
 		   const Quantity& freq,
 		   const Quantity& deltafreq,
 		   const Quantity& freqresolution,
+		   const MFrequency::Types& freqType,
 		   const Int nchannels,
 		   const String& stokes);
 
