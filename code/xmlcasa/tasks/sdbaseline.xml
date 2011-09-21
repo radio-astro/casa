@@ -185,8 +185,8 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
     </param>
 
     <param type="bool" name="verify">
-            <description>verify the results of baseline fitting</description>
-            <value>False</value>
+            <description>verify the results of baseline fitting (only for blfunce='poly')</description>
+            <val1ue>False</value>
     </param>
 
     <param type="bool" name="verbose">
@@ -442,6 +442,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/x
         verify -- verify the results of baseline fitting
                 options: (bool) True,False
                 default: False
+                NOTE: Currently available only when blfunc='poly'
                 WARNING: Currently this just asks whether you accept
                          the displayed fit and if not, continues
                          without doing any baseline fit.
