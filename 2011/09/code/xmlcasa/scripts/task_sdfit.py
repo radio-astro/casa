@@ -240,6 +240,10 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
                                     doguess = False
 
                     else:
+                            if invertmask:
+                                    msg='No channel is selected because invertmask=True. Exit without fittinging.'
+                                    casalog.post( msg, priority = 'WARN' )
+                                    return
                             # Use whole region
                             nlines = 1
                             linelist=[]
@@ -256,11 +260,11 @@ def sdfit(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler, sc
 	    elif (fitmode == 'interact'):
 		    # Interactive masking
 		    new_mask=sd.interactivemask(scan=s)
-		    if (len(maskline) > 0):
-			    new_mask.set_basemask(masklist=maskline,invert=False)
+		    #if (len(maskline) > 0):
+                    new_mask.set_basemask(masklist=maskline,invert=invertmask)
 		    new_mask.select_mask(once=False,showmask=True)
 		    # Wait for user to finish mask selection
-		    finish=raw_input("Press return to calculate statistics.\n")
+		    finish=raw_input("Press return to fit lines.\n")
 
 		    # Get final mask list
 		    linemask=new_mask.get_mask()
