@@ -73,8 +73,6 @@ namespace FilterModeMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration FilterMode.
   * 
@@ -107,7 +105,7 @@ class CFilterMode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -161,8 +159,8 @@ class CFilterMode {
     CFilterMode(const CFilterMode&);
     CFilterMode& operator=(const CFilterMode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SeeingRowIDL;
 #endif
 
 
@@ -52,13 +48,10 @@ using asdmIDL::SeeingRowIDL;
 
 
 #include <Angle.h>
-using  asdm::Angle;
 
 #include <Length.h>
-using  asdm::Length;
 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
 
 
 
@@ -373,7 +366,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SeeingRowIDL struct.
 	 */
-	SeeingRowIDL *toIDL() const;
+	asdmIDL::SeeingRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -382,14 +375,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SeeingRowIDL x) ;
+	void setFromIDL (asdmIDL::SeeingRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -397,7 +390,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -524,7 +517,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, SeeingAttributeFromBin> fromBinMethods;
+	std::map<std::string, SeeingAttributeFromBin> fromBinMethods;
 void timeIntervalFromBin( EndianISStream& eiss);
 void numBaseLengthFromBin( EndianISStream& eiss);
 void baseLengthFromBin( EndianISStream& eiss);
@@ -547,7 +540,7 @@ void exponentFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static SeeingRow* fromBin(EndianISStream& eiss, SeeingTable& table, const vector<string>& attributesSeq);	 
+	 static SeeingRow* fromBin(EndianISStream& eiss, SeeingTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

@@ -6,15 +6,16 @@
 #include <display/region/QtRegionSource.qo.h>
 #include <display/region/QtRegionDock.qo.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
+#include <casaqt/QtUtilities/QtId.h>
 
 namespace casa {
     namespace viewer {
 
 	QtRegion::freestate_list *QtRegion::freestates = 0;
 
-	QtRegion::QtRegion( const QString &nme, QtRegionSource *factory ) :
-		source_(factory), dock_(factory->dock()), name_(nme), z_index_within_range(true) {
-
+	QtRegion::QtRegion( const QString &nme, QtRegionSource *factory, bool hold_signals_ ) :
+			source_(factory), dock_(factory->dock()), name_(nme), hold_signals(hold_signals_ ? 1 : 0),
+			z_index_within_range(true), id_(QtId::get_id( )) {
 	    statistics_visible = position_visible = false;
 	    statistics_update_needed = position_update_needed = true;
 
@@ -48,6 +49,7 @@ namespace casa {
 	    connect( dock_, SIGNAL(outputRegions(std::list<QtRegionState*>, std::ostream&)), SLOT(output(std::list<QtRegionState*>,std::ostream&)) );
 
 	    dock_->addRegion(mystate);
+	    signal_region_change( RegionChangeCreate );
 	}
 
 	QtRegion::~QtRegion( ) {
@@ -73,6 +75,8 @@ namespace casa {
 
         // indicates that region movement requires that the statistcs be updated...
 	void QtRegion::updateStateInfo( bool region_modified ) {
+
+	    signal_region_change( RegionChangeUpdate );
 
 	    // update statistics, when needed...
 	    if ( statistics_visible == false ) {
@@ -174,6 +178,85 @@ namespace casa {
 		delete ann;
 
 	    }
+	}
+
+	void QtRegion::fetch_details( Region::RegionTypes &type, QList<int> &pixelx, QList<int> &pixely, QList<double> &worldx, QList<double> &worldy ) {
+
+	    std::vector<std::pair<int,int> > pixel_pts;
+	    std::vector<std::pair<double,double> > world_pts;
+
+	    fetch_region_details(type, pixel_pts, world_pts);
+
+	    for ( int i=0; i < pixel_pts.size(); ++i ) {
+		pixelx.push_back(pixel_pts[i].first);
+		pixely.push_back(pixel_pts[i].second);
+	    }
+
+	    for ( int i=0; i < world_pts.size(); ++i ) {
+		worldx.push_back(world_pts[i].first);
+		worldy.push_back(world_pts[i].second);
+	    }
+
+	}
+
+	void QtRegion::signal_region_change( RegionChanges change ) {
+
+	    if ( hold_signals > 0 ) {
+		held_signals[change] = true;
+		return;
+	    }
+
+
+	    switch ( change ) {
+		case RegionChangeUpdate:
+		case RegionChangeCreate:
+		    {
+			Region::RegionTypes type;
+			QList<int> pixelx, pixely;
+			QList<double> worldx, worldy;
+
+			fetch_details( type, pixelx, pixely, worldx, worldy );
+
+			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
+
+			if ( change == RegionChangeCreate )
+			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" : 
+							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
+						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
+						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );
+			else
+			    emit regionUpdate( id_, worldx, worldy, pixelx, pixely );
+		    }
+		    break;
+		case RegionChangeLabel:
+		    fprintf( stderr, "====>> labelRegion( %d [id], %s [line color], %s [text], %s [font], %d [style], %d [size] )\n",
+			     id_, lineColor( ).c_str( ), textValue( ).c_str( ), textFont( ).c_str( ), textFontStyle( ), textFontSize( ) );
+		    break;
+	    }
+	}
+
+	void QtRegion::releaseSignals( ) {
+
+	    if ( --hold_signals > 0 ) return;
+	    hold_signals = 0;
+
+	    if ( held_signals[RegionChangeCreate] ) {
+		signal_region_change(RegionChangeCreate);
+	    } else {
+		if ( held_signals[RegionChangeUpdate] ) {
+		    signal_region_change(RegionChangeUpdate);
+		}
+		if ( held_signals[RegionChangeLabel] ) {
+		    signal_region_change(RegionChangeLabel);
+		}
+	    }
+	    clear_signal_cache( );
+	}
+
+	void QtRegion::clear_signal_cache( ) {
+	    held_signals[RegionChangeCreate] = false;
+	    held_signals[RegionChangeUpdate] = false;
+	    held_signals[RegionChangeLabel] = false;
 	}
 
     }

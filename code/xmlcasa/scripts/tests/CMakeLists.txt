@@ -36,6 +36,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_fixvis.py
   test_flagdata.py
   test_flagdata2.py
+  test_flagcmd.py
   test_getchunk.py
   test_hanningsmooth.py
   test_ia_isconform.py

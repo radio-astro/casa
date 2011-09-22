@@ -469,6 +469,9 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalReductionTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

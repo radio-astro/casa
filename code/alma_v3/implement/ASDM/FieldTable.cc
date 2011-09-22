@@ -425,6 +425,9 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FieldTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

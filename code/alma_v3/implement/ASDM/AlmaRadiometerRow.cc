@@ -80,6 +80,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::AlmaRadiometerRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

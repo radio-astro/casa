@@ -407,6 +407,9 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::AnnotationTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

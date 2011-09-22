@@ -47,14 +47,14 @@ def flagcmd(
     # v3.5 Updated STM 2011-03-23 (3.2.0) bug fix casalog.post long lines
     # v3.6 Updated STM 2011-05-31 (3.3.0) optype extract, bug fix plotting
     # v3.6 Updated STM 2011-06-28 (3.3.0) version for replacement in test
-    #
+    # v3.6 Updated SMC 2011-09-22 (3.3.0) added observation parameter
     try:
         from xml.dom import minidom
     except:
         raise Exception, 'Failed to load xml.dom.minidom into python'
 
     casalog.origin('flagcmd')
-    casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
+    casalog.post('You are using flagcmd v3.6 Updated SMC 2011-09-22')
 
     fglocal = casac.homefinder.find_home_by_name('flaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
@@ -464,6 +464,7 @@ def applyflagcmd(
             'timerange',
             'correlation',
             'scan',
+            'intent',
             'feed',
             'array',
             'uvrange',
@@ -1023,6 +1024,9 @@ def sortflags(
                         nselect += 1
                 if myd.has_key('scan'):
                     if myd['scan'] != '':
+                        nselect += 1
+                if myd.has_key('intent'):
+                    if myd['intent'] != '':
                         nselect += 1
                 if myd.has_key('feed'):
                     if myd['feed'] != '':

@@ -129,8 +129,6 @@ namespace DirectionReferenceCodeMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration DirectionReferenceCode.
   * 
@@ -219,7 +217,7 @@ class CDirectionReferenceCode {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -273,8 +271,8 @@ class CDirectionReferenceCode {
     CDirectionReferenceCode(const CDirectionReferenceCode&);
     CDirectionReferenceCode& operator=(const CDirectionReferenceCode&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

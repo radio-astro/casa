@@ -480,6 +480,9 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::PointingTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

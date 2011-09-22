@@ -82,7 +82,7 @@ namespace casa {
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Ellipse::regionCenter( x, y ); }
 
-		QtEllipse( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+		QtEllipse( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y, bool hold_signals=false );
 
 		// qt-event -> QtRegion -> QtEllipse -> Region::refresh( )
 		void refresh( ) { Ellipse::refresh( ); }
@@ -100,6 +100,9 @@ namespace casa {
 		Region::StatisticsList *generate_statistics_list( ) { return Ellipse::generate_statistics_list( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 
+		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const 
+				{ return Ellipse::fetch_region_details( type, pixel_pts, world_pts ); }
 
 	};
     }

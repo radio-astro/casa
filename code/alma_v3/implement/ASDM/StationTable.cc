@@ -387,6 +387,9 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::StationTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

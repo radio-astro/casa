@@ -86,6 +86,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalFocusModelRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

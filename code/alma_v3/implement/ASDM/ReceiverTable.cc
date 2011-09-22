@@ -574,6 +574,9 @@ ReceiverRow* ReceiverTable::lookup(Tag spectralWindowId, ArrayTimeInterval timeI
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ReceiverTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

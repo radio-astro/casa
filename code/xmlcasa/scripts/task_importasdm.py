@@ -1,7 +1,7 @@
 import os
 from taskinit import *
 
-def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, process_syspower=None, process_caldevice=None, verbose=None, overwrite=None, showversion=None, useversion=None):
+def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=None, srt=None, time_sampling=None, ocorr_mode=None, compression=None, asis=None, wvr_corrected_data=None, scans=None, ignore_time=None, process_syspower=None, process_caldevice=None, process_pointing=None, verbose=None, overwrite=None, showversion=None, useversion=None):
 	"""Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
            The conversion of the ALMA SDM archive format into a measurement set.  This version
            is under development and is geared to handling many spectral windows of different
@@ -72,15 +72,20 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                       and Weather are processed independently of the time range of the selected exec block / scan.
 
 	   process_syspower -- The SysPower table is processed if and only if this parameter is set to True.
+	          default: True
 
 	   process_caldevice -- The CalDevice table is processed if and only if this parameter is set to True.
+	          default: True
+
+	   process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
+	          default: True
 
 	   verbose     -- produce log output as asdm2MS is being run
 
 	   showversion -- report the version of the asdm2MS being used.
 
-	   useversion -- Selects the version of asdm2MS to be used (\'v2\' (default) or \'v3\' (use for ALMA data))
-                     default: v2
+	   useversion -- Selects the version of asdm2MS to be used (\'v3\' (default) or \'v2\' (version before May 2011))
+                     default: v3
         """
 	#Python script
 
@@ -177,10 +182,20 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 		   execute_string= execute_string +' --scans ' + scans
 		if (ignore_time) :
 			execute_string= execute_string +' --ignore-time'
-		if (process_syspower) :
-			execute_string = execute_string +' --process-syspower'
-		if (process_caldevice) :
-			execute_string = execute_string +' --process-caldevice'
+		if(useversion =='v3'):
+			if (not process_syspower) :
+				execute_string = execute_string +' --no-syspower'
+			if (not process_caldevice) :
+				execute_string = execute_string +' --no-caldevice'
+			if (not process_pointing) :
+				execute_string = execute_string +' --no-pointing'
+		else:
+			if (process_syspower):
+				execute_string = execute_string +' --process-syspower'
+			if (process_caldevice) :
+				execute_string = execute_string +' --process-caldevice'
+			if (not process_pointing) :
+				raise Exception, "You have set parameter \"process_pointing\" to False. This only works together with useversion=\"v3\"."
 		if(compression) :
 		   execute_string= execute_string +' --compression'
 		if(verbose) :

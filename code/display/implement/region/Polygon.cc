@@ -512,6 +512,29 @@ namespace casa {
 	    trcy = _drawing_trc_y_;
 	}
 
+	void Polygon::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+					    std::vector<std::pair<double,double> > &world_pts ) const {
+	    if ( wc_ == 0 ) return;
+
+	    type = PolyRegion;
+
+	    pixel_pts.resize(_drawing_points_.size( ));
+	    world_pts.resize(_drawing_points_.size( ));
+
+	    for ( unsigned int i=0; i < _drawing_points_.size( ); ++i ) {
+
+		double wx, wy;
+		linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, wx, wy );
+		world_pts[i].first = wx;
+		world_pts[i].second = wy;
+
+		int px, py;
+		linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py );
+		pixel_pts[i].first = px;
+		pixel_pts[i].second = py;
+	    }
+	}
+
 	void Polygon::update_drawing_bounds_rectangle( ) {
 
 	    _drawing_blc_x_ = _drawing_points_[0].first;

@@ -426,6 +426,9 @@ SubscanRow* SubscanTable::lookup(Tag execBlockId, int scanNumber, int subscanNum
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SubscanTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

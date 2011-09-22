@@ -494,14 +494,21 @@ namespace casa {
 	    linear_to_world( wc, lin_x1, lin_y1, world_x1, world_y1 );
 
 	    const CoordinateSystem &cs = wc->coordinateSystem( );
-	    Vector<Double> refpix(cs.referenceValue( ));
 
 	    static Vector<Double> pixelv(2);	// avoid vector allocation for each conversion
 	    static Vector<Double> worldv(2);
 
 	    // BEGIN - critical section
-	    worldv.resize(refpix.nelements());
-	    worldv = refpix;
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+		worldv.resize(cs.nWorldAxes( ));
+		worldv = cs.referenceValue( );
+	    }
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+		pixelv.resize(cs.nPixelAxes( ));
+		pixelv = cs.referencePixel( );
+	    }
+
 	    worldv(0) = world_x1;
 	    worldv(1) = world_y1;
 
@@ -528,10 +535,23 @@ namespace casa {
 	    const CoordinateSystem &cs = wc->coordinateSystem( );
 
 	    // BEGIN - critical section
+
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+		worldv.resize(cs.nWorldAxes( ));
+		worldv = cs.referenceValue( );
+	    }
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+		pixelv.resize(cs.nPixelAxes( ));
+		pixelv = cs.referencePixel( );
+	    }
+
 	    worldv(0) = world_x1;
 	    worldv(1) = world_y1;
+
 	    if ( ! cs.toPixel( pixelv, worldv ) )
 		throw internal_error( "linear to pixel conversion failed" );
+
 	    pix_x1 = pixelv(0);
 	    pix_y1 = pixelv(1);
 
@@ -658,14 +678,20 @@ namespace casa {
 
 	    const CoordinateSystem &cs = wc->coordinateSystem( );
 
-	    Vector<Double> refpix(cs.referencePixel( ));
-
 	    static Vector<Double> pixelv(2);	// avoid vector allocation for each conversion
 	    static Vector<Double> worldv(2);
 
 	    // BEGIN - critical section
-	    pixelv.resize(refpix.nelements());
-	    pixelv = refpix;
+	    if ( cs.nWorldAxes( ) != worldv.nelements( ) ) {
+		worldv.resize(cs.nWorldAxes( ));
+		worldv = cs.referenceValue( );
+	    }
+
+	    if ( cs.nPixelAxes( ) != pixelv.nelements( ) ) {
+		pixelv.resize(cs.nPixelAxes( ));
+		pixelv = cs.referencePixel( );
+	    }
+
 	    pixelv(0) = pix_x1;
 	    pixelv(1) = pix_y1;
 

@@ -380,7 +380,7 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
                         realimage = ia.newimage( tmprealname[i] )
                         imagimage = ia.newimage( tmpimagname[i] )
                         for ichan in range(nchan):
-                            pixval = realimage.getchunk( [0,0,ichan], [nxx-1,ny-1,ichan] )
+                            pixval = realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
                             pixval = pixval.reshape((nx,ny))
                             pixfft = npfft.fft2( pixval )
                             pixfft = pixfft.reshape((nx,ny,1))
@@ -421,7 +421,7 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
                         for i in range(len(infiles)):
                             realimage = ia.newimage( tmprealname[i] )
                             imagimage = ia.newimage( tmpimagname[i] )
-                            pixval = image.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
+                            pixval = realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] )
                             pixval = pixval.reshape((nx,ny))
                             pixout = pixout + pixval * weights[i]
                             denom = denom + weights[i]
@@ -454,7 +454,7 @@ def sdimprocess(infiles, mode, numpoly, beamsize, smoothsize, direction, masklis
                         pixval = realimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) + imagimage.getchunk( [0,0,ichan], [nx-1,ny-1,ichan] ) * 1.0j
                         pixval = pixval.reshape((nx,ny))
                         pixifft = npfft.ifft2( pixval )
-                        pixifft = pixfft.reshape((nx,ny,1))
+                        pixifft = pixifft.reshape((nx,ny,1))
                         outimage.putchunk( pixifft.real, [0,0,ichan] )
                         del pixval, pixifft
                 if maskedvalue is not None:

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SpectralWindowRowIDL;
 #endif
 
 
@@ -52,10 +48,8 @@ using asdmIDL::SpectralWindowRowIDL;
 
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Frequency.h>
-using  asdm::Frequency;
 
 
 
@@ -64,12 +58,10 @@ using  asdm::Frequency;
 
 	
 #include "CBasebandName.h"
-using namespace BasebandNameMod;
 	
 
 	
 #include "CNetSideband.h"
-using namespace NetSidebandMod;
 	
 
 	
@@ -78,14 +70,12 @@ using namespace NetSidebandMod;
 
 	
 #include "CSidebandProcessingMode.h"
-using namespace SidebandProcessingModeMod;
 	
 
 	
 
 	
 #include "CWindowFunction.h"
-using namespace WindowFunctionMod;
 	
 
 	
@@ -100,7 +90,6 @@ using namespace WindowFunctionMod;
 
 	
 #include "CCorrelationBit.h"
-using namespace CorrelationBitMod;
 	
 
 	
@@ -115,7 +104,6 @@ using namespace CorrelationBitMod;
 
 	
 #include "CFrequencyReferenceCode.h"
-using namespace FrequencyReferenceCodeMod;
 	
 
 	
@@ -134,7 +122,6 @@ using namespace FrequencyReferenceCodeMod;
 
 	
 #include "CSpectralResolutionType.h"
-using namespace SpectralResolutionTypeMod;
 	
 
 
@@ -1527,7 +1514,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SpectralWindowRowIDL struct.
 	 */
-	SpectralWindowRowIDL *toIDL() const;
+	asdmIDL::SpectralWindowRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1536,14 +1523,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SpectralWindowRowIDL x) ;
+	void setFromIDL (asdmIDL::SpectralWindowRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1551,7 +1538,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -2030,7 +2017,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, SpectralWindowAttributeFromBin> fromBinMethods;
+	std::map<std::string, SpectralWindowAttributeFromBin> fromBinMethods;
 void spectralWindowIdFromBin( EndianISStream& eiss);
 void basebandNameFromBin( EndianISStream& eiss);
 void netSidebandFromBin( EndianISStream& eiss);
@@ -2078,7 +2065,7 @@ void dopplerIdFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static SpectralWindowRow* fromBin(EndianISStream& eiss, SpectralWindowTable& table, const vector<string>& attributesSeq);	 
+	 static SpectralWindowRow* fromBin(EndianISStream& eiss, SpectralWindowTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

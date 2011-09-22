@@ -98,6 +98,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::TotalPowerRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

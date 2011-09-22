@@ -494,6 +494,9 @@ CalWVRRow* CalWVRTable::lookup(string antennaName, Tag calDataId, Tag calReducti
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalWVRTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

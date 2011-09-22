@@ -94,6 +94,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // Destructor
 	    virtual ~MultiEllipseTool() { }
   
+	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
+  
 	protected:
 
 	    virtual memory::cptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;

@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SquareLawDetectorRowIDL;
 #endif
 
 
@@ -52,7 +48,6 @@ using asdmIDL::SquareLawDetectorRowIDL;
 
 
 #include <Tag.h>
-using  asdm::Tag;
 
 
 
@@ -63,7 +58,6 @@ using  asdm::Tag;
 
 	
 #include "CDetectorBandType.h"
-using namespace DetectorBandTypeMod;
 	
 
 
@@ -248,7 +242,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SquareLawDetectorRowIDL struct.
 	 */
-	SquareLawDetectorRowIDL *toIDL() const;
+	asdmIDL::SquareLawDetectorRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -257,14 +251,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SquareLawDetectorRowIDL x) ;
+	void setFromIDL (asdmIDL::SquareLawDetectorRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -272,7 +266,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -378,7 +372,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, SquareLawDetectorAttributeFromBin> fromBinMethods;
+	std::map<std::string, SquareLawDetectorAttributeFromBin> fromBinMethods;
 void squareLawDetectorIdFromBin( EndianISStream& eiss);
 void numBandFromBin( EndianISStream& eiss);
 void bandTypeFromBin( EndianISStream& eiss);
@@ -398,7 +392,7 @@ void bandTypeFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static SquareLawDetectorRow* fromBin(EndianISStream& eiss, SquareLawDetectorTable& table, const vector<string>& attributesSeq);	 
+	 static SquareLawDetectorRow* fromBin(EndianISStream& eiss, SquareLawDetectorTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

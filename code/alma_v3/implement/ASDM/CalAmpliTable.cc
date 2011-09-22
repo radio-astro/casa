@@ -486,6 +486,9 @@ CalAmpliRow* CalAmpliTable::lookup(string antennaName, AtmPhaseCorrectionMod::At
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalAmpliTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

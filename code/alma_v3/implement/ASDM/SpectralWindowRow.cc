@@ -92,6 +92,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::SpectralWindowRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

@@ -5,7 +5,7 @@
 namespace casa {
     namespace viewer {
 
-	QtPolygon::QtPolygon( QtRegionSource *factory, WorldCanvas *wc, double x1, double y1 ) :
-				QtRegion("polygon name",factory), Polygon(wc, x1, y1) { }
+	QtPolygon::QtPolygon( QtRegionSource *factory, WorldCanvas *wc, double x1, double y1, bool hold_signals ) :
+				QtRegion("polygon name",factory, hold_signals), Polygon(wc, x1, y1) { }
     }
 }

@@ -82,7 +82,7 @@ namespace casa {
 
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
-		QtPolygon( QtRegionSource *factory, WorldCanvas *wc, double x1, double y1 );
+		QtPolygon( QtRegionSource *factory, WorldCanvas *wc, double x1, double y1, bool hold_signals=false );
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Polygon::regionCenter( x, y ); }
@@ -97,6 +97,9 @@ namespace casa {
 	    protected:
 		Region::StatisticsList *generate_statistics_list( ) { return Polygon::generate_statistics_list( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
+		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const 
+				{ return Polygon::fetch_region_details( type, pixel_pts, world_pts ); }
 
 	};
     }

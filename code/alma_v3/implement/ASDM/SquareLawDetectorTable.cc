@@ -373,6 +373,9 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SquareLawDetectorTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

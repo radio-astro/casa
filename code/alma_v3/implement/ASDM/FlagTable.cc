@@ -421,6 +421,9 @@ FlagRow* FlagTable::lookup(ArrayTime startTime, ArrayTime endTime, string reason
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FlagTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

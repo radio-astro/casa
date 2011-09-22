@@ -885,6 +885,828 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 	pc->clearCurve();
 }
 
+void QtProfile::newRegion( int id_, const QString &shape, const QString &name,
+			   const QList<double> &world_x, const QList<double> &world_y,
+			   const QList<int> &pixel_x, const QList<int> &pixel_y,
+			   const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle ) {
+    
+    if (!isVisible()) return;
+    if (!analysis) return;
+
+    spectra_info_map[id_] = shape;
+    String c("world");
+
+    Vector<Double> px(pixel_x.size());
+    Vector<Double> py(pixel_y.size());
+    Vector<Double> wx(world_x.size());
+    Vector<Double> wy(world_y.size());
+
+    for ( int x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
+    for ( int x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
+    for ( int x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
+    for ( int x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
+
+    *itsLog << LogOrigin("QtProfile", "newRegion");
+
+    if (cube == 0) {
+	pc->setWelcome( "No profile available "
+			"for the given data \nor\n"
+			"No profile available for the "
+			"display axes orientation");
+	pc->clearCurve();
+	return;
+    }
+
+    last_event_cs.resize(c.size());
+    last_event_cs = c;
+    last_event_px.resize(px.size());
+    last_event_px = px;
+    last_event_py.resize(py.size());
+    last_event_py = py;
+    last_event_wx.resize(wx.size());
+    last_event_wx = wx;
+    last_event_wy.resize(wy.size());
+    last_event_wy = wy;
+
+    npoints = wx.size();
+
+    if (npoints_old==0 && wx.size()>0){
+	npoints_old = wx.size();
+	changePlotType(plotMode->currentText());
+    } else {
+	if (npoints==1 & npoints_old!=1){
+	    npoints_old = npoints;
+	    changePlotType(plotMode->currentText());
+	} else if (npoints!=1 & npoints_old==1) {
+	    npoints_old = npoints;
+	    changePlotType(plotMode->currentText());
+	}
+    }
+
+    if (c != coordinate) {
+	coordinate = c.chars();
+	if (coordinate == "world")
+	    chk->setCurrentIndex(0);
+	else
+	    chk->setCurrentIndex(1);
+    }
+       
+    Int ns;
+    px.shape(ns);
+
+    Vector<Double> pxv(ns);
+    Vector<Double> pyv(ns);
+    Vector<Double> wxv(ns);
+    Vector<Double> wyv(ns);
+
+    if (cube == -1){
+	pxv.assign(py);
+	pyv.assign(px);
+	wxv.assign(wy);
+	wyv.assign(wx);
+    } else{
+	pxv.assign(px);
+	pyv.assign(py);
+	wxv.assign(wx);
+	wyv.assign(wy);
+    }
+
+    if (ns < 1) return;
+
+    if ( shape == "point" ) {
+	pc->setTitle("Single Point Profile");
+	region = "Point";
+    } else if ( shape == "rectangle" ) {
+	pc->setTitle("Rectangle Region Profile");
+	region = "Rect";
+    } else if ( shape == "ellipse" ) {
+	pc->setTitle("Elliptical Region Profile");
+	region = "Ellipse";
+    } else if ( shape == "polygon" ) {
+	pc->setTitle("Polygon Region Profile");
+	region = "Poly";
+    } else {
+	pc->setTitle("");
+	region = "";
+    }
+    pc->setWelcome("");
+
+    if (coordinate == "world") {
+	//xpos, ypos and position only used for display
+	xpos = QString::number(floor(wxv[0]+0.5));
+	ypos = QString::number(floor(wyv[0]+0.5));
+	position = getRaDec(wxv[0], wyv[0]);
+    } else {
+	//xpos, ypos and position only used for display
+	xpos = QString::number(floor(pxv[0]+0.5));
+	ypos = QString::number(floor(pyv[0]+0.5));
+	position = QString("[%1, %2]").arg(xpos).arg(ypos);
+    }
+    te->setText(position);
+
+    //Get Profile Flux density v/s coordinateType
+    Bool ok = False;
+    switch (itsPlotType) {
+	case QtProfile::PMEAN:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::MEAN, 0 );
+	    break;
+	case QtProfile::PMEDIAN:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::MEDIAN, 0);
+	    break;
+	case QtProfile::PSUM:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::SUM, 0);
+	    break;
+	//case QtProfile::PVRMSE:
+	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+	//			 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+	//			 (Int)QtProfile::RMSE, 0);
+	//	 break;
+	default:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::MEAN, 0);
+	    break;
+    }
+
+    if (!ok) {
+   	 // change to notify user of error...
+    	*itsLog << LogIO::WARN << "Can not generate the frequency profile!" << LogIO::POST;
+    	return;
+    }
+
+    // get the coordinate system
+    CoordinateSystem cSys = image->coordinates();
+    switch (itsErrorType) {
+	case QtProfile::PNOERROR:
+	    if (z_eval.size()> 0)
+		z_eval.resize(0);
+	    break;
+	case QtProfile::PERMSE:
+	    if ( wxv.size() < 2 ) {
+		*itsLog << LogIO::NORMAL << "Can not do the plot request, only one point!" << LogIO::POST;
+		if (z_eval.size()> 0)
+		z_eval.resize(0);
+	    } else {
+		switch (itsPlotType) {
+		    case QtProfile::PSUM:
+			*itsLog << LogIO::NORMAL << "Plotting RMSE as error of SUM makes no sense!" << LogIO::POST;
+			if (z_eval.size()> 0)
+			    z_eval.resize(0);
+			break;
+		    //case QtProfile::PVRMSE:
+		    //		 cout << "Plotting RMSE over RMSE makes no sense!" << endl;
+		    //  	 if (z_eval.size()> 0)
+		    //  		 z_eval.resize(0);
+		    //		 break;
+		    default:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+						     (Int)QtProfile::RMSE, 0);
+			break;
+		}
+	    }
+	    break;
+	case QtProfile::PPROPAG:
+	    if ( cSys.qualityAxisNumber() < 0 ) {
+		*itsLog << LogIO::NORMAL << "Can not do the plot request, no quality axis!" << LogIO::POST;
+		if (z_eval.size()> 0)
+		    z_eval.resize(0);
+	    } else {
+		switch ( itsPlotType ) {
+		    case QtProfile::PMEAN:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+						     (Int)QtProfile::NSQRTSUM, 1);
+			break;
+		    case QtProfile::PMEDIAN:
+			*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
+			if (z_eval.size()> 0)
+			    z_eval.resize(0);
+			    break;
+		    case QtProfile::PSUM:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+						     (Int)QtProfile::SQRTSUM, 1);
+			break;
+		    default:
+			if (z_eval.size()> 0)
+			    z_eval.resize(0);
+			break;
+		}
+	    }
+	    break;
+	default:
+	    if (z_eval.size()> 0)
+		z_eval.resize(0);
+	    break;
+    }
+
+    if ( ! ok ) {
+	// change to notify user of error...
+	*itsLog << LogIO::WARN << "Can not generate the frequency error profile!" << LogIO::POST;
+	return;
+    }
+
+    // scale for better display
+    // max absolute display numbers should be between 0.1 and 100.0
+    Double dmin = 0.1;
+    Double dmax = 100.;
+    Double ymin = min(z_yval);  	
+    Double ymax = max(z_yval);
+    ymax = max(abs(ymin), ymax);
+    Double symax;
+    Int ordersOfM = 0;
+
+    symax = ymax;
+    while(symax < dmin && ymax != 0.0){
+	ordersOfM += 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+    while(symax > dmax && ymax != 0.0){
+	ordersOfM -= 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+
+    if(ordersOfM!=0){
+	// correct display y axis values
+	for (uInt i = 0; i < z_yval.size(); i++) {
+	    z_yval(i) *= pow(10.,ordersOfM);
+	}
+	if ( z_eval.size() > 0 ) {
+	    for (uInt i = 0; i < z_eval.size(); i++) {
+		z_eval(i) *= pow(10.,ordersOfM);
+	    }
+	}
+    }
+
+    if(ordersOfM!=0){
+	// correct unit string
+	if( yUnit.startsWith("(") || yUnit.startsWith("[") || yUnit.startsWith("\"") ){
+	    // express factor as number
+	    ostringstream oss;
+	    oss << -ordersOfM;
+	    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+	} else {
+	    // express factor as character
+	    switch(-ordersOfM){ // note the sign!
+		case -9:
+		    yUnitPrefix = "p";
+		    break;
+		case -6:
+		    yUnitPrefix = "u";
+		    break;
+	    	case -3:
+		    yUnitPrefix = "m";
+		    break;
+		case 3:
+		    yUnitPrefix = "k";
+		    break;
+		case 6:
+		    yUnitPrefix = "M";
+		    break;
+		case 9:
+		    yUnitPrefix = "M";
+		    break;
+		default:
+		    ostringstream oss;
+		    oss << -ordersOfM;
+		    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+		    break;
+	    }
+	}
+    } else{ // no correction
+	yUnitPrefix = "";
+    }
+	
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
+    // plot the graph 
+    
+    pc->clearData();
+    pc->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+
+
+    QHashIterator<QString, ImageAnalysis*> i(*over);
+    while (i.hasNext() && multiProf->isChecked()) {
+	i.next();
+	//qDebug() << i.key() << ": " << i.value();
+	QString ky = i.key();
+	ImageAnalysis* ana = i.value();
+	Vector<Float> xval(100);
+	Vector<Float> yval(100);
+
+	switch (itsPlotType) {
+	    case QtProfile::PMEAN:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::MEAN, 0);
+		break;
+	    case QtProfile::PMEDIAN:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::MEDIAN, 0);
+		break;
+	    case QtProfile::PSUM:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::PSUM, 0);
+		break;
+	    //case QtProfile::PVRMSE:
+	    //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+	    //			"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+	    //			(Int)QtProfile::RMSE, 0);
+	    // break;
+	    default:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::MEAN, 0);
+		break;
+	}
+
+	if (ok) {
+	    if( ordersOfM != 0 ) {
+		// correct display y axis values
+		for (uInt i = 0; i < yval.size(); i++) {
+		    yval(i) *= pow(10.,ordersOfM);
+		}
+	    }
+	    Vector<Float> xRel(yval.size());
+	    Vector<Float> yRel(yval.size());
+	    Int count = 0;
+	    if ( relative->isChecked() ) {
+		ky = ky+ "_rel.";
+		for (uInt i = 0; i < yval.size(); i++) {
+		    uInt k = z_yval.size() - 1;
+		    //cout << xval(i) << " - " << yval(i) << endl;
+		    //cout << z_xval(0) << " + " << z_xval(k) << endl;
+		    if (coordinateType.contains("elocity")) {
+			if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+			    for (uInt j = 0; j < k; j++) {
+				//cout << z_xval(j) << " + "
+				//     << z_yval(j) << endl;
+				if (xval(i) <= z_xval(j) && xval(i) > z_xval(j + 1)) {
+				    float s = z_xval(j + 1) - z_xval(j);
+				    if (s != 0) {
+					xRel(count) = xval(i);
+					yRel(count)= yval(i) - (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+					count++;
+					//yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+				    }
+				    break;
+				}
+			    }
+			}
+		    } else {
+			if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+			    for (uInt j = 0; j < k; j++) {
+				if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+				    float s = z_xval(j + 1) - z_xval(j);
+				    if (s != 0) {
+					xRel(count) = xval(i);
+					yRel(count)= yval(i) - (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+					count++;
+					//yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+				    }
+				    break;
+				}
+			    }
+			}
+		    }
+		}
+		xRel.resize(count, True);
+		yRel.resize(count, True);
+		pc->addPolyLine(xRel, yRel, ky);
+	    } else {
+		pc->addPolyLine(xval, yval, ky);
+	    }
+	}
+    }
+
+    lastWX.assign(wxv);
+    lastWY.assign(wyv);
+    lastPX.assign(pxv);
+    lastPY.assign(pyv);
+}
+
+void QtProfile::updateRegion( int id_, const QList<double> &world_x, const QList<double> &world_y,
+			      const QList<int> &pixel_x, const QList<int> &pixel_y ) {
+
+    
+    if (!isVisible()) return;
+    if (!analysis) return;
+
+    SpectraInfoMap::iterator it = spectra_info_map.find(id_);
+    if ( it == spectra_info_map.end( ) ) return;
+
+    QString shape = it->second.shape( );
+
+    String c("world");
+
+    Vector<Double> px(pixel_x.size());
+    Vector<Double> py(pixel_y.size());
+    Vector<Double> wx(world_x.size());
+    Vector<Double> wy(world_y.size());
+
+    for ( int x=0; x < px.nelements(); ++x ) px[x] = pixel_x[x];
+    for ( int x=0; x < py.nelements(); ++x ) py[x] = pixel_y[x];
+    for ( int x=0; x < wx.nelements(); ++x ) wx[x] = world_x[x];
+    for ( int x=0; x < wy.nelements(); ++x ) wy[x] = world_y[x];
+
+    *itsLog << LogOrigin("QtProfile", "newRegion");
+
+    if (cube == 0) {
+	pc->setWelcome( "No profile available "
+			"for the given data \nor\n"
+			"No profile available for the "
+			"display axes orientation");
+	pc->clearCurve();
+	return;
+    }
+
+    last_event_cs.resize(c.size());
+    last_event_cs = c;
+    last_event_px.resize(px.size());
+    last_event_px = px;
+    last_event_py.resize(py.size());
+    last_event_py = py;
+    last_event_wx.resize(wx.size());
+    last_event_wx = wx;
+    last_event_wy.resize(wy.size());
+    last_event_wy = wy;
+
+    npoints = wx.size();
+
+    if (npoints_old==0 && wx.size()>0){
+	npoints_old = wx.size();
+	changePlotType(plotMode->currentText());
+    } else {
+	if (npoints==1 & npoints_old!=1){
+	    npoints_old = npoints;
+	    changePlotType(plotMode->currentText());
+	} else if (npoints!=1 & npoints_old==1) {
+	    npoints_old = npoints;
+	    changePlotType(plotMode->currentText());
+	}
+    }
+
+    if (c != coordinate) {
+	coordinate = c.chars();
+	if (coordinate == "world")
+	    chk->setCurrentIndex(0);
+	else
+	    chk->setCurrentIndex(1);
+    }
+       
+    Int ns;
+    px.shape(ns);
+
+    Vector<Double> pxv(ns);
+    Vector<Double> pyv(ns);
+    Vector<Double> wxv(ns);
+    Vector<Double> wyv(ns);
+
+    if (cube == -1){
+	pxv.assign(py);
+	pyv.assign(px);
+	wxv.assign(wy);
+	wyv.assign(wx);
+    } else{
+	pxv.assign(px);
+	pyv.assign(py);
+	wxv.assign(wx);
+	wyv.assign(wy);
+    }
+
+    if (ns < 1) return;
+
+    if ( shape == "point" ) {
+	pc->setTitle("Single Point Profile");
+	region = "Point";
+    } else if ( shape == "rectangle" ) {
+	pc->setTitle("Rectangle Region Profile");
+	region = "Rect";
+    } else if ( shape == "ellipse" ) {
+	pc->setTitle("Elliptical Region Profile");
+	region = "Ellipse";
+    } else if ( shape == "polygon" ) {
+	pc->setTitle("Polygon Region Profile");
+	region = "Poly";
+    } else {
+	pc->setTitle("");
+	region = "";
+    }
+    pc->setWelcome("");
+
+    if (coordinate == "world") {
+	//xpos, ypos and position only used for display
+	xpos = QString::number(floor(wxv[0]+0.5));
+	ypos = QString::number(floor(wyv[0]+0.5));
+	position = getRaDec(wxv[0], wyv[0]);
+    } else {
+	//xpos, ypos and position only used for display
+	xpos = QString::number(floor(pxv[0]+0.5));
+	ypos = QString::number(floor(pyv[0]+0.5));
+	position = QString("[%1, %2]").arg(xpos).arg(ypos);
+    }
+    te->setText(position);
+
+    //Get Profile Flux density v/s coordinateType
+    Bool ok = False;
+    switch (itsPlotType) {
+	case QtProfile::PMEAN:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::MEAN, 0 );
+	    break;
+	case QtProfile::PMEDIAN:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::MEDIAN, 0);
+	    break;
+	case QtProfile::PSUM:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::SUM, 0);
+	    break;
+	//case QtProfile::PVRMSE:
+	//	 ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+	//			 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+	//			 (Int)QtProfile::RMSE, 0);
+	//	 break;
+	default:
+	    ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_yval,
+					 "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					 (Int)QtProfile::MEAN, 0);
+	    break;
+    }
+
+    if (!ok) {
+   	 // change to notify user of error...
+    	*itsLog << LogIO::WARN << "Can not generate the frequency profile!" << LogIO::POST;
+    	return;
+    }
+
+    // get the coordinate system
+    CoordinateSystem cSys = image->coordinates();
+    switch (itsErrorType) {
+	case QtProfile::PNOERROR:
+	    if (z_eval.size()> 0)
+		z_eval.resize(0);
+	    break;
+	case QtProfile::PERMSE:
+	    if ( wxv.size() < 2 ) {
+		*itsLog << LogIO::NORMAL << "Can not do the plot request, only one point!" << LogIO::POST;
+		if (z_eval.size()> 0)
+		z_eval.resize(0);
+	    } else {
+		switch (itsPlotType) {
+		    case QtProfile::PSUM:
+			*itsLog << LogIO::NORMAL << "Plotting RMSE as error of SUM makes no sense!" << LogIO::POST;
+			if (z_eval.size()> 0)
+			    z_eval.resize(0);
+			break;
+		    //case QtProfile::PVRMSE:
+		    //		 cout << "Plotting RMSE over RMSE makes no sense!" << endl;
+		    //  	 if (z_eval.size()> 0)
+		    //  		 z_eval.resize(0);
+		    //		 break;
+		    default:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+						     (Int)QtProfile::RMSE, 0);
+			break;
+		}
+	    }
+	    break;
+	case QtProfile::PPROPAG:
+	    if ( cSys.qualityAxisNumber() < 0 ) {
+		*itsLog << LogIO::NORMAL << "Can not do the plot request, no quality axis!" << LogIO::POST;
+		if (z_eval.size()> 0)
+		    z_eval.resize(0);
+	    } else {
+		switch ( itsPlotType ) {
+		    case QtProfile::PMEAN:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+						     (Int)QtProfile::NSQRTSUM, 1);
+			break;
+		    case QtProfile::PMEDIAN:
+			*itsLog << LogIO::NORMAL << "Can not plot the error, NO propagation for median!" << LogIO::POST;
+			if (z_eval.size()> 0)
+			    z_eval.resize(0);
+			    break;
+		    case QtProfile::PSUM:
+			ok=analysis->getFreqProfile( wxv, wyv, z_xval, z_eval,
+						     "world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+						     (Int)QtProfile::SQRTSUM, 1);
+			break;
+		    default:
+			if (z_eval.size()> 0)
+			    z_eval.resize(0);
+			break;
+		}
+	    }
+	    break;
+	default:
+	    if (z_eval.size()> 0)
+		z_eval.resize(0);
+	    break;
+    }
+
+    if ( ! ok ) {
+	// change to notify user of error...
+	*itsLog << LogIO::WARN << "Can not generate the frequency error profile!" << LogIO::POST;
+	return;
+    }
+
+    // scale for better display
+    // max absolute display numbers should be between 0.1 and 100.0
+    Double dmin = 0.1;
+    Double dmax = 100.;
+    Double ymin = min(z_yval);  	
+    Double ymax = max(z_yval);
+    ymax = max(abs(ymin), ymax);
+    Double symax;
+    Int ordersOfM = 0;
+
+    symax = ymax;
+    while(symax < dmin && ymax != 0.0){
+	ordersOfM += 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+    while(symax > dmax && ymax != 0.0){
+	ordersOfM -= 3;
+	symax = ymax * pow(10.,ordersOfM);
+    }
+
+    if(ordersOfM!=0){
+	// correct display y axis values
+	for (uInt i = 0; i < z_yval.size(); i++) {
+	    z_yval(i) *= pow(10.,ordersOfM);
+	}
+	if ( z_eval.size() > 0 ) {
+	    for (uInt i = 0; i < z_eval.size(); i++) {
+		z_eval(i) *= pow(10.,ordersOfM);
+	    }
+	}
+    }
+
+    if(ordersOfM!=0){
+	// correct unit string
+	if( yUnit.startsWith("(") || yUnit.startsWith("[") || yUnit.startsWith("\"") ){
+	    // express factor as number
+	    ostringstream oss;
+	    oss << -ordersOfM;
+	    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+	} else {
+	    // express factor as character
+	    switch(-ordersOfM){ // note the sign!
+		case -9:
+		    yUnitPrefix = "p";
+		    break;
+		case -6:
+		    yUnitPrefix = "u";
+		    break;
+	    	case -3:
+		    yUnitPrefix = "m";
+		    break;
+		case 3:
+		    yUnitPrefix = "k";
+		    break;
+		case 6:
+		    yUnitPrefix = "M";
+		    break;
+		case 9:
+		    yUnitPrefix = "M";
+		    break;
+		default:
+		    ostringstream oss;
+		    oss << -ordersOfM;
+		    yUnitPrefix = "10E"+QString(oss.str().c_str())+" ";
+		    break;
+	    }
+	}
+    } else{ // no correction
+	yUnitPrefix = "";
+    }
+	
+    pc->setYLabel("("+yUnitPrefix+yUnit+")", 12, 0.5, "Helvetica [Cronyx]");
+
+    // plot the graph 
+    
+    pc->clearData();
+    pc->plotPolyLine(z_xval, z_yval, z_eval, fileName);
+
+
+    QHashIterator<QString, ImageAnalysis*> i(*over);
+    while (i.hasNext() && multiProf->isChecked()) {
+	i.next();
+	//qDebug() << i.key() << ": " << i.value();
+	QString ky = i.key();
+	ImageAnalysis* ana = i.value();
+	Vector<Float> xval(100);
+	Vector<Float> yval(100);
+
+	switch (itsPlotType) {
+	    case QtProfile::PMEAN:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::MEAN, 0);
+		break;
+	    case QtProfile::PMEDIAN:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::MEDIAN, 0);
+		break;
+	    case QtProfile::PSUM:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::PSUM, 0);
+		break;
+	    //case QtProfile::PVRMSE:
+	    //	ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+	    //			"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+	    //			(Int)QtProfile::RMSE, 0);
+	    // break;
+	    default:
+		ok=ana->getFreqProfile( wxv, wyv, xval, yval,
+					"world", coordinateType, 0, 0, 0, xaxisUnit, frameType_p,
+					(Int)QtProfile::MEAN, 0);
+		break;
+	}
+
+	if (ok) {
+	    if( ordersOfM != 0 ) {
+		// correct display y axis values
+		for (uInt i = 0; i < yval.size(); i++) {
+		    yval(i) *= pow(10.,ordersOfM);
+		}
+	    }
+	    Vector<Float> xRel(yval.size());
+	    Vector<Float> yRel(yval.size());
+	    Int count = 0;
+	    if ( relative->isChecked() ) {
+		ky = ky+ "_rel.";
+		for (uInt i = 0; i < yval.size(); i++) {
+		    uInt k = z_yval.size() - 1;
+		    //cout << xval(i) << " - " << yval(i) << endl;
+		    //cout << z_xval(0) << " + " << z_xval(k) << endl;
+		    if (coordinateType.contains("elocity")) {
+			if (xval(i) < z_xval(0) && xval(i) >= z_xval(k)) {
+			    for (uInt j = 0; j < k; j++) {
+				//cout << z_xval(j) << " + "
+				//     << z_yval(j) << endl;
+				if (xval(i) <= z_xval(j) && xval(i) > z_xval(j + 1)) {
+				    float s = z_xval(j + 1) - z_xval(j);
+				    if (s != 0) {
+					xRel(count) = xval(i);
+					yRel(count)= yval(i) - (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+					count++;
+					//yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+				    }
+				    break;
+				}
+			    }
+			}
+		    } else {
+			if (xval(i) >= z_xval(0) && xval(i) < z_xval(k)) {
+			    for (uInt j = 0; j < k; j++) {
+				if (xval(i) >= z_xval(j) && xval(i) < z_xval(j + 1)) {
+				    float s = z_xval(j + 1) - z_xval(j);
+				    if (s != 0) {
+					xRel(count) = xval(i);
+					yRel(count)= yval(i) - (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+					count++;
+					//yval(i) -= (z_yval(j) + (xval(i) - z_xval(j)) / s * (z_yval(j + 1) - z_yval(j)));
+				    }
+				    break;
+				}
+			    }
+			}
+		    }
+		}
+		xRel.resize(count, True);
+		yRel.resize(count, True);
+		pc->addPolyLine(xRel, yRel, ky);
+	    } else {
+		pc->addPolyLine(xval, yval, ky);
+	    }
+	}
+    }
+
+    lastWX.assign(wxv);
+    lastWY.assign(wyv);
+    lastPX.assign(pxv);
+    lastPY.assign(pyv);
+}
+
+
 void QtProfile::wcChanged( const String c,
 			   const Vector<Double> px, const Vector<Double> py,
 			   const Vector<Double> wx, const Vector<Double> wy,

@@ -450,6 +450,9 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SysPowerTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

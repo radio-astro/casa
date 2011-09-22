@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SubscanRowIDL;
 #endif
 
 
@@ -52,10 +48,8 @@ using asdmIDL::SubscanRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 
 
@@ -72,12 +66,10 @@ using  asdm::Tag;
 
 	
 #include "CSubscanIntent.h"
-using namespace SubscanIntentMod;
 	
 
 	
 #include "CSwitchingMode.h"
-using namespace SwitchingModeMod;
 	
 
 	
@@ -86,7 +78,6 @@ using namespace SwitchingModeMod;
 
 	
 #include "CCorrelatorCalibration.h"
-using namespace CorrelatorCalibrationMod;
 	
 
 
@@ -589,7 +580,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SubscanRowIDL struct.
 	 */
-	SubscanRowIDL *toIDL() const;
+	asdmIDL::SubscanRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -598,14 +589,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SubscanRowIDL x) ;
+	void setFromIDL (asdmIDL::SubscanRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -613,7 +604,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -806,7 +797,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, SubscanAttributeFromBin> fromBinMethods;
+	std::map<std::string, SubscanAttributeFromBin> fromBinMethods;
 void execBlockIdFromBin( EndianISStream& eiss);
 void scanNumberFromBin( EndianISStream& eiss);
 void subscanNumberFromBin( EndianISStream& eiss);
@@ -834,7 +825,7 @@ void correlatorCalibrationFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table, const vector<string>& attributesSeq);	 
+	 static SubscanRow* fromBin(EndianISStream& eiss, SubscanTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

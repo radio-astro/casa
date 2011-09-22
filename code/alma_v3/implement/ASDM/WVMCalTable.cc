@@ -460,6 +460,9 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::WVMCalTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

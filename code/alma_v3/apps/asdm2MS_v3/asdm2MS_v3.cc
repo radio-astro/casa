@@ -37,12 +37,15 @@ using namespace asdm;
 using namespace casa;
 
 #include "CBasebandName.h"
+#include "CCalibrationDevice.h"
+using namespace CalibrationDeviceMod;
 #include "CFrequencyReferenceCode.h"
 #include "CPolarizationType.h"
 #include "CProcessorSubType.h"
 #include "CProcessorType.h"
 #include "CScanIntent.h"
 #include "CSubscanIntent.h"
+using namespace SubscanIntentMod;
 #include "CStokesParameter.h"
 
 #include "Name2Table.h"
@@ -297,7 +300,7 @@ FrequencyReferenceMapper::~FrequencyReferenceMapper() {
 
 MFrequency::Types FrequencyReferenceMapper::value(FrequencyReferenceCodeMod::FrequencyReferenceCode frc) {
   switch (frc) {
-  case LABREST : 
+  case FrequencyReferenceCodeMod::LABREST : 
     errstream.str("");
     errstream << " Can't map FrequencyReferenceCode::LABREST to an MFrequency::Types" << endl;
     error(errstream.str());
@@ -1173,8 +1176,9 @@ int main(int argc, char *argv[]) {
       ("revision,r", "logs information about the revision of this application.")
       ("dry-run,m", "does not fill the MS MAIN table.")
       ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.")
-      ("process-syspower", "the SysPower table is processed if and only if the option is present.")
-      ("process-caldevice", "The CalDevice table is processed if and only if the option is present.");
+      ("no-syspower", "the SysPower table will be  ignored.")
+      ("no-caldevice", "The CalDevice table will be ignored.")
+      ("no-pointing", "The Pointing table will be ignored.") ;
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -1214,20 +1218,27 @@ int main(int argc, char *argv[]) {
       error(errstream.str());
     }
 
-    // Revision ? displays revision's info and don't go further.
-    if (vm.count("revision")) {
-      errstream.str("");
-      errstream << "$Id: asdm2MS.cpp,v 1.78 2011/07/06 13:44:12 mcaillat Exp $" << "\n" ;
-      error(errstream.str());
-    }
-
     // Verbose or quiet ?
     verbose = vm.count("verbose") > 0;
-    
-    istringstream iss;
-    string token;
+   
+    // Revision ? displays revision's info and don't go further if there is no dataset to process otherwise proceed....
+    string revision = "$Id: asdm2MS.cpp,v 1.83 2011/09/16 14:37:34 mcaillat Exp $\n";
+    if (vm.count("revision")) {
+      if (!vm.count("asdm-directory")) {
+	errstream.str("");
+	errstream << revision ;
+	error(errstream.str());
+      }
+      else {
+	infostream.str("");
+	infostream << revision ;
+	info(infostream.str());
+      }
+    }
 
     // Selection of correlation mode of data to be considered on input.
+    istringstream iss;
+    string token;
 
     string icm_opt = vm["icm"].as< string >();
     iss.clear();
@@ -1339,7 +1350,6 @@ int main(int argc, char *argv[]) {
     }
     
     // Does the user want compressed columns in the resulting MS ?
-
     if ((withCompression = (vm.count("compression") != 0))) {
       infostream.str("");
       infostream << "Compressed columns in the resulting MS(s) : Yes" ;
@@ -1411,7 +1421,6 @@ int main(int argc, char *argv[]) {
     error(errstream.str());
   }
   
-
   mode = 1; myTimer(&cpu_time_parse_xml, &real_time_parse_xml, &mode);
   infostream.str("");
   infostream << "Time spent parsing the ASDM medata : " << cpu_time_parse_xml << " s.";
@@ -1502,8 +1511,9 @@ int main(int argc, char *argv[]) {
   }
 
   bool	ignoreTime	 = vm.count("ignore-time") != 0;
-  bool	processSysPower	 = vm.count("process-syspower") != 0;
-  bool	processCalDevice = vm.count("process-caldevice") != 0;
+  bool	processSysPower	 = vm.count("no-syspower") == 0;
+  bool	processCalDevice = vm.count("no-caldevice") == 0;
+  bool  processPointing  = vm.count("no-pointing") == 0;
 
   //
   // Report the selection's parameters.
@@ -1526,8 +1536,9 @@ int main(int argc, char *argv[]) {
   info(infostream.str());
 
   infostream.str("");
-  infostream << "The SysPower table will " << (processSysPower ? "":"not ") << "be processed." << endl;
-  infostream << "The CalDevice table will " << (processCalDevice ? "":"not ") << "be processed." << endl;
+  if (!processSysPower)   infostream << "The SysPower table will not be processed." << endl;
+  if (!processCalDevice)  infostream << "The CalDevice table will not be processed." << endl;
+  if (!processPointing)   infostream << "The Pointing table will not be processed." << endl;
   info(infostream.str());
   //
   // Shall we have Complex or Float data ?
@@ -1627,11 +1638,6 @@ int main(int argc, char *argv[]) {
   // these Tag values are forming a sequence of integer 0 -> table.size() - 1. If that's not the case, the
   // program aborts.
   //
-  //
-  // Antenna table conversion.
-  //  
-  AntennaTable& antennaT = ds->getAntenna();
-
 
   //
   // Process the Antenna table.
@@ -1641,8 +1647,10 @@ int main(int argc, char *argv[]) {
   // At the same time, we populate a map ASDM Station Tag -> MS ANTENNA ID
   // which will be useful when the Weather table will be converted.
   //
-  //unsigned int numTrueAntenna;
-  { 
+  //unsigned int numTrueAntenna
+  
+  try { 
+    AntennaTable& antennaT = ds->getAntenna();
     AntennaRow*   r   = 0;
 
     int nAntenna = antennaT.size();
@@ -1692,17 +1700,32 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
+  catch (IllegalAccessException& e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
   
-  SpectralWindowTable& spwT = ds->getSpectralWindow();  
   //
   // Process the SpectralWindow table.
   //
-  vector<Tag> reorderedSwIds = reorderSwIds(*ds); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
-
-  for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
-
+  
   try {
+    SpectralWindowTable& spwT = ds->getSpectralWindow();      
+    vector<Tag> reorderedSwIds = reorderSwIds(*ds); // The vector of Spectral Window Tags in the order they will be inserted in the MS.
     
+    for (vector<Tag>::size_type i = 0; i != reorderedSwIds.size() ; i++) swIdx2Idx[reorderedSwIds[i].getTagValue()] = i;
+
     SpectralWindowRow* r = 0;
     int nSpectralWindow = spwT.size();
     
@@ -1961,6 +1984,16 @@ int main(int argc, char *argv[]) {
     errstream << e.getMessage();
     error(errstream.str());
   }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
 
   //
   // Process the Polarization table
@@ -1973,8 +2006,9 @@ int main(int argc, char *argv[]) {
 			 
   vector<int> polarizationIdx2Idx;
   int pIdx;
-  PolarizationTable& polT = ds->getPolarization();  
+
   try {
+    PolarizationTable& polT = ds->getPolarization();  
     PolarizationRow* r = 0;
     int nPolarization = polT.size();
     infostream.str("");
@@ -2058,15 +2092,25 @@ int main(int argc, char *argv[]) {
     errstream << e.getMessage();
     error(errstream.str());
   }
-  
-    
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+   
   //
   // Process the DataDescription table.
   //
   vector<int> dataDescriptionIdx2Idx;
   int ddIdx;
-  DataDescriptionTable& ddT = ds->getDataDescription();
-  {
+
+  try {
+    DataDescriptionTable& ddT = ds->getDataDescription();
     DataDescriptionRow* r = 0;
     int nDataDescription = ddT.size();
     infostream.str("");
@@ -2093,13 +2137,23 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
 
   // 
   // Process the ExecBlock table,
   // in order to build the MS Observation table.
   // 
-  const ExecBlockTable& execBlockT = ds->getExecBlock(); 
-  {
+  try {
+    const ExecBlockTable& execBlockT = ds->getExecBlock(); 
     ExecBlockRow* r = 0;
     int nExecBlock = execBlockT.size();
     infostream.str("");
@@ -2167,14 +2221,24 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
-
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  
   //
   // Process the Feed table
   // Issues :
   //    - time (epoch) : at the moment it takes directly the time as it is stored in the ASDM.
   //    - focusLength (in AIPS++) is no defined.
-  const FeedTable& feedT = ds->getFeed();
-  {
+  try {
+    const FeedTable& feedT = ds->getFeed();
     FeedRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << feedT.size() << " feed(s)...";
@@ -2241,7 +2305,17 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
-    
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  
   // Process the Field table.
   // Issues :
   // - only processes the case with numPoly == 0 at the moment.
@@ -2263,10 +2337,7 @@ int main(int argc, char *argv[]) {
       }
 
       string fieldName = r->getFieldName();
-      string code = "";
-      if(r->isCodeExists()){
-	r->getCode();
-      }
+      string code = r->getCode();
       DirectionReferenceCodeMod::DirectionReferenceCode dirRefCode = DirectionReferenceCodeMod::J2000;
       if(r->isDirectionCodeExists()){
 	dirRefCode = r->getDirectionCode();
@@ -2305,14 +2376,26 @@ int main(int argc, char *argv[]) {
     }
   }
   catch (IllegalAccessException& e) {
-    cout << e.getMessage();
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
   }
 
   //
   // Process the FlagCmd table.
   //
-  const FlagCmdTable& flagCmdT  = ds->getFlagCmd();
-  {
+  try {
+    const FlagCmdTable& flagCmdT  = ds->getFlagCmd();
     FlagCmdRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << flagCmdT.size() << " FlagCmd(s)...";
@@ -2359,13 +2442,23 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
-
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  
   // Process the History table.
   // Issues :
   // - use executeBlockId for observationId ...to be discussed with Francois.
   // - objectId : not taken into account (it's a string while the MS expects an int).
-  const HistoryTable& historyT = ds->getHistory();
-  {
+  try {
+    const HistoryTable& historyT = ds->getHistory();
     HistoryRow* r = 0;
     int nHistory = historyT.size();
     infostream.str("");
@@ -2408,224 +2501,248 @@ int main(int argc, char *argv[]) {
       info(infostream.str());
     }
   }
-
-
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
+  }
+  
   //
   // Process the Pointing table.
   // Issues :
   // - pointingModelId , phaseTracking, sourceOffset and overTheTop not taken into account.
 
-  const PointingTable& pointingT = ds->getPointing();
-  infostream.str("");
-  infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
-  rowsInAScanbyTimeIntervalFunctor<PointingRow> selector(selectedScanRow_v);
+  if (processPointing) 
+    try {
+      const PointingTable& pointingT = ds->getPointing();
+      infostream.str("");
+      infostream << "The dataset has " << pointingT.size() << " pointing(s)...";
+      rowsInAScanbyTimeIntervalFunctor<PointingRow> selector(selectedScanRow_v);
 
-  const vector<PointingRow *>& v = selector(pointingT.get(), ignoreTime);
-  if (!ignoreTime) 
-    infostream << v.size() << " of them in the selected exec blocks / scans ... ";
+      const vector<PointingRow *>& v = selector(pointingT.get(), ignoreTime);
+      if (!ignoreTime) 
+	infostream << v.size() << " of them in the selected exec blocks / scans ... ";
 
-  info(infostream.str());
-  int nPointing = v.size();
+      info(infostream.str());
+      int nPointing = v.size();
 
-  if (nPointing > 0) {
+      if (nPointing > 0) {
 
-    // Check some assertions.
-    //
-    // All rows of ASDM-Pointing must have their attribute usePolynomials equal to false
-    // and their numTerm attribute equal to 1. Use the opportunity of this check
-    // to compute the number of rows to be created in the MS-Pointing by summing
-    // all the numSample attributes values.
-    //
-    int numMSPointingRows = 0;
-    for (unsigned int i = 0; i < v.size(); i++) {
-      if (v[i]->getUsePolynomials()) {
-	errstream.str("");
-	errstream << "Found usePolynomials equal to true at row #" << i <<". Can't go further.";
-	error(errstream.str());
-      }
+	// Check some assertions.
+	//
+	// All rows of ASDM-Pointing must have their attribute usePolynomials equal to false
+	// and their numTerm attribute equal to 1. Use the opportunity of this check
+	// to compute the number of rows to be created in the MS-Pointing by summing
+	// all the numSample attributes values.
+	//
+	int numMSPointingRows = 0;
+	for (unsigned int i = 0; i < v.size(); i++) {
+	  if (v[i]->getUsePolynomials()) {
+	    errstream.str("");
+	    errstream << "Found usePolynomials equal to true at row #" << i <<". Can't go further.";
+	    error(errstream.str());
+	  }
 
-      numMSPointingRows += v[i]->getNumSample();
-    }
+	  numMSPointingRows += v[i]->getNumSample();
+	}
 
-    //
-    // Ok now we have verified the assertions and we know the number of rows
-    // to be created into the MS-Pointing, we can proceed.
+	//
+	// Ok now we have verified the assertions and we know the number of rows
+	// to be created into the MS-Pointing, we can proceed.
 
-    PointingRow* r = 0;
+	PointingRow* r = 0;
 
-    vector<int> antenna_id_(numMSPointingRows, 0);
-    vector<double> time_(numMSPointingRows, 0.0);
-    vector<double> interval_(numMSPointingRows, 0.0);
-    vector<double> direction_(2 * numMSPointingRows, 0.0);
-    vector<double> target_(2 * numMSPointingRows, 0.0);
-    vector<double> pointing_offset_(2 * numMSPointingRows, 0.0);
-    vector<double> encoder_(2 * numMSPointingRows, 0.0);
-    vector<bool> tracking_(numMSPointingRows, false);
+	vector<int> antenna_id_(numMSPointingRows, 0);
+	vector<double> time_(numMSPointingRows, 0.0);
+	vector<double> interval_(numMSPointingRows, 0.0);
+	vector<double> direction_(2 * numMSPointingRows, 0.0);
+	vector<double> target_(2 * numMSPointingRows, 0.0);
+	vector<double> pointing_offset_(2 * numMSPointingRows, 0.0);
+	vector<double> encoder_(2 * numMSPointingRows, 0.0);
+	vector<bool> tracking_(numMSPointingRows, false);
 
-    //
-    // Let's check if the optional attribute overTheTop is present somewhere in the table.
-    //
-    unsigned int numOverTheTop = count_if(v.begin(), v.end(), overTheTopExists);
-    bool overTheTopExists4All = v.size() == numOverTheTop;
+	//
+	// Let's check if the optional attribute overTheTop is present somewhere in the table.
+	//
+	unsigned int numOverTheTop = count_if(v.begin(), v.end(), overTheTopExists);
+	bool overTheTopExists4All = v.size() == numOverTheTop;
 
-    vector<bool> v_overTheTop_ ;
+	vector<bool> v_overTheTop_ ;
 
-    vector<s_overTheTop> v_s_overTheTop_;
+	vector<s_overTheTop> v_s_overTheTop_;
     
-    if (overTheTopExists4All) 
-      v_overTheTop_.resize(numMSPointingRows);
-    else if (numOverTheTop > 0) 
-      v_overTheTop_.resize(numOverTheTop);
+	if (overTheTopExists4All) 
+	  v_overTheTop_.resize(numMSPointingRows);
+	else if (numOverTheTop > 0) 
+	  v_overTheTop_.resize(numOverTheTop);
 
-    int iMSPointingRow = 0;
-    for (int i = 0; i < nPointing; i++) {     // Each row in the ASDM-Pointing ...
-      r = v.at(i);
+	int iMSPointingRow = 0;
+	for (int i = 0; i < nPointing; i++) {     // Each row in the ASDM-Pointing ...
+	  r = v.at(i);
 
-      // Let's prepare some values.
-      int antennaId = r->getAntennaId().getTagValue();
+	  // Let's prepare some values.
+	  int antennaId = r->getAntennaId().getTagValue();
       
-      double time = 0.0, interval = 0.0;
-      if (!r->isSampledTimeIntervalExists()) { // If no sampledTimeInterval then
-	                                       // then compute the first value of MS TIME and INTERVAL.
-	interval   = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / r->getNumSample();
-	// if (isEVLA) {
-        //   time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond;
-        // }
-        // else {
-	time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0;
-	//}
-      }
+	  double time = 0.0, interval = 0.0;
+	  if (!r->isSampledTimeIntervalExists()) { // If no sampledTimeInterval then
+	    // then compute the first value of MS TIME and INTERVAL.
+	    interval   = ((double) r->getTimeInterval().getDuration().get()) / ArrayTime::unitsInASecond / r->getNumSample();
+	    // if (isEVLA) {
+	    //   time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond;
+	    // }
+	    // else {
+	    time = ((double) r->getTimeInterval().getStart().get()) / ArrayTime::unitsInASecond + interval / 2.0;
+	    //}
+	  }
 
-      //
-      // The size of each vector below 
-      // should be checked against numSample !!!
-      //
-      int numSample = r->getNumSample();
-      const vector<vector<Angle> > encoder = r->getEncoder();
-      checkVectorSize<vector<Angle> >("encoder", encoder, "numSample", (unsigned int) numSample, "Pointing", (unsigned int)i);
+	  //
+	  // The size of each vector below 
+	  // should be checked against numSample !!!
+	  //
+	  int numSample = r->getNumSample();
+	  const vector<vector<Angle> > encoder = r->getEncoder();
+	  checkVectorSize<vector<Angle> >("encoder", encoder, "numSample", (unsigned int) numSample, "Pointing", (unsigned int)i);
 
-      const vector<vector<Angle> > pointingDirection = r->getPointingDirection();
-      checkVectorSize<vector<Angle> >("pointingDirection", pointingDirection, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
+	  const vector<vector<Angle> > pointingDirection = r->getPointingDirection();
+	  checkVectorSize<vector<Angle> >("pointingDirection", pointingDirection, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
 
-      const vector<vector<Angle> > target = r->getTarget();
-      checkVectorSize<vector<Angle> >("target", target, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
+	  const vector<vector<Angle> > target = r->getTarget();
+	  checkVectorSize<vector<Angle> >("target", target, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
 
-      const vector<vector<Angle> > offset = r->getOffset();
-      checkVectorSize<vector<Angle> >("offset", offset, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
+	  const vector<vector<Angle> > offset = r->getOffset();
+	  checkVectorSize<vector<Angle> >("offset", offset, "numSample", (unsigned int) numSample, "Pointing", (unsigned int) i);
 
-      bool   pointingTracking = r->getPointingTracking();
+	  bool   pointingTracking = r->getPointingTracking();
  
-      //
-      // Prepare some data structures and values required to compute the
-      // (MS) direction.
-      vector<double> cartesian1(3, 0.0);
-      vector<double> cartesian2(3, 0.0);
-      vector<double> spherical1(2, 0.0);
-      vector<double> spherical2(2, 0.0);
-      vector<vector<double> > matrix3x3;
-      for (unsigned int ii = 0; ii < 3; ii++) {
-	matrix3x3.push_back(cartesian1); // cartesian1 is used here just as a way to get a 1D vector of size 3.
-      }
-      double PSI = M_PI_2;
-      double THETA;
-      double PHI;
+	  //
+	  // Prepare some data structures and values required to compute the
+	  // (MS) direction.
+	  vector<double> cartesian1(3, 0.0);
+	  vector<double> cartesian2(3, 0.0);
+	  vector<double> spherical1(2, 0.0);
+	  vector<double> spherical2(2, 0.0);
+	  vector<vector<double> > matrix3x3;
+	  for (unsigned int ii = 0; ii < 3; ii++) {
+	    matrix3x3.push_back(cartesian1); // cartesian1 is used here just as a way to get a 1D vector of size 3.
+	  }
+	  double PSI = M_PI_2;
+	  double THETA;
+	  double PHI;
       
-      vector<ArrayTimeInterval> timeInterval ;
-      if (r->isSampledTimeIntervalExists()) timeInterval = r->getSampledTimeInterval();
+	  vector<ArrayTimeInterval> timeInterval ;
+	  if (r->isSampledTimeIntervalExists()) timeInterval = r->getSampledTimeInterval();
 
-      // Use 'fill' from algorithm for the cases where values remain constant.
-      // ANTENNA_ID
-      fill(antenna_id_.begin()+iMSPointingRow, antenna_id_.begin()+iMSPointingRow+numSample, antennaId);
+	  // Use 'fill' from algorithm for the cases where values remain constant.
+	  // ANTENNA_ID
+	  fill(antenna_id_.begin()+iMSPointingRow, antenna_id_.begin()+iMSPointingRow+numSample, antennaId);
 
-      // TRACKING 
-      fill(tracking_.begin()+iMSPointingRow, tracking_.begin()+iMSPointingRow+numSample, pointingTracking);
+	  // TRACKING 
+	  fill(tracking_.begin()+iMSPointingRow, tracking_.begin()+iMSPointingRow+numSample, pointingTracking);
 
-      // OVER_THE_TOP 
-      if (overTheTopExists4All)
-	// it's present everywhere
-	fill(v_overTheTop_.begin()+iMSPointingRow, v_overTheTop_.begin()+iMSPointingRow+numSample,
-	     r->getOverTheTop());
-      else if (r->isOverTheTopExists()) {
-	// it's present only in some rows.
-	s_overTheTop saux ;
-	saux.start = iMSPointingRow; saux.len = numSample; saux.value = r->getOverTheTop();
-	v_s_overTheTop_.push_back(saux);
-      }
+	  // OVER_THE_TOP 
+	  if (overTheTopExists4All)
+	    // it's present everywhere
+	    fill(v_overTheTop_.begin()+iMSPointingRow, v_overTheTop_.begin()+iMSPointingRow+numSample,
+		 r->getOverTheTop());
+	  else if (r->isOverTheTopExists()) {
+	    // it's present only in some rows.
+	    s_overTheTop saux ;
+	    saux.start = iMSPointingRow; saux.len = numSample; saux.value = r->getOverTheTop();
+	    v_s_overTheTop_.push_back(saux);
+	  }
        
-      // Use an explicit loop for the other values.
-      for (int j = 0 ; j < numSample; j++) { // ... must be expanded in numSample MS-Pointing rows.
+	  // Use an explicit loop for the other values.
+	  for (int j = 0 ; j < numSample; j++) { // ... must be expanded in numSample MS-Pointing rows.
 
-	// TIME and INTERVAL
-	if (r->isSampledTimeIntervalExists()) { //if sampledTimeInterval is present use its values.	           
-	  // Here the size of timeInterval will have to be checked against numSample !!
-	  interval_[iMSPointingRow] = ((double) timeInterval.at(j).getDuration().get()) / ArrayTime::unitsInASecond ;
-	  time_[iMSPointingRow] = ((double) timeInterval.at(j).getStart().get()) / ArrayTime::unitsInASecond
-	    + interval_[iMSPointingRow]/2;	  
-	}
-	else {                                     // otherwise compute TIMEs and INTERVALs from the first values.
-	  interval_[iMSPointingRow]            = interval;
-	  time_[iMSPointingRow]                = time + j*interval;
-	}
+	    // TIME and INTERVAL
+	    if (r->isSampledTimeIntervalExists()) { //if sampledTimeInterval is present use its values.	           
+	      // Here the size of timeInterval will have to be checked against numSample !!
+	      interval_[iMSPointingRow] = ((double) timeInterval.at(j).getDuration().get()) / ArrayTime::unitsInASecond ;
+	      time_[iMSPointingRow] = ((double) timeInterval.at(j).getStart().get()) / ArrayTime::unitsInASecond
+		+ interval_[iMSPointingRow]/2;	  
+	    }
+	    else {                                     // otherwise compute TIMEs and INTERVALs from the first values.
+	      interval_[iMSPointingRow]            = interval;
+	      time_[iMSPointingRow]                = time + j*interval;
+	    }
 
-	// DIRECTION
-	THETA = target.at(j).at(1).get();
-	PHI   = -M_PI_2 - target.at(j).at(0).get();
-	spherical1[0] = offset.at(j).at(0).get();
-	spherical1[1] = offset.at(j).at(1).get();
-	rect(spherical1, cartesian1);
-	eulmat(PSI, THETA, PHI, matrix3x3);
-	matvec(matrix3x3, cartesian1, cartesian2);
-	spher(cartesian2, spherical2);
-	direction_[2*iMSPointingRow]  = spherical2[0];
-	direction_[2*iMSPointingRow+1]= spherical2[1];
+	    // DIRECTION
+	    THETA = target.at(j).at(1).get();
+	    PHI   = -M_PI_2 - target.at(j).at(0).get();
+	    spherical1[0] = offset.at(j).at(0).get();
+	    spherical1[1] = offset.at(j).at(1).get();
+	    rect(spherical1, cartesian1);
+	    eulmat(PSI, THETA, PHI, matrix3x3);
+	    matvec(matrix3x3, cartesian1, cartesian2);
+	    spher(cartesian2, spherical2);
+	    direction_[2*iMSPointingRow]  = spherical2[0];
+	    direction_[2*iMSPointingRow+1]= spherical2[1];
 
-	// TARGET
-	target_[2*iMSPointingRow]     = target.at(j).at(0).get();
-	target_[2*iMSPointingRow+1]   = target.at(j).at(1).get();
+	    // TARGET
+	    target_[2*iMSPointingRow]     = target.at(j).at(0).get();
+	    target_[2*iMSPointingRow+1]   = target.at(j).at(1).get();
 
-	// POINTING_OFFSET
-	pointing_offset_[2*iMSPointingRow]   = offset.at(j).at(0).get();
-	pointing_offset_[2*iMSPointingRow+1] = offset.at(j).at(1).get();
+	    // POINTING_OFFSET
+	    pointing_offset_[2*iMSPointingRow]   = offset.at(j).at(0).get();
+	    pointing_offset_[2*iMSPointingRow+1] = offset.at(j).at(1).get();
 
-	// ENCODER
-	encoder_[2*iMSPointingRow]           = encoder.at(j).at(0).get();
-	encoder_[2*iMSPointingRow+1]         = encoder.at(j).at(1).get();
+	    // ENCODER
+	    encoder_[2*iMSPointingRow]           = encoder.at(j).at(0).get();
+	    encoder_[2*iMSPointingRow+1]         = encoder.at(j).at(1).get();
 
 	
-	// increment the row number in MS Pointing.
-	iMSPointingRow++;	
-      }
-    }
+	    // increment the row number in MS Pointing.
+	    iMSPointingRow++;	
+	  }
+	}
     
 
-    for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
-	 iter != msFillers.end();
-	 ++iter) {
-      iter->second->addPointingSlice(numMSPointingRows,
-				     antenna_id_,
-				     time_,
-				     interval_,
-				     direction_,
-				     target_,
-				     pointing_offset_,
-				     encoder_,
-				     tracking_,
-				     overTheTopExists4All,
-				     v_overTheTop_,
-				     v_s_overTheTop_);
-    }
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator iter = msFillers.begin();
+	     iter != msFillers.end();
+	     ++iter) {
+	  iter->second->addPointingSlice(numMSPointingRows,
+					 antenna_id_,
+					 time_,
+					 interval_,
+					 direction_,
+					 target_,
+					 pointing_offset_,
+					 encoder_,
+					 tracking_,
+					 overTheTopExists4All,
+					 v_overTheTop_,
+					 v_s_overTheTop_);
+	}
     
-    if (nPointing) {
-      infostream.str("");
-      infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
-      info(infostream.str()); 
+	if (nPointing) {
+	  infostream.str("");
+	  infostream << "converted in " << msFillers.begin()->second->ms()->pointing().nrow() << " pointing(s) in the measurement set." ;
+	  info(infostream.str()); 
+	}
+      }
     }
-  }
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
+
     
   // Process the processor table.
   //
-  ProcessorTable& processorT = ds->getProcessor();
-  {
+
+  try {
+    ProcessorTable& processorT = ds->getProcessor();
     ProcessorRow* r = 0;
     int nProcessor = processorT.size();
 
@@ -2657,6 +2774,16 @@ int main(int argc, char *argv[]) {
       infostream << "converted in " << msFillers.begin()->second->ms()->processor().nrow() << " processor(s) in the measurement set." ;
       info(infostream.str());
     } 
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
   }
   
   // Process the Source table.
@@ -2822,7 +2949,7 @@ int main(int argc, char *argv[]) {
   // Process the SysCal table.
   //
   const SysCalTable& sysCalT = ds->getSysCal();
-  {
+  try {
     SysCalRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << sysCalT.size() << " sysCal(s)...";
@@ -2929,6 +3056,16 @@ int main(int argc, char *argv[]) {
       infostream << "converted in " << msFillers.begin()->second->ms()->sysCal().nrow() <<" sysCal(s) in the measurement set(s)." ;
       info(infostream.str());
     }
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
   }
   
   //
@@ -3199,148 +3336,149 @@ int main(int argc, char *argv[]) {
 
   //
   // Process the SysPower table.
-  try {
-    const SysPowerTable& sysPowerT = ds->getSysPower();
-    infostream.str("");
-    infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
+  if ( processSysPower ) 
+    try {
+      const SysPowerTable& sysPowerT = ds->getSysPower();
+      infostream.str("");
+      infostream << "The dataset has " << sysPowerT.size() << " syspower(s)..."; 
 
-    if (processSysPower && sysPowerT.size() > 0) { 
-      vector<int>		antennaId;
-      vector<int>		spectralWindowId;
-      vector<int>		feedId;
-      vector<double>	time;
-      vector<double>	interval;
-      vector<int>		numReceptor;
-      vector<float>	switchedPowerDifference;
-      vector<float>	switchedPowerSum;
-      vector<float>	requantizerGain;
+      if ( sysPowerT.size() > 0 ) { 
+	vector<int>		antennaId;
+	vector<int>		spectralWindowId;
+	vector<int>		feedId;
+	vector<double>	time;
+	vector<double>	interval;
+	vector<int>		numReceptor;
+	vector<float>	switchedPowerDifference;
+	vector<float>	switchedPowerSum;
+	vector<float>	requantizerGain;
     
-      unsigned int        numReceptor0;
-      {
-	info(infostream.str()); infostream.str("");
-	rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
+	unsigned int        numReceptor0;
+	{
+	  info(infostream.str()); infostream.str("");
+	  rowsInAScanbyTimeIntervalFunctor<SysPowerRow> selector(selectedScanRow_v);
       
-	const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
+	  const vector<SysPowerRow *>& sysPowers = selector(sysPowerT.get(), ignoreTime);
       
-	if (!ignoreTime) 
-	  infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
+	  if (!ignoreTime) 
+	    infostream << sysPowers.size() << " of them in the selected exec blocks / scans ... ";	
       
-	info(infostream.str());
+	  info(infostream.str());
       
-	infostream.str("");
-	errstream.str("");
+	  infostream.str("");
+	  errstream.str("");
       
-	antennaId.resize(sysPowers.size());
-	spectralWindowId.resize(sysPowers.size());
-	feedId.resize(sysPowers.size());
-	time.resize(sysPowers.size());
-	interval.resize(sysPowers.size());
+	  antennaId.resize(sysPowers.size());
+	  spectralWindowId.resize(sysPowers.size());
+	  feedId.resize(sysPowers.size());
+	  time.resize(sysPowers.size());
+	  interval.resize(sysPowers.size());
       
-	/*
-	 * Prepare the mandatory attributes.
-	 */
-	transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
-	transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
-	transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
-	transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
-	transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
+	  /*
+	   * Prepare the mandatory attributes.
+	   */
+	  transform(sysPowers.begin(), sysPowers.end(), antennaId.begin(), sysPowerAntennaId);
+	  transform(sysPowers.begin(), sysPowers.end(), spectralWindowId.begin(), sysPowerSpectralWindowId);
+	  transform(sysPowers.begin(), sysPowers.end(), feedId.begin(), sysPowerFeedId);
+	  transform(sysPowers.begin(), sysPowers.end(), time.begin(), sysPowerMidTimeInSeconds);
+	  transform(sysPowers.begin(), sysPowers.end(), interval.begin(), sysPowerIntervalInSeconds);
       
-	/*
-	 * Prepare the optional attributes.
-	 */
-	numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
-	//
-	// Do we have a constant numReceptor all over the array numReceptor.
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
-	  errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
-	  error(errstream.str());
-	}
-	else 
-	  infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
+	  /*
+	   * Prepare the optional attributes.
+	   */
+	  numReceptor0 = (unsigned int) sysPowers[0]->getNumReceptor();
+	  //
+	  // Do we have a constant numReceptor all over the array numReceptor.
+	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckConstantNumReceptor(numReceptor0)) != sysPowers.end()) {
+	    errstream << "In SysPower table, numReceptor is varying. Can't go further." << endl;
+	    error(errstream.str());
+	  }
+	  else 
+	    infostream << "In SysPower table, numReceptor is uniformly equal to '" << numReceptor0 << "'." << endl;
             
-	bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
-	  if (switchedPowerDifferenceExists0) {
-	    infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
-	    switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+	  bool switchedPowerDifferenceExists0 = sysPowers[0]->isSwitchedPowerDifferenceExists();
+	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerDifference(numReceptor0, switchedPowerDifferenceExists0)) == sysPowers.end())
+	    if (switchedPowerDifferenceExists0) {
+	      infostream << "In SysPower table all rows have switchedPowerDifference with " << numReceptor0 << " elements." << endl;
+	      switchedPowerDifference.resize(numReceptor0 * sysPowers.size());
+	      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerDifference(switchedPowerDifference.begin()));
+	    }
+	    else
+	      infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
+	  else {
+	    errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
+	    error(errstream.str());
 	  }
-	  else
-	    infostream << "In SysPower table no switchedPowerDifference recorded." << endl;
-	else {
-	  errstream << "In SysPower table, switchedPowerDifference has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
       
-	bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end())
-	  if (switchedPowerSumExists0) {
-	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	    switchedPowerSum.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+	  bool switchedPowerSumExists0 = sysPowers[0]->isSwitchedPowerSumExists();
+	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckSwitchedPowerSum(numReceptor0, switchedPowerSumExists0)) == sysPowers.end())
+	    if (switchedPowerSumExists0) {
+	      infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	      switchedPowerSum.resize(numReceptor0 * sysPowers.size());
+	      for_each(sysPowers.begin(), sysPowers.end(), sysPowerSwitchedPowerSum(switchedPowerSum.begin()));
+	    }
+	    else
+	      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	  else {
+	    errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
+	    error(errstream.str());
 	  }
-	  else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	else {
-	  errstream << "In SysPower table, switchedPowerSum has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
-	}
       
-	bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
-	if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end())
-	  if (requantizerGainExists0) {
-	    infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
-	    requantizerGain.resize(numReceptor0 * sysPowers.size());
-	    for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+	  bool requantizerGainExists0 = sysPowers[0]->isRequantizerGainExists();
+	  if (find_if(sysPowers.begin(), sysPowers.end(), sysPowerCheckRequantizerGain(numReceptor0, requantizerGainExists0)) == sysPowers.end())
+	    if (requantizerGainExists0) {
+	      infostream << "In SysPower table all rows have switchedPowerSum with " << numReceptor0 << " elements." << endl;
+	      requantizerGain.resize(numReceptor0 * sysPowers.size());
+	      for_each(sysPowers.begin(), sysPowers.end(), sysPowerRequantizerGain(requantizerGain.begin()));  
+	    }
+	    else
+	      infostream << "In SysPower table no switchedPowerSum recorded." << endl;
+	  else {
+	    errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
+	    error(errstream.str());
 	  }
-	  else
-	    infostream << "In SysPower table no switchedPowerSum recorded." << endl;
-	else {
-	  errstream << "In SysPower table, requantizerGain has a variable shape or is not present everywhere or both. Can't go further." ;
-	  error(errstream.str());
 	}
-      }
-      info(infostream.str());
-        
-      for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
-	   msIter != msFillers.end();
-	   ++msIter) {
-	msIter->second->addSysPowerSlice(antennaId.size(),
-					 antennaId,
-					 spectralWindowId,
-					 feedId,
-					 time,
-					 interval,
-					 (unsigned int) numReceptor0,
-					 switchedPowerDifference,
-					 switchedPowerSum,
-					 requantizerGain);
-      }
-     
-      unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
-      if (numMSSysPowers > 0) {
-	infostream.str("");
-	infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
 	info(infostream.str());
-      }
-    } // end of filling SysPower by slice.
-  }
-  catch (ConversionException e) {
-    errstream.str("");
-    errstream << e.getMessage();
-    error(errstream.str());
-  }
-  catch ( std::exception & e) {
-    errstream.str("");
-    errstream << e.what();
-    error(errstream.str());      
-  }
+        
+	for (map<AtmPhaseCorrection, ASDM2MSFiller*>::iterator msIter = msFillers.begin();
+	     msIter != msFillers.end();
+	     ++msIter) {
+	  msIter->second->addSysPowerSlice(antennaId.size(),
+					   antennaId,
+					   spectralWindowId,
+					   feedId,
+					   time,
+					   interval,
+					   (unsigned int) numReceptor0,
+					   switchedPowerDifference,
+					   switchedPowerSum,
+					   requantizerGain);
+	}
+     
+	unsigned int numMSSysPowers =  (const_cast<casa::MeasurementSet*>(msFillers.begin()->second->ms()))->rwKeywordSet().asTable("SYSPOWER").nrow();
+	if (numMSSysPowers > 0) {
+	  infostream.str("");
+	  infostream << "converted in " << numMSSysPowers << " syspower(s) in the measurement set.";
+	  info(infostream.str());
+	}
+      } // end of filling SysPower by slice.
+    }
+    catch (ConversionException e) {
+      errstream.str("");
+      errstream << e.getMessage();
+      error(errstream.str());
+    }
+    catch ( std::exception & e) {
+      errstream.str("");
+      errstream << e.what();
+      error(errstream.str());      
+    }
 
   //
   // Load the weather table
   const WeatherTable& weatherT = ds->getWeather();
 
-  {
+  try {
     WeatherRow* r = 0;
     infostream.str("");
     infostream << "The dataset has " << weatherT.size() << " weather(s)...";
@@ -3404,6 +3542,16 @@ int main(int argc, char *argv[]) {
       infostream << "converted in " << msFillers.begin()->second->ms()->weather().nrow() <<" weather(s) in the measurement set." ;
       info(infostream.str());
     }
+  }
+  catch (ConversionException e) {
+    errstream.str("");
+    errstream << e.getMessage();
+    error(errstream.str());
+  }
+  catch ( std::exception & e) {
+    errstream.str("");
+    errstream << e.what();
+    error(errstream.str());      
   }
 
 
@@ -3491,9 +3639,9 @@ int main(int argc, char *argv[]) {
 	    if (sscanR == 0) {
 	      errstream.str("");
 	      errstream << "Could not find a row in the Subscan table for the following key value (execBlockId=" << r->getExecBlockId().toString()
-			 <<", scanNumber="<< r->getScanNumber()
-			 <<", subscanNum=" << msState.subscanNum << "). Aborting. "
-			 << endl;
+			<<", scanNumber="<< r->getScanNumber()
+			<<", subscanNum=" << msState.subscanNum << "). Aborting. "
+			<< endl;
 	      error(errstream.str());
 	      continue;
 	    }

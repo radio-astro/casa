@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::StationRowIDL;
 #endif
 
 
@@ -52,13 +48,10 @@ using asdmIDL::StationRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Length.h>
-using  asdm::Length;
 
 
 
@@ -71,7 +64,6 @@ using  asdm::Length;
 
 	
 #include "CStationType.h"
-using namespace StationTypeMod;
 	
 
 	
@@ -333,7 +325,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a StationRowIDL struct.
 	 */
-	StationRowIDL *toIDL() const;
+	asdmIDL::StationRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -342,14 +334,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (StationRowIDL x) ;
+	void setFromIDL (asdmIDL::StationRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -357,7 +349,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -487,7 +479,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, StationAttributeFromBin> fromBinMethods;
+	std::map<std::string, StationAttributeFromBin> fromBinMethods;
 void stationIdFromBin( EndianISStream& eiss);
 void nameFromBin( EndianISStream& eiss);
 void positionFromBin( EndianISStream& eiss);
@@ -509,7 +501,7 @@ void timeFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static StationRow* fromBin(EndianISStream& eiss, StationTable& table, const vector<string>& attributesSeq);	 
+	 static StationRow* fromBin(EndianISStream& eiss, StationTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

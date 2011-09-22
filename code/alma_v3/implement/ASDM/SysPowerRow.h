@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SysPowerRowIDL;
 #endif
 
 
@@ -52,10 +48,8 @@ using asdmIDL::SysPowerRowIDL;
 
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
 
 
 
@@ -513,7 +507,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SysPowerRowIDL struct.
 	 */
-	SysPowerRowIDL *toIDL() const;
+	asdmIDL::SysPowerRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -522,14 +516,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SysPowerRowIDL x) ;
+	void setFromIDL (asdmIDL::SysPowerRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -537,7 +531,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -712,7 +706,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, SysPowerAttributeFromBin> fromBinMethods;
+	std::map<std::string, SysPowerAttributeFromBin> fromBinMethods;
 void antennaIdFromBin( EndianISStream& eiss);
 void spectralWindowIdFromBin( EndianISStream& eiss);
 void feedIdFromBin( EndianISStream& eiss);
@@ -737,7 +731,7 @@ void requantizerGainFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static SysPowerRow* fromBin(EndianISStream& eiss, SysPowerTable& table, const vector<string>& attributesSeq);	 
+	 static SysPowerRow* fromBin(EndianISStream& eiss, SysPowerTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 
