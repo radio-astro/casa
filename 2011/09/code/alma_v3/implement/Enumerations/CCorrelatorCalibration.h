@@ -71,8 +71,6 @@ namespace CorrelatorCalibrationMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration CorrelatorCalibration.
   * 
@@ -103,7 +101,7 @@ class CCorrelatorCalibration {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -157,8 +155,8 @@ class CCorrelatorCalibration {
     CCorrelatorCalibration(const CCorrelatorCalibration&);
     CCorrelatorCalibration& operator=(const CCorrelatorCalibration&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

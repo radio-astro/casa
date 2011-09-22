@@ -73,8 +73,6 @@ namespace ReceiverSidebandMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration ReceiverSideband.
   * 
@@ -107,7 +105,7 @@ class CReceiverSideband {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -161,8 +159,8 @@ class CReceiverSideband {
     CReceiverSideband(const CReceiverSideband&);
     CReceiverSideband& operator=(const CReceiverSideband&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

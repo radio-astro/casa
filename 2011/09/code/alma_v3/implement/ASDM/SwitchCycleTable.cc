@@ -413,6 +413,9 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SwitchCycleTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

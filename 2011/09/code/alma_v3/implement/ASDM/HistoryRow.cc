@@ -80,6 +80,9 @@ namespace asdm {
 		hasBeenAdded = added;
 	}
 	
+#ifndef WITHOUT_ACS
+	using asdmIDL::HistoryRowIDL;
+#endif
 	
 #ifndef WITHOUT_ACS
 	/**

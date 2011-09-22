@@ -168,7 +168,7 @@ class asdmv1_import(unittest.TestCase):
         '''Asdmv1-import: Test good v1.2 input with filler v2 and reverse filler v2 '''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
-        self.res = importasdm(myasdm_dataset_name)
+        self.res = importasdm(myasdm_dataset_name, useversion='v2')
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
@@ -297,7 +297,8 @@ class asdmv1_import(unittest.TestCase):
                 vis = 'myinput.ms',
                 asdm = 'exportasdm-output.asdm',
                 archiveid="S002",
-                apcorrected=False
+                apcorrected=False,
+                useversion='v2'
                 )
             print "rval is ", rval
             if not rval:
@@ -310,7 +311,7 @@ class asdmv1_import(unittest.TestCase):
             
         try:
             print "Reimporting the created ASDM ...."
-            importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no')
+            importasdm(asdm=asdmname, vis=reimp_msname, wvr_corrected_data='no', useversion='v2')
             print "Testing existence of reimported MS ...."
             if(not os.path.exists(reimp_msname)):
                 print "MS ", reimp_msname, " doesn't exist."

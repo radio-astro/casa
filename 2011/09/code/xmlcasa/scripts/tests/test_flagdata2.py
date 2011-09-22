@@ -62,6 +62,20 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         flagdata2(vis=self.vis, unflag=True)
 
+    def setUp_flagdatatest_alma(self):
+        self.vis = "flagdatatest-alma.ms"
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                      os.environ.get('CASAPATH').split()[0] +
+                      "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        flagdata2(vis=self.vis, unflag=True)
+
 
 class test_rfi(test_base):
     """Test of mode = 'rfi'"""
@@ -797,6 +811,25 @@ class test_selections2(test_base):
         flagdata2(vis=self.vis, selectdata=False, mf_observation='1',manualflag=True)
         test_eq(flagdata2(vis=self.vis, summary=True), 2882778, 28500)
         
+class test_selections_alma(test_base):
+    # Test various selections for alma data 
+    # may be need to be merged with test_selections.
+
+    def setUp(self):
+        self.setUp_flagdatatest_alma()
+
+    def test_scanitent(self):
+        '''test scanintent selection'''
+        # flag POINTING CALIBRATION scans 
+        # (CALIBRATE_POINTING_.. from STATE table's OBS_MODE)
+        flagdata2(vis=self.vis, selectdata=True, manualflag=True, intent='CAL*POINT*')
+        test_eq(flagdata2(vis=self.vis,summary=True, selectdata=True, antenna='2'), 377280, 26200)
+        
+        # Calling with mf_intent should give the same results
+        flagdata2(vis=self.vis, unflag=True)
+        flagdata2(vis=self.vis, selectdata=False, manualflag=True, mf_intent='CAL*POINT*')
+        test_eq(flagdata2(vis=self.vis,summary=True, selectdata=True, antenna='2'), 377280, 26200)
+        
      
 # Dummy class which cleans up created files
 class cleanup(test_base):
@@ -808,6 +841,7 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest.ms.flagversions')
         os.system('rm -rf missing-baseline.ms')
         os.system('rm -rf multiobs.ms')
+        os.system('rm -rf flagdatatest-alma.ms')
 
 
     def test1(self):
@@ -819,6 +853,7 @@ def suite():
     return [
             test_selections,
             test_selections2,
+            test_selections_alma,
             test_statistics_queries,
             test_vector,
             test_vector_ngc5921,

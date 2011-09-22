@@ -416,7 +416,7 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                         if plotlevel > 1:
                             pl.cla()
                             pl.ioff()
-                            pl.title('scan %s subscan %s'%(scans[i],subscans[j]))
+                            pl.title('scan %s subscan %s'%(scans[i],subscans[i][j]))
                             pl.plot(x,data[i][j],'b')
                         f.set_data(x,data[i][j],mask=masks)
                         f.fit()
@@ -429,7 +429,7 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, st
                             pl.draw()
                             pl.cla()
                             pl.ioff()
-                            pl.title('scan %s subscan %s'%(scans[i],subscans[j]))
+                            pl.title('scan %s subscan %s'%(scans[i],subscans[i][j]))
                             pl.ion()
                             pl.plot(x,data[i][j],'g')
                             pl.draw()
@@ -602,7 +602,8 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             #im.setsdoptions(convsupport=5)
             im.setsdoptions(pointingcolumntouse=pointingcolumn)
-            im.makeimage(type='singledish', image=outfile)
+            im.makeimage(type='singledish-observed', image=outfile)
+            #im.makeimage(type='singledish', image=outfile)
             im.close()
 
     except Exception, instance:

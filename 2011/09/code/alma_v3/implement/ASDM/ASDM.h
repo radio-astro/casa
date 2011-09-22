@@ -35,10 +35,7 @@
 #define ASDM_CLASS
 
 #include <vector>
-using std::vector;
-
 #include <map>
-using std::map;
 
 #include <Representable.h>
 #include <Entity.h>
@@ -49,15 +46,9 @@ using std::map;
 
 #include <Misc.h>
 
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::ArrayTime;
-using asdm::IllegalAccessException;
-using asdm::InvalidArgumentException;
-
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h> /// <-------------------
-using namespace asdmIDL;   /// <-------------------
+//using namespace asdmIDL;   /// <-------------------
 #endif
 
 /*\file ASDM.h
@@ -659,7 +650,7 @@ public:
 	  * @return a string containing the XML representation of this.
 	  * @throws ConversionException.
 	  */
-	virtual string toXML();
+	virtual std::string toXML();
 	
 	/**
 	 * Write this ASDM dataset to the specified directory
@@ -670,7 +661,7 @@ public:
 	 * not overwrite any existing file; a ConversionException is also
 	 * thrown in this case.
 	 */
-	void toXML(string directory) ;
+	void toXML(std::string directory) ;
 	
 	/**
 	 * Get an ASDM dataset, given the full path name of the 
@@ -682,7 +673,7 @@ public:
 	 * @throws ConversionException If any error occurs reading the 
 	 * files in the directory or in converting the tables from XML.
 	 */
-	virtual void fromXML(string xml) ;
+	virtual void fromXML(std::string xml) ;
 		
 	/**
 	 * Get an ASDM dataset, given the full path name of the 
@@ -696,14 +687,14 @@ public:
 	 *
 	 * @deprecated
 	 */
-	static ASDM *getFromXML(string xmlDirectory) ;
+	static ASDM *getFromXML(std::string xmlDirectory) ;
 	
    /**
 	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
 	 * @returns a string containing the MIME message.
 	 * 
 	 */
-	string toMIME();
+	std::string toMIME();
 	
    /** 
      * Extracts the binary part of a MIME message and deserialize its content
@@ -711,7 +702,7 @@ public:
 	 * @param mimeMsg the string containing the MIME message.
 	 * @throws ConversionException
 	 */
-	 void setFromMIME(const string & mimeMsg);	
+	 void setFromMIME(const std::string & mimeMsg);	
 
 	/**
 	 * Write this ASDM dataset to the specified directory
@@ -727,7 +718,7 @@ public:
 	 * not overwrite any existing file; a ConversionException is also
 	 * thrown in this case.
 	 */
-	void toFile(string directory);
+	void toFile(std::string directory);
 
 	/**
 	 * Constructs totally or partially an ASDM dataset from its representation on disk.
@@ -743,7 +734,7 @@ public:
 	 * files in the directory or parsing them.
 	 *
 	 */	
-	 void setFromFile(string directory, bool loadTablesOnDemand);
+	 void setFromFile(std::string directory, bool loadTablesOnDemand);
 	 
 	/**
 	 * Constructs an ASDM dataset from its representation on disk.
@@ -752,19 +743,42 @@ public:
 	 * containing the representation on disk of the dataset's tables. On exit the dataset contains 
 	 * all its tables in memory.
 	 *
+	 * <b>Backward compatibility.</b> This method presents some level of backward compatibility in the sense that it does its best to check if the dataset needs to be
+	 * transformed on the fly to the currently defined format prior being parsed and converted to its in memory representation. In order to do that it may need 
+	 * to find the version information of the dataset and possibly its origin (i.e. which telescope has created it). Based on these informations it decides if
+	 * if a transformation has to be applied on the fly or if the dataset can be processed as is.
+	 *
+	 * <b>Helping backward compatibility</b> It may happen though that the algorithm which searches the dataset for its version information and its origin fails, while the user knows
+	 * that his/her dataset can be parsed. Then the method's behaviour can be controlled by using the second (and optional) argument <code>parse</code> which has 
+	 * to be an instance of ASDMParseOptions. See below the description of this argument to undersand how to use it.
+	 *
 	 * @param directory the name of the directory containing the files.
+	 * @param parse an instance of ASDMParseOptions which can be used to tailor the behaviour of the method. Please read the definition of ASDMParseOptions to
+	 * see how the logic of the method can be controlled. Most of the time it wont be necessary to specify this argument hence the fact it's optional. The typical 
+	 * cases when one may have to use this argument are :
+	 * <ul>
+	 * <li> The version information cannot be derived from the content of the ASDM and you want to force the method to consider its format as the most recent one or the older one. 
+	 * In such a case present an ASDMParseOptions instance onto which you have applied <code>.asV3()</code> or <code>.asV2()</code></li>. 
+	 *
+	 * <li> The origin of the data cannot be retrieved from the content of the ASDM; this happens when the dataset has not ExecbBlock table. Then one can help the method 
+	 * by providing an instance of ASDMParseOptions onto which one of <code>.asALMA()</code>, <code>.asIRAM_PDB()</code>, <code>.asEVLA()</code> has been applied.</li>
+	 *
+	 * <li> One wants to control if all the tables of the dataset must be parsed and put into memory during the execution of the method or if one prefers to load them on 
+	 * on demand (i.e. a table is loaded in memory only the first time it's referred by the code.). One will present an instance of ASDMParseOptions onto which <code>.loadTablesOnDemand(b)</code>
+	 * hase been called where <code>b</code> is boolean value interpreted as follows :  <code>true</code> <->"load on demand" and <code>false</code> <-> "load the tables immediately." </li>
+	 * </ul>
 	 * @throws ConversionException If any error occurs while reading the 
 	 * files in the directory or parsing them.
 	 *
 	 */	
-	 void setFromFile(string directory);
+	 void setFromFile(std::string directory, const ASDMParseOptions&  parse=ASDMParseOptions());
 	
 	#ifndef WITHOUT_ACS
 	/**
 	  * Converts this ASDM into an ASDMDataSetIDL CORBA structure
 	  * @return a pointer to a ASDMDataSetIDL.
 	  */
-	virtual ASDMDataSetIDL* toIDL();  
+	virtual asdmIDL::ASDMDataSetIDL* toIDL();  
 	
 	 /**
 	   * Builds an ASDM out of its IDL representation.
@@ -774,7 +788,7 @@ public:
 	   * @throws ConversionException
 	   * @throws UniquenessViolationException
 	   */
-	virtual void fromIDL(ASDMDataSetIDL* x); 
+	virtual void fromIDL(asdmIDL::ASDMDataSetIDL* x); 
 	#endif
 		
 	virtual Entity getEntity() const;
@@ -784,7 +798,7 @@ public:
 	/**
 	 * Meaningless, but required for the Representable interface.
 	 */
-	virtual string getName() const;
+	virtual std::string getName() const;
 	
 	/**
 	 * Meaningless, but required for the Representable interface.
@@ -814,7 +828,7 @@ public:
 	 * specified name.
 	 * @throws InvalidArgumentException
 	 */
-	Representable &getTable(string tableName) ;
+	Representable &getTable(std::string tableName) ;
 
 	
 	
@@ -933,7 +947,7 @@ public:
 	  * if it has been constructed from this representation or an empty string if it has been
 	  * constructed ex nihilo.
 	  */
-	 string getDirectory() const ;
+	 std::string getDirectory() const ;
 	 
 	 XSLTransformer & getXSLTransformer() ;
 	 
@@ -944,7 +958,7 @@ private:
 	bool hasBeenAdded;
 	Origin origin;
 	bool loadTablesOnDemand;
-	string directory;
+	std::string directory;
 		
 
 	/**
@@ -1265,13 +1279,13 @@ private:
 	/**
 	 * The list of tables as Representable.
 	 */
-	vector<Representable *> table;
+	std::vector<Representable *> table;
 	
 	/**
 	 * The list of Entity objects representing the tables.
 	 */
 	//vector<Entity *> tableEntity;
-	map<string, Entity> tableEntity;
+	std::map<std::string, Entity> tableEntity;
 	
 	/**
 	 * This Container's entity.
@@ -1314,8 +1328,8 @@ private:
 
 	
 	void error() ; // throw(ConversionException);
-	static string getXMLEntity(EntityId id); // throw(ConversionException);
-	static void putXMLEntity(string xml); // throw(ConversionException);
+	static std::string getXMLEntity(EntityId id); // throw(ConversionException);
+	static void putXMLEntity(std::string xml); // throw(ConversionException);
 	
 	XSLTransformer xslTransformer;
 	

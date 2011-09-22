@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::ReceiverRowIDL;
 #endif
 
 
@@ -52,13 +48,10 @@ using asdmIDL::ReceiverRowIDL;
 
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Frequency.h>
-using  asdm::Frequency;
 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
 
 
 
@@ -73,19 +66,16 @@ using  asdm::ArrayTimeInterval;
 
 	
 #include "CReceiverBand.h"
-using namespace ReceiverBandMod;
 	
 
 	
 
 	
 #include "CReceiverSideband.h"
-using namespace ReceiverSidebandMod;
 	
 
 	
 #include "CNetSideband.h"
-using namespace NetSidebandMod;
 	
 
 
@@ -492,7 +482,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a ReceiverRowIDL struct.
 	 */
-	ReceiverRowIDL *toIDL() const;
+	asdmIDL::ReceiverRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -501,14 +491,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (ReceiverRowIDL x) ;
+	void setFromIDL (asdmIDL::ReceiverRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -516,7 +506,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -695,7 +685,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, ReceiverAttributeFromBin> fromBinMethods;
+	std::map<std::string, ReceiverAttributeFromBin> fromBinMethods;
 void receiverIdFromBin( EndianISStream& eiss);
 void spectralWindowIdFromBin( EndianISStream& eiss);
 void timeIntervalFromBin( EndianISStream& eiss);
@@ -721,7 +711,7 @@ void sidebandLOFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static ReceiverRow* fromBin(EndianISStream& eiss, ReceiverTable& table, const vector<string>& attributesSeq);	 
+	 static ReceiverRow* fromBin(EndianISStream& eiss, ReceiverTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

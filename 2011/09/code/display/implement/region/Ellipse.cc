@@ -41,6 +41,16 @@ namespace casa {
 	    return box;
 	}
 
+	void Ellipse::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+					    std::vector<std::pair<double,double> > &world_pts ) const {
+	    if ( wc_ == 0 ) return;
+
+	    type = EllipseRegion;
+	    RegionTypes x;
+	    Rectangle::fetch_region_details( x, pixel_pts, world_pts );
+	}
+
+
 	void Ellipse::drawRegion( bool selected ) {
 	    if ( wc_ == 0 ) return;
 

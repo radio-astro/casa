@@ -444,6 +444,9 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::FreqOffsetTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

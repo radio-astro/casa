@@ -520,6 +520,9 @@ CalPrimaryBeamRow* CalPrimaryBeamTable::lookup(string antennaName, ReceiverBandM
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalPrimaryBeamTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

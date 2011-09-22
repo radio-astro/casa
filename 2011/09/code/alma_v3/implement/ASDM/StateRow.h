@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::StateRowIDL;
 #endif
 
 
@@ -52,7 +48,6 @@ using asdmIDL::StateRowIDL;
 
 
 #include <Tag.h>
-using  asdm::Tag;
 
 
 
@@ -61,7 +56,6 @@ using  asdm::Tag;
 
 	
 #include "CCalibrationDevice.h"
-using namespace CalibrationDeviceMod;
 	
 
 	
@@ -363,7 +357,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a StateRowIDL struct.
 	 */
-	StateRowIDL *toIDL() const;
+	asdmIDL::StateRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -372,14 +366,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (StateRowIDL x) ;
+	void setFromIDL (asdmIDL::StateRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -387,7 +381,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -528,7 +522,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, StateAttributeFromBin> fromBinMethods;
+	std::map<std::string, StateAttributeFromBin> fromBinMethods;
 void stateIdFromBin( EndianISStream& eiss);
 void calDeviceNameFromBin( EndianISStream& eiss);
 void sigFromBin( EndianISStream& eiss);
@@ -551,7 +545,7 @@ void weightFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static StateRow* fromBin(EndianISStream& eiss, StateTable& table, const vector<string>& attributesSeq);	 
+	 static StateRow* fromBin(EndianISStream& eiss, StateTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

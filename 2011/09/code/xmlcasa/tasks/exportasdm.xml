@@ -62,8 +62,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="useversion" >
-	    <description>Selects the version of MS2asdm to be used (\'v2\' (default) or \'v3\' (needed for ALMA data taken after May 2011))</description>
-	    <value>v2</value>
+	    <description>Selects the version of MS2asdm to be used (\'v3\' (default) or \'v2\' (version before May 2011))</description>
+	    <value>v3</value>
 	    <allowed kind="enum">
 	      <value>v2</value>
 	      <value>v3</value>
@@ -108,8 +108,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   showversion -- report the version of the ASDM class set, 
                  default: True
 
-  useversion -- Selects the version of MS2asdm to be used (\'v2\' (default) or \'v3\' (use for ALMA data))
-                default: v2
+  useversion -- Selects the version of MS2asdm to be used (\'v3\' (default) or \'v2\' (version before May 2011))
+                default: v3
 
   exportasdm(vis='ngc4826.ms', asdm='uid___S021_X1418_X1', 
   datacolumn='corrected', archiveid='S021', rangeid='X1418', 

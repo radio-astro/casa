@@ -538,6 +538,9 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CalBandpassTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

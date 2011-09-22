@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::CalReductionRowIDL;
 #endif
 
 
@@ -52,10 +48,8 @@ using asdmIDL::CalReductionRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 
 
@@ -74,7 +68,6 @@ using  asdm::Tag;
 
 	
 #include "CInvalidatingCondition.h"
-using namespace InvalidatingConditionMod;
 	
 
 	
@@ -539,7 +532,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a CalReductionRowIDL struct.
 	 */
-	CalReductionRowIDL *toIDL() const;
+	asdmIDL::CalReductionRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -548,14 +541,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (CalReductionRowIDL x) ;
+	void setFromIDL (asdmIDL::CalReductionRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -563,7 +556,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -757,7 +750,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, CalReductionAttributeFromBin> fromBinMethods;
+	std::map<std::string, CalReductionAttributeFromBin> fromBinMethods;
 void calReductionIdFromBin( EndianISStream& eiss);
 void numAppliedFromBin( EndianISStream& eiss);
 void appliedCalibrationsFromBin( EndianISStream& eiss);
@@ -785,7 +778,7 @@ void softwareVersionFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static CalReductionRow* fromBin(EndianISStream& eiss, CalReductionTable& table, const vector<string>& attributesSeq);	 
+	 static CalReductionRow* fromBin(EndianISStream& eiss, CalReductionTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

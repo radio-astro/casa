@@ -129,8 +129,6 @@ namespace StokesParameterMod
 } 
 #endif
 
-using namespace std;
-
 /** 
   * A helper class for the enumeration StokesParameter.
   * 
@@ -219,7 +217,7 @@ class CStokesParameter {
 	    * @return a string
 	    *
 	    */
-	  static string revision() ;
+	  static std::string revision() ;
 	  
 	  
      /**
@@ -273,8 +271,8 @@ class CStokesParameter {
     CStokesParameter(const CStokesParameter&);
     CStokesParameter& operator=(const CStokesParameter&);
     
-    static string badString(const string& name) ;
-  	static string badInt(unsigned int i) ;
+    static std::string badString(const std::string& name) ;
+  	static std::string badInt(unsigned int i) ;
   	
 };
  

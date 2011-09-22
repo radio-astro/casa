@@ -70,6 +70,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		elregion_(0), oelregion_(0),
 		ptregion_(0), optregion_(0),
 		polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
+		region_source_factory(0),
 		mouseToolNames_(),
 		tracking_(True),
 		modeZ_(True),

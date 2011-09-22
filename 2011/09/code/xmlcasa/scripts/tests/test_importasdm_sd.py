@@ -185,8 +185,10 @@ class asdmsd_import( unittest.TestCase ):
 
         for key in items.keys():
             #print '%s: %s'%(key,vals[key])
-            self.assertAlmostEqual( vals[key], items[key],
-                                    msg=msgTemplate.safe_substitute(table=table,column=column,row=key,diff=vals[key]-items[key]) )
+            diff = (vals[key] - items[key]) / vals[key]
+            #print 'diff = %12.10f'%(diff)
+            self.assertTrue( diff < 1.0e-8,
+                             msg=msgTemplate.safe_substitute(table=table,column=column,row=key,diff=diff) )
 
 
 def suite():

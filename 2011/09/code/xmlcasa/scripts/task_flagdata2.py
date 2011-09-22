@@ -15,6 +15,7 @@ def flagdata2(vis = None,
              timerange = None,
              correlation = None,
              scan = None,
+             intent = None,
              feed = None, 
              array = None,
              observation = None,
@@ -25,6 +26,7 @@ def flagdata2(vis = None,
              mf_uvrange = None,
              mf_timerange = None,
              mf_scan = None,
+             mf_intent = None,
              mf_feed = None, 
              mf_array = None,
              mf_observation = None,
@@ -107,8 +109,8 @@ def flagdata2(vis = None,
         casalog.post('Flagging selection')
         if selectdata:
             if(debug):
-                print "field=%s, spw=%s, array=%s, feed=%s, scan=%s, baseline=%s, uvrange=%s,"\
-                      " time=%s, correlation=%s, observation=%s"%(field,spw,array,feed,scan,antenna,
+                print "field=%s, spw=%s, array=%s, feed=%s, scan=%s, intent=%s, baseline=%s, uvrange=%s,"\
+                      " time=%s, correlation=%s, observation=%s"%(field,spw,array,feed,scan,intent,antenna,
                                                                    uvrange,timerange,correlation,
                                                                    observation)
             fglocal.setdata(field = field, 
@@ -116,13 +118,14 @@ def flagdata2(vis = None,
                            array = array, 
                            feed = feed, 
                            scan = scan, 
+                           intent = intent,
                            baseline = antenna, 
                            uvrange = uvrange, 
                            time = timerange, 
                            correlation = correlation,
                            observation = str(observation))
         else:
-            field = antenna = timerange = correlation = scan = feed = array = uvrange = observation = ''
+            field = antenna = timerange = correlation = scan = intent = feed = array = uvrange = observation = ''
             fglocal.setdata()
 
         if manualflag:
@@ -137,6 +140,7 @@ def flagdata2(vis = None,
                          timerange=mf_timerange,
                          correlation=correlation,
                          scan=mf_scan,
+                         intent=mf_intent,
                          feed=mf_feed,
                          array=mf_array,
                          uvrange=mf_uvrange,
@@ -163,6 +167,7 @@ def flagdata2(vis = None,
                          timerange=timerange,
                          correlation=correlation,
                          scan=scan,
+                         intent=intent,
                          feed=feed,
                          array=array,
                          uvrange=uvrange,
@@ -185,6 +190,7 @@ def flagdata2(vis = None,
                          timerange=timerange,
                          correlation=correlation,
                          scan=scan,
+                         intent=intent,
                          feed=feed,
                          array=array,
                          uvrange=uvrange,
@@ -201,6 +207,7 @@ def flagdata2(vis = None,
                         array = array, \
                         feed = feed, \
                         scan = scan, \
+                        intent = intent, \
                         baseline = antenna, \
                         uvrange = uvrange, \
                         observation = str(observation), \
@@ -220,6 +227,7 @@ def flagdata2(vis = None,
                         array = array, \
                         feed = feed, \
                         scan = scan, \
+                        intent = intent, \
                         baseline = antenna, \
                         uvrange = uvrange, \
                         observation = str(observation), \
@@ -316,6 +324,7 @@ def flagdata2(vis = None,
                          timerange=timerange,
                          correlation=correlation,
                          scan=scan,
+                         intent=intent,
                          feed=feed,
                          array=array,
                          uvrange=uvrange,
@@ -338,6 +347,7 @@ def flagdata2(vis = None,
                                   array=array, \
                                   feed=feed, \
                                   scan=scan, \
+                                  intent=intent,\
                                   baseline=antenna, \
                                   uvrange=uvrange, \
                                   time=timerange, \
@@ -468,7 +478,7 @@ def clip_quack(fglocal, mode, selectdata, **params):
     if debug: print params
 
     if not selectdata:
-        params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['feed'] = params['array'] = params['uvrange'] = params['observation'] = ''
+        params['antenna'] = params['timerange'] = params['correlation'] = params['scan'] = params['intent'] = params['feed'] = params['array'] = params['uvrange'] = params['observation'] = ''
 
     rename_params(params)
     fglocal.setmanualflags(**params)

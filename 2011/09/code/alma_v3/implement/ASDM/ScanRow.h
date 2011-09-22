@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::ScanRowIDL;
 #endif
 
 
@@ -52,10 +48,8 @@ using asdmIDL::ScanRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 
 
@@ -72,29 +66,24 @@ using  asdm::Tag;
 
 	
 #include "CScanIntent.h"
-using namespace ScanIntentMod;
 	
 
 	
 #include "CCalDataOrigin.h"
-using namespace CalDataOriginMod;
 	
 
 	
 
 	
 #include "CCalibrationFunction.h"
-using namespace CalibrationFunctionMod;
 	
 
 	
 #include "CCalibrationSet.h"
-using namespace CalibrationSetMod;
 	
 
 	
 #include "CAntennaMotionPattern.h"
-using namespace AntennaMotionPatternMod;
 	
 
 	
@@ -767,7 +756,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a ScanRowIDL struct.
 	 */
-	ScanRowIDL *toIDL() const;
+	asdmIDL::ScanRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -776,14 +765,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (ScanRowIDL x) ;
+	void setFromIDL (asdmIDL::ScanRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -791,7 +780,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -1036,7 +1025,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, ScanAttributeFromBin> fromBinMethods;
+	std::map<std::string, ScanAttributeFromBin> fromBinMethods;
 void execBlockIdFromBin( EndianISStream& eiss);
 void scanNumberFromBin( EndianISStream& eiss);
 void startTimeFromBin( EndianISStream& eiss);
@@ -1068,7 +1057,7 @@ void sourceNameFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static ScanRow* fromBin(EndianISStream& eiss, ScanTable& table, const vector<string>& attributesSeq);	 
+	 static ScanRow* fromBin(EndianISStream& eiss, ScanTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

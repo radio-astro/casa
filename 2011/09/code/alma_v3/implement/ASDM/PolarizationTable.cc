@@ -385,6 +385,9 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::PolarizationTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

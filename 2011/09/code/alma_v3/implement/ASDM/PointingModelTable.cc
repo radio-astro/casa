@@ -506,6 +506,9 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::PointingModelTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

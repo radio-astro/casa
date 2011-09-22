@@ -341,6 +341,9 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SeeingTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

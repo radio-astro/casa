@@ -312,6 +312,9 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ObservationTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

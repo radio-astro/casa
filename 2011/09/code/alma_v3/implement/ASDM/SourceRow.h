@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::SourceRowIDL;
 #endif
 
 
@@ -52,31 +48,22 @@ using asdmIDL::SourceRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <AngularRate.h>
-using  asdm::AngularRate;
 
 #include <Angle.h>
-using  asdm::Angle;
 
 #include <Speed.h>
-using  asdm::Speed;
 
 #include <Flux.h>
-using  asdm::Flux;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Length.h>
-using  asdm::Length;
 
 #include <Frequency.h>
-using  asdm::Frequency;
 
 #include <ArrayTimeInterval.h>
-using  asdm::ArrayTimeInterval;
 
 
 
@@ -95,7 +82,6 @@ using  asdm::ArrayTimeInterval;
 
 	
 #include "CDirectionReferenceCode.h"
-using namespace DirectionReferenceCodeMod;
 	
 
 	
@@ -120,12 +106,10 @@ using namespace DirectionReferenceCodeMod;
 
 	
 #include "CSourceModel.h"
-using namespace SourceModelMod;
 	
 
 	
 #include "CFrequencyReferenceCode.h"
-using namespace FrequencyReferenceCodeMod;
 	
 
 	
@@ -138,7 +122,6 @@ using namespace FrequencyReferenceCodeMod;
 
 	
 #include "CStokesParameter.h"
-using namespace StokesParameterMod;
 	
 
 	
@@ -155,7 +138,6 @@ using namespace StokesParameterMod;
 
 	
 #include "CRadialVelocityReferenceCode.h"
-using namespace RadialVelocityReferenceCodeMod;
 	
 
 
@@ -1519,7 +1501,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a SourceRowIDL struct.
 	 */
-	SourceRowIDL *toIDL() const;
+	asdmIDL::SourceRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1528,14 +1510,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (SourceRowIDL x) ;
+	void setFromIDL (asdmIDL::SourceRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1543,7 +1525,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -2025,7 +2007,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, SourceAttributeFromBin> fromBinMethods;
+	std::map<std::string, SourceAttributeFromBin> fromBinMethods;
 void sourceIdFromBin( EndianISStream& eiss);
 void timeIntervalFromBin( EndianISStream& eiss);
 void spectralWindowIdFromBin( EndianISStream& eiss);
@@ -2074,7 +2056,7 @@ void velRefCodeFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static SourceRow* fromBin(EndianISStream& eiss, SourceTable& table, const vector<string>& attributesSeq);	 
+	 static SourceRow* fromBin(EndianISStream& eiss, SourceTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

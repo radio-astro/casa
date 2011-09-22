@@ -1226,7 +1226,9 @@ namespace asdm {
 	}
 
 	
-
+#ifndef WITHOUT_ACS
+	using namespace asdmIDL;
+#endif
 
 #ifndef WITHOUT_ACS	
 	ASDMDataSetIDL* ASDM::toIDL() {
@@ -4205,11 +4207,13 @@ namespace asdm {
 	
 
 	void ASDM::setFromFile(string directory, bool loadTablesOnDemand) {
-		this->loadTablesOnDemand = loadTablesOnDemand;
-		this->setFromFile(directory);
+		this->setFromFile(directory, ASDMParseOptions().loadTablesOnDemand(loadTablesOnDemand));
 	}
 	
-	void ASDM::setFromFile(string directory) {
+	void ASDM::setFromFile(string directory, const ASDMParseOptions& parse) {
+
+		this->loadTablesOnDemand = parse.loadTablesOnDemand_;
+		
 		string fileName;
 		if (fileAsBin) {
 			fileName = directory + "/ASDM.bin";
@@ -4244,21 +4248,18 @@ namespace asdm {
 		}
 		else {
 			fileName = directory + "/ASDM.xml";
-			string version = ASDMUtils::version(directory);
-			ASDMUtils::Origin origin = ASDMUtils::origin(ASDMUtils::telescopeNames(directory));
+			string version ;
+			ASDMUtils::Origin origin;
 			
-  			switch (origin) {
-  				case ASDMUtils::ALMA :
-    			break;
-
-  				case ASDMUtils::EVLA :
-    			break;
-    
-  				case ASDMUtils::UNKNOWN : 
-    			break;
-  			}
-
-    		if (origin == ASDMUtils::UNKNOWN)
+			try { 
+				version = parse.detectVersion_ ? ASDMUtils::version(directory) : parse.version_;
+				origin = parse.detectOrigin_ ? ASDMUtils::origin(ASDMUtils::telescopeNames(directory)) : parse.origin_;
+			}
+			catch (ASDMUtilsException e) {
+				throw ConversionException ("Caught an exception whose message is '" + e.getMessage() + "'.", "ASDM");
+			}
+			
+    		if ((version == "UNKNOWN") && (origin == ASDMUtils::UNKNOWN))
     			throw ConversionException("I cannot read this dataset with version='UNKNOWN' and origin='UNKNOWN'", "ASDM");
  		
     		string xsltPath;

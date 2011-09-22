@@ -457,6 +457,9 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::CorrelatorModeTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

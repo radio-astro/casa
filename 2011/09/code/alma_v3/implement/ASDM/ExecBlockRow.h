@@ -37,13 +37,9 @@
 #include <vector>
 #include <string>
 #include <set>
-using std::vector;
-using std::string;
-using std::set;
 
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::ExecBlockRowIDL;
 #endif
 
 
@@ -52,19 +48,14 @@ using asdmIDL::ExecBlockRowIDL;
 
 
 #include <ArrayTime.h>
-using  asdm::ArrayTime;
 
 #include <Angle.h>
-using  asdm::Angle;
 
 #include <Tag.h>
-using  asdm::Tag;
 
 #include <Length.h>
-using  asdm::Length;
 
 #include <EntityRef.h>
-using  asdm::EntityRef;
 
 
 
@@ -1337,7 +1328,7 @@ public:
 	 * Return this row in the form of an IDL struct.
 	 * @return The values of this row as a ExecBlockRowIDL struct.
 	 */
-	ExecBlockRowIDL *toIDL() const;
+	asdmIDL::ExecBlockRowIDL *toIDL() const;
 #endif
 	
 #ifndef WITHOUT_ACS
@@ -1346,14 +1337,14 @@ public:
 	 * @param x The IDL struct containing the values used to fill this row.
 	 * @throws ConversionException
 	 */
-	void setFromIDL (ExecBlockRowIDL x) ;
+	void setFromIDL (asdmIDL::ExecBlockRowIDL x) ;
 #endif
 	
 	/**
 	 * Return this row in the form of an XML string.
 	 * @return The values of this row as an XML string.
 	 */
-	string toXML() const;
+	std::string toXML() const;
 
 	/**
 	 * Fill the values of this row from an XML string 
@@ -1361,7 +1352,7 @@ public:
 	 * @param rowDoc the XML string being used to set the values of this row.
 	 * @throws ConversionException
 	 */
-	void setFromXML (string rowDoc) ;	
+	void setFromXML (std::string rowDoc) ;	
 
 private:
 	/**
@@ -1789,7 +1780,7 @@ private:
 	///////////////////////////////
 	// binary-deserialization material//
 	///////////////////////////////
-	map<string, ExecBlockAttributeFromBin> fromBinMethods;
+	std::map<std::string, ExecBlockAttributeFromBin> fromBinMethods;
 void execBlockIdFromBin( EndianISStream& eiss);
 void startTimeFromBin( EndianISStream& eiss);
 void endTimeFromBin( EndianISStream& eiss);
@@ -1835,7 +1826,7 @@ void scaleIdFromBin( EndianISStream& eiss);
 	  * @param attributesSeq a vector containing the names of the attributes . The elements order defines the order 
 	  * in which the attributes are written in the binary serialization.
 	  */
-	 static ExecBlockRow* fromBin(EndianISStream& eiss, ExecBlockTable& table, const vector<string>& attributesSeq);	 
+	 static ExecBlockRow* fromBin(EndianISStream& eiss, ExecBlockTable& table, const std::vector<std::string>& attributesSeq);	 
 
 };
 

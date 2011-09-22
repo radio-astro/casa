@@ -82,7 +82,7 @@ namespace casa {
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Point::regionCenter( x, y ); }
 
-		QtPoint( QtRegionSource *factory, WorldCanvas *wc, double x, double y );
+		QtPoint( QtRegionSource *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false );
 
 		// qt-event -> QtRegion -> QtPoint -> Region::refresh( )
 		void refresh( ) { Point::refresh( ); }
@@ -99,6 +99,10 @@ namespace casa {
 	    protected:
 		Region::StatisticsList *generate_statistics_list( ) { return Point::generate_statistics_list( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
+
+		virtual void fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
+						   std::vector<std::pair<double,double> > &world_pts ) const 
+				{ return Point::fetch_region_details( type, pixel_pts, world_pts ); }
 
 
 	};

@@ -397,6 +397,9 @@ HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCor
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::HolographyTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

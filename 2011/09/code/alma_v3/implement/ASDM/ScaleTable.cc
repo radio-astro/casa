@@ -397,6 +397,9 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ScaleTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

@@ -385,6 +385,9 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ProcessorTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

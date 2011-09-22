@@ -312,6 +312,9 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::EphemerisTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

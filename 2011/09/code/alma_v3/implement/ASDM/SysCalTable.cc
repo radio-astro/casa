@@ -478,6 +478,9 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::SysCalTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods

@@ -605,6 +605,9 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 
 
 
+#ifndef WITHOUT_ACS
+	using asdmIDL::ExecBlockTableIDL;
+#endif
 
 #ifndef WITHOUT_ACS
 	// Conversion Methods
