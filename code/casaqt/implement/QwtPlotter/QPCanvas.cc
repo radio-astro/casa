@@ -72,7 +72,7 @@ const String QPCanvas::EXPORT_NAME = "export";
 
 bool QPCanvas::exportPlotter(QPPlotter* plotter, const PlotExportFormat& fmt) {
 	
-printf("\n>>> DSW QPC ExPr \n");
+  //printf("\n>>> DSW QPC ExPr \n");
     vector<PlotCanvasPtr> canvases;
     if(plotter != NULL && !plotter->canvasLayout().null())
         canvases = plotter->canvasLayout()->allCanvases();
@@ -153,7 +153,7 @@ QImage QPCanvas::produceHighResImage(
         bool &wasCanceled
         )   
 {
-printf("DSW TEST: ----->  produce high res image in qpcanvas, %dx%d\n", width, height);
+
     // make sure both width and height are set
     int widgetWidth  = width, 
         widgetHeight = height;

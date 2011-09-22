@@ -75,9 +75,11 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
                 tb.open(srctab)
                 srcidcol=tb.getcol('SOURCE_ID')
                 for i in range(tb.nrows()):
-                    if sourceid==srcidcol[i] and not tb.iscelldefined('REST_FREQUENCY',i):
-                        restfreq=tb.getcell('REST_FREQUENCY',i)[0]
-                        break
+                    if sourceid==srcidcol[i] and tb.iscelldefined('REST_FREQUENCY',i):
+                        rf = tb.getcell('REST_FREQUENCY',i)
+                        if len(rf) > 0:
+                            restfreq=tb.getcell('REST_FREQUENCY',i)[0]
+                            break
                 tb.close()
                 casalog.post("restfreq set to %s"%restfreq, "INFO")
 
