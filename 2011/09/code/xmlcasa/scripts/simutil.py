@@ -220,7 +220,7 @@ class simutil:
     ###########################################################
     # plot an image (optionally), and calculate its statistics
 
-    def statim(self,image,plot=True,incell=None,disprange=None,bar=True):
+    def statim(self,image,plot=True,incell=None,disprange=None,bar=True,showstats=True):
         pix=self.cellsize(image)  # cell positive by convention
         pixarea=abs(qa.convert(pix[0],'arcsec')['value']*
                     qa.convert(pix[1],'arcsec')['value'])
@@ -302,14 +302,20 @@ class simutil:
             #pl.setp(l,fontsize="x-small")
             #l=ax.get_yticklabels()
             #pl.setp(l,fontsize="x-small")
-            pl.title(image,fontsize="x-small")
-            pl.text(0.05,0.95,"min=%7.1e\nmax=%7.1e\nRMS=%7.1e" % (im_min,im_max,im_rms),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
+            foo=image.split("/")
+            if len(foo)==1:
+                imagestrip=image
+            else:
+                imagestrip=foo[1]
+            pl.title(imagestrip,fontsize="x-small")
+            if showstats:
+                pl.text(0.05,0.95,"min=%7.1e\nmax=%7.1e\nRMS=%7.1e\n%s" % (im_min,im_max,im_rms,imunit),transform = ax.transAxes,bbox=dict(facecolor='white', alpha=0.7),size="x-small",verticalalignment="top")
             if bar:
                 cb=pl.colorbar(pad=0)
                 cl = pl.getp(cb.ax,'yticklabels')
                 pl.setp(cl,fontsize='x-small')
         ia.done()
-        return im_min,im_max,im_rms
+        return im_min,im_max,im_rms,imunit
 
 
 
