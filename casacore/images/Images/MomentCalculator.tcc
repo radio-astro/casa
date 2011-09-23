@@ -2738,9 +2738,18 @@ Bool MomentWindow<T>::setNSigmaWindow (Vector<Int>& window,
    window(0) = min(nPts-1,max(0,window(0)));
    window(1) = Int((pos+N*width)+0.5);
    window(1) = min(nPts-1,max(0,window(1)));
-                                      
-   if ( abs(window(1)-window(0)) < 3) return False;
-   return True;
+   // FIXME this was
+   // if ( abs(window(1)-window(0)) < 3) return False;
+   // return True;
+   // but because window(1) - window(0) could be negative and True could be
+   // returned, an allocation error was occuring because in another function a
+   // vector was being resized to (window(1) - window(0)). It is possible that
+   // in that case the absolute value should be calculated but I don't have time
+   // at the moment to trace through the code and make sure that is really the
+   // correct thing to do. Thus, making this function return false if window(1) - window(0)
+   // seems the more conservative approach, so I'm doing that for now.
+   return window(1)-window(0) >= 3;
+
 } 
 
 
