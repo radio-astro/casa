@@ -31,6 +31,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value type="string"></value>
   </param>
 
+  <param type="bool" name="copypointing">
+    <description>Copy all rows of the POINTING table.</description>
+    <value>True</value>
+  </param>
+
 </input>
 <example>
 
@@ -61,6 +66,10 @@ dirtol -- Direction shift tolerance for considering data as the same field
 	   their phase center differ by less than 1 arcsec.  If the field names
            are different in the input data sets, the name in the output data
            set will be the first relevant data set in the list.
+
+copypointing -- Make a proper copy of the POINTING subtable (can be time consuming).
+                If False, the result is an empty POINTING table.
+         default: True
 
 </example> 
 

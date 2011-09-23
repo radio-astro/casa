@@ -3,7 +3,7 @@ import shutil
 import stat
 from taskinit import *
 
-def testconcat(vislist,testconcatvis,freqtol,dirtol):
+def testconcat(vislist,testconcatvis,freqtol,dirtol,copypointing):
 	"""
 	The list of data sets given in the vis argument are concatenated into an output
 	data set in concatvis without copying the bulk data of the main table.
@@ -32,6 +32,9 @@ def testconcat(vislist,testconcatvis,freqtol,dirtol):
 	their phase center differ by less than 1 arcsec.  If the field names
 	are different in the input data sets, the name in the output data
 	set will be the first relevant data set in the list.
+
+	copypointing -- copy all rows of the pointing table
+	default: True
 	"""
 
         ###
@@ -64,7 +67,11 @@ def testconcat(vislist,testconcatvis,freqtol,dirtol):
  				for subt in thesubtables:
  					if not (subt[0]=='.'):
  						tb.open(vis[0]+'/'+subt)
- 						tb.copy(testconcatvis+'/'+subt, deep=True, valuecopy=True)
+						no_rows = False
+						if (subt=='POINTING' and not copypointing):
+							casalog.post('*** copypointing==False: resulting MS will have empty POINTING table', 'INFO')
+							no_rows = True
+ 						tb.copy(testconcatvis+'/'+subt, deep=False, valuecopy=True, norows=no_rows)
  						tb.close()
  				vis.remove(vis[0])
 	
