@@ -40,6 +40,9 @@ public:
     //Bool lock (Int milliseconds);
     void unlock ();
     Bool trylock ();
+    
+    // jagonzal: Useful when mandatory is locking
+    void acquirelock();
 
 protected:
 
