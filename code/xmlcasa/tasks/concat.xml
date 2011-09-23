@@ -35,6 +35,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <description>If true, sort by TIME in ascending order</description>
     <value>False</value>
   </param>
+
+  <param type="bool" name="copypointing">
+    <description>Copy all rows of the POINTING table.</description>
+    <value>True</value>
+  </param>
+
 </input>
 <example>
 
@@ -105,6 +111,10 @@ timesort -- If true, the output visibility table will be sorted in time.
 	example: timesort=true
      Note: There is no constraint on data that is simultaneously observed for
         more than one field; for example multi-source correlation of VLBA data.
+
+copypointing -- Make a proper copy of the POINTING subtable (can be time consuming).
+                If False, the result is an empty POINTING table.
+        default: True
 
 </example> 
 
