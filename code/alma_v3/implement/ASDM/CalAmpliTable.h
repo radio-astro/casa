@@ -553,6 +553,15 @@ private:
 	 
 	 */
 	CalAmpliRow* checkAndAdd(CalAmpliRow* x) ;
+	
+	/**
+	 * Brutally append an CalAmpliRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalAmpliRow* x a pointer onto the CalAmpliRow to be appended.
+	 */
+	 void append(CalAmpliRow* x) ;
+	 
+	 
 
 
 

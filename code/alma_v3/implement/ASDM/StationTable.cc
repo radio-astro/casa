@@ -269,10 +269,9 @@ StationRow* StationTable::newRow(StationRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -298,7 +297,7 @@ StationRow* StationTable::newRow(StationRow* row) {
 		,
 			x->getType()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table StationTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -314,6 +313,16 @@ StationRow* StationTable::newRow(StationRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void StationTable::append(StationRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -489,16 +498,21 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"StationTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"StationTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"StationTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"StationTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in StationTable::checkAndAdd called from StationTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -734,19 +748,27 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	StationRow* aRow = StationRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				StationRow* aRow = StationRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Station");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Station");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			StationRow* aRow = StationRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

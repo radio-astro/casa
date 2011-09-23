@@ -432,6 +432,9 @@ public:
 	 *
 	 * @return a pointer on a vector<WeatherRow *>. A null returned value means that the table contains
 	 * no WeatherRow for the given ( stationId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <WeatherRow*> *getByContext(Tag stationId);
 	 
@@ -526,6 +529,15 @@ private:
 	 
 	 */
 	WeatherRow* checkAndAdd(WeatherRow* x) ;
+	
+	/**
+	 * Brutally append an WeatherRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param WeatherRow* x a pointer onto the WeatherRow to be appended.
+	 */
+	 void append(WeatherRow* x) ;
+	 
+	 
 
 
 	

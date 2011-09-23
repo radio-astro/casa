@@ -482,6 +482,15 @@ private:
 	 
 	 */
 	ReceiverRow* checkAndAdd(ReceiverRow* x) ;
+	
+	/**
+	 * Brutally append an ReceiverRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ReceiverRow* x a pointer onto the ReceiverRow to be appended.
+	 */
+	 void append(ReceiverRow* x) ;
+	 
+	 
 
 
 	

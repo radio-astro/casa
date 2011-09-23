@@ -462,6 +462,12 @@ private:
 	 */
 	DataDescriptionRow* checkAndAdd(DataDescriptionRow* x) throw (DuplicateKey, UniquenessViolationException);
 
+	/**
+	 * Brutally append an DataDescriptionRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param «NameS»Row* x a pointer onto the «NameS»Row to be appended.
+	 */
+	 void append(DataDescriptionRow* x) ;
 
 
 // A data structure to store the pointers on the table's rows.
@@ -471,7 +477,7 @@ private:
    
 
 			
-	vector<DataDescriptionRow *> row;
+	//vector<DataDescriptionRow *> row;
 
 
 

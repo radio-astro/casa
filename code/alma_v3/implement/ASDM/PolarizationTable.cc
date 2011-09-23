@@ -267,10 +267,9 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -296,7 +295,7 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 		,
 			x->getCorrProduct()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table PolarizationTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -312,6 +311,16 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void PolarizationTable::append(PolarizationRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -487,16 +496,21 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"PolarizationTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"PolarizationTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"PolarizationTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"PolarizationTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in PolarizationTable::checkAndAdd called from PolarizationTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -729,19 +743,27 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	PolarizationRow* aRow = PolarizationRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				PolarizationRow* aRow = PolarizationRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Polarization");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Polarization");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			PolarizationRow* aRow = PolarizationRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

@@ -390,10 +390,9 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -427,6 +426,16 @@ CalPointingRow* CalPointingTable::newRow(CalPointingRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void CalPointingTable::append(CalPointingRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -648,16 +657,21 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"CalPointingTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"CalPointingTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"CalPointingTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"CalPointingTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in CalPointingTable::checkAndAdd called from CalPointingTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -977,19 +991,27 @@ CalPointingRow* CalPointingTable::lookup(string antennaName, ReceiverBandMod::Re
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	CalPointingRow* aRow = CalPointingRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				CalPointingRow* aRow = CalPointingRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "CalPointing");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "CalPointing");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			CalPointingRow* aRow = CalPointingRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

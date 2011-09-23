@@ -362,6 +362,9 @@ public:
 	 *
 	 * @return a pointer on a vector<SysPowerRow *>. A null returned value means that the table contains
 	 * no SysPowerRow for the given ( antennaId, spectralWindowId, feedId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <SysPowerRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
@@ -466,6 +469,15 @@ private:
 	 
 	 */
 	SysPowerRow* checkAndAdd(SysPowerRow* x) ;
+	
+	/**
+	 * Brutally append an SysPowerRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SysPowerRow* x a pointer onto the SysPowerRow to be appended.
+	 */
+	 void append(SysPowerRow* x) ;
+	 
+	 
 
 
 	

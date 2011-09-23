@@ -341,10 +341,9 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -380,7 +379,7 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 		,
 			x->getAssocPointingModelId()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table PointingModelTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -398,6 +397,16 @@ PointingModelRow* PointingModelTable::newRow(PointingModelRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void PointingModelTable::append(PointingModelRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -608,16 +617,21 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"PointingModelTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"PointingModelTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"PointingModelTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"PointingModelTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in PointingModelTable::checkAndAdd called from PointingModelTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -868,19 +882,27 @@ PointingModelRow* PointingModelTable::lookup(Tag antennaId, int numCoeff, vector
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	PointingModelRow* aRow = PointingModelRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				PointingModelRow* aRow = PointingModelRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "PointingModel");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "PointingModel");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			PointingModelRow* aRow = PointingModelRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

@@ -476,6 +476,15 @@ private:
 	 
 	 */
 	AntennaRow* checkAndAdd(AntennaRow* x) ;
+	
+	/**
+	 * Brutally append an AntennaRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param AntennaRow* x a pointer onto the AntennaRow to be appended.
+	 */
+	 void append(AntennaRow* x) ;
+	 
+	 
 
 
 

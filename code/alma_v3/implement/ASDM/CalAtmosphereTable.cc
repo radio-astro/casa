@@ -440,10 +440,9 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -479,6 +478,16 @@ CalAtmosphereRow* CalAtmosphereTable::newRow(CalAtmosphereRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void CalAtmosphereTable::append(CalAtmosphereRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -724,16 +733,21 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"CalAtmosphereTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"CalAtmosphereTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"CalAtmosphereTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"CalAtmosphereTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in CalAtmosphereTable::checkAndAdd called from CalAtmosphereTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -1062,19 +1076,27 @@ CalAtmosphereRow* CalAtmosphereTable::lookup(string antennaName, ReceiverBandMod
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "CalAtmosphere");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "CalAtmosphere");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			CalAtmosphereRow* aRow = CalAtmosphereRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

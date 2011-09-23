@@ -355,6 +355,15 @@ private:
 	 
 	 */
 	AlmaRadiometerRow* checkAndAdd(AlmaRadiometerRow* x) ;
+	
+	/**
+	 * Brutally append an AlmaRadiometerRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param AlmaRadiometerRow* x a pointer onto the AlmaRadiometerRow to be appended.
+	 */
+	 void append(AlmaRadiometerRow* x) ;
+	 
+	 
 
 
 

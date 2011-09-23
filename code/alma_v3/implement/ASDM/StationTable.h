@@ -413,6 +413,15 @@ private:
 	 
 	 */
 	StationRow* checkAndAdd(StationRow* x) ;
+	
+	/**
+	 * Brutally append an StationRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param StationRow* x a pointer onto the StationRow to be appended.
+	 */
+	 void append(StationRow* x) ;
+	 
+	 
 
 
 

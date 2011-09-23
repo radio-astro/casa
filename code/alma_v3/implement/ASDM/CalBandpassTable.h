@@ -635,6 +635,15 @@ private:
 	 
 	 */
 	CalBandpassRow* checkAndAdd(CalBandpassRow* x) ;
+	
+	/**
+	 * Brutally append an CalBandpassRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalBandpassRow* x a pointer onto the CalBandpassRow to be appended.
+	 */
+	 void append(CalBandpassRow* x) ;
+	 
+	 
 
 
 

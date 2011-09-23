@@ -293,10 +293,9 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -325,6 +324,16 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void WeatherTable::append(WeatherRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -348,6 +357,9 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 	
 		
 	 vector<WeatherRow *> *WeatherTable::getByContext(Tag stationId) {
+	 	if (getContainer().checkRowUniqueness() == false)
+	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "WeatherTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(stationId);
  
@@ -540,16 +552,21 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"WeatherTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"WeatherTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"WeatherTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"WeatherTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in WeatherTable::checkAndAdd called from WeatherTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -818,19 +835,27 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	WeatherRow* aRow = WeatherRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				WeatherRow* aRow = WeatherRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Weather");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Weather");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			WeatherRow* aRow = WeatherRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

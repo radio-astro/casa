@@ -628,6 +628,15 @@ private:
 	 
 	 */
 	CalPrimaryBeamRow* checkAndAdd(CalPrimaryBeamRow* x) ;
+	
+	/**
+	 * Brutally append an CalPrimaryBeamRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalPrimaryBeamRow* x a pointer onto the CalPrimaryBeamRow to be appended.
+	 */
+	 void append(CalPrimaryBeamRow* x) ;
+	 
+	 
 
 
 

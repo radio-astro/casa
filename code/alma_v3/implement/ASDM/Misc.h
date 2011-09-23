@@ -11,7 +11,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later verson.
  * 
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY, without even the implied warranty of
@@ -27,6 +27,7 @@
  * File Misc.h
  */
 
+#include <iostream>
 #include <string> 
 #include <vector>
 #include <set>
@@ -233,10 +234,21 @@ namespace asdm {
     ASDMParseOptions();
 
     /**
+     * A copy constructor
+     */
+    ASDMParseOptions(const ASDMParseOptions& x);
+
+    /**
      * The destructor.
      * Does nothing special.
      */
     virtual ~ASDMParseOptions();
+
+    /**
+     * = operator.
+     */
+    ASDMParseOptions & operator=(const ASDMParseOptions & rhs);
+
     
     /**
      * This is an ALMA dataset.
@@ -271,12 +283,28 @@ namespace asdm {
      */
     ASDMParseOptions& loadTablesOnDemand(bool b);
 
+    /**
+     * Determines if a control of the uniqueness is performed (b==true) or not (b==false) for each row of each table converted and loaded into memory.
+     * 
+     * @param bool b 
+     *
+     */
+    ASDMParseOptions& checkRowUniqueness(bool b);
+
+    /**
+     * Defines how an instance of ASDMParseOptions is output on an ostream.
+     */
+    friend std::ostream& operator<<(std::ostream& output, const ASDMParseOptions& p);
+
+    std::string toString() const;
+
   private:
     ASDMUtils::Origin	origin_;
     bool		detectOrigin_;
     std::string		version_;
     bool		detectVersion_;
     bool		loadTablesOnDemand_;
+    bool                checkRowUniqueness_;
   };				// end class ASDMParseOptions.
 
   /**

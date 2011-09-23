@@ -456,6 +456,9 @@ public:
 	 *
 	 * @return a pointer on a vector<PointingRow *>. A null returned value means that the table contains
 	 * no PointingRow for the given ( antennaId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <PointingRow*> *getByContext(Tag antennaId);
 	 
@@ -570,6 +573,15 @@ private:
 	 
 	 */
 	PointingRow* checkAndAdd(PointingRow* x) ;
+	
+	/**
+	 * Brutally append an PointingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param PointingRow* x a pointer onto the PointingRow to be appended.
+	 */
+	 void append(PointingRow* x) ;
+	 
+	 
 
 
 	

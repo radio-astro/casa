@@ -412,6 +412,15 @@ private:
 	 
 	 */
 	HolographyRow* checkAndAdd(HolographyRow* x) ;
+	
+	/**
+	 * Brutally append an HolographyRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param HolographyRow* x a pointer onto the HolographyRow to be appended.
+	 */
+	 void append(HolographyRow* x) ;
+	 
+	 
 
 
 

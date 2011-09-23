@@ -336,6 +336,15 @@ private:
 	 
 	 */
 	EphemerisRow* checkAndAdd(EphemerisRow* x) ;
+	
+	/**
+	 * Brutally append an EphemerisRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param EphemerisRow* x a pointer onto the EphemerisRow to be appended.
+	 */
+	 void append(EphemerisRow* x) ;
+	 
+	 
 
 
 

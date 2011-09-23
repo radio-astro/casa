@@ -29,8 +29,8 @@ using std::fmod;
 
 #include <ArrayTime.h>
 
-#include <Double.h>
-#include <Long.h>
+#include <DoubleWrapper.h>
+#include <LongWrapper.h>
 #include <Integer.h>
 #include <InvalidArgumentException.h>
 #include <NumberFormatException.h>

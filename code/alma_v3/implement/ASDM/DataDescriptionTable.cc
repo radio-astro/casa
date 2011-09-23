@@ -105,8 +105,8 @@ namespace asdm {
    */	
 	
   DataDescriptionTable::~DataDescriptionTable() {
-    for (unsigned int i = 0; i < row.size(); ++i) {
-      delete row[i];
+    for (unsigned int i = 0; i < privateRows.size(); ++i) {
+      delete privateRows[i];
     }
   }
 
@@ -123,7 +123,7 @@ namespace asdm {
    */
 
   unsigned int DataDescriptionTable::size() const {
-    return row.size();
+    return privateRows.size();
   }	
 	
 	
@@ -244,7 +244,6 @@ namespace asdm {
     // Autoincrement dataDescriptionId
     x->setDataDescriptionId(Tag(size(), TagType::DataDescription));
 						
-    row.push_back(x);
     privateRows.push_back(x);
     x->isAdded(true);
     return x;
@@ -278,7 +277,7 @@ namespace asdm {
 	       ,
 	       x->getSpectralWindowId()
 		
-	       )) throw UniquenessViolationException("Uniqueness violation exception in table DataDescriptionTable");
+	       )) throw UniquenessViolationException();
 		
 		
 		
@@ -288,13 +287,16 @@ namespace asdm {
 			
 		    )) throw DuplicateKey("Duplicate key exception in ", "DataDescriptionTable");
 		
-    row.push_back(x);
     privateRows.push_back(x);
     x->isAdded(true);
     return x;	
   }	
 
 
+  void DataDescriptionTable::append(DataDescriptionRow *x) {
+	  privateRows.push_back(x);
+	  x->isAdded(true);
+  }
 
 
 
@@ -331,8 +333,8 @@ namespace asdm {
   DataDescriptionRow* DataDescriptionTable::getRowByKey(Tag dataDescriptionId)  {
     checkPresenceInMemory();
     DataDescriptionRow* aRow = 0;
-    for (unsigned int i = 0; i < row.size(); i++) {
-      aRow = row.at(i);
+    for (unsigned int i = 0; i < privateRows.size(); i++) {
+      aRow = privateRows.at(i);
       
       
       if (aRow->dataDescriptionId != dataDescriptionId) continue;

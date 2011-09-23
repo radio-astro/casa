@@ -25,7 +25,7 @@
  */
 
 #include <Interval.h>
-#include <Long.h>
+#include <LongWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Long;
 using asdm::NumberFormatException;

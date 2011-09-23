@@ -33,6 +33,7 @@
 
 #include <algorithm> //required for std::swap
 #include <iostream>
+#include <sstream>
 
 #include <libxml/xmlmemory.h>
 #include <libxml/debugXML.h>
@@ -289,7 +290,7 @@ namespace asdm {
 	break; 
       node = node->next;
     }
-    return node;      
+    return (node != NULL);      
   }
 
   string ASDMUtils::parseRow(xmlDocPtr doc, xmlNodePtr node, const xmlChar* childName) {
@@ -405,17 +406,42 @@ namespace asdm {
     detectOrigin_       = true;
     version_    	= "UNKNOWN";
     detectVersion_      = true;
-    loadTablesOnDemand_ = true;
+    loadTablesOnDemand_ = false;
+    checkRowUniqueness_ = true;
+  }
+
+  ASDMParseOptions::ASDMParseOptions(const ASDMParseOptions& x) {
+    origin_				       = x.origin_;
+    detectOrigin_			       = x.detectOrigin_;
+    version_				       = x.version_;
+    detectVersion_			       = x.detectVersion_;
+    loadTablesOnDemand_			       = x.loadTablesOnDemand_;
+    checkRowUniqueness_                        = x.checkRowUniqueness_;
   }
 
   ASDMParseOptions::~ASDMParseOptions() {;}
 
+  ASDMParseOptions& ASDMParseOptions::operator = (const ASDMParseOptions& rhs) {
+    origin_				       = rhs.origin_;
+    detectOrigin_			       = rhs.detectOrigin_;
+    version_				       = rhs.version_;
+    detectVersion_			       = rhs.detectVersion_;
+    loadTablesOnDemand_			       = rhs.loadTablesOnDemand_;
+    checkRowUniqueness_                        = rhs.checkRowUniqueness_;
+    return *this;
+  }
   ASDMParseOptions& ASDMParseOptions::asALMA() { origin_ = ASDMUtils::ALMA; detectOrigin_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asIRAM_PDB() { origin_ = ASDMUtils::ALMA; detectOrigin_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asEVLA() { origin_ = ASDMUtils::EVLA; detectOrigin_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asV2() { version_ = "2"; detectVersion_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asV3() { version_ = "3"; detectVersion_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::loadTablesOnDemand(bool b) { loadTablesOnDemand_ = b;  return *this; }
+  ASDMParseOptions& ASDMParseOptions::checkRowUniqueness(bool b) { checkRowUniqueness_ = b;  return *this; }
+  string ASDMParseOptions::toString() const {
+    ostringstream oss;
+    oss << *this;
+    return oss.str();
+  }
 
   XSLTransformer::XSLTransformer() : cur(NULL) {
     xmlSubstituteEntitiesDefault(1);
@@ -499,6 +525,22 @@ namespace asdm {
     return docXML;
   } 
 
+  std::ostream& operator<<(std::ostream& output, const ASDMParseOptions& p) {
+    string s;
+    switch (p.origin_) {
+    case ASDMUtils::UNKNOWN:
+      s = "UNKNOWN";
+      break;
+    case ASDMUtils::ALMA:
+      s = "ALMA";
+      break;
+    case ASDMUtils::EVLA:
+      s = "EVLA";
+      break;
+    }
+    output << "Origin=" << s << ",Version=" << p.version_ << ",LoadTablesOnDemand=" << p.loadTablesOnDemand_ << ",CheckRowUniqueness=" << p.checkRowUniqueness_;
+    return output;  // for multiple << operators.
+  }
 } // end namespace asdm
  
  

@@ -693,6 +693,15 @@ private:
 	 
 	 */
 	ExecBlockRow* checkAndAdd(ExecBlockRow* x) ;
+	
+	/**
+	 * Brutally append an ExecBlockRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ExecBlockRow* x a pointer onto the ExecBlockRow to be appended.
+	 */
+	 void append(ExecBlockRow* x) ;
+	 
+	 
 
 
 

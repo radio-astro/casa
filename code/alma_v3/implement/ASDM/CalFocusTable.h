@@ -710,6 +710,15 @@ private:
 	 
 	 */
 	CalFocusRow* checkAndAdd(CalFocusRow* x) ;
+	
+	/**
+	 * Brutally append an CalFocusRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalFocusRow* x a pointer onto the CalFocusRow to be appended.
+	 */
+	 void append(CalFocusRow* x) ;
+	 
+	 
 
 
 

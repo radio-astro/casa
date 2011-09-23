@@ -476,6 +476,15 @@ private:
 	 
 	 */
 	FlagRow* checkAndAdd(FlagRow* x) ;
+	
+	/**
+	 * Brutally append an FlagRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FlagRow* x a pointer onto the FlagRow to be appended.
+	 */
+	 void append(FlagRow* x) ;
+	 
+	 
 
 
 

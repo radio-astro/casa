@@ -485,6 +485,15 @@ private:
 	 
 	 */
 	PointingModelRow* checkAndAdd(PointingModelRow* x) ;
+	
+	/**
+	 * Brutally append an PointingModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param PointingModelRow* x a pointer onto the PointingModelRow to be appended.
+	 */
+	 void append(PointingModelRow* x) ;
+	 
+	 
 
 
 

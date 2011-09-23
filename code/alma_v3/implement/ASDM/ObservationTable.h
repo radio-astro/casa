@@ -336,6 +336,15 @@ private:
 	 
 	 */
 	ObservationRow* checkAndAdd(ObservationRow* x) ;
+	
+	/**
+	 * Brutally append an ObservationRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ObservationRow* x a pointer onto the ObservationRow to be appended.
+	 */
+	 void append(ObservationRow* x) ;
+	 
+	 
 
 
 

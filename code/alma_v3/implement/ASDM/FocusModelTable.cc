@@ -347,10 +347,9 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -388,7 +387,7 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
 		,
 			x->getAssocFocusModelId()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table FocusModelTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -406,6 +405,16 @@ FocusModelRow* FocusModelTable::newRow(FocusModelRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void FocusModelTable::append(FocusModelRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -618,16 +627,21 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"FocusModelTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"FocusModelTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"FocusModelTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"FocusModelTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in FocusModelTable::checkAndAdd called from FocusModelTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -878,19 +892,27 @@ FocusModelRow* FocusModelTable::lookup(Tag antennaId, PolarizationTypeMod::Polar
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	FocusModelRow* aRow = FocusModelRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				FocusModelRow* aRow = FocusModelRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "FocusModel");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "FocusModel");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			FocusModelRow* aRow = FocusModelRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

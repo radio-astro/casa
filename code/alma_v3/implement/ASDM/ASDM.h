@@ -772,6 +772,16 @@ public:
 	 *
 	 */	
 	 void setFromFile(std::string directory, const ASDMParseOptions&  parse=ASDMParseOptions());
+	 
+	 /**
+	  * Returns a boolean value indicating if a control of the uniqueness of each row of each table is done during the execution
+	  * of the method setFromFile.
+	  *
+	  * @return a bool.
+	  *
+	  * see the documentation of ASDMParseOptions about how to set this parameter. 
+	  */
+	  bool checkRowUniqueness() const ;
 	
 	#ifndef WITHOUT_ACS
 	/**
@@ -957,7 +967,8 @@ private:
 	bool fileAsBin ; // If true file binary else file XML		
 	bool hasBeenAdded;
 	Origin origin;
-	bool loadTablesOnDemand;
+	bool loadTablesOnDemand_;  // For a dataset which is stored on disk, convert and load in memory only the tables which are used by the code the first time they are referred to.
+	bool checkRowUniqueness_;  // For a dataset which is stored on disk, when a table is converted and loaded in memory verify (true) or not (false) the fact that each row is unique.
 	std::string directory;
 		
 

@@ -384,6 +384,15 @@ private:
 	 
 	 */
 	SquareLawDetectorRow* checkAndAdd(SquareLawDetectorRow* x) ;
+	
+	/**
+	 * Brutally append an SquareLawDetectorRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SquareLawDetectorRow* x a pointer onto the SquareLawDetectorRow to be appended.
+	 */
+	 void append(SquareLawDetectorRow* x) ;
+	 
+	 
 
 
 

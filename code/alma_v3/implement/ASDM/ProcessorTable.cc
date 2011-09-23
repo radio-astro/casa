@@ -267,10 +267,9 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -296,7 +295,7 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 		,
 			x->getProcessorSubType()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table ProcessorTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -312,6 +311,16 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void ProcessorTable::append(ProcessorRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -487,16 +496,21 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"ProcessorTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"ProcessorTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"ProcessorTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"ProcessorTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in ProcessorTable::checkAndAdd called from ProcessorTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -729,19 +743,27 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	ProcessorRow* aRow = ProcessorRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				ProcessorRow* aRow = ProcessorRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Processor");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Processor");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			ProcessorRow* aRow = ProcessorRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

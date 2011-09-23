@@ -25,7 +25,7 @@
  */
 
 #include <Flux.h>
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;

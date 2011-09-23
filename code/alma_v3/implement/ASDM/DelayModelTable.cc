@@ -357,10 +357,9 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 
 
 
-
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -391,6 +390,16 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void DelayModelTable::append(DelayModelRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -414,6 +423,9 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	
 		
 	 vector<DelayModelRow *> *DelayModelTable::getByContext(Tag antennaId, Tag spectralWindowId) {
+	 	if (getContainer().checkRowUniqueness() == false)
+	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "DelayModelTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId);
  
@@ -606,16 +618,21 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		while (s.length() != 0) {
 			row = newRow();
 			row->setFromXML(s);
-			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
-				throw ConversionException(e1.getMessage(),"DelayModelTable");
-			} 
-			catch (UniquenessViolationException e1) {
-				throw ConversionException(e1.getMessage(),"DelayModelTable");	
-			}
-			catch (...) {
+			if (getContainer().checkRowUniqueness()) {
+				try {
+					checkAndAdd(row);
+				} catch (DuplicateKey e1) {
+					throw ConversionException(e1.getMessage(),"DelayModelTable");
+				} 
+				catch (UniquenessViolationException e1) {
+					throw ConversionException(e1.getMessage(),"DelayModelTable");	
+				}
+				catch (...) {
 				// cout << "Unexpected error in DelayModelTable::checkAndAdd called from DelayModelTable::fromXML " << endl;
+				}
+			}
+			else {
+				append(row);
 			}
 			s = xml.getElementContent("<row>","</row>");
 		}
@@ -929,19 +946,27 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	DelayModelRow* aRow = DelayModelRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				DelayModelRow* aRow = DelayModelRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "DelayModel");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "DelayModel");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			DelayModelRow* aRow = DelayModelRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;

@@ -516,6 +516,15 @@ private:
 	 
 	 */
 	CalDataRow* checkAndAdd(CalDataRow* x) ;
+	
+	/**
+	 * Brutally append an CalDataRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalDataRow* x a pointer onto the CalDataRow to be appended.
+	 */
+	 void append(CalDataRow* x) ;
+	 
+	 
 
 
 

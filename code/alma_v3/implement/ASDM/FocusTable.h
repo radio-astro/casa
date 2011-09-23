@@ -361,6 +361,9 @@ public:
 	 *
 	 * @return a pointer on a vector<FocusRow *>. A null returned value means that the table contains
 	 * no FocusRow for the given ( antennaId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <FocusRow*> *getByContext(Tag antennaId);
 	 
@@ -463,6 +466,15 @@ private:
 	 
 	 */
 	FocusRow* checkAndAdd(FocusRow* x) ;
+	
+	/**
+	 * Brutally append an FocusRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FocusRow* x a pointer onto the FocusRow to be appended.
+	 */
+	 void append(FocusRow* x) ;
+	 
+	 
 
 
 	

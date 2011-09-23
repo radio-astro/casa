@@ -416,6 +416,15 @@ private:
 	 
 	 */
 	ScaleRow* checkAndAdd(ScaleRow* x) ;
+	
+	/**
+	 * Brutally append an ScaleRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ScaleRow* x a pointer onto the ScaleRow to be appended.
+	 */
+	 void append(ScaleRow* x) ;
+	 
+	 
 
 
 
