@@ -69,8 +69,8 @@ main(int argc, char **argv)
             cout << "\n*** Test #1 ***\n" << endl;
 
             ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns =
-                    ROVisibilityIteratorAsync::prefetchColumns(VIA::Ant1, VIA::Ant2, VIA::Freq, VIA::Time,
-							       VIA::ObservedCube, VIA::Sigma, VIA::Flag, VIA::Uvw,
+                    ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1, casa::asyncio::Ant2, casa::asyncio::Freq, casa::asyncio::Time,
+                    		casa::asyncio::ObservedCube, casa::asyncio::Sigma, casa::asyncio::Flag, casa::asyncio::Uvw,
                                                              -1);
             auto_ptr<ROVisibilityIterator> syniter (ROVisibilityIteratorAsync::create (synms,prefetchColumns, bi));
             VisBufferAutoPtr vb (syniter.get());
@@ -131,7 +131,7 @@ main(int argc, char **argv)
         {
             cout << "\n*** Test #2 ***\n" << endl;
             ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns =
-                    ROVisibilityIteratorAsync::prefetchColumns(VIA::Time, -1);
+                    ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Time, -1);
 
 
             cout << " Now try to iterate in time-intervals of 10s"<<endl;
@@ -161,7 +161,7 @@ main(int argc, char **argv)
             cout << " Try iterator with 1000s interval."<<endl;
 
             ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns =
-                    ROVisibilityIteratorAsync::prefetchColumns(VIA::Time, -1);
+                    ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Time, -1);
 
             auto_ptr <ROVisibilityIterator>
             syniter3 (ROVisibilityIteratorAsync::create(synms,prefetchColumns, bi,10.));
