@@ -127,7 +127,7 @@ namespace casa {
 	}
 #endif
 
-	void QtRegionState::updateStatistics( Region::StatisticsList *stats ) {
+	void QtRegionState::updateStatistics( RegionInfo::image_stats_list_t *stats ) {
 	    if ( stats == 0 || stats->size() == 0 ) return;
 
 	    while ( stats->size() < statistics_group->count() ) {
@@ -153,7 +153,7 @@ namespace casa {
 	    int num = statistics_group->count( );
 	    QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 	    if ( first == 0 ) throw internal_error( );
-	    Region::StatisticsList::iterator stat_iter = stats->begin();
+	    RegionInfo::image_stats_list_t::iterator stat_iter = stats->begin();
 	    if ( stat_iter->second.isNull( ) ) {
 		fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
 	    } else {

@@ -20,7 +20,7 @@ namespace casa {
 		void clearstats( );
 		void addstats( const std::string &name, std::list<std::pair<String,String> > *stats );
 #endif
-		void updateStatistics( Region::StatisticsList *stats );
+		void updateStatistics( RegionInfo::image_stats_list_t *stats );
 		void clearStatistics( );
 
 		std::string lineColor( ) const;

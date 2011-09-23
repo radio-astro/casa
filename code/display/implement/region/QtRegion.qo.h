@@ -122,7 +122,7 @@ namespace casa {
 		void output(std::list<QtRegionState*>,std::ostream&);
 
 	    protected:
-		virtual Region::StatisticsList *generate_statistics_list( ) DISPLAY_PURE_VIRTUAL(Region::generate_statistics_list,0);
+		virtual RegionInfo::image_stats_list_t *generate_image_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_image_statistics,0);
 		// At the base of this inheritance hierarchy is a class that uses
 		// multiple inheritance. We are QtRegion is one base class, and we
 		// need to be able to retrieve our peer (the non-GUI dependent)
