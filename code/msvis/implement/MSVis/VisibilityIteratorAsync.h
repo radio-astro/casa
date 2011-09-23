@@ -14,6 +14,9 @@ using std::set;
 #include "VisibilityIterator.h"
 #include "UtilJ.h"
 
+// jagonzal: For MS access mutex
+#include "msvis/MSVis/AsynchronousTools.h"
+
 
 #define NotImplementedROVIA throw utilj::AipsErrorTrace (String ("Method not legal in ROVIA: ") + __PRETTY_FUNCTION__, __FILE__, __LINE__)
 
@@ -109,7 +112,8 @@ public:
             const Block<Int> & sortColumns,
             const Bool addDefaultSortCols,
             Double timeInterval=0,
-            Int nReadAheadBuffers = -1);
+            Int nReadAheadBuffers = -1,
+            Bool groupRows = false);
 
     static ROVisibilityIterator *
     create (const Block<MeasurementSet> & mss,
@@ -184,6 +188,7 @@ public:
                    MDoppler::Types , Bool );
     void setInterval(Double timeInterval);
     void setRowBlocking(Int nRow);
+    void slurp();
 
 
     //
@@ -198,6 +203,9 @@ public:
     static PrefetchColumns prefetchColumnsAll ();
     static PrefetchColumns prefetchAllColumnsExcept (int firstColumnId, ...);
     static PrefetchColumns prefetchColumns (int firstColumnId, ...);
+
+    // jagonzal: Implement an accessor function for the mutex resident in the vla data object
+    casa::async::Mutex * getMutex();
 
     // The functions below make no sense (at first glance) for asynchronous operation and are implemented
     // to throw an AipsError if called.  ROVIA is designed to have all the data accessed through the
@@ -309,7 +317,8 @@ protected:
                                const Block<Int> & sortColumns,
                                const Bool addDefaultSortCols,
                                Double timeInterval=0,
-                               Int nReadAheadBuffers = 2);
+                               Int nReadAheadBuffers = 2,
+                               Bool groupRows = false);
 
     // Same as previous constructor, but with multiple MSs to iterate over.
 
@@ -499,6 +508,20 @@ private:
     MRadialVelocity::Types rvType_p;
     MVRadialVelocity vInc_p;
     MVRadialVelocity vStart_p;
+
+    virtual void print (std::ostream & o) const;
+
+};
+
+class SlurpModifier : public RoviaModifier {
+
+public:
+
+	SlurpModifier ();
+
+    void apply (ROVisibilityIterator *) const;
+
+private:
 
     virtual void print (std::ostream & o) const;
 
