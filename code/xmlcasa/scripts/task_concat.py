@@ -65,9 +65,7 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 		else:
 			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				casalog.post('copying '+vis[0]+' to '+concatvis , 'INFO')
-				tb.open(vis[0])
-				tb.copy(concatvis, deep=True, valuecopy=True)
-				tb.close()
+				shutil.copytree(vis[0], concatvis)
 				# note that the resulting copy is writable even if the original was read-only
 				vis.remove(vis[0])
 				
