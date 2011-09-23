@@ -39,7 +39,7 @@ using std::complex;
 using asdmIDLTypes::IDLComplex;
 #endif
 
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <StringTokenizer.h>
 #include <NumberFormatException.h>
 using asdm::Double;

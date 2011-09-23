@@ -24,7 +24,7 @@
  * File Double.cpp
  */
 
-#include <Double.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

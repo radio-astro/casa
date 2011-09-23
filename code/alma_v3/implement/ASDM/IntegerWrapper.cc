@@ -24,7 +24,7 @@
  * File Integer.cpp
  */
 
-#include <Integer.h>
+#include <IntegerWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

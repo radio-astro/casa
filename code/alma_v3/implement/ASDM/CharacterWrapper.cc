@@ -24,7 +24,7 @@
  * File Character.cpp
  */
 
-#include <Character.h>
+#include <CharacterWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

@@ -24,7 +24,7 @@
  * File Byte.cpp
  */
 
-#include <Byte.h>
+#include <ByteWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

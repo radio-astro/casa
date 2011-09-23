@@ -24,7 +24,7 @@
  * File Float.cpp
  */
 
-#include <Float.h>
+#include <FloatWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

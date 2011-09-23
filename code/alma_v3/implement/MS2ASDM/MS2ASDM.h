@@ -33,7 +33,7 @@
 
 #include <alma_v3/ASDM/ASDM.h>
 #include <alma_v3/ASDM/Tag.h>
-#include <alma_v3/ASDM/Complex.h>
+#include <alma_v3/ASDM/ComplexWrapper.h>
 #include <alma_v3/ASDM/Frequency.h>
 #include <alma_v3/ASDM/Angle.h>
 #include <alma_v3/ASDM/AngularRate.h>

@@ -43,7 +43,7 @@ using asdmIDLTypes::IDLTag;
 #include <InvalidArgumentException.h>
 #include <TagFormatException.h>
 #include "TagType.h"
-#include "Integer.h"
+#include "IntegerWrapper.h"
 
 
 using asdm::StringTokenizer;

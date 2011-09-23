@@ -24,7 +24,7 @@
  * File Short.cpp
  */
 
-#include <Short.h>
+#include <ShortWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

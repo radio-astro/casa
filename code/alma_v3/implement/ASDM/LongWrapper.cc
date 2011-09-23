@@ -24,7 +24,7 @@
  * File Long.cpp
  */
 
-#include <Long.h>
+#include <LongWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>

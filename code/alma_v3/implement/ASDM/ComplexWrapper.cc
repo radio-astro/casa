@@ -24,8 +24,8 @@
  * File Complex.cpp
  */
 
-#include <Complex.h>
-#include <Double.h>
+#include <ComplexWrapper.h>
+#include <DoubleWrapper.h>
 #include <NumberFormatException.h>
 using asdm::Double;
 using asdm::NumberFormatException;

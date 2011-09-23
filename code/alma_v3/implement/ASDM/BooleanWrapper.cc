@@ -24,7 +24,7 @@
  * File Boolean.cpp
  */
 
-#include <Boolean.h>
+#include <BooleanWrapper.h>
 #include <NumberFormatException.h>
 
 #include <sstream>
