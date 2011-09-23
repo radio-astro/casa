@@ -134,7 +134,7 @@ def sim_observe(
              model_stokes) = returnpars 
 
             modelflat = fileroot + "/" + project + ".skymodel.flat"
-            if os.path.exists(modelflat) and (not observe) and analyze:
+            if os.path.exists(modelflat) and (not observe):
                 # if we're not predicting, then we want to use the previously
                 # created modelflat, because it may have components added 
                 msg("flat sky model "+modelflat+" exists, predict not requested",priority="warn")
@@ -396,6 +396,7 @@ def sim_observe(
         cell_asec=qa.convert(model_cell[0],'arcsec')['value']
         if psfsize < cell_asec:
             msg("Sky model cell of "+str(cell_asec)+" asec is very large compared to highest resolution "+str(psfsize)+" asec - this will lead to blank or erroneous output. (Did you set incell?)",priority="error")
+            shutil.rmtree(modelflat)
             return False
         if psfsize < 2*cell_asec:
             msg("Sky model cell of "+str(cell_asec)+" asec is large compared to highest resolution "+str(psfsize)+" asec. (Did you set incell?)",priority="warn")
