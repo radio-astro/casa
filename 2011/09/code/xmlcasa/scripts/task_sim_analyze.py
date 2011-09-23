@@ -100,6 +100,8 @@ def sim_analyze(
          model_stokes) = returnpars 
 
 
+        cell_asec=qa.convert(model_cell[0],'arcsec')['value']
+
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
@@ -140,11 +142,6 @@ def sim_analyze(
             else:
                 imsize=[imsize0,imsize0]
 
-            # this is primarily for sim-from-components but useful elsewhere as a minimum
-            # image size:
-            if imsize[0] < minimsize: imsize[0] = minimsize
-            if imsize[1] < minimsize: imsize[1] = minimsize
-
             
 
 
@@ -159,7 +156,10 @@ def sim_analyze(
 
             # parse ms parameter and check for existance;
             # initial ms list
-            mslist0 = vis.split(',')
+            if vis=="default" or len(vis)==0:
+                mslist0=default_mslist
+            else:
+                mslist0 = vis.split(',')
             # verified found ms list
             mslist = []
             mstype = []

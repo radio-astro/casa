@@ -421,6 +421,7 @@ def simdata(
         cell_asec=qa.convert(model_cell[0],'arcsec')['value']
         if psfsize < cell_asec:
             msg("Sky model cell of "+str(cell_asec)+" asec is very large compared to highest resolution "+str(psfsize)+" asec - this will lead to blank or erroneous output. (Did you set incell?)",priority="error")
+            shutil.rmtree(modelflat)
             return False
         if psfsize < 2*cell_asec:
             msg("Sky model cell of "+str(cell_asec)+" asec is large compared to highest resolution "+str(psfsize)+" asec. (Did you set incell?)",priority="warn")
