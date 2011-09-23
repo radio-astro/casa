@@ -330,7 +330,7 @@ class test_testconcat(unittest.TestCase):
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         
         self.res = testconcat(vis = ['shortpart1.ms', 'shortpart2.ms', 'shortpart3.ms', 'shortpart4.ms', 'shortpart5.ms'],
-                          testconcatvis = msname)
+                          testconcatvis = msname, copypointing=False)
         self.assertEqual(self.res,None)
 
         print myname, ": Success! Now checking output ..."
