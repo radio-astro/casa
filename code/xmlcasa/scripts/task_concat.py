@@ -1,6 +1,7 @@
 import os
 import shutil
 import stat
+import time
 from taskinit import *
 
 def initcal(vis=None):
@@ -19,7 +20,7 @@ def initcal(vis=None):
 	cb.close()
 
 
-def concat(vislist,concatvis,freqtol,dirtol,timesort):
+def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 	"""Concatenate two visibility data sets.
 	A second data set is appended to the input data set with
 	checking of the frequency and position.
@@ -43,6 +44,8 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 		their phase center is less than 1 arcsec.
 	timesort -- if true, sort the main table of the resulting MS by time
 	        default: false; example: timesort=true
+	copypointing -- copy all rows of the pointing table
+	        default: True
 
 	"""
 
@@ -50,6 +53,9 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 	#Python script
 	try:
 		casalog.origin('concat')
+		t = tbtool.create()
+		m = mstool.create()
+		
 		#break the reference between vis and vislist as we modify vis
 		if(type(vislist)==str):
 			vis=[vislist]
@@ -65,12 +71,25 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 		else:
 			if(len(vis) >0): # (note: in case len is 1, we only copy, essentially)
 				casalog.post('copying '+vis[0]+' to '+concatvis , 'INFO')
-				tb.open(vis[0])
-				tb.copy(concatvis, deep=True, valuecopy=True)
-				tb.close()
+				shutil.copytree(vis[0], concatvis)
 				# note that the resulting copy is writable even if the original was read-only
 				vis.remove(vis[0])
-				
+
+		if not copypointing: # remove the rows from the POINTING table of the first MS
+			casalog.post('*** copypointing==False: resulting MS will have empty POINTING table.', 'INFO')
+			tmptabname = 'TMPPOINTING'+str(time.time())
+			shutil.rmtree(tmptabname, ignore_errors=True)
+			shutil.move(concatvis+'/POINTING', tmptabname)
+			t.open(tmptabname)
+			if(t.nrows()>0): 
+				t.copy(newtablename=concatvis+'/POINTING', deep=False, valuecopy=True, norows=True)
+				t.close()
+				shutil.rmtree(tmptabname, ignore_errors=True)
+			else: # the POINTING table is already empty
+				casalog.post('***    Input POINTING table was already empty.', 'INFO')
+				shutil.move(tmptabname, concatvis+'/POINTING')
+				t.close()
+			casalog.post('***    (Subsequent warnings about the POINTING table can be ignored.)', 'INFO')				
 
 		# Determine if scratch columns should be considered at all
 		# by checking if any of the MSs has them.
@@ -80,14 +99,14 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
                 if ((type(concatvis)==str) & (os.path.exists(concatvis))):
 			
 			# check if all scratch columns are present
-			tb.open(concatvis)
-			if(tb.colnames().count('CORRECTED_DATA')==1 
-			   or  tb.colnames().count('MODEL_DATA')==1):
+			t.open(concatvis)
+			if(t.colnames().count('CORRECTED_DATA')==1 
+			   or  t.colnames().count('MODEL_DATA')==1):
 				considerscrcols = True  # there are scratch columns
 				
-			needscrcols.append(tb.colnames().count('CORRECTED_DATA')==0 
-					   or  tb.colnames().count('MODEL_DATA')==0)
-			tb.close()
+			needscrcols.append(t.colnames().count('CORRECTED_DATA')==0 
+					   or  t.colnames().count('MODEL_DATA')==0)
+			t.close()
                 else:
                         raise Exception, 'Visibility data set '+concatvis+' not found - please verify the name'
 
@@ -96,14 +115,14 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 				raise Exception, 'Visibility data set '+elvis+' not found - please verify the name'
 
 			# check if all scratch columns are present
-			tb.open(elvis)
-			if(tb.colnames().count('CORRECTED_DATA')==1 
-                           or  tb.colnames().count('MODEL_DATA')==1):
+			t.open(elvis)
+			if(t.colnames().count('CORRECTED_DATA')==1 
+                           or  t.colnames().count('MODEL_DATA')==1):
 				considerscrcols = True  # there are scratch columns
 
-			needscrcols.append(tb.colnames().count('CORRECTED_DATA')==0 
-					  or  tb.colnames().count('MODEL_DATA')==0)
-			tb.close()
+			needscrcols.append(t.colnames().count('CORRECTED_DATA')==0 
+					  or  t.colnames().count('MODEL_DATA')==0)
+			t.close()
 
 		# start actual work, file existence has already been checked
 		i = 0
@@ -113,7 +132,7 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 			cb.open(concatvis) # calibrator-open creates scratch columns
 			cb.close()
 
-		ms.open(concatvis,False) # nomodify=False to enable writing
+		m.open(concatvis,False) # nomodify=False to enable writing
 	
 		for elvis in vis : 
 			i = i + 1
@@ -127,22 +146,22 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort):
 				cb.open(tempname) # calibrator-open creates scratch columns
 				cb.close()
 				# concatenate copy instead of original file
-				ms.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol)
+				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol)
 				os.system('rm -rf '+tempname)
 			else:
-				ms.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
+				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
 
-			ms.writehistory(message='taskname=concat',origin='concat')
-			ms.writehistory(message='vis         = "'+str(concatvis)+'"',origin='concat')
-			ms.writehistory(message='concatvis   = "'+str(elvis)+'"',origin='concat')
-			ms.writehistory(message='freqtol     = "'+str(freqtol)+'"',origin='concat')
-			ms.writehistory(message='dirtol      = "'+str(dirtol)+'"',origin='concat')
+			m.writehistory(message='taskname=concat',origin='concat')
+			m.writehistory(message='vis         = "'+str(concatvis)+'"',origin='concat')
+			m.writehistory(message='concatvis   = "'+str(elvis)+'"',origin='concat')
+			m.writehistory(message='freqtol     = "'+str(freqtol)+'"',origin='concat')
+			m.writehistory(message='dirtol      = "'+str(dirtol)+'"',origin='concat')
 
 		if(timesort):
 			casalog.post('Sorting main table by TIME ...', 'INFO')
-			ms.timesort()
+			m.timesort()
 
-		ms.close()
+		m.close()
 			
 
 	except Exception, instance:
