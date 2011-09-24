@@ -63,7 +63,7 @@ public:
   MultiTermFT(const MultiTermFT &other);
 
   // Assignment operator --- leave it as the default
-  //  MultiTermFT &operator=(const MultiTermFT &other);
+  MultiTermFT &operator=(const MultiTermFT &other);
 
   // Destructor
   ~MultiTermFT();
@@ -144,6 +144,8 @@ protected:
   Int thisterm_p;
   Double reffreq_p;
   CountedPtr<FTMachine> subftm_p;
+
+  Double sumwt_p;
 
   Bool dbg_p,dotime_p;
   Timer tmr_p;
