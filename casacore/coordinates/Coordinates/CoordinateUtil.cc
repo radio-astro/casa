@@ -458,8 +458,8 @@ CoordinateSystem CoordinateUtil::makeCoordinateSystem(const IPosition& shape,
 // with this have something sensible
 
    ObsInfo obsInfo;
-   obsInfo.setObserver(String("NoY2K"));
-   obsInfo.setTelescope(String("ATCA"));
+   obsInfo.setObserver(String("Karl Jansky"));
+   obsInfo.setTelescope(String("ALMA"));
 
 // It must be easier than this...  USe 0.0001
 // so that roundoff does not tick the 0 to 24

@@ -972,7 +972,7 @@ Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >&
   case FluxCalc_SS_JPL_Butler::Juno:
     if(report){
       os << LogIO::WARN
-	 << "Juno has a large crater and temperature changes."
+	 << "Juno has a large crater and temperature changes that CASA does not fully account for."
 	 << LogIO::POST;
       os << LogIO::NORMAL1
 	 << "Reference for Juno's mean temperature (163K):\n"
@@ -983,6 +983,24 @@ Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >&
 	 << LogIO::POST;
     }
     temperature_p = 163.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Vesta:
+    if(report){
+      os << LogIO::WARN
+	 << "Vesta has a large crater, and its mean emissivity varies from\n"
+         << "0.6 in the submm to 0.7 in the mm.  Its mean submm brightness temperature varies\n"
+         << "from ~116 to 173K and its rotation period is 5.342h.\n "
+         << "CASA does not yet account for these variations."
+	 << LogIO::POST;
+      os << LogIO::NORMAL1
+	 << "Reference for Vesta's mean brightness temperature (160K):\n"
+	 << "Chamberlain et al., (2009).\n"
+	 << "\"Submillimeter photometry and lightcurves of Ceres and other large asteroids\"\n"
+         << "Icarus 202:487-501.\n"
+	 << LogIO::POST;
+      temperature_p = 160.0;
+    }
+    temperature_p = 271.0;
     break;
   default:
     break;
