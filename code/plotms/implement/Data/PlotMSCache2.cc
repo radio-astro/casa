@@ -208,7 +208,7 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
 	axisVol=sizeof(Bool)*sum(nRowsPerDDID_);
 	break;
       case PMS::WT:
-	axisVol=sizeof(Int)*sum(nRowsPerDDID_);
+	axisVol=sizeof(Int)*sum(nRowsPerDDID_*nCorrPerDDID_);
 	break;
       case PMS::AZ0:
       case PMS::EL0:
@@ -229,7 +229,8 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
       case PMS::ROW:
 	axisVol=sizeof(uInt)*sum(nRowsPerDDID_);
 	break;
-      default: break;
+      case PMS::NONE:
+	break;
       } // switch
       totalVol+=axisVol;
       //      cout << " " << PMS::axis(pAi->first) << " volume = " << axisVol << " bytes." << endl;
@@ -603,6 +604,11 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
   
   // At this stage, data is loaded and ready for indexing then plotting....
   dataLoaded_ = true;
+
+  // Calculate refTime (for plot labels)
+  refTime_p=min(time_);
+  refTime_p=86400.0*floor(refTime_p/86400.0);
+  logLoad("refTime = "+MVTime(refTime_p/C::day).string(MVTime::YMD,7));
   
   logLoad("Finished loading.");
 }
@@ -661,7 +667,7 @@ void PlotMSCache2::release(const vector<PMS::Axis>& axes) {
         case PMS::ELEVATION: PMSC_DELETE(el_) break;
         case PMS::PARANG: PMSC_DELETE(parang_) break;
         case PMS::ROW: PMSC_DELETE(row_) break;
-	default: break;
+	case PMS::NONE: break;
         }        
 
         loadedAxes_[axes[i]] = false;
@@ -1014,7 +1020,7 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi,
   
   vi.originChunks();
   vi.origin();
-  refTime_p=86400.0*floor(vb.time()(0)/86400.0);
+  //  refTime_p=86400.0*floor(vb.time()(0)/86400.0);
 
   // Count number of chunks.
   int chunk = 0;
@@ -1068,7 +1074,7 @@ void PlotMSCache2::countChunks(ROVisibilityIterator& vi, Vector<Int>& nIterPerAv
   nIterPerAve=0;
   
   Double time0(86400.0*floor(vb.time()(0)/86400.0));
-  refTime_p=time0;
+  //  refTime_p=time0;
   Double time1(0.0),time(0.0);
   
   Int thisscan(-1),lastscan(-1);
@@ -1547,6 +1553,7 @@ void PlotMSCache2::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
     break;
   case PMS::CHANNEL:
   case PMS::FREQUENCY:
+  case PMS::VELOCITY:
     axismask(1)=True;
     break;
   case PMS::CORR:
@@ -1567,6 +1574,10 @@ void PlotMSCache2::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
     axismask(1)=True;
     axismask(2)=True;
     break;
+  case PMS::WT:
+    axismask(0)=True;
+    axismask(2)=True;
+    break;
   case PMS::ANTENNA:
   case PMS::AZIMUTH:
   case PMS::ELEVATION:
@@ -1578,7 +1589,11 @@ void PlotMSCache2::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
   case PMS::SCAN:
   case PMS::SPW:
   case PMS::FIELD:
-  default:
+  case PMS::AZ0:
+  case PMS::EL0:
+  case PMS::HA0:
+  case PMS::PA0:
+  case PMS::NONE:
     break;
   }
 
@@ -1995,6 +2010,7 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 
 	// Refer to VB pieces we need
 	Cube<Bool> vbflag(vb.flagCube());
+	Vector<Bool> vbflagrow(vb.flagRow());
 	Vector<Int> corrType(vb.corrType());
 	Vector<Int> channel(vb.channel());
 	Vector<Int> a1(vb.antenna1());
@@ -2002,6 +2018,7 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 	Int ncorr=corrType.nelements();
 	Int nchan=channel.nelements();
 	Int nrow=vb.nRow();
+
 	if (False) {
 	  Int currChunk=flchunks(order[iflag]);
 	  Double time=getTime(currChunk,0);
@@ -2063,13 +2080,8 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 		// match a baseline exactly
 		if (a1(irow)==thisA1 &&
 		    a2(irow)==thisA2) {
-		  if (False) {
-		    cout << i << " " << ifl << " " << irow << " " << a1(irow) << "-" << a2(irow) 
-			 << " corr: " << corr.start() << " " << corr.length()
-			 << " chan: " << chan.start() << " " << chan.length()
-			 << endl;
-		  }
 		  vbflag(corr,chan,Slice(irow,1,1))=flag;
+		  if (!flag) vbflagrow(irow)=False;   // unset flag_row when unflagging
 
 		  break;  // found the one baseline, escape from for loop
 		}
@@ -2077,9 +2089,13 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 	      else {
 		// either antenna matches the one specified antenna
 		//  (don't break because there will be more than one)
+		//  TBD: this doesn't get cross-hands quite right when 
+		//    averaging 'by antenna'...
 		if (a1(irow)==thisA1 ||
-		    a2(irow)==thisA1) 
+		    a2(irow)==thisA1) {
 		  vbflag(corr,chan,Slice(irow,1,1))=flag;
+		  if (!flag) vbflagrow(irow)=False;   // unset flag_row when unflagging
+		}
 	      }
 	    }
 	  }
@@ -2089,6 +2105,7 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 	    //  extension, or we've avaraged over all baselines
 	    bsln=Slice(0,nrow,1);
 	    vbflag(corr,chan,bsln)=flag;
+	    if (!flag) vbflagrow(bsln)=False;   // unset flag_row when unflagging
 	  } 
 	  
 	  ++ifl;
@@ -2096,6 +2113,7 @@ void PlotMSCache2::flagToDisk(const PlotMSFlagging& flagging,
 
 	// Put the flags back into the MS
 	wvi_p->setFlag(vbflag);
+	if (!flag) wvi_p->setFlagRow(vbflagrow);
 
 	// Advance to the next vb
 	wvi_p->operator++();
@@ -2138,6 +2156,8 @@ unsigned int PlotMSCache2::nPointsForAxis(PMS::Axis axis) const {
     case PMS::CORR: 
     case PMS::AMP: 
     case PMS::PHASE: 
+    case PMS::REAL: 
+    case PMS::IMAG: 
     case PMS::ANTENNA1:
     case PMS::ANTENNA2: 
     case PMS::BASELINE: 
@@ -2156,13 +2176,15 @@ unsigned int PlotMSCache2::nPointsForAxis(PMS::Axis axis) const {
     case PMS::FLAG_ROW: 
       {
         unsigned int n = 0;
-        for(unsigned int i = 0; i < freq_.size(); i++) {
+        for(Int i = 0; i < nChunk_; ++i) {
             if(axis == PMS::FREQUENCY)     n += freq_[i]->size();
             else if(axis == PMS::VELOCITY) n += vel_[i]->size();
             else if(axis == PMS::CHANNEL)  n += chan_[i]->size();
             else if(axis == PMS::CORR)     n += corr_[i]->size();
             else if(axis == PMS::AMP)      n += amp_[i]->size();
             else if(axis == PMS::PHASE)    n += pha_[i]->size();
+            else if(axis == PMS::REAL)     n += real_[i]->size();
+            else if(axis == PMS::IMAG)     n += imag_[i]->size();
             else if(axis == PMS::ROW)      n += row_[i]->size();
             else if(axis == PMS::ANTENNA1) n += antenna1_[i]->size();
             else if(axis == PMS::ANTENNA2) n += antenna2_[i]->size();
@@ -2181,7 +2203,7 @@ unsigned int PlotMSCache2::nPointsForAxis(PMS::Axis axis) const {
 	    else if(axis == PMS::FLAG_ROW) n += flagrow_[i]->size();
         }
         return n;
-    }     
+      }     
     
     case PMS::TIME:          return time_.size();
     case PMS::TIME_INTERVAL: return timeIntr_.size();    
@@ -2194,8 +2216,10 @@ unsigned int PlotMSCache2::nPointsForAxis(PMS::Axis axis) const {
     case PMS::HA0:           return ha0_.size();
     case PMS::PA0:           return pa0_.size();
 
-    default: return 0;
+    case PMS::NONE: return 0;
+
     }
+    return 0;
 }
 
 void PlotMSCache2::log(const String& method, const String& message,
