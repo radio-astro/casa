@@ -1280,9 +1280,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     lsrFreq_p.resize(lsrFreq.nelements());
     lsrFreq_p=lsrFreq;
-    Vector<Double> c(1);
+    Vector<Double> c(1);//, ctmp(1);
     c=0.0;
-    Vector<Double> f(1);
+    Vector<Double> f(1);//, ftmp(1);
     Int nFound=0;
     
     
@@ -1291,11 +1291,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       f(0)=lsrFreq[chan];
       if(spectralCoord_p.toPixel(c, f)) {
 	Int pixel=Int(floor(c(0)+0.5));  // round to chan freq at chan center 
-	//cout << "spw " << spw << " f " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
 	/////////////
-	//c(0)=pixel;
-	//spectralCoord_p.toWorld(f, c);
-	// cout << "f1 " << f(0) << " pixel "<< c(0) << "  " << pixel << endl;
+	//ctmp(0)=pixel;
+	//spectralCoord_p.toWorld(ftmp, ctmp);
+	//cout << "spw " << spw << " f[vb] " << f(0) << " = pixel[im] "<< c(0) << "  " << pixel << " = " << ftmp(0) << endl;
 	////////////////
 	if(pixel>-1&&pixel<nchan) {
 	  chanMap(chan)=pixel;

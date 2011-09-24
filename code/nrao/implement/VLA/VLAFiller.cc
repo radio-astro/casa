@@ -1742,14 +1742,24 @@ void VLAFiller::logChanges(IterationStatus& counts) {
     const String& curProject = itsRecord.SDA().obsId();
     if (counts.lastProject != curProject) {
       counts.lastProject = curProject;
-      itsLog << "Project changed to " << curProject << LogIO::POST;
+      // log output clean-up (CAS-208)
+      //itsLog << "Project changed to " << curProject << LogIO::POST;
+      itsLog << "Project " << curProject;
+
+      const uInt lastRow = nrow() - 1;
+      const MEpoch obsTime = timeMeas()(lastRow);
+      itsLog << " starting at " 
+           << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
+           << " (" << obsTime.getRefString() << ")"
+           << LogIO::POST;
     }
   }
   {
     const String& curObsMode = itsRecord.SDA().obsMode();
     if (counts.lastObsMode != curObsMode) {
       counts.lastObsMode = curObsMode;
-      itsLog << "ObsMode changed to " << itsRecord.SDA().obsModeFull()
+      //itsLog << "ObsMode changed to " << itsRecord.SDA().obsModeFull()
+      itsLog << "ObsMode: " << itsRecord.SDA().obsModeFull()
 	     << LogIO::POST;
     }
   }
@@ -1766,23 +1776,26 @@ void VLAFiller::logChanges(IterationStatus& counts) {
       }
     }
     if (changed) {
-      itsLog << "Array configuration";
-      itsLog << " for sub-array " << subArray + 1;
-      if (counts.lastAnt[subArray].nelements() != 0) itsLog << " changed";
+      // some log output clean-ups (CAS-208)
+      //itsLog << "Array configuration";
+      //itsLog << " for sub-array " << subArray + 1;
+      itsLog << "Sub-array " << subArray + 1
+              << LogIO::POST;
+      //if (counts.lastAnt[subArray].nelements() != 0) itsLog << " changed";
       const uInt lastRow = nrow() - 1;
       const MEpoch obsTime = timeMeas()(lastRow);
-      itsLog << " at " 
-	     << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
- 	     << " (" << obsTime.getRefString() << ")"
-	     << LogIO::POST;
+      //itsLog << " at " 
+      //     << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
+      //     << " (" << obsTime.getRefString() << ")"
+      //     << LogIO::POST;
       counts.lastAnt[subArray].resize(nAnt, True);
       for (uInt i = 0; i < nAnt; i++) {
 	const uInt a = static_cast<uInt>(itsAntId[i]);
 	itsLog << "Station: " << ant.station()(a)
 	       << "  Antenna: " << ant.name()(a);
-// 	if (counts.lastAnt[subArray][i] != a) {
-// 	  itsLog << " \tNEW";
-// 	}
+      //if (counts.lastAnt[subArray][i] != a) {
+      //  itsLog << " \tNEW";
+      //}
 	counts.lastAnt[subArray][i] = a;
 	itsLog << LogIO::POST;
       }
@@ -1802,44 +1815,47 @@ void VLAFiller::logChanges(IterationStatus& counts) {
 	const Int curSpw = dd.spectralWindowId()(curDD);
 	if (lastSpw[d] != curSpw) {
 	  lastSpw[d] = curSpw;
-	  itsLog << "Spectral window for IF#" 
+	  //itsLog << "Spectral window for IF#" 
+	  itsLog << "Spectral window " 
 		 << spw.ifConvChain()(curSpw) + 1
-		 << " (on sub-array " << subArray + 1 << ")"
-		 << " changed to "
+                 << ": "
+          //	 << " (on sub-array " << subArray + 1 << ")"
+	  //     << " changed to "
 		 << spw.name()(curSpw);
 	  const MEpoch obsTime = timeMeas()(nrow()-1);
-	  itsLog << " at " 
-		 << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
-		 << " (" << obsTime.getRefString() << ")";
-	  if (counts.nSpw != spw.nrow() &&
-	      static_cast<uInt>(curSpw) >= counts.nSpw) {
-	    counts.nSpw =  curSpw + 1;
-	    itsLog << " NEW";
-	  }
-	  itsLog << LogIO::POST;
+	  //itsLog << " at " 
+          //	 << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
+          //	 << " (" << obsTime.getRefString() << ")";
+	  //if (counts.nSpw != spw.nrow() &&
+	  //    static_cast<uInt>(curSpw) >= counts.nSpw) {
+	  //  counts.nSpw =  curSpw + 1;
+	  //  itsLog << " NEW";
+	  //}
+	  //itsLog << LogIO::POST;
 	}
 	const Int curPol = dd.polarizationId()(curDD);
 	if (lastPol[d] != curPol) {
 	  lastPol[d] = curPol;
-	  itsLog << "Polarization setup for IF#" 
-		 << spw.ifConvChain()(curSpw) + 1
-		 << " (on sub-array " << subArray + 1 << ")"
-		 << " changed to ";
+	  //itsLog << "Polarization setup for IF#" 
+	  //	 << spw.ifConvChain()(curSpw) + 1
+          //	 << " (on sub-array " << subArray + 1 << ")"
+          //	 << " changed to ";
 	  const Vector<Int> corr = pol.corrType()(curPol);
 	  const Int nCorr = corr.nelements();
+          itsLog << " ";
 	  for (Int c = 0; c < nCorr - 1; c++) {
 	    itsLog << Stokes::name(Stokes::type(corr(c))) << ", ";
 	  }
 	  itsLog << Stokes::name(Stokes::type(corr(nCorr-1)));
 	  const MEpoch obsTime = timeMeas()(nrow()-1);
-	  itsLog << " at " 
-		 << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
-		 << " (" << obsTime.getRefString() << ")";
-	  if (counts.nPol != pol.nrow() &&
-	      static_cast<uInt>(curPol) >= counts.nPol) {
-	    counts.nPol =  curPol + 1;
-	    itsLog << " NEW";
-	  }
+	  //itsLog << " at " 
+          //	 << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
+          //	 << " (" << obsTime.getRefString() << ")";
+	  //if (counts.nPol != pol.nrow() &&
+	  //    static_cast<uInt>(curPol) >= counts.nPol) {
+	  //  counts.nPol =  curPol + 1;
+	  //  itsLog << " NEW";
+	  //}
 	  itsLog << LogIO::POST;
 	}
       } else {
@@ -1853,7 +1869,7 @@ void VLAFiller::logChanges(IterationStatus& counts) {
     const Int thisFld = itsFldId[subArray];
     if (counts.lastFld[subArray] != thisFld) {
       counts.lastFld[subArray] = thisFld;
-      itsLog << "Field changed to ";
+      //itsLog << "Field changed to ";
       { 
 	const String& fldName = fld.name()(thisFld);
  	if (fldName.length() > 0) {
@@ -1873,14 +1889,16 @@ void VLAFiller::logChanges(IterationStatus& counts) {
       }
       const uInt lastRow = nrow() - 1;
       const MEpoch obsTime = timeMeas()(lastRow);
-      itsLog << " (on sub-array " << subArray+1 << ") at " 
-	     << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
-	     << " (" << obsTime.getRefString() << ")";
-      if (counts.nFld != fld.nrow() && 
-	  static_cast<uInt>(thisFld) >= counts.nFld) {
-	counts.nFld = fld.nrow();
-	itsLog << " NEW";
-      }
+      //itsLog << " (on sub-array " << subArray+1 << ") at " 
+      itsLog << " " 
+      //     << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD)
+             << MVTime(obsTime.getValue().getTime()).string(MVTime::YMD);
+      //     << " (" << obsTime.getRefString() << ")";
+      //if (counts.nFld != fld.nrow() && 
+      //  static_cast<uInt>(thisFld) >= counts.nFld) {
+      //  counts.nFld = fld.nrow();
+      //  itsLog << " NEW";
+      //}
       itsLog << LogIO::POST;
     }
   }

@@ -908,6 +908,7 @@ Bool Simulator::setspwindow(const String& spwName,
 			    const Quantity& freq,
 			    const Quantity& deltafreq,
 			    const Quantity& freqresolution,
+			    const MFrequency::Types& freqType,
 			    const Int nChan,
 			    const String& stokes) 
 
@@ -940,9 +941,11 @@ Bool Simulator::setspwindow(const String& spwName,
     os << "sending init to MSSim for spw = " << spWindowName_p[nSpw-1] << LogIO::POST;  
 #endif
 
+    //freqType=MFrequency::TOPO;
     sim_p->initSpWindows(spWindowName_p[nSpw-1], nChan_p[nSpw-1], 
 			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
-			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
+			 freqRes_p[nSpw-1], freqType,
+			 stokesString_p[nSpw-1]);
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
@@ -2240,7 +2243,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	      images_p[model]->setMiscInfo(info);
 	    }
 
-	    // FTMachine only works in Hz and LSRK, so 
+	    // FTMachine only works in Hz and LSRK
 	    CoordinateSystem cs = images_p[model]->coordinates();
 	    String errorMsg;
 	    CoordinateUtil::setSpectralConversion(errorMsg,cs,MFrequency::showType(MFrequency::LSRK));
@@ -2400,10 +2403,10 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     }
     AlwaysAssert(ft_p, AipsError);
 
-    // do we need to tell ftmachine about the transformations in model images above?
-    Vector<Int> dataspectralwindowids_p;
-    Bool freqFrameValid_p = True;
-    ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+    // tell ftmachine about the transformations in model images above - no.
+    //Vector<Int> dataspectralwindowids_p;
+    //Bool freqFrameValid_p = True;
+    //ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
 
     
     se_p = new SkyEquation ( *sm_p, *vs_p, *ft_p, *cft_p );

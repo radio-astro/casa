@@ -690,14 +690,14 @@ def sim_observe(
                     sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
                                    deltafreq=qa.tos(model_width), 
                                    freqresolution=qa.tos(model_width), 
-                                   nchannels=model_nchan, 
+                                   nchannels=model_nchan, refcode="LSRK",
                                    stokes='RR LL')
                     sm.setfeed(mode='perfect R L',pol=[''])
                 else:            
                     sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 
                                    deltafreq=qa.tos(model_width), 
                                    freqresolution=qa.tos(model_width), 
-                                   nchannels=model_nchan, 
+                                   nchannels=model_nchan, refcode="LSRK",
                                    stokes='XX YY')
                     sm.setfeed(mode='perfect X Y',pol=[''])
 

@@ -646,6 +646,7 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest.ms.flagversions')
         os.system('rm -rf missing-baseline.ms')
         os.system('rm -rf multiobs.ms')
+        os.system('rm -rf flagdatatest-alma.ms')
 
     def test1(self):
         '''flagdata: Cleanup'''

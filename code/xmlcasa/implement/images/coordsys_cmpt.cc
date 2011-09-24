@@ -203,7 +203,7 @@ coordsys::newcoordsys(const bool direction, const bool spectral,
 
     // Give it a meaningful ObsInfo
     ObsInfo obsInfo;
-    obsInfo.setTelescope(String("ATCA"));
+    obsInfo.setTelescope(String("EVLA"));
     obsInfo.setObserver(String("Karl Jansky"));
 
     // It must be easier than this...  USe 0.0001
@@ -569,7 +569,7 @@ coordsys::done()
 
     // Give it a meaningful ObsInfo
     ObsInfo obsInfo;
-    obsInfo.setTelescope(String("ATCA"));
+    obsInfo.setTelescope(String("EVLA"));
     obsInfo.setObserver(String("Karl Jansky"));
 
     // It must be easier than this...  USe 0.0001

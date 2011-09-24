@@ -42,6 +42,7 @@ inwidth = '50MHz'
 setpointings = True
 integration = '10s'
 mapsize = '1arcmin'
+maptype = "hex"
 #maptype = 'square'
 pointingspacing = '9arcsec'
 

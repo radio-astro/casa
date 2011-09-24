@@ -876,6 +876,21 @@ Must be invoked at least once before {\tt observe}.
      <value>50.e6Hz</value>
      </param>
 
+     <param type="string" name="refcode" >
+     <description>Spectral reference code e.g. LSRK, TOPO, BARY</description>
+     <value type="string">TOPO</value>
+     <allowed kind="enum">
+       <value type="string">LSRK</value>
+       <value type="string">LSRD</value>
+       <value type="string">BARY</value>
+       <value type="string">GEO</value>
+       <value type="string">TOPO</value>
+       <value type="string">GALACTO</value>
+       <value type="string">LGROUP</value>
+       <value type="string">CMB</value>
+     </allowed>
+     </param>
+
      <param type="int" name="nchannels">
      <description>Number of channels</description>
      <value>1</value>
