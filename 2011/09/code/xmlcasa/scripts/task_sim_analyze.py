@@ -668,7 +668,7 @@ def sim_analyze(
 
                 util.endfig(show=grscreen,filename=file)
             
-            sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
+            sim_min,sim_max,sim_rms,sim_units = util.statim(imagename+".image.flat",plot=False)
             # if not displaying still print stats:
             # 20100505 ia.stats changed to return Jy/bm:
             msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
@@ -703,10 +703,10 @@ def sim_analyze(
 
 
     except TypeError, e:
-        msg("task_simdata -- TypeError: %s" % e,priority="error")
+        msg("task_sim_analyze -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
-        print "task_simdata -- OptionError: ", e
+        print "task_sim_analyze -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance
