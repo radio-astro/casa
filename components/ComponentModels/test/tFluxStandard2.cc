@@ -165,8 +165,8 @@ int main(int argc, char* argv[])
     expfds[9][1] = 0.0190617;	// 345 GHz
     expads[9] = 4.92412e-07;
     objnames[10] = "Vesta";
-    expfds[10][0] = 0.0890918;	// 115 GHz
-    expfds[10][1] = 0.785553;	// 345 GHz
+    expfds[10][0] = 0.0522284;	// 115 GHz
+    expfds[10][1] = 0.453937;	// 345 GHz
     expads[10] = 1.02016e-06;
 
     // Not tested; essentially a dummy.

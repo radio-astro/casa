@@ -113,6 +113,9 @@ class FluxCalc_SS_JPL_Butler
   // object's component type (i.e. DISK), or UNKNOWN_SHAPE on failure.
   ComponentType::Shape getShape(Double& angdiam);
 
+  // Returns the distance from the object to the Sun in AU, or -1 if unknown.
+  Double getHeliocentricDist();
+
   // returns the number of objects supported by this class.
   uInt n_known() const;
   
@@ -225,6 +228,16 @@ class FluxCalc_SS_JPL_Butler
   Bool get_row_numbers(uInt& rowbef, uInt& rowclosest, uInt& rowaft,
 		       const ROScalarColumn<Double>& mjd);
 
+  // Put a quadratic, linear, or nearest neighbor interpolation of colname into
+  // val.  Returns whether or not it did it.
+  // verbose: Send a message to the logger if nearest neighbor is used.
+  static Bool get_interpolated_value(Double& val, const String& colname,
+                                     const Table& tab, const uInt rowbef,
+                                     const uInt rowclosest, const uInt rowaft,
+                                     const Double f, const Double dt,
+                                     const Double tp1mt0, const Double t0mtm1,
+                                     const Bool verbose=True);
+
   // Data members which are initialized in the c'tor's initialization list:
   String     name_p;
   Bool       hasName_p;
@@ -246,6 +259,13 @@ class FluxCalc_SS_JPL_Butler
   Double r_p;           // heliocentric distance in AU
   Double delta_p;       // geocentric distance in AU
   Double phang_p;       // Phase angle in radians.
+  Bool   has_r_p;
+  Double illu_p;        // Illumination, as a fraction.
+  Bool   has_illu_p;
+  Double ra_p;          // RA, in deg.
+  Bool   has_ra_p;
+  Double dec_p;         // Declination, in deg.
+  Bool   has_dec_p;
 };
 
 
