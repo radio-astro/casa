@@ -191,7 +191,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
   os << LogIO::POST;
 	
   Float absmax=threshold();
-  Block< Vector<Int> > iterations(numberOfModels());
+  Block< Matrix<Int> > iterations(numberOfModels());
   Int maxIterations=0;
 
     
@@ -281,7 +281,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	IPosition trcDirty(image(model).shape()-1);
   
 	if(cycle==1) {
-	  iterations[model].resize(nchan);
+	  iterations[model].resize(nchan,npol);
 	  iterations[model]=0;
 	}
 	
@@ -381,8 +381,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
                        << "cycleSpeedup is " << cycleSpeedup_p << LogIO::POST;
 		    cleaner[model]->speedup(cycleSpeedup_p);
 		  }
-		
-		  cleaner[model]->startingIteration( iterations[model](chan) );
+		  cleaner[model]->startingIteration( iterations[model](chan,pol) );
 		  if (cycle <= stopLargeNegatives_p) {
 		    cleaner[model]->stopAtLargeScaleNegative();
 		  }
@@ -401,11 +400,11 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 		    else
 		      stop=True;
 		  }
-		  iterations[model](chan)=cleaner[model]->numberIterations();
-		  maxIterations=(iterations[model](chan)>maxIterations) ?
-		    iterations[model](chan) : maxIterations;
+		  iterations[model](chan,pol)=cleaner[model]->numberIterations();
+		  maxIterations=(iterations[model](chan,pol)>maxIterations) ?
+		    iterations[model](chan,pol) : maxIterations;
 		  os << LogIO::NORMAL    // Loglevel INFO
-                     << "Clean used " << iterations[model](chan)
+                     << "Clean used " << iterations[model](chan,pol)
                      << " iterations" 
 		     << LogIO::POST;
 		  modified_p=True;
