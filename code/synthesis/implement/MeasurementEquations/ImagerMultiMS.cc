@@ -232,7 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // MS.
     //I don't think i need this if statement
     //   if(datafieldids_p.nelements()>0||datadescids_p.nelements()>0) {
-      os << "Performing selection on MeasurementSet" << LogIO::POST;
+    os << "Performing selection on MeasurementSet : " << thisms.tableName() << LogIO::POST;
       //if(vs_p) delete vs_p; vs_p=0;
       //if(mssel_p) delete mssel_p; 
       mssel_p=0;
@@ -253,10 +253,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       MSSelection thisSelection;
       if(datafieldids_p.nelements() > 0){
 	thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
-	os << "Selecting on field ids" << LogIO::POST;
+	os << "Selecting on field ids : " << datafieldids_p << LogIO::POST;
       }
       if(fieldnames != ""){
 	thisSelection.setFieldExpr(fieldnames);
+	os << "Selecting on fields : " << fieldnames << LogIO::POST;
       }
       if(dataspectralwindowids_p.nelements() > 0){
 	thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
@@ -264,34 +265,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
       else if(spwstring != ""){
 	thisSelection.setSpwExpr(spwstring);
-	os << "Selecting on spectral windows expression "<< spwstring  << LogIO::POST;
+	os << "Selecting on spectral windows expression :"<< spwstring  << LogIO::POST;
       }
       if(antIndex.nelements() >0){
 	thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex) );
-	os << "Selecting on antenna ids" << LogIO::POST;	
+	os << "Selecting on antenna ids : " << antIndex << LogIO::POST;	
       }
       if(antnames != ""){
 	Vector<String> antNames(1, antnames);
 	// thisSelection.setAntennaExpr(MSSelection::nameExprStr( antNames));
 	thisSelection.setAntennaExpr(antnames);
-	os << "Selecting on antenna names" << LogIO::POST;
+	os << "Selecting on antenna names : " << antnames << LogIO::POST;
 	
       }            
       if(timerng != ""){
 	thisSelection.setTimeExpr(timerng);
-	os << "Selecting on time range" << LogIO::POST;	
+	os << "Selecting on time range : " << timerng << LogIO::POST;	
       }
       if(uvdist != ""){
 	thisSelection.setUvDistExpr(uvdist);
+	os << "Selecting on uvdist : " << uvdist << LogIO::POST;	
       }
       if(scan != ""){
 	thisSelection.setScanExpr(scan);
+	os << "Selecting on scan : " << scan << LogIO::POST;	
       }
       if(obs != ""){
 	thisSelection.setObservationExpr(obs);
+	os << "Selecting on Observation Expr : " << obs << LogIO::POST;	
       }
       if(msSelect != ""){
 	thisSelection.setTaQLExpr(msSelect);
+	os << "Selecting via TaQL : " << msSelect << LogIO::POST;	
       }
       //***************
 
@@ -507,13 +512,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
       if(mssel_p->nrow()!=thisms.nrow()) {
-	os << "By selection " << thisms.nrow() << " rows are reduced to "
-	   << mssel_p->nrow() << LogIO::POST;
+	os << "Selected " << thisms.nrow() << " out of  "
+	   << mssel_p->nrow() << " rows." << LogIO::POST;
       }
       else {
-	os << "Selection did not drop any rows" << LogIO::POST;
+	os << "Selected all " << mssel_p->nrow() << " rows" << LogIO::POST;
       }
       //  }
+
+    // Tell the user how many channels have been selected.
+    // NOTE : This code is replicated in Imager.cc.
+    Vector<Int> chancounts(dataspectralwindowids_p.nelements());
+    chancounts=0;
+    //    if( spwstring == "" ) os << "Selected all spws and channels" << LogIO::POST;
+    //   else os << "Channel selection : " << spwstring << LogIO::POST;
+    os << "Selected :";
+    for(uInt k=0;k<dataspectralwindowids_p.nelements();k++)
+      {
+	for(uInt ch=0;ch<uInt(nchanvec(dataspectralwindowids_p[k]));ch++) 
+	  {if(spwchansels_p(0,dataspectralwindowids_p[k],ch)) chancounts[k]++; }
+	os << " [" << chancounts[k] << " chans in spw " << dataspectralwindowids_p[k] << "]";
+	//	os << "Selected " << chancounts[k] << " chans in spw " 
+	//	   << dataspectralwindowids_p[k] << LogIO::POST;
+      }
+    os << LogIO::POST;
+
 
       blockMSSel_p[numMS_p-1]=*mssel_p;
       //lets make the visSet now
@@ -700,7 +723,7 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 	       << LogIO::POST;
 	    return False;
 	  }
-	  os << "Selecting "<< nch
+	  os << LogIO::DEBUG1 << "Selecting "<< nch
 	     << " channels, starting at visibility channel "
 	     << dataStart_p[i]  << " stepped by "
 	     << dataStep_p[i] << " for spw " << spwid << LogIO::POST;
