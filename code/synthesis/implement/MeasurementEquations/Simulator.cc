@@ -2270,7 +2270,7 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       }
     }
 
-    if(models_found<=0) {
+    if(models_found<=0) and componentList_p==0) {
       os << LogIO::SEVERE << "No model images found" << LogIO::POST;
       return False;
     }
