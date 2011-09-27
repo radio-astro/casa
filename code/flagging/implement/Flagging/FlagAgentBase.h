@@ -215,6 +215,10 @@ class FlagAgentList
 		// Methods to mimic vector
 		void push_back(FlagAgentBase *agent_i);
 		void pop_back();
+		void clear();
+		bool empty();
+		size_t size();
+
 
 		// Methods to mimic FlagAgentBase
 		void start();

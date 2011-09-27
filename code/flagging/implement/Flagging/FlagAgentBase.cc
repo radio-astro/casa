@@ -973,11 +973,7 @@ FlagAgentList::FlagAgentList()
 
 FlagAgentList::~FlagAgentList()
 {
-	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
-	{
-		delete (*iterator_p);
-	}
-	container_p.clear();
+	clear();
 }
 
 void FlagAgentList::push_back(FlagAgentBase *agent_i)
@@ -989,7 +985,30 @@ void FlagAgentList::push_back(FlagAgentBase *agent_i)
 void FlagAgentList::pop_back()
 {
 	container_p.pop_back();
+
 	return;
+}
+
+void FlagAgentList::clear(){
+
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		delete (*iterator_p);
+	}
+	container_p.clear();
+
+	return;
+}
+
+bool FlagAgentList::empty(){
+
+	return container_p.empty();
+}
+
+size_t FlagAgentList::size(){
+
+	return container_p.size();
+
 }
 
 void FlagAgentList::start()
