@@ -2399,13 +2399,15 @@ class cleanhelper:
         # use MSSelect if possible
         if len(self.sortedvislist) > 0:
           invis = self.sortedvislist[0]
+          inspw = self.vis.index(self.sortedvislist[0])
         else:
           invis = self.vis[0]
+          inspw = 0
         ms.open(invis)
+        if type(spw)==list:
+          spw=spw[inspw]
         if spw in ('-1', '*', '', ' '):
           spw='*'
-        if type(spw)==list:
-          spw=spw[invis]
         if field=='':
           field='*'
         mssel=ms.msseltoindex(vis=invis, spw=spw, field=field)
@@ -2908,11 +2910,12 @@ class cleanhelper:
         # first parse spw parameter:
 
         # use MSSelect if possible
+        if type(spw)==list:
+          spw=spw[self.sortedvisindx[0]]
+
         if spw in (-1, '-1', '*', '', ' '):
             spw="*"
 
-        if type(spw)==list:
-          spw=spw[self.sortedvisindx[0]]
         sel=ms.msseltoindex(self.vis[self.sortedvisindx[0]], spw=spw)
         # spw returned by msseletoindex, spw='0:5~10;10~20' 
         # will give spw=[0] and len(spw) not equal to len(chanids)
