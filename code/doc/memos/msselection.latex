@@ -282,11 +282,21 @@ antenna names.  E.g.
   "VLA:N".
 \end{itemize}
 
-Antenna specifications are first matched against the antenna names
-(the {\tt NAME} column of the {\tt ANTENNA} sub-table of the MS).  If
-no match is found, the given specification is matched against the
-station name (the {\tt STATION} column of the {\tt ANTENNA} sub-table
-of the MS).
+The precise logic applied to the antenna specification (ANT) is as
+follows:
+
+\begin{enumerate}
+\item If ANT is an integer index (or a list or range), it is first
+  used as a name (e.g. the index 1 is converted to a string "1" etc.)
+  and matched against the {\tt NAME} column of {\tt ANTENNA}
+  sub-table.  If no match is found, it is treated as an integer index
+  and matched against the antenna indices.
+
+\item If ANT is a string which cannot be converted to an integer, it
+  is first matched against the {\tt NAME} column of the {\tt ANTENNA}
+  sub-table.  If no match is found, match against the {\tt STATION}
+  column is attempted.
+\end{enumerate}
 
 
 \subsubsection{Baseline specification}
@@ -429,21 +439,18 @@ following logic is used:
   antenna name.  If that fails, the normal logic of using an integer
   as an integer and matching it with antenna index is done.
 \end{description}
-Hence if the antenna with ID 17 is named "21", the string
-\begin{verbatim}
-                               "21",VLA22
-\end{verbatim}
-will expand into an antenna ID list of 17,22 (assuming that the
-antenna named VLA22 has ID 22).
+For example, if the antenna with index 17 is named "21", the string
+{\tt "21,VLA22"} will expand into an antenna index list of 17,22
+(assuming that the antenna named VLA22 has index 22).
 
 If we conclude that this style of antenna selection is indeed the way
 we wish to go, users should be aware that the antenna selection will
-behave differently for telescopes other than VLA.  Assuming that
-antenna with names "21","17", and "11" have IDs 1,2,3 for VLA, a
-selection string "21,17,11" will select antenna with IDs 1,2,3.  For
-other instruments where this is not the naming convention, the same
-selection string ("21,17,11") will select antennas with ID 21, 17, and
-11.
+behave differently for telescopes other than VLA.  For example,
+assuming that antenna with names "21","17", and "11" have indices 1,2
+and 3, for VLA only a selection string "21,17,11" will select antenna
+with indices 1, 2 and 3.  For other instruments where this is not the
+naming convention, the same selection string ("21,17,11") will select
+antennas with indices 21, 17, and 11.
 
 %% \subsubsection{Note}
 
