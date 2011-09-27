@@ -49,6 +49,7 @@
 #include <display/DisplayDatas/CachingDisplayMethod.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
 #include <display/Display/Colormap.h>
+#include <display/region/Region.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -188,6 +189,8 @@ class MSAsRaster: public ActiveCaching2dDD {
   // setActiveImage(zindex); also used for position tracking.
   virtual String showPosition(const Vector<Double> &world,
 			      const Bool &displayAxesOnly = False);
+  bool showPosition( viewer::Region::ms_stats_t &stat_list, const Vector<Double> &world,
+		     const Bool& displayAxesOnly = False);
 
   // get the Unit for displayed data values (visibilities)
   virtual const Unit dataUnit() const;
@@ -267,6 +270,7 @@ class MSAsRaster: public ActiveCaching2dDD {
 
 
 
+  virtual const String &name( ) const { return msName_; }
 
 
  protected:
@@ -323,7 +327,7 @@ class MSAsRaster: public ActiveCaching2dDD {
   // use references or pointers instead.
   // <group>
   MSAsRaster(): mspos_(this) {  }
-  MSAsRaster(const MSAsRaster &other): mspos_(this) {  }
+  MSAsRaster(const MSAsRaster &other): ActiveCaching2dDD(other), mspos_(this) {  }
   MSAsRaster& operator=(const MSAsRaster &other) { return *this;  }
   // </group>
 
@@ -1344,7 +1348,7 @@ class MSAsRasterDM : public CachingDisplayMethod {
   // use references or pointers instead.
   // <group>
   MSAsRasterDM() {  }
-  MSAsRasterDM(const MSAsRasterDM &other) {  }
+  MSAsRasterDM(const MSAsRasterDM &other) : CachingDisplayMethod(other) {  }
   MSAsRasterDM& operator=(const MSAsRasterDM &other) { return *this;  }
   // </group>
   

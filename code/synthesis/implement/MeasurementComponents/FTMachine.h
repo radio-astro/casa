@@ -124,6 +124,8 @@ public:
 
   FTMachine& operator=(const FTMachine& other);
 
+  void setBasePrivates(const FTMachine& other){FTMachine::operator=(other);}
+
   virtual ~FTMachine();
 
   // Initialize transform to Visibility plane

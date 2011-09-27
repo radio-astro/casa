@@ -513,7 +513,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 		if (!cs.toWorld(tWrld,tPix)) {
 		} else {
 		    zLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(zPos), zPos);
-		    layerstats->push_back(ImageStatistics<Float>::stat_element(zaxis,zLabel + tStr));
+		    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type(zaxis,zLabel + tStr));
 
 		    if (zUnit.length()>0) {
 			zspKey = "Spectral_Vale";
@@ -547,31 +547,31 @@ void MultiRectTool::reset(Bool skipRefresh) {
 		if (downcase(zaxis).contains("freq")) {
 		    if (spCoord.pixelToVelocity(vel, zIndex)) {
 			if (restFreq >0)
-			    layerstats->push_back(ImageStatistics<Float>::stat_element("Velocity",String::toString(vel)+"km/s"));
+			    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
 			else
-			    layerstats->push_back(ImageStatistics<Float>::stat_element(zspKey,zspVal));
+			    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type(zspKey,zspVal));
 
 			// --- this line was executed, but was a NOP in the old code --- <drs>
-			// layerstats->push_back(ImageStatistics<Float>::stat_element("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
+			// layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
 		    }
 		}
 
 		if (downcase(haxis).contains("freq")) {
 		    if (spCoord.pixelToVelocity(vel, hIndex)) {
 			if (restFreq >0)
-			    layerstats->push_back(ImageStatistics<Float>::stat_element("Velocity",String::toString(vel)+"km/s"));
+			    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
 			else
-			    layerstats->push_back(ImageStatistics<Float>::stat_element(zspKey,zspVal));
+			    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type(zspKey,zspVal));
 
-			layerstats->push_back(ImageStatistics<Float>::stat_element("Frame",MFrequency::showType(spCoord.frequencySystem())));
-			layerstats->push_back(ImageStatistics<Float>::stat_element("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
+			layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("Frame",MFrequency::showType(spCoord.frequencySystem())));
+			layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
 		    }
 		}
 	    }
 
 
-	    layerstats->push_back(ImageStatistics<Float>::stat_element(haxis,hLabel));
-	    layerstats->push_back(ImageStatistics<Float>::stat_element("BrightnessUnit",unit));
+	    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type(haxis,hLabel));
+	    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("BrightnessUnit",unit));
 
 	    Double beamArea = 0;
 	    ImageInfo ii = image->imageInfo();
@@ -595,7 +595,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 		beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
 	    }
 
-	    layerstats->push_back(ImageStatistics<Float>::stat_element("BeamArea",String::toString(beamArea)));
+	    layerstats->push_back(viewer::RegionInfo::image_stats_t::value_type("BeamArea",String::toString(beamArea)));
 
 	    Bool statsOk = stats.getLayerStats(*layerstats, beamArea, zPos, zIndex, hPos, hIndex);
 	    if ( ! statsOk ) {

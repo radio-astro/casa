@@ -34,6 +34,7 @@
 #include <casadbus/types/ptr.h>
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MDirection.h>
+#include <display/region/RegionInfo.h>
 
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
 	{ fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", __FILE__, __LINE__, #FUNCTION ); return RESULT; }
@@ -148,8 +149,8 @@ namespace casa {
 		// returns OR'ed set of MouseState...
 		virtual int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
-		typedef ImageStatistics<Float>::stat_list getLayerStats_t;
-		typedef std::list<std::pair<String,memory::cptr<getLayerStats_t> > > StatisticsList;
+		typedef RegionInfo::ms_stats_t ms_stats_t;
+		typedef RegionInfo::ms_stats_list_t ms_stats_list_t;
 		
 		virtual void draw( );
 
@@ -178,7 +179,7 @@ namespace casa {
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
 
-		getLayerStats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
+		RegionInfo::image_stats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 		Units current_units( ) const;
 		Coord current_region_coordsys( ) const;

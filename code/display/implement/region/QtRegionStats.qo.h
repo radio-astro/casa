@@ -3,14 +3,23 @@
 
 #include <QtGui/QGroupBox>
 #include <casa/BasicSL/String.h>
-#include <display/region/QtRegionStats.ui.h>
+#include <display/region/QtImageRegionStats.ui.h>
 
 class QStackedWidget;
 
 namespace casa {
     namespace viewer {
 
-	class QtRegionStats : public QGroupBox, protected Ui::QtRegionStats {
+	namespace qt {
+	    class image_stats_t : public QGroupBox, public Ui::QtImageRegionStats {
+		Q_OBJECT
+		public:
+		    image_stats_t( QWidget *parent=0 ) : QGroupBox("",parent) { setupUi(this); }
+	    };
+	}
+
+
+	class QtRegionStats : public QWidget {
 	    Q_OBJECT
 	    public:
 		QtRegionStats( QWidget *parent=0 );
@@ -35,6 +44,9 @@ namespace casa {
 
 		QStackedWidget *container_;
 		QtRegionStats *next_;
+
+	    private:
+		qt::image_stats_t *image_stats_box;
 	};
     }
 }
