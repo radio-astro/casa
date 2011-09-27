@@ -147,17 +147,6 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                 return
             del sel
 
-	    # channel splitting
-	    if ( channelrange != [] ):
-		    if ( len(channelrange) == 1 ):
-                            #print "Split spectrum in the range [%d, %d]" % (0, channelrange[0])
-                            casalog.post( "Split spectrum in the range [%d, %d]" % (0, channelrange[0]) )
-			    s._reshape( 0, int(channelrange[0]) )
-		    else:
-                            #print "Split spectrum in the range [%d, %d]" % (channelrange[0], channelrange[1])
-                            casalog.post( "Split spectrum in the range [%d, %d]" % (channelrange[0], channelrange[1]) )
-			    s._reshape( int(channelrange[0]), int(channelrange[1]) )
-
             scanns = s.getscannos()
             sn=list(scanns)
             #print "Number of scans to be processed:", len(sn)
@@ -166,6 +155,17 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
 
             # Done with scantable s - clean up to free memory
             del s
+
+	    # channel splitting
+	    if ( channelrange != [] ):
+		    if ( len(channelrange) == 1 ):
+                            #print "Split spectrum in the range [%d, %d]" % (0, channelrange[0])
+                            casalog.post( "Split spectrum in the range [%d, %d]" % (0, channelrange[0]) )
+			    scal._reshape( 0, int(channelrange[0]) )
+		    else:
+                            #print "Split spectrum in the range [%d, %d]" % (channelrange[0], channelrange[1])
+                            casalog.post( "Split spectrum in the range [%d, %d]" % (channelrange[0], channelrange[1]) )
+			    scal._reshape( int(channelrange[0]), int(channelrange[1]) )
 
             # convert flux
             # set flux unit string (be more permissive than ASAP)

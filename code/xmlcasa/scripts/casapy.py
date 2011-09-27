@@ -1163,7 +1163,7 @@ casa['state']['startup'] = False
 import shutil
 if ipython:
     ipshell.mainloop( )
-    if(os.uname()[0] == 'Darwin') and casa['flags'].has_key('--maclogger') :
+    if(os.uname()[0] == 'Darwin') and type(casa) == "<type 'dict'>" and casa['flags'].has_key('--maclogger') :
            os.system("osascript -e 'tell application \"Console\" to quit'")
     for pid in logpid: 
         #print 'pid: ',pid

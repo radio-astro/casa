@@ -127,6 +127,9 @@ private:
   void simpAccumulate (VisBuffer& vb);  // ordinary
   void antAccumulate (VisBuffer& vb);   // antenna-based averaging version
 
+  // Verify zero or two crosshands present (if antAve_p)
+  void verifyCrosshands(VisBuffer& vb);
+
   // Hash function to return the row offset for an interferometer (ant1, ant2)
   Int baseline(const Int& ant1, const Int& ant2);
 
@@ -169,6 +172,9 @@ private:
 
   // Keep track of initialization state
   Bool initialized_p;
+
+  // Correlation list for cross-hand swapping
+  Vector<Int> jcor_p;
   
   // Diagnostic print level
   Int prtlev_;

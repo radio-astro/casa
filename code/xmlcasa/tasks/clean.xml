@@ -112,9 +112,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <allowed kind="enum">
 	<value></value>
 	<value>widefield</value>
-	<value>aprojection</value>
+<!--	<value>aprojection</value>
 	<value>experimental</value>
-      </allowed>
+	These 2 parameters are removed as per CAS-3352
+--> 
+     </allowed>
     </param>
     
     <param type="int" name="wprojplanes" subparam="true">
@@ -924,7 +926,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                facets is the number of facets on each side of the image 
                    (i.e. the total number of facets is 'facets x facets'). 
                    If wprojplanes>1, W-Projection is done for each facet.
-
+<!--
   &gt;&gt;&gt; gridmode='aprojection' expandable parameters
                Corrects for the (E)VLA polarization squint using the
                A-Projection algorithm (Bhatnagar et al., AandA (2008)).
@@ -935,7 +937,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    existing one removed). 
                painc (in degrees) is the Parallactic Angle increment used to
                    compute the convolution functions.
-
+====This section is removed as per CAS-3352
+====to be reintroduced whenever supported
+-->
   &gt;&gt;&gt; imagermode='mosaic' expandable parameter(s):
                Make a mosaic of the different pointings (uses csclean style
                too)

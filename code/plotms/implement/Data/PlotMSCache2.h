@@ -174,6 +174,7 @@ public:
 
   // Access to flags per chunk
   inline Array<Bool>& flag(Int chunk) { return *flag_[chunk]; };
+  inline Vector<Bool>& flagrow(Int chunk) { return *flagrow_[chunk]; };
 
   // Axis-specific generic gets
   inline Double getScan(Int chnk,Int irel)     { return scan_(chnk);   (void)irel; };

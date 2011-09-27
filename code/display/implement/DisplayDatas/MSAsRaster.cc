@@ -63,6 +63,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
+
 //---------------------------------------------------------------------
 MSAsRaster::MSAsRaster( const String msname, const viewer::DisplayDataOptions &ddo ): 
 
@@ -4179,9 +4180,198 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
   else os<<"Invalid";
   os<<" (cor "<<avgPos(axisName_[POL],pp+uiBase())<<")";
 
-  return String(os);  }
+  return String(os);
+}
+
+bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vector<Double> &world,
+			       const Bool& displayAxesOnly ) {
+    // for position tracking--formatted data value at given coordinate.
+    // #dk (Still to do: convert this to use of MSpos_. Also, add MSpos_
+    //      method to return frequency GHz).
+
+    if(!msValid_) return false;		// In this case, the object is useless.
+					// Protect public methods from crashes.
+  
+    if(!msselValid_) return false;
+        
+    if(!rstrsConformed_ || !csConformed_) return false;
+		// Doesn't match wch restrictions or CS state.  Probably means
+		// this DD isn't the one in charge of the canvas (csMaster).
+		// Return 4 blank lines anyway, to prevent gratuitous resizes
+		// of the tracking message area.
+
+    // we need _linear_ coords for display _and_ animator axes.
+    // So we convert back to lin...
+    Vector<Double> lin(2);
+    if(!worldToLin(lin, world)) return false;
+
+    Block<Int> pos(pos_);
+    for(AxisLoc disploc=X; disploc<=Y; disploc++) {
+	Axis ax=axisOn_[disploc];
+	Double lcoord=lin(disploc);
+	pos[ax] = ifloor(lcoord+.5);
+	// 'close the upper display edge'...(round down in this case)
+	if(near(lcoord, msShape_[ax]-.5)) pos[ax]=ifloor(lcoord);
+    }
+
+    pos[axisOn_[Z]] = activeZIndex_;	// Insert latest canvas animator
+		// position.  This position (or the WC[H]) should really be a parameter
+		// to the method instead.  pos_[axisOn_[Z]] is not necessarily already
+		// up-to-date, because the event giving rise to this call may have
+		// occurred on a different canvas from the one which last set
+		// pos_[axisOn_(Z)].  setActiveZIndex_(zindex) must be called prior
+		// to calling this routine (as it is via the conformsTo(WCH&) call
+		// in the GtkDD motion EH), so that activeZIndex_ contains the
+		// correct animator position for the canvas.
+
+    // The auxiliary data used for this world-coordinate tracking output
+    // (time_, nAnt_, freq_, spwId_, scan_, field_, fieldName_, polName_)
+    // was gathered during findRanges_().
+
+    // Ideally, it would be collected into the DD's CoordinateSystem and
+    // used by the WADD (itsAxisLabeller) as well, but neither of these
+    // has the full generality needed yet.  E.g., the baseline-to-antennas
+    // translation _is_ in the CS already, but the lame results in axis
+    // labelling are manifest.... (Axis labelling also fails for Image DDs
+    // when a Stokes coordinate is put onto a display axis).  Needs work...
+
+    Int pt=pos[TIME],   szt=msShape_[TIME];   Bool validt=(pt>=0 && pt<szt);
+    Int pb=pos[BASELN], szb=msShape_[BASELN]; Bool validb=(pb>=0 && pb<szb);
+    Int pc=pos[CHAN],   szc=msShape_[CHAN];   Bool validc=(pc>=0 && pc<szc);
+    Int pp=pos[POL],    szp=msShape_[POL];    Bool validp=(pp>=0 && pp<szp);
+    Int ps=pos[SP_W],   szs=msShape_[SP_W];   Bool valids=(ps>=0 && ps<szs &&
+  						 ps<Int(freq_.nelements()));
 
 
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // Time, Scan
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    if(validt) {
+	MVTime mtm(time_[pt]/C::day);		// (convert seconds to days)
+	if(mtm.year()<1000 || mtm.year()>=10000) {
+	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("time","invalid"));
+	    validt=False;  // (Y10K bug :-)
+	} else {
+	    String tstr = mtm.string(MVTime::YMD);
+	    String time_val = tstr.substr(8,2) + "-" + mtm.monthName() + "-" + tstr.substr(0,4) + " " + tstr.substr(11,8);
+	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("time",time_val));
+	}
+    }
+
+
+    stat_list.push_back(viewer::Region::ms_stats_t::value_type("time index",avgPos(axisName_[TIME],pt+uiBase())));
+		// (see def of DisplayData::uiBase() for explanation...).
+
+    char buf[1024];
+
+    if(validt) {
+	// os<<String(max( 0, 33+startp-Int(os.tellp()) ), ' ');
+	// 	// tab to position 33 in the line.
+	// 	// (_such_ a pain compared to FORTRAN formatting: "T33"....)
+	sprintf( buf, "%d", scan_[pt] );
+	stat_list.push_back(viewer::Region::ms_stats_t::value_type("scan",buf));
+		// (scan #s always reported as set in MS).
+    }
+
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // Field
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+    if ( validt ) {
+	sprintf( buf, "%s (%d)", fieldName_[pt].c_str( ), field_[pt]+uiBase() );
+	stat_list.push_back(viewer::Region::ms_stats_t::value_type("field",buf));
+    }
+
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // Baseline/Feed
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    if ( szb > 1 ) {
+
+	if(nAnt_==1) {
+
+	    // Feed case
+	    char *ptr = buf;
+	    *ptr = '\0';
+	  
+	    sprintf( ptr, "%d", pb+uiBase() ); ptr += strlen(ptr);
+	    if ( ! validb ) sprintf( ptr, " (invalid)" );
+	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("feed", buf));
+
+	} else {
+
+	    // Baseline case
+
+	    char *ptr = buf;
+	    *ptr = '\0';
+	    std::string baseline_val;
+	    Int a1=0, a1u=0, a2=0, a2u=0;
+	    if(!validb) {
+		sprintf( ptr, "(invalid)" ); ptr += strlen(ptr);
+	    } else {
+		a1 = a1_(pb);  a1u = a1 + uiBase();
+		a2 = a2_(pb);  a2u = a2 + uiBase();
+		sprintf( ptr, "%d", a1u ); ptr += strlen(ptr);
+		if ( a2 > nAnt_-1 ) {
+		    sprintf( ptr, "|%d", a1u+1 ); ptr += strlen(ptr);
+				// "Dividing line" (gap) between antennas (no data here)
+		} else {
+				// Real baseline
+		    sprintf( ptr, "-%d", a2u ); ptr += strlen(ptr);
+		    if( a1 != a2 ) {
+			sprintf( ptr, " %.0fm", bLen_(a1,a2) ); ptr += strlen(ptr);
+		    }
+		}
+	    }
+	   
+	    sprintf( ptr, " (b %s)", avgPos(axisName_[BASELN],pb+uiBase()).c_str( ) ); ptr += strlen(ptr);
+	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("baseline",buf));
+	}
+    }
+
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // Spectral window, Channel, Frequency
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+    if(valids) {
+
+	char *ptr = buf;
+	*ptr = '\0';
+
+	sprintf( ptr, "%s (s %d)", avgPos(axisName_[SP_W],spwId_[ps]+uiBase()).c_str( ), ps+uiBase()); ptr += strlen(ptr);
+
+	if(valids) {
+	    Vector<Double>& fr = *static_cast<Vector<Double>*>(freq_[ps]);
+	    if( validc && pc<Int(fr.nelements()) ) {
+		sprintf( ptr, " %.5g GHz", fr[pc]/1.e9 ); ptr += strlen(ptr);
+	    } else {
+		validc=False; 
+	    }
+	}
+    }
+
+    if ( ! valids || ! validc ) sprintf( buf, "(invalid)" );
+
+    stat_list.push_back(viewer::Region::ms_stats_t::value_type("sp win",buf));
+
+    stat_list.push_back(viewer::Region::ms_stats_t::value_type("channel",avgPos(axisName_[CHAN],pc+uiBase())));
+
+
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // Polarization
+    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+    String pol_val;
+    if ( validp )
+	pol_val = polName_[pp];
+    else
+	pol_val = "(invalid)";
+
+    pol_val = pol_val + " (cor " + avgPos(axisName_[POL],pp+uiBase()) + ")";
+
+    stat_list.push_back(viewer::Region::ms_stats_t::value_type("polarization",pol_val));
+
+    return true;
+}
 
 //===================misc. small stuff======================================
 

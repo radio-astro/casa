@@ -42,6 +42,7 @@ test_imstat                     dmehring@nrao.edu
 test_imtrans                    dmehring@nrao.edu
 test_imval                      dmehring@nrao.edu
 test_listhistory                scastro@eso.org
+test_listobs                    scastro@eso.org
 #test_listvis                    scastro@eso.org
 test_measures			rreid@nrao.edu
 test_msmoments                  takeshi.nakazato@nao.ac.jp

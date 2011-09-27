@@ -3099,16 +3099,19 @@ class cleanhelper:
         psfimage=[]
         fluximage=[]
         for k in range(len(self.imagelist)):
-            #ia.open(self.imagelist[k])
+            ia.open(self.imagelist[k])
             #if (modelimage =='' or modelimage==[]) and multifield:
             #    ia.rename(self.imagelist[k]+'.model',overwrite=True)
             #else:
             #    ia.remove(verbose=False)
             if ((modelimage =='' or modelimage==[]) or \
                 (type(modelimage)==list and modelimage[k]=='')) and multifield:
-                ia.rename(imset.imagelist[k]+'.model',overwrite=True)
+                ia.rename(self.imagelist[k]+'.model',overwrite=True)
             else:
-                ia.remove(verbose=False)
+                if type(modelimage)==str:
+                    modlist=[modelimage]
+                if not any([inmodel == self.imagelist[k] for inmodel in modlist]):
+                    ia.remove(verbose=False)
             ia.close()
 
             modelimages.append(self.imagelist[k]+'.model')
@@ -3177,7 +3180,7 @@ class cleanhelper:
         #
         return retparms
 
-    def defineChaniterModelimages(self,modeimage,chan,tmppath):
+    def defineChaniterModelimages(self,modelimage,chan,tmppath):
         chanmodimg=[]
         if type(modelimage)==str:
             modelimage=[modelimage]

@@ -350,7 +350,7 @@ class clean_test1(unittest.TestCase):
         '''Clean 40: Test chaniter=T clean with flagged channels'''
         # test CAS-2369 bug fix 
         flagdata(vis=self.msfile,mode='manualflag',spw='0:0~0')
-        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',spw='0')
+        self.res=clean(vis=self.msfile,imagename=self.img,mode='channel',chaniter=True, spw='0')
         self.assertEqual(self.res, None)
         self.assertTrue(os.path.exists(self.img+'.image'))
          
@@ -597,8 +597,8 @@ class clean_multims_test(unittest.TestCase):
 
     def tearDown(self):
         for msfile in self.msfiles:
-          if (os.path.exists(msfile)):
-            os.system('rm -rf ' + msfile)
+            if (os.path.exists(msfile)):
+                os.system('rm -rf ' + msfile)
 
         for imext in ['.image','.model','.residual','.psf','.flux','.mask']:
             if (os.path.exists(self.img+imext)):

@@ -132,8 +132,8 @@ namespace casa {
 	    return result;
 	}
 
-	Region::StatisticsList *Ellipse::generate_statistics_list(  ) {
-	    StatisticsList *region_statistics = new StatisticsList( );
+	RegionInfo::image_stats_list_t *Ellipse::generate_image_statistics(  ) {
+	    RegionInfo::image_stats_list_t *region_statistics = new RegionInfo::image_stats_list_t( );
 
 	    if( wc_==0 ) return region_statistics;
 
@@ -225,7 +225,7 @@ namespace casa {
 		    WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
 		    ImageRegion *imageregion = new ImageRegion(ellipse);
 
-		    region_statistics->push_back(StatisticsList::value_type(full_image_name,getLayerStats(padd,image,*imageregion)));
+		    region_statistics->push_back(RegionInfo::image_stats_list_t::value_type(full_image_name,getLayerStats(padd,image,*imageregion)));
 		    delete imageregion;
 
 		} catch (const casa::AipsError& err) {
