@@ -65,7 +65,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="mode" >
-	<description>imhead options: list, summary, get, put</description>
+	<description>imhead options: add, del, get, history, list, put, summary </description>
 	<allowed kind="enum">
 	    <value>list</value>
             <value>fits</value>
@@ -213,6 +213,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         hdvalue   --- keyword value that is 'got', or to be 'put' or
                       to be 'added'
 	                default: ''; example: hdvalue='VLA'
+        hdcomment --- comment to be stored with the keyword for mode='put' or mode='add'
 	Examples: 
 		  hdkey='date-obs';hdvalue='2007/06/20/00:00:00'
 		  hdkey='beammajor';hdvalue='55arcsec'
