@@ -530,7 +530,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt k=0;k<dataspectralwindowids_p.nelements();k++)
       {
 	for(uInt ch=0;ch<uInt(nchanvec(dataspectralwindowids_p[k]));ch++) 
-	  {if(spwchansels_p(0,dataspectralwindowids_p[k],ch)) chancounts[k]++; }
+	  {if(spwchansels_p(numMS_p-1,dataspectralwindowids_p[k],ch)) chancounts[k]++; }
 	os << " [" << chancounts[k] << " chans in spw " << dataspectralwindowids_p[k] << "]";
 	//	os << "Selected " << chancounts[k] << " chans in spw " 
 	//	   << dataspectralwindowids_p[k] << LogIO::POST;
