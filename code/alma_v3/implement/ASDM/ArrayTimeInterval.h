@@ -28,7 +28,7 @@
 #define ArrayTimeInterval_CLASS
 
 #include <stdint.h>
-#include <Long.h>
+#include <LongWrapper.h>
 #include <ArrayTime.h>
 #include <Interval.h>
 

@@ -341,21 +341,22 @@ class cleanhelper:
                 # for now just make for a main field 
                 ###need to get the pointing so select the fields
                 # single ms
-                if len(self.vis)==1:
-                  self.im.selectvis(field=field)
-                # multi-ms
-                else: 
-                  # multi-mses case: use first vis that has the specified field
-                  # (use unsorted vis list)
-                  nvis=len(self.vis)
-                  for i in range(nvis):
-                    #if type(field)!=list:
-                    #  field=[field]
-                    try:
-                      selparam=self._selectlistinputs(nvis,i,self.paramlist)
-                      self.im.selectvis(vis=self.vis[i],field=selparam['field'],spw=selparam['spw'])
-                    except:
-                      pass
+#                if len(self.vis)==1:
+#                  self.im.selectvis(field=field,spw=spw)
+#                # multi-ms
+#                else: 
+#                  if len(self.vis) > 1:
+#                  # multi-mses case: use first vis that has the specified field
+#                  # (use unsorted vis list)
+#                  nvis=len(self.vis)
+#                  for i in range(nvis):
+#                    #if type(field)!=list:
+#                    #  field=[field]
+#                    try:
+#                      selparam=self._selectlistinputs(nvis,i,self.paramlist)
+#                      self.im.selectvis(vis=self.vis[i],field=selparam['field'],spw=selparam['spw'])
+#                    except:
+#                      pass
 
                 # set to default minpb(=0.1), should use input minpb?
                 self.im.setmfcontrol()
@@ -363,7 +364,6 @@ class cleanhelper:
                 self.im.makeimage(type='pb', image=self.imagelist[n]+'.flux',
                                   compleximage="", verbose=False)
 		self.im.setvp(dovp=False, verbose=False)
-
                 
     def checkpsf(self,chan):
         """
@@ -1169,27 +1169,31 @@ class cleanhelper:
          #weighting and tapering should be done together
         if(weighting=='natural'):
             mosweight=False
-        vislist=self.sortedvisindx
+#        vislist=self.sortedvisindx
         #nvislist.reverse()
-        for i in vislist:
-          # select apropriate parameters
-          selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
-          inspw=selectedparams['spw'] 
-          intimerange=selectedparams['timerange'] 
-          inantenna=selectedparams['antenna'] 
-          inscan=selectedparams['scan'] 
-          inobs=selectedparams['observation'] 
-          inuvrange=selectedparams['uvrange'] 
-          
-          if len(self.vis) > 1:
-            self.im.selectvis(vis=self.vis[i], field=self.fieldindex[i],spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan, observation=inobs,
-                              uvrange=inuvrange, usescratch=calready)
-          else: 
-            self.im.selectvis(field=field,spw=inspw,time=intimerange,
-                              baseline=inantenna, scan=inscan, observation=inobs,
-                              uvrange=inuvrange, usescratch=calready)
-          self.im.weight(type=weighting,rmode=rmode,robust=robust, 
+#        for i in vislist:
+#          # select apropriate parameters
+#          selectedparams=self._selectlistinputs(len(vislist),i,self.paramlist)
+#          inspw=selectedparams['spw'] 
+#          intimerange=selectedparams['timerange'] 
+#          inantenna=selectedparams['antenna'] 
+#          inscan=selectedparams['scan'] 
+#          inobs=selectedparams['observation'] 
+#          inuvrange=selectedparams['uvrange'] 
+#          
+#          if len(self.vis) > 1:
+#            print 'from datwtfilter - multi';
+#            self.im.selectvis(vis=self.vis[i], field=self.fieldindex[i],spw=inspw,time=intimerange,
+#                              baseline=inantenna, scan=inscan, observation=inobs,
+#                              uvrange=inuvrange, usescratch=calready)
+#          else: 
+#            print 'from datwtfilter - single';
+#            self.im.selectvis(field=field,spw=inspw,time=intimerange,
+#                              baseline=inantenna, scan=inscan, observation=inobs,
+#                              uvrange=inuvrange, usescratch=calready)
+#          self.im.weight(type=weighting,rmode=rmode,robust=robust, 
+#                         npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
+        self.im.weight(type=weighting,rmode=rmode,robust=robust, 
                          npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
      
         if((type(outertaper)==list) and (len(outertaper) > 0)):

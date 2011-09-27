@@ -48,6 +48,7 @@ casa_add_library( msvis
   implement/MSVis/VisSetUtil.cc
   implement/MSVis/VisChunkAverager.cc
   implement/MSVis/VLAT.cc
+  implement/MSVis/VWBT.cc
    )
 
 casa_add_executable( msvis casasplit apps/casasplit/casasplit.cc )

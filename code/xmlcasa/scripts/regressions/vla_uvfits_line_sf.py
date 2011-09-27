@@ -248,9 +248,7 @@ pipeline.image['uvcontsub']['args'] = {'vis':'ngc5921.ms',
 				 'fitspw':'0:4~6;50~59',
 				 'spw':'0',
 				 'solint':'int',
-				 'fitorder':0,
-				 'fitmode':'subtract',
-				 'splitdata':True
+				 'fitorder':0
 		                }
 pipeline.image['clean'] = {}
 pipeline.image['clean']['args'] = {'vis':'ngc5921.ms.contsub',

@@ -75,7 +75,8 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const MeasurementSet & ms,
                                                       const Block<Int> & sortColumns,
                                                       const Bool addDefaultSortCols,
                                                       Double timeInterval,
-                                                      Int nReadAheadBuffers)
+                                                      Int nReadAheadBuffers,
+                                                      Bool groupRows)
 : impl_p (NULL),
   visBufferAsync_p (NULL)
 {
@@ -83,6 +84,9 @@ ROVisibilityIteratorAsync::ROVisibilityIteratorAsync (const MeasurementSet & ms,
 
     measurementSets_p.clear();
     measurementSets_p.push_back (& ms);
+
+    // jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+    if (groupRows) impl_p->vlat_p->setRowBlocking();
 
     impl_p->vlat_p->initialize (ms, sortColumns, addDefaultSortCols, timeInterval);
 
@@ -327,7 +331,8 @@ ROVisibilityIteratorAsync::create (const MeasurementSet & ms,
                                    const Block<Int> & sortColumns,
                                    const Bool addDefaultSortCols,
                                    Double timeInterval,
-                                   Int nReadAheadBuffers)
+                                   Int nReadAheadBuffers,
+                                   Bool groupRows)
 {
     ROVisibilityIterator * result = NULL;
 
@@ -338,7 +343,8 @@ ROVisibilityIteratorAsync::create (const MeasurementSet & ms,
                                                 sortColumns,
                                                 addDefaultSortCols,
                                                 timeInterval,
-                                                nReadAheadBuffers);
+                                                nReadAheadBuffers,
+                                                groupRows);
     }
     else {
         result = new ROVisibilityIterator (ms,
@@ -635,15 +641,16 @@ ROVisibilityIteratorAsync::originChunks ()
 {
     readComplete (); // complete any pending read
 
-    Bool atOrigin = chunkNumber_p == 0 && subChunkNumber_p == -1;
+    // jagonzal: Nuke this condition according to Jim Jacobs
+    // Bool atOrigin = chunkNumber_p == 0 && subChunkNumber_p == -1;
 
-    if (! atOrigin){
+    // if (! atOrigin){
 
         chunkNumber_p = 0;
         subChunkNumber_p = -1;
 
         impl_p->vlaData_p->requestViReset ();
-    }
+    // }
 
     if (linkedVisibilityIterator_p != NULL){
         linkedVisibilityIterator_p->originChunks ();
@@ -751,6 +758,12 @@ ROVisibilityIteratorAsync::prefetchColumnName (Int id)
     return names [id];
 }
 
+
+casa::async::Mutex *
+ROVisibilityIteratorAsync::getMutex()
+{
+	return impl_p->vlaData_p->getMutex();
+}
 
 ROVisibilityIteratorAsync::PrefetchColumns
 ROVisibilityIteratorAsync::prefetchColumns (Int firstColumn, ...)
@@ -884,6 +897,16 @@ ROVisibilityIteratorAsync::setRowBlocking(Int nRow)
 }
 
 void
+ROVisibilityIteratorAsync::slurp()
+{
+    SlurpModifier * slm = new SlurpModifier ();
+
+    impl_p->vlaData_p->addModifier (slm);
+
+    return;
+}
+
+void
 ROVisibilityIteratorAsync::startVlat ()
 {
     impl_p->vlat_p->startThread ();
@@ -993,9 +1016,10 @@ RoviaModifiers::~RoviaModifiers ()
 {
     // Free the objects owned by the vector
 
-    for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
-        delete (* i);
-    }
+	// jagonzal: Coment out this as suggested by Jim
+    // for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
+    //    delete (* i);
+    // }
 }
 
 void
@@ -1010,7 +1034,8 @@ RoviaModifiers::apply (ROVisibilityIterator * rovi)
     // Free the objects owned by the vector
 
     for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
-        Log (1, "Applying vi modifier: %s\n", lexical_cast<String> (** i).c_str());
+    	// jagonzal: We have to comment this out because the lexical_cast is crashing
+        // Log (1, "Applying vi modifier: %s\n", lexical_cast<String> (** i).c_str());
         (* i) -> apply (rovi);
     }
 
@@ -1207,6 +1232,21 @@ SetRowBlockingModifier::print (std::ostream & os) const
        << ",width=" << width_p
 
        << "}";
+}
+
+SlurpModifier::SlurpModifier () {}
+
+void
+SlurpModifier::apply (ROVisibilityIterator * rovi) const
+{
+    rovi->slurp ();
+}
+
+void
+SlurpModifier::print (std::ostream & os) const
+{
+	os << "Slurp:: Set the table data manager (ISM and SSM) cache size to the full column size, "
+			"for he columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW";
 }
 
 } // end namespace asyncio

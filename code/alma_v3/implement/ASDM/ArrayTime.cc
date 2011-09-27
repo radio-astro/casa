@@ -31,7 +31,7 @@ using std::fmod;
 
 #include <Double.h>
 #include <Long.h>
-#include <Integer.h>
+#include <IntegerWrapper.h>
 #include <InvalidArgumentException.h>
 #include <NumberFormatException.h>
 using asdm::Double;

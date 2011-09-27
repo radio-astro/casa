@@ -3687,8 +3687,8 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	    return False;
 	  }
 
-          os << LogIO::NORMAL // Too contentious for DEBUG1
-             << "Selecting ";
+          os << LogIO::DEBUG1 // Too contentious for DEBUG1
+             << "Selecting within ";
           if(nch > 1)
             os << nch << " channels, starting at "
                << dataStart[i]  << ", stepped by " << dataStep[i] << ",";
@@ -3722,7 +3722,7 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	     << LogIO::POST;
 	  return False;
 	}
-	os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
+	os << LogIO::DEBUG1 << "Selecting within "<< dataNchan[0] // Loglevel INFO
 	   << " channels, starting at visibility channel "
 	 << dataStart[0]  << " stepped by "
 	   << dataStep[0] << LogIO::POST;

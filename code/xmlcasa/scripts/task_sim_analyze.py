@@ -100,6 +100,8 @@ def sim_analyze(
          model_stokes) = returnpars 
 
 
+        cell_asec=qa.convert(model_cell[0],'arcsec')['value']
+
 
         #####################################################################
         # clean if desired, use noisy image for further calculation if present
@@ -140,11 +142,6 @@ def sim_analyze(
             else:
                 imsize=[imsize0,imsize0]
 
-            # this is primarily for sim-from-components but useful elsewhere as a minimum
-            # image size:
-            if imsize[0] < minimsize: imsize[0] = minimsize
-            if imsize[1] < minimsize: imsize[1] = minimsize
-
             
 
 
@@ -159,7 +156,10 @@ def sim_analyze(
 
             # parse ms parameter and check for existance;
             # initial ms list
-            mslist0 = vis.split(',')
+            if vis=="default" or len(vis)==0:
+                mslist0=default_mslist
+            else:
+                mslist0 = vis.split(',')
             # verified found ms list
             mslist = []
             mstype = []
@@ -412,10 +412,11 @@ def sim_analyze(
                 disprange = []  # passing empty list causes return of disprange
 
                 # original sky regridded to output pixels but not convolved with beam
-                discard = util.statim(modelflat+".regrid",disprange=disprange)
+                discard = util.statim(modelflat+".regrid",disprange=disprange,showstats=False)
                 util.nextfig()
 
                 # convolved sky model - units of Jy/bm
+                disprange = []  
                 discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                 util.nextfig()
                 
@@ -636,8 +637,9 @@ def sim_analyze(
 
                 disprange = []  # first plot will define range
                 if showmodel:
-                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange)
+                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange,showstats=False)
                     util.nextfig()
+                    disprange = []
 
                 if showconvolved:
                     discard = util.statim(modelflat+".regrid.conv")
@@ -661,23 +663,23 @@ def sim_analyze(
 
                 if showfidelity:
                     # it gets its own scaling.
-                    discard = util.statim(imagename+".fidelity")
+                    discard = util.statim(imagename+".fidelity",showstats=False)
                     util.nextfig()
 
                 util.endfig(show=grscreen,filename=file)
-            else:
-                sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
-                # if not displaying still print stats:
-                # 20100505 ia.stats changed to return Jy/bm:
-                msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
-                    str(sim_rms)+" Jy/bm",origin="analysis")
-                msg('Simulation max: '+str(sim_max/bmarea)+" Jy/pix = "+
-                    str(sim_max)+" Jy/bm",origin="analysis")
-                #msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
-                #    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
-                #msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
-                #    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
-                msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
+            
+            sim_min,sim_max,sim_rms,sim_units = util.statim(imagename+".image.flat",plot=False)
+            # if not displaying still print stats:
+            # 20100505 ia.stats changed to return Jy/bm:
+            msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
+                str(sim_rms)+" Jy/bm",origin="analysis")
+            msg('Simulation max: '+str(sim_max/bmarea)+" Jy/pix = "+
+                str(sim_max)+" Jy/bm",origin="analysis")
+            #msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
+            #    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
+            #msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
+            #    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
+            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
 
 
 
@@ -701,10 +703,10 @@ def sim_analyze(
 
 
     except TypeError, e:
-        msg("task_simdata -- TypeError: %s" % e,priority="error")
+        msg("task_sim_analyze -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
-        print "task_simdata -- OptionError: ", e
+        print "task_sim_analyze -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance

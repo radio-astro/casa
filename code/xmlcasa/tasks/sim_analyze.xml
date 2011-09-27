@@ -307,6 +307,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
          fidelity = input/max( abs(input-output), 0.7*rms(output) )
     
 
+    Note that the RMS is calculated in the lower quarter of the image.  
+         This is likely not the best choice, so you are encouraged to 
+         measure RMS yourself in an off-source region using the viewer.
 
 
     -------------------------------

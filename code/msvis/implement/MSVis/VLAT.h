@@ -30,7 +30,6 @@
 #define VLAT_H_
 
 #include "AsynchronousTools.h"
-using casa::async::Mutex;
 #include "UtilJ.h"
 using casa::utilj::ThreadTimes;
 using casa::utilj::DeltaThreadTimes;
@@ -275,6 +274,8 @@ public:
 	static Bool loggingInitialized_p;
 	static Int logLevel_p;
 
+	casa::async::Mutex * getMutex() {return &vlaDataMutex_p;};
+
 protected:
 
 private:
@@ -308,7 +309,7 @@ private:
 	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
 	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
 	mutable Condition vlaDataChanged_p;
-	mutable async::Mutex vlaDataMutex_p;
+	mutable casa::async::Mutex vlaDataMutex_p;
 
     Int clock (Int arg, Int base);
     String makeReport ();
@@ -509,6 +510,10 @@ public:
 	void requestSweepTermination ();
 	void terminate ();
 
+	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+	void setRowBlocking();
+	bool getRowBlocking() {return rowBlocking_p;}
+
 protected:
 
 	class FillerDictionary : public map<casa::asyncio::PrefetchColumnIds, VlatFunctor *> {
@@ -546,6 +551,9 @@ private:
 	Bool threadTerminated_p;
 	ROVisibilityIterator * visibilityIterator_p; // [own]
 	VlaData * vlaData_p; // [use]
+
+	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
+	bool rowBlocking_p;
 
 };
 

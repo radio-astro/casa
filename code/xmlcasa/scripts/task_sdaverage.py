@@ -46,8 +46,8 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     #print "Initial Raw Scantable:"
                     #print s
                     casalog.post( "Initial Raw Scantable:" )
-                    casalog.post( s._summary() )
-                    casalog.post( "--------------------------------------------------------------------------------" )
+                    #casalog.post( s._summary() )
+                    s._summary()
 
             # Default file name
             #if ( outfile == '' ):
@@ -311,8 +311,8 @@ def sdaverage(infile, antenna, fluxunit, telescopeparm, specunit, frame, doppler
                     #print "Final Calibrated Scantable:"
                     #print spave
                     casalog.post( "Final Calibrated Scantable:" )
-                    casalog.post( spave._summary() )
-                    casalog.post( "--------------------------------------------------------------------------------" )
+                    #casalog.post( spave._summary() )
+                    spave._summary()
 
 
             # Plot final spectrum

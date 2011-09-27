@@ -421,6 +421,7 @@ def simdata(
         cell_asec=qa.convert(model_cell[0],'arcsec')['value']
         if psfsize < cell_asec:
             msg("Sky model cell of "+str(cell_asec)+" asec is very large compared to highest resolution "+str(psfsize)+" asec - this will lead to blank or erroneous output. (Did you set incell?)",priority="error")
+            shutil.rmtree(modelflat)
             return False
         if psfsize < 2*cell_asec:
             msg("Sky model cell of "+str(cell_asec)+" asec is large compared to highest resolution "+str(psfsize)+" asec. (Did you set incell?)",priority="warn")
@@ -1571,10 +1572,11 @@ def simdata(
                 disprange = []  # passing empty list causes return of disprange
 
                 # original sky regridded to output pixels but not convolved with beam
-                discard = util.statim(modelflat+".regrid",disprange=disprange)
+                discard = util.statim(modelflat+".regrid",disprange=disprange,showstats=False)
                 util.nextfig()
 
                 # convolved sky model - units of Jy/bm
+                disprange = [] 
                 discard = util.statim(modelflat+".regrid.conv",disprange=disprange)
                 util.nextfig()
                 
@@ -1800,8 +1802,9 @@ def simdata(
 
                 disprange = []  # first plot will define range
                 if showmodel:
-                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange)
+                    discard = util.statim(modelflat+".regrid",incell=cell,disprange=disprange,showstats=False)
                     util.nextfig()
+                    disprange = []  
 
                 if showconvolved:
                     discard = util.statim(modelflat+".regrid.conv")
@@ -1825,23 +1828,23 @@ def simdata(
 
                 if showfidelity:
                     # it gets its own scaling.
-                    discard = util.statim(imagename+".fidelity")
+                    discard = util.statim(imagename+".fidelity",showstats=False)
                     util.nextfig()
 
                 util.endfig(show=grscreen,filename=file)
-            else:
-                sim_min,sim_max,sim_rms = util.statim(imagename+".image.flat",plot=False)
-                # if not displaying still print stats:
-                # 20100505 ia.stats changed to return Jy/bm:
-                msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
-                    str(sim_rms)+" Jy/bm",origin="analysis")
-                msg('Simulation max: '+str(sim_max/bmarea)+" Jy/pix = "+
-                    str(sim_max)+" Jy/bm",origin="analysis")
-                #msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
-                #    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
-                #msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
-                #    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
-                msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
+
+            sim_min,sim_max,sim_rms,sim_units = util.statim(imagename+".image.flat",plot=False)
+            # if not displaying still print stats:
+            # 20100505 ia.stats changed to return Jy/bm:
+            msg('Simulation rms: '+str(sim_rms/bmarea)+" Jy/pix = "+
+                str(sim_rms)+" Jy/bm",origin="analysis")
+            msg('Simulation max: '+str(sim_max/bmarea)+" Jy/pix = "+
+                str(sim_max)+" Jy/bm",origin="analysis")
+            #msg('Simulation rms: '+str(sim_rms)+" Jy/pix = "+
+            #    str(sim_rms*bmarea)+" Jy/bm",origin="analysis")
+            #msg('Simulation max: '+str(sim_max)+" Jy/pix = "+
+            #    str(sim_max*bmarea)+" Jy/bm",origin="analysis")
+            msg('Beam bmaj: '+str(beam['major']['value'])+' bmin: '+str(beam['minor']['value'])+' bpa: '+str(beam['positionangle']['value']),origin="analysis")
 
 
 
