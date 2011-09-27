@@ -1,8 +1,7 @@
 namespace casa {
 	class LogIO;
-	class MeasurementSet;
 	class Record;
 	class RecordInterface;
-	class Flagger2;
+	class TestFlagger;
 }
 

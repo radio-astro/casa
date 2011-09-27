@@ -47,15 +47,11 @@ testflagger::testflagger()
 
 }
 
-
 testflagger::~testflagger()
 {
 	try
 	{
-		if (test_flagger_p) {
-			delete testflagger_p;
-			test_flagger_p = NULL;
-		}
+		done();
 
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -63,6 +59,22 @@ testflagger::~testflagger()
 	}
 }
 
+void
+testflagger::done()
+{
+	try
+	{
+		if (testflagger_p) {
+			delete testflagger_p;
+			testflagger_p = NULL;
+		}
+
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+
+}
 
 bool
 testflagger::configTestFlagger(const ::casac::record& tfconfig)
@@ -125,7 +137,7 @@ testflagger::init()
 	{
 		if(testflagger_p){
 			if (testflagger_p->initFlagDataHandler()) {
-				return testflagger->initAgents();
+				return testflagger_p->initAgents();
 			}
 			return false;
 		}
@@ -137,18 +149,18 @@ testflagger::init()
 	}
 }
 
-bool
+void
 testflagger::run()
 {
 	try
 	{
 		if(testflagger_p){
-			testflagger_p->runTestFlagger();
+			testflagger_p->run();
 		}
 
-		return false;
+		return;
 	} catch(AipsError x){
-		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << logIO::POST;
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
 	}
 }
