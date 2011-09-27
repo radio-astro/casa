@@ -179,11 +179,10 @@ private:
 class BaseMSWriterVisitor: public TableVisitor {
   const String *lastFieldName;
   uInt lastRecordNo;
-  uInt lastBeamNo, lastScanNo, lastIfNo;
+  uInt lastBeamNo, lastScanNo, lastIfNo, lastPolNo;
   Int lastSrcType;
   uInt lastCycleNo;
   Double lastTime;
-  Int lastPolNo;
 protected:
   const Table &table;
   uInt count;
@@ -232,7 +231,7 @@ public:
     Int srcType;
     uInt cycleNo;
     Double time;
-    Int polNo;
+    uInt polNo;
     { // prologue
       uInt i = 0;
       {
@@ -422,7 +421,6 @@ public:
 
     makePolMap() ;
     initFrequencies() ;
-    initTcal() ;
 
     //
     // add rows to MS
@@ -589,45 +587,9 @@ public:
       // reset holder
       holder.reset() ;
     }
-    if ( tcalKey != -1 ) {
-      tcalNotYet[tcalKey] = False ;
-      tcalKey = -1 ;
-    }
   }
   virtual void enterPolNo(const uInt recordNo, uInt columnValue) {
     //printf("%u: PolNo: %d\n", recordNo, columnValue);
-    uInt tcalId = tcalIdCol.asuInt( recordNo ) ;
-    if ( tcalKey == -1 ) {
-      tcalKey = tcalId ;
-    }
-    if ( tcalNotYet[tcalKey] ) {
-      map< Int,Vector<uInt> >::iterator itr = tcalIdRec.find( tcalKey ) ;
-      if ( itr != tcalIdRec.end() ) {
-        Vector<uInt> ids = itr->second ;
-        uInt nrow = ids.nelements() ;
-        ids.resize( nrow+1, True ) ;
-        ids[nrow] = tcalId ;
-        tcalIdRec.erase( tcalKey ) ;
-        tcalIdRec[tcalKey] = ids ;
-      }
-      else {
-        Vector<uInt> rows( 1, tcalId ) ;
-        tcalIdRec[tcalKey] = rows ;
-      }
-    }
-    map< Int,Vector<uInt> >::iterator itr = tcalRowRec.find( tcalKey ) ;
-    if ( itr != tcalRowRec.end() ) {
-      Vector<uInt> rows = itr->second ;
-      uInt nrow = rows.nelements() ;
-      rows.resize( nrow+1, True ) ;
-      rows[nrow] = recordNo ;
-      tcalRowRec.erase( tcalKey ) ;
-      tcalRowRec[tcalKey] = rows ;
-    }
-    else {
-      Vector<uInt> rows( 1, recordNo ) ;
-      tcalRowRec[tcalKey] = rows ;
-    }
   }
   virtual void leavePolNo(const uInt recordNo, uInt columnValue) {
   }
@@ -689,8 +651,6 @@ public:
   void setSourceRecord( Record &r ) {
     srcRec = r ;
   }
-  map< Int,Vector<uInt> > &getTcalIdRecord() { return tcalIdRec ; }
-  map< Int,Vector<uInt> > &getTcalRowRecord() { return tcalRowRec ; }
 private:
   void addField( Int &fid, String &fname, String &srcName,
                  Vector<Double> &sdir, Vector<Double> &srate, 
@@ -1249,17 +1209,6 @@ private:
       cp( 1, 2 ) = 0 ;
     }
   }
-  void initTcal()
-  {
-    const TableRecord &rec = table.keywordSet() ;
-    Table tcalTable = rec.asTable( "TCAL" ) ;
-    ROScalarColumn<uInt> idCol( tcalTable, "ID" ) ;
-    Vector<uInt> id = idCol.getColumn() ;
-    uInt maxId = max( id ) ;
-    tcalNotYet.resize( maxId+1 ) ;
-    tcalNotYet = True ;
-    tcalKey = -1 ;
-  }
 
   Table &ms;
   TableRow row;
@@ -1324,15 +1273,454 @@ private:
   map<uInt,Double> increment;
   MFrequency::Types freqframe;
   Record srcRec;
-  map< Int,Vector<uInt> > tcalIdRec;
-  map< Int,Vector<uInt> > tcalRowRec;
-  Int tcalKey;
-  Vector<Bool> tcalNotYet;
+};
+
+class BaseMSSysCalVisitor: public TableVisitor {
+  uInt lastRecordNo;
+  uInt lastBeamNo, lastIfNo, lastPolNo;
+  Double lastTime;
+protected:
+  const Table &table;
+  uInt count;
+public:
+  BaseMSSysCalVisitor(const Table &table)
+    : table(table)
+  {
+    count = 0;
+  }
+  
+  virtual void enterBeamNo(const uInt recordNo, uInt columnValue) { }
+  virtual void leaveBeamNo(const uInt recordNo, uInt columnValue) { }
+  virtual void enterIfNo(const uInt recordNo, uInt columnValue) { }
+  virtual void leaveIfNo(const uInt recordNo, uInt columnValue) { }
+  virtual void enterPolNo(const uInt recordNo, uInt columnValue) { }
+  virtual void leavePolNo(const uInt recordNo, uInt columnValue) { }
+  virtual void enterTime(const uInt recordNo, Double columnValue) { }
+  virtual void leaveTime(const uInt recordNo, Double columnValue) { }
+
+  virtual Bool visitRecord(const uInt recordNo,
+			   const uInt beamNo,
+			   const uInt ifNo,
+			   const uInt polNo,
+			   const Double time) { return True ;}
+
+  virtual Bool visit(Bool isFirst, const uInt recordNo,
+		     const uInt nCols, void const *const colValues[]) {
+    uInt beamNo, ifNo, polNo;
+    Double time;
+    { // prologue
+      uInt i = 0;
+      {
+	const uInt *col = (const uInt *)colValues[i++];
+	beamNo = col[recordNo];
+      }
+      {
+	const uInt *col = (const uInt *)colValues[i++];
+	ifNo = col[recordNo];
+      }
+      {
+	const Double *col = (const Double *)colValues[i++];
+	time = col[recordNo];
+      }
+      {
+	const uInt *col = (const uInt *)colValues[i++];
+	polNo = col[recordNo];
+      }
+      assert(nCols == i);
+    }
+
+    if (isFirst) {
+      enterBeamNo(recordNo, beamNo);
+      enterIfNo(recordNo, ifNo);
+      enterTime(recordNo, time);
+      enterPolNo(recordNo, polNo);
+    } else {
+      if (lastBeamNo != beamNo) {
+	leavePolNo(lastRecordNo, lastPolNo);
+	leaveTime(lastRecordNo, lastTime);
+	leaveIfNo(lastRecordNo, lastIfNo);
+	leaveBeamNo(lastRecordNo, lastBeamNo);
+
+	enterBeamNo(recordNo, beamNo);
+	enterIfNo(recordNo, ifNo);
+	enterTime(recordNo, time);
+	enterPolNo(recordNo, polNo);
+      } else if (lastIfNo != ifNo) {
+	leavePolNo(lastRecordNo, lastPolNo);
+	leaveTime(lastRecordNo, lastTime);
+	leaveIfNo(lastRecordNo, lastIfNo);
+        
+	enterIfNo(recordNo, ifNo);
+	enterTime(recordNo, time);
+	enterPolNo(recordNo, polNo);
+      } else if (lastTime != time) {
+	leavePolNo(lastRecordNo, lastPolNo);
+	leaveTime(lastRecordNo, lastTime);
+
+	enterTime(recordNo, time);
+	enterPolNo(recordNo, polNo);
+      } else if (lastPolNo != polNo) {
+	leavePolNo(lastRecordNo, lastPolNo);
+	enterPolNo(recordNo, polNo);
+      }
+    }
+    count++;
+    Bool result = visitRecord(recordNo, beamNo, ifNo, polNo, time);
+
+    { // epilogue
+      lastRecordNo = recordNo;
+
+      lastBeamNo = beamNo;
+      lastIfNo = ifNo;
+      lastPolNo = polNo;
+      lastTime = time;
+    }
+    return result ;
+  }
+
+  virtual void finish() {
+    if (count > 0) {
+      leavePolNo(lastRecordNo, lastPolNo);
+      leaveTime(lastRecordNo, lastTime);
+      leaveIfNo(lastRecordNo, lastIfNo);
+      leaveBeamNo(lastRecordNo, lastBeamNo);
+    }
+  }
+};
+
+class BaseTsysHolder
+{
+public:
+  BaseTsysHolder( ROArrayColumn<Float> &tsysCol )
+    : col( tsysCol ),
+      nchan(0)
+  {
+    reset() ;
+  }
+  virtual Array<Float> getTsys() = 0 ;
+  void setNchan( uInt n ) { nchan = n ; }
+  void appendTsys( uInt row ) 
+  {
+    Vector<Float> v = col( row ) ;
+    uInt len = tsys.nrow() ;
+    tsys.resize( len+1, nchan, True ) ;
+    if ( v.nelements() == nchan )
+      tsys.row( len ) = v ;
+    else
+      tsys.row( len ) = v[0] ;
+  }
+  void setTsys( uInt row, uInt idx ) 
+  {
+    if ( idx >= nrow() ) 
+      appendTsys( row ) ;
+    else {
+      Vector<Float> v = col( row ) ;
+      if ( v.nelements() == nchan )
+        tsys.row( idx ) = v ;
+      else
+        tsys.row( idx ) = v[0] ;
+    }
+  }
+  void reset() 
+  {
+    tsys.resize() ;
+  } 
+  uInt nrow() { return tsys.nrow() ; }
+  Bool isEffective() 
+  {
+    return ( !(tsys.empty()) && anyNE( tsys, (Float)1.0 ) ) ;
+  }
+  BaseTsysHolder &operator= ( const BaseTsysHolder &v )
+  {
+    if ( this != &v )
+      tsys.assign( v.tsys ) ;
+    return *this ;
+  }
+protected:
+  ROArrayColumn<Float> col ;
+  Matrix<Float> tsys ;
+  uInt nchan ;
+};
+
+class TsysHolder : public BaseTsysHolder
+{
+public:
+  TsysHolder( ROArrayColumn<Float> &tsysCol )
+    : BaseTsysHolder( tsysCol )
+  {}
+  virtual Array<Float> getTsys() 
+  {
+    return tsys.column( 0 ) ;
+  }
+};
+
+class TsysSpectrumHolder : public BaseTsysHolder
+{
+public:
+  TsysSpectrumHolder( ROArrayColumn<Float> &tsysCol )
+    : BaseTsysHolder( tsysCol ) 
+  {}
+  virtual Array<Float> getTsys() 
+  { 
+    return tsys ; 
+  }
+};
+
+class BaseTcalProcessor
+{
+public:
+  BaseTcalProcessor( ROArrayColumn<Float> &tcalCol )
+    : col( tcalCol )
+  {}
+  void setTcalId( Vector<uInt> &tcalId ) { id.assign( tcalId ) ; } 
+  virtual Array<Float> getTcal() = 0 ;
+protected:
+  ROArrayColumn<Float> col ;
+  Vector<uInt> id ;
+};
+
+class TcalProcessor : public BaseTcalProcessor
+{
+public:
+  TcalProcessor( ROArrayColumn<Float> &tcalCol )
+    : BaseTcalProcessor( tcalCol )
+  {}
+  virtual Array<Float> getTcal()
+  {
+    uInt npol = id.nelements() ;
+    Vector<Float> tcal( npol ) ;
+    for ( uInt ipol = 0 ; ipol < npol ; ipol++ )
+      tcal[ipol] = col( id[ipol] ).data()[0] ;
+    //cout << "TcalProcessor: tcal = " << tcal << endl ;
+    return tcal ;
+  }
+};
+
+class TcalSpectrumProcessor : public BaseTcalProcessor
+{
+public:
+  TcalSpectrumProcessor( ROArrayColumn<Float> &tcalCol )
+    : BaseTcalProcessor( tcalCol )
+  {}
+  virtual Array<Float> getTcal()
+  {
+    uInt npol = id.nelements() ;
+    Vector<Float> tcal0 = col( 0 ) ;
+    uInt nchan = tcal0.nelements() ;
+    Matrix<Float> tcal( npol, nchan ) ;
+    tcal.row( 0 ) = tcal0 ;
+    for ( uInt ipol = 1 ; ipol < npol ; ipol++ ) 
+      tcal.row( ipol ) = col( id[ipol] ) ;
+    return tcal ;
+  }
+};
+
+class MSSysCalVisitor : public BaseMSSysCalVisitor
+{
+public:
+  MSSysCalVisitor( const Table &from, Table &to )
+    : BaseMSSysCalVisitor( from ),
+      sctab( to ),
+      rowidx( 0 )
+  {
+    scrow = TableRow( sctab ) ;
+
+    lastTcalId.resize() ;
+    theTcalId.resize() ;
+    startTime = 0.0 ;
+    endTime = 0.0 ;
+
+    const TableRecord &keys = table.keywordSet() ;
+    Table tcalTable = keys.asTable( "TCAL" ) ;
+    tcalCol.attach( tcalTable, "TCAL" ) ;
+    tsysCol.attach( table, "TSYS" ) ;
+    tcalIdCol.attach( table, "TCAL_ID" ) ;
+    intervalCol.attach( table, "INTERVAL" ) ;
+    effectiveTcal.resize( tcalTable.nrow() ) ;
+    for ( uInt irow = 0 ; irow < tcalTable.nrow() ; irow++ ) {
+      if ( allEQ( tcalCol( irow ), (Float)1.0 ) )
+        effectiveTcal[irow] = False ;
+      else 
+        effectiveTcal[irow] = True ;
+    }
+    
+    TableRecord &r = scrow.record() ;
+    RecordFieldPtr<Int> antennaIdRF( r, "ANTENNA_ID" ) ;
+    *antennaIdRF = 0 ;
+    feedIdRF.attachToRecord( r, "FEED_ID" ) ;
+    specWinIdRF.attachToRecord( r, "SPECTRAL_WINDOW_ID" ) ;
+    timeRF.attachToRecord( r, "TIME" ) ;
+    intervalRF.attachToRecord( r, "INTERVAL" ) ;
+    if ( r.isDefined( "TCAL" ) ) {
+      tcalRF.attachToRecord( r, "TCAL" ) ;
+      tcalProcessor = new TcalProcessor( tcalCol ) ;
+    }
+    else if ( r.isDefined( "TCAL_SPECTRUM" ) ) {
+      tcalRF.attachToRecord( r, "TCAL_SPECTRUM" ) ;
+      tcalProcessor = new TcalSpectrumProcessor( tcalCol ) ;
+    }
+    if ( r.isDefined( "TSYS" ) ) {
+      tsysRF.attachToRecord( r, "TSYS" ) ;
+      theTsys = new TsysHolder( tsysCol ) ;
+      lastTsys = new TsysHolder( tsysCol ) ;
+    }
+    else {
+      tsysRF.attachToRecord( r, "TSYS_SPECTRUM" ) ;
+      theTsys = new TsysSpectrumHolder( tsysCol ) ;
+      lastTsys = new TsysSpectrumHolder( tsysCol ) ;
+    }
+
+  }
+
+  virtual void enterBeamNo(const uInt recordNo, uInt columnValue) 
+  { 
+    *feedIdRF = (Int)columnValue ;
+  }
+  virtual void leaveBeamNo(const uInt recordNo, uInt columnValue) 
+  { 
+  }
+  virtual void enterIfNo(const uInt recordNo, uInt columnValue) 
+  { 
+    //cout << "enterIfNo" << endl ;
+    ROArrayColumn<Float> sp( table, "SPECTRA" ) ;
+    uInt nchan = sp( recordNo ).nelements() ;
+    theTsys->setNchan( nchan ) ;
+    lastTsys->setNchan( nchan ) ;
+
+    *specWinIdRF = (Int)columnValue ;
+  }
+  virtual void leaveIfNo(const uInt recordNo, uInt columnValue) 
+  { 
+    //cout << "leaveIfNo" << endl ;
+    post() ;
+    lastTsys->reset() ;
+    lastTcalId.resize() ;
+    theTsys->reset() ;
+    theTcalId.resize() ;
+    startTime = 0.0 ;
+    endTime = 0.0 ;
+  }
+  virtual void enterTime(const uInt recordNo, Double columnValue) 
+  { 
+    //cout << "enterTime" << endl ;
+    interval = intervalCol.asdouble( recordNo ) ;
+    // start time and end time
+    if ( startTime == 0.0 ) {
+      startTime = columnValue * 86400.0 - 0.5 * interval ;
+      endTime = columnValue * 86400.0 + 0.5 * interval ;
+    }
+  }
+  virtual void leaveTime(const uInt recordNo, Double columnValue) 
+  { 
+    //cout << "leaveTime" << endl ;
+    if ( isUpdated() ) {
+      post() ;
+      *lastTsys = *theTsys ;
+      lastTcalId = theTcalId ;
+      theTsys->reset() ;
+      theTcalId.resize() ;
+      startTime = columnValue * 86400.0 - 0.5 * interval ;
+      endTime = columnValue * 86400.0 + 0.5 * interval ;
+    }
+    else {
+      endTime = columnValue * 86400.0 + 0.5 * interval ;
+    }
+  }
+  virtual void enterPolNo(const uInt recordNo, uInt columnValue) 
+  {
+    //cout << "enterPolNo" << endl ;
+    Vector<Float> tsys = tsysCol( recordNo ) ;
+    uInt tcalId = tcalIdCol.asuInt( recordNo ) ;
+    // lastTsys.nrow() must be npol 
+    if ( lastTsys->nrow() == columnValue )
+      lastTsys->appendTsys( recordNo ) ;
+    // lastTcalId.nelements() must be npol
+    if ( lastTcalId.nelements() == columnValue ) 
+      appendTcalId( lastTcalId, tcalId, columnValue ) ;
+    // theTsys.nrow() must be npol
+    if ( theTsys->nrow() == columnValue )
+      theTsys->appendTsys( recordNo ) ;
+    else {
+      theTsys->setTsys( recordNo, columnValue ) ;
+    }
+    if ( theTcalId.nelements() == columnValue )
+      appendTcalId( theTcalId, tcalId, columnValue ) ;
+    else 
+      setTcalId( theTcalId, tcalId, columnValue ) ;
+  }
+  virtual void leavePolNo( const uInt recordNo, uInt columnValue )
+  {
+  }
+    
+private:
+  void appendTcalId( Vector<uInt> &v, uInt &elem, uInt &polId )
+  {
+    v.resize( polId+1, True ) ;
+    v[polId] = elem ;
+  }
+  void setTcalId( Vector<uInt> &v, uInt &elem, uInt &polId )
+  {
+    v[polId] = elem ;
+  }
+  void post()
+  {
+    // check if given Tcal and Tsys is effective 
+    Bool isEffective = False ;
+    for ( uInt ipol = 0 ; ipol < lastTcalId.nelements() ; ipol++ ) {
+      if ( effectiveTcal[lastTcalId[ipol]] ) {
+        isEffective = True ;
+        break ;
+      }
+    }
+    if ( !isEffective ) {
+      if ( !(lastTsys->isEffective()) )
+        return ;
+    }
+
+    //cout << " interval: " << (endTime-startTime) << " lastTcalId = " << lastTcalId << endl ;
+    Double midTime = 0.5 * ( startTime + endTime ) ;
+    Double interval = endTime - startTime ;
+    *timeRF = midTime ;
+    *intervalRF = interval ;
+    tcalProcessor->setTcalId( lastTcalId ) ;
+    Array<Float> tcal = tcalProcessor->getTcal() ;
+    tcalRF.define( tcal ) ;
+    tsysRF.define( lastTsys->getTsys() ) ;
+    sctab.addRow( 1, True ) ;
+    scrow.put( rowidx ) ;
+    rowidx++ ;
+  }
+  
+  Bool isUpdated()
+  {
+    Bool ret = False ;
+    ret = anyNE( theTcalId, lastTcalId ) ;
+    if ( !ret ) 
+      ret = anyNE( theTsys->getTsys(), lastTsys->getTsys() ) ;
+    return ret ;
+  }
+
+  Table &sctab;
+  TableRow scrow;
+  uInt rowidx;
+
+  Double startTime,endTime,interval;
+  
+  CountedPtr<BaseTsysHolder> lastTsys,theTsys;
+  Vector<uInt> lastTcalId,theTcalId;
+  CountedPtr<BaseTcalProcessor> tcalProcessor ;
+  Vector<Bool> effectiveTcal;
+
+  RecordFieldPtr<Int> feedIdRF,specWinIdRF;
+  RecordFieldPtr<Double> timeRF,intervalRF;
+  RecordFieldPtr< Array<Float> > tcalRF,tsysRF;
+
+  ROArrayColumn<Float> tsysCol,tcalCol;
+  ROTableColumn tcalIdCol,intervalCol;
 };
 
 MSWriter::MSWriter(CountedPtr<Scantable> stable) 
   : table_(stable),
-    isTcal_(False),
     isWeather_(False),
     tcalSpec_(False),
     tsysSpec_(False),
@@ -1409,6 +1797,9 @@ bool MSWriter::write(const string& filename, const Record& rec)
   if ( isWeather_ ) 
     fillWeather() ;
 
+  // SYSCAL
+  fillSysCal() ;
+
   /***
    * Start iteration using TableVisitor
    ***/
@@ -1423,7 +1814,7 @@ bool MSWriter::write(const string& filename, const Record& rec)
     static const TypeManagerImpl<Double> tmDouble;
     static const TypeManagerImpl<String> tmString;
     static const TypeManager *const tms[] = {
-      &tmString, &tmUInt, &tmUInt, &tmUInt, &tmInt, &tmUInt, &tmDouble, &tmInt, NULL
+      &tmString, &tmUInt, &tmUInt, &tmUInt, &tmInt, &tmUInt, &tmDouble, &tmUInt, NULL
     };
     //double t0 = mathutil::gettimeofday_sec() ;
     MSWriterVisitor myVisitor(table_->table(),*mstable_);
@@ -1439,12 +1830,6 @@ bool MSWriter::write(const string& filename, const Record& rec)
     traverseTable(table_->table(), cols, tms, &myVisitor);
     //double t3 = mathutil::gettimeofday_sec() ;
     //cout << "traverseTable(): elapsed time " << t3-t2 << " sec" << endl ;
-    map< Int,Vector<uInt> > &idRec = myVisitor.getTcalIdRecord() ;
-    map< Int,Vector<uInt> > &rowRec = myVisitor.getTcalRowRecord() ;
-
-    // SYSCAL
-    if ( isTcal_ ) 
-      fillSysCal( idRec, rowRec ) ;
   }
   /***
    * End iteration using TableVisitor
@@ -1517,11 +1902,12 @@ void MSWriter::init()
     polType_ = "notype" ;
 
   // Check if some subtables are exists
+  Bool isTcal = False ;
   if ( table_->tcal().table().nrow() != 0 ) {
     ROTableColumn col( table_->tcal().table(), "TCAL" ) ;
     if ( col.isDefined( 0 ) ) {
       os_ << "TCAL table exists: nrow=" << table_->tcal().table().nrow() << LogIO::POST ;
-      isTcal_ = True ;
+      isTcal = True ;
     }
     else {
       os_ << "No TCAL rows" << LogIO::POST ;
@@ -1545,13 +1931,15 @@ void MSWriter::init()
   }
 
   // Are TCAL_SPECTRUM and TSYS_SPECTRUM necessary?
-  if ( isTcal_ && header_.nchan != 1 ) {
-    // examine TCAL subtable
-    Table tcaltab = table_->tcal().table() ;
-    ROArrayColumn<Float> tcalCol( tcaltab, "TCAL" ) ;
-    for ( uInt irow = 0 ; irow < tcaltab.nrow() ; irow++ ) {
-      if ( tcalCol( irow ).size() != 1 )
-        tcalSpec_ = True ;
+  if ( header_.nchan != 1 ) {
+    if ( isTcal ) {
+      // examine TCAL subtable
+      Table tcaltab = table_->tcal().table() ;
+      ROArrayColumn<Float> tcalCol( tcaltab, "TCAL" ) ;
+      for ( uInt irow = 0 ; irow < tcaltab.nrow() ; irow++ ) {
+        if ( tcalCol( irow ).size() != 1 )
+          tcalSpec_ = True ;
+      }
     }
     // examine spectral data
     TableIterator iter0( table_->table(), "IFNO" ) ;
@@ -1670,14 +2058,15 @@ void MSWriter::setupMS()
   SetupNewTable stateTab( mstable_->stateTableName(), stateDesc, Table::New ) ;
   mstable_->rwKeywordSet().defineTable( MeasurementSet::keywordName( MeasurementSet::STATE ), Table( stateTab ) ) ;
 
-  // TODO: add TCAL_SPECTRUM and TSYS_SPECTRUM if necessary
   TableDesc sysCalDesc = MSSysCal::requiredTableDesc() ;
-  MSSysCal::addColumnToDesc( sysCalDesc, MSSysCalEnums::TCAL, 2 ) ;
-  MSSysCal::addColumnToDesc( sysCalDesc, MSSysCalEnums::TSYS, 2 ) ;
   if ( tcalSpec_ ) 
     MSSysCal::addColumnToDesc( sysCalDesc, MSSysCalEnums::TCAL_SPECTRUM, 2 ) ;
+  else 
+    MSSysCal::addColumnToDesc( sysCalDesc, MSSysCalEnums::TCAL, 1 ) ;
   if ( tsysSpec_ )
     MSSysCal::addColumnToDesc( sysCalDesc, MSSysCalEnums::TSYS_SPECTRUM, 2 ) ;
+  else 
+    MSSysCal::addColumnToDesc( sysCalDesc, MSSysCalEnums::TSYS, 1 ) ;
   SetupNewTable sysCalTab( mstable_->sysCalTableName(), sysCalDesc, Table::New ) ;
   mstable_->rwKeywordSet().defineTable( MeasurementSet::keywordName( MeasurementSet::SYSCAL ), Table( sysCalTab ) ) ;
 
@@ -2034,215 +2423,29 @@ void MSWriter::fillWeather()
 //   os_ << "end MSWriter::fillWeather() endSec=" << endSec << " (" << endSec-startSec << "sec)" << LogIO::POST ;
 }
 
-void MSWriter::fillSysCal( map< Int,Vector<uInt> > &idRec, 
-                           map< Int,Vector<uInt> > &rowRec )
+void MSWriter::fillSysCal() 
 {
-  //double startSec = mathutil::gettimeofday_sec() ;
-  //os_ << "start MSWriter::fillSysCal() startSec=" << startSec << LogIO::POST ;
+  Table mssc = mstable_->sysCal() ;
 
-  //idRec.print( cout ) ;
-
-  // access to MS SYSCAL subtable
-  MSSysCal mssc = mstable_->sysCal() ;
-
-  // access to TCAL subtable
-  Table stt = table_->tcal().table() ;
-  uInt nrow = stt.nrow() ;
-
-  // access to MAIN table
-  Block<String> cols( 6 ) ;
-  cols[0] = "TIME" ;
-  cols[1] = "TCAL_ID" ;
-  cols[2] = "TSYS" ;
-  cols[3] = "BEAMNO" ;
-  cols[4] = "IFNO" ;
-  cols[5] = "INTERVAL" ;
-  Table tab = table_->table().project( cols ) ;
-
-  if ( nrow == 0 ) 
-    return ;
-
-  //nrow = idRec.nfields() ;
-  nrow = idRec.size() ;
-
-  Double midTime ;
-  Double interval ;
-  String timeStr ;
-
-  // row base
-  TableRow row( mssc ) ;
-  TableRecord &trec = row.record() ;
-  RecordFieldPtr<Int> antennaRF( trec, "ANTENNA_ID" ) ;
-  RecordFieldPtr<Int> feedRF( trec, "FEED_ID" ) ;
-  RecordFieldPtr<Int> spwRF( trec, "SPECTRAL_WINDOW_ID" ) ;
-  RecordFieldPtr<Double> timeRF( trec, "TIME" ) ;
-  RecordFieldPtr<Double> intervalRF( trec, "INTERVAL" ) ;
-  RecordFieldPtr< Array<Float> > tsysRF( trec, "TSYS" ) ;
-  RecordFieldPtr< Array<Float> > tcalRF( trec, "TCAL" ) ;
-  RecordFieldPtr< Array<Float> > tsysspRF ;
-  RecordFieldPtr< Array<Float> > tcalspRF ;
-  if ( tsysSpec_ )
-    tsysspRF.attachToRecord( trec, "TSYS_SPECTRUM" ) ;
-  if ( tcalSpec_ )
-    tcalspRF.attachToRecord( trec, "TCAL_SPECTRUM" ) ;
-
-  // ANTENNA_ID is always 0
-  *antennaRF = 0 ;
-
-  Table sortedstt = stt.sort( "ID" ) ;
-  ROArrayColumn<Float> tcalCol( sortedstt, "TCAL" ) ;
-  ROTableColumn idCol( sortedstt, "ID" ) ;
-  ROArrayColumn<Float> tsysCol( tab, "TSYS" ) ;
-  ROTableColumn tcalidCol( tab, "TCAL_ID" ) ;
-  ROTableColumn timeCol( tab, "TIME" ) ;
-  ROTableColumn intervalCol( tab, "INTERVAL" ) ;
-  ROTableColumn beamnoCol( tab, "BEAMNO" ) ;
-  ROTableColumn ifnoCol( tab, "IFNO" ) ;
-  map< Int,Vector<uInt> >::iterator itr0 = idRec.begin() ;
-  map< Int,Vector<uInt> >::iterator itr1 = rowRec.begin() ;
-  for ( uInt irow = 0 ; irow < nrow ; irow++ ) {
-//     double t1 = mathutil::gettimeofday_sec() ;
-    Vector<uInt> ids = itr0->second ;
-    itr0++ ;
-//     os_ << "ids = " << ids << LogIO::POST ;
-    uInt npol = ids.size() ;
-    Vector<uInt> rows = itr1->second ;
-    itr1++ ;
-//     os_ << "rows = " << rows << LogIO::POST ;
-    Vector<Double> atime( rows.nelements() ) ;
-    Vector<Double> ainterval( rows.nelements() ) ;
-    Vector<uInt> atcalid( rows.nelements() ) ;
-    for( uInt jrow = 0 ; jrow < rows.nelements() ; jrow++ ) {
-      atime[jrow] = (Double)timeCol.asdouble( rows[jrow] ) ;
-      ainterval[jrow] = (Double)intervalCol.asdouble( rows[jrow] ) ;
-      atcalid[jrow] = tcalidCol.asuInt( rows[jrow] ) ;
-    }
-    Vector<Float> dummy = tsysCol( rows[0] ) ;
-    Matrix<Float> tsys( npol,dummy.nelements() ) ;
-    tsys.row( 0 ) = dummy ;
-    for ( uInt jrow = 1 ; jrow < npol ; jrow++ )
-      tsys.row( jrow ) = tsysCol( rows[jrow] ) ;
-
-    // FEED_ID
-    *feedRF = beamnoCol.asuInt( rows[0] ) ;
-
-    // SPECTRAL_WINDOW_ID
-    *spwRF = ifnoCol.asuInt( rows[0] ) ;
-
-    // TIME and INTERVAL
-    getValidTimeRange( midTime, interval, atime, ainterval ) ;
-    *timeRF = midTime ;
-    *intervalRF = interval ;
-
-    // TCAL and TSYS
-    Matrix<Float> tcal ;
-    Table t ;
-    if ( idCol.asuInt( ids[0] ) == ids[0] ) {
-//       os_ << "sorted at irow=" << irow << " ids[0]=" << ids[0] << LogIO::POST ;
-      Vector<Float> dummyC = tcalCol( ids[0] ) ;
-      tcal.resize( npol, dummyC.size() ) ;
-      tcal.row( 0 ) = dummyC ;
-    }
-    else {
-//       os_ << "NOT sorted at irow=" << irow << " ids[0]=" << ids[0] << LogIO::POST ;
-      t = stt( stt.col("ID") == ids[0], 1 ) ;
-      Vector<Float> dummyC = tcalCol( 0 ) ;
-      tcal.resize( npol, dummyC.size(), True ) ;
-      tcal.row( 0 ) = dummyC ;
-    }
-    if ( npol == 2 ) {
-      if ( idCol.asuInt( ids[1] ) == ids[1] ) {
-//         os_ << "sorted at irow=" << irow << " ids[1]=" << ids[1] << LogIO::POST ;
-        tcal.row( 1 ) = tcalCol( ids[1] ) ;
-      }
-      else {
-//         os_ << "NOT sorted at irow=" << irow << " ids[1]=" << ids[1] << LogIO::POST ;
-        t = stt( stt.col("ID") == ids[1], 1 ) ;
-        tcalCol.attach( t, "TCAL" ) ;
-        tcal.row( 1 ) = tcalCol( 0 ) ;
-      }
-    }
-    else if ( npol == 3 ) {
-      if ( idCol.asuInt( ids[2] ) == ids[2] )
-        tcal.row( 1 ) = tcalCol( ids[2] ) ;
-      else {
-        t = stt( stt.col("ID") == ids[2], 1 ) ;
-        tcalCol.attach( t, "TCAL" ) ;
-        tcal.row( 1 ) = tcalCol( 0 ) ;
-      }
-      if ( idCol.asuInt( ids[1] ) == ids[1] )
-        tcal.row( 2 ) = tcalCol( ids[1] ) ;
-      else {
-        t = stt( stt.col("ID") == ids[1], 1 ) ;
-        tcalCol.attach( t, "TCAL" ) ;
-        tcal.row( 2 ) = tcalCol( 0 ) ;
-      }
-    }
-    else if ( npol == 4 ) {
-      if ( idCol.asuInt( ids[2] ) == ids[2] )
-        tcal.row( 1 ) = tcalCol( ids[2] ) ;
-      else {
-        t = stt( stt.col("ID") == ids[2], 1 ) ;
-        tcalCol.attach( t, "TCAL" ) ;
-        tcal.row( 1 ) = tcalCol( 0 ) ;
-      }
-      if ( idCol.asuInt( ids[3] ) == ids[3] )
-        tcal.row( 2 ) = tcalCol( ids[3] ) ;
-      else {
-        t = stt( stt.col("ID") == ids[3], 1 ) ;
-        tcalCol.attach( t, "TCAL" ) ;
-        tcal.row( 2 ) = tcalCol( 0 ) ;
-      }
-      if ( idCol.asuInt( ids[1] ) == ids[1] )
-        tcal.row( 2 ) = tcalCol( ids[1] ) ;
-      else {
-        t = stt( stt.col("ID") == ids[1], 1 ) ;
-        tcalCol.attach( t, "TCAL" ) ;
-        tcal.row( 3 ) = tcalCol( 0 ) ;
-      }
-    }
-    if ( tcalSpec_ ) {
-      // put TCAL_SPECTRUM 
-      tcalspRF.define( tcal ) ;
-      // set TCAL (mean of TCAL_SPECTRUM)
-      Matrix<Float> tcalMean( npol, 1 ) ;
-      for ( uInt iid = 0 ; iid < npol ; iid++ ) {
-        tcalMean( iid, 0 ) = mean( tcal.row(iid) ) ;
-      }
-      // put TCAL
-      tcalRF.define( tcalMean ) ;
-    }
-    else {
-      // put TCAL
-      tcalRF.define( tcal ) ;
-    }
-    
-    if ( tsysSpec_ ) {
-      // put TSYS_SPECTRUM
-      tsysspRF.define( tsys ) ;
-      // set TSYS (mean of TSYS_SPECTRUM)
-      Matrix<Float> tsysMean( npol, 1 ) ;
-      for ( uInt iid = 0 ; iid < npol ; iid++ ) {
-        tsysMean( iid, 0 ) = mean( tsys.row(iid) ) ;
-      }
-      // put TSYS
-      tsysRF.define( tsysMean ) ;
-    }
-    else {
-      // put TSYS
-      tsysRF.define( tsys ) ;
-    }
-
-    // add row 
-    mssc.addRow( 1, True ) ;
-    row.put( mssc.nrow()-1 ) ;
-
-//     double t2 = mathutil::gettimeofday_sec() ;
-//     os_ << irow << "th loop elapsed time = " << t2-t1 << "sec" << LogIO::POST ;
+  {
+    static const char *cols[] = {
+      "BEAMNO", "IFNO", "TIME", "POLNO",
+      NULL
+    };
+    static const TypeManagerImpl<uInt> tmUInt;
+    static const TypeManagerImpl<Double> tmDouble;
+    static const TypeManager *const tms[] = {
+      &tmUInt, &tmUInt, &tmDouble, &tmUInt, NULL
+    };
+    //double t0 = mathutil::gettimeofday_sec() ;
+    MSSysCalVisitor myVisitor(table_->table(),mssc);
+    //double t1 = mathutil::gettimeofday_sec() ;
+    //cout << "MSWriterVisitor(): elapsed time " << t1-t0 << " sec" << endl ;
+    traverseTable(table_->table(), cols, tms, &myVisitor);
+    //double t3 = mathutil::gettimeofday_sec() ;
+    //cout << "traverseTable(): elapsed time " << t3-t2 << " sec" << endl ;
   }
-  
-  //double endSec = mathutil::gettimeofday_sec() ;
-  //os_ << "end MSWriter::fillSysCal() endSec=" << endSec << " (" << endSec-startSec << "sec)" << LogIO::POST ;
+ 
 }
 
 void MSWriter::getValidTimeRange( Double &me, Double &interval, Table &tab ) 

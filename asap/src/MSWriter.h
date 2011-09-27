@@ -83,22 +83,17 @@ private:
   void fillProcessor() ;
   void fillSource() ;
   void fillWeather() ;
-  void fillSysCal( std::map< casa::Int,casa::Vector<casa::uInt> > &idrec, 
-                   std::map< casa::Int,casa::Vector<casa::uInt> > &rowrec ) ;
+  void fillSysCal() ;
 
   // utility
   void getValidTimeRange( casa::Double &me, casa::Double &interval, casa::Table &tab ) ;
   void getValidTimeRange( casa::Double &me, casa::Double &interval, casa::Vector<casa::Double> &atime, casa::Vector<casa::Double> &ainterval ) ;
   void antennaProperty( casa::String &name, casa::String &mount, casa::String &type, casa::Double &diameter ) ;
 
-  // tool for HPC
-//   double gettimeofday_sec() ;
-
   casa::CountedPtr<Scantable> table_ ;
   STHeader header_ ;
   casa::MeasurementSet *mstable_ ;
 
-  casa::Bool isTcal_ ;
   casa::Bool isWeather_ ;
 
   casa::Bool useFloatData_ ;
