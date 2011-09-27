@@ -765,10 +765,8 @@ print ""
 print "--split--"
 print ""
 print " We are done with the calibrator data so we use split to select"
-print " source data only (field '0').  Moreover, split's default is to"
-print " move data in the 'corrected' datacolumn to the regular data"
-print " column.  This frees up the 'corrected' datacolumn for the output"
-print " of uvcontsub (which we will be running next)"
+print " source data only (field '0').  split will also move the"
+print " CORRECTED_DATA column to the DATA column."
 print ""
 
 default('split')
@@ -821,6 +819,8 @@ uvcontsub()
 if benchmarking:
     uvcontsub2time=time.time()
 
+uvcontsubfile = splitfile + '.contsub'
+
 #=====================================================================
 # IMAGING
 # make dirty image of channel 32
@@ -841,7 +841,7 @@ default('clean')
 
 outdirty = prefix + '.dirty'
 
-vis       = splitfile
+vis       = uvcontsubfile
 imagename = outdirty
 field     = '0'
 spw       = '0'
@@ -921,7 +921,7 @@ default('clean')
 
 outname = prefix + '.final.clean'
 
-vis       = splitfile
+vis       = uvcontsubfile
 imagename = outname
 field     = '0'
 spw       = '0'
