@@ -336,7 +336,7 @@ void AMueller::applyCal(VisBuffer& vb, Cube<Complex>& Vout,
   }
 }
 
-void AMueller::corrupt(VisBuffer& vb, Bool avoidACs)
+void AMueller::corrupt(VisBuffer& vb, Bool /* avoidACs */)
 {
   LogIO os(LogOrigin("AMueller", "corrupt()", WHERE));
 

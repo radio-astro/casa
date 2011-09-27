@@ -106,8 +106,9 @@ public:
   virtual Bool normalizable() {return False;};
 
   // Specialize corrupt to pre-zero model for corruption
-  using VisMueller::corrupt;
+  //using VisMueller::corrupt;
   virtual void corrupt(VisBuffer& vb, Bool avoidACs);
+  //virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs);
 
   // Set (repeatedly, unfortunately) whether or not subtraction is being done,
   // and IF fitorder == 0, sync matrices for current meta data (VisMueller
