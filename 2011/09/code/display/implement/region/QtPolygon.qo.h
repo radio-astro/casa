@@ -95,7 +95,7 @@ namespace casa {
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
 
 	    protected:
-		Region::StatisticsList *generate_statistics_list( ) { return Polygon::generate_statistics_list( ); }
+		RegionInfo::image_stats_list_t *generate_image_statistics( ) { return Polygon::generate_image_statistics( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const 

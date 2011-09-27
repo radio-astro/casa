@@ -179,6 +179,8 @@ scans        -- processes the scans requested in this parameter (default is
 
                 By default all the scans are considered. 
 
+overwrite    -- Over write an existing MS
+
 verbose      -- produce log output as asdm2MS is being run
 
 EVLA-specific parameters:
@@ -213,6 +215,9 @@ shadow       -- create flags for antennas that are shadowed
  
 applyflags   -- apply the online and specified flags to the MS
                 (default: False)
+
+switchedpower -- The SysPower and CalDevice tables are processed if and only if this parameter
+		 is set to true, enabling support for switched-power gain and tsys corrections.
 
 flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions (default: True)
 

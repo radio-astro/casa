@@ -97,7 +97,8 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/RegionShapes/QtSingleRegionShape.ui
   implement/region/QtRegionDock.ui
   implement/region/QtRegionState.ui
-  implement/region/QtRegionStats.ui
+  implement/region/QtImageRegionStats.ui
+  implement/region/QtMsRegionStats.ui
   )
 
 casa_qt4_add_resources( outfiles_qrc implement/QtAutoGui/QtAutoGui.qrc OPTIONS -name QtAutoGui )

@@ -1,4 +1,4 @@
-//# ellipse.h: base class for statistical regions
+//# RegionInfo.h: union class for the various types of region information
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -26,46 +26,41 @@
 //# $Id$
 
 
-#ifndef REGION_ELLIPSE_H_
-#define REGION_ELLIPSE_H_
+#ifndef REGION_REGIONINFO_H_
+#define REGION_REGIONINFO_H_
 
-#include <display/region/Rectangle.h>
-#include <casa/BasicSL/String.h>
-#include <casadbus/types/ptr.h>
+#include <display/region/Region.h>
 #include <list>
+#include <string>
+
 
 namespace casa {
 
-    class PanelDisplay;
-    class AnnRegion;
-
     namespace viewer {
 
-	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
-	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
-	// this means that coordinate transformation is required each time the region is drawn.
-	class Ellipse : public Rectangle {
+	class RegionInfo {
 	    public:
-		~Ellipse( );
-		Ellipse( WorldCanvas *wc, double x1, double y1, double x2, double y2) :
-		    Rectangle( wc, x1, y1, x2, y2 ) { }
 
-		// returns mouse movement state
-		int mouseMovement( double x, double y, bool other_selected );
+		enum RegionInfoTypes { MsRegionInfo, ImageRegionInfo };
 
-		AnnRegion *annotation( ) const;
+		typedef ImageStatistics<Float>::stat_list image_stats_t;
+		typedef std::list<std::pair<String,memory::cptr<image_stats_t> > > image_stats_list_t;
 
-	    protected:
+		typedef std::list<std::pair<String,String> > ms_stats_t;
+		typedef std::list<memory::cptr<ms_stats_t> > ms_stats_list_t;
 
-		RegionInfo::image_stats_list_t *generate_image_statistics( );
-
-		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
-						   std::vector<std::pair<double,double> > &world_pts ) const;
-
-		void drawRegion( bool );
-		/* void drawHandles( ); */
-
+		RegionInfo( ms_stats_list_t *msi ) : ms_info_(msi), type_(MsRegionInfo) { }
+		RegionInfo( image_stats_list_t *isi ) : image_info_(isi), type_(ImageRegionInfo) { }
+		RegionInfo( const RegionInfo &other ) : ms_info_(other.ms_info_), image_info_(other.image_info_), type_( other.type_) { }
+		memory::cptr<ms_stats_list_t> msInfo( ) const { return ms_info_; }
+		memory::cptr<image_stats_list_t> imageInfo( ) const { return image_info_; }
+		RegionInfoTypes type( ) const { return type_; }
+	    private:
+		RegionInfoTypes type_;
+		memory::cptr<ms_stats_list_t> ms_info_;
+		memory::cptr<image_stats_list_t> image_info_;
 	};
+
     }
 }
 

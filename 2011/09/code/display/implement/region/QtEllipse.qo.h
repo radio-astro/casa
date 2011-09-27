@@ -97,7 +97,7 @@ namespace casa {
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
 	    protected:
-		Region::StatisticsList *generate_statistics_list( ) { return Ellipse::generate_statistics_list( ); }
+		RegionInfo::image_stats_list_t *generate_image_statistics( ) { return Ellipse::generate_image_statistics( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 

@@ -38,6 +38,7 @@ namespace casa {
 
     class PanelDisplay;
     class AnnRegion;
+    class MSAsRaster;
 
     namespace viewer {
 
@@ -69,7 +70,8 @@ namespace casa {
 		AnnRegion *annotation( ) const;
 
 	    protected:
-		StatisticsList *generate_statistics_list( );
+		RegionInfo get_ms_stats( MSAsRaster *msar );
+		RegionInfo::image_stats_list_t *generate_image_statistics( );
 
 		// in "linear" coordinates...
 		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
