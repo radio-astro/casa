@@ -19,6 +19,37 @@ Features tested:
   3. Solar system (Uranus) flux density calibration.
 '''
 
+def get_last_history_line(vis, origin='setjy::imager::setjy()', nback=0):
+    """
+    Finding the right history line is a bit tricky...it helps to filter
+    by origin and read from the back to remain unaffected by changes
+    elsewhere.
+
+    Returns 'JUNK' on failure.
+    """
+    retline = ''
+    try:
+        tb.open(vis + '/HISTORY')
+        st = tb.query('ORIGIN == "%s"' % origin, columns='MESSAGE')
+        retline = st.getcell('MESSAGE', st.nrows() - 1 - nback)
+        st.close()
+        tb.close()
+    except Exception:
+        retline = 'JUNK'
+    return retline
+
+def check_history(histline, items):
+    isok = True
+    for item in items:
+        if item not in histline:
+            isok = False
+            break
+    if not isok:
+        errmsg = "%s not found in %s.\n" % (items, histline)
+        errmsg += "It could be that a change to HISTORY caused the wrong line to be selected."
+        raise AssertionError, errmsg
+    return isok
+
 class CheckAfterImportuvfits(unittest.TestCase):
     """
     Base class for unit test suites that want to convert a UVFITS file to an MS
@@ -116,9 +147,7 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
                                            async=False)
-            tb.open(self.inpms + '/HISTORY')
-            record['history'] = tb.getcell('MESSAGE', tb.nrows() - 2)
-            tb.close()
+            record['history'] = get_last_history_line(self.inpms)
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
                                             complex_value='amp',
@@ -142,18 +171,18 @@ class setjy_test_modimage(CheckAfterImportuvfits):
         """Flux density in HISTORY (standard)?"""
         # Don't bother checking it without scaling - it won't be there and isn't
         # interesting.
-        self.assertTrue("Scaling spw 1's model image to I =" in
-                        self.records[True]['history'])
+        check_history(self.records[True]['history'],
+                      ["Scaling spw 1's model image to I ="])
             
     def test_history_fluxdensity(self):
         """Flux density in HISTORY (fluxdensity)?"""
-        self.assertTrue("Scaling spw 1's model image to I =" in
-                        self.records['fluxdens']['history'])
+        check_history(self.records['fluxdens']['history'],
+                      ["Scaling spw 1's model image to I ="])
             
     def test_history_spix(self):
         """Flux density in HISTORY (spix)?"""
-        self.assertTrue("Scaling spw 1's model image to I =" in
-                        self.records['spix']['history'])
+        check_history(self.records['spix']['history'],
+                      ["Scaling spw 1's model image to I ="])
             
 
     def test_no_scaling(self):
@@ -228,6 +257,7 @@ class Uranus(SplitChecker):
             if 'MODEL_DATA' not in cols:
                 raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
         except AssertionError, e:
+            tb.close()
             raise e
         else:
             record['wvr'] = tb.getcell('MODEL_DATA', 0)
@@ -237,17 +267,13 @@ class Uranus(SplitChecker):
             record['med4'] = tb.getcell('MODEL_DATA', 4)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
             tb.close()
-            tb.open(self.inpms + '/HISTORY')
-            record['history'] = tb.getcell('MESSAGE', tb.nrows() - 3)
-        finally:
-            tb.close()
+            record['history'] = get_last_history_line(self.inpms)
         self.__class__.records[corrsel] = record
         return sjran
 
     def test_history_Uranus(self):
         """Flux density in HISTORY (Uranus)?"""
-        self.assertTrue(("Uranus" in self.records['']['history']) and
-                        ("V=0] Jy" in self.records['']['history']))
+        check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
 
     def test_wvr(self):
         """WVR spw"""
@@ -316,6 +342,7 @@ class ScaleUranusByChan(SplitChecker):
             if 'MODEL_DATA' not in cols:
                 raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
         except AssertionError, e:
+            tb.close()
             raise e
         else:
             record['wvr'] = tb.getcell('MODEL_DATA', 0)
@@ -324,17 +351,13 @@ class ScaleUranusByChan(SplitChecker):
             record['auto4'] = tb.getcell('MODEL_DATA', 2)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
             tb.close()
-            tb.open(self.inpms + '/HISTORY')
-            record['history'] = tb.getcell('MESSAGE', tb.nrows() - 3)
-        finally:
-            tb.close()
+            record['history'] = get_last_history_line(self.inpms)
         self.__class__.records[corrsel] = record
         return sjran
 
     def test_history_scalebychan(self):
         """Flux density in HISTORY (scalebychan)?"""
-        self.assertTrue(("Uranus" in self.records['']['history']) and
-                        ("V=0] Jy" in self.records['']['history']))
+        check_history(self.records['']['history'], ["Uranus", "V=0] Jy"])
 
     def test_wvr(self):
         """WVR spw with scalebychan"""
