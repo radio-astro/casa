@@ -70,7 +70,7 @@ void MWCRulerlineTool::keyPressed(const WCPositionEvent &ev) {
 
   // check for equal units
   if (unitNames.size()>1){
-	  if (!unitNames(0).compare(unitNames(1)))
+	  if (!unitNames(0).compare(unitNames(1)) && unitNames(0).size()>0)
 		  itsEqualUnits=True;
 	  else
 		  itsEqualUnits=False;
