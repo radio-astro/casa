@@ -574,6 +574,10 @@ mosaic simulation task:
          of the sky model, only to relabel them with different frequencies
          That kind of regridding can be accomplished with the CASA toolkit.
     -------------------------------
+    complist -- component list model of the sky, added to or instead of skymodel
+    compwidth -- bandwidth of components; if simulating from components only, 
+         this defines the bandwidth of the MS and output images
+    -------------------------------
     setpointings -- calculate a map of pointings, or if false, provide ptgfile
        * if graphics selected, display the pointings shown on the model image
     ptgfile -- a text file specifying directions in the same 
@@ -611,8 +615,8 @@ mosaic simulation task:
          compwidth, the desired bandwidth - 
          there is not currently a way to specify the spectrum of a component, 
          so simulations from a componentlist only will be continuum (1 chan)
-    refdate -- central time of simulated observation eg: '2012/05/21/22:05:00'
-       * NOTE: observations are currently centered at the nearest transit *
+    refdate -- date of simulated observation eg: '2012/05/21'
+    hourangle -- hour angle of observation e.g. '-3h'
     totaltime --- total time of observation e.g '7200s' or if an number without
          units, interpreted as the number of times to repeat the map
     antennalist -- ascii file containing antenna positions.
@@ -675,6 +679,7 @@ mosaic simulation task:
     tau0 -- zenith opacity at observing frequency [for tsys-manual]
        * see casaguides.nrao.edu for more information on noise, 
          in particular how to add a phase screen using the toolkit
+    seed -- random number seed for noise generation
     -------------------------------
     leakage -- add cross polarization corruption of this fractional magnitude
     -------------------------------
@@ -700,12 +705,18 @@ mosaic simulation task:
     threshold -- flux level to stop cleaning
     weighting -- weighting to apply to visibilities
        options: 'natural','uniform','briggs' (robust=0.5)
+    mask -- Specification of cleanbox(es), mask image(s), primary beam
+       coverage level, and/or region(s) to be used for CLEANing.
+       CLEAN tends to perform better, and is less likely to diverge, if 
+       the CLEAN component placement is limited by a mask to where real 
+       emission is expected to be.  e.g. pixel ranges mask=[110,110,150,145],
+       filename of mask image mask='myimage.mask', or a file with mask 
+       regions --  see help for the clean task.
     outertaper -- apply additional uv outer taper of visibilities
     stokes -- Stokes parameters to image; 'I','IV','IQU','IQUV'
     -------------------------------
     analyze -- compute and display difference between model and output, 
          fidelity, etc. 
-       * it is recommended to have graphics turned on for this subtask
     showarray -- like plotants (ignored in single dish simulation)
     showuv -- display uv coverage
     showpsf -- display synthesized (dirty) beam (ignored in single dish simulation)
@@ -718,6 +729,9 @@ mosaic simulation task:
     showfidelity -- display fidelity image
          fidelity = input/max( abs(input-output), 0.7*rms(output) )
 
+    graphics -- view plots on the screen, saved to file, both, or neither
+    verbose -- print extra information to the logger and terminal
+    overwrite -- overwrite existing files in the project subdirectory
     
     Note that the RMS is calculated in the lower quarter of the image.  
          This is likely not the best choice, so you are encouraged to 
