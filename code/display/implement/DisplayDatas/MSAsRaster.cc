@@ -4183,7 +4183,7 @@ String MSAsRaster::showPosition(const Vector<Double> &world,
   return String(os);
 }
 
-bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vector<Double> &world,
+bool MSAsRaster::showPosition( viewer::RegionInfo::stats_t &stat_list, const Vector<Double> &world,
 			       const Bool& displayAxesOnly ) {
     // for position tracking--formatted data value at given coordinate.
     // #dk (Still to do: convert this to use of MSpos_. Also, add MSpos_
@@ -4249,17 +4249,17 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
     if(validt) {
 	MVTime mtm(time_[pt]/C::day);		// (convert seconds to days)
 	if(mtm.year()<1000 || mtm.year()>=10000) {
-	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("time","invalid"));
+	    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("time","invalid"));
 	    validt=False;  // (Y10K bug :-)
 	} else {
 	    String tstr = mtm.string(MVTime::YMD);
 	    String time_val = tstr.substr(8,2) + "-" + mtm.monthName() + "-" + tstr.substr(0,4) + " " + tstr.substr(11,8);
-	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("time",time_val));
+	    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("time",time_val));
 	}
     }
 
 
-    stat_list.push_back(viewer::Region::ms_stats_t::value_type("time index",avgPos(axisName_[TIME],pt+uiBase())));
+    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("time index",avgPos(axisName_[TIME],pt+uiBase())));
 		// (see def of DisplayData::uiBase() for explanation...).
 
     char buf[1024];
@@ -4269,7 +4269,7 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
 	// 	// tab to position 33 in the line.
 	// 	// (_such_ a pain compared to FORTRAN formatting: "T33"....)
 	sprintf( buf, "%d", scan_[pt] );
-	stat_list.push_back(viewer::Region::ms_stats_t::value_type("scan",buf));
+	stat_list.push_back(viewer::RegionInfo::stats_t::value_type("scan",buf));
 		// (scan #s always reported as set in MS).
     }
 
@@ -4279,7 +4279,7 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
 
     if ( validt ) {
 	sprintf( buf, "%s (%d)", fieldName_[pt].c_str( ), field_[pt]+uiBase() );
-	stat_list.push_back(viewer::Region::ms_stats_t::value_type("field",buf));
+	stat_list.push_back(viewer::RegionInfo::stats_t::value_type("field",buf));
     }
 
     // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -4295,7 +4295,7 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
 	  
 	    sprintf( ptr, "%d", pb+uiBase() ); ptr += strlen(ptr);
 	    if ( ! validb ) sprintf( ptr, " (invalid)" );
-	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("feed", buf));
+	    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("feed", buf));
 
 	} else {
 
@@ -4324,7 +4324,7 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
 	    }
 	   
 	    sprintf( ptr, " (b %s)", avgPos(axisName_[BASELN],pb+uiBase()).c_str( ) ); ptr += strlen(ptr);
-	    stat_list.push_back(viewer::Region::ms_stats_t::value_type("baseline",buf));
+	    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("baseline",buf));
 	}
     }
 
@@ -4351,9 +4351,9 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
 
     if ( ! valids || ! validc ) sprintf( buf, "(invalid)" );
 
-    stat_list.push_back(viewer::Region::ms_stats_t::value_type("sp win",buf));
+    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("sp win",buf));
 
-    stat_list.push_back(viewer::Region::ms_stats_t::value_type("channel",avgPos(axisName_[CHAN],pc+uiBase())));
+    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("channel",avgPos(axisName_[CHAN],pc+uiBase())));
 
 
     // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -4368,7 +4368,7 @@ bool MSAsRaster::showPosition( viewer::Region::ms_stats_t &stat_list, const Vect
 
     pol_val = pol_val + " (cor " + avgPos(axisName_[POL],pp+uiBase()) + ")";
 
-    stat_list.push_back(viewer::Region::ms_stats_t::value_type("polarization",pol_val));
+    stat_list.push_back(viewer::RegionInfo::stats_t::value_type("polarization",pol_val));
 
     return true;
 }

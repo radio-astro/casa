@@ -127,7 +127,7 @@ namespace casa {
 	}
 #endif
 
-	void QtRegionState::updateStatistics( RegionInfo::image_stats_list_t *stats ) {
+	void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	    if ( stats == 0 || stats->size() == 0 ) return;
 
 	    while ( stats->size() < statistics_group->count() ) {
@@ -153,11 +153,11 @@ namespace casa {
 	    int num = statistics_group->count( );
 	    QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 	    if ( first == 0 ) throw internal_error( );
-	    RegionInfo::image_stats_list_t::iterator stat_iter = stats->begin();
-	    if ( stat_iter->second.isNull( ) ) {
+	    std::list<RegionInfo>::iterator stat_iter = stats->begin();
+	    if ( stat_iter->list( ).isNull( ) ) {
 		fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
 	    } else {
-		first->updateStatistics(stat_iter->first,*stat_iter->second);
+		first->updateStatistics(*stat_iter);
 	    }
 	    if ( num < 2 ) return;
 
@@ -166,10 +166,10 @@ namespace casa {
 	    for ( int i=1; i < statistics_group->count() && ++stat_iter != stats->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( stat_iter->second.isNull( ) ) {
+		if ( stat_iter->list( ).isNull( ) ) {
 		    fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
 		} else {
-		    cur->updateStatistics(stat_iter->first,*stat_iter->second);
+		    cur->updateStatistics(*stat_iter);
 		}
 		prev->setNext( statistics_group, cur );
 		prev = cur;

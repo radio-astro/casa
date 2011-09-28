@@ -70,8 +70,8 @@ namespace casa {
 		AnnRegion *annotation( ) const;
 
 	    protected:
-		RegionInfo get_ms_stats( MSAsRaster *msar );
-		RegionInfo::image_stats_list_t *generate_image_statistics( );
+		RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
+		std::list<RegionInfo> *generate_dds_statistics( );
 
 		// in "linear" coordinates...
 		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
