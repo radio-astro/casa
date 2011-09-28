@@ -126,6 +126,11 @@ FlagAgentBase::initialize()
    observationSelection_p = String("");
    scanIntentSelection_p = String("");
 
+   // Clear up indexes
+   rowsIndex_p.clear();
+   channelIndex_p.clear();
+   polarizationIndex_p.clear();
+
    // Initialize filters
    filterChannels_p = false;
    filterRows_p = false;
@@ -148,8 +153,13 @@ FlagAgentBase::initialize()
    antennaNegation_p = false;
    /// Flag/Unflag config
    writePrivateFlagCube_p = false;
-   applyFlag_p = NULL;
+   applyFlag_p = &FlagAgentBase::applyCommonFlags;
    flag_p = true;
+   /// Mapping config
+   dataColumn_p = "data";
+   expression_p = "abs";
+   applyVisExpr_p = &FlagAgentBase::abs;
+   dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
 
@@ -158,66 +168,11 @@ FlagAgentBase::initialize()
    return;
 }
 
-void *
-FlagAgentBase::run ()
+FlagAgentBase *
+FlagAgentBase::create (Record config)
 {
-	while (!terminationRequested_p)
-	{
-		if (processing_p)
-		{
-			runCore();
-
-			// Disable processing to enter in idle mode
-			processing_p = false;
-		}
-		else
-		{
-			sched_yield();
-		}
-	}
-
-	threadTerminated_p = true;
-
-	return NULL;
-}
-
-void
-FlagAgentBase::runCore()
-{
-	// Set pointer to common flag cube
-	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
-
-	// Generate indexes applying data selection filters
-	generateAllIndex();
-
-	if (!checkIfProcessBuffer())
-	{
-		// Disable processing to enter in idle mode
-		processing_p = false;
-	}
-	else
-	{
-		// Set pointer to private flag cube
-		if (writePrivateFlagCube_p)
-		{
-			if (privateFlagCube_p) delete privateFlagCube_p;
-			privateFlagCube_p = new Cube<Bool>(commonFlagCube_p->shape(),!flag_p);
-		}
-
-		// Iterate trough (time,freq) maps per antenna pair
-		if (antennaMap_p)
-		{
-			generateAntennaPairMap();
-			iterateMaps();
-		}
-		// Iterate trough rows (i.e. timesteps)
-		else
-		{
-			iterateRows();
-		}
-	}
-
-	return;
+	FlagAgentBase *ret = NULL;
+	return ret;
 }
 
 void
@@ -278,6 +233,68 @@ FlagAgentBase::completeProcess()
 		while (processing_p)
 		{
 			sched_yield();
+		}
+	}
+
+	return;
+}
+
+void *
+FlagAgentBase::run ()
+{
+	while (!terminationRequested_p)
+	{
+		if (processing_p)
+		{
+			runCore();
+
+			// Disable processing to enter in idle mode
+			processing_p = false;
+		}
+		else
+		{
+			sched_yield();
+		}
+	}
+
+	threadTerminated_p = true;
+
+	return NULL;
+}
+
+void
+FlagAgentBase::runCore()
+{
+	// Set pointer to common flag cube
+	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
+
+	// Generate indexes applying data selection filters
+	generateAllIndex();
+
+	if (!checkIfProcessBuffer())
+	{
+		// Disable processing to enter in idle mode
+		processing_p = false;
+	}
+	else
+	{
+		// Set pointer to private flag cube
+		if (writePrivateFlagCube_p)
+		{
+			if (privateFlagCube_p) delete privateFlagCube_p;
+			privateFlagCube_p = new Cube<Bool>(commonFlagCube_p->shape(),!flag_p);
+		}
+
+		// Iterate trough (time,freq) maps per antenna pair
+		if (antennaMap_p)
+		{
+			generateAntennaPairMap();
+			iterateMaps();
+		}
+		// Iterate trough rows (i.e. timesteps)
+		else
+		{
+			iterateRows();
 		}
 	}
 
@@ -477,9 +494,9 @@ FlagAgentBase::setDataSelection(Record config)
 	exists = config.fieldNumber ("intent");
 	if (exists >= 0)
 	{
-		config.get (config.fieldNumber ("intent"), observationSelection_p);
+		config.get (config.fieldNumber ("intent"), scanIntentSelection_p);
 
-		parser.setPolnExpr(observationSelection_p);
+		parser.setPolnExpr(scanIntentSelection_p);
 		parser.toTableExprNode(selectedMeasurementSet_p);
 		scanIntentList_p=parser.getStateObsModeList();
 		filterRows_p=true;
@@ -498,7 +515,86 @@ FlagAgentBase::setDataSelection(Record config)
 void
 FlagAgentBase::setAgentParameters(Record config)
 {
-	// TODO: This class must be re-implemented in the derived classes
+	// NOTE: This class must be re-implemented in the derived classes for
+	// the specific parameters although here we handle the common ones
+
+	int exists;
+
+	exists = config.fieldNumber ("expression");
+	if (exists >= 0)
+	{
+		expression_p = config.asString("expression");
+	}
+
+	// Check if expression is one of the supported operators
+	if (expression_p.compare("real") == 0)
+	{
+		applyVisExpr_p = &FlagAgentBase::real;
+	}
+	else if (expression_p.compare("imag") == 0)
+	{
+		applyVisExpr_p = &FlagAgentBase::imag;
+	}
+	else if (expression_p.compare("arg") == 0)
+	{
+		applyVisExpr_p = &FlagAgentBase::arg;
+	}
+	else if (expression_p.compare("abs") == 0)
+	{
+		applyVisExpr_p = &FlagAgentBase::abs;
+	}
+	else if (expression_p.compare("norm") == 0)
+	{
+		applyVisExpr_p = &FlagAgentBase::norm;
+	}
+	else
+	{
+		*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ <<
+				" Unsupported mapping expression: " <<
+				expression_p << ", selecting abs by default. Supported expressions: real,imag,arg,abs,norm." << LogIO::POST;
+		expression_p = "abs";
+		applyVisExpr_p = &FlagAgentBase::abs;
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " visibility expression is " << expression_p << LogIO::POST;
+
+	exists = config.fieldNumber ("datacolumn");
+	if (exists >= 0)
+	{
+		dataColumn_p = config.asString("datacolumn");
+	}
+
+	// Check if dataColumn_p is one of the supported columns (or residues)
+	if (dataColumn_p.compare("data") == 0)
+	{
+		dataReference_p = DATA;
+	}
+	else if (dataColumn_p.compare("corrected") == 0)
+	{
+		dataReference_p = CORRECTED;
+	}
+	else if (dataColumn_p.compare("model") == 0)
+	{
+		dataReference_p = MODEL;
+	}
+	else if (dataColumn_p.compare("residual") == 0)
+	{
+		dataReference_p = RESIDUAL;
+	}
+	else if (dataColumn_p.compare("residual_data") == 0)
+	{
+		dataReference_p = RESIDUAL_DATA;
+	}
+	else
+	{
+		*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ <<
+				" Unsupported data column: " <<
+				expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
+		dataColumn_p = "data";
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
+
 	return;
 }
 
@@ -808,7 +904,7 @@ FlagAgentBase::generateAntennaPairMap()
 			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)].push_back(*rowIter);
 		}
 	}
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
 
 	STOPCLOCK
 	return;
@@ -833,7 +929,7 @@ FlagAgentBase::iterateMaps()
 		commonFlagsView_p = getCommonFlagsView(antennaPair.first,antennaPair.second);
 
 		// Some logging info
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " Processing [pol,freq,time] data cube for baseline ("
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " Processing [pol,freq,time] data cube for baseline ("
 				<< antennaPair.first << "," << antennaPair.second << ") with shape " << commonFlagsView_p->shape() << LogIO::POST;
 
 		// Create CubeView for private flags
@@ -843,7 +939,7 @@ FlagAgentBase::iterateMaps()
 		visCubeView = getVisibilitiesView(antennaPair.first,antennaPair.second);
 
 		// Flag map
-		flagMap(antennaPair.first,antennaPair.second,visCubeView);
+		flagMap(antennaPair.first,antennaPair.second,*visCubeView);
 
 		// Clean up Cube Views
 		delete visCubeView;
@@ -859,7 +955,7 @@ CubeView<Bool> *
 FlagAgentBase::getCommonFlagsView(Int antenna1, Int antenna2)
 {
 	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
-	CubeView<Bool> *cube= new CubeView<Bool>(commonFlagCube_p,rows);
+	CubeView<Bool> *cube= new CubeView<Bool>(commonFlagCube_p,rows,&channelIndex_p,&polarizationIndex_p);
 	return cube;
 }
 
@@ -867,7 +963,7 @@ CubeView<Bool> *
 FlagAgentBase::getPrivateFlagsView(Int antenna1, Int antenna2)
 {
 	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
-	CubeView<Bool> *cube= new CubeView<Bool>(privateFlagCube_p,rows);
+	CubeView<Bool> *cube= new CubeView<Bool>(privateFlagCube_p,rows,&channelIndex_p,&polarizationIndex_p);
 	return cube;
 }
 
@@ -875,14 +971,76 @@ CubeView<Complex> *
 FlagAgentBase::getVisibilitiesView(Int antenna1, Int antenna2)
 {
 	std::vector<uInt> *rows = &((*antennaPairMap_p)[std::make_pair(antenna1,antenna2)]);
-	CubeView<Complex> *cube= new CubeView<Complex>(&(visibilityBuffer_p->get()->visCube()),rows);
+	Cube<Complex> *visCube = NULL;
+	switch (dataReference_p)
+	{
+		case DATA:
+		{
+			visCube = &(visibilityBuffer_p->get()->visCube());
+			break;
+		}
+		case CORRECTED:
+		{
+			visCube = &(visibilityBuffer_p->get()->correctedVisCube());
+			break;
+		}
+		case MODEL:
+		{
+			visCube = &(visibilityBuffer_p->get()->modelVisCube());
+			break;
+		}
+		case RESIDUAL:
+		{
+			visCube = &(visibilityBuffer_p->get()->correctedVisCube());
+			visCubeDiff(visCube,&(visibilityBuffer_p->get()->correctedVisCube()));
+			break;
+		}
+		case RESIDUAL_DATA:
+		{
+			visCube = &(visibilityBuffer_p->get()->visCube());
+			visCubeDiff(visCube,&(visibilityBuffer_p->get()->correctedVisCube()));
+			break;
+		}
+		default:
+		{
+			visCube = &(visibilityBuffer_p->get()->visCube());
+			break;
+		}
+	}
+
+	CubeView<Complex> *cube= new CubeView<Complex>(visCube,rows,&channelIndex_p,&polarizationIndex_p);
 	return cube;
 }
 
 void
-FlagAgentBase::flagMap(Int antenna1,Int antenna2,CubeView<Complex> *visibilities)
+FlagAgentBase::visCubeDiff(Cube<Complex> *leftOperand, Cube<Complex> *rightOperand)
 {
-	IPosition flagCubeShape = visibilities->shape();
+	STARTCLOCK
+
+	vector<uInt>::iterator rowIter;
+	vector<uInt>::iterator channellIter;
+	vector<uInt>::iterator polarizationIter;
+	Complex vis;
+
+	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
+	{
+		for (channellIter = channelIndex_p.begin();channellIter != channelIndex_p.end();channellIter++)
+		{
+			for (polarizationIter = polarizationIndex_p.begin();polarizationIter != polarizationIndex_p.end();polarizationIter++)
+			{
+				leftOperand->operator()(*polarizationIter,*channellIter,*rowIter) -= rightOperand->operator()(*polarizationIter,*channellIter,*rowIter);
+			}
+		}
+	}
+
+	STOPCLOCK
+	return;
+}
+
+void
+FlagAgentBase::flagMap(Int antenna1,Int antenna2,CubeView<Complex> &visibilities)
+{
+	IPosition flagCubeShape = visibilities.shape();
 	uInt nPolarizations,nChannels,nRows;
 	nPolarizations = flagCubeShape(0);
 	nChannels = flagCubeShape(1);
@@ -935,7 +1093,8 @@ FlagAgentBase::applyPrivateFlagsView(uInt row, uInt channel, uInt pol)
 	return;
 }
 
-void FlagAgentBase::applyFlag(uInt row, uInt channel, uInt pol)
+void
+FlagAgentBase::applyFlag(uInt row, uInt channel, uInt pol)
 {
 	(*this.*applyFlag_p)(row,channel,pol);
 }
@@ -955,11 +1114,10 @@ FlagAgentBase::checkFlags(uInt row, uInt channel, uInt pol)
 	return;
 }
 
-FlagAgentBase *
-FlagAgentBase::create (Record config)
+Float
+FlagAgentBase::applyVisExpr(const Complex &val)
 {
-	FlagAgentBase *ret = NULL;
-	return ret;
+	return (*this.*applyVisExpr_p)(val);
 }
 
 ////////////////////////////////////
@@ -985,30 +1143,28 @@ void FlagAgentList::push_back(FlagAgentBase *agent_i)
 void FlagAgentList::pop_back()
 {
 	container_p.pop_back();
-
 	return;
 }
 
-void FlagAgentList::clear(){
-
+void FlagAgentList::clear()
+{
 	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
 		delete (*iterator_p);
 	}
 	container_p.clear();
-
 	return;
 }
 
-bool FlagAgentList::empty(){
+bool FlagAgentList::empty()
+{
 
 	return container_p.empty();
 }
 
-size_t FlagAgentList::size(){
-
+size_t FlagAgentList::size()
+{
 	return container_p.size();
-
 }
 
 void FlagAgentList::start()

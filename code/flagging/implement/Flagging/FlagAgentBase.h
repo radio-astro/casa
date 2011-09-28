@@ -33,33 +33,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 class FlagAgentBase : public casa::async::Thread {
 
-	enum mode {
+	enum datacolumn {
 
-		FLAG_DATA_HANDLER_UNMAPPED=0,
-		FLAG_DATA_HANDLER_UNMAPPED_PRIVATE_FLAGS,
-		FLAG_DATA_HANDLER_MAP_SUB_INTEGRATIONS,
-		FLAG_DATA_HANDLER_MAP_SUB_INTEGRATIONS_PRIVATE_FLAGS,
-		FLAG_DATA_HANDLER_MAP_ANTENNA_PAIRS,
-		FLAG_DATA_HANDLER_MAP_ANTENNA_PAIRS_PRIVATE_FLAGS,
-		VISIBILITY_BUFFER,
-		VISIBILITY_BUFFER_PRIVATE_FLAGS,
-		UNDEFINED
+		DATA=0,
+		CORRECTED,
+		MODEL,
+		RESIDUAL,
+		RESIDUAL_DATA
 	};
 
 
 public:
 
 	FlagAgentBase(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool antennaMap = false, Bool flag = true);
-
 	~FlagAgentBase ();
+	static FlagAgentBase *create (Record config);
 
 	void start();
 	void terminate ();
 	void queueProcess();
 	void completeProcess();
 	void * run ();
-
-    static FlagAgentBase *create (Record config);
 
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
@@ -112,7 +106,7 @@ protected:
 	void iterateMaps();
 
 	// Compute flags for a given (time,freq) map
-	virtual void flagMap(Int antenna1,Int antenna2,CubeView<Complex> *visibilities);
+	virtual void flagMap(Int antenna1,Int antenna2,CubeView<Complex> &visibilities);
 
 	// Mapping functions as requested by Urvashi
 	CubeView<Bool> * getCommonFlagsView(Int antenna1, Int antenna2);
@@ -137,6 +131,21 @@ protected:
 	// Check flags is a test function to check that the flags are set where they should
 	void checkFlags(uInt row, uInt channel, uInt pol);
 
+	// Wrappers for the complex unitary operators
+	Float real(const Complex &val) {return val.real();}
+	Float imag(const Complex &val) {return val.imag();}
+	Float abs(const Complex &val) {return std::abs(val);}
+	Float arg(const Complex &val) {return std::arg(val);}
+	Float norm(const Complex &val) {return std::norm(val);}
+
+	// Wrapper to avoid complexity of calling a function pointer
+	Float applyVisExpr(const Complex &val);
+
+	// Utility function to make the difference between two columns
+	void visCubeDiff(Cube<Complex> *leftOperand, Cube<Complex> *rightOperand);
+
+	// Logger
+	casa::LogIO *logger_p;
 
 private:
 	
@@ -195,15 +204,16 @@ private:
 
 	// Configuration
 	void (casa::FlagAgentBase::*applyFlag_p)(uInt,uInt,uInt);
+	Float (casa::FlagAgentBase::*applyVisExpr_p)(const Complex &);
+	uShort dataReference_p;
+	string expression_p;
+	string dataColumn_p;
 	Bool writePrivateFlagCube_p;
 	Bool parallel_processing_p;
 	Bool antennaNegation_p;
 	Bool antennaMap_p;
 	Bool profiling_p;
 	Bool flag_p;
-
-	// Logger
-	casa::LogIO *logger_p;
 };
 
 class FlagAgentList
@@ -218,7 +228,6 @@ class FlagAgentList
 		void clear();
 		bool empty();
 		size_t size();
-
 
 		// Methods to mimic FlagAgentBase
 		void start();
