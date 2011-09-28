@@ -448,7 +448,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
      <param type="bool" name="allowchunk" subparam="false">
-      <description>Whether allowing to divide the big image cube by channel chunks </description>
+      <description>Divide large image cubes into channel chunks for deconvolution </description>
        <value>False</value>
      </param>
 <!--========================================================= -->
@@ -1233,6 +1233,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        calready -- if True will create scratch columns if they are 
                not there. And after clean completes the predicted model 
                visibility is from the clean components are written to the ms.
+
+       allowchunk -- Partition the image cube by channel-chunks.
+               default=False;  
+                  False: Major cycle grids all channels.  Minor cycle steps 
+                            through all channels before the next major cycle.
+                  True:  Major and minor cycles are performed one chunk
+                            at a time, and output images cubes are concatenated.
        async -- Run asynchronously 
   	       default = False; do not run asychronously
 
