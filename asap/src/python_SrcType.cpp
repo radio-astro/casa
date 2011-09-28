@@ -68,6 +68,9 @@ namespace asap {
         .value( "fhihot", SrcType::FHIHOT )
         .value( "fhiwarm", SrcType::FHIWARM )
         .value( "fhicold", SrcType::FHICOLD )
+        .value( "sig", SrcType::SIG )
+        .value( "ref", SrcType::REF )
+        .value( "cal", SrcType::CAL )
         .value( "notype", SrcType::NOTYPE )
         ;
 
