@@ -1324,6 +1324,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
 		 (b)  Use a box-file to set masks.
+                      *** Deprecated: will be not supported in future releases.
+                       
 		      This option allows mask-setting for only specified
                       fields. 
 	           
