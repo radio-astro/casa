@@ -70,7 +70,7 @@ void MWCRulerlineTool::keyPressed(const WCPositionEvent &ev) {
 
   // check for equal units
   if (unitNames.size()>1){
-	  if (!unitNames(0).compare(unitNames(1)))
+	  if (!unitNames(0).compare(unitNames(1)) && unitNames(0).size()>0)
 		  itsEqualUnits=True;
 	  else
 		  itsEqualUnits=False;
@@ -96,8 +96,8 @@ void MWCRulerlineTool::draw(const WCRefreshEvent &) {
   PixelCanvas *pCanvas = itsCurrentWC->pixelCanvas();
   if(!pCanvas) return;
 
-  Vector<Double> world1(2), world2(2), world3(2);
-  Vector<Double> pix1(2),   pix2(2),   pix3(2);
+  Vector<Double> world1(2), world2(2);
+  Vector<Double> pix1(2),   pix2(2);
   Vector<Double> diff(2);
   Double allDiff;
   String unit("");
@@ -120,11 +120,40 @@ void MWCRulerlineTool::draw(const WCRefreshEvent &) {
   	  return;
   }
 
-  // get the corner point in world-
-  // and pixel-coordinates
+  // pixToWorld sometimes seems to add a dimension
+  Vector<Double> world3(world2.size(), 0.0);
+  Vector<Double>   pix3(world2.size(), 0.0);
+
+  // get the corner point in world-coordinates
   world3(0) = world1(0);
   world3(1) = world2(1);
-  itsCurrentWC->worldToPix(pix3, world3);
+  for (Int index=2; index<world2.size(); index++)
+	  world3(index) = world2(index);
+
+  // get the corner point in pixel-coordinates
+  if (!itsCurrentWC->worldToPix(pix3, world3)){
+
+	  // if one the third positions could
+	  // NOT be determined, just draw a line between
+	  // the start and end point
+	  pCanvas->setColor(drawColor());
+	  pCanvas->setDrawFunction(Display::DFCopy);
+ 	  pCanvas->setLineWidth(2);
+  	  pCanvas->drawLine(itsX1, itsY1, itsX2, itsY2);
+  	  return;
+  }
+
+  if (fabs(pix3(0))>10000.0 || fabs(pix3(1))>10000.0){
+	  // if one the third positions could
+	  // NOT be determined, just draw a line between
+	  // the start and end point
+	  pCanvas->setColor(drawColor());
+	  pCanvas->setDrawFunction(Display::DFCopy);
+ 	  pCanvas->setLineWidth(2);
+  	  pCanvas->drawLine(itsX1, itsY1, itsX2, itsY2);
+  	  return;
+  }
+
   itsX3=Int(pix3(0)+0.5);
   itsY3=Int(pix3(1)+0.5);
 

@@ -8,7 +8,8 @@ debug = False
 def flagdata(vis = None,
              flagbackup = None,
              mode = None,
-             spw = None, field = None,
+             spw = None, 
+             field = None,
              selectdata = None,
              antenna = None,
              uvrange = None,
@@ -16,26 +17,35 @@ def flagdata(vis = None,
              correlation = None,
              scan = None,
              intent = None,
-             feed = None, array = None,
+             feed = None, 
+             array = None,
              observation = None,
-             clipexpr = None, clipminmax = None,
-             clipcolumn = None, clipoutside = None, channelavg = None,
-             quackinterval = None, quackmode = None, quackincrement = None,
+             clipexpr = None, 
+             clipminmax = None,
+             clipcolumn = None, 
+             clipoutside = None, 
+             channelavg = None,
+             quackinterval = None, 
+             quackmode = None, 
+             quackincrement = None,
              autocorr = None,
-             unflag = None, algorithm = None,
-             column = None, expr = None,
-             thr = None, window = None,
+             unflag = None, 
+#             algorithm = None,
+#             column = None, 
+#             expr = None,
+#             thr = None, 
+#             window = None,
              diameter = None,
-             time_amp_cutoff = None,
-             freq_amp_cutoff = None,
-             freqlinefit = None,
-             auto_cross = None,
-             num_time = None,
-             start_chan = None,
-             end_chan = None,
-             bs_cutoff = None,
-             ant_cutoff = None,
-             flag_level = None,
+#             time_amp_cutoff = None,
+#             freq_amp_cutoff = None,
+#             freqlinefit = None,
+#             auto_cross = None,
+#             num_time = None,
+#             start_chan = None,
+#             end_chan = None,
+#             bs_cutoff = None,
+#             ant_cutoff = None,
+#             flag_level = None,
              minrel = None,
              maxrel = None,
              minabs = None,
@@ -122,103 +132,112 @@ def flagdata(vis = None,
                         if flagbackup:
                                 backup_flags(fglocal, mode)
                         fglocal.run()
-                elif ( mode == 'autoflag' ):
-                        fglocal.setdata(field = field, \
-                                   spw = spw, \
-                                   array = array, \
-                                   feed = feed, \
-                                   scan = scan, \
-                                   intent = intent, \
-                                   baseline = antenna, \
-                                   uvrange = uvrange, \
-                                   time = timerange, \
-                                   correlation = correlation,
-                                   observation=str(observation))
-                        rec = fglocal.getautoflagparams(algorithm=algorithm)
-                        rec['expr'] = expr
-                        rec['thr'] = thr
-                        #rec['rowthr'] = rowthr;
-                        rec['hw'] = window
-                        #rec['rowhw'] = rowhw;
-                        #if( algorithm == 'uvbin' ):
-                        #     rec['nbins'] = nbins;
-                        #     rec['minpop'] = minpop;
-                        rec['column'] = column
-                        fglocal.setautoflag(algorithm = algorithm,
-                                       parameters = rec)
                         
-                        if flagbackup:
-                                backup_flags(fglocal, mode)
-                        fglocal.run()
+#                elif ( mode == 'autoflag' ):
+#                        casalog.post("autoflag mode is no longer supported. Please use the task testautoflag to access these capabilities.", "WARN")
+#                        fglocal.done()
+#                        return
 
-                elif mode == 'rfi':
-                        fglocal.setdata(field = field, \
-                                   spw = spw, \
-                                   array = array, \
-                                   feed = feed, \
-                                   scan = scan, \
-                                   intent = intent, \
-                                   baseline = antenna, \
-                                   uvrange = uvrange, \
-                                   time = timerange, \
-                                   correlation = correlation,
-                                   observation=str(observation))
+#                        fglocal.setdata(field = field, \
+#                                   spw = spw, \
+#                                   array = array, \
+#                                   feed = feed, \
+#                                   scan = scan, \
+#                                   intent = intent, \
+#                                   baseline = antenna, \
+#                                   uvrange = uvrange, \
+#                                   time = timerange, \
+#                                   correlation = correlation,
+#                                   observation=str(observation))
+#                        rec = fglocal.getautoflagparams(algorithm=algorithm)
+#                        rec['expr'] = expr
+#                        rec['thr'] = thr
+#                        #rec['rowthr'] = rowthr;
+#                        rec['hw'] = window
+#                        #rec['rowhw'] = rowhw;
+#                        #if( algorithm == 'uvbin' ):
+#                        #     rec['nbins'] = nbins;
+#                        #     rec['minpop'] = minpop;
+#                        rec['column'] = column
+#                        fglocal.setautoflag(algorithm = algorithm,
+#                                       parameters = rec)
+#                        
+#                        if flagbackup:
+#                                backup_flags(fglocal, mode)
+#                        fglocal.run()
+
+#                elif mode == 'rfi':
+#                        casalog.post("RFI mode is no longer supported. Please use the task testautoflag to access these capabilities.", "WARN")
+#                        fglocal.done()
+#                        return
+
+#                        fglocal.setdata(field = field, \
+#                                   spw = spw, \
+#                                   array = array, \
+#                                   feed = feed, \
+#                                   scan = scan, \
+#                                   intent = intent, \
+#                                   baseline = antenna, \
+#                                   uvrange = uvrange, \
+#                                   time = timerange, \
+#                                   correlation = correlation,
+#                                   observation=str(observation))
 
                         # Get the detault parameters for a particular algorithm,
                         # then modify them
                         
-                        par = fglocal.getautoflagparams(algorithm='tfcrop')
-                        #print "par =", par
-                        
-                        ## True : Show plots of each time-freq chunk.
-                        ## Needs 'gnuplot'
-                        ## Needs "ds9 &" running in the background (before starting casapy)
-                        ## Needs xpaset, xpaget, etc.. accessible in the path (for ds9)
-                        par['showplots']=False
-			## jmlarsen: Do not show plots. There's no way for the user to interrupt
-			## a lengthy sequence of plots (CAS-1655)
-                        
-                        ## channel range (1 based)
-                        par['start_chan']=start_chan 
-                        par['end_chan']=end_chan
-                        
-                        ## number of time-steps in each chunk
-                        par['num_time']=num_time
-
-                        ## flag on cross-correlations and auto-correlations. (0 : only autocorrelations)
-                        par['auto_cross']= auto_cross   
-                        
-                        ## Flag Level :
-                        ## 0: flag only what is found. 
-                        ## 1: extend flags one timestep before and after
-                        ## 2: 1 and extend flags one channel before/after.
-                        par['flag_level']=flag_level
-
-                        ## data expression on which to flag.
-                        par['expr']=clipexpr
-
-                        ## data column to use.
-                        par['column']=clipcolumn
-
-                        ## False : Fit the bandpass with a piecewise polynomial
-                        ## True : Fit the bandpass with a straight line.
-                        par['freqlinefit']=freqlinefit
-
-                        ## Flagging thresholds ( N sigma ), where 'sigma' is the stdev of the "fit".
-                        #par['freq_amp_cutoff']=3
-                        #par['time_amp_cutoff']=4
-                        par['freq_amp_cutoff']=freq_amp_cutoff
-                        par['time_amp_cutoff']=time_amp_cutoff
-                        
-                        # Tell the 'fg' tool which algorithm to use, and set the parameters.
-                        # Note : Can set multiple instances of this (will be done one after the other)
-                        #
-                        fglocal.setautoflag(algorithm='tfcrop', parameters=par)
-
-                        if flagbackup:
-                                backup_flags(fglocal, mode)
-
-                        fglocal.run()
+#                        par = fglocal.getautoflagparams(algorithm='tfcrop')
+#                        #print "par =", par
+#                        
+#                        ## True : Show plots of each time-freq chunk.
+#                        ## Needs 'gnuplot'
+#                        ## Needs "ds9 &" running in the background (before starting casapy)
+#                        ## Needs xpaset, xpaget, etc.. accessible in the path (for ds9)
+#                        par['showplots']=False
+#			## jmlarsen: Do not show plots. There's no way for the user to interrupt
+#			## a lengthy sequence of plots (CAS-1655)
+#                        
+#                        ## channel range (1 based)
+#                        par['start_chan']=start_chan 
+#                        par['end_chan']=end_chan
+#                        
+#                        ## number of time-steps in each chunk
+#                        par['num_time']=num_time
+#
+#                        ## flag on cross-correlations and auto-correlations. (0 : only autocorrelations)
+#                        par['auto_cross']= auto_cross   
+#                        
+#                        ## Flag Level :
+#                        ## 0: flag only what is found. 
+#                        ## 1: extend flags one timestep before and after
+#                        ## 2: 1 and extend flags one channel before/after.
+#                        par['flag_level']=flag_level
+#
+#                        ## data expression on which to flag.
+#                        par['expr']=clipexpr
+#
+#                        ## data column to use.
+#                        par['column']=clipcolumn
+#
+#                        ## False : Fit the bandpass with a piecewise polynomial
+#                        ## True : Fit the bandpass with a straight line.
+#                        par['freqlinefit']=freqlinefit
+#
+#                        ## Flagging thresholds ( N sigma ), where 'sigma' is the stdev of the "fit".
+#                        #par['freq_amp_cutoff']=3
+#                        #par['time_amp_cutoff']=4
+#                        par['freq_amp_cutoff']=freq_amp_cutoff
+#                        par['time_amp_cutoff']=time_amp_cutoff
+#                        
+#                        # Tell the 'fg' tool which algorithm to use, and set the parameters.
+#                        # Note : Can set multiple instances of this (will be done one after the other)
+#                        #
+#                        fglocal.setautoflag(algorithm='tfcrop', parameters=par)
+#
+#                        if flagbackup:
+#                                backup_flags(fglocal, mode)
+#
+#                        fglocal.run()
 
                 elif ( mode == 'summary' ):
                         fglocal.setdata()

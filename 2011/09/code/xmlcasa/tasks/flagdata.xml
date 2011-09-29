@@ -36,15 +36,13 @@
 
 
                 <param type="string" name="mode">
-                        <description>Mode (manualflag,shadow,quack,summary,autoflag,rfi)</description>
+                        <description>Mode (manualflag,shadow,quack,summary)</description>
                         <value>manualflag</value>
                         <allowed kind="enum">
                         <value>manualflag</value>
-                        <value>autoflag</value>
                         <value>summary</value>
                         <value>quack</value>
                         <value>shadow</value>
-                        <value>rfi</value>
                         </allowed>
                 </param>
 
@@ -184,85 +182,9 @@
                         <value type="bool">False</value>
                 </param>
 
-                <param type="string" name="algorithm" subparam="true">
-                        <description>Autoflag algorithm (timemed,freqmed)</description>
-                        <value>timemed</value>
-                        <allowed kind="enum">
-                        <value>timemed</value>
-                        <value>freqmed</value>
-                        </allowed>
-                </param>
-
-                <param type="string" name="column" subparam="true">
-                        <description>Data column to operate on.</description>
-                        <value>DATA</value>
-                        <!-- <allowed kind="enum">
-                        <value>DATA</value>
-                        <value>CORRECTED</value>
-                        <value>MODEL</value>
-                        </allowed> -->
-                </param>
-
-                <param type="string" name="expr" subparam="true">
-                        <description>Expression to flag on</description>
-                        <value>ABS RR</value>
-                </param>
-
-                <param type="double" name="thr" subparam="true">
-                        <description>Flagging threshold (n sigma)</description>
-                        <value>5.0</value>
-                </param>
-
-                <param type="int" name="window" subparam="true">
-                        <description>Sliding median filter width</description>
-                        <value>10</value>
-                </param>
-
                 <param type="double" name="diameter" subparam="true">
                         <description>Effective diameter (m) to use. -1 ==>antenna diameter</description>
                         <value>-1.0</value>
-                </param>
-
-                <param type="double" name="time_amp_cutoff" subparam="true">
-                        <description>Flagging thresholds in units of sigma, where sigma is the stdev of the "fit"</description>
-                        <value>4.0</value>
-                </param>
-                <param type="double" name="freq_amp_cutoff" subparam="true">
-                        <description>Flagging thresholds in units of sigma, where sigma is the stdev of the "fit"</description>
-                        <value>3.0</value>
-                </param>
-                <param type="bool" name="freqlinefit" subparam="true">
-                        <description>Fit the bandpass with a straight line (True), or fit the bandpass with a piecewise polynomial (False)</description>
-                        <value>False</value>
-                </param>
-                <param type="int" name="auto_cross" subparam="true">
-                        <description>flag on cross-correlations and auto-correlations (0 : only autocorrelations)</description>
-                        <value>1</value>
-                </param>
-                <param type="int" name="num_time" subparam="true">
-                        <description>number of time-steps in each chunk</description>
-                        <value>400</value>
-                </param>
-                <param type="int" name="start_chan" subparam="true">
-                        <description>channel range start (1 based)</description>
-                        <value>1</value>
-                </param>
-                <param type="int" name="end_chan" subparam="true">
-                        <description>channel range end (1 based)</description>
-                        <value>2048</value>
-                </param>
-                <param type="double" name="bs_cutoff" subparam="true">
-                        <description>baseline tolerance</description>
-                        <value>0.0</value>
-                </param>
-                <param type="double" name="ant_cutoff" subparam="true">
-                        <description>total autocorrelation amplitude threshold for a functional antenna</description>
-                        <value>0.0</value>
-                </param>
-
-                <param type="int" name="flag_level" subparam="true">
-                        <description>0: flag only what is found. 1: extend flags one timestep before and after. 2: extend flags one timestep and channel before/after</description>
-                        <value>1</value>
                 </param>
 
                 <param type="double" name="minrel" subparam="true">
@@ -293,13 +215,6 @@
                                         <default param="clipoutside"><value type="bool">True</value></default>
                                         <default param="channelavg"><value type="bool">False</value></default>
                                 </equals>
-                                <equals value="autoflag">
-                                        <default param="algorithm"><value type="string">timemed</value></default>
-                                        <default param="column"><value type="string">DATA</value></default>
-                                        <default param="expr"><value type="string">ABS RR</value></default>
-                                        <default param="thr"><value type="double">5.0</value></default>
-                                        <default param="window"><value type="int">10</value></default>
-                                </equals>
                                 <equals value="quack">
                                         <default param="autocorr"><value type="bool">False</value></default>
                                         <default param="unflag"><value type="bool">False</value></default>
@@ -315,20 +230,6 @@
                                 </equals>
                                 <equals value="shadow">
                                         <default param="diameter"><value type="double">-1.0</value></default>
-                                </equals>
-                                <equals value="rfi">
-                                        <default param="clipcolumn"><value type="string">DATA</value></default>
-                                        <default param="clipexpr"><value type="string">ABS RR</value></default>
-                                        <default param="time_amp_cutoff"><value type="double">4.0</value></default>
-                                        <default param="freq_amp_cutoff"><value type="double">3.0</value></default>
-                                        <default param="freqlinefit"><value type="bool">False</value></default>
-                                        <default param="auto_cross"><value type="int">1</value></default>
-                                        <default param="num_time"><value type="int">400</value></default>
-                                        <default param="start_chan"><value type="int">1</value></default>
-                                        <default param="end_chan"><value type="int">2048</value></default>
-                                        <default param="bs_cutoff"><value type="double">0.0</value></default>
-                                        <default param="ant_cutoff"><value type="double">0.0</value></default>
-                                        <default param="flag_level"><value type="int">1</value></default>
                                 </equals>
                         </when>
                         <when param="selectdata">
@@ -356,8 +257,8 @@
             summary    = report the amount of flagged data
             quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
-            rfi        = Radio Frequency Interference auto-flagging
-            autoflag   = experimental auto-flagging outliers
+            
+            NOTE: Please use testautoflag for RFI detection and autoflagging.
 
         Unflagging is also available with options manualflag and quack.
 
@@ -477,51 +378,7 @@
 
            would report only antennas/baselines/... with more than 80% flagged
            data and at the same time less than or equal to 3000 flagged values.
-
-        autoflag: Automatic flagging of outliers (Experimental)
-           One-dimensional sliding-window median filters along time or frequency.
-	   NOTE : These methods are still in development.
-
-	   algorithm -- autoflag algorithm name
-                default: 'timemed'
-                options: 'timemed','freqmed'
-           column -- the column on which to operate (DATA, CORRECTED, MODEL)
-           expr -- expression to use for flagging option
-                default: 'ABS RR'; example: expr='RE XX'
-                Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                     'I','XX','YY','RR','LL'
-           thr -- flagging threshold as a multiple of standard-deviation ( n sigma )
-           window -- half width for sliding window median filters.  The size should be
-                  about the number of integration in a scan, or the number of
-                  spectral channels.
-
-        rfi: RFI automatic flagging of outliers.
-        	This algorithm identifies and flags outliers on the 
-		two-dimensional time-frequency plane for all selected 
-		baselines. The number of timesteps and frequency channels 
-		for each 2D chunk of the time-frequency plane is 
-		specified by the user. 
-		
-		The following steps are performed for each chunk :
-		-- For all channels, a robust straight-line fit along 
-		   the time-axis (a 'robust fit' is a few iterations of 
-		   line-fits and outlier flagging, until the fit stabilizes).
-		-- Average the chunk across time to get a 'mean bandpass'.
-		-- A robust piece-wise polynomial fit across frequency. 
-		-- Use this 'fitted bandpass' to identify and flag outliers
-		   for each timestep in the chunk. 
-		-- Optionally apply heuristics to grow flags based on 
-		   neighbouring points on the time-frequency plane.
-
-		NOTE : This method is still in development.
-   
-
-           clipcolumn -- the column on which to operate (DATA, CORRECTED, MODEL)
-           clipexpr -- expression to use for flagging option
-                default: 'ABS RR'; example: expr='RE XX'
-                Options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                     'I','XX','YY','RR','LL'
-
+ 
         selectdata -- Other data selection parameters
                 default: True
         antenna -- Select data based on baseline

@@ -28,7 +28,7 @@
      <x>0</x>
      <y>0</y>
      <width>481</width>
-     <height>191</height>
+     <height>210</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -50,7 +50,7 @@
        <x>0</x>
        <y>0</y>
        <width>451</width>
-       <height>181</height>
+       <height>201</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
@@ -844,11 +844,17 @@
     <widget class="QStackedWidget" name="statistics_group">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>-5</x>
        <y>0</y>
-       <width>451</width>
-       <height>181</height>
+       <width>458</width>
+       <height>193</height>
       </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>455</width>
+       <height>0</height>
+      </size>
      </property>
      <property name="currentIndex">
       <number>-1</number>
@@ -865,7 +871,7 @@
        <x>0</x>
        <y>0</y>
        <width>451</width>
-       <height>181</height>
+       <height>201</height>
       </rect>
      </property>
      <widget class="QWidget" name="tab_2">

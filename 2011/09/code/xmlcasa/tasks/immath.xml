@@ -189,7 +189,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           value is empty as well.
               expr        (for mode='evalexpr') A LEL expression with images.
 	                      Image file names are specified in the imagenames paramter, and
-                          the variables IM0, IM1, ... are used to represent these files
+                          the variables IM0, IM1, ... (or optionally via the varnames parameter, see below)
+                          are used to represent these files
                           in the expression. Explicit notations of file names in the 
                           expression are also supported, in which cases the file names must
                           be enclosed in double quotes (") and imagename is ignored.
@@ -208,6 +209,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                           Note: No exponentiaion available?
                           Build an image pixel by pixel from the minimum of (image2.im, 2*image1.im)
                           expr='min(IM1,2*max(IM0))'
+               varnames   For mode="evalexpr". Instead of the default variable names IM0, IM1, ..., use
+                          the names in this array to represent the input images.
     outfile    The output image. Overwriting an existing outfile is not permitted.
 	           Default: immath_results.im;  Example: outfile='results.im'
     mask       Mask to apply. Also see polithresh.
