@@ -4987,11 +4987,11 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
             
           // Log flux density found for this field and spectral window
           os.output().width(12);
-          os << fieldName << "  rawspwid=";
+          os << fieldName << " spw ";
           os.output().width(3);
           os << rawspwid << "  ";
           os.output().width(0);
-          os.output().precision(4);
+          os.output().precision(5);
           os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
           os << "Q=" << fluxUsed(1) << ", ";
           os << "U=" << fluxUsed(2) << ", ";

@@ -201,7 +201,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
     try:
         if nterms > 1:
-            print '***WARNING: Multi-term MFS imaging algorithm is new and under active development and testing.  Use it on a shared risk basis.'
             qat=qatool.create();
             try:
                 rff=qat.canonical(reffreq);

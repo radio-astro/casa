@@ -68,40 +68,50 @@ template<class T> class CubeView
 
 public:
 
-	CubeView(Cube<T> *parentCube, std::vector<uInt> *rows = NULL)
+	CubeView(Cube<T> *parentCube, std::vector<uInt> *rows = NULL, std::vector<uInt> *channels = NULL, std::vector<uInt> *polarizations = NULL)
 	{
 		parentCube_p = parentCube;
+		IPosition baseCubeShape = parentCube_p->shape();
+		reducedLength_p = IPosition(3);
+
+		if ((polarizations != NULL) and (polarizations->size() > 0))
+		{
+			polarizations_p = polarizations;
+		}
+		else
+		{
+			polarizations_p = createIndex(baseCubeShape(0));
+		}
+
+		if ((channels != NULL) and (channels->size() > 0))
+		{
+			channels_p = channels;
+		}
+		else
+		{
+			channels_p = createIndex(baseCubeShape(1));
+		}
 
 		if ((rows != NULL) and (rows->size() > 0))
 		{
 			rows_p = rows;
-			IPosition baseCubeShape = parentCube_p->shape();
-			reducedLength_p = IPosition(3);
-			reducedLength_p(0) = baseCubeShape(0);
-			reducedLength_p(1) = baseCubeShape(1);
-			reducedLength_p(2) = rows_p->size();
 		}
 		else
 		{
-			IPosition baseCubeShape = parentCube_p->shape();
-			reducedLength_p = IPosition(3);
-			reducedLength_p(0) = baseCubeShape(0);
-			reducedLength_p(1) = baseCubeShape(1);
-			reducedLength_p(2) = baseCubeShape(2);
-
-			rows_p = new vector<uInt>(reducedLength_p(2));
-			rows_p->clear();
-			for (Int i=0; i<reducedLength_p(2); i++ )
-			{
-				rows_p->push_back(i);
-			}
+			rows_p = createIndex(baseCubeShape(2));
 		}
+
+		reducedLength_p(0) = polarizations_p->size();
+		reducedLength_p(1) = channels_p->size();
+		reducedLength_p(2) = rows_p->size();
 	}
 
     T &operator()(uInt i1, uInt i2, uInt i3)
     {
+    	uInt i1_index = polarizations_p->at(i1);
+    	uInt i2_index = channels_p->at(i2);
     	uInt i3_index = rows_p->at(i3);
-    	return parentCube_p->at(i1,i2,i3_index);
+    	return parentCube_p->at(i1_index,i2_index,i3_index);
     }
 
     const IPosition &shape() const
@@ -119,9 +129,22 @@ public:
 
 protected:
 
+    vector<uInt> *createIndex(uInt size)
+    {
+    	vector<uInt> *index = new vector<uInt>(size);
+    	index->clear();
+    	for (uInt i=0; i<size; i++ )
+    	{
+    		index->push_back(i);
+    	}
+    	return index;
+    }
+
 private:
     Cube<T> *parentCube_p;
 	std::vector<uInt> *rows_p;
+	std::vector<uInt> *channels_p;
+	std::vector<uInt> *polarizations_p;
 	IPosition reducedLength_p;
 };
 
@@ -220,6 +243,14 @@ public:
 	uShort chunkNo;
 	uShort bufferNo;
 
+	// Make the logger public to that we can use it from FlagAgentBase::create
+	casa::LogIO *logger_p;
+
+
+	// We make this public so that they are accessible for the TimeFreqCrop agents
+	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
+	std::map< Double,std::vector<uInt> > *subIntegrationMap_p;
+
 
 protected:
 
@@ -252,8 +283,6 @@ private:
 	bool asyncio_disabled_p;
 
 	// Mapping members
-	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
-	std::map< Double,std::vector<uInt> > *subIntegrationMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 
@@ -274,9 +303,6 @@ private:
 
 	// Profiling
 	bool profiling_p;
-
-	// Logger
-	casa::LogIO *logger_p;
 
 };
 

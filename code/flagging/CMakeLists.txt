@@ -52,8 +52,10 @@ casa_add_library( flagging
   implement/Flagging/LFDisplayFlags.cc
   implement/Flagging/FlagDataHandler.cc
   implement/Flagging/FlagAgentBase.cc
+  implement/Flagging/FlagAgentTimeFreqCrop.cc
    )
 
+casa_add_test( flagging implement/Flagging/test/tFlagAgentTimeFreqCrop.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagAgentBase.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagDataHandler.cc )
 casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
