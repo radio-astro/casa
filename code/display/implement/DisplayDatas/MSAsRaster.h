@@ -272,6 +272,8 @@ class MSAsRaster: public ActiveCaching2dDD {
 
   virtual const String &name( ) const { return msName_; }
 
+  // added to allow flagging control from mouse tools... <drs>
+  bool flag( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
 
  protected:
 

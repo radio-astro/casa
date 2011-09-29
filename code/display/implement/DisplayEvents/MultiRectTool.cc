@@ -39,6 +39,7 @@
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageStatistics.h>
 #include <casadbus/types/ptr.h>
+#include <display/DisplayDatas/MSAsRaster.h>
 
 // sometimes (?) gcc fails to instantiate this function, so this
 // explicit instantiation request may be necessary... <drs>
@@ -220,6 +221,32 @@ void MultiRectTool::disable() {
 	    // double click--invoke callbacks
 	    itsEmitted = True;
 	    itsLastPressTime = its2ndLastPressTime = -1.0;
+
+	    Int x = ev.pixX(), y = ev.pixY();
+	    double linx1, liny1;
+	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+
+	    rectanglelist selected_regions;
+	    for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
+		if ( (*iter)->clickWithin( linx1, liny1 ) )
+		    selected_regions.push_back(*iter);
+	    }
+
+	    if ( selected_regions.size( ) > 0 ) {
+		std::string errMsg_;
+		std::map<String,bool> processed;
+		DisplayData *dd = 0;
+		List<DisplayData*> *dds = pd_->displayDatas( );
+		for ( ListIter<DisplayData *> ddi(*dds); ! ddi.atEnd( ); ++ddi ) {
+		    dd = ddi.getRight( );
+		    MSAsRaster *msar = dynamic_cast<MSAsRaster*>(dd);
+		    if ( msar == 0 ) continue;
+		    for ( rectanglelist::iterator iter = selected_regions.begin(); iter != selected_regions.end(); ++iter ) {
+			(*iter)->flag( msar );
+		    }
+		}
+	    }
+
 	    refresh();	// current WC still valid, until new rect. started.
 			// In particular, still valid during callbacks below.
 	}

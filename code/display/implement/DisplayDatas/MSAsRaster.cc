@@ -2904,6 +2904,24 @@ AttributeBuffer MSAsRaster::optionsAsAttributes() {
 
 
 //--------------------------------------------------------------------------
+// MSAsRaster::handleEvent(DisplayEvent&) could (probably should) be
+// implemented in terms of this function... <drs>
+//--------------------------------------------------------------------------
+bool MSAsRaster::flag( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+    conformsTo(wc);
+    if(!rstrsConformed_ || !csConformed_) return false;
+    if(!msselValid_) return false;	// No data--don't attempt to flag.
+
+    Int ix0 = max( 0, ifloor(blc_x+.5) );
+    Int ix1 = min( msShape_[axisOn_[X]], ifloor(trc_x+.5)+1 );
+    Int iy0 = max( 0, ifloor(blc_y+.5) );
+    Int iy1 = min( msShape_[axisOn_[Y]], ifloor(trc_y+.5)+1 );
+
+    addEdit_(wc, ix0, (ix0 == ix1 ? 1 : ix1-ix0), iy0, (iy0 == iy1 ? 1 : iy1-iy0));
+    return true;
+}
+
+//--------------------------------------------------------------------------
 void MSAsRaster::handleEvent(DisplayEvent& ev) {
   // Process user selection of flagging region.  These (currently)
   // come from the crosshair or rectangular region mouse tools

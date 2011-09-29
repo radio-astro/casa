@@ -162,6 +162,10 @@ namespace casa {
 	    return box;
 	}
 
+	bool Rectangle::flag( MSAsRaster *msar ) {
+	    if ( wc_ == 0 ) return false;
+	    return msar->flag( wc_, blc_x, blc_y, trc_x, trc_y );
+	}
 
 	void Rectangle::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 					      std::vector<std::pair<double,double> > &world_pts ) const {

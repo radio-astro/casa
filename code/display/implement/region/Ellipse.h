@@ -55,6 +55,8 @@ namespace casa {
 
 		AnnRegion *annotation( ) const;
 
+		bool flag( MSAsRaster * ) { return false; }
+
 	    protected:
 
 		std::list<RegionInfo> *generate_dds_statistics( );
