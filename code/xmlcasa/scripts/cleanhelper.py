@@ -720,68 +720,83 @@ class cleanhelper:
                            # extract boxfile name
                         masktext.append(masklets)
 
+        #extract boxfile mask info only for now the rest is
+        #processed by makemaskimage. - DEPRECATED and will be removed 
+        #in 3.4
+        #
         #group circles and boxes in dic for each image field 
-        circles, boxes=self.readmultifieldboxfile(masktext)
+        circles, boxes, oldfmts=self.readmultifieldboxfile(masktext)
         # Loop over imagename
         # take out text file names contain multifield boxes and field info  
         # from maskobject and create updated one (updatedmaskobject)
         # by adding boxlists to it instead.
         # Use readmultifieldboxfile to read old outlier/box text file format
-        maskobject_tmp = maskobject 
+        # Note: self.imageids and boxes's key are self.imagelist for new outlier
+        #       format while for the old format, they are 'index' in string.
+
+        #maskobject_tmp = maskobject 
+        # need to do a deep copy
+        import copy
+        maskobject_tmp=copy.deepcopy(maskobject)
 	updatedmaskobject = [] 
         for maskid in range(len(maskobject_tmp)):
             if len(circles)!=0 or len(boxes)!=0:
                 # remove the boxfiles from maskobject list
                 for txtf in masktext:
-                    if maskobject_tmp[maskid].count(txtf):
+                    if maskobject_tmp[maskid].count(txtf) and oldfmts[txtf]:
                         maskobject_tmp[maskid].remove(txtf)
+                updatedmaskobject = maskobject_tmp
+
             else:
 	        updatedmaskobject = maskobject 
-        #if newformat: 
-        #    nmaskobj=len(maskobject_tmp)
-        #else:
-        #    nmaskobj=len(maskobject_tmp)-1
-       
-        for maskid in range(len(self.maskimages)):
+        # adjust no. of elements of maskoject list with []
+        if len(updatedmaskobject)-len(self.imagelist)<0:
+            for k in range(len(self.imagelist)-len(updatedmaskobject)):
+                updatedmaskobject.append([])            
+
+        #for maskid in range(len(self.maskimages)):
+        for maskid in self.maskimages:
             # for handling old format
             #if nmaskobj <= maskid:
             # add circles,boxes back
+            maskindx = self.maskimages.keys().index(maskid)
             if len(circles) != 0:
                 for key in circles:
-                    try: 
-                        keyindx=int(key)
-                    except:
-                        keyindx=boxes.keys().index(key)
-
-                    if maskid == keyindx:
+                    if  (newformat and maskid==key) or \
+                        (not newformat and maskid.split('_')[-1]==key):
                         if len(circles[key])==1:
                            incircles=circles[key][0]
                         else: 
                            incircles=circles[key]
-                        updatedmaskobject.append(incircles)
+                        # put in imagelist order
+                        updatedmaskobject[self.imagelist.values().index(maskid)].append(incircles)
             if len(boxes) != 0:
                 for key in boxes:
-                    try: 
-                        keyindx=int(key)
-                    except:
-                        keyindx=boxes.keys().index(key)
-                       
-                    if  maskid== keyindx:
-                    #if maskid == int(key):
+                    #try: 
+                    #    keyid=int(key)
+                    #except:
+                    #    keyid=key
+                    if  (newformat and maskid==key) or \
+                        (not newformat and maskid.split('_')[-1]==key):
                         if len(boxes[key])==1:
                             inboxes=boxes[key][0]
                         else: 
                             inboxes=boxes[key]
                         # add to maskobject (extra list bracket taken out)
-                        updatedmaskobject.append(inboxes)
+                        # put in imagelist order
+                        updatedmaskobject[self.imagelist.values().index(maskid)].extend(inboxes)
        
-        #print "Updated maskobject=",updatedmaskobject
 
         for maskid in range(len(self.maskimages)):
-            self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
-            self.outputmask=''
-            self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
-            imagename=self.imagelist[maskid], maskobject=updatedmaskobject[maskid], slice=slice)
+            if maskid < len(updatedmaskobject):
+                self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
+                self.outputmask=''
+                self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]],
+                imagename=self.imagelist[maskid], maskobject=updatedmaskobject[maskid], slice=slice)
+#            self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
+#            self.outputmask=''
+#            self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
+#            imagename=self.imagelist[maskid], maskobject=updatedmaskobject[maskid], slice=slice)
 
         for key in self.maskimages:
             if(os.path.exists(self.maskimages[key])):
@@ -789,7 +804,9 @@ class cleanhelper:
                 fsum=ia.statistics()['sum']
                 if(len(fsum)!=0 and fsum[0]==0.0):
                     # make an empty mask
-                    ia.set(pixels=0.0)
+                    #ia.set(pixels=0.0)
+                    # remove the empty mask
+                    ia.remove()
                 ia.done(verbose=False)
 
 
@@ -1472,17 +1489,26 @@ class cleanhelper:
     def readmultifieldboxfile(self, boxfiles):
         circles={}
         boxes={}
+        oldfilefmts={}
         for k in range(len(self.imageids)):
             circles[self.imageids[k]]=[]
             boxes[self.imageids[k]]=[]
         for boxfile in boxfiles:
             f=open(boxfile)
+            setonce=False
+            oldfilefmts[boxfile]=False
             while 1:
                 try:
                     line=f.readline()
                     if(len(line)==0):
                         raise Exception
-                    if (line.find('#')!=0):
+                    if line.find('#')==0:
+                        if not setonce and line.find('boxfile')>0:
+                            oldfilefmts[boxfile]=True
+                            setonce=True
+                            self._casalog.post(boxfile+" is in a deprecated boxfile format,"+\
+                                " will not be supported in the future releases","WARN")
+                    else:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
                         splitline2=splitline[0].split()
@@ -1518,7 +1544,8 @@ class cleanhelper:
             if(boxes[self.imageids[k]]==[]):
                 boxes.pop(self.imageids[k])
                 
-        return circles,boxes
+        return circles,boxes,oldfilefmts
+
 
     def readoutlier(self, outlierfile):
         """ Read a file containing clean boxes (kind of
@@ -1609,7 +1636,7 @@ class cleanhelper:
         if oldformat:
         #    f.close()
             self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
-            # do old to new data format conversion....(watch out for different ordor of return parameters...)
+            # do old to new data format conversion....(watch out for different order of return parameters...)
             (imsizes,phasecenters,imageids)=self.readoutlier(outlierfile)
             for i in range(len(imageids)):
                 modelimages.append('')
