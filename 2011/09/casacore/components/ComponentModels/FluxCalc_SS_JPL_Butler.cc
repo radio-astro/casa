@@ -183,6 +183,19 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::getShape(Double& angdiam)
   return ComponentType::DISK;
 }
 
+Double FluxCalc_SS_JPL_Butler::getHeliocentricDist()
+{
+  Double dist;
+
+  if(!hasEphemInfo_p && !readEphem())
+    dist = -1.0;
+  if(!has_r_p)
+    dist = -1.0;
+  else
+    dist = r_p;
+  return dist;
+}
+
 uInt FluxCalc_SS_JPL_Butler::n_known() const
 {
   return N_KNOWN;
@@ -347,38 +360,91 @@ Bool FluxCalc_SS_JPL_Butler::readEphem()
     return false;
   }
 
-  // Distance from Earth to the object, in AU.  JPL calls it delta, and MeasComet
-  // calls it Rho.
-  ROScalarColumn<Double> delta(tab, "Rho");
   Double tm1 = mjd(rowbef);
   Double t0  = mjd(rowclosest);
   Double tp1 = mjd(rowaft);
-  Double delta_m1 = delta(rowbef);
-  Double delta_0  = delta(rowclosest);
-  Double delta_p1 = delta(rowaft);
   Double f = time_p.get("d").getValue() - t0;
   Double dt = tp1 - tm1;
-  Double d2y = 0.0;
+  Double tp1mt0 = tp1 - t0;
+  Double t0mtm1 = t0 - tm1;
 
-  if(dt > 0){
-    f /= dt;
-    if(tm1 < t0 && t0 < tp1){
-      d2y = (delta_p1 - delta_0) / (tp1 - t0);
-      d2y -= (delta_0 - delta_m1) / (t0 - tm1);
-      d2y *= dt;
-    }
-  }
-  else{
-    os << LogIO::WARN
-       << "The table is not long enough for quadratic interpolation.\n"
-       << "Nearest neighbor will be used."
-       << LogIO::POST;
-    f = 0.0;
-  }
-  delta_p = delta_0 + f * (delta_p1 - delta_m1 + f * d2y);
+  // The distance from Earth to the object, in AU, is mandatory.
+  // JPL calls it delta, and MeasComet calls it Rho.
+  hasEphemInfo_p = found && get_interpolated_value(delta_p, "Rho",
+                                                   tab, rowbef, rowclosest,
+                                                   rowaft, f, dt, tp1mt0,
+                                                   t0mtm1, True);
 
-  hasEphemInfo_p = found;
+  // Heliocentric distance, in AU.
+  has_r_p = get_interpolated_value(r_p, "r", tab, rowbef, rowclosest, rowaft,
+                                   f, dt, tp1mt0, t0mtm1, False);
+
+  // Illumination, in %.
+  has_illu_p = get_interpolated_value(illu_p, "illu", tab, rowbef, rowclosest,
+                                      rowaft, f, dt, tp1mt0, t0mtm1, False);
+  if(has_illu_p)
+    has_illu_p *= 0.01;  // Convert it to a fraction.
+
+  // RA, in deg.
+  has_ra_p = get_interpolated_value(ra_p, "RA", tab, rowbef, rowclosest,
+                                    rowaft, f, dt, tp1mt0, t0mtm1, False);
+
+  // Declination, in deg.
+  has_dec_p = get_interpolated_value(dec_p, "DEC", tab, rowbef, rowclosest,
+                                     rowaft, f, dt, tp1mt0, t0mtm1, False);
+
   return found;
+}
+
+Bool FluxCalc_SS_JPL_Butler::get_interpolated_value(Double& val,
+                                                    const String& colname,
+                                                    const Table& tab,
+                                                    const uInt rowbef,
+                                                    const uInt rowclosest,
+                                                    const uInt rowaft,
+                                                    const Double f,
+                                                    const Double dt,
+                                                    const Double tp1mt0,
+                                                    const Double t0mtm1,
+                                                    const Bool verbose)
+{
+  Bool foundIt = False;
+  LogIO os(LogOrigin("FluxCalc_SS_JPL_Butler", "get_interpolated_value"));
+
+  if(tab.actualTableDesc().isColumn(colname)){
+    Double myf = f;
+    Double d2y = 0.0;
+
+    ROScalarColumn<Double> col(tab, colname);
+    Double col_m1 = col(rowbef);
+    Double col_0  = col(rowclosest);
+    Double col_p1 = col(rowaft);
+    
+    if(dt > 0){
+      myf /= dt;
+      if(t0mtm1 > 0.0 && tp1mt0 > 0.0){
+        d2y = (col_p1 - col_0) / tp1mt0;
+        d2y -= (col_0 - col_m1) / t0mtm1;
+        d2y *= dt;
+      }
+    }
+    else{
+      if(verbose){
+        os << LogIO::NORMAL
+           << "The table is not long enough for quadratic interpolation.\n"
+           << "Nearest neighbor will be used."
+           << LogIO::POST;
+      }
+      myf = 0.0;
+    }
+    val = col_0 + myf * (col_p1 - col_m1 + myf * d2y);
+    foundIt = True;
+  }
+  else
+    os << LogIO::NORMAL
+       << "The table does not have a " << colname << " column."
+       << LogIO::POST;
+  return foundIt;
 }
 
 Bool FluxCalc_SS_JPL_Butler::get_row_numbers(uInt& rowbef, uInt& rowclosest,
@@ -972,7 +1038,7 @@ Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >&
   case FluxCalc_SS_JPL_Butler::Juno:
     if(report){
       os << LogIO::WARN
-	 << "Juno has a large crater and temperature changes."
+	 << "Juno has a large crater and temperature changes that CASA does not fully account for."
 	 << LogIO::POST;
       os << LogIO::NORMAL1
 	 << "Reference for Juno's mean temperature (163K):\n"
@@ -983,6 +1049,23 @@ Bool FluxCalc_SS_JPL_Butler::compute_constant_temperature(Vector<Flux<Double> >&
 	 << LogIO::POST;
     }
     temperature_p = 163.0;
+    break;
+  case FluxCalc_SS_JPL_Butler::Vesta:
+    if(report){
+      os << LogIO::WARN
+	 << "Vesta has a large crater, and its mean emissivity varies from\n"
+         << "0.6 in the submm to 0.7 in the mm.  Its mean submm brightness temperature varies\n"
+         << "from ~116 to 173K and its rotation period is 5.342h.\n "
+         << "CASA does not yet account for these variations."
+	 << LogIO::POST;
+      os << LogIO::NORMAL1
+	 << "Reference for Vesta's mean brightness temperature (160K):\n"
+	 << "Chamberlain et al., (2009).\n"
+	 << "\"Submillimeter photometry and lightcurves of Ceres and other large asteroids\"\n"
+         << "Icarus 202:487-501.\n"
+	 << LogIO::POST;
+    }
+    temperature_p = 160.0;
     break;
   default:
     break;
