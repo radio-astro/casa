@@ -210,7 +210,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -318,7 +318,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
-			// IMPORTANT: Pre-load vis cube
+			// IMPORTANT: Pre-load vis cube, antenna1 and antenna2
 			dh->visibilityBuffer_p->get()->visCube();
 
 			// Queue flagging process
@@ -369,14 +369,14 @@ bool checkFlags(string targetFile,string referenceFile, Record dataSelection)
 	bool returnCode=true;
 
 	// Create data handler for target file
-	FlagDataHandler *targetFiledh = new FlagDataHandler(targetFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *targetFiledh = new FlagDataHandler(targetFile,FlagDataHandler::SUB_INTEGRATION);
 	targetFiledh->open();
 	targetFiledh->setDataSelection(dataSelection);
 	targetFiledh->selectData();
 	targetFiledh->generateIterator();
 
 	// Create data handler for reference file
-	FlagDataHandler *referenceFiledh = new FlagDataHandler(referenceFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED);
+	FlagDataHandler *referenceFiledh = new FlagDataHandler(referenceFile,FlagDataHandler::SUB_INTEGRATION);
 	referenceFiledh->open();
 	referenceFiledh->setDataSelection(dataSelection);
 	referenceFiledh->selectData();
