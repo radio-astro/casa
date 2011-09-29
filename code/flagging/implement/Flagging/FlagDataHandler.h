@@ -243,6 +243,14 @@ public:
 	uShort chunkNo;
 	uShort bufferNo;
 
+	// Make the logger public to that we can use it from FlagAgentBase::create
+	casa::LogIO *logger_p;
+
+
+	// We make this public so that they are accessible for the TimeFreqCrop agents
+	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
+	std::map< Double,std::vector<uInt> > *subIntegrationMap_p;
+
 
 protected:
 
@@ -275,8 +283,6 @@ private:
 	bool asyncio_disabled_p;
 
 	// Mapping members
-	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
-	std::map< Double,std::vector<uInt> > *subIntegrationMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 
@@ -297,9 +303,6 @@ private:
 
 	// Profiling
 	bool profiling_p;
-
-	// Logger
-	casa::LogIO *logger_p;
 
 };
 
