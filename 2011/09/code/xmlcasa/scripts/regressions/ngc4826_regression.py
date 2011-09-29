@@ -364,7 +364,7 @@ thistest_imrms=statistics['rms'][0]
 
 ##changed values due to flat noise clean
 calmean22=10.51
-srcmean22=111.52
+srcmean22=122.21  # 111.52
 calmax22=3.0459
 #srcmax22=1.54
 srcmax22=1.632

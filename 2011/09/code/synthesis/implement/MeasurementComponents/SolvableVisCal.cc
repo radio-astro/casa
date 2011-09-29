@@ -5142,6 +5142,491 @@ void SolvableVisJones::fluxscale(const Vector<Int>& refFieldIn,
   }
 
 }
+void SolvableVisJones::fluxscale2(const Vector<Int>& refFieldIn,
+				  const Vector<Int>& tranFieldIn,
+				  const Vector<Int>& inRefSpwMap,
+				  const Vector<String>& fldNames,
+				  Matrix<Double>& fd) {
+
+  //  cout << "REVISED FLUXSCALE" << endl;
+
+  // For updating the MS History Table
+  //  LogSink logSink_p = LogSink(LogMessage::NORMAL, False);
+  //  logSink_p.clearLocally();
+  //  LogIO oss(LogOrigin("calibrater", "fluxscale()"), logSink_p);
+
+  // PtrBlocks to hold mean gain moduli and related
+  PtrBlock< Cube<Bool>* >   MGOK;
+  PtrBlock< Cube<Double>* > MG;
+  PtrBlock< Cube<Double>* > MG2;
+  PtrBlock< Cube<Double>* > MGWT;
+  PtrBlock< Cube<Double>* > MGVAR;
+  PtrBlock< Cube<Int>* >    MGN;
+
+  Int nMSFld; fldNames.shape(nMSFld);
+
+  // assemble complete list of available fields
+  Vector<Int> fldList;
+  for (Int iSpw=0;iSpw<nSpw();iSpw++) {
+    Int currlen;
+    fldList.shape(currlen);
+
+    if (cs().nTime(iSpw) > 0) {
+
+      //      cout << "cs().fieldId(iSpw) = " << cs().fieldId(iSpw) << endl;
+
+      Vector<Int> thisFldList; thisFldList=cs().fieldId(iSpw);
+      Int nThisFldList=genSort(thisFldList,(Sort::QuickSort | Sort::NoDuplicates));
+      thisFldList.resize(nThisFldList,True);
+      fldList.resize(currlen+nThisFldList,True);
+      for (Int ifld=0;ifld<nThisFldList;ifld++) {
+        fldList(currlen+ifld) = thisFldList(ifld);
+      }
+    }
+  }
+  Int nFldList=genSort(fldList,(Sort::QuickSort | Sort::NoDuplicates));
+  fldList.resize(nFldList,True);
+
+  Int nFld=max(fldList)+1;
+
+  try {
+
+    // Resize, NULL-initialize PtrBlocks
+    MGOK.resize(nFld);   MGOK=NULL;
+    MG.resize(nFld);     MG=NULL;
+    MG2.resize(nFld);    MG2=NULL;
+    MGWT.resize(nFld);   MGWT=NULL;
+    MGVAR.resize(nFld);  MGVAR=NULL;
+    MGN.resize(nFld);    MGN=NULL;
+
+    // sort user-specified fields
+    Vector<Int> refField; refField = refFieldIn;
+    Vector<Int> tranField; tranField = tranFieldIn;
+    Int nRef,nTran;
+    nRef=genSort(refField,(Sort::QuickSort | Sort::NoDuplicates));
+    nTran=genSort(tranField,(Sort::QuickSort | Sort::NoDuplicates));
+
+    // make masks for ref/tran among available fields
+    Vector<Bool> tranmask(nFldList,True);
+    Vector<Bool> refmask(nFldList,False);
+    for (Int iFld=0; iFld<nFldList; iFld++) {
+      if ( anyEQ(refField,fldList(iFld)) ) {
+        // this is a ref field
+        refmask(iFld)=True;
+        tranmask(iFld)=False;
+      }
+    }
+
+    // Check availability of all ref fields
+    if (ntrue(refmask)==0) {
+      throw(AipsError(" Cannot find specified reference field(s)"));
+    }
+    // Any fields present other than ref fields?
+    if (ntrue(tranmask)==0) {
+      throw(AipsError(" Cannot find solutions for transfer field(s)"));
+    }
+
+    // make implicit reference field list
+    MaskedArray<Int> mRefFldList(fldList,LogicalArray(refmask));
+    Vector<Int> implRefField(mRefFldList.getCompressedArray());
+
+    //    cout << "implRefField = " << implRefField << endl;
+    // Check for missing reference fields
+    if (Int(ntrue(refmask)) < nRef) {
+      ostringstream x;
+      for (Int iRef=0; iRef<nRef; iRef++) {
+        if ( !anyEQ(fldList,refField(iRef)) ) {
+          if (refField(iRef)>-1 && refField(iRef) < nMSFld) x << fldNames(refField(iRef)) << " ";
+          else x << "Index="<<refField(iRef)+1<<"=out-of-range ";
+        }
+      }
+      String noRefSol=x.str();
+      logSink() << LogIO::WARN
+		<< " The following reference fields have no solutions available: "
+		<< noRefSol
+		<< LogIO::POST;
+      refField.reference(implRefField);
+    }
+    refField.shape(nRef);
+
+    // make implicit tranfer field list
+    MaskedArray<Int> mTranFldList(fldList,LogicalArray(tranmask));
+    Vector<Int> implTranField(mTranFldList.getCompressedArray());
+    Int nImplTran; implTranField.shape(nImplTran);
+
+    //    cout << "implTranField = " << implTranField << endl;
+
+    // Check availability of transfer fields
+
+    // If user specified no transfer fields, use implicit 
+    //  transfer field list, ELSE check for missing tran fields
+    //  among those they specified
+    if (nTran==0) {
+      tranField.reference(implTranField);
+      logSink() << LogIO::NORMAL
+		<< " Assuming all non-reference fields are transfer fields."
+		<< LogIO::POST;
+    } else {
+      if ( !(nTran==nImplTran &&
+             allEQ(tranField,implTranField)) ) {
+        ostringstream x;
+        for (Int iTran=0; iTran<nTran; iTran++) {
+          if ( !anyEQ(implTranField,tranField(iTran)) ) {
+            if (tranField(iTran)>-1 && tranField(iTran) < nMSFld) x << fldNames(tranField(iTran)) << " ";
+            else x << "Index="<<tranField(iTran)+1<<"=out-of-range ";
+          }
+        }
+        String noTranSol=x.str();
+	logSink() << LogIO::WARN
+		  << " The following transfer fields have no solutions available: "
+		  << noTranSol
+		  << LogIO::POST;
+        tranField.reference(implTranField);
+      }
+    }
+    tranField.shape(nTran);
+
+    // Report ref, tran field info
+    String refNames(fldNames(refField(0)));
+    for (Int iRef=1; iRef<nRef; iRef++) {
+      refNames+=" ";
+      refNames+=fldNames(refField(iRef));
+    }
+    logSink() << " Found reference field(s): " << refNames 
+	      << LogIO::POST;
+    String tranNames(fldNames(tranField(0)));
+    for (Int iTran=1; iTran<nTran; iTran++) {
+      tranNames+=" ";
+      tranNames+=fldNames(tranField(iTran));
+    }
+    logSink() << " Found transfer field(s):  " << tranNames 
+	      << LogIO::POST;
+
+    // Handle spw referencing
+    Vector<Int> refSpwMap;
+    refSpwMap.resize(nSpw());
+    indgen(refSpwMap);
+
+    if (inRefSpwMap(0)>-1) {
+      if (inRefSpwMap.nelements()==1) {
+        refSpwMap=inRefSpwMap(0);
+        logSink() << " All spectral windows will be referenced to spw=" << inRefSpwMap(0) 
+		  << LogIO::POST;
+      } else {
+        for (Int i=0; i<Int(inRefSpwMap.nelements()); i++) {
+          if (inRefSpwMap(i)>-1 && inRefSpwMap(i)!=i) {
+            refSpwMap(i)=inRefSpwMap(i);
+	    logSink() << " Spw=" << i << " will be referenced to spw=" << inRefSpwMap(i) 
+		      << LogIO::POST;
+          }
+        }
+      }
+    }
+
+    // Field names for log messages
+
+    //    cout << "Filling mgnorms....";
+
+    // fill per-ant -fld, -spw  mean gain moduli
+    for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
+
+      if (cs().nTime(iSpw) > 0 ) {
+
+        for (Int islot=0; islot<cs().nTime(iSpw); islot++) {
+          Int iFld=cs().fieldId(iSpw)(islot);
+          if (MGOK[iFld]==NULL) {
+            // First time this field, allocate ant/spw matrices
+            MGOK[iFld]   = new Cube<Bool>(nPar(),nElem(),nSpw(),False);
+            MG[iFld]     = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+            MG2[iFld]    = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+            MGWT[iFld]   = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+            MGVAR[iFld]  = new Cube<Double>(nPar(),nElem(),nSpw(),0.0);
+            MGN[iFld]    = new Cube<Int>(nPar(),nElem(),nSpw(),0);
+
+          }
+          // References to PBs for syntactical convenience
+          Cube<Bool>   mgok;   mgok.reference(*(MGOK[iFld]));
+          Cube<Double> mg;  mg.reference(*(MG[iFld]));
+          Cube<Double> mg2; mg2.reference(*(MG2[iFld]));
+          Cube<Double> mgwt;   mgwt.reference(*(MGWT[iFld]));
+          Cube<Int>    mgn;    mgn.reference(*(MGN[iFld]));
+
+          for (Int iAnt=0; iAnt<nElem(); iAnt++) {
+	    if (True) { // || antmask(iAnt)) {
+	      Double wt=cs().iFitwt(iSpw)(iAnt,islot);
+	      
+	      for (Int ipar=0; ipar<nPar(); ipar++) {
+		IPosition ip(4,ipar,0,iAnt,islot);
+		if (cs().parOK(iSpw)(ip)) {
+		  Double gn=abs( cs().par(iSpw)(ip) );
+		  mgok(ipar,iAnt,iSpw)=True;
+		  mg(ipar,iAnt,iSpw) += (wt*gn);
+		  mg2(ipar,iAnt,iSpw)+= (wt*gn*gn);
+		  mgn(ipar,iAnt,iSpw)++;
+		  mgwt(ipar,iAnt,iSpw)+=wt;
+		}
+	      }
+	    }
+	  }
+        }
+      }
+    }
+    //    cout << "done." << endl;
+
+    //    cout << "Normalizing mgs...";
+
+
+    // normalize mg
+    for (Int iFld=0; iFld<nFld; iFld++) {
+
+      //      cout << "iFld = " << iFld << " " << MGOK[iFld]->column(0) << endl;
+
+      // Have data for this field?
+      if (MGOK[iFld]!=NULL) {
+
+        // References to PBs for syntactical convenience
+        Cube<Bool>   mgok;   mgok.reference(*(MGOK[iFld]));
+        Cube<Double> mg;  mg.reference(*(MG[iFld]));
+        Cube<Double> mg2; mg2.reference(*(MG2[iFld]));
+        Cube<Double> mgwt;   mgwt.reference(*(MGWT[iFld]));
+        Cube<Double> mgvar;  mgvar.reference(*(MGVAR[iFld]));
+        Cube<Int>    mgn;    mgn.reference(*(MGN[iFld]));
+
+        for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
+	  //	  cout << endl;
+          for (Int iAnt=0; iAnt<nElem(); iAnt++) {
+	    for (Int ipar=0;ipar<nPar(); ++ipar) {
+	      if ( mgok(ipar,iAnt,iSpw) && mgwt(ipar,iAnt,iSpw)>0.0 ) {
+		mg(ipar,iAnt,iSpw)/=mgwt(ipar,iAnt,iSpw);
+		mg2(ipar,iAnt,iSpw)/=mgwt(ipar,iAnt,iSpw);
+		// Per-ant, per-spw variance (non-zero only if sufficient data)
+		if (mgn(ipar,iAnt,iSpw) > 2) {
+		  mgvar(ipar,iAnt,iSpw) = (mg2(ipar,iAnt,iSpw) - pow(mg(ipar,iAnt,iSpw),2.0))/(mgn(ipar,iAnt,iSpw)-1);
+		}
+	      } else {
+		mg(ipar,iAnt,iSpw)=0.0;
+		mgwt(ipar,iAnt,iSpw)=0.0;
+		mgok(ipar,iAnt,iSpw)=False;
+	      }
+	    }
+   /*
+            cout << " iSpw = " << iSpw << " iFld = " << iFld;
+            cout << " iAnt = " << iAnt;
+            cout << " mg = " << mg(iAnt,iSpw);
+            cout << " +/- " << sqrt(1.0/mgwt(iAnt,iSpw));
+            cout << " SNR = " << mg(iAnt,iSpw)/sqrt(1.0/mgwt(iAnt,iSpw));
+            cout << "  " << mgn(iAnt,iSpw);
+            cout << endl;
+   */
+          }
+        }
+
+
+      }
+    }
+
+
+
+    //    cout << "done." << endl;
+    //    cout << "nTran = " << nTran << endl;
+
+    //    cout << "Calculating scale factors...";
+
+
+    // Collapse ref field mg's into a single ref
+    Cube<Double> mgref;
+    Cube<Bool>  mgrefok;
+    mgref.reference(*MG[refField(0)]);
+    mgrefok.reference(*MGOK[refField(0)]);
+
+    if (nRef>1) {
+      // Add on additional ref fields
+      for (Int iref=1;iref<nRef;++iref) {
+
+	Cube<Bool> mgokR; mgokR.reference(*MGOK[refField(iref)]);
+	Cube<Double> mgR;   mgR.reference(*MG[refField(iref)]);
+
+	for (Int ispw=0;ispw<nSpw();++ispw) {
+	  for (Int iant=0;iant<nAnt();++iant) {
+	    for (Int ipar=0;ipar<nPar();++ipar) {
+	      if (mgrefok(ipar,iant,ispw) && mgokR(ipar,iant,ispw))
+		mgref(ipar,iant,ispw)+=mgR(ipar,iant,ispw);
+	      else {
+		mgrefok(ipar,iant,ispw)=False;
+		mgref(ipar,iant,ispw)=0.0;
+	      } // ok
+	    } // ipar
+	  } // iant
+	} // ispw
+      } // iref
+      // Complete the average:
+      mgref/=Double(nRef);
+    } // nRef > 1
+
+    // Scale factor calculation, per trans fld, per spw
+    fd.resize(nSpw(),nFld);
+    fd.set(-1.0);
+
+    Matrix<Bool> scaleOK(nSpw(),nFld,False);
+    Matrix<Double> mgratio(nSpw(),nFld,-1.0);
+    Matrix<Double> mgrms(nSpw(),nFld,-1.0);
+    Matrix<Double> mgerr(nSpw(),nFld,-1.0);
+    Matrix<Double> fdrms(nSpw(),nFld,-1.0);
+    Matrix<Double> fderr(nSpw(),nFld,-1.0);
+
+    for (Int iTran=0; iTran<nTran; iTran++) {
+      Int tranidx=tranField(iTran);
+
+      // References to PBs for syntactical convenience
+      Cube<Bool>   mgokT;  mgokT.reference(*(MGOK[tranidx]));
+      Cube<Double> mgT;    mgT.reference(*(MG[tranidx]));
+      Cube<Double> mgvarT; mgvarT.reference(*(MGVAR[tranidx]));
+      Cube<Double> mgwtT;  mgwtT.reference(*(MGWT[tranidx]));
+
+      for (Int ispw=0; ispw<nSpw(); ispw++) {
+
+        // Reference spw may be different
+        Int refSpw(refSpwMap(ispw));
+
+        // Only if anything good for this spw
+        if (ntrue(mgokT.xyPlane(ispw)) > 0) {
+
+	  for (Int iant=0;iant<nAnt();++iant) {
+	    for (Int ipar=0;ipar<nPar();++ipar) {
+	      if (mgokT(ipar,iant,ispw) && 
+		  mgrefok(ipar,iant,refSpw) &&
+		  mgref(ipar,iant,refSpw)>0.0 ) {
+		mgT(ipar,iant,ispw)/=mgref(ipar,iant,refSpw);
+	      }
+	      else {
+		mgT(ipar,iant,ispw)=0.0;
+		mgokT(ipar,iant,ispw)=False;
+	      }
+	    } // ipar
+	  } // iant
+	} // ntrue>0
+
+	// Form the mean gain ratio
+	Matrix<Double> mgTspw(mgT.xyPlane(ispw));
+	Matrix<Bool> mgokTspw(mgokT.xyPlane(ispw));
+
+	cout.precision(6);
+	cout.setf(ios::fixed,ios::floatfield);
+	Int nPA=ntrue(mgokTspw);
+	if (nPA>0) {
+	  //	  cout << "mgTspw = " << mgTspw << endl;
+	  scaleOK(ispw,tranidx)=True;
+	  mgratio(ispw,tranidx)=mean(mgTspw(mgokTspw));
+	  mgrms(ispw,tranidx)=stddev(mgTspw(mgokTspw));
+	  mgerr(ispw,tranidx)=mgrms(ispw,tranidx)/sqrt(Double(nPA-1));
+
+	  // ...and flux density estimate
+	  fd(ispw,tranidx)=mgratio(ispw,tranidx)*mgratio(ispw,tranidx);
+	  fdrms(ispw,tranidx)=2.0*mgrms(ispw,tranidx);
+	  fderr(ispw,tranidx)=fdrms(ispw,tranidx)/sqrt(Double(nPA-1));
+	}
+	  
+	// Report flux densities to logger
+	logSink() << " Flux density for " << fldNames(tranidx)
+		  << " in SpW=" << ispw;
+	if (refSpw!=ispw) 
+	  logSink() << " (ref SpW=" << refSpw << ")";
+	
+	logSink() << " is: ";
+	if (scaleOK(ispw,tranidx)) {
+	  logSink() << fd(ispw,tranidx)
+		    << " +/- " << fderr(ispw,tranidx)
+		    << " (SNR = " << fd(ispw,tranidx)/fderr(ispw,tranidx)
+		    << ", N= " << nPA << ")";
+	}
+	else
+	  logSink() << " INSUFFICIENT DATA ";
+
+	logSink() << LogIO::POST;
+
+      } // ispw
+		  
+    } // iTran
+
+    // quit if no scale factors found
+    if (ntrue(scaleOK) == 0) throw(AipsError("No scale factors determined!"));
+
+    //    cout << "done." << endl;
+
+    //    cout << "Adjusting gains...";
+
+    // Adjust tran field's gains here
+    for (Int iSpw=0; iSpw<nSpw(); iSpw++) {
+      if (cs().nTime(iSpw)>0) {
+        for (Int islot=0; islot<cs().nTime(iSpw); islot++) {
+          Int iFld=cs().fieldId(iSpw)(islot);
+          // If this is a tran fld and gainScaleFactor ok
+          if (scaleOK(iSpw,iFld)) {
+            for (Int iAnt=0; iAnt<nElem(); iAnt++) {
+	      for (Int ipar=0; ipar<nPar(); ipar++) {
+		IPosition ip(4,ipar,0,iAnt,islot);
+		if (cs().parOK(iSpw)(ip))
+                  cs().par(iSpw)(ip)/=mgratio(iSpw,iFld);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    //    cout << "done." << endl;
+
+    //    cout << "Cleaning up...";
+
+    // Clean up PtrBlocks
+    for (Int iFld=0; iFld<nFld; iFld++) {
+      if (MGOK[iFld]!=NULL) {
+        delete MGOK[iFld];
+        delete MG[iFld];
+        delete MG2[iFld];
+        delete MGWT[iFld];
+        delete MGVAR[iFld];
+        delete MGN[iFld];
+      }
+    }
+
+    //    cout << "done." << endl;
+
+    // Avoid this since problem with <msname>/SELECTED_TABLE (06Feb02 gmoellen)
+    /*
+    {
+
+      MeasurementSet ms(vs_->msName().before("/SELECTED"));
+      Table historytab = Table(ms.historyTableName(),
+                               TableLock(TableLock::UserNoReadLocking),
+                               Table::Update);
+      MSHistoryHandler hist = MSHistoryHandler(ms, "calibrater");
+      historytab.lock(True);
+      oss.postLocally();
+      hist.addMessage(oss);
+      historytab.unlock();
+    }
+    */
+  }
+  catch (AipsError x) {
+
+    // Clean up PtrBlocks
+    for (Int iFld=0; iFld<nFld; iFld++) {
+      if (MGOK[iFld]!=NULL) {
+        delete MGOK[iFld];
+        delete MG[iFld];
+        delete MG2[iFld];
+        delete MGWT[iFld];
+        delete MGVAR[iFld];
+        delete MGN[iFld];
+      }
+    }
+
+    throw(x);
+
+  }
+
+}
 
 void SolvableVisJones::listCal(const Vector<Int> ufldids,
                                const Vector<Int> uantids,
