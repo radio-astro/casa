@@ -29,10 +29,10 @@
 #ifndef REGION_REGIONINFO_H_
 #define REGION_REGIONINFO_H_
 
-#include <display/region/Region.h>
 #include <list>
 #include <string>
-
+#include <images/Images/ImageStatistics.h>
+#include <casadbus/types/ptr.h>
 
 namespace casa {
 
@@ -41,25 +41,39 @@ namespace casa {
 	class RegionInfo {
 	    public:
 
-		enum RegionInfoTypes { MsRegionInfo, ImageRegionInfo };
+		enum InfoTypes { MsInfoType, ImageInfoType, InvalidInfoType };
 
-		typedef ImageStatistics<Float>::stat_list image_stats_t;
-		typedef std::list<std::pair<String,memory::cptr<image_stats_t> > > image_stats_list_t;
+		typedef ImageStatistics<Float>::stat_list stats_t;
 
-		typedef std::list<std::pair<String,String> > ms_stats_t;
-		typedef std::list<memory::cptr<ms_stats_t> > ms_stats_list_t;
+		RegionInfo( ) : type_(InvalidInfoType) { }
+		RegionInfo( const RegionInfo &other ) : stat_list_(other.stat_list_), label_(other.label_), type_( other.type_) { }
+		virtual ~RegionInfo( ) { }
 
-		RegionInfo( ms_stats_list_t *msi ) : ms_info_(msi), type_(MsRegionInfo) { }
-		RegionInfo( image_stats_list_t *isi ) : image_info_(isi), type_(ImageRegionInfo) { }
-		RegionInfo( const RegionInfo &other ) : ms_info_(other.ms_info_), image_info_(other.image_info_), type_( other.type_) { }
-		memory::cptr<ms_stats_list_t> msInfo( ) const { return ms_info_; }
-		memory::cptr<image_stats_list_t> imageInfo( ) const { return image_info_; }
-		RegionInfoTypes type( ) const { return type_; }
+		memory::cptr<stats_t> &list( ) { return stat_list_; }
+		const std::string &label( ) const { return label_; }
+		InfoTypes type( ) const { return type_; }
+
+	    protected:
+		RegionInfo( const std::string &label, stats_t *si, InfoTypes t ) : stat_list_(si), label_(label), type_(t) { }
+
 	    private:
-		RegionInfoTypes type_;
-		memory::cptr<ms_stats_list_t> ms_info_;
-		memory::cptr<image_stats_list_t> image_info_;
+		memory::cptr<stats_t> stat_list_;
+		std::string label_;
+		InfoTypes type_;
 	};
+
+	class MsRegionInfo : public RegionInfo {
+	    public:
+		MsRegionInfo( const std::string &label, stats_t *si ) : RegionInfo(label,si,MsInfoType) { }
+		~MsRegionInfo( ) { }
+	};
+
+	class ImageRegionInfo : public RegionInfo {
+	    public:
+		ImageRegionInfo( const std::string &label, stats_t *si ) : RegionInfo(label,si,ImageInfoType) { }
+		~ImageRegionInfo( ) { }
+	};
+	
 
     }
 }

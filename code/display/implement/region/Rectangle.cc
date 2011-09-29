@@ -162,6 +162,10 @@ namespace casa {
 	    return box;
 	}
 
+	bool Rectangle::flag( MSAsRaster *msar ) {
+	    if ( wc_ == 0 ) return false;
+	    return msar->flag( wc_, blc_x, blc_y, trc_x, trc_y );
+	}
 
 	void Rectangle::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 					      std::vector<std::pair<double,double> > &world_pts ) const {
@@ -267,42 +271,20 @@ namespace casa {
 	}
 
 
-	RegionInfo Rectangle::get_ms_stats( MSAsRaster *msar ) {
+	RegionInfo::stats_t *Rectangle::get_ms_stats( MSAsRaster *msar, double x, double y ) {
 
-	    ms_stats_list_t *result = new ms_stats_list_t( );
+	    RegionInfo::stats_t *result = new RegionInfo::stats_t( );
 	  
-	    Vector<Double> bpos(2);
-	    Vector<Double> tpos(2);
-	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, bpos[0], bpos[1], tpos[0], tpos[1] );
+	    Vector<Double> pos(2);
+	    linear_to_world( wc_, x, y, pos[0], pos[1] );
 
-	    viewer::Region::ms_stats_t *blc_stats = new Region::ms_stats_t( );
-	    bool ok = msar->showPosition( *blc_stats, bpos );
-	    String ostr = msar->showPosition( bpos );
-	    cout << ostr << endl;
-
-	    if ( ! ok ) {
-		delete blc_stats;
-		return result;
-	    }
-	    result->push_back( blc_stats );
-
-	    viewer::Region::ms_stats_t *trc_stats = new Region::ms_stats_t( );
-	    ok = msar->showPosition( *trc_stats, tpos );
-	    ostr = msar->showPosition( tpos );
-	    cout << ostr << endl;
-	    
-	    if ( ! ok ) {
-		delete trc_stats;
-		return result;
-	    }
-	    result->push_back( trc_stats );
-
-	    return RegionInfo(result);
+	    bool ok = msar->showPosition( *result, pos );
+	    return result;
 	}
 
 
-	RegionInfo::image_stats_list_t *Rectangle::generate_image_statistics(  ) {
-	    RegionInfo::image_stats_list_t *region_statistics = new RegionInfo::image_stats_list_t( );
+	std::list<RegionInfo> *Rectangle::generate_dds_statistics(  ) {
+	    std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
 	    if( wc_==0 ) return region_statistics;
 
 	    Int zindex = 0;
@@ -331,16 +313,11 @@ namespace casa {
 		if (padd==0) {
 		    MSAsRaster *msar =  dynamic_cast<MSAsRaster*>(dd);
 		    if ( msar != 0 ) {
-			RegionInfo stats = get_ms_stats( msar );
-			fprintf( stderr, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" );
-			for ( Region::ms_stats_list_t::iterator itX = stats.msInfo( )->begin(); itX != stats.msInfo( )->end(); ++itX ) {
-			    for ( Region::ms_stats_t::iterator itY = (*itX)->begin(); itY != (*itX)->end(); ++itY ) {
-				fprintf( stderr, "\t%s: %s\n", itY->first.c_str( ), itY->second.c_str( ) );
-			    }
-			    fprintf( stderr, "---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----\n" );
-			}
-			fprintf( stderr, "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n" );
-			// region_statistics->push_back(image_stats_list_t::value_type(msar->name(),stats));
+			RegionInfo::stats_t *blc_stats = get_ms_stats( msar, blc_x, blc_y );
+			RegionInfo::stats_t *trc_stats = get_ms_stats( msar, trc_x, trc_y );
+			String full_ms_name = msar->name( );
+			region_statistics->push_back(MsRegionInfo(full_ms_name + " [blc]",blc_stats));
+			region_statistics->push_back(MsRegionInfo(full_ms_name + " [trc]",trc_stats));
 		    }
 		    continue;
 		}
@@ -411,7 +388,7 @@ namespace casa {
 		    WCBox box(blcq, trcq, cs, Vector<Int>());
 		    ImageRegion *imageregion = new ImageRegion(box);
 
-		    region_statistics->push_back(RegionInfo::image_stats_list_t::value_type(full_image_name,getLayerStats(padd,image,*imageregion)));
+		    region_statistics->push_back(ImageRegionInfo(full_image_name,getLayerStats(padd,image,*imageregion)));
 		    delete imageregion;
 
 		} catch (const casa::AipsError& err) {

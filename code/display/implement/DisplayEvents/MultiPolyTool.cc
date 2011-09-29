@@ -53,12 +53,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void MultiPolyTool::keyPressed(const WCPositionEvent &ev) {
 
+	Int x = ev.pixX();
+	Int y = ev.pixY();
+	WorldCanvas *wc = ev.worldCanvas( );
+	if ( ! wc->inDrawArea(x, y) ) return;
+
 	its2ndLastPressTime = itsLastPressTime;
 	itsLastPressTime = ev.timeOfEvent();
   
-	Int x = ev.pixX();
-	Int y = ev.pixY();
-
 	// finish building the polygon...
 	// could still be needed for flagging measurement sets...
 	if (ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval())  {
@@ -70,8 +72,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    }
 	    doubleClicked(x, y);
 	}
-
-	WorldCanvas *wc = ev.worldCanvas( );
 
 	double linx1, liny1;
 	viewer::screen_to_linear( wc, x, y, linx1, liny1 );
@@ -209,6 +209,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	Int x = ev.pixX();
 	Int y = ev.pixY();
+	if ( ! itsCurrentWC->inDrawArea(x, y) ) return;
 
 	double linx, liny;
 	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
@@ -330,46 +331,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// this callback is unused (and useless?) on glish level (12/01)
 
 
-void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
-  if (ev.worldCanvas() == itsCurrentWC &&
-	      ev.key() == Display::K_Escape) reset();  }
+    void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
+	WorldCanvas *wc = ev.worldCanvas( );
+	if ( wc == itsCurrentWC && ev.key() == Display::K_Escape) {
+	    uInt x = ev.pixX();
+	    uInt y = ev.pixY();
+
+	    resizing_region.clear( );
+	    moving_regions.clear( );		// ensure that moving state is clear...
+
+	    double linx, liny;
+	    viewer::screen_to_linear( wc, x, y, linx, liny );
+
+	    bool region_removed = false;
+	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
+		if ( (*iter)->regionVisible( ) ) {
+		    int result = (*iter)->mouseMovement(linx,liny,false);
+		    if ( viewer::Region::regionSelected(result) ) {
+			polygons.erase( iter );
+			region_removed = true;
+		    }
+		}
+	    }
+	    if ( region_removed ) refresh( );
+	}
+    }
 
     void MultiPolyTool::draw(const WCRefreshEvent &ev) {
 	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter )
 	    (*iter)->draw( );
     }
 
-#if OLDSTUFF
-void MultiPolyTool::draw(const WCRefreshEvent &) { 
-  if (itsMode==Off) return;
-
-  setClipToDrawArea();
-  PixelCanvas *pCanvas = itsCurrentWC->pixelCanvas();
-
-  pCanvas->setLineWidth(1);
-  pCanvas->setCapStyle(Display::CSRound);
-  pCanvas->setColor(drawColor());
-  pCanvas->setDrawFunction(Display::DFCopy);
-
-  Vector<Int> xp(itsNPoints), yp(itsNPoints);
-  get(xp, yp);
-
-  for(Int i=0; i<itsNPoints-1; i++) {
-    pCanvas->drawLine(xp(i),yp(i), xp(i+1),yp(i+1));  }
-
-  if(itsMode!=Def) {	//close only after defined.
-    pCanvas->drawLine(xp(itsNPoints-1),yp(itsNPoints-1), xp(0),yp(0));  }
-
-  if (itsMode==Ready) {		// draw handles
-    Int del = (itsHandleSize - 1) / 2;
-    Int x, y;
-    for (Int i = 0; i < itsNPoints; i++) {
-      get(x,y, i);
-      // (+1 in drawing because of strange X behaviour!)
-      pCanvas->drawFilledRectangle(x-del,   y-del-1,
-				   x+del+1, y+del+1);  }  }
-  resetClip();  }
-#endif
 
     void MultiPolyTool::revokeRegion( viewer::Region *p ) {
 	viewer::Polygon *poly = dynamic_cast<viewer::Polygon*>(p);

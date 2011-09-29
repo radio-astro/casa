@@ -149,9 +149,6 @@ namespace casa {
 		// returns OR'ed set of MouseState...
 		virtual int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
-		typedef RegionInfo::ms_stats_t ms_stats_t;
-		typedef RegionInfo::ms_stats_list_t ms_stats_list_t;
-		
 		virtual void draw( );
 
 		// indicates that region movement requires that the statistcs be updated...
@@ -179,7 +176,7 @@ namespace casa {
 
 		inline double linear_average( double a, double b ) const { return (a + b) / 2.0; }
 
-		RegionInfo::image_stats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
+		RegionInfo::stats_t *getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg );
 
 		Units current_units( ) const;
 		Coord current_region_coordsys( ) const;

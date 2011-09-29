@@ -166,10 +166,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 options: (str) 'channel','km/s','GHz','MHz','kHz','Hz'
                 default: 'channel'
                 example: this will be the units for nchan, start, and step
-  &gt;&gt;&gt; specunit='km/s' expandable parameters
-               restfreq -- rest frequency
-                 default: '' (refer input data)
-                 example: 1.0e11, '100GHz'
+        restfreq -- rest frequency
+                default: '' (refer input data)
+                example: 1.0e11, '100GHz'
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
                 example: [21,22,23,24]

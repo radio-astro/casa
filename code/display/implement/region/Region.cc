@@ -714,7 +714,7 @@ namespace casa {
 	}
 
 
-	RegionInfo::image_stats_t *Region::getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg ) {
+	RegionInfo::stats_t *Region::getLayerStats( PrincipalAxesDD *padd, ImageInterface<Float> *image, ImageRegion& imgReg ) {
 
 	    // Compute and print statistics on DD's image for
 	    // given region in all layers.
@@ -785,7 +785,7 @@ namespace casa {
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 		    //   begin collecting statistics...
 		    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-		    RegionInfo::image_stats_t *layerstats = new RegionInfo::image_stats_t( );
+		    RegionInfo::stats_t *layerstats = new RegionInfo::stats_t( );
 
 		    String zLabel="";
 		    String hLabel="";
@@ -797,7 +797,7 @@ namespace casa {
 			if (!cs.toWorld(tWrld,tPix)) {
 			} else {
 			    zLabel = ((CoordinateSystem)cs).format(tStr, Coordinate::DEFAULT, tWrld(zPos), zPos);
-			    layerstats->push_back(RegionInfo::image_stats_t::value_type(zaxis,zLabel + tStr));
+			    layerstats->push_back(RegionInfo::stats_t::value_type(zaxis,zLabel + tStr));
 
 			    if (zUnit.length()>0) {
 				zspKey = "Spectral_Vale";
@@ -831,9 +831,9 @@ namespace casa {
 			if (downcase(zaxis).contains("freq")) {
 			    if (spCoord.pixelToVelocity(vel, zIndex)) {
 				if (restFreq >0)
-				    layerstats->push_back(RegionInfo::image_stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
+				    layerstats->push_back(RegionInfo::stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
 				else
-				    layerstats->push_back(RegionInfo::image_stats_t::value_type(zspKey,zspVal));
+				    layerstats->push_back(RegionInfo::stats_t::value_type(zspKey,zspVal));
 
 				// --- this line was executed, but was a NOP in the old code --- <drs>
 				// layerstats->push_back(RegionInfo::image_stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
@@ -843,19 +843,19 @@ namespace casa {
 			if (downcase(haxis).contains("freq")) {
 			    if (spCoord.pixelToVelocity(vel, hIndex)) {
 				if (restFreq >0)
-				    layerstats->push_back(RegionInfo::image_stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
+				    layerstats->push_back(RegionInfo::stats_t::value_type("Velocity",String::toString(vel)+"km/s"));
 				else
-				    layerstats->push_back(RegionInfo::image_stats_t::value_type(zspKey,zspVal));
+				    layerstats->push_back(RegionInfo::stats_t::value_type(zspKey,zspVal));
 
-				layerstats->push_back(RegionInfo::image_stats_t::value_type("Frame",MFrequency::showType(spCoord.frequencySystem())));
-				layerstats->push_back(RegionInfo::image_stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
+				layerstats->push_back(RegionInfo::stats_t::value_type("Frame",MFrequency::showType(spCoord.frequencySystem())));
+				layerstats->push_back(RegionInfo::stats_t::value_type("Doppler",MDoppler::showType(spCoord.velocityDoppler())));
 			    }
 			}
 		    }
 
 
-		    layerstats->push_back(RegionInfo::image_stats_t::value_type(haxis,hLabel));
-		    layerstats->push_back(RegionInfo::image_stats_t::value_type("BrightnessUnit",unit));
+		    layerstats->push_back(RegionInfo::stats_t::value_type(haxis,hLabel));
+		    layerstats->push_back(RegionInfo::stats_t::value_type("BrightnessUnit",unit));
 
 		    Double beamArea = 0;
 		    ImageInfo ii = image->imageInfo();
@@ -879,7 +879,7 @@ namespace casa {
 			beamArea = C::pi/(4*log(2)) * major * minor / abs(deltas(0) * deltas(1));
 		    }
 
-		    layerstats->push_back(RegionInfo::image_stats_t::value_type("BeamArea",String::toString(beamArea)));
+		    layerstats->push_back(RegionInfo::stats_t::value_type("BeamArea",String::toString(beamArea)));
 
 		    Bool statsOk = stats.getLayerStats(*layerstats, beamArea, zPos, zIndex, hPos, hIndex);
 		    if ( ! statsOk ) {

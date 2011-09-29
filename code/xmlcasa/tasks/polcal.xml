@@ -98,7 +98,7 @@ calibrations can be applied on the fly.
 
 	<param type="double" name="minsnr">
 		<description>Reject solutions below this SNR</description>
-		<value>0.0</value>
+		<value>3.0</value>
 	</param>
 
 	<param type="string" name="poltype">
@@ -343,7 +343,7 @@ calibrations can be applied on the fly.
                    example: minblperant=10  =&gt; Antennas participating on 10 or more 
                             baselines are included in the solve
       minsnr -- Reject solutions below this SNR
-              default: 0.0 (accept all attempted solutions)
+              default: 3.0
       append -- Append solutions to the (existing) table
               default: False; overwrite existing table or make new table
 

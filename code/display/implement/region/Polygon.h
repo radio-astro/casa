@@ -69,7 +69,7 @@ namespace casa {
 		enum XScaleTo { ScaleLeft, ScaleRight };
 		enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
 
-		RegionInfo::image_stats_list_t *generate_image_statistics( );
+		std::list<RegionInfo> *generate_dds_statistics( );
 
 		void drawRegion( bool );
 

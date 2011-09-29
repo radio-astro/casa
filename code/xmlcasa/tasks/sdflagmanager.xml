@@ -86,15 +86,18 @@
                 'restore' will place the specified flag file into infile
                 'delete' will delete specified flag file
                 'rename' will rename a specified flag file
-        versionname -- Flag version name
-                default: none; example: versionname='original_data'
-                No imbedded blanks in the versionname
-        comment -- Short description of a versionname, when mode is 'save' or 'rename'
-                default: ''; example: comment='Clip above 1.85'
-                comment = versionname
-        oldname -- When mode='rename', the flag file to rename
-        merge -- Merge operation
-                Options: 'or','and', but not recommended for now.
+
+            &gt;&gt;&gt; mode expandable parameters             
+                 versionname -- Flag version name
+                         default: none; example: versionname='original_data'
+                         No imbedded blanks in the versionname
+                 comment -- Short description of a versionname, when mode is 'save' 
+                            or 'rename'
+                         default: ''; example: comment='Clip above 1.85'
+                         comment = versionname
+                 oldname -- When mode='rename', the flag file to rename
+                 merge -- Merge operation
+                         Options: 'or','and', but not recommended for now.
 
  </example>
  </task>
