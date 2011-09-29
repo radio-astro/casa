@@ -805,13 +805,13 @@ Bool WBCleanImageSkyModel::checkParameters()
 	    //cout << "Fractional bandwidth : " << fbw << endl;
 	     
 	    os << "Fractional Bandwidth : " << fbw*100 << " %." << endl;
-
+	    /*
 	    if(fbw < 0.1 && ntaylor_p == 2 )
 	        os << "Fractional Bandwidth is " << fbw*100 << " %. Please check that the flux variation across the chosen frequency range (" << startfreq << " Hz to " << endfreq << " Hz) is at least twice the single-channel noise-level. If not, please use nterms=1." << LogIO::WARN << LogIO::POST; 
 	    
 	    if(fbw < 0.1 && ntaylor_p > 2)
 	        os << "Fractional Bandwidth is " << fbw*100 << " %. Please check that (a) the flux variation across the chosen frequency range (" << startfreq << " Hz to " << endfreq << " Hz) is at least twice the single-channel noise-level, and (b) a " << ntaylor_p << "-term Taylor-polynomial fit across this frequency range is appropriate. " << LogIO::WARN << LogIO::POST; 
-
+	    */
 	    if(refFrequency_p < startfreq || refFrequency_p > endfreq)
 	        os << "A Reference frequency of " << refFrequency_p << "Hz is outside the frequency range of the selected data (" << startfreq << " Hz to " << endfreq << " Hz). A power-law interpretation of the resulting Taylor-coefficients may not be accurate." << LogIO::WARN << LogIO::POST;
 
