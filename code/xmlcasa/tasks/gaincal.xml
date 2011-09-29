@@ -69,7 +69,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 		<value></value>
 	</param>
 
-        <param type="any" name="observation">
+        <param type="any" name="observation" subparam="true">
                 <description>Select by observation ID(s)</description>
 		<any type="variant" limittypes="string int"/>
 		<value type="string"></value>
