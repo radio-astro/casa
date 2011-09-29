@@ -1155,7 +1155,7 @@ class cleanhelper:
     # as a parameter.  Both are used via self._selectlistinputs().
     def datweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                         wgttype, robust, noise, npixels, mosweight,
-                        innertaper, outertaper, calready, nchan=-1, start=0, width=1):
+                        uvtaper,innertaper, outertaper, calready, nchan=-1, start=0, width=1):
         rmode='none'
         weighting='natural';
         if(wgttype=='briggsabs'):
@@ -1196,7 +1196,7 @@ class cleanhelper:
         self.im.weight(type=weighting,rmode=rmode,robust=robust, 
                          npixels=npixels, noise=qa.quantity(noise,'Jy'), mosaic=mosweight)
      
-        if((type(outertaper)==list) and (len(outertaper) > 0)):
+        if((uvtaper==True) and (type(outertaper)==list) and (len(outertaper) > 0)):
             if(len(outertaper)==1):
                 outertaper.append(outertaper[0])
                 outertaper.append('0deg')
@@ -3065,7 +3065,7 @@ class cleanhelper:
                              uvrange=uvrange, antenna=antenna,scan=scan,
                              wgttype=weighting, robust=robust, noise=noise, 
                              npixels=npixels, mosweight=mosweight,
-                             innertaper=innertaper, outertaper=outertaper, 
+                             uvtaper=uvtaper, innertaper=innertaper, outertaper=outertaper, 
                              calready=calready, nchan=-1, start=0, width=1)
         # split this 
         #self.datselweightfilter(field=field, spw=spw,

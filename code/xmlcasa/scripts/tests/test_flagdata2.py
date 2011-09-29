@@ -77,16 +77,16 @@ class test_base(unittest.TestCase):
         flagdata2(vis=self.vis, unflag=True)
 
 
-class test_rfi(test_base):
-    """Test of mode = 'rfi'"""
-    
-    def setUp(self):
-        self.setUp_flagdata2test()
-        
-    def test1(self):
-        flagdata2(vis=self.vis, rfi=True, rfi_time_amp_cutoff=2.0);
-        test_eq(flagdata2(vis=self.vis, summary=True), 70902, 3000)
-        test_eq(flagdata2(vis=self.vis, selectdata=True, antenna='2', summary=True), 5252, 144)
+#class test_rfi(test_base):
+#    """Test of mode = 'rfi'"""
+#    
+#    def setUp(self):
+#        self.setUp_flagdata2test()
+#        
+#    def test1(self):
+#        flagdata2(vis=self.vis, rfi=True, rfi_time_amp_cutoff=2.0);
+#        test_eq(flagdata2(vis=self.vis, summary=True), 70902, 3000)
+#        test_eq(flagdata2(vis=self.vis, selectdata=True, antenna='2', summary=True), 5252, 144)
 
 
 class test_shadow(test_base):
@@ -217,15 +217,15 @@ class test_vector_ngc5921(test_base):
         manual= flagdata2(vis=self.vis, summary=True)
         flagdata2(vis=self.vis, unflag=True)
         flagdata2(vis=self.vis, clip=True, clipminmax=[0.0,0.1])
-        rfi=flagdata2(vis=self.vis, summary=True)
+        clip=flagdata2(vis=self.vis, summary=True)
         flagdata2(vis=self.vis, unflag=True)
         
         flagdata2(vis=self.vis, manualflag=True, mf_antenna=["2", "3", "5", "6"], clip=True,
                   clipminmax=[0.0,0.1])
         s = flagdata2(vis=self.vis, summary=True)
         
-        print 's=%s rfi+manual=%s rfi=%s manual=%s'%(s['flagged'],rfi['flagged']+manual['flagged'],
-                                                       rfi['flagged'],manual['flagged'])
+        print 's=%s clip+manual=%s clip=%s manual=%s'%(s['flagged'],clip['flagged']+manual['flagged'],
+                                                       clip['flagged'],manual['flagged'])
 
     def test4(self):
         a = ["2", "13", "5", "9"]
@@ -391,44 +391,44 @@ class test_msselection(test_base):
         assert "10&&10" not in baselines
         assert "10&&11" not in baselines
 
-class test_autoflag(test_base):
-
-    def setUp(self):
-        self.setUp_ngc5921()
-
-    def test_CAS1979(self):
-        """Test that autoflagging does not clear flags"""
-        s0 = flagdata2(vis=self.vis, summary=True)['flagged']
-        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
-        s1 = flagdata2(vis=self.vis, summary=True)['flagged']
-        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
-        s2 = flagdata2(vis=self.vis, summary=True)['flagged']
-        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
-        s3 = flagdata2(vis=self.vis, summary=True)['flagged']
-        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
-        s4 = flagdata2(vis=self.vis, summary=True)['flagged']
-        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
-        s5 = flagdata2(vis=self.vis, summary=True)['flagged']
-        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
-        s6 = flagdata2(vis=self.vis, summary=True)['flagged']
-
-        assert s0 == 0
-        assert s0 <= s1
-        assert s1 <= s2
-        assert s2 <= s3
-        assert s3 <= s4
-        assert s4 <= s5
-        assert s5 <= s6
-
-    def test1(self):
-        print "Test of autoflag, algorithm=timemed"
-        flagdata2(vis=self.vis, autoflag=True, algorithm='timemed', window=3)
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 4725)
-
-    def test2(self):
-        print "Test of autoflag, algorithm=freqmed"
-        flagdata2(vis=self.vis, autoflag=True, algorithm='freqmed')
-        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 29101)
+#class test_autoflag(test_base):
+#
+#    def setUp(self):
+#        self.setUp_ngc5921()
+#
+#    def test_CAS1979(self):
+#        """Test that autoflagging does not clear flags"""
+#        s0 = flagdata2(vis=self.vis, summary=True)['flagged']
+#        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
+#        s1 = flagdata2(vis=self.vis, summary=True)['flagged']
+#        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
+#        s2 = flagdata2(vis=self.vis, summary=True)['flagged']
+#        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
+#        s3 = flagdata2(vis=self.vis, summary=True)['flagged']
+#        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
+#        s4 = flagdata2(vis=self.vis, summary=True)['flagged']
+#        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
+#        s5 = flagdata2(vis=self.vis, summary=True)['flagged']
+#        flagdata2(vis=self.vis, autoflag=True, algorithm="freqmed", selectdata=True,field="0", spw="0")
+#        s6 = flagdata2(vis=self.vis, summary=True)['flagged']
+#
+#        assert s0 == 0
+#        assert s0 <= s1
+#        assert s1 <= s2
+#        assert s2 <= s3
+#        assert s3 <= s4
+#        assert s4 <= s5
+#        assert s5 <= s6
+#
+#    def test1(self):
+#        print "Test of autoflag, algorithm=timemed"
+#        flagdata2(vis=self.vis, autoflag=True, algorithm='timemed', window=3)
+#        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 4725)
+#
+#    def test2(self):
+#        print "Test of autoflag, algorithm=freqmed"
+#        flagdata2(vis=self.vis, autoflag=True, algorithm='freqmed')
+#        test_eq(flagdata2(vis=self.vis, summary=True), 2854278, 29101)
 
 class test_statistics_queries(test_base):
 
@@ -586,19 +586,19 @@ class test_multimode1(test_base):
     def setUp(self):
         self.setUp_ngc5921()
 
-    def test_manual_auto(self):
-        '''Flagdata2: manual and autoflag modes together'''
-        # It will run flagdata then compare with flagdata2
-        flagdata(vis=self.vis, selectdata=True, field='0')
-        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
-        res1 = flagdata2(vis=self.vis, summary=True)
-        
-        flagdata2(vis=self.vis, unflag=True)
-        flagdata2(vis=self.vis, autoflag=True,algorithm='timemed',window=3,
-                  manualflag=True, mf_field='0')
-        res2 = flagdata2(vis=self.vis, summary=True)
-        
-        self.assertEqual(res1['flagged'], res2['flagged'])
+#    def test_manual_auto(self):
+#        '''Flagdata2: manual and autoflag modes together'''
+#        # It will run flagdata then compare with flagdata2
+#        flagdata(vis=self.vis, selectdata=True, field='0')
+#        flagdata(vis=self.vis, mode='autoflag', algorithm='timemed', window=3)
+#        res1 = flagdata2(vis=self.vis, summary=True)
+#        
+#        flagdata2(vis=self.vis, unflag=True)
+#        flagdata2(vis=self.vis, autoflag=True,algorithm='timemed',window=3,
+#                  manualflag=True, mf_field='0')
+#        res2 = flagdata2(vis=self.vis, summary=True)
+#        
+#        self.assertEqual(res1['flagged'], res2['flagged'])
         
     def test_unflag_summary(self):
         '''Flagdata2: unflag and summary modes'''
@@ -858,11 +858,9 @@ def suite():
             test_vector,
             test_vector_ngc5921,
             test_flagmanager,
-            test_rfi,
             test_shadow,
             test_elevation,
             test_msselection,
-            test_autoflag,
             test_multimode1,
             test_multimode2,
             test_mfselections,

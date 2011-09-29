@@ -189,7 +189,7 @@ class MSAsRaster: public ActiveCaching2dDD {
   // setActiveImage(zindex); also used for position tracking.
   virtual String showPosition(const Vector<Double> &world,
 			      const Bool &displayAxesOnly = False);
-  bool showPosition( viewer::Region::ms_stats_t &stat_list, const Vector<Double> &world,
+  bool showPosition( viewer::RegionInfo::stats_t &stat_list, const Vector<Double> &world,
 		     const Bool& displayAxesOnly = False);
 
   // get the Unit for displayed data values (visibilities)
@@ -272,6 +272,8 @@ class MSAsRaster: public ActiveCaching2dDD {
 
   virtual const String &name( ) const { return msName_; }
 
+  // added to allow flagging control from mouse tools... <drs>
+  bool flag( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
 
  protected:
 

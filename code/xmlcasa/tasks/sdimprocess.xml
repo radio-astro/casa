@@ -106,19 +106,22 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         mode -- processing mode
                 default: 'basket'
                 options: 'basket', 'press'
-               direction -- scan direction in unit of degree
-                   default: []
-                   example: [0.0,90.0]
-               masklist -- mask width for Basket-Weaving on percentage
-                   default: 1.0 (1.0% of map size)
-               numpoly -- order of polynomial fit in Presssed-out
-                   default: 2
-               beamsize -- beam size 
-                   default: 0.0
-                   example: 10.0 (interpreted as '10arcsec'), '1arcmin'
-               smoothsize -- smoothing beam in Pressed-out
-                   default: 2.0 (interpreted as 2.0 * beamsize)
-                   example: '1arcmin' (set smoothsize directly)
+
+            &gt;&gt;&gt;mode expandable parameter
+                 direction -- scan direction in unit of degree
+                     default: []
+                     example: [0.0,90.0]
+                 masklist -- mask width for Basket-Weaving on percentage
+                     default: 1.0 (1.0% of map size)
+                 numpoly -- order of polynomial fit in Presssed-out
+                     default: 2
+                 beamsize -- beam size 
+                     default: 0.0
+                     example: 10.0 (interpreted as '10arcsec'), '1arcmin'
+                 smoothsize -- smoothing beam in Pressed-out
+                     default: 2.0 (interpreted as 2.0 * beamsize)
+                     example: '1arcmin' (set smoothsize directly)
+
         tmax -- maximum value used for process
                 default: 0.0 (no threshold in maximum)
                 example: 10.0 (mask data larger value than 10.0)

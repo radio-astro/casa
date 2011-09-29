@@ -83,7 +83,7 @@ namespace casa {
 		if ( region_modified ) statistics_update_needed = true;
 	    } else if ( (statistics_update_needed || region_modified) && regionVisible( ) ) {
 		statistics_update_needed = false;
-		RegionInfo::image_stats_list_t *rl = generate_image_statistics( );
+		std::list<RegionInfo> *rl = generate_dds_statistics( );
 		// send statistics to region state object...
 		mystate->updateStatistics(rl);
 	    }

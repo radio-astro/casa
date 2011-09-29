@@ -55,9 +55,11 @@ namespace casa {
 
 		AnnRegion *annotation( ) const;
 
+		bool flag( MSAsRaster * ) { return false; }
+
 	    protected:
 
-		RegionInfo::image_stats_list_t *generate_image_statistics( );
+		std::list<RegionInfo> *generate_dds_statistics( );
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;

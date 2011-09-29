@@ -82,8 +82,11 @@ Synopsis
     called \ahlink{sd.linefinder}{sd:sd.linefinder}. 
     The \ahlink{sd.linefinder}{sd:sd.linefinder} has a few control parameter 
     for line finding. The user is able to customize a behavior of line finding 
-    process by changing these parameters.
-    See \ahlink{sd.linefinder}{sd:sd.linefinder} for details.
+    process by changing these parameters. 
+    Simplified line finding tool \ahlink{sd.simplelinefinder}{sd:sd.simplelinefinder} 
+    is also available.  
+    See \ahlink{sd.linefinder}{sd:sd.linefinder} and 
+    \ahlink{sd.simplelinefinder}{sd:sd.simplelinefinder} for details.
 
   \medskip\noindent\textbf{Line catalog}
 
@@ -1666,7 +1669,11 @@ Methods
 
 	\ahlink{add}{sd:sd.scantable.add} &Return a scan where all spectra have the offset added \\
 
-	\ahlink{auto\_poly\_baseline}{sd:sd.scantable.auto_poly_baseline} &Perform automatic line finding and baseline subtraction \\
+        \ahlink{auto\_cspline\_baseline}{sd:sd.scantable.auto_cspline_baseline} &Perform automatic line finding and baseline subtraction using cubic spline function \\
+
+	\ahlink{auto\_poly\_baseline}{sd:sd.scantable.auto_poly_baseline} &Perform automatic line finding and baseline subtraction using polynomial function \\
+
+        \ahlink{auto\_sinusoid\_baseline}{sd:sd.scantable.auto_sinusoid_baseline} &Perform automatic line finding and baseline subtraction using sinusoidal function \\
 
 	\ahlink{auto\_quotient}{sd:sd.scantable.auto_quotient} &Automatic quotient for coordinated scans \\
 
@@ -1689,6 +1696,8 @@ Methods
 	\ahlink{copy}{sd:sd.scantable.copy} &Return a copy of this scantable \\
 
 	\ahlink{create\_mask}{sd:sd.scantable.create_mask} &Return a bool array based on [min,max] windows \\
+
+	\ahlink{cspline\_baseline}{sd:sd.scantable.cspline_baseline} &Perform a baseline subtraction using cubic spline function \\
 
 	\ahlink{drop\_scan}{sd:sd.scantable.drop_scan} &Return a new scantable where the specified scan number(s) dropped \\
 
@@ -1806,7 +1815,7 @@ Methods
 
 	\ahlink{poltype}{sd:sd.scantable.poltype} &Get a polarization type \\
 
-	\ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline} &Perform a baseline subtraction \\
+	\ahlink{poly\_baseline}{sd:sd.scantable.poly_baseline} &Perform a baseline subtraction using polynomial function \\
 
 	\ahlink{recalc\_azel}{sd:sd.scantable.recalc_azel} &Recalculate azimuth and elevation for each sky position \\
 
@@ -1843,6 +1852,8 @@ Methods
 	\ahlink{set\_unit}{sd:sd.scantable.set_unit} &Set unit for spectral axis \\
 
 	\ahlink{shift\_refpix}{sd:sd.scantable.shift_refpix} &Shift the reference pixel of the spectral coordinate \\
+
+	\ahlink{sinusoid\_baseline}{sd:sd.scantable.sinusoid_baseline} &Perform a baseline subtraction using sinusoidal function \\
 
 	\ahlink{smooth}{sd:sd.scantable.smooth} &Smooth the spectra \\
 
@@ -1891,14 +1902,127 @@ scantable
 \hfill \\
 
 
-%% sd.scantable.auto_poly_baseline
+%% sd.scantable.auto_cspline_baseline
 \newpage
-\ahsdfunction{sd.scantable.auto\_poly\_baseline}{sd.scantable.auto_poly_baseline}{Perform automatic line finding and baseline subtraction}
+\ahsdfunction{sd.scantable.auto\_cspline\_baseline}{sd.scantable.auto_cspline_baseline}{Perform automatic line finding and baseline subtraction using cubic spline function}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Return a scan which has been baselined (all rows by default) by a polynomial.
+    Return a scan which has been baselined (all rows) by cubic spline
+    function (piecewise cubic polynomial). Fit will be done with 'sigma-clipping'.
+
+    Spectral lines are detected first using linefinder and masked out
+    to avoid them affecting the baseline solution.
+
+    The edge argument is an optional number of channel to drop at the edge of
+    spectrum. If only one value is specified, the same number will be dropped from
+    both sides of the spectrum. Default is to keep all channels. Nested tuples 
+    represent individual edge selection for different IFs (a number of spectral
+    channels can be different).
+
+    The threshold and chan\_avg\_limit arguments are linefinder options.
+    The former is the threshold used by line finder. It is better to
+    keep it large as only strong lines affect the baseline solution.
+    The later is  a maximum number of consequtive spectral channels to
+    average during the search of weak and broad lines.
+    The default is no averaging (and no search for weak
+    lines). If such lines can affect the fitted baseline
+    (e.g. a high order polynomial is fitted), increase this
+    parameter (usually values up to 8 are reasonable). Most
+    users of this method should find the default value sufficient.
+    See \ahlink{linefinder}{sd:sd.linefinder} for more details on these options.
+
+    Note:
+        The best-fit parameter values output in logger and/or blfile are now
+        based on specunit of 'channel'. 
+ 
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: bool &  \\
+& &Default: None (use default value) & 
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask retreived from scantable}\\
+& &allowed: & bool \\
+& &Default: & None (no mask)
+\\
+npiece && \multicolumn{2}{p{3.36in}|}{Number of pieces}\\
+& &allowed: & integer \\
+& &Default: & 2
+\\
+clipthresh && \multicolumn{2}{p{3.36in}|}{Clipping threshold in unit of sigma}\\
+& &allowed: & float \\
+& &Default: & 3.0
+\\
+clipniter && \multicolumn{2}{p{3.36in}|}{Maximum number of iteration of clipping}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+edge && \multicolumn{2}{p{3.36in}|}{An optional number of channel to drop at the edge of spectrum}\\
+& &allowed: & integer, integer array \\
+& &Default: & (0,0) 
+\\
+threshold && \multicolumn{2}{p{3.36in}|}{The threshold used by line finder}\\
+& &allowed: & float \\
+& &Default: & 3
+\\
+chan\_avg\_limit && \multicolumn{2}{p{3.36in}|}{A maximum number of consequtive spectral channels to average during the search}\\
+& &allowed: & int \\
+& &Default: & 1
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual (currently unavailable)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+getresidual && \multicolumn{2}{p{3.36in}|}{If False, return best-fit value instead of residual}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+showprogress && \multicolumn{2}{p{3.36in}|}{Show progress status for large data}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+minnrow && \multicolumn{2}{p{3.36in}|}{Minimum number of spectra to show progress status}\\
+& &allowed: & integer \\
+& &Default: & 1000
+\\
+outlog && \multicolumn{2}{p{3.36in}|}{Output the coefficients of the best-fit function to logger}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+blfile && \multicolumn{2}{p{3.36in}|}{Name of text file in which the best-fit parameter values to be written}\\
+& &allowed: & string \\
+& &Default: & '' 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
+        bscan = scan.auto_cspline_baseline(npiece=3, insitu=False)
+\end{verbatim}
+
+
+%% sd.scantable.auto_poly_baseline
+\newpage
+\ahsdfunction{sd.scantable.auto\_poly\_baseline}{sd.scantable.auto_poly_baseline}{Perform automatic line finding and baseline subtraction using polynomial function}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return a scan which has been baselined (all rows) by a polynomial.
     Spectral lines are detected first using linefinder and masked out
     to avoid them affecting the baseline solution.
 
@@ -1924,6 +2048,10 @@ scantable
     In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
     recommended for large dataset.
  
+    Note:
+        The best-fit parameter values output in logger and/or blfile are now
+        based on specunit of 'channel'. 
+
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
 \begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
@@ -1933,13 +2061,13 @@ mask && \multicolumn{2}{p{3.36in}|}{An optional mask retreived from scantable}\\
 & &allowed: & bool array \\
 & &Default: & None (no mask)
 \\
-edge && \multicolumn{2}{p{3.36in}|}{An optional number of channel to drop at the edge of spectrum}\\
-& &allowed: & integer, integer array \\
-& &Default: & (0,0) 
-\\
 order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
 & &allowed: & integer \\
 & &Default: & 0
+\\
+edge && \multicolumn{2}{p{3.36in}|}{An optional number of channel to drop at the edge of spectrum}\\
+& &allowed: & integer, integer array \\
+& &Default: & (0,0) 
 \\
 threshold && \multicolumn{2}{p{3.36in}|}{The threshold used by line finder}\\
 & &allowed: & float \\
@@ -1955,10 +2083,27 @@ plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual.}\\
 \\
 insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
 & &allowed: & bool \\
-& &Default: & None (use default value)\\
-rows && \multicolumn{2}{p{3.36in}|}{Row numbers of spectra to be processed}\\
-& &allowed: & integer, integer array \\
-& &Default: & None (process all rows)
+& &Default: & None (use default value)
+\\
+getresidual && \multicolumn{2}{p{3.36in}|}{If False, return best-fit value instead of residual}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+showprogress && \multicolumn{2}{p{3.36in}|}{Show progress status for large data}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+minnrow && \multicolumn{2}{p{3.36in}|}{Minimum number of spectra to show progress status}\\
+& &allowed: & integer \\
+& &Default: & 1000
+\\
+outlog && \multicolumn{2}{p{3.36in}|}{Output the coefficients of the best-fit function to logger}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+blfile && \multicolumn{2}{p{3.36in}|}{Name of text file in which the best-fit parameter values to be written}\\
+& &allowed: & string \\
+& &Default: & '' 
 \\
 
 \hline
@@ -1975,7 +2120,6 @@ scantable
         scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
         scan2 = scan.auto_poly_baseline(order=7, insitu=False)
 \end{verbatim}
-
 
 
 %% sd.scantable.auto_quotient
@@ -2038,6 +2182,160 @@ scantable
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
+
+
+%% sd.scantable.auto_sinusoid_baseline
+\newpage
+\ahsdfunction{sd.scantable.auto\_sinusoid\_baseline}{sd.scantable.auto_sinusoid_baseline}{Perform automatic line finding and baseline subtraction using sinusoidal function}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return a scan which has been baselined (all rows) with sinusoidal functions.
+    Fit will be done with 'sigma-clipping'.
+
+    Spectral lines are detected first using linefinder and masked out
+    to avoid them affecting the baseline solution.
+
+    If applyfft is set to True, the function performs Fourier analysis to select 
+    wave numbers for sinusoidal fitting. Currently, 'fft' is only available to be 
+    used for the analysis. You can specify threshold for selection of wave number 
+    using fftthresh parameter. Both float and string is acceptable. Given a float 
+    value, the unit is set to sigma. For string values, allowed formats include:
+
+    \begin{itemize}
+    \item any decimal number plus 'sigma' (e.g. '3sigma')
+    \item 'top' plus any decimal number (e.g. 'top10')
+    \end{itemize}
+
+    In addition, you can add or reject specific wave numbers from the fit using 
+    addwn and rejwn, respectively. You can specify wave numbers as an integer,  
+    string, or list of them. For string specification, syntax for those parameters 
+    are as follows:
+    
+    \begin{itemize}
+    \item 'a-b' (= a, a+1, a+2, ..., b-1, b)
+    \item '$<$a' (= 0, 1, ..., a-2, a-1)
+    \item '$>$a' (= a+1, a+2, ... up to maximum wave number corresponding to the Nyquist frequency)
+    \end{itemize} 
+
+    You can append '=' after inequality sign. When both addwn and rejwn are set, 
+    rejwn will take priority of addwn.
+ 
+    The edge argument is an optional number of channel to drop at the edge of
+    spectrum. If only one value is specified, the same number will be dropped from
+    both sides of the spectrum. Default is to keep all channels. Nested tuples 
+    represent individual edge selection for different IFs (a number of spectral
+    channels can be different).
+
+    The threshold and chan\_avg\_limit arguments are linefinder options.
+    The former is the threshold used by line finder. It is better to
+    keep it large as only strong lines affect the baseline solution.
+    The later is  a maximum number of consequtive spectral channels to
+    average during the search of weak and broad lines.
+    The default is no averaging (and no search for weak
+    lines). If such lines can affect the fitted baseline
+    (e.g. a high order polynomial is fitted), increase this
+    parameter (usually values up to 8 are reasonable). Most
+    users of this method should find the default value sufficient.
+    See \ahlink{linefinder}{sd:sd.linefinder} for more details on these options.
+
+    Note:
+        The best-fit parameter values output in logger and/or blfile are now
+        based on specunit of 'channel'. 
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None (use default value)
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask retreived from scantable}\\
+& &allowed: & bool array \\
+& &Default: & None (no mask)
+\\
+applyfft && \multicolumn{2}{p{3.36in}|}{Perform Fourier analysis to find appropriate sinusoidal component}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+fftmethod && \multicolumn{2}{p{3.36in}|}{Method to find sinusoidal component (currently only 'fft' is available)}\\
+& &allowed: & string \\
+& &Default: & 'fft'
+\\
+fftthresh && \multicolumn{2}{p{3.36in}|}{Threshod to select wave number in Fourier analysis}\\
+& &allowed: & float, string \\
+& &Default: & 3.0
+\\
+addwn && \multicolumn{2}{p{3.36in}|}{Additional wave numbers to be used for fitting}\\
+& &allowed: & integer, string, any array \\
+& &Default: & []
+\\
+rejwn && \multicolumn{2}{p{3.36in}|}{Waver numbers not to be used for fitting}\\
+& &allowed: & integer, string, any array \\
+& &Default: & []
+\\
+clipthresh && \multicolumn{2}{p{3.36in}|}{Clipping threshold in unit of sigma}\\
+& &allowed: & float \\
+& &Default: & 3.0
+\\
+clipniter && \multicolumn{2}{p{3.36in}|}{Maximum number of iteration of clipping}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+edge && \multicolumn{2}{p{3.36in}|}{An optional number of channel to drop at the edge of spectrum}\\
+& &allowed: & integer, integer array \\
+& &Default: & (0,0) 
+\\
+threshold && \multicolumn{2}{p{3.36in}|}{The threshold used by line finder}\\
+& &allowed: & float \\
+& &Default: & 3
+\\
+chan\_avg\_limit && \multicolumn{2}{p{3.36in}|}{A maximum number of consequtive spectral channels to average during the search}\\
+& &allowed: & int \\
+& &Default: & 1
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual (currently unavailable)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+getresidual && \multicolumn{2}{p{3.36in}|}{If False, return best-fit value instead of residual}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+showprogress && \multicolumn{2}{p{3.36in}|}{Show progress status for large data}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+minnrow && \multicolumn{2}{p{3.36in}|}{Minimum number of spectra to show progress status}\\
+& &allowed: & integer \\
+& &Default: & 1000
+\\
+outlog && \multicolumn{2}{p{3.36in}|}{Output the coefficients of the best-fit function to logger}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+blfile && \multicolumn{2}{p{3.36in}|}{Name of text file in which the best-fit parameter values to be written}\\
+& &allowed: & string \\
+& &Default: & '' 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
+        scan2 = scan.auto_sinusoid_baseline(addwn='<=10', insitu=False)
+\end{verbatim}
 
 
 %% sd.scantable.average_beam
@@ -2493,6 +2791,88 @@ bool array
         # c)
         #mask only channel 400
         msk =  scan.create_mask([400])
+\end{verbatim}
+
+
+%% sd.scantable.cspline_baseline
+\newpage
+\ahsdfunction{sd.scantable.cspline\_baseline}{sd.scantable.cspline_baseline}{Perform a baseline subtraction using cubic spline function}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return a scan which has been baselined (all rows) by cubic spline
+    function (piecewise cubic polynomial). Fit will be done with 'sigma-clipping'.
+
+    Note:
+        The best-fit parameter values output in logger and/or blfile are now
+        based on specunit of 'channel'. 
+ 
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: bool &  \\
+& &Default: None (use default value) & 
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask retreived from scantable}\\
+& &allowed: & bool \\
+& &Default: & None (no mask)
+\\
+npiece && \multicolumn{2}{p{3.36in}|}{Number of pieces}\\
+& &allowed: & integer \\
+& &Default: & 2
+\\
+clipthresh && \multicolumn{2}{p{3.36in}|}{Clipping threshold in unit of sigma}\\
+& &allowed: & float \\
+& &Default: & 3.0
+\\
+clipniter && \multicolumn{2}{p{3.36in}|}{Maximum number of iteration of clipping}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual (currently unavailable)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+getresidual && \multicolumn{2}{p{3.36in}|}{If False, return best-fit value instead of residual}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+showprogress && \multicolumn{2}{p{3.36in}|}{Show progress status for large data}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+minnrow && \multicolumn{2}{p{3.36in}|}{Minimum number of spectra to show progress status}\\
+& &allowed: & integer \\
+& &Default: & 1000
+\\
+outlog && \multicolumn{2}{p{3.36in}|}{Output the coefficients of the best-fit function to logger}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+blfile && \multicolumn{2}{p{3.36in}|}{Name of text file in which the best-fit parameter values to be written}\\
+& &allowed: & string \\
+& &Default: & '' 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
+        # return a scan baselined by a cubic spline consisting of 2 pieces (i.e., 1 internal knot),
+        # also with 3-sigma clipping, iteration up to 4 times
+        bscan = scan.cspline_baseline(npiece=2,clipthresh=3.0,clipniter=4)
 \end{verbatim}
 
 
@@ -4377,7 +4757,7 @@ string
 
 %% sd.scantable.poly_baseline
 \newpage
-\ahsdfunction{sd.scantable.poly\_baseline}{sd.scantable.poly_baseline}{Perform a baseline subtraction}
+\ahsdfunction{sd.scantable.poly\_baseline}{sd.scantable.poly_baseline}{Perform a baseline subtraction using polynomial function}
 
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
@@ -4390,10 +4770,6 @@ string
     You can verify and decide whether you apply the fit result or not, if plot argument is True.
     In that case, you have to answer 'y' or 'n' for each spectra so that setting True is not 
     recommended for large dataset.
-
-    The batch argument is a new parameter to handle a behavior of the method.
-    If it is Ture, a faster algorithm is used and logs including the fit results will not be 
-    displayed in the logger or console.
 
     This is an newer version of \ahlink{old\_poly\_baseline}{sd:sd.scantable.old_poly_baseline}. 
     The only difference between them is its performance. For larger dataset, 
@@ -4412,21 +4788,33 @@ order && \multicolumn{2}{p{3.36in}|}{The order of the polynomial}\\
 & &allowed: & integer \\
 & &Default: & 0
 \\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None (use default value)
+\\
 plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual}\\
 & &allowed: & bool \\
 & &Default: & False
 \\
-batch && \multicolumn{2}{p{3.36in}|}{if True a faster algorithm is used}\\
+getresidual && \multicolumn{2}{p{3.36in}|}{If False, return best-fit value instead of residual}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+showprogress && \multicolumn{2}{p{3.36in}|}{Show progress status for large data}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+minnrow && \multicolumn{2}{p{3.36in}|}{Minimum number of spectra to show progress status}\\
+& &allowed: & integer \\
+& &Default: & 1000
+\\
+outlog && \multicolumn{2}{p{3.36in}|}{Output the coefficients of the best-fit function to logger}\\
 & &allowed: & bool \\
 & &Default: & False
 \\
-insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
-& &allowed: & bool \\
-& &Default: & None
-\\
-rows && \multicolumn{2}{p{3.36in}|}{row numbers of spectra to be processed}\\
-& &allowed: & integer, integer array \\
-& &Default: & None (all rows)
+blfile && \multicolumn{2}{p{3.36in}|}{Name of text file in which the best-fit parameter values to be written}\\
+& &allowed: & string \\
+& &Default: & '' 
 \\
 
 \hline
@@ -5125,6 +5513,133 @@ delta && \multicolumn{2}{p{3.36in}|}{The amount to shift by}\\
 \hfill \\
 
 
+%% sd.scantable.sinusoid_baseline
+\newpage
+\ahsdfunction{sd.scantable.sinusoid\_baseline}{sd.scantable.sinusoid_baseline}{Perform a baseline subtraction using sinusoidal function}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return a scan which has been baselined (all rows) with sinusoidal functions.
+    Fit will be done with 'sigma-clipping'.
+
+    Spectral lines are detected first using linefinder and masked out
+    to avoid them affecting the baseline solution.
+
+    If applyfft is set to True, the function performs Fourier analysis to select 
+    wave numbers for sinusoidal fitting. Currently, 'fft' is only available to be 
+    used for the analysis. You can specify threshold for selection of wave number 
+    using fftthresh parameter. Both float and string is acceptable. Given a float 
+    value, the unit is set to sigma. For string values, allowed formats include:
+
+    \begin{itemize}
+    \item any decimal number plus 'sigma' (e.g. '3sigma')
+    \item 'top' plus any decimal number (e.g. 'top10')
+    \end{itemize}
+
+    In addition, you can add or reject specific wave numbers from the fit using 
+    addwn and rejwn, respectively. You can specify wave numbers as an integer,  
+    string, or list of them. For string specification, syntax for those parameters 
+    are as follows:
+    
+    \begin{itemize}
+    \item 'a-b' (= a, a+1, a+2, ..., b-1, b)
+    \item '$<$a' (= 0, 1, ..., a-2, a-1)
+    \item '$>$a' (= a+1, a+2, ... up to maximum wave number corresponding to the Nyquist frequency)
+    \end{itemize} 
+
+    You can append '=' after inequality sign. When both addwn and rejwn are set, 
+    rejwn will take priority of addwn.
+ 
+    Note:
+        The best-fit parameter values output in logger and/or blfile are now
+        based on specunit of 'channel'. 
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+insitu && \multicolumn{2}{p{3.36in}|}{If False a new scantable is returned}\\
+& &allowed: & bool \\
+& &Default: & None (use default value)
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional mask retreived from scantable}\\
+& &allowed: & bool array \\
+& &Default: & None (no mask)
+\\
+applyfft && \multicolumn{2}{p{3.36in}|}{Perform Fourier analysis to find appropriate sinusoidal component}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+fftmethod && \multicolumn{2}{p{3.36in}|}{Method to find sinusoidal component (currently only 'fft' is available)}\\
+& &allowed: & string \\
+& &Default: & 'fft'
+\\
+fftthresh && \multicolumn{2}{p{3.36in}|}{Threshod to select wave number in Fourier analysis}\\
+& &allowed: & float, string \\
+& &Default: & 3.0
+\\
+addwn && \multicolumn{2}{p{3.36in}|}{Additional wave numbers to be used for fitting}\\
+& &allowed: & integer, string, any array \\
+& &Default: & []
+\\
+rejwn && \multicolumn{2}{p{3.36in}|}{Waver numbers not to be used for fitting}\\
+& &allowed: & integer, string, any array \\
+& &Default: & []
+\\
+clipthresh && \multicolumn{2}{p{3.36in}|}{Clipping threshold in unit of sigma}\\
+& &allowed: & float \\
+& &Default: & 3.0
+\\
+clipniter && \multicolumn{2}{p{3.36in}|}{Maximum number of iteration of clipping}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+plot && \multicolumn{2}{p{3.36in}|}{Plot the fit and the residual (currently unavailable)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+getresidual && \multicolumn{2}{p{3.36in}|}{If False, return best-fit value instead of residual}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+showprogress && \multicolumn{2}{p{3.36in}|}{Show progress status for large data}\\
+& &allowed: & bool \\
+& &Default: & True 
+\\
+minnrow && \multicolumn{2}{p{3.36in}|}{Minimum number of spectra to show progress status}\\
+& &allowed: & integer \\
+& &Default: & 1000
+\\
+outlog && \multicolumn{2}{p{3.36in}|}{Output the coefficients of the best-fit function to logger}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+blfile && \multicolumn{2}{p{3.36in}|}{Name of text file in which the best-fit parameter values to be written}\\
+& &allowed: & string \\
+& &Default: & '' 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+scantable
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+\begin{verbatim}
+        asap_init()
+        scan = sd.scantable('OrionS_rawACSmod_cal',average=False)
+        # return a scan baselined by a combination of sinusoidal curves having
+        # wave numbers in spectral window up to 10, 
+        # also with 3-sigma clipping, iteration up to 4 times
+        bscan = scan.sinusoid_baseline(addwn='<=10',clipthresh=3.0,clipniter=4)
+\end{verbatim}
+
+
 %% sd.scantable.smooth
 \newpage
 \ahfunction{sd.scantable.smooth}{Smooth the spectra}
@@ -5403,15 +5918,18 @@ fhisky & 36 & sky higher frequency throw of symmetric frequency switching \\
 fhihot & 37 & hot load higher frequency throw of symmetric frequency switching \\
 fhiwarm & 38 & warm load higher frequency throw of symmetric frequency switching \\
 fhicold & 39 & cold load higher frequency throw of symmetric frequency switching \\
+sig & 90 & signal scan \\
+ref & 91 & reference scan \\
+cal & 92 & calibration scan \\
 notype & 99 & no type \\ 
 \end{longtable}
 
-  \medskip\noindent\textbf{Known Issues}
-
-    After the data in scantable is selected by the selector object, 
-    \ahlink{save}{sd:sd.scantable.save} function doesn't work.
-    Before saving selected data, you must \ahlink{copy}{sd:sd.scantable.copy} 
-    scantable first, and save it as usual.
+%  \medskip\noindent\textbf{Known Issues}
+%
+%    After the data in scantable is selected by the selector object, 
+%    \ahlink{save}{sd:sd.scantable.save} function doesn't work.
+%    Before saving selected data, you must \ahlink{copy}{sd:sd.scantable.copy} 
+%    scantable first, and save it as usual.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -6296,6 +6814,8 @@ Methods
 
 	\ahlink{set\_scan}{sd:sd.fitter.set_scan} & Set the data as a scantable \\
 
+        \ahlink{set\_sinusoid\_parameters}{sd:sd.fitter.set_sinusoid_parameters} &Set the parameters of Sinusoidal component \\
+
 	\ahlink{store\_fit}{sd:sd.fitter.store_fit} & Save fit parameters \\
 
 \end{longtable}
@@ -6867,7 +7387,7 @@ component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
    Set the Parameters of a 'Lorentzian' component, set with \ahlink{set\_function}{sd:sd.fitter.set_function}.
 
    Three arguments, peak, centre, and fwhm, are mandatory to be set. They specifies an initial model of 
-   Gaussian component. 
+   Lorentzian component. 
 
    The peakfixed, centrefixed, and fwhmfixed are optional parameters to indicate if
    the paramters should be held fixed during the fitting process. The default is to keep all parameters flexible.
@@ -6948,9 +7468,11 @@ component && \multicolumn{2}{p{3.36in}|}{The number of the component}\\
    The params and fixed in the following argument list doesn't indicate argument itself here.
    Instead, they indicate keywords in the above dictionary.
 
-   This method is normally called from \ahlink{set\_gauss\_parameters}{sd:sd.fitter.set_gauss_parameters} 
-   and \ahlink{set\_lorentz\_parameters}{sd:sd.fitter.set_lorentz_parameters} so that you may not need to call 
-   this method directly. 
+   This method is normally called from 
+   \ahlink{set\_gauss\_parameters}{sd:sd.fitter.set_gauss_parameters}, 
+   \ahlink{set\_lorentz\_parameters}{sd:sd.fitter.set_lorentz_parameters}, and 
+   \ahlink{set\_sinusoid\_parameters}{sd:sd.fitter.set_sinusoid_parameters} so that you may 
+   not need to call this method directly. 
  
 \flushleft\vspace{.20in}\textbf {Arguments}\\
 \hfill \\
@@ -6966,6 +7488,72 @@ fixed && \multicolumn{2}{p{3.36in}|}{A vector of which parameters are to be held
 & &Default: & None (all parameters are flexible)
 \\
 component && \multicolumn{2}{p{3.36in}|}{In case of multiple gaussians/lorentzians, the index of the component}\\
+& &allowed: & integer \\
+& &Default: & 0
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.fitter.set_sinusoid_parameters
+\newpage
+\ahsdfunction{sd.fitter.set\_sinusoid\_parameters}{sd.fitter.set_sinusoid_parameters}{Set the parameters of Sinusoidal component}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+   Set the Parameters of a 'Sinusoidal' component, set with 
+   \ahlink{set\_function}{sd:sd.fitter.set_function}.
+
+   Three arguments, ampl, period, and x0, are mandatory to be set. 
+   They specifies an initial model of Sinusoidal component. 
+
+   The amplfixed, periodfixed, and x0fixed are optional parameters to indicate if
+   the paramters should be held fixed during the fitting process. 
+   The default is to keep all parameters flexible.
+   If you want to fix one of those parameters, you can do it by setting corresponding 
+   arguments (amplfixed, periodfixed, and x0fixed) to 1.
+   
+   The component argument is only effective for multi-component Sinusoidal fitting.
+   It specifies the number of the component to set the specified parameters.
+
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+ampl && \multicolumn{2}{p{3.36in}|}{The sinusoidal parameters (amplitude)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+period && \multicolumn{2}{p{3.36in}|}{The sinusoidal parameters (period)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+x0 && \multicolumn{2}{p{3.36in}|}{The sinusoidal parameters (phase offset)}\\
+& &allowed: & float \\
+& &Default: & 
+\\
+amplfixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if ampl should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+periodfixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if period should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+x0fixed && \multicolumn{2}{p{3.36in}|}{Optional parameters to indicate if x0 should be held fixed during the fitting process}\\
+& &allowed: & integer \\
+& &Default: & 0 (flexible)
+\\
+component && \multicolumn{2}{p{3.36in}|}{}\\
 & &allowed: & integer \\
 & &Default: & 0
 \\
@@ -7550,6 +8138,8 @@ Methods
 
 	\ahlink{get\_ranges}{sd:sd.linefinder.get_ranges} & Get ranges for all spectral lines found \\
 
+	\ahlink{set\_data}{sd:sd.linefinder.set_data} & Set the data as an array \\
+
 	\ahlink{set\_options}{sd:sd.linefinder.set_options} & Set the parameters of the line finding algorithm \\
 
 	\ahlink{set\_scan}{sd:sd.linefinder.set_scan} & Set the data as a scantable \\
@@ -7670,6 +8260,37 @@ bool array
 \hfill \\
 
 
+%% sd.linefinder.set_data
+\newpage
+\ahsdfunction{sd.linefinder.set\_data}{sd.linefinder.set_data}{Set the data as an array}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Set the 'data' (spectrum) to work with
+    Parameters: a method to allow linefinder work without setting scantable
+    for the purpose of using linefinder inside some method in scantable
+    class. (Dec 22, 2010 by W.Kawasaki)
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+spectrum&& \multicolumn{2}{p{3.36in}|}{The data to be set}\\
+& &allowed: & float array \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
 %% sd.linefinder.set_options
 \newpage
 \ahsdfunction{sd.linefinder.set\_options}{sd.linefinder.set_options}{Set the parameters of the line finding algorithm}
@@ -7754,6 +8375,246 @@ scan&& \multicolumn{2}{p{3.36in}|}{The data to be set}\\
 \hfill \\
 
 
+%%%%% sd.simplelinefinder
+\newpage
+\ahobject{sd.simplelinefinder}{Simplified line finder tool for single-dish spectrum}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    A simplified class to search for spectral features. The algorithm assumes that the bandpass
+    is taken out perfectly and no spectral channels are flagged (except some edge channels).
+    It works with a list or tuple rather than a scantable and returns the channel pairs.
+    There is an optional feature to attempt to split the detected lines into components, although
+    it should be used with caution. This class is largely intended to be used with scripts.
+    
+    The fully featured version of the algorithm working with scantables is called 
+    \ahlink{linefinder}{sd:sd.linefinder}.
+
+Methods
+\begin{longtable}{ll}
+
+	\ahlink{channelRange}{sd:sd.simplelinefinder.channelRange} & Convert supplied velocity range into the channel range \\
+
+	\ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} & Search for spectral lines in the spectrum \\
+
+	\ahlink{invertChannelSelection}{sd:sd.simplelinefinder.invertChannelSelection} & Invert channel range selection \\
+
+	\ahlink{median}{sd:sd.simplelinefinder.median} & Return a median of the last spectrum passed to \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} \\
+
+	\ahlink{rms}{sd:sd.simplelinefinder.rms} & Return rms calculated during last \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} call \\
+
+	\ahlink{writeLog}{sd:sd.simplelinefinder.writeLog} & Write user defined string into log file \\
+
+\end{longtable}
+
+
+%% sd.simplelinefineder.channelRange
+\newpage
+\ahfunction{sd.simplelinefinder.channelRange}{Convert supplied velocity range into the channel range}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    A helper method which works on a tuple with abcissa/flux vectors 
+    (i.e. as returned by uvSpectrum). It allows to convert supplied 
+    velocity range into the channel range.
+
+    The argument spc specifies abcissa/flux vectors as tuple. First and second elements of the 
+    tuple should be abcissa value and spectrum itself, respectively. 
+    The argument vel\_range must be 2-element tuple that indicates start and stop velocity 
+    of range.
+    
+    Note, if supplied range is completely outside the spectrum, an empty tuple will be returned.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{tuple with the abcissa and spectrum}\\
+spc && \multicolumn{2}{p{3.36in}|}{}\\
+& &allowed: & tuple \\
+& &Default: & 
+\\
+vel\_range && \multicolumn{2}{p{3.36in}|}{a 2-element tuple with start and stop velocity of the range}\\
+& &allowed: & tuple \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+a 2-element tuple with channels
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.simplelinefineder.find_lines
+\newpage
+\ahsdfunction{sd.simplelinefinder.find\_lines}{sd.simplelinefinder.find_lines}{Search for spectral lines in the spectrum}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    A simple spectral line detection routine, which assumes that bandpass has been
+    taken out perfectly and no channels are flagged within the spectrum. A detection
+    is reported if consequtive minchan number of channels is consistently above or
+    below the median value. The threshold is given in terms of the rms calculated
+    using 80\% of the lowest data points by the absolute value (with respect to median).
+ 
+    This method returns a list of tuples each containing start and stop 0-based channel
+    number of every detected line. Empty list if nothing has been detected.
+    
+     Note. The median and rms about this median is stored inside this class and can
+    be obtained with rms and median methods.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+spc && \multicolumn{2}{p{3.36in}|}{a list or tuple with the spectrum, no default}\\
+& &allowed: & tuple \\
+& &Default: & 
+\\
+edge && \multicolumn{2}{p{3.36in}|}{detection threshold}\\
+& &allowed: & intger \\
+& &Default: & 0
+\\
+minchan && \multicolumn{2}{p{3.36in}|}{minimum number of consequitive channels exceeding threshold to claim the detection}\\
+& &allowed: & integer \\
+& &Default: & 3
+\\
+tailsearch && \multicolumn{2}{p{3.36in}|}{if True (default), the algorithm attempts to widen each line until its flux crosses the median. It merges lines if necessary}\\
+& &allowed: & bool \\
+& &Default: & True
+\\
+splitFeatures && \multicolumn{2}{p{3.36in}|}{if True, the algorithm attempts to split each detected spectral feature into a number of spectral lines (just one local extremum)}\\
+& &allowed: & bool \\
+& &Default: & False
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+list of tuples that indicates ranges of detected lines
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.simplelinefineder.invertChannelSelection
+\newpage
+\ahfunction{sd.simplelinefinder.invertChannelSelection}{Invert channel range selection}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    This method converts a tuple with channel ranges to a tuple which covers all channels
+    not selected by the original tuple (optionally edge channels can be discarded).
+ 
+    Note, at this stage channel ranges are assumed to be sorted and without overlap.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+nchan && \multicolumn{2}{p{3.36in}|}{number of channels in the spectrum}\\
+& &allowed: & integer \\
+& &Default: & 
+\\
+chans && \multicolumn{2}{p{3.36in}|}{list of start and stop channels for all selected ranges}\\
+& &allowed: & tuple \\
+& &Default: & 
+\\
+edge&& \multicolumn{2}{p{3.36in}|}{how many channels to reject from the edge of spectrum}\\
+& &allowed: & integer or tuple\\
+& &Default: & (0,0)
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+tuple with inverted channel selection
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.simplelinefineder.median
+\newpage
+\ahfunction{sd.simplelinefinder.median}{Return a median of the last spectrum passed to \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines}}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return the median of the last spectrum passed to find_lines.
+    Note, this method throws an exception if 
+    \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} has never been called.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+float 
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.simplelinefineder.rms
+\newpage
+\ahfunction{sd.simplelinefinder.rms}{Return rms calculated during last \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} call}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Return rms scatter of the spectral points (with respect to the median) calculated
+    during last find_lines call. Note, this method throws an exception if
+    \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} has never been called.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+float 
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.simplelinefineder.writeLog
+\newpage
+\ahfunction{sd.simplelinefinder.writeLog}{Write user defined string into log file}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Write user defined string into log file.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+str && \multicolumn{2}{p{3.36in}|}{log message}\\
+& &allowed: & string \\
+& &Default: & 
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
 
 %%%%% sd.plotter
 \newpage
@@ -7790,6 +8651,10 @@ Methods
 	\ahlink{axvline}{sd:sd.plotter.axvline} & Draw a vertical line \\
 
 	\ahlink{axvspan}{sd:sd.plotter.axvspan} & Draw a vertical rectangle \\
+
+        \ahlink{casabar\_exists}{sd:sd.plotter.casabar_exists} & Check if casa toolbar exists or not \\
+
+        \ahlink{clear\_header}{sd:sd.plotter.clear_header} & Clear header \\
 
 	\ahlink{create\_mask}{sd:sd.plotter.create_mask} & Interactively define a mask \\
 
@@ -7837,7 +8702,7 @@ Methods
 
 	\ahlink{set\_ordinate}{sd:sd.plotter.set_ordinate} & Set y-axis label of the plot \\
 
-	\ahlink{set\_panellayout}{sd:sd.plotter.set_panellayout} & Set layout of subplots \\
+%	\ahlink{set\_panellayout}{sd:sd.plotter.set_panellayout} & Set layout of subplots \\
 
 	\ahlink{set\_panelling}{sd:sd.plotter.set_panelling} & Set the panelling mode \\
 
@@ -8166,6 +9031,45 @@ interactive && \multicolumn{2}{p{3.36in}|}{Interactively set the shape of the re
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 Polygon object
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.plotter.casabar_exists
+\newpage
+\ahsdfunction{sd.plotter.casabar\_exists}{sd.plotter.casabar_exists}{Check if casa toolbar exists or not}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    The function checks if plotter object associates with casa toolbar. It returns True if 
+    the object associates with casa toolbar. Otherwise, it returns False.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+bool 
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.plotter.clear_header
+\newpage
+\ahsdfunction{sd.plotter.clear\_header}{sd.plotter.clear_header}{Clear header}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    The function clears out header information from the plotter object.
+    Nothing is done if plotter object doesn't have header.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\
@@ -9085,43 +9989,43 @@ refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on t
 
 
 %% sd.plotter.set_panellayout
-\newpage
-\ahsdfunction{sd.plotter.set\_panellayout}{sd.plotter.set_panellayout}{Set layout of subplots}
-
-\flushleft\vspace{.20in}\textbf {Description}\\
-   \hfill \\
-
-    Set the layout of subplots.
-
-    The layout argument specifies a list of subplots layout in figure coordinate (0-1),
-    i.e., fraction of the figure width or height.
-    The order of elements should be: 
-    [left, bottom, right, top, horizontal space btw panels, vertical space btw panels].
- 
-    Note that, when layout is not specified, the values are reset to the defaults of matplotlib.
-    Note also that, if any element is set to be None, the current value is adopted.
-
-\flushleft\vspace{.20in}\textbf {Arguments}\\
-\hfill \\
-\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
-\hline
-Inputs && \multicolumn{2}{p{3.36in}|}{}\\
-layout && \multicolumn{2}{p{3.36in}|}{A list of subplots layout}\\
-& &allowed: & float array \\
-& &Default: & None 
-\\
-refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
-& &allowed: & bool \\
-& &Default: & True
-\\
-
-\hline
-\end{tabular}
-
-\flushleft\vspace{.20in}\textbf {Returns}\newline
-
-\flushleft\vspace{.20in}\textbf {Example}\\
-\hfill \\
+%\newpage
+%\ahsdfunction{sd.plotter.set\_panellayout}{sd.plotter.set_panellayout}{Set layout of subplots}
+%
+%\flushleft\vspace{.20in}\textbf {Description}\\
+%   \hfill \\
+%
+%    Set the layout of subplots.
+%
+%    The layout argument specifies a list of subplots layout in figure coordinate (0-1),
+%    i.e., fraction of the figure width or height.
+%    The order of elements should be: 
+%    [left, bottom, right, top, horizontal space btw panels, vertical space btw panels].
+% 
+%    Note that, when layout is not specified, the values are reset to the defaults of matplotlib.
+%    Note also that, if any element is set to be None, the current value is adopted.
+%
+%\flushleft\vspace{.20in}\textbf {Arguments}\\
+%\hfill \\
+%\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+%\hline
+%Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+%layout && \multicolumn{2}{p{3.36in}|}{A list of subplots layout}\\
+%& &allowed: & float array \\
+%& &Default: & None 
+%\\
+%refresh && \multicolumn{2}{p{3.36in}|}{If True, the plot is replotted based on the new parameter setting(s)}\\
+%& &allowed: & bool \\
+%& &Default: & True
+%\\
+%
+%\hline
+%\end{tabular}
+%
+%\flushleft\vspace{.20in}\textbf {Returns}\newline
+%
+%\flushleft\vspace{.20in}\textbf {Example}\\
+%\hfill \\
 
 
 %% sd.plotter.set_panelling

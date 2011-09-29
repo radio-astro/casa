@@ -1,39 +1,58 @@
 #include <display/region/QtRegionStats.qo.h>
 #include <QtGui/QStackedWidget>
+#include <display/region/Region.h>
+#include <display/region/RegionInfo.h>
 
 namespace casa {
     namespace viewer {
+	namespace qt {
+	    image_stats_t::image_stats_t( statfield_list_t &fields, QWidget *parent )  : stats_t(parent) {
+		setupUi(this);
+		fields.push_back(statfield_list_t::value_type(box11,text11));
+		fields.push_back(statfield_list_t::value_type(box12,text12));
+		fields.push_back(statfield_list_t::value_type(box13,text13));
+		fields.push_back(statfield_list_t::value_type(box14,text14));
+		fields.push_back(statfield_list_t::value_type(box15,text15));
+		fields.push_back(statfield_list_t::value_type(box21,text21));
+		fields.push_back(statfield_list_t::value_type(box22,text22));
+		fields.push_back(statfield_list_t::value_type(box23,text23));
+		fields.push_back(statfield_list_t::value_type(box24,text24));
+		fields.push_back(statfield_list_t::value_type(box25,text25));
+		fields.push_back(statfield_list_t::value_type(box31,text31));
+		fields.push_back(statfield_list_t::value_type(box32,text32));
+		fields.push_back(statfield_list_t::value_type(box33,text33));
+		fields.push_back(statfield_list_t::value_type(box34,text34));
+		fields.push_back(statfield_list_t::value_type(box35,text35));
+	    }
 
-	QtRegionStats::QtRegionStats( QWidget *parent ) : QWidget(parent), container_(0), next_(0) {
+	    ms_stats_t::ms_stats_t( statfield_list_t &fields, QWidget *parent ) : stats_t(parent) {
+		setupUi(this);
+		fields.push_back(statfield_list_t::value_type(box11,text11));
+		fields.push_back(statfield_list_t::value_type(box12,text12));
+		fields.push_back(statfield_list_t::value_type(box21,text21));
+		fields.push_back(statfield_list_t::value_type(box22,text22));
+		fields.push_back(statfield_list_t::value_type(box31,text31));
+		fields.push_back(statfield_list_t::value_type(box32,text32));
+		fields.push_back(statfield_list_t::value_type(box41,text41));
+		fields.push_back(statfield_list_t::value_type(box42,text42));
+	    }
 
-	    image_stats_box = new qt::image_stats_t(this);
-	    
-	    fields.push_back(statfield_list::value_type(image_stats_box->box11,image_stats_box->text11));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box12,image_stats_box->text12));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box13,image_stats_box->text13));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box14,image_stats_box->text14));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box15,image_stats_box->text15));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box21,image_stats_box->text21));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box22,image_stats_box->text22));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box23,image_stats_box->text23));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box24,image_stats_box->text24));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box25,image_stats_box->text25));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box31,image_stats_box->text31));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box32,image_stats_box->text32));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box33,image_stats_box->text33));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box34,image_stats_box->text34));
-	    fields.push_back(statfield_list::value_type(image_stats_box->box35,image_stats_box->text35));
+	}
+
+	QtRegionStats::QtRegionStats( QWidget *parent ) : QWidget(parent), container_(0), next_(0), stats_box_(0) {
+		layout_ = new QVBoxLayout(this);
+		// stats_box_ = new qt::image_stats_t(fields,this);
 	}
 
 	QtRegionStats::~QtRegionStats( ) { }
 
-	void QtRegionStats::updateStatistics( const String &s, std::list<std::pair<String,String> > &stats ) {
+	void QtRegionStats::updateStatistics( RegionInfo &stats ) {
 
-	    image_stats_box->setTitle(QString::fromStdString(s));
+	    new_stats_box(stats.type())->setTitle(QString::fromStdString(stats.label()));
 
-	    statfield_list::iterator fiter = fields.begin( );
-	    std::list<std::pair<String,String> >::iterator siter = stats.begin( );
-	    while ( fiter != fields.end( ) && siter != stats.end( ) ) {
+	    qt::statfield_list_t::iterator fiter = fields.begin( );
+	    std::list<std::pair<String,String> >::iterator siter = (*stats.list()).begin( );
+	    while ( fiter != fields.end( ) && siter != (*stats.list()).end( ) ) {
 		(*fiter).first->setTitle( QString::fromStdString((*siter).first) );
 		(*fiter).second->setText( QString::fromStdString((*siter).second) );
 		(*fiter).second->setCursorPosition(0);
@@ -48,13 +67,15 @@ namespace casa {
 	    // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 	    // clear all the key/value fields
 	    // setTitle("");
-	    // for (statfield_list::iterator iter = fields.begin(); iter != fields.end(); ++iter ) {
+	    // for (statfield_list_t::iterator iter = fields.begin(); iter != fields.end(); ++iter ) {
 	    // 	(*iter).first->setTitle("");
 	    // 	(*iter).second->setText("");
 	    // }
 
-	    image_stats_box->next->setDisabled(true);
-	    disconnect(image_stats_box->next, 0, 0, 0);
+	    if ( stats_box_ ) {
+		stats_box_->next( )->setDisabled(true);
+		disconnect(stats_box_->next(), 0, 0, 0);
+	    }
 
 	    // zero next state
 	    container_ = 0;
@@ -63,7 +84,7 @@ namespace casa {
 
 #if OLDSTUFF
 	void QtRegionStats::addstats( std::list<std::pair<String,String> > *stats ) {
-	    statfield_list::iterator fiter = fields.begin( );
+	    statfield_list_t::iterator fiter = fields.begin( );
 	    std::list<std::pair<String,String> >::iterator siter = stats->begin( );
 	    while ( fiter != fields.end( ) && siter != stats->end( ) ) {
 		(*fiter).first->setTitle( QString::fromStdString((*siter).first) );
@@ -77,8 +98,10 @@ namespace casa {
 	void QtRegionStats::setNext( QStackedWidget *c, QtRegionStats *n ) {
 	    container_ = c;
 	    next_ = n;
-	    image_stats_box->next->setDisabled(false);
-	    connect(image_stats_box->next, SIGNAL(pressed( )), SLOT(go_next( )));
+	    if ( stats_box_ ) {
+		stats_box_->next( )->setDisabled(false);
+		connect(stats_box_->next(), SIGNAL(pressed( )), SLOT(go_next( )));
+	    }
 	}
 
 	void QtRegionStats::go_next( ) {
@@ -86,6 +109,29 @@ namespace casa {
 	    container_->setCurrentWidget(next_);
 	}
       
+	qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type ) {
+
+	    if ( stats_box_ && stats_box_->type() == type ) return stats_box_;
+
+	    if ( stats_box_ ) {
+		// if we make it here, it means that stats_box_ is the wrong type...
+		layout_->removeWidget(stats_box_);
+		fields.erase(fields.begin(),fields.end());
+		delete stats_box_;
+	    }
+
+	    if ( type == RegionInfo::ImageInfoType ) {
+		stats_box_ = new qt::image_stats_t(fields);
+		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
+		return stats_box_;
+	    } else if ( type == RegionInfo::MsInfoType ) {
+		stats_box_ = new qt::ms_stats_t(fields);
+		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
+		return stats_box_;
+	    } else {
+		throw internal_error("QtRegionStats inconsistency");
+	    }
+	}
     }
 }
 
