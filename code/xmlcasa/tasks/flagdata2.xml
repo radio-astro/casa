@@ -9,16 +9,15 @@
     <shortdescription> All purpose flagging task based on selections. It allows the combination of several modes.</shortdescription>
     <description>
         The task will select a subset of data explicitly for flagging,
-        quacking, clipping, autocorrelation flagging, rfi, flagging
-        of shadowed antennas or flagging based on elevation. Unflagging
-        is also available.
+        quacking, clipping, flagging of shadowed antennas or flagging based 
+        on elevation. Unflagging is also available.
         
         The parameter selectdata will pre-select a subset of the data for flagging.
         Any flagging will be applied to the subset data only. Some modes contain
         specific subparameters for further selections.
         
         Any combination of the following modes can be applied: manualflag, clip,
-        shadow, elevation, quack, autoflag, rfi and summary. When mode summary is 
+        shadow, elevation, quack, and summary. When mode summary is 
         combined with any other mode(s), it will run as last and report what has
         been flagged by the other modes.
 
@@ -238,84 +237,6 @@
                    <value type="bool">False</value>
             </param>
 
-        <param type="bool" name="autoflag">
-               <description>Automatic flagging of outliers</description>
-               <value>False</value>
-        </param>
-            <param type="string" name="algorithm" subparam="true">
-                   <description>Autoflag algorithm (timemed,freqmed)</description>
-                   <value>timemed</value>
-                   <allowed kind="enum">
-                   <value>timemed</value>
-                   <value>freqmed</value>
-                   </allowed>
-            </param>
-            <param type="string" name="column" subparam="true">
-                   <description>Data column to operate on.</description>
-                   <value>DATA</value>
-                   <!-- <allowed kind="enum">
-                   <value>DATA</value>
-                   <value>CORRECTED</value>
-                   <value>MODEL</value>
-                   </allowed> -->
-            </param>
-            <param type="string" name="expr" subparam="true">
-                   <description>Expression to flag on</description>
-                   <value>ABS RR</value>
-            </param>
-            <param type="double" name="thr" subparam="true">
-                   <description>Flagging threshold (n sigma)</description>
-                   <value>5.0</value>
-            </param>
-            <param type="int" name="window" subparam="true">
-                   <description>Sliding median filter width</description>
-                   <value>10</value>
-            </param>
-
-        <param type="bool" name="rfi">
-               <description>Automatic flagging of narrow-band RFI (tfcrop algorithm)</description>
-               <value>False</value>
-        </param>
-            <param type="any" name="rfi_clipexpr" subparam="true">
-                   <description>Expression to clip on</description>
-                   <any type="variant" limittypes="string stringArray"/>
-                   <value type="string">ABS RR</value>
-            </param>           
-            <param type="any" name="rfi_clipcolumn" subparam="true">
-                   <description>Data column to use for clipping</description>
-                   <any type="variant" limittypes="string stringArray"/>
-                   <value type="string">DATA</value>
-                   <!-- <allowed kind="enum">
-                       <value>'DATA'</value>
-                       <value>'CORRECTED'</value>
-                       <value>'MODEL'</value>
-                   </allowed> -->
-            </param>
-            <param type="double" name="rfi_time_amp_cutoff" subparam="true">
-                   <description>Flagging thresholds in units of sigma, where sigma is the stdev of the "fit"</description>
-                   <value>4.0</value>
-            </param>
-            <param type="double" name="rfi_freq_amp_cutoff" subparam="true">
-                   <description>Flagging thresholds in units of sigma, where sigma is the stdev of the "fit"</description>
-                   <value>3.0</value>
-            </param>
-            <param type="bool" name="rfi_freqlinefit" subparam="true">
-                   <description>Fit the bandpass with a straight line (True), or fit the bandpass with a piecewise polynomial (False)</description>
-                   <value>False</value>
-            </param>
-            <param type="int" name="rfi_maxnpieces" subparam="true">
-                   <description>Number of pieces in the bandpass polynomial-fit (if freqlinefit=False)</description>
-                   <value>7</value>
-            </param>
-            <param type="int" name="rfi_num_time" subparam="true">
-                   <description>number of time-steps in each chunk</description>
-                   <value>400</value>
-            </param>
-            <param type="int" name="rfi_flag_level" subparam="true">
-                   <description>0: flag only what is found. 1: grow flags in time/freq 2: do 1 and flag one time/chan before/after</description>
-                   <value>1</value>
-            </param>
-
         <param type="bool" name="unflag">
                <description>Unflag the data specified</description>
                <value>False</value>
@@ -406,29 +327,6 @@
                 <default param="quackincrement"><value type="bool">False</value></default>
             </equals>
             </when>
-            <when param="autoflag">
-            <equals type="bool" value="False"/>
-            <equals type="bool" value="True">
-                <default param="algorithm"><value type="string">timemed</value></default>
-                <default param="column"><value type="string">DATA</value></default>
-                <default param="expr"><value type="string">ABS RR</value></default>
-                <default param="thr"><value type="double">5.0</value></default>
-                <default param="window"><value type="int">10</value></default>
-            </equals>
-            </when>
-            <when param="rfi">
-            <equals type="bool" value="False"/>
-            <equals type="bool" value="True">
-                <default param="rfi_clipcolumn"><value type="string">DATA</value></default>
-                <default param="rfi_clipexpr"><value type="string">ABS I</value></default>
-                <default param="rfi_time_amp_cutoff"><value type="double">4.0</value></default>
-                <default param="rfi_freq_amp_cutoff"><value type="double">3.0</value></default>
-                <default param="rfi_freqlinefit"><value type="bool">False</value></default>
-                <default param="rfi_maxnpieces"><value type="int">7</value></default>
-                <default param="rfi_num_time"><value type="int">50</value></default>
-                <default param="rfi_flag_level"><value type="int">1</value></default>
-            </equals>
-            </when>
             <when param="unflag">
             <equals type="bool" value="False"/>
             <equals type="bool" value="True">
@@ -454,10 +352,10 @@
             quack      = remove/keep specific time range at scan beginning/end
             shadow     = remove antenna-shadowed data
             elevation  = remove data below/above given elevations
-            rfi        = Radio Frequency Interference auto-flagging
-            autoflag   = experimental auto-flagging outliers
             summary    = report the amount of flagged data
             unflag     = unflag the specified data. This mode cannot be combined with any other!
+            
+            NOTE: use testautoflag for RFI detection and auto-flagging.
 
         The flags stored in the MS are automatically backed up before each run,
         unless flagbackup = False.
@@ -648,80 +546,7 @@
 
               would flag everything above 85 degrees of elevation (as well as data below 0
               degrees of elevation, if any).
-
-        autoflag -- Automatic flagging of outliers (Experimental)
-                default: False
-                options: True,False                
 		
-		One-dimensional sliding-window median filters along time or frequency.
-		
-		NOTE : These methods are still in development.
-           
-              algorithm -- autoflag algorithm name
-                  default: 'timemed'
-                  options: 'timemed','freqmed'
-		           'timemed' : filter along the time axis
-			   'freqmed' : filter along the frequency axis
-              column -- the column on which to operate
-                  default: 'DATA'
-                  options: 'DATA', 'CORRECTED', 'MODEL'
-              expr -- expression to use for flagging option
-                  default: 'ABS RR'; example: expr='RE XX'
-                  options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                           'I','XX','YY','RR','LL'
-              thr -- flagging threshold as a multiple of standard-deviation ( n sigma )
-                  default: 5.0
-              window -- half width for sliding window median filters.  The size should be
-                     about the number of integration in a scan, or the number of
-                     spectral channels.
-                  default: 10
-
-        rfi -- Automatic flagging of outliers (Experimental)
-                default: False
-                options: True,False
-
-		This algorithm identifies and flags outliers on the 
-		two-dimensional time-frequency plane for all selected 
-		baselines. The number of timesteps and frequency channels 
-		for each 2D chunk of the time-frequency plane is 
-		specified by the user. 
-		
-		The following steps are performed for each chunk :
-		-- For all channels, a robust straight-line fit along 
-		   the time-axis (a 'robust fit' is a few iterations of 
-		   line-fits and outlier flagging, until the fit stabilizes).
-		-- Average the chunk across time to get a 'mean bandpass'.
-		-- A robust piece-wise polynomial fit across frequency. 
-		-- Use this 'fitted bandpass' to identify and flag outliers
-		   for each timestep in the chunk. 
-		-- Optionally apply heuristics to grow flags based on 
-		   neighbouring points on the time-frequency plane.
-
-		NOTE : This method is still in development.
-	      
-
-              rfi_clipcolumn -- the column on which to operate
-                  default: 'DATA'
-                  options: 'DATA', 'CORRECTED', 'MODEL'  
-              rfi_clipexpr -- expression to use for flagging option
-                  default: 'ABS RR'; example: expr='RE XX'
-                  options: 'ABS','ARG','RE','IM','NORM' + ' ' +
-                            'I','XX','YY','RR','LL', 'XY', 'YX' ,'RL' , 'LR'
-              rfi_time_amp_cutoff -- thresholds in units of sigma, where sigma is the stdev of the fit
-                  default: 4.0
-              rfi_freq_amp_cutoff -- thresholds in units of sigma, where sigma is the stdev of the fit
-                  default: 3.0
-              rfi_freqlinefit -- Fit the bandpass with a straight line (True) or with piecewise polynomial (False)
-                  default: False
-                  options: True, False
-              rfi_maxnpieces -- Maximum number of pieces in the piece-wise polynomial bandpass fit
-              rfi_num_time -- number of time-steps in each chunk
-                  default: 400
-              rfi_flag_level -- 0: flag only what is found; 1: extend flags one timestep before and after; 
-                               #2: extend flags in time and frequency by examining values immediately 
-	                       #   surrounding flagged points.
-                  default: 1
-
         unflag -- Unflag the specified data.
                default: False
                options: True,False

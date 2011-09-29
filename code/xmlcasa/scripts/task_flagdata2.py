@@ -45,21 +45,21 @@ def flagdata2(vis = None,
              quackinterval = None, 
              quackmode = None, 
              quackincrement = None,
-             autoflag = None,
-             algorithm = None,
-             column = None, 
-             expr = None,
-             thr = None, 
-             window = None,
-             rfi = None,
-             rfi_clipexpr = None, 
-             rfi_clipcolumn = None, 
-             rfi_time_amp_cutoff = None,
-             rfi_freq_amp_cutoff = None,
-             rfi_freqlinefit = None,
-             rfi_maxnpieces = None,
-             rfi_num_time = None,
-             rfi_flag_level = None,
+#             autoflag = None,
+#             algorithm = None,
+#             column = None, 
+#             expr = None,
+#             thr = None, 
+#             window = None,
+#             rfi = None,
+#             rfi_clipexpr = None, 
+#             rfi_clipcolumn = None, 
+#             rfi_time_amp_cutoff = None,
+#             rfi_freq_amp_cutoff = None,
+#             rfi_freqlinefit = None,
+#             rfi_maxnpieces = None,
+#             rfi_num_time = None,
+#             rfi_flag_level = None,
              unflag = None,
              summary = None,
              minrel = None,
@@ -89,15 +89,14 @@ def flagdata2(vis = None,
         mslocal.open(vis,nomodify=False)
         
         if (not manualflag and not clip and not quack and not shadow and
-            not elevation and not rfi and 
-            not autoflag and not unflag and not summary):
+            not elevation and not unflag and not summary):
 #            casalog.post('No flagging mode was selected', 'WARN')
 #            casalog.post('Please, set at least one mode to run this task', 'WARN')
             msg = 'No flagging mode was selected. Please, set at least one mode to run this task.'
             casalog.post(msg, 'SEVERE')
             raise Exception
         
-        if (unflag and (manualflag or clip or quack or shadow or elevation or rfi or autoflag)):
+        if (unflag and (manualflag or clip or quack or shadow or elevation)):
             casalog.post('Cannot run unflag simultaneously with any other mode', 'SEVERE')
             casalog.post('Please, verify your parameters.', 'SEVERE')
             raise Exception
@@ -239,77 +238,77 @@ def flagdata2(vis = None,
             mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
             
 
-        if autoflag:
-            mode = 'autoflag'
-            casalog.post('Flagging in autoflag mode')
-            rec = fglocal.getautoflagparams(algorithm=algorithm)
-            rec['expr'] = expr
-            rec['thr'] = thr
-            #rec['rowthr'] = rowthr;
-            rec['hw'] = window
-            #rec['rowhw'] = rowhw;
-            #if( algorithm == 'uvbin' ):
-            #     rec['nbins'] = nbins;
-            #     rec['minpop'] = minpop;
-            rec['column'] = column
-            fglocal.setautoflag(algorithm = algorithm, parameters = rec)
-            
-            modestr = modestr+"autoflag_"
-            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
-                
-        if rfi:
-            mode = 'rfi'
-            casalog.post('Flagging in rfi mode')
-
-            # Get the detault parameters for a particular algorithm,
-            # then modify them
-                
-            par = fglocal.getautoflagparams(algorithm='tfcrop')
-            #print "par =", par
-                
-            ## True : Show plots of each time-freq chunk.
-            ## Needs "ds9 &" running in the background (before starting casapy)
-            ## Needs xpaset, xpaget, etc.. accessible in the path (for ds9)
-            par['showplots']=False
-    ## jmlarsen: Do not show plots. There's no way for the user to interrupt
-    ## a lengthy sequence of plots (CAS-1655)
-    ## rurvashi : Now there is. (r14053 onwards). Disable here because it still uses ds9.
-                
-            ## number of time-steps in each chunk
-            par['num_time']=rfi_num_time
-
-            ## Max npieces for the polynomial fit
-            par['maxnpieces'] = rfi_maxnpieces
-                
-            ## Flag Level :
-            ## 0: flag only what is found. 
-            ## 1: extend flags in time and freq
-            ## 2: 1 and extend flags one time/chan before/after
-            par['flag_level']=rfi_flag_level
-
-            ## data expression on which to flag.
-            par['expr']=rfi_clipexpr
-
-            ## data column to use.
-            par['column']=rfi_clipcolumn
-
-            ## False : Fit the bandpass with a piecewise polynomial
-            ## True : Fit the bandpass with a straight line.
-            par['freqlinefit']=rfi_freqlinefit
-
-            ## Flagging thresholds ( N sigma ), where 'sigma' is the stdev of the "fit".
-            #par['freq_amp_cutoff']=3
-            #par['time_amp_cutoff']=4
-            par['freq_amp_cutoff']=rfi_freq_amp_cutoff
-            par['time_amp_cutoff']=rfi_time_amp_cutoff
-                
-            # Tell the 'fg' tool which algorithm to use, and set the parameters.
-            # Note : Can set multiple instances of this (will be done one after the other)
-            #
-            fglocal.setautoflag(algorithm='tfcrop', parameters=par)
-            
-            modestr = modestr+"rfi_"
-            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+#        if autoflag:
+#            mode = 'autoflag'
+#            casalog.post('Flagging in autoflag mode')
+#            rec = fglocal.getautoflagparams(algorithm=algorithm)
+#            rec['expr'] = expr
+#            rec['thr'] = thr
+#            #rec['rowthr'] = rowthr;
+#            rec['hw'] = window
+#            #rec['rowhw'] = rowhw;
+#            #if( algorithm == 'uvbin' ):
+#            #     rec['nbins'] = nbins;
+#            #     rec['minpop'] = minpop;
+#            rec['column'] = column
+#            fglocal.setautoflag(algorithm = algorithm, parameters = rec)
+#            
+#            modestr = modestr+"autoflag_"
+#            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
+#                
+#        if rfi:
+#            mode = 'rfi'
+#            casalog.post('Flagging in rfi mode')
+#
+#            # Get the detault parameters for a particular algorithm,
+#            # then modify them
+#                
+#            par = fglocal.getautoflagparams(algorithm='tfcrop')
+#            #print "par =", par
+#                
+#            ## True : Show plots of each time-freq chunk.
+#            ## Needs "ds9 &" running in the background (before starting casapy)
+#            ## Needs xpaset, xpaget, etc.. accessible in the path (for ds9)
+#            par['showplots']=False
+#    ## jmlarsen: Do not show plots. There's no way for the user to interrupt
+#    ## a lengthy sequence of plots (CAS-1655)
+#    ## rurvashi : Now there is. (r14053 onwards). Disable here because it still uses ds9.
+#                
+#            ## number of time-steps in each chunk
+#            par['num_time']=rfi_num_time
+#
+#            ## Max npieces for the polynomial fit
+#            par['maxnpieces'] = rfi_maxnpieces
+#                
+#            ## Flag Level :
+#            ## 0: flag only what is found. 
+#            ## 1: extend flags in time and freq
+#            ## 2: 1 and extend flags one time/chan before/after
+#            par['flag_level']=rfi_flag_level
+#
+#            ## data expression on which to flag.
+#            par['expr']=rfi_clipexpr
+#
+#            ## data column to use.
+#            par['column']=rfi_clipcolumn
+#
+#            ## False : Fit the bandpass with a piecewise polynomial
+#            ## True : Fit the bandpass with a straight line.
+#            par['freqlinefit']=rfi_freqlinefit
+#
+#            ## Flagging thresholds ( N sigma ), where 'sigma' is the stdev of the "fit".
+#            #par['freq_amp_cutoff']=3
+#            #par['time_amp_cutoff']=4
+#            par['freq_amp_cutoff']=rfi_freq_amp_cutoff
+#            par['time_amp_cutoff']=rfi_time_amp_cutoff
+#                
+#            # Tell the 'fg' tool which algorithm to use, and set the parameters.
+#            # Note : Can set multiple instances of this (will be done one after the other)
+#            #
+#            fglocal.setautoflag(algorithm='tfcrop', parameters=par)
+#            
+#            modestr = modestr+"rfi_"
+#            mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata2')
 
         
         if unflag:
@@ -334,8 +333,7 @@ def flagdata2(vis = None,
 
         # Backup flags
         if flagbackup:
-            if (manualflag or clip or quack or shadow or elevation or rfi 
-                or autoflag or unflag or not summary):
+            if (manualflag or clip or quack or shadow or elevation or unflag or not summary):
                 backup_flags(fglocal, modestr)
 
         if summary:
