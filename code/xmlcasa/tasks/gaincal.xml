@@ -108,7 +108,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 
 	<param type="double" name="minsnr">
 		<description>Reject solutions below this SNR</description>
-		<value>0.0</value>
+		<value>3.0</value>
 	</param>
 
 	<param type="bool" name="solnorm">
@@ -367,7 +367,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                    expected, use taskname=gaincal rather than taskname=blcal to
                    obtain more options in data analysis.
       minsnr -- Reject solutions below this SNR
-              default: 0.0 (accept all attempted solutions)
+              default: 3.0 
       solnorm -- Normalize average solution amps to 1.0 after solution (G, T only)
               default: False (no normalization)
       append -- Append solutions to the (existing) table
