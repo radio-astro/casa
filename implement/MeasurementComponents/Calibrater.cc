@@ -1422,18 +1422,17 @@ Bool Calibrater::genericGatherAndSolve() {
       // Collapse each timestamp in this chunk according to VisEq
       //  with calibration and averaging
       for (vi.origin(); vi.more(); vi++) {
-	
+
 	// Force read of the field Id
 	vb.fieldId();
 
 	// Apply the channel mask (~no-op, if unnecessary)
 	svc_p->applyChanMask(vb);
 
-
 	// This forces the data/model/wt I/O, and applies
 	//   any prior calibrations
 	ve_p->collapse(vb);
-	
+
 	// If permitted/required by solvable component, normalize
 	if (svc_p->normalizable()) 
 	  vb.normalize();
@@ -1441,13 +1440,6 @@ Bool Calibrater::genericGatherAndSolve() {
 	// If this solve not freqdep, and channels not averaged yet, do so
 	if (!svc_p->freqDepMat() && vb.nChannel()>1)
 	  vb.freqAveCubes();
-	
-
-
-
-
-
-
 
 	// Accumulate collapsed vb in a time average
 	//  (only if the vb contains any unflagged data)
@@ -2094,7 +2086,7 @@ void Calibrater::fluxscale(const String& infile,
 
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
+      fsvj_->fluxscale2(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);
