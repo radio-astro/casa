@@ -47,7 +47,7 @@ public:
 
 	FlagAgentBase(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool antennaMap = false, Bool flag = true);
 	~FlagAgentBase ();
-	static FlagAgentBase *create (Record config);
+	static FlagAgentBase *create (FlagDataHandler *dh,Record config);
 
 	void start();
 	void terminate ();
@@ -98,9 +98,6 @@ protected:
 
 	// Compute flags for a given (row,channel,polarization)
 	virtual Bool computeFlag(uInt row, uInt channel, uInt pol);
-
-	// Create antenna map pairs
-	void generateAntennaPairMap();
 
 	// Main iteration procedure to be called per buffer
 	void iterateMaps();
@@ -192,15 +189,14 @@ private:
 	vector<uInt> channelIndex_p;
 	vector<uInt> polarizationIndex_p;
 
-	// Antenna pair map as requested by Urvashi
-	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
+	// Flag CubeViews as requested by Urvashi
 	CubeView<Bool> *privateFlagsView_p;
 	CubeView<Bool> *commonFlagsView_p;
 
 	// Thread state parameters
 	volatile Bool terminationRequested_p;
-	Bool threadTerminated_p;
-	Bool processing_p;
+	volatile Bool threadTerminated_p;
+	volatile Bool processing_p;
 
 	// Configuration
 	void (casa::FlagAgentBase::*applyFlag_p)(uInt,uInt,uInt);
