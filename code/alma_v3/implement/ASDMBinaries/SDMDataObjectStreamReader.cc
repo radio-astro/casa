@@ -264,8 +264,9 @@ namespace asdmbinaries {
     // MIME-Version
     pair<string, string>name_value(headerField2Pair(nextLine()));
     // cout << name_value.first << "=" << name_value.second << endl;
-    if (currentLine != "MIME-Version: 1.0") 
-      throw SDMDataObjectStreamReaderException("'MIME-Version: 1.0' missing at the very beginning of the file.");
+    // if (currentLine != "MIME-Version: 1.0") // a work around for the case when the very first character is not the expected "M" (happened with some corrupted data).
+    if (! boost::algorithm::iends_with(currentLine, "IME-Version: 1.0"))
+      throw SDMDataObjectStreamReaderException("'MIME-Version: 1.0' missing at the very beginning of the file '"+path+"'.");
 
     // Content-Type
     boundary_1 = requireBoundaryInCT(requireHeaderField("CONTENT-TYPE").second);
