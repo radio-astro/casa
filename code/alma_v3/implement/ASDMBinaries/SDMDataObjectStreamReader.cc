@@ -461,7 +461,7 @@ namespace asdmbinaries {
     else
       parser.parseMemoryTPSubsetHeader(sdmDataSubsetHeader, sdmDataSubset);
 
-    regex BINARYPARTLOC("([0-9]+/)+(actualDuration|actualTimes|autoData|crossData|zeroLags|flags)\\.bin");
+    regex BINARYPARTLOC("([0-9]+/)+(actualDurations|actualTimes|autoData|crossData|zeroLags|flags)\\.bin");
     bool done = false;
     while (!done) {
       name_value = requireHeaderField("CONTENT-TYPE");
