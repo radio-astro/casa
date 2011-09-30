@@ -416,6 +416,9 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                     be assigned the last specified value, or 0.057)
                Typical VLA values are: 5 GHz - 0.013, 8 GHz - 0.013
                15 GHz - 0.016, 23 GHz - 0.051, 43 GHz - 0.07
+      parang -- If True, apply the parallactic angle correction (required
+               for polarization calibration)
+               default: False
       preavg -- Pre-averaging interval (sec)
               default=-1 (none).
                Rarely needed.  Will average data over periods shorter than
