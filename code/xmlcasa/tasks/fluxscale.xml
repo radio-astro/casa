@@ -12,9 +12,18 @@
        Bootstrap the flux density scale from standard calibrators:
 
        After running gaincal on standard flux density calibrators (with or
-       without a model), and other calibrators with unknown flux densities,
-       fluxscale will determine the flux density of the unknowns calibrators
-       that are most consistent with the standard calibrator antenna gains.
+       without an image model), and other calibrators with unknown flux
+       densities (assumed 1 Jy), fluxscale applies the constraint that
+       net system gain was, in fact, independent of field, on average,
+       and that field-dependent gains in the input caltable are solely
+       a result of the unknown flux densities for the calibrators.
+       Using time-averaged gain amplitudes, the ratio between 
+       each ordinary calibrator and the flux density calibrator(s) is 
+       formed for each antenna and polarization (that they have in
+       common).  The average of this ratio over antennas and polarizations
+       yields a correction factor that is applied to the ordinary 
+       calibrators' gains.
+
 	</description>
 	<input>
 		<param type="string" name="vis" mustexist="true">
@@ -58,12 +67,36 @@
 <example>
 
        After running gaincal on standard flux density calibrators (with or
-       without a model), and other calibrators with unknown flux densities,
-       fluxscale will determine the flux density of the unknowns calibrators
-       that are most consistent with the standard calibrator antenna gains.
+       without an image model), and other calibrators with unknown flux
+       densities (assumed 1 Jy), fluxscale applies the constraint that
+       net system gain was, in fact, independent of field, on average,
+       and that field-dependent gains in the input caltable are solely
+       a result of the unknown flux densities for the calibrators.
+       Using time-averaged gain amplitudes, the ratio between 
+       each ordinary calibrator and the flux density calibrator(s) is 
+       formed for each antenna and polarization (that they have in
+       common).  The average of this ratio over antennas and polarizations
+       yields a correction factor that is applied to the ordinary 
+       calibrators' gains.
 
-       Check the log output to make sure that reasonable flux densities are
-       obtained.
+       The square of the gain correction factor for each calibrator
+       and spw is the presumed flux density of that calibrator, and is
+       reported in the logger.  The errors reported with this value
+       reflect the scatter in gain ratio over antennas and
+       polarizations, divided by the square root of the number of 
+       antennas and polarizations available.  The MODEL_DATA column
+       is currently _not_ revised to reflect the flux densities
+       derived by fluxscale.  Use setjy to set the MODEL_DATA column,
+       if necessary.
+
+       The constant gain constraint is usually a reasonable assumption
+       for the electronic systems on typical antennas.  It is
+       important that external time- and/or elevation-dependent
+       effects are separately accounted for when solving for the gain
+       solution supplied to fluxscale, e.g., gain curves, 
+       opacity, etc.  The fluxscale results can also be degraded
+       by poor pointing during the observation.
+
 
        Keyword arguments:
        vis -- Name of input visibility file
