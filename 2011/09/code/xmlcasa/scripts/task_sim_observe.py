@@ -27,32 +27,61 @@ def sim_observe(
 
     import re
 
-    # RI TODO for inbright=unchanged, need to scale input image to jy/pix
-    # according to actual units in the input image
+    try:
+#    if True:
 
-    # it was requested to make the user interface "observe" for what 
-    # is sm.observe and sm.predict.
-    # interally the code is clearer if we stick with predict, predict_sd, predict_int so
-    predict=observe
+        # RI TODO for inbright=unchanged, need to scale input image to jy/pix
+        # according to actual units in the input image
+    
+        # it was requested to make the user interface "observe" for what 
+        # is sm.observe and sm.predict.
+        # interally the code is clearer if we stick with predict, predict_sd, predict_int so
+        predict=observe
+    
+        casalog.origin('sim_observe')
+        if verbose: casalog.filter(level="DEBUG2")
+    
+        a = inspect.stack()
+        stacklevel = 0
+        for k in range(len(a)):
+            if (string.find(a[k][1], 'ipython console') > 0):
+                stacklevel = k
+        myf = sys._getframe(stacklevel).f_globals
+         
+        # create the utility object:
+        util = simutil(direction)  # this is the dir of the observation - could be ""
+        if verbose: util.verbose = True
+        msg = util.msg
+    
+        # put output in directory called "project"
+        fileroot = project
+        if not os.path.exists(fileroot):
+            os.mkdir(fileroot)
 
-    casalog.origin('simdata')
-    if verbose: casalog.filter(level="DEBUG2")
 
-    a = inspect.stack()
-    stacklevel = 0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel = k
-    myf = sys._getframe(stacklevel).f_globals
-     
-    # create the utility object:
-    util = simutil(direction)  # this is the dir of the observation - could be ""
-    if verbose: util.verbose = True
-    msg = util.msg
+        # filename parsing of cfg file here so that the project filenames 
+        # can contain the cfg
+        repodir = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
 
-    # put output in directory called "project"
-    fileroot = project
-    if os.path.exists(fileroot):
+        # convert "alma;0.4arcsec" to an actual configuration
+        # can only be done after reading skymodel, so here, we just string parse
+        if str.upper(antennalist[0:4]) == "ALMA":            
+            foo=antennalist[0:4]+"_"+antennalist[5:]
+        else:
+            if len(antennalist) > 0:
+                foo=antennalist
+            else:
+                if len(sdantlist) > 0:
+                    foo=sdantlist
+                
+        if foo:
+            foo=foo.replace(".cfg","")
+            sfoo=foo.split('/')
+            if len(sfoo)>1:
+                foo=sfoo[-1]
+            project=project+"."+foo
+
+
         if not overwrite:
             if (predict and os.path.exists(fileroot+"/"+project+".ms")):
                 msg(fileroot+"/"+project+".ms exists but overwrite=F",priority="error")
@@ -63,44 +92,39 @@ def sim_observe(
             if (image and os.path.exists(fileroot+"/"+project+".fidelity")):
                 msg(fileroot+"/"+project+".fidelity and other analysis products exist but overwrite=F",priority="error")
                 return False
-    else:
-        os.mkdir(fileroot)
-
-
-    saveinputs = myf['saveinputs']
-    saveinputs('simdata',fileroot+"/"+project+".simdata.last")
-
-
-
-    # some hardcoded variables that may be reintroduced in future development
-    relmargin = .5  # number of PB between edge of model and pointing centers
-    scanlength = 1  # number of integrations per scan 
     
-    if type(skymodel) == type([]):
-        skymodel = skymodel[0]
-    skymodel = skymodel.replace('$project',project)
-
-    if type(complist) == type([]):
-        complist = complist[0]
-
-    if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
-        msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
-        return False
-
-
-    grscreen = False
-    grfile = False
-    if graphics == "both":
-        grscreen = True
-        grfile = True
-    if graphics == "screen":
-        grscreen = True
-    if graphics == "file":
-        grfile = True
     
-    try:
-#    if True:
-
+        saveinputs = myf['saveinputs']
+        saveinputs('sim_observe',fileroot+"/"+project+".sim_observe.last")
+    
+    
+    
+        # some hardcoded variables that may be reintroduced in future development
+        relmargin = .5  # number of PB between edge of model and pointing centers
+        scanlength = 1  # number of integrations per scan 
+        
+        if type(skymodel) == type([]):
+            skymodel = skymodel[0]
+        skymodel = skymodel.replace('$project',project)
+    
+        if type(complist) == type([]):
+            complist = complist[0]
+    
+        if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
+            msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
+            return False
+    
+    
+        grscreen = False
+        grfile = False
+        if graphics == "both":
+            grscreen = True
+            grfile = True
+        if graphics == "screen":
+            grscreen = True
+        if graphics == "file":
+            grfile = True
+        
         ##################################################################
         # set up skymodel image
 
@@ -149,7 +173,7 @@ def sim_observe(
                         shutil.rmtree(modelflat)
                     shutil.move(newmodel+".flat",modelflat)
 
-            casalog.origin('simdata')
+            casalog.origin('sim_observe')
 
             # set startfeq and bandwidth in util object after modifymodel
             bandwidth = qa.mul(qa.quantity(model_nchan),qa.quantity(model_width))
@@ -209,7 +233,7 @@ def sim_observe(
         sd_only = False
         aveant = -1
         stnx = []  # for later, to know if we read an array in or not
-        repodir = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
+        pb = 0. # primary beam
 
         # convert "alma;0.4arcsec" to an actual configuration
         if str.upper(antennalist[0:4]) == "ALMA":
@@ -226,8 +250,6 @@ def sim_observe(
                 else:
                     msg("failed to find antenna configuration repository at "+repodir,priority="warn")
 
-        pb = 0. # primary beam
-
         # Search order is fileroot/ -> specified path -> repository
         if len(antennalist) > 0:
             if os.path.exists(fileroot+"/"+antennalist):
@@ -243,7 +265,7 @@ def sim_observe(
             aveant = stnd.mean()
             # TODO use max ant = min PB instead?  
             # (set back to simdata - there must be an automatic way to do this)
-            casalog.origin('simdata')
+            casalog.origin('sim_observe')
             predict_uv = True
             pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
@@ -285,7 +307,7 @@ def sim_observe(
             tp_padnames = [tp_padnames[sdant]]
             tp_nant = 1
             tp_aveant = tpd.mean()
-            casalog.origin('simdata')
+            casalog.origin('sim_observe')
             predict_sd = True
             if not predict_uv:
                 aveant = tp_aveant
@@ -629,9 +651,9 @@ def sim_observe(
             # position overlap already checked above in pointing section
 
             if verbose:
-                msg("preparing empty measurement set",origin="simdata",priority="warn")
+                msg("preparing empty measurement set",origin="sim_observe",priority="warn")
             else:
-                msg("preparing empty measurement set",origin="simdata")
+                msg("preparing empty measurement set",origin="sim_observe")
 
             nbands = 1;    
             fband  = 'band' + qa.tos(model_center,prec=1)
@@ -806,24 +828,24 @@ def sim_observe(
                 if not components_only:
                     if len(complist) > 1:
                         if verbose:
-                            msg("predicting from "+newmodel+" and "+complist,priority="warn")
+                            msg("predicting from "+newmodel+" and "+complist,priority="warn",origin="sim_observe")
                         else:
-                            msg("predicting from "+newmodel+" and "+complist)
+                            msg("predicting from "+newmodel+" and "+complist,origin="sim_observe")
                     else:
                         if verbose:
-                            msg("predicting from "+newmodel,priority="warn")
+                            msg("predicting from "+newmodel,priority="warn",origin="sim_observe")
                         else:
-                            msg("predicting from "+newmodel)
+                            msg("predicting from "+newmodel,origin="sim_observe")
                     sm.predict(imagename=newmodel,complist=complist)
                 else:   # if we're doing only components
                     if verbose:
-                        msg("predicting from "+complist,priority="warn")
+                        msg("predicting from "+complist,priority="warn",origin="sim_observe")
                     else:
-                        msg("predicting from "+complist)
+                        msg("predicting from "+complist,origin="sim_observe")
                     sm.predict(complist=complist)
             
                 sm.done()
-                msg('generation of measurement set '+msfile+' complete')
+                msg('generation of measurement set '+msfile+' complete',origin="sim_observe")
 
 
             ##################################################################
@@ -991,7 +1013,7 @@ def sim_observe(
                     util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle)
                 if predict_sd:
                     util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename,ms=sdmsfile,usehourangle=usehourangle)
-                casalog.origin('simdata')
+                casalog.origin('sim_observe')
                 if predict_uv:
                     util.nextfig()
                     util.plotants(stnx, stny, stnz, stnd, padnames)
@@ -1257,10 +1279,10 @@ def sim_observe(
             shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
 
     except TypeError, e:
-        msg("task_simdata -- TypeError: %s" % e,priority="error")
+        msg("task_sim_observe -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
-        print "task_simdata -- OptionError: ", e
+        print "task_sim_observe -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance

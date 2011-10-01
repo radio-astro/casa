@@ -2423,9 +2423,10 @@ class simutil:
         # determine channelization from (first) ms:
         if type(mstoimage)==type([]):
             ms0=mstoimage[0]
+            if len(mstoimage)==1:
+                mstoimage=mstoimage[0]
         else:
             ms0=mstoimage
-            mstoimage=[mstoimage]
         
         tb.open(ms0+"/SPECTRAL_WINDOW")
         if tb.nrows() > 1:
@@ -2456,9 +2457,9 @@ class simutil:
         cleanlast=open(image+".clean.last","write")
         cleanlast.write('taskname            = "clean"\n')
 
-        self.msg("clean inputs:")
-        cleanstr="clean(vis='"+', '.join(mstoimage)+"',imagename='"+image+"'"
-        cleanlast.write('vis                 = "'+', '.join(mstoimage)+'"\n')
+        self.msg("clean inputs:")        
+        cleanstr="clean(vis="+str(mstoimage)+",imagename='"+image+"'"
+        cleanlast.write('vis                 = '+str(mstoimage)+'\n')
         cleanlast.write('imagename           = "'+image+'"\n')
         cleanlast.write('outlierfile         = ""\n')
         cleanlast.write('field               = "'+sourcefieldlist+'"\n')
@@ -2571,7 +2572,7 @@ class simutil:
         cleanlast.write("#"+cleanstr+"\n")
         cleanlast.close()
         
-        clean(vis=', '.join(mstoimage), imagename=image, mode=chanmode, 
+        clean(vis=mstoimage, imagename=image, mode=chanmode, 
               niter=niter, threshold=threshold, selectdata=False, nchan=nchan,
               psfmode=psfmode, imagermode=imagermode, ftmachine=ftmachine, 
               imsize=imsize, cell=map(qa.tos,cell), phasecenter=imcenter,

@@ -62,7 +62,8 @@ vis = '$project.ms,$project.sd.ms'  #w/ noise
 imsize = [512,512]
 cell = '0.2arcsec'
 #modelimage='m51sdmed_co32.sd.image'  # should make parse $project
-modelimage='m51both_co32/m51both_co32.sd.image'  # should make parse $project
+# 20110926 this gets added by having vis=$project.sd.ms
+#modelimage='m51both_co32/m51both_co32.sd.image'  # should make parse $project
 
 analyze = True
 # show psf & residual are not available for SD-only simulation
@@ -90,12 +91,14 @@ endProc = time.clock()
 
 test_name = """simdata observation of M51 (total power+interferometric)"""
 
-ia.open(project+"/"+project + '.image')
+fileroot=project
+project=project+".alma_0.5arcsec"
+ia.open(fileroot+"/"+project + '.image')
 m51both_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 
-ia.open(project+"/"+project + '.diff')
+ia.open(fileroot+"/"+project + '.diff')
 m51both_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -139,7 +142,7 @@ reftol   = {'sum':  1e-2,
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = project+"/"+project + '.' + datestring + '.log'
+outfile    = fileroot+"/"+project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
@@ -151,7 +154,7 @@ loghdr = """
 print >> logfile, loghdr
 
 # more info
-ms.open(project+"/"+project+".sd.ms")
+ms.open(fileroot+"/"+project+".sd.ms")
 print >> logfile, "Noiseless MS, amp stats:"
 print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
@@ -207,7 +210,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat(project+"/"+project+'.sd.ms')
+msfstat = os.stat(fileroot+"/"+project+'.sd.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*************************************'
