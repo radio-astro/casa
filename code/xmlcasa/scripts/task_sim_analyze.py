@@ -21,6 +21,7 @@ def sim_analyze(
     async=False):
 
     import re
+    import glob
 
     casalog.origin('sim_analyze')
     if verbose: casalog.filter(level="DEBUG2")
@@ -61,30 +62,51 @@ def sim_analyze(
     try:
 #    if True:
 
+        # handle '$project' in modelimage
+        modelimage = modelimage.replace('$project',project)
+
 # things we need: model_cell, model_direction if user doesn't specify - 
 # so find those first, and get information using util.modifymodel
 # with skymodel=newmodel
 
-        # first look for skymodel, if not then compskymodel
-
-        skymodel=fileroot+"/"+project+".skymodel"
         components_only=False
+
+        # first look for skymodel, if not then compskymodel
+        skymodels=glob.glob(fileroot+"/"+project+"*.skymodel")+glob.glob(fileroot+"/"+project+"*.newmodel")
+        nmodels=len(skymodels)
+        if nmodels>1:
+            msg("Found %i sky model images:" % nmodels)
+            for ff in skymodels:
+                msg("   "+ff)
+            msg("Using "+skymodels[0])        
+        if nmodels>=1:
+            skymodel=skymodels[0]
+        else:
+            skymodel=""
+            
         if os.path.exists(skymodel):
             msg("Sky model image "+skymodel+" found.")
         else:
-            skymodel=fileroot+"/"+project+".newmodel"
+            skymodels=glob.glob(fileroot+"/"+project+"*.compskymodel")
+            nmodels=len(skymodels)
+            if nmodels>1:
+                msg("Found %i sky model images:" % nmodels)
+                for ff in skymodels:
+                    msg("   "+ff)
+                msg("Using "+skymodels[0])        
+            if nmodels>=1:
+                skymodel=skymodels[0]
+            else:
+                skymodel=""
+
             if os.path.exists(skymodel):
                 msg("Sky model image "+skymodel+" found.")
+                components_only=True
             else:
-                skymodel=fileroot+"/"+project+".compskymodel"
-                if os.path.exists(skymodel):
-                    msg("Sky model image "+skymodel+" found.")
-                    components_only=True
-                else:
-                    msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image "+imagename+".image has been created, but comparison with the input model is not possible.",priority="error")
-                    return False
+                msg("Can't find a model image in your project directory, named skymodel or compskymodel - output image will be been created, but comparison with the input model is not possible.",priority="error")
+                return False
 
-        modelflat = fileroot + "/" + project + ".skymodel.flat"
+        modelflat = skymodel+".flat"
         if not os.path.exists(modelflat):
             util.flatimage(skymodel,verbose=verbose)
 
@@ -146,7 +168,6 @@ def sim_analyze(
 
 
             # check for default measurement sets:
-            import glob
             default_mslist = glob.glob(fileroot+"/*ms")
             n_default=len(default_mslist)
             # is the user requesting this ms?
@@ -320,7 +341,14 @@ def sim_analyze(
 
         if image and len(mstoimage) > 0:
 
-            imagename = fileroot + "/" + project
+            # for reruns
+            foo=mstoimage[0]
+            foo=foo.replace(".ms","")
+            foo=foo.replace(project,"")
+            foo=foo.replace("/","")
+            project=project+foo
+
+            imagename = fileroot + "/" + project 
 
             # get nfld, sourcefieldlist, from (interfm) ms if it was not just created
             tb.open(mstoimage[0]+"/SOURCE")
@@ -626,6 +654,7 @@ def sim_analyze(
                     ttrans_array = flipped_array.tolist()
                     ttrans_array.reverse()
                     pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                    psfim.replace(project+"/","")
                     pl.title(psfim,fontsize="x-small")
                     b = qa.convert(beam['major'],'arcsec')['value']
                     pl.xlim([-3*b,3*b])

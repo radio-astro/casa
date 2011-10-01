@@ -545,19 +545,23 @@ mosaic simulation task:
 
     -------------------------------
     Output produced: (not all will always exist, depending on input parameters)
+    To support different runs with different arrays, the names have the
+    configuration name from antennalist appended.
     -------------------------------
-    project.skymodel = 4d input sky model image (optionally) scaled
-    project.skymodel.flat.regrid.conv = input sky regridded to match the output
-         image, and convolved with the output synthesized beam
-    project.skymodel.png = diagnostic figure of sky model with pointings
 
-    project.ptg.txt = list of mosaic pointings
-    project.quick.psf = psf calculated from uv coverage
-    project.ms = noise-free measurement set
-    project.noisy.ms = corrupted measurement set 
-    project.observe.png = diagnostic figure of uv coverage and visibilities
+    project.[cfg].skymodel = 4d input sky model image (optionally) scaled
+    project.[cfg].skymodel.flat.regrid.conv = input sky regridded to match the
+        output image, and convolved with the output synthesized beam
+    project.[cfg].skymodel.png = diagnostic figure of sky model with pointings
 
-    project.sim_observe.last = saved input parameters for simdata task
+    project.[cfg].ptg.txt = list of mosaic pointings
+    project.[cfg].quick.psf = psf calculated from uv coverage
+    project.[cfg].ms = noise-free measurement set
+    project.[cfg].noisy.ms = corrupted measurement set 
+    project.[cfg].observe.png = diagnostic figure of uv coverage and 
+         visibilities
+	    
+    project.[cfg].sim_observe.last = saved input parameters for simdata task
 
 </example>
 </task>

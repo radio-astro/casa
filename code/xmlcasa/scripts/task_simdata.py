@@ -34,32 +34,63 @@ def simdata(
 
     import re
 
-    # RI TODO for inbright=unchanged, need to scale input image to jy/pix
-    # according to actual units in the input image
+    try:
+#    if True:
 
-    # it was requested to make the user interface "observe" for what 
-    # is sm.observe and sm.predict.
-    # interally the code is clearer if we stick with predict, predict_sd, predict_int so
-    predict=observe
+        # RI TODO for inbright=unchanged, need to scale input image to jy/pix
+        # according to actual units in the input image
+    
+        # it was requested to make the user interface "observe" for what 
+        # is sm.observe and sm.predict.
+        # interally the code is clearer if we stick with predict, predict_sd, predict_int so
+        predict=observe
+    
+        casalog.origin('simdata')
+        if verbose: casalog.filter(level="DEBUG2")
+    
+        a = inspect.stack()
+        stacklevel = 0
+        for k in range(len(a)):
+            if (string.find(a[k][1], 'ipython console') > 0):
+                stacklevel = k
+        myf = sys._getframe(stacklevel).f_globals
+         
+        # create the utility object:
+        util = simutil(direction)  # this is the dir of the observation - could be ""
+        if verbose: util.verbose = True
+        msg = util.msg
+    
+        # put output in directory called "project"
+        fileroot = project
+        if not os.path.exists(fileroot):
+            os.mkdir(fileroot)
+    
+    
+            
+        # filename parsing of cfg file here so that the project filenames 
+        # can contain the cfg
+        repodir = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
 
-    casalog.origin('simdata')
-    if verbose: casalog.filter(level="DEBUG2")
-
-    a = inspect.stack()
-    stacklevel = 0
-    for k in range(len(a)):
-        if (string.find(a[k][1], 'ipython console') > 0):
-            stacklevel = k
-    myf = sys._getframe(stacklevel).f_globals
-     
-    # create the utility object:
-    util = simutil(direction)  # this is the dir of the observation - could be ""
-    if verbose: util.verbose = True
-    msg = util.msg
-
-    # put output in directory called "project"
-    fileroot = project
-    if os.path.exists(fileroot):
+        # convert "alma;0.4arcsec" to an actual configuration
+        # can only be done after reading skymodel, so here, we just string parse
+        if str.upper(antennalist[0:4]) == "ALMA":            
+            foo=antennalist[0:4]+"_"+antennalist[5:]
+        else:
+            if len(antennalist) > 0:
+                foo=antennalist
+            else:
+                if len(sdantlist) > 0:
+                    foo=sdantlist
+                
+        if foo:
+            foo=foo.replace(".cfg","")
+            sfoo=foo.split('/')
+            if len(sfoo)>1:
+                foo=sfoo[-1]
+            project=project+"."+foo
+        
+    
+    
         if not overwrite:
             if (predict and os.path.exists(fileroot+"/"+project+".ms")):
                 msg(fileroot+"/"+project+".ms exists but overwrite=F",priority="error")
@@ -70,46 +101,42 @@ def simdata(
             if (image and os.path.exists(fileroot+"/"+project+".fidelity")):
                 msg(fileroot+"/"+project+".fidelity and other analysis products exist but overwrite=F",priority="error")
                 return False
-    else:
-        os.mkdir(fileroot)
-
-
-    saveinputs = myf['saveinputs']
-    saveinputs('simdata',fileroot+"/"+project+".simdata.last")
-
-
-
-    # some hardcoded variables that may be reintroduced in future development
-    relmargin = .5  # number of PB between edge of model and pointing centers
-    scanlength = 1  # number of integrations per scan 
     
-    if type(skymodel) == type([]):
-        skymodel = skymodel[0]
-    skymodel = skymodel.replace('$project',project)
-
-    if type(complist) == type([]):
-        complist = complist[0]
-
-    if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
-        msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
-        return False
-
-
-    # handle '$project' in modelimage
-    modelimage = modelimage.replace('$project',project)
-
-    grscreen = False
-    grfile = False
-    if graphics == "both":
-        grscreen = True
-        grfile = True
-    if graphics == "screen":
-        grscreen = True
-    if graphics == "file":
-        grfile = True
     
-    try:
-#    if True:
+        saveinputs = myf['saveinputs']
+        saveinputs('simdata',fileroot+"/"+project+".simdata.last")
+    
+    
+    
+        # some hardcoded variables that may be reintroduced in future development
+        relmargin = .5  # number of PB between edge of model and pointing centers
+        scanlength = 1  # number of integrations per scan 
+        
+        if type(skymodel) == type([]):
+            skymodel = skymodel[0]
+        skymodel = skymodel.replace('$project',project)
+    
+        if type(complist) == type([]):
+            complist = complist[0]
+    
+        if((not os.path.exists(skymodel)) and (not os.path.exists(complist))):
+            msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
+            return False
+    
+    
+        # handle '$project' in modelimage
+        modelimage = modelimage.replace('$project',project)
+    
+        grscreen = False
+        grfile = False
+        if graphics == "both":
+            grscreen = True
+            grfile = True
+        if graphics == "screen":
+            grscreen = True
+        if graphics == "file":
+            grfile = True
+        
 
         ##################################################################
         # set up skymodel image
@@ -219,10 +246,9 @@ def simdata(
         sd_only = False
         aveant = -1
         stnx = []  # for later, to know if we read an array in or not
-        repodir = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
+        pb = 0. # primary beam
 
-        # convert "alma;0.4arcsec" to an actual configuration
-        if str.upper(antennalist[0:4]) == "ALMA":
+        if str.upper(antennalist[0:4]) == "ALMA":            
             tail = antennalist[5:]
             if util.isquantity(tail,halt=False):
                 resl = qa.convert(tail,"arcsec")['value']                
@@ -236,15 +262,14 @@ def simdata(
                 else:
                     msg("failed to find antenna configuration repository at "+repodir,priority="warn")
 
-        pb = 0. # primary beam
-
         # Search order is fileroot/ -> specified path -> repository
         if len(antennalist) > 0:
             if os.path.exists(fileroot+"/"+antennalist):
-                antennalist = fileroot + "/" + antennalist
+                antennalist = fileroot + "/" + antennalist                
             elif not os.path.exists(antennalist) and \
                      os.path.exists(repodir+antennalist):
                 antennalist = repodir + antennalist
+
 
         if os.path.exists(antennalist):
             stnx, stny, stnz, stnd, padnames, nant, telescopename = util.readantenna(antennalist)
@@ -1791,6 +1816,7 @@ def simdata(
                     ttrans_array = flipped_array.tolist()
                     ttrans_array.reverse()
                     pl.imshow(ttrans_array,interpolation='bilinear',cmap=pl.cm.jet,extent=xextent+yextent,origin="bottom")
+                    psfim.replace(project+"/","")
                     pl.title(psfim,fontsize="x-small")
                     b = qa.convert(beam['major'],'arcsec')['value']
                     pl.xlim([-3*b,3*b])
