@@ -65,6 +65,12 @@ calibrations can be applied on the fly.
 		<value></value>
 	</param>
 
+        <param type="any" name="observation" subparam="true">
+                <description>Select by observation ID(s)</description>
+		<any type="variant" limittypes="string int"/>
+		<value type="string"></value>
+        </param>
+
 	<param type="string" name="msselect" subparam="true">
 		<description>Optional complex data selection (ignore for now)</description>
 		<value></value>
@@ -175,6 +181,7 @@ calibrations can be applied on the fly.
 			<default param="uvrange"><value type="string"/></default>
 			<default param="antenna"><value type="string"/></default>
 			<default param="scan"><value type="string"/></default>
+			<default param="observation"><value type="string"/></default>
 			<default param="msselect"><value type="string"/></default>
 		</equals>
 		<equals type="bool" value="False"/>
@@ -285,6 +292,9 @@ calibrations can be applied on the fly.
               antenna='05'; all baselines with antenna name 05, i.e. VLA ant 5
               antenna='5,6,10'; all baselines with antennas 5, 6 and 10
       scan -- Scan number range
+      observation -- Observation ID(s).
+                     default: '' = all
+                     example: '0~2,4'
       msselect -- Optional complex data selection (ignore for now)
 
       --- Solution parameters

@@ -4,7 +4,8 @@ from taskinit import *
 
 def blcal(vis=None,caltable=None,
 	  field=None,spw=None,intent=None,
-	  selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
+	  selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,
+          observation=None, msselect=None,
 	  solint=None,combine=None,freqdep=None,calmode=None,solnorm=None,
 	  gaintable=None,gainfield=None,interp=None,spwmap=None,
 	  gaincurve=None,opacity=None,parang=None):
@@ -25,7 +26,7 @@ def blcal(vis=None,caltable=None,
 		if (selectdata):
 			# pass all data selection parameters in as specified
 			cb.selectvis(time=timerange,spw=spw,scan=scan,field=field,
-				     intent=intent,
+				     intent=intent, observation=str(observation),
 				     baseline=antenna,uvrange=uvrange,chanmode='none',
 				     msselect=msselect);
 		else:
@@ -33,7 +34,7 @@ def blcal(vis=None,caltable=None,
 			# using spw and field specifications only
 			cb.selectvis(time='',spw=spw,scan='',field=field,intent=intent,
 				     baseline='',uvrange='',chanmode='none',
-				     msselect='');
+				     observation='', msselect='')
 
 
                 # Arrange apply of existing other calibrations
