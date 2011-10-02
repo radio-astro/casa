@@ -93,7 +93,7 @@ endProc = time.clock()
 
 test_name = """simdata observation of M51 (total power)"""
 
-ia.open(project+"/"+project + '.image')
+ia.open(project+"/"+project + '.aca.tp.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -112,7 +112,7 @@ refstats = {'max': 1.5608,
             'sigma': 0.15789,
             'sum': 18400}
 
-ia.open(project+"/"+project + '.diff')
+ia.open(project+"/"+project + '.aca.tp.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -153,7 +153,7 @@ loghdr = """
 print >> logfile, loghdr
 
 # more info
-ms.open(project+"/"+project+".sd.ms")
+ms.open(project+"/"+project+".aca.tp.sd.ms")
 print >> logfile, "Noiseless MS, amp stats:"
 print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
@@ -207,7 +207,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat(project+"/"+project+'.sd.ms')
+msfstat = os.stat(project+"/"+project+'.aca.tp.sd.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*************************************'
