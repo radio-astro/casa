@@ -57,7 +57,7 @@ endProc = time.clock()
 # Regression
 
 test_name = """simdata observation of test cube"""
-ms.open(project+"/"+project+".ms")
+ms.open(project+"/"+project+".alma.out01.ms")
 newdata= ms.getdata(items="data")['data']
 
 
@@ -77,7 +77,7 @@ reftol   = {'max':  5e-3,
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = project + '.' + datestring + '.log'
+outfile    = project+"/"+project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
