@@ -277,23 +277,23 @@ class Uranus(SplitChecker):
 
     def test_wvr(self):
         """WVR spw"""
-        check_eq(self.records['']['wvr'], numpy.array([[26.40637016+0.j,
-                                                        26.40637016+0.j]]),
+        check_eq(self.records['']['wvr'], numpy.array([[26.40653229+0.j,
+                                                        26.40653229+0.j]]),
                  0.0001)
     def test_auto3(self):
         """Zero spacing of spw 3"""
-        check_eq(self.records['']['auto3'], numpy.array([[65.8059845+0.j],
-                                                         [65.8059845+0.j]]),
+        check_eq(self.records['']['auto3'], numpy.array([[65.80638885+0.j],
+                                                         [65.80638885+0.j]]),
                  0.0001)
     def test_long3(self):
         """Long spacing of spw 3"""
-        check_eq(self.records['']['long3'], numpy.array([[4.76127148+0.j],
-                                                         [4.76127148+0.j]]),
+        check_eq(self.records['']['long3'], numpy.array([[4.76111794+0.j],
+                                                         [4.76111794+0.j]]),
                  0.0001)
     def test_auto4(self):
         """Zero spacing of spw 4"""
-        check_eq(self.records['']['auto4'], numpy.array([[69.33354187+0.j],
-                                                         [69.33354187+0.j]]),
+        check_eq(self.records['']['auto4'], numpy.array([[69.33396912+0.j],
+                                                         [69.33396912+0.j]]),
                  0.0001)
     def test_med4(self):
         """Medium spacing of spw 4"""
@@ -302,8 +302,8 @@ class Uranus(SplitChecker):
                  0.0001)
     def test_long4(self):
         """Long spacing of spw 4"""
-        check_eq(self.records['']['long4'], numpy.array([[2.83950543+0.j],
-                                                         [2.83950543+0.j]]),
+        check_eq(self.records['']['long4'], numpy.array([[2.83933783+0.j],
+                                                         [2.83933783+0.j]]),
                  0.0001)
 
 class ScaleUranusByChan(SplitChecker):
@@ -368,37 +368,37 @@ class ScaleUranusByChan(SplitChecker):
         """Zero spacing of spw 1 with scalebychan"""
         # 8 (decreasing freq!) chans, XX & YY.
         check_eq(self.records['']['auto1'],
-                 numpy.array([[65.49375916+0.j, 65.42066193+0.j,
-                               65.34758759+0.j, 65.27452087+0.j,
-                               65.20146942+0.j, 65.12844086+0.j,
-                               65.05541992+0.j, 64.98241425+0.j],
-                              [65.49375916+0.j, 65.42066193+0.j,
-                               65.34758759+0.j, 65.27452087+0.j,
-                               65.20146942+0.j, 65.12844086+0.j,
-                               65.05541992+0.j, 64.98241425+0.j]]),
+                 numpy.array([[65.49415588+0.j, 65.42105865+0.j,
+                               65.34798431+0.j, 65.27491760+0.j,
+                               65.20187378+0.j, 65.12883759+0.j,
+                               65.05581665+0.j, 64.98281097+0.j],
+                              [65.49415588+0.j, 65.42105865+0.j,
+                               65.34798431+0.j, 65.27491760+0.j,
+                               65.20187378+0.j, 65.12883759+0.j,
+                               65.05581665+0.j, 64.98281097+0.j]]),
                  0.0001)
     def test_long1(self):
         """Long spacing of spw 1 with scalebychan"""
         check_eq(self.records['']['long1'],
-                 numpy.array([[4.92917442+0.j, 4.96841574+0.j,
-                               5.00762463+0.j, 5.04680014+0.j,
-                               5.08594275+0.j, 5.12505150+0.j,
-                               5.16412687+0.j, 5.20316792+0.j],
-                              [4.92917442+0.j, 4.96841574+0.j,
-                               5.00762463+0.j, 5.04680014+0.j,
-                               5.08594275+0.j, 5.12505150+0.j,
-                               5.16412687+0.j, 5.20316792+0.j]]),
+                 numpy.array([[4.92902184+0.j, 4.96826363+0.j,
+                               5.00747252+0.j, 5.04664850+0.j,
+                               5.08579159+0.j, 5.12490082+0.j,
+                               5.16397619+0.j, 5.20301771+0.j],
+                              [4.92902184+0.j, 4.96826363+0.j,
+                               5.00747252+0.j, 5.04664850+0.j,
+                               5.08579159+0.j, 5.12490082+0.j,
+                               5.16397619+0.j, 5.20301771+0.j]]),
                  0.0001)
     # spw 4 only has 1 chan, so it should be the same as without scalebychan.
     def test_auto4(self):
         """Zero spacing of spw 4 with scalebychan"""
-        check_eq(self.records['']['auto4'], numpy.array([[69.33354187+0.j],
-                                                         [69.33354187+0.j]]),
+        check_eq(self.records['']['auto4'], numpy.array([[69.33396912+0.j],
+                                                         [69.33396912+0.j]]),
                  0.0001)
     def test_long4(self):
         """Long spacing of spw 4 with scalebychan"""
-        check_eq(self.records['']['long4'], numpy.array([[2.83950543+0.j],
-                                                         [2.83950543+0.j]]),
+        check_eq(self.records['']['long4'], numpy.array([[2.83933783+0.j],
+                                                         [2.83933783+0.j]]),
                  0.0001)
             
 def suite():
