@@ -277,23 +277,23 @@ class Uranus(SplitChecker):
 
     def test_wvr(self):
         """WVR spw"""
-        check_eq(self.records['']['wvr'], numpy.array([[26.40637016+0.j,
-                                                        26.40637016+0.j]]),
+        check_eq(self.records['']['wvr'], numpy.array([[26.40653229+0.j,
+                                                        26.40653229+0.j]]),
                  0.0001)
     def test_auto3(self):
         """Zero spacing of spw 3"""
-        check_eq(self.records['']['auto3'], numpy.array([[65.8059845+0.j],
-                                                         [65.8059845+0.j]]),
+        check_eq(self.records['']['auto3'], numpy.array([[65.80638885+0.j],
+                                                         [65.80638885+0.j]]),
                  0.0001)
     def test_long3(self):
         """Long spacing of spw 3"""
-        check_eq(self.records['']['long3'], numpy.array([[4.76127148+0.j],
-                                                         [4.76127148+0.j]]),
+        check_eq(self.records['']['long3'], numpy.array([[4.76111794+0.j],
+                                                         [4.76111794+0.j]]),
                  0.0001)
     def test_auto4(self):
         """Zero spacing of spw 4"""
-        check_eq(self.records['']['auto4'], numpy.array([[69.33354187+0.j],
-                                                         [69.33354187+0.j]]),
+        check_eq(self.records['']['auto4'], numpy.array([[69.33396912+0.j],
+                                                         [69.33396912+0.j]]),
                  0.0001)
     def test_med4(self):
         """Medium spacing of spw 4"""
@@ -302,8 +302,8 @@ class Uranus(SplitChecker):
                  0.0001)
     def test_long4(self):
         """Long spacing of spw 4"""
-        check_eq(self.records['']['long4'], numpy.array([[2.83950543+0.j],
-                                                         [2.83950543+0.j]]),
+        check_eq(self.records['']['long4'], numpy.array([[2.83933783+0.j],
+                                                         [2.83933783+0.j]]),
                  0.0001)
 
 class ScaleUranusByChan(SplitChecker):
@@ -368,38 +368,102 @@ class ScaleUranusByChan(SplitChecker):
         """Zero spacing of spw 1 with scalebychan"""
         # 8 (decreasing freq!) chans, XX & YY.
         check_eq(self.records['']['auto1'],
-                 numpy.array([[65.49375916+0.j, 65.42066193+0.j,
-                               65.34758759+0.j, 65.27452087+0.j,
-                               65.20146942+0.j, 65.12844086+0.j,
-                               65.05541992+0.j, 64.98241425+0.j],
-                              [65.49375916+0.j, 65.42066193+0.j,
-                               65.34758759+0.j, 65.27452087+0.j,
-                               65.20146942+0.j, 65.12844086+0.j,
-                               65.05541992+0.j, 64.98241425+0.j]]),
+                 numpy.array([[65.49415588+0.j, 65.42105865+0.j,
+                               65.34798431+0.j, 65.27491760+0.j,
+                               65.20187378+0.j, 65.12883759+0.j,
+                               65.05581665+0.j, 64.98281097+0.j],
+                              [65.49415588+0.j, 65.42105865+0.j,
+                               65.34798431+0.j, 65.27491760+0.j,
+                               65.20187378+0.j, 65.12883759+0.j,
+                               65.05581665+0.j, 64.98281097+0.j]]),
                  0.0001)
     def test_long1(self):
         """Long spacing of spw 1 with scalebychan"""
         check_eq(self.records['']['long1'],
-                 numpy.array([[4.92917442+0.j, 4.96841574+0.j,
-                               5.00762463+0.j, 5.04680014+0.j,
-                               5.08594275+0.j, 5.12505150+0.j,
-                               5.16412687+0.j, 5.20316792+0.j],
-                              [4.92917442+0.j, 4.96841574+0.j,
-                               5.00762463+0.j, 5.04680014+0.j,
-                               5.08594275+0.j, 5.12505150+0.j,
-                               5.16412687+0.j, 5.20316792+0.j]]),
+                 numpy.array([[4.92902184+0.j, 4.96826363+0.j,
+                               5.00747252+0.j, 5.04664850+0.j,
+                               5.08579159+0.j, 5.12490082+0.j,
+                               5.16397619+0.j, 5.20301771+0.j],
+                              [4.92902184+0.j, 4.96826363+0.j,
+                               5.00747252+0.j, 5.04664850+0.j,
+                               5.08579159+0.j, 5.12490082+0.j,
+                               5.16397619+0.j, 5.20301771+0.j]]),
                  0.0001)
     # spw 4 only has 1 chan, so it should be the same as without scalebychan.
     def test_auto4(self):
         """Zero spacing of spw 4 with scalebychan"""
-        check_eq(self.records['']['auto4'], numpy.array([[69.33354187+0.j],
-                                                         [69.33354187+0.j]]),
+        check_eq(self.records['']['auto4'], numpy.array([[69.33396912+0.j],
+                                                         [69.33396912+0.j]]),
                  0.0001)
     def test_long4(self):
         """Long spacing of spw 4 with scalebychan"""
-        check_eq(self.records['']['long4'], numpy.array([[2.83950543+0.j],
-                                                         [2.83950543+0.j]]),
+        check_eq(self.records['']['long4'], numpy.array([[2.83933783+0.j],
+                                                         [2.83933783+0.j]]),
                  0.0001)
+
+class selectobs(SplitChecker):
+    """Test CAS-3320"""
+    need_to_initialize = True
+    inpms = 'unittest/setjy/multiobs.ms'  # 3 concatted observations of Titan
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        """
+        Doesn't really run split; just setjy.
+        """
+        record = {}
+
+        # Paranoia: check that inpms doesn't already have MODEL_DATA.
+        # Otherwise, we could mistake old results for new ones.  That could be
+        # fixed by splitting out DATA, but inpms is not supposed to require
+        # that.
+        tb.open(self.inpms)
+        cols = tb.colnames()
+        tb.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+
+        try:
+            print "\nRunning setjy(field='Titan', observation=1)."
+            sjran = setjy(self.inpms, field='Titan', spw='',
+                          selectdata=True, observation=1, 
+                          modimage='',
+                          scalebychan=False, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2010', async=False)
+        except Exception, e:
+            print "Error running setjy(field='Titan', observation=1)"
+            raise e
+        try:
+            tb.open(self.inpms)
+            cols = tb.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
+        except AssertionError, e:
+            tb.close()
+            raise e
+        else:
+            record[0] = tb.getcell('MODEL_DATA', 0)[0, 0]
+            record[1] = tb.getcell('MODEL_DATA', 666)[0]
+            record[2] = tb.getcell('MODEL_DATA', 950)[0, 0]
+            tb.close()
+        self.__class__.records[corrsel] = record
+        return sjran
+
+    def test_obs0(self):
+        """Was obsID 0 left alone?"""
+        check_eq(self.records[''][0], 1.0+0.0j, 0.003)
+
+    def test_obs1(self):
+        """Was obsID 1 set?"""
+        check_eq(self.records[''][1],
+                 numpy.array([1.40439999+0.j, 1.40436542+0.j,
+                              1.40433097+0.j, 1.40429640+0.j]), 0.003)
+
+    def test_obs2(self):
+        """Was obsID 2 left alone?"""
+        check_eq(self.records[''][2], 1.0+0.0j, 0.003)
+
             
 def suite():
-    return [setjy_test_modimage, Uranus, ScaleUranusByChan]
+    return [setjy_test_modimage, Uranus, ScaleUranusByChan, selectobs]

@@ -1440,7 +1440,8 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
 	      const std::string& modimage,
 	      const std::vector<double>& fluxdensity, const std::string& standard,
               const bool scalebychan, const double spix,
-              const ::casac::variant& reffreq)
+              const ::casac::variant& reffreq, const std::string& time,
+              const std::string& scan, const std::string& observation)
 {
   Bool rstat = False;
 
@@ -1471,10 +1472,13 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
                 << LogIO::POST;
         return False;
       }
+      casa::String timerange(time);
+      casa::String scanstr(scan);
+      casa::String obsstr(observation);
 
       rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
                                modimage, fluxdensity, standard, scalebychan,
-                               spix, mfreqref);
+                               spix, mfreqref, timerange, scanstr, obsstr);
     } 
     catch(AipsError x){
       *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

@@ -473,8 +473,9 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
   
-  //Setjy with model image. If chanDep=True then the scaling is calulated on a 
-  //per channel basis for the model image...otherwise the whole spw get the same scaling
+  //Setjy with model image. If chanDep=True then the scaling is calculated on a 
+  //per channel basis for the model image...otherwise the whole spw gets the
+  //same flux density.
   Bool setjy(const Vector<Int>& fieldid, 
 	     const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
@@ -482,7 +483,9 @@ class Imager
 	     const Vector<Double>& fluxDensity, const String& standard, 
 	     const Bool chanDep=False, const Double spix=0.0,
              const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
-                                                  MFrequency::LSRK));
+                                                  MFrequency::LSRK),
+             const String& timerange="", const String& scanstr="",
+             const String& obsidstr="");
 
   // Make an empty image
   Bool make(const String& model);
@@ -750,7 +753,8 @@ protected:
   // Returns whether it might have made any visibilities.
   Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                              const Int rawspwid, const Int fldid,
-                             const String& clname);
+                             const String& clname, const String& timerange="",
+                             const String& scanstr="", const String& obsidstr="");
   // Returns whether it found a source.
   Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                        Vector<Vector<Flux<Double> > >& returnFluxes,
