@@ -421,6 +421,7 @@ public:
 
     makePolMap() ;
     initFrequencies() ;
+    initCorrProductTemplate() ;
 
     //
     // add rows to MS
@@ -1193,20 +1194,36 @@ private:
     c.resize( n ) ;
     for ( Int i = 0 ; i < n ; i++ )
       c[i] = (Int)polmap[nos[i]] ;
-    cp.resize( 2, n ) ;
-    if ( n == 1 )
-      cp = 0 ;
-    else if ( n == 2 ) {
-      cp.column( 0 ) = 0 ;
-      cp.column( 1 ) = 1 ;
+    if ( n == 4 && 
+         ( poltype == "linear" || poltype == "circular" ) ) {
+      Int tmp = c[1] ;
+      c[1] = c[2] ;
+      c[2] = c[3] ;
+      c[3] = tmp ;
     }
-    else {
-      cp.column( 0 ) = 0 ;
-      cp.column( 1 ) = 1 ;
-      cp( 0, 1 ) = 0 ;
-      cp( 1, 1 ) = 1 ;
-      cp( 0, 2 ) = 1 ;
-      cp( 1, 2 ) = 0 ;
+    cp = corrProductTemplate[n] ;
+  }
+  void initCorrProductTemplate()
+  {
+    Int n = 1 ;
+    {
+      Matrix<Int> c( 2, n, 0 ) ;
+      corrProductTemplate[n] = c ;
+    }
+    n = 2 ;
+    { 
+      Matrix<Int> c( 2, n, 0 ) ;
+      c.column( 1 ) = 1 ;
+      corrProductTemplate[n] = c ;
+    }
+    n = 4 ;
+    {
+      Matrix<Int> c( 2, n, 0 ) ;
+      c( 0, 2 ) = 1 ;
+      c( 0, 3 ) = 1 ;
+      c( 1, 1 ) = 1 ;
+      c( 1, 3 ) = 1 ;
+      corrProductTemplate[n] = c ;
     }
   }
 
@@ -1273,6 +1290,7 @@ private:
   map<uInt,Double> increment;
   MFrequency::Types freqframe;
   Record srcRec;
+  map< Int, Matrix<Int> > corrProductTemplate;
 };
 
 class BaseMSSysCalVisitor: public TableVisitor {
