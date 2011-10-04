@@ -1361,6 +1361,7 @@ int SDMBinData::attachStreamDataObject(const string& dataOID ){
 //       }
       return 0;
     }
+    catch (SDMDataObjectStreamReaderException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectReaderException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectParserException e) { cout << e.getMessage()          << endl; }
     catch (SDMDataObjectException e)       { cout << e.getMessage()          << endl; }
