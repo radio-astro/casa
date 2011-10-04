@@ -400,6 +400,70 @@ class ScaleUranusByChan(SplitChecker):
         check_eq(self.records['']['long4'], numpy.array([[2.83933783+0.j],
                                                          [2.83933783+0.j]]),
                  0.0001)
+
+class selectobs(SplitChecker):
+    """Test CAS-3320"""
+    need_to_initialize = True
+    inpms = 'unittest/setjy/multiobs.ms'  # 3 concatted observations of Titan
+    corrsels = ['']
+    records = {}
+
+    def do_split(self, corrsel):
+        """
+        Doesn't really run split; just setjy.
+        """
+        record = {}
+
+        # Paranoia: check that inpms doesn't already have MODEL_DATA.
+        # Otherwise, we could mistake old results for new ones.  That could be
+        # fixed by splitting out DATA, but inpms is not supposed to require
+        # that.
+        tb.open(self.inpms)
+        cols = tb.colnames()
+        tb.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + inpms + " already has a MODEL_DATA col"
+
+        try:
+            print "\nRunning setjy(field='Titan', observation=1)."
+            sjran = setjy(self.inpms, field='Titan', spw='',
+                          selectdata=True, observation=1, 
+                          modimage='',
+                          scalebychan=False, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2010', async=False)
+        except Exception, e:
+            print "Error running setjy(field='Titan', observation=1)"
+            raise e
+        try:
+            tb.open(self.inpms)
+            cols = tb.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Titan') did not add a MODEL_DATA column"
+        except AssertionError, e:
+            tb.close()
+            raise e
+        else:
+            record[0] = tb.getcell('MODEL_DATA', 0)[0, 0]
+            record[1] = tb.getcell('MODEL_DATA', 666)[0]
+            record[2] = tb.getcell('MODEL_DATA', 950)[0, 0]
+            tb.close()
+        self.__class__.records[corrsel] = record
+        return sjran
+
+    def test_obs0(self):
+        """Was obsID 0 left alone?"""
+        check_eq(self.records[''][0], 1.0+0.0j, 0.003)
+
+    def test_obs1(self):
+        """Was obsID 1 set?"""
+        check_eq(self.records[''][1],
+                 numpy.array([1.40439999+0.j, 1.40436542+0.j,
+                              1.40433097+0.j, 1.40429640+0.j]), 0.003)
+
+    def test_obs2(self):
+        """Was obsID 2 left alone?"""
+        check_eq(self.records[''][2], 1.0+0.0j, 0.003)
+
             
 def suite():
-    return [setjy_test_modimage, Uranus, ScaleUranusByChan]
+    return [setjy_test_modimage, Uranus, ScaleUranusByChan, selectobs]
