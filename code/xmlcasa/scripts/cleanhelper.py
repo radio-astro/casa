@@ -769,7 +769,10 @@ class cleanhelper:
                         else: 
                            incircles=circles[key]
                         # put in imagelist order
-                        updatedmaskobject[self.imagelist.values().index(maskid)].append(incircles)
+                        if len(incircles)>1 and isinstance(incircles[0],list):
+                            updatedmaskobject[self.imagelist.values().index(maskid)].extend(incircles)
+                        else:
+                            updatedmaskobject[self.imagelist.values().index(maskid)].append(incircles)
             if len(boxes) != 0:
                 for key in boxes:
                     #try: 
@@ -784,9 +787,12 @@ class cleanhelper:
                             inboxes=boxes[key]
                         # add to maskobject (extra list bracket taken out)
                         # put in imagelist order
-                        updatedmaskobject[self.imagelist.values().index(maskid)].extend(inboxes)
+                        # take out extra []
+                        if len(inboxes)>1 and isinstance(inboxes[0],list):
+                           updatedmaskobject[self.imagelist.values().index(maskid)].extend(inboxes)
+                        else:
+                           updatedmaskobject[self.imagelist.values().index(maskid)].append(inboxes)
        
-
         for maskid in range(len(self.maskimages)):
             if maskid < len(updatedmaskobject):
                 self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
@@ -1803,7 +1809,6 @@ class cleanhelper:
             else:
                 retlist.append(l[i])
         return retlist 
-
 
     def getchanimage(self,cubeimage,outim,chan):
         """

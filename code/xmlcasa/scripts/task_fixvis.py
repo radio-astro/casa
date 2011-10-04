@@ -289,6 +289,10 @@ def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
         casalog.post('Refcode for the new phase center is valid but not yet supported: '
                      + thenewrefstr, 'WARN')
         casalog.post('Output MS may not be valid.', 'WARN')
+
+    if(theolddir[0] >= qa.constants('pi')['value']): # old RA uses range 0 ... 2 pi, not -pi ... pi
+        while (thenewra_rad < 0.): # keep RA positive in order not to confuse the user
+            thenewra_rad += 2. * qa.constants('pi')['value']
                 
     log_phasecenter('new', thenewrefstr, thenewra_rad, thenewdec_rad)
 
