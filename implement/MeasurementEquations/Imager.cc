@@ -5005,7 +5005,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                 Vector<Int>(), "", "", "", scanstr, obsidstr, True, true);
         ROMSColumns msselc(*mssel_p);
         if(nullSelect_p || msselc.nrow() < 1){
-          os << LogIO::WARN
+          os << ((timerange == "" && scanstr == ""
+                  && obsidstr == "") ? LogIO::WARN : LogIO::NORMAL)
              << "No data was selected for field " << fldid << "."
              << LogIO::POST;
           continue;
@@ -5025,8 +5026,9 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
             
           // Log flux density found for this field and spectral window
           os.output().width(12);
-          os << fieldName << " spw ";
-          os.output().width(3);
+          os << fieldName;
+          os.output().width(2);
+          os << " (fld ind " << fldid << ") spw ";
           os << rawspwid << "  ";
           os.output().width(0);
           os.output().precision(5);
