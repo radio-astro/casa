@@ -897,10 +897,10 @@ void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm,
     // cerr << "CSE: " << memtot << " " << pixInMem << endl;
     // cerr << npix << " " << pixInMem/8 << endl;
     nslice=1;
-
-    if(npix > (pixInMem/8)){
-      //Lets slice it so grid is at most 1/6th of memory
-      pixInMem=pixInMem/8;
+    //There are roughly 13 float images worth held in memory
+    if(npix > (pixInMem/16)){
+      //Lets slice it so grid is at most 1/16th of memory
+      pixInMem=pixInMem/16;
       //One plane is
       npix=theIm.shape()(0)*theIm.shape()(1)*theIm.shape()(2);
       nchanPerSlice_p=Int(floor(pixInMem/npix));

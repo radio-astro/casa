@@ -1701,6 +1701,8 @@ Methods
 
 	\ahlink{drop\_scan}{sd:sd.scantable.drop_scan} &Return a new scantable where the specified scan number(s) dropped \\
 
+	\ahlink{flag}{sd:sd.scantable.fft} & Apply FFT to the spectra \\
+
 	\ahlink{flag}{sd:sd.scantable.flag} & Flag selected data using specified mask (channel based flag) \\
 
 	\ahlink{flag\_nans}{sd:sd.scantable.flag_nans} &Flag NaN values\\
@@ -2903,6 +2905,55 @@ scanid && \multicolumn{2}{p{3.36in}|}{A (list of) scan number(s)}\\
 
 \flushleft\vspace{.20in}\textbf {Returns}\newline
 scantable
+
+\flushleft\vspace{.20in}\textbf {Example}\\
+\hfill \\
+
+
+%% sd.scantable.fft
+\newpage
+\ahfunction{sd.scantable.fft}{Apply FFT to the spectra}
+
+\flushleft\vspace{.20in}\textbf {Description}\\
+   \hfill \\
+
+    Apply FFT to the spectra.
+
+    Flagged data in the scantable get interpolated over the region.
+    An optional channel mask specified by mask parameter is applied to 
+    all specified rows if it is given as one dimensional array.
+
+    It returns a list of dictionaries containing the results for 
+    each spectrum.
+    Each dictionary contains two values, the real and the imaginary 
+    parts when getrealimag = True, or the amplitude(absolute value)
+    and the phase(argument) when getrealimag = False. The key for
+    these values are 'real' and 'imag', or 'ampl' and 'phase',
+    respectively.
+
+\flushleft\vspace{.20in}\textbf {Arguments}\\
+\hfill \\
+\begin{tabular}{|l p{0.25in}p{0.75in}p{2.38in}|}
+\hline
+Inputs && \multicolumn{2}{p{3.36in}|}{}\\
+rowno && \multicolumn{2}{p{3.36in}|}{Row number(s) to be processed.}\\
+& &allowed: & integet, integer list or tuple \\
+& &Default: & [] (apply to whole data)
+\\
+mask && \multicolumn{2}{p{3.36in}|}{An optional channel mask}\\
+& &allowed: & bool array \\
+& &Default: & [] 
+\\
+getrealimag && \multicolumn{2}{p{3.36in}|}{If True, return real and imaginary part instead of amplitude and phase}\\
+& &allowed: & bool \\
+& &Default: & False (return amplitude and phase)
+\\
+
+\hline
+\end{tabular}
+
+\flushleft\vspace{.20in}\textbf {Returns}\newline
+dictionary
 
 \flushleft\vspace{.20in}\textbf {Example}\\
 \hfill \\

@@ -608,7 +608,7 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
   // note:  these bands are fairly fast and loose,
   // and owe a lot to the fact that the band coverage is sparse!
   Double freqGHz = freq.getValue("GHz");
-  if (telescope(0,3)=="VLA") {
+  if (telescope(0,3)=="VLA" || telescope(0,4)=="EVLA") {
     if (freqGHz > 35.0 && freqGHz < 55.0) {
       whichPB = PBMath::VLA_Q;
       band = "Q";
@@ -870,7 +870,7 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::HATCREEK;
   } else if (str == "BIMA") {  //  BIMA is a synonym for HATCREEK
     ipb = PBMath::HATCREEK;
-  } else if (str == "VLA") {
+  } else if (str == "VLA" || str == "EVLA") {
     ipb = PBMath::VLA;
   } else if (str == "VLA_INVERSE") {
     ipb = PBMath::VLA_INVERSE;
