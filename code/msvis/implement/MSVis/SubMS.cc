@@ -99,6 +99,13 @@ namespace casa {
 
 //typedef ROVisibilityIterator ROVisIter;
 //typedef VisibilityIterator VisIter;
+
+Double subms_wtToSigma(Double wt);
+
+Double subms_wtToSigma(Double wt)
+{
+  return wt > 0.0 ? 1.0 / sqrt(wt) : -1.0;
+}
   
   SubMS::SubMS(String& theMS, Table::TableOption option) :
     ms_p(MeasurementSet(theMS, option)),
@@ -6750,7 +6757,6 @@ Bool SubMS::fillAccessoryMainCols(){
 Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
                               const Bool writeToDataCol)
   {
-
     Block<Int> columns;
     // include scan and state iteration, for more optimal iteration
     columns.resize(6);
@@ -6786,6 +6792,13 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
                         True, 1);
     uInt inrowsdone = 0;  // only for the meter.
 
+    uInt nDataCols = colNames.nelements();
+
+    // Is CORRECTED_DATA being moved to DATA?
+    Bool fromCorrToData = writeToDataCol && nDataCols == 1;
+    if(fromCorrToData)
+      fromCorrToData = colNames[0] == MS::CORRECTED_DATA;
+
     for (iChunk=0,viOut.originChunks(),viIn.originChunks();
 	 viOut.moreChunks(),viIn.moreChunks();
 	 viOut.nextChunk(),viIn.nextChunk(),++iChunk) {
@@ -6813,14 +6826,18 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
         viOut.setFlag(flag);
         viIn.weightMat(wtmat);
         viOut.setWeightMat(wtmat);
-        viIn.sigmaMat(wtmat);           // Yes, I'm reusing wtmat.
+        if(fromCorrToData)                           // Use SIGMA like a storage place
+          arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+        else
+          viIn.sigmaMat(wtmat);           // Yes, I'm reusing wtmat.
         viOut.setSigmaMat(wtmat);
+
         if(doWtSp){
           viIn.weightSpectrum(wtsp);
           viOut.setWeightSpectrum(wtsp);
         }
 
-        for(Int colnum = colNames.nelements(); colnum--;){
+        for(uInt colnum = 0; colnum < nDataCols; ++colnum){
           if(writeToDataCol || colNames[colnum] == MS::DATA) {
             // write DATA, MODEL_DATA, or CORRECTED_DATA to DATA
             switch (colNames[colnum]) {
@@ -7875,6 +7892,11 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   //ArrayColumn<Complex> outCmplxCols[nCmplx];
   //outDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
   const Bool writeToData = mustConvertToData(nCmplx, cmplxColLabels);
+
+  // Is CORRECTED_DATA being moved to DATA?
+  Bool fromCorrToData = writeToData && nCmplx == 1;
+  if(fromCorrToData)
+    fromCorrToData = cmplxColLabels[0] == MS::CORRECTED_DATA;
   
   Vector<Int> spwindex(max(spw_p) + 1);
   spwindex.set(-1);
@@ -7941,6 +7963,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   Cube<Complex> vis;
   Cube<Float> floatvis;
   VisBuffer vb(viIn);
+  Matrix<Float> wtmat;
 
   for(viOut.originChunks(), viIn.originChunks();
       viOut.moreChunks(), viIn.moreChunks();
@@ -8001,10 +8024,16 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
         //if(doFloat)
         //  viOut.setFloatData(vb.floatDataCube());    TBD!
         viOut.setFlag(vb.flagCube());
-        viOut.setWeightMat(vb.weightMat());
-        viOut.setSigmaMat(vb.sigmaMat());
+        wtmat.reference(vb.weightMat());
+
         if(doSpWeight)
           viOut.setWeightSpectrum(vb.weightSpectrum());
+        viOut.setWeightMat(wtmat);
+        if(fromCorrToData)                           // Use SIGMA like a storage place
+          arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+        else
+          wtmat.reference(vb.sigmaMat());           // Yes, I'm reusing wtmat.
+        viOut.setSigmaMat(wtmat);
       
         rowsdone += rowsnow;
       }
@@ -8240,6 +8269,9 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
        << "Using VisibilityIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
+  // Is CORRECTED_DATA being moved to DATA?
+  Bool fromCorrToData = nCmplx == 1 && cmplxColLabels[0] == MS::CORRECTED_DATA;
+
   ArrayColumn<Complex> outCmplxCols[nCmplx];
   getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
@@ -8311,6 +8343,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   Vector<Matrix<Int> > chanAveBounds;
   vi.slicesToMatrices(chanAveBounds, chanSlices_p, widths_p);
 
+  Matrix<Float> wtmat;
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
   Vector<Int> spwindex(max(spw_p) + 1);
@@ -8419,8 +8452,17 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
 
-      msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!
-      msc_p->sigma().putColumnCells(rowstoadd, avb.sigmaMat());
+      msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());   // Don't remap!
+
+      if(doSpWeight)
+        msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
+      wtmat.reference(avb.weightMat());
+      msc_p->weight().putColumnCells(rowstoadd, wtmat);
+      if(fromCorrToData)                           // Use SIGMA like a storage place
+        arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+      else
+        wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.
+      msc_p->sigma().putColumnCells(rowstoadd, wtmat);
 
       remap(avb.stateId(), stateRemapper_p);
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
@@ -8428,9 +8470,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       msc_p->time().putColumnCells(rowstoadd, avb.time());
       msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());
-      msc_p->weight().putColumnCells(rowstoadd, avb.weightMat());
-      if(doSpWeight)
-        msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
       
       rowsdone += rowsnow;
     }
@@ -8483,6 +8522,9 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
     os << LogIO::WARN
        << "Using VisIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
+
+  // Is CORRECTED_DATA being moved to DATA?
+  Bool fromCorrToData =  nCmplx == 1 && cmplxColLabels[0] == MS::CORRECTED_DATA;
 
   ArrayColumn<Complex> outCmplxCols[nCmplx];
   getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
@@ -8550,6 +8592,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   Vector<Matrix<Int> > chanAveBounds;
   vi.slicesToMatrices(chanAveBounds, chanSlices_p, widths_p);
 
+  Matrix<Float> wtmat;
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
   Vector<Int> spwindex(max(spw_p) + 1);
@@ -8659,7 +8702,17 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
 
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!
-      msc_p->sigma().putColumnCells(rowstoadd, avb.sigmaMat());
+
+      if(doSpWeight)
+        msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
+
+      wtmat.reference(avb.weightMat());
+      msc_p->weight().putColumnCells(rowstoadd, wtmat);
+      if(fromCorrToData)                           // Use SIGMA like a storage place
+        arrayTransformInPlace(wtmat, subms_wtToSigma);   // for corrected weights.
+      else
+        wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.     
+      msc_p->sigma().putColumnCells(rowstoadd, wtmat);
 
       remap(avb.stateId(), stateRemapper_p);
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
@@ -8667,9 +8720,6 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       msc_p->time().putColumnCells(rowstoadd, avb.time());
       msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());
-      msc_p->weight().putColumnCells(rowstoadd, avb.weightMat());
-      if(doSpWeight)
-        msc_p->weightSpectrum().putColumnCells(rowstoadd, avb.weightSpectrum());
       
       rowsdone += rowsnow;
     }

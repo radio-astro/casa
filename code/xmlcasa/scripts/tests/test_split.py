@@ -214,7 +214,7 @@ class split_test_tav(SplitChecker):
 
         shutil.rmtree(outms, ignore_errors=True)
         try:
-            print "\nTime averaging", corrsel
+            print "\nTime averaging", self.inpms, corrsel
             splitran = split(self.inpms, outms, datacolumn='data',
                              field='', spw='', width=1, antenna='',
                              timebin='20s', timerange='',
@@ -1462,10 +1462,162 @@ class split_test_tav_then_cvel(SplitChecker):
         shutil.rmtree(self.records['cvms'])
         #self.__class__.n_tests_passed += 1
 
+class split_test_wttosig(SplitChecker):
+    """
+    Check WEIGHT and SIGMA after various datacolumn selections and averagings.
+    """
+    need_to_initialize = True
+    inpms = datapath + '/unittest/split/testwtsig.ms'
+    records = {}
+
+    # records uses these as keys, so they MUST be tuples, not lists.
+    # Each tuple is really (datacolumn, width, timebin), but it's called corrsels for
+    # compatibility with SplitChecker.
+    corrsels = (('data',      '1', '0s'), # straight selection of DATA.
+                ('corrected', '1', '0s'), # straight CORRECTED -> DATA.
+                ('data', '2', '0s'),      # channel averaged DATA
+                ('data', '1', '60s'),     # time averaged DATA
+                ('corrected', '2', '0s'), # channel averaged CORRECTED -> DATA
+                ('corrected', '1', '60s')) # time averaged CORRECTED -> DATA
+
+    def do_split(self, dcwtb):
+        outms = 'wtsig_' + '_'.join(dcwtb) + '.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nChecking WEIGHT and SIGMA after %s." % (dcwtb,)
+            splitran = split(self.inpms, outms, datacolumn=dcwtb[0],
+                             field='', spw='', width=dcwtb[1], antenna='',
+                             timebin=dcwtb[2], timerange='',
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+            tb.open(outms)
+            record['sigma'] = tb.getcol('SIGMA')[:,0:5].transpose()
+            record['wt']    = tb.getcol('WEIGHT')[:,0:5].transpose()
+            tb.close()
+            shutil.rmtree(outms, ignore_errors=True)
+        except Exception, e:
+            print "Error splitting %s from %s", (dcwtb, self.inpms)
+            raise e
+        self.__class__.records[dcwtb] = record
+        return splitran
+
+    def test_wt_straightselection(self):
+        """WEIGHT after straight selection of DATA."""
+        check_eq(self.records[('data', '1', '0s')]['wt'],
+                 numpy.array([[1.,     4.,       9.,      16.],
+                              [0.0625, 0.111111, 0.25,     1.],
+                              [1.,     0.25,     0.111111, 0.0625],
+                              [1.,     1.,       1.,       1.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_sig_straightselection(self):
+        """SIGMA after straight selection of DATA."""
+        check_eq(self.records[('data', '1', '0s')]['sigma'],
+                 numpy.array([[4.,     3.,       2.,       1.],
+                              [4.,     3.,       2.,       1.],
+                              [1.,     2.,       3.,       4.],
+                              [5.,     6.,       7.,       8.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_wt_corrtodata(self):
+        """WEIGHT after straight CORRECTED -> DATA."""
+        check_eq(self.records[('corrected', '1', '0s')]['wt'],
+                 numpy.array([[1.,     4.,       9.,      16.],
+                              [0.0625, 0.111111, 0.25,     1.],
+                              [1.,     0.25,     0.111111, 0.0625],
+                              [1.,     1.,       1.,       1.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_sig_corrtodata(self):
+        """SIGMA after straight CORRECTED -> DATA."""
+        check_eq(self.records[('corrected', '1', '0s')]['sigma'],
+                 numpy.array([[1.,     0.5,      0.333333, 0.25],
+                              [4.,     3.,       2.,       1.],
+                              [1.,     2.,       3.,       4.],
+                              [1.,     1.,       1.,       1.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_wt_cavdata(self):
+        """WEIGHT after channel averaging DATA."""
+        check_eq(self.records[('data', '2', '0s')]['wt'],
+                 numpy.array([[1.,     4.,       9.,      16.],
+                              [0.0625, 0.111111, 0.25,     1.],
+                              [1.,     0.25,     0.111111, 0.0625],
+                              [1.,     1.,       1.,       1.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_sig_cavdata(self):
+        """SIGMA after channel averaging DATA."""
+        check_eq(self.records[('data', '2', '0s')]['sigma'],
+                 numpy.array([[4.,     3.,       2.,       1.],
+                              [4.,     3.,       2.,       1.],
+                              [1.,     2.,       3.,       4.],
+                              [5.,     6.,       7.,       8.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_wt_tavdata(self):
+        """WEIGHT after time averaging DATA."""
+        check_eq(self.records[('data', '1', '60s')]['wt'],
+                 numpy.array([[2.,     2.,       0.,       2.],
+                              [4.,    16.,       0.,       1.],
+                              [4.,     4.,       4.,       4.],
+                              [2.,     2.,       2.,       2.],
+                              [2.,     2.,       2.,       2.]]), 0.001)
+
+    def test_sig_tavdata(self):
+        """SIGMA after time averaging DATA."""
+        check_eq(self.records[('data', '1', '60s')]['sigma'],
+                 numpy.array([[0.7071, 0.7071,   -1.0,      0.7071],
+                              [0.5,    0.25,     -1.0,      1.0],
+                              [0.5,    0.5,      0.5,      0.5],
+                              [0.7071, 0.7071,   0.7071,   0.7071],
+                              [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
+
+    def test_wt_cavcorr(self):
+        """WEIGHT after channel averaging CORRECTED_DATA."""
+        check_eq(self.records[('corrected', '2', '0s')]['wt'],
+                 numpy.array([[1.,     4.,       9.,      16.],
+                              [0.0625, 0.111111, 0.25,     1.],
+                              [1.,     0.25,     0.111111, 0.0625],
+                              [1.,     1.,       1.,       1.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_sig_cavcorr(self):
+        """SIGMA after channel averaging CORRECTED_DATA."""
+        check_eq(self.records[('corrected', '2', '0s')]['sigma'],
+                 numpy.array([[1.,     0.5,      0.33333,  0.25],
+                              [4.,     3.0,      2.,       1.],
+                              [1.,     2.,       3.0000,   4.],
+                              [1.,     1.,       1.,       1.],
+                              [1.,     1.,       1.,       1.]]), 0.001)
+
+    def test_wt_tavcorr(self):
+        """WEIGHT after time averaging CORRECTED_DATA."""
+        check_eq(self.records[('corrected', '1', '60s')]['wt'],
+                 numpy.array([[2.,     2.,       0.,       2.],
+                              [4.,    16.,       0.,       1.],
+                              [4.,     4.,       4.,       4.],
+                              [2.,     2.,       2.,       2.],
+                              [2.,     2.,       2.,       2.]]), 0.001)
+
+    def test_sig_tavcorr(self):
+        """SIGMA after time averaging CORRECTED_DATA."""
+        check_eq(self.records[('corrected', '1', '60s')]['sigma'],
+                 numpy.array([[0.7071, 0.7071,   -1.0,      0.7071],
+                              [0.5,    0.25,     -1.0,      1.0],
+                              [0.5,    0.5,      0.5,      0.5],
+                              [0.7071, 0.7071,   0.7071,   0.7071],
+                              [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
+
+
+
 def suite():
     return [split_test_tav, split_test_cav, split_test_cav5, split_test_cst,
             split_test_state, split_test_optswc, split_test_cdsp,
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
-            split_test_sw_and_fc, split_test_cavcd, split_test_almapol]
+            split_test_sw_and_fc, split_test_cavcd, split_test_almapol,
+            split_test_wttosig]
     
