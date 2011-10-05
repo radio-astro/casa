@@ -449,9 +449,32 @@ void Table::open (const String& name, const String& type, int tableOption,
     }else{
         //# Check if the table directory exists.
         File dir(absName);
-        if (!dir.exists()) {
+
+        // Begin workaround -----------------------------------
+        // Might solve Lustre error that appears to be caused
+        // by directory information requests being satisfied
+        // using stale data (Jim Jacobs 2011/10/5)
+
+        Bool dirExists = False;
+        for (int i = 0; i < 3; i++){
+            if (dir.exists()){
+                dirExists = True;
+                break;
+            }
+            usleep (1000000); // one second
+        }
+
+        if (! dirExists){
             throw TableNoFile(absName);
         }
+
+// original code being replaced by workaround:
+//        if (!dir.exists()) {
+//            throw TableNoFile(absName);
+//        }
+
+        // End workaround ---------------------------------------
+
         if (!dir.isDirectory()) {
             throw TableNoDir(absName);
         }
