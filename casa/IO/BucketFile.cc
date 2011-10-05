@@ -202,12 +202,34 @@ Int64 BucketFile::fileSize () const
     // offset is wrong.
 
     Int64 size;
-    if (bufferedFile_p != 0) {
-        size = bufferedFile_p->seek (0, ByteIO::End);
+
+    // Begin workaround --------------------------------------------------
+    // Attempt to fix a problem that generates a "bucket 0 exceeds nr of buckets"
+    // exception when using files on Lustre.  The guess is that the seek
+    // is not returning a good value due to occasional use of stale cache values.
+    // (Jim Jacobs 2011/10/5)
+
+    for (int i = 0; i < 3; i++){
+        if (bufferedFile_p != 0) {
+            size = bufferedFile_p->seek (0, ByteIO::End);
+        }
+        else{
+            size = ::traceLSEEK (fd_p, 0, SEEK_END);
+        }
+        if (size > 0){
+            break;
+        }
     }
-    else{
-        size = ::traceLSEEK (fd_p, 0, SEEK_END);
-    }
+
+// original code:
+//    if (bufferedFile_p != 0) {
+//        size = bufferedFile_p->seek (0, ByteIO::End);
+//    }
+//    else{
+//        size = ::traceLSEEK (fd_p, 0, SEEK_END);
+//    }
+
+    // End workaround --------------------------------------------------
 
     if (size < 0){
         LogIO logIo (LogOrigin ("BucketFile", "fileSize"));
