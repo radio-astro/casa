@@ -2404,7 +2404,7 @@ Bool Imager::createFTMachine()
     useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
-  
+
   // This next line is only a guess
   Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
   
@@ -2944,6 +2944,7 @@ Bool Imager::createFTMachine()
   { 
     //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
      FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
+     tempftm->setBasePrivates(*ft_p);
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
