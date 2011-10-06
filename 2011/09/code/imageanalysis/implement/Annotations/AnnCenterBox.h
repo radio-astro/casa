@@ -91,6 +91,10 @@ public:
 
 	Vector<Quantity> getWidths() const;
 
+	void worldBoundingBox(
+		vector<Quantity>& blc, vector<Quantity>& trc
+	) const;
+
 	// get the blc and trc direction coords for the box which
 	// have been converted to the coordinate frame specified
 	// when the object was constructed.

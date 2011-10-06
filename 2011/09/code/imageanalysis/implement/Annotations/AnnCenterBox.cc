@@ -87,6 +87,21 @@ Vector<Quantity> AnnCenterBox::getWidths() const {
 	return _widths;
 }
 
+void AnnCenterBox::worldBoundingBox(
+	vector<Quantity>& blc, vector<Quantity>& trc
+) const {
+	Quantum<Vector<Double> > wblc = _corners[0].getAngle("rad");
+	Quantum<Vector<Double> > wtrc = _corners[1].getAngle("rad");
+	blc.resize(2);
+	trc.resize(2);
+
+	blc[0] = Quantity(wblc.getValue()[0], wblc.getUnit());
+	blc[1] = Quantity(wblc.getValue()[1], wblc.getUnit());
+
+	trc[0] = Quantity(wtrc.getValue()[0], wblc.getUnit());
+	trc[1] = Quantity(wtrc.getValue()[1], wblc.getUnit());
+}
+
 void AnnCenterBox::_init() {
 	if (! _inpXWidth.isConform("rad") && ! _inpXWidth.isConform("pix")) {
 		throw AipsError(
@@ -122,14 +137,14 @@ void AnnCenterBox::_init() {
 		qtrc[i] = Quantity(trcValues[i], "rad");
 	}
 
-	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
+	WCBox box(qblc, qtrc, _getDirectionAxes(), getCsys(), absrel);
 	_setDirectionRegion(box);
 	_extend();
 }
 
 void AnnCenterBox::_doCorners() {
 
-	Vector<Double> inc = _getCsys().increment();
+	Vector<Double> inc = getCsys().increment();
 
 	Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
 	Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;

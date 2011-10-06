@@ -265,6 +265,13 @@ public:
 	// Get a list of the user-friendly color names supported
 	static std::list<std::string> colorChoices();
 
+	// get the coordinate system associated with this object.
+	// This is the same coordinates system used to construct the object.
+
+	inline const CoordinateSystem& getCsys() const {
+		return _csys;
+	}
+
 protected:
 
 	AnnotationBase(
@@ -300,10 +307,6 @@ protected:
 
 	inline const IPosition& _getDirectionAxes() const {
 		return _directionAxes;
-	}
-
-	inline const CoordinateSystem& _getCsys() const {
-		return _csys;
 	}
 
 private:

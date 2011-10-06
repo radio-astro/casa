@@ -58,6 +58,8 @@ namespace casa {
 
 	    connect( dismiss_region, SIGNAL(clicked(bool)), SLOT(delete_current_region(bool)) );
 
+	    hide( );
+
 	}
   
 	QtRegionDock::~QtRegionDock() {  }
@@ -72,6 +74,8 @@ namespace casa {
 	    }
 	    regions->setCurrentWidget(state);
 	    connect( state, SIGNAL(outputRegion(const QString &,const QString &)), SLOT(output_region_event(const QString &,const QString & )) );
+
+	    if ( ! isVisible( ) ) show( );
 	}
 
 	int QtRegionDock::indexOf(QtRegionState *state) const {
@@ -84,6 +88,8 @@ namespace casa {
 		disconnect( state, 0, this, 0 );
 	    }
 	    regions->removeWidget(state);
+
+	    if ( regions->count( ) <= 0 && isVisible( ) ) hide( );
 	}
 
 	void QtRegionDock::selectRegion(QtRegionState *state) {

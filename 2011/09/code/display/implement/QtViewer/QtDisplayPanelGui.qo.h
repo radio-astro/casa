@@ -180,7 +180,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   // identically for all display panels.  This sets that state for everyone.
   // Sends out colorBarOrientationChange signal when the state changes.
   virtual void setColorBarOrientation(Bool vertical);    
- 
+
+  virtual void createNewPanel( );
+
   virtual void showDataManager();
   virtual void hideDataManager();
  

@@ -17,6 +17,8 @@
 
 #include <imageanalysis/Annotations/AnnRectBox.h>
 
+#include <coordinates/Coordinates/DirectionCoordinate.h>
+
 namespace casa {
 
 AnnRectBox::AnnRectBox(
@@ -82,6 +84,21 @@ ostream& AnnRectBox::print(ostream &os) const {
 	return os;
 }
 
+void AnnRectBox::worldBoundingBox(
+	vector<Quantity>& blc, vector<Quantity>& trc
+) const {
+	Vector<MDirection> corners = _getConvertedDirections();
+	Quantum<Vector<Double> > wblc = corners[0].getAngle("rad");
+	Quantum<Vector<Double> > wtrc = corners[1].getAngle("rad");
+	blc.resize(2);
+	trc.resize(2);
+
+	blc[0] = Quantity(wblc.getValue()[0], wblc.getUnit());
+	blc[1] = Quantity(wblc.getValue()[1], wblc.getUnit());
+
+	trc[0] = Quantity(wtrc.getValue()[0], wblc.getUnit());
+	trc[1] = Quantity(wtrc.getValue()[1], wblc.getUnit());
+}
 void AnnRectBox::_init(
 	const Quantity& blcx, const Quantity& blcy,
 	const Quantity& trcx, const Quantity& trcy
@@ -91,9 +108,7 @@ void AnnRectBox::_init(
 	_inputCorners(0, 1) = trcx;
 	_inputCorners(1, 1) = trcy;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCorners);
-
 	Vector<Int> absrel(2,(Int)RegionType::Abs);
-
 	Vector<Quantity> qblc(2);
 	Vector<Quantity> qtrc(2);
 	for (uInt i=0; i<2; i++) {
@@ -106,7 +121,11 @@ void AnnRectBox::_init(
 			"rad"
 		);
 	}
-	WCBox box(qblc, qtrc, _getDirectionAxes(), _getCsys(), absrel);
+	// we just want a 2-d coordinate system for creating our box. We'll extend
+	// it after.
+	CoordinateSystem csys;
+	csys.addCoordinate(*getCsys().directionCoordinate().clone());
+	WCBox box(qblc, qtrc, _getDirectionAxes(), csys, absrel);
 	_setDirectionRegion(box);
 	_extend();
 }

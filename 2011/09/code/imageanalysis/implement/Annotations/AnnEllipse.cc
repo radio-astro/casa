@@ -102,6 +102,45 @@ ostream& AnnEllipse::print(ostream &os) const {
 	return os;
 }
 
+void AnnEllipse::worldBoundingBox(
+	vector<Quantity>& blc, vector<Quantity>& trc
+) const {
+	const CoordinateSystem csys = getCsys();
+	Vector<Double> inc = csys.increment();
+	IPosition dirAxes = _getDirectionAxes();
+	Int xdir = inc[dirAxes[0]] >= 0 ? 1 : -1;
+	Int ydir = inc[dirAxes[1]] >= 0 ? 1 : -1;
+	String xUnit = csys.worldAxisUnits()[0];
+	String yUnit = csys.worldAxisUnits()[0];
+	Quantum<Vector<Double> > centerCoord = _getConvertedDirections()[0].getAngle("rad");
+
+	Double theta = _inputPositionAngle.getValue("rad");
+	Quantity delX = _convertedMinorAxis*Quantity(abs(sin(theta)), "")
+		+ _convertedMajorAxis*Quantity(abs(cos(theta)), "");
+	Quantity delY = _convertedMinorAxis*Quantity(abs(cos(theta)),"")
+		+ _convertedMajorAxis*Quantity(abs(sin(theta)), "");
+
+	Quantity blcx = Quantity(centerCoord.getValue()[0], centerCoord.getUnit())
+		- Quantity(xdir, "")*delX;
+	blcx.convert(xUnit);
+	Quantity blcy = Quantity(centerCoord.getValue()[1], centerCoord.getUnit())
+		- Quantity(ydir,"")*delY;
+	blcy.convert(yUnit);
+	Quantity trcx = Quantity(centerCoord.getValue()[0], centerCoord.getUnit())
+		+ Quantity(xdir,"")*delX;
+	trcx.convert(xUnit);
+	Quantity trcy = Quantity(centerCoord.getValue()[1], centerCoord.getUnit())
+		+ Quantity(ydir,"")*delY;
+	trcy.convert(yUnit);
+	blc.resize(2);
+	trc.resize(2);
+	blc[0] = blcx;
+	blc[1] = blcy;
+	trc[0] = trcx;
+	trc[1] = trcy;
+}
+
+
 void AnnEllipse::_init(
 	const Quantity& xcenter, const Quantity& ycenter
 ) {
@@ -139,7 +178,7 @@ void AnnEllipse::_init(
 	WCEllipsoid ellipse(
 		qCenter[0], qCenter[1],
 		_convertedMajorAxis, _convertedMinorAxis, _inputPositionAngle,
-		_getDirectionAxes()[0], _getDirectionAxes()[1], _getCsys()
+		_getDirectionAxes()[0], _getDirectionAxes()[1], getCsys()
 	);
 	_setDirectionRegion(ellipse);
 	_extend();
