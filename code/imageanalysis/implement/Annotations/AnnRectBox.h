@@ -84,6 +84,10 @@ public:
 
 	AnnRectBox& operator=(const AnnRectBox& other);
 
+	void worldBoundingBox(
+		vector<Quantity>& blc, vector<Quantity>& trc
+	) const;
+
 	// get the blc and trc direction coords for the box.
 	// The output directions will be converted from the input
 	// reference frame to the reference frame of the input

@@ -75,6 +75,19 @@ public:
 		const Quantity& restfreq=Quantity(0, "Hz")
 	);
 
+	// get the bounding box of the shape in the direction coordinate
+	// plane in pixels. <src>blc</src> and <src>trc</src> will each have to elements, the zeroth being
+	// the zeroth direction axis value and the first being the first direction axis value.
+	virtual void pixelBoundingBox(vector<Double>& blc, vector<Double>& trc) const;
+
+	// get the bounding box in the direction coordinate plane in world coordinates.
+	// <src>blc</src> and <src>trc</src> will each have to elements, the zeroth being
+	// the zeroth direction axis value and the first being the first direction axis value.
+	// FIXME make virtual
+	virtual void worldBoundingBox(
+		vector<Quantity>& blc, vector<Quantity>& trc
+	) const = 0;
+
 	Vector<MFrequency> getFrequencyLimits() const;
 
 	Vector<Stokes::StokesTypes> getStokes() const;
@@ -182,7 +195,10 @@ private:
 };
 
 // Just need a identifable expection class, compiler can generate implementation implicitly
-class ToLCRegionConversionError : public AipsError {};
+class ToLCRegionConversionError : public AipsError {
+public:
+	ToLCRegionConversionError(String msg) : AipsError(msg) {}
+};
 
 }
 

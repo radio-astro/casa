@@ -9,6 +9,17 @@ namespace casa {
 
 	QtRegionState::freestat_list *QtRegionState::freestats = 0;
 
+	void QtRegionState::init( ) {
+	    QString cat = categories->tabText(categories->currentIndex( ));
+	    if ( cat == "stats" )
+		emit statisticsVisible( true );
+	    else if ( cat == "state" ) {
+		QString state = states->tabText(categories->currentIndex( ));
+		if ( state == "coordinates" )
+		    emit positionVisible( true );
+	    }
+	}
+
 	QtRegionState::QtRegionState( const QString &n, QtRegion *r, QWidget *parent ) :
 					QFrame(parent), selected_statistics(-1), region_(r) {
 	    setupUi(this);
@@ -64,11 +75,9 @@ namespace casa {
 
 	    last_line_color = line_color->currentText( );
 	    connect( line_color, SIGNAL(currentIndexChanged(const QString&)), SLOT(line_color_change(const QString&)) );
-
 	}
 
-	QtRegionState::~QtRegionState( ) {
-	}
+	QtRegionState::~QtRegionState( ) { }
 
 	void QtRegionState::reset( const QString &n, QtRegion *r ) {
 	    name->setText(QString());

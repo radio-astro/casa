@@ -130,6 +130,72 @@ int main () {
 
 		}
 		{
+			log << LogIO::NORMAL << "Test getBoundingBox and getPixelBox"
+				<< LogIO::POST;
+			Vector<Quantity> x(3);
+			Vector<Quantity> y(3);
+			x[0] = Quantity(-3, "arcmin");
+			y[0] = Quantity(3, "arcmin");
+			x[1] = Quantity(-0.9, "arcmin");
+			y[1] = Quantity(0.6, "arcmin");
+			x[2] = Quantity(-0.9, "arcmin");
+			y[2] = Quantity(0.9, "arcmin");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnPolygon poly(
+				x, y, dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			vector<Quantity> wblc, wtrc;
+			poly.worldBoundingBox(wblc, wtrc);
+			AlwaysAssert(near(wblc[0].getValue("arcmin"), -0.9, 1e-6), AipsError);
+			AlwaysAssert(near(wblc[1].getValue("arcmin"), 0.6, 1e-6), AipsError);
+			AlwaysAssert(near(wtrc[0].getValue("arcmin"), -3.0, 1e-6), AipsError);
+			AlwaysAssert(near(wtrc[1].getValue("arcmin"), 3.0, 1e-6), AipsError);
+
+			vector<Double> pblc, ptrc;
+			poly.pixelBoundingBox(pblc, ptrc);
+			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
+			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
+
+			AlwaysAssert(near(pblc[0], (-1)*wblc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
+
+			vector<Quantity> wx, wy;
+			poly.worldVertices(wx, wy);
+			AlwaysAssert(near(wx[0].getValue("arcmin"), -3.0), AipsError);
+			AlwaysAssert(near(wy[0].getValue("arcmin"), 3.0), AipsError);
+			AlwaysAssert(near(wx[1].getValue("arcmin"), -0.9), AipsError);
+			AlwaysAssert(near(wy[1].getValue("arcmin"), 0.6), AipsError);
+			AlwaysAssert(near(wx[2].getValue("arcmin"), -0.9), AipsError);
+			AlwaysAssert(near(wy[2].getValue("arcmin"), 0.9), AipsError);
+
+			vector<Double> px, py;
+			poly.pixelVertices(px, py);
+			AlwaysAssert(near(px[0], (-1)*wx[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(py[0], wy[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(px[1], (-1)*wx[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(py[1], wy[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(px[2], (-1)*wx[2].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(py[2], wy[2].getValue("arcmin"), 3e-6), AipsError);
+		}
+		{
 			log << LogIO::NORMAL << "Verify corners"
 				<< LogIO::POST;
 			Vector<Quantity> x(3);

@@ -9,6 +9,10 @@
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <math.h>
 
+extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
+    fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", file, line, func );
+}
+
 namespace casa {
     namespace viewer {
 
@@ -292,6 +296,18 @@ namespace casa {
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
 	    MDirection::Types cccs = current_casa_coordsys( );
+
+	    if ( cccs == MDirection::N_Types ) {
+		// this impiles that the coordinate system does not have a direction coordinate...
+		// so it is probably a measurement set... treat as a pixel coordinate for now...
+		int center_x, center_y;
+		linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
+		x = as_string(center_x);
+		y = as_string(center_y);
+		angle = as_string(0);
+		return;
+	    }
+
 	    Coord cvcs = casa_to_viewer(cccs);
 	    double result_x, result_y;
 
@@ -394,6 +410,10 @@ namespace casa {
 
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 	    int index = cs.findCoordinate(Coordinate::DIRECTION);
+	    if ( index < 0 ) {
+		// no direction coordinate...
+		return MDirection::N_Types;
+	    }
 	    return cs.directionCoordinate(index).directionType(true);
 	}
 

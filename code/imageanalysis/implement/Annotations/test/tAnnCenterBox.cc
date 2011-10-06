@@ -117,6 +117,62 @@ int main () {
 
 		}
 		{
+			Quantity centerx(0.6, "arcmin");
+			Quantity centery(1.2, "arcmin");
+			Quantity widthx(6, "arcmin");
+			Quantity widthy(8, "arcmin");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnCenterBox box(
+				centerx, centery, widthx, widthy, dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			vector<Quantity> wblc, wtrc;
+			box.worldBoundingBox(wblc, wtrc);
+			AlwaysAssert(
+				near(wblc[0].getValue("arcmin"), (centerx+widthx/2).getValue("arcmin")),
+				AipsError
+			);
+
+			AlwaysAssert(
+				near(wblc[1].getValue("arcmin"), (centery-widthy/2).getValue("arcmin")),
+				AipsError
+			);
+			AlwaysAssert(
+				near(wtrc[0].getValue("arcmin"), (centerx-widthx/2).getValue("arcmin")),
+				AipsError
+			);
+			AlwaysAssert(
+				near(wtrc[1].getValue("arcmin"), (centery+widthy/2).getValue("arcmin")),
+				AipsError
+			);
+
+			vector<Double> pblc, ptrc;
+			box.pixelBoundingBox(pblc, ptrc);
+			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
+			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
+
+			AlwaysAssert(near(pblc[0], (-1)*wblc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
+
+		}
+		{
 			log << LogIO::NORMAL
 				<< "Test corners with no conversions"
 				<< LogIO::POST;
