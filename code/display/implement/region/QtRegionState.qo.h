@@ -14,6 +14,10 @@ namespace casa {
 	class QtRegionState : public QFrame, protected Ui::QtRegionState {
 	    Q_OBJECT
 	    public:
+		// initializing the display depends upon having signals & slots connected
+		// which cannot happen until after the ctor of QtRegionState...
+		void init( );
+
 		QtRegionState( const QString &name, QtRegion *region, QWidget *parent=0 );
 		~QtRegionState( );
 #if OLDSTUFF

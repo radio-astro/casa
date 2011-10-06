@@ -36,8 +36,9 @@
 #include <measures/Measures/MDirection.h>
 #include <display/region/RegionInfo.h>
 
+extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
-	{ fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", __FILE__, __LINE__, #FUNCTION ); return RESULT; }
+  { casa_viewer_pure_virtual( __FILE__, __LINE__, #FUNCTION ); return RESULT; }
 
 namespace casa {
 
