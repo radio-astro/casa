@@ -196,7 +196,54 @@ int main () {
 			}
 			AlwaysAssert(thrown, AipsError);
 		}
+		{
+			Quantity centerx(0.6, "arcmin");
+			Quantity centery(1.2, "arcmin");
+			Quantity mi(3, "arcmin");
+			Quantity ma(4, "arcmin");
+			Quantity pa(30, "deg");
 
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnEllipse ellipse(
+				centerx, centery, ma, mi, pa, dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+
+			Quantity wDelX(4.964101615, "arcmin");
+			Quantity wDelY(4.598076211, "arcmin");
+
+			vector<Quantity> wblc, wtrc;
+			ellipse.worldBoundingBox(wblc, wtrc);
+			AlwaysAssert(near(wblc[0].getValue("arcmin"), (centerx+wDelX).getValue("arcmin"), 1e-6), AipsError);
+			AlwaysAssert(near(wblc[1].getValue("arcmin"), (centery-wDelY).getValue("arcmin"), 1e-6), AipsError);
+			AlwaysAssert(near(wtrc[0].getValue("arcmin"), (centerx-wDelX).getValue("arcmin"), 1e-6), AipsError);
+			AlwaysAssert(near(wtrc[1].getValue("arcmin"), (centery+wDelY).getValue("arcmin"), 1e-6), AipsError);
+
+			vector<Double> pblc, ptrc;
+			ellipse.pixelBoundingBox(pblc, ptrc);
+			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
+			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
+
+			AlwaysAssert(near(pblc[0], (-1)*wblc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
+
+		}
 		{
 			log << LogIO::NORMAL
 				<< "Test center with no conversion"

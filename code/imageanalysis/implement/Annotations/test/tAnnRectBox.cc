@@ -41,6 +41,11 @@ int main () {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
 		LogIO log;
+		IPosition shape(4, 400,400,1,6000);
+		Vector<Double> refVal = csys.referenceValue();
+		refVal[0] = 300;
+		csys.setReferenceValue(refVal);
+
 		{
 			log << LogIO::NORMAL
 				<< "mixed world and pixel coordinates throws exception"
@@ -69,7 +74,7 @@ int main () {
 				AnnRectBox box(
 						blcx, blcy, trcx, trcy,
 						dirTypeString,
-						csys, beginFreq, endFreq, freqRefFrameString,
+						csys, shape, beginFreq, endFreq, freqRefFrameString,
 						dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -108,7 +113,7 @@ int main () {
 				AnnRectBox box(
 						blcx, blcy, trcx, trcy,
 						dirTypeString,
-						csys, beginFreq, endFreq, freqRefFrameString,
+						csys, shape, beginFreq, endFreq, freqRefFrameString,
 						dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -118,6 +123,64 @@ int main () {
 					<< x.getMesg() << LogIO::POST;
 			}
 			AlwaysAssert(thrown, AipsError);
+		}
+		{
+			Quantity blcx(10, "arcmin");
+			Quantity blcy(5, "arcmin");
+			Quantity trcx(2, "arcmin");
+			Quantity trcy(12, "arcmin");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnRectBox box(
+				blcx, blcy, trcx, trcy,
+				dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			vector<Quantity> wblc, wtrc;
+			box.worldBoundingBox(wblc, wtrc);
+			AlwaysAssert(
+				near(wblc[0].getValue("arcmin"), blcx.getValue("arcmin")),
+				AipsError
+			);
+
+			AlwaysAssert(
+				near(wblc[1].getValue("arcmin"), blcy.getValue("arcmin")),
+				AipsError
+			);
+			AlwaysAssert(
+				near(wtrc[0].getValue("arcmin"), trcx.getValue("arcmin")),
+				AipsError
+			);
+			AlwaysAssert(
+				near(wtrc[1].getValue("arcmin"), trcy.getValue("arcmin")),
+				AipsError
+			);
+
+			vector<Double> pblc, ptrc;
+			box.pixelBoundingBox(pblc, ptrc);
+
+			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
+			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
+
+			AlwaysAssert(near(pblc[0], (-1)*wblc[0].getValue("arcmin") + 300, .4), AipsError);
+			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin") + 300, .4), AipsError);
+			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
 		}
 		{
 			log << LogIO::NORMAL
@@ -144,7 +207,7 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -197,7 +260,7 @@ int main () {
 			Vector<Stokes::StokesTypes> stokes(0);
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			Vector<MDirection> corners = box.getCorners();
@@ -254,7 +317,7 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -293,17 +356,17 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1415508785.4853702),
+				near(freqs[0].get("Hz").getValue(), 1415467701.708973169),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1450521370.2853618),
+				near(freqs[1].get("Hz").getValue(), 1450479270.302481413),
 				AipsError
 			);
 		}
@@ -315,8 +378,8 @@ int main () {
 			Quantity blcy(0, "deg");
 			Quantity trcx(0.015, "deg");
 			Quantity trcy(0.01, "deg");
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
+			Quantity beginFreq(250000000, "m/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -334,17 +397,17 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
@@ -356,8 +419,8 @@ int main () {
 			Quantity blcy(0, "deg");
 			Quantity trcx(0.015, "deg");
 			Quantity trcy(0.01, "deg");
-			Quantity beginFreq(-20, "km/s");
-			Quantity endFreq(20000, "m/s");
+			Quantity endFreq(-20, "km/s");
+			Quantity beginFreq(20000, "m/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -375,17 +438,17 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1420500511.0578821),
+				near(freqs[1].get("Hz").getValue(), 1420500511.0578821),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1420310992.5141187),
+				near(freqs[0].get("Hz").getValue(), 1420310992.5141187),
 				AipsError
 			);
 		}
@@ -415,7 +478,7 @@ int main () {
 			AnnRectBox box(
 				blcx, blcy, trcx, trcy,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << box << endl;
@@ -430,6 +493,7 @@ int main () {
 				AipsError
 			);
 		}
+		/*
         {
             Quantity blcx (4.94852990, "rad");
             Quantity blcy (3.47999219e-02, "rad");
@@ -439,8 +503,9 @@ int main () {
             Vector<Stokes::StokesTypes> stokes(1, Stokes::I);
             Int polaxis = CoordinateUtil::findStokesAxis(stokes, im.coordinates());
             cout << "stokes " << stokes << endl;
-            AnnRectBox *box = new AnnRectBox( blcx, blcy, trcx, trcy, im.coordinates(), stokes );
+            AnnRectBox *box = new AnnRectBox( blcx, blcy, trcx, trcy, im.coordinates(), shape, stokes );
         }
+        */
 
 	} catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;

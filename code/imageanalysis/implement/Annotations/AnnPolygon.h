@@ -80,12 +80,21 @@ public:
 
 	AnnPolygon& operator=(const AnnPolygon& other);
 
+	// get the vertices converted to the coordinate system used at construction.
 	Vector<MDirection> getCorners() const;
+
+	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
+
+	// get the world coordinates of the polygon vertices
+	void worldVertices(vector<Quantity>& x, vector<Quantity>& y) const;
+
+	// get the pixel coordinates of the polygon vertices
+	void pixelVertices(vector<Double>& x, vector<Double>& y) const;
+
 
 	virtual ostream& print(ostream &os) const;
 
 private:
-	Vector<MDirection> _corners;
 	Vector<Quantity> _origXPos, _origYPos;
 
 	void _init();

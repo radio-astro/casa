@@ -93,9 +93,17 @@ public:
 	// These will have been converted to the frame of the
 	// coordinate system if necessary. The only thing about
 	// the order of the vector that is garaunteed is that
-	// adjacent corners will not be diagonally opposite
-	// from each other.
+	// adjacent entries in the returned Vector will not be
+	// diagonally opposite corners.
 	Vector<MDirection> getCorners() const;
+
+	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
+
+	// get the world coordinates of the polygon vertices
+	void worldCorners(vector<Quantity>& x, vector<Quantity>& y) const;
+
+	// get the pixel coordinates of the polygon vertices
+	void pixelCorners(vector<Double>& x, vector<Double>& y) const;
 
 	virtual ostream& print(ostream &os) const;
 

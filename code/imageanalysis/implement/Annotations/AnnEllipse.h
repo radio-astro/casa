@@ -103,6 +103,8 @@ public:
 	// of angular measure
 	Quantity getPositionAngle() const;
 
+	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
+
 	virtual ostream& print(ostream &os) const;
 
 

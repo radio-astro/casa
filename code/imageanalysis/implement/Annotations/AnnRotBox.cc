@@ -77,9 +77,9 @@ AnnRotBox& AnnRotBox::operator= (
 }
 
 void AnnRotBox::_doCorners() {
-	Quantity realAngle = Quantity(90, "deg") + _positionAngle;
+	Quantity realAngle = _positionAngle;
 
-	Vector<Double> inc = _getCsys().increment();
+	Vector<Double> inc = getCsys().increment();
 
 	Double xFactor = inc(_getDirectionAxes()[0]) > 0 ? 1.0 : -1.0;
 	Double yFactor = inc(_getDirectionAxes()[1]) > 0 ? 1.0 : -1.0;
@@ -88,9 +88,10 @@ void AnnRotBox::_doCorners() {
     Vector<Quantity> xShift(2);
     Vector<Quantity> yShift(2);
     for (uInt i=0; i<2; i++) {
-	    Double angleRad = (realAngle + Quantity(i*90, "deg")).getValue("rad");
-        xShift[i] = Quantity(0.5*xFactor*cos(angleRad))*_widths[0];
-	    yShift[i] = Quantity(0.5*yFactor*sin(angleRad))*_widths[1];
+    	Double fac = i == 0 ? 1.0 : -1.0;
+	    Double angleRad = _positionAngle.getValue("rad");
+        xShift[i] = Quantity(fac*0.5*xFactor*cos(angleRad))*_widths[0] + Quantity(0.5*yFactor*sin(angleRad))*_widths[1];
+	    yShift[i] = Quantity(-0.5*fac*xFactor*sin(angleRad))*_widths[0] + Quantity(0.5*yFactor*cos(angleRad))*_widths[1];
         _corners[i] = _getConvertedDirections()[0];
         _corners[i].shift(xShift[i], yShift[i]);
         _corners[i+2] = _getConvertedDirections()[0];
@@ -101,6 +102,76 @@ void AnnRotBox::_doCorners() {
 Vector<MDirection> AnnRotBox::getCorners() const {
 	return _corners;
 }
+
+void AnnRotBox::worldBoundingBox(
+	vector<Quantity>& blc, vector<Quantity>& trc
+) const {
+	const CoordinateSystem csys = getCsys();
+	Vector<Double> inc = csys.increment();
+	IPosition dirAxes = _getDirectionAxes();
+	Int xdir = inc[dirAxes[0]] >= 0 ? 1 : -1;
+	Int ydir = inc[dirAxes[1]] >= 0 ? 1 : -1;
+	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
+	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
+	vector<Quantum<Vector<Double> > > coords(_corners.size());
+	coords[0] = _corners[0].getAngle("rad");
+	Double xmin = coords[0].getValue(xUnit)[0];
+	Double xmax = xmin;
+	Double ymin = coords[0].getValue(yUnit)[1];
+	Double ymax = ymin;
+
+	for (uInt i=1; i<coords.size(); i++) {
+		coords[i] = _corners[i].getAngle("rad");
+		xmin = min(xmin, coords[i].getValue(xUnit)[0]);
+		xmax = max(xmax, coords[i].getValue(xUnit)[0]);
+		ymin = min(ymin, coords[i].getValue(yUnit)[1]);
+		ymax = max(ymax, coords[i].getValue(yUnit)[1]);
+	}
+
+	blc.resize(2);
+	trc.resize(2);
+	blc[0] = xdir > 0 ? Quantity(xmin, xUnit) : Quantity(xmax, xUnit);
+	blc[1] = ydir > 0 ? Quantity(ymin, yUnit) : Quantity(ymax, yUnit);
+	trc[0] = xdir > 0 ? Quantity(xmax, xUnit) : Quantity(xmin, xUnit);
+	trc[1] = ydir > 0 ? Quantity(ymax, yUnit) : Quantity(ymin, yUnit);
+}
+
+void AnnRotBox::worldCorners(vector<Quantity>& x, vector<Quantity>& y) const {
+	const CoordinateSystem csys = getCsys();
+	const IPosition dirAxes = _getDirectionAxes();
+	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
+	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
+	x.resize(_corners.size());
+	y.resize(_corners.size());
+	for (uInt i=0; i<_corners.size(); i++) {
+		x[i] = Quantity(_corners[i].getAngle(xUnit).getValue(xUnit)[0], xUnit);
+		y[i] = Quantity(_corners[i].getAngle(yUnit).getValue(yUnit)[1], yUnit);
+	}
+}
+
+void AnnRotBox::pixelCorners(vector<Double>& x, vector<Double>& y) const {
+	vector<Quantity> xx, xy;
+	worldCorners(xx, xy);
+
+	const CoordinateSystem csys = getCsys();
+	Vector<Double> world = csys.referenceValue();
+	const IPosition dirAxes = _getDirectionAxes();
+	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
+	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
+
+	x.resize(xx.size());
+	y.resize(xx.size());
+
+	for (uInt i=0; i<xx.size(); i++) {
+		world[dirAxes[0]] = xx[i].getValue(xUnit);
+		world[dirAxes[1]] = xy[i].getValue(yUnit);
+		Vector<Double> pixel;
+		csys.toPixel(pixel, world);
+		x[i] = pixel[dirAxes[0]];
+		y[i] = pixel[dirAxes[1]];
+	}
+}
+
 
 ostream& AnnRotBox::print(ostream &os) const {
 	_printPrefix(os);
@@ -147,7 +218,7 @@ void AnnRotBox::_init(
 	}
 	Quantum<Vector<Double> > x(xv, "rad");
 	Quantum<Vector<Double> > y(yv, "rad");
-	WCPolygon box(x, y, _getDirectionAxes(), _getCsys(), RegionType::Abs);
+	WCPolygon box(x, y, _getDirectionAxes(), getCsys(), RegionType::Abs);
 	_setDirectionRegion(box);
 	_extend();
 }
