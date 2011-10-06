@@ -45,135 +45,376 @@ using namespace std ;
 
 namespace asap {
 
-class PolarizedComponentHolder {
+class CorrTypeHandler {
 public:
-  PolarizedComponentHolder()
-    : nchan(0),
-      maxnpol(4)
-  {
-    reset() ;
-  }
-  PolarizedComponentHolder( uInt n )
-    : nchan(n),
-      maxnpol(4)
-  {
-    reset() ;
-  }
-
-  void reset()
-  {
-    npol = 0 ;
-    data.clear() ;
-    flag.clear() ;
-    flagrow = False ;
-    polnos.resize() ;
-  }
-
-  void accumulate( uInt id, Vector<Float> sp, Vector<Bool> fl, Bool flr )
-  {
-    map< uInt,Vector<Float> >::iterator itr = data.find( id ) ;
-    if ( id < maxnpol && itr == data.end() ) {
-      addPol( id ) ;
-      accumulateData( id, sp ) ;
-      accumulateFlag( id, fl ) ;
-      accumulateFlagRow( flr ) ;
-      npol++ ;
-    }
-  } 
-
-  void setNchan( uInt n ) { nchan = n ; } 
-  uInt nPol() { return npol ; } 
-  uInt nChan() { return nchan ; }
-  Vector<uInt> polNos() { return polnos ; }
-  Vector<Float> getWeight() { return Vector<Float>( npol, 1.0 ) ; }
-  Vector<Float> getSigma() { return Vector<Float>( npol, 1.0 ) ; }
-  Bool getFlagRow() { return flagrow ; }
-  Cube<Bool> getFlagCategory() { return Cube<Bool>( npol, nchan, 1, False ) ; }
-  Matrix<Float> getData() 
-  {
-    Matrix<Float> v( npol, nchan ) ;
-    for ( map< uInt,Vector<Float> >::iterator i = data.begin() ; i != data.end() ; i++ ) {
-      v.row( i->first ) =  i->second ;
-    }
-    return v ;
-  }
-  Matrix<Bool> getFlag() 
+  CorrTypeHandler() 
+  {}
+  virtual ~CorrTypeHandler() {}
+  virtual Vector<Stokes::StokesTypes> corrType() = 0 ;
+  virtual void reset() 
   { 
-    Matrix<Bool> v( npol, nchan ) ;
-    for ( map< uInt,Vector<Bool> >::iterator i = flag.begin() ; i != flag.end() ; i++ ) {
-      v.row( i->first ) = i->second ;
+    npol = 0 ;
+  }
+  void append( uInt polno ) 
+  {
+    polnos[npol] = polno ;
+    npol++ ;
+  }
+  uInt nPol() { return npol ; }
+protected:
+  Vector<Stokes::StokesTypes> polmap ;
+  uInt polnos[4] ;
+  uInt npol ;
+};
+
+class LinearHandler : public CorrTypeHandler {
+public:
+  LinearHandler()
+    : CorrTypeHandler() 
+  {
+    initMap() ;
+  }
+  virtual ~LinearHandler() {}
+  virtual Vector<Stokes::StokesTypes> corrType()
+  {
+    Vector<Stokes::StokesTypes> ret( npol, Stokes::Undefined ) ;
+    if ( npol < 4 ) {
+      for ( uInt ipol = 0 ; ipol < npol ; ipol++ ) 
+        ret[ipol] = polmap[polnos[ipol]] ;
     }
+    else if ( npol == 4 ) {
+      ret[0] = polmap[0] ;
+      ret[1] = polmap[2] ;
+      ret[2] = polmap[3] ;
+      ret[4] = polmap[1] ;
+    }
+    else {
+      throw( AipsError("npol > 4") ) ;
+    }
+    return ret ;
+  }
+protected:
+  void initMap()
+  {
+    polmap.resize( 4 ) ;
+    polmap[0] = Stokes::XX ;
+    polmap[1] = Stokes::YY ;
+    polmap[2] = Stokes::XY ;
+    polmap[3] = Stokes::YX ;
+  }
+};
+class CircularHandler : public CorrTypeHandler {
+public:
+  CircularHandler()
+    : CorrTypeHandler() 
+  {
+    initMap() ;
+  }
+  virtual ~CircularHandler() {}
+  virtual Vector<Stokes::StokesTypes> corrType()
+  {
+    Vector<Stokes::StokesTypes> ret( npol, Stokes::Undefined ) ;
+    if ( npol < 4 ) {
+      for ( uInt ipol = 0 ; ipol < npol ; ipol++ ) 
+        ret[ipol] = polmap[polnos[ipol]] ;
+    }
+    else if ( npol == 4 ) {
+      ret[0] = polmap[0] ;
+      ret[1] = polmap[2] ;
+      ret[2] = polmap[3] ;
+      ret[3] = polmap[1] ;
+    }
+    else {
+      throw( AipsError("npol > 4") ) ;
+    }
+    return ret ;
+  }
+private:
+  void initMap()
+  {
+    polmap.resize( 4 ) ;
+    polmap[0] = Stokes::RR ;
+    polmap[1] = Stokes::LL ;
+    polmap[2] = Stokes::RL ;
+    polmap[3] = Stokes::LR ;
+  }
+};
+class StokesHandler : public CorrTypeHandler {
+public:
+  StokesHandler()
+    : CorrTypeHandler() 
+  {
+    initMap() ;
+  }
+  virtual ~StokesHandler() {}
+  virtual Vector<Stokes::StokesTypes> corrType()
+  {
+    Vector<Stokes::StokesTypes> ret( npol, Stokes::Undefined ) ;
+    if ( npol <= 4 ) {
+      for ( uInt ipol = 0 ; ipol < npol ; ipol++ ) 
+        ret[ipol] = polmap[polnos[ipol]] ;
+    }
+    else {
+      throw( AipsError("npol > 4") ) ;
+    }
+    return ret ;
+  }
+private:
+  void initMap()
+  {
+    polmap.resize( 4 ) ;
+    polmap[0] = Stokes::I ;
+    polmap[1] = Stokes::Q ;
+    polmap[2] = Stokes::U ;
+    polmap[3] = Stokes::V ;
+  }
+};
+class LinPolHandler : public CorrTypeHandler {
+public:
+  LinPolHandler()
+    : CorrTypeHandler() 
+  {
+    initMap() ;
+  }
+  virtual ~LinPolHandler() {}
+  virtual Vector<Stokes::StokesTypes> corrType()
+  {
+    Vector<Stokes::StokesTypes> ret( npol, Stokes::Undefined ) ;
+    if ( npol <= 2 ) {
+      for ( uInt ipol = 0 ; ipol < npol ; ipol++ ) 
+        ret[ipol] = polmap[polnos[ipol]] ;
+    }
+    else {
+      throw( AipsError("npol > 4") ) ;
+    }
+    return ret ;
+  }
+private:
+  void initMap()
+  {
+    polmap.resize( 2 ) ;
+    polmap[0] = Stokes::Plinear ;
+    polmap[1] = Stokes::Pangle ;
+  }
+};
+
+class DataHolder {
+public:
+  DataHolder( TableRow &tableRow, String polType )
+    : row( tableRow )
+  {
+    nchan = 0 ;
+    npol = 0 ;
+    makeCorrTypeHandler( polType ) ;
+    attach() ;
+    flagRow.resize( 4 ) ;
+    reset() ;
+    sigmaTemplate.resize( 4 ) ;
+    sigmaTemplate = 1.0 ;
+  }
+  virtual ~DataHolder() {}
+  virtual void post() = 0 ;
+  virtual void reset()
+  {
+    corr->reset() ;
+    flagRow = False ;
+    npol = 0 ;
+  }
+  virtual void accumulate( uInt id, Vector<Float> &sp, Vector<Bool> &fl, Bool &flr )
+  {
+    accumulateCorrType( id ) ;
+    accumulateData( id, sp ) ;
+    accumulateFlag( id, fl ) ;
+    accumulateFlagRow( id, flr ) ;
+  }
+  uInt nPol() { return npol ; }
+  uInt nChan() { return nchan ; }
+  Vector<Int> corrTypeInt() 
+  {
+    Vector<Int> v( npol ) ;
+    convertArray( v, corr->corrType() ) ;
     return v ;
   }
-  Matrix<Complex> getComplexData()
+  Vector<Stokes::StokesTypes> corrType() { return corr->corrType() ; }
+  void setNchan( uInt num ) 
+  { 
+    nchan = num ; 
+    resize() ;
+  }
+protected:
+  void postAuxiliary()
   {
+    Vector<Float> w = sigmaTemplate( IPosition(1,0), IPosition(1,npol-1) ) ;
+    sigmaRF.define( w ) ;
+    weightRF.define( w ) ;
+    Cube<Bool> c( npol, nchan, 1, False ) ;
+    flagCategoryRF.define( c ) ;
+  }
+  inline void accumulateCorrType( uInt &id )
+  {
+    corr->append( id ) ;
+    npol = corr->nPol() ;
+  } 
+  inline void accumulateFlagRow( uInt &id, Bool &flr )
+  {
+    flagRow[id] = flr ;
+  }
+  void postFlagRow() 
+  {
+    *flagRowRF = anyEQ( flagRow, True ) ;
+  }
+  inline void accumulateFlag( uInt &id, Vector<Bool> &fl ) 
+  {
+    flag.row( id ) = fl ;
+  }
+  virtual void postFlag() = 0 ;
+  inline void accumulateData( uInt &id, Vector<Float> &sp )
+  {
+    data.row( id ) = sp ;
+  }
+  virtual void postData() = 0 ;
+  TableRow &row ;
+  uInt nchan ;
+  uInt npol ;
+  CountedPtr<CorrTypeHandler> corr;
+  RecordFieldPtr< Vector<Float> > sigmaRF ;
+  RecordFieldPtr< Vector<Float> > weightRF ;
+  RecordFieldPtr< Array<Bool> > flagRF ;
+  RecordFieldPtr<Bool> flagRowRF ;
+  RecordFieldPtr< Cube<Bool> > flagCategoryRF ;
+  Vector<Bool> flagRow ;
+  Matrix<Bool> flag ;
+  Matrix<Float> data ;
+  Vector<Float> sigmaTemplate ;
+private:
+  void makeCorrTypeHandler( String &polType )
+  {
+    if ( polType == "linear" ) 
+      corr = new LinearHandler() ;
+    else if ( polType == "circular" )
+      corr = new CircularHandler() ;
+    else if ( polType == "stokes" ) 
+      corr = new StokesHandler() ;
+    else if ( polType == "linpol" )
+      corr = new LinPolHandler() ;
+    else 
+      throw( AipsError("Invalid polarization type") ) ;
+  }
+  void attach()
+  {
+    TableRecord &rec = row.record() ;
+    sigmaRF.attachToRecord( rec, "SIGMA" ) ;
+    weightRF.attachToRecord( rec, "WEIGHT" ) ;
+    flagRF.attachToRecord( rec, "FLAG" ) ;
+    flagRowRF.attachToRecord( rec, "FLAG_ROW" ) ;
+    flagCategoryRF.attachToRecord( rec, "FLAG_CATEGORY" ) ;
+  }
+  void resize() 
+  {
+    flag.resize( 4, nchan ) ;
+    data.resize( 4, nchan ) ;
+  }
+};
+
+class FloatDataHolder : public DataHolder {
+public:
+  FloatDataHolder( TableRow &tableRow, String polType )
+    : DataHolder( tableRow, polType )
+  {
+    attachData() ;
+  }
+  virtual ~FloatDataHolder() {}
+  virtual void post()
+  {
+    postData() ;
+    postFlag() ;
+    postFlagRow() ;
+    postAuxiliary() ;
+  }
+protected:
+  virtual void postFlag()
+  {
+    flagRF.define( flag( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ; 
+  }
+  virtual void postData()
+  {
+    dataRF.define( data( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ;
+  }
+private:
+  void attachData() 
+  {
+    dataRF.attachToRecord( row.record(), "FLOAT_DATA" ) ;
+  }
+  RecordFieldPtr< Matrix<Float> > dataRF; 
+};
+
+class ComplexDataHolder : public DataHolder {
+public:
+  ComplexDataHolder( TableRow &tableRow, String polType )
+    : DataHolder( tableRow, polType )
+  {
+    attachData() ;
+  }
+  virtual ~ComplexDataHolder() {}
+  virtual void accumulate( uInt id, Vector<Float> &sp, Vector<Bool> &fl, Bool &flr )
+  {
+    DataHolder::accumulate( id, sp, fl, flr ) ;
+    isFilled[id] = True ;
+  }
+  virtual void post()
+  {
+    postData() ;
+    postFlag() ;
+    postFlagRow() ;
+    postAuxiliary() ;
+  }
+  virtual void reset()
+  {
+    DataHolder::reset() ;
+    for ( uInt i = 0 ; i < 4 ; i++ )
+      isFilled[i] = False ;
+  }
+protected:
+  virtual void postFlag()
+  {
+    if ( npol == 4 ) {
+      Vector<Bool> tmp = flag.row( 3 ) ;
+      flag.row( 3 ) = flag.row( 1 ) ;
+      flag.row( 2 ) = flag.row( 2 ) || tmp ;
+      flag.row( 1 ) = flag.row( 2 ) ;
+      flagRF.define( flag ) ;
+    }
+    else {
+      flagRF.define( flag( IPosition( 2, 0, 0 ), IPosition( 2, npol-1, nchan-1 ) ) ) ; 
+    }
+  }
+  virtual void postData()
+  {
+    Matrix<Float> tmp( 2, nchan, 0.0 ) ;
     Matrix<Complex> v( npol, nchan ) ;
-    Matrix<Float> dummy( 2, nchan, 0.0 ) ;
-    map< uInt,Vector<Float> >::iterator itr0 = data.find( 0 ) ;
-    map< uInt,Vector<Float> >::iterator itr1 = data.find( 1 ) ;
-    if ( itr0 != data.end() ) {
-      dummy.row( 0 ) = itr0->second ;
-      v.row( 0 ) = RealToComplex( dummy ) ;
+    if ( isFilled[0] ) {
+      tmp.row( 0 ) = data.row( 0 ) ;
+      v.row( 0 ) = RealToComplex( tmp ) ;
     }
-    if ( itr1 != data.end() ) {
-      dummy.row( 0 ) = itr1->second ;
-      v.row( npol-1 ) = RealToComplex( dummy ) ;
+    if ( isFilled[1] ) {
+      tmp.row( 0 ) = data.row( 1 ) ;
+      v.row( npol-1 ) = RealToComplex( tmp ) ;
     }
-    itr0 = data.find( 2 ) ;
-    itr1 = data.find( 3 ) ;
-    if ( itr0 != data.end() && itr1 != data.end() ) {
-      dummy.row( 0 ) = itr0->second ;
-      dummy.row( 1 ) = itr1->second ;
-      v.row( 1 ) = RealToComplex( dummy ) ;
+    if ( isFilled[2] && isFilled[3] ) {
+      tmp.row( 0 ) = data.row( 2 ) ;
+      tmp.row( 1 ) = data.row( 3 ) ;
+      v.row( 1 ) = RealToComplex( tmp ) ;
       v.row( 2 ) = conj( v.row( 1 ) ) ;
     }
-    return v ;
+    dataRF.define( v ) ;
   }
-
-  Matrix<Bool> getComplexFlag()
-  {
-    Matrix<Bool> tmp = getFlag() ;
-    Matrix<Bool> v( npol, nchan ) ;
-    v.row( 0 ) = tmp.row( 0 ) ;
-    if ( npol == 2 ) {
-      v.row( npol-1 ) = tmp.row( 1 ) ;
-    }
-    else if ( npol > 2 ) {
-      v.row( npol-1 ) = tmp.row( 1 ) ;
-      v.row( 1 ) = tmp.row( 2 ) || tmp.row( 3 ) ;
-      v.row( 2 ) = v.row( 1 ) ;
-    }
-    return v ;
-  }
-  
 private:
-  void accumulateData( uInt &id, Vector<Float> &v ) 
+  void attachData()
   {
-    data.insert( pair< uInt,Vector<Float> >( id, v ) ) ;
+    dataRF.attachToRecord( row.record(), "DATA" ) ;
   }
-    void accumulateFlag( uInt &id, Vector<Bool> &v )
-  {
-    flag.insert( pair< uInt,Vector<Bool> >( id, v ) ) ;
-  }
-  void accumulateFlagRow( Bool &v )
-  {
-    flagrow |= v ;
-  }
-  void addPol( uInt id ) 
-  {
-    uInt i = polnos.nelements() ;
-    polnos.resize( i+1, True ) ;
-    polnos[i] = id ;
-  }
-
-  uInt nchan;
-  const uInt maxnpol;
-  uInt npol;
-  Vector<uInt> polnos;
-
-  map< uInt,Vector<Float> > data;
-  map< uInt,Vector<Bool> > flag;
-  Bool flagrow;
+  RecordFieldPtr< Matrix<Complex> > dataRF; 
+  Bool isFilled[4] ;
 };
 
 class BaseMSWriterVisitor: public TableVisitor {
@@ -417,11 +658,8 @@ public:
     
     row = TableRow( ms ) ;
 
-    holder.reset() ;
-
-    makePolMap() ;
+    initPolarization() ;
     initFrequencies() ;
-    initCorrProductTemplate() ;
 
     //
     // add rows to MS
@@ -504,7 +742,7 @@ public:
 
     Vector<Float> sp = spectraCol( recordNo ) ;
     uInt nchan = sp.nelements() ;
-    holder.setNchan( nchan ) ;
+    holder->setNchan( nchan ) ;
 
     addSpectralWindow( spwId, freqId ) ;
 
@@ -556,37 +794,20 @@ public:
     *exposureRF = interval ;
   }
   virtual void leaveTime(const uInt recordNo, Double columnValue) {
-    if ( holder.nPol() > 0 ) {
-      Vector<Float> w = holder.getWeight() ;
-      Cube<Bool> c = holder.getFlagCategory() ;
-      Bool flr = holder.getFlagRow() ;
-      Matrix<Bool> fl = holder.getFlag() ;
-      Vector<uInt> polnos = holder.polNos() ;
-      Int polId = addPolarization( polnos ) ;
+    if ( holder->nPol() > 0 ) {
+      Int polId = addPolarization() ;
       Int ddId = addDataDescription( polId, spwId ) ;
        
       // put field
       *dataDescIdRF = ddId ;
-      *flagRowRF = flr ;
-      weightRF.define( w ) ;
-      sigmaRF.define( w ) ;
-      flagCategoryRF.define( c ) ;
-      flagRF.define( fl ) ;
-      if ( useFloat ) {
-        Matrix<Float> sp = holder.getData() ;
-        floatDataRF.define( sp ) ;
-      }
-      else {
-        Matrix<Complex> sp = holder.getComplexData() ;
-        dataRF.define( sp ) ;
-      }
+      holder->post() ;
       
       // commit row
       row.put( rowidx ) ;
       rowidx++ ;
 
       // reset holder
-      holder.reset() ;
+      holder->reset() ;
     }
   }
   virtual void enterPolNo(const uInt recordNo, uInt columnValue) {
@@ -612,7 +833,7 @@ public:
     Vector<Bool> fl( tmp.shape() ) ;
     convertArray( fl, tmp ) ;
     Bool flr = (Bool)flagRowCol.asuInt( recordNo ) ;
-    holder.accumulate( polNo, sp, fl, flr ) ;
+    holder->accumulate( polNo, sp, fl, flr ) ;
 
     return True ;
   }
@@ -636,15 +857,10 @@ public:
 
   void dataColumnName( String name ) 
   {
-    TableRecord &r = row.record() ;
-    if ( name == "DATA" ) {
-      useFloat = False ;
-      dataRF.attachToRecord( r, name ) ;
-    }
-    else if ( name == "FLOAT_DATA" ) {
-      useFloat = True ;
-      floatDataRF.attachToRecord( r, name ) ;
-    }
+    if ( name == "DATA" ) 
+      holder = new ComplexDataHolder( row, poltype ) ;
+    else if ( name == "FLOAT_DATA" ) 
+      holder = new FloatDataHolder( row, poltype ) ;
   }
   void pointingTableName( String name ) {
     ptName = name ;
@@ -742,21 +958,20 @@ private:
     poTargetRF.define( dir ) ;
     porow.put( nrow ) ;
   }
-  Int addPolarization( Vector<uInt> &nos )
+  Int addPolarization()
   {
     Int idx = -1 ;
+    Vector<Int> corrType = holder->corrTypeInt() ;
     uInt nEntry = polEntry.size() ;
     for ( uInt i = 0 ; i < nEntry ; i++ ) {
-      if ( polEntry[i].conform( nos ) && allEQ( polEntry[i], nos ) ) {
+      if ( polEntry[i].conform( corrType ) && allEQ( polEntry[i], corrType ) ) {
         idx = i ;
         break ;
       }
     }
     
-    Int numCorr ;
-    Vector<Int> corrType ;
-    Matrix<Int> corrProduct ;
-    polProperty( nos, numCorr, corrType, corrProduct ) ;
+    Int numCorr = holder->nPol() ;
+    Matrix<Int> corrProduct = corrProductTemplate[numCorr] ;
 
     if ( idx == -1 ) {
       uInt nrow = poltab.nrow() ;
@@ -770,7 +985,7 @@ private:
       idx = nrow ;
 
       polEntry.resize( nEntry+1 ) ;
-      polEntry[nEntry] = nos ;
+      polEntry[nEntry] = corrType ;
     }
 
     return idx ;
@@ -840,7 +1055,7 @@ private:
     Double ic = increment[fid] ;
 
     Int mfrInt = (Int)freqframe ;
-    Int nchan = holder.nChan() ;
+    Int nchan = holder->nChan() ;
     Double bw = nchan * abs( ic ) ;
     Double reffreq = rv - rp * ic ;
     Int netsb = 0 ; // USB->0, LSB->1
@@ -916,40 +1131,12 @@ private:
       feedEntry.row( nEntry ) = key ;
     }
   }
-  void makePolMap() 
+  void initPolarization() 
   {
     const TableRecord &keys = table.keywordSet() ;
     poltype = keys.asString( "POLTYPE" ) ;
 
-    if ( poltype == "stokes" ) {
-      polmap.resize( 4 ) ;
-      polmap[0] = Stokes::I ;
-      polmap[1] = Stokes::Q ;
-      polmap[2] = Stokes::U ;
-      polmap[3] = Stokes::V ;
-    }
-    else if ( poltype == "linear" ) {
-      polmap.resize( 4 ) ;
-      polmap[0] = Stokes::XX ;
-      polmap[1] = Stokes::YY ;
-      polmap[2] = Stokes::XY ;
-      polmap[3] = Stokes::YX ;
-    }
-    else if ( poltype == "circular" ) {
-      polmap.resize( 4 ) ;
-      polmap[0] = Stokes::RR ;
-      polmap[1] = Stokes::LL ;
-      polmap[2] = Stokes::RL ;
-      polmap[3] = Stokes::LR ;
-    }
-    else if ( poltype == "linpol" ) {
-      polmap.resize( 2 ) ;
-      polmap[0] = Stokes::Plinear ;
-      polmap[1] = Stokes::Pangle ;
-    }
-    else {
-      polmap.resize( 0 ) ;
-    }
+    initCorrProductTemplate() ;
   }
   void initFrequencies()
   {
@@ -1002,11 +1189,6 @@ private:
   {
     TableRecord &r = row.record() ;
     dataDescIdRF.attachToRecord( r, "DATA_DESC_ID" ) ;
-    flagRowRF.attachToRecord( r, "FLAG_ROW" ) ;
-    weightRF.attachToRecord( r, "WEIGHT" ) ;
-    sigmaRF.attachToRecord( r, "SIGMA" ) ;
-    flagCategoryRF.attachToRecord( r, "FLAG_CATEGORY" ) ;
-    flagRF.attachToRecord( r, "FLAG" ) ;
     timeRF.attachToRecord( r, "TIME" ) ;
     timeCentroidRF.attachToRecord( r, "TIME_CENTROID" ) ;
     intervalRF.attachToRecord( r, "INTERVAL" ) ;
@@ -1188,21 +1370,6 @@ private:
       break ;
     }
   }
-  void polProperty( Vector<uInt> &nos, Int &n, Vector<Int> &c, Matrix<Int> &cp ) 
-  {
-    n = nos.nelements() ;
-    c.resize( n ) ;
-    for ( Int i = 0 ; i < n ; i++ )
-      c[i] = (Int)polmap[nos[i]] ;
-    if ( n == 4 && 
-         ( poltype == "linear" || poltype == "circular" ) ) {
-      Int tmp = c[1] ;
-      c[1] = c[2] ;
-      c[2] = c[3] ;
-      c[3] = tmp ;
-    }
-    cp = corrProductTemplate[n] ;
-  }
   void initCorrProductTemplate()
   {
     Int n = 1 ;
@@ -1237,11 +1404,10 @@ private:
   Int spwId;
   Int feedId;
   Int subscan;
-  PolarizedComponentHolder holder;
+  CountedPtr<DataHolder> holder;
   String ptName;
   Bool useFloat;
   String poltype;
-  Vector<Stokes::StokesTypes> polmap;
 
   // MS subtables
   Table spwtab;
@@ -1262,13 +1428,7 @@ private:
   // MS MAIN columns
   RecordFieldPtr<Int> dataDescIdRF,fieldIdRF,feed1RF,feed2RF,
     scanNumberRF,stateIdRF;
-  RecordFieldPtr<Bool> flagRowRF;
   RecordFieldPtr<Double> timeRF,timeCentroidRF,intervalRF,exposureRF;
-  RecordFieldPtr< Vector<Float> > weightRF,sigmaRF;
-  RecordFieldPtr< Cube<Bool> > flagCategoryRF;
-  RecordFieldPtr< Matrix<Bool> > flagRF;
-  RecordFieldPtr< Matrix<Float> > floatDataRF;
-  RecordFieldPtr< Matrix<Complex> > dataRF;
 
   // MS POINTING columns
   TableRow porow;
@@ -1283,7 +1443,7 @@ private:
   Vector<String> stateEntry;
   Matrix<Int> ddEntry;
   Matrix<Int> feedEntry;
-  vector< Vector<uInt> > polEntry;
+  vector< Vector<Int> > polEntry;
   map<uInt,Bool> processedFreqId;
   map<uInt,Double> refpix;
   map<uInt,Double> refval;
@@ -1415,6 +1575,7 @@ public:
   {
     reset() ;
   }
+  virtual ~BaseTsysHolder() {}
   virtual Array<Float> getTsys() = 0 ;
   void setNchan( uInt n ) { nchan = n ; }
   void appendTsys( uInt row ) 
@@ -1466,6 +1627,7 @@ public:
   TsysHolder( ROArrayColumn<Float> &tsysCol )
     : BaseTsysHolder( tsysCol )
   {}
+  virtual ~TsysHolder() {}
   virtual Array<Float> getTsys() 
   {
     return tsys.column( 0 ) ;
@@ -1478,6 +1640,7 @@ public:
   TsysSpectrumHolder( ROArrayColumn<Float> &tsysCol )
     : BaseTsysHolder( tsysCol ) 
   {}
+  virtual ~TsysSpectrumHolder() {}
   virtual Array<Float> getTsys() 
   { 
     return tsys ; 
@@ -1490,6 +1653,7 @@ public:
   BaseTcalProcessor( ROArrayColumn<Float> &tcalCol )
     : col( tcalCol )
   {}
+  virtual ~BaseTcalProcessor() {}
   void setTcalId( Vector<uInt> &tcalId ) { id.assign( tcalId ) ; } 
   virtual Array<Float> getTcal() = 0 ;
 protected:
@@ -1503,6 +1667,7 @@ public:
   TcalProcessor( ROArrayColumn<Float> &tcalCol )
     : BaseTcalProcessor( tcalCol )
   {}
+  virtual ~TcalProcessor() {}
   virtual Array<Float> getTcal()
   {
     uInt npol = id.nelements() ;
@@ -1520,6 +1685,7 @@ public:
   TcalSpectrumProcessor( ROArrayColumn<Float> &tcalCol )
     : BaseTcalProcessor( tcalCol )
   {}
+  virtual ~TcalSpectrumProcessor() {}
   virtual Array<Float> getTcal()
   {
     uInt npol = id.nelements() ;
