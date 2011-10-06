@@ -86,7 +86,7 @@ void AnnRegion::setFrequencyLimits(
 	const Quantity& restfreq
 ) {
 	String preamble(_class + ": " + String(__FUNCTION__) + ": ");
-	if (! _getCsys().hasSpectralAxis()) {
+	if (! getCsys().hasSpectralAxis()) {
 		return;
 	}
 	if (! beginFreq.getUnit().empty() > 0 && endFreq.getUnit().empty()) {
@@ -127,7 +127,7 @@ void AnnRegion::setFrequencyLimits(
 			);
 		}
 		if (freqRefFrame.empty()) {
-			_freqRefFrame = _getCsys().spectralCoordinate().frequencySystem();
+			_freqRefFrame = getCsys().spectralCoordinate().frequencySystem();
 		}
 		else if (! MFrequency::getType(_freqRefFrame, freqRefFrame)) {
 			throw AipsError(
@@ -137,7 +137,7 @@ void AnnRegion::setFrequencyLimits(
 			);
 		}
 		if (dopplerString.empty()) {
-			_dopplerType = _getCsys().spectralCoordinate().velocityDoppler();
+			_dopplerType = getCsys().spectralCoordinate().velocityDoppler();
 		}
 		else if (! MDoppler::getType(_dopplerType, dopplerString)) {
 			throw AipsError(
@@ -205,19 +205,19 @@ void AnnRegion::_extend() {
 	Int spectralAxis = -1;
 	Vector<Quantity> freqRange;
 	uInt nBoxes = 0;
-	if (_getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
+	if (getCsys().hasSpectralAxis() && _convertedFreqLimits.size() == 2) {
 		Quantity begin = _convertedFreqLimits[0].get("Hz");
 		Quantity end = _convertedFreqLimits[1].get("Hz");
 		freqRange.resize(2);
 		freqRange[0] = begin;
 		freqRange[1] = end;
-		spectralAxis = _getCsys().spectralAxisNumber();
+		spectralAxis = getCsys().spectralAxisNumber();
 		nBoxes = 1;
 	}
 	vector<Stokes::StokesTypes> stokesRanges;
 	if (
-		_getCsys().hasPolarizationCoordinate() && _stokes.size() > 0
-		&& (stokesAxis = _getCsys().polarizationAxisNumber()) >= 0
+		getCsys().hasPolarizationCoordinate() && _stokes.size() > 0
+		&& (stokesAxis = getCsys().polarizationAxisNumber()) >= 0
 	) {
 		vector<uInt> stokesNumbers(2*_stokes.size());
 		for (uInt i=0; i<_stokes.size(); i++) {
@@ -272,11 +272,41 @@ void AnnRegion::_extend() {
 		}
 	}
 	try {
-		_imageRegion.asWCRegionPtr()->toLCRegion(_getCsys(), _imShape);
+		_imageRegion.asWCRegionPtr()->toLCRegion(getCsys(), _imShape);
 	}
 	catch (AipsError x) {
-		throw (ToLCRegionConversionError());
+		throw (ToLCRegionConversionError(x.getMesg()));
 	}
+}
+
+void AnnRegion::pixelBoundingBox(
+	vector<Double>& blc, vector<Double>& trc
+) const {
+	vector<Quantity> xblc, xtrc;
+	worldBoundingBox(xblc, xtrc);
+
+	const CoordinateSystem csys = getCsys();
+	Vector<Double> wblc = csys.referenceValue();
+	Vector<Double> wtrc = wblc.copy();
+	const IPosition dirAxes = _getDirectionAxes();
+	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
+	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
+
+	wblc[dirAxes[0]] = xblc[0].getValue(xUnit);
+	wblc[dirAxes[1]] = xblc[1].getValue(yUnit);
+	wtrc[dirAxes[0]] = xtrc[0].getValue(xUnit);
+	wtrc[dirAxes[1]] = xtrc[1].getValue(yUnit);
+
+	Vector<Double> pblc, ptrc;
+	csys.toPixel(pblc, wblc);
+	csys.toPixel(ptrc, wtrc);
+
+	blc.resize(2);
+	trc.resize(2);
+	blc[0] = pblc[dirAxes[0]];
+	blc[1] = pblc[dirAxes[1]];
+	trc[0] = ptrc[dirAxes[0]];
+	trc[1] = ptrc[dirAxes[1]];
 }
 
 WCBox AnnRegion::_makeExtensionBox(
@@ -297,23 +327,23 @@ WCBox AnnRegion::_makeExtensionBox(
 		blc[n] = Quantity(stokesRange[0], "");
 		trc[n] = Quantity(stokesRange[1], "");
 	}
-	WCBox wbox(blc, trc, pixelAxes, _getCsys(), absRel);
+	WCBox wbox(blc, trc, pixelAxes, getCsys(), absRel);
 	return wbox;
 }
 
 void AnnRegion::_checkAndConvertFrequencies() {
-	MFrequency::Types cFrameType = _getCsys().spectralCoordinate().frequencySystem(False);
-	MDoppler::Types cDopplerType = _getCsys().spectralCoordinate().velocityDoppler();
+	MFrequency::Types cFrameType = getCsys().spectralCoordinate().frequencySystem(False);
+	MDoppler::Types cDopplerType = getCsys().spectralCoordinate().velocityDoppler();
 	_convertedFreqLimits.resize(2);
 	for (Int i=0; i<2; i++) {
 		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
 		if (qFreq.getUnit() == "pix") {
-			Int spectralAxisNumber = _getCsys().spectralAxisNumber();
-			Vector<Double> pixel = _getCsys().referencePixel();
+			Int spectralAxisNumber = getCsys().spectralAxisNumber();
+			Vector<Double> pixel = getCsys().referencePixel();
 			pixel[spectralAxisNumber] = qFreq.getValue();
 			Vector<Double> world;
-			_getCsys().toWorld(world, pixel);
-			String unit = _getCsys().worldAxisUnits()[spectralAxisNumber];
+			getCsys().toWorld(world, pixel);
+			String unit = getCsys().worldAxisUnits()[spectralAxisNumber];
 			if (_freqRefFrame != cFrameType) {
 				LogIO log;
 				log << LogOrigin(String(__FUNCTION__)) << LogIO::WARN
@@ -369,12 +399,12 @@ void AnnRegion::_checkAndConvertFrequencies() {
 			);
 		}
 		if (_freqRefFrame != cFrameType) {
-			Vector<Double> refDirection = _getCsys().directionCoordinate().referenceValue();
-			Vector<String> directionUnits = _getCsys().directionCoordinate().worldAxisUnits();
+			Vector<Double> refDirection = getCsys().directionCoordinate().referenceValue();
+			Vector<String> directionUnits = getCsys().directionCoordinate().worldAxisUnits();
 			MDirection refDir(
 				Quantity(refDirection[0], directionUnits[0]),
 				Quantity(refDirection[1], directionUnits[1]),
-				_getCsys().directionCoordinate().directionType()
+				getCsys().directionCoordinate().directionType()
 			);
 			MFrequency::Ref inFrame(_freqRefFrame, MeasFrame(refDir));
 			MFrequency::Ref outFrame(cFrameType, MeasFrame(refDir));
@@ -388,7 +418,7 @@ Quantity AnnRegion::_lengthToAngle(
 	const Quantity& quantity, const uInt pixelAxis
 ) const {
 	if(quantity.getUnit() == "pix") {
-		return _getCsys().toWorldLength(quantity.getValue(), pixelAxis);
+		return getCsys().toWorldLength(quantity.getValue(), pixelAxis);
 	}
 	else if (! quantity.isConform("rad")) {
 		throw AipsError (

@@ -38,6 +38,7 @@
 namespace casa {
 
 class RSMarker;
+class AnnRegion;
 
 // Implementation of RegionFileWriter for writing to DS9 files.
 class DS9FileWriter : public RSFileWriter {
@@ -97,6 +98,10 @@ public:
 
     // Implements RegionFileWriter::write.
     bool write(const vector<RegionShape*>& shapes) const;
+
+    bool writeHeader( QTextStream & ) const;
+    bool writeFooter( QTextStream & ) const;
+    bool write( QTextStream &, AnnRegion * ) const;
     
 private:
     // Custom options.
@@ -147,6 +152,8 @@ private:
     // returns false, the given shape should NOT be written.
     static bool regionType(const RegionShape* shape, DS9::RegionType& type,
                            stringstream& errors);
+    static bool regionType(const AnnRegion* shape, DS9::RegionType& type,
+			   stringstream& errors);
     
     // Converts the given RSMarker into one or more DS9-friendly RSMarkers.
     // If marker is NULL or the markers is empty then an empty vector is

@@ -32,10 +32,16 @@
 
 #include <casa/namespace.h>
 
+#include <iomanip>
+
 int main () {
 	try {
 		LogIO log;
+		IPosition imShape(4,500,500,1,6000);
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
+		Vector<Double> refVal = csys.referenceValue();
+		refVal[0] = 300;
+		csys.setReferenceValue(refVal);
 		AnnRegion::unitInit();
 		{
 			log << LogIO::NORMAL
@@ -65,7 +71,7 @@ int main () {
 			try {
 				AnnRotBox box(
 					centerx, centery, widthx, widthy, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, imShape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 
@@ -106,7 +112,7 @@ int main () {
 			try {
 				AnnRotBox box(
 					centerx, centery, widthx, widthy, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, imShape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -145,7 +151,7 @@ int main () {
 			try {
 				AnnRotBox box(
 					centerx, centery, widthx, widthy, pa, dirTypeString,
-					csys, beginFreq, endFreq, freqRefFrameString,
+					csys, imShape, beginFreq, endFreq, freqRefFrameString,
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
@@ -156,14 +162,100 @@ int main () {
 			}
 			AlwaysAssert(thrown, AipsError);
 		}
+
+		{
+			log << LogIO::NORMAL << "Test getBoundingBox and getPixelBox"
+				<< LogIO::POST;
+			Quantity centerx(0.01, "deg");
+			Quantity centery(0.01, "deg");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
+			Quantity pa(30, "deg");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnRotBox box(
+				centerx, centery, widthx, widthy, pa, dirTypeString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			Vector<MDirection> corners = box.getCorners();
+			for (uInt i=0; i<4; i++) {
+				cout << corners[i].getAngle("arcmin") << endl;
+			}
+			vector<Quantity> wblc, wtrc;
+			box.worldBoundingBox(wblc, wtrc);
+
+			AlwaysAssert(
+				near(
+					wblc[0].getValue("arcmin"), 24.84038105676658503
+				),
+				AipsError
+			);
+			AlwaysAssert(
+				near(
+					wblc[1].getValue("arcmin"),-26.38557158514987577
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					wtrc[0].getValue("arcmin"), -23.64038105676658219
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					wtrc[1].getValue("arcmin"), 27.58557158514987862
+				), AipsError
+			);
+
+			vector<Double> pblc, ptrc;
+			box.pixelBoundingBox(pblc, ptrc);
+			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
+			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
+			cout << std::setprecision(19) << pblc[0] << " " << pblc[1] << endl;
+			cout << std::setprecision(19) << ptrc[0] << " " << ptrc[1] <<  endl;
+			AlwaysAssert(
+				near(
+					pblc[0], 274.8578147498681687
+				),
+				AipsError
+			);
+			AlwaysAssert(
+				near(
+					pblc[1], -26.38531252582800235
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					ptrc[0], 323.1521213950262563
+				), AipsError
+			);
+			AlwaysAssert(
+				near(
+					ptrc[1], 27.58527554845477781
+				), AipsError
+			);
+		}
 		{
 			log << LogIO::NORMAL
 				<< "Test corners with no conversions"
 				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
 			Quantity beginFreq, endFreq;
@@ -183,7 +275,7 @@ int main () {
 
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -192,21 +284,18 @@ int main () {
 			Double cosp = cos(pa.getValue("rad"));
 			Double sinp = sin(pa.getValue("rad"));
 			for (uInt i=0; i<4; i++) {
-				Double ra = corners[i].getAngle("deg").getValue("deg")[0];
-				Double dec = corners[i].getAngle("deg").getValue("deg")[1];
-				cout << "*** ra dec " << ra << " " << dec << endl;
-
+				Double ra = corners[i].getAngle("arcmin").getValue("arcmin")[0];
+				Double dec = corners[i].getAngle("arcmin").getValue("arcmin")[1];
+				cout << std::setprecision(19) << ra << " " << dec << endl;
 				if (
 					near(
-						ra,
-						centerx.getValue("deg") + sinp*widthx.getValue("deg")/2
+						ra, -1.140381056766581969
 					)
 				) {
 					AlwaysAssert(! found[0], AipsError);
 					AlwaysAssert(
 						near(
-							dec,
-							centery.getValue("deg") + cosp*widthy.getValue("deg")/2
+							dec, 27.58557158514987862
 						), AipsError
 					);
 					found[0] = True;
@@ -214,45 +303,39 @@ int main () {
 
 				else if (
 					near(
-						ra,
-						centerx.getValue("deg") + cosp*widthx.getValue("deg")/2
+						ra, 24.84038105676658503
 					)
 				) {
 					AlwaysAssert(! found[1], AipsError);
 					AlwaysAssert(
 						near(
-							dec,
-							centery.getValue("deg") - sinp*widthy.getValue("deg")/2
+							dec, 12.58557158514987506
 						), AipsError
 					);
 					found[1] = True;
 				}
 				else if (
 					near(
-						ra,
-						centerx.getValue("deg") - sinp*widthx.getValue("deg")/2
+						ra, 2.340381056766581924
 					)
 				) {
 					AlwaysAssert(! found[2], AipsError);
 					AlwaysAssert(
 						near(
-							dec,
-							centery.getValue("deg") - cosp*widthy.getValue("deg")/2
+							dec, -26.38557158514987577
 						), AipsError
 					);
 					found[2] = True;
 				}
 				else if (
 					near(
-						ra,
-						centerx.getValue("deg") - cosp*widthx.getValue("deg")/2
+						ra, -23.64038105676658219
 					)
 				) {
 					AlwaysAssert(! found[3], AipsError);
 					AlwaysAssert(
 						near(
-							dec,
-							centery.getValue("deg") + sinp*widthy.getValue("deg")/2
+							dec, -11.38557158514987222
 						), AipsError
 					);
 					found[3] = True;
@@ -261,7 +344,6 @@ int main () {
 					log << "Corner could not be identified" << LogIO::EXCEPTION;
 				}
 			}
-
 		}
 		{
 			log << LogIO::NORMAL
@@ -269,8 +351,8 @@ int main () {
 				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(0.5, "pix");
-			Quantity widthy(0.75, "pix");
+			Quantity widthx(30, "pix");
+			Quantity widthy(45, "pix");
 			Quantity pa(30, "deg");
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
@@ -289,7 +371,7 @@ int main () {
 
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa, dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -298,83 +380,74 @@ int main () {
 			Double cosp = cos(pa.getValue("rad"));
 			Double sinp = sin(pa.getValue("rad"));
 			for (uInt i=0; i<4; i++) {
-				Double ra = corners[i].getAngle("deg").getValue("deg")[0];
-				Double dec = corners[i].getAngle("deg").getValue("deg")[1];
-                cout << "ra dec 2 " << ra << " " << dec << endl;
+				Double ra = corners[i].getAngle("arcmin").getValue("arcmin")[0];
+				Double dec = corners[i].getAngle("arcmin").getValue("arcmin")[1];
 				if (
-					near(
-						ra,
-						centerx.getValue("deg") + sinp*widthx.getValue()/60/2
-					)
+						near(
+								ra, -1.140381056766581969
+						)
 				) {
 					AlwaysAssert(! found[0], AipsError);
 					AlwaysAssert(
-						near(
-							dec,
-							centery.getValue("deg") + cosp*widthy.getValue()/60/2
-						), AipsError
+							near(
+									dec, 27.58557158514987862
+							), AipsError
 					);
 					found[0] = True;
 				}
 
 				else if (
-					near(
-						ra,
-						centerx.getValue("deg") + cosp*widthx.getValue()/120
-					)
+						near(
+								ra, 24.84038105676658503
+						)
 				) {
 					AlwaysAssert(! found[1], AipsError);
 					AlwaysAssert(
-						near(
-							dec,
-							centery.getValue("deg") - sinp*widthy.getValue()/120
-						), AipsError
+							near(
+									dec, 12.58557158514987506
+							), AipsError
 					);
 					found[1] = True;
 				}
 				else if (
-					near(
-						ra,
-						centerx.getValue("deg") - sinp*widthx.getValue()/120
-					)
+						near(
+								ra, 2.340381056766581924
+						)
 				) {
 					AlwaysAssert(! found[2], AipsError);
 					AlwaysAssert(
-						near(
-							dec,
-							centery.getValue("deg") - cosp*widthy.getValue()/120
-						), AipsError
+							near(
+									dec, -26.38557158514987577
+							), AipsError
 					);
 					found[2] = True;
 				}
 				else if (
-					near(
-						ra,
-						centerx.getValue("deg") - cosp*widthx.getValue()/120
-					)
+						near(
+								ra, -23.64038105676658219
+						)
 				) {
 					AlwaysAssert(! found[3], AipsError);
 					AlwaysAssert(
-						near(
-							dec,
-							centery.getValue("deg") + sinp*widthy.getValue()/120
-						), AipsError
+							near(
+									dec, -11.38557158514987222
+							), AipsError
 					);
 					found[3] = True;
 				}
 				else {
-					log << "This corner could not be identified" << LogIO::EXCEPTION;
+					log << "Corner could not be identified" << LogIO::EXCEPTION;
 				}
 			}
-
-
 		}
 		{
-			// check unmodified frequencies
+			log << LogIO::NORMAL
+				<< "check unmodified frequencies"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
 			Quantity beginFreq(1415, "MHz");
@@ -396,7 +469,7 @@ int main () {
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
@@ -411,11 +484,13 @@ int main () {
 			);
 		}
 		{
-			// check frequencies GALACTO -> LSRK
+			log << LogIO::NORMAL
+				<< "check frequencies GALACTO -> LSRK"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
 			Quantity beginFreq(1415, "MHz");
@@ -435,30 +510,32 @@ int main () {
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1415508785.4853702),
+				near(freqs[0].get("Hz").getValue(), 1415467701.708973169),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1450521370.2853618),
+				near(freqs[1].get("Hz").getValue(), 1450479270.302481413),
 				AipsError
 			);
 		}
 		{
-			// check unmodified frequencies when specifying relativistic velocities
+			log << LogIO::NORMAL
+				<< "check unmodified frequencies when specifying relativistic velocities"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
+			Quantity beginFreq(250000000, "m/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -476,30 +553,32 @@ int main () {
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
 		{
-			// check unmodified frequencies when specifying velocities
+			log << LogIO::NORMAL
+				<< "check unmodified frequencies when specifying velocities"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
-			Quantity beginFreq(-20, "km/s");
-			Quantity endFreq(20000, "m/s");
+			Quantity endFreq(-20, "km/s");
+			Quantity beginFreq(20000, "m/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -517,30 +596,32 @@ int main () {
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1420500511.0578821),
+				near(freqs[1].get("Hz").getValue(), 1420500511.0578821),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1420310992.5141187),
+				near(freqs[0].get("Hz").getValue(), 1420310992.5141187),
 				AipsError
 			);
 		}
 		{
-			// check unmodified frequencies when specifying relativistic velocities
+			log << LogIO::NORMAL
+				<< "check unmodified frequencies when specifying relativistic velocities"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
-			Quantity beginFreq(-250000, "km/s");
-			Quantity endFreq(250000000, "m/s");
+			Quantity endFreq(-250000, "km/s");
+			Quantity beginFreq(250000000, "m/s");
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
@@ -558,26 +639,28 @@ int main () {
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 
 			Vector<MFrequency> freqs = box.getFrequencyLimits();
 			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 2604896650.3078709),
+				near(freqs[1].get("Hz").getValue(), 2604896650.3078709),
 				AipsError
 			);
 			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 235914853.26413003),
+				near(freqs[0].get("Hz").getValue(), 235914853.26413003),
 				AipsError
 			);
 		}
 		{
-			// check modified doppler definitions
+			log << LogIO::NORMAL
+				<< "test modified doppler definitions"
+				<< LogIO::POST;
 			Quantity centerx(0.01, "deg");
 			Quantity centery(0.01, "deg");
-			Quantity widthx(30, "arcsec");
-			Quantity widthy(45, "arcsec");
+			Quantity widthx(30, "arcmin");
+			Quantity widthy(45, "arcmin");
 			Quantity pa(30, "deg");
 
 			Quantity beginFreq(2013432.1736247784, "m/s");
@@ -597,7 +680,7 @@ int main () {
 			AnnRotBox box(
 				centerx, centery, widthx, widthy, pa,
 				dirTypeString,
-				csys, beginFreq, endFreq, freqRefFrameString,
+				csys, imShape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
 			cout << box << endl;

@@ -7,7 +7,7 @@ namespace casa {
 	// 			QtRegion("point name",factory), Point(blc_x, blc_y, trc_x, trc_y) { }
 
 	QtPoint::QtPoint( QtRegionSource *factory, WorldCanvas *wc, double x, double y, bool hold_signals ) :
-				QtRegion("point name", factory, hold_signals), Point(wc, x, y) { }
+				QtRegion("point name", factory, hold_signals), Point(wc, x, y) { mystate->init( ); }
 
 	QtPoint::~QtPoint( ) { }
 

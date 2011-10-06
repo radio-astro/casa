@@ -523,7 +523,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //## Direct reactions to user interface.
 
     connect(ddOpenAct_,  SIGNAL(triggered()),  SLOT(showDataManager()));
-    connect(dpNewAct_,   SIGNAL(triggered()),  v_, SLOT(createDPG()));
+    // connect(dpNewAct_,   SIGNAL(triggered()),  v_, SLOT(createDPG()));
+    connect(dpNewAct_,   SIGNAL(triggered()),  SLOT(createNewPanel()));
     connect(dpOptsAct_,  SIGNAL(triggered()),  SLOT(showCanvasManager()));
     connect(dpSaveAct_,  SIGNAL(triggered()),  SLOT(savePanelState_()));
     connect(dpRstrAct_,  SIGNAL(triggered()),  SLOT(restorePanelState_()));
@@ -957,7 +958,11 @@ void QtDisplayPanelGui::hideAllSubwindows() {
   hideDataOptionsPanel();
   hideStats();
 }
-  
+
+void QtDisplayPanelGui::createNewPanel( ) {
+    v_->createDPG( )->show( );
+}
+
 void QtDisplayPanelGui::showDataManager() {
   if(qdm_==0) qdm_ = new QtDataManager(this);
   qdm_->showNormal();

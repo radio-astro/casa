@@ -31,6 +31,19 @@
 #include <display/RegionShapes/QtSingleRegionShape.qo.h>
 #include <display/RegionShapes/RSUtils.qo.h>
 
+#include <imageanalysis/Annotations/AnnAnnulus.h>
+#include <imageanalysis/Annotations/AnnCenterBox.h>
+#include <imageanalysis/Annotations/AnnCircle.h>
+#include <imageanalysis/Annotations/AnnEllipse.h>
+#include <imageanalysis/Annotations/AnnLine.h>
+#include <imageanalysis/Annotations/AnnPolygon.h>
+#include <imageanalysis/Annotations/AnnRectBox.h>
+#include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/AnnRotBox.h>
+#include <imageanalysis/Annotations/AnnSymbol.h>
+#include <imageanalysis/Annotations/AnnText.h>
+#include <imageanalysis/Annotations/AnnVector.h>
+
 #include <iomanip>
 
 namespace casa {
@@ -770,6 +783,44 @@ bool DS9FileWriter::regionType(const RegionShape* shape,
     return true;
 }
 
+bool DS9FileWriter::regionType(const AnnRegion* shape,
+        DS9::RegionType& type, stringstream& errors) {
+    if(shape == NULL) {
+        RSUtils::appendUniqueMessage(errors, "Given null annotation. (Shouldn't "
+                                             "happen.)");
+        return false;
+    }
+    
+    const AnnSymbol* m; const RSComposite* cp;
+    if(dynamic_cast<const AnnCircle*>(shape) != NULL) type = DS9::Circle;
+    else if(dynamic_cast<const AnnEllipse*>(shape) != NULL) type = DS9::Ellipse;
+    else if(dynamic_cast<const AnnRectBox*>(shape) != NULL) type = DS9::Box;
+    else if(dynamic_cast<const AnnPolygon*>(shape) != NULL) type = DS9::Polygon;
+    else if(dynamic_cast<const AnnVector*>(shape) != NULL) type = DS9::Vector;
+    else if(dynamic_cast<const AnnLine*>(shape) != NULL) type = DS9::Line;
+    else if((m = dynamic_cast<const AnnSymbol*>(shape)) != NULL) {
+	switch(m->getSymbol( )) {
+	    case AnnSymbol::X:       type = DS9::XPoint; break;
+            case AnnSymbol::CIRCLE:  type = DS9::CirclePoint; break;
+            case AnnSymbol::DIAMOND: type = DS9::DiamondPoint; break;
+            case AnnSymbol::SQUARE:  type = DS9::BoxPoint; break;
+	    default:
+		RSUtils::appendUniqueMessage(errors, "symbol type not valid for DS9; defaulting to CrossPoint");
+		type = DS9::CrossPoint;
+		break;
+	}
+    }
+    else if(dynamic_cast<const AnnText*>(shape) != NULL) type = DS9::Text;
+    else {
+        RSUtils::appendUniqueMessage(errors, "Unknown shape type. (Shouldn't "
+                                             "happen.)");
+        return false;
+    }
+    
+    return true;
+}
+
+
 vector<RSMarker*> DS9FileWriter::convertMarker(const RSMarker* marker,
         bool& conversionWasNeeded) {
     conversionWasNeeded = false;
@@ -874,6 +925,27 @@ QString DS9FileWriter::convertValue(double value, const String& toUnits,
     }
     
     return QString(ss.str().c_str());
+}
+
+
+static stringstream static_errors;
+bool DS9FileWriter::writeHeader( QTextStream &out ) const {
+    bool success = true;
+    static_errors.str("");
+    static_errors.clear( );
+
+    success &= writeHeader(out, static_errors);
+    success &= writeGlobals(out, static_errors);
+    setError(static_errors.str(), false);
+    return success;
+}
+
+bool DS9FileWriter::writeFooter( QTextStream & ) const {
+    return false;
+}
+
+bool DS9FileWriter::write( QTextStream &, AnnRegion * ) const {
+    return false;
 }
 
 }

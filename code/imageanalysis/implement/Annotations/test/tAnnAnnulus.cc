@@ -152,7 +152,49 @@ int main () {
 			}
 			AlwaysAssert(thrown, AipsError);
 		}
+		{
+			Quantity centerx(0.6, "arcmin");
+			Quantity centery(1.2, "arcmin");
+			Quantity inner(3, "arcmin");
+			Quantity outer(4, "arcmin");
 
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			AnnAnnulus annulus(
+				centerx, centery, inner, outer, dirTypeString,
+				csys, shape, beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			vector<Quantity> wblc, wtrc;
+			annulus.worldBoundingBox(wblc, wtrc);
+			AlwaysAssert(near(wblc[0].getValue("arcmin"), (centerx+outer).getValue("arcmin")), AipsError);
+			AlwaysAssert(near(wblc[1].getValue("arcmin"), (centery-outer).getValue("arcmin")), AipsError);
+			AlwaysAssert(near(wtrc[0].getValue("arcmin"), (centerx-outer).getValue("arcmin")), AipsError);
+			AlwaysAssert(near(wtrc[1].getValue("arcmin"), (centery+outer).getValue("arcmin")), AipsError);
+
+			vector<Double> pblc, ptrc;
+			annulus.pixelBoundingBox(pblc, ptrc);
+			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
+			AlwaysAssert(pblc[1] < ptrc[1], AipsError);
+
+			AlwaysAssert(near(pblc[0], (-1)*wblc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
+			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
+
+		}
 		{
 			log << LogIO::NORMAL
 				<< "Test center with no conversion"
