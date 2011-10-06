@@ -226,6 +226,9 @@ private:
   // Number of correlations and channels
   Int nCorr_p, nChan_p;
 
+  // The number of flag categories.  0 if flagCategory() is invalid.
+  Int nCat_p;
+
   // Averaging buffer
   CalVisBuffer avBuf_p;
 };
