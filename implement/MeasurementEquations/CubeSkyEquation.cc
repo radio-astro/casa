@@ -245,8 +245,10 @@ void CubeSkyEquation::init(FTMachine& ft){
       iftm_p[k]=new MultiTermFT(static_cast<MultiTermFT &>(*ift_));
     }
      for (Int k=0; k < (nmod); ++k){ 
-      ftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
-      iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
+       uInt tayindex = k/(sm_->numberOfModels()/sm_->numberOfTaylorTerms());
+       //       cout << "CubeSkyEqn : model : " << k << " : setting taylor index : " << tayindex << endl;
+       ftm_p[k]->setMiscInfo(tayindex);
+      iftm_p[k]->setMiscInfo(tayindex);
     }
   }
   else if (ft.name() == "SDGrid") {

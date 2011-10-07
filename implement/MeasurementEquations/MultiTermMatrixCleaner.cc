@@ -279,7 +279,7 @@ Int MultiTermMatrixCleaner::mtclean(Int maxniter, Float stopfraction, Float inpu
   //  computeFluxLimit(fluxlimit,thresh);
   
  /********************** START MINOR CYCLE ITERATIONS ***********************/
-  os << "Doing deconvolution iterations..." << LogIO::POST;
+  //os << "Doing deconvolution iterations..." << LogIO::POST;
   for(itercount_p=0;itercount_p<maxniter_p;itercount_p++)
   {
       globalmaxval_p=-1e+10;
@@ -792,7 +792,8 @@ Int MultiTermMatrixCleaner::computeHessianPeak()
 	             //invert((*invMatA_p[scale]),deter,(*matA_p[scale]));
 	             //os << "Matrix Inverse : inv(A) : " << (*invMatA_p[scale]) << LogIO::POST;
 	      
-                     if(adbg) os << "The Matrix [A] is : " << (matA_p[scale]) << LogIO::POST;
+                     //if(adbg) 
+		     os << "The Matrix [H] for " << scaleSizes_p[scale] << " pixel scale is : " << (matA_p[scale]) << LogIO::POST;
 	             invertSymPosDef((invMatA_p[scale]),deter,(matA_p[scale]));
 	             if(adbg) os << "Lapack Cholesky Decomposition Inverse of [A] is : " << (invMatA_p[scale]) << LogIO::POST;
 	             //if(adbg)os << "A matrix determinant : " << deter << LogIO::POST;
@@ -1132,6 +1133,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     Int convergedflag = 0;
     if( fabs(rmaxval) < MAX(userthreshold_p,fluxlimit) ) 
     {
+      LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
       os << "Reached stopping threshold at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
        convergedflag=1; 
     }
@@ -1151,6 +1153,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
         /* detect divergence by approximately 10 consecutive increases in maxval */
         if(loopgain < (Float)0.01)
    	{
+	  LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
 	  os << "Not converging any more. May be diverging. Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
           convergedflag=-1; 
 	 }
@@ -1158,6 +1161,7 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     /* Stop if there is divergence : 200% increase from the current minimum value */
 	if( fabs(  (min_max_p-globalmaxval_p)/min_max_p ) > (Float)2.0 )
       {
+	LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
 	os << "Diverging.... Stopping minor cycles at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << " Max: " << globalmaxval_p << LogIO::POST;
         convergedflag=-1;
       }
@@ -1194,11 +1198,12 @@ Int MultiTermMatrixCleaner::checkConvergence(Int criterion, Float &fluxlimit, Fl
     {
          fluxlimit = rmaxval * stopfraction_p;
 	 //        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << itsThreshold.getValue("Jy")  << LogIO::POST;
+	 LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
         os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << fluxlimit  << LogIO::POST;
     }
     else
     {
-      if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
+      //     if( totalIters_p==maxniter_p || (adbg==(Bool)True) || maxniter_p < (int)5 || (totalIters_p%(Int)20==0) )
        {
 	 
 	    os << "[" << totalIters_p << "] Res: " << rmaxval << " Max: " << globalmaxval_p;
