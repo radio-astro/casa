@@ -3876,10 +3876,13 @@ Bool Imager::clean(const String& algorithm,
       maskNames=mask;
     }
     else {
-      /* For msmfs, the one input mask must be replicated for all Taylor-planes */
+      /* For msmfs, the one input mask PER FIELD must be replicated for all 
+	 Taylor-planes PER FIELD */
       if(algorithm=="msmfs" && Int(mask.nelements())>0){
        for(Int tay=0;tay<nmodels;tay++)
-          maskNames[tay] = mask[0];
+	 {
+	   maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];
+	 }
       }
       else {
 	 /* No mask */
@@ -6938,7 +6941,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
+	    uInt nmods = aresidual.nelements()/ntaylor_p;
+	    for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
 		PagedImage<Float> resi(aresidual[nIm]);
@@ -6988,7 +6992,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
+		uInt nmods = aresidual.nelements()/ntaylor_p;
+		for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
 					      

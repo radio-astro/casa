@@ -135,6 +135,10 @@ protected:
   Bool modifyVisWeights(VisBuffer& vb);
   // Multiply model visibilities by Taylor-function weights - during "get"
   Bool modifyModelVis(VisBuffer &vb);
+  // Restore vb.imagingweights to the original
+  Bool restoreImagingWeights(VisBuffer &vb);
+
+  Matrix<Float> imweights_p;
 
   String machineName_p;
 

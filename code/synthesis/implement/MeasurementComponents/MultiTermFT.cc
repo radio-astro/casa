@@ -68,7 +68,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //---------------------------------------------------------------------- 
   MultiTermFT::MultiTermFT(FTMachine *subftm, String subFTMname, Int nterms, Double reffreq)
     :FTMachine(), subftm_p(subftm), subFTMname_p(subFTMname), nterms_p(nterms), 
-     thisterm_p(0), reffreq_p(reffreq), machineName_p("MultiTermFT")
+     thisterm_p(0), reffreq_p(reffreq), imweights_p(Matrix<Float>(0,0)), machineName_p("MultiTermFT")
   {
     dbg_p=False;
     dotime_p=False;
@@ -170,7 +170,12 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
   {
     if( thisterm_p > 0 )
       {
-        Float freq=0.0,mulfactor=1.0;
+
+	if(imweights_p.shape() != vb.imagingWeight().shape())
+	  imweights_p.resize(vb.imagingWeight().shape());
+	imweights_p = vb.imagingWeight();
+    
+	Float freq=0.0,mulfactor=1.0;
         Vector<Double> selfreqlist(vb.frequency());
 	
         for (Int row=0; row<vb.nRow(); row++)
@@ -178,7 +183,7 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
             {
 	      freq = selfreqlist(IPosition(1,chn));
 	      mulfactor = ((freq-reffreq_p)/reffreq_p);
-	      (vb.imagingWeight())(chn,row) *= mulfactor;
+	      (vb.imagingWeight())(chn,row) *= pow( mulfactor, thisterm_p );
 	      //	      sumwt_p += (vb.imagingWeight())(chn,row);
             }
       }
@@ -194,6 +199,18 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
     */
     return True;
   }
+
+// Reset the imaging weights back to their original values
+// to be called just after "put"
+Bool MultiTermFT::restoreImagingWeights(VisBuffer &vb)
+{
+  if(thisterm_p>0)
+    {
+      AlwaysAssert( imweights_p.shape() == vb.imagingWeight().shape() ,AipsError);
+      vb.imagingWeight() = imweights_p;
+    }
+}
+
   
   // Multiply the model visibilities by the Taylor functions - in place.
   Bool MultiTermFT::modifyModelVis(VisBuffer& vb)
@@ -281,7 +298,8 @@ MultiTermFT& MultiTermFT::operator=(const MultiTermFT& other)
     
     modifyVisWeights(vb);
     subftm_p->put(vb,row,dopsf,type); 
-    
+    restoreImagingWeights(vb);
+
     if(dotime_p) time_put += tmr_p.real();
   }
   
