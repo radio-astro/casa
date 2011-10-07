@@ -779,14 +779,15 @@ if checklistvis:
     listvisOut = prefix + '.listvis.out'
 
     default('listvis')
-    vis = srcsplitms
-    datacolumn = 'data'
-    selectdata=True
-    antenna='VA03&VA04'
-    listfile = listvisOut
+#    vis = srcsplitms
+#    datacolumn = 'data'
+#    selectdata=True
+#    antenna='VA03&VA04'
+#    listfile=listvisOut
     print "Listing corrected data."
     print "Reducing output by selecting only baseline 3&4."
-    listvis()
+#    listvis()
+    listvis(vis=srcsplitms,datacolumn='data',selectdata=True,antenna='VA03&VA04',listfile=listvisOut)
 
     # Record visibility listing time
     if benchmarking:
