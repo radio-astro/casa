@@ -8382,6 +8382,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
+  Bool doFC = !mscIn_p->flagCategory().isNull() && mscIn_p->flagCategory().isDefined(0);
+
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
@@ -8444,6 +8446,10 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
       msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
       msc_p->flag().putColumnCells(rowstoadd, avb.flagCube());
+
+      if(doFC)
+        msc_p->flagCategory().putColumnCells(rowstoadd, avb.flagCategory());
+
       msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
 
       remap(avb.observationId(), obsMapper);

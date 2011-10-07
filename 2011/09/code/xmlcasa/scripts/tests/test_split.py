@@ -1569,9 +1569,9 @@ class split_test_wttosig(SplitChecker):
     def test_sig_tavdata(self):
         """SIGMA after time averaging DATA."""
         check_eq(self.records[('data', '1', '60s')]['sigma'],
-                 numpy.array([[0.7071, 0.7071,   -1.0,      0.7071],
-                              [0.5,    0.25,     -1.0,      1.0],
-                              [0.5,    0.5,      0.5,      0.5],
+                 numpy.array([[3.5355, 4.2426,  -1.0,      5.6569],
+                              [4.3011, 2.5495,  -1.0,      3.0414],
+                              [17.2505, 0.7906, 17.2518,   0.4507],
                               [0.7071, 0.7071,   0.7071,   0.7071],
                               [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
 
@@ -1605,8 +1605,8 @@ class split_test_wttosig(SplitChecker):
     def test_sig_tavcorr(self):
         """SIGMA after time averaging CORRECTED_DATA."""
         check_eq(self.records[('corrected', '1', '60s')]['sigma'],
-                 numpy.array([[0.7071, 0.7071,   -1.0,      0.7071],
-                              [0.5,    0.25,     -1.0,      1.0],
+                 numpy.array([[0.7071, 0.7071,  -1.0,      0.7071],
+                              [0.5,    0.25,    -1.0,      1.0],
                               [0.5,    0.5,      0.5,      0.5],
                               [0.7071, 0.7071,   0.7071,   0.7071],
                               [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
