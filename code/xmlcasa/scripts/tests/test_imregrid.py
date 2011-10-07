@@ -159,8 +159,8 @@ class imregrid_test(unittest.TestCase):
                  template = out3,
                  output = out4)
         
-        s1 = imstat(IMAGE, robust=True)
-        s2 = imstat(out4, robust=True)
+        s1 = imstat(IMAGE)
+        s2 = imstat(out4)
         print s1
         print s2
         for stat in ['rms', 'medabsdevmed', 'minpos',

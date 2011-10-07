@@ -1103,7 +1103,6 @@ if scriptmode:
 #
 print '--imstat (moment images)--'
 default('imstat')
-robust = True
 
 imagename = momfile+'.integrated'
 
