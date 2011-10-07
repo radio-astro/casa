@@ -175,6 +175,8 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
       vb.weightSpectrum();
     vb.weightMat();
     vb.sigmaMat();
+    if(nCat_p > 0)
+      vb.flagCategory();
       
     vb.channelAve(chanAveBounds_p[vi.spectralWindow()]);
 
@@ -252,6 +254,12 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
             constwtperchan /= nChan_p;
 
           for(Int ochan = 0; ochan < nChan_p; ++ochan){
+            if(totwtsp > 0.0){
+              for(Int cat = 0; cat < nCat_p; ++cat){
+                avBuf_p.flagCategory()(IPosition(4, cor, ochan, cat, outrow)) &=
+                  vb.flagCategory()(IPosition(4, cor, ochan, cat, inrow));
+              }
+            }
             if(!vb.flagCube()(cor, ochan, inrow)){
               Double wt = useWtSp ?
                 channellesswt * vb.weightSpectrum()(cor, ochan, inrow) / totwtsp
@@ -261,8 +269,6 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
                 if(doSpWeight_p)
                   avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
                 avBuf_p.flagCube()(cor, ochan, outrow) = false;
-                for(Int cat = 0; cat < nCat_p; ++cat)
-                  avBuf_p.flagCategory()(IPosition(4, cor, ochan, cat, outrow)) = false;
             
                 for(Int i = colEnums_p.nelements(); i--;){
                   if(colEnums_p[i] == MS::CORRECTED_DATA)

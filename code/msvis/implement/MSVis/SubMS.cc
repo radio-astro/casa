@@ -943,6 +943,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   // UVW is the only other Measures column in the main table.
   msc_p->uvwMeas().setDescRefCode(Muvw::castType(mscIn_p->uvwMeas().getMeasRef().getType()));
 
+  if(!mscIn_p->flagCategory().isNull() && mscIn_p->flagCategory().isDefined(0))
+    msc_p->setFlagCategories(mscIn_p->flagCategories());
+
   timer.mark();
   if(!fillDDTables())
     return False;
@@ -6671,25 +6674,6 @@ Bool SubMS::fillAccessoryMainCols(){
       //    << "Copying FLAG took " << timer.real() << "s."
       //    << LogIO::POST;
 
-      os << LogIO::DEBUG1;
-      Bool didFC = false;
-      timer.mark();      
-      if(!mscIn_p->flagCategory().isNull() &&
-         mscIn_p->flagCategory().isDefined(0)){
-        IPosition fcshape(mscIn_p->flagCategory().shape(0));
-        IPosition fshape(mscIn_p->flag().shape(0));
-
-        // I don't know or care how many flag categories there are.
-        if(fcshape(0) == fshape(0) && fcshape(1) == fshape(1)){
-          msc_p->flagCategory().putColumn(mscIn_p->flagCategory());
-          os << "Copying FLAG_CATEGORY took " << timer.real() << "s.";
-          didFC = true;
-        }
-      }
-      if(!didFC)
-        os << "Deciding not to copy FLAG_CATEGORY took " << timer.real() << "s.";
-      os << LogIO::POST;
-          
       timer.mark();
       copyDataFlagsWtSp(complexCols, writeToDataCol);
       if(doFloat)
@@ -6706,6 +6690,20 @@ Bool SubMS::fillAccessoryMainCols(){
     return success;
   }
   
+Bool SubMS::existsFlagCategory() const
+{
+  Bool hasFC = false;
+  if(!mscIn_p->flagCategory().isNull() &&
+     mscIn_p->flagCategory().isDefined(0)){
+    IPosition fcshape(mscIn_p->flagCategory().shape(0));
+    IPosition fshape(mscIn_p->flag().shape(0));
+
+    // I don't know or care how many flag categories there are.
+    hasFC = fcshape(0) == fshape(0) && fcshape(1) == fshape(1);
+  }
+  return hasFC;
+}
+
   Bool SubMS::getDataColumn(ROArrayColumn<Complex>& data,
                             const MS::PredefinedColumns colName)
   {
@@ -6781,6 +6779,7 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
     Int iChunk(0), iChunklet(0);
     Cube<Complex> data;
     Cube<Bool> flag;
+    Array<Bool> flagcat;
 
     Matrix<Float> wtmat;
     viIn.originChunks();                                // Makes me feel better.
@@ -6798,6 +6797,8 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
     Bool fromCorrToData = writeToDataCol && nDataCols == 1;
     if(fromCorrToData)
       fromCorrToData = colNames[0] == MS::CORRECTED_DATA;
+
+    Bool doFC = existsFlagCategory();
 
     for (iChunk=0,viOut.originChunks(),viIn.originChunks();
 	 viOut.moreChunks(),viIn.moreChunks();
@@ -6824,6 +6825,10 @@ Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
 #endif
         viIn.flag(flag);
         viOut.setFlag(flag);
+        if(doFC){
+          viIn.flagCategory(flagcat);
+          viOut.setFlagCategory(flagcat);
+        }
         viIn.weightMat(wtmat);
         viOut.setWeightMat(wtmat);
         if(fromCorrToData)                           // Use SIGMA like a storage place
@@ -7957,6 +7962,7 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
   viIn.originChunks();                                // Makes me feel better.
 
   const Bool doSpWeight = viIn.existsWeightSpectrum();
+  Bool doFC = existsFlagCategory();
   uInt rowsdone = 0;
   ProgressMeter meter(0.0, mssel_p.nrow() * 1.0, "split", "rows averaged", "", "",
 		      True, 1);
@@ -7994,6 +8000,8 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
         // if(viIn.existsWeightSpectrum())
         //   vb.weightSpectrum();
         // vb.weightMat();
+        if(doFC)
+          vb.flagCategory();
       
         vb.channelAve(chanAveBounds[viIn.spectralWindow()]);
 
@@ -8024,6 +8032,9 @@ Bool SubMS::doChannelMods(const Vector<MS::PredefinedColumns>& datacols)
         //if(doFloat)
         //  viOut.setFloatData(vb.floatDataCube());    TBD!
         viOut.setFlag(vb.flagCube());
+        if(doFC)
+          viOut.setFlagCategory(vb.flagCategory());
+
         wtmat.reference(vb.weightMat());
 
         if(doSpWeight)
@@ -8382,7 +8393,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
-  Bool doFC = !mscIn_p->flagCategory().isNull() && mscIn_p->flagCategory().isDefined(0);
+  Bool doFC = existsFlagCategory();
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
@@ -8637,6 +8648,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
+  Bool doFC = existsFlagCategory();
+
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
   for(vi.originChunks(); vi.moreChunks(); vi.nextChunk()){
@@ -8699,6 +8712,10 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
 
       msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
       msc_p->flag().putColumnCells(rowstoadd, avb.flagCube());
+
+      if(doFC)
+        msc_p->flagCategory().putColumnCells(rowstoadd, avb.flagCategory());
+
       msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
 
       remap(avb.observationId(), obsMapper);

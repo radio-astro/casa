@@ -1611,6 +1611,165 @@ class split_test_wttosig(SplitChecker):
                               [0.7071, 0.7071,   0.7071,   0.7071],
                               [0.7071, 0.7071,   0.7071,   0.7071]]), 0.001)
 
+class split_test_fc(SplitChecker):
+    """
+    Check FLAG_CATEGORY after various selections and averagings.
+    """
+    need_to_initialize = True
+    inpms = datapath + '/unittest/split/hasfc.ms'
+    records = {}
+
+    # records uses these as keys, so they MUST be tuples, not lists.
+    # Each tuple is really (datacolumn, width, timebin), but it's called corrsels for
+    # compatibility with SplitChecker.
+    corrsels = (('21:37:30~21:39:00', 1, '0s'),  # straight selection
+                ('',                  2, '0s'),  # channel averaged
+                ('',                  1, '20s')) # time averaged
+
+    def do_split(self, trwtb):
+        outms = 'fc.ms'
+        record = {'ms': outms}
+
+        shutil.rmtree(outms, ignore_errors=True)
+        try:
+            print "\nChecking FLAG_CATEGORY after %s." % (trwtb,)
+            splitran = split(self.inpms, outms, datacolumn='data',
+                             field='', spw='', width=trwtb[1], antenna='',
+                             timebin=trwtb[2], timerange=trwtb[0],
+                             scan='', array='', uvrange='',
+                             correlation='', async=False)
+            tb.open(outms)
+            record['fc'] = tb.getcell('FLAG_CATEGORY', 5)[2]
+            categories = tb.getcolkeyword('FLAG_CATEGORY', 'CATEGORY')
+            tb.close()
+            shutil.rmtree(outms, ignore_errors=True)
+        except Exception, e:
+            print "Error splitting %s from %s", (trwtb, self.inpms)
+            raise e
+        self.__class__.records[trwtb] = record
+        self.__class__.records['categories'] = categories
+        return splitran
+
+    def test_fc_categories(self):
+        """FLAG_CATEGORY's CATEGORY keyword"""
+        check_eq(self.records['categories'],
+                 numpy.array(['FLAG_CMD', 'ORIGINAL', 'USER']))
+
+    def test_fc_straightselection(self):
+        """FLAG_CATEGORY after straight selection"""
+        check_eq(self.records[('21:37:30~21:39:00', 1, '0s')]['fc'],
+                 numpy.array([[ True, False, False],
+                              [ True, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [ True, False, False],
+                              [ True, False, False]]))
+
+    def test_fc_cav(self):
+        """FLAG_CATEGORY after channel averaging"""
+        check_eq(self.records[('', 2, '0s')]['fc'],
+                 numpy.array([[ True, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [ True, False, False]]))
+
+    def test_fc_tav(self):
+        """FLAG_CATEGORY after time averaging"""
+        check_eq(self.records[('', 1, '20s')]['fc'],
+                 numpy.array([[ True, False, False],
+                              [ True, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [False, False, False],
+                              [ True, False, False],
+                              [ True, False, False]]))
+
 
 
 def suite():
@@ -1619,5 +1778,5 @@ def suite():
             split_test_singchan, split_test_unorderedpolspw, split_test_blankov,
             split_test_tav_then_cvel, split_test_genericsubtables,
             split_test_sw_and_fc, split_test_cavcd, split_test_almapol,
-            split_test_wttosig]
+            split_test_wttosig, split_test_fc]
     

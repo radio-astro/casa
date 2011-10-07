@@ -969,6 +969,11 @@ public:
   // Set/modify the flag row column; dimension Vector(nrow)
   void setFlagRow(const Vector<Bool>& rowflags);
 
+  // This sets the flags as found in the MS, Array(npol, nchan, ncat, nrow),
+  // where ncat is the number of categories for flagging and nrow is the number
+  // of rows in the current iteration (given by nRow()).
+  void setFlagCategory(const Array<Bool>& fc);
+
   // Set/modify the visibilities.
   // This is possibly only for a 'reference' MS which has a new DATA column.
   // The first axis of the matrix should equal the selected number of channels
@@ -1032,9 +1037,8 @@ protected:
   ArrayColumn<Float> RWcolSigma;
   ArrayColumn<Bool> RWcolFlag;
   ScalarColumn<Bool> RWcolFlagRow;
-
+  ArrayColumn<Bool> RWcolFlagCategory;
 };
-
 
 } //# NAMESPACE CASA - END
 

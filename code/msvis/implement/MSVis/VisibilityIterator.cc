@@ -2753,6 +2753,7 @@ VisibilityIterator::operator=(const VisibilityIterator& other)
 	ROVisibilityIterator::operator=(other);
 	RWcolFlag.reference(other.RWcolFlag);
         RWcolFlagRow.reference(other.RWcolFlagRow);
+        RWcolFlagCategory.reference(other.RWcolFlagCategory);
 	RWcolVis.reference(other.RWcolVis);
 	RWcolFloatVis.reference(other.RWcolFloatVis);
 	RWcolModelVis.reference(other.RWcolModelVis);
@@ -2802,6 +2803,8 @@ void VisibilityIterator::attachColumns(const Table &t)
   RWcolSigma.attach(t, MS::columnName(MS::SIGMA));
   RWcolFlag.attach(t, MS::columnName(MS::FLAG));
   RWcolFlagRow.attach(t, MS::columnName(MS::FLAG_ROW));
+  if(cds.isDefined("FLAG_CATEGORY"))
+    RWcolFlagCategory.attach(t, MS::columnName(MS::FLAG_CATEGORY));
 }
 
 void VisibilityIterator::setFlag(const Matrix<Bool>& flag)
@@ -2837,6 +2840,13 @@ void VisibilityIterator::setFlagRow(const Vector<Bool>& rowflags)
 {
     putCol(RWcolFlagRow, rowflags);
 }
+
+void VisibilityIterator::setFlagCategory(const Array<Bool>& fc)
+{
+  if (useSlicer_p) putCol(RWcolFlagCategory, slicer_p, fc);
+  else putCol(RWcolFlagCategory, fc);
+}
+
 
 void VisibilityIterator::setVis(const Matrix<CStokesVector> & vis,
 				DataColumn whichOne)

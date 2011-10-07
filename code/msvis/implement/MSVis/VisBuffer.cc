@@ -277,6 +277,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     flagCubeOK_p = status;
     flagOK_p = status;
     flagRowOK_p = status;
+    flagCategoryOK_p = status;
     floatDataCubeOK_p  = status;
     frequencyOK_p = status;
     imagingWeightOK_p = status;
