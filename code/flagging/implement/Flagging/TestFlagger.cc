@@ -229,7 +229,8 @@ TestFlagger::initFlagDataHandler()
 // ---------------------------------------------------------------------
 // TestFlagger::initAgents
 // Initialize the Agents
-// It assumes that parseAgentParameters has been called first
+// It assumes that parseAgentParameters and initFlagDataHander have
+// been called first
 // ---------------------------------------------------------------------
 bool
 TestFlagger::initAgents()
@@ -247,10 +248,12 @@ TestFlagger::initAgents()
 		// get agent record
 		Record agent_rec = agents_config_list_p[i];
 
-		// call the factory method for each one of them
-		FlagAgentBase *fa = FlagAgentBase::create(agent_rec);
+		// TODO: should I check for fdh_p existence here?
+		// Should it call initFlagDataHandler in case it doesn't exist?
+		// call the factory method for each of the agent's records
+		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
 
-		// add to list of FlagAgentBase
+		// add to list of FlagAgentList
 		agents_list_p.push_back(fa);
 
 	}
