@@ -653,7 +653,7 @@ class cleanhelper:
                     # make an empty mask
                     ia.set(pixels=0.0)
 
-    def makemultifieldmask3(self, maskobject='',slice=-1, newformat=True):
+    def makemultifieldmask3(self, maskobject='',slice=-1, newformat=True, interactive=False):
 
         """
         Create mask images for multiple fields (flanking fields) 
@@ -708,7 +708,6 @@ class cleanhelper:
         if(type(maskobject) != list):
             ##don't know what to do with this
             raise TypeError, 'Dont know how to deal with mask object'
-
         #if(type(maskobject[0])==int or type(maskobject[0])==float):
         if(numpy.issubdtype(type(maskobject[0]),int) or numpy.issubdtype(type(maskobject[0]),float)):
             maskobject=[maskobject] 
@@ -849,9 +848,13 @@ class cleanhelper:
                 fsum=ia.statistics()['sum']
                 if(len(fsum)!=0 and fsum[0]==0.0):
                     # make an empty mask
-                    #ia.set(pixels=0.0)
+                    ia.set(pixels=0.0)
+                    # should not remove empty mask for multifield case
+                    # interactive=F.
+                    # Otherwise makemaskimage later does not work
                     # remove the empty mask
-                    ia.remove()
+                    if not interactive:
+                        ia.remove()
                 ia.done(verbose=False)
 
 
@@ -1321,14 +1324,26 @@ class cleanhelper:
         """
         modelos=[]
         maskelos=[]
-        if((modelimages=='') or (modelimages==[])):
+        if((modelimages=='') or (modelimages==[]) or (modelimages==[''])):
+        #if((modelimages=='') or (modelimages==[])):
             return
         if(type(modelimages)==str):
             modelimages=[modelimages]
         k=0
         for modim in modelimages:
+            if not os.path.exists(modim):
+                raise Exception, "Model image file name="+modim+" does not exist."
+
             ia.open(modim)
-            modelos.append('modelos_'+str(k))
+            modelosname='modelos_'+str(k) 
+
+            # clean up any temp files left from preveous incomplete run
+            if os.path.exists(modelosname):
+                ia.removefile(modelosname)
+            if os.path.exists('__temp_model2'):
+                ia.removefile('__temp_model2')
+
+            modelos.append(modelosname)
             if( (ia.brightnessunit().count('/beam')) > 0):
                 maskelos.append(modelos[k]+'.sdmask')
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
@@ -1379,13 +1394,24 @@ class cleanhelper:
             if(os.path.exists(ima)):
                 ia.removefile(ima)
         if(not (os.path.exists(outputmodel))):
-            self.im.make(outputmodel)
+            # im.make uses the main field coord. so it does
+            # not make correct coord. for outlier fields
+            if len(self.imagelist)>1:
+               ia.fromimage(outputmodel, self.imagelist[imindex])
+            else:
+               self.im.make(outputmodel)
+        #ia.open(outputmodel)
+        #ia.close()
         for k in range(len(modelos)):
-            os.rename(outputmodel,'__temp_model2')
+            # if os.rename() or shutil.move() is used here,
+            # for k=1 and at image.imagecalc, it seems to cause 
+            # casapy to crash... 
+            #os.rename(outputmodel,'__temp_model2')
+            shutil.copytree(outputmodel,'__temp_model2')
+            
             ia.imagecalc(outfile=outputmodel,
                              pixels=modelos[k]+' + '+'__temp_model2',
                              overwrite=True)
-            
             ia.removefile('__temp_model2')
             ia.removefile(modelos[k])
             
@@ -3268,6 +3294,7 @@ class cleanhelper:
                 (type(modelimage)==list and modelimage[k]=='')) and multifield:
                 ia.rename(self.imagelist[k]+'.model',overwrite=True)
             else:
+                modlist=[]
                 if type(modelimage)==str:
                     modlist=[modelimage]
                 if not any([inmodel == self.imagelist[k] for inmodel in modlist]):
