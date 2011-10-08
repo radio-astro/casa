@@ -53,11 +53,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Print stats and bounding box to logger?</description>
         <value>True</value>
     </param>
-    <param type="bool" name="robust">
-        <description>If T then compute robust statistics as well</description>
-        <value>False</value>
-        <example>robust=True</example>
-     </param>
     <param type="bool" name="verbose">
         <description>Print additional messages to logger?</description>
         <value>True</value>
@@ -111,7 +106,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                      Example:stokes='I,Q'
                 Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ...
     listit   -- Print stats and bounding box to logger? 
-    robust   -- If T then compute robust statistics as well
     verbose  -- Print additional messages to logger?
 
 
@@ -150,10 +144,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                        $\sigma^2 = (\sum I_i - \bar{I})^2 / (n-1)$
         rms          - the root mean square: 
                        $\sqrt {\sum I_i^2 / n}$
-	median       - the median pixel value (if robust=T)
+	median       - the median pixel value
 	medabsdevmed - the median of the absolute deviations from the 
-                       median (if robust=T)    
-	quartile     - the inter-quartile range (if robust=T). Find the points 
+                       median
+	quartile     - the inter-quartile range. Find the points 
                        which are 25% largest and 75% largest (the median is 
                        50% largest), find their difference and divide that 
                        difference by 2.

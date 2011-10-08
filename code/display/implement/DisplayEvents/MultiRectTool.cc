@@ -289,14 +289,16 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 	viewer::screen_to_linear( wc, x, y, linx, liny );
 
 	bool region_removed = false;
-	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
+	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ) {
 	    if ( (*iter)->regionVisible( ) ) {
 		int result = (*iter)->mouseMovement(linx,liny,false);
 		if ( viewer::Region::regionSelected(result) ) {
+		    rectanglelist::iterator xi = iter; ++xi;
 		    rectangles.erase( iter );
 		    region_removed = true;
-		}
-	    }
+		    iter = xi;
+		} else { ++iter; }
+	    } else { ++iter; }
 	}
 	if ( region_removed ) refresh( );
     }
