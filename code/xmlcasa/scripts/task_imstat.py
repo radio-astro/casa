@@ -2,7 +2,7 @@ from taskinit import *
 
 def imstat(
     imagename=None, axes=None, region=None, box=None, chans=None,
-    stokes=None, listit=None, robust=None, verbose=None
+    stokes=None, listit=None, verbose=None
 ):
     _myia = iatool.create()
     try:
@@ -15,7 +15,7 @@ def imstat(
         )
         retValue = _myia.statistics(
             axes=axes, region=reg, list=listit,
-            robust=robust, verbose=verbose
+            verbose=verbose, robust=True
         )
         _myia.done()
         return retValue
