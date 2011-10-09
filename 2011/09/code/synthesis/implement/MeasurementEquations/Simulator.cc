@@ -2161,6 +2161,7 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 	  // from above, the prediction is now already in Observed.
 	  // RI TODO remove scratch columns from NewMSSimulator; 
 	  // until then we;ll just leave them 1 and Corr=Obs (for imaging)
+	  //vi.setVis(vb.visCube(),VisibilityIterator::Observed);
 	  vi.setVis(vb.visCube(),VisibilityIterator::Corrected);
 	}
 	vb.setModelVisCube(Complex(1.0,0.0));
