@@ -1294,7 +1294,9 @@ Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
 	logSink() << i << ", ";
       }
     }
-    logSink() << "\n  are not calibrated and could not be " << origin << "ed!"
+    logSink() << "\n  could not be " << origin << "ed due to missing (pre-)calibration\n"
+	      << "    in one or more of the specified tables.\n"
+	      << "    Please check your results carefully!"
 	      << LogIO::POST;
   }
   return !hadprob;
@@ -1402,6 +1404,10 @@ Bool Calibrater::genericGatherAndSolve() {
   
   Vector<Int> slotidx(vs_p->numberSpw(),-1);
 
+  // We will remember which spws couldn't be processed
+  Vector<Bool> unsolspw(vi.numberSpw());	
+  unsolspw.set(False);		       
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
@@ -1415,38 +1421,42 @@ Bool Calibrater::genericGatherAndSolve() {
       // Current _chunk_'s spw
       Int spw(vi.spectralWindow());
     
-      // Abort if we encounter a spw for which a priori cal not available
-      if (!ve_p->spwOK(spw)) 
-	throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+      // Only accumulate for solve if we can pre-calibrate
+      if (ve_p->spwOK(spw)) {
 
-      // Collapse each timestamp in this chunk according to VisEq
-      //  with calibration and averaging
-      for (vi.origin(); vi.more(); vi++) {
-
-	// Force read of the field Id
-	vb.fieldId();
-
-	// Apply the channel mask (~no-op, if unnecessary)
-	svc_p->applyChanMask(vb);
-
-	// This forces the data/model/wt I/O, and applies
-	//   any prior calibrations
-	ve_p->collapse(vb);
-
-	// If permitted/required by solvable component, normalize
-	if (svc_p->normalizable()) 
-	  vb.normalize();
-
-	// If this solve not freqdep, and channels not averaged yet, do so
-	if (!svc_p->freqDepMat() && vb.nChannel()>1)
-	  vb.freqAveCubes();
-
-	// Accumulate collapsed vb in a time average
-	//  (only if the vb contains any unflagged data)
-	if (nfalse(vb.flag())>0)
+	// Collapse each timestamp in this chunk according to VisEq
+	//  with calibration and averaging
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  // Force read of the field Id
+	  vb.fieldId();
+	  
+	  // Apply the channel mask (~no-op, if unnecessary)
+	  svc_p->applyChanMask(vb);
+	  
+	  // This forces the data/model/wt I/O, and applies
+	  //   any prior calibrations
+	  ve_p->collapse(vb);
+	  
+	  // If permitted/required by solvable component, normalize
+	  if (svc_p->normalizable()) 
+	    vb.normalize();
+	  
+	  // If this solve not freqdep, and channels not averaged yet, do so
+	  if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	    vb.freqAveCubes();
+	  
+	  // Accumulate collapsed vb in a time average
+	  //  (only if the vb contains any unflagged data)
+	  if (nfalse(vb.flag())>0)
 	  vbga.accumulate(vb);
-
+	  
+	}
       }
+      else
+	// This spw not accumulated for solve
+	unsolspw(spw)=True;
+
       // Advance the VisIter, if possible
       if (vi.moreChunks()) vi.nextChunk();
 
@@ -1460,9 +1470,7 @@ Bool Calibrater::genericGatherAndSolve() {
     //  (this sets currSpw() in the SVC)
     Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
 
-
     if (vbOk) {
-
 
       // Use spw of first VB in vbga
       // TBD: (currSpw==thisSpw) here??  (I.e., use svc_p->currSpw()?  currSpw is prot!)
@@ -1541,6 +1549,8 @@ Bool Calibrater::genericGatherAndSolve() {
 	    << svc_p->typeName() << " solutions in "
 	    << nGood << " slots."
 	    << LogIO::POST;
+
+  summarize_uncalspws(unsolspw, "solv");
   
   // Store whole of result in a caltable
   if (nGood==0) {
