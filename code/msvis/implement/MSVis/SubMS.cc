@@ -8393,7 +8393,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
-  Bool doFC = existsFlagCategory();
+  Bool doFC = !mscIn_p->flagCategory().isNull() && mscIn_p->flagCategory().isDefined(0);
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
