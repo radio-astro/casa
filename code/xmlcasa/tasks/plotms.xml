@@ -55,6 +55,9 @@ MS Parameters
       <value>u</value>
       <value>v</value>
       <value>w</value>
+      <value>uwave</value>
+      <value>vwave</value>
+      <value>wwave</value>
       <value>velocity</value><value>vel</value>
       <value>amp</value><value>amplitude</value>
       <value>phase</value>
@@ -109,6 +112,9 @@ MS Parameters
       <value>u</value>
       <value>v</value>
       <value>w</value>
+      <value>uwave</value>
+      <value>vwave</value>
+      <value>wwave</value>
       <value>velocity</value><value>vel</value>
       <value>amp</value><value>amplitude</value>
       <value>phase</value>
@@ -714,11 +720,15 @@ Constraints
        <equals value="ant2"/>
       <equals value="baseline"/>
       <equals value="uvdist"/>
-      <equals value="uvdist_l"/>
+      <equals value="uvwave"/>
+       <equals value="uvdist_l"/>
        <equals value="uvdistl"/>
       <equals value="u"/>
       <equals value="v"/>
       <equals value="w"/>
+      <equals value="uwave"/>
+      <equals value="vwave"/>
+      <equals value="wwave"/>
       <equals value="velocity"/>
        <equals value="vel"/>
       <equals value="wt"/>
@@ -785,11 +795,15 @@ Constraints
        <equals value="ant2"/>
       <equals value="baseline"/>
       <equals value="uvdist"/>
-      <equals value="uvdist_l"/>
+      <equals value="uvwave"/>
+       <equals value="uvdist_l"/>
        <equals value="uvdistl"/>
       <equals value="u"/>
       <equals value="v"/>
       <equals value="w"/>
+      <equals value="uwave"/>
+      <equals value="vwave"/>
+      <equals value="wwave"/>
       <equals value="velocity"/>
        <equals value="vel"/>
       <equals value="wt"/>
@@ -972,6 +986,9 @@ Constraints
                  'u'  (meters)
                  'v'  (meters)
                  'w'  (meters)
+                 'uwave'  ('u' in wavelengths, per channel)
+                 'vwave'  ('v' in wavelengths, per channel)
+                 'wwave'  ('w' in wavelengths, per channel)
                  'azimuth'  (at array reference; degrees)
                  'elevation'  (at array reference; degrees)
                  'hourang'='hourangle'  (at array reference; hours)

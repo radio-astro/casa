@@ -96,6 +96,9 @@ void PlotCalCache::load(const vector<PMS::Axis>& axes,
     case PMS::U:
     case PMS::V:
     case PMS::W:
+    case PMS::UWAVE:
+    case PMS::VWAVE:
+    case PMS::WWAVE:
     case PMS::AZ0:
     case PMS::EL0:
     case PMS::HA0:

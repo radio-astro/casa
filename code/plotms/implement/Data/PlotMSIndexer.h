@@ -111,8 +111,8 @@ public:
     globalXMinMax_=globalX; globalYMinMax_=globalY; };
 
   // Report per-chunk point counters
-  Vector<Int> nPoints() { return nPoints_; };
-  Vector<Int> nCumulative() { return nCumulative_; };
+  Vector<uInt> nPoints() { return nPoints_; };
+  Vector<uInt> nCumulative() { return nCumulative_; };
 
   // Return if the indexer is ready (setUpPlot has been run)
   inline Bool indexerReady() const { return indexerReady_; };
@@ -184,7 +184,7 @@ private:
   inline Double refTime() { return plotmscache_->refTime(); };
 
   // Set currChunk_ according to a supplied index
-  void setChunk(Int i) const;
+  void setChunk(uInt i) const;
 
   // Computes the X and Y limits for the currently set axes.  In the future we
   // may want to cache ALL ranges for all loaded values to avoid recomputation.
@@ -218,18 +218,19 @@ private:
   //  CollapseMethPtr collapseXMask_, collapseYMask_;
 
   // The in-focus chunk and relative index offset
-  mutable Int currChunk_, irel_, lasti_;
+  mutable Int currChunk_, irel_;
+  mutable uInt lasti_;
 
   // The number of points per chunk
-  Vector<Int> nPoints_;
+  Vector<uInt> nPoints_;
 
   // The cumulative running total of points
-  Vector<Int> nCumulative_;
+  Vector<uInt> nCumulative_;
 
   // Segment point-counting Vectors
   Int nSegment_;
   mutable Int currSeg_;
-  Vector<Int> nSegPoints_,nCumulPoints_,cacheChunk_,cacheOffset_;
+  Vector<uInt> nSegPoints_,nCumulPoints_,cacheChunk_,cacheOffset_;
   
   // Current setup/state.
   PMS::Axis currentX_, currentY_;
