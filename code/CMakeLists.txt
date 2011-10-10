@@ -1075,7 +1075,7 @@ casa_add_module( nrao CASACORE )
 casa_add_module( spectrallines CASACORE imageanalysis )
 casa_add_module( miriad CASACORE msvis )
 
-casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis )
+casa_add_module( xmlcasa CASACORE CCMTOOLS PYTHON ATM READLINE DL plotms display flagging synthesis dish nrao spectrallines imageanalysis miriad )
 
 #
 # ASAP's build depends on something called a makedefs file. Fake one of those.
