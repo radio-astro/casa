@@ -126,7 +126,9 @@ void EGainCurve::setApply(const Record& applypar) {
                                  && rawgaintab.col("ETIME") > obstime_);
 
   // ...for each spw:
-  spwOK_.resize(nSpw(),False);  // will set True when we find them
+  spwOK_.resize(nSpw());  
+  spwOK_.set(False);  // will set True when we find them
+
   for (Int ispw=0; ispw<nSpw(); ispw++) {
 
     currSpw()=ispw;
@@ -204,6 +206,10 @@ else {
     */
 
   } // ispw
+
+  if (allEQ(spwOK_,False))
+    throw(AipsError("Found no gaincurve data for any spw."));
+
 
   // Reset currSpw()
   currSpw()=0;
