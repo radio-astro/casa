@@ -28,6 +28,7 @@ AnnRegion::AnnRegion(
 ) : AnnotationBase(shape, dirRefFrameString, csys), _isAnnotationOnly(annotationOnly),
 	_convertedFreqLimits(Vector<MFrequency>(0)), _stokes(stokes),
 	_isDifference(False), _constructing(True), _imShape(imShape) {
+	_init();
 	setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrameString,
 		dopplerString, restfreq
@@ -46,12 +47,10 @@ AnnRegion::AnnRegion(
 	_beginFreq(Quantity(0, "Hz")), _endFreq(Quantity(0, "Hz")),
 	_restFreq(Quantity(0, "Hz")), _stokes(stokes),
 	_isDifference(False), _constructing(True), _imShape(imShape) {
-
+	_init();
 	// right before returning
 	_constructing = False;
 }
-
-
 
 AnnRegion::~AnnRegion() {}
 
@@ -194,6 +193,16 @@ WCRegion*  AnnRegion::getRegion() const {
 
 Bool AnnRegion::isRegion() const {
 	return True;
+}
+
+void AnnRegion::_init() const {
+	if (_imShape.nelements() != getCsys().nPixelAxes()) {
+		ostringstream oss;
+		oss << _class << "::" << __FUNCTION__ << ": Number of coordinate axes ("
+			<< getCsys().nPixelAxes() << ") differs from number of dimensions in image shape ("
+			<< _imShape.nelements() << ")";
+		throw AipsError(oss.str());
+	}
 }
 
 void AnnRegion::_setDirectionRegion(const ImageRegion& region) {

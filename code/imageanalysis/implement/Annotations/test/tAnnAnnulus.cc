@@ -153,6 +153,44 @@ int main () {
 			AlwaysAssert(thrown, AipsError);
 		}
 		{
+			log << LogIO::NORMAL
+				<< "Test that shape and coordinate system mismatch throws exception"
+				<< LogIO::POST;
+			Bool thrown = True;
+			Quantity centerx(0.01, "deg");
+			Quantity centery(0.01, "deg");
+			Quantity inner(30, "arcsec");
+			Quantity outer(40, "arcsec");
+
+			Quantity beginFreq, endFreq;
+			String dirTypeString = MDirection::showType(
+				csys.directionCoordinate().directionType(False)
+			);
+			String freqRefFrameString = MFrequency::showType(
+				csys.spectralCoordinate().frequencySystem()
+			);
+			String dopplerString = MDoppler::showType(
+				csys.spectralCoordinate().velocityDoppler()
+			);
+			Quantity restfreq(
+				csys.spectralCoordinate().restFrequency(), "Hz"
+			);
+			Vector<Stokes::StokesTypes> stokes(0);
+			try {
+				AnnAnnulus annulus(
+					centerx, centery, inner, outer, dirTypeString,
+					csys, IPosition(3, 40, 40, 2), beginFreq, endFreq, freqRefFrameString,
+					dopplerString, restfreq, stokes, False
+				);
+				thrown = False;
+			} catch (AipsError x) {
+				log << LogIO::NORMAL
+					<< "Exception thrown as expected: " << x.getMesg()
+					<< LogIO::POST;
+			}
+			AlwaysAssert(thrown, AipsError);
+		}
+		{
 			Quantity centerx(0.6, "arcmin");
 			Quantity centery(1.2, "arcmin");
 			Quantity inner(3, "arcmin");
@@ -650,6 +688,18 @@ int main () {
 			AlwaysAssert(annulus.getColorString() == "blue", AipsError);
 			cout << "ann 3rd color " << annulus << endl;
 			AlwaysAssert(AnnotationBase::colorChoices().size() == 10, AipsError);
+			cout << annulus << endl;
+			annulus.setFont("Lucida Blueberry");
+			cout << annulus << endl;
+			annulus.setLabel("beeblebrox");
+			cout << annulus << endl;
+			annulus.setLabel("marklar beeblebrox");
+			cout << annulus << endl;
+			annulus.setLabelColor("yellow");
+			cout << annulus << endl;
+			annulus.setLabel("");
+			cout << annulus << endl;
+
 
 		}
 	} catch (AipsError x) {

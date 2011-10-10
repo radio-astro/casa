@@ -52,13 +52,13 @@ const AnnotationBase::RGB AnnotationBase::YELLOW = list_of(255.0)(255.0)(0.0);
 
 const String AnnotationBase::DEFAULT_LABEL = "";
 const AnnotationBase::RGB AnnotationBase::DEFAULT_COLOR = AnnotationBase::GREEN;
-const AnnotationBase::LineStyle AnnotationBase::DEFAULT_LINESTYLE = SOLID;
+const AnnotationBase::LineStyle AnnotationBase::DEFAULT_LINESTYLE = AnnotationBase::SOLID;
 const uInt AnnotationBase::DEFAULT_LINEWIDTH = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLSIZE = 1;
 const uInt AnnotationBase::DEFAULT_SYMBOLTHICKNESS = 1;
 const String AnnotationBase::DEFAULT_FONT = "Helvetica";
 const uInt AnnotationBase::DEFAULT_FONTSIZE = 10;
-const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = BOLD;
+const AnnotationBase::FontStyle AnnotationBase::DEFAULT_FONTSTYLE = AnnotationBase::BOLD;
 const Bool AnnotationBase::DEFAULT_USETEX = False;
 const AnnotationBase::RGB AnnotationBase::DEFAULT_LABELCOLOR = AnnotationBase::GREEN;
 const String AnnotationBase::DEFAULT_LABELPOS = "top";
@@ -309,12 +309,12 @@ String AnnotationBase::fontStyleToString(
 void AnnotationBase::setLabel(const String& s) {
 	_label = s;
 	if (_label.empty()) {
-		if (_params.find(LABEL) == _params.end()) {
-			_params[LABEL] = _label;
-		}
-		else {
+		if (_params.find(LABEL) != _params.end()) {
 			_params.erase(LABEL);
 		}
+	}
+	else {
+		_params[LABEL] = _label;
 	}
 }
 
@@ -615,16 +615,36 @@ ostream& AnnotationBase::print(
 	if (params.size() == 0) {
 		return os;
 	}
+	/*
 	map<Keyword, String>::const_iterator bb = params.end();
 	bb--;
+	*/
+	Bool hasLabel = params.find(LABEL) != params.end();
 	for (
 		map<Keyword, String>::const_iterator iter=params.begin();
 		iter!=params.end(); iter++
 	) {
-		os << keywordToString((Keyword)iter->first)
-			<< "=" << iter->second;
-		if (iter != bb) {
-			os << ", ";
+		if (! iter->second.empty()) {
+			if (
+				! hasLabel && (
+					iter->first == LABELCOLOR || iter->first == LABELPOS
+					|| iter->first == LABELOFF
+				)
+			) {
+				continue;
+			}
+			if (iter != params.begin()) {
+				os << ", ";
+			}
+			String quote = iter->first == LABEL || iter->second.contains(' ')
+				? "\"" : "";
+			os << keywordToString((Keyword)iter->first)
+				<< "=" << quote << iter->second << quote;
+			/*
+			if (iter != bb) {
+				os << ", ";
+			}
+			*/
 		}
 	}
 	return os;
@@ -753,7 +773,6 @@ void AnnotationBase::_initColors() {
 			("red", RED)
 			("white", WHITE)
 			("yellow", YELLOW);
-
 	for (
 		map<string, RGB>::const_iterator iter=_colors.begin();
 			iter != _colors.end(); iter++
@@ -761,7 +780,6 @@ void AnnotationBase::_initColors() {
 		_rgbNameMap[iter->second] = iter->first;
 		_colorNames.push_back(iter->first);
 	}
-
     _doneColorInit = True;
 }
 
@@ -781,7 +799,9 @@ void AnnotationBase::_testConvertToPixel() const {
 	) {
 		world = iter->getAngle().getValue(*unit);
 		if (! _csys.directionCoordinate().toPixel(pixel, world)) {
-			throw (WorldToPixelConversionError());
+			ostringstream oss;
+			oss << "Could not convert world coordinate " << world << "to pixel";
+			throw (WorldToPixelConversionError(oss.str()));
 		}
 	}
 }
