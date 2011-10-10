@@ -552,6 +552,10 @@ class SubMS
   // MSes.
   Bool areDataShapesConstant();
 
+  // Returns whether or not the input MS has a valid FLAG_CATEGORY, and its
+  // first row has the right number of correlations and channels.
+  Bool existsFlagCategory() const;
+
   // Sets up sourceRelabel_p for mapping input SourceIDs (if any) to output
   // ones.  Must be called after fieldid_p is set and before calling
   // fillFieldTable() or copySource().

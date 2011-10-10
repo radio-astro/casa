@@ -25,13 +25,18 @@ datadir=repodir+"/data/regression/simdata/"
 cfgdir=repodir+"/data/alma/simmos/"
 #importfits(fitsimage=datadir+modelname,imagename="m51.image")
 shutil.copytree(datadir+modelname,modelname)
-default("simdata")
 
-project = 'm51both_co32'
+
+
+#======================================
+# 12m INT
+
+default("sim_observe")
+
+project = 'm51c'
 # Clear out results from previous runs.
 os.system('rm -rf '+project+'*')
 
-#modifymodel=True
 skymodel = modelname
 inbright = '0.004'
 indirection = 'B1950 23h59m59.96 -34d59m59.50'
@@ -43,33 +48,17 @@ setpointings = True
 integration = '10s'
 mapsize = '1arcmin'
 maptype = "hex"
-#maptype = 'square'
 pointingspacing = '9arcsec'
 
-#predict = True
 observe = True
 refdate='2012/11/21/20:00:00'
-#totaltime = '31360s'
-sdantlist = cfgdir+'aca.tp.cfg'
-sdant = 0
+totaltime = '3600s'
+#sdantlist = cfgdir+'aca.tp.cfg'
+#sdant = 0
 
 antennalist="alma;0.5arcsec"
 
 #thermalnoise = 'tsys-manual'  #w/ noise 
-
-image = True
-vis = '$project.ms,$project.sd.ms'  #w/ noise
-imsize = [512,512]
-cell = '0.2arcsec'
-#modelimage='m51sdmed_co32.sd.image'  # should make parse $project
-# 20110926 this gets added by having vis=$project.sd.ms
-#modelimage='m51both_co32/m51both_co32.sd.image'  # should make parse $project
-
-analyze = True
-# show psf & residual are not available for SD-only simulation
-showpsf = False
-showresidual = False
-showconvolved = True
 
 if not l.has_key('interactive'): interactive=False
 if interactive:
@@ -80,44 +69,169 @@ else:
 verbose=True
 overwrite=True
 
-inp()
-simdata()
+go()
+
+
+
+
+#========================================================
+# 12m TP
+
+
+default("sim_observe")
+
+project = 'm51c'
+
+skymodel = modelname
+inbright = '0.004'
+indirection = 'B1950 23h59m59.96 -34d59m59.50'
+incell = '0.1arcsec'
+incenter = '330.076GHz'
+inwidth = '50MHz'
+
+setpointings = True
+integration = '10s'
+mapsize = '1arcmin'
+#maptype = "hex"
+maptype = "square"
+pointingspacing = '9arcsec'
+
+observe = True
+refdate='2012/11/21/20:00:00'
+totaltime = '2h'
+sdantlist = cfgdir+'aca.tp.cfg'
+sdant = 0
+antennalist=""
+
+#thermalnoise = 'tsys-manual'  #w/ noise 
+
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
+verbose=True
+overwrite=True
+
+go()
+
+
+
+
+#========================================================
+# ACA
+
+
+default("sim_observe")
+
+project = 'm51c'
+
+skymodel = modelname
+inbright = '0.004'
+indirection = 'B1950 23h59m59.96 -34d59m59.50'
+incell = '0.1arcsec'
+incenter = '330.076GHz'
+inwidth = '50MHz'
+
+setpointings = True
+integration = '10s'
+mapsize = '1arcmin'
+maptype = "hex"
+#maptype = "square"
+pointingspacing = '15arcsec'
+
+observe = True
+refdate='2012/11/21/20:00:00'
+totaltime = '3' # times through the map
+#sdantlist = cfgdir+'aca.tp.cfg'
+#sdant = 0
+
+antennalist="aca.i.cfg"
+
+#thermalnoise = 'tsys-manual'  #w/ noise 
+
+if not l.has_key('interactive'): interactive=False
+if interactive:
+    graphics="both"
+else:
+    graphics="file"
+
+verbose=True
+overwrite=True
+
+go()
+
+
+
+
+#==============================================
+# clean
+
+
+default("sim_analyze")
+
+project = 'm51c'
+
+# clean ACA with SD model
+
+image = True
+vis = '$project.aca.i.ms,$project.aca.tp.sd.ms'  #w/ noise
+imsize = [512,512]
+cell = '0.2arcsec'
+
+analyze = True
+# show psf & residual are not available for SD-only simulation
+showpsf = False
+showresidual = False
+showconvolved = True
+
+go()
+
+
+
+
+default("sim_analyze")
+
+project = 'm51c'
+
+# clean ALMA with ACA+SD model
+
+image = True
+vis = '$project.alma_0.5arcsec.ms'
+imsize = [512,512]
+cell = '0.2arcsec'
+modelimage="$project.aca.i.image"
+
+analyze = True
+# show psf & residual are not available for SD-only simulation
+showpsf = False
+showresidual = False
+showconvolved = True
+
+go()
+
+
+
+
+
 
 endTime = time.time()
 endProc = time.clock()
-
 
 # Regression
 
 test_name = """simdata observation of M51 (total power+interferometric)"""
 
-fileroot=project
-project=project+".alma_0.5arcsec"
-ia.open(fileroot+"/"+project + '.image')
+ia.open(project+"/"+project + '.alma_0.5arcsec.image')
 m51both_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 
-ia.open(fileroot+"/"+project + '.diff')
+ia.open(project+"/"+project + '.alma_0.5arcsec.diff')
 m51both_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-# # KS - updated 2010-12-17 (13767@active)
-# # reference statistic values for simulated image
-# refstats = { 'sum': 531.76,
-#              'max': 0.11337,
-#              'min': -0.032224,
-#              'rms': 0.013376,
-#              'sigma': 0.012521 }
-
-# # reference statistic values for diff image
-# diffstats = {'sum': 335.78,
-#              'max': 0.053222,
-#              'min': -0.042831,
-#              'rms': 0.0094158,
-#              'sigma': 0.0089342 }
-
-# KS - updated 2011-08-16 (15907@active)
 # reference statistic values for simulated image
 refstats = { 'max': 0.1126,
              'min': -0.032491,
@@ -142,7 +256,7 @@ reftol   = {'sum':  1e-2,
 
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
-outfile    = fileroot+"/"+project + '.' + datestring + '.log'
+outfile    = project+"/"+project + '.' + datestring + '.log'
 logfile    = open(outfile, 'w')
 
 print 'Writing regression output to ' + outfile + "\n"
@@ -154,7 +268,7 @@ loghdr = """
 print >> logfile, loghdr
 
 # more info
-ms.open(fileroot+"/"+project+".sd.ms")
+ms.open(project+"/"+project+".alma_0.5arcsec.ms")
 print >> logfile, "Noiseless MS, amp stats:"
 print >> logfile, ms.statistics('DATA','amp')
 print >> logfile, "Noiseless MS, phase stats:"
@@ -210,7 +324,7 @@ print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
 ### Get last modification time of .ms.
-msfstat = os.stat(fileroot+"/"+project+'.sd.ms')
+msfstat = os.stat(project+"/"+project+'.alma_0.5arcsec.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*************************************'

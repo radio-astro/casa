@@ -3223,6 +3223,21 @@ one field, and will currently only process Stokes I.
        <any type="variant"/>
        <value>1GHz</value>
      </param>
+
+     <param type="string" name="time">
+     <description>Time range to operate on</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="scan">
+     <description>Scan(s) to operate on</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="observation">
+     <description>Observation ID(s) to operate on</description>
+     <value></value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>

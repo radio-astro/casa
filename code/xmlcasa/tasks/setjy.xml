@@ -49,6 +49,29 @@
 			<value></value>
 		</param>
 
+                <param type="bool" name="selectdata">
+                  <description>Other data selection parameters</description>
+                  <value>False</value>
+                </param>
+    
+                <param type="any" name="timerange" subparam="true">
+                  <description>Time range to operate on</description>
+                  <any type="variant" limittypes="string stringArray"/>
+                  <value type="string"></value>
+                </param>
+
+                <param type="any" name="scan" subparam="true">
+                  <description>Scan number range</description>
+                  <any type="variant" limittypes="string stringArray"/>
+                  <value type="string"></value>
+                </param>
+    
+                <param type="any" name="observation" subparam="true">
+                  <description>Observation ID range</description>
+                  <any type="variant" limittypes="string int"/>
+                  <value type="string"></value>
+                </param>
+    
 		<param type="string" name="modimage">
 			<description>File location for field model</description>
 			<value></value>
@@ -91,6 +114,17 @@
 		</param>
                 
                 <constraints>
+                  <when param="selectdata">
+		    <equals type="bool" value="False"/>
+		    <equals type="bool" value="True">
+		      <default param="timerange"><value type="string"></value>
+		      </default>
+		      <default param="scan"><value type="string"></value>
+		      </default>
+		      <default param="observation"><value type="string"></value>
+		      </default>
+	            </equals>
+                  </when>
                   <when param="fluxdensity">
                     <notequals type="int" value="-1">
                       <default param="spix"><value type="int">0</value></default>
@@ -163,6 +197,43 @@
            Note that setjy only selects by spectral window, and ignores
            channel selections.  Fine-grained control could be achieved using
            (and possibly constructing) a cube for modimage.
+
+    selectdata -- Other parameters for selecting part(s) of the MS
+                  to operate on.
+                  (Currently all time-oriented and most likely only of
+                   interest when using a Solar System object as a calibrator.)
+                  default: False
+
+  &gt;&gt;&gt; selectdata=True expandable parameters
+               See help par.selectdata for more on these.
+
+               timerange  -- Select data based on time range:
+                   default: '' (all); examples,
+                   timerange = 'YYYY/MM/DD/hh:mm:ss~YYYY/MM/DD/hh:mm:ss'
+                   Note: if YYYY/MM/DD is missing date defaults to first 
+			 day in data set
+                   timerange='09:14:0~09:54:0' picks 40 min on first day
+                   timerange='25:00:00~27:30:00' picks 1 hr to 3 hr 
+			     30min on NEXT day
+                   timerange='09:44:00' pick data within one integration 
+		             of time
+                   timerange='&gt;10:24:00' data after this time
+                   For multiple MS input, a list of timerange strings can be
+                   used:
+                   timerange=['09:14:0~09:54:0','&gt;10:24:00']
+                   timerange='09:14:0~09:54:0''; apply the same timerange for
+                                                 all input MSes
+               scan -- Scan number range.
+                   default: '' (all)
+                   example: scan='1~5'
+                   For multiple MS input, a list of scan strings can be used:
+                   scan=['0~100','10~200']
+                   scan='0~100; scan ids 0-100 for all input MSes
+                   Check 'go listobs' to insure the scan numbers are in order.
+               observation -- Observation ID range.
+                   default: '' (all)
+                   example: observation='1~5'
+
 
     modimage -- Model image (I only) for setting the model visibilities.
            modimage can be a cube, and its channels do not have to exactly

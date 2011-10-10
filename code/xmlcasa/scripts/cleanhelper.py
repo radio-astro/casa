@@ -61,7 +61,11 @@ class cleanhelper:
         else:
             spectable=visname+"/SPECTRAL_WINDOW"
         return spectable
+
     def initsinglems(self, imtool, vis, usescratch):
+        """
+        initialization for single ms case
+        """
         self.im=imtool
         # modified for self.vis to be a list for handling multims
         #self.vis=vis
@@ -101,6 +105,7 @@ class cleanhelper:
         sorting user input vis if it is multiple MSes based on
         frequencies (spw). So that in sebsequent processing such
         as setChannelization() correctly works.
+        Returns sorted vis. name list
         """
         import operator
         reverse=False
@@ -159,6 +164,10 @@ class cleanhelper:
     def defineimages(self, imsize, cell, stokes, mode, spw, nchan, start,
                      width, restfreq, field, phasecenter, facets=1, outframe='',
                      veltype='radio'):
+        """
+        Define image parameters -calls im.defineimage.
+        for processing a single field  
+        """
         if((type(cell)==list) and (len(cell)==1)):
             cell.append(cell[0])
         elif ((type(cell)==str) or (type(cell)==int) or (type(cell)==float)):
@@ -285,6 +294,11 @@ class cleanhelper:
                           nchan, start, width, restfreq, field, phasecenters,
                           names=[], facets=1, outframe='', veltype='radio',
                           makepbim=False, checkpsf=False):
+        """
+        Define image parameters - multiple field version
+        This fucntion set "private" variables (imagelist and imageids),
+        and then calls defineimages for ecah field. 
+        """
         #will do loop in reverse assuming first image is main field
         if not hasattr(imsizes, '__len__'):
             imsizes = [imsizes]
@@ -401,6 +415,7 @@ class cleanhelper:
     
     def makemultifieldmask(self, maskobject=''):
         """
+        (deprecated - will be removed for 3.4)
         This function assumes that the function definemultiimages has been run and thus
         self.imagelist is defined
         if single image use the single image version
@@ -465,6 +480,7 @@ class cleanhelper:
     def makemultifieldmask2(self, maskobject='',slice=-1):
 
         """
+        (deprecated - will be removed for 3.4)
         New makemultifieldmask to accomodate different kinds of masks supported
         in clean with flanking fields (added by TT)
         required: definemultiimages has already run so that imagelist is defined 
@@ -637,14 +653,37 @@ class cleanhelper:
                     # make an empty mask
                     ia.set(pixels=0.0)
 
-    def makemultifieldmask3(self, maskobject='',slice=-1, newformat=True):
+    def makemultifieldmask3(self, maskobject='',slice=-1, newformat=True, interactive=False):
 
         """
-        refactored version of makemultifieldmask2 - make use of makemaskimage()
+        Create mask images for multiple fields (flanking fields) 
+        This new makemultifieldmask to accomodate different kinds of masks supported
+        in clean with flanking fields.
 
-        New makemultifieldmask to accomodate different kinds of masks supported
-        in clean with flanking fields (added by TT)
-        required: definemultiimages has already run so that imagelist is defined 
+        Keyword arguments:
+        maskobject -- input mask, a list (of string or of list(s)) or a string 
+        slice      -- channel slice (to handle chaniter mode): default = -1 (all)
+        newformat  -- if mask is read from new format text file: default = True 
+
+        Prerequiste: definemultiimages has already ran so that imagelist is defined 
+       
+        Notes: 
+        * It makes empty mask images at begenning, calls makemaskimage, and if no
+          mask to be specified, the corresponding empty mask image is removed
+  
+        * When clean is executed in commnad line style (e.g. clean(vis='..', ..))
+          it is possible to have mask parameter consists of a mix of strings and int lists
+          (i.e. mask=[['newreg.txt',[55,55,65,70]],['outliermask.rgn']]), and this function
+          should be able to parse these properly. - although this won't work for the task execution
+          by go() and tends to messed up inp() after such execution 
+ 
+        * Currently it is made to handle old outlier text file format and boxfile-style
+          mask box specification for backward compartibility. But it is planned to
+          be removed for 3.4.
+
+        * This is a refactored version of the previous one, makemultifieldmask2
+          and  calls makemaskimage() for each field and will be rename to makemultifieldmask
+          in 3.4.
         """
         #print "Inside makemultifieldmask3"
         if((len(self.maskimages)==(len(self.imagelist)))):
@@ -669,7 +708,6 @@ class cleanhelper:
         if(type(maskobject) != list):
             ##don't know what to do with this
             raise TypeError, 'Dont know how to deal with mask object'
-
         #if(type(maskobject[0])==int or type(maskobject[0])==float):
         if(numpy.issubdtype(type(maskobject[0]),int) or numpy.issubdtype(type(maskobject[0]),float)):
             maskobject=[maskobject] 
@@ -810,9 +848,13 @@ class cleanhelper:
                 fsum=ia.statistics()['sum']
                 if(len(fsum)!=0 and fsum[0]==0.0):
                     # make an empty mask
-                    #ia.set(pixels=0.0)
+                    ia.set(pixels=0.0)
+                    # should not remove empty mask for multifield case
+                    # interactive=F.
+                    # Otherwise makemaskimage later does not work
                     # remove the empty mask
-                    ia.remove()
+                    if not interactive:
+                        ia.remove()
                 ia.done(verbose=False)
 
 
@@ -862,6 +904,8 @@ class cleanhelper:
         a)set of previous mask images
         b)lists of blc trc's
         c)record output from rg tool for e.g
+
+        * for a single field 
         """
         if (not hasattr(maskobject, '__len__')) \
            or (len(maskobject) == 0) or (maskobject == ['']):
@@ -1059,6 +1103,10 @@ class cleanhelper:
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                            wgttype, robust, noise, npixels, mosweight,
                            innertaper, outertaper, calready, nchan=-1, start=0, width=1):
+        """
+        Make data selection 
+        (not in use, split into datsel and  datweightfileter)
+        """  
         rmode='none'
         weighting='natural';
         if(wgttype=='briggsabs'):
@@ -1093,6 +1141,9 @@ class cleanhelper:
     # split version of datselweightfilter
     def datsel(self, field, spw, timerange, uvrange, antenna, scan, observation,
                            calready, nchan=-1, start=0, width=1):
+        """
+        Make selections in visibility data 
+        """ 
 
         # for multi-MSes, if field,spw,timerage,uvrange,antenna,scan are not
         # lists the same selection is applied to all the MSes.
@@ -1179,6 +1230,9 @@ class cleanhelper:
     def datweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
                         wgttype, robust, noise, npixels, mosweight,
                         uvtaper,innertaper, outertaper, calready, nchan=-1, start=0, width=1):
+        """
+        Apply weighting and tapering 
+        """
         rmode='none'
         weighting='natural';
         if(wgttype=='briggsabs'):
@@ -1229,6 +1283,9 @@ class cleanhelper:
 
 
     def setrestoringbeam(self, restoringbeam):
+        """
+        Set restoring beam
+        """
         if((restoringbeam == ['']) or (len(restoringbeam) ==0)):
             return
         resbmaj=''
@@ -1256,16 +1313,37 @@ class cleanhelper:
            self.im.setbeam(resbmaj, resbmin, resbpa)
         
     def convertmodelimage(self, modelimages=[], outputmodel='',imindex=0):
+        """
+        Convert model inputs to a model image
+
+        Keyword arguments:
+        modleimages -- input model list
+        outputmodel -- outout modelimage name
+        imindex     -- image name index (corresponding to imagelist) 
+                       for multi field hanlding
+        """
         modelos=[]
         maskelos=[]
-        if((modelimages=='') or (modelimages==[])):
+        if((modelimages=='') or (modelimages==[]) or (modelimages==[''])):
+        #if((modelimages=='') or (modelimages==[])):
             return
         if(type(modelimages)==str):
             modelimages=[modelimages]
         k=0
         for modim in modelimages:
+            if not os.path.exists(modim):
+                raise Exception, "Model image file name="+modim+" does not exist."
+
             ia.open(modim)
-            modelos.append('modelos_'+str(k))
+            modelosname='modelos_'+str(k) 
+
+            # clean up any temp files left from preveous incomplete run
+            if os.path.exists(modelosname):
+                ia.removefile(modelosname)
+            if os.path.exists('__temp_model2'):
+                ia.removefile('__temp_model2')
+
+            modelos.append(modelosname)
             if( (ia.brightnessunit().count('/beam')) > 0):
                 maskelos.append(modelos[k]+'.sdmask')
                 self.im.makemodelfromsd(sdimage=modim,modelimage=modelos[k],maskimage=maskelos[k])
@@ -1316,13 +1394,24 @@ class cleanhelper:
             if(os.path.exists(ima)):
                 ia.removefile(ima)
         if(not (os.path.exists(outputmodel))):
-            self.im.make(outputmodel)
+            # im.make uses the main field coord. so it does
+            # not make correct coord. for outlier fields
+            if len(self.imagelist)>1:
+               ia.fromimage(outputmodel, self.imagelist[imindex])
+            else:
+               self.im.make(outputmodel)
+        #ia.open(outputmodel)
+        #ia.close()
         for k in range(len(modelos)):
-            os.rename(outputmodel,'__temp_model2')
+            # if os.rename() or shutil.move() is used here,
+            # for k=1 and at image.imagecalc, it seems to cause 
+            # casapy to crash... 
+            #os.rename(outputmodel,'__temp_model2')
+            shutil.copytree(outputmodel,'__temp_model2')
+            
             ia.imagecalc(outfile=outputmodel,
                              pixels=modelos[k]+' + '+'__temp_model2',
                              overwrite=True)
-            
             ia.removefile('__temp_model2')
             ia.removefile(modelos[k])
             
@@ -1493,6 +1582,19 @@ class cleanhelper:
         return polyg,union
 
     def readmultifieldboxfile(self, boxfiles):
+        """ 
+        Read boxes and circles in text files in the 
+        AIPS clean boxfile format.
+
+        Keyword arguments:
+        boxfiles -- text files in boxfile format
+
+        returns:
+        circles -- dictionary containing circles      
+        boxes   -- dictionary conatining boxes ([blc, trc])
+        oldfileformats -- a list of boolean if the input textfiles
+                   are boxfile format. 
+        """  
         circles={}
         boxes={}
         oldfilefmts={}
@@ -1598,8 +1700,9 @@ class cleanhelper:
 
     def newreadoutlier(self, outlierfile): 
         """
-	read a outlier file with a new format.
-	The format consists of a set of task parameter inputs.
+	Read a outlier file (both old and new format) 
+         
+	The new format consists of a set of task parameter inputs.
 	imagename="outlier1" imsize=[128,128] phasecenter="J2000 hhmmss.s ddmmss.s" 
 	imagename="outlier2" imsize=[128,128] phasecenter="J2000 hhmmss.s ddmmss.s"
 	mask=['viewermask.rgn','box[[50,60],[50,60]]'] ...
@@ -1612,6 +1715,13 @@ class cleanhelper:
         modelimage (optional) 
 	* other parameters can be included in the file but not parsed
 
+        For the old format, readoutlier() is called internally currently. But
+        the support will be removed by CASA3.4. 
+
+        Returns:
+        lists of imageids, imsizes, phasecenters, masks, 
+        and modelimages, and a dictionary contains all the parameters,
+        and a boolean to indicate read file is in the new format. 
         """
         import ast
         import re
@@ -1745,6 +1855,14 @@ class cleanhelper:
 
 
     def copymaskimage(self, maskimage, shp, outfile):
+        """
+        Copy mask image
+        
+        Keyword arguments:
+        maskimage -- input maskimage 
+        shp       -- shape of output image 
+        outfile   -- output image name
+        """
         if outfile == maskimage:     # Make it a no-op,
             return                   # this is more than just peace of mind.
         #pdb.set_trace() 
@@ -1812,7 +1930,12 @@ class cleanhelper:
 
     def getchanimage(self,cubeimage,outim,chan):
         """
-        create a slice of channel image from cubeimage
+        Create a slice of channel image from cubeimage
+
+        Keyword arguments:
+        cubeimage -- input image cube
+        outim     -- output sliced image
+        chan      -- nth channel
         """
         #pdb.set_trace()
         ia.open(cubeimage)
@@ -1830,7 +1953,12 @@ class cleanhelper:
 
     def putchanimage(self,cubimage,inim,chan):
         """
-        put channel image back to a pre-exisiting cubeimage
+        Put channel image back to a pre-exisiting cubeimage
+ 
+        Keyword arguments:
+        cubimage -- image cube
+        inim     -- input channel image 
+        chan     -- nth channel
         """
         ia.open(inim)
         inimshape=ia.shape()
@@ -1853,7 +1981,8 @@ class cleanhelper:
 
     def qatostring(self,q):
         """
-        return a quantity in string
+        A utility function to return a quantity in string
+        (currently only used in setChannelization which is deprecated)
         """
         if not q.has_key('unit'):
             raise TypeError, "Does not seems to be quantity"
@@ -1863,8 +1992,8 @@ class cleanhelper:
         """
         returns doppler(velocity) or frequency in string
         currently use first rest frequency
-        Assume input vf (velocity or fequency) and output are
-        the same 'frame'.
+        Assume input vf (velocity or fequency in a string) and 
+        output are the same 'frame'.
         """
         #pdb.set_trace()
         docalcf=False
@@ -1934,6 +2063,7 @@ class cleanhelper:
 
     def getfreqs(self,nchan,spw,start,width, dummy=False):
         """
+        (not in used - currently commented out in its caller, initChaniter()) 
         returns a list of frequencies to be used in output clean image
         if width = -1, start is actually end (max) freq 
         """
@@ -2047,6 +2177,7 @@ class cleanhelper:
 
     def setChannelization(self,mode,spw,field,nchan,start,width,frame,veltype,restf):
         """
+        Deprecated: will be removed for CASA 3.4
         determine appropriate values for channelization
         parameters when default values are used
         for mode='velocity' or 'frequency' or 'channel'
@@ -2875,6 +3006,7 @@ class cleanhelper:
 
     def convertframe(self,fin,frame,field):
         """
+        (not in use: its caller is setChannelization...)
         convert freq frame in dataframe to specfied frame, assume fin in Hz
         retruns converted freq in Hz (value only)
         """
@@ -2980,6 +3112,21 @@ class cleanhelper:
         initialize for channel iteration in interactive clean
         --- create a temporary directory, get frequencies for
         mode='channel'
+       
+        Keyword arguments:
+        nchan -- no. channels
+        spw   -- spw 
+        start -- start modified after channelization function 
+        width -- width modified after channelization function
+        imagename -- from task input 
+        mode  -- from task input
+        tmpdir -- temporary directory to store channel images
+        
+        returns: 
+        frequencies in a list
+        frequency increment
+        newmode -- force to set mode to frequency
+        tmppath -- path for the temporary directory
         """
         # create a temporary directory to put channel images
         tmppath=[]
@@ -3147,6 +3294,7 @@ class cleanhelper:
                 (type(modelimage)==list and modelimage[k]=='')) and multifield:
                 ia.rename(self.imagelist[k]+'.model',overwrite=True)
             else:
+                modlist=[]
                 if type(modelimage)==str:
                     modlist=[modelimage]
                 if not any([inmodel == self.imagelist[k] for inmodel in modlist]):
@@ -3168,7 +3316,9 @@ class cleanhelper:
 
     def setChaniterParms(self,finalimagename, spw,chan,start,width,freqs,finc,tmppath):
         """
-        set parameters for channel by channel iterations
+        Set parameters for channel by channel iterations
+        returns:
+        start and width to define each channel image plane
         """
         retparms={}
         self.maskimages={}
@@ -3220,6 +3370,9 @@ class cleanhelper:
         return retparms
 
     def defineChaniterModelimages(self,modelimage,chan,tmppath):
+        """
+        Convert input models to a model image for chaniter mode 
+        """
         chanmodimg=[]
         if type(modelimage)==str:
             modelimage=[modelimage]
@@ -3250,7 +3403,13 @@ class cleanhelper:
 
     def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
         """
-        put channel images back into CubeImages
+        Put channel images back into CubeImages for chaniter=T mode
+        
+        Keyword argements:
+        cubeimageroot -- root name for output cube image
+        chanimageroot -- root name for channel image
+        chan          -- channel plane index
+        imagermode    -- imagermode  
         """
         imagext = ['.image','.model','.flux','.residual','.psf','.mask']
         if imagermode=='mosaic':
@@ -3285,7 +3444,8 @@ class cleanhelper:
 
     def convertImageFreqFrame(self,imlist):
         """
-        convert output images to proper output frame
+        Convert output images to proper output frame
+        (after im.clean() executed)
         """
         if type(imlist)==str:
           imlist=[imlist]

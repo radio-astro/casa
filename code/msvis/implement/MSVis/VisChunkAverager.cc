@@ -174,6 +174,9 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
     if(vi.existsWeightSpectrum())
       vb.weightSpectrum();
     vb.weightMat();
+    vb.sigmaMat();
+    if(nCat_p > 0)
+      vb.flagCategory();
       
     vb.channelAve(chanAveBounds_p[vi.spectralWindow()]);
 
@@ -229,43 +232,66 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
         Vector<Float> wtM(vb.weightMat().column(inrow));
 
         // Accumulate the visibilities and weights, and set the flags.
+        // For better or worse, calibration may adjust WEIGHT without adjusting
+        // WEIGHT_SPECTRUM.  This means that at least for now weightSpectrum
+        // should be treated as a unnormalized relative quantity between
+        // channels, and the overall weight is given by WEIGHT.
         Double totwt = 0.0;                       // Total weight for inrow.
         for(Int cor = 0; cor < nCorr_p; ++cor){
-          Double channellesswt = 0.0;
-          Double constwtperchan = wtM[cor] / nChan_p;
+          Double channellesswt = wtM[cor];  // Already adjusted by flagging.
+          Double totwtsp = channellesswt;
+          Bool useWtSp = doSpWeight_p;
+          if(doSpWeight_p){
+            totwtsp = 0.0;
+            for(Int ochan = 0; ochan < nChan_p; ++ochan)
+              totwtsp += vb.weightSpectrum()(cor, ochan, inrow);
+            useWtSp = totwtsp > 0.0;
+          }
+          Double sig = vb.sigmaMat()(cor, inrow);
+
+          Double constwtperchan = wtM[cor];
+          if(nChan_p > 0)
+            constwtperchan /= nChan_p;
 
           for(Int ochan = 0; ochan < nChan_p; ++ochan){
+            if(totwtsp > 0.0){
+              for(Int cat = 0; cat < nCat_p; ++cat){
+                avBuf_p.flagCategory()(IPosition(4, cor, ochan, cat, outrow)) &=
+                  vb.flagCategory()(IPosition(4, cor, ochan, cat, inrow));
+              }
+            }
             if(!vb.flagCube()(cor, ochan, inrow)){
-              Double wt = doSpWeight_p ? vb.weightSpectrum()(cor, ochan, inrow) :
-                constwtperchan;
+              Double wt = useWtSp ?
+                channellesswt * vb.weightSpectrum()(cor, ochan, inrow) / totwtsp
+                : constwtperchan;
 
-              if(doSpWeight_p)
-                avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
-              channellesswt += wt;
-              avBuf_p.flagCube()(cor, ochan, outrow) &= wt <= 0.0;
-
-              // FLAG_CATEGORY?
+              if(wt > 0.0){
+                if(doSpWeight_p)
+                  avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
+                avBuf_p.flagCube()(cor, ochan, outrow) = false;
             
-              for(Int i = colEnums_p.nelements(); i--;){
-                if(colEnums_p[i] == MS::CORRECTED_DATA)
-                  avBuf_p.correctedVisCube()(cor, ochan, outrow) += 
-                    (wt * vb.correctedVisCube()(cor, ochan, inrow));
-                else if(colEnums_p[i] == MS::MODEL_DATA)
-                  avBuf_p.modelVisCube()(cor, ochan, outrow) += 
-                    (wt * vb.modelVisCube()(cor, ochan, inrow));
-                // else if(colEnums_p[i] == MS::LAG_DATA)
-                //  VisBuffer doesn't handle LAG_DATA
-                else if(colEnums_p[i] == MS::FLOAT_DATA)
-                  avBuf_p.floatDataCube()(cor, ochan, outrow) += 
-                    (wt * vb.floatDataCube()(cor, ochan, inrow));
-                else if(colEnums_p[i] == MS::DATA)
-                  avBuf_p.visCube()(cor, ochan, outrow) += 
-                    (wt * vb.visCube()(cor, ochan, inrow));
+                for(Int i = colEnums_p.nelements(); i--;){
+                  if(colEnums_p[i] == MS::CORRECTED_DATA)
+                    avBuf_p.correctedVisCube()(cor, ochan, outrow) += 
+                      (wt * vb.correctedVisCube()(cor, ochan, inrow));
+                  else if(colEnums_p[i] == MS::MODEL_DATA)
+                    avBuf_p.modelVisCube()(cor, ochan, outrow) += 
+                      (wt * vb.modelVisCube()(cor, ochan, inrow));
+                  // else if(colEnums_p[i] == MS::LAG_DATA)
+                  //  VisBuffer doesn't handle LAG_DATA
+                  else if(colEnums_p[i] == MS::FLOAT_DATA)
+                    avBuf_p.floatDataCube()(cor, ochan, outrow) +=
+                      (wt * vb.floatDataCube()(cor, ochan, inrow));
+                  else if(colEnums_p[i] == MS::DATA)
+                    avBuf_p.visCube()(cor, ochan, outrow) += 
+                      (wt * vb.visCube()(cor, ochan, inrow));
+                }
+                avBuf_p.weightMat()(cor, outrow) += wt;
+                avBuf_p.sigmaMat()(cor, outrow) += wt * wt * sig * sig;
+                totwt += wt;
               }
             }
           }
-          avBuf_p.weightMat()(cor, outrow) += channellesswt;
-          totwt += channellesswt;
         }
 
         Double totslotwt = 0.0;
@@ -362,6 +388,7 @@ void VisChunkAverager::initialize(VisBuffer& vb)
   // Immutables:
   nChan_p = vb.nChannel();
   nCorr_p = vb.corrType().nelements();
+  nCat_p = vb.flagCategory().nelements() > 0 ? vb.flagCategory().shape()(2) : 0;
 
   // More or less VisBuffAccumulator::initialize() up to
   // "// Fill in the antenna numbers for all rows"
@@ -392,7 +419,13 @@ void VisChunkAverager::initialize(VisBuffer& vb)
   avBuf_p.feed2().resize(nRow);
   // avBuf_p.fieldId() is an Int, not a Vector.
   avBuf_p.flagCube().resize(nCorr_p, nChan_p, nRow);
-  avBuf_p.flagRow().resize(nRow); 
+  avBuf_p.flagRow().resize(nRow);
+
+  if(nCat_p > 0){
+    avBuf_p.flagCategory().resize(IPosition(4, nCorr_p, nChan_p, nCat_p, nRow));
+    avBuf_p.flagCategory() = True;
+  }
+
   avBuf_p.observationId().resize(nRow);
   avBuf_p.processorId().resize(nRow);
   avBuf_p.scan().resize(nRow);
@@ -438,6 +471,7 @@ void VisChunkAverager::initialize(VisBuffer& vb)
   avBuf_p.timeCentroid() = 0.0;
   avBuf_p.uvwMat() = 0.0;
   avBuf_p.weightMat() = 0.0;
+  avBuf_p.sigmaMat() = 0.0;
 
   if(doSpWeight_p)
     avBuf_p.weightSpectrum() = 0.0;
@@ -480,9 +514,11 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
 
     for(Int cor = 0; cor < nCorr_p; ++cor){
       Float orw = wtM[cor];
-        
-      avBuf_p.sigmaMat()(cor, outrow) = orw > 0.0 ? sqrt(1.0 / orw)
-                                        : -1.0; // Seems safer than 0.0.
+      
+      // sigma is the channel-averaged sigma for a single chan.
+      avBuf_p.sigmaMat()(cor, outrow) = orw > 0.0 ?
+        sqrt(nChan_p * avBuf_p.sigmaMat()(cor, outrow)) / orw
+        : -1.0; // Seems safer than 0.0.
       wt += orw;
     }
 

@@ -45,7 +45,7 @@ go()
 endTime = time.time()
 endProc = time.clock()
 
-ia.open(project+"/"+project + '.image')
+ia.open(project+"/"+project + '.alma_cycle0.extended.image')
 hii_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
@@ -96,7 +96,7 @@ print >>logfile,'Total CPU        time was: %8.3f s.' % (endProc - startProc)
 print >>logfile,'Wall processing  rate was: %8.3f MB/s.' % (17896.0 /
                                                             (endTime - startTime))
 
-msfstat = os.stat(project+"/"+project+'.ms')
+msfstat = os.stat(project+"/"+project+'.alma_cycle0.extended.ms')
 print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*  generating visibilities took %8.3fs,' % (msfstat[8] - startTime)
 print >>logfile,'*  deconvolution with %d iterations took %8.3fs.' % ( niter,

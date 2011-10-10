@@ -156,6 +156,7 @@ VisBuffer::copyCache (const VisBuffer & other, Bool force)
                      modelVisibility_p, other.modelVisibility_p, force);
     cacheCopyNormal (nChannelOK_p, other.nChannelOK_p, nChannel_p, other.nChannel_p, force);
     cacheCopyNormal (nCorrOK_p, other.nCorrOK_p, nCorr_p, other.nCorr_p, force);
+    //cacheCopyNormal (nCatOK_p, other.nCatOK_p, nCat_p, other.nCat_p, force);
     cacheCopyNormal (nRowOK_p, other.nRowOK_p, nRow_p, other.nRow_p, force);
     cacheCopyArray  (observationIdOK_p, other.observationIdOK_p, observationId_p, other.observationId_p, force);
     cacheCopyNormal (phaseCenterOK_p, other.phaseCenterOK_p, phaseCenter_p, other.phaseCenter_p, force);
@@ -198,6 +199,7 @@ VisBuffer::operator-=(const VisBuffer & vb)
     // make sure flag and flagRow are current
     flag();
     flagRow();
+    // flagCategory?
 
     // do the subtraction, or'ing the flags
     Int nRows = nRow ();
@@ -275,6 +277,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     flagCubeOK_p = status;
     flagOK_p = status;
     flagRowOK_p = status;
+    flagCategoryOK_p = status;
     floatDataCubeOK_p  = status;
     frequencyOK_p = status;
     imagingWeightOK_p = status;
@@ -284,6 +287,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     msOK_p = status;
     nChannelOK_p = status;
     nCorrOK_p = status;
+    //    nCatOK_p = status;
     nRowOK_p = status;
     observationIdOK_p  = status;
     phaseCenterOK_p = status;
@@ -732,8 +736,8 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     Int nChanOut(chanAveBounds_p.nrow());
     Vector<Int> chans(channel()); // Ensure channels pre-filled
     
-    // Row weight and sigma refer to the number of channels in the MS,
-    // regardless of any selection.
+    // Row weight and sigma currently refer to the number of channels in the
+    // MS, regardless of any selection.
     Int nAllChan0 = visIter_p->msColumns().spectralWindow().numChan()(spectralWindow());
 
     const Bool doWtSp(visIter_p->existsWeightSpectrum());
@@ -748,11 +752,11 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     uInt nrows = nRow();
     Matrix<Float> rowWtFac(nCor, nrows);
 
-    Double selChanFac = 1.0;
+    uInt nch = flagCube().shape()(1);   // # of selected channels
+    Double selChanFac;
 
     if(doWtSp){                                    // Get the total weight spectrum
       const Cube<Float>& wtsp(weightSpectrum());   // while it is unaveraged.
-      uInt nch = wtsp.shape()(1);
 
       for(uInt row = 0; row < nrows; ++row){
         for(uInt icor = 0; icor < nCor; ++icor){
@@ -763,14 +767,15 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
             rowWtFac(icor, row) += wtsp(icor, ichan, row);
         }
       }
-      if(nAllChan0 > 0)                 // This is slightly fudgy.
-        selChanFac = nch / nAllChan0;   // Now that selection is applied to
-    }                                   // weightSpectrum(), we can't get at
-    else                                // the unselected channel weights.
+    }
+    else
       rowWtFac = 1.0;
 
     // The false makes it leave weightSpectrum() averaged if it is present.
     if(flagCubeOK_p)          chanAveFlagCube(flagCube(), nChanOut, false);
+
+    if(flagCategoryOK_p)
+      chanAveFlagCategory(flagCategory(), nChanOut);
     
     // Collapse the frequency values themselves, and count the number of
     // selected channels.
@@ -828,6 +833,9 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
           }
         }
       }
+      // This is slightly fudgy because it ignores the unselected part of
+      // weightSpectrum.  Unfortunately now that selection is applied to
+      // weightSpectrum, we can't get at the unselected channel weights.
       selChanFac = static_cast<Float>(totn) / nAllChan0;
 
       for(uInt row = 0; row < nrows; ++row){
@@ -896,6 +904,52 @@ void VisBuffer::chanAveFlagCube(Cube<Bool>& flagcube, Int nChanOut,
 
   if(doWtSp && restoreWeightSpectrum)
     fillWeightSpectrum();
+}
+
+void VisBuffer::chanAveFlagCategory(Array<Bool>& flagcat, const Int nChanOut)
+{
+  if(flagcat.nelements() == 0)      // Averaging a degenerate Array is fast,
+    return;                         // and avoids the conformance check below.
+
+  IPosition csh(flagcat.shape());
+  Int nChan0 = csh(1);
+  csh(1) = nChanOut;
+
+  if(nChan0 < nChanOut)
+    // It's possible that data has already been averaged.  I could try
+    // refilling data if I knew which column to use, but I don't.
+    // Chuck it to the caller.
+    throw(AipsError("Can't average " + String(nChan0) + " channels to " +
+                    String(nChanOut) + " channels!"));
+
+  Vector<Int>& chans(channel());
+  if(nChan0 == nChanOut && chans.nelements() > 0 && chans[0] == 0)
+    return;    // No-op.
+
+  Array<Bool> newFC(csh);
+  newFC = True;
+
+  Int nCor = nCorr();
+  Int nCat = csh(2);
+  Int ichan;
+  for(Int row = 0; row < nRow(); ++row){
+    ichan = 0;
+    for(Int ochan = 0; ochan < nChanOut; ++ochan){
+      while(chans[ichan] >= chanAveBounds_p(ochan, 0) &&
+            chans[ichan] <= chanAveBounds_p(ochan, 1) &&
+            ichan < nChan0) {
+        for(Int icor = 0; icor < nCor; ++icor){
+          for(Int icat = 0; icat < nCat; ++icat){
+            if(!flagcat(IPosition(4, icor, ichan, icat, row))) 
+              newFC(IPosition(4, icor, ochan, icat, row)) = False;
+          }
+        }
+        ++ichan;
+      }
+    }
+  }
+  // Use averaged flag Categories
+  flagcat.reference(newFC);
 }
 
 // Sort correlations: (PP,QQ,PQ,QP) -> (PP,PQ,QP,QQ)

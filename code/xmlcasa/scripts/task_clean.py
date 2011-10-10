@@ -331,6 +331,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             parms={}
             rootname=''
             newformat=False
+            loc_modelimage= modelimage
             # new handling:
             # need to combine task parameter inputs and outlier file input
             if len(outlierfile) != 0:
@@ -363,10 +364,15 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     mask=[mask] 
                 elif type(mask[0]) != list:
                     mask=[mask]
-                if type(modelimage) != list:
-                    modelimage=[modelimage]
-                elif type(modelimage[0]) != list and type(imagename) != str:
-                    modelimage=[modelimage]
+                if type(loc_modelimage) != list:
+                    loc_modelimage=[loc_modelimage]
+                elif type(loc_modelimage[0]) != list and type(imagename) != str:
+                    loc_modelimage=[loc_modelimage]
+                # add extra bracket to correct matching to image
+                elif type(loc_modelimage[0]) != list:
+                     if (type(imagename)==list and len(imagename) < len(loc_modelimage)) or \
+                        (type(imagename)==str and len(loc_modelimage)>1):
+                         loc_modelimage=[loc_modelimage]
                 # now append readoutlier content
                 for indx, name in enumerate(f_imageids): 
                     imageids.append(name)    
@@ -374,11 +380,13 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     phasecenters.append(f_phasecenters[indx])    
                     if newformat:
                         mask.append(f_masks[indx])
-                        modelimage.append(f_modelimages[indx])
+                        #modelimage.append(f_modelimages[indx])
+                        loc_modelimage.append(f_modelimages[indx])
                     else:
                         # append empty string list to match the size of modelimage list
                         if indx!=0:
-                            modelimage.append(f_modelimages[indx])
+                            #modelimage.append(f_modelimages[indx])
+                            loc_modelimage.apend(f_modelimages[indx])
                     
                 nfield=len(imageids)
                 if nfield > 1:
@@ -483,7 +491,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
             else:
                 #imset.makemultifieldmask2(mask,chanslice)
-                imset.makemultifieldmask3(mask,chanslice,newformat)
+                imset.makemultifieldmask3(mask,chanslice,newformat, interactive)
                 maskimage=[]
                 for img in sorted(imset.maskimages):
                     maskimage.append(imset.maskimages[img])
@@ -512,21 +520,25 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             #if not multifield:
             #         imset.convertmodelimage(modelimages=modelimage,
             #                 outputmodel=imagename+'.model')
-	    if (type(modelimage)!=str and type(modelimage)!=list):
+	    if (type(loc_modelimage)!=str and type(loc_modelimage)!=list):
 		    raise Exception,'modelimage must be a string or a list of strings';
-            if modelimage != '' and modelimage != [] and nterms==1:
+            if loc_modelimage != '' and loc_modelimage != [] and nterms==1:
                 if dochaniter:
-                    imset.defineChaniterModelimages(modelimage,j,tmppath)
+                    imset.defineChaniterModelimages(loc_modelimage,j,tmppath)
                 else:
-                    if type(modelimage)== str: 
-                        modelimage=[modelimage] 
-                    if len(imset.imagelist)!= len(modelimage):
-                        raise Exception, "Number of modelimage does not match with number of image field"
+                    if type(loc_modelimage)== str or \
+                       (type(loc_modelimage)==list and len(imset.imagelist)==1 and len(loc_modelimage)>1): 
+                        loc_modelimage=[loc_modelimage]
+                    #if len(imset.imagelist)!= len(modelimage):
+                    #    raise Exception, "Number of modelimage does not match with number of image field"
                     for j in range(len(imset.imagelist)): 
                   # imset.convertmodelimage(modelimages=modelimage,
                   #                outputmodel=imset.imagelist.values()[0]+'.model')
-                        if modelimage[j] != '' and modelimage[j] != []:
-                            imset.convertmodelimage(modelimages=modelimage[j],
+                        #print "modelimage[",j,"]=", modelimage[j]
+                        casalog.post("Use modelimages: "+str(loc_modelimage[j])+" to create a combined modelimage: " \
+                                           +imset.imagelist.values()[j]+".model", 'DEBUG1')
+                        if loc_modelimage[j] != '' and loc_modelimage[j] != []:
+                            imset.convertmodelimage(modelimages=loc_modelimage[j],
                                              outputmodel=imset.imagelist.values()[j]+'.model',imindex=j)
             modelimages=[]
             restoredimage=[]
@@ -535,8 +547,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             fluximage=[]
             for k in range(len(imset.imagelist)):
                 ia.open(imset.imagelist[k])
-                if ((modelimage =='' or modelimage==[]) or \
-                    (type(modelimage)==list and modelimage[k]=='')) and \
+                if ((loc_modelimage =='' or loc_modelimage==[]) or \
+                    (type(loc_modelimage)==list and \
+                     (loc_modelimage[k]=='' or loc_modelimage[k]==[''] or loc_modelimage[k]==[]))) and \
                     multifield:
                     ia.rename(imset.imagelist[k]+'.model',overwrite=True)
                 else:
@@ -695,6 +708,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                     pbcov_image += '.pbcoverage'
                 maskimage = imset.make_mask_from_threshhold(pbcov_image, maskimg) 
             if not imset.skipclean: 
+                #print "imager.clean() starts"
                 imCln.clean(algorithm=localAlgorithm, niter=niter, gain=gain,
                             threshold=qa.quantity(threshold,'mJy'),
                             model=modelimages, residual=residualimage,

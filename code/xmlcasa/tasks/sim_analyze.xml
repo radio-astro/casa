@@ -323,22 +323,25 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     -------------------------------
     Output produced: (not all will always exist, depending on input parameters)
+    To support different runs with different arrays, the names have the
+    configuration name from antennalist appended.
     -------------------------------
-    project.skymodel.flat.regrid.conv = input sky regridded to match the output
-         image, and convolved with the output synthesized beam
+    project.[cfg].skymodel.flat.regrid.conv = input sky regridded to match 
+         the output image, and convolved with the output synthesized beam
 
-    project.image = synthesized image
-    project.flux.pbcoverage = promary beam correction for mosaic image
-    project.residual = residual image after cleaning
-    project.clean.last = parameter file of what parameters were used in the
-         clean task
-    project.psf = synthesized beam calculated from weighted uv distribution
-    project.image.png = diagnostic figure of clean image and residual
-
-    project.fidelity = fidelity image
-    project.analysis.png = diagnostic figure of difference and fidelity
-
-    project.sim_analyze.last = saved input parameters for simdata task
+    project.[cfg].image = synthesized image
+    project.[cfg].flux.pbcoverage = promary beam correction for mosaic image
+    project.[cfg].residual = residual image after cleaning
+    project.[cfg].clean.last = parameter file of what parameters were used in
+          the clean task
+    project.[cfg].psf = synthesized beam calculated from weighted uv 
+          distribution
+    project.[cfg].image.png = diagnostic figure of clean image and residual
+	    
+    project.[cfg].fidelity = fidelity image
+    project.[cfg].analysis.png = diagnostic figure of difference and fidelity
+	    
+    project.[cfg].sim_analyze.last = saved input parameters for simdata task
 
 </example>
 </task>

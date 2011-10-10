@@ -780,30 +780,35 @@ mosaic simulation task:
 
     -------------------------------
     Output produced: (not all will always exist, depending on input parameters)
+    To support different runs with different arrays, the names have the
+    configuration name from antennalist appended.
     -------------------------------
-    project.skymodel = 4d input sky model image (optionally) scaled
-    project.skymodel.flat.regrid.conv = input sky regridded to match the output
-         image, and convolved with the output synthesized beam
-    project.skymodel.png = diagnostic figure of sky model with pointings
 
-    project.ptg.txt = list of mosaic pointings
-    project.quick.psf = psf calculated from uv coverage
-    project.ms = noise-free measurement set
-    project.noisy.ms = corrupted measurement set 
-    project.observe.png = diagnostic figure of uv coverage and visibilities
+    project.[cfg].skymodel = 4d input sky model image (optionally) scaled
+    project.[cfg].skymodel.flat.regrid.conv = input sky regridded to match the
+        output image, and convolved with the output synthesized beam
+    project.[cfg].skymodel.png = diagnostic figure of sky model with pointings
 
-    project.image = synthesized image
-    project.flux.pbcoverage = promary beam correction for mosaic image
-    project.residual = residual image after cleaning
-    project.clean.last = parameter file of what parameters were used in the
-         clean task
-    project.psf = synthesized beam calculated from weighted uv distribution
-    project.image.png = diagnostic figure of clean image and residual
-
-    project.fidelity = fidelity image
-    project.analysis.png = diagnostic figure of difference and fidelity
-
-    project.simdata.last = saved input parameters for simdata task
+    project.[cfg].ptg.txt = list of mosaic pointings
+    project.[cfg].quick.psf = psf calculated from uv coverage
+    project.[cfg].ms = noise-free measurement set
+    project.[cfg].noisy.ms = corrupted measurement set 
+    project.[cfg].observe.png = diagnostic figure of uv coverage and 
+         visibilities
+	    
+    project.[cfg].image = synthesized image
+    project.[cfg].flux.pbcoverage = promary beam correction for mosaic image
+    project.[cfg].residual = residual image after cleaning
+    project.[cfg].clean.last = parameter file of what parameters were used in
+          the clean task
+    project.[cfg].psf = synthesized beam calculated from weighted uv 
+          distribution
+    project.[cfg].image.png = diagnostic figure of clean image and residual
+	    
+    project.[cfg].fidelity = fidelity image
+    project.[cfg].analysis.png = diagnostic figure of difference and fidelity
+	    
+    project.[cfg].simdata.last = saved input parameters for simdata task
 
 </example>
 </task>

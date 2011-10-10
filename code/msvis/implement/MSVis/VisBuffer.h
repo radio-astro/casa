@@ -143,6 +143,13 @@ public:
         return This->channel();
     }
 
+    // virtual Int & nCat() {
+    //     return nCatOK_p ? nCat_p : fillnCat();
+    // }
+    // virtual Int nCat() const {
+    //     return This->nCat();
+    // }
+
     virtual Int & nRow() {
         return nRowOK_p ? nRow_p : fillnRow();
     }
@@ -590,6 +597,9 @@ public:
     virtual void chanAveFlagCube(Cube<Bool>& flagcube, const Int nChanOut,
                          const Bool restoreWeightSpectrum = True);
 
+    // Doesn't do anything if flagcat is degenerate.
+    void chanAveFlagCategory(Array<Bool>& flagcat, const Int nChanOut);
+
     // Form Stokes parameters from correlations
     //  (these are preliminary versions)
     virtual void formStokes();
@@ -799,6 +809,7 @@ private:
     //virtual Vector<Double>& fillLSRFreq();
     virtual Int & fillnChannel();
     virtual Int & fillnCorr();
+  //    virtual Int & fillnCat();
     virtual Int & fillnRow();
     virtual Vector<Int> & fillObservationId();
     virtual MDirection & fillPhaseCenter();
@@ -851,6 +862,7 @@ private:
     Bool msOK_p;
     Bool nChannelOK_p;
     Bool nCorrOK_p;
+  //    Bool nCatOK_p;
     Bool newMS_p;
     Bool nRowOK_p;
     Bool observationIdOK_p;
@@ -905,6 +917,7 @@ private:
     Matrix<CStokesVector> modelVisibility_p;
     Int nChannel_p;
     Int nCorr_p;
+  //    Int nCat_p;
     Int nRow_p;
     Vector<Int> observationId_p;
     MDirection phaseCenter_p;
