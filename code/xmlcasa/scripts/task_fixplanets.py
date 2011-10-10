@@ -134,11 +134,18 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0):
                 thedirme = me.direction(rf='AZELGEO',v0=qa.quantity(thedir[0][0], 'rad'), v1=qa.quantity(thedir[1][0],'rad'))
                 # convert AZEL to J2000 coordinates
                 me.doframe(me.epoch(rf='UTC', v0=qa.quantity(thetime,'s')))
-                tbt.open(vis+'/OBSERVATION')
-                theobs = tbt.getcell('TELESCOPE_NAME',0)
+
+                tbt.open(vis+'/ANTENNA')
+                thepos = tbt.getcell('POSITION',antid)
+                theposref = tbt.getcolkeyword('POSITION', 'MEASINFO')['Ref']
+                theposunits =  tbt.getcolkeyword('POSITION', 'QuantumUnits')
                 tbt.close()
-                casalog.post( "Observatory is " + theobs, 'NORMAL')
-                me.doframe(me.observatory(theobs))
+                casalog.post( "Ref. antenna position is "+str(thepos)+' ('+theposunits[0]+', '+theposunits[1]+', '+theposunits[2]+')('+theposref+')', 'NORMAL')
+                me.doframe(me.position(theposref,
+                                       qa.quantity(thepos[0],theposunits[0]),
+                                       qa.quantity(thepos[1],theposunits[1]),
+                                       qa.quantity(thepos[2],theposunits[2]))
+                           )
                 thedirmemod = me.measure(v=thedirme, rf='J2000')
                 #print thedirmemod
                 thenewra_rad = thedirmemod['m0']['value']
