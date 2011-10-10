@@ -359,7 +359,7 @@ C     the final image by this term.
                                     if(doweightgrid .gt. 0) then
                                        iloc(1)=nx/2+1+ix
                                        iloc(2)=ny/2+1+iy
-                                       weightgrid(iiloc(1),iiloc(2),
+                                       weightgrid(iloc(1),iloc(2),
      $                                  apol,achan)= weightgrid(
      $                                  iloc(1),iloc(2),apol,achan)
      $                               + nweight*sconv2(ix,iy,aconvplane)
