@@ -269,6 +269,8 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
                 if(doSpWeight_p)
                   avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
                 avBuf_p.flagCube()(cor, ochan, outrow) = false;
+                
+                // FLAG_CATEGORY?
             
                 for(Int i = colEnums_p.nelements(); i--;){
                   if(colEnums_p[i] == MS::CORRECTED_DATA)
