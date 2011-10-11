@@ -130,8 +130,8 @@ PMSCacheVolMeter::PMSCacheVolMeter(const MeasurementSet& ms,
       nchan0=0;
       for (uInt j=0;j<s.nelements();++j) {
 	nchan0+=s(j).length();  // unaveraged chan count
-	minchan=min(minchan,s(j).start());
-	maxchan=max(maxchan,s(j).end());
+	minchan=min(minchan,Int(s(j).start()));
+	maxchan=max(maxchan,Int(s(j).end()));
       }
       // Average sees full range of channels 
       nchanA=Int(ceil(Double(maxchan-minchan+1)/ave.channelValue()));
