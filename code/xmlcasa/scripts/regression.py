@@ -35,12 +35,14 @@ import time
 import os
 
 pathname=os.environ.get('CASAPATH').split()[0]
-test=pathname.find('lib')
+libIndex=pathname.find('lib')
 
-if (test !=-1):	
-	scriptpath=pathname+'/lib/python2.5/regressions'
+if (libIndex !=-1):
+    # Copy test scripts from an installed package directory. 
+    scriptpath=pathname+'/lib/python2.6/regressions'
 else:
-	scriptpath=pathname+'/code/xmlcasa/scripts/regressions'
+    # Copy test scripts from the source directory.
+    scriptpath=pathname+'/code/xmlcasa/scripts/regressions'
 
 command='cp '+scriptpath+'/*_regression.py .'
 #command='ls '+scriptpath+'/*_regression.py'
@@ -63,18 +65,18 @@ scriptlist=['G192','H121','L02D','NGC5921','NGC7538','NGC1333','NGC4826','NGC482
 ratedict={'G192': 634.9,'H121': 500.,'L02D': 500.,'NGC5921': 35.1,'NGC7538': 240.3,'NGC1333': 500.,'NGC4826': 662.,'NGC4826C': 760., 'ORION': 500., 'B0319': 5.0,'ORI_SIO_TASK': 74,'IRC_HC3N_TASK': 694., 'IRC_CS_TASK': 694, 'FLS3A_HI':4100., 'COORDSYSTEST':44., 'IMAGEPOLTEST':41., 'IMAGETEST':32., 'IC2233':8051, 'POINTING':1080}
 
 for mysource in scriptlist:
-	execute_script='DO_'+mysource
-	if (eval(execute_script)):
-		try:
-			print 'source ',mysource
-			execfile(str.lower(mysource)+'_regression.py')
-			scriptpass=regstate
-			scriptlog=outfile
-			scripttime=(endTime-startTime)
-			scriptrate=ratedict[mysource]/(endTime-startTime)
-			print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
-		except:
-			print 'Test failed:', sys.exc_info()[0]
+    execute_script='DO_'+mysource
+        if (eval(execute_script)):
+            try:
+                print 'source ',mysource
+                execfile(str.lower(mysource)+'_regression.py')
+                scriptpass=regstate
+                scriptlog=outfile
+                scripttime=(endTime-startTime)
+                scriptrate=ratedict[mysource]/(endTime-startTime)
+                print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
+	    except:
+                print 'Test failed:', sys.exc_info()[0]
 
 regfile.close()
 
