@@ -427,7 +427,7 @@ AnnotationBase::RGB AnnotationBase::getLabelColor() const {
 
 void AnnotationBase::setLineStyle(const LineStyle s) {
 	_linestyle = s;
-	_params[LINESTYLE] = _linestyle;
+	_params[LINESTYLE] = lineStyleToString(_linestyle);
 }
 
 AnnotationBase::LineStyle AnnotationBase::getLineStyle() const {
@@ -481,7 +481,7 @@ uInt AnnotationBase::getFontSize() const {
 
 void AnnotationBase::setFontStyle(const AnnotationBase::FontStyle& fs) {
 	_fontstyle = fs;
-	_params[FONTSTYLE] = _fontstyle;
+	_params[FONTSTYLE] = fontStyleToString(_fontstyle);
 }
 
 AnnotationBase::FontStyle AnnotationBase::getFontStyle() const {
@@ -615,10 +615,6 @@ ostream& AnnotationBase::print(
 	if (params.size() == 0) {
 		return os;
 	}
-	/*
-	map<Keyword, String>::const_iterator bb = params.end();
-	bb--;
-	*/
 	Bool hasLabel = params.find(LABEL) != params.end();
 	for (
 		map<Keyword, String>::const_iterator iter=params.begin();
@@ -640,11 +636,6 @@ ostream& AnnotationBase::print(
 				? "\"" : "";
 			os << keywordToString((Keyword)iter->first)
 				<< "=" << quote << iter->second << quote;
-			/*
-			if (iter != bb) {
-				os << ", ";
-			}
-			*/
 		}
 	}
 	return os;

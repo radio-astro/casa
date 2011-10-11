@@ -699,6 +699,13 @@ int main () {
 			cout << annulus << endl;
 			annulus.setLabel("");
 			cout << annulus << endl;
+			int font_style = annulus.getFontStyle();
+			annulus.setFontStyle(AnnotationBase::ITALIC_BOLD);
+			ostringstream oss;
+			annulus.print(oss);
+			cout << oss.str() << endl;
+
+
 
 
 		}
