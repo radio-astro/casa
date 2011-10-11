@@ -175,9 +175,11 @@ void AnnEllipse::_init(
 	qCenter[0] = Quantity(coords[0], "rad");
 	qCenter[1] = Quantity(coords[1], "rad");
 
+	Quantity relToXAxis = _inputPositionAngle + Quantity(90, "deg");
+
 	WCEllipsoid ellipse(
 		qCenter[0], qCenter[1],
-		_convertedMajorAxis, _convertedMinorAxis, _inputPositionAngle,
+		_convertedMajorAxis, _convertedMinorAxis, relToXAxis,
 		_getDirectionAxes()[0], _getDirectionAxes()[1], getCsys()
 	);
 	_setDirectionRegion(ellipse);

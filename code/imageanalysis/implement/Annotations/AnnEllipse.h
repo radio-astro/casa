@@ -52,6 +52,10 @@ class AnnEllipse: public AnnRegion {
 
 public:
 
+	// <src>positionAngle</src> is defined as the angle between north and the
+	// ellipse major axis.
+	// <group>
+
 	AnnEllipse(
 		const Quantity& xcenter, const Quantity& ycenter,
 		const Quantity& majorAxis,
@@ -83,7 +87,10 @@ public:
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 
+
 	// implicit copy constructor and destructor are fine
+
+	//</group>
 
 	AnnEllipse& operator=(const AnnEllipse& other);
 
