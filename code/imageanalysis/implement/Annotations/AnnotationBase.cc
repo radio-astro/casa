@@ -725,7 +725,7 @@ MDirection AnnotationBase::_directionFromQuantities(
 	}
 	catch (AipsError x) {
 		throw AipsError(
-			String(__FUNCTION__) + "Error converting direction ("
+			_class + "::" + String(__FUNCTION__) + ": Error converting direction ("
 			+ value + ") to MDirection: " + x.getMesg()
 		);
 	}
@@ -783,12 +783,11 @@ void AnnotationBase::_testConvertToPixel() const {
 	Vector<Double> pixel(2);
 	Vector<Double> world(2);
 	Vector<String> units = _csys.worldAxisUnits();
-	Vector<String>::const_iterator unit = units.begin();
 	for (
 		Vector<MDirection>::const_iterator iter = _convertedDirections.begin();
-		iter != _convertedDirections.end(); iter++, unit++
+		iter != _convertedDirections.end(); iter++
 	) {
-		world = iter->getAngle().getValue(*unit);
+		world = iter->getAngle().getValue("rad");
 		if (! _csys.directionCoordinate().toPixel(pixel, world)) {
 			ostringstream oss;
 			oss << "Could not convert world coordinate " << world << "to pixel";

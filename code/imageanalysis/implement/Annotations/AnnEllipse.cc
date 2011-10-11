@@ -175,6 +175,8 @@ void AnnEllipse::_init(
 	qCenter[0] = Quantity(coords[0], "rad");
 	qCenter[1] = Quantity(coords[1], "rad");
 
+	// WCEllipsoid expects the angle to the major axis to be relative to the positive x
+	// axis. Astronomers however measure the position angle relative to north (positive y axis usually).
 	Quantity relToXAxis = _inputPositionAngle + Quantity(90, "deg");
 
 	WCEllipsoid ellipse(
