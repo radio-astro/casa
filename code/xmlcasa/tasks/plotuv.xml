@@ -5,7 +5,7 @@
 	 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 			     file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-  <task type="function" name="plotuv" category="visualization">
+  <task type="function" name="plotuv" category="visualization,information">
     <shortdescription>Plot the baseline distribution</shortdescription>
     <description>
       Plots the selected baselines of vis one field at a time, in kilowavelengths.

@@ -213,6 +213,7 @@ def plotfield(fld, uvplotinfo, debug=False):
     if fldquery:
         fldquery += ' and '
     pl.clf()
+    pl.ioff()
     for d in ddids:
         #print "minmax[%d] = %s" % (d, minmax[d])
         s = uvplotinfo.dd_to_spw[d]
@@ -299,6 +300,7 @@ def plotfield(fld, uvplotinfo, debug=False):
         pl.title(fldtitle)                
     if uvplotinfo.figfile:
         pl.savefig(uvplotinfo.figfile + str(fld) + uvplotinfo.ext)
+    pl.ion()
     return True
 
 class NavField:
