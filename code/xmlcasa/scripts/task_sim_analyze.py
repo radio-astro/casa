@@ -129,6 +129,7 @@ def sim_analyze(
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
         #####################################################################
+        beam_current = False
         if image:
 
             # make sure cell is defined
@@ -325,6 +326,10 @@ def sim_analyze(
                     msg('Primary beam: '+str(beam['major']))
                     ia.setrestoringbeam(beam=beam)
                 ia.done()
+                if sd_only:
+                    beam_current = True
+                    bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+                    bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
                 del beam
 
                 msg('generation of total power image '+tpimage+' complete.')
@@ -337,7 +342,6 @@ def sim_analyze(
 
         outflat_current = False
         convsky_current = False
-        beam_current = False
 
         if image and len(mstoimage) > 0:
 
@@ -567,6 +571,9 @@ def sim_analyze(
             # need MS for showuv and showpsf
             if not image:
                 msfile = fileroot + "/" + project + ".ms"
+            elif sd_only:
+                # imaged and single dish only
+                msfile = tpmstoimage
 #            if sd_only and os.path.exists(sdmsfile):
 #                # use TP ms for UV plot if only SD sim, i.e.,
 #                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)
