@@ -41,6 +41,19 @@ AnnText::AnnText(
 	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
 }
 
+AnnText::AnnText(
+	const Quantity& xPos, const Quantity& yPos,
+	const CoordinateSystem& csys,
+	const String& text
+) : AnnotationBase(TEXT, csys),
+	_inputDirection(Vector<Quantity>(2)),
+	_text(text) {
+	_inputDirection[0] = xPos;
+	_inputDirection[1] = yPos;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+}
+
+
 AnnText& AnnText::operator= (
 	const AnnText& other
 ) {

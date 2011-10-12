@@ -317,13 +317,17 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
       else:
           myf=ipython_globals
 
-      if str(type(value)) != "&lt;type &apos;instance&apos;&gt;" :
-         value = myf['cu'].expandparam(param, value)
-         if(type(value) == numpy.ndarray) :
-            myf[param] = value.tolist()
-         else :
-            myf[param] = value
-         value = myf['cu'].verifyparam({param:value})
+      try :
+         if str(type(value)) != "&lt;type &apos;instance&apos;&gt;" :
+            value = myf['cu'].expandparam(param, value)
+            if(type(value) == numpy.ndarray) :
+               myf[param] = value.tolist()
+            else :
+               myf[param] = value
+            value = myf['cu'].verifyparam({param:value})
+      except Exception, instance:
+         #ignore the exception and just return it unchecked
+         myf[param] = value
       return value
 #
 #

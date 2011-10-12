@@ -129,6 +129,7 @@ def sim_analyze(
         # clean if desired, use noisy image for further calculation if present
         # todo suggest a cell size from psf?
         #####################################################################
+        beam_current = False
         if image:
 
             # make sure cell is defined
@@ -210,11 +211,15 @@ def sim_analyze(
                         if default_mslist.count(ms1_raw):
                             i=default_mslist.index(ms1_raw)
                             default_requested[i]=True
-                    else: # not noisy                        
-                        ms1_noisy=re.split('.ms',ms1)[0]+'.noisy.ms'
+                    else: # not noisy
+                        if ms1.endswith(".sd.ms"):
+                            ms1_noisy=re.split('.sd.ms',ms1)[0]+'.noisy.sd.ms'
+                        else:
+                            ms1_noisy=re.split('.ms',ms1)[0]+'.noisy.ms'
                         if default_mslist.count(ms1_noisy):
                             i=default_mslist.index(ms1_noisy)
                             default_requested[i]=True
+                            if vis == "default": continue
                             msg("You requested "+ms1+" but there is a corrupted (noisy) version of the ms in your project directory - if your intent is to model noisy data you may want to check inputs",priority="warn")
 
                     # check if the ms is tp data or not.
@@ -325,7 +330,12 @@ def sim_analyze(
                     msg('Primary beam: '+str(beam['major']))
                     ia.setrestoringbeam(beam=beam)
                 ia.done()
-                del beam
+                if sd_only:
+                    beam_current = True
+                    bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
+                    bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
+                else: del beam
+                #del beam
 
                 msg('generation of total power image '+tpimage+' complete.')
                 # update TP ms name the for following steps
@@ -337,7 +347,6 @@ def sim_analyze(
 
         outflat_current = False
         convsky_current = False
-        beam_current = False
 
         if image and len(mstoimage) > 0:
 
@@ -567,6 +576,9 @@ def sim_analyze(
             # need MS for showuv and showpsf
             if not image:
                 msfile = fileroot + "/" + project + ".ms"
+            elif sd_only:
+                # imaged and single dish only
+                msfile = tpmstoimage
 #            if sd_only and os.path.exists(sdmsfile):
 #                # use TP ms for UV plot if only SD sim, i.e.,
 #                # image=sd_only=T or (image=F=predict_uv and predict_sd=T)

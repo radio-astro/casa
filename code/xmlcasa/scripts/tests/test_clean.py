@@ -483,6 +483,7 @@ class clean_multifield_test(unittest.TestCase):
     res = None
     img = ['cleantest3a','cleantest3b']
     newoutlierfile='newoutlier4cleantest.txt'
+    inmodel = 'cleantest3in.model'
 
     def setUp(self):
         self.res = None
@@ -530,7 +531,9 @@ class clean_multifield_test(unittest.TestCase):
                         mode="mfs",
                         interpolation="linear",
                         niter=100, psfmode="clark",
-                        mask=[[250, 250, 262, 262], [250, 350, 262, 362]],
+                        #mask=[[250, 250, 262, 262], [250, 350, 262, 362]],
+                        # use (new) CASA region 
+                        mask=['box[ [250pix, 250pix], [262pix, 262pix]]', 'box[ [250pix, 350pix], [262pix, 362pix]]'],
                         imsize=[[512, 512], [512, 512]],
                         cell="0.0001arcsec", 
                         phasecenter=['J2000 05h59m32.03313 23d53m53.9267', 'J2000 05h59m32.03313 23d53m53.9167'],
@@ -577,6 +580,35 @@ class clean_multifield_test(unittest.TestCase):
         self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
                all(stat1['maxpos']==numpy.array([256,356,0,0])))
 
+    def testOutlier3(self):
+        """Clean test3:test task parm input with outlier file and  with user-specified mask and model"""
+        datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/'
+        shutil.copy(datapath+self.newoutlierfile,self.newoutlierfile)
+        shutil.copytree(datapath+self.inmodel, self.inmodel)
+        self.res= clean(vis=self.msfile,
+                        imagename=self.img[0],
+                        outlierfile=self.newoutlierfile,
+                        mode="mfs",
+                        interpolation="linear",
+                        niter=100, psfmode="clark",
+                        mask='box [[250pix, 250pix], [262pix, 262pix]]',
+                        imsize=[512, 512],
+                        cell="0.0001arcsec",
+                        phasecenter='J2000 05h59m32.03313 23d53m53.9267',
+                        weighting="natural",
+                        pbcor=False,
+                        minpb=0.1)
+
+        #print "DONE clean"
+        self.assertEqual(self.res,None)
+        # quick check on the peaks apear at the location as expected
+        for img in self.img:
+            self.assertTrue(os.path.exists(img+".image"))
+        stat0 = imstat(self.img[0]+'.model')
+        stat1 = imstat(self.img[1]+'.model')
+        #self.assertEqual(stat0['max'],stat1['max'])
+        self.assertTrue(all(stat0['maxpos']==numpy.array([256,256,0,0])) and
+               all(stat1['maxpos']==numpy.array([256,356,0,0])))
 
 class clean_multims_test(unittest.TestCase):
     # unit tests for multiple ms inputs

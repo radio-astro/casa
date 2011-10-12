@@ -163,7 +163,6 @@ void AnnPolygon::_init() {
 			preamble + "x and y vectors are not the same length but must be."
 		);
 	}
-
 	Matrix<Quantity> corners(2, _origXPos.size());
 	for (uInt i=0; i<_origXPos.size(); i++) {
 		corners(0, i) = _origXPos[i];
@@ -176,10 +175,8 @@ void AnnPolygon::_init() {
 		xv[i] = coords[0];
 		yv[i] = coords[1];
 	}
-
 	Quantum<Vector<Double> > x(xv, "rad");
 	Quantum<Vector<Double> > y(yv, "rad");
-
 	WCPolygon wpoly(
 		x, y, IPosition(_getDirectionAxes()),
 		getCsys(), RegionType::Abs

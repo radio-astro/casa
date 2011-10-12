@@ -2698,13 +2698,18 @@ void SolvableVisCal::applySNRThreshold() {
     }
   }
   
-  if (nFail>0)
+  if (nFail>0) {
     cout << nFail << " of " << nOk1
-	 << " solutions rejected due to SNR < " << minSNR() 
-	 << " in spw=" << currSpw()
-	 << " at " << MVTime(refTime()/C::day).string(MVTime::YMD,7)
+	 << " solutions flagged due to SNR < " << minSNR() 
+	 << " in spw=" << currSpw();
+    // if multi-chan, report channel
+    if (freqDepPar())
+      cout << " (chan="<<focusChan()<<")";
+
+    cout << " at " << MVTime(refTime()/C::day).string(MVTime::YMD,7)
 	 << endl;
-  
+  }
+
 }
 
 void SolvableVisCal::smooth(Vector<Int>& fields,
@@ -2874,7 +2879,7 @@ void SolvableVisCal::keep(const Int& slot) {
     cs().parOK(currSpw())(blc4,trc4).nonDegenerate(3)= solveParOK();
     cs().parErr(currSpw())(blc4,trc4).nonDegenerate(3)= solveParErr();
     cs().parSNR(currSpw())(blc4,trc4).nonDegenerate(3)= solveParSNR();
-    cs().solutionOK(currSpw())(slot) = anyEQ(solveParOK(),True);
+    cs().solutionOK(currSpw())(slot) = (cs().solutionOK(currSpw())(slot) || anyEQ(solveParOK(),True));
 
 //    if ( cs().solutionOK(currSpw())(slot) != True) 
 //      cout << "soln !OK " << solveCPar().shape() << " : " << solveCPar() << " -> " << solveParOK() << endl;
