@@ -66,17 +66,17 @@ ratedict={'G192': 634.9,'H121': 500.,'L02D': 500.,'NGC5921': 35.1,'NGC7538': 240
 
 for mysource in scriptlist:
     execute_script='DO_'+mysource
-        if (eval(execute_script)):
-            try:
-                print 'source ',mysource
-                execfile(str.lower(mysource)+'_regression.py')
-                scriptpass=regstate
-                scriptlog=outfile
-                scripttime=(endTime-startTime)
-                scriptrate=ratedict[mysource]/(endTime-startTime)
-                print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
-	    except:
-                print 'Test failed:', sys.exc_info()[0]
+    if (eval(execute_script)):
+        try:
+            print 'source ',mysource
+            execfile(str.lower(mysource)+'_regression.py')
+            scriptpass=regstate
+            scriptlog=outfile
+            scripttime=(endTime-startTime)
+            scriptrate=ratedict[mysource]/(endTime-startTime)
+            print >>regfile,'%9s %6s %9s %9s %39s'%(mysource,scriptpass,scripttime,scriptrate,scriptlog)
+        except:
+            print 'Test failed:', sys.exc_info()[0]
 
 regfile.close()
 
