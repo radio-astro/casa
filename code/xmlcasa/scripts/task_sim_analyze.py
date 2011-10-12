@@ -211,11 +211,15 @@ def sim_analyze(
                         if default_mslist.count(ms1_raw):
                             i=default_mslist.index(ms1_raw)
                             default_requested[i]=True
-                    else: # not noisy                        
-                        ms1_noisy=re.split('.ms',ms1)[0]+'.noisy.ms'
+                    else: # not noisy
+                        if ms1.endswith(".sd.ms"):
+                            ms1_noisy=re.split('.sd.ms',ms1)[0]+'.noisy.sd.ms'
+                        else:
+                            ms1_noisy=re.split('.ms',ms1)[0]+'.noisy.ms'
                         if default_mslist.count(ms1_noisy):
                             i=default_mslist.index(ms1_noisy)
                             default_requested[i]=True
+                            if vis == "default": continue
                             msg("You requested "+ms1+" but there is a corrupted (noisy) version of the ms in your project directory - if your intent is to model noisy data you may want to check inputs",priority="warn")
 
                     # check if the ms is tp data or not.
@@ -330,7 +334,8 @@ def sim_analyze(
                     beam_current = True
                     bmarea = beam['major']['value']*beam['minor']['value']*1.1331 #arcsec2
                     bmarea = bmarea/(cell[0]['value']*cell[1]['value']) # bm area in pix
-                del beam
+                else: del beam
+                #del beam
 
                 msg('generation of total power image '+tpimage+' complete.')
                 # update TP ms name the for following steps
