@@ -58,7 +58,7 @@ RegionTextParser::RegionTextParser(
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
-	_fileVersion(-1), _imShape(imShape) {
+	_fileVersion(-1), _imShape(imShape), _regions(0) {
 	String preamble = String(__FUNCTION__) + ": ";
 	RegularFile file(filename);
 	if (! file.exists()) {
@@ -110,7 +110,7 @@ RegionTextParser::RegionTextParser(
 	_currentGlobals(ParamSet()),
 	_lines(Vector<AsciiAnnotationFileLine>(0)),
 	_globalKeysToApply(Vector<AnnotationBase::Keyword>(0)),
-	_fileVersion(-1), _imShape(imShape) {
+	_fileVersion(-1), _imShape(imShape), _regions(0) {
 	String preamble = String(__FUNCTION__) + ": ";
 
 	if (! _csys.hasDirectionCoordinate()) {
@@ -294,10 +294,20 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			// is to be the same as the annotation color
 			newParams[AnnotationBase::LABELCOLOR] = newParams[AnnotationBase::COLOR];
 		}
-		if (_csys.hasSpectralAxis() && spectralParmsUpdated) {
-			qFreqs = _quantitiesFromFrequencyString(
-				currentParamSet[AnnotationBase::RANGE].stringVal, preamble
-			);
+		if (_csys.hasSpectralAxis()) {
+			if(spectralParmsUpdated) {
+				qFreqs = _quantitiesFromFrequencyString(
+					currentParamSet[AnnotationBase::RANGE].stringVal, preamble
+				);
+			}
+			else if(
+				_currentGlobals.find(AnnotationBase::RANGE)
+				== _currentGlobals.end()
+				|| _currentGlobals.at(AnnotationBase::RANGE).freqRange.size() == 0
+			) {
+				// no global frequency range, so use entire freq span
+				qFreqs = Vector<Quantity>(2, Quantity(0));
+			}
 		}
 		ParamSet globalsLessLocal = _currentGlobals;
 		for (
@@ -323,6 +333,8 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 			currentParamSet, annOnly, difference, preamble
 		);
 	}
+	*_log << LogIO::NORMAL << "Combined " << _regions
+		<< " image regions (regions not for annotation only)" << LogIO::POST;
 }
 
 void RegionTextParser::_addLine(const AsciiAnnotationFileLine& line) {
@@ -868,7 +880,7 @@ void RegionTextParser::_createAnnotation(
 			break;
 		default:
 			throw AipsError(
-				"Logic error. Unhandled type "
+				preamble + "Logic error. Unhandled type "
 					+  String::toString(annType) + " in switch statement"
 			);
 	}
@@ -877,15 +889,15 @@ void RegionTextParser::_createAnnotation(
 		*_log << LogIO::WARN << preamble
 			<< "Error converting one or more world coordinates to pixel coordinates. "
 			<< "This could mean, among other things, that (part of) the region or "
-			<< "annotation lies far outside the "
-			<< "image. This region/annotation will be ignored" << LogIO::POST;
+			<< "annotation lies far outside the image. This region/annotation will "
+			<< "be ignored. The related message is: " << x.getMesg() << LogIO::POST;
 		return;
 	}
 	catch (ToLCRegionConversionError x) {
 		*_log << LogIO::WARN << preamble
 			<< "Error converting world region to lattice region which probably indicates "
 			<< "the region lies outside of the image. This region will be ignored."
-			<< LogIO::POST;
+			<< "The related message is: " << x.getMesg() << LogIO::POST;
 		return;
 	}
 	catch (AipsError x) {
@@ -893,6 +905,9 @@ void RegionTextParser::_createAnnotation(
 	}
 	if (annotation->isRegion()) {
 		dynamic_cast<AnnRegion *>(annotation)->setDifference(isDifference);
+		if (! annOnly) {
+			_regions++;
+		}
 	}
 	annotation->setLineWidth(currentParamSet.at(AnnotationBase::LINEWIDTH).intVal);
 	annotation->setLineStyle(

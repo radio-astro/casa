@@ -44,6 +44,22 @@ AnnVector::AnnVector(
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
 }
 
+AnnVector::AnnVector(
+	const Quantity& xStart,
+	const Quantity& yStart,
+	const Quantity& xEnd,
+	const Quantity& yEnd,
+	const CoordinateSystem& csys
+) : AnnotationBase(VECTOR, csys),
+	_inputPoints(Matrix<Quantity>(2, 2)) {
+
+	_inputPoints(0, 0) = xStart;
+	_inputPoints(1, 0) = yStart;
+	_inputPoints(0, 1) = xEnd;
+	_inputPoints(1, 1) = yEnd;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+}
+
 AnnVector& AnnVector::operator= (
 	const AnnVector& other
 ) {

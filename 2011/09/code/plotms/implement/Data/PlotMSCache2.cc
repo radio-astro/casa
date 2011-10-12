@@ -29,6 +29,7 @@
 
 #include <casa/OS/Timer.h>
 #include <casa/OS/HostInfo.h>
+#include <casa/OS/Memory.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/System/Aipsrc.h>
 #include <casa/Utilities/Sort.h>
@@ -70,7 +71,10 @@ PMSCacheVolMeter::PMSCacheVolMeter():
   nAnt_(0) {}
 
 
-PMSCacheVolMeter::PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave):
+PMSCacheVolMeter::PMSCacheVolMeter(const MeasurementSet& ms, 
+				   const PlotMSAveraging ave,
+				   const Vector<Vector<Slice> >& chansel,
+				   const Vector<Vector<Slice> >& corrsel):
   nDDID_(0),
   nPerDDID_(),
   nRowsPerDDID_(),
@@ -103,18 +107,44 @@ PMSCacheVolMeter::PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveragi
 
   for (Int iddid=0;iddid<nDDID_;++iddid) {
     // ncorr is simple (for now, maybe Stokes later?):
-    nCorrPerDDID_(iddid)=nCorrPerPol(polPerDDID(iddid));
-    // nChan depends on averaging:
+    Int ipol=polPerDDID(iddid);
+    // Unselected corr counting
+    nCorrPerDDID_(iddid)=nCorrPerPol(ipol);
+
+    if (corrsel.nelements()>0 && corrsel(ipol).nelements()>0) {
+      Vector<Slice> s(corrsel(ipol));
+      Int ncorr0=0;
+      for (uInt j=0;j<s.nelements();++j) ncorr0+=s(j).length();
+      nCorrPerDDID_(iddid)=ncorr0;
+    }
+    
+    Int ispw=spwPerDDID(iddid);
+    // Unselected channel counting
     Int nchan0=nChanPerSpw(spwPerDDID(iddid));
-    Int nchanA=Int(ceil(Double(nchan0)/ave.channelValue()));
+    Int nchanA= ( chave ? Int(ceil(Double(nchan0)/ave.channelValue())) : nchan0 );
+
+    // Override channel counting if specific selection provided
+    if (chansel.nelements()>0 && chansel(ispw).nelements()>0) {
+      Vector<Slice> s(chansel(ispw));
+      Int minchan(INT_MAX),maxchan(-1);
+      nchan0=0;
+      for (uInt j=0;j<s.nelements();++j) {
+	nchan0+=s(j).length();  // unaveraged chan count
+	minchan=min(minchan,Int(s(j).start()));
+	maxchan=max(maxchan,Int(s(j).end()));
+      }
+      // Average sees full range of channels 
+      nchanA=Int(ceil(Double(maxchan-minchan+1)/ave.channelValue()));
+    }
+    // record channel counting result
     nChanPerDDID_(iddid)= (chave ? nchanA : nchan0);
   }
-  //  cout << "nChanPerDDID_ = " << nChanPerDDID_ << endl;
-  //  cout << "nCorrPerDDID_ = " << nCorrPerDDID_ << endl;
+
   // nAnt:
   nAnt_=msCol.antenna().nrow();
 
 }
+
 
 PMSCacheVolMeter::~PMSCacheVolMeter() {}
 
@@ -193,6 +223,9 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
 	axisVol=sizeof(Double)*sum(nRowsPerDDID_);
 	break;
       case PMS::UVDIST_L:
+      case PMS::UWAVE:
+      case PMS::VWAVE:
+      case PMS::WWAVE:
 	axisVol=sizeof(Double)*sum(nRowsPerDDID_*nChanPerDDID_);
 	break;
       case PMS::AMP:
@@ -235,10 +268,7 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
       totalVol+=axisVol;
       //      cout << " " << PMS::axis(pAi->first) << " volume = " << axisVol << " bytes." << endl;
     } 
-  } // for 
-
-  
-  
+  } // for   
 
   // Add in the plotting mask
   //  (TBD: only if does not reference the flags) 
@@ -249,7 +279,7 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
     if (axesmask(1)) nplmaskPerDDID*=nChanPerDDID_;
     if (axesmask(2)) nplmaskPerDDID*=nRowsPerDDID_;
     if (axesmask(3)) nplmaskPerDDID*=uInt64(nAnt_);
-    Int plmaskVol=sizeof(Bool)*sum(nplmaskPerDDID);
+    uInt64 plmaskVol=sizeof(Bool)*sum(nplmaskPerDDID);
     //    cout << " Collapsed flag (plot mask) volume = " << plmaskVol << " bytes." << endl;
     totalVol+=plmaskVol;
   }
@@ -261,7 +291,8 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
   if (axesmask(1)) nPointsPerDDID*=nChanPerDDID_;
   if (axesmask(2)) nPointsPerDDID*=nRowsPerDDID_;
   if (axesmask(3)) nPointsPerDDID*=uInt64(nAnt_);
-  Int totalPoints=sum(nPointsPerDDID);
+
+  uInt64 totalPoints=sum(nPointsPerDDID);
 
   Double totalVolGB=Double(totalVol)/1.0e9;  // in GB
   Double bytesPerPt=Double(totalVol)/Double(totalPoints);  // bytes/pt
@@ -296,18 +327,37 @@ String PMSCacheVolMeter::evalVolume(map<PMS::Axis,Bool> axes, Vector<Bool> axesm
   if (ignoreFree)
     ss << "Use of 'plotms.ignorefree: T' in the .casarc file may cause" << endl
        << "your machine to swap for very large plots." << endl;
+
+  // Report number of points to be plotted.
   ss << "Data selection will yield a total of " << totalPoints 
-     << " plottable points (flagged and unflagged)." << endl
-     << "The plotms cache will require an estimated " 
+     << " plottable points (flagged and unflagged).";
+
+  // Report require memory
+  ss << endl<< "The plotms cache will require an estimated " 
      << totalVolGB << " GB of memory (" << bytesPerPt << " bytes/point)." << endl
      << "This is " << fracMem << "% of the memory avail. to CASA (" 
      << ((ignoreFree||(hostMemTotalKB<hostMemFreeKB)) ? "total=" : "free=") 
      << hostMemGB << " GB).";
 
-  if (totalVolGB>hostMemGB) {
-    ss << endl << "Insufficient memory!";
-    throw(AipsError(ss.str()));
+  // Trap too many points
+  Bool toomany(False);
+  if (totalPoints>UINT_MAX) {
+    ss << endl
+       << "Too many points!  CASA plotms cannot plot more than " << UINT_MAX << " points.";
+    toomany=True;
   }
+
+  // Trap insufficient memory
+  Bool toomuch(False);
+  if (totalVolGB>hostMemGB) {
+    ss << endl
+       << "Insufficient memory!";
+    toomuch=True;
+  }
+
+  // Throw exception if toomuch or toomany
+  if (toomuch || toomany)
+    throw(AipsError(ss.str()));
 
   return ss.str();
 
@@ -408,6 +458,24 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
   currentX_=axes[0];
   currentY_=axes[1];
 
+  // Trap (currently) unsupported modes
+  {
+    // Forbid antenna-based/baseline-based combination plots, for now
+    Vector<Bool> nAM=netAxesMask(currentX_,currentY_);
+    if (nAM(2)&&nAM(3))
+      throw(AipsError("Plots of antenna-based vs. baseline-based axes not supported ("+
+		      PMS::axis(currentX_)+" and "+PMS::axis(currentY_)));
+
+    // Can't plot averaged weights yet
+    if (averaging_.anyAveraging()) {
+      if (axes[0] == (PMS::WT) |
+	  axes[1] == (PMS::WT)) {
+	throw(AipsError("Sorry, the Wt axes options do not yet support averaging."));
+      }
+    }
+    
+  }
+
   // Check if scr cols present
   Bool scrcolOk(False);
   {
@@ -430,16 +498,7 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
     
     antstanames_=antnames_+String("@")+stanames_;
 
-    vm_.reset(); // ensures assign will work!
-    vm_= PMSCacheVolMeter(ms,averaging_);
   } 	 
-
-  if (averaging_.anyAveraging()) {
-    if (axes[0] == (PMS::WT) |
-	axes[1] == (PMS::WT)) {
-      throw(AipsError("Sorry, the Wt axes options do not yet support averaging."));
-    }
-  }
 
   stringstream ss;
   ss << "Caching for the new plot: " 
@@ -462,9 +521,6 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
 
   // A map that keeps track of all pending loaded axes
   map<PMS::Axis,Bool> pendingLoadAxes;
-
-
-
   
   // Check meta-data.
   for(unsigned int i = 0; i < N_METADATA; i++) {
@@ -474,7 +530,6 @@ void PlotMSCache2::load(const vector<PMS::Axis>& axes,
       loadData.push_back(PMS::DEFAULT_DATACOLUMN);
     }
   }
-
 
   // Ensure all _already-loaded_ axes are in the pending list
   for (Int i= 0;i<PMS::NONE;++i)
@@ -623,12 +678,26 @@ void PlotMSCache2::clear() {
 }
 
 #define PMSC_DELETE(VAR)                                                \
-  for(unsigned int j = 0; j < VAR.size(); j++)  			\
-    if(VAR[j]) delete VAR[j];                                           \
-  VAR.resize(0,True);
+  { \
+  for(unsigned int j = 0; j < VAR.size(); j++) {	\
+    if(VAR[j]) {						  \
+        delete VAR[j];						  \
+    }								  \
+  } \
+  VAR.resize(0,True);				\
+  }
+
+
+  //    cout << VAR.size() << " " << j << " " << PMS::axis(axes[i]) << " " << VAR[j]->nrefs() << " " << VAR[j] << endl; \
+
 
 void PlotMSCache2::release(const vector<PMS::Axis>& axes) {
+
+  //  uInt premem=HostInfo::memoryFree();
+
+  {
     for(unsigned int i = 0; i < axes.size(); i++) {
+
         switch(axes[i]) {
         case PMS::SCAN: scan_.resize(0); break;
         case PMS::FIELD: field_.resize(0); break;
@@ -648,6 +717,9 @@ void PlotMSCache2::release(const vector<PMS::Axis>& axes) {
         case PMS::U: PMSC_DELETE(u_) break;
         case PMS::V: PMSC_DELETE(v_) break;
         case PMS::W: PMSC_DELETE(w_) break;
+        case PMS::UWAVE: PMSC_DELETE(uwave_) break;
+        case PMS::VWAVE: PMSC_DELETE(vwave_) break;
+        case PMS::WWAVE: PMSC_DELETE(wwave_) break;
         case PMS::AMP: PMSC_DELETE(amp_) break;
         case PMS::PHASE: PMSC_DELETE(pha_) break;
         case PMS::REAL: PMSC_DELETE(real_) break;
@@ -679,7 +751,9 @@ void PlotMSCache2::release(const vector<PMS::Axis>& axes) {
             dataLoaded_ = false;
         }
     }
-    
+  }
+  //    uInt postmem=HostInfo::memoryFree();
+  //    cout << "memoryFree = " << premem << " " << postmem << " " << premem-postmem << endl;
     if(!dataLoaded_) nChunk_ = 0;
 }
 
@@ -877,6 +951,9 @@ void PlotMSCache2::increaseChunks(Int nc) {
   u_.resize(nChunk_,False,True);
   v_.resize(nChunk_,False,True);
   w_.resize(nChunk_,False,True);
+  uwave_.resize(nChunk_,False,True);
+  vwave_.resize(nChunk_,False,True);
+  wwave_.resize(nChunk_,False,True);
 
   amp_.resize(nChunk_,False,True);
   pha_.resize(nChunk_,False,True);
@@ -908,6 +985,9 @@ void PlotMSCache2::increaseChunks(Int nc) {
     u_[ic] = new Vector<Double>();
     v_[ic] = new Vector<Double>();
     w_[ic] = new Vector<Double>();
+    uwave_[ic] = new Matrix<Double>();
+    vwave_[ic] = new Matrix<Double>();
+    wwave_[ic] = new Matrix<Double>();
     freq_[ic] = new Vector<Double>();
     vel_[ic] = new Vector<Double>();
     chan_[ic] = new Vector<Int>();
@@ -984,6 +1064,10 @@ void PlotMSCache2::setUpVisIter(const String& msname,
   Vector<Vector<Slice> > chansel;
   Vector<Vector<Slice> > corrsel;
   selection.apply(ms,selms,chansel,corrsel);
+
+  // setup the volume meter
+  vm_.reset();
+  vm_= PMSCacheVolMeter(ms,averaging_,chansel,corrsel);
 
   if (readonly) {
     // Readonly version, for caching
@@ -1272,6 +1356,40 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
       chshapes_(3,chunk)=vi.numberAnt();
       goodChunk_(chunk)=True;
 
+  /*  not yet!
+      // Make "U vs V"-like plots half-plane
+      switch (currentX_) {
+      case PMS::U:
+      case PMS::V:
+      case PMS::W:
+      case PMS::UWAVE:
+      case PMS::VWAVE:
+      case PMS::WWAVE: {
+	switch (currentY_) {
+	case PMS::U:
+	case PMS::V:
+	case PMS::W:
+	case PMS::UWAVE:
+	case PMS::VWAVE:
+	case PMS::WWAVE: {
+	  // Invert sign when U<0
+	  Vector<Double> uM(vb.uvwMat().row(0));
+	  for (uInt iu=0;iu<uM.nelements();++iu)
+	    if (uM(iu)<0.0) {
+	      Vector<Double> uvw(vb.uvwMat().column(iu));
+	      uvw*=-1.0;
+	    }
+	  break;
+	}
+	default: 
+	  break;
+	}
+      }
+      default: 
+	break;
+      }
+  */
+
       for(unsigned int i = 0; i < loadAxes.size(); i++) {
 	//	cout << PMS::axis(loadAxes[i]) << " ";
 	loadAxis(vb, chunk, loadAxes[i], loadData[i]);
@@ -1413,6 +1531,40 @@ void PlotMSCache2::loadChunks(ROVisibilityIterator& vi,
       chshapes_(3,chunk)=vi.numberAnt();
       goodChunk_(chunk)=True;
 
+  /*  not yet
+      // Make "U vs V"-like plots half-plane
+      switch (currentX_) {
+      case PMS::U:
+      case PMS::V:
+      case PMS::W:
+      case PMS::UWAVE:
+      case PMS::VWAVE:
+      case PMS::WWAVE: {
+	switch (currentY_) {
+	case PMS::U:
+	case PMS::V:
+	case PMS::W:
+	case PMS::UWAVE:
+	case PMS::VWAVE:
+	case PMS::WWAVE: {
+	  // Invert sign when U<0
+	  Vector<Double> uM(avb.uvwMat().row(0));
+	  for (uInt iu=0;iu<uM.nelements();++iu)
+	    if (uM(iu)<0.0) {
+	      Vector<Double> uvw(avb.uvwMat().column(iu));
+	      uvw*=-1.0;
+	    }
+	  break;
+	}
+	default: 
+	  break;
+	}
+      }
+      default: 
+	break;
+      }
+  */
+
       for(unsigned int i = 0; i < loadAxes.size(); i++) {
 	loadAxis(avb, chunk, loadAxes[i], loadData[i]);
       }
@@ -1526,7 +1678,10 @@ void PlotMSCache2::discernData(vector<PMS::Axis> loadAxes,
     case PMS::UVDIST_L:
     case PMS::U:
     case PMS::V:
-    case PMS::W: {
+    case PMS::W: 
+    case PMS::UWAVE:
+    case PMS::VWAVE:
+    case PMS::WWAVE: {
       //  cout << "Arranging to load UVW
       vba.setDoUVW();
     }
@@ -1571,6 +1726,9 @@ void PlotMSCache2::setAxesMask(PMS::Axis axis,Vector<Bool>& axismask) {
     axismask(2)=True;
     break;
   case PMS::UVDIST_L:
+  case PMS::UWAVE:
+  case PMS::VWAVE:
+  case PMS::WWAVE:
     axismask(1)=True;
     axismask(2)=True;
     break;
@@ -1767,6 +1925,46 @@ void PlotMSCache2::loadAxis(VisBuffer& vb, Int vbnum, PMS::Axis axis,
 	uvrow.reference(uvdistL_[vbnum]->column(irow));
 	uvrow.set(uvdistM(irow));
 	uvrow*=vb.frequency();
+      }
+      break;
+    }
+
+    case PMS::UWAVE: {
+      Vector<Double> uM(vb.uvwMat().row(0));
+      uM/=C::c;
+      uwave_[vbnum]->resize(vb.nChannel(),vb.nRow());
+      Vector<Double> urow;
+      Vector<Double> freq(vb.frequency());
+      for (Int irow=0;irow<vb.nRow();++irow) {
+	urow.reference(uwave_[vbnum]->column(irow));
+	urow.set(uM(irow));
+	urow*=freq;
+      }
+      break;
+    }
+    case PMS::VWAVE: {
+      Vector<Double> vM(vb.uvwMat().row(1));
+      vM/=C::c;
+      vwave_[vbnum]->resize(vb.nChannel(),vb.nRow());
+      Vector<Double> vrow;
+      Vector<Double> freq(vb.frequency());
+      for (Int irow=0;irow<vb.nRow();++irow) {
+	vrow.reference(vwave_[vbnum]->column(irow));
+	vrow.set(vM(irow));
+	vrow*=freq;
+      }
+      break;
+    }
+    case PMS::WWAVE: {
+      Vector<Double> wM(vb.uvwMat().row(2));
+      wM/=C::c;
+      wwave_[vbnum]->resize(vb.nChannel(),vb.nRow());
+      Vector<Double> wrow;
+      Vector<Double> freq(vb.frequency());
+      for (Int irow=0;irow<vb.nRow();++irow) {
+	wrow.reference(wwave_[vbnum]->column(irow));
+	wrow.set(wM(irow));
+	wrow*=freq;
       }
       break;
     }
@@ -2166,6 +2364,9 @@ unsigned int PlotMSCache2::nPointsForAxis(PMS::Axis axis) const {
     case PMS::U:
     case PMS::V:
     case PMS::W:
+    case PMS::UWAVE:
+    case PMS::VWAVE:
+    case PMS::WWAVE:
     case PMS::FLAG:
     case PMS::WT:
     case PMS::ANTENNA: 
@@ -2194,6 +2395,9 @@ unsigned int PlotMSCache2::nPointsForAxis(PMS::Axis axis) const {
             else if(axis == PMS::U)        n += u_[i]->size();
             else if(axis == PMS::V)        n += v_[i]->size();
             else if(axis == PMS::W)        n += w_[i]->size();
+            else if(axis == PMS::UWAVE)    n += uwave_[i]->size();
+            else if(axis == PMS::VWAVE)    n += vwave_[i]->size();
+            else if(axis == PMS::WWAVE)    n += wwave_[i]->size();
             else if(axis == PMS::FLAG)     n += flag_[i]->size();
             else if(axis == PMS::WT)       n += wt_[i]->size();
             else if(axis == PMS::ANTENNA)  n += antenna_[i]->size();

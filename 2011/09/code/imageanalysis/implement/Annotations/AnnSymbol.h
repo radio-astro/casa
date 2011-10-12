@@ -71,7 +71,7 @@ public:
 		THIN_DIAMOND,
 		VLINE,
 		HLINE,
-		UNKOWN
+		UNKNOWN
 	};
 
 	AnnSymbol(
@@ -79,6 +79,12 @@ public:
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
 		const Char symbolChar
+	);
+
+	AnnSymbol(
+		const Quantity& x, const Quantity& y,
+		const CoordinateSystem& csys,
+		const Symbol symbol
 	);
 
 	// implicit copy constructor and destructor are fine
@@ -91,12 +97,19 @@ public:
 
 	static Symbol charToSymbol(const Char c);
 
+	static Char symbolToChar(const Symbol s);
+
+
 	virtual ostream& print(ostream &os) const;
 
 private:
 	Vector<Quantity> _inputDirection;
 	Symbol _symbol;
 	Char _symbolChar;
+	const static String _class;
+	static map<Char, Symbol> _symbolMap;
+
+	static void _initMap();
 
 };
 

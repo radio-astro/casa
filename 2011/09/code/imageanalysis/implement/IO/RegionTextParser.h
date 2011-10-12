@@ -114,6 +114,7 @@ private:
 	Vector<AnnotationBase::Keyword> _globalKeysToApply;
 	Int _fileVersion;
 	IPosition _imShape;
+	uInt _regions;
 
 	void _parse(const String& contents, const String& fileDesc);
 

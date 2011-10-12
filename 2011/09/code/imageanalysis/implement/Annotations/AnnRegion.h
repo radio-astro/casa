@@ -83,7 +83,6 @@ public:
 	// get the bounding box in the direction coordinate plane in world coordinates.
 	// <src>blc</src> and <src>trc</src> will each have to elements, the zeroth being
 	// the zeroth direction axis value and the first being the first direction axis value.
-	// FIXME make virtual
 	virtual void worldBoundingBox(
 		vector<Quantity>& blc, vector<Quantity>& trc
 	) const = 0;
@@ -191,7 +190,7 @@ private:
 
 	void _checkAndConvertFrequencies();
 
-
+	void _init() const;
 };
 
 // Just need a identifable expection class, compiler can generate implementation implicitly
