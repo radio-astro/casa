@@ -59,6 +59,14 @@ public:
 		const CoordinateSystem& csys
 	);
 
+	AnnLine(
+		const Quantity& xPoint1,
+		const Quantity& yPoint1,
+		const Quantity& xPoint2,
+		const Quantity& yPoint2,
+		const CoordinateSystem& csys
+	);
+
 	// implicit copy constructor and destructor are fine
 
 	AnnLine& operator=(const AnnLine& other);

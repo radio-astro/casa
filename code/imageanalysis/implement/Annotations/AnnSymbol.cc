@@ -28,6 +28,10 @@
 
 namespace casa {
 
+map<Char, AnnSymbol::Symbol> AnnSymbol::_symbolMap;
+
+const String AnnSymbol::_class = "AnnSymbol";
+
 AnnSymbol::AnnSymbol(
 	const Quantity& x, const Quantity& y,
 	const String& dirRefFrameString,
@@ -35,13 +39,32 @@ AnnSymbol::AnnSymbol(
 	const Char symbolChar
 ) : AnnotationBase(SYMBOL, dirRefFrameString, csys),
 	_symbolChar(symbolChar) {
-	if ((_symbol = charToSymbol(symbolChar)) == UNKOWN) {
+	if (_symbolMap.size() == 0) {
+		_initMap();
+	}
+	if ((_symbol = charToSymbol(symbolChar)) == UNKNOWN) {
 		throw AipsError(
 			String(symbolChar)
 				+ " does not correspond to a known symbol"
 		);
 	}
 
+	_inputDirection.resize(2);
+	_inputDirection[0] = x;
+	_inputDirection[1] = y;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+}
+
+AnnSymbol::AnnSymbol(
+	const Quantity& x, const Quantity& y,
+	const CoordinateSystem& csys,
+	const Symbol symbol
+) : AnnotationBase(SYMBOL, csys),
+	_symbol(symbol) {
+	if (_symbolMap.size() == 0) {
+		_initMap();
+	}
+	_symbolChar = symbolToChar(_symbol);
 	_inputDirection.resize(2);
 	_inputDirection[0] = x;
 	_inputDirection[1] = y;
@@ -70,34 +93,55 @@ AnnSymbol::Symbol AnnSymbol::getSymbol() const {
 	return _symbol;
 }
 
+void AnnSymbol::_initMap() {
+	_symbolMap['.'] = POINT;
+	_symbolMap[','] = PIXEL;
+	_symbolMap['o'] = CIRCLE;
+	_symbolMap['v'] = TRIANGLE_DOWN;
+	_symbolMap['^'] = TRIANGLE_UP;
+	_symbolMap['<'] = TRIANGLE_LEFT;
+	_symbolMap['>'] = TRIANGLE_RIGHT;
+	_symbolMap['1'] = TRI_DOWN;
+	_symbolMap['2'] = TRI_UP;
+	_symbolMap['3'] = TRI_LEFT;
+	_symbolMap['4'] = TRI_RIGHT;
+	_symbolMap['s'] = SQUARE;
+	_symbolMap['p'] = PENTAGON;
+	_symbolMap['*'] = STAR;
+	_symbolMap['h'] = HEXAGON1;
+	_symbolMap['H'] = HEXAGON2;
+	_symbolMap['+'] = PLUS;
+	_symbolMap['x'] = X;
+	_symbolMap['D'] = DIAMOND;
+	_symbolMap['d'] = THIN_DIAMOND;
+	_symbolMap['|'] = VLINE;
+	_symbolMap['_'] = HLINE;
+}
+
 AnnSymbol::Symbol AnnSymbol::charToSymbol(
 	const Char c
 ) {
-	switch(c) {
-	case '.': return POINT;
-	case ',': return PIXEL;
-	case 'o': return CIRCLE;
-	case 'v': return TRIANGLE_DOWN;
-	case '^': return TRIANGLE_UP;
-	case '<': return TRIANGLE_LEFT;
-	case '>': return TRIANGLE_RIGHT;
-	case '1': return TRI_DOWN;
-	case '2': return TRI_UP;
-	case '3': return TRI_LEFT;
-	case '4': return TRI_RIGHT;
-	case 's': return SQUARE;
-	case 'p': return PENTAGON;
-	case '*': return STAR;
-	case 'h': return HEXAGON1;
-	case 'H': return HEXAGON2;
-	case '+': return PLUS;
-	case 'x': return X;
-	case 'D': return DIAMOND;
-	case 'd': return THIN_DIAMOND;
-	case '|': return VLINE;
-	case '_': return HLINE;
-	default: return UNKOWN;
+	if (_symbolMap.find(c) != _symbolMap.end()) {
+		return _symbolMap.at(c);
 	}
+	else {
+		return UNKNOWN;
+	}
+}
+
+Char AnnSymbol::symbolToChar(const AnnSymbol::Symbol s) {
+	for (
+		map<Char, Symbol>::const_iterator iter=_symbolMap.begin();
+		iter != _symbolMap.end(); iter++
+	) {
+		if (s == iter->second) {
+			return iter->first;
+		}
+	}
+	ostringstream oss;
+	oss << _class << "::" << __FUNCTION__
+		<< ": Logic error. No corresponding character found for symbol " << s;
+	throw AipsError(oss.str());
 }
 
 ostream& AnnSymbol::print(ostream &os) const {

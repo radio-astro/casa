@@ -52,7 +52,9 @@ public:
 
   // Constructor/Destructor
   PMSCacheVolMeter();
-  PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave);
+  PMSCacheVolMeter(const MeasurementSet& ms, const PlotMSAveraging ave,
+		   const Vector<Vector<Slice> >& chansel,
+		   const Vector<Vector<Slice> >& corrsel);
   ~PMSCacheVolMeter();
 
   // reset (as if default ctor was run)
@@ -195,6 +197,9 @@ public:
   inline Double getU(Int chnk,Int irel) { return *(u_[chnk]->data()+irel); };
   inline Double getV(Int chnk,Int irel) { return *(v_[chnk]->data()+irel); };
   inline Double getW(Int chnk,Int irel) { return *(w_[chnk]->data()+irel); };
+  inline Double getUwave(Int chnk,Int irel) { return *(uwave_[chnk]->data()+irel); };
+  inline Double getVwave(Int chnk,Int irel) { return *(vwave_[chnk]->data()+irel); };
+  inline Double getWwave(Int chnk,Int irel) { return *(wwave_[chnk]->data()+irel); };
 
   inline Double getAmp(Int chnk,Int irel)  { return *(amp_[chnk]->data()+irel); };
   inline Double getPha(Int chnk,Int irel)  { return *(pha_[chnk]->data()+irel); };
@@ -348,7 +353,7 @@ protected:
   PtrBlock<Vector<uInt>*> row_;
   PtrBlock<Vector<Int>*> antenna1_, antenna2_, baseline_;
   PtrBlock<Vector<Double>*> uvdist_, u_, v_, w_;
-  PtrBlock<Matrix<Double>*> uvdistL_;
+  PtrBlock<Matrix<Double>*> uvdistL_, uwave_, vwave_, wwave_;
   PtrBlock<Vector<Double>*> freq_, vel_;
   PtrBlock<Vector<Int>*> chan_;
   PtrBlock<Vector<Int>*> corr_;

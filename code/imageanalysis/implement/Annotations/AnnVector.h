@@ -57,6 +57,15 @@ public:
 		const CoordinateSystem& csys
 	);
 
+	AnnVector(
+		const Quantity& xStart,
+		const Quantity& yStart,
+		const Quantity& xEnd,
+		const Quantity& yEnd,
+		const CoordinateSystem& csys
+	);
+
+
 	// implicit copy constructor and destructor are fine
 
 	AnnVector& operator=(const AnnVector& other);

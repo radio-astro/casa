@@ -552,6 +552,33 @@ int main () {
 				AipsError
 			);
 		}
+		{
+			log << LogIO::NORMAL
+				<< "Test that object construction using Darrell's parameters no longer segfaults"
+				<< LogIO::POST;
+			Vector<Quantity> x(5);
+			Vector<Quantity> y(5);
+			IPosition shape1(4, 400, 400, 1, 1);
+			x[0] = Quantity(4.94799, "rad"); y[0] = Quantity(0.0352309, "rad");
+			x[1] = Quantity(4.94806, "rad"); y[1] = Quantity(0.0352925, "rad");
+			x[2] = Quantity(4.94798, "rad"); y[2] = Quantity(0.0353659, "rad");
+			x[3] = Quantity(4.94786, "rad"); y[3] = Quantity(0.0353345, "rad");
+			x[4] = Quantity(4.94800, "rad"); y[4] = Quantity(0.0353174, "rad");
+			Vector<Stokes::StokesTypes> stokes(1);
+			stokes[0] = Stokes::I;
+			try {
+
+				AnnPolygon poly(
+					x, y,
+					csys, shape1, stokes
+				);
+			}
+			catch (AipsError) {
+				// this will throw an exception but we don't care
+				// we just don't want it to segfault
+			}
+
+		}
 
 	} catch (AipsError x) {
 		cerr << "Caught exception: " << x.getMesg() << endl;

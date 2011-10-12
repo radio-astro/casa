@@ -45,6 +45,22 @@ AnnLine::AnnLine(
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
 }
 
+AnnLine::AnnLine(
+	const Quantity& xPoint1,
+	const Quantity& yPoint1,
+	const Quantity& xPoint2,
+	const Quantity& yPoint2,
+	const CoordinateSystem& csys
+) : AnnotationBase(LINE, csys),
+	_inputPoints(Matrix<Quantity>(2, 2)) {
+
+	_inputPoints(0, 0) = xPoint1;
+	_inputPoints(1, 0) = yPoint1;
+	_inputPoints(0, 1) = xPoint2;
+	_inputPoints(1, 1) = yPoint2;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+}
+
 AnnLine& AnnLine::operator= (
 	const AnnLine& other
 ) {

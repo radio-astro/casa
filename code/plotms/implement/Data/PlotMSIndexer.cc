@@ -356,7 +356,7 @@ bool PlotMSIndexer::colorize(bool doColorize, PMS::Axis colorizeAxis) {
 
 
 void PlotMSIndexer::setUpIndexing() {
-    
+ 
   // Forbid antenna-based/baseline-based combination plots, for now
   //  (e.g., data vs. _antenna-based_ elevation)
   if (plotmscache_->netAxesMask_(2)&&plotmscache_->netAxesMask_(3))
@@ -583,7 +583,7 @@ void PlotMSIndexer::setUpIndexing() {
 
 }
 
-void PlotMSIndexer::setChunk(Int i) const {
+void PlotMSIndexer::setChunk(uInt i) const {
 
   // NB: this method assumes that i>=lasti, for now
 
@@ -606,9 +606,10 @@ void PlotMSIndexer::setChunk(Int i) const {
   currChunk_=cacheChunk_(currSeg_);
   
   // Calculate the offset into the current chunk
-  irel_=i;
   if (currSeg_>0) 
-    irel_-=nCumulPoints_(currSeg_-1);
+    irel_=Int(i-nCumulPoints_(currSeg_-1));
+  else
+    irel_=Int(i);
 
   // Offset into the cache (e.g., non-zero for baseline iteration)
   irel_+=cacheOffset_(currSeg_);
@@ -676,6 +677,15 @@ void PlotMSIndexer::setMethod(PlotMSCache2MemPtr& getmethod,PMS::Axis axis) {
     break;
   case PMS::UVDIST_L:
     getmethod = &PlotMSCache2::getUVDistL;
+    break;
+  case PMS::UWAVE:
+    getmethod = &PlotMSCache2::getUwave;
+    break;
+  case PMS::VWAVE:
+    getmethod = &PlotMSCache2::getVwave;
+    break;
+  case PMS::WWAVE:
+    getmethod = &PlotMSCache2::getWwave;
     break;
 
     // Data
@@ -779,6 +789,9 @@ void PlotMSIndexer::setIndexer(IndexerMethPtr& indexmethod,PMS::Axis axis) {
 
     // chan-,bsln-dep
   case PMS::UVDIST_L:
+  case PMS::UWAVE:
+  case PMS::VWAVE:
+  case PMS::WWAVE:
     indexmethod = &PlotMSIndexer::getIndex0110;
     break;
 
@@ -859,6 +872,9 @@ void PlotMSIndexer::setCollapser(CollapseMethPtr& collmethod,PMS::Axis axis) {
 
     // chan-,bsln-dep
   case PMS::UVDIST_L:
+  case PMS::UWAVE:
+  case PMS::VWAVE:
+  case PMS::WWAVE:
     collmethod = &PlotMSIndexer::collapseMask0110;
     break;
 

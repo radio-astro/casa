@@ -54,6 +54,12 @@ public:
 		const String& text
 	);
 
+	AnnText(
+		const Quantity& xPos, const Quantity& yPos,
+		const CoordinateSystem& csys,
+		const String& text
+	);
+
 	// implicit copy constructor and destructor are fine
 
 	AnnText& operator=(const AnnText& other);

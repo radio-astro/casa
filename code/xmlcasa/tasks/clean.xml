@@ -428,12 +428,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
     <param type="int" name="nterms" subparam="true">
-	    <description>Number of terms used to model the sky frequency dependence (Note: nterms>1 is under development)</description>
+	    <description>Number of Taylor coefficients to model the sky frequency dependence </description>
 	    <value>1</value>
     </param>
 <!--========================================================= -->
     <param type="string" name="reffreq" subparam="true">
-	    <description>Reference frequency for MFS (relevant only if nterms > 1),\'\' defaults to central data-frequency</description>
+	    <description>Reference frequency (nterms > 1),\'\' uses central data-frequency</description>
 	    <value></value>
     </param>
 <!--========================================================= -->
@@ -448,7 +448,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 <!--========================================================= -->
      <param type="bool" name="allowchunk" subparam="false">
-      <description>Whether allowing to divide the big image cube by channel chunks </description>
+      <description>Divide large image cubes into channel chunks for deconvolution </description>
        <value>False</value>
      </param>
 <!--========================================================= -->
@@ -689,7 +689,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                  imagename=['n5921','outlier1','outlier2'] 
        outlierfile --- Text file name which contains image names, sizes, field
                        centers (See 'HINTS ON CLEAN WITH FLANKING FIELDS' below 
-                       for two possible formats.)
+                       for the format of this outlier file.)
        field -- Select fields to image or mosaic.  Use field id(s) or name(s).
                   ['go listobs' to obtain the list id's or names]
                default: ''= all fields
@@ -798,17 +798,19 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   &gt;&gt;&gt; mode='mfs' expandable parameters 
                Make a continuum image from the selected frequency
                channels/range using Multi-frequency synthesis
-               algorithm for wide-band narrow field imaging.  nterms
-               is the number of Taylor terms to be used to model the
+               algorithm for wide-band narrow field imaging.  
+             nterms -- Number of Taylor terms to be used to model the
                frequency dependence of the sky emission.  nterms=1 is
                equivalent to assuming no frequency dependence.
-               nterms=2 is equivalent to the Sault-Wieringa algorithm
-               (AandAS, 1994) reffreq is the reference frequency about
-               which the Taylor expansion is done. If reffreq='' it
-	       defaults to the middle frequency of the selected range.
-	       ** Note that the software implementation of the algorithm
-	       for nterms>1 is still experimental and will be fully
-	       available in a later release **
+               nterms>1 runs the MS-MFS algorithm, and the choice of nterms 
+               should depend on the expected shape and SNR of the spectral
+               structure, across the chosen bandwidth. 
+             reffreq -- The reference frequency (for nterms>1) about which
+                the Taylor expansion is done. reffreq='' defaults to the
+                middle frequency of the selected range. 
+	       ** Note that the software implementation of the MS-MFS algorithm
+	       for nterms>1 is still new, and will be integrated with multi-field, 
+               mosaics, and pbcor, in a future release **
 
   &gt;&gt;&gt; mode='channel', 'velocity', and 'frequency' expandable parameters
                nchan -- Total number of channels in the output image.
@@ -1090,45 +1092,30 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                session) can be used for a new execution.  NOTE: the initial
                clean mask actually used is the union of what is specified in mask
                and &lt;imagename&gt;.mask
-               default: [] (no masking); Possible specification types:
-               (a) Explicit cleanbox pixel ranges example: mask=[110,110,150,145]
-                   = clean region with blc=110,100; trc=150,145 (pixel values)
+               default: [] or '' : no masking; Possible specification types:
+               (a) Cleanboxes, specified using the CASA region format
+                    (http://casaguides.nrao.edu/index.php?title=CASA_Region_Format)
+                    Example : mask='box [ [ 100pix , 130pix] , [120pix, 150pix ] ]'
+                       mask='circle [ [ 120pix , 40pix] ,6pix ]'
+                       mask='circle[[19h58m52.7s,+40d42m06.04s ], 30.0arcsec]'
 		   If used with a spectral cube, it will apply to all channels.
 		   Multiple regions may be specified as a list of pixel ranges.
-		   example : mask=[ [110,110,150,145], [160,160,170,170] ]
-               (b) Filename with cleanbox pixel values in ASCII format.
+                    Example :  mask= ['circle [ [ 120pix , 40pix] ,6pix ]', 
+                                                 'box [ [ 100pix , 130pix] , [120pix, 150pix ] ]' ]
+               (b) Filename with cleanbox shapes defined using the CASA region format.
                    Example: mask='mycleanbox.txt'
-                            &lt;fieldid blc-x blc-y trc-x trc-y&gt; on each line:
-			    Example : 
-                              #boxfile
-                              0 45 66 123 124 
-                              1 23 100 300 340
-		   The first line must contain \'#boxfile\'.
-		   If used with a spectral cube, it will apply to all channels.	    
+                     The file 'mycleanbox.txt' contains : 
+                          box [ [ 100pix , 130pix ] , [ 120pix, 150pix ] ]
+                          circle [ [ 150pix , 150pix] ,10pix ]
+                          rotbox [ [ 60pix , 50pix ] , [ 30pix , 30pix ] , 30deg ]
                (c) Filename for image mask.  Example: mask='myimage.mask'
-                   '' -> no mask
 		   Multiple mask files may be specified.
 		   example : mask=[ 'mask1.mask', 'mask2.mask' ]
                (d) Filename for region specification (e.g. from viewer).
                    Example: mask='myregion.rgn'
                (e) Combinations of the above options.
                    Example: mask=['mycleanbox.txt', 'myimage.mask',
-                                  'myregion.rgn']
-		   (explicit pixel ranges cannot be included in such a list).
-		   -- If including outlier fields:
-		      -- specify a list of masks: mask=['myimage.mask',
-                                                        'myregion.rgn']
-		         The number of entries in this list must match the
-                         number of fields.
-                      -- specify a box-file : mask = 'boxfile.txt' 
-		         Example :
-                            #boxfile
-                            0 45 66 123 124 
-                            1 23 100 300 340
-		         The field index must match the field index in the
-                         outlierfile.
-			 Each field index can have only one mask entry.
-			 Unlisted field indices will get full-field masks.
+                                  'myregion.rgn','circle [ [ 120pix , 40pix] ,6pix ]']
                (f) Threshold on primary-beam.
                    A number between 0 and 1, used as a threshhold of primary
                    beam coverage.  The primary beam coverage map (imagename +
@@ -1137,6 +1124,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                (g) True or False.
                    True: like (f), but use minpb as the number.
                    False: go maskless (and expect trouble).
+            (For masks for multiple fields, please see 'HINTS ON CLEAN WITH FLANKING FIELDS' below)
+
        uvtaper -- Apply additional uv tapering of the visibilities.
                default: uvtaper=False; example: uvtaper=True
 
@@ -1233,6 +1222,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        calready -- if True will create scratch columns if they are 
                not there. And after clean completes the predicted model 
                visibility is from the clean components are written to the ms.
+
+       allowchunk -- Partition the image cube by channel-chunks.
+               default=False;  
+                  False: Major cycle grids all channels.  Minor cycle steps 
+                            through all channels before the next major cycle.
+                  True:  Major and minor cycles are performed one chunk
+                            at a time, and output images cubes are concatenated.
        async -- Run asynchronously 
   	       default = False; do not run asychronously
 
@@ -1241,106 +1237,70 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
                              HINTS ON CLEAN WITH FLANKING FIELDS
 
-              1. Decide if the images will be specified directly in the
-                 inputs or with an outlier file.  For more than a few fields,
-                 an outlier file more convenient.
+              There are two ways of specifying multi-field images for clean.
 
-                (a) Direct Method:
+              (a) Task parameters are used to define the first(main) field.
+                   A text file containing definitions of all additional fields is supplied
+                   to the 'outlierfile' task parameter.  
 
-                    cell = ['1.0arcsec', '1.0arcsec']
-                    imagename = ['M1_0','M1_1','M1_2]
-                    imsize = [[1024,1024],[128,128],[128,128]]
-                    phasecenter = ['J2000 13h27m20.98 43d26m28.0',
-                                   'J2000 13h30m52.159 43d23m08.02',
-                                   'J2000 13h24m08.16 43d09m48.0']
-	
-                (b) Text file method  (in outlier.txt)
-
-                    imagename = 'M1'
-                    outlierfile = 'outlier.txt'
-                      Note : phasecenter, imsize are ignored.
-
-                    Contents of outlier.txt 
-                    C 0   1024 1024   13 27 20.98     43 26 28.0
-                    C 1    128  128   13 30 52.158    43 23 08.00
-                    C 2    128  128   13 24 08.163    43 09 48.00
-
-		    Note : field-ids (the number after 'C') must start from
-                           zero.
-
-                (c) New: use both task inputs and outlier file 
-
-                    imagename = 'M1_0'
-                    outlierfile='newoutlier.txt'
-                    imsize = [1024,1024]
-                    phasecenter = 'J2000 13h27m20.98 43d26m28.0'
-                   
-                    Contents of newoutlier.txt:
-                    imagename = 'M1_1' imsize = [128,128] 
-                    phasecenter = 'J2000 13h30m52.159 43d23m08.02'
-                    imagename = 'M1_2' imsize = [128,128] 
-                    phasecenter = 'J2000 13h24m08.16 43d09m48.0'
-
-                    Note: if the outlier file is written in this format, both 
-                    imagename, imsize, and phasecenter from task inputs and
-                    outlier file in this format are combined. A set of the parameter
-                    for each field must begin with imagename and include imsize and
-                    phasecenter. It can be in single line or spanned to multiple lines.
-                    Also, mask and modelimage for outlier fields can be optionally specified. 
-                 
-                    e.g. using the above example, to include mask and modelimage
-                    for outlier field, M1_1, 
-                      imagename = 'M1_1' imsize = [128,128]
-                      phasecenter = 'J2000 13h30m52.159 43d23m08.02'
-                      mask = 'out1.mask' modelimage = 'out1.model'
-                      imagename = 'M1_2' imsize = [128,128]
-                      phasecenter = 'J2000 13h24m08.16 43d09m48.0'
+                   This outlier file must contain the following parameters per field
+                     Required : imagename, imsize, phasecenter     
+                     Optional : mask, modelimage
+                   The parameter set for each field must begin with 'imagename'. 
+                   Parameters can be listed in a single line or span multiple lines.
                     
+                   Example : Three fields. 
+                    
+                    - Task Inputs :
+                       imagename = 'M1_0'
+                       outlierfile='outlier.txt'
+                       imsize = [1024,1024]
+                       phasecenter = 'J2000 13h27m20.98 43d26m28.0'
+                   
+                    - Contents of outlier file 'outlier.txt':
+                       imagename = 'M1_1' 
+                       imsize = [128,128]
+                       phasecenter = 'J2000 13h30m52.159 43d23m08.02'
+                       mask = ['out1.mask', 'circle[[40pix,40pix],5pix]' ]
+                       modelimage = 'out1.model'
+                       imagename = 'M1_2' 
+                       imsize = [128,128]
+                       phasecenter = 'J2000 13h24m08.16 43d09m48.0'
+                    
+                     In this example, the first field 'M1_0' is defined using
+                     main task parameters. The next two 'M1_1' and 'M1_2' 
+                     are listed in the file 'newoutlier.txt'.  A mask and modelimage 
+                     has been supplied only for the second field (M1_1). Fields
+                     with unspecified masks will use the full field for cleaning.
 
-                In all cases above, the following images will be made:
-                    M1_0.image, M1_1.image, M1_2.image     cleaned images
-                    M1.0.model, M1_1.model, M1_2.model     model images
-                    M1.0.residual, M1_1.residual, M1_2.residual     residual images
 
-		  
+                (b) Specify all fields as lists for each task parameter :
                      
-	      2. Masks for central and flanking fields  
+                    Parameters that support lists for multi-field specification : 
+                      'imagename', 'imsize', 'phasecenter','mask','modelimage'
 
-	         (a)  Specify a list of masks, one for each field.
-		      Note : Number of masks must match the number of fields.
+                    Example : Three fields (same as above)
 
-	           mask = [ [200,200,700,700] , [30,30,70,70], [40,40,80,80] ]
-		   (or)
-	           mask = [ 'image0.mask', 'region1.rgn', 'image2.mask' ]
+                       imagename = ['M1_0','M1_1','M1_2]
+                       imsize = [[1024,1024],[128,128],[128,128]]
+                       phasecenter = ['J2000 13h27m20.98 43d26m28.0',
+                                      'J2000 13h30m52.159 43d23m08.02',
+                                      'J2000 13h24m08.16 43d09m48.0']
+                       mask=[[''], ['out1.mask','circle[[40pix,40pix],5pix]'],['']] 
+                       modelimage=[[''],['out1.model'],['']]
 
+                     Note : All lists must have the same length.
 
-		 (b)  Use a box-file to set masks.
-		      This option allows mask-setting for only specified
-                      fields. 
-	           
-		   mask = 'boxfile.txt'
-	
-		   This text-file contains one entry per field (start with
-                   index 0):
-		        # boxfile
-		        0 200 200 700 700
-			1 30  30  70  70
-			2 40  40  80  80
+                In the examples for both (a) and (b), the following images will be made:
+                M1_0.image, M1_1.image, M1_2.image     cleaned images
+                M1.0.model, M1_1.model, M1_2.model     model images
+                M1.0.residual, M1_1.residual, M1_2.residual     residual images
 
-		    Not all fields need to be specified. Unspecified fields
-                    get full-field masks.
-
-		    If an outlier file is not used, field ids are matched 
-		    with a zero-based image-list. ('field 1 = second field in
-                    list).
-
-		    If an outlier file is used, field-ids in the box-file 
-		    must match field-ids in the outlier-file.
-
-                 (c)  As noted in 1., with the new text file format, 
-                    masks for outlier fields in the outlierfile can be included
-                    in the file 
- 		    
+	  
+             Note : The old outlier-file and boxfile formats have been deprecated. 
+                       They are still supported in CASA 3.3, but will be removed from 
+                       the next release. Please update your scripts. 
+                     
   </example>
 
 </task>

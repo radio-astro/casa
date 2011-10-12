@@ -346,7 +346,6 @@ private:
 	static Bool _isRGB(const RGB& rgb);
 
 	void _testConvertToPixel() const;
-
 };
 
 inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {
@@ -365,8 +364,11 @@ inline ostream &operator<<(ostream& os, const map<AnnotationBase::Keyword, Strin
 	return AnnotationBase::print(os, x);
 };
 
-// Just need a identifable expection class, compiler can generate implementation implicitly
-class WorldToPixelConversionError : public AipsError {};
+// Just need a identifiable exception class for exception handling.
+class WorldToPixelConversionError : public AipsError {
+public:
+	WorldToPixelConversionError(String msg) : AipsError(msg) {}
+};
 
 }
 

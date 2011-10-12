@@ -115,7 +115,7 @@ public:
 	      ANTENNA1,ANTENNA2,BASELINE,ROW,
 	      AMP,PHASE,REAL,IMAG,WT,
 	      FLAG,FLAG_ROW,
-	      UVDIST,UVDIST_L,U,V,W,
+	      UVDIST,UVDIST_L,U,V,W,UWAVE,VWAVE,WWAVE,
 	      AZ0,EL0,HA0,PA0,
 	      ANTENNA,AZIMUTH,ELEVATION,PARANG,
 	      NONE)
@@ -126,7 +126,7 @@ public:
 	      "Antenna1","Antenna2","Baseline","Row",
 	      "Amp","Phase","Real","Imag","Wt",
 	      "Flag","FlagRow",
-	      "UVdist","UVwave","U","V","W",
+	      "UVdist","UVwave","U","V","W","Uwave","Vwave","Wwave",
 	      "Azimuth","Elevation","HourAngle","ParAngle",
 	      "Antenna","Ant-Azimuth","Ant-Elevation","Ant-ParAngle",
 	      "None")
