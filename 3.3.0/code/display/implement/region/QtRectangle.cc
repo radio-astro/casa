@@ -1,0 +1,13 @@
+#include <display/region/QtRectangle.qo.h>
+#include <display/region/QtRegionSource.qo.h>
+
+namespace casa {
+    namespace viewer {
+
+	QtRectangle::QtRectangle( QtRegionSource *factory, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y, bool hold_signals ) :
+				QtRegion("rectangle name",factory, hold_signals), Rectangle(wc, blc_x, blc_y, trc_x, trc_y) { mystate->init( ); }
+
+	QtRectangle::~QtRectangle( ) { }
+
+    }
+}

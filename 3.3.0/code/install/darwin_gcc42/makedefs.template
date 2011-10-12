@@ -1,0 +1,245 @@
+#-----------------------------------------------------------------------------
+# makedefs: Installation-specific definitions used by AIPS++ makefiles
+#-----------------------------------------------------------------------------
+#
+#   Copyright (C) 1997,1998,1999,2000,2003
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# This GNU makefile is read in by the makedefs file in the directory above
+# this.  That "default makedefs" file defines default values of each and
+# every variable required by the AIPS++ makefiles.  Those default values are
+# overridden where necessary by redefining them in this file.
+#
+# Installation instructions:
+#
+#    A template version of this file was copied from the "install/linux_egcs"
+#    directory into the site-specific AIPS++ system directory for this
+#    architecture (this directory) by the 'configure' script as part of the
+#    AIPS++ installation.
+#
+#    While default definitions are made in the default makedefs file in the
+#    directory above this, certain platform-specific redefinitions may have
+#    been included here to help make the installation easier.
+#
+#    You must carefully check all of the definitions made in the default
+#    makedefs file (as well as the redefinitions made here) and if necessary,
+#    correct them by making an overriding definition (or correction) here.
+#    However,
+#
+#                  DO NOT MODIFY THE DEFAULT MAKEDEFS FILE -
+#
+#                         MODIFY THIS FILE INSTEAD
+#
+#    Certain of the defaults in the default makedefs file are expressed in
+#    terms of another default using "recursively expanded" variables (defined
+#    with '=') rather than "simply expanded" (defined with ':=').  For
+#    example the TeX variables are defined in terms of "TEXROOT".  This may
+#    allow this makedefs file to redefine a whole set of variables, for
+#    example all of the TeX variables, simply by redefining one, TEXROOT.
+#    However,
+#
+#           ALWAYS USE "SIMPLY EXPANDED" VARIABLES WITHIN THIS FILE
+#
+#    That is, always use ":=" to make the assignments.
+#
+# Original: 1996/08/30 by Mark Calabretta, ATNF
+# $Id$
+#=============================================================================
+
+#-----------------------------------------------------------------------------
+# This file should work on RedHat Linux 5.2 systems without
+# modification and with a bit of tweaking on RedHat-5.1 system
+# assuming that the additional software (lapack, pgplot etc.)
+# available on the AIPS++ ftp site has been installed. It uses egcs as
+# the compiler for C,C++ and Fortran (ie g77).
+#-----------------------------------------------------------------------------
+
+# Libraries and include paths.
+#-----------------------------------------------------------------------------
+THIRDPARTY := /opt/casa/core2-apple-darwin8/3rd-party
+
+# The C++ compiler.
+#------------------
+C++ROOT := $(THIRDPARTY)
+
+# General external libraries. 
+#---------------------------- 
+
+#PYTHON
+PYTHONVER := 2.5
+PYVERSION := 25
+PYTHONROOT := $(THIRDPARTY)/lib/Python.framework/Versions/$(PYTHONVER)
+PYTHONINCD := $(PYTHONROOT)/include/python$(PYTHONVER)
+PYTHON := $(THIRDPARTY)/bin/pythonw
+PYTHONLIBD := $(PYTHONROOT)
+PYTHONLIB := -F$(THIRDPARTY)/lib -framework Python
+PYTHONDEFS := -DAIPSROOT=\"$(AIPSROOT)\" -DAIPSARCH=\"$(word 2, $(CASAPATH))\" -DAIPSSITE=\"$(word 3, $(CASAPATH))\" -DPYTHONROOT=\"$(PYTHONROOT)\" -DPYTHONVER=\"$(PYTHONVER)\" -DPYVERSION=$(PYVERSION)
+
+
+CCMTOOLSROOT := $(THIRDPARTY)
+COREROOT := $(AIPSARCH)
+
+#
+# these variables go into the setup.py file for building the casac.so. The single quotes (') are important
+# for the setup.py script.
+
+SETUPLIBS := '''$(AIPSARCH)/lib''', '''$(THIRDPARTY)/lib'''
+SETUPPYTHONLIB := 'ATM', 'xerces-c', 'readline'
+SETUPEXTRALINK := '''$(THIRDPARTY)/lib/libCCM_Local_HomeFinder.a''', '''$(THIRDPARTY)/lib/libWX_Utils_types.a''', '/usr/lib/libSystemStubs.a'
+
+LAPACKROOT=$(THIRDPARTY)
+LAPACKLIB := -Wl,-framework,Accelerate
+BLASLIB := -Wl,-framework,Accelerate
+RPFITSROOT := $(THIRDPARTY)
+
+QT4ROOT := $(THIRDPARTY)
+QT4LIBD := $(THIRDPARTY)/lib
+QT4DEFS := -headerpad_max_install_names -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
+QT4INCD := $(QT4ROOT)/mkspecs/macx-g++ $(QT4ROOT)/include/QtCore $(QT4ROOT)/include/QtDBus $(QT4ROOT)/include/QtGui $(QT4ROOT)/include/QtXml $(QT4ROOT)/include
+QT4LIB  :=  -F$(QT4LIBD) -framework QtGui -framework Carbon -framework QtCore -framework QtDBus -framework QtXml -lqwt
+MOC4 :=$(QT4ROOT)/bin/moc -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED -DAIPS_HAS_QWT
+UIC4 :=$(QT4ROOT)/bin/uic
+
+ATMROOT := $(THIRDPARTY)
+
+JAVABIND := /usr/bin
+CPATHROOT := $(AIPSROOT)/java/lib
+JCLASSPATH := $(CPATHROOT)/freehep-j3d.jar:$(CPATHROOT)/jdom.jar:$(CPATHROOT)/jfreechart-1.0.0.jar
+JCLASSPATH += $(JCLASSPATH):$(CPATHROOT)/xml-writer.jar:$(CPATHROOT)/jcommon-1.0.0.jar
+
+JNIROOT := /System/Library/Frameworks/JavaVM.framework
+JNIINCD := $(JNIROOT)/Headers
+JNILIBD :=
+JNILIB := -framework JavaVM
+
+TCLROOT  := $(THIRDPARTY)
+TKROOT  := $(THIRDPARTY)
+CFITSIOROOT := $(THIRDPARTY)
+CFITSIOINCD := $(CFITSIOROOT)/include
+CFITSIOLIBD := $(CFITSIOROOT)/lib
+RPFITSROOT := $(THIRDPARTY)
+PGPLOTROOT := $(THIRDPARTY)
+
+
+CPPSTD   := -DAIPS_STDLIB -DAIPS_BIG_ENDIAN -DAIPS_AUTO_STL -DAIPS_NO_LEA_MALLOC -DAIPS_DARWIN -DMACOSXBUILT -DAIPS_USEMATPLOTLIB -DAIPS_NEEDS_RETHROW
+
+WCSLIBROOT := $(AIPSARCH)
+
+# The fortran library is fully specified to guarentee that we do not
+# link against /usr/lib/libf2c.{a,so}. This can happen if a -L/usr
+# flag appears in the library link path before -L$(F77LIBD) and F77LIB
+# is defined as -lf2c
+#F77LIB   := $(F77ROOT)/gcc-lib/powerpc-apple-darwin7.2.0/3.3/libgcc.a
+
+# FORTRAN compiler flags for system debug/optimized compilations.
+
+
+# FORTRAN compiler.
+# using native g77
+F77ROOT  := $(THIRDPARTY)
+F77 := $(F77ROOT)/bin/gfortran-mp-4.2 -fno-second-underscore
+FC := $(F77)
+F77LIBD  := $(F77ROOT)/lib
+F77LIB := -lgfortran
+
+FCDBG    += -fPIC
+FCOPTLVL := -g -O2
+FCOPT    += -fPIC
+
+# Platform-specific libraries - always added.
+ARCHLIBS := -L$(C++LIBD) -lstdc++ -L$(PYTHONLIBD) $(PYTHONLIB) -L$(CCMTOOLSLIBD) $(CCMTOOLSLIB) -L$(AIPSARCH)/lib -lSystemStubs -L$(WCSLIBD) $(WCSLIB) -lm  -Wl,-framework,Accelerate -L$(F77LIBD) $(F77LIB)
+
+# External libraries required by particular AIPS++ packages.
+#-----------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# Compilation and linkage variables
+#-----------------------------------------------------------------------------
+
+# Preprocessor flags for system debug/optimized compilations.
+CPPSTD   := -DAIPS_STDLIB  -DAIPS_LITTLE_ENDIAN -DAIPS_AUTO_STL -DAIPS_DARWIN -DMACOSXBUILT -DAIPS_USEMATPLOTLIB -DCASACORE_NEEDS_RETHROW -DAIPS_NEEDS_RETHROW -DAIPS_HAS_QWT
+CPPDBG := $(CPPSTD)
+
+
+# C compiler flags for system debug/optimized compilations.
+
+CC       := $(C++ROOT)/bin/gcc
+CSTD    := -DAIPS_DARWIN -Wall -fPIC -pipe
+COPTLVL := -O3
+CPPDBG := $(CPPSTD) -pg
+
+# C++ compiler flags for system debug/optimized compilations.
+C++ := $(C++ROOT)/bin/g++ -Wno-deprecated
+C++OPTLVL := -O2 -mtune=nocona -ftree-vectorize -ffast-math -mfpmath=sse -fasm-blocks
+C++STD    += -dynamic -pipe -fPIC -Wall -Wno-non-template-friend -Woverloaded-virtual -Wcast-align -Wno-comment
+C++DBG    += -g $(C++OPT)
+
+
+# Link flags for system debug/optimized compilations; these are passed to
+# the C++ compiler.
+LDDBG := -g
+LDOPT := $(LDDBG)
+
+LDOPT := -bind_at_load $(LDDBG)
+LDSOPTS := -dynamiclib -undefined dynamic_lookup
+SFXSHAR := dylib
+
+# Object library utilities.
+RANLIB := ranlib
+
+
+# Absolute pathnames of perl-4 and perl-5 executables (if available).
+PERL4 := /usr/bin/perl
+PERL5 := /usr/bin/perl
+
+# TeX, dvips, and MetaFont paths.
+#--------------------------------
+TEXROOT    := /usr/local/teTeX/share
+TEXFONTS   := $(TEXROOT)/texmf.tetex/fonts/tfm//:$(TEXROOT)/texmf.tetex/fonts/type1//:$(TEXROOT)/texmf.local/fonts/map//
+TEXINPUTS  := $(TEXROOT)/texmf.tetex/tex//:$(TEXROOT)/texmf.local/tex//:$(TEXROOT)/texmf.local/web2c//
+TEXPKS     := $(TEXROOT)/texmf.tetex/fonts/pk//:$(TEXROOT)/texmf.local/fonts/map//
+MFINPUTS   := $(TEXROOT)/texmf.tetex/map//
+
+TEXBINROOT := /usr/local/teTeX/bin/powerpc-apple-darwin-current
+TEXFORMATS := $(TEXROOT)/texmf/web2c
+TEXPOOL    := $(TEXROOT)/texmf/web2c
+MFBASES    := $(TEXROOT)/texmf/web2c
+MFPOOL     := $(TEXROOT)/texmf/web2c
+PDFLATEX := $(TEXBINROOT)/pdflatex
+HTLATEX := $(TEXBINROOT)/htlatex
+MAKEINDEX := $(TEXBINROOT)/makeindex
+HTLATEXOPTS := "html,5"
+
+
+# Variables which tell the makefiles what to do and how to do it
+#-----------------------------------------------------------------------------
+# Command for benchmarking the rebuild (usually 'adate -l').
+TIMER := adate -l
+
+# Unset this to defeat document compilation.
+DOCSYS :=
+
+# Unset this to defeat document extraction from C++ sources.
+DOCEXTR :=

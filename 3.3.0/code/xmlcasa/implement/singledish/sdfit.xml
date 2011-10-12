@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/casa/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+ 
+	<tool name="sdfit" module="singledish">
+        <shortdescription>tool for accessing single dish FIT table</shortdescription>
+       
+<code>
+	<include>xmlcasa/singledish/sdfit_forward.h</include>
+<private>
+	#include &lt;xmlcasa/singledish/sdfit_private.h&gt;
+</private>
+</code>
+
+
+ 
+   <method type="constructor" name="sdfit">
+   <shortdescription>Construct a sdfit tool</shortdescription>
+   <input>
+   </input>
+   <returns type="sdfit"/>
+   </method>
+
+   <method type="constructor" name="sdfit">
+   <shortdescription>Construct a sdfit tool</shortdescription>
+   <input>
+      <param type="Object" direction="in" name="other">
+     <description></description>
+     <value></value>
+     </param>
+   </input>
+   <returns type="sdfit"/>
+   </method>
+
+   <method type="function" name="__len__">
+   <shortdescription>Get a number of parameters</shortdescription>
+   <input>
+      <param type="int" direction="in" name="nfits_">
+     <description></description>
+     <value>0</value>
+     </param>
+   </input>
+   <returns type="int"/>
+   </method>
+
+   <method type="function" name="getfixedparameters">
+   <shortdescription>get fixed parameters</shortdescription>
+   <input>
+     <param type="int" direction="in" name="which">
+     <description></description>
+     <value>0</value>
+     </param>
+   </input>
+   <returns type="boolArray"/>
+   </method>
+
+
+   <method type="function" name="getparameters">
+   <shortdescription>get the parameters </shortdescription>
+   <input>
+     <param type="int" direction="in" name="which">
+     <description></description>
+     <value>0</value>
+     </param>
+   </input>
+   <returns type="doubleArray"/>
+   </method>
+                                                                                
+ 
+   <method type="function" name="getfunctions">
+   <shortdescription>get the functions</shortdescription>
+   <input>
+     <param type="int" direction="in" name="which">
+     <description></description>
+     <value>0</value>
+     </param>
+   </input>
+
+   <returns type="stringArray"/>
+   </method>
+
+ 
+   <method type="function" name="getcomponents">
+   <shortdescription>get the component</shortdescription>
+
+   <input>
+     <param type="int" direction="in" name="which">
+     <description></description>
+     <value>0</value>
+     </param>
+   </input>
+
+   <returns type="intArray"/>
+   </method>
+
+   <method type="function" name="getframeinfo">
+   <shortdescription>get the frame info</shortdescription>
+
+   <input>
+     <param type="int" direction="in" name="which">
+     <description></description>
+     <value>0</value>
+     </param>
+   </input>
+   <returns type="stringArray"/>
+   </method>
+
+</tool>
+ 
+</casaxml>
