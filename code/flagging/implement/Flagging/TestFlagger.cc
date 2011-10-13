@@ -54,6 +54,7 @@ LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 // -----------------------------------------------------------------------
 TestFlagger::TestFlagger ()
 {
+	fdh_p = NULL;
 	done();
 }
 
@@ -115,8 +116,9 @@ TestFlagger::configTestFlagger(Record config)
 	// get the parameters to parse
 	// TODO: Check for the existence later....
 	config.get("msname", msname_p);
-	config.get("async", asyncio_p);
-	config.get("parallel", parallel_p);
+	// TODO: active async and parallel later
+//	config.get("async", asyncio_p);
+//	config.get("parallel", parallel_p);
 
 	return true;
 }
@@ -194,7 +196,7 @@ TestFlagger::initFlagDataHandler()
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
-	FlagDataHandler *fdh_p = new FlagDataHandler(msname_p);
+	fdh_p = new FlagDataHandler(msname_p);
 
 	// Open the MS
 	fdh_p->open();
@@ -251,6 +253,11 @@ TestFlagger::initAgents()
 		// TODO: should I check for fdh_p existence here?
 		// Should it call initFlagDataHandler in case it doesn't exist?
 		// call the factory method for each of the agent's records
+		if(not fdh_p){
+			os << LogIO::SEVERE << "FlagDataHandler has not been initialized."
+					<< LogIO::POST;
+			return false;
+		}
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
 
 		// add to list of FlagAgentList

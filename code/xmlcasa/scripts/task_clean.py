@@ -386,7 +386,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         # append empty string list to match the size of modelimage list
                         if indx!=0:
                             #modelimage.append(f_modelimages[indx])
-                            loc_modelimage.apend(f_modelimages[indx])
+                            loc_modelimage.append(f_modelimages[indx])
                     
                 nfield=len(imageids)
                 if nfield > 1:
