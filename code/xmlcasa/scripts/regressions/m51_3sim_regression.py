@@ -233,24 +233,24 @@ m51both_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
 # reference statistic values for simulated image
-refstats = { 'max': 0.1126,
-             'min': -0.032491,
-             'rms': 0.013248,
-             'sigma': 0.012456,
-             'sum': 510.06 }
+refstats = { 'max': 0.12078,
+             'min': -0.022069,
+             'rms': 0.016695,
+             'sigma': 0.014399,
+             'sum': 951.08 }
 
 # reference statistic values for diff image
-diffstats = {'max': 0.053971,
-             'min': -0.049349,
-             'rms': 0.0095375,
-             'sigma': 0.0089992,
-             'sum': 357.14 }
+diffstats = {'max': 0.030648,
+             'min': -0.075413,
+             'rms': 0.0096487,
+             'sigma': 0.0096155,
+             'sum': -90.078 }
 
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
             'max':  1e-2,
-            'min':  5e-2,
+            'min':  1e-2,
             'rms':  1e-2,
             'sigma': 1e-2}
 
