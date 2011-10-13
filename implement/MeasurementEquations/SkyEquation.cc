@@ -67,7 +67,7 @@
 #include <casa/Exceptions/Error.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferAsync.h>
+///////////////#include <msvis/MSVis/VisBufferAsync.h>
 #include <casa/iostream.h>
 
 #include <casa/System/ProgressMeter.h>

@@ -705,6 +705,8 @@ protected:
   // have changed. 
   Bool createFTMachine();
 
+  void openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock);
+
   Bool removeTable(const String& tablename);
   Bool updateSkyModel(const Vector<String>& model,
 		      const String complist);
