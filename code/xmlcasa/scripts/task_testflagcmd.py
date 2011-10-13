@@ -181,9 +181,9 @@ def testflagcmd(
         
         # Parse the configuration for the tool (msname, async, parallel)
         # Create a dictionary with the configuration
-        tfconfig['MSNAME'] = vis
-        tfconfig['ASYNC'] = async
-        tfconfig['PARALLEL'] = parallel
+        tfconfig['msname'] = vis
+        tfconfig['async'] = async
+        tfconfig['parallel'] = parallel
         tfglocal.configTestFlagger(tfconfig)
 
         # Parse the data selection
@@ -2157,7 +2157,10 @@ def getUnion(cmdlist):
     '''Get a dictionary of a union of all selection parameters from a list of lines:
        -> cmdlist is a list of parameters and values
     '''
-        
+    
+    # TODO: remove correlation from the union. Because it's an in-row selection,
+    # it is not handled by MS Selection. It should go as part of the agent specific
+    # data selection parameters
     # Dictionary of parameters to return
     dicpars = {
     'field':'',
@@ -2169,7 +2172,8 @@ def getUnion(cmdlist):
     'intent':'',
     'feed':'',
     'array':'',
-    'uvrange':''
+    'uvrange':'',
+    'observation':''
     }
 
     # Strings for each parameter
@@ -2183,6 +2187,7 @@ def getUnion(cmdlist):
     arrays = ''
     uvs = ''
     spws = ''
+    obs = ''
         
     nrows = cmdlist.__len__()
 
@@ -2241,6 +2246,9 @@ def getUnion(cmdlist):
                 elif xkey == "spw":
                     spws += xval + ','
 
+                elif xkey == "observation":
+                    obs += xval + ','
+
                         
     # Strip out the extra comma at the end
     scans = scans.rstrip(',')
@@ -2253,17 +2261,21 @@ def getUnion(cmdlist):
     arrays = arrays.rstrip(',')
     uvs = uvs.rstrip(',')
     spws = spws.rstrip(',')
+    obs = obs.rstrip(',')
 
     dicpars['scan'] = scans
     dicpars['field'] = fields
     dicpars['antenna'] = ants
     dicpars['timerange'] = times
-    dicpars['correlation'] = corrs
+    # The union of the correlations is all of them always.
+    # Correlations should be handled only by the agents
+    dicpars['correlation'] = ''
     dicpars['intent'] = ints
     dicpars['feed'] = feeds
     dicpars['array'] = arrays
     dicpars['uvrange'] = uvs
     dicpars['spw'] = spws
+    dicpars['observation'] = obs
 
     # Real number of input lines
     # Get the number of occurrences of each parameter
@@ -2282,7 +2294,7 @@ def getUnion(cmdlist):
 def setupAgent(tfglocal,cmdlist,flagbackup,reset):
     ''' for optype = apply '''
         
-    # TO DO: consider the unflag parameter in all modes
+    # TO DO: correlation is to be considered here
     # Read the mode
     # First remove the blank lines from the list (if any)
     blanks = cmdlist.count('\n')
@@ -2361,7 +2373,8 @@ def getLinePars(cmdline, mlist=[]):
     'intent':'',
     'feed':'',
     'array':'',
-    'uvrange':''
+    'uvrange':'',
+    'observation':''
     }
 
     # Strings for each parameter
@@ -2375,6 +2388,7 @@ def getLinePars(cmdline, mlist=[]):
     arrays = ''
     uvs = ''
     spws = ''
+    obs = ''
     modes = ''
 
         
@@ -2430,6 +2444,9 @@ def getLinePars(cmdline, mlist=[]):
             elif xkey == "spw":
                 spws += xval + ','
                 
+            elif xkey == "observation":
+                obs += xval + ','
+
             elif xkey == "mode":
                 # write mode in dictionary
                 modes += xval + ','
@@ -2456,6 +2473,7 @@ def getLinePars(cmdline, mlist=[]):
     arrays = arrays.rstrip(',')
     uvs = uvs.rstrip(',')
     spws = spws.rstrip(',')
+    obs = obs.rstrip(',')
     modes = modes.rstrip(',')
 
     dicpars['mode'] = modes
@@ -2469,6 +2487,7 @@ def getLinePars(cmdline, mlist=[]):
     dicpars['array'] = arrays
     dicpars['uvrange'] = uvs
     dicpars['spw'] = spws
+    dicpars['observation'] = obs
     
     return dicpars
 
