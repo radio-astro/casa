@@ -674,9 +674,12 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
       }
       if(useScratch){
 	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoLocking), Table::Update);
+	itsMS->setMemoryResidentSubtables(MrsEligibility::defaultEligible());
+
       }
       else{
 	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoNoReadLocking), Table::Old);
+	itsMS->setMemoryResidentSubtables(MrsEligibility::defaultEligible());
       }
       // itsImager = new Imager(*itsMS, compress);
       AlwaysAssert(itsMS, AipsError);

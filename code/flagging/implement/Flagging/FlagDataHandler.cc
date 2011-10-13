@@ -623,58 +623,61 @@ FlagDataHandler::generateIterator()
 	}
 	else
 	{
+
+	    throw AipsError ("Not implemented???", __FILE__, __LINE__);
+
 		// Determine columns to be pre-fetched
-		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
-															casa::asyncio::Ant2,
-															casa::asyncio::ArrayId,
-															casa::asyncio::CorrType,
-															casa::asyncio::Feed1,
-															casa::asyncio::Feed2,
-															casa::asyncio::FieldId,
-															casa::asyncio::Flag,
-															casa::asyncio::FlagCube,
-															casa::asyncio::FlagRow,
-															casa::asyncio::ObservationId,
-															casa::asyncio::ObservedCube,
-															casa::asyncio::Freq,
-															casa::asyncio::NChannel,
-															casa::asyncio::NCorr,
-															casa::asyncio::NRow,
-															casa::asyncio::PhaseCenter,
-															casa::asyncio::Scan,
-															casa::asyncio::SpW,
-															casa::asyncio::StateId,
-															casa::asyncio::Time,
-															casa::asyncio::TimeInterval,
-															casa::asyncio::Uvw,-1);
-
-		// Then create and initialize RO Async iterator
-		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-		roVisibilityIterator_p = ROVisibilityIteratorAsync::create(*selectedMeasurementSet_p,prefetchColumns,sortOrder_p,true,timeInterval_p,-1,groupTimeSteps_p);
-
-		// Set the table data manager (ISM and SSM) cache size to the full column size, for
-		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-		if (slurp_p) roVisibilityIterator_p->slurp();
-
-		// Apply channel selection
-		applyChannelSelection(roVisibilityIterator_p);
-
-		// Attach Visibility Buffer to Visibility Iterator
-		if (visibilityBuffer_p) delete visibilityBuffer_p;
-		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
-
-		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
-		// NOTE: We have to do this before starting the flag agents,
-		// otherwise we have some seg. faults related with RegEx parser
-		// which is used when applying the ROVIA modifiers
-		roVisibilityIterator_p->originChunks();
-
-		// Finally, initialize Visibility Write Behind Thread
-		if (vwbt_p) delete vwbt_p;
-		ROVisibilityIteratorAsync * roVisibilityIteratorAsync = (ROVisibilityIteratorAsync*) roVisibilityIterator_p;
-		casa::async::Mutex * mutex = roVisibilityIteratorAsync->getMutex();
-		vwbt_p = new VWBT(rwVisibilityIterator_p,mutex,groupTimeSteps_p);
-		vwbt_p->start();
+//		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
+//															casa::asyncio::Ant2,
+//															casa::asyncio::ArrayId,
+//															casa::asyncio::CorrType,
+//															casa::asyncio::Feed1,
+//															casa::asyncio::Feed2,
+//															casa::asyncio::FieldId,
+//															casa::asyncio::Flag,
+//															casa::asyncio::FlagCube,
+//															casa::asyncio::FlagRow,
+//															casa::asyncio::ObservationId,
+//															casa::asyncio::ObservedCube,
+//															casa::asyncio::Freq,
+//															casa::asyncio::NChannel,
+//															casa::asyncio::NCorr,
+//															casa::asyncio::NRow,
+//															casa::asyncio::PhaseCenter,
+//															casa::asyncio::Scan,
+//															casa::asyncio::SpW,
+//															casa::asyncio::StateId,
+//															casa::asyncio::Time,
+//															casa::asyncio::TimeInterval,
+//															casa::asyncio::Uvw,-1);
+//
+//		// Then create and initialize RO Async iterator
+//		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+//		roVisibilityIterator_p = ROVisibilityIteratorAsync::create(*selectedMeasurementSet_p,prefetchColumns,sortOrder_p,true,timeInterval_p,-1,groupTimeSteps_p);
+//
+//		// Set the table data manager (ISM and SSM) cache size to the full column size, for
+//		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+//		if (slurp_p) roVisibilityIterator_p->slurp();
+//
+//		// Apply channel selection
+//		applyChannelSelection(roVisibilityIterator_p);
+//
+//		// Attach Visibility Buffer to Visibility Iterator
+//		if (visibilityBuffer_p) delete visibilityBuffer_p;
+//		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+//
+//		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
+//		// NOTE: We have to do this before starting the flag agents,
+//		// otherwise we have some seg. faults related with RegEx parser
+//		// which is used when applying the ROVIA modifiers
+//		roVisibilityIterator_p->originChunks();
+//
+//		// Finally, initialize Visibility Write Behind Thread
+//		if (vwbt_p) delete vwbt_p;
+//		ROVisibilityIteratorAsync * roVisibilityIteratorAsync = (ROVisibilityIteratorAsync*) roVisibilityIterator_p;
+//		casa::async::Mutex * mutex = roVisibilityIteratorAsync->getMutex();
+//		vwbt_p = new VWBT(rwVisibilityIterator_p,mutex,groupTimeSteps_p);
+//		vwbt_p->start();
 
 	}
 

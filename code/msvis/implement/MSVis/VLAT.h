@@ -30,14 +30,20 @@
 #define VLAT_H_
 
 #include "AsynchronousTools.h"
+using casa::async::Mutex;
+
 #include "UtilJ.h"
 using casa::utilj::ThreadTimes;
 using casa::utilj::DeltaThreadTimes;
-#include "VisBuffer.h"
-#include "VisibilityIterator.h"
-#include "VisibilityIteratorAsync.h"
+
+#include <msvis/MSVis/AsynchronousInterface.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisibilityIteratorImplAsync.h>
+
 using casa::asyncio::RoviaModifiers;
-#include "VisBufferAsync.h"
+
+#include <msvis/MSVis/VisBufferAsync.h>
 #include <boost/tuple/tuple.hpp>
 
 #include <memory>
@@ -50,288 +56,14 @@ using namespace casa::async;
 
 namespace casa {
 
+template<typename T> class Block;
+class MeasurementSet;
 class VisBuffer;
 
-// <summary>
-//    VlaDatum is a single elemement in the VlaDatum buffer ring used to support the
-//    ROVisibilityIteratorAsync.
-// </summary>
+namespace asyncio {
 
-// <use visibility=local>
-
-// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
-// </reviewed>
-
-// <prerequisite>
-//   <li> VisBuffer
-//   <li> VisBufferAsync
-//   <li> ROVisibilityIteratorAsync
-//   <li> VlaData
-//   <li> VLAT
-// </prerequisite>
-//
-// <etymology>
-//    VlaDatum is the quantum of data associated with a single position of the visibility
-//    look-ahead scheme.
-// </etymology>
-//
-// <synopsis>
-//    VlaDatum is a single buffer for data produced by the VLAT thread and consumed by the
-//    main thread.  A collection of VlaDatum objects is organized as a buffer ring in a
-//    VlaData object.
-//
-//    A VlaDatum object is responsible for maintaining its state as well as containing the set
-//    of data accessed from a single position of a ROVisibilityIterator.  It contains a
-//    VisibilityBufferAsync object to hold the data that will be used by the main thread; other
-//    data is maintained in member variables.
-//
-//    VlaDatum has no concurrency mechanisms built in it; that is handled by the VlaData object.
-//    It does support a set of states that indicate its current use:
-//        Empty -> Filling -> Full -> Reading -> Empty.
-//    Changing state is accomplished by the methods fillStart, fillComplete, readStart and readComplete.
-// </synopsis>
-//
-// <example>
-// </example>
-//
-// <motivation>
-// </motivation>
-//
-// <thrown>
-//    <li>AipsError for unhandleable errors
-// </thrown>
-//
-// <todo asof="yyyy/mm/dd">
-// </todo>
-
-class SubChunkPair : public pair<Int, Int>{
-public:
-
-    SubChunkPair () : pair<Int,Int> (-1, -1) {}
-    SubChunkPair (Int a, Int b) : pair<Int,Int> (a,b) {}
-
-    Bool operator== (const SubChunkPair & other){
-        return first == other.first && second == other.second;
-    }
-
-    Bool operator< (const SubChunkPair & other){
-        return first < other.first ||
-               (first == other.first && second < other.second);
-    }
-
-    String toString () const
-    {
-        return utilj::format ("(%d,%d)", first, second);
-    }
-
-};
-
-class VlaDatum {
-
-public:
-
-	typedef enum {Empty, Filling, Full, Reading} State;
-
-	VlaDatum (Int chunkNumber, Int subChunkNumber);
-	~VlaDatum ();
-
-	SubChunkPair  getSubChunkPair () const;
-    VisBufferAsync * getVisBuffer ();
-    //const VisBufferAsync * getVisBuffer () const;
-    Bool isSubChunk (Int chunkNumber, Int subchunkNumber) const;
-
-	VisBufferAsync * releaseVisBufferAsync ();
-	void reset ();
-
-protected:
-
-private:
-
-	// Add: --> Cache of values normally obtained from MSIter
-
-	Int              chunkNumber_p;
-	Int              subChunkNumber_p;
-	VisBufferAsync * visBuffer_p;
-
-	// Illegal operations
-
-	VlaDatum & operator= (const VlaDatum & other);
-
-};
-
-class VLAT;
-
-// <summary>
-//    The VlaData class is a buffer ring used to support the communication between
-//    the visiblity lookahead thread (VLAT) and the main application thread.  It
-//    implements the required concurrency control to support this communication.
-// </summary>
-
-// <use visibility=local>
-
-// <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
-// </reviewed>
-
-// <prerequisite>
-//   <li> VisBuffer
-//   <li> VisBufferAsync
-//   <li> ROVisibilityIteratorAsync
-//   <li> VlaData
-//   <li> VLAT
-// </prerequisite>
-//
-// <etymology>
-//    VlaData is the entire collection of visibility look-ahead data currently (or potentially)
-//    shared between the lookahead and main threads.
-// </etymology>
-//
-// <synopsis>
-//    The VlaData object supports the sharing of information between the VLAT look ahead thread and
-//    the main thread.  It contains a buffer ring of VlaDatum objects which each hold all of the
-//    data that is normally access by a position of a ROVisibiltyIterator.  Other data that is shared
-//    or communicated between the two threads is also managed by VlaData.
-//
-//    A single mutex (member variable mutex_p) is used to protect data that is shared between the
-//    two threads.  In addition there is a single PThreads condition variable, vlaDataChanged_p used
-//    to allow either thread to wait for the other to change the state of VlaData object.
-//
-//    Buffer ring concurrency has two levels: the mutex protecting VlaData and the state of the
-//    VlaDatum object.  Whenever a free buffer (VlaDatum object) is available the VLAT thread will
-//    fill it with the data from the next position of the ROVisibilityIterator; a buffer is free for
-//    filling when it is in the Empty state.  Before the VLAT fills a buffer it must call fillStart;
-//    this method will block the caller until the next buffer in the ring becomes free; as a side effect
-//    the buffer's state becomes Filling.  After fillStart is complete, the VLAT owns the buffer.
-//    When the VLAT is done with the buffer it calls fillComplete to relinquish the buffer; this causes
-//    the buffer state to change from Filling to Full.
-//
-//    The main thread calls readStart to get the next filled buffer; the main thread is blocked until
-//    the a filled buffer is available.  When the full buffer is ready its state is changed to Reading
-//    and readStart returns.  The VLAT thread will not access the buffer while the main thread is reading.
-//    The read operation is terminated by calling readComplete; this changes the buffer state to Empty and
-//    does not block the main thread except potentially to acquire the mutex.
-//
-//    The concurrency scheme is fairly sound except for the possibility of low-level data sharing through
-//    CASA data structures.  Some of the CASA containers (e.g., Array<T>) can potentially share storage
-//    although it appears that normal operation they do not.  Some problems have been encountered with
-//    objects that share data via reference-counted pointers.  For instance, objects derived from
-//    MeasBase<T,U> (e.g., MDirection, MPosition, MEpoch, etc.) share the object that serves as the
-//    frame of reference for the measurement; only by converting the object to text and back again can
-//    a user easily obtain a copy which does not share values with another.  It is possible that other
-//    objects deep many layers down a complex object may still be waiting to trip up VlaData's
-//    concurrency scheme.
-//
-//    On unusual interaction mediated by VlaData occurs when it is necessary to reset the visibility
-//    iterator back to the start of a MeasurementSet.  This usually happens either at the start of the MS
-//    sweep (e.g., to reset the row blocking factor of the iterator) or at the end (e.g., to make an
-//    additional pass through the MS).  The main thread requests a reset of the VI and then is blocked
-//    until the VI is reset.  The sweepTerminationRequested_p variable is set to true; when the VLAT
-//    discovers that this variable is true it resets the buffer ring, repositions its VI to the start
-//    of the MS and then informs the blocked main thread by setting viResetComplete to true and
-//    signalling vlaDataChanged_p.
-// </synopsis>
-//
-// <example>
-// </example>
-//
-// <motivation>
-// </motivation>
-//
-// <thrown>
-//    <li> AipsError
-// </thrown>
-//
-// <todo asof="yyyy/mm/dd">
-// </todo>
-
-class VlaData {
-
-public:
-
-	VlaData (Int maxNBuffers);
-	~VlaData ();
-
-	void addModifier (asyncio::RoviaModifier * modifier);
-	void fillComplete (VlaDatum * datum);
-	VlaDatum * fillStart (Int chunkNumber, Int subChunkNumber);
-	asyncio::ChannelSelection getChannelSelection () const;
-	void initialize ();
-	void insertValidChunk (Int chunkNumber);
-	void insertValidSubChunk (Int chunkNumber, Int subChunkNumber);
-	Bool isSweepTerminationRequested () const;
-	Bool isValidChunk (Int chunkNumber) const;
-	Bool isValidSubChunk (Int chunkNumber, Int subChunkNumber) const;
-	void readComplete (Int chunkNumber, Int subChunkNumber);
-	VisBufferAsync * readStart (Int chunkNumber, Int subChunkNumber);
-    void requestViReset ();
-	void setNoMoreData ();
-	void storeChannelSelection (const asyncio::ChannelSelection & channelSelection);
-    void terminateLookahead ();
-	pair<Bool,RoviaModifiers> waitForViReset ();
-
-	static void debugBlock ();
-	static void debugUnblock ();
-
-	static Bool loggingInitialized_p;
-	static Int logLevel_p;
-
-	casa::async::Mutex * getMutex() {return &vlaDataMutex_p;};
-
-protected:
-
-private:
-
-    typedef queue<VlaDatum *> Data;
-    typedef queue<Int> ValidChunks;
-    typedef queue<SubChunkPair> ValidSubChunks;
-
-    asyncio::ChannelSelection channelSelection_p; // last channels selected for the VI in use
-	Data       data_p;       // Buffer queue
-    ThreadTimes      fill1_p;
-    ThreadTimes      fill2_p;
-    ThreadTimes      fill3_p;
-    DeltaThreadTimes fillCycle_p;
-    DeltaThreadTimes fillOperate_p;
-    DeltaThreadTimes fillWait_p;
-    volatile Bool lookaheadTerminationRequested_p;
-    const Int MaxNBuffers_p;
-    ThreadTimes      read1_p;
-    ThreadTimes      read2_p;
-    ThreadTimes      read3_p;
-    DeltaThreadTimes readCycle_p;
-    DeltaThreadTimes readOperate_p;
-    DeltaThreadTimes readWait_p;
-	asyncio::RoviaModifiers roviaModifiers_p;
-    volatile Bool sweepTerminationRequested_p;
-    ThreadTimes timeStart_p;
-    ThreadTimes timeStop_p;
-	volatile Bool viResetRequested_p;
-    volatile Bool viResetComplete_p;
-	mutable ValidChunks validChunks_p;       // Queue of valid chunk numbers
-	mutable ValidSubChunks validSubChunks_p; // Queue of valid subchunk pairs
-	mutable Condition vlaDataChanged_p;
-	mutable casa::async::Mutex vlaDataMutex_p;
-
-    Int clock (Int arg, Int base);
-    String makeReport ();
-
-    void resetBufferData ();
-    Bool statsEnabled () const;
-	void terminateSweep ();
-
-	//// static Semaphore debugBlockSemaphore_p; // used to block a thread for debugging
-
-	static Bool initializeLogging ();
-
-	// Illegal operations
-
-	VlaData (const VlaData & other);
-	VlaData & operator= (const VlaData & other);
-
-
-};
-
-class MeasurementSet;
-template<typename T> class Block;
+class AsynchronousInterface;
+class InterfaceController;
 
 // VlatFunctor is an abstract class for functor objects used to encapsulate the various
 // filling methods (e.g., fillVis, fillAnt1, etc.).  This allows the various functions
@@ -345,28 +77,28 @@ class VlatFunctor {
 
 public:
 
-	VlatFunctor (Int precedence = 0)
-	: id_p (casa::asyncio::N_PrefetchColumnIds), precedence_p (precedence)
-	{}
-	virtual ~VlatFunctor () {}
+    VlatFunctor (Int precedence = 0)
+    : id_p (VisBufferComponents::N_VisBufferComponents), precedence_p (precedence)
+    {}
+    virtual ~VlatFunctor () {}
 
-	virtual void operator() (VisBuffer *) = 0;
-	virtual VlatFunctor * clone () = 0;
+    virtual void operator() (VisBuffer *) = 0;
+    virtual VlatFunctor * clone () = 0;
 
-	casa::asyncio::PrefetchColumnIds getId () const { return id_p;}
-	void setId (casa::asyncio::PrefetchColumnIds id) { id_p = id;}
-	void setPrecedence (Int precedence) { precedence_p = precedence; }
+    VisBufferComponents::EnumType getId () const { return id_p;}
+    void setId (VisBufferComponents::EnumType id) { id_p = id;}
+    void setPrecedence (Int precedence) { precedence_p = precedence; }
 
-	static Bool byDecreasingPrecedence (const VlatFunctor * a, const VlatFunctor * b)
-	{   // First by increasing precedence and then by decreasing id (make deterministic)
-	    Bool result = (a->precedence_p > b->precedence_p) ||
-	                  (a->precedence_p == b->precedence_p && a->id_p < b->id_p);
-	    return result;
-	}
+    static Bool byDecreasingPrecedence (const VlatFunctor * a, const VlatFunctor * b)
+    {   // First by increasing precedence and then by decreasing id (make deterministic)
+        Bool result = (a->precedence_p > b->precedence_p) ||
+                      (a->precedence_p == b->precedence_p && a->id_p < b->id_p);
+        return result;
+    }
 private:
 
-	casa::asyncio::PrefetchColumnIds id_p;
-	Int precedence_p;
+    VisBufferComponents::EnumType id_p;
+    Int precedence_p;
 
 };
 
@@ -375,17 +107,17 @@ class VlatFunctor0 : public VlatFunctor {
 
 public:
 
-	typedef Ret (VbType::* Nullary) ();
+    typedef Ret (VbType::* Nullary) ();
 
-	VlatFunctor0 (Nullary nullary, Int precedence = 0) : VlatFunctor (precedence), f_p (nullary) {}
-	virtual ~VlatFunctor0 () {}
+    VlatFunctor0 (Nullary nullary, Int precedence = 0) : VlatFunctor (precedence), f_p (nullary) {}
+    virtual ~VlatFunctor0 () {}
 
-	void operator() (VisBuffer * c) { (dynamic_cast<VbType *> (c)->*f_p)(); }
-	virtual VlatFunctor * clone () { return new VlatFunctor0 (* this); }
+    void operator() (VisBuffer * c) { (dynamic_cast<VbType *> (c)->*f_p)(); }
+    virtual VlatFunctor * clone () { return new VlatFunctor0 (* this); }
 
 private:
 
-	Nullary f_p;
+    Nullary f_p;
 };
 
 template <typename Ret, typename VbType>
@@ -397,18 +129,18 @@ class VlatFunctor1 : public VlatFunctor {
 
 public:
 
-	typedef Ret (VisBuffer::* Unary) (Arg);
+    typedef Ret (VisBuffer::* Unary) (Arg);
 
-	VlatFunctor1 (Unary unary, Arg arg, Int precedence = 0) : VlatFunctor (precedence) { f_p = unary; arg_p = arg;}
-	virtual ~VlatFunctor1 () {}
+    VlatFunctor1 (Unary unary, Arg arg, Int precedence = 0) : VlatFunctor (precedence) { f_p = unary; arg_p = arg;}
+    virtual ~VlatFunctor1 () {}
 
-	void operator() (VisBuffer * c) { (c->*f_p)(arg_p); }
-	virtual VlatFunctor * clone () { return new VlatFunctor1 (* this); }
+    void operator() (VisBuffer * c) { (c->*f_p)(arg_p); }
+    virtual VlatFunctor * clone () { return new VlatFunctor1 (* this); }
 
 private:
 
-	Unary f_p;
-	Arg arg_p;
+    Unary f_p;
+    Arg arg_p;
 };
 
 template <typename Ret, typename Arg>
@@ -485,95 +217,141 @@ class VLAT : public casa::async::Thread {
 
 public:
 
-	VLAT (VlaData * vlaData);
-	~VLAT ();
+    VLAT (AsynchronousInterface *);
+    ~VLAT ();
 
-	void clearFillTerminationRequest ();
-	void initialize (const ROVisibilityIterator & rovi);
-	void initialize (const MeasurementSet & ms,
-			         const Block<Int> & sortColumns,
-                     Double timeInterval=0);
-	void initialize (const MeasurementSet & ms,
-			         const Block<Int> & sortColumns,
-	                 const Bool addDefaultSortCols,
-	                 Double timeInterval=0);
-	void initialize (const Block<MeasurementSet> & mss,
-	                 const Block<Int> & sortColumns,
-	                 Double timeInterval=0);
-	void initialize (const Block<MeasurementSet> & mss,
-	                 const Block<Int> & sortColumns,
-	                 const Bool addDefaultSortCols,
-	                 Double timeInterval=0);
-	Bool isTerminated () const;
-	void setModifiers (asyncio::RoviaModifiers & modifiers);
-	void setPrefetchColumns (const ROVisibilityIteratorAsync::PrefetchColumns & prefetchColumns);
-	void requestSweepTermination ();
-	void terminate ();
-
-	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
-	void setRowBlocking();
-	bool getRowBlocking() {return rowBlocking_p;}
+    void clearFillTerminationRequest ();
+    void initialize (const ROVisibilityIterator & rovi);
+    void initialize (const Block<MeasurementSet> & mss,
+                     const Block<Int> & sortColumns,
+                     Bool addDefaultSortCols,
+                     Double timeInterval,
+                     Bool writable);
+    Bool isTerminated () const;
+    void setModifiers (RoviaModifiers & modifiers);
+    void setPrefetchColumns (const PrefetchColumns & prefetchColumns);
+    void requestSweepTermination ();
+    void terminate ();
 
 protected:
 
-	class FillerDictionary : public map<casa::asyncio::PrefetchColumnIds, VlatFunctor *> {
+    class FillerDictionary : public map<VisBufferComponents::EnumType, VlatFunctor *> {
 
-	public:
-	    void add (casa::asyncio::PrefetchColumnIds id, VlatFunctor * f)
-	    {
-	        f->setId (id);
-	        assert (find(id) == end()); // shouldn't already have one for this ID
-	        (* this)[id] =  f;
-	    }
+    public:
 
-	    //void setPrecedences (const FillerDependencies & dependencies);
-	};
-	typedef vector<VlatFunctor *> Fillers;
+    void add (VisBufferComponents::EnumType id, VlatFunctor * f)
+    {
+        f->setId (id);
+        assert (find(id) == end()); // shouldn't already have one for this ID
+        (* this)[id] =  f;
+    }
+
+        //void setPrecedences (const FillerDependencies & dependencies);
+    };
+    typedef vector<VlatFunctor *> Fillers;
 
     void applyModifiers (ROVisibilityIterator * rovi);
-    void checkFiller (asyncio::PrefetchColumnIds id);
-	void createFillerDictionary ();
+    void alignWriteIterator (SubChunkPair subchunk);
+    void checkFiller (VisBufferComponents::EnumType id);
+    void createFillerDictionary ();
     void fillDatum (VlaDatum * datum);
     void fillDatumMiscellanyAfter (VlaDatum * datum);
     void fillDatumMiscellanyBefore (VlaDatum * datum);
     void fillLsrInfo (VlaDatum * datum);
+    void flushWrittenData ();
+    void handleWrite ();
     void * run ();
     Bool sweepTerminationRequested () const;
     void sweepVi ();
+    void throwIfSweepTerminated ();
+    Bool waitForViReset ();
+    void waitUntilFillCanStart ();
 
 private:
 
-    //FillerDependencies fillerDependencies_p;
-	FillerDictionary fillerDictionary_p;
-	Fillers fillers_p;
-	asyncio::RoviaModifiers roviaModifiers_p;
-	volatile Bool sweepTerminationRequested_p;
-	Bool threadTerminated_p;
-	ROVisibilityIterator * visibilityIterator_p; // [own]
-	VlaData * vlaData_p; // [use]
+    class SweepTerminated : public std::exception {};
 
-	// jagonzal: Load all the rows per chunk in one single VisBuffer (i.e. group time steps)
-	bool rowBlocking_p;
+//    class NullaryPredicate {
+//    public:
+//
+//        virtual ~NullaryPredicate () {}
+//        virtual Bool operator () () const = 0;
+//    };
+//
+//    class FillCanStartOrSweepTermination : public NullaryPredicate {
+//
+//    public:
+//
+//        FillCanStartOrSweepTermination (VlaData * vlaData, AsynchronousInterface * interface)
+//        : interface_p (interface),
+//          vlaData_p (vlaData)
+//        {}
+//
+//        Bool operator() () const
+//        {
+//            return vlaData_p->fillCanStart () || interface_p->isSweepTerminationRequested ();
+//        }
+//
+//    private:
+//
+//        AsynchronousInterface * interface_p;
+//        VlaData * vlaData_p;
+//    };
+//
+//    class ViResetOrLookaheadTermination : public NullaryPredicate {
+//
+//    public:
+//
+//        ViResetOrLookaheadTermination (AsynchronousInterface * interface)
+//        : interface_p (interface)
+//        {}
+//
+//        Bool operator() () const
+//        {
+//            Bool viWasReset_p = interface_p->viResetRequested;
+//
+//            return viWasReset_p || interface_p->isLookaheadTerminationRequested ();
+//        }
+//
+//    private:
+//
+//        AsynchronousInterface * interface_p;
+//    };
+
+    const InterfaceController * controller_p; // [use]
+    FillerDictionary            fillerDictionary_p;
+    Fillers                     fillers_p;
+    AsynchronousInterface *     interface_p; // [use]
+    Block<MeasurementSet>       measurementSets_p;
+    SubChunkPair                readSubchunk_p;
+    RoviaModifiers              roviaModifiers_p;
+    volatile Bool               sweepTerminationRequested_p;
+    Bool                        threadTerminated_p;
+    ROVisibilityIterator *      visibilityIterator_p; // [own]
+    VlaData *                   vlaData_p; // [use]
+    VisibilityIterator *        writeIterator_p; // [own]
+    SubChunkPair                writeSubchunk_p;
 
 };
 
-class ROVisibilityIteratorAsyncImpl {
+class VlatAndData {
 
-	friend class ROVisibilityIteratorAsync;
+    friend class ViReadImplAsync;
 
 public:
 
 protected:
 
-	ROVisibilityIteratorAsyncImpl ();
-	~ROVisibilityIteratorAsyncImpl (){}
+    VlatAndData ();
+    ~VlatAndData (){}
 
 private:
 
-	VlaData * vlaData_p;
-	VLAT * vlat_p;
-
+    VlaData * vlaData_p;
+    VLAT * vlat_p;
 };
+
+} // end namespace asyncio
 
 } // end namespace casa
 

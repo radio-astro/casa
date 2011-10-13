@@ -75,8 +75,7 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
-#include <msvis/MSVis/VisibilityIteratorAsync.h>
-#include <msvis/MSVis/VisBufferAsync.h>
+/////////#include <msvis/MSVis/VisBufferAsync.h>
 
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
@@ -3791,7 +3790,7 @@ Bool Imager::clean(const String& algorithm,
 
 
 
-  ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
+  //ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
   if(!valid())
     {

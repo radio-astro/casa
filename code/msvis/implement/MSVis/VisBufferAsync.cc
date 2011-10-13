@@ -10,11 +10,12 @@ using namespace casa::utilj;
 
 #include <casa/Containers/Record.h>
 
-#include "VisBufferAsync.h"
-#include "VisBufferAsyncWrapper.h"
-#include "VisibilityIterator.h"
-#include "VisibilityIteratorAsync.h"
-#include "VLAT.h"
+#include <msvis/MSVis/VisBufferAsync.h>
+#include <msvis/MSVis/VisBufferAsyncWrapper.h>
+#include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/AsynchronousInterface.h>
+#include <msvis/MSVis/VLAT.h>
+
 #include <algorithm>
 
 using std::transform;
@@ -23,7 +24,7 @@ using std::transform;
 #include <typeinfo>
 
 #define Log(level, ...) \
-    {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
+    {if (casa::asyncio::AsynchronousInterface::logThis (level)) \
          Logger::get()->log (__VA_ARGS__);};
 
 namespace casa {
@@ -62,7 +63,7 @@ unsharedCopyMeasure (const MeasureType & measure, AsMeasure asMeasure)
     return result;
 }
 
-}
+} // end namespace asyncio
 
 VisBufferAsync::VisBufferAsync ()
   : VisBuffer ()
@@ -180,7 +181,7 @@ VisBufferAsync::azel(Double time) const
     //MSDerivedValues msd;
     //msd.setMeasurementSet (* measurementSet_p);
 
-    ROVisibilityIteratorAsync::azelCalculate (time, * msd_p, azel, nAntennas_p, mEpoch_p);
+    ROVisibilityIterator::azelCalculate (time, * msd_p, azel, nAntennas_p, mEpoch_p);
 
     return azel;
 }
@@ -193,7 +194,7 @@ VisBufferAsync::azel0(Double time) const
     //msd.setMeasurementSet (* measurementSet_p);
 
 
-    ROVisibilityIteratorAsync::azel0Calculate (time, * msd_p, azel0, mEpoch_p);
+    ROVisibilityIterator::azel0Calculate (time, * msd_p, azel0, mEpoch_p);
 
     return azel0;
 }
@@ -500,8 +501,8 @@ VisBufferAsync::feed_pa(Double time) const
         //MSDerivedValues msd;
         //msd.setMeasurementSet (* measurementSet_p);
 
-        feedpa.assign (ROVisibilityIteratorAsync::feed_paCalculate (time, * msd_p, nAntennas_p,
-                                                                    mEpoch_p, receptor0Angle_p));
+        feedpa.assign (ROVisibilityIterator::feed_paCalculate (time, * msd_p, nAntennas_p,
+                                                               mEpoch_p, receptor0Angle_p));
     }
 
     return feedpa;
@@ -571,7 +572,7 @@ VisBufferAsync::hourang(Double time) const
     //MSDerivedValues msd;
     //msd.setMeasurementSet (* measurementSet_p);
 
-    Double hourang = ROVisibilityIteratorAsync::hourangCalculate (time, * msd_p, mEpoch_p);
+    Double hourang = ROVisibilityIterator::hourangCalculate (time, * msd_p, mEpoch_p);
 
     return hourang;
 }
@@ -665,7 +666,7 @@ VisBufferAsync::parang(Double time) const
     //MSDerivedValues msd;
     //msd.setMeasurementSet (* measurementSet_p);
 
-    Vector<Float> parang = ROVisibilityIteratorAsync::parangCalculate (time, * msd_p, nAntennas_p, mEpoch_p);
+    Vector<Float> parang = ROVisibilityIterator::parangCalculate (time, * msd_p, nAntennas_p, mEpoch_p);
 
     return parang;
 }
@@ -676,7 +677,7 @@ VisBufferAsync::parang0(Double time) const
     //MSDerivedValues msd;
     //msd.setMeasurementSet (* measurementSet_p);
 
-    Float parang0 = ROVisibilityIteratorAsync::parang0Calculate (time, * msd_p, mEpoch_p);
+    Float parang0 = ROVisibilityIterator::parang0Calculate (time, * msd_p, mEpoch_p);
 
     return parang0;
 }
@@ -977,175 +978,6 @@ VisBufferAsync::updateCoordInfo(const VisBuffer * other, const Bool dirDepend)
 }
 
 
-VisBufferAutoPtr::VisBufferAutoPtr ()
-{
-    visBuffer_p = NULL;
-}
-
-VisBufferAutoPtr::VisBufferAutoPtr (VisBufferAutoPtr & other)
-{
-    // Take ownership of the other's object
-
-    visBuffer_p = other.visBuffer_p;
-    other.visBuffer_p = NULL;
-}
-
-VisBufferAutoPtr::VisBufferAutoPtr (VisBuffer & vb)
-{
-    constructVb (& vb);
-}
-
-VisBufferAutoPtr::VisBufferAutoPtr (VisBuffer * vb)
-{
-    constructVb (vb);
-}
-
-VisBufferAutoPtr::VisBufferAutoPtr (ROVisibilityIterator & rovi)
-{
-    construct (& rovi, True);
-}
-
-
-VisBufferAutoPtr::VisBufferAutoPtr (ROVisibilityIterator * rovi)
-{
-    construct (rovi, True);
-}
-
-VisBufferAutoPtr::~VisBufferAutoPtr ()
-{
-    delete visBuffer_p;
-}
-
-VisBufferAutoPtr &
-VisBufferAutoPtr::operator= (VisBufferAutoPtr & other)
-{
-    if (this != & other){
-
-        delete visBuffer_p;  // release any currently referenced object
-
-        // Take ownership of the other's object
-
-        visBuffer_p = other.visBuffer_p;
-        other.visBuffer_p = NULL;
-    }
-
-    return * this;
-}
-
-VisBuffer &
-VisBufferAutoPtr::operator* () const
-{
-    assert (visBuffer_p != NULL);
-
-    return * visBuffer_p;
-}
-
-VisBuffer *
-VisBufferAutoPtr::operator-> () const
-{
-    assert (visBuffer_p != NULL);
-
-    return visBuffer_p;
-}
-
-void
-VisBufferAutoPtr::construct (ROVisibilityIterator * rovi, Bool attachVi)
-{
-    ROVisibilityIteratorAsync * rovia = dynamic_cast<ROVisibilityIteratorAsync *> (rovi);
-
-    if (rovia != NULL){
-
-        // Create an asynchronous VisBuffer
-
-        VisBufferAsyncWrapper * vba;
-
-        if (attachVi){
-            vba = new VisBufferAsyncWrapper (* rovia);
-        }
-        else{
-            vba = new VisBufferAsyncWrapper ();
-        }
-
-        visBuffer_p = vba;
-    }
-    else{
-
-        // This is a synchronous VI so just create a synchronous VisBuffer.
-
-        if (attachVi){
-            visBuffer_p = new VisBuffer (* rovi);
-        }
-        else{
-            visBuffer_p = new VisBuffer ();
-        }
-    }
-}
-
-void
-VisBufferAutoPtr::constructVb (VisBuffer * vb)
-{
-    VisBufferAsync * vba = dynamic_cast<VisBufferAsync *> (vb);
-
-    if (vba != NULL){
-
-        // Create an asynchronous VisBuffer
-
-        VisBufferAsyncWrapper * vbaNew = new VisBufferAsyncWrapper (* vba);
-
-        visBuffer_p = vbaNew;
-    }
-    else{
-
-        // This is a synchronous VI so just create a synchronous VisBuffer.
-
-        visBuffer_p = new VisBuffer (* vb);
-    }
-}
-
-VisBuffer *
-VisBufferAutoPtr::get () const
-{
-    return visBuffer_p;
-}
-
-
-VisBuffer *
-VisBufferAutoPtr::release ()
-{
-    VisBuffer * result = visBuffer_p;
-    visBuffer_p = NULL;
-
-    return result;
-}
-
-
-void
-VisBufferAutoPtr::set (VisBuffer & vb)
-{
-    delete visBuffer_p;
-    visBuffer_p = & vb;
-}
-
-void
-VisBufferAutoPtr::set (VisBuffer * vb)
-{
-    delete visBuffer_p;
-    visBuffer_p = vb;
-}
-
-void
-VisBufferAutoPtr::set (ROVisibilityIterator * rovi)
-{
-    delete visBuffer_p;
-    construct (rovi, False);
-}
-
-void
-VisBufferAutoPtr::set (ROVisibilityIterator & rovi)
-{
-    delete visBuffer_p;
-    construct (& rovi, False);
-}
 
 
 } // end namespace casa

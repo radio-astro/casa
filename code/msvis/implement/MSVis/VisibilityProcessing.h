@@ -16,6 +16,7 @@
 #include "UtilJ.h"
 
 #include <boost/iterator/indirect_iterator.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/utility.hpp>
 #include <map>
@@ -32,24 +33,25 @@ namespace vpf {
 
 class VisibilityProcessor;
 class VpContainer;
+class VpEngine;
 
-class SubChunkIndex {
+class SubchunkIndex {
 
-    friend class SubChunkIndex_Test;
+    friend class SubchunkIndex_Test;
 
 public:
 
     enum {Invalid = -1};
 
-    SubChunkIndex (Int chunkNumber = Invalid, Int subChunkNumber = Invalid, Int iteration = Invalid);
+    SubchunkIndex (Int chunkNumber = Invalid, Int subChunkNumber = Invalid, Int iteration = Invalid);
 
-    Bool operator< (const SubChunkIndex & other) const;
-    Bool operator== (const SubChunkIndex & other) const { return ! (* this < other || other < * this);}
-    Bool operator!= (const SubChunkIndex & other) const { return ! (* this == other);}
+    Bool operator< (const SubchunkIndex & other) const;
+    Bool operator== (const SubchunkIndex & other) const { return ! (* this < other || other < * this);}
+    Bool operator!= (const SubchunkIndex & other) const { return ! (* this == other);}
 
     Int getChunkNumber () const;
     Int getIteration () const;
-    Int getSubChunkNumber () const;
+    Int getSubchunkNumber () const;
 
     String toString () const;
 
@@ -60,40 +62,18 @@ private:
     Int subChunkNumber_p;
 };
 
-class VbPtr {
-
-    friend class VbPtr_Test;
+class VbPtr : public boost::shared_ptr<casa::VisBuffer> {
 
 public:
 
-    VbPtr ();
-    explicit VbPtr (VisBuffer * vb, Bool destroyIt = True);
-    VbPtr (const VbPtr & other);
-    ~VbPtr ();
+    VbPtr () : boost::shared_ptr<casa::VisBuffer> () {}
+    explicit VbPtr (casa::VisBuffer * vb) : boost::shared_ptr<casa::VisBuffer> (vb) {}
 
-    VbPtr & operator= (const VbPtr & other);
-    VisBuffer & operator* ();
-    VisBuffer * operator-> ();
-
-    void clear ();
-    Bool null () const;
-
-//    VisBuffer * get ();
-//    VisBuffer * release ();
-
-private:
-
-    class MutexLocker {
-    public:
-
-        MutexLocker () {} // no op for now
-    };
-
-    typedef CountedPtr <VisBuffer>  CtdPtr;
-
-    CtdPtr * vb_p;
-
-    Int getNRefs () const; // for testing only
+    VbPtr & operator= (casa::VisBuffer * vb)
+    {
+        boost::shared_ptr<casa::VisBuffer>::operator= (VbPtr (vb));
+        return * this;
+    }
 };
 
 class VpPort {
@@ -103,9 +83,9 @@ class VpPort {
 
 public:
 
-    typedef enum {Input = 1, Output = 2, InOutput = Input | Output} Type;
+    typedef enum {Unknown, Input = 1, Output = 2, InOutput = Input | Output} Type;
 
-    VpPort () : visibilityProcessor_p (NULL) {}
+    VpPort ();
     VpPort (VisibilityProcessor * vp, const String & name, Type type);
     ~VpPort () {}
 
@@ -148,6 +128,7 @@ public:
     Bool contains (const String & name) const;
     Bool contains (const VpPort & port) const;
     VpPort get (const String & name) const;
+    String toString () const;
 
 protected:
 
@@ -183,10 +164,10 @@ class VpData: public std::map<VpPort, VbPtr> {
 public:
 
     VpData ();
-    VpData (const VpPort & port, VisBuffer *, Bool deleteIt = True);
+    VpData (const VpPort & port, VbPtr);
 
-    void add (const VpPort & port, VisBuffer *, Bool deleteIt = True);
-    VpData getSelection (const VpPorts &) const;
+    void add (const VpPort & port, VbPtr);
+    VpData getSelection (const VpPorts &, bool missingIsOk = False) const;
     String getNames () const;
 };
 
@@ -194,6 +175,7 @@ public:
 class VisibilityProcessor : boost::noncopyable {
 
     friend class VpContainer;
+    friend class WriterVp;
 
 public:
 
@@ -203,7 +185,7 @@ public:
     } ChunkCode;
 
     typedef enum {
-        SubChunk,
+        Subchunk,
         EndOfChunk,
         EndOfData
     } ProcessingType;
@@ -217,36 +199,55 @@ public:
 
     typedef boost::tuple <ChunkCode, VpData> ProcessingResult;
 
+    VisibilityProcessor ();
     VisibilityProcessor (const String & name,
                          const vector<String> & inputNames,
-                         const vector<String> & outputNames = vector<String>());
+                         const vector<String> & outputNames = vector<String>(),
+                         Bool makeIoPorts = False);
     virtual ~VisibilityProcessor () {}
 
-    virtual void chunkStart (const SubChunkIndex &) {}
-    virtual ProcessingResult doProcessing (ProcessingType processingType,
-                                           VpData & inputData,
-                                           const SubChunkIndex & subChunkIndex) = 0;
+    void chunkStart (const SubchunkIndex &);
+    ProcessingResult doProcessing (ProcessingType processingType,
+                                   VpData & inputData,
+                                   VpEngine * vpEngine,
+                                   const SubchunkIndex & subChunkIndex);
     const VpContainer * getContainer () const { return NULL;}
     String getFullName () const;
     VpPort getInput (const String & name) const;
+    VpPort & getInputRef (const String & name);
     VpPorts getInputs (Bool connectedOnly = False) const;
     String getName () const;
+    Int getNSubchunksProcessed () const;
+    Int getNSubchunksUniqueProcessed () const;
     VpPort getOutput (const String & name) const;
-    VpPorts getOutputs () const;
+    VpPort & getOutputRef (const String & name);
+    VpPorts getOutputs (Bool connectedOnly = False) const;
     virtual casa::asyncio::PrefetchColumns getPrefetchColumns () const;
-    virtual void processingStart () {}
-    virtual void validate (const VpPorts & inputs, const VpPorts & outputs) = 0;
+    void processingStart ();
+    void validate ();
 
 protected:
 
+
+    virtual void chunkStartImpl (const SubchunkIndex &) {}
     VpPorts definePorts (const vector<String> & portNames, VpPort::Type type, const String & typeName);
+    virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
+                                               VpData & inputData,
+                                               const SubchunkIndex & subChunkIndex) = 0;
+    VpPorts portsUnconnected (const VpPorts & ports, Bool (VpPort::* isConnected) () const,
+                              const vector<String> & except = vector<String> ()) const;
+    virtual void processingStartImpl () {}
+    void throwIfAnyInputsUnconnected (const vector<String> & exceptThese = vector<String> ()) const;
+    void throwIfAnyInputsUnconnectedExcept (const String & exceptThisOne) const;
+    void throwIfAnyOutputsUnconnected (const vector<String> & exceptThese = vector<String> ()) const;
+    void throwIfAnyOutputsUnconnectedExcept (const String & exceptThisOne) const;
+    void throwIfAnyPortsUnconnected () const;
+    virtual void validateImpl () = 0;
 
 private:
 
     //VisibilityProcessor (Type t);
 
-    VpPort & getInputRef (const String & name);
-    VpPort & getOutputRef (const String & name);
     void setContainer (const VpContainer *);
 
     // Prevent copying of existing objects
@@ -254,12 +255,21 @@ private:
     VisibilityProcessor (const VisibilityProcessor & other); // do not define
     VisibilityProcessor & operator=(const VisibilityProcessor & other); // do not define
 
+    ROVisibilityIterator * getVi ();
+    VpEngine * getVpEngine();
+
     const VpContainer * container_p; // [use]
     String name_p;
+    Int nSubchunks_p;
+    Int nSubchunksUnique_p;
 //    Type type_p;
+    VpEngine * vpEngine_p;
     VpPorts vpInputs_p;
     VpPorts vpOutputs_p;
 };
+
+ostream & operator<< (ostream & os, const VisibilityProcessor::ProcessingType & processingType);
+String toString (VisibilityProcessor::ProcessingType p);
 
 class VisibilityProcessorStub : public VisibilityProcessor {
 
@@ -269,14 +279,14 @@ public:
     : VisibilityProcessor (name, utilj::Strings(), utilj::Strings())
     {}
 
-    ProcessingResult doProcessing (ProcessingType /*processingType*/,
-                                   VpData & /*inputData*/,
-                                   const SubChunkIndex & /*subChunkIndex*/)
+    ProcessingResult doProcessingImpl (ProcessingType /*processingType*/,
+                                       VpData & /*inputData*/,
+                                       const SubchunkIndex & /*subChunkIndex*/)
     {
         return ProcessingResult (Normal, VpData());
     }
 
-    void validate (const VpPorts & /*inputs */, const VpPorts & /*outputs*/) {}
+    void validateImpl () {}
 
 
 };
@@ -288,22 +298,66 @@ public:
     SimpleVp (const String & input = "In", const string & output = "");
     virtual ~SimpleVp ();
 
-    ProcessingResult doProcessing (ProcessingType processintType,
-                                   VpData & inputData,
-                                   const SubChunkIndex & subChunkIndex);
-    ProcessingResult processingComplete ();
 
-    void validate (const VpPorts & inputs, const VpPorts & outputs);
+    void validateImpl ();
 
 protected:
 
     class SimpleResult : public boost::tuple<ChunkCode, VisBuffer *> {};
 
-    virtual SimpleResult doProcessing (ProcessingType processType,
-                                       VisBuffer * vb,
-                                       const SubChunkIndex & subChunkIndex) = 0;
+    ProcessingResult doProcessingImpl (ProcessingType processingType,
+                                       VpData & inputData,
+                                       const SubchunkIndex & subChunkIndex);
+
 private:
 
+};
+
+class SplitterVp : public VisibilityProcessor {
+
+public:
+
+    SplitterVp (const String & name,
+                const vector<String> & inputNames,
+                const vector<String> & outputNames);
+
+    ~SplitterVp () {}
+
+protected:
+
+    ProcessingResult doProcessingImpl (ProcessingType processingType ,
+                                       VpData & inputData,
+                                       const SubchunkIndex & subChunkIndex);
+
+    void validateImpl ()
+    {}
+};
+
+class WriterVp: public VisibilityProcessor {
+
+public:
+
+    WriterVp (const String & name,
+              VisibilityIterator * vi = NULL,
+              Bool advanceVi = False,
+              const String & input = "In",
+              const String & output = "Out");
+
+    Bool setDisableOutput (Bool disableIt);
+
+protected:
+
+    ProcessingResult doProcessingImpl (ProcessingType processingType,
+                                       VpData & inputData,
+                                       const SubchunkIndex & subChunkIndex);
+
+    void validateImpl ();
+
+private:
+
+    Bool advanceVi_p;
+    Bool disableOutput_p;
+    VisibilityIterator * vi_p;
 };
 
 //class VisibilityAverager : public VisibilityProcessor {
@@ -312,7 +366,7 @@ private:
 //    VisibilityAverager () : VisibilityProcessor (Averager) {}
 //    virtual ~VisibilityAverager ();
 //
-//    Result doProcessing (VisibilityBuffer & vb, Bool isNewChunk, Bool isNewSubChunk);
+//    Result doProcessing (VisibilityBuffer & vb, Bool isNewChunk, Bool isNewSubchunk);
 //
 //};
 
@@ -322,21 +376,16 @@ class VpContainer : public VisibilityProcessor {
 
 public:
 
-    VpContainer (); // create with one input, In and no outputs
-    VpContainer (const vector<String> & inputs, const vector<String> & outputs = vector<String> ());
+    VpContainer (const String & name, const vector<String> & inputs = vector<String> (1, "In"), const vector<String> & outputs = vector<String> ());
 
-    virtual ~VpContainer ();
+    virtual ~VpContainer () {}
 
     virtual void add (VisibilityProcessor * processor);
     virtual void connect (VpPort & sourcePort,
                           VpPort & sinkPort);
-    virtual void chunkStart (const SubChunkIndex & sci);
-    virtual ProcessingResult doProcessing (ProcessingType processingType,
-                                           VpData & inputData,
-                                           const SubChunkIndex & subChunkIndex);
+    virtual void chunkStart (const SubchunkIndex & sci);
     virtual void fillWithSequence (VisibilityProcessor * first, ...); // Last one NULL
-    virtual void processingStart ();
-    virtual void validate (const VpPorts & inputs, const VpPorts & outputs);
+    virtual casa::asyncio::PrefetchColumns getPrefetchColumns () const;
 
 protected:
 
@@ -347,10 +396,15 @@ protected:
     iterator begin();
     const_iterator begin() const;
     Bool contains (const VisibilityProcessor *) const;
+    virtual ProcessingResult doProcessingImpl (ProcessingType processingType,
+                                               VpData & inputData,
+                                               const SubchunkIndex & subChunkIndex);
     Bool empty () const;
     iterator end();
     const_iterator end() const;
+    virtual void processingStartImpl ();
     size_t size() const;
+    virtual void validateImpl ();
 
 private:
 
@@ -364,20 +418,30 @@ private:
         String getNames () const;
     };
 
+    typedef boost::tuple<VisibilityProcessor *, VpData> ReadyVpAndData;
+
     Network network_p;
     NetworkReverse networkReverse_p;
     VPs vps_p;
 
-    boost::tuple<VisibilityProcessor *, VpData>
-    findReadyVp (VpSet & vpsWaiting, VpData & inputs) const;
+    ReadyVpAndData findReadyVp (VpSet & vpsWaiting, VpData & inputs, bool flushing) const;
+    ReadyVpAndData findReadyVpFlushing (VpSet & vpsWaiting, VpData & inputs) const;
+    ReadyVpAndData findReadyVpNormal (VpSet & vpsWaiting, VpData & inputs) const;
+    bool follows (const VisibilityProcessor * a, const VisibilityProcessor * b) const;
+    bool followsSet (const VisibilityProcessor * a, const VpSet & vpSet) const;
+    void orderContents ();
     void remapPorts (VpData & data, const VisibilityProcessor *);
 };
 
 class VpEngine {
 
+    friend class VisibilityProcessor;
+
 public:
 
-    void process (VisibilityProcessor & processor, ROVisibilityIterator & vi, VpPort inputPort = VpPort ());
+    VpEngine () : vi_p (NULL) {}
+
+    void process (VisibilityProcessor & processor, ROVisibilityIterator & vi, const VpPort & inputPort = VpPort ());
 
     static Int getLogLevel ();
     static void log (const String & format, ...);
@@ -385,12 +449,16 @@ public:
 
 private:
 
+    ROVisibilityIterator * vi_p; // [use]
 
     static Int logLevel_p;
     static LogIO * logIo_p;
     static Bool loggingInitialized_p;
+    static LogSink * logSink_p;
 
     static Bool initializeLogging ();
+
+    ROVisibilityIterator * getVi ();
 
 };
 

@@ -8,6 +8,9 @@
 #include "../VisibilityProcessing.h"
 #include "VisibilityProcessing_Test.h"
 
+#include <casa/BasicSL/String.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+
 #include <cppunit/CompilerOutputter.h>
 #include <cppunit/TestFailure.h>
 #include <cppunit/TestResultCollector.h>
@@ -15,13 +18,85 @@
 #include <stdarg.h>
 #include <iterator>
 #include <msvis/MSVis/UtilJ.h>
+#include <msvis/MSVis/VisibilityIterator.h>
 
 using namespace std;
+using namespace casa;
 using namespace casa::vpf;
+namespace po = boost::program_options;
 
 int
-main (int /*argc*/, char * /*args*/ [])
+main (int argc, char * args [])
 {
+    return casa::vpf::VpTests::singleton().run (argc, args);
+}
+
+namespace casa {
+
+namespace vpf {
+
+CPPUNIT_TEST_SUITE_REGISTRATION (SubchunkIndex_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VpPort_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VpPorts_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VbPtr_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VpData_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VisibilityProcessor_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VpEngine_Test);
+CPPUNIT_TEST_SUITE_REGISTRATION (VpContainer_Test);
+
+const casa::String VpTests::Visibility = "visibility";
+
+
+VpTests::VpTests ()
+: vm_p (new po::variables_map())
+{}
+
+const po::variables_map &
+VpTests::getArguments () const
+{
+    return * vm_p;
+}
+
+int
+VpTests::parseArguments (int argc, char * args [])
+{
+    po::options_description desc("Allowed options");
+    desc.add_options()
+            ("help", "Help me, help me!")
+            (String (Visibility + ",v").c_str(), po::value<string>()->default_value(""),
+             "visibility input file")
+            ;
+
+    try{
+        po::store(po::command_line_parser(argc, args).
+                  options(desc).run(),
+                  * vm_p);
+    }
+    catch (po::error e){
+        cerr << e.what() << endl;
+
+        return 1;
+    }
+
+    po::notify(* vm_p);
+
+    if (vm_p->count ("help")){
+        cout << desc << endl;
+
+        return 1;
+    }
+
+    return 0;
+}
+
+int
+VpTests::run (int argc, char * args [])
+{
+    int parseResult = parseArguments (argc, args);
+    if (parseResult != 0){
+        return parseResult;
+    }
+
     CppUnit::TextUi::TestRunner runner;
 
     CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
@@ -43,63 +118,60 @@ main (int /*argc*/, char * /*args*/ [])
     return 0;
 }
 
-namespace casa {
+VpTests &
+VpTests::singleton ()
+{
+    static VpTests theSingleton;
 
-namespace vpf {
-
-CPPUNIT_TEST_SUITE_REGISTRATION (SubChunkIndex_Test);
-CPPUNIT_TEST_SUITE_REGISTRATION (VpPort_Test);
-CPPUNIT_TEST_SUITE_REGISTRATION (VpPorts_Test);
-CPPUNIT_TEST_SUITE_REGISTRATION (VbPtr_Test);
-CPPUNIT_TEST_SUITE_REGISTRATION (VpData_Test);
-CPPUNIT_TEST_SUITE_REGISTRATION (VisibilityProcessor_Test);
+    return theSingleton;
+}
 
 void
-SubChunkIndex_Test::testConstruction ()
+SubchunkIndex_Test::testConstruction ()
 {
     {
-        SubChunkIndex sci;
-        CPPUNIT_ASSERT (sci.getChunkNumber () == SubChunkIndex::Invalid);
-        CPPUNIT_ASSERT (sci.getSubChunkNumber () == SubChunkIndex::Invalid);
-        CPPUNIT_ASSERT (sci.getIteration () == SubChunkIndex::Invalid);
+        SubchunkIndex sci;
+        CPPUNIT_ASSERT (sci.getChunkNumber () == SubchunkIndex::Invalid);
+        CPPUNIT_ASSERT (sci.getSubchunkNumber () == SubchunkIndex::Invalid);
+        CPPUNIT_ASSERT (sci.getIteration () == SubchunkIndex::Invalid);
     }
 
     {
-        SubChunkIndex sci (1);
+        SubchunkIndex sci (1);
         CPPUNIT_ASSERT (sci.getChunkNumber () == 1);
-        CPPUNIT_ASSERT (sci.getSubChunkNumber () == SubChunkIndex::Invalid);
-        CPPUNIT_ASSERT (sci.getIteration () == SubChunkIndex::Invalid);
+        CPPUNIT_ASSERT (sci.getSubchunkNumber () == SubchunkIndex::Invalid);
+        CPPUNIT_ASSERT (sci.getIteration () == SubchunkIndex::Invalid);
     }
 
     {
-        SubChunkIndex sci (1,2);
+        SubchunkIndex sci (1,2);
         CPPUNIT_ASSERT (sci.getChunkNumber () == 1);
-        CPPUNIT_ASSERT (sci.getSubChunkNumber () == 2);
-        CPPUNIT_ASSERT (sci.getIteration () == SubChunkIndex::Invalid);
+        CPPUNIT_ASSERT (sci.getSubchunkNumber () == 2);
+        CPPUNIT_ASSERT (sci.getIteration () == SubchunkIndex::Invalid);
     }
 
     {
-        SubChunkIndex sci (1,2,3);
+        SubchunkIndex sci (1,2,3);
         CPPUNIT_ASSERT (sci.getChunkNumber () == 1);
-        CPPUNIT_ASSERT (sci.getSubChunkNumber () == 2);
+        CPPUNIT_ASSERT (sci.getSubchunkNumber () == 2);
         CPPUNIT_ASSERT (sci.getIteration () == 3);
         CPPUNIT_ASSERT (sci.toString() == "(1,2,3)");
     }
 }
 
 void
-SubChunkIndex_Test::testComparisons ()
+SubchunkIndex_Test::testComparisons ()
 {
-    SubChunkIndex sci1 (1,2,3);
-    SubChunkIndex sci2 (1,2,3);
+    SubchunkIndex sci1 (1,2,3);
+    SubchunkIndex sci2 (1,2,3);
     CPPUNIT_ASSERT (sci1 == sci2);
     CPPUNIT_ASSERT (! (sci1 != sci2));
     CPPUNIT_ASSERT (! (sci1 < sci2));
     CPPUNIT_ASSERT (! (sci2 < sci1));
 
-    CPPUNIT_ASSERT (SubChunkIndex (1,10,20) < SubChunkIndex (2,1,2));
-    CPPUNIT_ASSERT (SubChunkIndex (1,10,20) < SubChunkIndex (1,11,2));
-    CPPUNIT_ASSERT (SubChunkIndex (1,10,20) < SubChunkIndex (1,10,21));
+    CPPUNIT_ASSERT (SubchunkIndex (1,10,20) < SubchunkIndex (2,1,2));
+    CPPUNIT_ASSERT (SubchunkIndex (1,10,20) < SubchunkIndex (1,11,2));
+    CPPUNIT_ASSERT (SubchunkIndex (1,10,20) < SubchunkIndex (1,10,21));
 }
 
 void
@@ -110,7 +182,7 @@ VpData_Test::testConstruction ()
 
     VisibilityProcessorStub * vp1 = new VisibilityProcessorStub ("vp");
     VpPort port1 (vp1, "In", VpPort::Input);
-    VisBuffer * vb1 = new VisBuffer();
+    VbPtr vb1 (new VisBuffer());
     VpData * data = new VpData (port1, vb1);
 
     CPPUNIT_ASSERT (utilj::containsKey (port1, * data));
@@ -119,7 +191,7 @@ VpData_Test::testConstruction ()
 
     VpPort port2 (vp1, "Out", VpPort::Output);
 
-    VisBuffer * vb2 = new VisBuffer ();
+    VbPtr vb2 (new VisBuffer ());
     data->add (port2, vb2);
     CPPUNIT_ASSERT (utilj::containsKey (port1, * data));
     CPPUNIT_ASSERT (utilj::containsKey (port2, * data));
@@ -130,6 +202,65 @@ VpData_Test::testConstruction ()
 }
 
 void
+VpContainer_Test::testSweep (Int nRepeats)
+{
+    const po::variables_map & vm = VpTests::singleton().getArguments();
+
+    if (vm.count(VpTests::Visibility) != 1 || vm[VpTests::Visibility].as<string>().empty()){
+        CPPUNIT_ASSERT_MESSAGE ("No input file specified.", false);
+        return;
+    }
+
+    VpContainer vpContainer ("TheContainer",
+                             utilj::fillContainer<vector<String> > ("", "ContainerIn", ""),
+                             vector<String> ());
+
+    SplitterVp splitter ("Splitter",
+                         utilj::fillContainer<vector<String> > ("", "In1", ""),
+                         utilj::fillContainer<vector<String> > ("", "Out1", ""));
+
+    vector<String> inputs = utilj::fillContainer<vector<String> > ("", "In2", "");
+    vector<String> outputs;
+    VpNoop noop ("Noop", inputs, outputs, nRepeats);
+
+    vpContainer.add (& noop);
+    vpContainer.add (& splitter);
+
+    vpContainer.connect (splitter.getOutputRef ("Out1"), noop.getInputRef ("In2"));
+    vpContainer.connect (vpContainer.getInputRef ("ContainerIn"), splitter.getInputRef ("In1"));
+
+    VpEngine vpEngine;
+
+    String inputFile = vm [VpTests::Visibility].as<string> ();
+    MeasurementSet theMs;
+    CPPUNIT_ASSERT_NO_THROW (theMs = MeasurementSet (inputFile, Table::Old));
+    ROVisibilityIterator vi (theMs, Block<Int> ());
+
+    CPPUNIT_ASSERT_NO_THROW (vpEngine.process (vpContainer, vi));
+
+    CPPUNIT_ASSERT (noop.getNSubchunksProcessed () == splitter.getNSubchunksProcessed ());
+    CPPUNIT_ASSERT (vpContainer.getNSubchunksProcessed () == splitter.getNSubchunksProcessed ());
+
+    CPPUNIT_ASSERT (noop.getNSubchunksUniqueProcessed () == splitter.getNSubchunksUniqueProcessed ());
+    CPPUNIT_ASSERT (vpContainer.getNSubchunksUniqueProcessed () == splitter.getNSubchunksUniqueProcessed ());
+
+    CPPUNIT_ASSERT (noop.getNSubchunksProcessed () == noop.getNSubchunksUniqueProcessed () * nRepeats);
+
+}
+
+void
+VpContainer_Test::testDoubleSweep ()
+{
+    testSweep (2);
+}
+
+void
+VpContainer_Test::testSimpleSweep ()
+{
+    testSweep (1);
+}
+
+void
 VpData_Test::testMethods ()
 {
     // Put three ports with associated data into the VpData object data
@@ -137,15 +268,15 @@ VpData_Test::testMethods ()
     VisibilityProcessorStub * vp1 = new VisibilityProcessorStub ("vp");
 
     VpPort port1 (vp1, "In", VpPort::Input);
-    VisBuffer * vb1 = new VisBuffer();
+    VbPtr vb1 (new VisBuffer());
     VpData * data = new VpData (port1, vb1);
     CPPUNIT_ASSERT_THROW (data->add (port1, vb1), AipsError);
 
     VpPort port2 (vp1, "Out", VpPort::Output);
-    VisBuffer * vb2 = new VisBuffer ();
+    VbPtr vb2 (new VisBuffer ());
     CPPUNIT_ASSERT_NO_THROW (data->add (port2, vb2));
 
-    VisBuffer * vb3 = new VisBuffer ();
+    VbPtr vb3 (new VisBuffer ());
     VpPort port3 (vp1, "InOut", VpPort::InOutput);
     CPPUNIT_ASSERT_NO_THROW (data->add (port3, vb3));
 
@@ -198,18 +329,23 @@ VbPtr_Test::tearDown ()
 void
 VbPtr_Test::testAssignment ()
 {
-    VisBuffer * vb = new VisBuffer();
-
-    VbPtr vbPtr (vb, False);
+    VbPtr vbPtr (new VisBuffer());
 
     VbPtr vbPtr2;
     vbPtr2 = vbPtr;
 
     CPPUNIT_ASSERT (& * vbPtr2 == & * vbPtr);
-    CPPUNIT_ASSERT (vbPtr.getNRefs() == 2);
-    CPPUNIT_ASSERT (vbPtr2.getNRefs() == 2);
+    CPPUNIT_ASSERT (vbPtr.use_count() == 2);
+    CPPUNIT_ASSERT (vbPtr2.use_count() == 2);
 
-    CPPUNIT_ASSERT_NO_THROW (delete vb);
+    {
+        VbPtr vbPtr3 (vbPtr2);
+        CPPUNIT_ASSERT (vbPtr.use_count() == 3);
+    }
+
+    vbPtr2.reset();
+
+    CPPUNIT_ASSERT (vbPtr.use_count() == 1);
 
 }
 
@@ -219,18 +355,16 @@ VbPtr_Test::testConstruction ()
     VisBuffer * vb = new VisBuffer();
 
     VbPtr vbPtr;
-    CPPUNIT_ASSERT (vbPtr.null());
+    CPPUNIT_ASSERT (! vbPtr && true);
 
-    VbPtr vbPtr2 (vb, False);
+    VbPtr vbPtr2 (vb);
     CPPUNIT_ASSERT (& * vbPtr2 == vb);
 
-    Int nRefs = vbPtr2.getNRefs();
+    Int nRefs = vbPtr2.use_count();
     VbPtr vbPtr3 (vbPtr2);
     CPPUNIT_ASSERT (& * vbPtr2 == vb);
     CPPUNIT_ASSERT (& * vbPtr2 == & * vbPtr3);
-    CPPUNIT_ASSERT (vbPtr2.getNRefs() == nRefs + 1);
-
-    CPPUNIT_ASSERT_NO_THROW (delete vb);
+    CPPUNIT_ASSERT (vbPtr2.use_count() == nRefs + 1);
 }
 
 void
@@ -239,11 +373,11 @@ VbPtr_Test::testDestruction ()
     VbPtr * vp1 = new VbPtr (new VisBuffer ());
 
     VbPtr * vp2 = new VbPtr (* vp1);
-    CPPUNIT_ASSERT (vp2->getNRefs () == 2);
+    CPPUNIT_ASSERT (vp2->use_count () == 2);
 
     CPPUNIT_ASSERT_NO_THROW (delete vp2);
 
-    CPPUNIT_ASSERT (vp1->getNRefs () == 1);
+    CPPUNIT_ASSERT (vp1->use_count () == 1);
 
     CPPUNIT_ASSERT_NO_THROW (delete vp1);
 
@@ -254,12 +388,10 @@ VbPtr_Test::testOperators ()
 {
     VisBuffer * vb = new VisBuffer();
 
-    VbPtr vbPtr (vb, False);
+    VbPtr vbPtr (vb);
 
     CPPUNIT_ASSERT (vbPtr.operator->() == vb);
     CPPUNIT_ASSERT (& vbPtr.operator* () == vb);
-
-    CPPUNIT_ASSERT_NO_THROW (delete vb);
 }
 
 void
@@ -388,7 +520,7 @@ VisibilityProcessor_Test::testConstruction ()
     vector<String> inputs = utilj::fillContainer<vector<String> > ("", "in1", "in2", "");
     vector<String> outputs = utilj::fillContainer<vector<String> > ("", "out1", "out2", "out3", "");
     String name = "vp1";
-    VpNoop vp1 (name, inputs, outputs);
+    VpNoop vp1 (name, inputs, outputs, 1);
 
     CPPUNIT_ASSERT (vp1.getName() == name);
     CPPUNIT_ASSERT (vp1.getFullName() == name);
@@ -428,6 +560,31 @@ VisibilityProcessor_Test::testConstruction ()
     }
 }
 
+void
+VpEngine_Test::testNoopProcessor ()
+{
+    const po::variables_map & vm = VpTests::singleton().getArguments();
+
+    if (vm.count(VpTests::Visibility) != 1 || vm[VpTests::Visibility].as<string>().empty()){
+        CPPUNIT_ASSERT_MESSAGE ("No input file specified.", false);
+        return;
+    }
+
+    String inputFile = vm [VpTests::Visibility].as<string> ();
+    VpEngine engine;
+
+    vector<String> inputs = utilj::fillContainer<vector<String> > ("", "in1", "");
+    vector<String> outputs;
+    String name = "vp1";
+    VpNoop vp1 (name, inputs, outputs, 1);
+
+    MeasurementSet theMs;
+    CPPUNIT_ASSERT_NO_THROW (theMs = MeasurementSet (inputFile, Table::Old));
+    ROVisibilityIterator vi (theMs, Block<Int> ());
+
+    CPPUNIT_ASSERT_NO_THROW (engine.process (vp1, vi, vp1.getInput ("in1")));
+}
+
 VpTestListener::VpTestListener (bool verbose)
 : errorsOccurred_p (false),
   verbose_p (verbose)
@@ -457,6 +614,17 @@ VpTestListener::addFailure (const TestFailure &failure)
 }
 
 void
+VpTestListener::endTest (Test * test)
+{
+    if (verbose_p){
+
+        cout << endl << "... completed test " << test->getName() << endl;
+
+    }
+}
+
+
+void
 VpTestListener::endTestRun (Test * /*test*/, TestResult * /*eventManager*/)
 {
     if (verbose_p){
@@ -464,10 +632,17 @@ VpTestListener::endTestRun (Test * /*test*/, TestResult * /*eventManager*/)
         cout << endl;
 
         if (errorsOccurred_p){
-            cout << "--> Unsuccessfully completed test run. ;-(" << endl;
+
+            cout << endl
+                 << "**********************************************" << endl
+                 << "* --> UNSUCCESSFULLY completed test run. ;-( *" << endl
+                 << "**********************************************" << endl;
         }
         else{
-            cout << "--> Successfully completed test run. ;-)" << endl;
+            cout << endl
+                 << "+------------------------------------------+" << endl
+                 << "| --> Successfully completed test run. ;-) |" << endl
+                 << "+------------------------------------------+" << endl;
         }
         cout << endl;
     }
@@ -478,7 +653,8 @@ VpTestListener::startTest (Test * test)
 {
     if (verbose_p){
 
-        cout << "Starting test " << test->getName() << "..." << endl;
+        cout << endl << "=============================================" << endl
+             << "Starting test " << test->getName() << "..." << endl << endl;
 
     }
 }

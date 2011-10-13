@@ -29,7 +29,7 @@
 #include <ms/MeasurementSets/MSSelection.h>
 
 // Async I/O infrastructure
-#include <msvis/MSVis/VisibilityIteratorAsync.h>
+///////////////#include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBufferAsync.h>
 #include <msvis/MSVis/VWBT.h>
 

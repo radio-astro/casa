@@ -3449,69 +3449,74 @@ Bool Imager::addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool
   return True;
 }
 
+void
+Imager::openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock)
+{
+    if (otherTable.isNull()){
 
-Bool Imager::openSubTables(){
+        // otherTable does not exist so leave things be
 
- antab_p=Table(ms_p->antennaTableName(),
-	       TableLock(TableLock::UserNoReadLocking));
- datadesctab_p=Table(ms_p->dataDescriptionTableName(),
-	       TableLock(TableLock::UserNoReadLocking));
- feedtab_p=Table(ms_p->feedTableName(),
-		 TableLock(TableLock::UserNoReadLocking));
- fieldtab_p=Table(ms_p->fieldTableName(),
-		  TableLock(TableLock::UserNoReadLocking));
- obstab_p=Table(ms_p->observationTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- poltab_p=Table(ms_p->polarizationTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- proctab_p=Table(ms_p->processorTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- spwtab_p=Table(ms_p->spectralWindowTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- statetab_p=Table(ms_p->stateTableName(),
-		TableLock(TableLock::UserNoReadLocking));
+    }
+    else if (otherTable.tableType() == Table::Memory){
 
- if(Table::isReadable(ms_p->dopplerTableName()))
-   dopplertab_p=Table(ms_p->dopplerTableName(),
-		      TableLock(TableLock::UserNoReadLocking));
+        table = otherTable;
 
- if(Table::isReadable(ms_p->flagCmdTableName()))
-   flagcmdtab_p=Table(ms_p->flagCmdTableName(),
-		      TableLock(TableLock::UserNoReadLocking));
- if(Table::isReadable(ms_p->freqOffsetTableName()))
-   freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
-			 TableLock(TableLock::UserNoReadLocking));
+    }
+    else{
 
- if(ms_p->isWritable()){
-   if(!(Table::isReadable(ms_p->historyTableName()))){
-     // setup a new table in case its not there
-     TableRecord &kws = ms_p->rwKeywordSet();
-     SetupNewTable historySetup(ms_p->historyTableName(),
-				MSHistory::requiredTableDesc(),Table::New);
-     kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-     
-   }
-   historytab_p=Table(ms_p->historyTableName(),
-		      TableLock(TableLock::UserNoReadLocking), Table::Update);
- }
- if(Table::isReadable(ms_p->pointingTableName()))
-   pointingtab_p=Table(ms_p->pointingTableName(), 
-		       TableLock(TableLock::UserNoReadLocking));
- 
- if(Table::isReadable(ms_p->sourceTableName()))
-   sourcetab_p=Table(ms_p->sourceTableName(),
-		     TableLock(TableLock::UserNoReadLocking));
+        // Reopen (potentially) the subtable with the desired locking
 
- if(Table::isReadable(ms_p->sysCalTableName()))
- syscaltab_p=Table(ms_p->sysCalTableName(),
-		   TableLock(TableLock::UserNoReadLocking));
- if(Table::isReadable(ms_p->weatherTableName()))
-   weathertab_p=Table(ms_p->weatherTableName(),
-		      TableLock(TableLock::UserNoReadLocking));
- if(ms_p->isWritable()){
-   hist_p= new MSHistoryHandler(*ms_p, "imager");
- }
-return True;
+        table = Table (otherTable.tableName(), tableLock);
+    }
+}
+
+Bool
+Imager::openSubTables()
+{
+    // These variables will already have copied in the Tables from
+    // the MS specified in open.  If they are not memory resident
+    // subtables then replace them with table objects having the
+    // UserNoReadLocking attribute.
+
+    TableLock tableLock (TableLock::UserNoReadLocking);
+
+    openSubTable (ms_p->antenna(), antab_p, tableLock);
+    openSubTable (ms_p->dataDescription (), datadesctab_p, tableLock);
+    openSubTable (ms_p->doppler(), dopplertab_p, tableLock);
+    openSubTable (ms_p->feed(), feedtab_p, tableLock);
+    openSubTable (ms_p->field(), fieldtab_p, tableLock);
+    openSubTable (ms_p->flagCmd(), flagcmdtab_p, tableLock);
+    openSubTable (ms_p->freqOffset(), freqoffsettab_p, tableLock);
+    openSubTable (ms_p->observation(), obstab_p, tableLock);
+    openSubTable (ms_p->pointing(), pointingtab_p, tableLock);
+    openSubTable (ms_p->polarization(), poltab_p, tableLock);
+    openSubTable (ms_p->processor(), proctab_p, tableLock);
+    openSubTable (ms_p->source(), sourcetab_p, tableLock);
+    openSubTable (ms_p->spectralWindow(), spwtab_p, tableLock);
+    openSubTable (ms_p->state(), statetab_p, tableLock);
+    openSubTable (ms_p->sysCal(), syscaltab_p, tableLock);
+    openSubTable (ms_p->weather(), weathertab_p, tableLock);
+
+    // Handle the history table
+
+    if(ms_p->isWritable()){
+
+        if(!(Table::isReadable(ms_p->historyTableName()))){
+
+            // setup a new table in case its not there
+            TableRecord &kws = ms_p->rwKeywordSet();
+            SetupNewTable historySetup(ms_p->historyTableName(),
+                                       MSHistory::requiredTableDesc(),Table::New);
+            kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+
+        }
+        historytab_p=Table(ms_p->historyTableName(),
+                           TableLock(TableLock::UserNoReadLocking), Table::Update);
+
+        hist_p= new MSHistoryHandler(*ms_p, "imager");
+    }
+
+    return True;
 
 }
 

@@ -81,7 +81,7 @@ bool QPPlotter::initColors() {
 // Constructors/Destructors //
 
 QPPlotter::QPPlotter(QPCanvas* canvas, int logEventFlags, QWidget* parent) :
-        QWidget(parent), m_layout(NULL), m_emitResize(true) {
+        QWidget(parent), m_layout(), m_emitResize(true) {
     setLogFilterEventFlags(logEventFlags);
     logObject(CLASS_NAME, this, true);
     

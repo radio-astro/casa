@@ -12,6 +12,9 @@
 #include <casa/aipstype.h>
 #include <casa/BasicSL/String.h>
 #include <boost/utility.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/thread/condition.hpp>
+#include "UtilJ.h"
 
 #include <map>
 #include <queue>
@@ -30,11 +33,14 @@ class MutexImpl;
 class Mutex {
 
     friend class Condition;
+    friend class UniqueLock;
 
 public:
 
     Mutex ();
     virtual ~Mutex ();
+
+    ///Bool isLockedByThisThread () const; // for debug purposes only !!!
 
     void lock ();
     //Bool lock (Int milliseconds);
@@ -46,10 +52,11 @@ public:
 
 protected:
 
-    pthread_mutex_t * getRep ();
+    boost::mutex & getMutex ();
 
 private:
 
+    Bool        isLocked_p;
     MutexImpl * impl_p;
 
     Mutex (const Mutex & other); // illegal operation: do not define
@@ -57,23 +64,60 @@ private:
 
 };
 
+class LockGuard {
+
+    friend class LockGuardInverse;
+
+public:
+
+    LockGuard (Mutex & mutex);
+    LockGuard (Mutex * mutex);
+
+    virtual ~LockGuard ();
+
+private:
+
+    Mutex * mutex_p;
+
+};
+
+class LockGuardInverse {
+
+public:
+
+    LockGuardInverse (Mutex & mutex);
+    LockGuardInverse (Mutex * mutex);
+    LockGuardInverse (LockGuard & lg);
+
+    virtual ~LockGuardInverse ();
+
+private:
+
+    Mutex * mutex_p;
+
+};
+
+
 class MutexLocker {
 
 public:
 
     MutexLocker (Mutex & mutex);
+    MutexLocker (Mutex * mutex);
+
     virtual ~MutexLocker ();
 
 private:
 
-    Mutex & mutex_p;
+    Mutex * mutex_p;
 
-    MutexLocker (const MutexLocker & other); // illegal operation: do not define
-    MutexLocker operator= (const MutexLocker & other); // illegal operation: do not define
+    MutexLocker (const MutexLocker & other); // do not define
+    MutexLocker & operator= (const MutexLocker & other); // do not define
 
 };
 
 class ConditionImpl;
+class UniqueLock;
 
 class Condition {
 
@@ -82,9 +126,12 @@ public:
     Condition ();
     virtual ~Condition ();
 
-    void broadcast ();
-    void signal ();
-    void wait (Mutex & mutex);
+    DEPRECATED_METHOD (void broadcast ()); // use notify_all
+    DEPRECATED_METHOD (void signal ()); // use notify_one
+
+    void notify_all ();
+    void notify_one ();
+    void wait (UniqueLock & uniqueLock);
     // Bool wait (Mutex & mutex, int milliseconds);
 
 private:
@@ -146,6 +193,22 @@ private:
     bool started_p;
     volatile bool terminationRequested_p;
 
+};
+
+class UniqueLock {
+
+    friend class Condition;
+
+public:
+
+    UniqueLock (Mutex & mutex);
+
+    void lock ();
+    void unlock ();
+
+private:
+
+    boost::unique_lock<boost::mutex> uniqueLock_p;
 };
 
 class Logger : private boost::noncopyable {

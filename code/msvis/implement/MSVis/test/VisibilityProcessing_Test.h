@@ -11,18 +11,54 @@
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TextTestProgressListener.h>
 #include <cppunit/TestResult.h>
+#include <boost/program_options.hpp>
+#include <memory>
+
+
+namespace po = boost::program_options;
+
 
 using namespace CppUnit;
+
+int main (int argc, char * args []);
 
 namespace casa {
 
 namespace vpf {
+
+class VpTests {
+
+    friend int ::main (int argc, char * args []);
+
+public:
+
+
+    const po::variables_map & getArguments () const;
+
+    static VpTests & singleton ();
+
+    static const casa::String Visibility;
+
+protected:
+
+    int parseArguments (int argc, char * args []);
+    int run (int argc, char * args []);
+
+
+private:
+
+    VpTests ();
+
+    std::auto_ptr<po::variables_map> vm_p;
+
+};
 
 class VpTestListener : public TextTestProgressListener {
 public:
 
     VpTestListener (bool verbose = False);
     void addFailure (const TestFailure & failure);
+    void endTest (Test * test);
     void endTestRun (Test * test, TestResult * eventManager);
     void startTest (Test * test);
 
@@ -59,10 +95,10 @@ private:
 //
 //};
 
-class SubChunkIndex_Test : public CppUnit::TestFixture {
+class SubchunkIndex_Test : public CppUnit::TestFixture {
 
 
-    CPPUNIT_TEST_SUITE (SubChunkIndex_Test);
+    CPPUNIT_TEST_SUITE (SubchunkIndex_Test);
 
     CPPUNIT_TEST (testConstruction);
     CPPUNIT_TEST (testComparisons);
@@ -91,17 +127,24 @@ public:
 };
 
 
-//class VpContainer_Test : public CppUnit::TestFixture {
-//
-//public:
-//
-//    CPPUNIT_TEST_SUITE (VisibilityProcessing_Test);
-//
-//    //CPPUNIT_TEST ();
-//
-//    CPPUNIT_TEST_SUITE_END ();
-//
-//};
+class VpContainer_Test : public CppUnit::TestFixture {
+
+    CPPUNIT_TEST_SUITE (VpContainer_Test);
+
+    CPPUNIT_TEST (testSimpleSweep);
+    CPPUNIT_TEST (testDoubleSweep);
+
+    CPPUNIT_TEST_SUITE_END ();
+
+public:
+
+    void testDoubleSweep ();
+    void testSimpleSweep ();
+
+protected:
+
+    void testSweep (Int nChunkSweeps);
+};
 
 class VpData_Test : public CppUnit::TestFixture {
 
@@ -125,19 +168,35 @@ public:
 
     VpNoop (const String & name,
             const vector<String> & inputNames,
-            const vector<String> & outputNames)
-    : VisibilityProcessor (name, inputNames, outputNames)
+            const vector<String> & outputNames,
+            Int nChunkSweeps)
+    : VisibilityProcessor (name, inputNames, outputNames),
+      nChunkSweeps_p (nChunkSweeps)
     {}
 
     ~VpNoop () {}
 
-    ProcessingResult doProcessing (ProcessingType /* processingType */,
-                                   VpData & /* inputData */,
-                                   const SubChunkIndex & /* subChunkIndex */)
-    {return ProcessingResult();}
+    ProcessingResult doProcessingImpl (ProcessingType processingType,
+                                       VpData & /* inputData */,
+                                       const SubchunkIndex & subchunkIndex )
+    {
+        cout << "VpNoop::doProcessing: " << processingType << " on subchunk: " << subchunkIndex.toString() << endl;
 
-    void validate (const VpPorts & /* inputs */, const VpPorts & /* outputs */)
+
+        if (processingType ==  EndOfChunk && subchunkIndex.getIteration () < nChunkSweeps_p - 1){
+            return ProcessingResult (RepeatChunk, VpData ());
+        }
+        else{
+            return ProcessingResult();
+        }
+    }
+
+    void validateImpl ()
     {}
+
+private:
+
+    Int nChunkSweeps_p;
 };
 
 
@@ -147,19 +206,20 @@ protected:
 
     SimpleResult doProcessing (ProcessingType processType,
                                VisBuffer * vb,
-                               const SubChunkIndex & subChunkIndex);
+                               const SubchunkIndex & subchunkIndex);
 };
 
 class VpEngine_Test : public CppUnit::TestFixture {
 
     CPPUNIT_TEST_SUITE (VpEngine_Test);
 
-    //CPPUNIT_TEST (testConstruction);
+    CPPUNIT_TEST (testNoopProcessor);
 
     CPPUNIT_TEST_SUITE_END ();
 
 public:
 
+    void testNoopProcessor ();
 
 };
 

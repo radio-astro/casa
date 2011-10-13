@@ -35,10 +35,29 @@
 #ifdef NDEBUG
 #define Assert(c) assert (c)
 #else
-#define Assert(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__); }
+#define Assert(c) { utilj::throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
 #endif
 
-#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__); }
+#define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
+
+#ifdef __GNUC__
+#define DEPRECATED(func) func __attribute__ ((deprecated)); func
+#elif defined(_MSC_VER)
+#define DEPRECATED(func) __declspec(deprecated) func
+#else
+///#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
+#define DEPRECATED(func) func
+#endif
+
+#ifdef __GNUC__
+#define DEPRECATED_METHOD(func) func __attribute__ ((deprecated));
+#elif defined(_MSC_VER)
+#define DEPRECATED(func) __declspec(deprecated) func
+#else
+///#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
+#define DEPRECATED(func) func
+#endif
+
 
 #if defined (NDEBUG)
 #    define Throw(m) \
@@ -49,9 +68,11 @@
 #    define Throw(m) throw AipsError ((m), __FILE__, __LINE__)
 #endif
 
-#define ThrowIf(c,m) casa::utilj::throwIf ((c), (m), __FILE__, __LINE__)
+#define ThrowIf(c,m) {if (c) {casa::utilj::throwIf ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
 
-#define ThrowIfError(c,m) casa::utilj::throwIfError ((c), (m), __FILE__, __LINE__)
+#define ThrowIfError(c,m) {if (c) {casa::utilj::throwIfError ((c), (m), __FILE__, __LINE__, __PRETTY_FUNCTION__);}}
+
+#define Rethrow(e,m) {throw casa::utilj::repackageAipsError ((e),(m),__FILE__,__LINE__, __PRETTY_FUNCTION__);}
 
 namespace casa {
 
@@ -220,12 +241,15 @@ template <typename K, typename V>
 std::vector<K>
 mapKeys (const std::map<K,V> & aMap)
 {
-    std::vector<K> result (aMap.size());
+    std::vector<K> result;
 
     std::transform (aMap.begin(), aMap.end(), back_inserter (result), firstFunctor<K,V>());
 
     return result;
 }
+
+AipsError repackageAipsError (AipsError & error, const String & message, const String & file,
+                              Int line, const String & func);
 
 template <typename F, typename S>
 F & second (std::pair<F,S> & pair) { return pair.second;}
@@ -259,8 +283,26 @@ void printBacktrace (ostream & os, const String & prefix = "");
 
 void sleepMs (Int milliseconds);
 void toStdError (const String & m, const String & prefix = "*E* ");
-void throwIf (Bool condition, const String & message, const String & file, Int line);
-void throwIfError (Int errorCode, const String & prefix, const String & file, Int line);
+void throwIf (Bool condition, const String & message, const String & file,
+              Int line, const String & func = String());
+void throwIfError (Int errorCode, const String & prefix, const String & file,
+                   Int line, const String & func = String());
+
+template <typename It, typename Obj>
+string
+containerToString (It begin, It end, String (Obj::* func) () const, const String & delimiter = ",",
+                   const String & wrapper = "")
+{
+    String result;
+    String d = "";
+
+    for (It i = begin; i != end; i++){
+        result += d + wrapper + ((* i) .* func) () + wrapper;
+        d = delimiter;
+    }
+
+    return result;
+}
 
 // These two classes, Times and DeltaTimes should be moved out of this file and
 // into casacore/casa/OS.  In the meantime, an ifdef should keep the apple from

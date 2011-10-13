@@ -111,9 +111,11 @@ class VisBuffer;
 //   <li> Handle the multi-MS case like ROVisibilityIterator does.
 // </todo>
 
+class ROVisIteratorImpl;
+
 class ROVisIterator : public ROVisibilityIterator
 {
-public:
+  public:
 
   // Default constructor - useful only to assign another iterator later
   ROVisIterator();
@@ -131,13 +133,13 @@ public:
 		const Block<Int>& sortColumns, 
 		Double timeInterval=0);
 
-  // Copy construct. This calls the assigment operator.
+  // Copy construct. This calls the assignment operator.
   ROVisIterator(const ROVisIterator & other);
 
   // Destructor
-  virtual ~ROVisIterator();
+  ~ROVisIterator();
 
-  // Assigment. Any attached VisBuffers are lost in the assign.
+  // Assignment. Any attached VisBuffers are lost in the assign.
   ROVisIterator & operator=(const ROVisIterator &other);
 
   // Members
@@ -149,33 +151,15 @@ public:
   // Return channel numbers in selected VisSet spectrum
   // (i.e. disregarding possible selection on the iterator, but
   //  including the selection set when creating the VisSet)
-  Vector<Int>& channel(Vector<Int>& chan) const;
+
   Vector<Int>& chanIds(Vector<Int>& chanids) const;
   Vector<Int>& chanIds(Vector<Int>& chanids,Int spw) const;
 
   // Return selected correlation indices
   Vector<Int>& corrIds(Vector<Int>& corrids) const;
 
-  // Return flag for each polarization, channel and row
-  Cube<Bool>& flag(Cube<Bool>& flags) const;
-
-  // Return current frequencies
-  Vector<Double>& frequency(Vector<Double>& freq) const;
-
   // Return the correlation type (returns Stokes enums)
   Vector<Int>& corrType(Vector<Int>& corrTypes) const;
-
-  // Return sigma matrix (pol-dep)
-  Matrix<Float>& sigmaMat(Matrix<Float>& sigmat) const;
-
-  // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
-  Cube<Complex>& visibility(Cube<Complex>& vis,
-			    DataColumn whichOne) const;
-  // Return weight matrix
-  Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
-
-  // Return weightspectrum (a weight for each corr & channel)
-  Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
 
   // Set up new chan/corr selection via Vector<Slice>
   void selectChannel(const Vector<Vector<Slice> >& chansel);
@@ -188,59 +172,26 @@ public:
   Int numberChan(Int spw) const;
   Int numberCorr(Int pol) const;
 
-  // Return the row ids as from the original root table. This is useful 
-  // to find correspondance between a given row in this iteration to the 
-  // original ms row
-  virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
-
-  // Need to override this and not use getColArray
-  virtual Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
-
 protected:
-  virtual void setSelTable();
 
-  virtual const Table attachTable() const;
+  class Factory : public ROVisibilityIterator::Factory {
+  public:
 
-  // update the DATA slicer
-  virtual void updateSlicer();
-  // attach the column objects to the currently selected table
+      Factory (ROVisIterator * vi) : vi_p (vi) {}
+      VisibilityIteratorReadImpl *
+      operator() (const asyncio::PrefetchColumns * prefetchColumns,
+                  const Block<MeasurementSet>& mss,
+                  const Block<Int>& sortColumns,
+                  const Bool addDefaultSortCols,
+                  Double timeInterval) const;
+  private:
 
-  // The ROVisibilityIterator version of this function sets the tile cache to 1
-  // because of a feature in sliced data access that grows memory dramatically in
-  // some cases.  However, ROVisibilityIterator, because it uses
-  // ROArrayColumn::getColumn(Vector<Vector<Slice> >&), is (1/28/2011) incredibly
-  // slow if the tile cache does not span all the selected channels, and it will
-  // read orders of magnitude more data than it needs to.  This sets the tile
-  // cache to the minimum number of tiles required to span the selected channels.
-  // Unlike ROVisibilityIterator, it does it for each hypercube, not just the
-  // first one, and it does its work when the DDID has changed.
-  virtual void setTileCache();
+      ROVisIterator * vi_p;
 
-  using ROVisibilityIterator::getDataColumn;
-  virtual void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, 
-			     Cube<Complex>& data) const;
+  };
 
-  // Column access functions
-  virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
-  virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
-
-  virtual void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = False) const;
-
-  virtual void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
-  virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
-
-  Table selTable_p;
-
-  // New slicer supports multiple Slices in channel and correlation
-  Vector<Vector<Slice> > chanSlices_p, corrSlices_p, newSlicer_p, newWtSlicer_p;
-  Bool useNewSlicer_p;
-  Vector<Matrix<Int> > chanAveBounds_p;
-
+  void getDataColumn(DataColumn whichOne, const Vector<Vector<Slice> >& slices, Cube<Complex>& data) const;
+  ROVisIteratorImpl * getReadImpl () const;
 };
 
 // <summary>
@@ -362,18 +313,20 @@ protected:
   virtual void putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array);
   virtual void putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array);
 
-  ArrayColumn<Complex> RWcolVis;
-  ArrayColumn<Float> RWcolFloatVis;
-  ArrayColumn<Complex> RWcolModelVis;
-  ArrayColumn<Complex> RWcolCorrVis;
-  ArrayColumn<Float> RWcolWeight;
-  ArrayColumn<Float> RWcolWeightSpectrum;
-  ArrayColumn<Float> RWcolSigma;
-  ArrayColumn<Bool> RWcolFlag;
-  ScalarColumn<Bool> RWcolFlagRow;
+  ArrayColumn<Complex> rwColVis_p;
+  ArrayColumn<Float> rwColFloatVis_p;
+  ArrayColumn<Complex> rwColModelVis_p;
+  ArrayColumn<Complex> rwColCorrVis_p;
+  ArrayColumn<Float> rwColWeight_p;
+  ArrayColumn<Float> rwColWeightSpectrum_p;
+  ArrayColumn<Float> rwColSigma_p;
+  ArrayColumn<Bool> rwColFlag_p;
+  ScalarColumn<Bool> rwColFlagRow_p;
 
 
 };
+
+
 
 
 } //# NAMESPACE CASA - END

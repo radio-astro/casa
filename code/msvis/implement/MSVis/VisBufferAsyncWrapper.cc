@@ -1,12 +1,14 @@
-#include "VisBufferAsyncWrapper.h"
+#include <msvis/MSVis/VisBufferAsyncWrapper.h>
 
 #include "AsynchronousTools.h"
 using namespace casa::async;
 
 #include "UtilJ.h"
 using namespace casa::utilj;
-#include "VisibilityIteratorAsync.h"
-#include "VLAT.h"
+
+#include <msvis/MSVis/AsynchronousInterface.h>
+#include <msvis/MSVis/VisibilityIteratorImplAsync.h>
+#include <msvis/MSVis/VLAT.h>
 
 #define CheckWrap() \
         if (wrappedVba_p == NULL){\
@@ -14,7 +16,7 @@ using namespace casa::utilj;
         }
 
 #define Log(level, ...) \
-    {if (VlaData::loggingInitialized_p && level <= VlaData::logLevel_p) \
+    {if (casa::asyncio::AsynchronousInterface::logThis (level)) \
          Logger::get()->log (__VA_ARGS__);};
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -24,9 +26,11 @@ VisBufferAsyncWrapper::VisBufferAsyncWrapper ()
    wrappedVisIterAsync_p (NULL)
 {}
 
-VisBufferAsyncWrapper::VisBufferAsyncWrapper (ROVisibilityIteratorAsync & iter)
+VisBufferAsyncWrapper::VisBufferAsyncWrapper (ROVisibilityIterator & iter)
  : wrappedVba_p (NULL)
 {
+    Assert (iter.isAsynchronous ());
+
     attachToVisIterAsync (iter);
 }
 
@@ -143,7 +147,7 @@ VisBufferAsyncWrapper::arrayId () const
 void
 VisBufferAsyncWrapper::attachToVisIter (ROVisibilityIterator & iter)
 {
-    ROVisibilityIteratorAsync * rovia = dynamic_cast<ROVisibilityIteratorAsync *> (& iter);
+    ROVisibilityIterator * rovia = dynamic_cast<ROVisibilityIterator *> (& iter);
 
     ThrowIf (rovia == NULL, "Attempt to attach VisBufferAsyncWraper to synchronous ROVisibilityIterator");
 
@@ -151,7 +155,7 @@ VisBufferAsyncWrapper::attachToVisIter (ROVisibilityIterator & iter)
 }
 
 void
-VisBufferAsyncWrapper::attachToVisIterAsync (ROVisibilityIteratorAsync & iter)
+VisBufferAsyncWrapper::attachToVisIterAsync (ROVisibilityIterator & iter)
 {
     Log (2, "VBAW::attachToVisIterAsync this=%08x, iter=%08x\n", this, & iter);
 
@@ -243,6 +247,12 @@ VisBufferAsyncWrapper::checkVisIter (const char * func, const char * file, int l
 {
   CheckWrap ();
   wrappedVba_p->checkVisIter (func, file, line);
+}
+
+VisBuffer *
+VisBufferAsyncWrapper::clone ()
+{
+    return wrappedVba_p->clone();
 }
 
 Vector<SquareMatrix<Complex, 2> >&

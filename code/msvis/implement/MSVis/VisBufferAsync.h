@@ -14,14 +14,19 @@ namespace casa {
 
 class ROVisibilityIteratorAsync;
 
+namespace asyncio {
+    class VlaDatum;
+    class VLAT;
+}
+
 class VisBufferAsync : public VisBuffer {
 
     friend class Rovia_Test;
-    friend class ROVisibilityIteratorAsync;
+    friend class ViReadImplAsync;
     friend class VisBufferAsyncWrapper;
     friend class VisBufferAutoPtr;
-    friend class VLAT;
-    friend class VlaDatum;
+    friend class asyncio::VlaDatum;
+    friend class asyncio::VLAT;
 
 public:
 
@@ -143,39 +148,6 @@ private:
     IPosition                      visibilityShape_p;
 };
 
-class VisBufferAutoPtr {
-
-public:
-
-    VisBufferAutoPtr ();
-    VisBufferAutoPtr (VisBufferAutoPtr & other);
-    explicit VisBufferAutoPtr (VisBuffer &);
-    explicit VisBufferAutoPtr (VisBuffer *);
-    explicit VisBufferAutoPtr (ROVisibilityIterator * rovi);
-    explicit VisBufferAutoPtr (ROVisibilityIterator & rovi);
-    ~VisBufferAutoPtr ();
-
-    VisBufferAutoPtr & operator= (VisBufferAutoPtr & other);
-    VisBuffer & operator* () const;
-    VisBuffer * operator-> () const;
-
-    VisBuffer * get () const;
-    VisBuffer * release ();
-    void set (VisBuffer &);
-    void set (VisBuffer *);
-    void set (ROVisibilityIterator * rovi);
-    void set (ROVisibilityIterator & rovi);
-
-protected:
-
-    void construct (ROVisibilityIterator * rovi, Bool attachVi);
-    void constructVb (VisBuffer * rovi);
-
-private:
-
-    VisBuffer * visBuffer_p;
-
-};
 
 template<typename T>
 void VisBufferAsync::copyVector (const Vector<T> & from, Vector<T> & to)

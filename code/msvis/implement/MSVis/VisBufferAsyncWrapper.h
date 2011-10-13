@@ -80,14 +80,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //</todo>
 class VisBufferAsyncWrapper : public VisBufferAsync {
 
-    friend class ROVisibilityIteratorAsync;
+    friend class ViReadImplAsync;
 
 public:
     // Create empty VisBuffer you can assign to or attach.
     VisBufferAsyncWrapper();
 //    // Construct VisBuffer for a particular VisibilityIterator
 //    // The buffer will remain synchronized with the iterator.
-    VisBufferAsyncWrapper (ROVisibilityIteratorAsync & iter);
+    VisBufferAsyncWrapper (ROVisibilityIterator & iter);
 //
 //    // Copy construct, looses synchronization with iterator: only use buffer for
 //    // current iteration (or reattach).
@@ -114,7 +114,8 @@ public:
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
     virtual void attachToVisIter(ROVisibilityIterator & iter);
-    void attachToVisIterAsync (ROVisibilityIteratorAsync & iter);
+    void attachToVisIterAsync (ROVisibilityIterator & iter);
+    virtual VisBuffer * clone ();
     virtual void detachFromVisIter ();
 
     // Invalidate the cache
@@ -457,7 +458,7 @@ protected:
 private:
 
     VisBufferAsync * wrappedVba_p;
-    ROVisibilityIteratorAsync * wrappedVisIterAsync_p;
+    ROVisibilityIterator * wrappedVisIterAsync_p;
 
     // validate the cache
     void validate();

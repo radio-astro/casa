@@ -166,6 +166,18 @@ printBacktrace (ostream & os, const String & prefix)
     delete trace;
 }
 
+AipsError
+repackageAipsError (AipsError & error, const String & message, const String & file, Int line, const String & func)
+{
+    ostringstream os;
+
+    AipsError tmp (message, file, line);
+    os << func << ": " << tmp.what() << "\n   " << error.what();
+
+    return AipsError (os.str());
+}
+
+
 void
 sleepMs (Int milliseconds)
 {
@@ -197,32 +209,33 @@ toStdError (const String & m, const String & prefix)
 
 
 void
-throwIf (bool condition, const String & message, const String & file, Int line)
+throwIf (bool condition, const String & message, const String & file, Int line, const String & func)
 {
 
 	// If the condition is met then throw an AipsError
 
 	if (condition) {
-	    AipsErrorTrace e (message.c_str(), file.c_str(), line);
+	    String m = func + ": " + message;
+	    AipsErrorTrace e (m.c_str(), file.c_str(), line);
 
 #       if defined (NDEBUG)
 	        toStdError (e.what());
 #       endif
 
-		throw e;
+	    throw e;
 	}
 }
 
 void
-throwIfError (int errorCode, const String & prefix, const String & file, Int line)
+throwIfError (int errorCode, const String & prefix, const String & file, Int line, const String & func)
 {
 	// If the provided error code is not equal to success (0) then
 	// throw an AipsError using the provided suffix and then details
 	// of the error.
 
 	if (errorCode != 0) {
-		AipsErrorTrace e (format ("%s (errno=%d):%s", prefix.c_str(), errorCode, strerror (errorCode)),
-				          file.c_str(), line);
+		AipsErrorTrace e (format ("%s: %s (errno=%d):%s", func.c_str(), prefix.c_str(),
+		                          errorCode, strerror (errorCode)), file.c_str(), line);
 
 #       if defined (NDEBUG)
 	        toStdError (e.what());
@@ -318,6 +331,8 @@ AipsErrorTrace::AipsErrorTrace ( const String &msg, const String &filename, uInt
     }
     free (trace);
 }
+
+
 
 } // end namespace utilj
 

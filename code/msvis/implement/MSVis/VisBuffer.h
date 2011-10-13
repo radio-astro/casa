@@ -37,13 +37,51 @@
 #include <measures/Measures/MEpoch.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBufferComponents.h>
 #include <msvis/MSVis/MSCalEnums.h>
+#include <set>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
 //#forward
 
-//<summary>VisBuffers encapulsate one chunk of visibility data for processing.</summary>
+class VbDirtyComponents {
+
+public:
+
+    typedef std::set<VisBufferComponents::EnumType> Set;
+    typedef Set::const_iterator const_iterator;
+
+    VbDirtyComponents operator+ (const VbDirtyComponents & other) const;
+
+    const_iterator begin () const;
+    Bool contains (VisBufferComponents::EnumType component) const;
+    const_iterator end () const;
+
+    static VbDirtyComponents all ();
+    static VbDirtyComponents exceptThese (VisBufferComponents::EnumType component, ...);
+    static VbDirtyComponents none ();
+    static VbDirtyComponents singleton (VisBufferComponents::EnumType component);
+    static VbDirtyComponents these (VisBufferComponents::EnumType component, ...);
+
+protected:
+
+private:
+
+    Set set_p;
+
+    static const VbDirtyComponents all_p;
+
+    static VbDirtyComponents initializeAll ();
+
+};
+
+namespace asyncio {
+    class VLAT;
+} // end namespace asyncio
+
+//<summary>VisBuffers encapsulate one chunk of visibility data for processing.</summary>
 //
 // <use visibility=export>
 //
@@ -78,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //</todo>
 class VisBuffer {
 
-    friend class VLAT; // for async i/o
+    friend class asyncio::VLAT; // for async i/o
     friend class VisBufferAsync; // for async i/o
     friend class VisBufferAsyncWrapper; // for async i/o
 
@@ -105,6 +143,8 @@ public:
     // this is identical to normal assignment operator
 
     virtual VisBuffer & assign(const VisBuffer & vb, Bool copy = True);
+
+    virtual VisBuffer * clone () const;
 
     // subtraction: return the difference of the visibilities, flags of
     // this and other are or-ed. An exception is thrown if the number of
@@ -186,6 +226,13 @@ public:
     virtual const Vector<Int>& feed2() const {
         return This->feed2();
     }
+
+    virtual void dirtyComponentsAdd (const VbDirtyComponents & additionalDirtyComponents);
+    virtual void dirtyComponentsAdd (VisBufferComponents::EnumType component);
+    virtual void dirtyComponentsClear ();
+    virtual VbDirtyComponents dirtyComponentsGet () const;
+    virtual void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents);
+    virtual void dirtyComponentsSet (VisBufferComponents::EnumType component);
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
     // (each corresponds to the first receptor of the feed) one for each
@@ -754,6 +801,7 @@ private:
     virtual Vector<Int> unique(const Vector<Int>& indices) const;
 
     Bool corrSorted_p; // Have correlations been sorted by sortCorr?
+    VbDirtyComponents dirtyComponents_p;
     Int lastPointTableRow_p;
     Int oldMSId_p;
     VisBuffer * This;
@@ -942,6 +990,39 @@ private:
     Cube<Float> weightSpectrum_p;
 };
 
+class VisBufferAutoPtr {
+
+public:
+
+    VisBufferAutoPtr ();
+    VisBufferAutoPtr (VisBufferAutoPtr & other);
+    explicit VisBufferAutoPtr (VisBuffer &);
+    explicit VisBufferAutoPtr (VisBuffer *);
+    explicit VisBufferAutoPtr (ROVisibilityIterator * rovi);
+    explicit VisBufferAutoPtr (ROVisibilityIterator & rovi);
+    ~VisBufferAutoPtr ();
+
+    VisBufferAutoPtr & operator= (VisBufferAutoPtr & other);
+    VisBuffer & operator* () const;
+    VisBuffer * operator-> () const;
+
+    VisBuffer * get () const;
+    VisBuffer * release ();
+    void set (VisBuffer &);
+    void set (VisBuffer *);
+    void set (ROVisibilityIterator * rovi);
+    void set (ROVisibilityIterator & rovi);
+
+protected:
+
+    void construct (ROVisibilityIterator * rovi, Bool attachVi);
+    void constructVb (VisBuffer * rovi);
+
+private:
+
+    VisBuffer * visBuffer_p;
+
+};
 
 } //# NAMESPACE CASA - END
 

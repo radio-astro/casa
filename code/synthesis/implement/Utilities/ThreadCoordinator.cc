@@ -121,7 +121,7 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
 
   barrier_p->wait ();
 
-  MutexLocker ml (* mutex_p);
+  UniqueLock uniqueLock (* mutex_p);
 
   if (! readyForWork_p){
       readyForWork_p = True;
@@ -133,7 +133,7 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
   // Wait for the next bit of work
 
   while (! workToBeDone_p && ! thisThread->isTerminationRequested()){
-    stateChanged_p->wait (* mutex_p);
+    stateChanged_p->wait (uniqueLock);
   }
 
   ++ nThreadsDispatched_p;
@@ -152,14 +152,14 @@ ThreadCoordinatorBase::waitForWork (const Thread * thisThread)
 void
 ThreadCoordinatorBase::waitForWorkersToFinishTask ()
 {
-  MutexLocker ml (* mutex_p);
+  UniqueLock uniqueLock (* mutex_p);
 
   // Wait for them to complete the current round of work
 
   //  logState ("Waiting for workers to finish task...");
 
   while (! workCompleted_p){
-    stateChanged_p->wait (* mutex_p);
+    stateChanged_p->wait (uniqueLock);
   }
 
   //  logState ("... workers have finished task.");
@@ -169,7 +169,7 @@ ThreadCoordinatorBase::waitForWorkersToFinishTask ()
 void
 ThreadCoordinatorBase::waitForWorkersToReport ()
 {
-  MutexLocker ml (* mutex_p);
+  UniqueLock uniqueLock (* mutex_p);
 
   // Wait for all of the worker threads to complete
   // the previous work.
@@ -177,7 +177,7 @@ ThreadCoordinatorBase::waitForWorkersToReport ()
   //  logState ("Waiting for workers to report ...");
 
   while (! readyForWork_p || workToBeDone_p){
-    stateChanged_p->wait (* mutex_p);
+    stateChanged_p->wait (uniqueLock);
   }
   //  logState ("... workers have reported");
 }

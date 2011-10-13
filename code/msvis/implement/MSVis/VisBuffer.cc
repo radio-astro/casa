@@ -27,6 +27,8 @@
 
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferAsyncWrapper.h>
+#include <msvis/MSVis/UtilJ.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/MaskedArray.h>
@@ -254,6 +256,62 @@ void VisBuffer::validate()
 {
     setAllCacheStatuses (True);
 }
+
+//Matrix<Float> &
+//VisBuffer::imagingWeight () const
+//{
+//    if (imagingWeightOK_p){
+//        return imagingWeight_p;
+//    }
+//
+//    if (imagingWeight_p.getType () == "none") {
+//
+//        // Try and get one from the VI
+//
+//        imagingWeight_p = visIter_p->imagingWeight();
+//    }
+//
+//    if (imagingWeight_p.getType () == "none") {
+//        throw (AipsError ("Programmer Error... imaging weights not set"));
+//    }
+//
+//    Vector<Float> weightvec = weight ();
+//    Matrix<Bool> flagmat = flag ();
+//    imagingWeight_p.resize (flagmat.shape ());
+//
+//    Vector<Double> fvec;
+//    Matrix<Double> uvwmat;
+//
+//    String type = imagingWeight_p.getType();
+//    if (imagingWeight_p.doFilter() || type == "uniform" || type == "radial"){
+//        fvec = frequency ();
+//        uvwmat = uvwMat ();
+//    }
+//
+//    if (imagingWeight_p.getType () == "uniform") {
+//
+//        imagingWeight_p.weightUniform (imagingWeight_p, flagmat, uvwmat, fvec, weightvec, msId (), fieldId ());
+//
+//    } else if (imagingWeight_p.getType () == "radial") {
+//
+//        imagingWeight_p.weightRadial (imagingWeight_p, flagmat, uvwmat, fvec, weightvec);
+//
+//    } else {
+//
+//        imagingWeight_p.weightNatural (imagingWeight_p, flagmat, weightvec);
+//
+//    }
+//
+//    if (imagingWeight_p.doFilter ()) {
+//
+//        imagingWeight_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
+//    }
+//
+//    imagingWeightOK_p = True;
+//
+//    return imagingWeight_p;
+//}
+
 
 void
 VisBuffer::setAllCacheStatuses (bool status)
@@ -2303,6 +2361,355 @@ Bool VisBuffer::checkMSId()
 
   return False;
 }
+
+VisBuffer *
+VisBuffer::clone () const
+{
+    return new VisBuffer (* this);
+}
+
+void
+VisBuffer::dirtyComponentsAdd (const VbDirtyComponents & dirtyComponents)
+{
+    dirtyComponents_p = dirtyComponents_p + dirtyComponents;
+}
+
+void
+VisBuffer::dirtyComponentsAdd (VisBufferComponents::EnumType component)
+{
+    dirtyComponents_p = dirtyComponents_p + VbDirtyComponents::singleton (component);
+}
+
+
+void
+VisBuffer::dirtyComponentsClear ()
+{
+    dirtyComponents_p = VbDirtyComponents::none();
+}
+
+VbDirtyComponents
+VisBuffer::dirtyComponentsGet () const
+{
+    return dirtyComponents_p;
+}
+
+void
+VisBuffer::dirtyComponentsSet (const VbDirtyComponents & dirtyComponents)
+{
+    dirtyComponents_p = dirtyComponents;
+}
+
+void
+VisBuffer::dirtyComponentsSet (VisBufferComponents::EnumType component)
+{
+    dirtyComponents_p = VbDirtyComponents::singleton (component);
+}
+
+VisBufferAutoPtr::VisBufferAutoPtr ()
+{
+    visBuffer_p = NULL;
+}
+
+VisBufferAutoPtr::VisBufferAutoPtr (VisBufferAutoPtr & other)
+{
+    // Take ownership of the other's object
+
+    visBuffer_p = other.visBuffer_p;
+    other.visBuffer_p = NULL;
+}
+
+VisBufferAutoPtr::VisBufferAutoPtr (VisBuffer & vb)
+{
+    constructVb (& vb);
+}
+
+VisBufferAutoPtr::VisBufferAutoPtr (VisBuffer * vb)
+{
+    constructVb (vb);
+}
+
+VisBufferAutoPtr::VisBufferAutoPtr (ROVisibilityIterator & rovi)
+{
+    construct (& rovi, True);
+}
+
+
+VisBufferAutoPtr::VisBufferAutoPtr (ROVisibilityIterator * rovi)
+{
+    construct (rovi, True);
+}
+
+VisBufferAutoPtr::~VisBufferAutoPtr ()
+{
+    delete visBuffer_p;
+}
+
+VisBufferAutoPtr &
+VisBufferAutoPtr::operator= (VisBufferAutoPtr & other)
+{
+    if (this != & other){
+
+        delete visBuffer_p;  // release any currently referenced object
+
+        // Take ownership of the other's object
+
+        visBuffer_p = other.visBuffer_p;
+        other.visBuffer_p = NULL;
+    }
+
+    return * this;
+}
+
+VisBuffer &
+VisBufferAutoPtr::operator* () const
+{
+    assert (visBuffer_p != NULL);
+
+    return * visBuffer_p;
+}
+
+VisBuffer *
+VisBufferAutoPtr::operator-> () const
+{
+    assert (visBuffer_p != NULL);
+
+    return visBuffer_p;
+}
+
+void
+VisBufferAutoPtr::construct (ROVisibilityIterator * rovi, Bool attachVi)
+{
+    if (rovi->isAsynchronous ()){
+
+        // Create an asynchronous VisBuffer
+
+        VisBufferAsyncWrapper * vba;
+
+        if (attachVi){
+            vba = new VisBufferAsyncWrapper (* rovi);
+        }
+        else{
+            vba = new VisBufferAsyncWrapper ();
+        }
+
+        visBuffer_p = vba;
+    }
+    else{
+
+        // This is a synchronous VI so just create a synchronous VisBuffer.
+
+        if (attachVi){
+            visBuffer_p = new VisBuffer (* rovi);
+        }
+        else{
+            visBuffer_p = new VisBuffer ();
+        }
+    }
+}
+
+void
+VisBufferAutoPtr::constructVb (VisBuffer * vb)
+{
+    VisBufferAsync * vba = dynamic_cast<VisBufferAsync *> (vb);
+
+    if (vba != NULL){
+
+        // Create an asynchronous VisBuffer
+
+        VisBufferAsyncWrapper * vbaNew = new VisBufferAsyncWrapper (* vba);
+
+        visBuffer_p = vbaNew;
+    }
+    else{
+
+        // This is a synchronous VI so just create a synchronous VisBuffer.
+
+        visBuffer_p = new VisBuffer (* vb);
+    }
+}
+
+VisBuffer *
+VisBufferAutoPtr::get () const
+{
+    return visBuffer_p;
+}
+
+
+VisBuffer *
+VisBufferAutoPtr::release ()
+{
+    VisBuffer * result = visBuffer_p;
+    visBuffer_p = NULL;
+
+    return result;
+}
+
+
+void
+VisBufferAutoPtr::set (VisBuffer & vb)
+{
+    delete visBuffer_p;
+    visBuffer_p = & vb;
+}
+
+void
+VisBufferAutoPtr::set (VisBuffer * vb)
+{
+    delete visBuffer_p;
+    visBuffer_p = vb;
+}
+
+void
+VisBufferAutoPtr::set (ROVisibilityIterator * rovi)
+{
+    delete visBuffer_p;
+    construct (rovi, False);
+}
+
+void
+VisBufferAutoPtr::set (ROVisibilityIterator & rovi)
+{
+    delete visBuffer_p;
+    construct (& rovi, False);
+}
+
+const VbDirtyComponents VbDirtyComponents::all_p = initializeAll ();
+
+VbDirtyComponents
+VbDirtyComponents::operator+ (const VbDirtyComponents & other) const
+{
+    VbDirtyComponents result = * this;
+
+    result.set_p.insert (other.begin(), other.end());
+
+    return result;
+}
+
+
+
+VbDirtyComponents::const_iterator
+VbDirtyComponents::begin () const
+{
+    return set_p.begin();
+}
+
+Bool
+VbDirtyComponents::contains (VisBufferComponents::EnumType component) const
+{
+    return utilj::containsKey (component, set_p);
+}
+
+VbDirtyComponents::const_iterator
+VbDirtyComponents::end () const
+{
+    return set_p.end();
+}
+
+VbDirtyComponents
+VbDirtyComponents::all ()
+{
+    return all_p;
+}
+
+VbDirtyComponents
+VbDirtyComponents::exceptThese (VisBufferComponents::EnumType component, ...)
+{
+    va_list vaList;
+
+    va_start (vaList, component);
+
+    VisBufferComponents::EnumType c = component;
+    VbDirtyComponents dirtyComponents = all();
+
+    while (c != VisBufferComponents::Unknown){
+
+        ThrowIf (! all().contains (c), "Not a writable VB component: " + String::toString (c));
+
+        dirtyComponents.set_p.erase (c);
+        c = (VisBufferComponents::EnumType) va_arg (vaList, Int);
+    }
+
+    va_end (vaList);
+
+    return dirtyComponents;
+
+}
+
+VbDirtyComponents
+VbDirtyComponents::initializeAll ()
+{
+
+    VbDirtyComponents all;
+
+    VisBufferComponents::EnumType
+    writableComponents [] = {VisBufferComponents::Corrected,
+                             VisBufferComponents::CorrectedCube,
+                             VisBufferComponents::Flag,
+                             VisBufferComponents::FlagCube,
+                             VisBufferComponents::FlagRow,
+                             VisBufferComponents::Model,
+                             VisBufferComponents::ModelCube,
+                             VisBufferComponents::Observed,
+                             VisBufferComponents::ObservedCube,
+                             VisBufferComponents::Sigma,
+                             VisBufferComponents::SigmaMat,
+                             VisBufferComponents::Weight,
+                             VisBufferComponents::WeightMat,
+                             VisBufferComponents::Unknown};
+
+    for (Int i = 0; ; i++){
+
+        if (writableComponents [i] == VisBufferComponents::Unknown){
+            break;
+        }
+
+        all.set_p.insert (writableComponents [i]);
+    }
+
+    return all;
+}
+
+VbDirtyComponents
+VbDirtyComponents::none ()
+{
+    return VbDirtyComponents ();
+}
+
+VbDirtyComponents
+VbDirtyComponents::singleton (VisBufferComponents::EnumType component)
+{
+    ThrowIf (! all().contains (component), "Not a writable VB component.");
+    VbDirtyComponents result;
+    result.set_p.insert (component);
+
+    return result;
+}
+
+VbDirtyComponents
+VbDirtyComponents::these (VisBufferComponents::EnumType component, ...)
+{
+    va_list vaList;
+
+    va_start (vaList, component);
+
+    VisBufferComponents::EnumType c = component;
+    VbDirtyComponents dirtyComponents;
+
+    while (c != VisBufferComponents::Unknown){
+
+        ThrowIf (! all().contains (c), "Not a writable VB component: " + String::toString (c));
+
+        dirtyComponents.set_p.insert (c);
+        c = (VisBufferComponents::EnumType ) va_arg (vaList, Int);
+    }
+
+    va_end (vaList);
+
+    return dirtyComponents;
+}
+
+
+
 
 } //# NAMESPACE CASA - END
 
