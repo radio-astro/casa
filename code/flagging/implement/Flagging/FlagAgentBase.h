@@ -25,6 +25,7 @@
 
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <casa/Containers/OrdMapIO.h>
+#include <measures/Measures/Stokes.h>
 
 using namespace casa::async;
 
@@ -32,6 +33,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 class FlagAgentBase : public casa::async::Thread {
+
+public:
 
 	enum datacolumn {
 
@@ -42,10 +45,14 @@ class FlagAgentBase : public casa::async::Thread {
 		RESIDUAL_DATA
 	};
 
+	enum iteration {
 
-public:
+		ROWS=0,
+		IN_ROWS,
+		ANTENNA_PAIRS
+	};
 
-	FlagAgentBase(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool antennaMap = false, Bool flag = true);
+	FlagAgentBase(FlagDataHandler *dh, Record config, uShort iterationApproach, Bool writePrivateFlagCube = false, Bool flag = true);
 	~FlagAgentBase ();
 	static FlagAgentBase *create (FlagDataHandler *dh,Record config);
 
@@ -57,9 +64,6 @@ public:
 
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
-
-	// Activate check mode to test that the flags were written to the MS
-	void setCheckMode() {applyFlag_p = &FlagAgentBase::checkFlags;}
 
 
 protected:
@@ -77,6 +81,7 @@ protected:
 	void generateRowsIndex(uInt nRows);
 	void generateChannelIndex(uInt nChannels);
 	void generatePolarizationIndex(uInt nPolarizations);
+	std::vector<uInt> * generateAntennaPairRowsIndex(Int antenna1, Int antenna2);
 
 	// Generate index for all rows
 	void indigen(vector<uInt> &index, uInt size);
@@ -93,56 +98,35 @@ protected:
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();
 
-	// Main iteration procedure to be called per buffer
+	// Iterate trough list of rows
 	void iterateRows();
 
-	// Compute flags for a given (row,channel,polarization)
-	virtual Bool computeFlag(uInt row, uInt channel, uInt pol);
+	// Iterate trough visibilities mapper
+	void iterateInRows();
 
-	// Main iteration procedure to be called per buffer
-	void iterateMaps();
-
-	// Compute flags for a given (time,freq) map
-	virtual void flagMap(Int antenna1,Int antenna2,CubeView<Complex> &visibilities);
+	// Iterate trough list of antenna pairs
+	void iterateAntennaPairs();
 
 	// Mapping functions as requested by Urvashi
-	CubeView<Bool> * getCommonFlagsView(Int antenna1, Int antenna2);
-	CubeView<Bool> * getPrivateFlagsView(Int antenna1, Int antenna2);
-	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
+	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
+	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
 
-	// Apply flags to common flag cube
-	void applyCommonFlags(uInt row, uInt channel, uInt pol);
+	// Compute flags for a given row
+	virtual Bool computeRowFlags(uInt row);
 
-	// Apply flags to common and private flag cubes
-	void applyPrivateFlags(uInt row, uInt channel, uInt pol);
+	// Compute flags for a given visibilities point
+	virtual Bool computeInRowFlags(uInt row, uInt channel, Float visExpression);
 
-	// Apply flags to common flag cube view
-	void applyCommonFlagsView(uInt row, uInt channel, uInt pol);
-
-	// Apply flags to common and private flag cubes
-	void applyPrivateFlagsView(uInt row, uInt channel, uInt pol);
-
-	// Wrapper to avoid complexity of calling a function pointer
-	void applyFlag(uInt row, uInt channel, uInt pol);
-
-	// Check flags is a test function to check that the flags are set where they should
-	void checkFlags(uInt row, uInt channel, uInt pol);
-
-	// Wrappers for the complex unitary operators
-	Float real(const Complex &val) {return val.real();}
-	Float imag(const Complex &val) {return val.imag();}
-	Float abs(const Complex &val) {return std::abs(val);}
-	Float arg(const Complex &val) {return std::arg(val);}
-	Float norm(const Complex &val) {return std::norm(val);}
-
-	// Wrapper to avoid complexity of calling a function pointer
-	Float applyVisExpr(const Complex &val);
-
-	// Utility function to make the difference between two columns
-	void visCubeDiff(Cube<Complex> *leftOperand, Cube<Complex> *rightOperand);
+	// Compute flags for a given (time,freq) antenna pair map
+	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
 
 	// Logger
 	casa::LogIO *logger_p;
+
+	// Running mode configuration
+	Bool multiThreading_p;
+	Int nThreads_p;
+	Int threadId_p;
 
 private:
 	
@@ -168,6 +152,7 @@ private:
 	bool filterRows_p;
 	bool filterPols_p;
 	bool filterChannels_p;
+	Bool antennaNegation_p;
 
 	// Own data selection indexes
 	Vector<Int> arrayList_p;
@@ -189,26 +174,23 @@ private:
 	vector<uInt> channelIndex_p;
 	vector<uInt> polarizationIndex_p;
 
-	// Flag CubeViews as requested by Urvashi
-	CubeView<Bool> *privateFlagsView_p;
-	CubeView<Bool> *commonFlagsView_p;
-
 	// Thread state parameters
 	volatile Bool terminationRequested_p;
 	volatile Bool threadTerminated_p;
 	volatile Bool processing_p;
 
-	// Configuration
-	void (casa::FlagAgentBase::*applyFlag_p)(uInt,uInt,uInt);
-	Float (casa::FlagAgentBase::*applyVisExpr_p)(const Complex &);
-	uShort dataReference_p;
+	// Data source configuration
 	string expression_p;
 	string dataColumn_p;
-	Bool writePrivateFlagCube_p;
-	Bool parallel_processing_p;
-	Bool antennaNegation_p;
-	Bool antennaMap_p;
+	uShort dataReference_p;
 	Bool profiling_p;
+
+	// Running mode configuration
+	uShort iterationApproach_p;
+	Bool backgroundMode_p;
+
+	// Flagging mode configuration
+	Bool writePrivateFlagCube_p;
 	Bool flag_p;
 };
 
@@ -232,7 +214,6 @@ class FlagAgentList
 		void queueProcess();
 		void completeProcess();
 		void setProfiling(bool enable);
-		void setCheckMode();
 
 	protected:
 
