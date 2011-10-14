@@ -24,8 +24,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FlagAgentTimeFreqCrop::FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
-		FlagAgentBase(dh,config,writePrivateFlagCube,true,flag)
+FlagAgentTimeFreqCrop::FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
+		FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube)
 {
 	setAgentParameters(config);
 }
@@ -42,7 +42,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("time_amp_cutoff");
 	if (exists >= 0)
 	{
-		T_TOL_p = config.asDouble("time_amp_cutoff");
+		T_TOL_p = atof(config.asString("time_amp_cutoff").c_str());
 	}
 	else
 	{
@@ -54,7 +54,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("freq_amp_cutoff");
 	if (exists >= 0)
 	{
-		F_TOL_p = config.asDouble("freq_amp_cutoff");
+		F_TOL_p = atof(config.asString("freq_amp_cutoff").c_str());
 	}
 	else
 	{
@@ -66,7 +66,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("maxnpieces");
 	if (exists >= 0)
 	{
-		MaxNPieces_p = config.asInt("maxnpieces");
+		MaxNPieces_p = atoi(config.asString("maxnpieces").c_str());
 
 		if ((MaxNPieces_p<1) or (MaxNPieces_p>9))
 		{
@@ -145,7 +145,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("halfwin");
 	if (exists >= 0)
 	{
-		halfWin_p = config.asInt("halfwin");
+		halfWin_p = atoi(config.asString("halfwin").c_str());
 		if ((halfWin_p < 1) or (halfWin_p > 3))
 		{
 			*logger_p << LogIO::WARN << "FlagAgentTimeFreqCrop::" << __FUNCTION__ <<
@@ -185,36 +185,44 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 }
 
 void
-FlagAgentTimeFreqCrop::flagMap(Int antenna1,Int antenna2,CubeView<Complex> &visibilities)
+FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2)
 {
+
 	IPosition flagCubeShape = visibilities.shape();
-	uInt nPolarizations,nChannels,nRows;
-	nPolarizations = flagCubeShape(0);
-	nChannels = flagCubeShape(1);
-	nRows = flagCubeShape(2);
-	Complex visValue;
-	Float visExpression;
-	uInt row_i,chan_i,pol_i;
+
+	// Some logging info
+	if (multiThreading_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__
+				<<  " Thread Id " << threadId_p << ":" << nThreads_p
+				<<  " Processing [freq,time] data cube for baseline ("
+				<< antenna1 << "," << antenna2 << ") with shape " << flagCubeShape << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__
+				<<  " Processing [freq,time] data cube for baseline ("
+				<< antenna1 << "," << antenna2 << ") with shape " << flagCubeShape << LogIO::POST;
+	}
+
+	uInt nChannels,nRows;
+	nChannels = flagCubeShape(0);
+	nRows = flagCubeShape(1);
+	Float vis;
+	uInt row_i,chan_i;
 	for (row_i=0;row_i<nRows;row_i++)
 	{
 		for (chan_i=0;chan_i<nChannels;chan_i++)
 		{
-			for (pol_i=0;pol_i<nPolarizations;pol_i++)
-			{
-				// Get original visibility value
-				visValue = visibilities(pol_i,chan_i,row_i);
+			// Get mapped visibility value
+			vis = visibilities(chan_i,row_i);
 
-				// Get value derived from visibility after applying a complex unitary operator (real,imag,abs,...)
-				visExpression = applyVisExpr(visValue);
+			// ... RFI detection algorithm ...
 
-				// ... RFI detection algorithm ...
-
-				// Set the flag in this point if the vis has RFI
-				applyFlag(row_i,chan_i,pol_i);
-			}
+			// Set flags in all correlations involved
+			flags.applyFlag(chan_i,row_i);
 		}
 	}
-
 	return;
 }
 
