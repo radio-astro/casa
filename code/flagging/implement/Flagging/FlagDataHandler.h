@@ -59,8 +59,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Type definitions
 typedef std::map< std::pair<Int,Int>,std::vector<uInt> >::iterator antennaPairMapIterator;
 typedef std::map< Double,std::vector<uInt> >::iterator subIntegrationMapIterator;
+typedef std::map< uShort,uShort >::iterator polartizationMapIterator;
 typedef std::map< std::pair<Int,Int>,std::vector<uInt> > antennaPairMap;
 typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
+typedef std::map< uShort,uShort > polarizationMap;
+
+const Complex ImaginaryUnit = Complex(0,1);
 
 // We need to have the CubeView definition here because its type is used by FlagDataHandler class
 template<class T> class CubeView
@@ -73,6 +77,44 @@ public:
 		parentCube_p = parentCube;
 		IPosition baseCubeShape = parentCube_p->shape();
 		reducedLength_p = IPosition(3);
+
+		if (((polarizations != NULL) and (polarizations->size() > 0)) and
+			((channels != NULL) and (channels->size() > 0)) and
+			((rows != NULL) and (rows->size() > 0)))
+		{
+			access_p = &CubeView::accessMapped;
+		}
+		else if (((polarizations != NULL) and (polarizations->size() > 0)) and
+				((channels != NULL) and (channels->size() > 0)))
+		{
+			access_p = &CubeView::accessIndex12Mapped;
+		}
+		else if (((polarizations != NULL) and (polarizations->size() > 0)) and
+				((rows != NULL) and (rows->size() > 0)))
+		{
+			access_p = &CubeView::accessIndex13Mapped;
+		}
+		else if (((channels != NULL) and (channels->size() > 0)) and
+				((rows != NULL) and (rows->size() > 0)))
+		{
+			access_p = &CubeView::accessIndex23Mapped;
+		}
+		else if ((polarizations != NULL) and (polarizations->size() > 0))
+		{
+			access_p = &CubeView::accessIndex1Mapped;
+		}
+		else if ((channels != NULL) and (channels->size() > 0))
+		{
+			access_p = &CubeView::accessIndex2Mapped;
+		}
+		else if ((rows != NULL) and (rows->size() > 0))
+		{
+			access_p = &CubeView::accessIndex3Mapped;
+		}
+		else
+		{
+			access_p = &CubeView::accessUnmapped;
+		}
 
 		if ((polarizations != NULL) and (polarizations->size() > 0))
 		{
@@ -108,10 +150,7 @@ public:
 
     T &operator()(uInt i1, uInt i2, uInt i3)
     {
-    	uInt i1_index = polarizations_p->at(i1);
-    	uInt i2_index = channels_p->at(i2);
-    	uInt i3_index = rows_p->at(i3);
-    	return parentCube_p->at(i1_index,i2_index,i3_index);
+    	return (*this.*access_p)(i1,i2,i3);
     }
 
     const IPosition &shape() const
@@ -140,12 +179,169 @@ protected:
     	return index;
     }
 
+    T &accessUnmapped(uInt i1, uInt i2, uInt i3)
+    {
+    	return parentCube_p->at(i1,i2,i3);
+    }
+
+    T &accessMapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i1_index = polarizations_p->at(i1);
+    	uInt i2_index = channels_p->at(i2);
+    	uInt i3_index = rows_p->at(i3);
+    	return parentCube_p->at(i1_index,i2_index,i3_index);
+    }
+
+    T &accessIndex1Mapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i1_index = polarizations_p->at(i1);
+    	return parentCube_p->at(i1_index,i2,i3);
+    }
+
+    T &accessIndex2Mapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i2_index = channels_p->at(i2);
+    	return parentCube_p->at(i1,i2_index,i3);
+    }
+
+    T &accessIndex3Mapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i3_index = rows_p->at(i3);
+    	return parentCube_p->at(i1,i2,i3_index);
+    }
+
+    T &accessIndex12Mapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i1_index = polarizations_p->at(i1);
+    	uInt i2_index = channels_p->at(i2);
+    	return parentCube_p->at(i1_index,i2_index,i3);
+    }
+
+    T &accessIndex13Mapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i1_index = polarizations_p->at(i1);
+    	uInt i3_index = rows_p->at(i3);
+    	return parentCube_p->at(i1_index,i2,i3_index);
+    }
+
+    T &accessIndex23Mapped(uInt i1, uInt i2, uInt i3)
+    {
+    	uInt i2_index = channels_p->at(i2);
+    	uInt i3_index = rows_p->at(i3);
+    	return parentCube_p->at(i1,i2_index,i3_index);
+    }
+
 private:
     Cube<T> *parentCube_p;
 	std::vector<uInt> *rows_p;
 	std::vector<uInt> *channels_p;
 	std::vector<uInt> *polarizations_p;
 	IPosition reducedLength_p;
+	T &(casa::CubeView<T>::*access_p)(uInt,uInt,uInt);
+};
+
+class VisMapper
+{
+
+public:
+
+	VisMapper(String expression,polarizationMap *polMap,CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
+	VisMapper(String expression,polarizationMap *polMap);
+	~VisMapper();
+
+	Float operator()(uInt chan, uInt row);
+
+    const IPosition &shape() const
+    {
+    	return reducedLength_p;
+    }
+
+    void setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
+
+    vector<uInt> getSelectedCorrelations() { return selectedCorrelations_p;}
+
+    void shape(Int &chan, Int &row) const
+    {
+    	chan = reducedLength_p(0);
+    	row = reducedLength_p(1);
+    	return;
+    }
+
+
+protected:
+    void setExpressionMapping(String expression,polarizationMap *polMap);
+	Float real(Complex val) {return val.real();}
+	Float imag(Complex val) {return val.imag();}
+	Float abs(Complex val) {return std::abs(val);}
+	Float arg(Complex val) {return std::arg(val);}
+	Float norm(Complex val) {return std::norm(val);}
+	Complex leftVis(uInt pol, uInt chan, uInt row);
+	Complex diffVis(uInt pol, uInt chan, uInt row);
+	Complex stokes_i(uInt pol, uInt chan);
+	Complex stokes_q(uInt pol, uInt chan);
+	Complex stokes_u(uInt pol, uInt chan);
+	Complex stokes_v(uInt pol, uInt chan);
+	Complex linear_xx(uInt pol, uInt chan);
+	Complex linear_yy(uInt pol, uInt chan);
+	Complex linear_xy(uInt pol, uInt chan);
+	Complex linear_yx(uInt pol, uInt chan);
+	Complex circular_rr(uInt pol, uInt chan);
+	Complex circular_ll(uInt pol, uInt chan);
+	Complex circular_rl(uInt pol, uInt chan);
+	Complex circular_lr(uInt pol, uInt chan);
+	Complex stokes_i_from_linear(uInt chan, uInt row);
+	Complex stokes_q_from_linear(uInt chan, uInt row);
+	Complex stokes_u_from_linear(uInt chan, uInt row);
+	Complex stokes_v_from_linear(uInt chan, uInt row);
+	Complex stokes_i_from_circular(uInt chan, uInt row);
+	Complex stokes_q_from_circular(uInt chan, uInt row);
+	Complex stokes_u_from_circular(uInt chan, uInt row);
+	Complex stokes_v_from_circular(uInt chan, uInt row);
+
+
+private:
+	Float (casa::VisMapper::*applyVisExpr_p)(Complex);
+	Complex (casa::VisMapper::*getVis_p)(uInt,uInt,uInt);
+	Complex (casa::VisMapper::*getCorr_p)(uInt,uInt);
+	CubeView<Complex> *leftVis_p;
+	CubeView<Complex> *rightVis_p;
+	IPosition reducedLength_p;
+	polarizationMap *polMap_p;
+	String expression_p;
+	vector<uInt> selectedCorrelations_p;
+};
+
+class FlagMapper
+{
+
+public:
+
+	FlagMapper(Bool flag,vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	FlagMapper(Bool flag,vector<uInt> selectedCorrelations);
+	~FlagMapper();
+
+	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	void applyFlag(uInt chan, uInt row);
+
+
+protected:
+
+	void setExpressionMapping(vector<uInt> selectedCorrelations);
+
+	// Apply flags to common flag cube
+	void applyCommonFlags(uInt row, uInt channel, uInt pol);
+	// Apply flags to common and private flag cubes
+	void applyPrivateFlags(uInt row, uInt channel, uInt pol);
+
+
+private:
+
+	Bool flag_p;
+    IPosition reducedLength_p;
+	CubeView<Bool> *commonFlagsView_p;
+	CubeView<Bool> *privateFlagsView_p;
+	vector<uInt> selectedCorrelations_p;
+	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);
 };
 
 // Flag Data Handler class definition
@@ -208,8 +404,17 @@ public:
 	// Mapping functions as requested by Urvashi
 	void generateAntennaPairMap();
 	void generateSubIntegrationMap();
+
+	// Produce correlation-polarization map to determine which position
+	// corresponds to which correlation type i.e.: XX,XY,YX,YY or XX,YY,XY,YX
+	void generatePolarizationsMap();
+
+	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
+	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
+
+	// Old CubeView accessors
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
 	CubeView<Bool> * getFlagsView(Double timestep);
 	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
@@ -247,11 +452,6 @@ public:
 	casa::LogIO *logger_p;
 
 
-	// We make this public so that they are accessible for the TimeFreqCrop agents
-	std::map< std::pair<Int,Int>,std::vector<uInt> > *antennaPairMap_p;
-	std::map< Double,std::vector<uInt> > *subIntegrationMap_p;
-
-
 protected:
 
 private:
@@ -283,8 +483,12 @@ private:
 	bool asyncio_disabled_p;
 
 	// Mapping members
+	antennaPairMap *antennaPairMap_p;
+	subIntegrationMap *subIntegrationMap_p;
+	polarizationMap *polarizationMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
+	bool mapPolarizations_p;
 
 	// Stats members
 	bool stats_p;
