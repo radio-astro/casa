@@ -113,7 +113,9 @@ public:
 	AsciiAnnotationFileLine lineAt(const uInt i) const;
 
 	// get all lines in the list
-	Vector<AsciiAnnotationFileLine> getLines() const;
+	inline const Vector<AsciiAnnotationFileLine>& getLines() const {
+		return _lines;
+	}
 
 	ostream& print(ostream& os) const;
 
