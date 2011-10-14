@@ -974,9 +974,6 @@ FlagAgentBase::iterateInRows()
 	nChannels = flagCubeShape(0);
 	nRows = flagCubeShape(1);
 
-	// Some logging info
-	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " Iterating trough visibility cube with shape: " << flagCubeShape << LogIO::POST;
-
 	// Some log info
 	if (multiThreading_p)
 	{
