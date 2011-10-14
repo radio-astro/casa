@@ -115,7 +115,7 @@ protected:
 	virtual Bool computeRowFlags(uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual Bool computeInRowFlags(uInt row, uInt channel, Float visExpression);
+	virtual void computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt channel, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
 	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);

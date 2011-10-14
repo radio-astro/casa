@@ -24,6 +24,7 @@
 
 // Needed for the factory method (create)
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
+#include <flagging/Flagging/FlagAgentClipping.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -174,7 +175,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	}
 
 	// Unflag mode
-	writePrivateFlags = false;
 	if (mode.compare("unflag")==0)
 	{
 		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
@@ -194,7 +194,8 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	if (mode.compare("clip")==0)
 	{
 		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
-		return ret;
+		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags);
+		return agent;
 	}
 
 	return ret;
@@ -834,6 +835,7 @@ FlagAgentBase::generateAntennaPairRowsIndex(Int antenna1, Int antenna2)
 void
 FlagAgentBase::indigen(vector<uInt> &index, uInt size)
 {
+	index.reserve(size);
 	for (uInt i=0; i<size; i++ )
 	{
 		index.push_back(i);
@@ -913,18 +915,26 @@ FlagAgentBase::iterateRows()
 			channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
 			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
 
-	// Declare iterators
+	// Loop trough selected rows
+	uInt rowIdx = 0;
 	Bool computedFlag;
 	vector<uInt>::iterator rowIter;
 	vector<uInt>::iterator channellIter;
-
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
-		computedFlag = computeRowFlags(*rowIter);
-
-		for (channellIter = channelIndex_p.begin();channellIter != channelIndex_p.end();channellIter++)
+		if (multiThreading_p and (rowIdx % nThreads_p != threadId_p))
 		{
-			if (computedFlag == flag_p)
+			// Increment row index
+			rowIdx++;
+
+			// Continue with next row
+			continue;
+		}
+
+		computedFlag = computeRowFlags(*rowIter);
+		if (computedFlag == flag_p)
+		{
+			for (channellIter = channelIndex_p.begin();channellIter != channelIndex_p.end();channellIter++)
 			{
 				flagMap.applyFlag(*channellIter,*rowIter);
 			}
@@ -941,11 +951,22 @@ FlagAgentBase::iterateInRows()
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
 	FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
 
-	// Set CubeViews in VisMapper
-	setVisibilitiesMap(&rowsIndex_p,&visibilitiesMap);
+	if (filterRows_p)
+	{
+		// Set CubeViews in VisMapper
+		setVisibilitiesMap(&rowsIndex_p,&visibilitiesMap);
 
-	// Set CubeViews in FlagMapper
-	setFlagsMap(&rowsIndex_p,&flagsMap);
+		// Set CubeViews in FlagMapper
+		setFlagsMap(&rowsIndex_p,&flagsMap);
+	}
+	else
+	{
+		// Set CubeViews in VisMapper
+		setVisibilitiesMap(NULL,&visibilitiesMap);
+
+		// Set CubeViews in FlagMapper
+		setFlagsMap(NULL,&flagsMap);
+	}
 
 	// Determine visibilities map size
 	IPosition flagCubeShape = visibilitiesMap.shape();
@@ -956,25 +977,37 @@ FlagAgentBase::iterateInRows()
 	// Some logging info
 	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " Iterating trough visibility cube with shape: " << flagCubeShape << LogIO::POST;
 
+	// Some log info
+	if (multiThreading_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
+				<<  " Thread Id " << threadId_p << ":" << nThreads_p
+				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p
+				<< " from a total of " << nRows << LogIO::POST;
+	}
+	else
+	{
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " Iterating trough visibility cube with shape: " << flagCubeShape << LogIO::POST;
+	}
+
 	// Loop trough visibilities map
-	Float vis;
-	Bool computedFlag;
 	uInt row_i,chan_i;
+	uInt rowIdx = 0;
 	for (row_i=0;row_i<nRows;row_i++)
 	{
+		if (multiThreading_p and (rowIdx % nThreads_p != threadId_p))
+		{
+			// Increment row index
+			rowIdx++;
+
+			// Continue with next row
+			continue;
+		}
+
 		for (chan_i=0;chan_i<nChannels;chan_i++)
 		{
-			// Get mapped visibility value
-			vis = visibilitiesMap(chan_i,row_i);
-
 			// Compute flag
-			computedFlag = computeInRowFlags(chan_i,row_i,vis);
-
-			// Apply flag
-			if (computedFlag == flag_p)
-			{
-				flagsMap.applyFlag(chan_i,row_i);
-			}
+			computeInRowFlags(visibilitiesMap,flagsMap,chan_i,row_i);
 		}
 	}
 
@@ -1155,11 +1188,11 @@ FlagAgentBase::computeRowFlags(uInt row)
 	return flag_p;
 }
 
-Bool
-FlagAgentBase::computeInRowFlags(uInt row, uInt channel, Float visExpression)
+void
+FlagAgentBase::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags,uInt channel, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
-	return flag_p;
+	return;
 }
 
 void
