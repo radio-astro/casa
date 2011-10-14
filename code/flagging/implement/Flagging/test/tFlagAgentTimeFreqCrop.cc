@@ -657,7 +657,7 @@ int main(int argc, char **argv)
 		else if (parameter == string("-usewindowstats"))
 		{
 			usewindowstats = casa::String(value);
-			agentParameters.define ("usewindowstats", intent);
+			agentParameters.define ("usewindowstats", usewindowstats);
 			cout << "usewindowstats is: " << usewindowstats << endl;
 		}
 	}
