@@ -119,33 +119,35 @@ public:
 		if ((polarizations != NULL) and (polarizations->size() > 0))
 		{
 			polarizations_p = polarizations;
+			reducedLength_p(0) = polarizations_p->size();
 		}
 		else
 		{
-			polarizations_p = createIndex(baseCubeShape(0));
+			polarizations_p = NULL;
+			reducedLength_p(0) = baseCubeShape(0);
 		}
 
 		if ((channels != NULL) and (channels->size() > 0))
 		{
 			channels_p = channels;
+			reducedLength_p(1) = channels_p->size();
 		}
 		else
 		{
-			channels_p = createIndex(baseCubeShape(1));
+			channels_p = NULL;
+			reducedLength_p(1) = baseCubeShape(1);
 		}
 
 		if ((rows != NULL) and (rows->size() > 0))
 		{
 			rows_p = rows;
+			reducedLength_p(2) = rows_p->size();
 		}
 		else
 		{
-			rows_p = createIndex(baseCubeShape(2));
+			rows_p = NULL;
+			reducedLength_p(2) = baseCubeShape(2);
 		}
-
-		reducedLength_p(0) = polarizations_p->size();
-		reducedLength_p(1) = channels_p->size();
-		reducedLength_p(2) = rows_p->size();
 	}
 
     T &operator()(uInt i1, uInt i2, uInt i3)

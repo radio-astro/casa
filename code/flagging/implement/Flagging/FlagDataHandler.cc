@@ -616,7 +616,7 @@ FlagDataHandler::generateIterator()
 	else
 	{
 
-	    throw AipsError ("Not implemented???", __FILE__, __LINE__);
+	    throw AipsError ("FlagDataHandler.asyncio temporally disabled ", __FILE__, __LINE__);
 
 		// Determine columns to be pre-fetched
 //		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
