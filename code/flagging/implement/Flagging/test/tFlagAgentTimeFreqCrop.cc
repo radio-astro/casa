@@ -500,17 +500,17 @@ int main(int argc, char **argv)
 	string targetFile,referenceFile;
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
 	string time_amp_cutoff,freq_amp_cutoff,maxnpieces,timefit,freqfit,flagdimension,halfwin,usewindowstats;
-	string expression,datacolumn,ntime;
+	string expression,datacolumn,nThreadsParam,ntime;
+	Int nThreads = 0;
 
 	// Execution control variables declaration
+	bool deleteFlagsActivated=false;
 	bool checkFlagsActivated=false;
 	bool returnCode=true;
 
 	// Parse input parameters
 	Record agentParameters;
 	Record dataSelection;
-	vector<string> correlationSelection;
-	vector<string> antennaSelection;
 	for (unsigned short i=0;i<argc-1;i++)
 	{
 		parameter = string(argv[i]);
@@ -560,7 +560,7 @@ int main(int argc, char **argv)
 		else if (parameter == string("-antenna"))
 		{
 			antenna = casa::String(value);
-			antennaSelection.push_back(antenna);
+			dataSelection.define("antenna",antenna);
 			cout << "Antenna selection is: " << antenna << endl;
 		}
 		else if (parameter == string("-uvrange"))
@@ -590,8 +590,8 @@ int main(int argc, char **argv)
 		else if (parameter == string("-correlation"))
 		{
 			correlation = casa::String(value);
-			correlationSelection.push_back(correlation);
-			cout << "Correlation selection is: " << correlation << endl;
+			agentParameters.define ("correlation", uvrange);
+			cout << "Correlation range selection is: " << correlation << endl;
 		}
 		else if (parameter == string("-expression"))
 		{
@@ -604,6 +604,13 @@ int main(int argc, char **argv)
 			datacolumn = casa::String(value);
 			agentParameters.define ("datacolumn", datacolumn);
 			cout << "datacolumn is: " << datacolumn << endl;
+		}
+		else if (parameter == string("-nThreads"))
+		{
+			nThreadsParam = casa::String(value);
+			agentParameters.define ("nThreads", nThreadsParam);
+			nThreads = atoi(nThreadsParam.c_str());
+			cout << "nThreads is: " << nThreads << endl;
 		}
 		else if (parameter == string("-time_amp_cutoff"))
 		{
@@ -659,47 +666,26 @@ int main(int argc, char **argv)
 	Record agentParameters_i;
 	vector<Record> agentParamersList;
 
-	if (correlationSelection.size()>1)
-	{	// Parallelization per correlation
-		for (vector<string>::iterator iter = correlationSelection.begin();iter!=correlationSelection.end();iter++)
+	if (nThreads>1)
+	{
+		for (Int threadId=0;threadId<nThreads;threadId++)
 		{
 			agentParameters_i = agentParameters;
-			agentParameters_i.define("correlation", *iter);
-			agentParamersList.push_back(agentParameters_i);
-		}
-	}
-	else if (antennaSelection.size()>1)
-	{	// Parallelization per baseline
-		for (vector<string>::iterator iter = antennaSelection.begin();iter!=antennaSelection.end();iter++)
-		{
-			agentParameters_i = agentParameters;
-			agentParameters_i.define("antenna", *iter);
-			agentParamersList.push_back(agentParameters_i);
-		}
-	}
 
-	// If we don't have an agent list yet, we create a single-agent one
-	if (agentParamersList.size()==0)
+			stringstream ss;
+			ss << threadId;
+			agentParameters_i.define("threadId",ss.str());
+			agentParameters_i.define("nThreads",nThreadsParam);
+
+			agentParamersList.push_back(agentParameters_i);
+		}
+	}
+	else
 	{
 		agentParamersList.push_back(agentParameters);
 	}
 
-	// If we have a single antenna selection it goes to the data handler
-	if (antennaSelection.size()==1)
-	{
-		dataSelection.define("antenna", antennaSelection[0]);
-	}
-
-	// If we have a single correlation selection it goes to the agents
-	if (correlationSelection.size()==1)
-	{
-		for (vector<Record>::iterator iter = agentParamersList.begin();iter!=agentParamersList.end();iter++)
-		{
-			(*iter).define("correlation",correlationSelection[0]);
-		}
-	}
-
-	deleteFlags(targetFile,dataSelection,agentParamersList);
+	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection,agentParamersList);
 	writeFlags(targetFile,dataSelection,agentParamersList);
 	if (checkFlagsActivated) returnCode = checkFlags(targetFile,referenceFile,dataSelection);
 
