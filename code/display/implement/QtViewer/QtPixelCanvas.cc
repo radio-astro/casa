@@ -762,7 +762,7 @@ void QtPixelCanvas::drawEllipse(const Float &cx, const Float &cy,
 #define DRAW_POLY(X,Y,POLYGON,FILLED) {                                \
     Int np = std::min(X.nelements(), Y.nelements());			\
     if(np<2) return;                                                        \
-    QPointF pts[np];                                                        \
+    QPointF *pts = new QPointF[np];                                                        \
     for(Int i=0; i<np; i++) { pts[i].setX(x[i]); pts[i].setY(q_(y[i]));  }  \
                                                                             \
     if ( cache_label_and_axis == False ) {                                  \
@@ -779,6 +779,7 @@ void QtPixelCanvas::drawEllipse(const Float &cx, const Float &cy,
         else                                                                \
             label_and_axis_cache.push_back( new q_polyline(pts,np,itsPen) );\
     }                                                                       \
+    delete [] pts;                                                          \
 }
 
 

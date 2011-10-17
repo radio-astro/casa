@@ -1896,7 +1896,7 @@ MsPlot::parseStrToList( const String& inString, Vector<String>& outVector )
     Int numSpaces = strippedStr.freq(" ");
     uInt numFound=0;
 
-    String stringList[numCommas+numSpaces+1];
+    String *stringList = new String[numCommas+numSpaces+1];
     if ( numCommas > 0 ) {
        numFound = split( strippedStr, stringList, numCommas+numSpaces+1, "," );
     } else if ( numSpaces > 0 ) {
@@ -1926,6 +1926,7 @@ MsPlot::parseStrToList( const String& inString, Vector<String>& outVector )
        errors[1] += String("Warning: empty string found, nothing to parse");
     }
     
+    delete [] stringList;
 
     log->FnExit(fnname, clname);
     return errors;
@@ -5417,7 +5418,7 @@ MsPlot::corrSelection( const String& corrExpr,
 
      //# Now pull out the correlation information.
      Int nmax = (uInt)Stokes::NumberOfTypes;
-     String stokesNm[ nmax ];         
+     String *stokesNm = new String[ nmax ];         
      uInt totalStokes = split( corrExprPure, stokesNm, nmax, "," );
      
      //# This bit remains for backward compatibility, but this 
@@ -5444,6 +5445,7 @@ MsPlot::corrSelection( const String& corrExpr,
     corrNames[i] = names;
     //cout << "corrNames[" << i << "]=" << names << endl;
      }
+     delete [] stokesNm;
      log->FnExit( fnname, clname);
      return True;
 
@@ -5850,7 +5852,7 @@ MsPlot::getTimeExprStr( const String& times)
     //# Looping through all of the time ranges given and stripping of
     //# time step (average) values, and keeping the time step value
     //# locally.
-    String timeRanges[ times.length() ];
+    String *timeRanges = new String[ times.length() ];
     uInt numRanges = split( times, timeRanges, times.length(), "," );
   
     for( uInt i=0; i < numRanges; i++ )
@@ -5978,7 +5980,7 @@ MsPlot::getTimeExprStr(const String& times, const String& mode)
    //# Looping through all of the time ranges given and stripping of
    //# time step (average) values, and keeping the time step value
    //# locally.
-   String timeRanges[times.length()];
+   String *timeRanges = new String[times.length()];
    uInt numRanges = split(times, timeRanges, times.length(), ",");
   
    for (uInt i=0; i < numRanges; i++) {
@@ -6033,6 +6035,7 @@ MsPlot::getTimeExprStr(const String& times, const String& mode)
          }
       }
    }
+   delete [] timeRanges;
     
    //# We now have a timeExpr that should keep MSSelection happy!
    //# We'll return it and if we found a step value, lets hang on

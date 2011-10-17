@@ -1130,7 +1130,7 @@ void QtDrawCanvas::plotPolyLine(const Matrix<Double> &x,
     int n = nc / 2;
     if (n < 1 || nr < 1)
         return;
-    CurveData data[nr];
+    CurveData *data = new CurveData[nr];
     for (int i = 0; i < nr; i++)
     {
          if (ln < 0)
@@ -1155,6 +1155,7 @@ void QtDrawCanvas::plotPolyLine(const Matrix<Double> &x,
              setCurveData(lin, data[i], typ, clr);
           }
      }
+     delete [] data;
 
      setDataRange();
      return;
@@ -1171,7 +1172,7 @@ void QtDrawCanvas::plotPolyLine(const Matrix<Int> &x,
     int n = nc / 2;
     if (n < 1 || nr < 1)
         return;
-    CurveData data[nr];
+    CurveData *data = new CurveData[nr];
     for (int i = 0; i < nr; i++)
     {
          if (ln < 0)
@@ -1198,6 +1199,7 @@ void QtDrawCanvas::plotPolyLine(const Matrix<Int> &x,
      }
 
      setDataRange();
+     delete [] data;
      return;
 }
 
@@ -1212,7 +1214,7 @@ void QtDrawCanvas::plotPolyLine(const Matrix<Float> &x,
     int n = nc / 2;
     if (n < 1 || nr < 1)
         return;
-    CurveData data[nr];
+    CurveData *data = new CurveData[nr];
     for (int i = 0; i < nr; i++)
     {
          if (ln < 0)
@@ -1254,6 +1256,7 @@ void QtDrawCanvas::plotPolyLine(const Matrix<Float> &x,
      // }
 
      setDataRange();
+     delete [] data;
      return;
 }
 

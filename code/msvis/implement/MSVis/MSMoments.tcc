@@ -415,7 +415,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
 
     // Set moment data units and assign pointer to output moments array
     // Value of goodUnits is the same for each output moment
-    goodUnits = setOutThings( suffix, momentUnits, dataUnits, 
+    goodUnits = this->setOutThings( suffix, momentUnits, dataUnits, 
                               momentAxisUnits, moments_p( i ),
                               convertToVelocity_p ) ;
     // create output MSs
@@ -578,7 +578,7 @@ Bool MSMoments<T>::createMoments(PtrBlock< MeasurementSet* >& outPt,
   ((SubLattice<T> *)mskArrIn)->setPixelMask( mskLatIn, False ) ; 
   PtrBlock< MaskedLattice<T>* > arrLatOutPts( moments_p.nelements() ) ;
   IPosition outDataShape ;
-  CoordinateSystem cSysOut = makeOutputCoordinates( outDataShape, 
+  CoordinateSystem cSysOut = this->makeOutputCoordinates( outDataShape, 
                                                     cSys, 
                                                     mskArrIn->shape(), 
                                                     momentAxis_p, 

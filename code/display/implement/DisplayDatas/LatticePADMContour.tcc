@@ -98,7 +98,7 @@ uInt LatticePADMContour<T>::dataDrawSelf(WorldCanvas *wCanvas,
     wCanvas->setAttribute(dashPos);
     Matrix<T> datMatrix;
     Matrix<Bool> maskMatrix;
-    dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
+    this->dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
     Vector<Float> levels; levels = lac->levels();
     if (maskMatrix.nelements() == datMatrix.nelements()) {
       //cerr << "mask available, but being ignored in "

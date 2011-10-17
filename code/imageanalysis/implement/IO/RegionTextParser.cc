@@ -1177,7 +1177,7 @@ RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) const {
 	Int maxn = Stokes::NumberOfTypes;
-	string res[maxn];
+	string *res = new string[maxn];
 	Int nStokes = split(stokes, res, maxn, ",");
 	Vector<Stokes::StokesTypes> myTypes(nStokes);
 	for (Int i=0; i<nStokes; i++) {
@@ -1188,6 +1188,7 @@ RegionTextParser::_stokesFromString(
 			throw AipsError(preamble + "Unknown correlation type " + x);
 		}
 	}
+	delete [] res;
 	return myTypes;
 }
 

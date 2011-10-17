@@ -138,7 +138,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	       const Double& dphase, const Double& freq, 
     	       const Double* __restrict__  scale, 
 	       const Double* __restrict__  offset,
-    	       const Float* __restrict__  sampling);
+    	       const Float* __restrict__  sampling) __restrict__;
 
     inline Bool onGrid (const Int& nx, const Int& ny, 
 			const Vector<Int>& __restrict__ loc, 
@@ -185,11 +185,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Version that use internally cached inc_p
     //    template <class T>
     inline void addTo4DArray(DComplex* __restrict__& store, Int* __restrict__& iPos, 
-			     Complex& nvalue, Double& wt) __restrict__ 
+			     Complex& nvalue, Double& wt)
     {addTo4DArray(store, iPos, inc_p, nvalue, wt);}
 
     inline void addTo4DArray(Complex* __restrict__& store, Int* __restrict__& iPos, 
-			     Complex& nvalue, Double& wt) __restrict__ 
+			     Complex& nvalue, Double& wt)
     {addTo4DArray(store, iPos, inc_p, nvalue, wt);}
 
     
@@ -205,7 +205,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // The following two methods are called in the innermost loop.
     inline Complex getFrom4DArray(const Complex* __restrict__& store, const Int* __restrict__& iPos) 
-      __restrict__ 
     {return getFrom4DArray(store, iPos, inc_p);}
 
     inline Complex getFrom4DArray(const Complex* __restrict__& store, 
