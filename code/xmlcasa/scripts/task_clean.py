@@ -493,7 +493,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 #imset.makemultifieldmask2(mask,chanslice)
                 imset.makemultifieldmask3(mask,chanslice,newformat, interactive)
                 maskimage=[]
-                for img in sorted(imset.maskimages):
+                #for img in sorted(imset.maskimages):
+                for img in imset.maskimages.keys():
                     maskimage.append(imset.maskimages[img])
 	    casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
 
