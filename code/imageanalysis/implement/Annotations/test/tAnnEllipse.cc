@@ -49,7 +49,6 @@ int main () {
 			Quantity mi(30, "arcsec");
 			Quantity ma(40, "arcsec");
 			Quantity pa(0, "deg");
-
 			Quantity beginFreq, endFreq;
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)

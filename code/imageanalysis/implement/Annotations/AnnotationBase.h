@@ -55,6 +55,8 @@ public:
 
 	typedef vector<float> RGB;
 
+	typedef Vector<std::pair<Quantity,Quantity> > Direction;
+
 	enum Type {
 		// annotations only
 		LINE,
@@ -145,6 +147,8 @@ public:
 	// Given a string, return the corresponding annotation type or throw
 	// an error if the string does not correspond to an allowed type.
 	static Type typeFromString(const String& type);
+
+	static String typeToString(const Type type);
 
 	static String keywordToString(const Keyword key);
 
@@ -272,6 +276,10 @@ public:
 		return _csys;
 	}
 
+	inline Direction getDirections() const {
+		return _convertedDQs;
+	}
+
 protected:
 
 	AnnotationBase(
@@ -291,13 +299,19 @@ protected:
 	// assignment operator
 	AnnotationBase& operator= (const AnnotationBase& other);
 
-	static void _checkMixed(const String& origin, const Array<Quantity>& quantities);
+	static void _checkMixed(
+		const String& origin,
+		const Direction& dirs
+	);
 
 	MDirection _directionFromQuantities(
 		const Quantity& q0, const Quantity& q1
 	);
 
-	void _checkAndConvertDirections(const String& origin, const Matrix<Quantity>& quantities);
+	void _checkAndConvertDirections(
+		const String& origin,
+		const Direction& dirs
+	);
 
 	virtual void _printPairs(ostream &os) const;
 
@@ -322,10 +336,12 @@ private:
 		_symbolthickness;
 	Bool _usetex;
 	Vector<MDirection> _convertedDirections;
+
 	map<Keyword, Bool> _globals;
 	map<Keyword, String> _params;
 	Bool _printGlobals;
 	vector<Int> _labelOff;
+    Direction _convertedDQs;
 
 	static Bool _doneUnitInit, _doneColorInit;
 	static map<String, LineStyle> _lineStyleMap;
@@ -346,6 +362,8 @@ private:
 	static Bool _isRGB(const RGB& rgb);
 
 	void _testConvertToPixel() const;
+
+	static void _initTypeMap();
 };
 
 inline ostream &operator<<(ostream& os, const AnnotationBase& annotation) {

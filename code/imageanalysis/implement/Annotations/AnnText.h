@@ -72,8 +72,10 @@ public:
 	virtual ostream& print(ostream &os) const;
 
 private:
-	Vector<Quantity> _inputDirection;
+	AnnotationBase::Direction _inputDirection;
 	String _text;
+
+	void _init(const Quantity& x, const Quantity& y);
 
 };
 

@@ -34,11 +34,9 @@ AnnText::AnnText(
 	const CoordinateSystem& csys,
 	const String& text
 ) : AnnotationBase(TEXT, dirRefFrameString, csys),
-	_inputDirection(Vector<Quantity>(2)),
+	_inputDirection(AnnotationBase::Direction(1)),
 	_text(text) {
-	_inputDirection[0] = xPos;
-	_inputDirection[1] = yPos;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+	_init(xPos, yPos);
 }
 
 AnnText::AnnText(
@@ -46,13 +44,10 @@ AnnText::AnnText(
 	const CoordinateSystem& csys,
 	const String& text
 ) : AnnotationBase(TEXT, csys),
-	_inputDirection(Vector<Quantity>(2)),
+	_inputDirection(AnnotationBase::Direction(1)),
 	_text(text) {
-	_inputDirection[0] = xPos;
-	_inputDirection[1] = yPos;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
+	_init(xPos, yPos);
 }
-
 
 AnnText& AnnText::operator= (
 	const AnnText& other
@@ -67,6 +62,15 @@ AnnText& AnnText::operator= (
     return *this;
 }
 
+void AnnText::_init(const Quantity& x, const Quantity& y) {
+	_inputDirection[0].first = x;
+	_inputDirection[0].second = y;
+	_checkAndConvertDirections(
+		String(__FUNCTION__), _inputDirection
+	);
+}
+
+
 MDirection AnnText::getDirection() const {
 	return _getConvertedDirections()[0];
 }
@@ -76,8 +80,8 @@ String AnnText::getText() const {
 }
 
 ostream& AnnText::print(ostream &os) const {
-	os << "text [[" << _inputDirection[0]
-	   << ", " << _inputDirection[1] << "], \""
+	os << "text [[" << _inputDirection[0].first
+	   << ", " << _inputDirection[0].second << "], \""
 	   << _text << "\"]";
 	_printPairs(os);
 	return os;
