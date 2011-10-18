@@ -44,24 +44,52 @@ protected:
 
 private:
 
-	/// Input parameters ///
+  /// Input parameters ///
 
-	// Flag threshold in time (flag all data-points further than N-stddev from the fit).
-	Double T_TOL_p;
-    // Flag threshold in frequency. Flag all data-points further than N-stddev from the fit.
-	Double F_TOL_p;
-    // Maximum number of pieces to allow in the piecewise-polynomial fits (1-9)
-	Int MaxNPieces_p;
-    // Fitting function for the time direction  ('line' or 'poly')
-	String timeFitType_p;
-    // Fitting function for the frequency direction  ('line' or 'poly')
-	String freqFitType_p;
-    // Choose the directions along which to perform flagging ('time', 'freq', 'timefreq', 'freqtime')
-	String flagDimension_p;
-    // Half width of sliding window to use with 'usewindowstats' (1,2,3 for 3-point, 5-point or 7-point window sizes)
-    Int halfWin_p;
-    // Use sliding-window statistics to find additional flags ('none', 'sum', 'std', 'both' )
-    String winStats_p;
+  // Flag threshold in time.
+  // (flag all data-points further than N-stddev from the fit).
+  Double time_cutoff_p;
+  // Flag threshold in frequency.
+  // (flag all data-points further than N-stddev from the fit).
+  Double freq_cutoff_p;
+  // Maximum number of pieces to allow in the piecewise-polynomial fits (1-9)
+  Int maxNPieces_p;
+  // Fitting function for the time direction  ('line' or 'poly')
+  String timeFitType_p;
+  // Fitting function for the frequency direction  ('line' or 'poly')
+  String freqFitType_p;
+  // Choose the directions along which to perform flagging
+  // ('time', 'freq', 'timefreq', 'freqtime')
+  String flagDimension_p;
+  // Half width of sliding window to use with 'usewindowstats' 
+  // (1,2,3 for 3-point, 5-point or 7-point window sizes)
+  Int halfWin_p;
+  // Use sliding-window statistics to find additional flags
+  // ('none', 'sum', 'std', 'both' )
+  String winStats_p;
+  
+  
+  /////// TFCROP functions
+  
+  // Average the data, fit a piecewise polynomial, divide it out, flag outliers.
+  void fitBaseAndFlag(String fittype, String direction, VisMapper &visibilities,FlagMapper &flags);
+  
+  // Calculate Mean, Variance, Stddev while accounting for flags
+  Float calcMean(Vector<Float> &vect, Vector<Bool> &flag);
+  Float calcVar(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit);
+  Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit);
+  Float calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mean);
+  
+  // Fit a piece-wise polynomial according to the supplied specs
+  void fitPiecewisePoly(Vector<Float> &data,Vector<Bool> &flag, Vector<Float> &fit, uInt maxnpieces, uInt maxdeg);
+  
+  // Fit a polynomial of specified degree to a range of data points
+  void polyFit(Vector<Float> &data,Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2,uInt deg);
+  
+  // Fit a line to a range of data points
+  void lineFit(Vector<Float> &data,Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2);
+  
+
 
 };
 

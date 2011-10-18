@@ -22,7 +22,16 @@
 
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
 
+// Polynomial-fitting classes
+#include <scimath/Functionals/Polynomial.h>
+#include <scimath/Fitting.h>
+#include <scimath/Fitting/LinearFit.h>
+#include <scimath/Fitting/GenericL2Fit.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+// TODO : Get rid of this macro ?
+#define MIN(a,b) ((a)<=(b) ? (a) : (b))
 
 FlagAgentTimeFreqCrop::FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
 		FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube)
@@ -42,46 +51,46 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 	exists = config.fieldNumber ("time_amp_cutoff");
 	if (exists >= 0)
 	{
-		T_TOL_p = atof(config.asString("time_amp_cutoff").c_str());
+		time_cutoff_p = atof(config.asString("time_amp_cutoff").c_str());
 	}
 	else
 	{
-		T_TOL_p = 4.0;
+		time_cutoff_p = 4.0;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " time_amp_cutoff is " << T_TOL_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " time_amp_cutoff is " << time_cutoff_p << LogIO::POST;
 
 	exists = config.fieldNumber ("freq_amp_cutoff");
 	if (exists >= 0)
 	{
-		F_TOL_p = atof(config.asString("freq_amp_cutoff").c_str());
+		freq_cutoff_p = atof(config.asString("freq_amp_cutoff").c_str());
 	}
 	else
 	{
-		F_TOL_p = 3.0;
+		freq_cutoff_p = 3.0;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " freq_amp_cutoff is " << F_TOL_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " freq_amp_cutoff is " << freq_cutoff_p << LogIO::POST;
 
 	exists = config.fieldNumber ("maxnpieces");
 	if (exists >= 0)
 	{
-		MaxNPieces_p = atoi(config.asString("maxnpieces").c_str());
+		maxNPieces_p = atoi(config.asString("maxnpieces").c_str());
 
-		if ((MaxNPieces_p<1) or (MaxNPieces_p>9))
+		if ((maxNPieces_p<1) or (maxNPieces_p>9))
 		{
 			*logger_p << LogIO::WARN << "FlagAgentTimeFreqCrop::" << __FUNCTION__ <<
 					" Unsupported maxnpieces: " <<
-					MaxNPieces_p << ", using 7 by default. Supported values: 1-9" << LogIO::POST;
-			MaxNPieces_p = 7;
+					maxNPieces_p << ", using 7 by default. Supported values: 1-9" << LogIO::POST;
+			maxNPieces_p = 7;
 		}
 	}
 	else
 	{
-		MaxNPieces_p = 7;
+		maxNPieces_p = 7;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " maxnpieces is " << MaxNPieces_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " maxnpieces is " << maxNPieces_p << LogIO::POST;
 
 	exists = config.fieldNumber ("timefit");
 	if (exists >= 0)
@@ -205,6 +214,7 @@ FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMappe
 				<< antenna1 << "," << antenna2 << ") with shape " << flagCubeShape << LogIO::POST;
 	}
 
+ /// Justo - This code demonstrates a current problem with the FlagMapper.
 	uInt nChannels,nRows;
 	nChannels = flagCubeShape(0);
 	nRows = flagCubeShape(1);
@@ -213,22 +223,548 @@ FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMappe
 	Float vis;
 	for (row_i=0;row_i<nRows;row_i++)
 	{
-		for (chan_i=0;chan_i<nChannels;chan_i++)
-		{
-			// Get mapped visibility value
-			vis = visibilities(chan_i,row_i);
-
-			// Get already existing flags
-			prevCombinedFlag = flags(chan_i,row_i);
-
-			// ... RFI detection algorithm ...
-
-			// Set flags in all correlations involved
-			flags.applyFlag(chan_i,row_i);
-		}
+	  	for (chan_i=0;chan_i<nChannels;chan_i++)
+	 	{
+		// Get already existing flags
+		  prevCombinedFlag = flags(chan_i,row_i);
+		// Set flags in all correlations involved
+		  if(prevCombinedFlag) flags.applyFlag(chan_i,row_i);
+	  	}
+		flags.applyFlag(40,row_i);
 	}
+
+  //// Un-comment the following block of code to enable TFCROP.
+	/*
+	// Call 'fltBaseAndFlag' as specified by the user.
+	if(flagDimension_p == String("time"))
+	  {
+	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	  }
+	else if( flagDimension_p == String("freq") )
+	  {
+	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	  }
+	else if( flagDimension_p == String("timefreq") )
+	  {
+	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	  }
+	else // freqtime
+	  {
+	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	  }
+	*/
+
 	return;
 }
+
+//----------------------------------------------------------------------------------------------------------
+
+// fitBaseAndFlag
+// Average the data along the axis not-specified by 'direction' to generate a vector along 'direction'.
+// Fit a piece-wise polynomial of type 'fittype' along the axis specified by 'direction'
+// Divide the unaveraged data by this fit, and iteratively flag outliers - use flags.applyFlag()
+void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, VisMapper &visibilities,FlagMapper &flags)
+{    
+  // Get shapes
+  IPosition flagCubeShape = visibilities.shape();
+  uInt nChannels = flagCubeShape(0);
+  uInt nTimes = flagCubeShape(1);
+
+  // Work variables
+  Vector<Float> avgDat,avgFit;
+  Vector<Bool> avgFlag;
+  Vector<Int> mind(2);
+  Float tol=4.0,mn=1.0,sd=0,tpsd=0.0,tpsum=0.0, mval=0.0;
+  Int mcnt=0;
+  
+  // Decide which direction to fit the base polynomial
+  if(direction==String("freq"))
+    { 
+      mind[0]=nChannels;  mind[1]=nTimes;
+      tol=freq_cutoff_p;
+    }
+  else if(direction==String("time") )
+    { 
+      mind[0]=nTimes;  mind[1]=nChannels;
+      tol=time_cutoff_p;
+    }
+  else
+    {
+      throw AipsError("Internal Error. Unrecognized axis direction for tfcrop : " + direction);
+    }
+  
+  // ALLOC : Resize temp arrays to either nChannel or nTime
+  avgDat.resize(mind[0]);   avgDat=0.0;   
+  avgFit.resize(mind[0]);    avgFit=0.0;                
+  avgFlag.resize(mind[0]);  avgFlag=False;
+
+  // A way to tell if anything is non-zero in this piece.
+  Bool allzeros=True; 
+  
+  // STEP 1 : 
+  // For each element in the dominant direction (axis0)
+  // calculate the mean across the other direction (axis1).
+  // The output average data and flags will later be sent for poly fitting...
+  for(int i0=0;i0<mind[0];i0++)	
+    {
+      // Calc the mean across axes1 (with flags)
+      mval=0.0;mcnt=0;
+      for(uInt i1=0;i1<mind[1];i1++)
+	{
+	  if(mind[0]==nChannels)// if i0 is channel, and i1 is time
+	    {
+	      if( ! flags(i0,i1) )
+		{
+		  mval += visibilities(i0,i1);
+		  mcnt++;
+		}
+	    }
+	  else // if i1 is channel, and i0 is time
+	    {
+	      if( ! flags(i1,i0) )
+		{
+		  mval += visibilities(i1,i0);
+		  mcnt++;
+		}
+	    }
+	}//for i1
+
+      // Fill in the mean value across axis1 for i0
+      avgDat[i0] = mcnt ? mval/mcnt : 0.0;
+      // Fill in whether all visibilities are zero or not
+      avgFlag[i0] = mcnt ? False : True;
+      if(! avgFlag[i0] ) allzeros=False;
+
+    }// for i0
+
+  // STEP 2 : 
+  // If there are any non-zero unflagged values in the average, 
+  //     fit polynomials and flag. Otherwise, return.  
+  if(allzeros==False)
+    {
+      // Fit a piece-wise polynomial across axis0 (or do a line)
+      // This fit is done to the average computed in the previous step.
+      if(fittype == String("poly"))	  // Piecewise Poly Fit
+	{
+	  fitPiecewisePoly(avgDat,avgFlag,avgFit,maxNPieces_p,4);	
+	}
+      else  // Line Fit 
+	{
+	  fitPiecewisePoly(avgDat,avgFlag,avgFit,1,1);	
+	}
+      
+      // STEP 3 : 
+      // Now, iterate through the data again and flag.
+      // This time, iterate in reverse order : for each i1, get all i0
+      // This is because 'avgFit' is of size mind[0], 
+      //     and window stats are to be computed along i0
+      for(uInt i1=0;i1<mind[1];i1++)
+	{
+	  // STEP 3A : Divide out the clean bandpass 
+	  avgDat=0,avgFlag=False; 
+	  for(int i0=0;i0<mind[0];i0++)
+	    {
+	      if(mind[0]==nChannels)// if i0 is channel, and i1 is time
+		{
+		  avgFlag[i0] = flags(i0,i1);
+		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i0,i1)/avgFit(i0);
+		}
+	      else // if i1 is channel, i0 is time
+		{
+		  avgFlag[i0] = flags(i1,i0);
+		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i1,i0)/avgFit(i0);
+		}
+	    }//for i0
+
+	  // STEP 3B
+	  // Flag outliers based on absolute deviation from the model
+	  // Do this as a robust fit
+	  Float temp=0;
+	  for(Int loop=0;loop<5;loop++)
+	    {
+	      // Calculate the standard-deviation of the normalized data w.r.to the mean
+	      sd = calcStd(avgDat,avgFlag,mn);
+	      
+	      // Flag if the data differs from 1 by N sd
+	      for(Int i0=0;i0<mind[0];i0++)
+		{
+		  if(avgFlag[i0]==False && fabs(avgDat[i0]-mn) > tol*sd) avgFlag[i0]=True ;
+		}
+	      
+	      // Stop iterating if the deviation of the normalized data from the mean is less than 10%
+	      if(fabs(temp-sd) < 0.1)break;
+	      // else go on for 5 iterations
+	      temp=sd;
+	    }//for loop
+	  
+	  // STEP 3C :
+	  // Additional flagging based on sliding-window statistics
+	  // Note : this step looks only at vis values, not existing flags.
+	  if(halfWin_p>0 && (winStats_p != "none") )
+	    {
+	      // Start and end the sliding windows halfWin from the ends.
+	      for(Int i0=halfWin_p;i0<mind[0]-halfWin_p;i0++)
+		{
+		  tpsum=0.0;tpsd=0.0;
+		  
+		  // Flag point i0  if average of N points around i0 crosses N sd
+		  if(winStats_p=="sum" || winStats_p=="both")
+		    {
+		      for(Int i=i0-halfWin_p; i<i0+halfWin_p+1; i++) tpsum += fabs(avgDat[i]-mn);
+		      if(tpsum/(2*halfWin_p+1.0) > tol*sd ) avgFlag[i0]=True;
+		    }
+		  
+		  // Flag point i0 if the N point std around i0 is larger then N sd
+		  if(winStats_p=="std" || winStats_p=="both")
+		    {
+		      for(Int i=i0-halfWin_p; i<i0+halfWin_p+1; i++) tpsd += (avgDat[i]-mn) * (avgDat[i]-mn) ;
+		      if(sqrt( tpsd / (2*halfWin_p+1.0) ) > tol*sd)  avgFlag[i0]=True ;
+		    }
+		  
+		}//for i0
+	    }// if winStats != none
+
+
+	  // STEP 3D :
+	  // Fill the flags into the FlagMapper 
+	  // Note : To minimize copies, call flags.applyFlag() directly from STEPS 3B and 3C,
+	  //           in addition to filling in avgFlag for STEP 3B.  
+	  //       However, the following ensures minimal calls to flags.applyFlag().
+	  for(Int i0=0;i0<mind[0];i0++)
+	    {
+	      if(mind[0]==nChannels) // if i0 is channel, and i1 is time
+		{
+		  if(avgFlag[i0]) {flags.applyFlag(i0,i1);}
+		}
+	      else //if i1 is channel, and i0 is time
+		{
+		  if(avgFlag[i0]) {flags.applyFlag(i1,i0);}
+		}
+	    }// for i0
+	  
+	}//for i1
+      
+    }// if allzeros==False
+  
+  return;
+  
+}// end fitBaseAndFlag
+
+
+
+/* Calculate the MEAN of 'vect' ignoring values flagged in 'flag' */
+Float FlagAgentTimeFreqCrop :: calcMean(Vector<Float> &vect, Vector<Bool> &flag)
+{
+  Float mean=0;
+  Int cnt=0;
+  for(uInt i=0;i<vect.nelements();i++)
+    if(flag[i]==False)
+      {
+	mean += vect[i];
+	cnt++;
+      }
+  if(cnt==0) cnt=1;
+  return mean/cnt;
+}
+
+
+/* Calculate the variance of 'vect' w.r.to a given 'fit' 
+ * ignoring values flagged in 'flag' 
+ * Use  median ( data - median(data) )   as the estimator of variance
+ */
+Float FlagAgentTimeFreqCrop :: calcVar(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit)
+{
+  Float var=0;
+  uInt n=0,cnt=0;
+  n = vect.nelements() < fit.nelements() ? vect.nelements() : fit.nelements();
+  for(uInt i=0;i<n;i++)
+    {
+      if(flag[i]==False)cnt++;
+    }
+  
+  Vector<Float> validvals(cnt);
+  cnt=0;
+  for(uInt i=0;i<n;i++)
+    {
+      if(flag[i]==False)
+	{
+	  validvals[cnt] = fit[i] < 1e-6 ? 0.0 : fabs( (vect[i] - fit[i])/fit[i] );
+	  cnt++;
+	}
+    }
+  
+  Float med=0.0;
+  
+  if(validvals.nelements())
+    {
+      med = median(validvals,False);
+      
+      //cout << "validvals : " << validvals << endl;
+      //cout << "median : " << med << endl;
+      
+      for(uInt i=0;i<validvals.nelements();i++)
+	validvals[i] = fabs( validvals[i]-med );
+      
+      med = median(validvals,False);
+      //cout << "median(data-median(data)) : " << med << endl;
+    }
+  
+  return med;
+}
+
+
+
+/* Calculate the STANDARD DEVN. of 'vect' w.r.to a given 'fit' 
+ * ignoring values flagged in 'flag' */
+Float FlagAgentTimeFreqCrop :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Vector<Float> &fit)
+{
+  Float std=0;
+  uInt n=0,cnt=0;
+  n = vect.nelements() < fit.nelements() ? vect.nelements() : fit.nelements();
+  for(uInt i=0;i<n;i++)
+    if(flag[i]==False)
+      {
+	cnt++;
+	std += (vect[i]-fit[i])*(vect[i]-fit[i]);
+      }
+  if(cnt==0) cnt=1;
+  return sqrt(std/cnt);
+}
+
+
+/* Calculate the STANDARD DEVN. of 'vect' w.r.to a given mean 
+ * ignoring values flagged in 'flag' */
+Float FlagAgentTimeFreqCrop :: calcStd(Vector<Float> &vect, Vector<Bool> &flag, Float mean)
+{
+  Float std=0;
+  uInt cnt=0;
+  for(uInt i=0;i<vect.nelements();i++)
+    if(flag[i]==False)
+      {
+	cnt++;
+	std += (vect[i]-mean)*(vect[i]-mean);
+      }
+  return sqrt(std/cnt);
+}
+
+/* Fit Piecewise polynomials to 'data' and get the 'fit' */
+void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt maxnpieces, uInt maxdeg)
+{
+  Int deg=0,start=0;
+  Int left=0,right=0;
+  Float sd,TOL=3;
+  Vector<Float> tdata;
+  
+  // ALLOC : Another temp array to hold modified data
+  tdata.resize(data.nelements());
+  tdata = data;
+  
+  AlwaysAssert(data.nelements()==flag.nelements(), AipsError);    
+  
+  /* replace empty data values by adjacent values */
+  for(uInt i=0;i<tdata.nelements();i++)
+    {
+      if(tdata[i]==0)
+	{
+	  if(i==0)// find first non-zero value and set to that.
+	    {
+	      Int ind=0;
+	      for(uInt j=1;j<tdata.nelements();j++)
+		if(tdata[j]!=0){ind=j;break;}
+	      if(ind==0) tdata[i]=0;
+	      else tdata[i]=tdata[ind];
+	    }
+	  else// find next non-zero value and interpolate.
+	    {
+	      Int indr=0;
+	      for(uInt j=i+1;j<tdata.nelements();j++)
+		if(tdata[j]!=0){indr=j;break;}
+	      Int indl=-1;
+	      for(int j = i ; j >= 0 ; j--)
+		if(tdata[j]!=0){indl=j;break;}
+	      
+	      if(indl==-1 && indr==0) tdata[i]=0;
+	      if(indl>-1 && indr==0) tdata[i]=tdata[indl];
+	      if(indl==-1 && indr>0) tdata[i]=tdata[indr];
+	      if(indl>-1 && indr>0) tdata[i]=(tdata[indl]+tdata[indr])/2.0;
+	    }
+	}
+    }
+  
+  
+  /* If there still are empty points (entire spectrum is flagged) flag it. */
+  for(uInt i=0;i<tdata.nelements();i++)
+    if(tdata[i]==0) 
+      {
+	flag[i]=True;
+      }
+  
+  fit = tdata;
+  
+  Int psize=1;
+  Int leftover=1,leftover_back=0,leftover_front=0,npieces=1;
+  
+  deg=1;
+  npieces=1;
+  
+  for(uInt j=0;j<5;j++)
+    {
+      npieces = MIN(2*j+1, maxnpieces);
+      if(j>1) {deg=2;}
+      if(j>2) {deg=3;}
+      deg = MIN(deg,maxdeg);
+      
+      psize = (int)(tdata.nelements()/npieces);
+      //     cout << "Iter : " << j << " with Deg : " << deg << " and Piece-size : " << psize << endl;
+      
+      leftover = (int)(tdata.nelements() % npieces);
+      
+      leftover_front = (int)(leftover/2.0);
+      leftover_back = leftover - leftover_front;
+      
+      left=0; right=tdata.nelements()-1;
+      for(Int p=0;p<npieces;p++)
+	{
+	  if(npieces>1)
+	    {
+	      left = leftover_front + p*psize;
+	      right = left + psize; 
+	      
+	      if(p==0) {left = 0; right = leftover_front + psize;}
+	      if(p==npieces-1) {right = tdata.nelements()-1;} 
+	    }
+	  if(deg==1) 
+	    lineFit(tdata,flag,fit,left,right);
+	  else 
+	    polyFit(tdata,flag,fit,left,right,deg);
+	}
+      
+      /* Now, smooth the fit - make this nicer later */
+      
+      int winstart=0,winend=0;
+      float winsum=0.0;
+      int offset=2;
+      for(uInt i=offset;i<tdata.nelements()-offset;i++)
+	{
+	  winstart = i-offset;
+	  winend = i+offset;
+	  if(winstart<0)winstart=0;
+	  if(winend>=tdata.nelements())winend=tdata.nelements()-1;
+	  if(winend <= winstart) break;
+	  winsum=0.0;
+	  for(uInt wi=winstart;wi<=winend;++wi)
+	    winsum += fit[wi];
+	  fit[i] = winsum/(winend-winstart+1);
+	}
+      
+      
+      /* Calculate the STD of the fit */
+      sd = calcStd(tdata,flag,fit);
+      if(j>=2)  TOL=2;
+      else TOL=3;
+      
+      
+      /* Detect outliers */
+      for(uInt i=0;i<tdata.nelements();i++)
+	{
+	  if(tdata[i]-fit[i] > TOL*sd) 
+	    flag[i]=True;
+	}
+      
+    } // for j
+  
+} // end of fitPiecewisePoly
+
+
+
+  /* Fit a polynomial to 'data' from lim1 to lim2, of given degree 'deg', 
+   * taking care of flags in 'flag', and returning the fitted values in 'fit' */
+void FlagAgentTimeFreqCrop :: polyFit(Vector<Float> &data,Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2,uInt deg)
+{
+  static Vector<Double> x;
+  static Vector<Double> y;
+  static Vector<Double> sig;
+  static Vector<Double> solution;
+  
+  uInt cnt=0;
+  for(uInt i=lim1;i<=lim2;i++)
+    if(flag[i]==False) cnt++;
+  
+  if(cnt <= deg)
+    {
+      lineFit(data,flag,fit,lim1,lim2);
+      return;
+    }
+  
+  
+  LinearFit<Double> fitter;
+  Polynomial<AutoDiff<Double> > combination(deg);
+  
+  
+  combination.setCoefficient(0,0.0);
+  if (deg >= 1) combination.setCoefficient(1, 0.0);
+  if (deg >= 2) combination.setCoefficient(2, 0.0);
+  if (deg >= 3) combination.setCoefficient(3, 0.0);
+  if (deg >= 4) combination.setCoefficient(4, 0.0);
+  
+  // ALLOC : Resize to the length of each 'piece' in the piecewise fit.
+  x.resize(lim2-lim1+1);
+  y.resize(lim2-lim1+1);
+  sig.resize(lim2-lim1+1);
+  solution.resize(deg+1);
+  
+  for(uInt i=lim1;i<=lim2;i++)
+    {
+      x[i-lim1] = i+1;
+      y[i-lim1] = data[i];
+      sig[i-lim1] = (flag[i]==True)?0:1;
+    }
+  
+  fitter.asWeight(True);
+  fitter.setFunction(combination);
+  solution = fitter.fit(x,y,sig);
+  
+  for(uInt i=lim1;i<=lim2;i++)
+    {
+      fit[i]=0;
+      for(uInt j=0;j<deg+1;j++)
+	fit[i] += solution[j]*pow((double)(x[i-lim1]),(double)j);
+    }
+  
+}
+
+
+
+/* Fit a LINE to 'data' from lim1 to lim2, taking care of flags in 
+ * 'flag', and returning the fitted values in 'fit' */
+void FlagAgentTimeFreqCrop :: lineFit(Vector<Float> &data, Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2)
+{
+  float Sx = 0, Sy = 0, Sxx = 0, Sxy = 0, S = 0, a, b, sd, mn;
+  
+  mn = calcMean(data, flag);
+  sd = calcStd (data, flag, mn);
+  
+  for (uInt i = lim1; i <= lim2; i++)
+    {
+      if (flag[i] == False) // if unflagged
+	{
+	  S += 1 / (sd * sd);
+	  Sx += i / (sd * sd);
+	  Sy += data[i] / (sd * sd);
+	  Sxx += (i * i) / (sd * sd);
+	  Sxy += (i * data[i]) / (sd * sd);
+	}
+    }
+  a = (Sxx * Sy - Sx * Sxy) / (S * Sxx - Sx * Sx);
+  b = (S * Sxy - Sx * Sy) / (S * Sxx - Sx * Sx);
+  
+  for (uInt i = lim1; i <= lim2; i++)
+    fit[i] = a + b * i;
+  
+}
+
 
 
 } //# NAMESPACE CASA - END
