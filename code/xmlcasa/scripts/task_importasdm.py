@@ -127,9 +127,17 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                                         lpath = p
                                                         break
                                 casalog.post( 'path to asap library is %s'%(lpath) )
-                                if lpath not in os.environ['LD_LIBRARY_PATH'].split(':'):
-                                        casalog.post( 'appending %s to LD_LIBRARY_PATH'%(lpath) )
-                                        os.environ['LD_LIBRARY_PATH'] += ':%s'%(lpath)
+                                import sys
+                                if sys.platform == 'darwin':
+                                        libpath='DYLD_LIBRARY_PATH'
+                                else:
+                                        libpath='LD_LIBRARY_PATH'
+                                if os.environ.has_key(libpath) == False:
+					casalog.post( 'defining %s as %s'%(lpath,libpath) )
+                                        os.environ[libpath] = lpath
+                                elif lpath not in os.environ[libpath].split(':'):
+                                        casalog.post( 'appending %s to %s'%(lpath,libpath) )
+                                        os.environ[libpath] += ':%s'%(lpath)
                                 if showversion:
                                         execute_string = theexecutable + ' --help'
                                 else:
