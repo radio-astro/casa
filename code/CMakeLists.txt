@@ -530,7 +530,11 @@ if( NOT SKIP_PGPLOT )
   if (CMAKE_SYSTEM MATCHES ^Darwin-11 AND NOT LLVMCOMPILER )
      set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran" )
   else()
-     set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
+     if (APPLE) 
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
+     else()
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
+     endif()
   endif()
   casa_find( PGPLOT
     VERSION 5.3.1
