@@ -91,11 +91,13 @@ private:
     if ( file.isDirectory() )
       ret = pks ;
     else if ( file.isReadable() ) {
+      // if we want to compare to 6 characters we should only read in 6
       FILE *f = fopen( filename.c_str(), "r") ;
-      char buf[8] ;
-      fread( buf, 6, 1, f ) ;
+      char buf[7] ;
+      size_t tmp = fread( buf, 6, 1, f ) ;
+      (void *)tmp;
       fclose( f ) ;
-      buf[7]='\0' ;
+      buf[6]='\0' ;
       // NRO data has two types:
       //  1) specific binary data for OTF observation
       //  2) (pseudo-)FITS data that doesn't have primary HDU

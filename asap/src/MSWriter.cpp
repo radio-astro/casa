@@ -2375,7 +2375,7 @@ void MSWriter::fillAntenna()
   TableRecord &r = tr.record() ;
   RecordFieldPtr<String> nameRF( r, "NAME" ) ;
   RecordFieldPtr<String> stationRF( r, "STATION" ) ;
-  RecordFieldPtr<String> mountRF( r, "NAME" ) ;
+  RecordFieldPtr<String> mountRF( r, "MOUNT" ) ;
   RecordFieldPtr<String> typeRF( r, "TYPE" ) ;
   RecordFieldPtr<Double> dishDiameterRF( r, "DISH_DIAMETER" ) ;
   RecordFieldPtr< Vector<Double> > positionRF( r, "POSITION" ) ;
@@ -2384,6 +2384,7 @@ void MSWriter::fillAntenna()
   *typeRF = atype ;
   *dishDiameterRF = diameter ;
   *positionRF = antpos ;
+  *stationRF = stationName ;
   
   tr.put( 0 ) ;
 
