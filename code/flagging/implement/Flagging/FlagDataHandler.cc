@@ -200,6 +200,21 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 			mapSubIntegrations_p = false;
 			break;
 		}
+		case  ARRAY_FIELD:
+		{
+			*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Iteration mode: ARRAY_FIELD" << LogIO::POST;
+			sortOrder_p = Block<int>(4);
+			sortOrder_p[0] = MS::ARRAY_ID;
+			sortOrder_p[1] = MS::FIELD_ID;
+			sortOrder_p[2] = MS::DATA_DESC_ID;
+			sortOrder_p[3] = MS::TIME;
+
+			// NOTE: groupTimeSteps_p=false selects only one time step per buffer
+			groupTimeSteps_p = false;
+			mapAntennaPairs_p = false;
+			mapSubIntegrations_p = false;
+			break;
+		}
 		default:
 		{
 			iterationApproach_p = SUB_INTEGRATION;
@@ -1684,6 +1699,11 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *priva
 	{
 		applyFlag_p = &FlagMapper::applyCommonFlags;
 	}
+
+	IPosition commonFlagCubeSize = commonFlagsView_p->shape(); // pol,chan,row
+	reducedLength_p = IPosition(2);
+	reducedLength_p(0) = commonFlagCubeSize(1); // chan
+	reducedLength_p(1) = commonFlagCubeSize(2); // row
 }
 
 void
@@ -1700,6 +1720,18 @@ FlagMapper::~FlagMapper()
 {
 	if (commonFlagsView_p != NULL) delete commonFlagsView_p;
 	if (privateFlagsView_p != NULL) delete privateFlagsView_p;
+}
+
+Bool
+FlagMapper::operator()(uInt channel, uInt row)
+{
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	{
+		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(row,channel,*iter);
+	}
+
+	return combinedFlag;
 }
 
 void

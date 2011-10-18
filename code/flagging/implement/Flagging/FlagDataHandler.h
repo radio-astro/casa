@@ -251,16 +251,16 @@ public:
 	VisMapper(String expression,polarizationMap *polMap);
 	~VisMapper();
 
+    void setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
+
+    vector<uInt> getSelectedCorrelations() { return selectedCorrelations_p;}
+
 	Float operator()(uInt chan, uInt row);
 
     const IPosition &shape() const
     {
     	return reducedLength_p;
     }
-
-    void setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis=NULL);
-
-    vector<uInt> getSelectedCorrelations() { return selectedCorrelations_p;}
 
     void shape(Int &chan, Int &row) const
     {
@@ -323,7 +323,22 @@ public:
 	~FlagMapper();
 
 	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+
 	void applyFlag(uInt chan, uInt row);
+
+	Bool operator()(uInt chan, uInt row);
+
+    const IPosition &shape() const
+    {
+    	return reducedLength_p;
+    }
+
+    void shape(Int &chan, Int &row) const
+    {
+    	chan = reducedLength_p(0);
+    	row = reducedLength_p(1);
+    	return;
+    }
 
 
 protected:
@@ -359,7 +374,8 @@ public:
 		COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,
 		COMPLETE_SCAN_UNMAPPED,
 		ANTENNA_PAIR,
-		SUB_INTEGRATION
+		SUB_INTEGRATION,
+		ARRAY_FIELD
 	};
 
 	// Default constructor
