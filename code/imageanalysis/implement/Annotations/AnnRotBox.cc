@@ -103,39 +103,6 @@ Vector<MDirection> AnnRotBox::getCorners() const {
 	return _corners;
 }
 
-void AnnRotBox::worldBoundingBox(
-	vector<Quantity>& blc, vector<Quantity>& trc
-) const {
-	const CoordinateSystem csys = getCsys();
-	Vector<Double> inc = csys.increment();
-	IPosition dirAxes = _getDirectionAxes();
-	Int xdir = inc[dirAxes[0]] >= 0 ? 1 : -1;
-	Int ydir = inc[dirAxes[1]] >= 0 ? 1 : -1;
-	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
-	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
-	vector<Quantum<Vector<Double> > > coords(_corners.size());
-	coords[0] = _corners[0].getAngle("rad");
-	Double xmin = coords[0].getValue(xUnit)[0];
-	Double xmax = xmin;
-	Double ymin = coords[0].getValue(yUnit)[1];
-	Double ymax = ymin;
-
-	for (uInt i=1; i<coords.size(); i++) {
-		coords[i] = _corners[i].getAngle("rad");
-		xmin = min(xmin, coords[i].getValue(xUnit)[0]);
-		xmax = max(xmax, coords[i].getValue(xUnit)[0]);
-		ymin = min(ymin, coords[i].getValue(yUnit)[1]);
-		ymax = max(ymax, coords[i].getValue(yUnit)[1]);
-	}
-
-	blc.resize(2);
-	trc.resize(2);
-	blc[0] = xdir > 0 ? Quantity(xmin, xUnit) : Quantity(xmax, xUnit);
-	blc[1] = ydir > 0 ? Quantity(ymin, yUnit) : Quantity(ymax, yUnit);
-	trc[0] = xdir > 0 ? Quantity(xmax, xUnit) : Quantity(xmin, xUnit);
-	trc[1] = ydir > 0 ? Quantity(ymax, yUnit) : Quantity(ymin, yUnit);
-}
-
 void AnnRotBox::worldCorners(vector<Quantity>& x, vector<Quantity>& y) const {
 	const CoordinateSystem csys = getCsys();
 	const IPosition dirAxes = _getDirectionAxes();

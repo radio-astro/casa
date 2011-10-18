@@ -162,7 +162,7 @@ int main () {
 			}
 			AlwaysAssert(thrown, AipsError);
 		}
-
+		/*
 		{
 			log << LogIO::NORMAL << "Test getBoundingBox and getPixelBox"
 				<< LogIO::POST;
@@ -248,6 +248,7 @@ int main () {
 				), AipsError
 			);
 		}
+		*/
 		{
 			log << LogIO::NORMAL
 				<< "Test corners with no conversions"

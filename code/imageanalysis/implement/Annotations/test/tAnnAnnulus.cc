@@ -215,12 +215,14 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			/*
 			vector<Quantity> wblc, wtrc;
 			annulus.worldBoundingBox(wblc, wtrc);
 			AlwaysAssert(near(wblc[0].getValue("arcmin"), (centerx+outer).getValue("arcmin")), AipsError);
 			AlwaysAssert(near(wblc[1].getValue("arcmin"), (centery-outer).getValue("arcmin")), AipsError);
 			AlwaysAssert(near(wtrc[0].getValue("arcmin"), (centerx-outer).getValue("arcmin")), AipsError);
 			AlwaysAssert(near(wtrc[1].getValue("arcmin"), (centery+outer).getValue("arcmin")), AipsError);
+
 
 			vector<Double> pblc, ptrc;
 			annulus.pixelBoundingBox(pblc, ptrc);
@@ -231,6 +233,7 @@ int main () {
 			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
+			*/
 
 		}
 		{

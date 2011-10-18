@@ -288,36 +288,6 @@ void AnnRegion::_extend() {
 	}
 }
 
-void AnnRegion::pixelBoundingBox(
-	vector<Double>& blc, vector<Double>& trc
-) const {
-	vector<Quantity> xblc, xtrc;
-	worldBoundingBox(xblc, xtrc);
-
-	const CoordinateSystem csys = getCsys();
-	Vector<Double> wblc = csys.referenceValue();
-	Vector<Double> wtrc = wblc.copy();
-	const IPosition dirAxes = _getDirectionAxes();
-	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
-	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
-
-	wblc[dirAxes[0]] = xblc[0].getValue(xUnit);
-	wblc[dirAxes[1]] = xblc[1].getValue(yUnit);
-	wtrc[dirAxes[0]] = xtrc[0].getValue(xUnit);
-	wtrc[dirAxes[1]] = xtrc[1].getValue(yUnit);
-
-	Vector<Double> pblc, ptrc;
-	csys.toPixel(pblc, wblc);
-	csys.toPixel(ptrc, wtrc);
-
-	blc.resize(2);
-	trc.resize(2);
-	blc[0] = pblc[dirAxes[0]];
-	blc[1] = pblc[dirAxes[1]];
-	trc[0] = ptrc[dirAxes[0]];
-	trc[1] = ptrc[dirAxes[1]];
-}
-
 WCBox AnnRegion::_makeExtensionBox(
 	const Vector<Quantity>& freqRange,
 	const Vector<Stokes::StokesTypes>& stokesRange,
