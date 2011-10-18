@@ -141,6 +141,7 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			/*
 			vector<Quantity> wblc, wtrc;
 			box.worldBoundingBox(wblc, wtrc);
 			AlwaysAssert(
@@ -161,6 +162,7 @@ int main () {
 				AipsError
 			);
 
+			/*
 			vector<Double> pblc, ptrc;
 			box.pixelBoundingBox(pblc, ptrc);
 			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
@@ -170,7 +172,7 @@ int main () {
 			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
-
+			*/
 		}
 		{
 			log << LogIO::NORMAL

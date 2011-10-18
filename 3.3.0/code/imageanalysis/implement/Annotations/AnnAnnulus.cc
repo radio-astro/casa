@@ -96,38 +96,6 @@ ostream& AnnAnnulus::print(ostream &os) const {
 	return os;
 }
 
-void AnnAnnulus::worldBoundingBox(
-	vector<Quantity>& blc, vector<Quantity>& trc
-) const {
-	const CoordinateSystem csys = getCsys();
-	Vector<Double> inc = csys.increment();
-	IPosition dirAxes = _getDirectionAxes();
-	Int xdir = inc[dirAxes[0]] >= 0 ? 1 : -1;
-	Int ydir = inc[dirAxes[1]] >= 0 ? 1 : -1;
-	String xUnit = csys.worldAxisUnits()[0];
-	String yUnit = csys.worldAxisUnits()[0];
-	Quantum<Vector<Double> > centerCoord = _getConvertedDirections()[0].getAngle("rad");
-
-	Quantity blcx = Quantity(centerCoord.getValue()[0], centerCoord.getUnit())
-		- (Quantity(xdir,"")*_convertedRadii[1]);
-	blcx.convert(xUnit);
-	Quantity blcy = Quantity(centerCoord.getValue()[1], centerCoord.getUnit())
-		- Quantity(ydir,"")*_convertedRadii[1];
-	blcy.convert(yUnit);
-	Quantity trcx = Quantity(centerCoord.getValue()[0], centerCoord.getUnit())
-		+ Quantity(xdir,"")*_convertedRadii[1];
-	trcx.convert(xUnit);
-	Quantity trcy = Quantity(centerCoord.getValue()[1], centerCoord.getUnit())
-		+ Quantity(ydir,"")*_convertedRadii[1];
-	trcy.convert(yUnit);
-	blc.resize(2);
-	trc.resize(2);
-	blc[0] = blcx;
-	blc[1] = blcy;
-	trc[0] = trcx;
-	trc[1] = trcy;
-}
-
 void AnnAnnulus::_init() {
 	_convertedRadii[0] = _lengthToAngle(_innerRadius, _getDirectionAxes()[0]);
 	_convertedRadii[1] = _lengthToAngle(_outerRadius, _getDirectionAxes()[0]);

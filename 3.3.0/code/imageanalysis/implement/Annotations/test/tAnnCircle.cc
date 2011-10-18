@@ -137,10 +137,12 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			/*
 			vector<Quantity> blc, trc;
 			circle.worldBoundingBox(blc, trc);
 			cout << "world bb blc " << blc[0] << ", " << blc[1]
 			     << " trc " << trc[0] << ", " << trc[1] << endl;
+			*/
 		}
 		{
 			Quantity centerx(0.6, "arcmin");
@@ -166,14 +168,14 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-
+			/*
 			vector<Quantity> wblc, wtrc;
 			circle.worldBoundingBox(wblc, wtrc);
 			AlwaysAssert(near(wblc[0].getValue("arcmin"), (centerx+radius).getValue("arcmin")), AipsError);
 			AlwaysAssert(near(wblc[1].getValue("arcmin"), (centery-radius).getValue("arcmin")), AipsError);
 			AlwaysAssert(near(wtrc[0].getValue("arcmin"), (centerx-radius).getValue("arcmin")), AipsError);
 			AlwaysAssert(near(wtrc[1].getValue("arcmin"), (centery+radius).getValue("arcmin")), AipsError);
-
+			/*
 			vector<Double> pblc, ptrc;
 			circle.pixelBoundingBox(pblc, ptrc);
 			AlwaysAssert(pblc[0] < ptrc[0], AipsError);
@@ -183,7 +185,7 @@ int main () {
 			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
-
+			*/
 		}
 		{
 			log << LogIO::NORMAL
