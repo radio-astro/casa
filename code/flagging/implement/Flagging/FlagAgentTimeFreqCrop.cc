@@ -208,14 +208,18 @@ FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMappe
 	uInt nChannels,nRows;
 	nChannels = flagCubeShape(0);
 	nRows = flagCubeShape(1);
-	Float vis;
+	Bool prevCombinedFlag;
 	uInt row_i,chan_i;
+	Float vis;
 	for (row_i=0;row_i<nRows;row_i++)
 	{
 		for (chan_i=0;chan_i<nChannels;chan_i++)
 		{
 			// Get mapped visibility value
 			vis = visibilities(chan_i,row_i);
+
+			// Get already existing flags
+			prevCombinedFlag = flags(chan_i,row_i);
 
 			// ... RFI detection algorithm ...
 
