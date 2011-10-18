@@ -111,11 +111,11 @@ protected:
 	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
 	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
 
-	// Compute flags for a given row
-	virtual Bool computeRowFlags(uInt row);
+	// Compute flags for a given visibilities point
+	virtual void computeRowFlags(FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual void computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt channel, uInt row);
+	virtual void computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
 	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);

@@ -204,10 +204,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 void
 FlagAgentBase::start()
 {
-	if (backgroundMode_p)
-	{
-		casa::async::Thread::startThread();
-	}
+	casa::async::Thread::startThread();
 
 	return;
 }
@@ -268,22 +265,26 @@ FlagAgentBase::completeProcess()
 void *
 FlagAgentBase::run ()
 {
-	while (!terminationRequested_p)
+	if (backgroundMode_p)
 	{
-
-		if (processing_p) // NOTE: This races with queueProcess but it is harmless
+		while (!terminationRequested_p)
 		{
-			runCore();
 
-			// Disable processing to enter in idle mode
-			processing_p = false;
-		}
-		else
-		{
-			sched_yield();
+			if (processing_p) // NOTE: This races with queueProcess but it is harmless
+			{
+				runCore();
+
+				// Disable processing to enter in idle mode
+				processing_p = false;
+			}
+			else
+			{
+				sched_yield();
+			}
 		}
 	}
 
+	processing_p = false;
 	threadTerminated_p = true;
 
 	return NULL;
@@ -902,12 +903,11 @@ FlagAgentBase::checkIfProcessBuffer()
 void
 FlagAgentBase::iterateRows()
 {
-	// Prepare Flag Mapper
-	CubeView<Bool> *commonFlagCube = NULL;
-	CubeView<Bool> *privateFlagCube = NULL;
-	commonFlagCube= new CubeView<Bool>(commonFlagCube_p);
-	if (writePrivateFlagCube_p) privateFlagCube= new CubeView<Bool>(privateFlagCube_p);
-	FlagMapper flagMap = FlagMapper(flag_p,polarizationIndex_p,commonFlagCube,privateFlagCube);
+	// Create FlagMapper objects and parse the correlation selection
+	FlagMapper flagsMap = FlagMapper(flag_p,polarizationIndex_p);
+
+	// Set CubeViews in FlagMapper
+	setFlagsMap(NULL,&flagsMap);
 
 	// Some logging info
 	*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
@@ -916,10 +916,8 @@ FlagAgentBase::iterateRows()
 			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
 
 	// Loop trough selected rows
-	uInt rowIdx = 0;
-	Bool computedFlag;
+	Int rowIdx = 0;
 	vector<uInt>::iterator rowIter;
-	vector<uInt>::iterator channellIter;
 	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
 		if (multiThreading_p and (rowIdx % nThreads_p != threadId_p))
@@ -931,14 +929,11 @@ FlagAgentBase::iterateRows()
 			continue;
 		}
 
-		computedFlag = computeRowFlags(*rowIter);
-		if (computedFlag == flag_p)
-		{
-			for (channellIter = channelIndex_p.begin();channellIter != channelIndex_p.end();channellIter++)
-			{
-				flagMap.applyFlag(*channellIter,*rowIter);
-			}
-		}
+		// Compute flags for this row
+		computeRowFlags(flagsMap,*rowIter);
+
+		// Increment row index
+		rowIdx++;
 	}
 
 	return;
@@ -951,28 +946,11 @@ FlagAgentBase::iterateInRows()
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
 	FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
 
-	if (filterRows_p)
-	{
-		// Set CubeViews in VisMapper
-		setVisibilitiesMap(&rowsIndex_p,&visibilitiesMap);
+	// Set CubeViews in VisMapper
+	setVisibilitiesMap(NULL,&visibilitiesMap);
 
-		// Set CubeViews in FlagMapper
-		setFlagsMap(&rowsIndex_p,&flagsMap);
-	}
-	else
-	{
-		// Set CubeViews in VisMapper
-		setVisibilitiesMap(NULL,&visibilitiesMap);
-
-		// Set CubeViews in FlagMapper
-		setFlagsMap(NULL,&flagsMap);
-	}
-
-	// Determine visibilities map size
-	IPosition flagCubeShape = visibilitiesMap.shape();
-	uInt nChannels,nRows;
-	nChannels = flagCubeShape(0);
-	nRows = flagCubeShape(1);
+	// Set CubeViews in FlagMapper
+	setFlagsMap(NULL,&flagsMap);
 
 	// Some log info
 	if (multiThreading_p)
@@ -980,17 +958,21 @@ FlagAgentBase::iterateInRows()
 		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p
-				<< " from a total of " << nRows << LogIO::POST;
+				<< " from a total of " << rowsIndex_p.size() << " rows with " << channelIndex_p.size() << " channels ("
+				<< channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") each one" << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " Iterating trough visibility cube with shape: " << flagCubeShape << LogIO::POST;
+		// Some logging info
+		*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
+				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
+				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") "<< LogIO::POST;
 	}
 
-	// Loop trough visibilities map
-	uInt row_i,chan_i;
-	uInt rowIdx = 0;
-	for (row_i=0;row_i<nRows;row_i++)
+	// Iterate trough rows
+	Int rowIdx = 0;
+	vector<uInt>::iterator rowIter;
+	for (rowIter = rowsIndex_p.begin();rowIter != rowsIndex_p.end();rowIter++)
 	{
 		if (multiThreading_p and (rowIdx % nThreads_p != threadId_p))
 		{
@@ -1001,11 +983,11 @@ FlagAgentBase::iterateInRows()
 			continue;
 		}
 
-		for (chan_i=0;chan_i<nChannels;chan_i++)
-		{
-			// Compute flag
-			computeInRowFlags(visibilitiesMap,flagsMap,chan_i,row_i);
-		}
+		// Compute flags for this row
+		computeInRowFlags(visibilitiesMap,flagsMap,*rowIter);
+
+		// Increment row index
+		rowIdx++;
 	}
 
 	return;
@@ -1096,7 +1078,7 @@ FlagAgentBase::iterateAntennaPairs()
 void
 FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 {
-	// Second step: Get reference visibility cubes
+	// First step: Get reference visibility cubes
 	Cube<Complex> *leftVisCube = NULL;
 	Cube<Complex> *rightVisCube = NULL;
 	switch (dataReference_p)
@@ -1135,21 +1117,14 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 		}
 	}
 
-	// Third step create CubeViews from selected vis cubes
+	// Second step create CubeViews from selected vis cubes
 	CubeView<Complex> *leftVisCubeView = NULL;
 	CubeView<Complex> *rightVisCubeView = NULL;
-	if (filterChannels_p)
-	{
-		leftVisCubeView = new CubeView<Complex>(leftVisCube,rows,&channelIndex_p);
-		if (rightVisCube != NULL) rightVisCubeView = new CubeView<Complex>(rightVisCube,rows,&channelIndex_p);
-	}
-	else
-	{
-		leftVisCubeView = new CubeView<Complex>(leftVisCube,rows);
-		if (rightVisCube != NULL) rightVisCubeView = new CubeView<Complex>(rightVisCube,rows);
-	}
+	leftVisCubeView = new CubeView<Complex>(leftVisCube,rows,&channelIndex_p);
+	if (rightVisCube != NULL) rightVisCubeView = new CubeView<Complex>(rightVisCube,rows,&channelIndex_p);
 
-	// Fourth step: Set CubeViews in mapper
+
+	// Third step: Set CubeViews in mapper
 	visMap->setParentCubes(leftVisCubeView,rightVisCubeView);
 
 	return;
@@ -1158,19 +1133,13 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 void
 FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 {
-	// Second step create common/private CubeViews
+	// First step create common/private CubeViews
 	CubeView<Bool> *commonFlagCube = NULL;
 	CubeView<Bool> *privateFlagCube = NULL;
-	if (filterChannels_p)
-	{
-		commonFlagCube= new CubeView<Bool>(commonFlagCube_p,rows,&channelIndex_p);
-		if (writePrivateFlagCube_p) privateFlagCube= new CubeView<Bool>(privateFlagCube_p,rows,&channelIndex_p);
-	}
-	else
-	{
-		commonFlagCube= new CubeView<Bool>(commonFlagCube_p,rows);
-		if (writePrivateFlagCube_p) privateFlagCube= new CubeView<Bool>(privateFlagCube_p,rows);
-	}
+
+	// Second step create CubeViews from selected vis cubes
+	commonFlagCube= new CubeView<Bool>(commonFlagCube_p,rows,&channelIndex_p);
+	if (writePrivateFlagCube_p) privateFlagCube= new CubeView<Bool>(privateFlagCube_p,rows,&channelIndex_p);
 
 	// Third step: Set CubeViews in mapper
 	flagMap->setParentCubes(commonFlagCube,privateFlagCube);
@@ -1178,15 +1147,15 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 	return;
 }
 
-Bool
-FlagAgentBase::computeRowFlags(uInt row)
+void
+FlagAgentBase::computeRowFlags(FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
-	return flag_p;
+	return;
 }
 
 void
-FlagAgentBase::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags,uInt channel, uInt row)
+FlagAgentBase::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;
