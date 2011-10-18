@@ -69,12 +69,21 @@ FlagAgentClipping::setAgentParameters(Record config)
 }
 
 void
-FlagAgentClipping::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags,uInt channel, uInt row)
+FlagAgentClipping::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
-	Float visExpression = visibilities(channel,row);
-	if ((visExpression <  clipmin_p) or (visExpression >  clipmin_p))
+	IPosition flagCubeShape= flags.shape();
+	uInt nChannels,chan_i;
+	nChannels = flagCubeShape(0);
+	Float visExpression;
+
+	for (chan_i=0;chan_i<nChannels;chan_i++)
 	{
-		flags.applyFlag(channel,row);
+		visExpression = visibilities(chan_i,row);
+		if ((visExpression <  clipmin_p) or (visExpression >  clipmin_p))
+		{
+			flags.applyFlag(chan_i,row);
+		}
+
 	}
 
 	return;
