@@ -157,15 +157,20 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
         cavms = tempfile.mkdtemp(suffix=outputvis, dir=workingdir)
 
         casalog.post('Channel averaging to ' + cavms)
-        myms.split(outputms=cavms,     field=field,
-                   spw=spw,            step=width,
-                   baseline=antenna,   subarray=array,
-                   timebin='',         time=timerange,
-                   whichcol=datacolumn,
-                   scan=scan,          uvrange=uvrange,
-                   combine=combine,
-                   correlation=correlation, intent=intent,
-                   obs=str(observation))
+        if not myms.split(outputms=cavms,     field=field,
+                          spw=spw,            step=width,
+                          baseline=antenna,   subarray=array,
+                          timebin='',         time=timerange,
+                          whichcol=datacolumn,
+                          scan=scan,          uvrange=uvrange,
+                          combine=combine,
+                          correlation=correlation, intent=intent,
+                          obs=str(observation)):
+            myms.close()
+            if os.path.isdir(cavms):
+                import shutil
+                shutil.rmtree(cavms)
+            return False
         
         # The selection was already made, so blank them before time averaging.
         field = ''
@@ -189,16 +194,18 @@ def split(vis, outputvis, datacolumn, field, spw, width, antenna,
     else:
         taqlstr = 'NOT (FLAG_ROW OR ALL(FLAG))'
 
-    myms.split(outputms=outputvis,  field=field,
-             spw=spw,             step=width,
-             baseline=antenna,    subarray=array,
-             timebin=timebin,     time=timerange,
-             whichcol=datacolumn,
-             scan=scan,           uvrange=uvrange,
-             combine=combine,
-             correlation=correlation,
-             taql=taqlstr, intent=intent,
-               obs=str(observation))
+    if not myms.split(outputms=outputvis,  field=field,
+                      spw=spw,             step=width,
+                      baseline=antenna,    subarray=array,
+                      timebin=timebin,     time=timerange,
+                      whichcol=datacolumn,
+                      scan=scan,           uvrange=uvrange,
+                      combine=combine,
+                      correlation=correlation,
+                      taql=taqlstr, intent=intent,
+                      obs=str(observation)):
+        myms.close()
+        return False
     myms.close()
 
     if do_both_chan_and_time_mod:

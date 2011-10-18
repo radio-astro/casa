@@ -39,7 +39,7 @@ AnnCircle::AnnCircle(
 		CIRCLE, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
-), _inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
+), _inputCenter(AnnotationBase::Direction(1)), _inputRadius(radius) {
 	_init(xcenter, ycenter);
 }
 
@@ -51,7 +51,7 @@ AnnCircle::AnnCircle(
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(CIRCLE, csys, imShape, stokes),
-	_inputCenter(Vector<Quantity>(2)), _inputRadius(radius) {
+	_inputCenter(AnnotationBase::Direction(1)), _inputRadius(radius) {
 	_init(xcenter, ycenter);
 }
 
@@ -63,7 +63,7 @@ AnnCircle& AnnCircle::operator= (
     }
     AnnRegion::operator=(other);
     _inputCenter.resize(other._inputCenter.nelements());
-    _inputCenter = other._inputCenter.nelements();
+    _inputCenter = other._inputCenter;
     _inputRadius = other._inputRadius;
     _convertedRadius = other._convertedRadius;
     return *this;
@@ -80,8 +80,8 @@ Quantity AnnCircle::getRadius() const {
 
 ostream& AnnCircle::print(ostream &os) const {
 	_printPrefix(os);
-	os << "circle [[" << _inputCenter[0] << ", "
-		<< _inputCenter[1] << "], " << _inputRadius << "]";
+	os << "circle [[" << _inputCenter[0].first << ", "
+		<< _inputCenter[0].second << "], " << _inputRadius << "]";
 	_printPairs(os);
 	return os;
 }
@@ -121,8 +121,8 @@ void AnnCircle::worldBoundingBox(
 
 void AnnCircle::_init(const Quantity& xcenter, const Quantity& ycenter) {
 	_convertedRadius = _lengthToAngle(_inputRadius, _getDirectionAxes()[0]);
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
+	_inputCenter[0].first = xcenter;
+	_inputCenter[0].second = ycenter;
 
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 

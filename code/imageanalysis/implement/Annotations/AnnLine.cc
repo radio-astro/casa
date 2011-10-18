@@ -36,12 +36,12 @@ AnnLine::AnnLine(
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys
 ) : AnnotationBase(LINE, dirRefFrameString, csys),
-	_inputPoints(Matrix<Quantity>(2, 2)) {
+	_inputPoints(AnnotationBase::Direction(2)) {
 
-	_inputPoints(0, 0) = xPoint1;
-	_inputPoints(1, 0) = yPoint1;
-	_inputPoints(0, 1) = xPoint2;
-	_inputPoints(1, 1) = yPoint2;
+	_inputPoints(0).first = xPoint1;
+	_inputPoints(0).second = yPoint1;
+	_inputPoints(1).first = xPoint2;
+	_inputPoints(1).second = yPoint2;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
 }
 
@@ -52,12 +52,12 @@ AnnLine::AnnLine(
 	const Quantity& yPoint2,
 	const CoordinateSystem& csys
 ) : AnnotationBase(LINE, csys),
-	_inputPoints(Matrix<Quantity>(2, 2)) {
+	_inputPoints(AnnotationBase::Direction(2)) {
 
-	_inputPoints(0, 0) = xPoint1;
-	_inputPoints(1, 0) = yPoint1;
-	_inputPoints(0, 1) = xPoint2;
-	_inputPoints(1, 1) = yPoint2;
+	_inputPoints(0).first = xPoint1;
+	_inputPoints(0).second = yPoint1;
+	_inputPoints(1).first = xPoint2;
+	_inputPoints(1).second = yPoint2;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
 }
 
@@ -68,7 +68,7 @@ AnnLine& AnnLine::operator= (
     	return *this;
     }
     AnnotationBase::operator=(other);
-    _inputPoints.resize(other._inputPoints.shape());
+    _inputPoints.resize(other._inputPoints.size());
     _inputPoints = other._inputPoints;
     return *this;
 }
@@ -78,9 +78,9 @@ Vector<MDirection> AnnLine::getEndPoints() const {
 }
 
 ostream& AnnLine::print(ostream &os) const {
-	os << "line [[" << _inputPoints(0, 0) << ", "
-		<< _inputPoints(1, 0) << "], [" << _inputPoints(0, 1)
-		<< ", " << _inputPoints(1, 1) << "]]";
+	os << "line [[" << _inputPoints(0).first << ", "
+		<< _inputPoints(0).second << "], [" << _inputPoints(1).first
+		<< ", " << _inputPoints(1).second << "]]";
 	_printPairs(os);
 	return os;
 }

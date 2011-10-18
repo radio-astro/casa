@@ -78,7 +78,7 @@ public:
 	virtual ostream& print(ostream &os) const;
 
 protected:
-	Matrix<Quantity> _inputPoints;
+	AnnotationBase::Direction _inputPoints;
 
 };
 

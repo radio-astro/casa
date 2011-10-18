@@ -29,7 +29,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	       default: all
 
 	   time_sampling -- specifies the time sampling, INTEGRATION and/or
-                            SUBINTEGRAION. could be one or more of the following
+                            SUBINTEGRATION. could be one or more of the following
                             i, si, or all.
 		 default: all
 
@@ -80,7 +80,9 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	   process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
 	          default: True
 
-	   verbose     -- produce log output as asdm2MS is being run
+	   verbose     -- produce log output as asdm2MS is being run.
+
+	   overwrite -- Over write an existing MS.
 
 	   showversion -- report the version of the asdm2MS being used.
 

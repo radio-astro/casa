@@ -38,21 +38,15 @@ AnnSymbol::AnnSymbol(
 	const CoordinateSystem& csys,
 	const Char symbolChar
 ) : AnnotationBase(SYMBOL, dirRefFrameString, csys),
+	_inputDirection(AnnotationBase::Direction(1)),
 	_symbolChar(symbolChar) {
-	if (_symbolMap.size() == 0) {
-		_initMap();
-	}
+	_init(x, y);
 	if ((_symbol = charToSymbol(symbolChar)) == UNKNOWN) {
 		throw AipsError(
 			String(symbolChar)
 				+ " does not correspond to a known symbol"
 		);
 	}
-
-	_inputDirection.resize(2);
-	_inputDirection[0] = x;
-	_inputDirection[1] = y;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
 }
 
 AnnSymbol::AnnSymbol(
@@ -60,15 +54,10 @@ AnnSymbol::AnnSymbol(
 	const CoordinateSystem& csys,
 	const Symbol symbol
 ) : AnnotationBase(SYMBOL, csys),
+	_inputDirection(AnnotationBase::Direction(1)),
 	_symbol(symbol) {
-	if (_symbolMap.size() == 0) {
-		_initMap();
-	}
+	_init(x, y);
 	_symbolChar = symbolToChar(_symbol);
-	_inputDirection.resize(2);
-	_inputDirection[0] = x;
-	_inputDirection[1] = y;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
 }
 
 AnnSymbol& AnnSymbol::operator= (
@@ -83,6 +72,15 @@ AnnSymbol& AnnSymbol::operator= (
     _symbol = other._symbol;
     _symbolChar = other._symbolChar;
     return *this;
+}
+
+void AnnSymbol::_init(const Quantity& x, const Quantity& y) {
+	if (_symbolMap.size() == 0) {
+		_initMap();
+	}
+	_inputDirection[0].first = x;
+	_inputDirection[0].second = y;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputDirection);
 }
 
 MDirection AnnSymbol::getDirection() const {
@@ -145,8 +143,8 @@ Char AnnSymbol::symbolToChar(const AnnSymbol::Symbol s) {
 }
 
 ostream& AnnSymbol::print(ostream &os) const {
-	os << "symbol [[" << _inputDirection[0] << ", "
-		<< _inputDirection[1] << "], "
+	os << "symbol [[" << _inputDirection[0].first << ", "
+		<< _inputDirection[0].second << "], "
 		<< _symbolChar << "]";
 	_printPairs(os);
 	return os;

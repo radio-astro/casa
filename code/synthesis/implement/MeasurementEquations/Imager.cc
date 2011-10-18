@@ -5062,8 +5062,20 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           // with the specified flux density
           PointShape point(fieldDir);
           SpectralIndex siModel;
-          siModel.setRefFrequency(reffreq);
-          siModel.setIndex(spix);
+          if(reffreq.getValue().getValue() > 0.0){
+            siModel.setRefFrequency(reffreq);
+            siModel.setIndex(spix);
+          }
+          else{
+            if(spix != 0.0){            // If not the default, complain and quit.
+              os << LogIO::SEVERE
+                 << "spix cannot be nonzero with reffreq = 0!"
+                 << LogIO::POST;
+              return false;
+            }
+            siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
+            siModel.setIndex(0.0);
+          }
 
           // No worries about varying fluxes or sizes here, so any time will do.
           MEpoch mtime = msc.field().timeMeas()(fldid);

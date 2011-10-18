@@ -143,9 +143,9 @@ void AnnAnnulus::_init() {
 		);
 	}
 
-	Vector<Quantity> inputCenter(2);
-	inputCenter[0] = _xcenter;
-	inputCenter[1] = _ycenter;
+	AnnotationBase::Direction inputCenter(1);
+	inputCenter[0].first = _xcenter;
+	inputCenter[0].second = _ycenter;
 
 	_checkAndConvertDirections(String(__FUNCTION__), inputCenter);
 

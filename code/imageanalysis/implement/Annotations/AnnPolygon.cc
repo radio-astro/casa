@@ -163,10 +163,10 @@ void AnnPolygon::_init() {
 			preamble + "x and y vectors are not the same length but must be."
 		);
 	}
-	Matrix<Quantity> corners(2, _origXPos.size());
+	AnnotationBase::Direction corners(_origXPos.size());
 	for (uInt i=0; i<_origXPos.size(); i++) {
-		corners(0, i) = _origXPos[i];
-		corners(1, i) = _origYPos[i];
+		corners[i].first = _origXPos[i];
+		corners[i].second = _origYPos[i];
 	}
 	_checkAndConvertDirections(String(__FUNCTION__), corners);
 	Vector<Double> xv(_origXPos.size()), yv(_origYPos.size());

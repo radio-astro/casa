@@ -99,7 +99,8 @@ public:
 	ostream& print(ostream &os) const;
 
 private:
-	Matrix<Quantity> _inputCorners;
+	AnnotationBase::Direction _inputCorners;
+
 	void _init(
 		const Quantity& blcx, const Quantity& blcy,
 		const Quantity& trcx, const Quantity& trcy
