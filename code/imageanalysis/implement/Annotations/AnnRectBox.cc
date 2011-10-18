@@ -121,11 +121,7 @@ void AnnRectBox::_init(
 			"rad"
 		);
 	}
-	// we just want a 2-d coordinate system for creating our box. We'll extend
-	// it after.
-	CoordinateSystem csys;
-	csys.addCoordinate(*getCsys().directionCoordinate().clone());
-	WCBox box(qblc, qtrc, _getDirectionAxes(), csys, absrel);
+	WCBox box(qblc, qtrc, _getDirectionAxes(), getCsys(), absrel);
 	_setDirectionRegion(box);
 	_extend();
 }
