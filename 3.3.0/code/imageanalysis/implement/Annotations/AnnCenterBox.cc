@@ -116,9 +116,9 @@ void AnnCenterBox::_init() {
 	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
 	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
 
-	Vector<Quantity> center(2);
-	center[0] = _inpXCenter;
-	center[1] = _inpYCenter;
+	AnnotationBase::Direction center(1);
+	center[0].first = _inpXCenter;
+	center[0].second =_inpYCenter;
 	_checkAndConvertDirections(String(__FUNCTION__), center);
 
 	_doCorners();

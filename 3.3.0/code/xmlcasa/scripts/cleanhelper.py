@@ -7,6 +7,7 @@ import numpy
 import shutil
 import string
 from numpy import unique
+from odict import odict
 
 ###some helper tools
 mstool = casac.homefinder.find_home_by_name('msHome')
@@ -35,7 +36,8 @@ class cleanhelper:
                 self.initmultims(imtool, vis, usescratch)
             else:
                 self.initsinglems(imtool, vis, usescratch)
-        self.maskimages={}
+        #self.maskimages={}
+        self.maskimages=odict()
         self.finalimages={}
         self.usescratch=usescratch
         self.dataspecframe='LSRK'
@@ -688,10 +690,11 @@ class cleanhelper:
         #print "Inside makemultifieldmask3"
         if((len(self.maskimages)==(len(self.imagelist)))):
             if(not self.maskimages.has_key(self.imagelist[0])):
-                self.maskimages={}
+                #self.maskimages={}
+                self.maskimages=odict()
         else:
-            self.maskimages={}
-
+            #self.maskimages={}
+            self.maskimages=odict()
         # clean up temp mask image 
         if os.path.exists('__tmp_mask'):
            shutil.rmtree('__tmp_mask')
@@ -722,7 +725,6 @@ class cleanhelper:
             for k in range(len(self.imageids)):
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
-
         # initialize maskimages
         # --- use outframe or dataframe for mask creation
         ##### duplicating with makemasimage?
@@ -791,9 +793,8 @@ class cleanhelper:
         if len(updatedmaskobject)-len(self.imagelist)<0:
             for k in range(len(self.imagelist)-len(updatedmaskobject)):
                 updatedmaskobject.append([])            
-
         #for maskid in range(len(self.maskimages)):
-        for maskid in self.maskimages:
+        for maskid in self.maskimages.keys(): 
             # for handling old format
             #if nmaskobj <= maskid:
             # add circles,boxes back
@@ -830,7 +831,6 @@ class cleanhelper:
                            updatedmaskobject[self.imagelist.values().index(maskid)].extend(inboxes)
                         else:
                            updatedmaskobject[self.imagelist.values().index(maskid)].append(inboxes)
-       
         for maskid in range(len(self.maskimages)):
             if maskid < len(updatedmaskobject):
                 self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
@@ -842,7 +842,7 @@ class cleanhelper:
 #            self.makemaskimage(outputmask=self.maskimages[self.imagelist[maskid]], 
 #            imagename=self.imagelist[maskid], maskobject=updatedmaskobject[maskid], slice=slice)
 
-        for key in self.maskimages:
+        for key in self.maskimages.keys():
             if(os.path.exists(self.maskimages[key])):
                 ia.open(self.maskimages[key])
                 fsum=ia.statistics()['sum']

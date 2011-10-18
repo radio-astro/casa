@@ -35,13 +35,8 @@ AnnVector::AnnVector(
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys
 ) : AnnotationBase(VECTOR, dirRefFrameString, csys),
-	_inputPoints(Matrix<Quantity>(2, 2)) {
-
-	_inputPoints(0, 0) = xStart;
-	_inputPoints(1, 0) = yStart;
-	_inputPoints(0, 1) = xEnd;
-	_inputPoints(1, 1) = yEnd;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+	_inputPoints(AnnotationBase::Direction(2)) {
+	_init(xStart, yStart, xEnd, yEnd);
 }
 
 AnnVector::AnnVector(
@@ -51,13 +46,8 @@ AnnVector::AnnVector(
 	const Quantity& yEnd,
 	const CoordinateSystem& csys
 ) : AnnotationBase(VECTOR, csys),
-	_inputPoints(Matrix<Quantity>(2, 2)) {
-
-	_inputPoints(0, 0) = xStart;
-	_inputPoints(1, 0) = yStart;
-	_inputPoints(0, 1) = xEnd;
-	_inputPoints(1, 1) = yEnd;
-	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+	_inputPoints(AnnotationBase::Direction(2)) {
+	_init(xStart, yStart, xEnd, yEnd);
 }
 
 AnnVector& AnnVector::operator= (
@@ -72,15 +62,26 @@ AnnVector& AnnVector::operator= (
     return *this;
 }
 
+void AnnVector::_init(
+	const Quantity& xBegin, const Quantity& yBegin,
+	const Quantity& xEnd, const Quantity& yEnd
+) {
+	_inputPoints[0].first = xBegin;
+	_inputPoints[0].second = yBegin;
+	_inputPoints[1].first = xEnd;
+	_inputPoints[1].second = yEnd;
+	_checkAndConvertDirections(String(__FUNCTION__), _inputPoints);
+}
+
 Vector<MDirection> AnnVector::getEndPoints() const {
 	return _getConvertedDirections();
 }
 
 ostream& AnnVector::print(ostream &os) const {
-	os << "vector [[" << _inputPoints(0, 0) << ", "
-		<< _inputPoints(1, 0) << "], ["
-		<< _inputPoints(0, 1) << ", "
-		<< _inputPoints(1, 1) << "]]";
+	os << "vector [[" << _inputPoints[0].first << ", "
+		<< _inputPoints[0].second << "], ["
+		<< _inputPoints[1].first << ", "
+		<< _inputPoints[1].second << "]]";
 	_printPairs(os);
 	return os;
 }

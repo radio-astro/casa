@@ -79,10 +79,12 @@ public:
 	virtual ostream& print(ostream &os) const;
 
 private:
-	Matrix<Quantity> _inputPoints;
+	AnnotationBase::Direction _inputPoints;
 
-	AnnVector();
-
+	void _init(
+		const Quantity& xBegin, const Quantity& yBegin,
+		const Quantity& xEnd, const Quantity& yEnd
+	);
 };
 
 }

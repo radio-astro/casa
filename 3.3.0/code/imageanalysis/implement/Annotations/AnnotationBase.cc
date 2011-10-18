@@ -79,6 +79,7 @@ map<AnnotationBase::RGB, string> AnnotationBase::_rgbNameMap;
 
 const boost::regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
 
+
 AnnotationBase::AnnotationBase(
 	const Type type, const String& dirRefFrameString,
 	const CoordinateSystem& csys
@@ -212,25 +213,28 @@ AnnotationBase::Type AnnotationBase::getType() const {
 	return _type;
 }
 
+void AnnotationBase::_initTypeMap() {
+	_typeMap["line"] = LINE;
+	_typeMap["vector"] = VECTOR;
+	_typeMap["text"] = TEXT;
+	_typeMap["symbol"] = SYMBOL;
+	_typeMap["box"] = RECT_BOX;
+	_typeMap["rectangularbox"] = RECT_BOX;
+	_typeMap["centerbox"] = CENTER_BOX;
+	_typeMap["rotatedbox"] = ROTATED_BOX;
+	_typeMap["rotbox"] = ROTATED_BOX;
+	_typeMap["poly"] = POLYGON;
+	_typeMap["polygon"] = POLYGON;
+	_typeMap["circle"] = CIRCLE;
+	_typeMap["annulus"] = ANNULUS;
+	_typeMap["ellipse"] = ELLIPSE;
+}
+
 AnnotationBase::Type AnnotationBase::typeFromString(
 	const String& type
 ) {
 	if (_typeMap.size() == 0) {
-		_typeMap["line"] = LINE;
-		_typeMap["vector"] = VECTOR;
-		_typeMap["text"] = TEXT;
-		_typeMap["symbol"] = SYMBOL;
-		_typeMap["box"] = RECT_BOX;
-		_typeMap["rectangularbox"] = RECT_BOX;
-		_typeMap["centerbox"] = CENTER_BOX;
-		_typeMap["rotatedbox"] = ROTATED_BOX;
-		_typeMap["rotbox"] = ROTATED_BOX;
-		_typeMap["poly"] = POLYGON;
-		_typeMap["polygon"] = POLYGON;
-		_typeMap["circle"] = CIRCLE;
-		_typeMap["annulus"] = ANNULUS;
-		_typeMap["ellipse"] = ELLIPSE;
-
+		_initTypeMap();
 	}
 	String cType = type;
 	cType.downcase();
@@ -240,6 +244,26 @@ AnnotationBase::Type AnnotationBase::typeFromString(
 	}
 	return _typeMap.at(cType);
 }
+
+String AnnotationBase::typeToString(const AnnotationBase::Type type) {
+	if (_typeMap.size() == 0) {
+		_initTypeMap();
+	}
+	for (
+		map<String, Type>::const_iterator iter = _typeMap.begin();
+		iter != _typeMap.end(); iter++
+	) {
+		if (iter->second == type) {
+			return iter->first;
+		}
+
+	}
+	throw AipsError(
+		_class + "::" + __FUNCTION__ + ": Logic error. Type "
+		+ String::toString(type) + " not handled"
+	);
+}
+
 
 AnnotationBase::LineStyle AnnotationBase::lineStyleFromString(const String& ls) {
 	if (_lineStyleMap.size() == 0) {
@@ -660,30 +684,28 @@ void AnnotationBase::_printPairs(ostream &os) const {
 }
 
 void AnnotationBase::_checkMixed(
-	const String& origin, const Array<Quantity>& quantities
+	const String& origin, const AnnotationBase::Direction& quantities
 ) {
 	Bool isWorld = False;
 	Bool isPixel = False;
-	Bool isMixed = False;
 	Quantity qArg;
 	for (
-		Array<Quantity>::const_iterator iter = quantities.begin();
+		Direction::const_iterator iter = quantities.begin();
 		iter != quantities.end(); iter++
 	) {
-		Bool pix = iter->getUnit() == "pix";
-		Bool world = ! pix;
-		isWorld = isWorld || world;
-		isPixel = isPixel || pix;
-		if (isPixel && isWorld) {
-			isMixed = True;
-			break;
+		for (uInt i=0; i<2; i++) {
+			Quantity tQ = i == 0 ? iter->first : iter->second;
+			Bool pix = tQ.getUnit() == "pix";
+			Bool world = ! pix;
+			isWorld = isWorld || world;
+			isPixel = isPixel || pix;
+			if (isPixel && isWorld) {
+				throw AipsError(
+					origin
+					+ ": Mixed world and pixel coordinates not supported"
+				);
+			}
 		}
-	}
-	if (isMixed) {
-		throw AipsError(
-			origin
-			+ ": Mixed world and pixel coordinates not supported"
-		);
 	}
 }
 
@@ -732,16 +754,38 @@ MDirection AnnotationBase::_directionFromQuantities(
 }
 
 void AnnotationBase::_checkAndConvertDirections(
-	const String& origin, const Matrix<Quantity>& quantities
+	const String& origin, const AnnotationBase::Direction& quantities
 ) {
 	_checkMixed(origin, quantities);
+	_convertedDQs.resize(quantities.size());
+	_convertedDQs = quantities;
+	String xUnit = _csys.worldAxisUnits()[_directionAxes[0]];
+	String yUnit = _csys.worldAxisUnits()[_directionAxes[1]];
+
 	MDirection::Types csysDirectionRefFrame = _csys.directionCoordinate().directionType(False);
 	Bool needsConverting = _directionRefFrame != csysDirectionRefFrame;
-	_convertedDirections.resize(quantities.shape()[1]);
-	for (uInt i=0; i<_convertedDirections.size(); i++) {
-		_convertedDirections[i] = _directionFromQuantities(quantities(0, i), quantities(1, i));
+	_convertedDirections.resize(quantities.size());
+	for (uInt i=0; i<quantities.size(); i++) {
+		_convertedDirections[i] = _directionFromQuantities(quantities(i).first, quantities(i).second);
 		if (needsConverting) {
 			_convertedDirections[i] = MDirection::Convert(_convertedDirections[i], csysDirectionRefFrame)();
+			Vector<Double> dv = _convertedDirections[i].getAngle(xUnit).getValue();
+			Quantity longitude(dv[0], xUnit);
+			Quantity latitude(dv[1], xUnit);
+			if (xUnit != yUnit) {
+				latitude.convert(yUnit);
+			}
+			_convertedDQs[i] = std::pair<Quantity, Quantity>(
+				latitude, longitude
+			);
+		}
+		else {
+			if (_convertedDQs[i].first.getUnit() != xUnit) {
+				_convertedDQs[i].first.convert(xUnit);
+			}
+			if (_convertedDQs[i].second.getUnit() != yUnit) {
+				_convertedDQs[i].second.convert(yUnit);
+			}
 		}
 	}
 	// check this now because if converting from world to pixel fails when regions are being formed,

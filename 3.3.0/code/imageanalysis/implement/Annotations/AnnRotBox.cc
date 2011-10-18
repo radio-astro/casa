@@ -37,7 +37,7 @@ const Quantity& beginFreq,
 		ROTATED_BOX, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString, restfreq,
 		stokes, annotationOnly
-	), _inputCenter(Vector<Quantity>(2)),
+	), _inputCenter(AnnotationBase::Direction(1)),
 	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
 	_init(xcenter, ycenter, xwidth, ywidth);
@@ -51,7 +51,7 @@ AnnRotBox::AnnRotBox(
 	const CoordinateSystem& csys, const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(ROTATED_BOX, csys, imShape, stokes),
-	_inputCenter(Vector<Quantity>(2)),
+	_inputCenter(AnnotationBase::Direction(1)),
 	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
 	_init(xcenter, ycenter, xwidth, ywidth);
@@ -175,8 +175,8 @@ void AnnRotBox::pixelCorners(vector<Double>& x, vector<Double>& y) const {
 
 ostream& AnnRotBox::print(ostream &os) const {
 	_printPrefix(os);
-	os << "rotbox [[" << _inputCenter[0] << ", "
-		<< _inputCenter[1] << "], [" << _inputWidths[0]
+	os << "rotbox [[" << _inputCenter[0].first << ", "
+		<< _inputCenter[0].second << "], [" << _inputWidths[0]
 		<< ", " << _inputWidths[1] << "], "
 		<< _positionAngle << "]";
 	_printPairs(os);
@@ -205,8 +205,8 @@ void AnnRotBox::_init(
 	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
 	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
 
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
+	_inputCenter[0].first = xcenter;
+	_inputCenter[0].second = ycenter;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
 	_doCorners();

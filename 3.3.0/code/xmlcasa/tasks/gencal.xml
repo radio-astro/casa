@@ -131,8 +131,8 @@
              example: spw = '2,3,4'
      antenna -- Antenna selection for specified parameters. 
                  default: antenna='' (specified parameters apply to all antennas)
-                 example: antenna='EA02, EA03' (specified parameter(s) to
-                           apply to EA02 and EA03 only)
+                 example: antenna='ea02, ea03' (specified parameter(s) to
+                           apply to ea02 and ea03 only)
      pol -- Polarization selection for specified parameters.
              default: pol='' (specified parameters apply to all polarizations)
              example: pol='R' (specified parameters to apply to
@@ -165,75 +165,75 @@
               uncorrected visibility.
 
        gencal(vis='test.ms',caltable='test.G',caltype='ph',
-              spw='',antenna='EA03,EA04',pol='',
+              spw='',antenna='ea03,ea04',pol='',
               parameter=[45,120])
 
-         --> Gain phase corrections for antennas EA03 and EA04
+         --> Gain phase corrections for antennas ea03 and ea04
               will be adjusted (additive) by 45 and 120 
               degrees (respectively), for all spws and polarizations.
               When these phases are applied to visibility data, the
               visibility phases will decrease or increase by the
               specified amount where the selected antennas occur
               first or second (respectively) in each baseline.  E.g., 
-              the phase of baseline EA03-EA04 will change by (-45+120)
-              = + 75 degrees.  Baseline EA01-EA03's phase will change
-              by +45 degrees; baseline EA04-EA05's phase will change
+              the phase of baseline ea03-ea04 will change by (-45+120)
+              = + 75 degrees.  Baseline ea01-ea03's phase will change
+              by +45 degrees; baseline ea04-ea05's phase will change
               by -120 degrees.  The same phase sign convention is
               used for delay and antenna position corrections.
 
        gencal(vis='test.ms',caltable='test.G',caltype='ph',
-              spw='',antenna='EA05,EA06',pol='R',
+              spw='',antenna='ea05,ea06',pol='R',
               parameter=[63,-34])
 
-         --> Gain phase corrections for antennas EA05 and EA06
+         --> Gain phase corrections for antennas ea05 and ea06
               will be adjusted (additive) by 63 and -34 
               degrees (respectively), in R only, for all spws
 
        gencal(vis='test.ms',caltable='test.G',caltype='ph',
-              spw='',antenna='EA09,EA10',pol='R,L',
+              spw='',antenna='ea09,ea10',pol='R,L',
               parameter=[14,-23,-130,145])
 
          --> Gain phase corrections in all spws will be adjusted for 
-              antenna EA09 by 14 deg in R and -23 deg in L, and for
-              antenna EA10 by -130 deg in R and 145 deg in L.
+              antenna ea09 by 14 deg in R and -23 deg in L, and for
+              antenna ea10 by -130 deg in R and 145 deg in L.
 
        gencal(vis='test.ms',caltable='test.G',caltype='ph',
-              spw='2,3',antenna='EA09,EA10',pol='',
+              spw='2,3',antenna='ea09,ea10',pol='',
               parameter=[14,-23,-130,145])
 
          --> Gain phases corrections in both polarizations will be adjusted for 
-              antenna EA09 by 14 deg in spw 2 and -23 deg in spw 3, and for
-              antenna EA10 by -130 deg in spw 2 and 145 deg in spw 3.
+              antenna ea09 by 14 deg in spw 2 and -23 deg in spw 3, and for
+              antenna ea10 by -130 deg in spw 2 and 145 deg in spw 3.
 
        gencal(vis='test.ms',caltable='test.G',caltype='sbd',
-              spw='2,3',antenna='EA09,EA10',pol='',
+              spw='2,3',antenna='ea09,ea10',pol='',
               parameter=[14,-23,-130,145])
 
          --> Delay corrections in both polarizations will be adjusted for 
-              antenna EA09 by 14 nsec in spw 2 and -23 nsec in spw 3, and for
-              antenna EA10 by -130 nsec in spw 2 and 145 nsec in spw
+              antenna ea09 by 14 nsec in spw 2 and -23 nsec in spw 3, and for
+              antenna ea10 by -130 nsec in spw 2 and 145 nsec in spw
               3.  See the above example for caltype='ph' for details
               of the sign convention adopted when applying delay corrections.
 
        gencal(vis='test.ms',caltable='test.G',caltype='antpos',
-              antenna='EA09,EA10',
+              antenna='ea09,ea10',
               parameter=[0.01,0.02,0.03, -0.03,-0.01,-0.02])
 
          --> Antenna position corrections in meters (in ITRF) for
-              antenna EA09 (dBx=0.01, dBy=0.02, dBz=0.03) and for
-              antenna EA10 (dBx=-0.03, dBy=-0.01, dBz=-0.02)
+              antenna ea09 (dBx=0.01, dBy=0.02, dBz=0.03) and for
+              antenna ea10 (dBx=-0.03, dBy=-0.01, dBz=-0.02)
               See the above example for caltype='ph' for details
               of the sign convention adopted when applying antpos 
               corrections.
 
        gencal(vis='test.ms',caltable='test.G',caltype='antposvla',
-              antenna='EA09,EA10',
+              antenna='ea09,ea10',
               parameter=[0.01,0.02,0.03, -0.03,-0.01,-0.02])
 
          --> Antenna position corrections (in the traditional VLA-centric
               frame) will be introduced in meters for
-              antenna EA09 (dBx=0.01, dBy=0.02, dBz=0.03) and for
-              antenna EA10 (dBx=-0.03, dBy=-0.01, dBz=-0.02)
+              antenna ea09 (dBx=0.01, dBy=0.02, dBz=0.03) and for
+              antenna ea10 (dBx=-0.03, dBy=-0.01, dBz=-0.02)
               These offsets will be rotated to the ITRF frame before
               storing them in the caltable.
               See the above example for caltype='ph' for details

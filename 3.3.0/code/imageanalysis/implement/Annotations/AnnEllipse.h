@@ -116,7 +116,7 @@ public:
 
 
 private:
-	Vector<Quantity> _inputCenter;
+	AnnotationBase::Direction _inputCenter;
 	Quantity _inputMajorAxis, _inputMinorAxis, _inputPositionAngle,
 		_convertedMajorAxis, _convertedMinorAxis;
 
