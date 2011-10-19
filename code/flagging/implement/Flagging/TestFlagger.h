@@ -30,15 +30,6 @@
 #include <iostream>
 #include <vector>
 
-#include <flagging/Flagging/RFCommon.h>
-#include <flagging/Flagging/RFABase.h>
-#include <tableplot/TablePlot/FlagVersion.h>
-
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <measures/Measures/MDirection.h>
-#include <measures/Measures/MPosition.h>
-#include <measures/Measures/MRadialVelocity.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/Record.h>
@@ -50,9 +41,6 @@
 #include <boost/smart_ptr.hpp>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
-class VisSet;
-class RFChunkStats;
 
 // <summary>
 // TestFlagger: high-performance automated flagging
@@ -99,8 +87,9 @@ class RFChunkStats;
 // </motivation>
 //
 
+// TODO: write the above comments
 
-class TestFlagger : public FlaggerEnums
+class TestFlagger
 {
 protected:
 
@@ -122,36 +111,39 @@ protected:
 	String feed_p;
 	String array_p;
 	String uvrange_p;
-	Record *dataselection_p;
+	String observation_p;
+	Record dataselection_p;
 
 
 	// variables for initFlagDataHandler and initAgents
 	FlagDataHandler *fdh_p;
 	std::vector<Record> agents_config_list_p;
-	std::vector<FlagAgentBase> agents_list_p;
+	FlagAgentList agents_list_p;
 
 public:  
 	// default constructor
-	TestFlagger  ();
+	TestFlagger();
 
 	// destructor
-	~TestFlagger ();
+	~TestFlagger();
 
 	// reset everything
 	void done();
 
 	// configure the tool
-	bool configTestFlagger(Record &config);
+	bool configTestFlagger(Record config);
 
 	// parse the data selection
-	bool parseDataSelection(Record &selrec);
+	bool parseDataSelection(Record selrec);
 
 	// parse the parameters of the agent
-	bool parseAgentParameters(Record &agent_params);
+	bool parseAgentParameters(Record agent_params);
 
 	bool initFlagDataHandler();
 
 	bool initAgents();
+
+	void run();
 
 
 private:
@@ -162,6 +154,9 @@ private:
 
 	// Sink used to store history
 	LogSink logSink_p;
+
+	// Debug Message flag
+	static const bool dbg;
 
 };
 
