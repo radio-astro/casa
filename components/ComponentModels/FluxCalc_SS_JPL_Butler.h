@@ -17,7 +17,7 @@
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
 //#
-//# Correspondence concerning AIPS++ should be adressed as follows:
+//# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
@@ -33,6 +33,7 @@
 #include <casa/BasicSL/String.h>
 #include <measures/Measures/MEpoch.h>
 //#include <measures/Measures/MFrequency.h>
+#include <measures/Measures/MDirection.h>
 #include <components/ComponentModels/Flux.h>
 #include <tables/Tables/ScalarColumn.h>
 
@@ -108,6 +109,9 @@ class FluxCalc_SS_JPL_Butler
   Bool getName(String& output) const;
   Bool getTime(MEpoch& output) const;
   //Bool getFreq(MFrequency& output) const;
+
+  // Returns the default direction (N. Pole) on failure.
+  MDirection getDirection();
 
   // Sets angdiam to the source's angular diameter in radians and returns the
   // object's component type (i.e. DISK), or UNKNOWN_SHAPE on failure.
@@ -247,6 +251,9 @@ class FluxCalc_SS_JPL_Butler
   // Bool       hasFreq_p;
   Bool       hasEphemInfo_p;
   Unit       hertz_p;           // make it static and/or const?
+  Bool       has_ra_p;
+  Bool       has_dec_p;
+  Bool       has_illu_p;
 
   // These are also initialized by the c'tor, but not in the initialization
   // list:
@@ -261,11 +268,8 @@ class FluxCalc_SS_JPL_Butler
   Double phang_p;       // Phase angle in radians.
   Bool   has_r_p;
   Double illu_p;        // Illumination, as a fraction.
-  Bool   has_illu_p;
   Double ra_p;          // RA, in deg.
-  Bool   has_ra_p;
   Double dec_p;         // Declination, in deg.
-  Bool   has_dec_p;
 };
 
 

@@ -41,6 +41,7 @@
 #include <measures/Measures.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MCEpoch.h>
+#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MFrequency.h>
 #include <measures/Measures/MeasComet.h>
 #include <scimath/Mathematics/InterpolateArray1D.h>
@@ -58,7 +59,10 @@ FluxCalc_SS_JPL_Butler::FluxCalc_SS_JPL_Butler(const String& objname,
   time_p(time),
   hasTime_p(true),
   hasEphemInfo_p(false),
-  hertz_p("Hz")
+  hertz_p("Hz"),
+  has_ra_p(false),
+  has_dec_p(false),
+  has_illu_p(false)
 {
   hasObjNum_p = setObjNum();
 }
@@ -181,6 +185,15 @@ ComponentType::Shape FluxCalc_SS_JPL_Butler::getShape(Double& angdiam)
   
   angdiam = 2.0 * mean_rad_p / delta_p;
   return ComponentType::DISK;
+}
+
+MDirection FluxCalc_SS_JPL_Butler::getDirection()
+{
+  if((!hasEphemInfo_p && !readEphem()) || !(has_ra_p && has_dec_p))
+    return MDirection();
+  
+  return MDirection(MVDirection(Quantity(ra_p, "deg"),
+				Quantity(dec_p, "deg")), MDirection::J2000);
 }
 
 Double FluxCalc_SS_JPL_Butler::getHeliocentricDist()
