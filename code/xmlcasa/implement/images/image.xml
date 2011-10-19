@@ -4007,6 +4007,7 @@ that should be held constant during the fit. Any combination of the characters '
 permitted, eg "fc" means hold the fwhm and the center constant during the fit. Fixed parameters will have no error associated
 with them. Here is an example file:
 
+\begin{verbatim}
 # estimates file indicating that two gaussians should be fit
 # first guassian estimate, peak=40, center at pixel number 10.5, fwhm = 5.8 pixels, all parameters allowed to vary during
 # fit
@@ -4014,6 +4015,7 @@ with them. Here is an example file:
 # second gaussian, peak = 4, center at pixel number 90.2, fwhm = 7.2 pixels, hold fwhm constant
 4, 90.2, 7.2, f
 # end file
+\end{verbatim}
 
 In the case of multifit=True, the initial estimates from the file will be applied to the location of the
 first fit. This is normally the bottom left corner of the region selected. If masked or not enough good
