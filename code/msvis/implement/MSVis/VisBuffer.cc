@@ -850,13 +850,12 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
       while(chans[ichan] >= chanAveBounds_p(ochan, 0) &&
             chans[ichan] <= chanAveBounds_p(ochan, 1) &&
             ichan < nChan0){
-	newFreq[ochan] += frequency()[ichan];
+	++n;
+	newFreq[ochan] += (frequency()[ichan] - newFreq[ochan]) / n;
 	newChan[ochan] += chans[ichan];
 	ichan++;
-	n++;
       }
       if (n>0) {
-	newFreq[ochan] /= Double(n);
 	newChan[ochan] /= n;
         totn += n;
       }
@@ -867,43 +866,41 @@ void VisBuffer::channelAve(const Matrix<Int>& chanavebounds)
     channel().reference(newChan);
     nChannel()=nChanOut;
 
-    if(totn < nAllChan0){
-      // Update weightMat and sigmaMat, since only part of the row was used.
-      if(doWtSp){
-        // chanAccCube(weightSpectrum(), nChanOut); already done.
-        const Cube<Float>& wtsp(weightSpectrum());
-
-        for(uInt row = 0; row < nrows; ++row){
-          for(uInt icor = 0; icor < nCor; ++icor){
-            Float totwtsp = rowWtFac(icor, row);
-            
-            rowWtFac(icor, row) = 0.0;
-            for(Int ochan = 0; ochan < nChanOut; ++ochan){
-              Float oswt = wtsp(icor, ochan, row);       // output spectral
-                                                         // weight
-              if(oswt > 0.0)
-                rowWtFac(icor, row) += oswt;
-              else
-                flagCube()(icor, ochan, row) = True;
-            }
-            if(totwtsp > 0.0)
-              rowWtFac(icor, row) /= totwtsp;
-          }
-        }
-      }
-      // This is slightly fudgy because it ignores the unselected part of
-      // weightSpectrum.  Unfortunately now that selection is applied to
-      // weightSpectrum, we can't get at the unselected channel weights.
-      selChanFac = static_cast<Float>(totn) / nAllChan0;
+    if(doWtSp){
+      // chanAccCube(weightSpectrum(), nChanOut); already done.
+      const Cube<Float>& wtsp(weightSpectrum());
 
       for(uInt row = 0; row < nrows; ++row){
         for(uInt icor = 0; icor < nCor; ++icor){
-          Float rwfcr = rowWtFac(icor, row);
-
-          weightMat()(icor, row) *= selChanFac * rwfcr;
-          if(rwfcr > 0.0)                               // Unlike WEIGHT, SIGMA
-            sigmaMat()(icor, row) /= sqrt(rwfcr);       // is for a single chan
+          Float totwtsp = rowWtFac(icor, row);
+            
+          rowWtFac(icor, row) = 0.0;
+          for(Int ochan = 0; ochan < nChanOut; ++ochan){
+            Float oswt = wtsp(icor, ochan, row);       // output spectral
+            // weight
+            if(oswt > 0.0)
+              rowWtFac(icor, row) += oswt;
+            else
+              flagCube()(icor, ochan, row) = True;
+          }
+          if(totwtsp > 0.0)
+            rowWtFac(icor, row) /= totwtsp;
         }
+      }
+    }
+    // This is slightly fudgy because it ignores the unselected part of
+    // weightSpectrum.  Unfortunately now that selection is applied to
+    // weightSpectrum, we can't get at the unselected channel weights.
+    selChanFac = static_cast<Float>(totn) / nAllChan0;
+
+    for(uInt row = 0; row < nrows; ++row){
+      for(uInt icor = 0; icor < nCor; ++icor){
+        Float rwfcr = rowWtFac(icor, row);
+
+        if(totn < nAllChan0)
+          weightMat()(icor, row) *= selChanFac * rwfcr;
+        if(rwfcr > 0.0)          // Unlike WEIGHT, SIGMA is for a single chan.
+          sigmaMat()(icor, row) /= sqrt(nch * rwfcr / nChanOut);
       }
     }
   }
