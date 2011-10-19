@@ -909,11 +909,25 @@ FlagAgentBase::iterateRows()
 	// Set CubeViews in FlagMapper
 	setFlagsMap(NULL,&flagsMap);
 
-	// Some logging info
-	*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
-			rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
-			channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
-			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+	// Some log info
+	if (multiThreading_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
+				<<  " Thread Id " << threadId_p << ":" << nThreads_p
+				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p << " from a total of " <<
+				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
+				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
+				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+
+	}
+	else
+	{
+		// Some logging info
+		*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
+				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
+				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
+				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+	}
 
 	// Loop trough selected rows
 	Int rowIdx = 0;
@@ -1151,6 +1165,13 @@ void
 FlagAgentBase::computeRowFlags(FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
+	IPosition flagCubeShape = flags.shape();
+	uInt nChannels = flagCubeShape(0);
+	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
+	{
+		flags.applyFlag(chan_i,row);
+	}
+
 	return;
 }
 
