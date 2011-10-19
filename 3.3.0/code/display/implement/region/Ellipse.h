@@ -53,7 +53,7 @@ namespace casa {
 		// returns mouse movement state
 		int mouseMovement( double x, double y, bool other_selected );
 
-		AnnRegion *annotation( ) const;
+		AnnotationBase *annotation( ) const;
 
 		bool flag( MSAsRaster * ) { return false; }
 

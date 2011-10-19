@@ -36,7 +36,8 @@
 
 namespace casa {
 
-    class AnnRegion;
+    class AnnotationBase;
+    class RegionTextList;
 
     namespace viewer {
 
@@ -71,6 +72,11 @@ namespace casa {
 		Region::TextPosition textPosition( ) const { return mystate->textPosition( ); }
 		void textPositionDelta( int &x, int &y ) const { return mystate->textPositionDelta( x, y ); }
 
+		// set attributes when loading a casa region text file...
+		virtual void setLabel( const std::string &l );
+		virtual void setFont( const std::string &font="", int font_size=0, int font_style=0, const std::string &font_color="" );
+		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine );
+
 		int numFrames( ) const;
 		void zRange( int &x, int &y ) const;
 		virtual int zIndex( ) const DISPLAY_PURE_VIRTUAL(Region::zIndex,0);
@@ -79,7 +85,7 @@ namespace casa {
 		virtual void regionCenter( double &x, double &y ) const DISPLAY_PURE_VIRTUAL(Region::regionCenter,);
 
 		virtual void refresh( ) DISPLAY_PURE_VIRTUAL(Region::refresh,);
-		virtual AnnRegion *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
+		virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( );
@@ -119,7 +125,7 @@ namespace casa {
 		void position_move_event( const QString &x, const QString &y, const QString &coord, const QString &units );
 		void refresh_zrange_event(int,int);
 		void revoke_region(QtRegionState*);
-		void output(std::list<QtRegionState*>,std::ostream&);
+		void output(std::list<QtRegionState*>,RegionTextList&);
 
 	    protected:
 		virtual std::list<RegionInfo> *generate_dds_statistics( ) DISPLAY_PURE_VIRTUAL(Region::generate_dds_statistics,0);

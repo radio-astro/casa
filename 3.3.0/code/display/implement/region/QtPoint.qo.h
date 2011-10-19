@@ -86,7 +86,7 @@ namespace casa {
 
 		// qt-event -> QtRegion -> QtPoint -> Region::refresh( )
 		void refresh( ) { Point::refresh( ); }
-		AnnRegion *annotation( ) const { return Point::annotation( ); }
+		AnnotationBase *annotation( ) const { return Point::annotation( ); }
 
 		// indicates that the user has selected this point...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
@@ -95,6 +95,12 @@ namespace casa {
 		void updateStateInfo( bool region_modified ) { QtRegion::updateStateInfo( region_modified ); }
 
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
+
+		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
+		void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" )
+				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
+		void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine )
+				{ QtRegion::setLine( line_color, line_style ); }
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Point::generate_dds_statistics( ); }

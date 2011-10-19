@@ -330,7 +330,7 @@ Matrix<Float>& ROVisIterator::weightMat(Matrix<Float>& wtmat) const
 
 Cube<Float>& ROVisIterator::weightSpectrum(Cube<Float>& wtsp) const
 {
-  if (!colWeightSpectrum.isNull()) {
+  if (this->existsWeightSpectrum()) {
     if (useNewSlicer_p) colWeightSpectrum.getColumn(newSlicer_p,wtsp,True);
     else {
       wtsp.resize(nPol_p,nChan_p,curNumRow_p);
@@ -751,7 +751,7 @@ void VisIterator::setWeightMat(const Matrix<Float>& weightMat)
 
 void VisIterator::setWeightSpectrum(const Cube<Float>& weightSpectrum)
 {
-  if (!colWeightSpectrum.isNull()) {
+  if (this->existsWeightSpectrum()) {
     if (useNewSlicer_p) RWcolWeightSpectrum.putColumn(newSlicer_p,weightSpectrum);
     else RWcolWeightSpectrum.putColumn(weightSpectrum);
   }

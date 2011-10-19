@@ -236,6 +236,7 @@ class PrincipalAxesDD : public DisplayData {
 
   // allow external functions to translate axes...
   Int xlatePixelAxes( Int idx ) const { return itsTransPixelAxes[idx]; }
+  Int xlateFixedPixelAxes( Int idx ) const { return itsFixedPosition[idx]; }
   const String &xaxisStr( ) const { return itsOptionsXAxis; }
   const String &yaxisStr( ) const { return itsOptionsYAxis; }
   const String &zaxisStr( ) const { return itsOptionsZAxis; }

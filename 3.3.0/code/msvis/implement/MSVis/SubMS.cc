@@ -8325,10 +8325,15 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // interval[bin_start]).
   //
   // late April 2011: MSIter removed the bias, which threw off the correction.
+  // October 2011: The bias seems to be back, possibly because of a change in
+  //               when MSInterval's "offset" is reset.
+  //               But, then, practically, timebins can be cut short but never
+  //               lengthened by changes in scan, state, or obs ID, so it seems
+  //               better to leave the bias in!
   //
-  ROVisibilityIterator vi(mssel_p, sort,
-                          //timeBin_p - 0.5 * mscIn_p->interval()(0));
-                          timeBin_p);
+  //Double tbin = mscIn_p->interval()(0);
+  //tbin = timeBin_p > tbin ? timeBin_p - 0.5 * tbin : timeBin_p;
+  ROVisibilityIterator vi(mssel_p, sort, timeBin_p);
   //vi.slurp();
   //cerr << "Finished slurping." << endl;
 
@@ -8578,17 +8583,22 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   if(watch_obs)
     sort[colnum] = MS::OBSERVATION_ID;
 
-  // MSIter used to tend toward output INTERVALs that are longer than the
+  // MSIter tends to produce output INTERVALs that are longer than the
   // requested interval length, by ~0.5 input integrations for a random
   // timeBin_p.  Giving it timeBin_p - 0.5 * interval[0] removes the bias and
   // brings it almost in line with binTimes() (which uses -0.5 *
   // interval[bin_start]).
   //
-  // MSIter removed the bias in late April 2011.
+  // late April 2011: MSIter removed the bias, which threw off the correction.
+  // October 2011: The bias seems to be back, possibly because of a change in
+  //               when MSInterval's "offset" is reset.
+  //               But, then, practically, timebins can be cut short but never
+  //               lengthened by changes in scan, state, or obs ID, so it seems
+  //               better to leave the bias in!
   //
-  ROVisIterator vi(mssel_p, sort,
-                   //timeBin_p - 0.5 * mscIn_p->interval()(0));
-                   timeBin_p);
+  //Double tbin = mscIn_p->interval()(0);
+  //tbin = timeBin_p > tbin ? timeBin_p - 0.5 * tbin : timeBin_p;
+  ROVisIterator vi(mssel_p, sort, timeBin_p);
   
   // Apply selection
   vi.selectChannel(chanSlices_p);     // ROVisIterator

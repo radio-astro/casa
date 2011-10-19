@@ -39,6 +39,8 @@ namespace casa {
 
 	    name->setPlaceholderText(QApplication::translate("QtRegionState", n.toAscii( ).constData( ), 0, QApplication::UnicodeUTF8));
 
+	    // fix to use the Qt file browser as with shape manager
+	    save_file_name_browse->hide( );
 
 	    // update line characteristics...
 	    connect( line_color, SIGNAL(currentIndexChanged(int)), SLOT(state_change(int)) );
@@ -89,52 +91,6 @@ namespace casa {
 	    frame_max->setMaximum(z_max);
 	    frame_max->setValue(z_max);
 	}
-#if OLDSTUFF
-	void QtRegionState::clearstats( ) {
-	    selected_statistics = statistics_group->currentIndex( );
-	    while ( statistics_group->count() > 0 ) {
-		QtRegionStats *w = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
-		if ( w == 0 ) throw internal_error( );
-		statistics_group->removeWidget(w);
-		freestats->push_back(w);
-	    }
-	}
-
-	void QtRegionState::addstats( const std::string &name, std::list<std::pair<String,String> > *stats ) {
-	    if ( ! stats ) return;
-	    QtRegionStats *mystat;
-	    // BEGIN - critical section
-	    if ( freestats->size() > 0 ) {
-		mystat = freestats->back( );
-		freestats->pop_back( );
-		// END - critical section
-		mystat->reset(QString::fromStdString(name),stats->size( ));
-	    } else {
-		mystat = new QtRegionStats(QString::fromStdString(name));
-	    }
-
-	    mystat->addstats( stats );
-	    statistics_group->insertWidget(statistics_group->count( ),mystat);
-
-	    if ( selected_statistics >= 0 && selected_statistics == statistics_group->count( ) - 1 )
-		statistics_group->setCurrentIndex(selected_statistics);
-
-	    int num = statistics_group->count( );
-	    if ( num < 2 ) return;
-
-	    QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
-	    QtRegionStats *prev = first;
-	    if ( prev == 0 ) throw internal_error( );
-
-	    for ( int i=1; i < statistics_group->count(); ++i ) {
-		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
-		if ( cur == 0 ) throw internal_error( );
-		prev->setNext( statistics_group, cur );
-		prev = cur;
-	    }
-	    prev->setNext( statistics_group, first );
-	}
-#endif
 
 	void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	    if ( stats == 0 || stats->size() == 0 ) return;
@@ -164,7 +120,7 @@ namespace casa {
 	    if ( first == 0 ) throw internal_error( );
 	    std::list<RegionInfo>::iterator stat_iter = stats->begin();
 	    if ( stat_iter->list( ).isNull( ) ) {
-		fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
+		// fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
 	    } else {
 		first->updateStatistics(*stat_iter);
 	    }
@@ -176,7 +132,7 @@ namespace casa {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
 		if ( stat_iter->list( ).isNull( ) ) {
-		    fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
+		    // fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
 		} else {
 		    cur->updateStatistics(*stat_iter);
 		}
@@ -249,6 +205,64 @@ namespace casa {
 	    y = y_off->value( );
 	}
 
+
+	void QtRegionState::setTextValue( const std::string &l ) { text->setText( QString::fromStdString(l) ); }
+
+	void QtRegionState::setTextFont( const std::string &f ) {
+	    QString font( QString::fromStdString(f) );
+	    for ( int i = 0; i < font_name->count( ); ++i ) {
+		if ( ! font.compare( font_name->itemText(i), Qt::CaseInsensitive ) ) {
+		    font_name->setCurrentIndex(i);
+		    break;
+		}
+	    }
+	}
+
+	void QtRegionState::setTextFontSize( int s ) {
+	    // limits specified in QtRegionState.ui
+	    if ( s >= 7 && s <= 99 ) font_size->setValue(s);
+	}
+
+	void QtRegionState::setTextFontStyle( int s ) {
+	    if ( s & Region::BoldText ) font_bold->setCheckState(Qt::Checked);
+	    if ( s & Region::ItalicText ) font_italic->setCheckState(Qt::Checked);
+	}
+
+	void QtRegionState::setTextColor( const std::string &c ) {
+	    QString color(QString::fromStdString(c));
+	    for ( int i = 0; i < text_color->count( ); ++i ) {
+		if ( ! color.compare( text_color->itemText(i), Qt::CaseInsensitive ) ) {
+		    text_color->setCurrentIndex(i);
+		    break;
+		}
+	    }
+	}
+
+	void QtRegionState::setLineColor( const std::string &c ) {
+	    QString color(QString::fromStdString(c));
+	    for ( int i = 0; i < line_color->count( ); ++i ) {
+		if ( ! color.compare( line_color->itemText(i), Qt::CaseInsensitive ) ) {
+		    line_color->setCurrentIndex(i);
+		    break;
+		}
+	    }
+	}
+
+	void QtRegionState::setLineStyle( Region::LineStyle s ) {
+	    switch ( s ) {
+		case Region::SolidLine:
+		    line_style->setCurrentIndex(0);
+		    break;
+		case Region::DashLine:
+		    line_style->setCurrentIndex(1);
+		    break;
+		case Region::DotLine:
+		    line_style->setCurrentIndex(2);
+		    break;
+	    }
+	}
+
+
 	int QtRegionState::zMin( ) const { return frame_min->value( ); }
 	int QtRegionState::zMax( ) const { return frame_max->value( ); }
 	int QtRegionState::numFrames( ) const { return region_->numFrames( ); }
@@ -266,13 +280,19 @@ namespace casa {
 	    last_line_color = s;
 	}
 
+	QString QtRegionState::default_extension( const QString &base ) {
+	    if ( base.contains('.') ) return base;
+	    else return base + QString(".crtf");
+	}
+
 	void QtRegionState::save_region( bool ) {
 	    if ( save_filename->text() == "" ) {
 		save_filename->setPlaceholderText(QApplication::translate("QtRegionState", "please enter a file name or use 'browse' button", 0, QApplication::UnicodeUTF8));
 		save_now->setFocus(Qt::OtherFocusReason);
 		return;
 	    }
-	    QString name = save_filename->text();
+
+	    QString name = default_extension(save_filename->text());
 
 	    bool do_unlink = false;
 	    int fd = open( name.toAscii( ).constData( ), O_WRONLY | O_APPEND );

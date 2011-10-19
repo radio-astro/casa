@@ -70,6 +70,7 @@ namespace casa {
 	void linear_to_world( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
 	// convert world coordinates to linear coordinates...
 	void world_to_linear( WorldCanvas *wc_, double, double, double &, double & );
+	void world_to_linear( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double& );
 	// convert casa pixel coordinates to world coordinates...
 	void pixel_to_world( WorldCanvas *wc_, int, int, double &, double & );
 	// convert casa pixel coordinates to linear coordinates...
@@ -114,6 +115,10 @@ namespace casa {
 		virtual std::string textValue( ) const DISPLAY_PURE_VIRTUAL(Region::textValue,"");
 		virtual TextPosition textPosition( ) const DISPLAY_PURE_VIRTUAL(Region::textPosition,BottomText);
 		virtual void textPositionDelta( int &x, int &y ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
+
+		virtual void setLabel( const std::string &l ) = 0;
+		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
+		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine ) = 0;
 
 		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const;
 		void getPositionString( std::string &x, std::string &y, std::string &angle,

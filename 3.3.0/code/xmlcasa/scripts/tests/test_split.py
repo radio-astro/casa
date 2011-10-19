@@ -467,18 +467,17 @@ class split_test_cav(SplitChecker):
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([1.0, 1.0]), 0.0001)
+                 numpy.array([0.57735026, 0.57735026]), 0.0001)
         
     def test_sigma_rr(self):
         """SIGMA[7], chan avg. RR"""
         check_eq(self.records['rr']['sigma'],
-                 numpy.array([1.0]), 0.0001)
-        #self.__class__.n_tests_passed += 1
+                 numpy.array([0.57735026]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([1.0]), 0.0001)
+                 numpy.array([0.57735026]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cav5(SplitChecker):
@@ -557,12 +556,12 @@ class split_test_cav5(SplitChecker):
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([1.0, 1.0]), 0.0001)
+                 numpy.array([0.5, 0.5]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([1.0]), 0.0001)
+                 numpy.array([0.5]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cdsp(SplitChecker):
@@ -1551,11 +1550,12 @@ class split_test_wttosig(SplitChecker):
     def test_sig_cavdata(self):
         """SIGMA after channel averaging DATA."""
         check_eq(self.records[('data', '2', '0s')]['sigma'],
-                 numpy.array([[4.,     3.,       2.,       1.],
-                              [4.,     3.,       2.,       1.],
-                              [1.,     2.,       3.,       4.],
-                              [5.,     6.,       7.,       8.],
-                              [1.,     1.,       1.,       1.]]), 0.001)
+                 numpy.array([[ 2.82842708,  2.12132049,  1.41421354,  0.70710677],
+                              [ 2.82842708,  2.12132049,  1.41421354,  0.70710677],
+                              [ 0.70710677,  1.41421354,  2.12132049,  2.82842708],
+                              [ 3.53553391,  4.24264097,  4.94974756,  5.65685415],
+                              [ 0.70710677,  0.70710677,  0.70710677,  0.70710677]]),
+                 0.001)
 
     def test_wt_tavdata(self):
         """WEIGHT after time averaging DATA."""

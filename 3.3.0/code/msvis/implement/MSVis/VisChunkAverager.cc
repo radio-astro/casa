@@ -234,10 +234,17 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
         // WEIGHT_SPECTRUM.  This means that at least for now weightSpectrum
         // should be treated as a unnormalized relative quantity between
         // channels, and the overall weight is given by WEIGHT.
+        // Note that avBuf_p.weightSpectrum() is used to accumulate the weights
+        // regardless of vb.existsWeightSpectrum(), so its absolute magnitude
+        // does matter (i.e. it holds the relative weights between one
+        // integration and the next).
         Double totwt = 0.0;                       // Total weight for inrow.
         for(Int cor = 0; cor < nCorr_p; ++cor){
-          Double channellesswt = wtM[cor];  // Already adjusted by flagging.
-          Double totwtsp = channellesswt;
+          Double constwtperchan = wtM[cor];  // Already adjusted by flagging.
+          if(nChan_p > 0)
+            constwtperchan /= nChan_p;
+
+          Double totwtsp = wtM[cor];
           Bool useWtSp = doSpWeight_p;
           if(doSpWeight_p){
             totwtsp = 0.0;
@@ -245,25 +252,18 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
               totwtsp += vb.weightSpectrum()(cor, ochan, inrow);
             useWtSp = totwtsp > 0.0;
           }
-          Double sig = vb.sigmaMat()(cor, inrow);
 
-          Double constwtperchan = wtM[cor];
-          if(nChan_p > 0)
-            constwtperchan /= nChan_p;
-
+          Double unflaggedWt = 0.0;
           for(Int ochan = 0; ochan < nChan_p; ++ochan){
             if(!vb.flagCube()(cor, ochan, inrow)){
               Double wt = useWtSp ?
-                channellesswt * vb.weightSpectrum()(cor, ochan, inrow) / totwtsp
+                wtM[cor] * vb.weightSpectrum()(cor, ochan, inrow) / totwtsp
                 : constwtperchan;
 
               if(wt > 0.0){
-                if(doSpWeight_p)
-                  avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
+                avBuf_p.weightSpectrum()(cor, ochan, outrow) += wt;
                 avBuf_p.flagCube()(cor, ochan, outrow) = false;
                 
-                // FLAG_CATEGORY?
-            
                 for(Int i = colEnums_p.nelements(); i--;){
                   if(colEnums_p[i] == MS::CORRECTED_DATA)
                     avBuf_p.correctedVisCube()(cor, ochan, outrow) += 
@@ -280,12 +280,14 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
                     avBuf_p.visCube()(cor, ochan, outrow) += 
                       (wt * vb.visCube()(cor, ochan, inrow));
                 }
-                avBuf_p.weightMat()(cor, outrow) += wt;
-                avBuf_p.sigmaMat()(cor, outrow) += wt * wt * sig * sig;
-                totwt += wt;
+                unflaggedWt += wt;
               }
             }
           }
+          avBuf_p.weightMat()(cor, outrow) += unflaggedWt;
+          Double sig = vb.sigmaMat()(cor, inrow);
+          avBuf_p.sigmaMat()(cor, outrow) += unflaggedWt * unflaggedWt * sig * sig;
+          totwt += unflaggedWt;
         }
 
         Double totslotwt = 0.0;
@@ -296,7 +298,9 @@ VisBuffer& VisChunkAverager::average(ROVisibilityIterator& vi)
         // totwt > 0.0 implies totslotwt > 0.0, as required by
         // the running averages (mandatory for timeCentroid!).
         if(totwt > 0.0){
-          Double leverage = totwt / totslotwt;
+          Double leverage = avBuf_p.timeCentroid()[outrow] == 0.0 ? 1.0 :
+            totwt / totslotwt;  // Technically == 1 for the 1st input
+                                // integration, but numerical error is a real problem.
 
           // UVW (weighted only by weight for now)
       // // Iterate through slots.
@@ -429,8 +433,9 @@ void VisChunkAverager::initialize(VisBuffer& vb)
   // Use weightMat() throughout, not the correlation-averaged weight().
   avBuf_p.weightMat().resize(nCorr_p, nRow); 
 
-  if(doSpWeight_p)
-    avBuf_p.weightSpectrum().resize(nCorr_p, nChan_p, nRow);
+  // Because of channel dependent flagging, avBuf_p's weight spectrum gets used
+  // for normalization regardless of vb.existsWeightSpectrum().
+  avBuf_p.weightSpectrum().resize(nCorr_p, nChan_p, nRow);
 
   // Fill in the antenna numbers for all rows.
   // Do not assume a constant number of antennas like VisBuffAccumulator.
@@ -459,9 +464,7 @@ void VisChunkAverager::initialize(VisBuffer& vb)
   avBuf_p.uvwMat() = 0.0;
   avBuf_p.weightMat() = 0.0;
   avBuf_p.sigmaMat() = 0.0;
-
-  if(doSpWeight_p)
-    avBuf_p.weightSpectrum() = 0.0;
+  avBuf_p.weightSpectrum() = 0.0;
 }
 
 //----------------------------------------------------------------------------
@@ -478,7 +481,6 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
   // These columns are independently normalized:
   // DATA_DESC_ID, UVW, TIME_CENTROID, WEIGHT,
   // WEIGHT_SPECTRUM, FLAG
-  Double rowwtfac; // Adjusts row weight for channel selection.
 
   // Things that are the same throughout avBuf_p.
   // A short running average (for numerical stability).
@@ -504,7 +506,7 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
       
       // sigma is the channel-averaged sigma for a single chan.
       avBuf_p.sigmaMat()(cor, outrow) = orw > 0.0 ?
-        sqrt(nChan_p * avBuf_p.sigmaMat()(cor, outrow)) / orw
+        sqrt(avBuf_p.sigmaMat()(cor, outrow)) / orw
         : -1.0; // Seems safer than 0.0.
       wt += orw;
     }
@@ -530,12 +532,9 @@ void VisChunkAverager::normalize(const Double minTime, const Double maxTime,
 
     if(!avBuf_p.flagRow()[outrow]){
       for(Int cor = 0; cor < nCorr_p; ++cor){
-        Double constwtperchan = wtM[cor] / nChan_p;
-
         for(Int ochan = 0; ochan < avBuf_p.nChannel(); ++ochan){
           if(!avBuf_p.flagCube()(cor, ochan, outrow)){
-            Double w = doSpWeight_p ? avBuf_p.weightSpectrum()(cor, ochan, outrow)
-              : constwtperchan;
+            Double w = avBuf_p.weightSpectrum()(cor, ochan, outrow);
 
             // The 2nd choice begs the question of why it isn't flagged.
             Double norm = w > 0.0 ? 1.0 / w : 0.0;      
