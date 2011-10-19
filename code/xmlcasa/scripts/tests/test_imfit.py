@@ -128,20 +128,24 @@ class imfit_test(unittest.TestCase):
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image, multiplane_image, two_gauss_multiplane_estimates
         ] :
-            if (os.path.isdir(datapath + f)):
-                shutil.copytree(datapath + f, f)
-            if (os.path.isfile(datapath + f)):
-                shutil.copy(datapath + f, f)
+            if not os.path.exists(f):
+                if (os.path.isdir(datapath + f)):
+                    shutil.copytree(datapath + f, f)
+                if (os.path.isfile(datapath + f)):
+                    shutil.copy(datapath + f, f)
 
     def tearDown(self):
         for f in [
-            noisy_image, expected_model, expected_residual, convolved_model,
+            # removing this image with rmtree() etc fails on mac
+            # noisy_image,
+            expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
             masked_image, multiplane_image, two_gauss_multiplane_estimates
         ] :
             if (os.path.isdir(f)):
-                shutil.rmtree(f)
+                os.system("rm -rf " + f)
+                #shutil.rmtree(f)
             if (os.path.isfile(f)):
                 os.remove(f)
 
