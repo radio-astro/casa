@@ -276,7 +276,7 @@ gridfunction='pb' was selected).
 </input>
 <returns type="bool"/>
 <example>
-Eample of how to make the approximate psf for a mosaic
+Example of how to make the approximate psf for a mosaic:
 
 im.open('orion.ms')
 im.selectvis(spwid=[0, 1] ,field=range(2,11));
@@ -1649,6 +1649,53 @@ image=['mars.moving.restored', 'mars.fixed.restored'])
 This makes two empty images, one moving with mars and one fixed
 in J2000, and then deconvolves the two jointly using clean.
 Finally the images are restored.
+</example>
+<comments>
+</comments>
+</method>
+
+<method type="function" name="makecomp">
+  <shortdescription>Make a component list for a known object</shortdescription>
+<description>
+Make a component list for an object recognized by standard, one of setjy's
+flux density standards.
+</description>
+<input>
+     <param type="string" name="objname">
+     <description>Name of the object</description>
+     <value></value>
+     </param>
+     <param type="string" name="standard">
+     <description>Name of the flux standard</description>
+     <value></value>
+     </param>
+     <param type="any" name="epoch">
+     <description>Time to use, as an epoch measure, e.g. me.epoch('UTC', '55555d'), for Solar System objects</description>
+     <any type="variant"/>
+     <value>55555.0d</value>
+     <choice>epoch measure</choice>
+     </param>
+     <param type="doubleArray" name="freqs">
+     <description>The frequencies to use, in Hz</description>
+     <value type="vector">
+     <value>1.0e11</value>
+     </value>
+     </param>
+     <param type="string" name="pfx">
+     <description>Prefix for the name of the component list</description>
+     <value>makecomp</value>
+     </param>
+</input>
+<returns type="string"/>
+<example>
+
+clname = im.makecomp('Ceres', 'Butler-JPL-Horizons 2010', '2012-02-14/13:33:00', 
+                     [3.45e11, 6.90e11], 'vd_')
+
+This writes a component "list" named vd_spw0_Ceres_345GHz55971.6d.cl to disk
+containing a uniform disk component for Ceres as it is expected to appear at
+345 and 690 GHz at 2012-02-14/13:33:00 UTC, and returns the name of the
+component list.  Returns '' on error.
 </example>
 <comments>
 </comments>

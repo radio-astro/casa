@@ -556,6 +556,39 @@ bool imager::make(const std::string& image, const bool async)
     return rstat;
 }
 
+std::string imager::makecomp(const std::string& objname, const std::string& standard,
+			     const ::casac::variant& time, const std::vector<double>& freqs,
+			     const std::string& pfx)
+{
+  std::string rstat("");
+  try{
+    *itsLog << LogOrigin("im", "makecomp");
+    *itsLog << LogIO::DEBUG1 << "starting imager::makecomp" << LogIO::POST;
+    MEpoch epoch;
+    if(!casaMEpoch(time, epoch)){
+      *itsLog << LogIO::SEVERE
+	      << "Could not convert time to an epoch measure."
+	      << LogIO::POST;
+      return false;
+    }
+    *itsLog << LogIO::DEBUG1 << "epoch made" << LogIO::POST;
+
+    uInt nfreqs = freqs.size();
+    Vector<MFrequency> freqv(nfreqs);
+
+    for(uInt f = 0; f < nfreqs; ++f)
+      freqv[f].set(MVFrequency(freqs[f]));
+    *itsLog << LogIO::DEBUG1 << "freqs set" << LogIO::POST;
+    rstat = itsImager->make_comp(String(objname), String(standard), epoch,
+				 freqv, String(pfx));
+  }
+  catch(AipsError x){
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
 bool imager::makeimage(const std::string& type, const std::string& image,
                        const std::string& compleximage, const bool verbose,
                        const bool async)
@@ -1447,6 +1480,7 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
               const std::string& scan, const std::string& observation)
 {
   Bool rstat = False;
+  *itsLog << LogOrigin("im", "setjy");
 
   if(hasValidMS_p){
     try{

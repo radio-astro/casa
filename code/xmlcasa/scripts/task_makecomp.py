@@ -1,6 +1,10 @@
-def makecomp(clist=None, objname=None, standard=None, epoch=None,
-             minfreq=None, maxfreq=None, nfreqs=None, uvrange=None,
-             doplot=None, savefig=None):
+from taskinit import casalog, cltool, imtool, metool, qa
+import pylab as pl
+import os
+
+def makecomp(objname=None, standard=None, epoch=None,
+             minfreq=None, maxfreq=None, nfreqs=None, prefix=None,
+             uvrange=None, doplot=None, savefig=None):
     """
     Writes a component list named clist to disk and returns a dict of
     {'clist': clist,
@@ -14,10 +18,6 @@ def makecomp(clist=None, objname=None, standard=None, epoch=None,
      'savedfig': False or, if made, the filename of a plot.}
     or False on error.
 
-    clist: directory name of the component list.
-           Defaults to "%s%s_%s_%s.cl" % (objname, mjd(epoch),
-                                          0.5 * (minfreq + maxfreq),
-                                          uvrange)
     objname: An object supported by standard.
     standard: A standard for calculating flux densities, as in setjy.
               Default: 'Butler-JPL-Horizons 2010'
@@ -32,6 +32,9 @@ def makecomp(clist=None, objname=None, standard=None, epoch=None,
     nfreqs:  The number of frequencies to use.
              Default: 1 if minfreq == maxfreq,
                       2 otherwise.
+    prefix: The component list will be saved to
+              prefix + 'spw0_<objname>_<minfreq><epoch>.cl'
+            Default: ''
     uvrange: The range of baseline lengths to calculate for.
              Default: '' (None, just make clist.)
     doplot: Whether or not to show a plot of S vs. |u| on screen.
@@ -41,15 +44,16 @@ def makecomp(clist=None, objname=None, standard=None, epoch=None,
     savefig: Filename for saving a plot of S vs. |u|.
              Subparameter of uvrange.
              Default: False (necessarily if uvrange is not specified)
-             Examples: True (save to clist with a .png extension instead of .cl)
+             Examples: True (save to prefix + '.png')
                        'myplot.png' (save to myplot.png) 
     """
     retval = False
     try:
+        casalog.origin('makecomp')
         minfreqq = qa.quantity(minfreq)
         minfreqHz = qa.convert(minfreqq, 'Hz')['value']
         try:
-            maxfreqq = qa.quantity(minfreq)
+            maxfreqq = qa.quantity(maxfreq)
         except Exception, instance:
             maxfreqq = minfreqq
         frequnit = maxfreqq['unit']
@@ -63,24 +67,54 @@ def makecomp(clist=None, objname=None, standard=None, epoch=None,
         else:
             nfreqs = 1
         freqs = pl.linspace(minfreqHz, maxfreqHz, nfreqs)
-        
-        if not clist:
-            meanfreq = {'value': 0.5 * (minfreqHz + maxfreqHz),
-                        'unit': frequnit}
-            clist = "%s%s_%.7g%s_%s.cl" % (objname, mjd(epoch),
-                                           qa.convert(meanfreq, frequnit)['value'],
-                                           frequnit, uvrange)
+
+        myme = metool.create()
+        mepoch = myme.epoch('UTC', epoch)
+        if not prefix:
+            ## meanfreq = {'value': 0.5 * (minfreqHz + maxfreqHz),
+            ##             'unit': frequnit}
+            ## prefix = "%s%s_%.7g" % (objname, epoch.replace('/', '-'),
+            ##                         minfreqq['value'])
+            ## if minfreqHz != maxfreqHz:
+            ##     prefix += "to" + maxfreq
+            ## else:
+            ##     prefix += minfreqq['unit']
+            ## prefix += "_"
+            prefix = ''
+
         if savefig == True:
-            savefig = clist.split('.')[:-1] + '.png'
+            savefig = prefix + '.png'
 
         # Get clist
+        myim = imtool.create()
+        if hasattr(myim, 'makecomp'):
+            casalog.post('local im instance created', 'DEBUG1')
+        else:
+            casalog.post('Error creating a local im instance.', 'SEVERE')
+            return False
+        clist = myim.makecomp(objname, standard, mepoch, freqs.tolist(), prefix)
 
         if os.path.isdir(clist):
+            # The spw0 is useless here, but it is added by FluxStandard for the sake of setjy.
+            casalog.post('The component list was saved to ' + clist)
+            
             retval = {'clist': clist,
                       'objname': objname,
                       'standard': standard,
-                      'epoch': epoch,
-                      'freqs': 1.0e-9 * freqs,
-                      'uvrange': pl.array of baseline lengths, in m,
-                      'amps':  pl.array of predicted visibility amplitudes, in Jy,
-                      'savedfig': False or, if made, the filename of a plot.}
+                      'epoch': mepoch,
+                      'freqs (GHz)': 1.0e-9 * freqs,
+                      'uvrange': uvrange,
+                      'amps':  None,       # TODO
+                      'savedfig': savefig}
+            mycl = cltool.create()
+            mycl.open(clist)
+            comp = mycl.getcomponent(0)
+            mycl.close(False)               # False prevents the stupid warning.
+            for k in ('shape', 'spectrum'):
+                retval[k] = comp[k]
+        else:
+            casalog.post("There was an error in making the component list.",
+                         'SEVERE')
+    except Exception, instance:
+        casalog.post(instance, 'SEVERE')
+    return retval

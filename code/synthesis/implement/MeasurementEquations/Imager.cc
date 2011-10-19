@@ -5131,6 +5131,46 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
   return didAnything;
 }
 
+String Imager::make_comp(const String& objName,
+			 const String& standard,
+			 const MEpoch& mtime, const Vector<MFrequency>& freqv,
+			 const String& prefix)
+{
+  Bool foundSrc = false;
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "setjy()"), logSink_p);
+
+  Vector<String> clistnames(1);
+  try{
+    FluxStandard::FluxScale fluxScaleEnum;
+    String fluxScaleName("user-specified");
+
+    if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
+      throw(AipsError(standard + " is not a recognized flux density scale"));
+
+    FluxStandard fluxStd(fluxScaleEnum);
+
+    Vector<Vector<Flux<Double> > > returnFluxes(1), returnFluxErrs(1);
+    Vector<Vector<MFrequency> > mfreqs(1);
+    uInt nfreqs = freqv.nelements();
+
+    mfreqs[0] = freqv;
+    returnFluxes[0].resize(nfreqs);
+    returnFluxErrs[0].resize(nfreqs);
+
+    MDirection objDir;
+     
+    foundSrc = fluxStd.computeCL(objName, mfreqs, mtime, objDir,
+				 returnFluxes, returnFluxErrs,
+				 clistnames, prefix);
+  }
+  catch(AipsError x){
+    os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }  
+  return foundSrc ? clistnames[0] : "";
+}
+
 Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
                             Vector<Vector<Flux<Double> > >& returnFluxErrs,
                             Vector<String>& tempCLs,

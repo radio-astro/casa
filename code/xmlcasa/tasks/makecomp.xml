@@ -20,17 +20,13 @@
 	  or False on error.
 	</description>
 	<input>
-	  <param type="string" name="clist" mustexist="false">
-	    <description>Name of output component list.</description>
-	    <value></value>
-	  </param>
 	  <param type="string" name="objname">
 	    <description>Object name</description>
 	    <value></value>
 	  </param>
 	  <param type="string" name="standard">
 	    <description>Flux density standard</description>
-	    <value>Perley-Butler 2010</value>
+	    <value>Butler-JPL-Horizons 2010</value>
 	    <allowed kind="enum">
 	      <value>Perley-Butler 2010</value>
 	      <value>Perley-Taylor 99</value>
@@ -44,7 +40,7 @@
 	         <description>List the objects known to standard.</description>
 	         <value>False</value>
 	       </param> -->
-	  <param type="string" name="epoch" subparam="True">
+	  <param type="string" name="epoch">
 	    <description>Epoch</description>
 	    <value></value>
 	  </param>
@@ -59,6 +55,10 @@
 	  <param type="int" name="nfreqs">
 	    <description>Number of frequencies</description>
 	    <value>2</value>
+	  </param>
+	  <param type="string" name="prefix" mustexist="false">
+	    <description>Prefix for the component list directory name.</description>
+	    <value></value>
 	  </param>
 	  <param type="string" name="uvrange">
 	    <description>Range of baseline lengths</description>
@@ -87,8 +87,8 @@
 
 <example>
 
-    Writes a component list named clist to disk and returns a dict of
-    {'clist': clist,
+    Writes a component list to disk and returns a dict of
+    {'clist': filename of the component list,
      'objname': objname,
      'angdiam': angular diameter in radians (if used in clist),
      'standard': standard,
@@ -99,15 +99,12 @@
      'savedfig': False or, if made, the filename of a plot.}
     or False on error.
 
-    clist: directory name of the component list.
-           Defaults to "%s%s_%s_%s.cl" % (objname, mjd(epoch),
-                                          0.5 * (minfreq + maxfreq),
-                                          uvrange)
     objname: An object supported by standard.
     standard: A standard for calculating flux densities, as in setjy.
               Default: 'Butler-JPL-Horizons 2010'
     epoch: The epoch to use for the calculations.   Irrelevant for
-           extrasolar standards.
+           extrasolar standards. (Uses UTC)
+	   Examples: '2011-12-31/5:34:12', '2011-12-31-5:34:12'
     minfreq: The minimum frequency to use.
              Example: '342.0GHz'
     maxfreq: The maximum frequency to use.
@@ -117,8 +114,15 @@
     nfreqs:  The number of frequencies to use.
              Default: 1 if minfreq == maxfreq,
                       2 otherwise.
+    prefix: The component list will be saved to
+               prefix + 'spw0_&lt;objname&gt;_&lt;minfreq&gt;&lt;epoch&gt;.cl'
+            Default: '' 
+	    Example: "Bands3to7_"
+                     (which could produce 'Bands3to7_spw0_Uranus_100GHz55877d.cl',
+		      depending on the other parameters)
     uvrange: The range of baseline lengths to calculate for.
              Default: '' (None, just make clist.)
+	     Example: '0~1000klambda'
     doplot: Whether or not to show a plot of S vs. |u| on screen.
             Subparameter of uvrange.
             Default: Necessarily False if uvrange is not specified.
@@ -126,10 +130,9 @@
     savefig: Filename for saving a plot of S vs. |u|.
              Subparameter of uvrange.
              Default: False (necessarily if uvrange is not specified)
-             Examples: True (save to clist with a .png extension instead of .cl)
+             Examples: True (save to prefix + '.png')
                        'myplot.png' (save to myplot.png) 
-
-            
+     
 </example>
 </task>
 </casaxml>

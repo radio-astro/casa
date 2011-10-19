@@ -34,8 +34,8 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
-
-#include <measures/Measures/MDirection.h>
+#include <components/ComponentModels/FluxStandard.h>
+//#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 
@@ -57,9 +57,9 @@ class VisImagingWeight_p;
 class MSHistoryHandler;
 class PBMath;
 class MeasurementSet;
+class MDirection;
 class MFrequency;
 class File;
-class FluxStandard;
 class VPSkyJones;
 class EPJones;
 class ViewerProxy;
@@ -496,6 +496,12 @@ class Imager
   Bool makemodelfromsd(const String& sdImage, const String& modelimage,
 		       const String& lowPSF,
 		       String& maskImage);
+
+  // Write a component list to disk, starting with prefix, using a setjy
+  // standard, and return the name of the list.
+  String make_comp(const String& objName, const String& standard,
+		   const MEpoch& mtime, const Vector<MFrequency>& freqv,
+		   const String& prefix);
 
   // Clone an image
   static Bool clone(const String& imageName, const String& newImageName);
