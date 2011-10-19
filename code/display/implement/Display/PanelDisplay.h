@@ -159,7 +159,7 @@ class PanelDisplay : public MultiWCHolder, public DisplayOptions {
   virtual ListIter<WorldCanvas* >* wcs() {
     return itsWCLI;
   }
-  
+
   // Is the specified DisplayData the one in charge of coordinate
   // state of the Panel's WCs?
   virtual Bool isCSmaster(const DisplayData *dd) const;

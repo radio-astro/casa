@@ -222,6 +222,13 @@
                </property>
               </widget>
              </item>
+             <item>
+              <widget class="QPushButton" name="regionButton_">
+               <property name="text">
+                <string>load regions</string>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
           </layout>

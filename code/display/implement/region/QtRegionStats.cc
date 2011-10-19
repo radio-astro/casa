@@ -59,6 +59,13 @@ namespace casa {
 		++fiter;
 		++siter;
 	    }
+	    // clear out unused fields
+	    while ( fiter != fields.end( ) ) {
+		(*fiter).first->setTitle( "" );
+		(*fiter).second->setText( "" );
+		++fiter;
+	    }
+	      
 	}
 
 	void QtRegionStats::reset( ) {

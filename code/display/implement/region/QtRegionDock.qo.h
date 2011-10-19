@@ -30,6 +30,7 @@
 #include <iostream>
 #include <display/region/QtRegionDock.ui.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 
 namespace casa {
     namespace viewer {
@@ -54,7 +55,7 @@ namespace casa {
 
 	    signals:
 		void deleteRegion(QtRegionState*);
-		void outputRegions( std::list<QtRegionState*>, std::ostream & );
+		void outputRegions( std::list<QtRegionState*>, RegionTextList & );
 
 	    private slots:
 		void stack_changed(int);

@@ -70,6 +70,21 @@ namespace casa {
 	    // return memory::cptr<Polygon>( );
 	}
 
+	memory::cptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
+	    QtPolygon *result = new QtPolygon( this, wc, pts, true );
+
+	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						    const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+		     this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+	    connect( result, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+
+	    result->releaseSignals( );
+	    return memory::cptr<Polygon>(result);
+	    // return memory::cptr<Polygon>( );
+	}
+
 	memory::cptr<Rectangle> QtRegionSource::ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    QtEllipse *result = new QtEllipse( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 

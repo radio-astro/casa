@@ -6,6 +6,7 @@
 #include <display/region/QtRegionSource.qo.h>
 #include <display/region/QtRegionDock.qo.h>
 #include <imageanalysis/Annotations/AnnRegion.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 #include <casaqt/QtUtilities/QtId.h>
 
 namespace casa {
@@ -43,10 +44,10 @@ namespace casa {
 	    connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
 	    connect( mystate, SIGNAL(positionMove( const QString &, const QString &, const QString &, const QString &)),
 		     SLOT(position_move_event( const QString &, const QString &, const QString &, const QString &)) );
-				     
+
 	    connect( mystate, SIGNAL(zRange(int,int)), SLOT(refresh_zrange_event(int,int)) );
 	    connect( dock_, SIGNAL(deleteRegion(QtRegionState*)), SLOT(revoke_region(QtRegionState*)) );
-	    connect( dock_, SIGNAL(outputRegions(std::list<QtRegionState*>, std::ostream&)), SLOT(output(std::list<QtRegionState*>,std::ostream&)) );
+	    connect( dock_, SIGNAL(outputRegions(std::list<QtRegionState*>, RegionTextList &)), SLOT(output(std::list<QtRegionState*>, RegionTextList &)) );
 
 	    dock_->addRegion(mystate);
 	    signal_region_change( RegionChangeCreate );
@@ -56,6 +57,20 @@ namespace casa {
 	    dock_->removeRegion(mystate);
 	    disconnect(mystate, 0, 0, 0);
 	    freestates->push_back(mystate);
+	}
+
+	void QtRegion::setLabel( const std::string &l ) {  mystate->setTextValue(l); }
+
+	void QtRegion::setFont( const std::string &font, int font_size, int font_style, const std::string &font_color ) {
+	    if ( font != "" ) mystate->setTextFont(font);
+	    if ( font_size >= 0 ) mystate->setTextFontSize(font_size);
+	    mystate->setTextFontStyle( font_style );
+	    if ( font_color != "" ) mystate->setTextColor( font_color );
+	}
+
+	void QtRegion::setLine( const std::string &line_color, Region::LineStyle line_style ) {
+	    if ( line_color != "" ) mystate->setLineColor( line_color );
+	    mystate->setLineStyle( line_style );
 	}
 
 	int QtRegion::numFrames( ) const { return source_->numFrames( ); }
@@ -108,7 +123,7 @@ namespace casa {
 					 QString::fromStdString(y),
 					 QString::fromStdString(angle) );
 	    }
-	      
+
 	}
 
 	void QtRegion::clearStatistics( ) {
@@ -152,11 +167,16 @@ namespace casa {
 	    return ls == Region::SolidLine ? AnnotationBase::SOLID : ls == Region::DotLine ? AnnotationBase::DOTTED : AnnotationBase::DASHED;
 	}
 
-	void QtRegion::output( std::list<QtRegionState*> ol, std::ostream &out ) {
+	void QtRegion::output( std::list<QtRegionState*> ol, RegionTextList &regionlist ) {
 	    std::list<QtRegionState*>::iterator iter = find( ol.begin(), ol.end( ), mystate );
 	    if ( iter != ol.end( ) ) {
 
-		AnnRegion *ann = annotation( );
+		AnnotationBase *ann = annotation( );
+
+		if ( ann == 0 ) {
+		    fprintf( stderr, "Failed to create region annotation...\n" );
+		    return;
+		}
 
 		int number_frames = (*iter)->numFrames( );
 		ann->setLabel( (*iter)->textValue( ) );
@@ -168,14 +188,15 @@ namespace casa {
 		ann->setFont( (*iter)->textFont( ) );
 		ann->setFontSize( (*iter)->textFontSize( ) );
 		int font_style = (*iter)->textFontStyle( );
-		ann->setFontStyle( font_style | Region::ItalicText && font_style | Region::BoldText ? AnnotationBase::ITALIC_BOLD :
-				   font_style | Region::ItalicText ? AnnotationBase::ITALIC : 
-				   font_style | Region::BoldText ? AnnotationBase::BOLD : AnnotationBase::NORMAL );
+
+		ann->setFontStyle( font_style & Region::ItalicText && font_style & Region::BoldText ? AnnotationBase::ITALIC_BOLD :
+				   font_style & Region::ItalicText ? AnnotationBase::ITALIC :
+				   font_style & Region::BoldText ? AnnotationBase::BOLD : AnnotationBase::NORMAL );
 		// if ( (*iter)->zMin( ) != 0 || (*iter)->zMax( ) < number_frames ) {
 		//     ann->setFreqRange( (*iter)->zMin( ), (*iter)->zMax( ) );
 		// }
-		ann->print(out);
-		delete ann;
+
+		regionlist.addLine(AsciiAnnotationFileLine(ann));
 
 	    }
 	}
@@ -220,7 +241,7 @@ namespace casa {
 			if ( pixelx.size() == 0 || pixely.size() == 0 || worldx.size() == 0 || worldy.size() == 0 ) return;
 
 			if ( change == RegionChangeCreate )
-			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" : 
+			    emit regionCreated( id_, QString( type == Region::RectRegion ? "rectangle" : type == Region::PointRegion ? "point" :
 							      type == Region::EllipseRegion ? "ellipse" : type == Region::PolyRegion ? "polygon" : "error"),
 						QString::fromStdString(name( )), worldx, worldy, pixelx, pixely, QString::fromStdString(lineColor( )), QString::fromStdString(textValue( )),
 						QString::fromStdString(textFont( )), textFontSize( ), textFontStyle( ) );

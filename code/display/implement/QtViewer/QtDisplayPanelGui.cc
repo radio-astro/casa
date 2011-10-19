@@ -54,13 +54,14 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
-		   regionDock_(0) {
+		   regionDock_(0), use_new_regions(false),
+		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
     
     setWindowTitle("Viewer Display Panel");
-    bool use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
+    use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
     if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {
@@ -135,17 +136,24 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                     dpMenu_->addAction(dpCloseAct_);
   
     tlMenu_       = menuBar()->addMenu("&Tools");
-    fboxAct_      = tlMenu_->addAction("&Box in File");
-    annotAct_     = tlMenu_->addAction("Region in &File");
-    mkRgnAct_     = tlMenu_->addAction("Region in &Image");
+    if ( ! use_new_regions ) {
+	fboxAct_      = tlMenu_->addAction("&Box in File");
+	annotAct_     = tlMenu_->addAction("Region in &File");
+	mkRgnAct_     = tlMenu_->addAction("Region in &Image");
 //                  annotAct_->setEnabled(False);
+	connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
+	connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
+	connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
+    }
 
-    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
-    rgnMgrAct_    = new QAction("Region Manager...", 0);
-//  rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
-                    rgnMgrAct_->setEnabled(False);
+    profileAct_   = tlMenu_->addAction("Spectral Profi&le...");
+    // rgnMgrAct_    = new QAction("Region Manager...", 0);
+                    // rgnMgrAct_->setEnabled(False);
 
-    shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
+    if ( ! use_new_regions ) {
+	shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
+	connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
+    }
   
     vwMenu_       = menuBar()->addMenu("&View");
 			// (populated after creation of toolbars/dockwidgets).
@@ -477,7 +485,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpOptsAct_ ->setIcon(QIcon(":/icons/DP_Options.png"));
     dpSaveAct_ ->setIcon(QIcon(":/icons/Save.png"));
     dpRstrAct_ ->setIcon(QIcon(":/icons/Restore.png"));
-    rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
+    // rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
     printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
     unzoomAct_ ->setIcon(QIcon(":/icons/Zoom0_OutExt.png"));
     zoomInAct_ ->setIcon(QIcon(":/icons/Zoom1_In.png"));
@@ -493,8 +501,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpOptsAct_ ->setToolTip("Panel Display Options");
     dpSaveAct_ ->setToolTip("Save Display Panel State to File");
     dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
-    rgnMgrAct_ ->setToolTip("Save/Control Regions");
-    shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
+    // rgnMgrAct_ ->setToolTip("Save/Control Regions");
+    if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
     printAct_  ->setToolTip("Print...");
     unzoomAct_ ->setToolTip("Zoom Out to Entire Image");
     zoomInAct_ ->setToolTip("Zoom In");
@@ -530,12 +538,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     connect(dpRstrAct_,  SIGNAL(triggered()),  SLOT(restorePanelState_()));
     connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
     connect(dpQuitAct_,  SIGNAL(triggered()),  SLOT(quit()));
-    connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
-    connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
-    connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
     connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
-    connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
-    connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
+    // connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
     connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
     connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
     connect(unzoomAct_,  SIGNAL(triggered()),  qdp_, SLOT(unzoom()));
@@ -727,9 +731,11 @@ Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
     if(qdd == qdds.getRight()) return True;  }
   return False;  }
-      
 
-  
+void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+    qdp_->loadRegions( path, datatype, displaytype );
+}
+
 QtDisplayData* QtDisplayPanelGui::dd(const String& name) {
   // retrieve DD with given name (0 if none).
   QtDisplayData* qdd;
@@ -914,11 +920,11 @@ void QtDisplayPanelGui::hideImageMenus() {
          //      << ppd->isCSmaster(pdd->dd()) << endl;
          if (ppd != 0 && ppd->isCSmaster(pdd->dd())) { 
             if (pdd->dataType() == "image" && img !=0) {
-               fboxAct_->setEnabled(True);
-               mkRgnAct_->setEnabled(True);
-               annotAct_->setEnabled(True);
+	       if ( fboxAct_ ) fboxAct_->setEnabled(True);
+               if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
+               if ( annotAct_ ) annotAct_->setEnabled(True);
                profileAct_->setEnabled(True);
-               shpMgrAct_->setEnabled(True);
+               if ( shpMgrAct_ ) shpMgrAct_->setEnabled(True);
                setUseRegion(False);
                break;
             }
@@ -932,11 +938,11 @@ void QtDisplayPanelGui::hideImageMenus() {
                hideShapeManager();
                hideStats();
 
-               fboxAct_->setEnabled(False);
-               mkRgnAct_->setEnabled(False);
-               annotAct_->setEnabled(False);
+               if ( fboxAct_ ) fboxAct_->setEnabled(False);
+               if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
+               if ( annotAct_ ) annotAct_->setEnabled(False);
                profileAct_->setEnabled(False);
-               shpMgrAct_->setEnabled(False);
+               if ( shpMgrAct_ ) shpMgrAct_->setEnabled(False);
                setUseRegion(False);
                //cout << "hide image menus" << endl;
                break;
@@ -1177,8 +1183,8 @@ void QtDisplayPanelGui::showFileBoxPanel() {
   }
   qfb_->showNormal();
   qfb_->raise();  
-  annotAct_->setEnabled(False);
-  mkRgnAct_->setEnabled(False);
+  if ( annotAct_ ) annotAct_->setEnabled(False);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
   setUseRegion(True);
 
 }
@@ -1187,8 +1193,8 @@ void QtDisplayPanelGui::hideFileBoxPanel() {
   if (qfb_==0) 
      return;
   qfb_->hide();  
-  annotAct_->setEnabled(True);
-  mkRgnAct_->setEnabled(True);
+  if ( annotAct_ ) annotAct_->setEnabled(True);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
   setUseRegion(False);
 }
     
@@ -1216,8 +1222,8 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
   }
   qap_->showNormal();
   qap_->raise();  
-  fboxAct_->setEnabled(False);
-  mkRgnAct_->setEnabled(False);
+  if ( fboxAct_ ) fboxAct_->setEnabled(False);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
   setUseRegion(True);
 
 }
@@ -1227,8 +1233,8 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
   if (qap_==0) 
      return;
   qap_->hide();  
-  fboxAct_->setEnabled(True);
-  mkRgnAct_->setEnabled(True);
+  if ( fboxAct_ ) fboxAct_->setEnabled(True);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
   setUseRegion(False);
 }
 
@@ -1253,8 +1259,8 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         }
       }
   }
-  fboxAct_->setEnabled(False);
-  annotAct_->setEnabled(False);
+  if ( fboxAct_ ) fboxAct_->setEnabled(False);
+  if ( annotAct_ ) annotAct_->setEnabled(False);
   setUseRegion(True);
 
 }
@@ -1264,8 +1270,8 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
   if (qmr_==0) 
      return;
   qmr_->hide();  
-  fboxAct_->setEnabled(True);
-  annotAct_->setEnabled(True);
+  if ( fboxAct_ ) fboxAct_->setEnabled(True);
+  if ( annotAct_ ) annotAct_->setEnabled(True);
   setUseRegion(False);
 }
 

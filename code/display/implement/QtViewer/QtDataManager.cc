@@ -82,40 +82,42 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   
   hideDisplayButtons();
 
-  uiDataType_["Unknown"]         = UNKNOWN;
-  uiDataType_["Image"]           = IMAGE;
-  uiDataType_["Measurement Set"] = MEASUREMENT_SET;
-  uiDataType_["Sky Catalog"]     = SKY_CATALOG;
-  uiDataType_["Directory"]       = DIRECTORY;
-  uiDataType_["FITS Image"]      = IMAGE;
-  uiDataType_["FITS Ext."]       = IMAGE;
-  uiDataType_["Quality Ext."]    = QUALIMG;
-  uiDataType_["Miriad Image"]    = IMAGE;
-  uiDataType_["Gipsy"]           = IMAGE;
-  uiDataType_["Restore File"]    = RESTORE;
+  uiDataType_["Unknown"]          = UNKNOWN;
+  uiDataType_["Image"]            = IMAGE;
+  uiDataType_["Measurement Set"]  = MEASUREMENT_SET;
+  uiDataType_["Sky Catalog"]      = SKY_CATALOG;
+  uiDataType_["Directory"]        = DIRECTORY;
+  uiDataType_["FITS Image"]       = IMAGE;
+  uiDataType_["FITS Ext."]        = IMAGE;
+  uiDataType_["Quality Ext."]     = QUALIMG;
+  uiDataType_["Miriad Image"]     = IMAGE;
+  uiDataType_["Gipsy"]            = IMAGE;
+  uiDataType_["Restore File"]     = RESTORE;
+  uiDataType_["CASA Region File"] = CASAREGION;
   
-  dataType_[UNKNOWN]         = "unknown";
-  dataType_[IMAGE]           = "image";
-  dataType_[QUALIMG]         = "image";
-  dataType_[MEASUREMENT_SET] = "ms";
-  dataType_[SKY_CATALOG]     = "skycatalog";
-  dataType_[RESTORE]         = "restore";
+  dataType_[UNKNOWN]              = "unknown";
+  dataType_[IMAGE]                = "image";
+  dataType_[QUALIMG]              = "image";
+  dataType_[MEASUREMENT_SET]      = "ms";
+  dataType_[SKY_CATALOG]          = "skycatalog";
+  dataType_[RESTORE]              = "restore";
+  dataType_[CASAREGION]           = "casa region";
 
-  uiDisplayType_["raster image"] = RASTER;
-  uiDisplayType_["contour map"] = CONTOUR;
-  uiDisplayType_["vector map"] = VECTOR;
-  uiDisplayType_["marker map"] = MARKER;
-  uiDisplayType_["sky catalog"] = SKY_CAT;
-  uiDisplayType_["old window"] = OLDPANEL;
-  uiDisplayType_["new window"] = NEWPANEL;
+  uiDisplayType_["raster image"]  = RASTER;
+  uiDisplayType_["contour map"]   = CONTOUR;
+  uiDisplayType_["vector map"]    = VECTOR;
+  uiDisplayType_["marker map"]    = MARKER;
+  uiDisplayType_["sky catalog"]   = SKY_CAT;
+  uiDisplayType_["old window"]    = OLDPANEL;
+  uiDisplayType_["new window"]    = NEWPANEL;
   
-  displayType_["raster"] = RASTER;
-  displayType_["contour"] = CONTOUR;
-  displayType_["vector"] = VECTOR;
-  displayType_["marker"] = MARKER;
-  displayType_["skycatalog"] = SKY_CAT;
-  displayType_["oldpanel"] = OLDPANEL;
-  displayType_["newpanel"] = NEWPANEL;
+  displayType_["raster"]          = RASTER;
+  displayType_["contour"]         = CONTOUR;
+  displayType_["vector"]          = VECTOR;
+  displayType_["marker"]          = MARKER;
+  displayType_["skycatalog"]      = SKY_CAT;
+  displayType_["oldpanel"]        = OLDPANEL;
+  displayType_["newpanel"]        = NEWPANEL;
   
   leaveOpen_->setToolTip("Uncheck to close this window after "
     "data and display type selection.\n"
@@ -151,6 +153,7 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
   connect(oldPanelButton_,  SIGNAL(clicked()), SLOT(restoreToOld_()));
   connect(newPanelButton_,  SIGNAL(clicked()), SLOT(restoreToNew_()));
   connect(updateButton_,  SIGNAL(clicked()), SLOT(buildDirTree()));
+  connect(regionButton_, SIGNAL(clicked()), SLOT(load_regions_clicked()));
 
   //connect(registerCheck, SIGNAL(clicked()), 
   //      SLOT(registerClicked()));
@@ -408,23 +411,34 @@ void QtDataManager::showDisplayButtons(int ddtp) {
         vectorButton_->show();
         markerButton_->show();
         break;
+    case CASAREGION:
+	if ( panel_->useNewRegions( ) ) {
+	    if ( panel_->nDDs( ) == 0 )
+		regionButton_->setDisabled(true);
+	    else
+		regionButton_->setDisabled(false);
+	    regionButton_->show( );
+	}
+	break;
   }
 }
 
 
 
 QColor QtDataManager::getDirColor(int ddtp) {
-  QColor clr;
-  switch (ddtp) {
-     case IMAGE:            clr = Qt::darkGreen;        break;
-     case MEASUREMENT_SET:  clr = Qt::darkBlue;         break;
-     case SKY_CATALOG:      clr = Qt::darkCyan;         break;
-     case RESTORE:          clr = QColor(255,43,45);    break;
-     case DIRECTORY:        clr = Qt::black;            break;
-     case QUALIMG:          clr = Qt::darkRed;              break;
-     case UNKNOWN: default: clr = Qt::darkMagenta;  }
+    QColor clr;
+    switch (ddtp) {
+	case IMAGE:            clr = Qt::darkGreen;        break;
+	case MEASUREMENT_SET:  clr = Qt::darkBlue;         break;
+	case SKY_CATALOG:      clr = Qt::darkCyan;         break;
+	case RESTORE:          clr = QColor(255,43,45);    break;
+	case DIRECTORY:        clr = Qt::black;            break;
+	case QUALIMG:          clr = Qt::darkRed;          break;
+	case CASAREGION:       clr = Qt::darkYellow;       break;
+	case UNKNOWN: default: clr = Qt::darkMagenta;
+    }
      
-  return clr;
+    return clr;
 }
 
 
@@ -436,6 +450,7 @@ void QtDataManager::hideDisplayButtons(){
   catalogButton_->hide();
   oldPanelButton_->hide();
   newPanelButton_->hide();
+  regionButton_->hide();
   ms_selection_box->hide();
 }
 
@@ -500,6 +515,31 @@ void QtDataManager::createButtonClicked() {
 	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
 }
 
+
+void QtDataManager::load_regions_clicked( ) {
+    QPushButton* button = dynamic_cast<QPushButton*>(sender());
+
+    if(panel_==0 || button==0) return;
+
+    std::string path, datatype, displaytype;
+
+    displaytype = (displayType_.key(uiDisplayType_[button->text()])).toStdString();
+
+    if (treeWidget_->currentItem() > 0) {
+
+	// Display selected file.
+	path = (dir_.path() + "/" + treeWidget_->currentItem()->text(0)).toStdString();
+
+	datatype = dataType_.value(uiDataType_[treeWidget_->currentItem()->text(1)]).toStdString();
+    }
+
+    if(path=="" || datatype=="" || displaytype=="") return;
+
+    
+    panel_->loadRegions( path, datatype, displaytype );
+
+    if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
+}
 
 //<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
 //      should try to find a way to make this available from QtViewer

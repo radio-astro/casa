@@ -460,6 +460,20 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
   return (nabove % 2);  }
 
 
+    bool MultiPolyTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				const std::string &font, int font_size, int font_style, const std::string &font_color,
+				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+	if ( pts.size( ) <= 2 ) return false;
+	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
+	memory::cptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
+	result->setLabel( label );
+	result->setFont( font, font_size, font_style, font_color );
+	result->setLine( line_color, line_style );
+	polygons.push_back( result );
+	refresh( );
+	return true;
+    }
+
     void MultiPolyTool::start_new_polygon( WorldCanvas *wc, int x, int y ) {
 
 	// As originally requested by Kumar, any non-modified regions would be erased when a
