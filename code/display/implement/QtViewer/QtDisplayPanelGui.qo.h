@@ -174,6 +174,11 @@ class QtDisplayPanelGui : public QtPanelBase,
   viewer::QtRegionDock *regionDock( ) { return regionDock_; }
   int numFrames( ) const { return qdp_->nFrames( ); }
 
+  // load casa (or DS9?) region files...
+  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+
+  bool useNewRegions( ) const { return use_new_regions; }
+
  public slots:
  
   // At least for now, colorbars can only be placed horizontally or vertically,
@@ -253,7 +258,7 @@ class QtDisplayPanelGui : public QtPanelBase,
     void ddRemoved(QtDisplayData*);
 
     void closed( const QtDisplayPanelGui * );
-  
+
  protected slots:
   
   virtual void quit( );
@@ -434,6 +439,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   
      
  private:
+  bool use_new_regions;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
 

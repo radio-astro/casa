@@ -50,6 +50,8 @@ namespace casa {
 		/* memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
 		memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
 		memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 );
+		memory::cptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+
 		// ellipse is derived from rectangle... so while this should be "memory::cptr<Ellipse>" this would preclude
 		// the direct reuse of the Rectangle code (which only differs by region creation)... perhaps a case where
 		// smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be

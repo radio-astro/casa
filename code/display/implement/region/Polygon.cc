@@ -39,6 +39,16 @@
 namespace casa {
     namespace viewer {
 
+	Polygon::Polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts) :
+	  Region( wc ), closed(false), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+	  _drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1) {
+	    for ( int i=0; i < pts.size(); ++i ) {
+		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
+		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
+	    }
+	    closeFigure( );
+	}
+
 	void Polygon::closeFigure( ) {
 	    closed = true;
 	    unsigned int size = _ref_points_.size( );
@@ -402,7 +412,7 @@ namespace casa {
 	}
 
 	void Polygon::drawRegion( bool selected ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if(pc==0) return;
@@ -480,8 +490,9 @@ namespace casa {
 	    }
 	}
 
-	AnnRegion *Polygon::annotation( ) const {
-	    if ( wc_ == 0 ) return 0;
+	AnnotationBase *Polygon::annotation( ) const {
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 	    const Vector<String> &units = wc_->worldAxisUnits( );
@@ -499,7 +510,19 @@ namespace casa {
 	    /*Int polaxis =*/ CoordinateUtil::findStokesAxis(stokes, cs);
 	    const DisplayData *dd = wc_->displaylist().front();
 
-	    AnnPolygon *poly = new AnnPolygon( xv, yv, cs, dd->dataShape(), stokes );
+	    AnnPolygon *poly = 0;
+	    try {
+		std::vector<int> axes = dd->displayAxes( );
+		IPosition shape(cs.nPixelAxes( ));
+		for ( int i=0; i < shape.size( ); ++i )
+		    shape(i) = dd->dataShape( )[axes[i]];
+		poly = new AnnPolygon( xv, yv, cs, shape, stokes );
+	    } catch ( AipsError &e ) {
+		cerr << "Error encountered creating an AnnPolygon:" << endl;
+		cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
+	    } catch ( ... ) {
+		cerr << "Error encountered creating an AnnPolygon..." << endl;
+	    }
 
 	    return poly;
 	}
@@ -514,7 +537,8 @@ namespace casa {
 
 	void Polygon::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 					    std::vector<std::pair<double,double> > &world_pts ) const {
-	    if ( wc_ == 0 ) return;
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    type = PolyRegion;
 

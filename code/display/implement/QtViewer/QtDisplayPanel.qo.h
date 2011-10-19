@@ -342,6 +342,9 @@ public:
   panel_state getPanelState( ) const;
   void setPanelState( const panel_state & );
 
+  // load casa (or DS9?) region files...
+  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+
  public slots:
 
   //respond to region manager to set ImageRegion extension 

@@ -830,6 +830,20 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
+    bool MultiRectTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				const std::string &font, int font_size, int font_style, const std::string &font_color,
+				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+	if ( pts.size( ) != 2 ) return false;
+	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
+	memory::cptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
+	result->setLabel( label );
+	result->setFont( font, font_size, font_style, font_color );
+	result->setLine( line_color, line_style );
+	rectangles.push_back( result );
+	refresh( );
+	return true;
+    }
+
     void MultiRectTool::start_new_rectangle( WorldCanvas *wc, int x, int y ) {
 
 	// As originally requested by Kumar, any non-modified regions would be erased when a

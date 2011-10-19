@@ -37,7 +37,7 @@
 namespace casa {
 
     class PanelDisplay;
-    class AnnRegion;
+    class AnnotationBase;
     class MSAsRaster;
 
     namespace viewer {
@@ -67,7 +67,7 @@ namespace casa {
 
 		void regionCenter( double &x, double &y ) const;
 
-		AnnRegion *annotation( ) const;
+		AnnotationBase *annotation( ) const;
 
 		virtual bool flag( MSAsRaster *msar );
 

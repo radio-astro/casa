@@ -54,6 +54,8 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
 
+#include <imageanalysis/Annotations/AnnEllipse.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -2342,6 +2344,221 @@ QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
 			colormapstate );
 }
 
+
+// load casa (or DS9?) region files...
+void QtDisplayPanel::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+
+    bool first_trip = true;
+    ListIter<WorldCanvas* >* wcs = panelDisplay( )->wcs();
+    for ( wcs->toStart(); ! wcs->atEnd(); wcs->step( ) ) {
+	WorldCanvas *wc = wcs->getRight();
+	if ( wc == 0 ) continue;
+	const CoordinateSystem &test = wc->coordinateSystem();
+	const Vector<String> &units = wc->worldAxisUnits( );
+	IPosition shape(2);
+	shape[0] = wc->canvasXSize( );
+	shape[1] = wc->canvasYSize( );
+	RegionTextList rlist( path, test, shape );
+	Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
+	for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
+	    if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
+	    const AnnotationBase* ann = aaregions[i].getAnnotationBase();
+	    AnnotationBase::Direction points = ann->getDirections( );
+	    switch ( ann->getType( ) ) {
+		case AnnotationBase::SYMBOL:
+		    {
+			if ( points.size( ) != 1 ) {
+			    fprintf( stderr, "QtDisplayPanel::loadRegions(symbol): wrong number of points returned...\n" );
+			    continue;
+			}
+
+			double lcx, lcy;
+			viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy );
+			int px, py;
+			viewer::linear_to_pixel( wc, lcx, lcy, px, py );
+
+			// region is outside of our pixel canvas area
+			if ( ! wc->inPC(px,py) ) continue;
+
+			std::vector<std::pair<double,double> > linear_pts(2);
+			linear_pts[0].first = lcx;
+			linear_pts[0].second = lcy;
+			linear_pts[1].first = lcx;
+			linear_pts[1].second = lcy;
+			AnnotationBase::LineStyle ls = ann->getLineStyle( );
+			AnnotationBase::FontStyle fs = ann->getFontStyle( );
+			crosshair_->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+					   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
+					   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
+					   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
+					   ann->getLabelColorString( ), ann->getColorString( ),
+					   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
+					     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
+
+		    }
+		    break;
+		case AnnotationBase::RECT_BOX:
+		    {
+			if ( points.size( ) != 2 ) {
+			    fprintf( stderr, "QtDisplayPanel::loadRegions(rect_box): wrong number of points returned...\n" );
+			    continue;
+			}
+
+			double lblcx, lblcy, ltrcx, ltrcy;
+			viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]),
+						 points[1].first.getValue(units[0]), points[1].second.getValue(units[1]),
+						 lblcx, lblcy, ltrcx, ltrcy );
+			int pblcx, pblcy, ptrcx, ptrcy;
+			viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+
+			// region is outside of our pixel canvas area
+			if ( ! wc->inPC(pblcx,pblcy) || ! wc->inPC(ptrcx,ptrcy) ) continue;
+
+			std::vector<std::pair<double,double> > linear_pts(2);
+			linear_pts[0].first = lblcx;
+			linear_pts[0].second = lblcy;
+			linear_pts[1].first = ltrcx;
+			linear_pts[1].second = ltrcy;
+			AnnotationBase::LineStyle ls = ann->getLineStyle( );
+			AnnotationBase::FontStyle fs = ann->getFontStyle( );
+			rtregion_->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+					   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
+					   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
+					   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
+					   ann->getLabelColorString( ), ann->getColorString( ),
+					   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
+					     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
+		    }
+		    break;
+		case AnnotationBase::ELLIPSE:
+		    {
+			if ( points.size( ) != 1 ) {
+			    fprintf( stderr, "QtDisplayPanel::loadRegions(ellipse): wrong number of points returned...\n" );
+			    continue;
+			}
+
+			const AnnEllipse *el = dynamic_cast<const AnnEllipse*>(ann);
+
+			double pos_angle = el->getPositionAngle( ).getValue("deg");
+
+			while ( pos_angle < 0 ) pos_angle += 360;
+			while ( pos_angle >= 360 ) pos_angle -= 360;
+
+			// 90 deg around 0 & 180 deg
+			bool x_is_major = ((pos_angle > 45.0 && pos_angle < 135.0) ||
+					   (pos_angle > 225.0 && pos_angle < 315.0));
+
+			Quantity qblcx, qblcy, qtrcx, qtrcy;
+			Quantity major_inc = el->getMajorAxis( ) / 2.0;
+			Quantity minor_inc = el->getMinorAxis( ) / 2.0;
+			Quantity centerx = points[0].first;
+			Quantity centery = points[0].second;
+			if ( x_is_major ) {
+			    qblcx = centerx - major_inc;
+			    qblcy = centery - minor_inc;
+			    qtrcx = centerx + major_inc;
+			    qtrcy = centery + minor_inc;
+			} else { 
+			    qblcx = centerx - minor_inc;
+			    qblcy = centery - major_inc;
+			    qtrcx = centerx + minor_inc;
+			    qtrcy = centery + major_inc;
+			}
+
+			double lblcx, lblcy, ltrcx, ltrcy;
+			viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
+						 qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
+						 lblcx, lblcy, ltrcx, ltrcy );
+			int pblcx, pblcy, ptrcx, ptrcy;
+			viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+
+			// region is outside of our pixel canvas area
+			if ( ! wc->inPC(pblcx,pblcy) || ! wc->inPC(ptrcx,ptrcy) ) continue;
+
+			std::vector<std::pair<double,double> > linear_pts(2);
+			linear_pts[0].first = lblcx;
+			linear_pts[0].second = lblcy;
+			linear_pts[1].first = ltrcx;
+			linear_pts[1].second = ltrcy;
+			AnnotationBase::LineStyle ls = ann->getLineStyle( );
+			AnnotationBase::FontStyle fs = ann->getFontStyle( );
+			elregion_->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+					   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
+					   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
+					   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
+					   ann->getLabelColorString( ), ann->getColorString( ),
+					   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
+					     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
+		    }
+		    break;
+		case AnnotationBase::POLYGON:
+		    {
+			if ( points.size( ) <= 2 ) {
+			    fprintf( stderr, "QtDisplayPanel::loadRegions(polygon): wrong number of points returned...\n" );
+			    continue;
+			}
+
+			std::vector<std::pair<double,double> > linear_pts(points.size( ));
+
+			bool error = false;
+			for ( int i = 0; i < points.size( ); ++i ) {
+			    double lx, ly;
+			    viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
+			    int px, py;
+			    viewer::linear_to_pixel( wc, lx, ly, px, py );
+
+			    // region is outside of our pixel canvas area
+			    if ( ! wc->inPC(px,py) ) {
+				error = false;
+				break;
+			    }
+
+			    linear_pts[i].first = lx;
+			    linear_pts[i].second = ly;
+			}
+
+			AnnotationBase::LineStyle ls = ann->getLineStyle( );
+			AnnotationBase::FontStyle fs = ann->getFontStyle( );
+
+			ptregion_->create( wc, linear_pts, ann->getLabel( ), ann->getFont( ), ann->getFontSize( ),
+					   (fs == AnnotationBase::BOLD ? viewer::Region::BoldText : 0) |
+					   (fs == AnnotationBase::ITALIC ? viewer::Region::ItalicText : 0) |
+					   (fs == AnnotationBase::ITALIC_BOLD ? (viewer::Region::BoldText | viewer::Region::ItalicText) : 0 ),
+					   ann->getLabelColorString( ), ann->getColorString( ),
+					   ( ls == AnnotationBase::DASHED ? viewer::Region::DashLine :
+					     ls == AnnotationBase::DOTTED ? viewer::Region::DotLine : viewer::Region::SolidLine ) );
+		    }
+		    break;
+
+		case AnnotationBase::CIRCLE:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (circle) encountered...\n" );
+		    break;
+		case AnnotationBase::CENTER_BOX:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (center box) encountered...\n" );
+		    break;
+		case AnnotationBase::LINE:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (line) encountered...\n" );
+		    break;
+		case AnnotationBase::VECTOR:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (vector) encountered...\n" );
+		    break;
+		case AnnotationBase::TEXT:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (text) encountered...\n" );
+		    break;
+		case AnnotationBase::ROTATED_BOX:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (rotated box) encountered...\n" );
+		    break;
+		case AnnotationBase::ANNULUS:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region type (annulus) encountered...\n" );
+		    break;
+		default:
+		    if ( first_trip ) fprintf( stderr, "QtDisplayPanel::loadRegions(): unsupported region (of unknown type) encountered...\n" );
+	    }
+
+	}
+	first_trip = false;
+    }
+}
 
 const QtDisplayPanel::panel_state::colormap_state *QtDisplayPanel::panel_state::colormap( const std::string &path ) const {
     colormap_map::const_iterator iter = colormaps_.find( path );
