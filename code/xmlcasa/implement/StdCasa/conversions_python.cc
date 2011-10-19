@@ -1063,7 +1063,7 @@ static int unmap_array_pylist( PyObject *array, std::vector<int> &shape, casac::
 		done = true;								\
 	    } else {									\
 		if ( DO_THROW )								\
-		    throw std::string("all list elements to not confrom to array shape"); \
+		    throw std::string("all list elements do not confrom to array shape"); \
 		result.asBool();							\
 	    }										\
 	}										\

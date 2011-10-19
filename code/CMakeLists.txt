@@ -32,6 +32,8 @@ set( CASA_MINOR_VERSION 3 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
+enable_language (Fortran)
+
 # Define compiler paths on OSX 10.5. This must be done before invoking project()
 if( APPLE )
     set( SO dylib )
@@ -160,7 +162,7 @@ set( CASA_assay ${CMAKE_SOURCE_DIR}/install/assay )
 if( APPLE )
     set( CMAKE_Fortran_FLAGS -fno-second-underscore )
     execute_process( COMMAND ${CMAKE_Fortran_COMPILER} -print-search-dirs
-                     COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;} if ( -e \"$d/libgfortran.${CMAKE_STATIC_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_STATIC_LIBRARY_SUFFIX}\"; $found = 1; break;}}} break if $found; }"
+	    COMMAND perl -e "$found = 0; while(<>) { if( m|^libraries:\\s*=(.*?$)| ) { foreach $d (split(':',$1) ) { if ( -e \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\" ) { print \"$d/libgfortran.${CMAKE_SHARED_LIBRARY_SUFFIX}\"; $found = 1; break;}; if ( -e \"$d/libgfortran.a\" and !$found ) { print \"$d/libgfortran.a \"; $found = 1; break;}break if $found;}break if $found;} break if $found; }"
                      OUTPUT_VARIABLE _gfortran_lib_path
                      OUTPUT_STRIP_TRAILING_WHITESPACE )
 
@@ -235,10 +237,12 @@ if( APPLE )
 
 	
 	message( STATUS "$_gfortran_version = ${_gfortran_version}" )
+	message( STATUS "$_gfortran_lib_path = ${_gfortran_lib_path}" )
 	message( STATUS "$_gcc_machine = ${_gcc_machine}" )
         message( STATUS "cxxversion (${_cxx_version})" )
 	if( NOT _gfortran_version STREQUAL "4.4" AND
-	    NOT _gfortran_version STREQUAL "4.2" )
+			NOT _gfortran_version STREQUAL "4.2" AND
+			NOT LLVMCOMPILER )
 	    set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -arch ${archflag}" )
 	    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran")
 	else()
@@ -523,8 +527,14 @@ if( NOT SKIP_PGPLOT )
   else()
     set( _deps X11 FORTRAN )
   endif()
-  if (CMAKE_SYSTEM MATCHES ^Darwin-11)
+  if (CMAKE_SYSTEM MATCHES ^Darwin-11 AND NOT LLVMCOMPILER )
      set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit -lgfortran" )
+  else()
+     if (APPLE) 
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error -framework AppKit" )
+     else()
+        set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-undefined -Wl,error" )
+     endif()
   endif()
   casa_find( PGPLOT
     VERSION 5.3.1

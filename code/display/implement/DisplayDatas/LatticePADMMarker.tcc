@@ -128,7 +128,7 @@ uInt LatticePADMMarker<T>::dataDrawSelf(WorldCanvas *wCanvas,
 
     Matrix<T> datMatrix;
     Matrix<Bool> datMask;
-    dataGetSlice(datMatrix, datMask, start, shape, stride);
+    this->dataGetSlice(datMatrix, datMask, start, shape, stride);
 
 // Get CS
 

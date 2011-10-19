@@ -94,10 +94,8 @@ public:
 
 	virtual ostream& print(ostream &os) const;
 
-	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
-
 private:
-	Vector<Quantity> _inputCenter;
+	AnnotationBase::Direction _inputCenter;
 	Quantity _inputRadius, _convertedRadius;
 
 	void _init(const Quantity& xcenter, const Quantity& ycenter);

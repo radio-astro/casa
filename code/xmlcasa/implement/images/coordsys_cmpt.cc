@@ -4480,7 +4480,7 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
       // Don't split e.g. '1 km 20 m' into a vector.
       String s = tmpv.asString();
       Int maxn=50;
-      String sa[maxn];
+      String *sa = new String[maxn];
       String sep = " ";
       int n = split(s, sa, maxn, sep);
       if (n==1) {
@@ -4493,6 +4493,7 @@ coordsys::coordinateValueToRecord(const ::casac::variant& value, Bool isWorld,
 	rec = new Record(rd);
 	rec->define("string", sarr);
       }
+       delete [] sa;
     } else {
       // Convert to numeric e.g. "1 20" -> [1,20]
       //tovector(value, 'double');  NEEDS WORK HERE!!!

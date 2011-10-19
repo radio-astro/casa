@@ -31,13 +31,13 @@ class FlagAgentTimeFreqCrop : public FlagAgentBase {
 
 public:
 
-	FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false, Bool flag = true);
+	FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
 	~FlagAgentTimeFreqCrop();
 
 protected:
 
 	// Compute flags for a given (time,freq) map
-	void flagMap(Int antenna1,Int antenna2,CubeView<Complex> &visibilities);
+	void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);

@@ -37,7 +37,7 @@ const Quantity& beginFreq,
 		ROTATED_BOX, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString, restfreq,
 		stokes, annotationOnly
-	), _inputCenter(Vector<Quantity>(2)),
+	), _inputCenter(AnnotationBase::Direction(1)),
 	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
 	_init(xcenter, ycenter, xwidth, ywidth);
@@ -51,7 +51,7 @@ AnnRotBox::AnnRotBox(
 	const CoordinateSystem& csys, const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(ROTATED_BOX, csys, imShape, stokes),
-	_inputCenter(Vector<Quantity>(2)),
+	_inputCenter(AnnotationBase::Direction(1)),
 	_inputWidths(Vector<Quantity>(2)), _widths(Vector<Quantity>(2)),
 	_positionAngle(positionAngle), _corners(Vector<MDirection>(4)) {
 	_init(xcenter, ycenter, xwidth, ywidth);
@@ -103,39 +103,6 @@ Vector<MDirection> AnnRotBox::getCorners() const {
 	return _corners;
 }
 
-void AnnRotBox::worldBoundingBox(
-	vector<Quantity>& blc, vector<Quantity>& trc
-) const {
-	const CoordinateSystem csys = getCsys();
-	Vector<Double> inc = csys.increment();
-	IPosition dirAxes = _getDirectionAxes();
-	Int xdir = inc[dirAxes[0]] >= 0 ? 1 : -1;
-	Int ydir = inc[dirAxes[1]] >= 0 ? 1 : -1;
-	String xUnit = csys.worldAxisUnits()[dirAxes[0]];
-	String yUnit = csys.worldAxisUnits()[dirAxes[1]];
-	vector<Quantum<Vector<Double> > > coords(_corners.size());
-	coords[0] = _corners[0].getAngle("rad");
-	Double xmin = coords[0].getValue(xUnit)[0];
-	Double xmax = xmin;
-	Double ymin = coords[0].getValue(yUnit)[1];
-	Double ymax = ymin;
-
-	for (uInt i=1; i<coords.size(); i++) {
-		coords[i] = _corners[i].getAngle("rad");
-		xmin = min(xmin, coords[i].getValue(xUnit)[0]);
-		xmax = max(xmax, coords[i].getValue(xUnit)[0]);
-		ymin = min(ymin, coords[i].getValue(yUnit)[1]);
-		ymax = max(ymax, coords[i].getValue(yUnit)[1]);
-	}
-
-	blc.resize(2);
-	trc.resize(2);
-	blc[0] = xdir > 0 ? Quantity(xmin, xUnit) : Quantity(xmax, xUnit);
-	blc[1] = ydir > 0 ? Quantity(ymin, yUnit) : Quantity(ymax, yUnit);
-	trc[0] = xdir > 0 ? Quantity(xmax, xUnit) : Quantity(xmin, xUnit);
-	trc[1] = ydir > 0 ? Quantity(ymax, yUnit) : Quantity(ymin, yUnit);
-}
-
 void AnnRotBox::worldCorners(vector<Quantity>& x, vector<Quantity>& y) const {
 	const CoordinateSystem csys = getCsys();
 	const IPosition dirAxes = _getDirectionAxes();
@@ -175,8 +142,8 @@ void AnnRotBox::pixelCorners(vector<Double>& x, vector<Double>& y) const {
 
 ostream& AnnRotBox::print(ostream &os) const {
 	_printPrefix(os);
-	os << "rotbox [[" << _inputCenter[0] << ", "
-		<< _inputCenter[1] << "], [" << _inputWidths[0]
+	os << "rotbox [[" << _inputCenter[0].first << ", "
+		<< _inputCenter[0].second << "], [" << _inputWidths[0]
 		<< ", " << _inputWidths[1] << "], "
 		<< _positionAngle << "]";
 	_printPairs(os);
@@ -205,8 +172,8 @@ void AnnRotBox::_init(
 	_widths[0] = _lengthToAngle(xwidth, _getDirectionAxes()[0]);
 	_widths[1] = _lengthToAngle(ywidth, _getDirectionAxes()[1]);
 
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
+	_inputCenter[0].first = xcenter;
+	_inputCenter[0].second = ycenter;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 
 	_doCorners();

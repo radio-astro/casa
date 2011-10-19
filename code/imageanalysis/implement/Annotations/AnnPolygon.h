@@ -83,8 +83,6 @@ public:
 	// get the vertices converted to the coordinate system used at construction.
 	Vector<MDirection> getCorners() const;
 
-	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
-
 	// get the world coordinates of the polygon vertices
 	void worldVertices(vector<Quantity>& x, vector<Quantity>& y) const;
 

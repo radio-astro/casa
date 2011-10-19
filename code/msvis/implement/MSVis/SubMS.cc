@@ -1079,39 +1079,39 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       uInt nddids = polId.nrow();
       uInt nSpws = spw_p.nelements();
 
-      Vector<uInt> npols_per_spw;  // # of pol setups per spw, !#pols.
+      // # of distinct channel ranges or pol setups (!#pols) per spw.
+      Vector<uInt> nuses_per_spw;
+
       Int highestSpw = max(spw_p);
       if(highestSpw < 0)
         highestSpw = 0;
       spw2ddid_p.resize(highestSpw + 1);
-      npols_per_spw.resize(highestSpw + 1);
+      nuses_per_spw.resize(highestSpw + 1);
       spw2ddid_p.set(0);                 // This is a row #, so must be >= 0.
-      npols_per_spw.set(0);
+      nuses_per_spw.set(0);
+      Bool ddidprob = false;
       for(uInt j = 0; j < nddids; ++j){
         Int spw = spwId(j);
         for(uInt k = 0; k < nSpws; ++k){
           if(spw == spw_p[k]){
-            ++npols_per_spw[spw];
+            ++nuses_per_spw[spw];
+            if(nuses_per_spw[spw_p[k]] == 2){
+              ddidprob = true;
+              os << LogIO::SEVERE
+                 << "Input spw " << spw_p[k] << " was selected for > 1 "
+                 << "channel ranges or polarization setups." << LogIO::POST;
+            }
             spw2ddid_p[spw] = j;
           }
         }
       }
 
-      Bool ddidprob = false;
-      for(uInt k = 0; k < nSpws; ++k){
-        if(npols_per_spw[spw_p[k]] != 1){
-          ddidprob = true;
-          os << LogIO::SEVERE
-             << "Selected input spw " << spw_p[k] << " matches "
-             << npols_per_spw[spw_p[k]] << " POLARIZATION_IDs." << LogIO::POST;
-        }
-      }
       if(ddidprob){
-          os << LogIO::SEVERE
-             << "split currently requires one POLARIZATION_ID per selected "
-             << "\nSPECTRAL_WINDOW_ID in the DATA_DESCRIPTION table."
-             << LogIO::POST;
-          return false;
+        os << LogIO::SEVERE
+           << "split does not yet support more than 1 channel range (';' in spw)"
+           << "\nor polarization setup per spectral window."
+           << LogIO::POST;
+        return false;
       }
 
       Vector<Int> ddids;
@@ -8283,7 +8283,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // Is CORRECTED_DATA being moved to DATA?
   Bool fromCorrToData = nCmplx == 1 && cmplxColLabels[0] == MS::CORRECTED_DATA;
 
-  ArrayColumn<Complex> outCmplxCols[nCmplx];
+  ArrayColumn<Complex> *outCmplxCols = new ArrayColumn<Complex>[nCmplx];
   getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
@@ -8393,7 +8393,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
   VisChunkAverager vca(dataColNames, doSpWeight, chanAveBounds);
 
-  Bool doFC = !mscIn_p->flagCategory().isNull() && mscIn_p->flagCategory().isDefined(0);
+  Bool doFC = existsFlagCategory();
 
   // Iterate through the chunks.  A timebin will have multiple chunks if it has
   // > 1 arrays, fields, or ddids.
@@ -8492,6 +8492,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     }
     meter.update(inrowsdone);
   }   // End of for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
+  delete [] outCmplxCols;
   os << LogIO::NORMAL << "Data binned." << LogIO::POST;
 
   //const ColumnDescSet& cds = mssel_p.tableDesc().columnDescSet();
@@ -8543,7 +8544,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   // Is CORRECTED_DATA being moved to DATA?
   Bool fromCorrToData =  nCmplx == 1 && cmplxColLabels[0] == MS::CORRECTED_DATA;
 
-  ArrayColumn<Complex> outCmplxCols[nCmplx];
+  ArrayColumn<Complex> *outCmplxCols = new ArrayColumn<Complex>[nCmplx];
   getDataColMap(outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
@@ -8748,6 +8749,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
     }
     meter.update(inrowsdone);
   }   // End of for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
+  delete [] outCmplxCols;
   os << LogIO::NORMAL << "Data binned." << LogIO::POST;
 
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)

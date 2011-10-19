@@ -99,17 +99,18 @@ public:
 
 	static Char symbolToChar(const Symbol s);
 
-
 	virtual ostream& print(ostream &os) const;
 
 private:
-	Vector<Quantity> _inputDirection;
+	AnnotationBase::Direction _inputDirection;
 	Symbol _symbol;
 	Char _symbolChar;
 	const static String _class;
 	static map<Char, Symbol> _symbolMap;
 
 	static void _initMap();
+
+	void _init(const Quantity& x, const Quantity& y);
 
 };
 

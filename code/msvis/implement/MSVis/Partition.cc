@@ -1273,7 +1273,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
        << "Using VisibilityIterator to average both FLOAT_DATA and another DATA column is extremely experimental."
        << LogIO::POST;
 
-  ArrayColumn<Complex> outCmplxCols[nCmplx];
+  ArrayColumn<Complex> *outCmplxCols = new ArrayColumn<Complex>[nCmplx];
   getDataColMap(msc_p, outCmplxCols, nCmplx, cmplxColLabels);
 
   // We may need to watch for chunks (timebins) that should be split because of
@@ -1421,6 +1421,7 @@ Bool Partition::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     }
     meter.update(inrowsdone);
   }   // End of for(vi.originChunks(); vi.moreChunks(); vi.nextChunk())
+  delete [] outCmplxCols;
   os << LogIO::NORMAL << "Data binned." << LogIO::POST;
 
   //const ColumnDescSet& cds = mssel_p.tableDesc().columnDescSet();

@@ -493,7 +493,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 #imset.makemultifieldmask2(mask,chanslice)
                 imset.makemultifieldmask3(mask,chanslice,newformat, interactive)
                 maskimage=[]
-                for img in sorted(imset.maskimages):
+                #for img in sorted(imset.maskimages):
+                for img in imset.maskimages.keys():
                     maskimage.append(imset.maskimages[img])
 	    casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
 
@@ -628,22 +629,24 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 		# Note : modelimages is an internal variable and modelimage is user-specified
                 for tt in range(0, nterms):
 		    if not os.path.exists(modelimages[tt]):
-			 imCln.make(modelimages[tt])
+			 imCln.make(modelimages[tt]);
 		         casalog.post("No model found. Making empty initial model : "+modelimages[tt]);
 	            else:
 		         casalog.post("Found and starting from existing model on disk : "+modelimages[tt]);
-		# Check for a user-specified modelimage list to add to current model
+               # Check for a user-specified modelimage list to add to current model
 		if( modelimage != '' and modelimage != [] ):
 		   if( type(modelimage)==str ):
 		       modelimage = [modelimage];
 		   if( type(modelimage)==list ):
 		       nimages = min( len(modelimage), len(modelimages) );
+                       shutil.copytree(modelimages[0] , imset.imagelist[0]);		
 		       for tt in range(0,nimages):
 			   if( os.path.exists(modelimage[tt]) ):
 			       imset.convertmodelimage(modelimages=[modelimage[tt]],outputmodel=modelimages[tt]);
 			       casalog.post("Found user-specified model image : "+modelimage[tt]+" . Adding to starting model : "+modelimages[tt]);
 			   else:
 			       casalog.post("Cannot find user-specified model image : "+modelimage[tt]+" . Continuing with current model : "+modelimages[tt]);
+                       shutil.rmtree(imset.imagelist[0]); 
 		   else:
 		      raise Exception,'Model image(s) must be a string or a list of strings';
 		

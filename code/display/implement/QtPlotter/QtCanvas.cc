@@ -745,7 +745,7 @@ void QtCanvas::drawCurves(QPainter *painter)
 
     int siz = curveMap.size();
     int sz = siz > 1 ? siz - 1 : 1;
-    QColor colorFolds[sz];
+    QColor *colorFolds = new QColor[sz];
 
     while (it != curveMap.end())
     {
@@ -850,6 +850,7 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 ++it;
     }
 
+    delete [] colorFolds;
     painter->setPen(pen);                   
     painter->setFont(ft);
 }
@@ -1012,7 +1013,7 @@ void QtCanvas::plotPolyLine(const Matrix<Double> &x)
     int n = min (nr, nc);
     if (n > 0)
     {
-        CurveData data[n];
+        CurveData *data = new CurveData[n];
         if (n < nr)
         {
             for (int i = 0; i < n; i++)
@@ -1038,6 +1039,7 @@ void QtCanvas::plotPolyLine(const Matrix<Double> &x)
             }
         }
 
+	delete [] data;
 
     }
     setDataRange();
@@ -1053,7 +1055,7 @@ void QtCanvas::plotPolyLine(const Matrix<Int> &x)
     int n = min (nr, nc);
     if (n > 0)
     {
-        CurveData data[n];
+        CurveData *data = new CurveData[n];
         if (n < nr)
         {
             for (int i = 0; i < n; i++)
@@ -1078,6 +1080,7 @@ void QtCanvas::plotPolyLine(const Matrix<Int> &x)
                 setCurveData(i, data[i]);
             }
         }
+	delete [] data;
 
     }
 
@@ -1094,7 +1097,7 @@ void QtCanvas::plotPolyLine(const Matrix<Float> &x)
     int n = min (nr, nc);
     if (n > 0)
     {
-        CurveData data[n];
+        CurveData *data = new CurveData[n];
         if (n < nr)
         {
             for (int i = 0; i < n; i++)
@@ -1119,6 +1122,7 @@ void QtCanvas::plotPolyLine(const Matrix<Float> &x)
                 setCurveData(i, data[i]);
             }
         }
+	delete [] data;
     }
 
     setDataRange();

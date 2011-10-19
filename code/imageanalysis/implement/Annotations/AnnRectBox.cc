@@ -41,7 +41,7 @@ AnnRectBox::AnnRectBox(
 		beginFreq, endFreq, freqRefFrameString,
 		dopplerString, restfreq, stokes,
 		annotationOnly
-	  ), _inputCorners(Matrix<Quantity>(2, 2)) {
+	  ), _inputCorners(AnnotationBase::Direction(2)) {
 	_init(blcx, blcy, trcx, trcy);
 }
 
@@ -54,7 +54,7 @@ AnnRectBox::AnnRectBox(
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(RECT_BOX, csys, imShape, stokes),
-	_inputCorners(Matrix<Quantity>(2, 2)) {
+	_inputCorners(AnnotationBase::Direction(2)) {
 	_init(blcx, blcy, trcx, trcy);
 }
 
@@ -66,7 +66,7 @@ AnnRectBox& AnnRectBox::operator= (
     }
     AnnRegion::operator=(other);
     _inputCorners.resize(other._inputCorners.shape());
-    _inputCorners = other._inputCorners.shape();
+    _inputCorners = other._inputCorners;
     return *this;
 }
 
@@ -76,37 +76,22 @@ Vector<MDirection> AnnRectBox::getCorners() const {
 
 ostream& AnnRectBox::print(ostream &os) const {
 	_printPrefix(os);
-	os << "box [[" << _inputCorners(0, 0) << ", "
-		<< _inputCorners(1, 0) << "], ["
-		<< _inputCorners(0, 1) << ", "
-		<< _inputCorners(1, 1) << "]]";
+	os << "box [[" << _inputCorners[0].first << ", "
+		<< _inputCorners[0].second << "], ["
+		<< _inputCorners[1].first << ", "
+		<< _inputCorners[1].second << "]]";
 	_printPairs(os);
 	return os;
 }
 
-void AnnRectBox::worldBoundingBox(
-	vector<Quantity>& blc, vector<Quantity>& trc
-) const {
-	Vector<MDirection> corners = _getConvertedDirections();
-	Quantum<Vector<Double> > wblc = corners[0].getAngle("rad");
-	Quantum<Vector<Double> > wtrc = corners[1].getAngle("rad");
-	blc.resize(2);
-	trc.resize(2);
-
-	blc[0] = Quantity(wblc.getValue()[0], wblc.getUnit());
-	blc[1] = Quantity(wblc.getValue()[1], wblc.getUnit());
-
-	trc[0] = Quantity(wtrc.getValue()[0], wblc.getUnit());
-	trc[1] = Quantity(wtrc.getValue()[1], wblc.getUnit());
-}
 void AnnRectBox::_init(
 	const Quantity& blcx, const Quantity& blcy,
 	const Quantity& trcx, const Quantity& trcy
 ) {
-	_inputCorners(0, 0) = blcx;
-	_inputCorners(1, 0) = blcy;
-	_inputCorners(0, 1) = trcx;
-	_inputCorners(1, 1) = trcy;
+	_inputCorners[0].first = blcx;
+	_inputCorners[0].second = blcy;
+	_inputCorners[1].first = trcx;
+	_inputCorners[1].second = trcy;
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCorners);
 	Vector<Int> absrel(2,(Int)RegionType::Abs);
 	Vector<Quantity> qblc(2);
@@ -121,11 +106,7 @@ void AnnRectBox::_init(
 			"rad"
 		);
 	}
-	// we just want a 2-d coordinate system for creating our box. We'll extend
-	// it after.
-	CoordinateSystem csys;
-	csys.addCoordinate(*getCsys().directionCoordinate().clone());
-	WCBox box(qblc, qtrc, _getDirectionAxes(), csys, absrel);
+	WCBox box(qblc, qtrc, _getDirectionAxes(), getCsys(), absrel);
 	_setDirectionRegion(box);
 	_extend();
 }

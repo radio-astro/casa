@@ -110,13 +110,11 @@ public:
 	// of angular measure
 	Quantity getPositionAngle() const;
 
-	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
-
 	virtual ostream& print(ostream &os) const;
 
 
 private:
-	Vector<Quantity> _inputCenter;
+	AnnotationBase::Direction _inputCenter;
 	Quantity _inputMajorAxis, _inputMinorAxis, _inputPositionAngle,
 		_convertedMajorAxis, _convertedMinorAxis;
 

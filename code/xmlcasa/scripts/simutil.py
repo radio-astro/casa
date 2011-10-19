@@ -2458,8 +2458,12 @@ class simutil:
         cleanlast.write('taskname            = "clean"\n')
 
         self.msg("clean inputs:")        
-        cleanstr="clean(vis="+str(mstoimage)+",imagename='"+image+"'"
-        cleanlast.write('vis                 = '+str(mstoimage)+'\n')
+        if type(mstoimage)==type([]):
+            cleanstr="clean(vis="+str(mstoimage)+",imagename='"+image+"'"
+            cleanlast.write('vis                 = '+str(mstoimage)+'\n')
+        else:
+            cleanstr="clean(vis='"+str(mstoimage)+"',imagename='"+image+"'"
+            cleanlast.write('vis                 = "'+str(mstoimage)+'"\n')
         cleanlast.write('imagename           = "'+image+'"\n')
         cleanlast.write('outlierfile         = ""\n')
         cleanlast.write('field               = "'+sourcefieldlist+'"\n')

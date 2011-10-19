@@ -87,21 +87,6 @@ Vector<Quantity> AnnCenterBox::getWidths() const {
 	return _widths;
 }
 
-void AnnCenterBox::worldBoundingBox(
-	vector<Quantity>& blc, vector<Quantity>& trc
-) const {
-	Quantum<Vector<Double> > wblc = _corners[0].getAngle("rad");
-	Quantum<Vector<Double> > wtrc = _corners[1].getAngle("rad");
-	blc.resize(2);
-	trc.resize(2);
-
-	blc[0] = Quantity(wblc.getValue()[0], wblc.getUnit());
-	blc[1] = Quantity(wblc.getValue()[1], wblc.getUnit());
-
-	trc[0] = Quantity(wtrc.getValue()[0], wblc.getUnit());
-	trc[1] = Quantity(wtrc.getValue()[1], wblc.getUnit());
-}
-
 void AnnCenterBox::_init() {
 	if (! _inpXWidth.isConform("rad") && ! _inpXWidth.isConform("pix")) {
 		throw AipsError(
@@ -116,9 +101,9 @@ void AnnCenterBox::_init() {
 	_widths[0] = _lengthToAngle(_inpXWidth, _getDirectionAxes()[0]);
 	_widths[1] = _lengthToAngle(_inpYWidth, _getDirectionAxes()[1]);
 
-	Vector<Quantity> center(2);
-	center[0] = _inpXCenter;
-	center[1] = _inpYCenter;
+	AnnotationBase::Direction center(1);
+	center[0].first = _inpXCenter;
+	center[0].second =_inpYCenter;
 	_checkAndConvertDirections(String(__FUNCTION__), center);
 
 	_doCorners();

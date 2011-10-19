@@ -20,7 +20,7 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
+#include <flagging/Flagging/FlagAgentClipping.h>
 #include <iostream>
 
 using namespace casa;
@@ -210,7 +210,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -229,10 +229,10 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 
 	// Create agent list
 	FlagAgentList agentList;
-	FlagAgentTimeFreqCrop *flaggingAgent = NULL;
+	FlagAgentClipping *flaggingAgent = NULL;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
-		flaggingAgent = new FlagAgentTimeFreqCrop(dh,*iter);
+		flaggingAgent = new FlagAgentClipping(dh,*iter);
 		agentList.push_back(flaggingAgent);
 	}
 
@@ -499,7 +499,7 @@ int main(int argc, char **argv)
 	string parameter, value;
 	string targetFile,referenceFile;
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
-	string time_amp_cutoff,freq_amp_cutoff,maxnpieces,timefit,freqfit,flagdimension,halfwin,usewindowstats;
+	string clipmin,clipmax;
 	string expression,datacolumn,nThreadsParam,ntime;
 	Int nThreads = 0;
 
@@ -612,53 +612,17 @@ int main(int argc, char **argv)
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
-		else if (parameter == string("-time_amp_cutoff"))
+		else if (parameter == string("-clipmin"))
 		{
-			time_amp_cutoff = casa::String(value);
-			agentParameters.define ("time_amp_cutoff", time_amp_cutoff);
-			cout << "time_amp_cutoff is: " << time_amp_cutoff << endl;
+			clipmin = casa::String(value);
+			agentParameters.define ("clipmin", clipmin);
+			cout << "clipmin is: " << clipmin << endl;
 		}
-		else if (parameter == string("-freq_amp_cutoff"))
+		else if (parameter == string("-clipmax"))
 		{
-			freq_amp_cutoff = casa::String(value);
-			agentParameters.define ("freq_amp_cutoff", freq_amp_cutoff);
-			cout << "freq_amp_cutoff is: " << freq_amp_cutoff << endl;
-		}
-		else if (parameter == string("-maxnpieces"))
-		{
-			maxnpieces = casa::String(value);
-			agentParameters.define ("maxnpieces", maxnpieces);
-			cout << "maxnpieces is: " << maxnpieces << endl;
-		}
-		else if (parameter == string("-timefit"))
-		{
-			timefit = casa::String(value);
-			agentParameters.define ("timefit", timefit);
-			cout << "timefit is: " << timefit << endl;
-		}
-		else if (parameter == string("-freqfit"))
-		{
-			freqfit = casa::String(value);
-			agentParameters.define ("freqfit", freqfit);
-			cout << "freqfit is: " << freqfit << endl;
-		}
-		else if (parameter == string("-flagdimension"))
-		{
-			flagdimension = casa::String(value);
-			agentParameters.define ("flagdimension", flagdimension);
-			cout << "flagdimension is: " << flagdimension << endl;
-		}
-		else if (parameter == string("-halfwin"))
-		{
-			halfwin = casa::String(value);
-			agentParameters.define ("halfwin", halfwin);
-			cout << "halfwin is: " << halfwin << endl;
-		}
-		else if (parameter == string("-usewindowstats"))
-		{
-			usewindowstats = casa::String(value);
-			agentParameters.define ("usewindowstats", usewindowstats);
-			cout << "usewindowstats is: " << usewindowstats << endl;
+			clipmax = casa::String(value);
+			agentParameters.define ("clipmax", clipmax);
+			cout << "clipmax is: " << clipmax << endl;
 		}
 	}
 

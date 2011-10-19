@@ -93,7 +93,12 @@ def deep_equality(a, b):
             print "keys don't match, a is " + str(a.keys()) + " b is " + str(b.keys())
             return False
         for k in a.keys():
-            if (not deep_equality(a[k], b[k])):
+            if (
+                k == "telescope" or k == "observer"
+                or k == "telescopeposition"
+            ):
+                continue
+            elif (not deep_equality(a[k], b[k])):
                 print "dictionary member inequality a[" + str(k) \
                     + "] is " + str(a[k]) + " b[" + str(k) + "] is " + str(b[k])
                 return False

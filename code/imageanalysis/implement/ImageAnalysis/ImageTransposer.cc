@@ -208,7 +208,7 @@ Vector<Int> ImageTransposer::_getOrder(const String& order) {
 	String orderCopy = order;
 	if (orderCopy.contains('-', 0)) {
 		uInt maxn = orderCopy.freq('-') + 1;
-		String parts[maxn];
+		String *parts = new String[maxn];
 		split(order, parts, maxn, '-');
 		// disregard the first element because that won't have a -
 		_reverse.resize(maxn - 1);
@@ -217,6 +217,7 @@ Vector<Int> ImageTransposer::_getOrder(const String& order) {
 			_reverse[i-1] = String::toInt(parts[i].substr(0, 1));
 			orderCopy += parts[i];
 		}
+		delete [] parts;
 
 	}
 	return _getOrder(String::toInt(orderCopy));

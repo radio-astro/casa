@@ -29,7 +29,7 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	       default: all
 
 	   time_sampling -- specifies the time sampling, INTEGRATION and/or
-                            SUBINTEGRAION. could be one or more of the following
+                            SUBINTEGRATION. could be one or more of the following
                             i, si, or all.
 		 default: all
 
@@ -80,7 +80,9 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
 	   process_pointing -- The Pointing table is processed if and only if this parameter is set to True.
 	          default: True
 
-	   verbose     -- produce log output as asdm2MS is being run
+	   verbose     -- produce log output as asdm2MS is being run.
+
+	   overwrite -- Over write an existing MS.
 
 	   showversion -- report the version of the asdm2MS being used.
 
@@ -125,9 +127,17 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                                         lpath = p
                                                         break
                                 casalog.post( 'path to asap library is %s'%(lpath) )
-                                if lpath not in os.environ['LD_LIBRARY_PATH'].split(':'):
-                                        casalog.post( 'appending %s to LD_LIBRARY_PATH'%(lpath) )
-                                        os.environ['LD_LIBRARY_PATH'] += ':%s'%(lpath)
+                                import sys
+                                if sys.platform == 'darwin':
+                                        libpath='DYLD_LIBRARY_PATH'
+                                else:
+                                        libpath='LD_LIBRARY_PATH'
+                                if os.environ.has_key(libpath) == False:
+					casalog.post( 'defining %s as %s'%(lpath,libpath) )
+                                        os.environ[libpath] = lpath
+                                elif lpath not in os.environ[libpath].split(':'):
+                                        casalog.post( 'appending %s to %s'%(lpath,libpath) )
+                                        os.environ[libpath] += ':%s'%(lpath)
                                 if showversion:
                                         execute_string = theexecutable + ' --help'
                                 else:

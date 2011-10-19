@@ -39,8 +39,8 @@ AnnEllipse::AnnEllipse(
 		ELLIPSE, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
-), _inputCenter(Vector<Quantity>(2)), _inputMajorAxis(majorAxis),
-_inputMinorAxis(minorAxis),
+), _inputCenter(AnnotationBase::Direction(1)), _inputMajorAxis(majorAxis),
+	_inputMinorAxis(minorAxis),
 	_inputPositionAngle(positionAngle) {
 	_init(xcenter, ycenter);
 }
@@ -53,7 +53,7 @@ AnnEllipse::AnnEllipse(
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(ELLIPSE, csys, imShape, stokes),
-	_inputCenter(Vector<Quantity>(2)), _inputMajorAxis(majorAxis),
+	_inputCenter(AnnotationBase::Direction(1)), _inputMajorAxis(majorAxis),
 	_inputMinorAxis(minorAxis),
 	_inputPositionAngle(positionAngle) {
 	_init(xcenter, ycenter);
@@ -67,7 +67,7 @@ AnnEllipse& AnnEllipse::operator= (
     }
     AnnRegion::operator=(other);
     _inputCenter.resize(other._inputCenter.nelements());
-    _inputCenter = other._inputCenter.nelements();
+    _inputCenter = other._inputCenter;
     _inputMajorAxis = other._inputMajorAxis;
     _inputMinorAxis = other._inputMinorAxis;
     _inputPositionAngle = other._inputPositionAngle;
@@ -94,59 +94,19 @@ Quantity AnnEllipse::getPositionAngle() const {
 
 ostream& AnnEllipse::print(ostream &os) const {
 	_printPrefix(os);
-	os << "ellipse [[" << _inputCenter[0] << ", "
-		<< _inputCenter[1] << "], [" << _inputMajorAxis
+	os << "ellipse [[" << _inputCenter[0].first << ", "
+		<< _inputCenter[0].second << "], [" << _inputMajorAxis
 		<< ", " << _inputMinorAxis << "], "
 		<< _inputPositionAngle << "]";
 	_printPairs(os);
 	return os;
 }
 
-void AnnEllipse::worldBoundingBox(
-	vector<Quantity>& blc, vector<Quantity>& trc
-) const {
-	const CoordinateSystem csys = getCsys();
-	Vector<Double> inc = csys.increment();
-	IPosition dirAxes = _getDirectionAxes();
-	Int xdir = inc[dirAxes[0]] >= 0 ? 1 : -1;
-	Int ydir = inc[dirAxes[1]] >= 0 ? 1 : -1;
-	String xUnit = csys.worldAxisUnits()[0];
-	String yUnit = csys.worldAxisUnits()[0];
-	Quantum<Vector<Double> > centerCoord = _getConvertedDirections()[0].getAngle("rad");
-
-	Double theta = _inputPositionAngle.getValue("rad");
-	Quantity delX = _convertedMinorAxis*Quantity(abs(sin(theta)), "")
-		+ _convertedMajorAxis*Quantity(abs(cos(theta)), "");
-	Quantity delY = _convertedMinorAxis*Quantity(abs(cos(theta)),"")
-		+ _convertedMajorAxis*Quantity(abs(sin(theta)), "");
-
-	Quantity blcx = Quantity(centerCoord.getValue()[0], centerCoord.getUnit())
-		- Quantity(xdir, "")*delX;
-	blcx.convert(xUnit);
-	Quantity blcy = Quantity(centerCoord.getValue()[1], centerCoord.getUnit())
-		- Quantity(ydir,"")*delY;
-	blcy.convert(yUnit);
-	Quantity trcx = Quantity(centerCoord.getValue()[0], centerCoord.getUnit())
-		+ Quantity(xdir,"")*delX;
-	trcx.convert(xUnit);
-	Quantity trcy = Quantity(centerCoord.getValue()[1], centerCoord.getUnit())
-		+ Quantity(ydir,"")*delY;
-	trcy.convert(yUnit);
-	blc.resize(2);
-	trc.resize(2);
-	blc[0] = blcx;
-	blc[1] = blcy;
-	trc[0] = trcx;
-	trc[1] = trcy;
-}
-
-
 void AnnEllipse::_init(
 	const Quantity& xcenter, const Quantity& ycenter
 ) {
 	_convertedMajorAxis = _lengthToAngle(_inputMajorAxis, _getDirectionAxes()[0]);
 	_convertedMinorAxis = _lengthToAngle(_inputMinorAxis, _getDirectionAxes()[0]);
-
 	String preamble = String(__FUNCTION__) + ": ";
 	if (
 		_convertedMinorAxis.getValue("rad")
@@ -164,8 +124,8 @@ void AnnEllipse::_init(
 			+ "Position angle must have angular units"
 		);
 	}
-	_inputCenter[0] = xcenter;
-	_inputCenter[1] = ycenter;
+	_inputCenter[0].first = xcenter;
+	_inputCenter[0].second = ycenter;
 
 	_checkAndConvertDirections(String(__FUNCTION__), _inputCenter);
 

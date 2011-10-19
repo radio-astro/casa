@@ -272,7 +272,10 @@ void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 		ParamSet currentParamSet = _getCurrentParamSet(
 			spectralParmsUpdated, newParams, consumeMe, preamble
 		);
-		if (newParams.find(AnnotationBase::LABEL) == newParams.end()) {
+		if (
+			newParams.find(AnnotationBase::LABEL) == newParams.end()
+			|| newParams[AnnotationBase::LABEL].stringVal.empty()
+		) {
 			if (newParams.find(AnnotationBase::LABELCOLOR) != newParams.end()) {
 				*_log << LogIO::WARN << preamble
 					<< "Ignoring labelcolor because there is no associated label specified"
@@ -659,6 +662,7 @@ RegionTextParser::_getCurrentParamSet(
 			}
 			else if (keyword == "fontsize") {
 				key = AnnotationBase::FONTSIZE;
+				paramValue.intVal = String::toInt(paramValue.stringVal);
 			}
 			else if (keyword == "fontstyle") {
 				key = AnnotationBase::FONTSTYLE;
@@ -926,9 +930,16 @@ void RegionTextParser::_createAnnotation(
 		)
 	);
 	annotation->setUseTex(currentParamSet.at(AnnotationBase::USETEX).boolVal);
-	annotation->setLabelColor(currentParamSet.at(AnnotationBase::LABELCOLOR).stringVal);
-	annotation->setLabelPosition(currentParamSet.at(AnnotationBase::LABELPOS).stringVal);
-	annotation->setLabelOffset(currentParamSet.at(AnnotationBase::LABELOFF).intVec);
+	if (
+		currentParamSet.find(AnnotationBase::LABEL) != currentParamSet.end()
+		&& ! currentParamSet.find(AnnotationBase::LABEL)->second.stringVal.empty()
+	) {
+		annotation->setLabel(currentParamSet.at(AnnotationBase::LABEL).stringVal);
+		annotation->setLabelColor(currentParamSet.at(AnnotationBase::LABELCOLOR).stringVal);
+		annotation->setLabelColor(currentParamSet.at(AnnotationBase::LABELCOLOR).stringVal);
+		annotation->setLabelPosition(currentParamSet.at(AnnotationBase::LABELPOS).stringVal);
+		annotation->setLabelOffset(currentParamSet.at(AnnotationBase::LABELOFF).intVec);
+	}
 	annotation->setGlobals(_globalKeysToApply);
 	AsciiAnnotationFileLine line(annotation);
 	_addLine(line);
@@ -988,7 +999,7 @@ String RegionTextParser::_doLabel(
 		*_log << preamble << "Could not find closing quote ("
 			<< String(firstChar) << ") for label" << LogIO::EXCEPTION;
 	}
-	String label = consumeMe.substr(1, posCloseQuote - 2);
+	String label = consumeMe.substr(1, posCloseQuote - 1);
 	consumeMe.del(0, (Int)posCloseQuote + 1);
 	return label;
 }
@@ -1177,7 +1188,7 @@ RegionTextParser::_stokesFromString(
 	const String& stokes, const String& preamble
 ) const {
 	Int maxn = Stokes::NumberOfTypes;
-	string res[maxn];
+	string *res = new string[maxn];
 	Int nStokes = split(stokes, res, maxn, ",");
 	Vector<Stokes::StokesTypes> myTypes(nStokes);
 	for (Int i=0; i<nStokes; i++) {
@@ -1188,6 +1199,7 @@ RegionTextParser::_stokesFromString(
 			throw AipsError(preamble + "Unknown correlation type " + x);
 		}
 	}
+	delete [] res;
 	return myTypes;
 }
 

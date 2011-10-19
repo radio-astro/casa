@@ -25,6 +25,7 @@
 
 #include <casa/aips.h>
 #include <imageanalysis/Annotations/AnnRectBox.h>
+#include <imageanalysis/Annotations/RegionTextList.h>
 
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -37,6 +38,36 @@
 #include <iomanip>
 
 int main () {
+	/*
+	PagedImage<Float> pim("g35_sma_usb_12co.image");
+	CoordinateSystem csys1 = pim.coordinates();
+	IPosition shape1 = pim.shape();
+	/*
+	Vector<Double> refVal = csys1.referenceValue();
+	refVal[0] = 4.94827;
+	refVal[1] = 0.035055;
+	Vector<Double> refPix = csys1.referencePixel();
+	refPix[0] = 40;
+	refPix[1] = 40;
+	csys1.setReferencePixel(refPix);
+	Vector<String> units = csys1.worldAxisUnits();
+	units[0] = "arcsec";
+	units[1] = "arcsec";
+	csys1.setWorldAxisUnits(units);
+
+ 	RegionTextList rlist( "txy.crtf", csys1, shape1 );
+	Vector<AsciiAnnotationFileLine> aaregions = rlist.getLines( );
+	for ( unsigned int i=0; i < aaregions.size( ); ++i ) {
+		if ( aaregions[i].getType( ) != AsciiAnnotationFileLine::ANNOTATION ) continue;
+		const AnnotationBase* ann = aaregions[i].getAnnotationBase();
+		cout << " >>>==>> " << ann->getLabel( ) << endl;
+		cout << " >>>==>> " << ann->getFontSize( ) << endl;
+
+	}
+
+	return 0;
+	*/
+
 	try {
 		CoordinateSystem csys = CoordinateUtil::defaultCoords4D();
 		AnnRegion::unitInit();
@@ -151,6 +182,7 @@ int main () {
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			/*
 			vector<Quantity> wblc, wtrc;
 			box.worldBoundingBox(wblc, wtrc);
 			AlwaysAssert(
@@ -170,7 +202,7 @@ int main () {
 				near(wtrc[1].getValue("arcmin"), trcy.getValue("arcmin")),
 				AipsError
 			);
-
+			/*
 			vector<Double> pblc, ptrc;
 			box.pixelBoundingBox(pblc, ptrc);
 
@@ -181,6 +213,7 @@ int main () {
 			AlwaysAssert(near(pblc[1], wblc[1].getValue("arcmin"), 3e-6), AipsError);
 			AlwaysAssert(near(ptrc[0], (-1)*wtrc[0].getValue("arcmin") + 300, .4), AipsError);
 			AlwaysAssert(near(ptrc[1], wtrc[1].getValue("arcmin"), 3e-6), AipsError);
+			*/
 		}
 		{
 			log << LogIO::NORMAL

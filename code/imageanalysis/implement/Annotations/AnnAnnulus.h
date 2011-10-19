@@ -96,10 +96,7 @@ public:
 	// the outer
 	Vector<Quantity> getRadii() const;
 
-	void worldBoundingBox(vector<Quantity>& blc, vector<Quantity>& trc) const;
-
 	virtual ostream& print(ostream &os) const;
-
 
 private:
 	Vector<Quantity> _convertedRadii;

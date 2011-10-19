@@ -84,10 +84,6 @@ public:
 
 	AnnRectBox& operator=(const AnnRectBox& other);
 
-	void worldBoundingBox(
-		vector<Quantity>& blc, vector<Quantity>& trc
-	) const;
-
 	// get the blc and trc direction coords for the box.
 	// The output directions will be converted from the input
 	// reference frame to the reference frame of the input
@@ -99,7 +95,8 @@ public:
 	ostream& print(ostream &os) const;
 
 private:
-	Matrix<Quantity> _inputCorners;
+	AnnotationBase::Direction _inputCorners;
+
 	void _init(
 		const Quantity& blcx, const Quantity& blcy,
 		const Quantity& trcx, const Quantity& trcy

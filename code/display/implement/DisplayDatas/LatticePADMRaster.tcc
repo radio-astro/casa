@@ -103,7 +103,7 @@ uInt LatticePADMRaster<T>::dataDrawSelf(WorldCanvas *wCanvas,
     wCanvas->setDataScaleHandler(lar->itsPowerScaleHandler);
     Matrix<T> datMatrix;
     Matrix<Bool> maskMatrix;
-    dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
+    this->dataGetSlice(datMatrix, maskMatrix, start, shape, stride);
     Bool useMask = (maskMatrix.nelements() == datMatrix.nelements());
     switch (wCanvas->pixelCanvas()->pcctbl()->colorModel()) {
     case Display::Index:
