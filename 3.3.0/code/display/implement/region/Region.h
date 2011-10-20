@@ -76,6 +76,8 @@ namespace casa {
 	// convert casa pixel coordinates to linear coordinates...
 	void pixel_to_linear( WorldCanvas *wc_, int, int, double &, double & );
 
+	void screen_offset_to_linear_offset( WorldCanvas *wc_, int, int, double &, double & );
+
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 	// this means that coordinate transformation is required each time the region is drawn.

@@ -634,6 +634,14 @@ namespace casa {
 	    // END - critical section
 	}
 
+	void screen_offset_to_linear_offset( WorldCanvas *wc_, int sx, int sy, double &lx, double &ly ) {
+	    const int base = 200;
+	    double blcx, blcy, trcx, trcy;
+	    screen_to_linear( wc_, base, base, base+sx, base+sy, blcx, blcy, trcx, trcy );
+	    lx = trcx - blcx;
+	    ly = trcy - blcy;
+	}
+
 	void linear_to_world( WorldCanvas *wc, double lin_x, double lin_y, double &world_x, double &world_y ) {
 
 	    if ( wc == 0 )
