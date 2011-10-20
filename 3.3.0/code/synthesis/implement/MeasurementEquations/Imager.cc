@@ -1643,12 +1643,12 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     if(nvis_sel != nvis_all) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Selected " << nvis_sel << " out of "
-         << nvis_all << " visibilities."
+         << nvis_all << " rows."
 	 << LogIO::POST;
     }
     else {
       os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
-         << "Selected all " << nvis_sel << " visibilities" << LogIO::POST; // Loglevel INFO
+         << "Selected all " << nvis_sel << " rows" << LogIO::POST; // Loglevel INFO
     }
     //    }
 
@@ -1671,7 +1671,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 
     // Now we do a selection to cut down the amount of information
     // passed around.
-    
+  
     this->selectDataChannel(dataspectralwindowids_p, dataMode_p,
 			    dataNchan_p, dataStart_p, dataStep_p,
                             mDataStart_p, mDataStep_p);
