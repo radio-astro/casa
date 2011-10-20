@@ -1550,9 +1550,11 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
   tiledDataNames.resize(1);
   tiledDataNames[0] = hcolName;
   
-  // add this optional column because random group fits has a
-  // weight per visibility
-  MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
+  // Add this optional column (random group fits can have a
+  // weight per visibility) if the FITS IDI data actually contains it
+  if(uv_data_hasWeights_p){
+    MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 2);
+  }
   
   if(mainTbl && useTSM) {
     td.defineHypercolumn("TiledDATA",3,
@@ -1561,8 +1563,10 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
 			 stringToVector(MS::columnName(MS::FLAG)));
     td.defineHypercolumn("TiledFlagCategory",4,
 			 stringToVector(MS::columnName(MS::FLAG_CATEGORY)));
-    td.defineHypercolumn("TiledWgtSpectrum",3,
-			 stringToVector(MS::columnName(MS::WEIGHT_SPECTRUM)));
+    if(uv_data_hasWeights_p){
+      td.defineHypercolumn("TiledWgtSpectrum",3,
+			   stringToVector(MS::columnName(MS::WEIGHT_SPECTRUM)));
+    }
     td.defineHypercolumn("TiledUVW",2,
 			 stringToVector(MS::columnName(MS::UVW)));
     td.defineHypercolumn("TiledWgt",2,
@@ -1646,7 +1650,9 @@ void FITSIDItoMS1::setupMeasurementSet(const String& MSFileName, Bool useTSM,
     
     newtab.bindColumn(MS::columnName(MS::FLAG),tiledStMan1f);
     newtab.bindColumn(MS::columnName(MS::FLAG_CATEGORY),tiledStMan1fc);
-    newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),tiledStMan2);
+    if(uv_data_hasWeights_p){
+      newtab.bindColumn(MS::columnName(MS::WEIGHT_SPECTRUM),tiledStMan2);
+    }
     
     newtab.bindColumn(MS::columnName(MS::UVW),tiledStMan3);
     newtab.bindColumn(MS::columnName(MS::WEIGHT),tiledStMan4);
@@ -2034,7 +2040,9 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 
       }
 
-      msc.weightSpectrum().put(putrow,weightSpec); 
+      if(uv_data_hasWeights_p){
+	msc.weightSpectrum().put(putrow,weightSpec); 
+      }
       msc.flag().put(putrow,flag);
       msc.flagCategory().put(putrow,flagCat);
 
