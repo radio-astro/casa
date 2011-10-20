@@ -332,8 +332,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
+	const int pixel_step = 1;
 	WorldCanvas *wc = ev.worldCanvas( );
-	if ( wc == itsCurrentWC && ev.key() == Display::K_Escape) {
+	if ( wc == itsCurrentWC && 
+	     ( ev.key() == Display::K_Escape ||
+	       ev.key() == Display::K_Left ||
+	       ev.key() == Display::K_Right ||
+	       ev.key() == Display::K_Up ||
+	       ev.key() == Display::K_Down ) ) {
 	    uInt x = ev.pixX();
 	    uInt y = ev.pixY();
 
@@ -343,17 +349,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    double linx, liny;
 	    viewer::screen_to_linear( wc, x, y, linx, liny );
 
-	    bool region_removed = false;
-	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
+	    bool refresh_needed = false;
+	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ) {
 		if ( (*iter)->regionVisible( ) ) {
 		    int result = (*iter)->mouseMovement(linx,liny,false);
 		    if ( viewer::Region::regionSelected(result) ) {
-			polygons.erase( iter );
-			region_removed = true;
-		    }
-		}
+			if ( ev.key() == Display::K_Escape ) {
+			    polygonlist::iterator xi = iter; ++xi;
+			    polygons.erase( iter );
+			    refresh_needed = true;
+			    iter = xi;
+			} else {
+			    double dx=0, dy=0;
+			    switch ( ev.key( ) ) {
+				case Display::K_Left:
+				    viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Right:
+				    viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Down:
+				    viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+				    break;
+				case Display::K_Up:
+				    viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+				    break;
+				default:
+				    break;
+			    }
+			    (*iter)->move( dx, dy );
+			    refresh_needed = true;
+			    ++iter;
+			}
+		    } else { ++iter; }
+		} else { ++iter; }
 	    }
-	    if ( region_removed ) refresh( );
+	    if ( refresh_needed ) refresh( );
 	}
     }
 
