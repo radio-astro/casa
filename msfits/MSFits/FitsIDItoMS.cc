@@ -1950,9 +1950,8 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 
     Float visReal = 0.;
     Float visImag = 0.;
-    Float visWeight = 0.;
+    Float visWeight = 1.;
 
-    //***temporal fix  
     Int nIF_p = 0;
     nIF_p = getIndex(coordType_p,"BAND");
     if (nIF_p>=0) {
