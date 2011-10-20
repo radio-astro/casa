@@ -276,7 +276,7 @@ void AMueller::setApply(const Record& applypar)
         for(uInt row = 0; row < nrows; ++row){
           Int cspw = spwMap()[row];
 
-          if(cspw > 0 && cspw < nSpw()){
+          if(cspw >= 0 && cspw < nSpw()){
             // Storing lo and hifreq_p in chanFreq (suggested by George
             // Moellenbrock) is a hack, but it does not seem to be otherwise
             // used, and it avoids more serious mucking with the caltable.
