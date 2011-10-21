@@ -1229,21 +1229,22 @@ void QtPixelCanvas::keyPressEvent (QKeyEvent* e ) {
   Display::KeySym ksym = Display::K_None;
   
   // This is just a start; needs extensive translation table(s).
-  
-  if     (qkey==Qt::Key_Escape)   ksym = Display::K_Escape;
-  else if(qkey==Qt::Key_Space)    ksym = Display::K_space;
-  else if(qkey==Qt::Key_L)        ksym = Display::K_l;
-  else if(qkey==Qt::Key_Left)     ksym = Display::K_Left;
-  else if(qkey==Qt::Key_Right)    ksym = Display::K_Right;
-  else if(qkey==Qt::Key_Up)       ksym = Display::K_Up;
-  else if(qkey==Qt::Key_Down)     ksym = Display::K_Down;
-  else if(qkey==Qt::Key_Home)     ksym = Display::K_Home;
-  else if(qkey==Qt::Key_End)      ksym = Display::K_End;
-  else if(qkey==Qt::Key_PageUp)   ksym = Display::K_Page_Up;
-  else if(qkey==Qt::Key_PageDown) ksym = Display::K_Page_Down;
- 
-  else { e->ignore(); return;  }
-  
+
+  switch ( qkey ) {
+      case Qt::Key_Escape:     ksym = Display::K_Escape; break;
+      case Qt::Key_Space:      ksym = Display::K_space; break;
+      case Qt::Key_L:          ksym = Display::K_l; break;
+      case Qt::Key_Left:       ksym = Display::K_Left; break;
+      case Qt::Key_Right:      ksym = Display::K_Right; break;
+      case Qt::Key_Up:         ksym = Display::K_Up; break;
+      case Qt::Key_Down:       ksym = Display::K_Down; break;
+      case Qt::Key_Home:       ksym = Display::K_Home; break;
+      case Qt::Key_End:        ksym = Display::K_End; break;
+      case Qt::Key_PageUp:     ksym = Display::K_Page_Up; break;
+      case Qt::Key_PageDown:   ksym = Display::K_Page_Down; break;
+      default:                 e->ignore(); return;
+  }
+
   uInt kmods = dlKeyMods_(e->modifiers());
 
   // Mouse position is not part of Qt kbd events, but it can be retrieved...
