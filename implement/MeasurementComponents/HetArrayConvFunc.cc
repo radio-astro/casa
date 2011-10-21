@@ -406,12 +406,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=9;
+	  trial=15*convSampling;
 	}
 	
 				 
 	if(found) {
-	  if(trial < 15) trial=15;
+	  if(trial < 15*convSampling) trial=15*convSampling;
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
 	  //support is really over the edge
 	  if( (convSupport*convSampling) >= convSize_p/2){

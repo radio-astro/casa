@@ -475,8 +475,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	trial=5;
       }
       
-      if(trial < 15) 
-	trial=15;
+      if(trial < 15*convSampling) 
+	trial=15*convSampling;
       
       if(found) {
 	convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;
