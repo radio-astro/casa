@@ -80,7 +80,7 @@ class WCPositionEH {
   WCPositionEH();
 
   // Default just prints the event to cout
-  virtual void operator()(const WCPositionEvent & ev);
+  virtual void operator()(const WCPositionEvent & ev) = 0;
 
   // Destructor
   virtual ~WCPositionEH();

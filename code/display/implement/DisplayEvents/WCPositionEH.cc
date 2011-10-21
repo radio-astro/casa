@@ -34,9 +34,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 WCPositionEH::WCPositionEH() {
 }
 
-void WCPositionEH::operator()(const WCPositionEvent &) {
-}
-
 // Destructor
 WCPositionEH::~WCPositionEH() {
 }
