@@ -1828,7 +1828,7 @@ class simutil:
 
 
 
-    def irtf2loc(self, x,y,z, cx,cy,cz):
+    def itrf2loc(self, x,y,z, cx,cy,cz):
         """
         itrf xyz and COFA cx,cy,cz -> latlon WGS84
         """
@@ -1874,7 +1874,7 @@ class simutil:
         cx=pl.mean(x)
         cy=pl.mean(y)
         cz=pl.mean(z)
-        lat,lon = self.irtf2loc(x,y,z,cx,cy,cz)
+        lat,lon = self.itrf2loc(x,y,z,cx,cy,cz)
         n=lat.__len__()
         
         dolam=0

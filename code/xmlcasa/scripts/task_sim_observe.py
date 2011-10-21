@@ -273,7 +273,7 @@ def sim_observe(
             cx=pl.mean(stnx)
             cy=pl.mean(stny)
             cz=pl.mean(stnz)
-            lat,lon = util.irtf2loc(stnx,stny,stnz,cx,cy,cz)
+            lat,lon = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
             maxbase=max(lat)-min(lat) # in meters
             maxbase2=max(lon)-min(lon)
             if maxbase2>maxbase:
