@@ -549,7 +549,7 @@ C
 C            if((pos(idim)-loc(idim)) < 0.0)then
 C               loc(idim)=loc(idim)-1
 C            end if 
-            off(idim)=nint((pos(idim)-real(loc(idim)))*real(sampling))
+            off(idim)=nint((pos(idim)-real(loc(idim)))*real(-sampling))
 C            if(off(idim).eq.sampling) then
 C               off(idim)=0
 C               loc(idim)=loc(idim)+1
