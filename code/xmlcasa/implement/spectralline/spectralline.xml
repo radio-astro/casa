@@ -284,6 +284,17 @@ newsl.search([0,1000])
     <returns type="void"/>
 </method>
 
+<method type="function" name="torecord">
+    <shortdescription>Return data on the spectral lines in the table as a record.</shortdescription>
+    <description>
+        Return data on the spectral lines in the table as a record.
+    </description>
+    <returns type="any">
+        <any type="record"/>
+    </returns>
+</method>
+
+
 <method type="function" name="species">
     <shortdescription>List the unique species in the associated table to the logger.</shortdescription>
     <description>

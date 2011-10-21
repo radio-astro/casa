@@ -207,7 +207,7 @@ void spectralline::list() {
 			return;
 		}
 		if (_table->nrow() > 10000) {
-			*_log << "Table contains " << _table->nrow()
+			*_log << LogIO::WARN << "Table contains " << _table->nrow()
 				<< " spectral lines and so may take quite some time to list"
 				<< LogIO::POST;
 		}
@@ -217,6 +217,25 @@ void spectralline::list() {
 		*_log << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
 	}
 }
+
+record* spectralline::torecord() {
+	try {
+		if (_detached()) {
+			return 0;
+		}
+		if (_table->nrow() > 10000) {
+			*_log << LogIO::WARN << "Table contains " << _table->nrow()
+				<< " spectral lines and so may take quite some time to process"
+				<< LogIO::POST;
+		}
+		return fromRecord(_table->toRecord());
+	}
+	catch (AipsError x) {
+		*_log << LogIO::SEVERE << "Exception Reports: " << x.getMesg() << LogIO::POST;
+		return 0;
+	}
+}
+
 
 record* spectralline::species(const bool verbose, const string& logfile, const bool append) {
 	try {

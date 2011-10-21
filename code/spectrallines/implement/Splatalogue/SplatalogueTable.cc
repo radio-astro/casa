@@ -73,7 +73,7 @@ SplatalogueTable::SplatalogueTable(
 }
 
 String SplatalogueTable::getFrequencyUnit() const {
-	return keywordSet().asString("FreqUnit");
+	return _freqUnit;
 }
 
 String SplatalogueTable::list() const {
@@ -119,6 +119,54 @@ String SplatalogueTable::list() const {
     		<< " " << ceu << "  " << clinelist << endl;
 	}
 	return os.str();
+}
+
+Record SplatalogueTable::toRecord() const {
+	Array<String> species = col(SPECIES).getColumnString();
+	Array<Bool> recommended = col(RECOMMENDED).getColumnBool();
+	Array<String> chemName = col(CHEMICAL_NAME).getColumnString();
+	Array<Double> freq = col(FREQUENCY).getColumnDouble();
+	Array<String> qns = col(QUANTUM_NUMBERS).getColumnString();
+	Array<Float> intensity = col(INTENSITY).getColumnFloat();
+	Array<Float> smu2 = col(SMU2).getColumnFloat();
+	Array<Float> loga = col(LOGA).getColumnFloat();
+	Array<Float> el = col(EL).getColumnFloat();
+	Array<Float> eu = col(EU).getColumnFloat();
+	Array<String> linelist = col(LINELIST).getColumnString();
+	IPosition idx = IPosition(1, 0);
+	Record rec;
+	Record qFreq;
+	qFreq.define("value", 0.0);
+	qFreq.define("unit", _freqUnit);
+	Record qSmu2;
+	qSmu2.define("value", 0.0f);
+
+	qSmu2.define("unit", _smu2Unit);
+	Record qel = qSmu2;
+	qel.define("unit", _elUnit);
+	Record qeu = qSmu2;
+	qeu.define("unit", _euUnit);
+	for (uInt i=0; i<species.size(); i++) {
+		idx[0] = i;
+		Record line;
+		line.define("species", species(idx));
+		line.define("recommended", recommended(idx));
+		line.define("chemname", chemName(idx));
+		qFreq.define("value", freq(idx));
+		line.defineRecord("freq", qFreq);
+		line.define("qns", qns(idx));
+		line.define("intensity", intensity(idx));
+		qSmu2.define("value", smu2(idx));
+		line.defineRecord("smu2", qSmu2);
+		line.define("loga", loga(idx));
+		qel.define("value", el(idx));
+		line.defineRecord("el", qel);
+		qeu.define("value", eu(idx));
+		line.defineRecord("eu", qeu);
+		line.define("linelist", linelist(idx));
+		rec.defineRecord("*" + String::toString(i), line);
+	}
+	return rec;
 }
 
 void SplatalogueTable::_construct(const Bool setup) {
@@ -173,6 +221,25 @@ void SplatalogueTable::_construct(const Bool setup) {
 			reopenRW();
 		}
 		_addKeywords();
+	}
+	else {
+		ROScalarColumn<Double> freq(*this, FREQUENCY);
+		_freqUnit = freq.keywordSet().asString("Unit");
+		ROScalarColumn<Float> smu2(*this, SMU2);
+		_smu2Unit = smu2.keywordSet().asString("Unit");
+		if (_smu2Unit.empty()) {
+			_smu2Unit = "Debye2";
+		}
+		ROScalarColumn<Float> el(*this, EL);
+		_elUnit = el.keywordSet().asString("Unit");
+		if (_elUnit.empty()) {
+			_elUnit = "K";
+		}
+		ROScalarColumn<Float> eu(*this, EU);
+		_euUnit = eu.keywordSet().asString("Unit");
+		if (_euUnit.empty()) {
+			_euUnit = "K";
+		}
 	}
 }
 

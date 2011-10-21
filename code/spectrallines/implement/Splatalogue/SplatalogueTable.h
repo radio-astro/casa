@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 
 #include <casa/Arrays/Vector.h>
+#include <casa/Containers/Record.h>
 #include <tables/Tables/Table.h>
 
 namespace casa {
@@ -97,6 +98,8 @@ public:
 
 	// Pretty print table contents to a String.
 	String list() const;
+
+	Record toRecord() const;
 
 private:
 	String _freqUnit, _smu2Unit, _elUnit, _euUnit;
