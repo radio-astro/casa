@@ -259,9 +259,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
 	for (uInt j =k ; j < ndish; ++j){
 	
-	  Matrix<Complex> screen(convSize_p, convSize_p);
-	  screen=1.0;
-	  pBScreen.putSlice(screen, start);
+	  //Matrix<Complex> screen(convSize_p, convSize_p);
+	  //screen=1.0;
+	  //pBScreen.putSlice(screen, start);
+	  pBScreen.set(Complex(1.0, 0.0));
 	  //one antenna 
 	  (antMath_p[k])->applyVP(pBScreen, pBScreen, direction1_p);
 	  //Then the other
@@ -276,10 +277,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  //	}
 	  *****************/
-	  Matrix<Complex> screenoo(convSize_p, convSize_p);
-	  screenoo.set(1.0);
-	  pB2Screen.putSlice(screenoo, start);
-	//one antenna 
+	  //Matrix<Complex> screenoo(convSize_p, convSize_p);
+	  //screenoo.set(1.0);
+	  //pB2Screen.putSlice(screenoo, start);
+	  pB2Screen.set(Complex(1.0,0.0));
+	  //one antenna 
 	  (antMath_p[k])->applyPB(pB2Screen, pB2Screen, direction1_p);
 	  //Then the other
 	  (antMath_p[j])->applyPB(pB2Screen, pB2Screen, direction2_p);
@@ -396,14 +398,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int trial=0;
 	for (trial=convSize_p/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
 	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
-	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=15*convSampling;
