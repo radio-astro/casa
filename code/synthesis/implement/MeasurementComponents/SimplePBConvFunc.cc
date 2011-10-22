@@ -291,10 +291,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
       
       // Accumulate terms 
-      Matrix<Complex> screen(convSize_p, convSize_p);
-      screen=1.0;
+      //Matrix<Complex> screen(convSize_p, convSize_p);
+      //screen=1.0;
       // Either the SkyJones
-      twoDPB.putSlice(screen, start);
+      twoDPB.set(Complex(1.0,0.0));
+      //twoDPB.putSlice(screen, start);
       sj_p->apply(twoDPB, twoDPB, vb, 0); 
  
       //*****Test
@@ -303,9 +304,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       {
 	TempImage<Float> screen2(pbShape, coords);
-	Matrix<Float> screenoo(convSize_p, convSize_p);
-	screenoo.set(1.0);
-	screen2.putSlice(screenoo,start);
+	//	Matrix<Float> screenoo(convSize_p, convSize_p);
+	//screenoo.set(1.0);
+	//screen2.putSlice(screenoo,start);
+	screen2.set(1.0);
 	sj_p->applySquare(screen2, screen2, vb, 0);
 	LatticeExpr<Complex> le(screen2);
 	twoDPB2.copyData(le);
@@ -492,7 +494,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // steps of convSampling)
       
       Double pbSum=0.0;
-      /*
+      
       for (Int iy=-convSupport_p;iy<=convSupport_p;iy++) {
 	for (Int ix=-convSupport_p;ix<=convSupport_p;ix++) {
 	  Complex val=convFunc_p(ix*convSampling+convSize_p/2,
@@ -500,9 +502,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  pbSum+=real(val);
 	  //pbSum+=sqrt(real(val)*real(val)+ imag(val)*imag(val));
 	}
-	}
-	*/
-      pbSum=sum(amplitude(convFunc_p))/Double(convSampling)/Double(convSampling);
+      }
+      
+      //pbSum=sum(amplitude(convFunc_p))/Double(convSampling)/Double(convSampling);
 
       if(pbSum>0.0) {
 	convFunc_p*=Complex(1.0/pbSum,0.0);

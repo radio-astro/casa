@@ -201,7 +201,8 @@ C                          write(*,*) support, iloc
      $                                   loc(2)+iy,apol,achan)+
      $                                   nvalue*cwt
                                     if(doweightgrid .gt. 0) then
-                                       cwt=sconv2(iloc(1), iloc(2), 
+                                       cwt=sconv2(sampling*ix, 
+     $                                  sampling*iy, 
      $                                      aconvplane)
                                        iiloc(1)=nx/2+1+ix
                                        iiloc(2)=ny/2+1+iy
