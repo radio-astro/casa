@@ -285,7 +285,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
 
   //for(uint ii=0; ii<newAntIndices.size(); ii++){
-  //  cout << "i, newAntIndices(i)" << ii << " " << newAntIndices[ii] << endl;
+  //  cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
   //}
 
   // FIELD
@@ -774,9 +774,17 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
 
   if(rowToBeAdded > 0){
     MSPointingColumns pointCol(point);
+    // check antenna IDs
     Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
-    if(( min(antennaIDs) <0) || ( uInt(max(antennaIDs)) > newAntIndices.nelements())){
-      
+    Bool idsOK = True;
+    uInt maxID = newAntIndices.nelements()-1;
+    for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
+      if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
+	idsOK = False;
+	break;
+      }
+    }
+    if(!idsOK){
       os << LogIO::WARN 
 	 << "Found invalid antenna ids in the POINTING table; the POINTING table will be emptied as it is inconsistent" 
 	 << LogIO::POST;
@@ -784,7 +792,6 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
       indgen(rowtodel);
       point.removeRow(rowtodel);
       return False;
-  
     } 
 
     for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
