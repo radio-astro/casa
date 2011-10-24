@@ -31,6 +31,7 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   taskutil.py
   listshapes.py
   astro_stations2simdata.py
+  setOrder.py
 )
 
 add_subdirectory( ephemerides )
