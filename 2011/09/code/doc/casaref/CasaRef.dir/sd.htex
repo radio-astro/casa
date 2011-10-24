@@ -8604,7 +8604,7 @@ tuple with inverted channel selection
 \flushleft\vspace{.20in}\textbf {Description}\\
    \hfill \\
 
-    Return the median of the last spectrum passed to find_lines.
+    Return the median of the last spectrum passed to find\_lines.
     Note, this method throws an exception if 
     \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} has never been called.
 
@@ -8626,7 +8626,7 @@ float
    \hfill \\
 
     Return rms scatter of the spectral points (with respect to the median) calculated
-    during last find_lines call. Note, this method throws an exception if
+    during last find\_lines call. Note, this method throws an exception if
     \ahlink{find\_lines}{sd:sd.simplelinefinder.find_lines} has never been called.
 
 \flushleft\vspace{.20in}\textbf {Arguments}\\
