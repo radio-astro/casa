@@ -175,7 +175,7 @@ class rg_fromtextfile_test(unittest.TestCase):
         
     def test_CAS_3259(self):
         """Verify fix to CAS-3259"""
-        self.ia.maketestimage()
+        self.ia.fromshape("", [250,250])
         self._testit(cas_3259t, cas_3259r)
         
     def test_CAS_3260(self):
