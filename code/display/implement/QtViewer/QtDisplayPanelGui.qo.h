@@ -279,8 +279,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   //# purely internal slots
  
-  virtual void toggleAnimExtras_();
-  virtual void setAnimExtrasVisibility_();  
+  /* virtual void toggleAnimExtras_(); */
+  /* virtual void setAnimExtrasVisibility_();   */
   
   virtual void frameNumberEdited_();
   

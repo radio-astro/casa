@@ -396,15 +396,15 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     stopTB_->setCheckable(True);
     playTB_->setCheckable(True);
   
-    rateEdit_ ->setReadOnly(True);
-	//#dk~ temporary only: no edits allowed here yet.
+    // rateEdit_ ->setReadOnly(True);
+    // 	//#dk~ temporary only: no edits allowed here yet.
 
 //  frameEdit_->setReadOnly(True);
     frameEdit_->setValidator(new QIntValidator(frameEdit_));
 	// (Assures only validated Ints will signal editingFinished).
   
-    animAuxButton_->setToolTip( "Press 'Full' for more animation controls.\n"
-			      "Press 'Compact' to hide the extra controls." );
+    // animAuxButton_->setToolTip( "Press 'Full' for more animation controls.\n"
+    // 			      "Press 'Compact' to hide the extra controls." );
 	// (...More animator widgets still need these help texts as well...)
   
     
@@ -412,13 +412,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
   
     updateAnimUi_();
   
-    animAuxButton_->setText("Compact");
+    // animAuxButton_->setText("Compact");
 	// Puts animator initially in 'Full' configuration.
 //  animAuxButton_->setText("Full");
 	// (This would put it in 'Compact' configuration).
   
   
-    setAnimExtrasVisibility_();
+    // setAnimExtrasVisibility_();
 	// Hides or shows extra animator widgets according to
 	// the 'Compact/Full' button.
   
@@ -545,7 +545,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     connect(unzoomAct_,  SIGNAL(triggered()),  qdp_, SLOT(unzoom()));
     connect(zoomInAct_,  SIGNAL(triggered()),  qdp_, SLOT(zoomIn()));
     connect(zoomOutAct_, SIGNAL(triggered()),  qdp_, SLOT(zoomOut()));
-    connect(animAuxButton_, SIGNAL(clicked()),    SLOT(toggleAnimExtras_()));
+    // connect(animAuxButton_, SIGNAL(clicked()),    SLOT(toggleAnimExtras_()));
 
     //## docking changes
     connect( trkgDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(trackingMoved(Qt::DockWidgetArea)) );
@@ -559,7 +559,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
   
     connect(frameSlider_, SIGNAL(valueChanged(int)), qdp_, SLOT(goTo(int)));
     connect(frameEdit_, SIGNAL(editingFinished()),  SLOT(frameNumberEdited_()));
-    connect(rateSlider_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
+    // connect(rateSlider_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
+    connect(rateEdit_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
     connect(normalRB_,    SIGNAL(toggled(bool)),     qdp_, SLOT(setMode(bool)));
   
     connect(toStartTB_, SIGNAL(clicked()),  qdp_, SLOT(toStart()));
@@ -802,7 +803,7 @@ void QtDisplayPanelGui::updateAnimUi_() {
   // (The signal used from text boxes is only emitted on user edits).
   Bool nrbSav = normalRB_->blockSignals(True),
        brbSav = blinkRB_->blockSignals(True),
-       rslSav = rateSlider_->blockSignals(True),
+       // rslSav = rateSlider_->blockSignals(True),
        fslSav = frameSlider_->blockSignals(True);
   
   // Current animator state.
@@ -822,10 +823,12 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	// NB: QRadioButton::setChecked(false)  doesn't work
 	// (not what we want here anyway).
   
-  rateSlider_->setMinimum(minr);
-  rateSlider_->setMaximum(maxr);
-  rateSlider_->setValue(rate);
-  rateEdit_  ->setText(QString::number(rate));
+  // rateSlider_->setMinimum(minr);
+  // rateSlider_->setMaximum(maxr);
+  // rateSlider_->setValue(rate);
+  rateEdit_->setMinimum(minr);
+  rateEdit_->setMaximum(maxr);
+  rateEdit_->setValue(rate);
   
   frameSlider_->setMinimum(0);
   frameSlider_->setMaximum(len-1);
@@ -833,9 +836,9 @@ void QtDisplayPanelGui::updateAnimUi_() {
   //frameSlider_->setMaximum(lst);
   frameSlider_->setValue(frm);
   
-  stFrmEdit_ ->setText(QString::number(strt));
-  lstFrmEdit_->setText(QString::number(lst));
-  stepEdit_  ->setText(QString::number(stp));
+  // stFrmEdit_ ->setText(QString::number(strt));
+  // lstFrmEdit_->setText(QString::number(lst));
+  // stepEdit_  ->setText(QString::number(stp));
   
   
   
@@ -843,15 +846,15 @@ void QtDisplayPanelGui::updateAnimUi_() {
   
   // enabled in any case:
   modeGB_->setEnabled(True);		// Blink mode
-  animAuxButton_->setEnabled(True);	// 'Compact/Full' button.
+  // animAuxButton_->setEnabled(True);	// 'Compact/Full' button.
   
   // Enabled only if there is more than 1 frame to animate:
   Bool multiframe = (len > 1);
   
   rateLbl_->setEnabled(multiframe);	// 
-  rateSlider_->setEnabled(multiframe);	// Rate controls.
+  // rateSlider_->setEnabled(multiframe);	// Rate controls.
   rateEdit_->setEnabled(multiframe);	//
-  perSecLbl_->setEnabled(multiframe);	//
+  // perSecLbl_->setEnabled(multiframe);	//
   
   toStartTB_->setEnabled(multiframe);	//
   revStepTB_->setEnabled(multiframe);	//
@@ -862,14 +865,14 @@ void QtDisplayPanelGui::updateAnimUi_() {
   toEndTB_->setEnabled(multiframe);	//
   frameEdit_->setEnabled(multiframe);	// Frame number entry.
   nFrmsLbl_->setEnabled(multiframe);	// Total frames label.
-  curFrmLbl_->setEnabled(multiframe);	//
+  // curFrmLbl_->setEnabled(multiframe);	//
   frameSlider_->setEnabled(multiframe);	// Frame number slider.
-  stFrmLbl_->setEnabled(multiframe);	//
-  stFrmEdit_->setEnabled(multiframe);	// first and last frames
-  lstFrmLbl_->setEnabled(multiframe);	// to include in animation
-  lstFrmEdit_->setEnabled(multiframe);	// and animation step.
-  stepLbl_->setEnabled(multiframe);	//
-  stepEdit_->setEnabled(multiframe);	//
+  // stFrmLbl_->setEnabled(multiframe);	//
+  // stFrmEdit_->setEnabled(multiframe);	// first and last frames
+  // lstFrmLbl_->setEnabled(multiframe);	// to include in animation
+  // lstFrmEdit_->setEnabled(multiframe);	// and animation step.
+  // stepLbl_->setEnabled(multiframe);	//
+  // stepEdit_->setEnabled(multiframe);	//
   
   
   revTB_ ->setChecked(play<0);
@@ -880,19 +883,19 @@ void QtDisplayPanelGui::updateAnimUi_() {
   //#dk  (For now, always disable the following animator
   //      interface, because it is not yet fully supported).
  
-  stFrmLbl_->setEnabled(False);		// 
-  stFrmEdit_->setEnabled(False);	// 
-  lstFrmLbl_->setEnabled(False);	// first and last frames
-  lstFrmEdit_->setEnabled(False);	// to include in animation,
-  stepLbl_->setEnabled(False);		// and animation step.
-  stepEdit_->setEnabled(False);		// 
+  // stFrmLbl_->setEnabled(False);		// 
+  // stFrmEdit_->setEnabled(False);	// 
+  // lstFrmLbl_->setEnabled(False);	// first and last frames
+  // lstFrmEdit_->setEnabled(False);	// to include in animation,
+  // stepLbl_->setEnabled(False);		// and animation step.
+  // stepEdit_->setEnabled(False);		// 
   
   
   // restore signal-blocking state (to 'unblocked', in all likelihood).
   
   normalRB_->blockSignals(nrbSav),
   blinkRB_->blockSignals(brbSav),
-  rateSlider_->blockSignals(rslSav),
+  // rateSlider_->blockSignals(rslSav),
   frameSlider_->blockSignals(fslSav);  
 
 //cout << "updataAni============" << endl;
@@ -1708,38 +1711,38 @@ void QtDisplayPanelGui::quit( ) {
     }
 }
 
-void QtDisplayPanelGui::toggleAnimExtras_() {
+// void QtDisplayPanelGui::toggleAnimExtras_() {
 
-  if(animAuxButton_->text()=="Full") animAuxButton_->setText("Compact");
-  else				     animAuxButton_->setText("Full");  
-  setAnimExtrasVisibility_();  }
+//   if(animAuxButton_->text()=="Full") animAuxButton_->setText("Compact");
+//   else				     animAuxButton_->setText("Full");  
+//   setAnimExtrasVisibility_();  }
 
    
        
-void QtDisplayPanelGui::setAnimExtrasVisibility_() {
+// void QtDisplayPanelGui::setAnimExtrasVisibility_() {
     
-//#dg  ...of failure of dockWidgets/areas to downsize when needed.
-// (also, of improper dependencies of szHints on event processing).
-// (Leave these until promised Qt fixes arrive...).
+// //#dg  ...of failure of dockWidgets/areas to downsize when needed.
+// // (also, of improper dependencies of szHints on event processing).
+// // (Leave these until promised Qt fixes arrive...).
     
-/*  //#dg
-cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()	    
-          <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHb:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()	    
-          <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHb:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+// /*  //#dg
+// cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()	    
+//           <<","<<animWidget_->minimumSizeHint().height()
+//     <<"   SzHb:"<<animWidget_->sizeHint().width()	    
+//           <<","<<animWidget_->sizeHint().height()<<endl; 
+// cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()	    
+//           <<","<<trkgWidget_->minimumSizeHint().height()
+//     <<"   SzHb:"<<trkgWidget_->sizeHint().width()	    
+//           <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
+// //*/  //#dg  
 
   
   
-  if(animAuxButton_->text()=="Full") {
-    animAuxFrame_->hide(); modeGB_->hide();  }
-  else {
-    animAuxFrame_->show(); modeGB_->show();
-    animAuxButton_->setText("Compact");  }  
+//   if(animAuxButton_->text()=="Full") {
+//     animAuxFrame_->hide(); modeGB_->hide();  }
+//   else {
+//     animAuxFrame_->show(); modeGB_->show();
+//     animAuxButton_->setText("Compact");  }  
     
     
 /*  //#dg
@@ -1794,7 +1797,7 @@ cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()
 //*/  //#dg  
 
 
-}
+// }
 
 
 
@@ -2183,7 +2186,5 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
   v_->hold();	// (avoid unnecessary extra refreshes).
   emit colorBarOrientationChange();
   v_->release();  }
- 
-
 
 }
