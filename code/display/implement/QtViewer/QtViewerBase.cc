@@ -26,6 +26,7 @@
 //#
 //# $Id$
 
+#include <display/QtViewer/QtOptions.h>
 #include <display/QtViewer/QtViewerBase.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
@@ -48,6 +49,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 QtViewerBase::QtViewerBase( bool is_server) :
 	qdps_(), msbtns_(), datatypeNames_(N_DT+1), server_(is_server), 
 	displaytypeNames_(N_DS+1), dataDisplaysAs_(N_DT+1) {
+
+  // viewer::options provides global state...
+  if ( viewer::options == 0 ) {
+      viewer::options = new viewer::QtOptions( );
+  }
 
   // Initialize some (conceptually constant) data for datatype and
   // displaytype names, and for displaytypes which are valid for a

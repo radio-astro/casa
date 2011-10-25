@@ -113,6 +113,7 @@ casa_add_library( display
   ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
   implement/Display/AttributeBuffer.cc
   implement/Display/Attribute.cc
+  implement/Display/Options.cc
   implement/Display/AttValBase.cc
   implement/DisplayCanvas/DefaultWCCoordinateHandler.cc
   implement/DisplayCanvas/DefaultWCSizeControlHandler.cc
@@ -310,6 +311,7 @@ casa_add_library( display
   implement/QtPlotter/QtDrawColors.cc
   implement/QtPlotter/QtDrawSettings.cc
   implement/QtPlotter/QtDrawer.cc
+  implement/QtViewer/QtOptions.cc
   implement/QtViewer/FileBox.cc
   implement/QtViewer/QtWCBox.cc
   implement/QtViewer/MakeMask.cc
