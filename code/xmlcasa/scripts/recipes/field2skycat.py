@@ -5,12 +5,23 @@ def field2skycat(msname='', skycat=''):
     Converts field table in ms to skycatalog
     allow overlay on image in the viewer
     """
+    enumTypes =['J2000','JMEAN','JTRUE','APP','B1950',
+                'B1950_VLA','BMEAN','BTRUE','GALACTIC','HADEC','AZEL','AZELSW',
+                'AZELGEO','AZELSWGEO','JNAT','ECLIPTIC','MECLIPTIC','TECLIPTIC','SUPERGAL',
+                'ITRF','TOPO','ICRS']
+
     qa=c.quanta
     c.table.open(msname+'/FIELD')
     dir=c.table.getcol('PHASE_DIR')
     nam=c.table.getcol('NAME')
     nfield=c.table.nrows()
-    eltype=[c.table.getcolkeyword('PHASE_DIR', 'MEASINFO')['Ref']]*nfield
+    eltype=[]
+    if(c.table.getcolkeyword('PHASE_DIR', 'MEASINFO').has_key('VarRefCol')):
+        typeid=c.table.getcol(c.table.getcolkeyword('PHASE_DIR', 'MEASINFO')['VarRefCol'])
+        for k in range(nfield):
+            eltype.append(enumTypes[typeid[k]])
+    else:
+        eltype=[c.table.getcolkeyword('PHASE_DIR', 'MEASINFO')['Ref']]*nfield
     unitra=c.table.getcolkeyword('PHASE_DIR', 'QuantumUnits')[0]
     unitdec=c.table.getcolkeyword('PHASE_DIR', 'QuantumUnits')[1]
     c.table.done()
