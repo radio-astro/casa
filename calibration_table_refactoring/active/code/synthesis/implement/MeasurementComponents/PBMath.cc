@@ -640,6 +640,9 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
       whichPB = PBMath::VLA_NVSS;
       band = "UNKNOWN";
     }
+  } else if(telescope(0,4)=="EVLA") {
+    whichPB = PBMath::VLA;
+    band = "UNKNOWN";
   } else if (telescope(0,4)=="WSRT") {
     if (freqGHz > 3.0 && freqGHz < 6.0) {
       whichPB = PBMath::WSRT;
@@ -870,7 +873,7 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::HATCREEK;
   } else if (str == "BIMA") {  //  BIMA is a synonym for HATCREEK
     ipb = PBMath::HATCREEK;
-  } else if (str == "VLA") {
+  } else if (str == "VLA" || str == "EVLA") {
     ipb = PBMath::VLA;
   } else if (str == "VLA_INVERSE") {
     ipb = PBMath::VLA_INVERSE;

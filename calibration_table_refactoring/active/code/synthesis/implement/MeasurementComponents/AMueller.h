@@ -106,8 +106,9 @@ public:
   virtual Bool normalizable() {return False;};
 
   // Specialize corrupt to pre-zero model for corruption
-  using VisMueller::corrupt;
-  virtual void corrupt(VisBuffer& vb);
+  //using VisMueller::corrupt;
+  virtual void corrupt(VisBuffer& vb, Bool avoidACs);
+  //virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs);
 
   // Set (repeatedly, unfortunately) whether or not subtraction is being done,
   // and IF fitorder == 0, sync matrices for current meta data (VisMueller
@@ -188,6 +189,10 @@ protected:
 
   // override VC default of timeDepMat=F for OTF simulatio:
   virtual Bool timeDepMat() { return simOnTheFly(); };
+
+  // Calculate an ensemble of Mueller matrices (all baselines, channels)
+  // overrriding VisCal::calcAllMueller
+  virtual void calcAllMueller();
 
   // Calculate a single Mueller matrix by some means
   // override SolvableVisMueller::calcOneMueller

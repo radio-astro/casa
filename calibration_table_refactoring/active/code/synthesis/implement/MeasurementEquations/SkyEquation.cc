@@ -67,7 +67,7 @@
 #include <casa/Exceptions/Error.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferAsync.h>
+///////////////#include <msvis/MSVis/VisBufferAsync.h>
 #include <casa/iostream.h>
 
 #include <casa/System/ProgressMeter.h>
@@ -209,7 +209,6 @@ void SkyEquation::setSkyJones(SkyJones& j) {
 void SkyEquation::predictComponents(Bool& incremental, Bool& initialized,  MS::PredefinedColumns Type){
   // Initialize 
   
-  
    // Do the component model only if this is not an incremental update;
   if(sm_->hasComponentList() &&  !incremental ) {
     if(noModelCol_p)
@@ -289,7 +288,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
   // **** predictcomponents doesn't do anything if incremental!
   // it gets components into vb->model, and writes to vi::(Type)
   predictComponents(incremental, initialized, Type);
- 
+
   // Now do the images
   for (Int model=0;model<sm_->numberOfModels();model++) {      
     
@@ -315,6 +314,7 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	  }
 	}
       }
+      //if (!incremental&&!initialized) initialized=True;
 
 
     }
@@ -353,6 +353,19 @@ void SkyEquation::predict(Bool incremental,  MS::PredefinedColumns Type) {
 	  if(!incremental&&!initialized) {
 	    vb->setModelVisCube(Complex(0.0,0.0));
 	    //	    vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
+	    switch(Type) {
+	    case MS::MODEL_DATA:
+	      vi.setVis(vb->modelVisCube(),VisibilityIterator::Model);
+	      break;
+	    case MS::DATA:
+	      vi.setVis(vb->modelVisCube(),VisibilityIterator::Observed);
+	      break;
+	    case MS::CORRECTED_DATA:
+	      vi.setVis(vb->modelVisCube(),VisibilityIterator::Corrected);
+	      break;
+	    default:
+	      throw (AipsError("Programmer made a wrong call"));
+	    }
 	  }
 	  // get the model visibility (adds to vb->model)
 	  //get(vb,model,incremental);

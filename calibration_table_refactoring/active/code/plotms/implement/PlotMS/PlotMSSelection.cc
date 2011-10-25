@@ -37,7 +37,7 @@ namespace casa {
 
 // Static //
 
-String PlotMSSelection::defaultValue(Field f) { return ""; }
+String PlotMSSelection::defaultValue(Field /*f*/) { return ""; }
 
 
 // Non-Static //
@@ -80,7 +80,8 @@ void PlotMSSelection::apply(MeasurementSet& ms, MeasurementSet& selMS,
 
     mssSetData(ms, selMS, chansel,corrsel, "", 
 	       timerange(), antenna(), field(), spw(),
-	       uvrange(), msselect(), corr(), scan(), array());
+	       uvrange(), msselect(), corr(), scan(), array(),
+	       "", observation());
 }
 
 

@@ -465,24 +465,26 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
       }
       MFrequency::Types mfreqref=(obsFreqRef==(MFrequency::REST)) ? MFrequency::REST : MFrequency::castType(mfImageStart_p.getRef().getType()) ; 
 
+      /////Some problem here it is really goofing up in getting frequency
+      // -> fixed was made in calcImFreqs -TT 
       Vector<Double> imgridfreqs;
       Vector<Double> imfreqres;
       //rstate=calcImFreqs(imgridfreqs, imfreqres, mfreqref, obsEpoch, obsPosition,restFreq);
       // should use obsFreqRef
       rstate=calcImFreqs(imgridfreqs, imfreqres, obsFreqRef, obsEpoch, obsPosition,restFreq);
       //cerr<<"imfreqres(0)="<<imfreqres(0)<<endl;
-
+      
 
       if (imageNchan_p==1) {
-        mySpectral = new SpectralCoordinate(mfreqref,
+      mySpectral = new SpectralCoordinate(mfreqref,
       					  mfImageStart_p.get("Hz").getValue(),
       					  mfImageStep_p.get("Hz").getValue(),
       					  refChan, restFreq);
       }
       else {
-        Double finc= imgridfreqs(1)-imgridfreqs(0); 
+        Double finc= imgridfreqs(1)-imgridfreqs(0);
         mySpectral = new SpectralCoordinate(mfreqref, imgridfreqs(0), finc, refChan, restFreq);
-
+	//cerr << "after myspectral2 " << mySpectral->referenceValue() << " pixel " <<  mySpectral->referencePixel() << endl;
         //debug TT
         //Double wrld,pixl;
         //pixl=0.0;
@@ -1094,7 +1096,7 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
       }
 
 
-	  //in order to outframe to work need to set here original freq frame
+      //in order to outframe to work need to set here original freq frame
       //mySpectral = new SpectralCoordinate(freqFrame_p, freqs(0)-finc/2.0, finc,
       mySpectral = new SpectralCoordinate(obsFreqRef, freqs(0)//-finc/2.0
 					  , finc,
@@ -2402,7 +2404,7 @@ Bool Imager::createFTMachine()
     useDoublePrecGrid=True;
 
   LogIO os(LogOrigin("imager", "createFTMachine()", WHERE));
-  
+
   // This next line is only a guess
   Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
   
@@ -2942,6 +2944,7 @@ Bool Imager::createFTMachine()
   { 
     //cout << "Creating a Multi-Term FT machine containing " << ftmachine_p << endl;
      FTMachine *tempftm = new MultiTermFT(ft_p, ftmachine_p, ntaylor_p, reffreq_p);
+     tempftm->setBasePrivates(*ft_p);
      ft_p = tempftm;
   }
   /******* End MTFT code ********/
@@ -3141,6 +3144,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
 	 << " not readable" << LogIO::POST;
       return False;
     }
+    delete componentList_p;
     componentList_p=new ComponentList(complist, True);
     if(componentList_p==0) {
       os << LogIO::SEVERE << "Cannot create ComponentList from " << complist
@@ -3156,6 +3160,7 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
        << "Processing after subtracting componentlist " << complist << LogIO::POST;
   }
   else {
+    delete componentList_p;
     componentList_p=0;
   }
  
@@ -3444,69 +3449,74 @@ Bool Imager::addMasksToSkyEquation(const Vector<String>& mask, const Vector<Bool
   return True;
 }
 
+void
+Imager::openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock)
+{
+    if (otherTable.isNull()){
 
-Bool Imager::openSubTables(){
+        // otherTable does not exist so leave things be
 
- antab_p=Table(ms_p->antennaTableName(),
-	       TableLock(TableLock::UserNoReadLocking));
- datadesctab_p=Table(ms_p->dataDescriptionTableName(),
-	       TableLock(TableLock::UserNoReadLocking));
- feedtab_p=Table(ms_p->feedTableName(),
-		 TableLock(TableLock::UserNoReadLocking));
- fieldtab_p=Table(ms_p->fieldTableName(),
-		  TableLock(TableLock::UserNoReadLocking));
- obstab_p=Table(ms_p->observationTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- poltab_p=Table(ms_p->polarizationTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- proctab_p=Table(ms_p->processorTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- spwtab_p=Table(ms_p->spectralWindowTableName(),
-		TableLock(TableLock::UserNoReadLocking));
- statetab_p=Table(ms_p->stateTableName(),
-		TableLock(TableLock::UserNoReadLocking));
+    }
+    else if (otherTable.tableType() == Table::Memory){
 
- if(Table::isReadable(ms_p->dopplerTableName()))
-   dopplertab_p=Table(ms_p->dopplerTableName(),
-		      TableLock(TableLock::UserNoReadLocking));
+        table = otherTable;
 
- if(Table::isReadable(ms_p->flagCmdTableName()))
-   flagcmdtab_p=Table(ms_p->flagCmdTableName(),
-		      TableLock(TableLock::UserNoReadLocking));
- if(Table::isReadable(ms_p->freqOffsetTableName()))
-   freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
-			 TableLock(TableLock::UserNoReadLocking));
+    }
+    else{
 
- if(ms_p->isWritable()){
-   if(!(Table::isReadable(ms_p->historyTableName()))){
-     // setup a new table in case its not there
-     TableRecord &kws = ms_p->rwKeywordSet();
-     SetupNewTable historySetup(ms_p->historyTableName(),
-				MSHistory::requiredTableDesc(),Table::New);
-     kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-     
-   }
-   historytab_p=Table(ms_p->historyTableName(),
-		      TableLock(TableLock::UserNoReadLocking), Table::Update);
- }
- if(Table::isReadable(ms_p->pointingTableName()))
-   pointingtab_p=Table(ms_p->pointingTableName(), 
-		       TableLock(TableLock::UserNoReadLocking));
- 
- if(Table::isReadable(ms_p->sourceTableName()))
-   sourcetab_p=Table(ms_p->sourceTableName(),
-		     TableLock(TableLock::UserNoReadLocking));
+        // Reopen (potentially) the subtable with the desired locking
 
- if(Table::isReadable(ms_p->sysCalTableName()))
- syscaltab_p=Table(ms_p->sysCalTableName(),
-		   TableLock(TableLock::UserNoReadLocking));
- if(Table::isReadable(ms_p->weatherTableName()))
-   weathertab_p=Table(ms_p->weatherTableName(),
-		      TableLock(TableLock::UserNoReadLocking));
- if(ms_p->isWritable()){
-   hist_p= new MSHistoryHandler(*ms_p, "imager");
- }
-return True;
+        table = Table (otherTable.tableName(), tableLock);
+    }
+}
+
+Bool
+Imager::openSubTables()
+{
+    // These variables will already have copied in the Tables from
+    // the MS specified in open.  If they are not memory resident
+    // subtables then replace them with table objects having the
+    // UserNoReadLocking attribute.
+
+    TableLock tableLock (TableLock::UserNoReadLocking);
+
+    openSubTable (ms_p->antenna(), antab_p, tableLock);
+    openSubTable (ms_p->dataDescription (), datadesctab_p, tableLock);
+    openSubTable (ms_p->doppler(), dopplertab_p, tableLock);
+    openSubTable (ms_p->feed(), feedtab_p, tableLock);
+    openSubTable (ms_p->field(), fieldtab_p, tableLock);
+    openSubTable (ms_p->flagCmd(), flagcmdtab_p, tableLock);
+    openSubTable (ms_p->freqOffset(), freqoffsettab_p, tableLock);
+    openSubTable (ms_p->observation(), obstab_p, tableLock);
+    openSubTable (ms_p->pointing(), pointingtab_p, tableLock);
+    openSubTable (ms_p->polarization(), poltab_p, tableLock);
+    openSubTable (ms_p->processor(), proctab_p, tableLock);
+    openSubTable (ms_p->source(), sourcetab_p, tableLock);
+    openSubTable (ms_p->spectralWindow(), spwtab_p, tableLock);
+    openSubTable (ms_p->state(), statetab_p, tableLock);
+    openSubTable (ms_p->sysCal(), syscaltab_p, tableLock);
+    openSubTable (ms_p->weather(), weathertab_p, tableLock);
+
+    // Handle the history table
+
+    if(ms_p->isWritable()){
+
+        if(!(Table::isReadable(ms_p->historyTableName()))){
+
+            // setup a new table in case its not there
+            TableRecord &kws = ms_p->rwKeywordSet();
+            SetupNewTable historySetup(ms_p->historyTableName(),
+                                       MSHistory::requiredTableDesc(),Table::New);
+            kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+
+        }
+        historytab_p=Table(ms_p->historyTableName(),
+                           TableLock(TableLock::UserNoReadLocking), Table::Update);
+
+        hist_p= new MSHistoryHandler(*ms_p, "imager");
+    }
+
+    return True;
 
 }
 
@@ -3683,8 +3693,8 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	    return False;
 	  }
 
-          os << LogIO::NORMAL // Too contentious for DEBUG1
-             << "Selecting ";
+          os << LogIO::DEBUG1 // Too contentious for DEBUG1
+             << "Selecting within ";
           if(nch > 1)
             os << nch << " channels, starting at "
                << dataStart[i]  << ", stepped by " << dataStep[i] << ",";
@@ -3718,36 +3728,13 @@ Bool Imager::selectDataChannel(Vector<Int>& spectralwindowids,
 	     << LogIO::POST;
 	  return False;
 	}
-	os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
+	os << LogIO::DEBUG1 << "Selecting within "<< dataNchan[0] // Loglevel INFO
 	   << " channels, starting at visibility channel "
 	 << dataStart[0]  << " stepped by "
 	   << dataStep[0] << LogIO::POST;
       }
   }
-  else if (dataMode=="velocity") {
-      MVRadialVelocity mvStart(mDataStart.get("m/s"));
-      MVRadialVelocity mvStep(mDataStep.get("m/s"));
-      MRadialVelocity::Types
-	vType((MRadialVelocity::Types)mDataStart.getRefPtr()->getType());
-      os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
-	 << " channels, starting at radio velocity " << mvStart
-	 << " stepped by " << mvStep << ", reference frame is "
-	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      rvi_p->selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
-				  vType, MDoppler::RADIO);
-  }
-  else if (dataMode=="opticalvelocity") {
-      MVRadialVelocity mvStart(mDataStart.get("m/s"));
-      MVRadialVelocity mvStep(mDataStep.get("m/s"));
-      MRadialVelocity::Types
-	vType((MRadialVelocity::Types)mDataStart.getRefPtr()->getType());
-      os << LogIO::NORMAL << "Selecting "<< dataNchan[0] // Loglevel INFO
-	 << " channels, starting at optical velocity " << mvStart
-	 << " stepped by " << mvStep << ", reference frame is "
-	 << MRadialVelocity::showType(vType) << LogIO::POST;
-      rvi_p->selectVelocity(Int(dataNchan[0]), mvStart, mvStep,
-				  vType, MDoppler::OPTICAL);
-  }
+  
 
   return True;
 
@@ -4367,6 +4354,7 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
 
  
   try {
+    /***
     if(spectralwindowids_p.nelements()==1){
       if(spectralwindowids_p[0]<0){
         spectralwindowids_p.resize();
@@ -4378,14 +4366,21 @@ Bool Imager::calcImFreqs(Vector<Double>& imgridfreqs,
         spectralwindowids_p=dataspectralwindowids_p;
       }
     }
-
-    if(spectralwindowids_p.nelements()==1) {
-      oldChanFreqs=msc.spectralWindow().chanFreq()(spectralwindowids_p[0]);  
-      oldFreqResolution=msc.spectralWindow().chanWidth()(spectralwindowids_p[0]);
+    ***/
+    Vector<Int> spwlist; 
+    if (mode=="frequency" || mode=="velocity") {
+       spwlist = dataspectralwindowids_p;
+    }
+    else {
+       spwlist = spectralwindowids_p;
+    }
+    if(spwlist.nelements()==1) {
+      oldChanFreqs=msc.spectralWindow().chanFreq()(spwlist[0]);  
+      oldFreqResolution=msc.spectralWindow().chanWidth()(spwlist[0]);
     }
     else {
       SubMS thems(*ms_p);
-      if(!thems.combineSpws(spectralwindowids_p,True,oldChanFreqs,oldFreqResolution)){
+      if(!thems.combineSpws(spwlist,True,oldChanFreqs,oldFreqResolution)){
         os << LogIO::SEVERE << "Error combining SpWs" << LogIO::POST;
       }
     }
@@ -4497,6 +4492,7 @@ String Imager::dQuantitytoString(const Quantity& dq) {
 } 
 
 } //# NAMESPACE CASA - END
+
 
 
 

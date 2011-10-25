@@ -198,7 +198,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for (uInt ii=0; ii < ndish; ++ii){
 	support=max((antMath_p[ii])->support(coords), support);
       }
-      support=min(Int(max(nx_p, ny_p)*1.2), support);
+      support=Int(max(nx_p, ny_p)*2.0)/2;
       convSize_p=support*convSampling;
       CompositeNumber cn(convSize_p);
       convSize_p=cn.nearestEven(convSize_p);
@@ -259,9 +259,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
 	for (uInt j =k ; j < ndish; ++j){
 	
-	  Matrix<Complex> screen(convSize_p, convSize_p);
-	  screen=1.0;
-	  pBScreen.putSlice(screen, start);
+	  //Matrix<Complex> screen(convSize_p, convSize_p);
+	  //screen=1.0;
+	  //pBScreen.putSlice(screen, start);
+	  pBScreen.set(Complex(1.0, 0.0));
 	  //one antenna 
 	  (antMath_p[k])->applyVP(pBScreen, pBScreen, direction1_p);
 	  //Then the other
@@ -276,10 +277,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  
 	  //	}
 	  *****************/
-	  Matrix<Complex> screenoo(convSize_p, convSize_p);
-	  screenoo.set(1.0);
-	  pB2Screen.putSlice(screenoo, start);
-	//one antenna 
+	  //Matrix<Complex> screenoo(convSize_p, convSize_p);
+	  //screenoo.set(1.0);
+	  //pB2Screen.putSlice(screenoo, start);
+	  pB2Screen.set(Complex(1.0,0.0));
+	  //one antenna 
 	  (antMath_p[k])->applyPB(pB2Screen, pB2Screen, direction1_p);
 	  //Then the other
 	  (antMath_p[j])->applyPB(pB2Screen, pB2Screen, direction2_p);
@@ -396,20 +398,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int trial=0;
 	for (trial=convSize_p/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
+	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
 	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
-	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
+	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=5;
+	  trial=15*convSampling;
 	}
+	
 				 
 	if(found) {
+	  if(trial < 15*convSampling) trial=15*convSampling;
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
 	  //support is really over the edge
 	  if( (convSupport*convSampling) >= convSize_p/2){
@@ -446,7 +450,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  IPosition blc(2, -convSupport*convSampling+convSize_p/2, -convSupport*convSampling+convSize_p/2);
 	  IPosition trc(2, convSupport*convSampling+convSize_p/2, convSupport*convSampling+convSize_p/2);
 	  
-	  pbSum=real(sum(convFunc_p.xyPlane(plane)(blc,trc)));
+	  pbSum=real(sum(convFunc_p.xyPlane(plane)(blc,trc)))/Double(convSampling)/Double(convSampling);
 	  if(pbSum>0.0) {
 	    (convFunc_p.xyPlane(plane))=convFunc_p.xyPlane(plane)*Complex(1.0/pbSum,0.0);
 	    (weightConvFunc_p.xyPlane(plane)) =(weightConvFunc_p.xyPlane(plane))*Complex(1.0/pbSum,0.0);

@@ -63,7 +63,7 @@ public:
   MultiTermFT(const MultiTermFT &other);
 
   // Assignment operator --- leave it as the default
-  //  MultiTermFT &operator=(const MultiTermFT &other);
+  MultiTermFT &operator=(const MultiTermFT &other);
 
   // Destructor
   ~MultiTermFT();
@@ -135,6 +135,10 @@ protected:
   Bool modifyVisWeights(VisBuffer& vb);
   // Multiply model visibilities by Taylor-function weights - during "get"
   Bool modifyModelVis(VisBuffer &vb);
+  // Restore vb.imagingweights to the original
+  Bool restoreImagingWeights(VisBuffer &vb);
+
+  Matrix<Float> imweights_p;
 
   String machineName_p;
 
@@ -144,6 +148,8 @@ protected:
   Int thisterm_p;
   Double reffreq_p;
   CountedPtr<FTMachine> subftm_p;
+
+  Double sumwt_p;
 
   Bool dbg_p,dotime_p;
   Timer tmr_p;

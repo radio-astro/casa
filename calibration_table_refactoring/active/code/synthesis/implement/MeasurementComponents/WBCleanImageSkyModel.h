@@ -128,8 +128,9 @@ public:
 
    // Major axis for ordering : Models
    //inline Int getModelIndex(uInt model, uInt taylor){return model * (ntaylor_p) + (taylor);};
+   //inline Int getPSFModelIndex(uInt model, uInt taylor){return model * (2*ntaylor_p-1) + (taylor);};
    //inline Int getTaylorIndex(uInt index){return index%ntaylor_p;};
-   //inline Int getModelIndex(uInt index){return index/ntaylor_p;};
+   //inline Int getFieldIndex(uInt index){return index/ntaylor_p;};
  
    Vector<String> imageNames;
    
@@ -157,7 +158,7 @@ private:
   void initVars();
   Bool checkParameters();
 
-  //  Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
+  Int storeAsImg(String fileName, ImageInterface<Float>& theImg);
   //Int storeTLAsImg(String fileName, TempLattice<Float> &TL, ImageInterface<Float>& theImg);
   //Int storeTLAsImg(String fileName, TempLattice<Complex> &TL, ImageInterface<Float>& theImg);
 
@@ -166,7 +167,10 @@ private:
   Int makeSpectralPSFs(SkyEquation& se);
    //Int addTo(Lattice<Float>& to, const Lattice<Float>& add, Float multiplier);
   Int writeResultsToDisk();
-  Float computeFluxLimit(Int model, Float &fractionOfPsf);
+  Float computeFluxLimit(Float &fractionOfPsf);
+
+  void blankOverlappingModels();
+  void restoreOverlappingModels();
   
   Timer tmr1,tmr2;
   Int adbg;

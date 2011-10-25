@@ -108,14 +108,22 @@ void CalCorruptor::setCurrTime(const Double& time) {
 Complex ANoiseCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar) {
   if (prtlev()>5) cout << "AN::simPar(vi,type,ipar) ";
   if (type==VisCal::ANoise) {
-    return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
+    if (currAnt() == currAnt2()){
+      return (*nDist_p)()*amp(); // auto-correlation
+    }else{
+      return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp()); // cross-correlation
+    }
   } else throw(AipsError("unknown VC type "+VisCal::nameOfType(type)+" in AnoiseCorruptor::simPar(vi,type,ipar)"));
 }
 
 
 Complex ANoiseCorruptor::simPar() {
   if (prtlev()>5) cout << "AN::simPar() ";
-  return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp());
+  if (currAnt() == currAnt2()){
+    return (*nDist_p)()*amp(); // auto-correlation
+  }else{
+    return Complex((*nDist_p)()*amp(),(*nDist_p)()*amp()); // cross-correlation
+  }
 }
 
 
@@ -152,14 +160,14 @@ AtmosCorruptor::AtmosCorruptor() :
   CalCorruptor(1),  // parent
   mean_pwv_(-1.),
   airMassValid_(False),airMassTime_(-1000),
-  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
+  screen_p(0),itsatm(0),itsSpecGrid(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::AtmosCorruptor(const Int nSim) : 
   CalCorruptor(nSim),  // parent
   mean_pwv_(-1.),
   airMassValid_(False),airMassTime_(-1000),
-  screen_p(0),itsatm(0),itsRIP(0),itsSkyStatus(0)
+  screen_p(0),itsatm(0),itsSpecGrid(0),itsRIP(0),itsSkyStatus(0)
 {}
 
 AtmosCorruptor::~AtmosCorruptor() {
@@ -170,6 +178,10 @@ AtmosCorruptor::~AtmosCorruptor() {
   if (itsRIP) {
     delete itsRIP;
     itsRIP=0;
+  }
+  if (itsSpecGrid) {
+    delete itsSpecGrid;
+    itsSpecGrid=0;
   }
   if (itsatm) {
     delete itsatm;
@@ -251,9 +263,8 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
       double tint = vi.msColumns().exposure()(0);  
       int iSpW = vi.spectralWindow();
       double deltaNu = 
-	vi.msColumns().spectralWindow().totalBandwidth()(iSpW) / 
+	abs(vi.msColumns().spectralWindow().totalBandwidth()(iSpW)) / 
 	Float(vi.msColumns().spectralWindow().numChan()(iSpW));	    
-
 
       // 20100824 getAngle() is very slow: cache airmass
       if (!airMassValid_) {
@@ -273,13 +284,14 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 	airMassValid_=True;
 	airMassTime_=curr_time();
 
-	//cout<<"t="<<curr_time()<<" A[0]="<<airMass_(0)<<" A(1)="<<airMass_(1)<<" A(15)="<<airMass_(15)<<" "<<airMass_.nelements()<<endl;
 	if (prtlev()>3) cout <<"done"<<endl;
       }
 	
+      //cout << "Delta nu = " << deltaNu << "; amp=" << amp() << "; tint=" << tint << endl;
+
 
       if (type==VisCal::M) {
-	factor = amp() / sqrt( deltaNu * tint ) ;	
+	factor = senscoeff() * amp() / sqrt( deltaNu * tint ) ;	
 	airmass= 0.5*(airMass_(currAnt()) + airMass_(currAnt2()));
 	
 	// this is tsys above atmosphere
@@ -289,7 +301,7 @@ Complex AtmosCorruptor::simPar(const VisIter& vi, VisCal::Type type,Int ipar){
 
       } else if (type==VisCal::T) {
 
-	factor = sqrt( amp() / sqrt( deltaNu * tint ) ) ;
+	factor = sqrt( senscoeff() * amp() / sqrt( deltaNu * tint ) ) ;
 	airmass = airMass_(currAnt());
 
 //	cout << "gain per baseline [mJy]=" << 
@@ -505,6 +517,7 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
     tatmos() = simpar.asFloat("tatmos");  // only used in manual mode
     tcmb() = simpar.asFloat("tcmb");
     trx() = simpar.asFloat("trx");
+    senscoeff() = simpar.asFloat("senscoeff");
     // use ATM but no time fluctuation of atm - e.g. Tf [Tsys scaling, also Mf]
     if (freqDepPar()) initAtm();
 
@@ -537,21 +550,22 @@ void AtmosCorruptor::initialize(const VisIter& vi, const Record& simpar, VisCal:
     os << LogIO::NORMAL 
        << "Tsys at center of first Spectral Window = " << tsys(1.0)
        << " tground=" << tground() << " spillover=" << spilleff()
-       << LogIO::POST;      
+       << LogIO::POST;
     if (tsys(1.0)>1e6 or tsys(1.0)<=0) {
       ostringstream o; 
       o << "error in ATM setup - Tsys " << tsys(1.0) << " poorly defined - check inputs";
       throw(AipsError(o));
       //      throw(AipsError("error in ATM setup - Tsys poorly defined - check inputs"));
     }
-    if (freqDepPar()) 
+    if (freqDepPar())
       os << " pwv="<< mean_pwv() << " tau=" << opac(focusChan()) << LogIO::POST;
     else
       os << " tauscale=" << tauscale() << LogIO::POST;
    
     // conversion to Jy when divided by D1D2 for an M, 
     // extra sqrt(2) or application to real & imag
-    amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
+//     amp() = 4 * C::sqrt2 * 1.38062e-16 * 1e23 * 1e-4 / 		
+    amp() = 8 * 1.38062e-16 * 1e23 * 1e-4 /
       ( simpar.asFloat("antefficiency") * 
 	simpar.asFloat("correfficiency") * C::pi );
     // or divided by D for a T

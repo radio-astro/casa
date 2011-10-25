@@ -132,7 +132,8 @@ public:
 
   // This collapse avoids I/O (assumes the vb data/model are ready),
   //  and uses a generic pivot (see setPivot) rather than the svc
-  void collapseForSim(VisBuffer& vb);
+  //  void collapseForSim(VisBuffer& vb);
+  void collapseForSim(VisBuffer& vb, const Bool avoidACs=True);
 
   // Calculate residuals 
   //   (optionally for specific chan)

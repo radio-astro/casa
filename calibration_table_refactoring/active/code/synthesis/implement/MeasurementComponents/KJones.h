@@ -87,8 +87,8 @@ public:
   //                            const Vector<Complex>& par, const Vector<Bool>& pOk );
 
 
-  // Hazard a guess at parameters
-  virtual void guessPar(VisBuffer& vb) {};
+  // Hazard a guess at parameters (unneeded here)
+  virtual void guessPar(VisBuffer& ) {};
 
   // K now uses generic gather, but solves for itself per solution
   virtual Bool useGenericGatherForSolve() { return True; };

@@ -29,6 +29,7 @@
 #ifndef SYNTHESIS_FTMACHINE_H
 #define SYNTHESIS_FTMACHINE_H
 
+#include <measures/Measures/Measure.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <casa/Arrays/Array.h>
@@ -122,6 +123,8 @@ public:
   FTMachine(const FTMachine& other);
 
   FTMachine& operator=(const FTMachine& other);
+
+  void setBasePrivates(const FTMachine& other){FTMachine::operator=(other);}
 
   virtual ~FTMachine();
 
@@ -344,6 +347,9 @@ protected:
 
   void setSpectralFlag(const VisBuffer& vb, Cube<Bool>& modflagcube); 
 
+  //helper to save Measures in a record
+  Bool saveMeasure(RecordInterface& rec, const String& name, String& error, const Measure& ms);
+
   // Private variables needed for spectral frame conversion 
   SpectralCoordinate spectralCoord_p;
   Vector<Bool> doConversion_p;
@@ -361,6 +367,7 @@ protected:
   CFStore cfs_p, cfwts_p;
   CountedPtr<ConvolutionFunction> convFuncCtor_p;
   Bool canComputeResiduals_p;
+  Bool toVis_p;
  private:
   //Some temporary wasteful function for swapping axes because we don't 
   //Interpolation along the second axis...will need to implement 

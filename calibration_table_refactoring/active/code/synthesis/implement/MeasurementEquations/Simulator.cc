@@ -908,6 +908,7 @@ Bool Simulator::setspwindow(const String& spwName,
 			    const Quantity& freq,
 			    const Quantity& deltafreq,
 			    const Quantity& freqresolution,
+			    const MFrequency::Types& freqType,
 			    const Int nChan,
 			    const String& stokes) 
 
@@ -940,9 +941,11 @@ Bool Simulator::setspwindow(const String& spwName,
     os << "sending init to MSSim for spw = " << spWindowName_p[nSpw-1] << LogIO::POST;  
 #endif
 
+    //freqType=MFrequency::TOPO;
     sim_p->initSpWindows(spWindowName_p[nSpw-1], nChan_p[nSpw-1], 
 			 startFreq_p[nSpw-1], freqInc_p[nSpw-1], 
-			 freqRes_p[nSpw-1], stokesString_p[nSpw-1]);
+			 freqRes_p[nSpw-1], freqType,
+			 stokesString_p[nSpw-1]);
 
   } catch (AipsError x) {
     os << LogIO::SEVERE << "Caught exception: " << x.getMesg() << LogIO::POST;
@@ -965,9 +968,9 @@ Bool Simulator::setfeed(const String& mode,
        << LogIO::POST;
     return False;
   }
+  feedMode_p = mode;
   sim_p->initFeeds(feedMode_p, x, y, pol);
 
-  feedMode_p = mode;
   nFeeds_p = x.nelements();
   feedsHaveBeenSet = True;
 
@@ -1052,7 +1055,8 @@ Bool Simulator::setnoise(const String& mode,
 			 const Float trx=150.0, 
 			 const Float tground=270.0, 
 			 const Float tcmb=2.73, 
-			 const Bool OTF=True
+			 const Bool OTF=True,
+			 const Float senscoeff=0.0
 			 ) {
   
   LogIO os(LogOrigin("Simulator", "setnoise2()", WHERE));
@@ -1082,6 +1086,7 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("trx"		  ,TpFloat);
     simparDesc.addField ("tground"	  ,TpFloat);
     simparDesc.addField ("tcmb"           ,TpFloat);
+    simparDesc.addField ("senscoeff"      ,TpFloat);
 
     // user-override of ATM calculated tau
     simparDesc.addField ("tatmos"	  ,TpFloat);
@@ -1092,6 +1097,8 @@ Bool Simulator::setnoise(const String& mode,
     simparDesc.addField ("relhum"	  ,TpFloat);
     simparDesc.addField ("altitude"	  ,TpDouble);
     simparDesc.addField ("waterheight"	  ,TpDouble);
+
+    simparDesc.addField ("seed"	  ,TpInt);
 
     // RI todo setnoise2 if tau0 is not defined, use freqdep
 
@@ -1116,6 +1123,7 @@ Bool Simulator::setnoise(const String& mode,
       }
     
     Record simpar(simparDesc,RecordInterface::Variable);
+    simpar.define ("seed", seed_p);
     simpar.define ("type", "A Noise");
     if (strlen>1) 
       simpar.define ("caltable", caltbl+".A.cal");      
@@ -1129,9 +1137,9 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("mode", "simple");
 
     } else if (mode=="tsys-atm" or mode=="tsys-manual") {
-      os << "adding noise with unity amplitude" << LogIO::POST;
       // do be scaled in a minute by a Tsys-derived M below
       simpar.define ("amplitude", Float(1.0) );
+//       os << "adding noise with unity amplitude" << LogIO::POST;
       simpar.define ("mode", mode);
 
     } else {
@@ -1156,6 +1164,14 @@ Bool Simulator::setnoise(const String& mode,
       simpar.define ("trx"	      ,trx	      );
       simpar.define ("tground"	      ,tground	      );
       simpar.define ("tcmb"           ,tcmb           );
+
+      if ( senscoeff > 0.0 ) {
+	simpar.define ("senscoeff", Float(senscoeff) );
+	os << "adding noise with the sensitivity constant of " << senscoeff << LogIO::POST;
+      } else {
+	simpar.define("senscoeff", Float(1./ sqrt(2.)));
+	os << "adding noise with the sensitivity constant of 1/sqrt(2)" << LogIO::POST;
+      }
 
       if (pwv.getValue("mm")>0.) {
 	if (pwv.getValue("mm")>100.) 
@@ -1268,6 +1284,7 @@ Bool Simulator::setgain(const String& mode,
 	simparDesc.addField ("combine", TpString);
 	simparDesc.addField ("startTime", TpDouble);
 	simparDesc.addField ("stopTime", TpDouble);
+	simparDesc.addField ("seed", TpInt);
 	
 	// Create record with the requisite field values
 	Record simpar(simparDesc,RecordInterface::Variable);
@@ -1285,6 +1302,7 @@ Bool Simulator::setgain(const String& mode,
 	//simpar.define ("amplitude", amplitude);
 	simpar.define ("caltable", caltable);
 	simpar.define ("combine", "");
+	simpar.define ("seed", seed_p);
 	
 	// create the G
 	if (!create_corrupt(simpar)) 
@@ -1347,6 +1365,8 @@ Bool Simulator::settrop(const String& mode,
       simparDesc.addField ("relhum"	  ,TpFloat);
       simparDesc.addField ("altitude"	  ,TpDouble);
       simparDesc.addField ("waterheight"	  ,TpDouble);
+
+      simparDesc.addField ("seed"	  ,TpInt);
     
       // create record with the requisite field values
       Record simpar(simparDesc,RecordInterface::Variable);
@@ -1358,6 +1378,8 @@ Bool Simulator::settrop(const String& mode,
       simpar.define ("beta", beta);
       simpar.define ("windspeed", windspeed);
       simpar.define ("combine", "");
+
+      simpar.define ("seed", seed_p);
 
 //      if (tground>100.)
 //	simpar.define ("tground", tground);
@@ -1438,6 +1460,8 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simparDesc.addField ("simint", TpString);
     simparDesc.addField ("startTime", TpDouble);
     simparDesc.addField ("stopTime", TpDouble);
+
+    simparDesc.addField ("seed", TpInt);
             
     // create record with the requisite field values
     Record simpar(simparDesc,RecordInterface::Variable);
@@ -1462,6 +1486,7 @@ Bool Simulator::setleakage(const String& mode, const String& table,
     simpar.define ("simint", "infinite");
 
     simpar.define ("combine", "");
+    simpar.define ("seed", seed_p);
 
     
     // create the D
@@ -1809,7 +1834,8 @@ Bool Simulator::setapply(const String& type,
 
 
 
-Bool Simulator::corrupt() {
+// Bool Simulator::corrupt() {
+Bool Simulator::corrupt(const Bool avoidauto=True) {
 
   // VIS-plane (only) corruption
   
@@ -1883,7 +1909,7 @@ Bool Simulator::corrupt() {
 	  for (vi.origin(); vi.more(); vi++) {
 
 	    // corrupt model to pivot, correct data up to pivot
-	    ve_p.collapseForSim(vb);	    
+	    ve_p.collapseForSim(vb, avoidauto);
 
 	    // Deposit corrupted visibilities into DATA
 	    // vi.setVis(vb.modelVisCube(), VisibilityIterator::Observed);
@@ -2135,6 +2161,7 @@ Bool Simulator::predict(const Vector<String>& modelImage,
 	  // from above, the prediction is now already in Observed.
 	  // RI TODO remove scratch columns from NewMSSimulator; 
 	  // until then we;ll just leave them 1 and Corr=Obs (for imaging)
+	  //vi.setVis(vb.visCube(),VisibilityIterator::Observed);
 	  vi.setVis(vb.visCube(),VisibilityIterator::Corrected);
 	}
 	vb.setModelVisCube(Complex(1.0,0.0));
@@ -2189,7 +2216,8 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
     
     nmodels_p = image.nelements();
     if (nmodels_p == 1 && image(0) == "") nmodels_p = 0;
-    
+
+    int models_found=0;
     if (nmodels_p > 0) {
       images_p.resize(nmodels_p); 
       
@@ -2206,7 +2234,6 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	    os << "About to open model " << model+1 << " named "
 	       << image(model) << LogIO::POST;
 	    images_p[model]=new PagedImage<Float>(image(model));
-
 	    AlwaysAssert(images_p[model], AipsError);
 	    // RI TODO is this a logic problem with more than one source??
 	    // Add distance
@@ -2217,14 +2244,38 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
 	      info.define("distance", distance_p[nField-1].get("m").getValue());
 	      images_p[model]->setMiscInfo(info);
 	    }
+
+	    // FTMachine only works in Hz and LSRK
+	    CoordinateSystem cs = images_p[model]->coordinates();
+	    String errorMsg;
+	    CoordinateUtil::setSpectralConversion(errorMsg,cs,MFrequency::showType(MFrequency::LSRK));
+	    Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);
+	    AlwaysAssert(spectralIndex>=0, AipsError);
+	    SpectralCoordinate spectralCoord=cs.spectralCoordinate(spectralIndex);
+	    Vector<String> units(1); units = "Hz";
+	    // doesn't work: cs.spectralCoordinate(spectralIndex).setWorldAxisUnits(units);	
+	    spectralCoord.setWorldAxisUnits(units);
+	    // put spectralCoord back into cs
+	    cs.replaceCoordinate(spectralCoord,spectralIndex);
+	    // and cs into image
+	    images_p[model]->setCoordinateInfo(cs);
+
+
 	    if(sm_p->add(*images_p[model])!=model) {
 	      os << LogIO::SEVERE << "Error adding model " << model+1 << LogIO::POST;
 	      return False;
 	    }
+	    models_found++;
 	  }
 	}
       }
     }
+
+    if(models_found<=0 and componentList_p==0) {
+      os << LogIO::SEVERE << "No model images found" << LogIO::POST;
+      return False;
+    }
+
     
     
     if(vs_p) {
@@ -2360,6 +2411,12 @@ Bool Simulator::createSkyEquation(const Vector<String>& image,
       }
     }
     AlwaysAssert(ft_p, AipsError);
+
+    // tell ftmachine about the transformations in model images above - no.
+    //Vector<Int> dataspectralwindowids_p;
+    //Bool freqFrameValid_p = True;
+    //ft_p->setSpw(dataspectralwindowids_p, freqFrameValid_p);
+
     
     se_p = new SkyEquation ( *sm_p, *vs_p, *ft_p, *cft_p );
     

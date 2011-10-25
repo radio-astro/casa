@@ -36,7 +36,7 @@
 #include <lattices/Lattices/LatticeExpr.h>
 #include <lattices/Lattices/LCBox.h>
 #include <synthesis/MeasurementEquations/SkyEquation.h>
-#include <synthesis/MeasurementEquations/PSkyEquation.h>
+//#include <synthesis/MeasurementEquations/PSkyEquation.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Utilities/Assert.h>

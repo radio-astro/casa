@@ -143,11 +143,13 @@ public:
   // Apply calibration to data in VisBuffer (correct Data or corrupt Model)
   //  (in-place versions)
   virtual void correct(VisBuffer& vb,Bool avoidACs=True);
-  virtual void corrupt(VisBuffer& vb);
+  //  virtual void corrupt(VisBuffer& vb);
+  virtual void corrupt(VisBuffer& vb, Bool avoidACs=True);
   // Apply calibration to data in VisBuffer; 
   //  (alternate output versions)
   virtual void correct(VisBuffer& vb, Cube<Complex>& Vout,Bool avoidACs=True);
-  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
+  //  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout);
+  virtual void corrupt(VisBuffer& vb, Cube<Complex>& Mout, Bool avoidACs=True);
 
   // Report the state
   virtual void state();

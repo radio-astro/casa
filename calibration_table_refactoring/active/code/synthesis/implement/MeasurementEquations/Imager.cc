@@ -71,11 +71,11 @@
 #include <images/Images/ImagePolarimetry.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
+#include <msvis/MSVis/MSUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
-#include <msvis/MSVis/VisibilityIteratorAsync.h>
-#include <msvis/MSVis/VisBufferAsync.h>
+/////////#include <msvis/MSVis/VisBufferAsync.h>
 
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
@@ -1264,7 +1264,8 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const Vector<Int>& antIndex,
 			  const String& antnames,
 			  const String& spwstring,
-                          const String& uvdist, const String& scan, const Bool useModelCol)
+                          const String& uvdist, const String& scan,
+                          const String& obs, const Bool useModelCol)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1285,7 +1286,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
   //Calling the old setdata
   return   setdata(mode, nchan, start, step, dummy, dummy, spectralwindowids, 
 		   fieldids, msSelect, timerng, fieldnames, antIndex, 
-                   antnames, spwstring, uvdist, scan, useModelCol);
+                   antnames, spwstring, uvdist, scan, obs, useModelCol);
 
 }
 
@@ -1300,6 +1301,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
                      const String& uvdist, const String& scan,
+                     const String& obs,
                      const Bool /*useModelCol*/,
                      const Bool be_calm)
 {
@@ -1313,7 +1315,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     return False;
   }
 
-  os << "mode=" << mode << " nchan=" << nchan 
+  os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+     << "mode=" << mode << " nchan=" << nchan 
      <<  " start=" << start << " step=" << step;
   ostringstream clicom;
   clicom <<  " mstart='" << mStart << "' mstep='" << mStep;
@@ -1328,7 +1331,9 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     this->lock();
     this->writeCommand(os);
 
-    os << LogIO::NORMAL << "Selecting data" << LogIO::POST; // Loglevel PROGRESS
+    os << (be_calm ? LogIO::NORMAL2 : LogIO::NORMAL)
+       << "Performing selection on MeasurementSet : " << ms_p->tableName()
+       << LogIO::POST; // Loglevel PROGRESS
     //Some MSSelection 
     MSSelection thisSelection;
 
@@ -1338,59 +1343,75 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     //MeasurementSet sorted=ms_p->keywordSet().asTable("SORTED_TABLE");
     //MSSelection thisSelection (sorted, MSSelection::PARSE_NOW,timerng,antnames,
     //			       fieldnames, spwstring,uvdist, msSelect,"",
-    //			       scan); 
+    //			       scan, obs); 
 
     datafieldids_p.resize(fieldids.nelements());
     datafieldids_p = fieldids;
     if(datafieldids_p.nelements() > 0){
       thisSelection.setFieldExpr(MSSelection::indexExprStr(datafieldids_p));
-      os << LogIO::DEBUG1 << "Selecting on field ids" << LogIO::POST;
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selecting on field ids : " << datafieldids_p <<  LogIO::POST;
     }
     if(fieldnames != ""){
       thisSelection.setFieldExpr(fieldnames);
-      os << LogIO::DEBUG1
-		 << "Selecting on field names " << fieldnames << LogIO::POST;
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selecting on fields : " << fieldnames << LogIO::POST;
     }
     
     dataspectralwindowids_p.resize(spectralwindowids.nelements());
     dataspectralwindowids_p = spectralwindowids;
     if(dataspectralwindowids_p.nelements() > 0){
       thisSelection.setSpwExpr(MSSelection::indexExprStr(dataspectralwindowids_p));
-      os << LogIO::DEBUG1 << "Selecting on spectral windows" << LogIO::POST;
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selecting on spectral windows" << LogIO::POST;
     }
     else if(spwstring != ""){
-      os << LogIO::DEBUG1
-		 << "Selecting on spectral windows expression " << spwstring
-		 << LogIO::POST;
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selecting on spectral windows expression : " << spwstring
+	 << LogIO::POST;
       thisSelection.setSpwExpr(spwstring);
     }
     
     if(antIndex.nelements() >0){
       thisSelection.setAntennaExpr( MSSelection::indexExprStr(antIndex));
-      os << LogIO::DEBUG1 << "Selecting on antenna ids" << LogIO::POST;	
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selecting on antenna ids : " << antIndex << LogIO::POST;	
     }
     if(antnames != ""){
       Vector<String>antNames(1, antnames);
       //       thisSelection.setAntennaExpr(MSSelection::nameExprStr(antNames));
       thisSelection.setAntennaExpr(antnames);
-      os << LogIO::DEBUG1 << "Selecting on antenna names" << LogIO::POST; 
+      os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+         << "Selecting on antenna names : " << antnames << LogIO::POST; 
     } 
                
     if(timerng != ""){
       //	Vector<String>timerange(1, timerng);
 	thisSelection.setTimeExpr(timerng);
-	os << LogIO::DEBUG1 << "Selecting on time range" << LogIO::POST;	
+	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+           << "Selecting on time range : " << timerng << LogIO::POST;	
     }
     
     if(uvdist != ""){
 	thisSelection.setUvDistExpr(uvdist);
+	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+           << "Selecting on uvdist : " << uvdist << LogIO::POST;	
     }
     
     if(scan != ""){
       thisSelection.setScanExpr(scan);
+	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+           << "Selecting on scan : " << scan << LogIO::POST;	
+    }
+    if(obs != ""){
+      thisSelection.setObservationExpr(obs);
+	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+           << "Selecting on Observation Expr : " << obs << LogIO::POST;	
     }
     if(msSelect != ""){
       thisSelection.setTaQLExpr(msSelect);
+	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+           << "Selecting via TaQL : " << msSelect << LogIO::POST;	
     }
     
     //***************
@@ -1602,8 +1623,7 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       nullSelect_p=False;
     }
     if (nullSelect_p) {
-      Table mytab(msname_p+"/FIELD", Table::Old);
-      if (mytab.nrow() > 1) {
+      if ((mssel_p->field()).nrow() > 1) {
 	os << LogIO::NORMAL4 << "Multiple fields selected" << LogIO::POST;
 	multiFields_p = True;
       } else {
@@ -1622,18 +1642,35 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
     if(nvis_sel != nvis_all) {
       os << LogIO::NORMAL // Loglevel INFO
          << "Selected " << nvis_sel << " out of "
-         << nvis_all << " visibilities."
+         << nvis_all << " rows."
 	 << LogIO::POST;
     }
     else {
       os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
-         << "Selected all " << nvis_sel << " visibilities" << LogIO::POST; // Loglevel INFO
+         << "Selected all " << nvis_sel << " rows" << LogIO::POST; // Loglevel INFO
     }
     //    }
-    
+
+    // Tell the user how many channels have been selected.
+    // NOTE : This code is replicated in ImagerMultiMS.cc.
+    Vector<Int> chancounts(dataspectralwindowids_p.nelements());
+    chancounts=0;
+    //    if( spwstring == "" ) os << "Selected all spws and channels" << LogIO::POST;
+    //else os << "Channel selection : " << spwstring << LogIO::POST;
+    os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL) << "Selected:";
+    for(uInt k=0;k<dataspectralwindowids_p.nelements();k++)
+      {
+	for(uInt ch=0;ch<uInt(nchanvec(dataspectralwindowids_p[k]));ch++) 
+	  {if(spwchansels_p(0,dataspectralwindowids_p[k],ch)) chancounts[k]++; }
+	os << " [" << chancounts[k] << " chans in spw " << dataspectralwindowids_p[k] << "]";
+	//	os << "Selected " << chancounts[k] << " channels in spw " 
+	//  << dataspectralwindowids_p[k] << LogIO::POST;
+      }
+    os << LogIO::POST;
+
     // Now we do a selection to cut down the amount of information
     // passed around.
-    
+  
     this->selectDataChannel(dataspectralwindowids_p, dataMode_p,
 			    dataNchan_p, dataStart_p, dataStep_p,
                             mDataStart_p, mDataStep_p);
@@ -2813,6 +2850,30 @@ Bool Imager::weight(const String& type, const String& rmode,
 }
 
 
+Bool Imager::getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type){
+
+  if(type=="imaging"){
+    weightgrid.resize(0, True, False);
+    if(imwgt_p.getType()!="uniform")
+      return False;
+    imwgt_p.getWeightDensity(weightgrid);
+    return True;
+  }
+        
+  return False;
+}
+
+Bool Imager::setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type){
+
+  if(type=="imaging"){
+    if(imwgt_p.getType()!="uniform")
+      return False;
+    imwgt_p.setWeightDensity(weightgrid);
+    rvi_p->useImagingWeight(imwgt_p);
+  }
+
+  return True;
+}
 
 // Filter the MeasurementSet
 Bool Imager::filter(const String& type, const Quantity& bmaj,
@@ -3729,7 +3790,7 @@ Bool Imager::clean(const String& algorithm,
 
 
 
-  ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
+  //ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
   if(!valid())
     {
@@ -3814,10 +3875,13 @@ Bool Imager::clean(const String& algorithm,
       maskNames=mask;
     }
     else {
-      /* For msmfs, the one input mask must be replicated for all Taylor-planes */
+      /* For msmfs, the one input mask PER FIELD must be replicated for all 
+	 Taylor-planes PER FIELD */
       if(algorithm=="msmfs" && Int(mask.nelements())>0){
        for(Int tay=0;tay<nmodels;tay++)
-          maskNames[tay] = mask[0];
+	 {
+	   maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];
+	 }
       }
       else {
 	 /* No mask */
@@ -4774,7 +4838,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
 		MRadialVelocity(),
 		selectSpw, selectField, msSelectString, "", "", Vector<Int>(), 
-		"", "", "", "", True);
+		"", "", "", "", "", True);
 
 	if (!nullSelect_p) {
 
@@ -4814,7 +4878,6 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
   return True;
 }
 
-
 // This is the one used by im.setjy() (because it has a model arg).
 Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const Vector<Int>& /*spectralwindowid*/,
@@ -4822,10 +4885,14 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const String& model,
                    const Vector<Double>& fluxDensity, 
                    const String& standard, const Bool chanDep,
-                   const Double spix, const MFrequency& reffreq)
+                   const Double spix, const MFrequency& reffreq,
+                   const String& timerange, const String& scanstr,
+                   const String& obsidstr)
 {
   if(!valid())
     return False;
+
+  Bool didAnything = False;
 
   logSink_p.clearLocally();
   LogIO os(LogOrigin("imager", "setjy()"), logSink_p);
@@ -4889,6 +4956,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
          << "Using model image, so zeroing user QUV flux densities."
          << LogIO::POST;
       fluxdens[1] = fluxdens[2] = fluxdens[3] = 0.0;
+      writeHistory(os);
     }
 
     // Loop over field id. and spectral window id.
@@ -4899,12 +4967,12 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       throw(AipsError(standard + " is not a recognized flux density scale"));
 
     FluxStandard fluxStd(fluxScaleEnum);
-    ROMSColumns msc(*ms_p);
 
     // Setup the frequency, Flux, and ComponentList arrays.
     uInt nspws = selToRawSpwIds.nelements();
     Vector<Vector<Flux<Double> > > returnFluxes(nspws), returnFluxErrs(nspws);
     Vector<Vector<MFrequency> > mfreqs(nspws);
+    ROMSColumns msc(*ms_p);
     const Unit freqUnit = sjy_setup_arrs(returnFluxes, returnFluxErrs, tempCLs, mfreqs,
                                          msc.spectralWindow(), nspws, selToRawSpwIds,
                                          chanDep);
@@ -4920,9 +4988,35 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       if(precompute){
         // Pre-compute flux density for standard sources if not specified
         // using the specified flux scale standard or catalog.
+        //
+        // The flux densities are calculated for all spws at once to avoid
+        // repeatedly digging up the flux model (and possibly the ephemeris).
+        //
+        Vector<Int> selectField(1);
+        selectField[0] = fldid;
+        Vector<Int> numDeChan(1);
+        numDeChan[0] = 0;
+        Vector<Int> begin(1);
+        begin[0] = 0;
+        Vector<Int> stepsize(1);
+        stepsize[0] = 1;
+        String msSelectString = "";
+        setdata("none", numDeChan, begin, stepsize, MRadialVelocity(), 
+                MRadialVelocity(),
+                selToRawSpwIds, selectField, msSelectString, timerange, "",
+                Vector<Int>(), "", "", "", scanstr, obsidstr, True, true);
+        ROMSColumns msselc(*mssel_p);
+        if(nullSelect_p || msselc.nrow() < 1){
+          os << ((timerange == "" && scanstr == ""
+                  && obsidstr == "") ? LogIO::WARN : LogIO::NORMAL)
+             << "No data was selected for field " << fldid << "."
+             << LogIO::POST;
+          continue;
+        }
+
         foundSrc = sjy_computeFlux(os, fluxStd, returnFluxes, returnFluxErrs, tempCLs,
                                    fluxUsed, fluxScaleName, mfreqs, model, fieldName,
-                                   msc, fldid, fieldDir, standard);
+                                   msselc, fldid, fieldDir, standard);
       }
       
       for(uInt selspw = 0; selspw < nspws; ++selspw){
@@ -4934,16 +5028,18 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
             
           // Log flux density found for this field and spectral window
           os.output().width(12);
-          os << fieldName << "  rawspwid=";
-          os.output().width(3);
+          os << fieldName;
+          os.output().width(2);
+          os << " (fld ind " << fldid << ") spw ";
           os << rawspwid << "  ";
           os.output().width(0);
-          os.output().precision(4);
+          os.output().precision(5);
           os << LogIO::NORMAL << "[I=" << fluxUsed(0) << ", "; // Loglevel INFO
           os << "Q=" << fluxUsed(1) << ", ";
           os << "U=" << fluxUsed(2) << ", ";
           os << "V=" << fluxUsed(3) << "] Jy, ";
           os << ("(" + fluxScaleName + ")") << LogIO::POST;
+          writeHistory(os);
         }
           
         // If a model image has been specified, 
@@ -4968,8 +5064,20 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           // with the specified flux density
           PointShape point(fieldDir);
           SpectralIndex siModel;
-          siModel.setRefFrequency(reffreq);
-          siModel.setIndex(spix);
+          if(reffreq.getValue().getValue() > 0.0){
+            siModel.setRefFrequency(reffreq);
+            siModel.setIndex(spix);
+          }
+          else{
+            if(spix != 0.0){            // If not the default, complain and quit.
+              os << LogIO::SEVERE
+                 << "spix cannot be nonzero with reffreq = 0!"
+                 << LogIO::POST;
+              return false;
+            }
+            siModel.setRefFrequency(MFrequency(Quantity(1.0, "GHz")));
+            siModel.setIndex(0.0);
+          }
 
           // No worries about varying fluxes or sizes here, so any time will do.
           MEpoch mtime = msc.field().timeMeas()(fldid);
@@ -4977,23 +5085,33 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
                                                             mfreqs[selspw][0],
                                                             mtime, fluxval, point,
-                                                            siModel, ".setjy_");
+                                                            siModel,
+                                                            "_setjy_spw" +
+                                                            String::toString(selspw) +
+                                                            "_");
         }
 
-        sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw]);
+        sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],
+                              timerange, scanstr, obsidstr);
 	
         if(tmodimage)
           delete tmodimage;
         tmodimage = NULL;
         //	if (Table::canDeleteTable("temp.setjy.image")) Table::deleteTable("temp.setjy.image");
-      }
 
-      // Delete the temporary component lists.  Do it after ft() has been run
-      // for all the spws because some spws with the same center frequency may
-      // be sharing component lists.
-      for(uInt selspw = 0; selspw < nspws; ++selspw)
-	if(tempCLs[selspw] != "" && Table::canDeleteTable(tempCLs[selspw]))
-	  Table::deleteTable(tempCLs[selspw]);
+	if(tempCLs[selspw] != ""){
+          String errmsg;
+
+          didAnything = True;
+          if(Table::canDeleteTable(errmsg, tempCLs[selspw]))
+            Table::deleteTable(tempCLs[selspw]);
+          else
+            os << LogIO::WARN
+               << "Could not rm " << tempCLs[selspw]
+               << " because the " << errmsg << "."
+               << LogIO::POST;
+        }
+      }
     }   // End of loop over fields.
 
     this->writeHistory(os);
@@ -5010,7 +5128,47 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     os << LogIO::SEVERE << "Exception: " << x.getMesg() << LogIO::POST;
     return False;
   } 
-  return True;
+  return didAnything;
+}
+
+String Imager::make_comp(const String& objName,
+			 const String& standard,
+			 const MEpoch& mtime, const Vector<MFrequency>& freqv,
+			 const String& prefix)
+{
+  Bool foundSrc = false;
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "setjy()"), logSink_p);
+
+  Vector<String> clistnames(1);
+  try{
+    FluxStandard::FluxScale fluxScaleEnum;
+    String fluxScaleName("user-specified");
+
+    if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
+      throw(AipsError(standard + " is not a recognized flux density scale"));
+
+    FluxStandard fluxStd(fluxScaleEnum);
+
+    Vector<Vector<Flux<Double> > > returnFluxes(1), returnFluxErrs(1);
+    Vector<Vector<MFrequency> > mfreqs(1);
+    uInt nfreqs = freqv.nelements();
+
+    mfreqs[0] = freqv;
+    returnFluxes[0].resize(nfreqs);
+    returnFluxErrs[0].resize(nfreqs);
+
+    MDirection objDir;
+     
+    foundSrc = fluxStd.computeCL(objName, mfreqs, mtime, objDir,
+				 returnFluxes, returnFluxErrs,
+				 clistnames, prefix);
+  }
+  catch(AipsError x){
+    os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }  
+  return foundSrc ? clistnames[0] : "";
 }
 
 Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
@@ -5053,7 +5211,8 @@ Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
 
 Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                                    const Int rawspwid, const Int fldid,
-                                   const String& clname)
+                                   const String& clname, const String& timerange,
+                                   const String& scanstr, const String& obsidstr)
 {
   Bool made_visibilities = False;
 
@@ -5072,8 +5231,8 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
   if(tmodimage || clname != "")
     setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
             MRadialVelocity(),
-            selectSpw, selectField, msSelectString, "", "",
-            Vector<Int>(), "", "", "", "", True, true);
+            selectSpw, selectField, msSelectString, timerange, "",
+            Vector<Int>(), "", "", "", scanstr, obsidstr, True, true);
 
   if(!nullSelect_p){
     // Use ft to form visibilities
@@ -5093,8 +5252,10 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
 
       made_visibilities = True;
     }
-    else if(clname != "")
+    else if(clname != ""){
       made_visibilities = ft(modelv, clname, False);
+      destroySkyEquation();
+    }
     else
       os << LogIO::NORMAL
          << "Skipping an empty component list for spw " << rawspwid
@@ -5132,11 +5293,14 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     //
     // Obviously that would be overkill if the source does not vary.
     //
-    MEpoch mtime = msc.field().timeMeas()(fldid);
+    Double meantime = msc.time()(0);
+    meantime += 0.5 * (msc.time()(msc.nrow() - 1) - meantime);
+    MEpoch mtime(msc.timeMeas()(0));
+    mtime.set(Quantity(meantime, "s"));
             
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                  returnFluxes, returnFluxErrs,
-                                 tempCLs, ".setjy_");
+                                 tempCLs, "_setjy_");
   }
 
   if(!foundSrc){
@@ -5202,6 +5366,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     os << "U=" << fluxUsed(2) << ", ";
     os << "V=" << fluxUsed(3) << "] Jy, ";
     os << ("(" + fluxScaleName + ")") << LogIO::POST;
+    writeHistory(os);
   }  // End of if(!foundSrc).
 
   return foundSrc;
@@ -5339,6 +5504,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
            << fluxUsedPerChan.row(0) 
            << " Jy (ch 0) for visibility prediction."
            << LogIO::POST;
+        writeHistory(os);
         for(uInt k = 0; k < fluxUsedPerChan.ncolumn(); ++k){
           Float scale = fluxUsedPerChan.column(k)(0)/sumI;
           blc[3] = k;
@@ -5364,23 +5530,27 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
          << fluxUsed[0] // Loglevel INFO
          << " Jy for visibility prediction."
          << LogIO::POST;
+      writeHistory(os);
     }
   }
   else{
     os << LogIO::NORMAL                                  // Loglevel INFO
  << "Using the model image's original unscaled flux density for visibility prediction."
        << LogIO::POST;
+    writeHistory(os);
     if(imshape(3) > 1 && modimage.shape()(freqAxis) != 1)
       sjy_regridCubeChans(tmodimage, modimage, freqAxis);
     else
       tmodimage->copyData( (LatticeExpr<Float>)(modimage) );
   }
             
-  if(selspw == 0)
+  if(selspw == 0){
     os << LogIO::NORMAL // Loglevel INFO
        << "The model image's reference pixel is " << sep 
        << " arcsec from " << fieldName << "'s phase center."
        << LogIO::POST;
+    writeHistory(os);
+  }
 
   return tmodimage;
 }
@@ -6737,6 +6907,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
       //viewer_p->unload(mask_id_p);
       //Setting clean_panel_p to 0 seems to do the trick...the above stuff 
       // like done causes a crash after a call again...have to understand that
+      viewer_p->unload(image_id_p);
+      viewer_p->unload(mask_id_p);
       viewer_p->close(clean_panel_p);
       clean_panel_p=0;
       image_id_p=0;
@@ -6803,6 +6975,7 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	  Bool forceReload=True;
 	  Int nloop=0;
 	  if(npercycle != 0)
+
 	    nloop=niter/npercycle;
 	  Int continter=0;
 	  Int elniter=npercycle;
@@ -6819,7 +6992,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
+	    uInt nmods = aresidual.nelements()/ntaylor_p;
+	    for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
 		PagedImage<Float> resi(aresidual[nIm]);
@@ -6869,7 +7043,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
+		uInt nmods = aresidual.nelements()/ntaylor_p;
+		for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
 					      
@@ -6926,18 +7101,13 @@ Int Imager::interactivemask(const String& image, const String& mask,
 Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
 		       const Double& freqStep,  const MFrequency::Types& freqframe,
 		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
-			     Vector< Vector<Int> >& nchan){
+			     Vector< Vector<Int> >& nchan, const String& ms, const Int field_id){
 
   LogIO os(LogOrigin("imager", "adviseChanSelex"));
   spw.resize();
   start.resize();
   nchan.resize();
   try {
-    if(numMS_p < 1 || !rvi_p){
-      os << LogIO::SEVERE << "Data selection incomplete" 
-       << LogIO::POST;
-      return False;
-    }
     Block<Vector<Int> > bnchan;
     Block<Vector<Int> > bstart;
     Block<Vector<Int> > bspw;
@@ -6948,7 +7118,24 @@ Bool Imager::adviseChanSelex(const Double& freqStart, const Double& freqEnd,
       fS=freqEnd;
       fE=freqStart;
     }
-    rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
+    if(ms==String("")){
+      if(numMS_p < 1 || !rvi_p){
+	os << LogIO::SEVERE << "Data selection incomplete" 
+	   << LogIO::POST;
+	return False;
+      }
+      
+      rvi_p->getSpwInFreqRange(bspw, bstart, bnchan, fS, fE, fabs(freqStep), freqframe);
+    }
+    else{
+      bnchan.resize(1);
+      bstart.resize(1);
+      bspw.resize(1);
+      MeasurementSet elms(String(ms), TableLock(TableLock::AutoNoReadLocking), Table::Old);
+      MSUtil::getSpwInFreqRange(bspw[0], bstart[0], bnchan[0], elms, fS, fE, fabs(freqStep), freqframe, field_id);
+      elms.relinquishAutoLocks(True);
+
+    }
     spw=Vector<Vector<Int> >(bspw, bspw.nelements());
     start=Vector<Vector<Int> >(bstart, bstart.nelements());
     nchan=Vector<Vector<Int> >(bnchan, bnchan.nelements());

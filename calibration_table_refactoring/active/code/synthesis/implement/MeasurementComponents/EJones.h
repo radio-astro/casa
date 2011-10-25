@@ -67,6 +67,9 @@ public:
   // Guess (throws error because we don't yet solve for this)
   virtual void guessPar(VisBuffer& vb);
 
+  // Local implementation of spwOK()
+  virtual Vector<Bool> spwOK() { return spwOK_; };
+
 protected:
 
   // EGainCurve has eight Float pars per ant (4 per pol)
@@ -98,7 +101,13 @@ private:
   // The spw ref frequencies (for selecting gain curves)
   Vector<Double> spwfreqs_;
 
+  // Zenith angles
   Vector<Double> za_;
+
+  // Local spwOK_
+  Vector<Bool> spwOK_;
+
+
   
 };
 

@@ -31,6 +31,7 @@
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableParse.h>
 
+#include <casa/System/AipsrcValue.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayLogical.h>
 //#include <casa/Arrays/ArrayMath.h>
@@ -54,6 +55,13 @@
 #include <casa/Utilities/Assert.h>
 
 #include <tables/Tables/SetupNewTab.h>
+#include <vector>
+using std::vector;
+#include <msvis/MSVis/UtilJ.h>
+
+using namespace casa::utilj;
+
+using namespace casa::vpf;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -232,6 +240,7 @@ void Calibrater::selectvis(const String& time,
 			   const String& scan,
 			   const String& field,
 			   const String& intent,
+			   const String& obsIDs,
 			   const String& baseline,
 			   const String& uvrange,
 			   const String& chanmode,
@@ -249,6 +258,7 @@ void Calibrater::selectvis(const String& time,
 //    scan
 //    field
 //    intent
+//    obsIDs
 //    baseline
 //    uvrange
 //    chanmode     const String&            Frequency/velocity selection mode
@@ -317,6 +327,8 @@ void Calibrater::selectvis(const String& time,
       logSink() << " Selecting on field: '" << field << "'" << endl;
     if (intent!="")
       logSink() << " Selecting on intent: '" << intent << "'" << endl;
+    if(obsIDs != "")
+      logSink() << " Selecting by observation IDs: '" << obsIDs << "'" << endl;
     if (baseline!="")
       logSink() << " Selecting on antenna/baseline: '" << baseline << "'" << endl;
     if (uvrange!="")
@@ -336,7 +348,7 @@ void Calibrater::selectvis(const String& time,
 			   time,baseline,
 			   field,spw,
 			   uvrange,msSelect,
-			   "",scan,"",intent);
+			   "",scan,"",intent, obsIDs);
 
     // If non-trivial MSSelection invoked and nrow reduced:
     if(nontrivsel && mssel_p->nrow()<ms_p->nrow()) {
@@ -690,7 +702,7 @@ Bool Calibrater::setsolve (const String& type,
   solveparDesc.addField ("solint", TpString);
   solveparDesc.addField ("preavg", TpDouble);
   solveparDesc.addField ("apmode", TpString);
-  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("refant", TpArrayInt);
   solveparDesc.addField ("minblperant", TpInt);
   solveparDesc.addField ("table", TpString);
   solveparDesc.addField ("append", TpBool);
@@ -710,7 +722,7 @@ Bool Calibrater::setsolve (const String& type,
   String upmode=apmode;
   upmode.upcase();
   solvepar.define ("apmode", upmode);
-  solvepar.define ("refant", getRefantIdx(refant));
+  solvepar.define ("refant", getRefantIdxList(refant));
   solvepar.define ("minblperant", minblperant);
   solvepar.define ("table", table);
   solvepar.define ("append", append);
@@ -807,7 +819,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solveparDesc.addField ("solnorm", TpBool);
     solveparDesc.addField ("maskcenter", TpInt);
     solveparDesc.addField ("maskedge", TpFloat);
-    solveparDesc.addField ("refant", TpInt);
+    solveparDesc.addField ("refant", TpArrayInt);
 
     //    solveparDesc.addField ("preavg", TpDouble);
     //    solveparDesc.addField ("phaseonly", TpBool);
@@ -825,7 +837,7 @@ Bool Calibrater::setsolvebandpoly(const String& table,
     solvepar.define ("solnorm", solnorm);
     solvepar.define ("maskcenter", maskcenter);
     solvepar.define ("maskedge", maskedge);
-    solvepar.define ("refant", getRefantIdx(refant));
+    solvepar.define ("refant", getRefantIdxList(refant));
 
 
     //    solvepar.define ("t", t);
@@ -894,7 +906,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
   solveparDesc.addField ("apmode", TpString);
   solveparDesc.addField ("splinetime", TpDouble);
   solveparDesc.addField ("preavg", TpDouble);
-  solveparDesc.addField ("refant", TpInt);
+  solveparDesc.addField ("refant", TpArrayInt);
   solveparDesc.addField ("numpoint", TpInt);
   solveparDesc.addField ("phasewrap", TpDouble);
   
@@ -907,7 +919,7 @@ Bool Calibrater::setsolvegainspline(const String& table,
   solvepar.define ("apmode", upMode);
   solvepar.define ("splinetime",splinetime);
   solvepar.define ("preavg", preavg);
-  solvepar.define ("refant", getRefantIdx(refant));
+  solvepar.define ("refant", getRefantIdxList(refant));
   solvepar.define ("numpoint",numpoint);
   solvepar.define ("phasewrap",phasewrap);
   
@@ -1109,6 +1121,14 @@ Bool Calibrater::correct() {
   
   logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
   
+  Bool useVpf;
+  AipsrcValue<Bool>::find (useVpf, "Calibrater.useVpf", False);
+
+  if (useVpf){
+      logSink() << "Using VPF for correction" << LogIO::POST;
+      return correctUsingVpf ();
+  }
+
   Bool retval = true;
 
   try {
@@ -1164,6 +1184,19 @@ Bool Calibrater::correct() {
 	  if (calwt) vb.resetWeightMat();
 	  
 	  ve_p->correct(vb);    // throws exception if nothing to apply
+
+//Cube<Complex> & cube = vb.visCube();
+//Int d1, d2, d3;
+//cube.shape (d1, d2, d3);
+//cout << "CorrectedVisCube [" << d1 << "," << d2 << "," << d3 << "] {no-vpf}" << endl;
+//for (int i = 0; i < min(d1, 10); i++){
+//    for (int j = 0; j < min (d2, 10); j++){
+//        for (int k = 0; k < min (d3, 10); k++){
+//            cout << "[" << i << "," << j << "," << k << "] = " << cube(i,j,k) << endl;
+//        }
+//    }
+//}
+
 	  vi.setVis(vb.visCube(),whichOutCol);
 	  vi.setFlag(vb.flag());
 	  
@@ -1192,6 +1225,69 @@ Bool Calibrater::correct() {
   } 
   return retval;
 }
+
+//Bool
+//Calibrater::correctUsingVpf ()
+//{
+//    Bool result = False;
+//
+//    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
+//
+//    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
+//
+//    VpEngine vpEngine;
+//
+//    try{
+//
+//        vpEngine.process (* correctorVp, * vi);
+//        result = True;
+//    }
+//    catch (AipsError & e){
+//
+//        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
+//                   << LogIO::NORMAL;
+//
+//    }
+//
+//    return result;
+//
+//}
+
+Bool
+Calibrater::correctUsingVpf ()
+{
+    Bool result = False;
+
+    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
+    auto_ptr<WriterVp> writerVp ( new WriterVp ("CorrectionWriter"));
+    auto_ptr<VpContainer> vpContainer (new VpContainer ("CalibraterContainer"));
+
+    vpContainer->add (correctorVp.get());
+    vpContainer->add (writerVp.get());
+
+    vpContainer->connect (correctorVp->getOutputRef ("Out"), writerVp->getInputRef ("In"));
+    vpContainer->connect (vpContainer->getInputRef ("In"), correctorVp->getInputRef ("In"));
+
+    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
+
+    VpEngine vpEngine;
+
+    try{
+
+        vpEngine.process (* vpContainer, * vi);
+        result = True;
+    }
+    catch (AipsError & e){
+
+        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
+                   << LogIO::NORMAL;
+
+    }
+
+    return result;
+
+}
+
 
 Bool Calibrater::corrupt() {
   
@@ -1290,7 +1386,9 @@ Bool Calibrater::summarize_uncalspws(const Vector<Bool>& uncalspw,
 	logSink() << i << ", ";
       }
     }
-    logSink() << "\n  are not calibrated and could not be " << origin << "ed!"
+    logSink() << "\n  could not be " << origin << "ed due to missing (pre-)calibration\n"
+	      << "    in one or more of the specified tables.\n"
+	      << "    Please check your results carefully!"
 	      << LogIO::POST;
   }
   return !hadprob;
@@ -1398,6 +1496,10 @@ Bool Calibrater::genericGatherAndSolve() {
   
   Vector<Int> slotidx(vs_p->numberSpw(),-1);
 
+  // We will remember which spws couldn't be processed
+  Vector<Bool> unsolspw(vi.numberSpw());	
+  unsolspw.set(False);		       
+
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
@@ -1411,46 +1513,42 @@ Bool Calibrater::genericGatherAndSolve() {
       // Current _chunk_'s spw
       Int spw(vi.spectralWindow());
     
-      // Abort if we encounter a spw for which a priori cal not available
-      if (!ve_p->spwOK(spw)) 
-	throw(AipsError("Pre-applied calibration not available for at least 1 spw. Check spw selection carefully."));
+      // Only accumulate for solve if we can pre-calibrate
+      if (ve_p->spwOK(spw)) {
 
-      // Collapse each timestamp in this chunk according to VisEq
-      //  with calibration and averaging
-      for (vi.origin(); vi.more(); vi++) {
-	
-	// Force read of the field Id
-	vb.fieldId();
-
-	// Apply the channel mask (~no-op, if unnecessary)
-	svc_p->applyChanMask(vb);
-
-
-	// This forces the data/model/wt I/O, and applies
-	//   any prior calibrations
-	ve_p->collapse(vb);
-	
-	// If permitted/required by solvable component, normalize
-	if (svc_p->normalizable()) 
-	  vb.normalize();
-
-	// If this solve not freqdep, and channels not averaged yet, do so
-	if (!svc_p->freqDepMat() && vb.nChannel()>1)
-	  vb.freqAveCubes();
-	
-
-
-
-
-
-
-
-	// Accumulate collapsed vb in a time average
-	//  (only if the vb contains any unflagged data)
-	if (nfalse(vb.flag())>0)
+	// Collapse each timestamp in this chunk according to VisEq
+	//  with calibration and averaging
+	for (vi.origin(); vi.more(); vi++) {
+	  
+	  // Force read of the field Id
+	  vb.fieldId();
+	  
+	  // Apply the channel mask (~no-op, if unnecessary)
+	  svc_p->applyChanMask(vb);
+	  
+	  // This forces the data/model/wt I/O, and applies
+	  //   any prior calibrations
+	  ve_p->collapse(vb);
+	  
+	  // If permitted/required by solvable component, normalize
+	  if (svc_p->normalizable()) 
+	    vb.normalize();
+	  
+	  // If this solve not freqdep, and channels not averaged yet, do so
+	  if (!svc_p->freqDepMat() && vb.nChannel()>1)
+	    vb.freqAveCubes();
+	  
+	  // Accumulate collapsed vb in a time average
+	  //  (only if the vb contains any unflagged data)
+	  if (nfalse(vb.flag())>0)
 	  vbga.accumulate(vb);
-
+	  
+	}
       }
+      else
+	// This spw not accumulated for solve
+	unsolspw(spw)=True;
+
       // Advance the VisIter, if possible
       if (vi.moreChunks()) vi.nextChunk();
 
@@ -1464,9 +1562,7 @@ Bool Calibrater::genericGatherAndSolve() {
     //  (this sets currSpw() in the SVC)
     Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
 
-
     if (vbOk) {
-
 
       // Use spw of first VB in vbga
       // TBD: (currSpw==thisSpw) here??  (I.e., use svc_p->currSpw()?  currSpw is prot!)
@@ -1545,6 +1641,8 @@ Bool Calibrater::genericGatherAndSolve() {
 	    << svc_p->typeName() << " solutions in "
 	    << nGood << " slots."
 	    << LogIO::POST;
+
+  summarize_uncalspws(unsolspw, "solv");
   
   // Store whole of result in a caltable
   if (nGood==0) {
@@ -2090,7 +2188,7 @@ void Calibrater::fluxscale(const String& infile,
 
       // Make fluxscale calculation
       Vector<String> fldnames(ROMSFieldColumns(ms_p->field()).name().getColumn());
-      fsvj_->fluxscale(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
+      fsvj_->fluxscale2(refField,tranField,refSpwMap,fldnames,fluxScaleFactor);
      
       // If no outfile specified, use infile (overwrite!)
       String out(outfile);
@@ -2982,18 +3080,32 @@ void Calibrater::selectChannel(const String& mode,
   
 }
 
+// Parse refant specification
+Vector<Int> Calibrater::getRefantIdxList(const String& refant) {
 
-// Interpret refant *index*
-Int Calibrater::getRefantIdx(const String& refant) {
-  Int irefant(-1);
-  if (refant.length()!=0) {
+  Vector<Int> irefant;
+  if (refant.length()==0) {
+    // Nothing specified, return -1 in single-element vector
+    irefant.resize(1);
+    irefant(0)=-1;
+  }
+  else {
+    // parse the specification
     MSSelection msselect;
     msselect.setAntennaExpr(refant);
-    Vector<Int> ant1list=msselect.getAntenna1List(mssel_p);
-    irefant= max(ant1list);  // is this right?
+    Vector<Int> iref=msselect.getAntenna1List(mssel_p);
+    if (anyLT(iref,0))
+      cout << "Negated selection (via '!') not yet implemented for refant," << endl << " and will be ignored." << endl;
+    irefant=iref(iref>-1).getCompressedArray();
+    if (irefant.nelements()==0) {
+      irefant.resize(1);
+      irefant(0)=-1;
+    }
   }
+
   return irefant;
 }
+
 
 // Interpret refant *index*
 Vector<Int> Calibrater::getAntIdx(const String& antenna) {
@@ -3082,5 +3194,153 @@ void Calibrater::writeHistory(LogIO& os, Bool cliCommand)
     os << LogIO::SEVERE << "calibrater is not yet initialized" << LogIO::POST;
   }
 }
+
+CorrectorVp *
+Calibrater::getCorrectorVp ()
+{
+    return new CorrectorVp (this);
+}
+
+const String CorrectorVp::In = "In";
+const String CorrectorVp::Out = "Out";
+
+
+CorrectorVp::CorrectorVp (Calibrater * calibrater, const String & name)
+: VisibilityProcessor (name, vector<String> (1, In), vector<String> (1, Out)),
+  calibrater_p (calibrater)
+{}
+
+
+void
+CorrectorVp::chunkStartImpl (const vpf::SubchunkIndex &)
+{
+}
+
+vpf::VisibilityProcessor::ProcessingResult
+CorrectorVp::doProcessingImpl (ProcessingType processingType,
+                               VpData & inputData,
+                               const SubchunkIndex & /*subchunkIndex*/)
+{
+    VpPort inputPort = getInputs () [0];
+    VbPtr inputVbPtr = inputData [inputPort];
+
+    ProcessingResult result;
+
+    if (processingType == EndOfData){
+        calibrater_p->vs_p->flush(); // flush to disk
+    }
+    else if (processingType != Subchunk){
+        // do nothing
+    }
+    else if (!calibrater_p->ve_p->spwOK (inputVbPtr->spectralWindow())){
+        uncalibratedSpectralWindows_p [inputVbPtr->spectralWindow()] = True;
+    }
+    else {
+
+        // If the VB's spectral window can be calibrated, then do so.
+
+        if (calculateWeights_p){
+            inputVbPtr->resetWeightMat();
+        }
+
+        calibrater_p->ve_p->correct(* inputVbPtr);    // throws exception if nothing to apply
+
+        // Mark the modified columns in the VB as dirty.  The "correct" method makes its
+        // modifications on the observed component of the data.
+
+        if (whichOutputColumn_p == VisibilityIterator::Corrected){
+
+            // Mark the corrected cube as modified and copy the results from the
+            // observed cube to the corrected cube component of the VB.
+
+            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::CorrectedCube);
+            inputVbPtr->correctedVisCube() = inputVbPtr->visCube();
+//VisBuffer * vb = inputVbPtr.get();
+//Cube<Complex> & cube = vb->correctedVisCube();
+//Int d1, d2, d3;
+//cube.shape (d1, d2, d3);
+//cout << "CorrectedVisCube [" << d1 << "," << d2 << "," << d3 << "] {vpf}" << endl;
+//for (int i = 0; i < min(d1, 10); i++){
+//    for (int j = 0; j < min (d2, 10); j++){
+//        for (int k = 0; k < min (d3, 10); k++){
+//            cout << "[" << i << "," << j << "," << k << "] = " << cube(i,j,k) << endl;
+//        }
+//    }
+//}
+        }
+        else{
+
+            // The modifications can be left in place.  Mark the observed cube as
+            // dirty.  N.B., this will overwrite the actual data!
+
+            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::ObservedCube);
+        }
+
+        inputVbPtr->dirtyComponentsAdd (VisBufferComponents::Flag);
+
+        // Write out weight col, if it has changed
+
+        if (calculateWeights_p){
+            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
+        }
+
+
+        VpData output;
+        VpPort outputPort = getOutputs () [0];
+
+        output [outputPort] = inputVbPtr;
+
+        result = ProcessingResult (Normal, output);
+    }
+
+    return result;
+}
+
+ROVisibilityIterator *
+CorrectorVp::getVisibilityIterator ()
+{
+    if (!calibrater_p->ok())
+      throw(AipsError("Calibrater not prepared for correct!"));
+
+    // Ensure apply list non-zero and properly sorted
+
+    calibrater_p->ve_p->setapply(calibrater_p->vc_p);
+
+    // Report the types that will be applied
+
+    calibrater_p->applystate();
+
+    // Arrange for iteration over data
+
+    Block<Int> columns;
+    columns.resize(5);
+
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER; // include scan iteration
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    calibrater_p->vs_p->resetVisIter(columns,0.0);
+
+    return & (calibrater_p->vs_p->iter());
+}
+
+void
+CorrectorVp::processingStartImpl ()
+{
+    calculateWeights_p = calibrater_p->calWt();
+    uncalibratedSpectralWindows_p.resize ();
+    uncalibratedSpectralWindows_p.set (False);
+    whichOutputColumn_p = calibrater_p->scrOk_p ? VisibilityIterator::Corrected
+                                                : VisibilityIterator::Observed;
+}
+
+void
+CorrectorVp::validateImpl ()
+{
+    throwIfAnyPortsUnconnected ();
+}
+
 
 } //# NAMESPACE CASA - END

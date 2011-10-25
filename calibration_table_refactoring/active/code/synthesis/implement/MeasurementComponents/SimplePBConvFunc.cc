@@ -220,8 +220,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     //3 times the support size 
     if(!doneMainConv_p){
-      convSize_p=4*(sj_p->support(vb, coords));
-      convSize_p=min(Int(max(nx_p, ny_p)*1.2), convSize_p)*convSampling;
+      //convSize_p=4*(sj_p->support(vb, coords));
+      convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSampling;
     }
     
    
@@ -254,7 +254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       
       Vector<Double> unitVec(2);
-      unitVec=convSize_p/2+1;
+      unitVec=convSize_p/2;
       dc.setReferencePixel(unitVec);
       
       /////now lets make a SF to tamper down the ripple
@@ -291,21 +291,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition pbSlice(4, convSize_p, convSize_p, 1, 1);
       
       // Accumulate terms 
-      Matrix<Complex> screen(convSize_p, convSize_p);
-      screen=1.0;
+      //Matrix<Complex> screen(convSize_p, convSize_p);
+      //screen=1.0;
       // Either the SkyJones
-      twoDPB.putSlice(screen, start);
+      twoDPB.set(Complex(1.0,0.0));
+      //twoDPB.putSlice(screen, start);
       sj_p->apply(twoDPB, twoDPB, vb, 0); 
-      
+ 
       //*****Test
       TempImage<Complex> twoDPB2(pbShape, coords);
       //Old way
       
       {
 	TempImage<Float> screen2(pbShape, coords);
-	Matrix<Float> screenoo(convSize_p, convSize_p);
-	screenoo.set(1.0);
-	screen2.putSlice(screenoo,start);
+	//	Matrix<Float> screenoo(convSize_p, convSize_p);
+	//screenoo.set(1.0);
+	//screen2.putSlice(screenoo,start);
+	screen2.set(1.0);
 	sj_p->applySquare(screen2, screen2, vb, 0);
 	LatticeExpr<Complex> le(screen2);
 	twoDPB2.copyData(le);
@@ -411,17 +413,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       
       //addBeamCoverage(twoDPB);
       
-      if(0){
-	ostringstream os1;
-	os1 << "Screen_" << vb.fieldId() ;
-	PagedImage<Float> thisScreen(pbShape, coords, String(os1));
-	LatticeExpr<Float> le(real(twoDPB));
-	thisScreen.copyData(le);
-	
-
-      }
-
-
+ 
       
       // Now FFT and get the result back
       LatticeFFT::cfft2d(twoDPB);
@@ -446,6 +438,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
       convFunc_p=twoDPB.get(True);
+      
       //convFunc/=max(abs(convFunc));
       Float maxAbsConvFunc=max(amplitude(convFunc_p));
       
@@ -484,8 +477,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	trial=5;
       }
       
-      if(trial < 5) 
-	trial=5;
+      if(trial < 15*convSampling) 
+	trial=15*convSampling;
       
       if(found) {
 	convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;
@@ -501,6 +494,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // steps of convSampling)
       
       Double pbSum=0.0;
+      
       for (Int iy=-convSupport_p;iy<=convSupport_p;iy++) {
 	for (Int ix=-convSupport_p;ix<=convSupport_p;ix++) {
 	  Complex val=convFunc_p(ix*convSampling+convSize_p/2,
@@ -510,6 +504,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
       }
       
+      //pbSum=sum(amplitude(convFunc_p))/Double(convSampling)/Double(convSampling);
 
       if(pbSum>0.0) {
 	convFunc_p*=Complex(1.0/pbSum,0.0);

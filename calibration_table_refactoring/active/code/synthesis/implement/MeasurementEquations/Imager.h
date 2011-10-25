@@ -34,8 +34,8 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <components/ComponentModels/ConstantSpectrum.h>
-
-#include <measures/Measures/MDirection.h>
+#include <components/ComponentModels/FluxStandard.h>
+//#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MRadialVelocity.h>
 
@@ -57,9 +57,9 @@ class VisImagingWeight_p;
 class MSHistoryHandler;
 class PBMath;
 class MeasurementSet;
+class MDirection;
 class MFrequency;
 class File;
-class FluxStandard;
 class VPSkyJones;
 class EPJones;
 class ViewerProxy;
@@ -204,6 +204,7 @@ class Imager
 			     const String& spwstring="",
 			     const String& uvdist="",
                              const String& scan="",
+                             const String& obs="",
                              const Bool useModelCol=False);
 
   // Select some data.
@@ -223,6 +224,7 @@ class Imager
 	       const String& spwstring="",
 	       const String& uvdist="",
                const String& scan="",
+               const String& obs="",
                const Bool usemodelCol=False,
                const Bool be_calm=false);
   
@@ -471,8 +473,9 @@ class Imager
 	     const String& fieldnames, const String& spwstring, 
 	     const Vector<Double>& fluxDensity, const String& standard);
   
-  //Setjy with model image. If chanDep=True then the scaling is calulated on a 
-  //per channel basis for the model image...otherwise the whole spw get the same scaling
+  //Setjy with model image. If chanDep=True then the scaling is calculated on a 
+  //per channel basis for the model image...otherwise the whole spw gets the
+  //same flux density.
   Bool setjy(const Vector<Int>& fieldid, 
 	     const Vector<Int>& spectralwindowid, 
 	     const String& fieldnames, const String& spwstring, 
@@ -480,7 +483,9 @@ class Imager
 	     const Vector<Double>& fluxDensity, const String& standard, 
 	     const Bool chanDep=False, const Double spix=0.0,
              const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
-                                                  MFrequency::LSRK));
+                                                  MFrequency::LSRK),
+             const String& timerange="", const String& scanstr="",
+             const String& obsidstr="");
 
   // Make an empty image
   Bool make(const String& model);
@@ -491,6 +496,12 @@ class Imager
   Bool makemodelfromsd(const String& sdImage, const String& modelimage,
 		       const String& lowPSF,
 		       String& maskImage);
+
+  // Write a component list to disk, starting with prefix, using a setjy
+  // standard, and return the name of the list.
+  String make_comp(const String& objName, const String& standard,
+		   const MEpoch& mtime, const Vector<MFrequency>& freqv,
+		   const String& prefix);
 
   // Clone an image
   static Bool clone(const String& imageName, const String& newImageName);
@@ -546,12 +557,31 @@ class Imager
                    const MEpoch& obsEpoch, const MPosition& obsPosition,
                    const Double& restFreq);
 
+  // Advise the chanselection needed for the frequency range
+  // if the parameter msname is used then the MSs associated associated with
+  // this object (that have been either 'open'ed or 'selectvis'ed) are ignored
+  // In this mode it is a helper function to the general world ...no need to
+  // open or selectvis. You need to specify the field_id for which this calculation is 
+  // being done for in the helper mode. 
+  // If you have already set MS's and selected data and msname="" then 
+  // the calulation is done for the field(s) selected in selectvis.
   Bool adviseChanSelex(const Double& freqStart, const Double& freqEnd, 
 		       const Double& freqStep,  const MFrequency::Types& freqframe,
 		       Vector< Vector<Int> >& spw, Vector< Vector<Int> >& start,
-		       Vector< Vector<Int> >& nchan);
+		       Vector< Vector<Int> >& nchan, const String& msname="", 
+		       const Int fieldid=0);
 
 
+  //These are utility functions when weights from different imager instances 
+  //need to reconciled in parallel gridding by different instances of imagers 
+  //for example.
+  // when type is "imaging"
+  // getweightGrid will get the weight density for uniform style imaging weight
+  // the Block elements are for different fields if independent field weighting 
+  // was done.
+
+  Bool getWeightGrid(Block<Matrix<Float> >&weightgrid, const String& type);
+  Bool setWeightGrid(const Block<Matrix<Float> >& weightgrid, const String& type);
   String dQuantitytoString(const Quantity& dq);
 
 protected:
@@ -681,6 +711,8 @@ protected:
   // have changed. 
   Bool createFTMachine();
 
+  void openSubTable (const Table & otherTable, Table & table, const TableLock & tableLock);
+
   Bool removeTable(const String& tablename);
   Bool updateSkyModel(const Vector<String>& model,
 		      const String complist);
@@ -729,7 +761,8 @@ protected:
   // Returns whether it might have made any visibilities.
   Bool sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                              const Int rawspwid, const Int fldid,
-                             const String& clname);
+                             const String& clname, const String& timerange="",
+                             const String& scanstr="", const String& obsidstr="");
   // Returns whether it found a source.
   Bool sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                        Vector<Vector<Flux<Double> > >& returnFluxes,

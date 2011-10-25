@@ -77,7 +77,8 @@ public:
   inline String&      tInterpType()    { return tInterpType_; };
   inline String&      fInterpType()    { return fInterpType_; };
   inline Vector<Int>& spwMap()         { return spwMap_; };
-  inline Int&         refant()         { return refant_; };
+  inline Int&         refant()         { return refantlist()(0); };
+  inline Vector<Int>& refantlist()     { return urefantlist_; };
   inline Int&         minblperant()    { return minblperant_; };
   inline String&      apmode()         { return apmode_; };
   inline String&      solint()         { return solint_; };
@@ -278,6 +279,11 @@ public:
 			 const Vector<Int>& inRefSpwMap,
 			 const Vector<String>& fldNames,
 			 Matrix<Double>& fluxScaleFactor)=0;
+  virtual void fluxscale2(const Vector<Int>& refFieldIn,
+			  const Vector<Int>& tranFieldIn,
+			  const Vector<Int>& inRefSpwMap,
+			  const Vector<String>& fldNames,
+			  Matrix<Double>& fluxScaleFactor)=0;
 
   // Tell the CalSet to write a CalTable
   virtual void store();
@@ -438,7 +444,7 @@ private:
   Vector<Int> spwMap_;
 
   // Refant
-  Int refant_;
+  Vector<Int> urefantlist_;
 
   // Min baselines per ant for solve
   Int minblperant_;
@@ -546,6 +552,11 @@ public:
 
   // Scale solutions
   virtual void fluxscale(const Vector<Int>& ,
+			 const Vector<Int>& ,
+			 const Vector<Int>& ,
+			 const Vector<String>& ,
+			 Matrix<Double>& ) { throw(AipsError("NYI")); };
+  virtual void fluxscale2(const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<Int>& ,
 			 const Vector<String>& ,
@@ -680,6 +691,11 @@ public:
 		 const Vector<Int>& inRefSpwMap,
 		 const Vector<String>& fldNames,
 		 Matrix<Double>& fluxScaleFactor);
+  void fluxscale2(const Vector<Int>& refFieldIn,
+		  const Vector<Int>& tranFieldIn,
+		  const Vector<Int>& inRefSpwMap,
+		  const Vector<String>& fldNames,
+		  Matrix<Double>& fluxScaleFactor);
 			     
   // Report state:
   inline virtual void state() { stateSVJ(True); };
