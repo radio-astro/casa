@@ -69,7 +69,7 @@ class cvel_test(unittest.TestCase):
         if(not os.path.exists(vis_e)):
             os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/cvel/input/evla-highres-sample-thinned.ms .') # 74 MB
         if(not os.path.exists(vis_f)):
-            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub2/test_uvcontsub2.ms .') # 39 MB
+            os.system('cp -R '+os.environ['CASAPATH'].split()[0]+'/data/regression/unittest/uvcontsub/test_uvcontsub2.ms .') # 39 MB
 
 
     def tearDown(self):
