@@ -1249,13 +1249,16 @@ image* image::transpose(
 	}
 }
 
-::casac::record* image::fitcomponents(const string& box, const variant& region,
-		const variant& chans, const string& stokes, const variant& vmask,
+::casac::record* image::fitcomponents(
+		const string& box, const variant& region, const variant& chans,
+		const string& stokes, const variant& vmask,
 		const vector<double>& in_includepix,
 		const vector<double>& in_excludepix, const string& residual,
-		const string& model, const string& estimates, const string& logfile,
-		const bool append, const string& newestimates, const string& complist,
-		const bool overwrite, const int chan) {
+		const string& model, const string& estimates,
+		const string& logfile, const bool append,
+		const string& newestimates, const string& complist,
+		const bool overwrite
+) {
 	if (detached()) {
 		return 0;
 	}
@@ -1272,12 +1275,11 @@ image* image::transpose(
 		excludepix.resize();
 	}
 	::casac::record *rstat = 0;
-	*_log << LogOrigin("image", "fitcomponent");
+	*_log << LogOrigin("image", __FUNCTION__);
 	String mask = vmask.toString();
 	if (mask == "[]") {
 		mask = "";
 	}
-	//    cout << "chans " << chans.typeString() << endl;
 	try {
 		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = _image->getImage();
@@ -1297,15 +1299,6 @@ image* image::transpose(
 			*_log
 					<< "Unsupported type for chans. chans must be either an integer or a string"
 					<< LogIO::EXCEPTION;
-		}
-
-		if (chan >= 0) {
-			*_log << LogIO::WARN
-					<< "THE chan PARAMETER HAS BEEN DEPRECATED. PLEASE USE chans INSTEAD."
-					<< LogIO::POST;
-			if (sChans.empty()) {
-				sChans = String::toString(chan);
-			}
 		}
 		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
 			String regionString = (region.size() == 0) ? "" : region.toString();
@@ -1340,10 +1333,11 @@ image* image::transpose(
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
 		rstat = fromRecord(returnRecord);
-	} catch (AipsError x) {
+	}
+	catch (AipsError x) {
 		FluxRep<Double>::clearAllowedUnits();
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;

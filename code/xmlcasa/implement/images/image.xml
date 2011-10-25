@@ -4219,12 +4219,6 @@ tool attached to the residual (continuum subtracted) image.
             <description>Overwrite component list if it already exists. Default is False.</description>
             <value>false</value>
         </param>
-        
-        <param type="int" direction="in" name="chan">
-            <description>DEPRECATED. USE chans INPUT INSTEAD.</description>
-            <value>-1</value>
-        </param>
-    
     </input>
     <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
     <description>
@@ -4384,9 +4378,6 @@ ia.fitcomponents(region=region, chans=chans, excludepix=excludepix, estimates=es
 </description>
 
 </method>
-
-
-
  
 <method type="function" name="fromrecord">
    <shortdescription>Generate an image from a record</shortdescription>
@@ -6967,7 +6958,7 @@ ia.close()
 
 
 <method type="function" name="reorder">
-    <shortdescription>Transpose the image.</shortdescription>
+    <shortdescription>THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD. Transpose the image.</shortdescription>
     <input>
         <param type="string" direction="in" name="outfile">
             <description>Output image file name.  Default is unset.</description>
