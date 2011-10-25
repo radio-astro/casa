@@ -29,6 +29,7 @@
 #define IMAGES_IMAGECOLLAPSER_H
 
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
+#include <images/Images/SubImage.h>
 
 #include <casa/namespace.h>
 
@@ -144,6 +145,17 @@ private:
 	//std::vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
 
 	void _finishConstruction();
+
+	// necessary to improve performance
+	void _doMedian(
+		const SubImage<Float>& subImage,
+		const std::auto_ptr<ImageInterface<Float> >& outImage
+	) const;
+
+	void _attachOutputMask(
+		const std::auto_ptr<ImageInterface<Float> >& outImage,
+		const Array<Bool>& outMask
+	) const;
 
 };
 }

@@ -40,7 +40,6 @@ namespace casa {
 
 map<uInt, String> *ImageCollapser::_funcNameMap = 0;
 map<uInt, String> *ImageCollapser::_minMatchMap = 0;
-//map<uInt, Float (*)(const Array<Float>&)> *ImageCollapser::_funcMap = 0;
 
 const String ImageCollapser::_class = "ImageCollapser";
 
@@ -139,10 +138,12 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			new PagedImage<Float>(outShape, outCoords, _getOutname())
 		);
 	}
-	Bool isPaged = ! _getOutname().empty();
 	if (_aggType == ZERO) {
 		Array<Float> zeros(outShape, 0.0);
 		outImage->put(zeros);
+	}
+	else if (_aggType == MEDIAN) {
+		_doMedian(subImage, outImage);
 	}
 	else {
 		LatticeStatsBase::StatisticsTypes lattStatType;
@@ -152,9 +153,6 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 			break;
 		case MEAN:
 			lattStatType = LatticeStatsBase::MEAN;
-			break;
-		case MEDIAN:
-			lattStatType = LatticeStatsBase::MEDIAN;
 			break;
 		case MIN:
 			lattStatType = LatticeStatsBase::MIN;
@@ -171,6 +169,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		case VARIANCE:
 			lattStatType = LatticeStatsBase::VARIANCE;
 			break;
+		case MEDIAN:
 		case ZERO:
 		case UNKNOWN:
 		default:
@@ -181,7 +180,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		Array<Bool> mask;
 		IPosition x;
 		LatticeUtilities::collapse(
-			data, mask, _axes, subImage ,False,
+			data, mask, _axes, subImage, False,
 			True, True, lattStatType
 		);
 		Array<Float> dataCopy = (_axes.size() <= 1) ? data : data.addDegenerate(_axes.size() - 1);
@@ -217,26 +216,14 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		if (needsMask) {
 			Array<Bool> maskCopy = (
 				_axes.size() <= 1)
-					? mask
-					: mask.addDegenerate(_axes.size() - 1
+				? mask
+				: mask.addDegenerate(_axes.size() - 1
 			);
 			Array<Bool> mCopy = reorderArray(maskCopy, newOrder);
-			if (isPaged) {
-				String maskName = outImage->makeUniqueRegionName(
-					String("mask"), 0
-				);
-				outImage->makeMask(maskName, True, True, False);
-				(&outImage->pixelMask())->put(mCopy);
-			}
-			else {
-				dynamic_cast<TempImage<Float> *>(
-					outImage.get()
-				)->attachMask(ArrayLattice<Bool>(mCopy));
-			}
+			_attachOutputMask(outImage, mCopy);
 		}
 	}
 	ImageUtilities::copyMiscellaneous(*outImage, subImage);
-
 	if (! _getOutname().empty()) {
 		outImage->flush();
 	}
@@ -333,5 +320,95 @@ void ImageCollapser::_invert() {
 		_axes = x;
 	}
 }
+
+void ImageCollapser::_doMedian(
+	const SubImage<Float>& subImage, const std::auto_ptr<ImageInterface<Float> >& outImage
+) const {
+	IPosition cursorShape(subImage.ndim(), 1);
+	for (uInt i=0; i<cursorShape.size(); i++) {
+		for (uInt j=0; j<_axes.size(); j++) {
+			if (_axes[j] == i) {
+				cursorShape[i] = subImage.shape()[i];
+				break;
+			}
+		}
+	}
+	LatticeStepper stepper(subImage.shape(), cursorShape);
+	Array<Float> ary = subImage.get(False);
+	Array<Bool> mask = subImage.getMask();
+	if (subImage.hasPixelMask()) {
+		mask = mask && subImage.pixelMask().get(False);
+	}
+	std::auto_ptr<Array<Bool> > outMask(0);
+	Bool hasMaskedPixels = ! allTrue(mask);
+	for (stepper.reset(); !stepper.atEnd(); stepper++) {
+		Slicer slicer(stepper.position(), stepper.endPosition(), Slicer::endIsLast);
+		Vector<Float> kk(ary(slicer));
+		if (hasMaskedPixels) {
+			Vector<Bool> maskSlice(mask(slicer));
+			if (! anyTrue(maskSlice)) {
+				if (outMask.get() == 0) {
+					outMask.reset(new Array<Bool>(outImage->shape(), True));
+				}
+				(*outMask)(stepper.position()) = False;
+				kk.resize(0);
+			}
+			else if (! allTrue(maskSlice)) {
+				vector<Float> data;
+				kk.tovector(data);
+				vector<Float>::iterator diter = data.begin();
+				Vector<Bool>::iterator miter = maskSlice.begin();
+				while (diter != data.end()) {
+					if (! *miter) {
+						data.erase(diter);
+						if (diter == data.end()) {
+							break;
+						}
+					}
+					else {
+						diter++;
+					}
+					miter++;
+				}
+				kk.resize(data.size());
+				kk = Vector<Float>(data);
+			}
+		}
+		GenSort<Float>::sort(kk);
+		uInt s = kk.size();
+
+		outImage->putAt(
+			s == 0
+				? 0
+				: s % 2 == 1
+				  ? kk[s/2]
+				  : (kk[s/2] + kk[s/2 - 1])/2,
+			stepper.position()
+		);
+	}
+	if (outMask.get() != 0) {
+		_attachOutputMask(outImage, *outMask.get());
+	}
 }
+
+void ImageCollapser::_attachOutputMask(
+	const std::auto_ptr<ImageInterface<Float> >& outImage,
+	const Array<Bool>& outMask
+) const {
+	if (_getOutname().empty()) {
+		dynamic_cast<TempImage<Float> *>(
+			outImage.get()
+		)->attachMask(ArrayLattice<Bool>(outMask));
+	}
+	else {
+		String maskName = outImage->makeUniqueRegionName(
+			String("mask"), 0
+		);
+		outImage->makeMask(maskName, True, True, True, True);
+		(&outImage->pixelMask())->put(outMask);
+	}
+}
+
+}
+
 
