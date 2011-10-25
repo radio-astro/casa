@@ -212,7 +212,8 @@ def plotfield(fld, uvplotinfo, debug=False):
 
     if fldquery:
         fldquery += ' and '
-    pl.clf()
+    pl.ion()                 # Magic incantation to make the plot
+    pl.clf()                 # window appear (and clear it).
     pl.ioff()
     for d in ddids:
         #print "minmax[%d] = %s" % (d, minmax[d])
@@ -300,6 +301,7 @@ def plotfield(fld, uvplotinfo, debug=False):
         pl.title(fldtitle)                
     if uvplotinfo.figfile:
         pl.savefig(uvplotinfo.figfile + str(fld) + uvplotinfo.ext)
+    pl.draw()
     pl.ion()
     return True
 
