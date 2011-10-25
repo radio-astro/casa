@@ -556,14 +556,16 @@ bool imager::make(const std::string& image, const bool async)
     return rstat;
 }
 
-std::string imager::makecomp(const std::string& objname, const std::string& standard,
-			     const ::casac::variant& time, const std::vector<double>& freqs,
-			     const std::string& pfx)
+std::string imager::predictcomp(const std::string& objname,
+                                const std::string& standard,
+                                const ::casac::variant& time,
+                                const std::vector<double>& freqs,
+                                const std::string& pfx)
 {
   std::string rstat("");
   try{
-    *itsLog << LogOrigin("im", "makecomp");
-    *itsLog << LogIO::DEBUG1 << "starting imager::makecomp" << LogIO::POST;
+    *itsLog << LogOrigin("im", "predictcomp");
+    *itsLog << LogIO::DEBUG1 << "starting imager::predictcomp" << LogIO::POST;
     MEpoch epoch;
     if(!casaMEpoch(time, epoch)){
       *itsLog << LogIO::SEVERE
@@ -583,7 +585,8 @@ std::string imager::makecomp(const std::string& objname, const std::string& stan
 				 freqv, String(pfx));
   }
   catch(AipsError x){
-    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
     RETHROW(x);
   }
   return rstat;

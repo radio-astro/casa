@@ -5,7 +5,7 @@
       xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="makecomp" category="modeling, calibration">
+<task type="function" name="predictcomp" category="modeling, calibration">
 	<shortdescription>Make a component list for a known calibrator</shortdescription>
 	<description>
 	  Writes a component list named clist to disk and returns a dict of
@@ -14,7 +14,7 @@
 	   'standard': standard,
 	   'epoch': epoch,
 	   'freqs': pl.array of frequencies, in GHz,
-	   'uvrange': pl.array of baseline lengths, in m,
+	   'antennalist': a simdata type configuration file,
 	   'amps':  pl.array of predicted visibility amplitudes, in Jy,
 	   'savedfig': False or, if made, the filename of a plot.}
 	  or False on error.
@@ -60,25 +60,24 @@
 	    <description>Prefix for the component list directory name.</description>
 	    <value></value>
 	  </param>
-	  <param type="string" name="uvrange">
-	    <description>Range of baseline lengths</description>
+	  <param type="string" name="antennalist">
+	    <description>Plot for this configuration</description>
 	    <value></value>
 	  </param>
-	  <param type="bool" name="doplot" subparam="True">
+	  <param type="bool" name="showplot" subparam="True">
 	    <description>Plot S vs |u| to the screen?</description>
 	    <value>False</value>
 	  </param>
-	  <param type="any" name="savefig" subparam="true">
-	    <any type="variant" limittypes="bool String"/>
-	    <description>Save a plot of S vs |u|?</description>
-	    <value type="bool">False</value>
+	  <param type="string" name="savefig" subparam="true">
+	    <description>Save a plot of S vs |u| to this filename</description>
+	    <value></value>
 	  </param>
 
 	  <constraints>
-	    <when param="uvrange">
+	    <when param="antennalist">
 	      <notequals value="">
-		<default param="doplot"><value>True</value></default>
-		<default param="savefig"><value type="bool">False</value></default>
+		<default param="showplot"><value>True</value></default>
+		<default param="savefig"><value type="string"></value></default>
 	      </notequals>
 	    </when>
 	  </constraints>
@@ -94,7 +93,7 @@
      'standard': standard,
      'epoch': epoch,
      'freqs': pl.array of frequencies, in GHz,
-     'uvrange': pl.array of baseline lengths, in m,
+     'antennalist': pl.array of baseline lengths, in m,
      'amps':  pl.array of predicted visibility amplitudes, in Jy,
      'savedfig': False or, if made, the filename of a plot.}
     or False on error.
@@ -120,16 +119,19 @@
 	    Example: "Bands3to7_"
                      (which could produce 'Bands3to7_spw0_Uranus_100GHz55877d.cl',
 		      depending on the other parameters)
-    uvrange: The range of baseline lengths to calculate for.
+    antennalist: 'Observe' and plot the visibility amplitudes for this
+                 antenna configuration.  The file should be in a format usable
+                 by simdata.  The search path is:
+                     .:casa['dirs']['data'] + '/alma/simmos/'
              Default: '' (None, just make clist.)
-	     Example: '0~1000klambda'
-    doplot: Whether or not to show a plot of S vs. |u| on screen.
-            Subparameter of uvrange.
-            Default: Necessarily False if uvrange is not specified.
-                     True otherwise.
+	     Example: 'alma.cycle0.extended.cfg'
+    showplot: Whether or not to show a plot of S vs. |u| on screen.
+              Subparameter of antennalist.
+              Default: Necessarily False if antennalist is not specified.
+                       True otherwise.
     savefig: Filename for saving a plot of S vs. |u|.
-             Subparameter of uvrange.
-             Default: False (necessarily if uvrange is not specified)
+             Subparameter of antennalist.
+             Default: False (necessarily if antennalist is not specified)
              Examples: True (save to prefix + '.png')
                        'myplot.png' (save to myplot.png) 
      

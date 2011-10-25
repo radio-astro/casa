@@ -2729,7 +2729,77 @@ class simutil:
         ia.done()
 
 
+    def bandname(self, freq):
+        """
+        Given freq in GHz, return the silly and in some cases deliberately
+        confusing band name that some people insist on using.
+        """
+        # TODO: add a trivia argument to optionally provide the historical
+        #       radar band info from Wikipedia.
+        band = ''
+        if freq > 90:   # Use the ALMA system.
+            band = 'band%.0f' % (0.01 * freq)   # () are mandatory!
+        # Now switch to radar band names.  Above 40 GHz different groups used
+        # different names.  Wikipedia uses ones from Baytron, a now defunct company
+        # that made test equipment.
+        elif freq > 75:    # used as a visual sensor for experimental autonomous vehicles
+            band = 'W' 
+        elif freq > 50:    # Very strongly absorbed by atmospheric O2,
+            band = 'V'     # which resonates at 60 GHz.
+        elif freq >= 40:
+            band = 'Q'
+        elif freq >= 26.5: # mapping, short range, airport surveillance;
+            band = 'Ka'    # frequency just above K band (hence 'a')
+                           # Photo radar operates at 34.300 +/- 0.100 GHz.
+        elif freq >= 18:
+            band = 'K'     # from German kurz, meaning 'short'; limited use due to
+                           # absorption by water vapor, so Ku and Ka were used
+                           # instead for surveillance. Used for detecting clouds
+                           # and at 24.150 +/- 0.100 GHz for speeding motorists.
+        elif freq >= 12:
+            band = 'U'     # or Ku
+        elif freq >= 8:    # Missile guidance, weather, medium-resolution mapping and ground
+            band = 'X'     # surveillance; in the USA the narrow range 10.525 GHz +/- 25 MHz
+                           # is used for airport radar and short range tracking.  Named X
+                           # band because the frequency was a secret during WW2.
+        elif freq >= 4:
+            band = 'C'     # Satellite transponders; a compromise (hence 'C') between X
+                           # and S bands; weather; long range tracking
+        elif freq >= 2:
+            band = 'S'     # Moderate range surveillance, air traffic control,
+                           # long-range weather; 'S' for 'short'
+        elif freq >= 1:
+            band = 'L'     # Long range air traffic control and surveillance; 'L' for 'long'
+        elif freq >= 0.3:
+            band = 'UHF'
+        else:
+            band = 'P'     # for 'previous', applied retrospectively to early radar systems
+                           # Includes HF and VHF.  Worse, it leaves no space for me
+                           # to put in rock band easter eggs.
+        return band
 
+
+    def polsettings(self, telescope, poltype=None, listall=False):
+        """
+        Returns stokes parameters (for use as stokes in sm.setspwindow)
+        and feed type (for use as mode in sm.setfeed).
+
+        If poltype is not specified or recognized, a guess is made using
+        telescope.  Defaults to 'XX YY', 'perfect X Y'
+
+        If listall is True, return the options instead.
+        """
+        psets = {'circular': ('RR LL', 'perfect R L'),
+                 'linear':   ('XX YY', 'perfect X Y'),
+                 'RR':       ('RR',    'perfect R L')}
+        if listall:
+            return psets
+        if poltype not in psets:
+            poltype = 'linear'
+            for circ in ('VLA', 'DRAO'):       # Done this way to
+                if circ in telescope.upper():  # catch EVLA.
+                    poltype = 'circular'
+        return psets[poltype]
 
 #######################################
 # ALMA calcpointings

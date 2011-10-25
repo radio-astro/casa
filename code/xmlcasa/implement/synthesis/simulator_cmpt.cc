@@ -420,7 +420,10 @@ simulator::setconfig(const std::string& telescopename, const std::vector<double>
 			      toVectorString(padname), 
 			      coordsystem, mpos );
     }
-
+    else
+      *itsLog << LogIO::SEVERE
+              << "The sm tool must be opened first."
+              << LogIO::POST;
     
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 

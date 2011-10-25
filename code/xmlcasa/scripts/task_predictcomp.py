@@ -1,10 +1,11 @@
 from taskinit import casalog, cltool, imtool, metool, qa
+from plotcomp import plotcomp
 import pylab as pl
 import os
 
-def makecomp(objname=None, standard=None, epoch=None,
-             minfreq=None, maxfreq=None, nfreqs=None, prefix=None,
-             uvrange=None, doplot=None, savefig=None):
+def predictcomp(objname=None, standard=None, epoch=None,
+                minfreq=None, maxfreq=None, nfreqs=None, prefix=None,
+                antennalist=None, showplot=None, savefig=None):
     """
     Writes a component list named clist to disk and returns a dict of
     {'clist': clist,
@@ -35,21 +36,22 @@ def makecomp(objname=None, standard=None, epoch=None,
     prefix: The component list will be saved to
               prefix + 'spw0_<objname>_<minfreq><epoch>.cl'
             Default: ''
-    uvrange: The range of baseline lengths to calculate for.
-             Default: '' (None, just make clist.)
-    doplot: Whether or not to show a plot of S vs. |u| on screen.
-            Subparameter of uvrange.
-            Default: Necessarily False if uvrange is not specified.
-                     True otherwise.
+    antennalist: An array configuration file as used by simdata.
+                 If given, a plot of S vs. |u| will be made.
+                 Default: '' (None, just make clist.)
+    showplot: Whether or not to show the plot on screen.
+              Subparameter of antennalist.
+              Default: Necessarily False if antennalist is not specified.
+                       True otherwise.
     savefig: Filename for saving a plot of S vs. |u|.
-             Subparameter of uvrange.
-             Default: False (necessarily if uvrange is not specified)
+             Subparameter of antennalist.
+             Default: False (necessarily if antennalist is not specified)
              Examples: True (save to prefix + '.png')
                        'myplot.png' (save to myplot.png) 
     """
     retval = False
     try:
-        casalog.origin('makecomp')
+        casalog.origin('predictcomp')
         minfreqq = qa.quantity(minfreq)
         minfreqHz = qa.convert(minfreqq, 'Hz')['value']
         try:
@@ -82,17 +84,14 @@ def makecomp(objname=None, standard=None, epoch=None,
             ## prefix += "_"
             prefix = ''
 
-        if savefig == True:
-            savefig = prefix + '.png'
-
         # Get clist
         myim = imtool.create()
-        if hasattr(myim, 'makecomp'):
+        if hasattr(myim, 'predictcomp'):
             casalog.post('local im instance created', 'DEBUG1')
         else:
             casalog.post('Error creating a local im instance.', 'SEVERE')
             return False
-        clist = myim.makecomp(objname, standard, mepoch, freqs.tolist(), prefix)
+        clist = myim.predictcomp(objname, standard, mepoch, freqs.tolist(), prefix)
 
         if os.path.isdir(clist):
             # The spw0 is useless here, but it is added by FluxStandard for the sake of setjy.
@@ -103,18 +102,22 @@ def makecomp(objname=None, standard=None, epoch=None,
                       'standard': standard,
                       'epoch': mepoch,
                       'freqs (GHz)': 1.0e-9 * freqs,
-                      'uvrange': uvrange,
-                      'amps':  None,       # TODO
-                      'savedfig': savefig}
+                      'antennalist': antennalist}
             mycl = cltool.create()
             mycl.open(clist)
             comp = mycl.getcomponent(0)
             mycl.close(False)               # False prevents the stupid warning.
             for k in ('shape', 'spectrum'):
                 retval[k] = comp[k]
+            if antennalist:
+                retval['savedfig'] = savefig
+                retval.update(plotcomp(retval, showplot, wantdict=True))
+            else:
+                retval['savedfig'] = None
         else:
             casalog.post("There was an error in making the component list.",
                          'SEVERE')
+
     except Exception, instance:
         casalog.post(instance, 'SEVERE')
     return retval

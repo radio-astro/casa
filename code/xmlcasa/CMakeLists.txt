@@ -189,6 +189,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/parallel_go.py
   scripts/parameter_check.py
   scripts/parameter_dictionary.py
+  scripts/plotcomp.py
   scripts/pointcal.py
   scripts/qtcasapy.py
   scripts/regression.py
@@ -265,7 +266,6 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_listsdm.py
   scripts/task_listvis.py
   scripts/taskmanager.py
-  scripts/task_makecomp.py
   scripts/task_mosaic.py
   scripts/task_peel.py
   scripts/task_plotants.py
@@ -275,6 +275,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_plotxy.py
   scripts/task_partition.py
   scripts/task_polcal.py
+  scripts/task_predictcomp.py
   scripts/task_rmtables.py
   scripts/task_sdaverage.py
   scripts/task_sdbaseline.py
@@ -387,7 +388,6 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/listobs.xml
   tasks/listsdm.xml
   tasks/listvis.xml
-  tasks/makecomp.xml
   tasks/mosaic.xml
   tasks/peel.xml
   tasks/plotants.xml
@@ -397,6 +397,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/plotxy.xml
   tasks/partition.xml
   tasks/polcal.xml
+  tasks/predictcomp.xml
   tasks/rmtables.xml
   tasks/sdaverage.xml
   tasks/sdbaseline.xml
