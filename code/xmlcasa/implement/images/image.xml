@@ -5807,6 +5807,11 @@ ia.close()
      <value>true</value>
      </param>
   
+    <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? </description>
+         <value>false</value>
+     </param>
+  
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>

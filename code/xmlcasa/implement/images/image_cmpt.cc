@@ -1867,7 +1867,8 @@ image::maxfit(const ::casac::record& region, const bool doPoint,
 }
 
 ::casac::image *
-image::moments(const std::vector<int>& moments, const int axis,
+image::moments(
+		const std::vector<int>& moments, const int axis,
 		const ::casac::record& region, const ::casac::variant& vmask,
 		const std::vector<std::string>& in_method,
 		const std::vector<int>& smoothaxes,
@@ -1878,31 +1879,37 @@ image::moments(const std::vector<int>& moments, const int axis,
 		const double stddev, const std::string& velocityType,
 		const std::string& out, const std::string& smoothout,
 		const std::string& pgdevice, const int nx, const int ny,
-		const bool yind, const bool overwrite, const bool removeAxis, const bool /* async */) {
-	::casac::image *rstat = 0;
+		const bool yind, const bool overwrite, const bool removeAxis,
+		const bool stretch, const bool /* async */
+) {
 	try {
-		*_log << LogOrigin("image", "moments");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
 
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Vector<Int> whichmoments(moments);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 		Vector<String> method = toVectorString(in_method);
 
 		Vector<String> kernels;
 		if (smoothtypes.type() == ::casac::variant::BOOLVEC) {
 			kernels.resize(0); // unset
-		} else if (smoothtypes.type() == ::casac::variant::STRING) {
+		}
+		else if (smoothtypes.type() == ::casac::variant::STRING) {
 			sepCommaEmptyToVectorStrings(kernels, smoothtypes.toString());
-		} else if (smoothtypes.type() == ::casac::variant::STRINGVEC) {
+		}
+		else if (smoothtypes.type() == ::casac::variant::STRINGVEC) {
 			kernels = toVectorString(smoothtypes.toStringVec());
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN << "Unrecognized smoothtypes datatype"
-					<< LogIO::POST;
+				<< LogIO::POST;
 		}
 		int num = kernels.size();
 
@@ -1911,7 +1918,6 @@ image::moments(const std::vector<int>& moments, const int axis,
 		for (int i = 0; i < num; i++) {
 			kernelwidths[i] = casa::Quantity(smoothwidths[i], u);
 		}
-		//
 		Vector<Float> includepix;
 		num = d_includepix.size();
 		if (!(num == 1 && d_includepix[0] == -1)) {
@@ -1919,7 +1925,6 @@ image::moments(const std::vector<int>& moments, const int axis,
 			for (int i = 0; i < num; i++)
 				includepix[i] = d_includepix[i];
 		}
-		//
 		Vector<Float> excludepix;
 		num = d_excludepix.size();
 		if (!(num == 1 && d_excludepix[0] == -1)) {
@@ -1928,21 +1933,23 @@ image::moments(const std::vector<int>& moments, const int axis,
 				excludepix[i] = d_excludepix[i];
 		}
 
-		ImageInterface<Float>* outIm = _image->moments(whichmoments, axis,
+		std::auto_ptr<ImageInterface<Float> > outIm(
+			_image->moments(
+				whichmoments, axis,
 				*Region, mask, method, Vector<Int> (smoothaxes), kernels,
 				kernelwidths, includepix, excludepix, peaksnr, stddev,
 				velocityType, out, smoothout, pgdevice, nx, ny, yind,
-				overwrite, removeAxis);
-		//
-		delete Region;
-		rstat = new ::casac::image(outIm);
-		delete outIm;
-	} catch (AipsError x) {
+				overwrite, removeAxis, stretch
+			)
+		);
+
+		return new ::casac::image(outIm.get());
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::string image::name(const bool strippath) {

@@ -1108,6 +1108,73 @@ class immoment_test2(unittest.TestCase):
         casalog.post( "Done MASK tests", 'NORMAL2' )
         self.assertTrue(retValue['success'],retValue['error_msgs'])
     
+    def test_CAS2943(self):
+        """Test the stretch parameter"""
+        myia = iatool.create()
+        myia.fromshape("myim.im", [10, 20, 4, 40])
+        myia.done()
+        myia.fromshape("mask1.im", [10, 20, 4, 40])
+        myia.done()
+        myia.fromshape("mask2.im", [10, 20, 1, 1])
+        myia.done()
+        myia.fromshape("mask3.im", [10, 20, 4, 2])
+        myia.done()
+        for i in range(4):
+            outfile = ""
+            mask = ""
+            stretch = False
+            exp = []
+            atype = True
+            if (i == 0):
+                outfile = "out1.im"
+                mask = "mask1.im > 5"
+                stretch = False
+                exp = [10, 20, 4, 1]
+                atype = True
+            if (i == 1):
+                outfile = "out2.im"
+                mask="mask2.im > 5"
+                stretch=False
+                atype = False
+            if (i == 2):
+                outfile = "out3.im"
+                mask = "mask2.im > 5"
+                stretch = True
+                exp = [10, 20, 4, 1]
+                atype = True
+            if (i == 3):
+                outfile = "out4.im"
+                mask = "mask3.im > 5"
+                stretch = False
+                atype = False
+            ret = True
+            func = ""
+            for j in [0, 1]:
+                if j == 0:
+                    ret = immoments(
+                        imagename="myim.im", outfile=outfile,
+                        mask=mask, stretch=stretch
+                    )
+                if j == 1:
+                    myia.open("myim.im")
+                    ret = True
+                    try:
+                        myia.moments(
+                            outfile=outfile, mask=mask,
+                            stretch=stretch, drop=False
+                        )
+                        myia.done()
+                    except:
+                        ret = False
+                myia.open(outfile)
+                if (atype):
+                    print str(myia.shape()) + " " + str(exp)
+                    self.assertTrue(myia.shape() == exp)
+                else:
+                    self.assertFalse(ret)
+                myia.done()
+                if os.path.exists(outfile):
+                    shutil.rmtree(outfile)
             
 def suite():
     return [immoment_test1,immoment_test2]        
