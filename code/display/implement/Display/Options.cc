@@ -30,6 +30,7 @@
 namespace casa {
     namespace viewer {
 
-	Options *options=0;
+	Options options;
+	unsigned int options_init_::count = 0;
     }
 }

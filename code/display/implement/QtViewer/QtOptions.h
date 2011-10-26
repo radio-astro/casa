@@ -31,7 +31,7 @@
 
 namespace casa {
     namespace viewer {
-	class QtOptions : public Options {
+	class QtOptionsKernel : public Options::Kernel {
 	    public:
 		std::string temporaryPath( ) const;
 	};

@@ -31,11 +31,39 @@
 
 namespace casa {
     namespace viewer {
+
 	class Options {
 	    public:
-		virtual std::string temporaryPath( ) const = 0;
+		class Kernel {
+		    public:
+			virtual std::string temporaryPath( ) const = 0;
+		};
+
+		std::string temporaryPath( ) const { return kernel->temporaryPath( ); }
+
+		~Options( ) { delete kernel; }
+
+		Options( ) { }
+
+	    private:
+		friend class options_init_;
+		Options( const Options & ) { }
+		const Options &operator=(const Options&) { return *this; }
+		void init( Kernel *k ) { kernel = k; }
+		Kernel *kernel;
 	};
-	extern Options *options;
+
+	extern Options options;
+
+	static class options_init_ {
+	    public:
+	        options_init_( ) { if ( count++ == 0 ) do_init( ); }
+		~options_init_( ) { if ( --count == 0 ) { /* could destruct options */ } }
+	    private:
+		static unsigned int count;
+		// to be defined in qt (or other windowing library) land....
+		void do_init( );
+	} _options_init_object_;
     }
 }
 
