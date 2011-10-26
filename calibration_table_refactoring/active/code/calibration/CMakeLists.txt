@@ -63,6 +63,7 @@ casa_add_library( calibration
   implement/CalTables/NewCalTable.cc
   implement/CalTables/NewCalTableDesc.cc
   implement/CalTables/NewCalTableEnums.cc
+  implement/CalTables/NewCalTabIter.cc
   implement/CalTables/NewCalMainColumns.cc
   implement/CalTables/NewCalMainRecord.cc
   implement/CalTables/PlotCal.cc
@@ -95,3 +96,4 @@ casa_add_library( calibration
 casa_add_assay( calibration implement/CalTables/test/tCalInterpolation.cc )
 casa_add_assay( calibration implement/CalTables/test/tCalIntpMatch.cc )
 casa_add_assay( calibration implement/CalTables/test/tNewCalTable.cc )
+casa_add_assay( calibration implement/CalTables/test/tNewCalTableIter.cc )
