@@ -2752,16 +2752,17 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	return outrec;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
-		Record& Region, const String& mask, const Vector<String>& method,
-		const Vector<Int>& smoothaxes, const Vector<String>& kernels,
-		const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
-		const Vector<Float>& excludepix, const Double peaksnr,
-		const Double stddev, const String& velocityType, const String& out,
-		const String& smoothout, const String& pgdevice, const Int nx,
-		const Int ny, const Bool yind, const Bool overwrite,
-		const Bool removeAxis) {
+ImageInterface<Float> * ImageAnalysis::moments(
+	const Vector<Int>& whichmoments, const Int axis,
+	Record& Region, const String& mask, const Vector<String>& method,
+	const Vector<Int>& smoothaxes, const Vector<String>& kernels,
+	const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
+	const Vector<Float>& excludepix, const Double peaksnr,
+	const Double stddev, const String& velocityType, const String& out,
+	const String& smoothout, const String& pgdevice, const Int nx,
+	const Int ny, const Bool yind, const Bool overwrite,
+	const Bool removeAxis, const Bool stretchMask
+) {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// check that we can write to smoothout if specified
@@ -2781,7 +2782,7 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), stretchMask
 	);
 	// Create ImageMoments object
 	ImageMoments<Float> momentMaker(subImage, *itsLog, overwrite, True);
@@ -3418,6 +3419,7 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 	// Deal with axes
 	Vector<Int> axes(inaxes);
 	IPosition axes2(axes);
+	//cout << "axes2 " << axes2 << endl;
 	Vector<Int> shape(tmpShape);
 	IPosition outShape(shape);
 
@@ -4162,7 +4164,7 @@ Bool ImageAnalysis::statistics(
 	const Bool verbose
 ) {
 	String pgdevice("/NULL");
-	*itsLog << LogOrigin("ImageAnalysis", "statistics");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -4174,9 +4176,10 @@ Bool ImageAnalysis::statistics(
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
 		mtmp,  (verbose ? itsLog : 0), False
 	);
-	/*
 	{
-		cout << "mask " << subImage.getMask() << endl;
+        /*
+		// block for debug only
+		//cout << "mask " << subImage.getMask() << endl;
 		Array<Bool> mymask = subImage.getMask();
 		IPosition shape = mymask.shape();
 		IPosition index = shape-1;
@@ -4228,8 +4231,8 @@ Bool ImageAnalysis::statistics(
 				break;
 			}
 		}
+        */
 	}
-	*/
 	// Reset who is logging stuff.
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 

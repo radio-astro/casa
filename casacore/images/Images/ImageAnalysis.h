@@ -280,23 +280,21 @@ class ImageAnalysis
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);
 
-    ImageInterface<Float> * moments(const Vector<Int>& moments, const Int axis,
-                                    Record& region, const String& mask, 
-                                    const Vector<String>& method, 
-                                    const Vector<Int>& smoothaxes, 
-                                    const Vector<String>& smoothtypes, 
-                                    const Vector<Quantity>& smoothwidths, 
-                                    const Vector<Float>& includepix, 
-                                    const Vector<Float>& excludepix, 
-                                    const Double peaksnr, const Double stddev, 
-                                    const String& doppler = "RADIO", 
-                                    const String& outfile = "", 
-                                    const String& smoothout = "", 
-                                    const String& plotter = "/NULL", 
-                                    const Int nx = 1, const Int ny = 1, 
-                                    const Bool yind = False, 
-                                    const Bool overwrite = False, 
-                                    const Bool drop = True);
+    ImageInterface<Float> * moments(
+    	const Vector<Int>& moments, const Int axis, Record& region,
+    	const String& mask, const Vector<String>& method,
+    	const Vector<Int>& smoothaxes,
+    	const Vector<String>& smoothtypes,
+        const Vector<Quantity>& smoothwidths,
+        const Vector<Float>& includepix,
+        const Vector<Float>& excludepix,
+        const Double peaksnr, const Double stddev,
+        const String& doppler = "RADIO",  const String& outfile = "",
+        const String& smoothout="", const String& plotter="/NULL",
+        const Int nx=1, const Int ny=1,  const Bool yind=False,
+        const Bool overwrite=False, const Bool drop=True,
+        const Bool stretchMask=False
+    );
 
     String name(const Bool strippath = False);
 
