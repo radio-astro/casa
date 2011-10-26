@@ -28,7 +28,7 @@
 {
 \setboolean{isModule}{true}
 \NextFile{#1-Module.html}
-\section{ #1 - Module \label{#1}{#1}}
+\section{ #1 - Module }\label{#1}{\index{#1}}
 #2\\
 \sbox{\moduleName}{#1}
 \def\itsModule{#1}
@@ -42,7 +42,7 @@
 {
 \NextFile{#1-Tool.html}
 \setboolean{isObject}{true}
-\subsection{ #1 - Tool\label{\itsModule:#1}{\index{#1}}}
+\subsection{ #1 - Tool}\label{\itsModule:#1}{\index{#1}}
 #2\\
 }{
 \vspace{.18in}
@@ -54,7 +54,7 @@
 {
 \NextFile{#1-Tool.html}
 \setboolean{isObject}{true}
-\subsection{ #1 - Tool\label{\itsModule:#1}{\index{#1}}}
+\subsection{ #1 - Tool}\label{\itsModule:#1}{\index{#1}}
 #2\\
 }{
 \vspace{.18in}
@@ -68,7 +68,7 @@
 \ifthenelse{\pdfoutput > 0}
 {\NextFile{#1.html}}
 {\NextFile{#2.html}}
-\subsection{ #1 - Tool\label{\itsModule:#2}{\index{#1}}}
+\subsection{ #1 - Tool}\label{\itsModule:#2}{\index{#1}}
 #3\\
 }{
 \vspace{.18in}
@@ -80,8 +80,8 @@
 {
 \NextFile{#1.html}
 \ifthenelse{\boolean{isModule} \or \boolean{isObject}}
-{\subsubsection{ #1 - Function\label{\itsModule:#1}{\index{#1}}}\ref{\itsModule:#1}}
-{\section{ #1 - Function\label{#1}{\index{#1}}}\ref{#1}}
+{\subsubsection{ #1 - Function}\label{\itsModule:#1}{\index{#1}}\ref{\itsModule:#1}}
+{\section{ #1 - Function}\label{#1}{\index{#1}}\ref{#1}}
 #2\\
 }{
 \vspace{.18in}
@@ -94,8 +94,8 @@
 {\NextFile{#1.html}}
 {\NextFile{#2.html}}
 \ifthenelse{\boolean{isModule} \or \boolean{isObject}}
-{\subsubsection{ #1 - Function\label{\itsModule:#2}{\index{#1}}}\ref{\itsModule:#2}}
-{\section{ #1 - Function\label{#2}{\index{#1}}}\ref{#2}}
+{\subsubsection{ #1 - Function}\label{\itsModule:#2}{\index{#1}}\ref{\itsModule:#2}}
+{\section{ #1 - Function}\label{#2}{\index{#1}}\ref{#2}}
 #3\\
 }{
 \vspace{.18in}
