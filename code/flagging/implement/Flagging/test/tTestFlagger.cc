@@ -22,8 +22,101 @@
 
 #include <flagging/Flagging/TestFlagger.h>
 #include <iostream>
+#include <sstream>
+
 
 using namespace casa;
+
+String
+get_agent_parameters(int argc, char **argv, Record *agent_record)
+{
+	String parameter, value;
+	String mode = "unknown";
+
+
+	for (unsigned short i=0;i<argc-1;i++)
+	{
+		parameter = String(argv[i]);
+		value = String(argv[i+1]);
+
+		if (parameter == String("-mode"))
+		{
+			mode = value;
+		}
+	}
+
+	if (mode == ""){
+		mode == "manualflag";
+		agent_record->define("mode", "manualflag");
+	}
+	else if (mode == "manualflag"){
+		agent_record->define("mode", "manualflag");
+	}
+	else if (mode == "unflag"){
+		agent_record->define("mode", "unflag");
+	}
+	else if (mode == "clip"){
+		agent_record->define("mode", "clip");
+
+		for (unsigned short i=0;i<argc-1;i++)
+		{
+			parameter = String(argv[i]);
+			value = String(argv[i+1]);
+			if (parameter == String("-clipcolumn"))
+			{
+				agent_record->define("clipcolumn", value);
+			}
+			else if (parameter == String("-clipexpr"))
+			{
+				agent_record->define("clipexpr", value);
+			}
+			else if (parameter == String("-clipminmax"))
+			{
+				agent_record->define("clipminmax", value);
+			}
+			else if (parameter == String("-clipoutside"))
+			{
+				agent_record->define("clipoutside", value);
+			}
+			else if (parameter == String("-channelavg"))
+			{
+				agent_record->define("channelavg", value);
+			}
+
+		}
+	}
+
+
+	return mode;
+}
+
+bool
+setdata(String field, String spw, String array,
+		String feed, String scan,
+		String baseline,  String uvrange,  String time,
+		String correlation, String intent, String observation)
+{
+	return true;
+}
+
+bool
+setmanualflags(Bool autocorr,
+		Bool unflag,
+		String clipexpr,
+		Vector<Double> cliprange,
+		String clipcolumn,
+		Bool outside,
+		Bool channel_average,
+		Double quackinterval,
+		String quackmode,
+		Bool quackincrement,
+		String opmode,
+		Double diameter,
+		Double lowerlimit,
+		Double upperlimit)
+{
+	return true;
+}
 
 int main(int argc, char **argv)
 {
@@ -41,7 +134,6 @@ int main(int argc, char **argv)
 	String array = "";
 	String uvrange = "";
 	String observation = "";
-	String mode = "manualflag";
 	String parameter, value;
 	unsigned short logLevel = 0;
 
@@ -170,12 +262,12 @@ int main(int argc, char **argv)
 			record.define ("uvrange", casa::String(value));
 			if (logLevel >= 3) cout << "UV range selection is: " << uvrange << endl;
 		}
-		else if (parameter == String("-correlation"))
+/*		else if (parameter == String("-correlation"))
 		{
 			correlation = value;
 			record.define ("correlation", casa::String(value));
 			if (logLevel >= 3) cout << "Correlation selection is: " << correlation << endl;
-		}
+		}*/
 		else if (parameter == String("-observation"))
 		{
 			observation = value;
@@ -204,10 +296,14 @@ int main(int argc, char **argv)
 
 	// Create a record with the agent's parameters
 	Record arecord;
-	// default mode
-	arecord.define("mode", "manualflag");
+	String mode = get_agent_parameters(argc, argv, &arecord);
+	if (mode == "unknown")
+	{
+		cout << "ERROR: Unknown mode requested " << endl;
 
-	for (unsigned short i=0;i<argc-1;i++)
+	}
+
+/*	for (unsigned short i=0;i<argc-1;i++)
 	{
 		parameter = String(argv[i]);
 		value = String(argv[i+1]);
@@ -215,12 +311,34 @@ int main(int argc, char **argv)
 		if (parameter == String("-mode"))
 		{
 			mode = value;
-			arecord.define ("mode", casa::String(value));
-			if (logLevel >= 3) cout << "Flag mode is: " << mode << endl;
+
+			// There is a mode, get the agent's parameters
+			if (not get_agent_parameters(argc, argv, &arecord))
+			{
+				cout << "ERROR: Cannot get agent's parameters for mode= "<< mode << endl;
+
+			}
+			break;
 		}
 	}
+*/
+	cout << "Will parse parameters for mode="<< mode << endl;
+	if (logLevel >= 3)
+	{
+		cout << "Parameters of mode " << mode << " are" << endl;
+		ostringstream os;
+		arecord.print(os);
+		String str(os.str());
+		cout << str << endl;
+	}
 
-	// Parse agent parameters
+
+//	if (mode == "clip"){
+		// get clip parameters
+//	}
+	// TODO: do other modes
+
+	// Parse agent data selection parameters
 	if (not tf->parseAgentParameters(arecord)) {
 		cout << "ERROR: Failed to parse agent parameters" << endl;
 	}

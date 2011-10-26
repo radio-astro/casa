@@ -158,6 +158,8 @@ TestFlagger::parseDataSelection(Record selrec)
 // ---------------------------------------------------------------------
 // TestFlagger::parseAgentParameters
 // Create a vector of agents and parameters
+// Each input record contains data selection parameters
+// and agent's specific parameters
 // ---------------------------------------------------------------------
 bool
 TestFlagger::parseAgentParameters(Record agent_params)
@@ -167,6 +169,8 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	if(agent_params.empty()){
 		return false;
 	}
+
+	// TODO: should I verify the contents of the record?
 
 	// add this agent to the list
 	agents_config_list_p.push_back(agent_params);
@@ -258,6 +262,8 @@ TestFlagger::initAgents()
 					<< LogIO::POST;
 			return false;
 		}
+
+		// TODO: Catch error, print a warning and continue to next agent.
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
 
 		// add to list of FlagAgentList
@@ -274,14 +280,14 @@ TestFlagger::initAgents()
 // Run the agents
 // It assumes that initAgents has been called first
 // ---------------------------------------------------------------------
-void
+bool
 TestFlagger::run()
 {
 
 	LogIO os(LogOrigin("TestFlagger", "run()", WHERE));
 
 	if (agents_list_p.empty()) {
-		return;
+		return false;
 	}
 
 	agents_list_p.start();
@@ -310,7 +316,7 @@ TestFlagger::run()
 	agents_list_p.terminate();
 	agents_list_p.join();
 
-	return;
+	return true;
 }
 
 
