@@ -360,7 +360,7 @@ namespace asdm {
       autoOrigin = EVLA;
     else if (numALMA == telescopeNames.size())
       autoOrigin = ALMA;
-
+    
     return autoOrigin;
   }
 
@@ -374,8 +374,7 @@ namespace asdm {
   }
 
   string ASDMUtils::pathToxslTransform( const string& xsltFilename) {
-
-    char * envVars[] = {"INTROOT", "ACSROOT", "CASAPATH"};
+    char * envVars[] = {"INTROOT", "ACSROOT"};
     char * rootDir_p;
     for (unsigned int i = 0; i < sizeof(envVars) ; i++) 
       if ((rootDir_p = getenv(envVars[i])) != 0) {
@@ -386,11 +385,32 @@ namespace asdm {
 	  string xsltPath = *iter;
 	  if (!ends_with(xsltPath, "/")) xsltPath+="/";
 	  xsltPath+=rootSubdir[string(envVars[i])]+ xsltFilename;
+	  if (getenv("ASDM_DEBUG"))
+	    cout << "pathToxslTransform tries to locate '" << xsltPath << "'." << endl;
 	  if (exists(path(xsltPath)))
 	    return xsltPath;
 	}
       }
-    
+
+    // Ok it seems that we are not in an ALMA/ACS environment, then look for $CASAPATH/data.
+    if ((rootDir_p = getenv("CASAPATH")) != 0) {
+      string rootPath(rootDir_p);
+      vector<string> rootPathElements;
+      split(rootPathElements, rootPath, is_any_of(" "));
+      string xsltPath = rootPathElements[0];
+      if (!ends_with(xsltPath, "/")) xsltPath+="/";
+      xsltPath+="data/alma/asdm/";
+      xsltPath+=xsltFilename;
+      if (getenv("ASDM_DEBUG"))
+	cout << "pathToxslTransform tries to locate '" << xsltPath << "'." << endl;
+
+      if (exists(path(xsltPath)))
+	return xsltPath;
+    }
+
+    if (getenv("ASDM_DEBUG"))
+      cout  << "pathToxslTransform returns an empty xsltPath " << endl;
+
     // Here rootDir_p == NULL , let's return an empty string.
     return "" ;  // An empty string will be interpreted as no file found.
   }
@@ -446,12 +466,14 @@ namespace asdm {
   XSLTransformer::XSLTransformer() : cur(NULL) {
     xmlSubstituteEntitiesDefault(1);
     xmlLoadExtDtdDefaultValue = 1;
-    // cout << "XSLTransformer::XSLTransformer() called " << endl;
   }
 
   XSLTransformer::XSLTransformer(const string& xsltPath) {
-    // cout << "XSLTransformer::XSLTransformer(const string& xsltPath) called " << endl;
-    // cout << "About parse the style sheet contained in " << xsltPath << endl;
+    if (getenv("ASDM_DEBUG")) {
+	cout << "XSLTransformer::XSLTransformer(const string& xsltPath) called " << endl;
+	cout << "About parse the style sheet contained in " << xsltPath << endl;
+    }
+
     xmlSubstituteEntitiesDefault(1);
     xmlLoadExtDtdDefaultValue = 1;
     
@@ -461,7 +483,8 @@ namespace asdm {
   }
 
   void XSLTransformer::setTransformation(const string& xsltPath) {
-    // cout << "XSLTransformer::setTransformation(const string& xsltPath) called " << endl;
+    if (getenv("ASDM_DEBUG")) 
+      cout << "XSLTransformer::setTransformation(const string& xsltPath) called on '" << xsltPath << "'." << endl;
     
     if (cur) {
       xsltFreeStylesheet(cur);
@@ -491,7 +514,7 @@ namespace asdm {
     xmlChar* docTxtPtr = NULL;
     int docTxtLen = 0;
     
-    // cout << "About to read and parse " << xmlPath << endl;
+    if (getenv("ASDM_DEBUG")) cout << "About to read and parse " << xmlPath << endl;
     doc = xmlParseFile(xmlPath.c_str());
     if (doc == NULL) {
       throw XSLTransformerException("Could not parse the XML file '" + xmlPath + "'." );
@@ -513,7 +536,8 @@ namespace asdm {
 	throw XSLTransformerException("Could not dump the result of the XSL transformation into memory.");
     }
 
-    // cout << "Making a string out of the result of applying the XSL transformation" << endl;
+    if (getenv("ASDM_DEBUG")) 
+      cout << "Making a string from the result of the XSL transformation" << endl;
     string docXML((char *) docTxtPtr, docTxtLen);
     // cout << "docXML = " << docXML << endl;
 

@@ -457,6 +457,13 @@ private:
 	 */
 	 void append(SeeingRow* x) ;
 	 
+	/**
+	 * Brutally append an SeeingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SeeingRow* x a pointer onto the SeeingRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SeeingRow* x) ;
+	 
 	 
 
 

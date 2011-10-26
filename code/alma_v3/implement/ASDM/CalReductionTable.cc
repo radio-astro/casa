@@ -318,7 +318,17 @@ CalReductionRow* CalReductionTable::newRow(CalReductionRow* row) {
 		return x;
 	}
 		
+	
 		
+	void CalReductionTable::addWithoutCheckingUnique(CalReductionRow * x) {
+		if (getRowByKey(
+						x->getCalReductionId()
+						) != (CalReductionRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalReductionTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -577,29 +587,46 @@ CalReductionRow* CalReductionTable::lookup(int numApplied, vector<string > appli
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalReductionRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalReductionTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalReductionTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalReductionTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalReductionTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalReductionTable::checkAndAdd called from CalReductionTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalReductionTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalReductionTable::addWithoutCheckingUnique called from CalReductionTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalReductionTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -993,6 +1020,7 @@ void CalReductionTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalReduction");

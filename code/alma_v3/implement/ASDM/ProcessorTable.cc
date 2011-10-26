@@ -262,7 +262,17 @@ ProcessorRow* ProcessorTable::newRow(ProcessorRow* row) {
 		return x;
 	}
 		
+	
 		
+	void ProcessorTable::addWithoutCheckingUnique(ProcessorRow * x) {
+		if (getRowByKey(
+						x->getProcessorId()
+						) != (ProcessorRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "ProcessorTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -493,29 +503,46 @@ ProcessorRow* ProcessorTable::lookup(Tag modeId, ProcessorTypeMod::ProcessorType
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		ProcessorRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"ProcessorTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"ProcessorTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ProcessorTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"ProcessorTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in ProcessorTable::checkAndAdd called from ProcessorTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ProcessorTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in ProcessorTable::addWithoutCheckingUnique called from ProcessorTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</ProcessorTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -888,6 +915,7 @@ void ProcessorTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Processor");

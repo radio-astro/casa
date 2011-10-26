@@ -297,7 +297,19 @@ CalGainRow* CalGainTable::newRow(CalGainRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalGainTable::addWithoutCheckingUnique(CalGainRow * x) {
+		if (getRowByKey(
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalGainRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalGainTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -536,29 +548,46 @@ CalGainRow* CalGainTable::lookup(Tag calDataId, Tag calReductionId, ArrayTime st
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalGainRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalGainTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalGainTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalGainTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalGainTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalGainTable::checkAndAdd called from CalGainTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalGainTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalGainTable::addWithoutCheckingUnique called from CalGainTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalGainTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -952,6 +981,7 @@ void CalGainTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalGain");

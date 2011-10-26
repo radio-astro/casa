@@ -286,9 +286,14 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void FocusTable::addWithoutCheckingUnique(FocusRow * x) {
+		FocusRow * dummy = add(x);
+	}
 	
 
 
@@ -357,8 +362,8 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 	
 		
 	 vector<FocusRow *> *FocusTable::getByContext(Tag antennaId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "FocusTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "FocusTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId);
@@ -549,29 +554,46 @@ FocusRow* FocusTable::newRow(FocusRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FocusRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"FocusTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"FocusTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FocusTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"FocusTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in FocusTable::checkAndAdd called from FocusTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FocusTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FocusTable::addWithoutCheckingUnique called from FocusTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</FocusTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -956,6 +978,7 @@ void FocusTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Focus");

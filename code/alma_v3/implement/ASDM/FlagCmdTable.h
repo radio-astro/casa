@@ -462,6 +462,13 @@ private:
 	 */
 	 void append(FlagCmdRow* x) ;
 	 
+	/**
+	 * Brutally append an FlagCmdRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FlagCmdRow* x a pointer onto the FlagCmdRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FlagCmdRow* x) ;
+	 
 	 
 
 

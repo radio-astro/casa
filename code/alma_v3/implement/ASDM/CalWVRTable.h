@@ -610,6 +610,13 @@ private:
 	 */
 	 void append(CalWVRRow* x) ;
 	 
+	/**
+	 * Brutally append an CalWVRRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalWVRRow* x a pointer onto the CalWVRRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalWVRRow* x) ;
+	 
 	 
 
 

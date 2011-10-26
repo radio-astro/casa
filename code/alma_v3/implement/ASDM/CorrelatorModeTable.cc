@@ -310,7 +310,17 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
 		return x;
 	}
 		
+	
 		
+	void CorrelatorModeTable::addWithoutCheckingUnique(CorrelatorModeRow * x) {
+		if (getRowByKey(
+						x->getCorrelatorModeId()
+						) != (CorrelatorModeRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CorrelatorModeTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -565,29 +575,46 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CorrelatorModeRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CorrelatorModeTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CorrelatorModeTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CorrelatorModeTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CorrelatorModeTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CorrelatorModeTable::checkAndAdd called from CorrelatorModeTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CorrelatorModeTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CorrelatorModeTable::addWithoutCheckingUnique called from CorrelatorModeTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CorrelatorModeTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -978,6 +1005,7 @@ void CorrelatorModeTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CorrelatorMode");

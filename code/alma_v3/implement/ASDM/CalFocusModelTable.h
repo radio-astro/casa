@@ -614,6 +614,13 @@ private:
 	 */
 	 void append(CalFocusModelRow* x) ;
 	 
+	/**
+	 * Brutally append an CalFocusModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalFocusModelRow* x a pointer onto the CalFocusModelRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalFocusModelRow* x) ;
+	 
 	 
 
 

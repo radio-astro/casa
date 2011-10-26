@@ -343,7 +343,25 @@ CalCurveRow* CalCurveTable::newRow(CalCurveRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalCurveTable::addWithoutCheckingUnique(CalCurveRow * x) {
+		if (getRowByKey(
+						x->getAtmPhaseCorrection()
+						,
+						x->getTypeCurve()
+						,
+						x->getReceiverBand()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalCurveRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalCurveTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -610,29 +628,46 @@ CalCurveRow* CalCurveTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection atm
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalCurveRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalCurveTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalCurveTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalCurveTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalCurveTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalCurveTable::checkAndAdd called from CalCurveTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalCurveTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalCurveTable::addWithoutCheckingUnique called from CalCurveTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalCurveTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1047,6 +1082,7 @@ void CalCurveTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalCurve");

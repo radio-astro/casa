@@ -357,7 +357,23 @@ CalPositionRow* CalPositionTable::newRow(CalPositionRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalPositionTable::addWithoutCheckingUnique(CalPositionRow * x) {
+		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getAtmPhaseCorrection()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalPositionRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalPositionTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -624,29 +640,46 @@ CalPositionRow* CalPositionTable::lookup(string antennaName, AtmPhaseCorrectionM
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalPositionRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalPositionTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalPositionTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalPositionTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalPositionTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalPositionTable::checkAndAdd called from CalPositionTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalPositionTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalPositionTable::addWithoutCheckingUnique called from CalPositionTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalPositionTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1070,6 +1103,7 @@ void CalPositionTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalPosition");

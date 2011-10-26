@@ -266,6 +266,11 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 	}
 		
 	
+		
+	void FlagCmdTable::addWithoutCheckingUnique(FlagCmdRow * x) {
+		FlagCmdRow * dummy = add(x);
+	}
+	
 
 
 
@@ -455,29 +460,46 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FlagCmdRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"FlagCmdTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"FlagCmdTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FlagCmdTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"FlagCmdTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in FlagCmdTable::checkAndAdd called from FlagCmdTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FlagCmdTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FlagCmdTable::addWithoutCheckingUnique called from FlagCmdTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</FlagCmdTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -859,6 +881,7 @@ void FlagCmdTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "FlagCmd");

@@ -365,7 +365,25 @@ CalPhaseRow* CalPhaseTable::newRow(CalPhaseRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalPhaseTable::addWithoutCheckingUnique(CalPhaseRow * x) {
+		if (getRowByKey(
+						x->getBasebandName()
+						,
+						x->getReceiverBand()
+						,
+						x->getAtmPhaseCorrection()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalPhaseRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalPhaseTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -640,29 +658,46 @@ CalPhaseRow* CalPhaseTable::lookup(BasebandNameMod::BasebandName basebandName, R
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalPhaseRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalPhaseTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalPhaseTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalPhaseTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalPhaseTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalPhaseTable::checkAndAdd called from CalPhaseTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalPhaseTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalPhaseTable::addWithoutCheckingUnique called from CalPhaseTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalPhaseTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1086,6 +1121,7 @@ void CalPhaseTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalPhase");

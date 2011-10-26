@@ -589,6 +589,13 @@ private:
 	 */
 	 void append(PointingRow* x) ;
 	 
+	/**
+	 * Brutally append an PointingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param PointingRow* x a pointer onto the PointingRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(PointingRow* x) ;
+	 
 	 
 
 

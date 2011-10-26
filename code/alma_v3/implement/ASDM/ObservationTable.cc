@@ -221,7 +221,17 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		return x;
 	}
 		
+	
 		
+	void ObservationTable::addWithoutCheckingUnique(ObservationRow * x) {
+		if (getRowByKey(
+						x->getObservationId()
+						) != (ObservationRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "ObservationTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -420,29 +430,46 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		ObservationRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"ObservationTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"ObservationTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ObservationTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"ObservationTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in ObservationTable::checkAndAdd called from ObservationTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ObservationTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in ObservationTable::addWithoutCheckingUnique called from ObservationTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</ObservationTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -806,6 +833,7 @@ void ObservationTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Observation");

@@ -590,6 +590,13 @@ private:
 	 */
 	 void append(TotalPowerRow* x) ;
 	 
+	/**
+	 * Brutally append an TotalPowerRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param TotalPowerRow* x a pointer onto the TotalPowerRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(TotalPowerRow* x) ;
+	 
 	 
 
 

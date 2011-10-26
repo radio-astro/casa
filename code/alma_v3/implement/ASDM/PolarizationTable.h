@@ -409,6 +409,13 @@ private:
 	 */
 	 void append(PolarizationRow* x) ;
 	 
+	/**
+	 * Brutally append an PolarizationRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param PolarizationRow* x a pointer onto the PolarizationRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(PolarizationRow* x) ;
+	 
 	 
 
 

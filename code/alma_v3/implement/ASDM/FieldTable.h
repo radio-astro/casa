@@ -510,6 +510,13 @@ private:
 	 */
 	 void append(FieldRow* x) ;
 	 
+	/**
+	 * Brutally append an FieldRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FieldRow* x a pointer onto the FieldRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FieldRow* x) ;
+	 
 	 
 
 

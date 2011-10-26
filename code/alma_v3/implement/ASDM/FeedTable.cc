@@ -385,7 +385,13 @@ FeedRow* FeedTable::newRow(FeedRow* row) {
 			if (insertionId >= (int) context[k].size()) context[k].resize(insertionId+1);
 			return insertByStartTime(x, context[k][insertionId]);
 	}
+	
 		
+	
+		
+	void FeedTable::addWithoutCheckingUnique(FeedRow * x) {
+		FeedRow * dummy = add(x);
+	}
 	
 
 
@@ -718,29 +724,46 @@ FeedRow* FeedTable::lookup(Tag antennaId, Tag spectralWindowId, ArrayTimeInterva
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FeedRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"FeedTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"FeedTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FeedTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"FeedTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in FeedTable::checkAndAdd called from FeedTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FeedTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FeedTable::addWithoutCheckingUnique called from FeedTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</FeedTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1143,6 +1166,7 @@ void FeedTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Feed");

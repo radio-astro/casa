@@ -350,9 +350,14 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void DelayModelTable::addWithoutCheckingUnique(DelayModelRow * x) {
+		DelayModelRow * dummy = add(x);
+	}
 	
 
 
@@ -423,8 +428,8 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 	
 		
 	 vector<DelayModelRow *> *DelayModelTable::getByContext(Tag antennaId, Tag spectralWindowId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "DelayModelTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "DelayModelTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId);
@@ -615,29 +620,46 @@ DelayModelRow* DelayModelTable::newRow(DelayModelRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		DelayModelRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"DelayModelTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"DelayModelTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"DelayModelTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"DelayModelTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in DelayModelTable::checkAndAdd called from DelayModelTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"DelayModelTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in DelayModelTable::addWithoutCheckingUnique called from DelayModelTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</DelayModelTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1091,6 +1113,7 @@ void DelayModelTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "DelayModel");

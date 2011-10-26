@@ -262,7 +262,17 @@ PolarizationRow* PolarizationTable::newRow(PolarizationRow* row) {
 		return x;
 	}
 		
+	
 		
+	void PolarizationTable::addWithoutCheckingUnique(PolarizationRow * x) {
+		if (getRowByKey(
+						x->getPolarizationId()
+						) != (PolarizationRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "PolarizationTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -493,29 +503,46 @@ PolarizationRow* PolarizationTable::lookup(int numCorr, vector<StokesParameterMo
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		PolarizationRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"PolarizationTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"PolarizationTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"PolarizationTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"PolarizationTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in PolarizationTable::checkAndAdd called from PolarizationTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"PolarizationTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in PolarizationTable::addWithoutCheckingUnique called from PolarizationTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</PolarizationTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -888,6 +915,7 @@ void PolarizationTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Polarization");

@@ -313,7 +313,21 @@ CalSeeingRow* CalSeeingTable::newRow(CalSeeingRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalSeeingTable::addWithoutCheckingUnique(CalSeeingRow * x) {
+		if (getRowByKey(
+						x->getAtmPhaseCorrection()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalSeeingRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalSeeingTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -560,29 +574,46 @@ CalSeeingRow* CalSeeingTable::lookup(AtmPhaseCorrectionMod::AtmPhaseCorrection a
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalSeeingRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalSeeingTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalSeeingTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalSeeingTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalSeeingTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalSeeingTable::checkAndAdd called from CalSeeingTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalSeeingTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalSeeingTable::addWithoutCheckingUnique called from CalSeeingTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalSeeingTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -988,6 +1019,7 @@ void CalSeeingTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalSeeing");

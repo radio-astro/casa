@@ -482,6 +482,13 @@ private:
 	 */
 	 void append(FocusRow* x) ;
 	 
+	/**
+	 * Brutally append an FocusRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FocusRow* x a pointer onto the FocusRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FocusRow* x) ;
+	 
 	 
 
 

@@ -308,9 +308,14 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void GainTrackingTable::addWithoutCheckingUnique(GainTrackingRow * x) {
+		GainTrackingRow * dummy = add(x);
+	}
 	
 
 
@@ -383,8 +388,8 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	
 		
 	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "GainTrackingTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "GainTrackingTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
@@ -575,29 +580,46 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		GainTrackingRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"GainTrackingTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"GainTrackingTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"GainTrackingTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"GainTrackingTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in GainTrackingTable::checkAndAdd called from GainTrackingTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"GainTrackingTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in GainTrackingTable::addWithoutCheckingUnique called from GainTrackingTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</GainTrackingTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -991,6 +1013,7 @@ void GainTrackingTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "GainTracking");

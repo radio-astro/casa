@@ -356,7 +356,17 @@ SBSummaryRow* SBSummaryTable::newRow(SBSummaryRow* row) {
 		return x;
 	}
 		
+	
 		
+	void SBSummaryTable::addWithoutCheckingUnique(SBSummaryRow * x) {
+		if (getRowByKey(
+						x->getSBSummaryId()
+						) != (SBSummaryRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "SBSummaryTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -631,29 +641,46 @@ SBSummaryRow* SBSummaryTable::lookup(EntityRef sbSummaryUID, EntityRef projectUI
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SBSummaryRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"SBSummaryTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"SBSummaryTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SBSummaryTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"SBSummaryTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in SBSummaryTable::checkAndAdd called from SBSummaryTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SBSummaryTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SBSummaryTable::addWithoutCheckingUnique called from SBSummaryTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</SBSummaryTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1068,6 +1095,7 @@ void SBSummaryTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SBSummary");

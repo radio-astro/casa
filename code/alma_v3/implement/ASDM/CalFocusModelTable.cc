@@ -351,7 +351,25 @@ CalFocusModelRow* CalFocusModelTable::newRow(CalFocusModelRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalFocusModelTable::addWithoutCheckingUnique(CalFocusModelRow * x) {
+		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getReceiverBand()
+						,
+						x->getPolarizationType()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalFocusModelRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalFocusModelTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -622,29 +640,46 @@ CalFocusModelRow* CalFocusModelTable::lookup(string antennaName, ReceiverBandMod
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalFocusModelRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalFocusModelTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalFocusModelTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalFocusModelTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalFocusModelTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalFocusModelTable::checkAndAdd called from CalFocusModelTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalFocusModelTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalFocusModelTable::addWithoutCheckingUnique called from CalFocusModelTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalFocusModelTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1059,6 +1094,7 @@ void CalFocusModelTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalFocusModel");

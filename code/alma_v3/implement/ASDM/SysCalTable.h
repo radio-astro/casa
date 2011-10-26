@@ -592,6 +592,13 @@ private:
 	 */
 	 void append(SysCalRow* x) ;
 	 
+	/**
+	 * Brutally append an SysCalRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SysCalRow* x a pointer onto the SysCalRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SysCalRow* x) ;
+	 
 	 
 
 

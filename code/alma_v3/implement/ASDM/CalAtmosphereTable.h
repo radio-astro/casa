@@ -845,6 +845,13 @@ private:
 	 */
 	 void append(CalAtmosphereRow* x) ;
 	 
+	/**
+	 * Brutally append an CalAtmosphereRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalAtmosphereRow* x a pointer onto the CalAtmosphereRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalAtmosphereRow* x) ;
+	 
 	 
 
 

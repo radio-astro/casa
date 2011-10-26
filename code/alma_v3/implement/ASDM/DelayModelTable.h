@@ -705,6 +705,13 @@ private:
 	 */
 	 void append(DelayModelRow* x) ;
 	 
+	/**
+	 * Brutally append an DelayModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DelayModelRow* x a pointer onto the DelayModelRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(DelayModelRow* x) ;
+	 
 	 
 
 

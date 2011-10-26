@@ -270,7 +270,17 @@ HolographyRow* HolographyTable::newRow(HolographyRow* row) {
 		return x;
 	}
 		
+	
 		
+	void HolographyTable::addWithoutCheckingUnique(HolographyRow * x) {
+		if (getRowByKey(
+						x->getHolographyId()
+						) != (HolographyRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "HolographyTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -505,29 +515,46 @@ HolographyRow* HolographyTable::lookup(Length distance, Length focus, int numCor
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		HolographyRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"HolographyTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"HolographyTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"HolographyTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"HolographyTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in HolographyTable::checkAndAdd called from HolographyTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"HolographyTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in HolographyTable::addWithoutCheckingUnique called from HolographyTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</HolographyTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -903,6 +930,7 @@ void HolographyTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Holography");

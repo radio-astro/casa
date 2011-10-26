@@ -414,6 +414,13 @@ private:
 	 */
 	 void append(DopplerRow* x) ;
 	 
+	/**
+	 * Brutally append an DopplerRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DopplerRow* x a pointer onto the DopplerRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(DopplerRow* x) ;
+	 
 	 
 
 

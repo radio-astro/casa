@@ -508,6 +508,13 @@ private:
 	 */
 	 void append(SubscanRow* x) ;
 	 
+	/**
+	 * Brutally append an SubscanRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SubscanRow* x a pointer onto the SubscanRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SubscanRow* x) ;
+	 
 	 
 
 

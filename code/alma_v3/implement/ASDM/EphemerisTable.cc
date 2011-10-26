@@ -221,7 +221,17 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		return x;
 	}
 		
+	
 		
+	void EphemerisTable::addWithoutCheckingUnique(EphemerisRow * x) {
+		if (getRowByKey(
+						x->getEphemerisId()
+						) != (EphemerisRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "EphemerisTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -420,29 +430,46 @@ EphemerisRow* EphemerisTable::newRow(EphemerisRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		EphemerisRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"EphemerisTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"EphemerisTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"EphemerisTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"EphemerisTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in EphemerisTable::checkAndAdd called from EphemerisTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"EphemerisTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in EphemerisTable::addWithoutCheckingUnique called from EphemerisTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</EphemerisTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -806,6 +833,7 @@ void EphemerisTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Ephemeris");

@@ -260,6 +260,11 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 	}
 		
 	
+		
+	void SeeingTable::addWithoutCheckingUnique(SeeingRow * x) {
+		SeeingRow * dummy = add(x);
+	}
+	
 
 
 
@@ -449,29 +454,46 @@ SeeingRow* SeeingTable::newRow(SeeingRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SeeingRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"SeeingTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"SeeingTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SeeingTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"SeeingTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in SeeingTable::checkAndAdd called from SeeingTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SeeingTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SeeingTable::addWithoutCheckingUnique called from SeeingTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</SeeingTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -850,6 +872,7 @@ void SeeingTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Seeing");

@@ -328,9 +328,14 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void PointingTable::addWithoutCheckingUnique(PointingRow * x) {
+		PointingRow * dummy = add(x);
+	}
 	
 
 
@@ -399,8 +404,8 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 	
 		
 	 vector<PointingRow *> *PointingTable::getByContext(Tag antennaId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "PointingTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "PointingTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId);
@@ -591,29 +596,46 @@ PointingRow* PointingTable::newRow(PointingRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		PointingRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"PointingTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"PointingTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"PointingTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"PointingTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in PointingTable::checkAndAdd called from PointingTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"PointingTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in PointingTable::addWithoutCheckingUnique called from PointingTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</PointingTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1025,6 +1047,7 @@ void PointingTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Pointing");

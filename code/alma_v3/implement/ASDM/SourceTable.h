@@ -726,6 +726,13 @@ private:
 	 */
 	 void append(SourceRow* x) ;
 	 
+	/**
+	 * Brutally append an SourceRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SourceRow* x a pointer onto the SourceRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SourceRow* x) ;
+	 
 	 
 
 

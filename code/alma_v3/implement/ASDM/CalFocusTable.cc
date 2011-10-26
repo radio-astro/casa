@@ -373,7 +373,23 @@ CalFocusRow* CalFocusTable::newRow(CalFocusRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalFocusTable::addWithoutCheckingUnique(CalFocusRow * x) {
+		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getReceiverBand()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalFocusRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalFocusTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -640,29 +656,46 @@ CalFocusRow* CalFocusTable::lookup(string antennaName, ReceiverBandMod::Receiver
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalFocusRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalFocusTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalFocusTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalFocusTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalFocusTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalFocusTable::checkAndAdd called from CalFocusTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalFocusTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalFocusTable::addWithoutCheckingUnique called from CalFocusTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalFocusTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1110,6 +1143,7 @@ void CalFocusTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalFocus");

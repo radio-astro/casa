@@ -306,9 +306,14 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void WVMCalTable::addWithoutCheckingUnique(WVMCalRow * x) {
+		WVMCalRow * dummy = add(x);
+	}
 	
 
 
@@ -379,8 +384,8 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 	
 		
 	 vector<WVMCalRow *> *WVMCalTable::getByContext(Tag antennaId, Tag spectralWindowId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "WVMCalTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "WVMCalTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId);
@@ -571,29 +576,46 @@ WVMCalRow* WVMCalTable::newRow(WVMCalRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		WVMCalRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"WVMCalTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"WVMCalTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"WVMCalTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"WVMCalTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in WVMCalTable::checkAndAdd called from WVMCalTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"WVMCalTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in WVMCalTable::addWithoutCheckingUnique called from WVMCalTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</WVMCalTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -981,6 +1003,7 @@ void WVMCalTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "WVMCal");

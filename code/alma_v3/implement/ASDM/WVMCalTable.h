@@ -506,6 +506,13 @@ private:
 	 */
 	 void append(WVMCalRow* x) ;
 	 
+	/**
+	 * Brutally append an WVMCalRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param WVMCalRow* x a pointer onto the WVMCalRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(WVMCalRow* x) ;
+	 
 	 
 
 

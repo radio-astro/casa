@@ -37,62 +37,30 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <set>
-using std::string;
-using std::vector;
-using std::map;
 
-#include <Angle.h>
-#include <AngularRate.h>
-#include <ArrayTime.h>
-#include <ArrayTimeInterval.h>
-#include <ComplexWrapper.h>
-#include <Entity.h>
-#include <EntityId.h>
-#include <EntityRef.h>
-#include <Flux.h>
-#include <Frequency.h>
-#include <Humidity.h>
-#include <Interval.h>
-#include <Length.h>
-#include <PartId.h>
-#include <Pressure.h>
-#include <Speed.h>
+
+
+	
 #include <Tag.h>
-#include <Temperature.h>
+	
+
+
+
+
+	
+
+
+
 #include <ConversionException.h>
 #include <DuplicateKey.h>
 #include <UniquenessViolationException.h>
 #include <NoSuchRow.h>
 #include <DuplicateKey.h>
 
+
 #ifndef WITHOUT_ACS
 #include <asdmIDLC.h>
-using asdmIDL::DataDescriptionTableIDL;
 #endif
-
-using asdm::Angle;
-using asdm::AngularRate;
-using asdm::ArrayTime;
-using asdm::Complex;
-using asdm::Entity;
-using asdm::EntityId;
-using asdm::EntityRef;
-using asdm::Flux;
-using asdm::Frequency;
-using asdm::Humidity;
-using asdm::Interval;
-using asdm::Length;
-using asdm::PartId;
-using asdm::Pressure;
-using asdm::Speed;
-using asdm::Tag;
-using asdm::Temperature;
-
-using asdm::DuplicateKey;
-using asdm::ConversionException;
-using asdm::NoSuchRow;
-using asdm::DuplicateKey;
 
 #include <Representable.h>
 
@@ -105,39 +73,53 @@ class ASDM;
 class DataDescriptionRow;
 /**
  * The DataDescriptionTable class is an Alma table.
+ * <BR>
+ * 
+ * \par Role
+ * Spectro-polarization description.
+ * <BR>
+ 
+ * Generated from model's revision "1.60", branch "HEAD"
+ *
  * <TABLE BORDER="1">
  * <CAPTION> Attributes of DataDescription </CAPTION>
- * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Comment </TH></TR>
+ * <TR BGCOLOR="#AAAAAA"> <TH> Name </TH> <TH> Type </TH> <TH> Expected shape  </TH> <TH> Comment </TH></TR>
  
- * <TR> <TH BGCOLOR="#CCCCCC" colspan="3" align="center"> Key </TD></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC" colspan="4" align="center"> Key </TD></TR>
 	
- 		
  * <TR>
- * <TD><I> dataDescriptionId </I></TD> 
- * <TD><U> Tag</U></TD>
- * <TD> &nbsp; </TD>
- * </TR>
  		
+ * <TD><I> dataDescriptionId </I></TD>
+ 		 
+ * <TD> Tag</TD>
+ * <TD> &nbsp; </TD>
+ * <TD> &nbsp;identifies a unique row in the table. </TD>
+ * </TR>
 	
 
 
- * <TR> <TH BGCOLOR="#CCCCCC"  colspan="3" valign="center"> Value <br> (Mandarory) </TH></TR>
+ * <TR> <TH BGCOLOR="#CCCCCC"  colspan="4" valign="center"> Value <br> (Mandatory) </TH></TR>
 	
  * <TR>
  * <TD> polOrHoloId </TD> 
  * <TD> Tag </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a unique row in PolarizationTable or HolograpyTable. </TD>
  * </TR>
 	
  * <TR>
  * <TD> spectralWindowId </TD> 
  * <TD> Tag </TD>
  * <TD>  &nbsp;  </TD> 
+ * <TD> &nbsp;refers to a unique row in SpectralWindowTable. </TD>
  * </TR>
+	
+
+
  * </TABLE>
  */
 class DataDescriptionTable : public Representable {
-	friend class asdm::ASDM;
+	friend class ASDM;
 
 public:
 
@@ -147,7 +129,7 @@ public:
 	 * as an array of strings.
 	 * @return a vector of string.
 	 */	
-	static vector<string> getKeyName();
+	static std::vector<std::string> getKeyName();
 
 
 	virtual ~DataDescriptionTable();
@@ -164,21 +146,27 @@ public:
 	 *
 	 * @return the number of rows in an unsigned int.
 	 */
-	unsigned int size() const ;
+	unsigned int size() const;
 	
 	/**
 	 * Return the name of this table.
 	 *
 	 * @return the name of this table in a string.
 	 */
-	string getName() const;
-
+	std::string getName() const;
+	
+	/**
+	 * Return the version information about this table.
+	 *
+	 */
+	 std::string getVersion() const ;
+	
 	/**
 	 * Return the names of the attributes of this table.
 	 *
 	 * @return a vector of string
 	 */
-	 static const vector<string>& getAttributesNames();
+	 static const std::vector<std::string>& getAttributesNames();
 
 	/**
 	 * Return this table's Entity.
@@ -190,7 +178,36 @@ public:
 	 * @param e An entity. 
 	 */
 	void setEntity(Entity e);
+		
+	/**
+	 * Produces an XML representation conform
+	 * to the schema defined for DataDescription (DataDescriptionTable.xsd).
+	 *
+	 * @returns a string containing the XML representation.
+	 * @throws ConversionException
+	 */
+	std::string toXML()  ;
 
+#ifndef WITHOUT_ACS
+	// Conversion Methods
+	/**
+	 * Convert this table into a DataDescriptionTableIDL CORBA structure.
+	 *
+	 * @return a pointer to a DataDescriptionTableIDL
+	 */
+	asdmIDL::DataDescriptionTableIDL *toIDL() ;
+#endif
+
+#ifndef WITHOUT_ACS
+	/**
+	 * Populate this table from the content of a DataDescriptionTableIDL Corba structure.
+	 *
+	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
+	 * @throws ConversionException
+	 */	
+	void fromIDL(asdmIDL::DataDescriptionTableIDL x) ;
+#endif
+	
 	//
 	// ====> Row creation.
 	//
@@ -201,29 +218,20 @@ public:
 	 */
 	DataDescriptionRow *newRow();
 	
-	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
-	DataDescriptionRow *newRowEmpty();
 	
 	/**
 	 * Create a new row initialized to the specified values.
 	 * @return a pointer on the created and initialized row.
 	
- 	 * @param polOrHoloId. 
+ 	 * @param polOrHoloId
 	
- 	 * @param spectralWindowId. 
+ 	 * @param spectralWindowId
 	
      */
 	DataDescriptionRow *newRow(Tag polOrHoloId, Tag spectralWindowId);
 	
-	/**
-	 * Same as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
-	DataDescriptionRow *newRowFull(Tag polOrHoloId, Tag spectralWindowId);
-	
+
+
 	/**
 	 * Create a new row using a copy constructor mechanism.
 	 * 
@@ -237,13 +245,7 @@ public:
 	 * @param row the row which is to be copied.
 	 */
 	 DataDescriptionRow *newRow(DataDescriptionRow *row); 
-	 
-	/**
-	 * Same definition as the newRow method with the same signature.
-	 * Defined to facilitate the call from Python.
-     */
-	 DataDescriptionRow *newRowCopy(DataDescriptionRow *row); 	
-	 
+
 	//
 	// ====> Append a row to its table.
 	//
@@ -256,8 +258,8 @@ public:
 	 * If there table contains a row whose key's fields are equal
 	 * to x's ones then return a pointer on this row (i.e. no actual insertion is performed) 
 	 * otherwise add x to the table and return x.
-	 * @param x. A pointer on the row to be added.
- 	 * @returns a DataDescriptionRow pointer.
+	 * @param x . A pointer on the row to be added.
+ 	 * @returns a pointer to a DataDescriptionRow.	 
 	 */	 
 	 
  	 DataDescriptionRow* add(DataDescriptionRow* x) ;
@@ -269,21 +271,30 @@ public:
 	//
 		
 	/**
-	 * Get all rows.
-	 * @return Alls rows as a vector of pointers of DataDescriptionRow. The elements of this vector are stored in the order 
+	 * Get a collection of pointers on the rows of the table.
+	 * @return Alls rows in a vector of pointers of DataDescriptionRow. The elements of this vector are stored in the order 
 	 * in which they have been added to the DataDescriptionTable.
 	 */
-	vector<DataDescriptionRow *> get() ;
+	std::vector<DataDescriptionRow *> get() ;
 	
-	const vector<DataDescriptionRow *>& get() const;
+	/**
+	 * Get a const reference on the collection of rows pointers internally hold by the table.
+	 * @return A const reference of a vector of pointers of DataDescriptionRow. The elements of this vector are stored in the order 
+	 * in which they have been added to the DataDescriptionTable.
+	 *
+	 */
+	 const std::vector<DataDescriptionRow *>& get() const ;
+	
 
+
+ 
 	
 	/**
  	 * Returns a DataDescriptionRow* given a key.
  	 * @return a pointer to the row having the key whose values are passed as parameters, or 0 if
  	 * no row exists for that key.
 	
-	 * @param dataDescriptionId. 
+	 * @param dataDescriptionId
 	
  	 *
 	 */
@@ -299,116 +310,17 @@ public:
  	 * @return a pointer on this row if any, null otherwise.
  	 *
 			
- 	 * @param polarizationId.
+ 	 * @param polOrHoloId
  	 		
- 	 * @param spectralWindowId.
+ 	 * @param spectralWindowId
  	 		 
  	 */
-	DataDescriptionRow* lookup(Tag polarizationId, Tag spectralWindowId); 
+	DataDescriptionRow* lookup(Tag polOrHoloId, Tag spectralWindowId); 
 
 
-#ifndef WITHOUT_ACS
-	// Conversion Methods
-	/**
-	 * Convert this table into a DataDescriptionTableIDL CORBA structure.
-	 *
-	 * @return a pointer to a DataDescriptionTableIDL
-	 */
-	DataDescriptionTableIDL *toIDL() ;
-#endif
+	void setUnknownAttributeBinaryReader(const std::string& attributeName, BinaryAttributeReaderFunctor* barFctr);
+	BinaryAttributeReaderFunctor* getUnknownAttributeBinaryReader(const std::string& attributeName) const;
 
-#ifndef WITHOUT_ACS
-	/**
-	 * Populate this table from the content of a DataDescriptionTableIDL Corba structure.
-	 *
-	 * @throws DuplicateKey Thrown if the method tries to add a row having a key that is already in the table.
-	 * @throws ConversionException
-	 */	
-	void fromIDL(DataDescriptionTableIDL x) throw(DuplicateKey,ConversionException);
-#endif
-
-	/**
-	 * To be implemented
-	 */
-	char *toFITS() const throw(ConversionException);
-
-	/**
-	 * To be implemented
-	 */
-	void fromFITS(char *fits) throw(ConversionException);
-
-	/**
-	 * To be implemented
-	 */
-	string toVOTable() const throw(ConversionException);
-
-	/**
-	 * To be implemented
-	 */
-	void fromVOTable(string vo) throw(ConversionException);
-
-	/**
-	 * Translate this table to an XML representation conform
-	 * to the schema defined for DataDescription (DataDescriptionTable.xsd).
-	 *
-	 * @returns a string containing the XML representation.
-	 */
-	string toXML()  throw(ConversionException);
-	
-	/**
-	 * Populate this table from the content of a XML document that is required to
-	 * be conform to the XML schema defined for a DataDescription (DataDescriptionTable.xsd).
-	 * 
-	 */
-	void fromXML(string& xmlDoc) throw(ConversionException);
-
-  /**
-	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
-	 * @returns a string containing the MIME message.
-	 * 
-	 */
-	string toMIME();
-	
-   /** 
-     * Extracts the binary part of a MIME message and deserialize its content
-	 * to fill this with the result of the deserialization. 
-	 * @param mimeMsg the string containing the MIME message.
-	 * @throws ConversionException
-	 */
-	 void setFromMIME(const string & mimeMsg);
-	
-	/**
-	  * Stores a representation (binary or XML) of this table into a file.
-	  *
-	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
-	  * will be saved in a file "DataDescription.bin" or an XML representation (fileAsBin==false) will be saved in a file "DataDescription.xml".
-	  * The file is always written in a directory whose name is passed as a parameter.
-	  * 
-	  */
-	  void toFile(string directory);
-
-	  /**
-	   * Load the table in memory if necessary.
-	   */
-	  void checkPresenceInMemory() {
-		if (!presentInMemory && !loadInProgress) {
-			loadInProgress = true;
-			setFromFile(getContainer().getDirectory());
-			presentInMemory = true;
-			loadInProgress = false;
-	  	}
-	  }
-	  
-	/**
-	 * Reads and parses a collection of files as those produced by the toFile method.
-	 * This table is populated with the result of the parsing.
-	 * @param directory The name of the directory containing the files.
-	 * @throws ConversionException If any error occurs while reading the 
-	 * files in the directory or parsing them.
-	 *
-	 */
-	 void setFromFile(const string& directory);		  
-	  
 private:
 
 	/**
@@ -424,78 +336,155 @@ private:
 	ASDM & container;
 	
 	bool archiveAsBin; // If true archive binary else archive XML
-	bool fileAsBin ; // If true file binary else file XML		
+	bool fileAsBin ; // If true file binary else file XML	
+	
+	std::string version ; 
 	
 	Entity entity;
 	
 
 	// A map for the autoincrementation algorithm
-	map<string,int>  noAutoIncIds;
-	void autoIncrement(string key, DataDescriptionRow* x);
+	std::map<std::string,int>  noAutoIncIds;
+	void autoIncrement(std::string key, DataDescriptionRow* x);
 
 
 	/**
 	 * The name of this table.
 	 */
-	static string tableName;
-
+	static std::string tableName;
+	
 	/**
 	 * The attributes names.
 	 */
-	static const vector<string> attributesNames;
-
+	static const std::vector<std::string> attributesNames;
+	
 	/**
 	 * A method to fill attributesNames;
 	 */
-	static vector<string> initAttributesNames();
+	static std::vector<std::string> initAttributesNames();
+
 
 	/**
 	 * The list of field names that make up key key.
 	 */
-	static vector<string> key;
+	static std::vector<std::string> key;
 
 
 	/**
 	 * If this table has an autoincrementable attribute then check if *x verifies the rule of uniqueness and throw exception if not.
 	 * Check if *x verifies the key uniqueness rule and throw an exception if not.
 	 * Append x to its table.
+	 * @throws DuplicateKey
+	 
+	 * @throws UniquenessViolationException
+	 
 	 */
-	DataDescriptionRow* checkAndAdd(DataDescriptionRow* x) throw (DuplicateKey, UniquenessViolationException);
-
+	DataDescriptionRow* checkAndAdd(DataDescriptionRow* x) ;
+	
 	/**
 	 * Brutally append an DataDescriptionRow x to the collection of rows already stored in this table. No uniqueness check is done !
 	 *
-	 * @param «NameS»Row* x a pointer onto the «NameS»Row to be appended.
+	 * @param DataDescriptionRow* x a pointer onto the DataDescriptionRow to be appended.
 	 */
 	 void append(DataDescriptionRow* x) ;
+	 
+	/**
+	 * Brutally append an DataDescriptionRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DataDescriptionRow* x a pointer onto the DataDescriptionRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(DataDescriptionRow* x) ;
+	 
+	 
+
 
 
 // A data structure to store the pointers on the table's rows.
 
-// In all cases we maintain a private ArrayList of DataDescriptionRow s.
-   vector<DataDescriptionRow * > privateRows;
+// In all cases we maintain a private vector of DataDescriptionRow s.
+   std::vector<DataDescriptionRow * > privateRows;
    
 
 			
-	//vector<DataDescriptionRow *> row;
+	std::vector<DataDescriptionRow *> row;
 
+	
+	void error() ; //throw(ConversionException);
 
+	
+	/**
+	 * Populate this table from the content of a XML document that is required to
+	 * be conform to the XML schema defined for a DataDescription (DataDescriptionTable.xsd).
+	 * @throws ConversionException
+	 * 
+	 */
+	void fromXML(std::string& xmlDoc) ;
+		
+	std::map<std::string, BinaryAttributeReaderFunctor *> unknownAttributes2Functors;
 
 	/**
-	 * Fills the vector vout (passed by reference) with pointers on elements of vin 
-	 * whose attributes are equal to the corresponding parameters of the method.
+	  * Private methods involved during the build of this table out of the content
+	  * of file(s) containing an external representation of a DataDescription table.
+	  */
+	void setFromMIMEFile(const std::string& directory);
+	void setFromXMLFile(const std::string& directory);
+	
+		 /**
+	 * Serialize this into a stream of bytes and encapsulates that stream into a MIME message.
+	 * @returns a string containing the MIME message.
+	 *
+	 * @param byteOrder a const pointer to a static instance of the class ByteOrder.
+	 * 
+	 */
+	std::string toMIME(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+  
+	
+   /** 
+     * Extracts the binary part of a MIME message and deserialize its content
+	 * to fill this with the result of the deserialization. 
+	 * @param mimeMsg the string containing the MIME message.
+	 * @throws ConversionException
+	 */
+	 void setFromMIME(const std::string & mimeMsg);
+	
+	/**
+	  * Private methods involved during the export of this table into disk file(s).
+	  */
+	std::string MIMEXMLPart(const asdm::ByteOrder* byteOrder=asdm::ByteOrder::Machine_Endianity);
+	
+	/**
+	  * Stores a representation (binary or XML) of this table into a file.
+	  *
+	  * Depending on the boolean value of its private field fileAsBin a binary serialization  of this (fileAsBin==true)  
+	  * will be saved in a file "DataDescription.bin" or an XML representation (fileAsBin==false) will be saved in a file "DataDescription.xml".
+	  * The file is always written in a directory whose name is passed as a parameter.
+	 * @param directory The name of directory  where the file containing the table's representation will be saved.
+	  * 
+	  */
+	  void toFile(std::string directory);
+	  
+	  /**
+	   * Load the table in memory if necessary.
+	   */
+	  bool loadInProgress;
+	  void checkPresenceInMemory() {
+		if (!presentInMemory && !loadInProgress) {
+			loadInProgress = true;
+			setFromFile(getContainer().getDirectory());
+			presentInMemory = true;
+			loadInProgress = false;
+	  	}
+	  }
+	/**
+	 * Reads and parses a file containing a representation of a DataDescriptionTable as those produced  by the toFile method.
+	 * This table is populated with the result of the parsing.
+	 * @param directory The name of the directory containing the file te be read and parsed.
+	 * @throws ConversionException If any error occurs while reading the 
+	 * files in the directory or parsing them.
 	 *
 	 */
-	void getByRequiredValue(vector <DataDescriptionRow*>& vin, vector <DataDescriptionRow*>& vout,  Tag polarizationId, Tag spectralWindowId);
-
-
-
-
-
-
-
-	void error() throw(ConversionException);
-
+	 void setFromFile(const std::string& directory);	
+ 
 };
 
 } // End namespace asdm

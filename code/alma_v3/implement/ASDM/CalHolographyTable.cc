@@ -365,7 +365,21 @@ CalHolographyRow* CalHolographyTable::newRow(CalHolographyRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalHolographyTable::addWithoutCheckingUnique(CalHolographyRow * x) {
+		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalHolographyRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalHolographyTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -626,29 +640,46 @@ CalHolographyRow* CalHolographyTable::lookup(string antennaName, Tag calDataId, 
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalHolographyRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalHolographyTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalHolographyTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalHolographyTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalHolographyTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalHolographyTable::checkAndAdd called from CalHolographyTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalHolographyTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalHolographyTable::addWithoutCheckingUnique called from CalHolographyTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalHolographyTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1090,6 +1121,7 @@ void CalHolographyTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalHolography");

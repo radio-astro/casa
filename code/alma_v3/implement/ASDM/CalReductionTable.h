@@ -502,6 +502,13 @@ private:
 	 */
 	 void append(CalReductionRow* x) ;
 	 
+	/**
+	 * Brutally append an CalReductionRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalReductionRow* x a pointer onto the CalReductionRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalReductionRow* x) ;
+	 
 	 
 
 

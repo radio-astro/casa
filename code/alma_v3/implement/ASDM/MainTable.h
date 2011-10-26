@@ -555,6 +555,13 @@ private:
 	 */
 	 void append(MainRow* x) ;
 	 
+	/**
+	 * Brutally append an MainRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param MainRow* x a pointer onto the MainRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(MainRow* x) ;
+	 
 	 
 
 

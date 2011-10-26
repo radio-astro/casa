@@ -481,6 +481,13 @@ private:
 	 */
 	 void append(SysPowerRow* x) ;
 	 
+	/**
+	 * Brutally append an SysPowerRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SysPowerRow* x a pointer onto the SysPowerRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SysPowerRow* x) ;
+	 
 	 
 
 

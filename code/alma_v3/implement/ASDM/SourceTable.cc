@@ -390,7 +390,13 @@ SourceRow* SourceTable::newRow(SourceRow* row) {
 			if (insertionId >= (int) context[k].size()) context[k].resize(insertionId+1);
 			return insertByStartTime(x, context[k][insertionId]);
 	}
+	
 		
+	
+		
+	void SourceTable::addWithoutCheckingUnique(SourceRow * x) {
+		SourceRow * dummy = add(x);
+	}
 	
 
 
@@ -704,29 +710,46 @@ SourceRow* SourceTable::lookup(ArrayTimeInterval timeInterval, Tag spectralWindo
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SourceRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"SourceTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"SourceTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SourceTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"SourceTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in SourceTable::checkAndAdd called from SourceTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SourceTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SourceTable::addWithoutCheckingUnique called from SourceTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</SourceTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1183,6 +1206,7 @@ void SourceTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Source");

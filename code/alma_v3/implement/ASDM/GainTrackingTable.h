@@ -517,6 +517,13 @@ private:
 	 */
 	 void append(GainTrackingRow* x) ;
 	 
+	/**
+	 * Brutally append an GainTrackingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param GainTrackingRow* x a pointer onto the GainTrackingRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(GainTrackingRow* x) ;
+	 
 	 
 
 

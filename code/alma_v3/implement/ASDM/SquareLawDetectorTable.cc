@@ -254,7 +254,17 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 		return x;
 	}
 		
+	
 		
+	void SquareLawDetectorTable::addWithoutCheckingUnique(SquareLawDetectorRow * x) {
+		if (getRowByKey(
+						x->getSquareLawDetectorId()
+						) != (SquareLawDetectorRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "SquareLawDetectorTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -481,29 +491,46 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SquareLawDetectorRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in SquareLawDetectorTable::checkAndAdd called from SquareLawDetectorTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SquareLawDetectorTable::addWithoutCheckingUnique called from SquareLawDetectorTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</SquareLawDetectorTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -873,6 +900,7 @@ void SquareLawDetectorTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SquareLawDetector");

@@ -338,6 +338,11 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 			
 		
 	
+		
+	void TotalPowerTable::addWithoutCheckingUnique(TotalPowerRow * x) {
+		TotalPowerRow * dummy = add(x);
+	}
+	
 
 
 
@@ -407,8 +412,8 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 	
 		
 	 vector<TotalPowerRow *> *TotalPowerTable::getByContext(Tag configDescriptionId, Tag fieldId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "TotalPowerTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "TotalPowerTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(configDescriptionId, fieldId);
@@ -587,29 +592,46 @@ TotalPowerRow* TotalPowerTable::newRow(TotalPowerRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		TotalPowerRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"TotalPowerTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"TotalPowerTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"TotalPowerTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"TotalPowerTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in TotalPowerTable::checkAndAdd called from TotalPowerTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"TotalPowerTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in TotalPowerTable::addWithoutCheckingUnique called from TotalPowerTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</TotalPowerTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1018,6 +1040,7 @@ void TotalPowerTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "TotalPower");

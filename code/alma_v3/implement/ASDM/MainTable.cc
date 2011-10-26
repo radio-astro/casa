@@ -324,6 +324,11 @@ MainRow* MainTable::newRow(MainRow* row) {
 			
 		
 	
+		
+	void MainTable::addWithoutCheckingUnique(MainRow * x) {
+		MainRow * dummy = add(x);
+	}
+	
 
 
 
@@ -393,8 +398,8 @@ MainRow* MainTable::newRow(MainRow* row) {
 	
 		
 	 vector<MainRow *> *MainTable::getByContext(Tag configDescriptionId, Tag fieldId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "MainTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "MainTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(configDescriptionId, fieldId);
@@ -573,29 +578,46 @@ MainRow* MainTable::newRow(MainRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		MainRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"MainTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"MainTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"MainTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"MainTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in MainTable::checkAndAdd called from MainTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"MainTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in MainTable::addWithoutCheckingUnique called from MainTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</MainTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -995,6 +1017,7 @@ void MainTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Main");

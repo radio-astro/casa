@@ -363,7 +363,29 @@ CalBandpassRow* CalBandpassTable::newRow(CalBandpassRow* row) {
 		return x;
 	}
 
+	
 		
+	void CalBandpassTable::addWithoutCheckingUnique(CalBandpassRow * x) {
+		if (getRowByKey(
+						x->getBasebandName()
+						,
+						x->getSideband()
+						,
+						x->getAtmPhaseCorrection()
+						,
+						x->getTypeCurve()
+						,
+						x->getReceiverBand()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalBandpassRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalBandpassTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -646,29 +668,46 @@ CalBandpassRow* CalBandpassTable::lookup(BasebandNameMod::BasebandName basebandN
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalBandpassRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"CalBandpassTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"CalBandpassTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalBandpassTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"CalBandpassTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in CalBandpassTable::checkAndAdd called from CalBandpassTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalBandpassTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalBandpassTable::addWithoutCheckingUnique called from CalBandpassTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</CalBandpassTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1089,6 +1128,7 @@ void CalBandpassTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalBandpass");

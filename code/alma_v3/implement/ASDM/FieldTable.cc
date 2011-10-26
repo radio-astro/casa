@@ -294,7 +294,17 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
 		return x;
 	}
 		
+	
 		
+	void FieldTable::addWithoutCheckingUnique(FieldRow * x) {
+		if (getRowByKey(
+						x->getFieldId()
+						) != (FieldRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "FieldTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -533,29 +543,46 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FieldRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"FieldTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"FieldTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FieldTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"FieldTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in FieldTable::checkAndAdd called from FieldTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FieldTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FieldTable::addWithoutCheckingUnique called from FieldTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</FieldTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -958,6 +985,7 @@ void FieldTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Field");

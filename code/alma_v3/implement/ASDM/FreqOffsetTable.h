@@ -450,6 +450,13 @@ private:
 	 */
 	 void append(FreqOffsetRow* x) ;
 	 
+	/**
+	 * Brutally append an FreqOffsetRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FreqOffsetRow* x a pointer onto the FreqOffsetRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FreqOffsetRow* x) ;
+	 
 	 
 
 

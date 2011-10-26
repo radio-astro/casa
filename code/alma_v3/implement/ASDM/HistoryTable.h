@@ -494,6 +494,13 @@ private:
 	 */
 	 void append(HistoryRow* x) ;
 	 
+	/**
+	 * Brutally append an HistoryRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param HistoryRow* x a pointer onto the HistoryRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(HistoryRow* x) ;
+	 
 	 
 
 

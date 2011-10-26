@@ -294,6 +294,11 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 			
 		
 	
+		
+	void HistoryTable::addWithoutCheckingUnique(HistoryRow * x) {
+		HistoryRow * dummy = add(x);
+	}
+	
 
 
 
@@ -361,8 +366,8 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 	
 		
 	 vector<HistoryRow *> *HistoryTable::getByContext(Tag execBlockId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "HistoryTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "HistoryTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(execBlockId);
@@ -541,29 +546,46 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		HistoryRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"HistoryTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"HistoryTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"HistoryTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"HistoryTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in HistoryTable::checkAndAdd called from HistoryTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"HistoryTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in HistoryTable::addWithoutCheckingUnique called from HistoryTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</HistoryTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -951,6 +973,7 @@ void HistoryTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "History");

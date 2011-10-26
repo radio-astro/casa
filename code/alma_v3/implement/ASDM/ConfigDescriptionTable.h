@@ -572,6 +572,13 @@ private:
 	 */
 	 void append(ConfigDescriptionRow* x) ;
 	 
+	/**
+	 * Brutally append an ConfigDescriptionRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ConfigDescriptionRow* x a pointer onto the ConfigDescriptionRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(ConfigDescriptionRow* x) ;
+	 
 	 
 
 

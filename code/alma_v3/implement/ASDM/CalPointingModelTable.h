@@ -633,6 +633,13 @@ private:
 	 */
 	 void append(CalPointingModelRow* x) ;
 	 
+	/**
+	 * Brutally append an CalPointingModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalPointingModelRow* x a pointer onto the CalPointingModelRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalPointingModelRow* x) ;
+	 
 	 
 
 

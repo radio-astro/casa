@@ -286,9 +286,14 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void WeatherTable::addWithoutCheckingUnique(WeatherRow * x) {
+		WeatherRow * dummy = add(x);
+	}
 	
 
 
@@ -357,8 +362,8 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 	
 		
 	 vector<WeatherRow *> *WeatherTable::getByContext(Tag stationId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "WeatherTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "WeatherTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(stationId);
@@ -549,29 +554,46 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		WeatherRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"WeatherTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"WeatherTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"WeatherTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"WeatherTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in WeatherTable::checkAndAdd called from WeatherTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"WeatherTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in WeatherTable::addWithoutCheckingUnique called from WeatherTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</WeatherTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -980,6 +1002,7 @@ void WeatherTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Weather");

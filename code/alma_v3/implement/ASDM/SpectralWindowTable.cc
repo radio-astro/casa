@@ -340,7 +340,17 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 		return x;
 	}
 		
+	
 		
+	void SpectralWindowTable::addWithoutCheckingUnique(SpectralWindowRow * x) {
+		if (getRowByKey(
+						x->getSpectralWindowId()
+						) != (SpectralWindowRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "SpectralWindowTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -587,29 +597,46 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SpectralWindowRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"SpectralWindowTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"SpectralWindowTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SpectralWindowTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"SpectralWindowTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in SpectralWindowTable::checkAndAdd called from SpectralWindowTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SpectralWindowTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SpectralWindowTable::addWithoutCheckingUnique called from SpectralWindowTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</SpectralWindowTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1063,6 +1090,7 @@ void SpectralWindowTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SpectralWindow");

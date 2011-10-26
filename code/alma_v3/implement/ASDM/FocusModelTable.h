@@ -496,6 +496,13 @@ private:
 	 */
 	 void append(FocusModelRow* x) ;
 	 
+	/**
+	 * Brutally append an FocusModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FocusModelRow* x a pointer onto the FocusModelRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FocusModelRow* x) ;
+	 
 	 
 
 

@@ -609,6 +609,13 @@ private:
 	 */
 	 void append(CalFluxRow* x) ;
 	 
+	/**
+	 * Brutally append an CalFluxRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalFluxRow* x a pointer onto the CalFluxRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalFluxRow* x) ;
+	 
 	 
 
 

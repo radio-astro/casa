@@ -288,9 +288,14 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
+	
+		
+	void FreqOffsetTable::addWithoutCheckingUnique(FreqOffsetRow * x) {
+		FreqOffsetRow * dummy = add(x);
+	}
 	
 
 
@@ -363,8 +368,8 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 	
 		
 	 vector<FreqOffsetRow *> *FreqOffsetTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
-	 	if (getContainer().checkRowUniqueness() == false)
-	 		throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "FreqOffsetTable");
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "FreqOffsetTable");
 
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
@@ -555,29 +560,46 @@ FreqOffsetRow* FreqOffsetTable::newRow(FreqOffsetRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FreqOffsetRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
-			if (getContainer().checkRowUniqueness()) {
-				try {
+		if (getContainer().checkRowUniqueness()) {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
 					checkAndAdd(row);
-				} catch (DuplicateKey e1) {
-					throw ConversionException(e1.getMessage(),"FreqOffsetTable");
-				} 
-				catch (UniquenessViolationException e1) {
-					throw ConversionException(e1.getMessage(),"FreqOffsetTable");	
+					s = xml.getElementContent("<row>","</row>");
 				}
-				catch (...) {
+				
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FreqOffsetTable");
+			} 
+			catch (UniquenessViolationException e1) {
+				throw ConversionException(e1.getMessage(),"FreqOffsetTable");	
+			}
+			catch (...) {
 				// cout << "Unexpected error in FreqOffsetTable::checkAndAdd called from FreqOffsetTable::fromXML " << endl;
+			}
+		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
 				}
 			}
-			else {
-				append(row);
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FreqOffsetTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FreqOffsetTable::addWithoutCheckingUnique called from FreqOffsetTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
-		}
+		}				
+				
+				
 		if (!xml.isStr("</FreqOffsetTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -953,6 +975,7 @@ void FreqOffsetTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "FreqOffset");
