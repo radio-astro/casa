@@ -24,7 +24,13 @@ set( prefix  ${CASA_DOC_DIR} )
 set( _latex ${prefix}/TaskRef/${_base}.tex )
 set( _latex ${_base}.latex )
 
-set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/taskref/:${CMAKE_SOURCE_DIR}/doc/taskref/TaskRef.dir/:/usr/share/texmf/tex/{latex,generic,}//:/usr/share/texmf/web2c//:/usr/share/texmf/tex4ht//:/usr/share/texmf/tex/:$ENV{TEXINPUTS} )
+#set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/taskref/:${CMAKE_SOURCE_DIR}/doc/taskref/TaskRef.dir/:/usr/share/texmf/tex/{latex,generic,}//:/usr/share/texmf/web2c//:/usr/share/texmf/tex4ht//:/usr/share/texmf/tex/:$ENV{TEXINPUTS} )
+if( APPLE )
+   set( TEXROOT /Library/TeX/Root )
+else()
+   set( TEXROOT /usr/share )
+endif()
+set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/taskref/:${CMAKE_SOURCE_DIR}/doc/taskref/TaskRef.dir/:${TEXROOT}/texmf/tex/{latex,generic,}//:${TEXROOT}/texmf/web2c//:${TEXROOT}/texmf/tex4ht//:${TEXROOT}/texmf/tex/:$ENV{TEXINPUTS} )
 set( CASAGOOGLESEARCH 006707099318971825654:0jfwitmloig )
 
 
@@ -39,6 +45,10 @@ set( CASAGOOGLESEARCH 006707099318971825654:0jfwitmloig )
       add_custom_command(
         OUTPUT ${_html}
 	COMMAND sed -e "s/CASADOCUMENT/CASA Task Reference Manual/" -e "s/CASAGOOGLESEARCH/${CASAGOOGLESEARCH}/" ${casaroot}/code/doc/texinputs.dir/nraoheader.4ht > ${prefix}/nraoheader.4ht
+	COMMAND sed -e "s/%\\\\NextFile/\\\\NextFile/" ${prefix}/helpfiles/sim_observe.htex > /tmp/sim_observe.htex
+	COMMAND cp /tmp/sim_observe.htex ${prefix}/helpfiles
+	COMMAND sed -e "s/%\\\\NextFile/\\\\NextFile/" ${prefix}/helpfiles/sim_analyze.htex > /tmp/sim_analyze.htex
+	COMMAND cp /tmp/sim_analyze.htex ${prefix}/helpfiles
         COMMAND mkdir -p ${prefix}/TaskRef
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
@@ -59,6 +69,10 @@ set( CASAGOOGLESEARCH 006707099318971825654:0jfwitmloig )
       set( _pdf  ${prefix}/TaskRef/${_base}.pdf )
       add_custom_command(
         OUTPUT ${_pdf}
+	COMMAND sed -e "s/\\\\NextFile/%\\\\NextFile/" ${prefix}/helpfiles/sim_observe.htex > /tmp/sim_observe.htex
+	COMMAND cp /tmp/sim_observe.htex ${prefix}/helpfiles
+	COMMAND sed -e "s/\\\\NextFile/%\\\\NextFile/" ${prefix}/helpfiles/sim_analyze.htex > /tmp/sim_analyze.htex
+	COMMAND cp /tmp/sim_analyze.htex ${prefix}/helpfiles
         COMMAND mkdir -p ${prefix}/TaskRef
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
         COMMAND cd ${prefix}/TaskRef && TEXINPUTS=${_inputs} ${PDFLATEX_COMPILER} ${_latex}
