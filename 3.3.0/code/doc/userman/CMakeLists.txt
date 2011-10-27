@@ -46,6 +46,7 @@ set( LATEX2HTML_OPTIONS htcasa,section+,next,p-width,5 )
         COMMAND cd ${prefix}/UserMan && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         COMMAND cd ${prefix}/UserMan && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
         COMMAND cd ${prefix}/UserMan && TEXINPUTS=${_inputs} ${LATEX2HTML_CONVERTER} ${_latex} ${LATEX2HTML_OPTIONS}
+	COMMAND svn export --force ${casaroot}/code/doc/userman/FIG ${prefix}/UserMan/FIG
         DEPENDS ${_latex}
         VERBATIM )
 
