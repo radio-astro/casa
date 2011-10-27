@@ -263,11 +263,13 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	selectedMeasurementSet_p = NULL;
 	measurementSetSelection_p = NULL;
 	originalMeasurementSet_p = NULL;
+	antennaNames_p = NULL;
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
 	subIntegrationMap_p = NULL;
 	polarizationMap_p = NULL;
+	polarizationIndexMap_p = NULL;
 	antennaPairMap_p = NULL;
 	vwbt_p = NULL;
 
@@ -285,6 +287,7 @@ FlagDataHandler::~FlagDataHandler()
 	if (antennaPairMap_p) delete antennaPairMap_p;
 	if (subIntegrationMap_p) delete subIntegrationMap_p;
 	if (polarizationMap_p) delete polarizationMap_p;
+	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
 	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
@@ -292,6 +295,7 @@ FlagDataHandler::~FlagDataHandler()
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
+	if (antennaNames_p) delete antennaNames_p;
 	if (logger_p) delete logger_p;
 
 	return;
@@ -309,6 +313,12 @@ FlagDataHandler::open()
 
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
+
+	// Read antenna names from Antenna table
+	const MSAntenna msant( originalMeasurementSet_p->antenna() );
+	ROScalarColumn<String> names(msant,"NAME");
+	if (antennaNames_p) delete antennaNames_p;
+	antennaNames_p = new Vector<String>(names.getColumn());
 
 	return true;
 }
@@ -921,6 +931,8 @@ FlagDataHandler::generatePolarizationsMap()
 	// Free previous map and create a new one
 	if (polarizationMap_p) delete polarizationMap_p;
 	polarizationMap_p = new polarizationMap();
+	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
+	polarizationIndexMap_p = new polarizationIndexMap();
 
 	uShort pos = 0;
 	Vector<Int> corrTypes = visibilityBuffer_p->get()->corrType();
@@ -934,72 +946,84 @@ FlagDataHandler::generatePolarizationsMap()
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is I" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::I] = pos;
+				(*polarizationIndexMap_p)[pos] = "I";
 				break;
 			}
 			case Stokes::Q:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is Q" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::Q] = pos;
+				(*polarizationIndexMap_p)[pos] = "Q";
 				break;
 			}
 			case Stokes::U:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is U" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::U] = pos;
+				(*polarizationIndexMap_p)[pos] = "U";
 				break;
 			}
 			case Stokes::V:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is V" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::V] = pos;
+				(*polarizationIndexMap_p)[pos] = "V";
 				break;
 			}
 			case Stokes::XX:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XX" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::XX] = pos;
+				(*polarizationIndexMap_p)[pos] = "XX";
 				break;
 			}
 			case Stokes::YY:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YY" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::YY] = pos;
+				(*polarizationIndexMap_p)[pos] = "YY";
 				break;
 			}
 			case Stokes::XY:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XY" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::XY] = pos;
+				(*polarizationIndexMap_p)[pos] = "XY";
 				break;
 			}
 			case Stokes::YX:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YX" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::YX] = pos;
+				(*polarizationIndexMap_p)[pos] = "YX";
 				break;
 			}
 			case Stokes::RR:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RR" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::RR] = pos;
+				(*polarizationIndexMap_p)[pos] = "RR";
 				break;
 			}
 			case Stokes::LL:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LL" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::LL] = pos;
+				(*polarizationIndexMap_p)[pos] = "LL";
 				break;
 			}
 			case Stokes::RL:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RL" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::RL] = pos;
+				(*polarizationIndexMap_p)[pos] = "RL";
 				break;
 			}
 			case Stokes::LR:
 			{
 				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LR" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::LR] = pos;
+				(*polarizationIndexMap_p)[pos] = "LR";
 				break;
 			}
 			default:
@@ -1734,17 +1758,23 @@ FlagMapper::operator()(uInt channel, uInt row)
 	return combinedFlag;
 }
 
+Bool
+FlagMapper::operator()(uInt pol, uInt channel, uInt row)
+{
+	return commonFlagsView_p->operator ()(pol,channel,row);
+}
+
 void
 FlagMapper::applyFlag(uInt channel, uInt row)
 {
 	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
 	{
-		(*this.*applyFlag_p)(row,channel,*iter);
+		(*this.*applyFlag_p)(*iter,channel,row);
 	}
 }
 
 void
-FlagMapper::applyCommonFlags(uInt row, uInt channel, uInt pol)
+FlagMapper::applyCommonFlags(uInt pol, uInt channel, uInt row)
 {
 	// NOTE: Notice that the position is pol,channel,row, not the other way around
 	commonFlagsView_p->operator()(pol,channel,row) = flag_p;
@@ -1752,7 +1782,7 @@ FlagMapper::applyCommonFlags(uInt row, uInt channel, uInt pol)
 }
 
 void
-FlagMapper::applyPrivateFlags(uInt row, uInt channel, uInt pol)
+FlagMapper::applyPrivateFlags(uInt pol, uInt channel, uInt row)
 {
 	// NOTE: Notice that the position is pol,channel,row, not the other way around
 	commonFlagsView_p->operator()(pol,channel,row) = flag_p;
