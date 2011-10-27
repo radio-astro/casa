@@ -120,10 +120,10 @@ protected:
 	// Compute flags for a given (time,freq) antenna pair map
 	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
 
-	// Logger
+	// Common used members that must be accessible to derivaded classes
 	casa::LogIO *logger_p;
-
-	// Running mode configuration
+	VisBufferAutoPtr *visibilityBuffer_p;
+	FlagDataHandler *flagDataHandler_p;
 	Bool multiThreading_p;
 	Int nThreads_p;
 	Int threadId_p;
@@ -131,9 +131,7 @@ protected:
 private:
 	
 	// MS-related objects
-	FlagDataHandler *flagDataHandler_p;
 	MeasurementSet *selectedMeasurementSet_p;
-	VisBufferAutoPtr *visibilityBuffer_p;
 	Cube<Bool> *commonFlagCube_p;
 	Cube<Bool> *privateFlagCube_p;
 
