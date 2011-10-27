@@ -49,16 +49,9 @@ casapy: error while loading shared libraries: /opt/casa/casapy-20.0.5653-001/lib
 \end{verbatim}
 \normalsize
 
-The non-root installation is thought to work on a wide variety of linux platforms including:
-\begin{itemize}
-    \item RedHat Enterprise Linux: 4 \& 5 (32 bit and 64 bit)
-    \item Fedora Core Linux: 6, 7, 8 (32 bit and 64 bit)
-    \item Ubuntu 8.0.4 (32 bit and 64 bit)
-    \item openSUSE 10.0, 11.0 (32 bit and 64 bit)
-    \item Debian 4.0 (32 bit and 64 bit) 
-\end{itemize}
-
-and it may work for other versions of Linux.
+The non-root installation is thought to work on a wide variety of
+linux platforms, see Sect.\,\ref{section:intro.obtaining} for the
+latest supported OSs.
 
 
 \subsection{Unsupported platforms}
@@ -122,8 +115,7 @@ should be as easy as copying a file.
    \item Double-click the CASA application to run it for the first time. This ensures everything is properly updated if you had installed a previous version. 
 \end{enumerate}
 
-If you had previously installed CASA rev 8909 or later you will need
-to unload the dbus before the copy will work
+You may need to unload the dbus before the copy will work
 
 \small
 \begin{verbatim}
@@ -140,7 +132,7 @@ advisable to do so as this will allow you to run casapy from a
 terminal window by typing casapy. Additionally, the viewer
 (casaviewer), table browser (casabrowser), plotms (casaplotms), and
 buildmytasks will also be available via the command line. Creating the
-symbolic links will require that you have administrator priviledges.
+symbolic links will require that you have administrator privileges.
 
 
 \
@@ -221,7 +213,9 @@ should be used for most purposes:
 \end{verbatim}
 \normalsize
 
-This file is loaded just before the casapy prompt is display. This is the place where users can load their own python modules and casa tasks. For example ~/.casa/init.py might contain:
+This file is loaded just before the casapy prompt is display. This is
+the place where users can load their own python modules and casa
+tasks. For example ~/.casa/init.py might contain:
 
 \small
 \begin{verbatim}

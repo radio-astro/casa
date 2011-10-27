@@ -4,6 +4,7 @@
 
 % STM 2008-11-07  Patch3 draft from Wes
 % STM 2009-11-23  Release 3.0.0 version
+% JO  2011-10-03  Release 3.3 edits
 
 %\chapter{Writing Tasks in CASA}
 \chapter[Appendix: Writing Tasks in CASA]{Writing Tasks}
@@ -31,7 +32,7 @@ the steps you need to execute (again for an example task named ``yourtask''):
 \begin{itemize}
 \item Create python code for task as {\tt yourtask\_task.py}
 \item Create xml for task as {\tt yourtask.xml}
-\item Execute outside casapy: {\tt buildmytasks yourtask}
+\item Execute in or outside casapy the shell script: {\tt buildmytasks yourtask}
 \item Execute inside casapy: {\tt execfile 'mytasks.py'}
 \end{itemize}
 After this, you should see the help and inputs inside casapy, e.g.\ 
@@ -39,23 +40,31 @@ After this, you should see the help and inputs inside casapy, e.g.\
 invoke the file called {\tt mytasks.py}, regardless of what you named
 the actual task.
 
-Note that in order to run the {\tt buildmytasks} command in your OS,
-you need the path to that executable.  This is set up if you've sourced
-one of the {\tt casainit.sh} files, otherwise you will have to find
-this on your system, 
+To get all paths at the right place, it is easiest to execute the {\tt
+  buildmytask} from within CASA, in the directory where the {\tt
+  task\_yourtask.py} and {\tt yourtask.xml} files reside. As this is a
+shell script and not a python command, call {\tt buildmytasks} within
+the {\tt os.system()} python method:
 \begin{verbatim}
-    /usr/lib64/casapy/24.0.8115-001/bin/buildmytasks yourtask
+os.system(buildmytasks  yourtask)
 \end{verbatim}
-for the 2.4.0 beta release on Linux at the AOC.  Note also if the files you have
-provided are not in the directory you are working from in CASA, you
-would provide that path
+or simply 
 \begin{verbatim}
-    execfile '<MYPATH>/mytasks.py'
+os.system(buildmytasks) 
 \end{verbatim}
-where {\tt <MYPATH>} is that path.
+the latter will build all the tasks that reside in the current
+directory. This will create a few *.pyc. *cli* files that CASA needs
+to run properly, and {\tt buildmytasks} will also create {\tt
+  mytasks.py} which needs to be executed within CASA to register the
+new task:
+\begin{verbatim}
+    execfile('mytasks.py')
+\end{verbatim}
 
-{\bf ALERT:} This has changed since Beta Patch 2.4 in that before you
-would do {\tt execfile 'yourtask.py'} instead of {\tt execfile 'mytasks.py'}.
+You now have a shiny new task {\tt yourtask} that you can run and use
+in the same way as all other CASA tasks. 
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -318,13 +327,17 @@ for an example.
 \section{Example: The {\tt clean} task}
 \label{section:write.clean}
 
+Note that the following is for illustration only and does {\it not} reflect
+the current implementation of {\tt clean} -- a task that is always
+developing further on a quick pace.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \subsection{File {\tt clean.xml} }
 \label{section:write.clean.xml}
 
 Clean.xml gives a fairly comprehensive example of how to construct the
-XML file.
+XML file. 
 \begin{verbatim}
 
 <?xml version="1.0" encoding="UTF-8"?>
@@ -786,8 +799,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </input>
 
   <returns type="void"/>
-\end{verbatim}
-\begin{verbatim}
 
   <example>
 

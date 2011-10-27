@@ -27,6 +27,7 @@
 % JO 2010-10-11 release 3.1.0 edits
 % GM 2010-11-19 release 3.1.0 edits
 % JO 2011-04-13 release 3.2.0 editing starts
+% JO 2011-10-03 redits for CASA 3.3.0
 
 \chapter{Introduction}
 \label{chapter:intro}
@@ -72,7 +73,7 @@ provide the full capability of the package, and are the atomic
 functions that form the basis of data reduction.  These tools augment
 the tasks, or fill in gaps left by tasks that are under development
 but not yet available. See the {\bf CASA Toolkit Manual} for more
-details on the tools (avaiable from \verb=casa.nrao.edu=).  Note that
+details on the tools (available from \verb=casa.nrao.edu=).  Note that
 in most cases, the tasks are Python interface scripts to the tools,
 but with specific, limited access to them and a standardized interface
 for parameter setting.  The tasks and tools can be used together to
@@ -166,7 +167,7 @@ There is also a CASAGuides Wiki
    \url{http://casaguides.nrao.edu}
 \end{quote}
 that contains helpful information on CASA startup, AIPS-to-CASA
-cheatsheet, example scripts of processing your data in CASA,
+cheat sheet, example scripts of processing your data in CASA,
 along with hints and tricks to best use this package.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,27 +185,29 @@ along with hints and tricks to best use this package.
   \end{boxedminipage}
 \end{wrapfigure}
 
+CASA 3.3.0 is now available and the main feature 
+improvements are listed below. In addition to the new features, many bugs were 
+addressed and fixed.
 
-
-The CASA release 3.2.0 is the third release of CASA. The main feature
-improvements are listed below. In addition to the new features, many
-bugs were addressed and fixed.
 
 We occasionally issue patches and 'stable' versions of CASA. To get
-notified, please subscribe to the 'casa-users' mailing list. Releases
-will be announced via the 'casa-announce' mailing list. To subscribe,
-please visit the mailing lists webpage. For feedback, and help please
-go to the CASA webpage {\url http://casa.nrao.edu} or visit the NRAO
-helpdesk {\url http://help.nrao.edu}.
+notified, please subscribe to the 'casa-users' mailing list. 'Stable'
+as well as CASA releases are available at \url{http://casa.nrao.edu}.
+Releases will be announced via the 'casa-announce' mailing list. To
+subscribe, please visit the \url{http://casa.nrao.edu}. For feedback,
+and help please go to the \url{http://help.nrao.edu} NRAO
+helpdesk; for ALMA questions please use the
+\url{http://alma-help.nrao.edu} ALMA helpdesk.
 
 Note that in its current incarnation CASA is designed to support EVLA,
 ALMA, and VLA data, as well as single dish data from ALMA as well as
-Nobeyama. Data from other telescopes, be it single dish or
-interferometers can be imported from uvfits or sdfits formats into
-measurements sets (ms) or scantables in CASA. Given the variety of
-non-standard fits formats, we cannot guarantee that CASA will fully
-support data from all telescopes. However, efforts are made to support
-data formats from other facilities. 
+Nobeyama.  Data from other telescopes, be it single dish or
+interferometers can be imported from {\tt uvfits} or {\tt sdfits}
+formats into measurements sets (ms) or scantables in CASA. Given the
+variety of non-standard fits formats, we cannot guarantee that CASA
+will fully support data from all telescopes. However, efforts are made
+to support data formats from other facilities.
+
 %%%%%%%%%%%%%
 
 \section{Obtaining CASA}
@@ -224,8 +227,8 @@ CASA is available for the following operating systems:
 
     \item Mac OS
          \begin{itemize}
-          \item Mac OS 10.5 (Leopard; 32-bit)
-          \item Mac OS 10.6 (Snow Leopard; 64-bit) 
+          \item Mac OS 10.6 (Snow Leopard) 
+          \item Mac OS 10.7 (Lion)
 \end{itemize}
 \end{itemize}
 
@@ -240,132 +243,141 @@ link.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsection{What's New in Release 3.2.0}
+\subsection{What's New in Release 3.3.0}
 \label{section:intro.release.whatsnew}
 
 
 Major improvements over the previous version of CASA include:
 
-  
+
+
 \begin{itemize}
 
-\item {\bf Flagging}
-    \begin{itemize} 
-     \item New task {\tt flagcmd} to apply flags from text files, xml files, the flag\_cmd table (see {\tt importevla}), and python strings  
-     \item Selection by scan intents is now available in {\tt flagdata}
-   \end{itemize}
-
-\item {\bf Imaging}
+\item  {\bf  Flagging }
     \begin{itemize}
-     \item More Stokes selection options in {\tt clean}
-     \item Improved handling of flat noise in mosaics
-     \item Double-precision frequency grids are now used in {\tt clean} (important for interpolation of narrow channel-width data)
-     \item MS-MFS performance improvements ({\tt nterms>1} in the {\tt clean} task) - the
-minor-cycle is multi-threaded on scales, and deconvolution is no
-longer restricted to the inner-quarter of the image.
-
-
-   \end{itemize}
-
-\item {\bf Data examination/editing}
-  \begin{itemize}
-    \item {\tt plotms} now has the option to iterate through the data, e.g. through baselines or spectral windows interactively
-    \item {\tt plotms} hardcopy outputs now have a white background instead of the former grey color
-    \item {\tt plotms:} colorize is now available from the plotms task interface. There are also many smaller updates like allowing grid lines and changes to the title. 
-   \end{itemize}
-
-\item {\bf  Calibration}
-\begin{itemize}
-
-    \item CASA now supports the calibration of linear polarization feeds
-    \item {\tt uvcontsub2}  now offers polynomial continuum fits
-    \item Support for ALMA Tsys and EVLA switched power calibration
-    \item Support for scan intents in {\tt listobs} and a number of calibration tasks (and tools)
-    \item Improved ALMA primary beam tables are now available
-    \item Tools to handle solar system object distances and sizes for calibration (including comets)  
-    \item {\tt uvcontsub2} output no longer creates scratch columns
-    \item A flux standard model for Venus is now implemented
-    \item Unification of spectral shift and regridding in {\tt cvel} and {\tt  Clean}
-    \item {\tt Applycal} now automatically backs up the flags before
-      the calibration tables are applied to the data
-    \item The default flux standard in {\tt setjy} is now 'Perley-Butler 2010' with improved values
-
-   \end{itemize}
-
-\item {\bf Simulation}
-  \begin{itemize}
-  \item {\tt simdata} includes the ALMA early science Cycle 0 configurations and has updates on ALMA band 7 and 9 Tsys values
-  \end{itemize} 
-
-
-\item {\bf  Parallelization }
-  \begin{itemize}
-  \item Parallel flagging supported 
-
-\end{itemize} 
-
-\item {\bf  Data and Image Manipulation }
-   \begin{itemize}
-   \item new interpolation method {\it fftshift} in {\tt cvel}
-    \item {\tt split} now copies arbitrary subtables 
-    \item in {\tt split}: spw string now always means to <i>skip</i> n channels, never an
-averaging width as it did previously (at least in the task)
-   \end{itemize}
-
-\item {\bf  Data im/export }
-     \begin{itemize} 
-
-    \item CASA does now comply with the FITS v3.0 standards for spectral WCS (wcslib 4.7 compatibility)
-    \item CASA now supports the import and export of FITS images with spectral axes linear in optical velocity (ctype VOPT) and wavelength (ctype WAVE)
-     \item In addition, spectral axes linear in air wavelength (ctype AWAV) can be imported
-    \item Degenerate WCS axes in FITS images are now better handled
-     \item {\tt importevla} fills now the flag\_cmd table, allows scan selection and has separate controls on online, zero, and shadow flags (note, this is implied by changing {\tt importevla2} to {\tt importevla}) 
-      \end{itemize}
-
-\item {\bf  Data Analysis }
-    \begin{itemize} 
-    \item {\tt imfit} has better error estimates
-    \item Component lists can now be written to a table in {\tt imfit}
+       \item  {\tt testautoflag:} new, experimental task for autoflagging data based on piecewise fitting of the bandpass in the time and frequency domains
     \end{itemize}
 
-\item {\bf  Viewer }
+\item  {\bf  Imaging }
+    \begin{itemize}
+      \item  {\tt clean} masks for main and outlier fields in {\tt clean} now 
+use the same format please use the new CASA region format (see below), boxfile 
+format support etc. will be removed in upcoming CASA releases
+    \end{itemize}
+
+
+\item  {\bf  Data examination/editing }
+  \begin{itemize}
+    \item  {\tt plotms:} also displays the antenna station name 
+    \item  {\tt plotuv:} new task to plot the visibilities in the uv-plane
+    \item  {\tt listvis:} now labels all entries with their units
+    \item  {\tt ms.select()} is a new method to select visibilities on the tool level with a selection syntax similar to that in CASA tasks
+    \item  {\tt listobs:} can now write the output to a text file
+  \end{itemize}
+
+\item  {\bf  Calibration }
+  \begin{itemize}
+    \item  {\tt setjy:} A spectral index is now supported as input for flux calibration
+    \item  {\tt setjy:} Arbitrary fluxes, and spectral index can be applied to model images
+    \item  {\tt setjy:} The parameter {\it listmodimages} will list all available calibrator models. Standard calibrator models don't need their full paths anymore
+    \item  {\tt bandpass, gaincal, applycal:} The {\it opacity} parameter can now be a list of opacities, one entry for each spectral window
+    \item  {\tt gaincal:} {\it gaintype='K'} is implemented to solve for antenna based delays
+    \item  data selection based on {\it scan intents} and {\it observation id} is now supported in most calibration tasks
+    \item  EVLA switched power calibration available in {\tt gencal}
+      ({\it caltype='evlagain'})
+    \item ALMA Tsys calibration available in {\tt gencal} ({\it caltype='tsys'}) 
+    \item  previous {\tt uvcontsub2} has been renamed and is now replacing {\tt uvcontsub}
+    \item  the reference antenna in calibration tasks can now be a list of antennas. If the first antenna is not available, the second entry will be used etc.
+    \item  calibration tasks now use {\it minsnr=3} as default for the minimum signal-to-noise ration of data to be included in the solutions  
+    \item Model for the EVLA calibrator 3C147 in L-band is now available   
+  \end{itemize}
+
+\item  {\bf  Simulation }
+  \begin{itemize}
+    \item  The {\tt simdata} task has been split into two tasks, 
+{\tt sim\_observe} 
+and
+{\tt sim\_analyze}, to reduce the complexity for new users, and facilitate the
+combination of multiple arrays. {\tt sim\_observe} is used to create
+measurement sets from model images and component lists, and optionally
+add thermal noise and cross-polarization.  {\tt sim\_analyze} is used to image
+datasets and graphically assess their fidelity.  The original task
+{\tt simdata} is retained in CASA 3.3 but will be removed in the future.
+     \item  better handling of simulation from components and clarification of the 
+units for reported statistics. 
+    \item  More flexibility in simulating sources around transit
+    \item  a {\it thermalnoise} {\it seed} parameter will now ensure randomness of noise 
+    \item  the default velocity frame for simulated data is now LSRK rather than TOPO
+  \end{itemize} 
+
+\item  {\bf  Data and Image Manipulation }
+   \begin{itemize}
+    \item  {\tt fixvis:} new parameter {\it phasecenter} to change the direction of the phase center of the visibilities. Changes can be absolute or relative
+    \item  {\tt concat} can now optionally omit copying (and concatenating) the POINTING table 
+    \item  {\tt impbcor}, {\tt ia.pbcor()} new task and tool method for primary beam correction of images
+    \item  {\tt immath:} a {\it stretch} parameter in the {\it mask} selection will extend a smaller mask to the full size of the data cube (e.g. a moment0 mask to all channels)
+    \item  the default for channel interpolation during regridding processes is now 
+{\it 'linear'} in most tasks  
+   \end{itemize}
+
+
+
+\item  {\bf  Data im/export }
      \begin{itemize}
-     \item The viewer can now display and convert to/from wavelengths and air wavelengths on the spectral axis
-     \item The Spectral Profile Tool (SPT) now persists as you open more files in the {\tt Viewer}, and are correctly automatically added to list shown in SPT
-     \item Zoom in the SPT window now persists when cursor is moved in {\tt Viewer} window
-     \item If you open a single plane in SPT first, before cube(s), the spectrum is displayed (before if cube wasn't first in the stack, no spectrum could be displayed)
-     \item FITS images created by other packages such as IDL without degenerate axes (e.g. Stokes) can be displayed in {\tt Viewer} and imported via importfits. 
-     \item All extensions of a mulit-extension FITS image can now be displayed in the {\tt viewer}. 
-     \item The cursor tracking, animation, and mouse button panels can be docked on any side of the viewer. The cursor tracking and animation panels can be tabbed or untabed. The dock state of these panels is retained from one execution of the viewer to the next. This feature can be used to avoid any shrinking of the display panel as more data is loaded.
+        \item  full ICRS coordinate support
+        \item  upgrades to {\tt importasdm} and {\tt exportasdm} to support ASDM v1.3
+        \item  {\tt importasdm} can now optionally omit importing the POINTING table  
+        \item  {\tt importevla:} EVLA switched power can now be filled from an SDM into an MS
+     \end{itemize}
    
+
+\item  {\bf  Data analysis }
+     \begin{itemize}
+      \item  {\tt imfit:} now optionally performs fits on a plane-by-plane basis if given multiple channels
+      \item  {\tt imfit:}  now derives the integrals and associated errors of the fitted Gaussians 
+      \item  {\tt imspec:} accepts initial values for Gaussian fitting
+      \item  {\tt imstat:} now derives statistics in slices of data, e.g. across RA/DEC per channel map
      \end{itemize}
 
 
 
-\item {\bf  Single Dish }
-  \begin{itemize}
-    \item Cubic spline and sinusoidal fitting are now avaiable in sdbaseline 
-    \item Polynomial fitting in {\tt sdbaseline} is now 30 times faster than in CASA 3.1
-    \item {\tt sdplot} can now plot more than 16 panels at a time
-    \item Tasks show a context sensitive help to the arguments rather than global value descriptions 
-    \item Interactive flagging is now available in {\tt sdflag}
-    \item Renaming of some parameters in {\tt sdbaseline} for clarification, and adding new parameters for improved clipping 
-    \item Beams can now be selected for plotting in {\tt sdplot}
-    \item Explicit specification of row panelling and stacking in {\tt sdplot} 
-    \item {\tt sdbaseline} supports per IF baseline selection syntax
+\item  {\bf  Viewer }
+     \begin{itemize}
+      \item  A distance measurement tool has been added
+      \item  the spectral line tool can now plot errorbars on the spectrum
+      \item  support of error cubes in viewer 
+      \item  the spectrum of a cube can be derived as an average, sum,
+        median, and weighted average of a selected region
+      \item better support of spectral units
+      \item elliptical region tool added
+     \end{itemize}
 
-    \end{itemize}
+\item  {\bf  Single Dish }
+     \begin{itemize}
+      \item  {\tt  sdbaseline:} Automated sinusoidal fitting based on FFTs
+      \item  more uniformity in infile/outfile parameter naming throughout the single dish package
+     \end{itemize}
+
+\item  {\bf  Performance }
+     \begin{itemize}
+      \item  Copying the POINTING subtables is now 75-300 times faster       
+      \item  {\tt  partition:} new task to split a MS into a multi-MS that is optimized for parallelized processing
+      \item  tasks {\tt flagdata, clearcal, applycal} now work in parallelized mode, ie. they make use of multi-core multi-node processing
+      \item  {\tt pcont} tool method for parallelized imaging and deconvolution of continuum data
+     \end{itemize}
 
 
-
-\item {\bf  Other }
-  \begin{itemize} 
-  \item ATM libraries are updated to ATM-0.5.0. to be in sync with ALMA 8.1 online software
-  \item If the user has no .matplotlib/matplotlibrc file, CASA sets up the backend to TkAgg as the default
-  \item Better data tiling algorithms for performance improvements 
-  \item {\tt casapy --help} now displays the available startup options of CASA
-  \item And, as usual, many bug fixes and updated documentation 
-\end{itemize}
+\item  {\bf  Other }
+     \begin{itemize}
+     \item New format for CASA regions. The new ascii format supports
+       a large variety of shapes, offers flexibility for different
+       coordinate systems and can be used as regions and
+       annotations. See Chapter\,\ref{chapter:regionformat} for
+       details. The new region format can be used in almost
+       all tasks and we offer limited support to write out the new
+       format in the current CASA viewer. Full support will be
+       available in the next release.
+     \end{itemize}
 
 \end{itemize}
 
@@ -1127,18 +1139,20 @@ Available tasks, organized by category (experimental tasks in parens ()
 
 Import/export       Information         Editing             Manipulation      
 ------------------  ------------------  ------------------  ------------------
-exportfits          imhead              fixvis              concat            
-exportuvfits        imstat              flagautocorr        conjugatevis      
-importaipscaltable  imval               flagcmd             cvel              
-importasdm          listcal             flagdata            hanningsmooth     
-importfits          listhistory         flagmanager         imhead            
-importfitsidi       listobs             msview              msmoments         
-importuvfits        listvis             plotms              plotms            
-importvla           plotms              plotxy              plotxy            
-(exportasdm)        plotxy              (flagdata2)         split             
-(importevla)        vishead                                 testconcat        
-(importgmrt)        visstat                                 vishead           
-{importoldasdm}     (listsdm)                               (uvcontsub2)      
+exportfits          imhead              fixplanets          concat            
+exportuvfits        imstat              fixvis              conjugatevis      
+importaipscaltable  imval               flagautocorr        cvel              
+importasdm          listcal             flagcmd             fixvis            
+importfits          listhistory         flagdata            hanningsmooth     
+importfitsidi       listobs             flagmanager         imhead            
+importuvfits        listvis             msview              msmoments         
+importvla           plotms              plotms              plotms            
+(exportasdm)        plotxy              plotxy              plotxy            
+(importevla)        vishead             (flagdata2)         split             
+(importgmrt)        visstat             (testautoflag)      testconcat        
+{importoldasdm}     (listsdm)                               uvcontsub         
+                                                            vishead           
+                                                            {uvcontsub2}      
 
 Calibration         Modeling            Imaging             Analysis          
 ------------------  ------------------  ------------------  ------------------
@@ -1146,33 +1160,33 @@ accum               setjy               clean               imcollapse
 applycal            uvcontsub           deconvolve          imcontsub         
 bandpass            uvmodelfit          feather             imfit             
 blcal               uvsub               ft                  imhead            
-calstat             (uvcontsub2)        imcontsub           immath            
-clearcal                                (autoclean)         immoments         
-fixvis                                  (boxit)             imregrid          
-fluxscale                               (csvclean)          imsmooth          
-ft                                      {mosaic}            imstat            
-gaincal                                 {widefield}         imtrans           
-gencal                                                      imval             
-listcal                                                     listvis           
-plotants                                                    slsearch          
-plotcal                                                     splattotable      
-polcal                                                      (specfit)         
-setjy                                                                         
+calstat             {uvcontsub2}        imcontsub           immath            
+clearcal                                (boxit)             immoments         
+fixplanets                              (csvclean)          impbcor           
+fluxscale                               {mosaic}            imregrid          
+ft                                      {widefield}         imsmooth          
+gaincal                                                     imstat            
+gencal                                                      imtrans           
+listcal                                                     imval             
+plotants                                                    listvis           
+plotcal                                                     slsearch          
+polcal                                                      splattotable      
+setjy                                                       (specfit)         
 smoothcal                                                                     
 uvmodelfit                                                                    
 uvsub                                                                         
 
 Visualization       Simulation          Single dish         Utility           
 ------------------  ------------------  ------------------  ------------------
-clearplot           simdata             asap_init           browsetable       
-imview              {oldsimdata}        sdaverage           clearplot         
-msview                                  sdbaseline          clearstat         
+clearplot           sim_analyze         asap_init           browsetable       
+imview              sim_observe         sdaverage           clearplot         
+msview              simdata             sdbaseline          clearstat         
 plotants                                sdcal               concat            
 plotcal                                 sdcoadd             conjugatevis      
 plotms                                  sdfit               find              
-plotxy                                  sdflag              help par.parameter
-viewer                                  sdflagmanager       help taskname     
-                                        sdimaging           imview            
+plotuv                                  sdflag              help par.parameter
+plotxy                                  sdflagmanager       help taskname     
+viewer                                  sdimaging           imview            
                                         sdimprocess         msview            
                                         sdlist              plotms            
                                         sdmath              rmtables          
@@ -1186,12 +1200,11 @@ viewer                                  sdflagmanager       help taskname
 User defined tasks
 ------------------
 
-CASA <3>: 
 \end{verbatim}
 \normalsize
 The tasks with name in parentheses are experimental, those in curly brackets
 are deprecated and will be removed in future releases. The
-funtionality of deprecated
+functionality of deprecated
 tasks is usually available in some other task (e.g., instead of {\tt
   mosaic} one should use {\tt clean}). In the above
 case, the user has not defined any task him/herself.
@@ -1226,7 +1239,8 @@ exportfits         : Convert a CASA image to a FITS file
 exportuvfits       : Convert a CASA visibility data set to a UVFITS file:
 feather            : Combine two images using their Fourier transforms
 find               : Find string in tasks, task names, parameter names:
-fixvis             : Recalculates or converts (u, v, w)
+fixplanets         : Changes FIELD and SOURCE table entries based on user given direction or POINTING table, optionally fixes the UVW coordinates
+fixvis             : Recalculates (u, v, w) and/or changes Phase Center 
 flagautocorr       : Flag autocorrelations
 flagcmd            : Flagging task based on flagging commands
 flagdata           :  All purpose flagging task based on selections
@@ -1238,11 +1252,12 @@ gaincal            : Determine temporal gains from calibrator observations
 gencal             : Specify Calibration Values of Various Types
 hanningsmooth      : Hanning smooth frequency channel data to remove Gibbs ringing
 imcollapse         : Collapse image along one axis, aggregating pixel values along that axis.
-imcontsub          : Subtracts specified continuum channels from a spectral line data set
+imcontsub          : Estimates and subtracts continuum emission from an image cube
 imfit              : Fit one or more elliptical Gaussian components on an image region(s)
 imhead             : List, get and put image header parameters
 immath             : Perform math operations on images
 immoments          : Compute moments from an image
+impbcor            : Construct a primary beam corrected image from an image and a primary beam pattern.
 importaipscaltable : Convert a AIPS calibration table (FITS format) to a CASA calibration table
 importasdm         : Convert an ALMA Science Data Model observation into a CASA visibility file
 importevla         : Convert an Science Data Model observation into a CASA Measurement Set
@@ -1260,18 +1275,19 @@ imval              : Get the data value(s) and/or mask value in an image.
 imview             : View an image
 listcal            : List antenna gain solutions
 listhistory        : List the processing history of a dataset:
-listobs            : List data set summary in the logger
+listobs            : List data set summary in the logger or in a file
 listsdm            : Lists observation information present in an SDM directory.
 listvis            : List measurement set visibilities.
 mosaic             : Create a multi-field deconvolved image with selected algorithm
 msmoments          : Compute moments from an MS
 msview             : View a visibility data set
-oldsimdata         : simulation task:
+partition          : Experimental extension of split to produce multi-MSs
 pclean             : Invert and deconvolve images with parallel engines
 peel               : Do direction dependent selfcal(s) and optionally remove annoying sources.
 plotants           : Plot the antenna distribution in the local reference frame:
 plotcal            : An all-purpose plotter for calibration results 
 plotms             : A plotter/interactive flagger for visibility data.
+plotuv             : Plot the baseline distribution
 plotxy             : An X-Y plotter/interactive flagger for visibility data.
 polcal             : Determine instrumental polarization calibrations
 rmtables           : 
@@ -1293,6 +1309,8 @@ sdsmooth           : ASAP SD task: do smoothing of spectra
 sdstat             : ASAP SD task: list statistics of spectral region
 sdtpimaging        : SD task: do a simple calibration and imaging for total power data 
 setjy              : Fills the model column with the visibilities of a calibrator
+sim_analyze        : image and analyze simulated datasets
+sim_observe        : mosaic simulation task:
 simdata            : mosaic simulation task:
 slsearch           : Search a spectral line table.
 smoothcal          : Smooth calibration solution(s) derived from one or more sources:
@@ -1300,9 +1318,10 @@ specfit            : Fit 1-dimensional gaussians and/or polynomial models to an 
 splattotable       : Convert a downloaded Splatalogue spectral line list to a casa table.
 split              : Create a visibility subset from an existing visibility set
 ssoflux            : Fills the model column with the visibilities of a calibrator
+testautoflag       : Task for automatic identification and flagging of RFI
 testconcat         : Concatenate the subtables of several visibility data sets, not the MAIN bulk data.
 uvcontsub          : Continuum fitting and subtraction in the uv plane
-uvcontsub2         : Continuum fitting and subtraction in the uv plane CALIBRATION VERSION
+uvcontsub2         : Temporarily a clone of uvcontsub
 uvmodelfit         : Fit a single component source model to the uv data
 uvsub              : Subtract/add model from/to the corrected visibility data.
 viewer             : View an image or visibility data set
@@ -1311,7 +1330,6 @@ visstat            : Displays statistical information from a measurement set, or
 widefield          : Wide-field imaging and deconvolution with selected algorithm
 
 CASA <4>: 
-
 
 \end{verbatim}
 \normalsize
@@ -1600,20 +1618,20 @@ tm.retrieve(return_value) # to retrieve the status
 \normalsize
 for the example above.
 
-To show the current state of an asynchronous task, use the
+To show the current status of an asynchronous task, use the
 {\tt tm.retrieve} method using the handle id as the argument.
 For example,
 \small
 \begin{verbatim}
 CASA <9>: tm.retrieve(handle)
-  Out[9]: {'result': None, 'state': 'pending'}
+  Out[9]: {'result': None, 'status': 'pending'}
 \end{verbatim}
 \normalsize
 or
 \small
 \begin{verbatim}
 CASA <10>: tm.retrieve(1)
-  Out[10]: {'result': None, 'state': 'pending'}
+  Out[10]: {'result': None, 'status': 'pending'}
 \end{verbatim}
 \normalsize
 which means its still running.  You should be seeing output in
@@ -1623,7 +1641,7 @@ When a task is finished, you will see:
 \small
 \begin{verbatim}
 CASA <11>: tm.retrieve(1)
-  Out[11]: {'result': None, 'state': 'done'}
+  Out[11]: {'result': None, 'status': 'done'}
 \end{verbatim}
 \normalsize
 which indicates completion.
@@ -1770,7 +1788,7 @@ Tasks DO NOT change the values of the global parameters, nor does the
 invocation of tasks using the functional call with arguments change
 the globals.
 
-This does mean that unless you do an explict {\tt default} of the task
+This does mean that unless you do an explicit {\tt default} of the task
 (\S~\ref{section:intro.tasks.setpar.default}), previously set values
 may be unexpectedly used if you do not inspect the {\tt inp}
 carefully.  For example, good practice is:
@@ -2422,7 +2440,7 @@ and it has highlighted all instances in green.}
 
 {\bf ALERT:} Due to problems with Qt under MacOSX, we had to
 replace the GUI {\tt qtcasalogger} with a special stripped down one that
-uses the Mac Console.  This still has the important capabilties 
+uses the Mac Console.  This still has the important capabilities 
 such as showing the messages and cut/paste.  The following description
 is for the Linux version and thus should mostly be disregarded on OSX.  On
 the Mac, you treat this as just another console window and use the
@@ -2549,7 +2567,7 @@ However, the logger GUI will still be monitoring the previous
  Open} and select the new log file, in our case 'otherfile.log'.
 
 %%%%%%
-\subsubsection{Starup options for the {\tt logger}}
+\subsubsection{Startup options for the {\tt logger}}
 \label{section:intro.common.logger.startup}
 
 One can specify {\tt logger} options at the startup of {\tt casapy} on
@@ -2740,7 +2758,7 @@ directories that fit the name wildcard that are not CASA tables).
 {\bf ALERT:} Some CASA processes lock the file and forget to
 give it up when they are done ({\tt plotxy} is usually the culprit).
 You will get WARNING messages from {\tt rmtables} and your script
-will probably crash second time around as the file isnt removed.
+will probably crash second time around as the file isn't removed.
 The safest thing is still to exit {\tt casapy} and start a new 
 session for multiple runs.
 
@@ -2915,7 +2933,7 @@ The main data examination and flagging tasks are:
          visibility data (\S~\ref{section:edit.plot.plotxy}), {\bf
            note:} plotxy is slower than plotms and will eventually be
          phased out, plotxy is still useful to create scripted
-         hardcopy output, this functionality will likeyl be available
+         hardcopy output, this functionality will likely be available
          in plotms in the next release);
    \item {\tt flagdata} --- non-interactive flagging (and unflagging)
          of specified data (\S~\ref{section:edit.flagdata});
@@ -3011,7 +3029,7 @@ The major calibration tasks are:
          (\S~\ref{section:cal.tables.listcal});
    \item {\tt plotcal} --- Plots (and optionally flags) calibration
          solutions (\S~\ref{section:cal.tables.plotcal});
-   \item {\tt uvcontsub/uvcontsub2} --- carry out uv-plane continuum subtraction
+   \item {\tt uvcontsub} --- carry out uv-plane continuum subtraction
          for spectral-line data (\S~\ref{section:cal.other.uvcontsub});
    \item {\tt split} --- write out a new (calibrated) MS for specified
          sources (\S~\ref{section:cal.other.split});
@@ -3092,7 +3110,7 @@ The {\tt gaincal} task determines solutions for the time-based complex
 antenna gains, for each spectral window, from the specified
 calibration sources.  A solution interval may be specified. The
 default {\tt 'G'} solution mode solves for antenna-based gains 
-in each polarization in specified time solution invervals.  The {\tt 'T'}
+in each polarization in specified time solution intervals.  The {\tt 'T'}
 solution mode is the same as {\tt 'G'} except that it solves for
 a single solution shared by both polarizations.
 
@@ -3187,10 +3205,9 @@ carried out on these split Measurement Sets.
 \label{section:intro.walkthru.calib.uvcontsub}
 
 For spectral line data, continuum subtraction can be performed in the
-image domeain ({\tt imcontsub}) or in the uv domain. For the latter,
+image domain ({\tt imcontsub}) or in the uv domain. For the latter,
 there are two tasks available: {\tt uvcontsub} subtracts polynomial of
-desired order from each baseline, defined by line-free channels. {\tt
-  uvcontsub2} performs this process across spectral windows in a broad band dataset.
+desired order from each baseline, defined by line-free channels. 
 
 %See \S~\ref{section:cal.correct.apply} for details.
 
