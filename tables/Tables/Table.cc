@@ -49,6 +49,7 @@
 #include <casa/OS/File.h>
 #include <casa/OS/Directory.h>
 #include <casa/OS/DirectoryIterator.h>
+#include <casa/OS/EnvVar.h>
 #include <casa/iostream.h>
 
 
@@ -427,7 +428,6 @@ Table Table::copyToMemoryTable (const String& newName, Bool noRows) const
   return newtab;
 }
 
-
 //# Open the table file and read it in if necessary.
 void Table::open (const String& name, const String& type, int tableOption,
 		  const TableLock& lockOptions, const TSMOption& tsmOpt)
@@ -456,14 +456,20 @@ void Table::open (const String& name, const String& type, int tableOption,
         // using stale data (Jim Jacobs 2011/10/5)
 
         Bool dirExists = False;
-        for (int i = 0; i < 3; i++){
+	if(!EnvironmentVariable::isDefined("CASA_NOLUSTRE_CHECK")){
+          for (int i = 0; i < 3; i++){
             if (dir.exists()){
                 dirExists = True;
                 break;
             }
             usleep (1000000); // one second
-        }
+	    if(i==2)
+	      std::cerr << "Lustre Latency Check is on. To turn off set environment variable CASA_NOLUSTRE_CHECK=1." << std::endl;
+          }
 
+        } else {
+           dirExists = dir.exists();
+	}
         if (! dirExists){
             throw TableNoFile(absName);
         }
