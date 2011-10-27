@@ -36,6 +36,8 @@
 % GM 2010-11-19 Release 3.1.0 edits
 % JO 2011-04-?? Release 3.2.0 edits
 % GM 2011-05-10 Release 3.2.0 edits
+% JO 2011-06-07 added negative channel widths
+% JO 2011-10-06 edits for Release 3.3.0
 
 \chapter{Synthesis Calibration}
 \label{chapter:cal}
@@ -286,14 +288,15 @@ the insertion of other non-calibration steps
 \begin{figure}[h!]
 \begin{center}
 \pngname{casa_caltables}{6.25}
-\caption{\label{fig:casacaltables}
-Chart of the table flow during calibration. The parameter names for
-input or output of the tasks are shown on the connectors.  Note
-that from the output solver through the accumulator only a single 
-calibration type (e.g. {\tt 'B'}, {\tt 'G'}) can be smoothed,
-interpolated or accumulated at a time.  The final set of
-cumulative calibration tables of all types are then input to
-{\tt applycal} as shown in Figure~\ref{fig:casacalflow}. }
+\caption{\label{fig:casacaltables} Chart of the table flow during
+  calibration. The parameter names for input or output of the tasks
+  are shown on the connectors.  Note that from the output solver
+  through the accumulator only a single calibration type (e.g. {\tt
+    'B'}, {\tt 'G'}) can be smoothed, interpolated or accumulated at a
+  time.  {\tt accum} is optional and all calibration files. The final
+  set of cumulative calibration tables of all types (accummulated or
+  as a list of caltables) are then input to {\tt applycal} as shown in
+  Figure~\ref{fig:casacalflow}. }
 \hrulefill
 \end{center}
 \end{figure}
@@ -307,12 +310,11 @@ tables, and will output an ``incremental'' calibration table
 (it increments the previous calibration, if any).  This table
 can then be smoothed using {\tt smoothcal} if desired.
 
-You can accumulate the incremental calibration onto previous
-calibration tables with {\tt accum}, which will then output
-a cumulative calibration table.
-This task will also interpolate onto a different time scale.  
-See \S~\ref{section:cal.tables.accum} for more on accumulation
-and interpolation.
+You can optionally accumulate the incremental calibration onto
+previous calibration tables with {\tt accum}, which will then output a
+cumulative calibration table.  This task will also interpolate onto a
+different time scale.  See \S~\ref{section:cal.tables.accum} for more
+on accumulation and interpolation.
 
 Figure~\ref{fig:casacaltables} graphs the flow of these tables
 through the sequence
@@ -520,7 +522,8 @@ Opacity corrections are a component of calibration type 'T'.  To make
 opacity corrections in CASA, an estimate of the zenith opacity is
 required (see observatory-specific chapters for how to measure zenith
 opacity).  This is then supplied to the {\tt opacity} parameter in
-the calibration tasks.
+the calibration tasks, which can be a single value or a list of
+opacities with entries for the different spectral windows.
 
 {\bf ALERT:} The {\tt opacity} parameter must be supplied
 to any calibration task that allows pre-application of the prior
@@ -557,9 +560,29 @@ the same time.
 As noted above, there are no facilities yet to estimate this from the
 data (e.g. by plotting Tsys vs. elevation).
 
-Below, we give instructions for determining {\tt opacity} for VLA 
-observations where tip-curve data is available.  It is beyond the
-scope of this cookbook to provide information for other telescopes.
+Below, we give instructions for determining {\tt opacity} for EVLA
+data from weather statistics and VLA observations where tip-curve data
+is available.  It is beyond the scope of this cookbook to provide
+information for other telescopes.
+
+%%%%%
+\subsubsection{Determining opacity corrections for EVLA data}
+\label{section:cal.prior.opacity.evla}
+
+For the EVLA site, weather statistics prove to be a reasonable good
+way to estimate the opacity at the time of the observations. On
+\url{http://casaguides.nrao.edu} under {\it EVLA guides>Contributed
+  Scipts} a task and script (plotWX) is provided that calculates the
+opacity as a mix of both actual weather data and seasonal model. The
+script or task can be downloaded and run within CASA (see also
+Sect.\,\ref{chapter:write} on how to integrate external tasks into
+CASA). The result will be a variable (e.g. {\it myTau=[0.02,0.03]})
+that can be used as input for the {\it opacity} parameter ({\it
+  opacity=myTau} or {\it opacity=[0.02,0.03]}) for subsequent
+  calibration.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%
 \subsubsection{Determining opacity corrections for VLA data}
@@ -607,7 +630,7 @@ visibilities (unpolarized) for all sources (e.g. AMP=1,
 phase=0$^{\circ}$).  
 
 The {\tt setjy} task is then used to set the proper flux density in
-the MODEL DATA column for flux calibrators. For sources that are
+the MODEL\_DATA column for flux calibrators. For sources that are
 recognized flux calibrators (listed in Tables
 \ref{table:fluxcal-table} and \ref{table:fluxcal-table-solarsystem}),
 {\tt setjy} can calculate the flux densities as a function of
@@ -617,7 +640,7 @@ calibration source is then filled into the {\tt MODEL} column.
 
 For the EVLA, the default source models are customarily point sources
 defined by the Baars, Perley-Taylor 99, or Perley-Butler 2010 flux density
-scales ('Perley-Butler 2010' is now standard by default),
+scales ('Perley-Butler 2010' is standard by default),
 or point sources of unit flux density if the flux density is
 unknown. The {\tt MODEL\_DATA} column can also be filled with a model
 generated from an image of the source (e.g. the Fourier transform of
@@ -641,6 +664,7 @@ J2000 calibrator names.
 \end{tabular}
 \end{center}
 \end{table}
+
 
 \vspace{5mm}
 \begin{table}[h!]
@@ -695,13 +719,17 @@ vis                 =         ''        #  Name of input visibility file
 field               =         ''        #  Field name(s)
 spw                 =         ''        #  Spectral window identifier (list)
 modimage            =         ''        #  File location for field model
-scalebychan         =      False        #  scale the flux density on a per channel basis or else on a per spw basis
-fluxdensity         =         -1        #  Specified flux density [I,Q,U,V]; -1 will lookup values
+listmodimages       =      False        #  List the available modimages
+scalebychan         =      False        #  scale the flux density on a per channel basis or else
+                                        #   on a per spw basis
+fluxdensity         =         -1        #  Specified flux density [I,Q,U,V]; -1 will lookup
+                                        #   values
 standard            = 'Perley-Butler 2010' #  Flux density standard
 async               =      False        #  If true the taskname must be started using setjy(...)
+
 \end{verbatim}
 \normalsize By default the {\tt setjy} task will cycle through all
-fields and spectral windows (or even cheannels, if {\tt scalebychan =
+fields and spectral windows (or even channels, if {\tt scalebychan =
   True}, setting the flux density either to 1 Jy (unpolarized), or if
 the source is recognized as one of the calibrators in the above table,
 to the flux density (assumed unpolarized) appropriate to the observing
@@ -711,6 +739,21 @@ called {\tt data.ms}: \small
   setjy(vis='data.ms')                # This will set all fields and spectral windows
 \end{verbatim}
 \normalsize
+
+Models of available calibrator sources can be listed by setting {\it
+  listmodimages=True}. {\tt setjy} will then come up with all images
+that are in the paths where calibrator models for known telescopes are
+stored. It will also show all images in the working directory - any
+image there could potentially be a calibrator model. If the calibrator
+model is found by {\it listmodimages} it can be used in the {\it
+  modimage} parameter without a path.
+
+The {\tt fluxdensity} parameter can be used to specify the flux of the
+calibrator in all Stokes parameters. Is is thus a list of values
+[I,Q,U,V], e.g. ['12Jy','13mJy','0Jy','0Jy']. In addition, a spectral
+index can be specified via {\it spix} and a reference frequency {\it
+  reffreq} (using the definition: $S = fluxdensity\times\frac{
+  freq}{reffreq}^{spix}$).
 
 
 Most calibrator sources are based on radio emission from quasars and
@@ -733,7 +776,7 @@ darkening will be accounted for soon. Note that this model may
 oversimplify the real structure, in particular asteroids.
 
 An example, using data from the M99 tutorial in 
-\href{http://casaguides.nrao.edu/index.php?title=CARMA_spectral_line_mosaic_M99}:
+\url{http://casaguides.nrao.edu/index.php?title=CARMA_spectral_line_mosaic_M99}:
 
 {\tt setjy(vis='c0104I', field='MARS', spw='0~2', standard='Butler-JPL-Horizons 2010')}
 
@@ -743,13 +786,16 @@ measurement.  Use casalog.filter('INFO') to restore the normal logging
 level.
 
 
-{\bf ALERT:} At this time, all that {\tt setjy} does is to fill
+At this time, all that {\tt setjy} does is to fill
 the {\tt MODEL\_DATA} column of the MS with the Fourier transform of
 a source model.  The {\tt ft} task (\S~\ref{section:im.ft})
 will do the same thing, although it does not offer the options for
 flux rescaling that {\tt setjy} does.  Note also that currently 
 {\tt setjy} will not transform a full-Stokes model image such that all
 polarizations are filled correct.  You need to use {\tt ft} for this.
+
+
+
 
 To limit this operation to certain fields and spectral windows, use
 the {\tt field} and/or {\tt spw} parameters, which take the usual
@@ -776,6 +822,26 @@ The full-polarization flux density (I,Q,U,V) may also be explicitly provided:
 \normalsize
 
 
+{\bf ALERT:} The apparent brightness of objects in the Solar System
+will vary with time (Fig.~\ref{fig:reldelfdperday}) because of the
+Earth's motion relative to them, if nothing else.  If the field {\it
+  index} of a flux calibrator spans several days, you should run setjy
+more than once, limiting each run to a suitable timerange by using the
+timerange, scan, and/or observation selection parameters.  Note that
+it is the field index that matters, not the name.  Typically {\tt
+  concat} assigns moving objects a new field index for each
+observation, so usually it is not necessary to select a time range in
+setjy.  However, it is worth checking with {\tt listobs}, especially
+for planets.
+
+\begin{figure}
+\label{fig:reldelfdperday}
+\pngname{reldelfdperday}{6}
+\caption{The relative change of apparent brightness per day for some
+popular Solar System flux density calibrators.  Note that when Mars is
+varies fastest near opposition, when it is closest to us and thus probably
+too resolved to use as a calibrator anyway.}  
+\end{figure}
 
 
 \subsubsection{Using Calibration Models for Resolved Sources}
@@ -818,11 +884,11 @@ for details on the use of standard calibrators for the E/VLA.
 Model images for some flux density calibrators are provided with CASA:
 \begin{itemize}
    \item Red Hat Linux RPMs 32bit (RHE4, Fedora 6): 
-         located in /usr/lib/casapy/data/nrao/VLA/CalModels
+         located in\\ /usr/lib/casapy/data/nrao/VLA/CalModels
    \item Red Hat Linux RPMs 64bit (RHE4, Fedora 6): 
-         located in /usr/lib64/casapy/data/nrao/VLA/CalModels
-   \item MAC OSX .dmg: located in /Applications/CASA.app/Contents/Resources/casa-data/nrao/VLA/CalModels
-   \item NRAO-AOC casapy-test: /home/casa/data/nrao/VLA/CalModels
+         located in\\ /usr/lib64/casapy/data/nrao/VLA/CalModels
+   \item MAC OSX .dmg: located in\\ /Applications/CASA.app/Contents/Resources/casa-data/nrao/VLA/CalModels
+   \item NRAO-AOC casapy-test:\\ /home/casa/data/nrao/VLA/CalModels
 %  \item NRAO-AOC test: /home/ballista/casa/daily/data/nrao/VLA/CalModels
 \end{itemize}
 e.g., these are found in the {\tt data/nrao/VLA/CalModels}
@@ -840,15 +906,16 @@ The models available are:
 \small
 \begin{verbatim}
 
-3C138_L.im              3C286_L.im  3C48_L.im
+3C138_L.im  3C147_L.im  3C286_L.im  3C48_L.im
 3C138_C.im  3C147_C.im  3C286_C.im  3C48_C.im
 3C138_X.im  3C147_X.im  3C286_X.im  3C48_X.im
 3C138_U.im  3C147_U.im  3C286_U.im  3C48_U.im
 3C138_K.im  3C147_K.im  3C286_K.im  3C48_K.im
 3C138_Q.im  3C147_Q.im  3C286_Q.im  3C48_Q.im
-
-
 \end{verbatim}
+
+(more calibrator models for the EVLA are available at\\
+\url{https://science.nrao.edu/facilities/evla/data-processing/flux-calibrator-models-for-new-evla-bands}
 \normalsize
 These are all un-reconvolved images of AIPS CC lists.  
 It is important that the model image {\em not} be one
@@ -948,12 +1015,13 @@ using applycal.
 The {\tt gencal} task has the inputs:
 \small
 \begin{verbatim}
-#  gencal :: Externally specify calibration solutions of varous types
+#  gencal :: Specify Calibration Values of Various Types
 vis                 =         ''        #  Name of input visibility file
-caltable            =         ''        #  The input/output calibration table
-caltype             =         ''        #  The calibration type
+caltable            =         ''        #  The new/existing calibration table
+caltype             =         ''        #  The calibration type:
+                                        #   'amp','ph','sbd','mbd','antpos','antposvla'
 spw                 =         ''        #  Calibration spw(s) selection
-antenna             =         ''        #  Calibraiton antenna(s) selection
+antenna             =         ''        #  Calibration antenna(s) selection
 pol                 =         ''        #  Calibration polarizations(s) selection
 parameter           =         []        #  The calibration values
 async               =      False        #  If true the taskname must be started using gencal(...)
@@ -1130,7 +1198,39 @@ gencal(vis='test.ms',caltable='test.antposvla',caltype='antposvla', \
        parameter=[0.01,0.02,0.03, -0.03,-0.01,-0.02])
 \end{verbatim}
 \normalsize
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Applying EVLA switched power  or ALMA Tsys
+   using {\tt gencal}}
+\label{section:cal.prior.gencalevlagains}
+Noise diodes in the EVLA antennas can be used to pre-calibrate the
+data. The diodes follow an ON-OFF cycle and the power for both states is
+measured and recorded. This is called the 'EVLA switched power'
+calibration. To apply the calibration, the switched power data first needs to be
+filled into the measurement set via {\tt importevla} and {\tt switchedpower=True}
+(see Sect.\,\ref{section:io.import.evla}). The second setp is to
+create a calibration table vis {\tt gencal} and {\tt
+  caltype='evlagain'}, like 
 
+\small
+\begin{verbatim}
+gencal(vis='test.ms',caltable='EVLAswitchedpower.cal',caltype='evlagain')
+\end{verbatim}
+\normalsize
+
+For ALMA the calibration of system temperature is done via hot loads
+and the data recorded similar to the EVLA in the measurement set (ALMA
+will provide measurement sets where these data are available. To
+derive the calibration table from it, use {\tt caltype='tsys'}:
+
+\small
+\begin{verbatim}
+gencal(vis='test.ms',caltable='ALMAtsys.cal',caltype='tsys')
+\end{verbatim}
+\normalsize
+
+
+This calibration tables created for ALMA or EVLA are then carried
+along all further calibration steps in the {\tt gaintable} parameter.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1198,7 +1298,7 @@ them.  Be careful.
 
 %%%%%%
 \subsubsection{Selection: {\tt field}, {\tt spw}, {\tt selectdata},
-  and {\tt intent} }
+  {\tt intent}, and {\tt observation} }
 \label{section:cal.solve.pars.select}
 
 Selection is controlled by the parameters:
@@ -1217,21 +1317,28 @@ respectively. {\tt intent} is the scan intent that was specified when
 the observations were set up. They typically describe what was
 intended with a specific scan, i.e. a flux or phase calibration, a
 bandpass, a pointing, an observation of your target, or something else
-or a combination. The format for the scan intents of your
-observations are listed in the logger when you run {\tt
-  listobs}. Minimum matching with wildcards will work, like
-'*BANDPASS*'. This is especially useful when multiple intents are attached to scans. 
+or a combination. The format for the scan intents of your observations
+are listed in the logger when you run {\tt listobs}. Minimum matching
+with wildcards will work, like '*BANDPASS*'. This is especially useful
+when multiple intents are attached to scans.  Fibally, {\tt
+  observation} is an identifier to distinguish between different
+observing runs, mainly used for ALMA.
 
 The {\tt selectdata} parameter expands as usual, uncovering other
 selection sub-parameters:
 \small
 \begin{verbatim}
-selectdata      =       True   #   Other data selection parameters
-     timerange  =         ''   #   time range: ''==>all 
-     uvrange    =         ''   #   uv range''==>all 
-     antenna    =         ''   #   antenna/baselines: ''==>all 
-     scan       =         ''   #   scan numbers: Not yet implemented
-     msselect   =         ''   #   Optional data selection (Specialized. but see help)
+selectdata          =       True        #  data selection parameters
+     field          =         ''        #  field names or field index numbers (blank for all)
+     spw            =         ''        #  spectral windows:channels (blank for all)
+     timerange      =         ''        #  time range (blank for all)
+     uvrange        =         ''        #  uv range (blank for all)
+     antenna        =         ''        #  antenna/baselines (blank for all)
+     scan           =         ''        #  scan numbers (blank for all)
+     correlation    =         ''        #  correlations (blank for all)
+     array          =         ''        #  (sub)array numbers (blank for all)
+     observation    =         ''        #  Select by observation ID(s)
+     msselect       =         ''        #  MS selection (blank for all)
 \end{verbatim}
 \normalsize
 Note that if {\tt selectdata=False} these parameters are not used when
@@ -1415,12 +1522,13 @@ lists of lists, e.g.
 The parameters controlling common aspects of the solution are:
 \small
 \begin{verbatim}
-solint       =      'inf'   #  Solution interval: egs. 'inf', '60s' (see help)
-combine      =         ''   #  Data axes which to combine for solve (scan, spw, and/or field)
-preavg       =       -1.0   #  Pre-averaging interval (sec) (rarely needed)
-refant       =         ''   #  Reference antenna name:''=no explicit reference
-minblperant  =          4   #  Minimum baselines _per antenna_ required for solve
-minsnr       =        0.0   #  Reject solutions below this SNR: 0==>no rejection
+solint              =      'inf'        #  Solution interval: egs. 'inf', '60s' (see help)
+combine             =     'scan'        #  Data axes which to combine for solve (scan, spw,
+                                        #   and/or field)
+preavg              =       -1.0        #  Pre-averaging interval (sec) (rarely needed)
+refant              =         ''        #  Reference antenna name(s)
+minblperant         =          4        #  Minimum baselines _per antenna_ required for solve
+minsnr              =        3.0        #  Reject solutions below this SNR
 \end{verbatim} 
 \normalsize
 
@@ -1466,21 +1574,23 @@ and spw).  You can specify multiple choices for combination:
 \normalsize
 for example.
 
-The reference antenna is specified by the {\tt refant} parameter.
-This useful to ``lock'' the solutions with time, effectively rotating
-(after solving) the phase of the gain solutions for all antennas such
-that the reference antenna's phase is constant at zero.  If the
-selected antenna drops out, another antenna will be selected for
-ongoing consistency in time (at its ``current'' value) until the
-refant returns, usually at a new value (not zero), which will be kept
-fixed thenceforth.  You can also run without a reference antenna, but
-in this case the solutions will formally float with time; in practice,
-the first antenna will be approximately constant near zero phase.
-It is usually prudent to select an antenna
-in the center of the array that is known to be particularly stable, as
-any gain jumps or wanders in the {\tt refant} will be transferred to
-the other antenna solutions.  Also, it is best to choose a reference
-antenna that never drops out.
+The reference antenna is specified by the {\tt refant} parameter. A
+list of antennas can be provided to this parameter and if the first
+antenna is not present in the data, the next antenna in the list will
+be used, etc.  It is useful to ``lock'' the solutions with time,
+effectively rotating (after solving) the phase of the gain solutions
+for all antennas such that the reference antenna's phase is constant
+at zero.  If the selected antenna drops out, another antenna will be
+selected for ongoing consistency in time (at its ``current'' value)
+until the refant returns, usually at a new value (not zero), which
+will be kept fixed thenceforth.  You can also run without a reference
+antenna, but in this case the solutions will formally float with time;
+in practice, the first antenna will be approximately constant near
+zero phase.  It is usually prudent to select an antenna in the center
+of the array that is known to be particularly stable, as any gain
+jumps or wanders in the {\tt refant} will be transferred to the other
+antenna solutions.  Also, it is best to choose a reference antenna
+that never drops out.
 
 
 
@@ -1489,8 +1599,7 @@ average data over periods shorter than the solution interval first
 before solving on longer timescales.
 
 The minimum signal-to-noise ratio allowed for an acceptable solution
-is specified in the {\tt minsnr} parameter.  
-
+is specified in the {\tt minsnr} parameter.  Default is {\tt minsnr=3}.
 The {\tt minblperant} parameter sets the minimum number of baselines
 to other antennas that must be preset for a each antenna to be
 included in a solution.  This enables control of the constraints
@@ -1544,8 +1653,6 @@ Thus, it makes sense to solve for them as a separate term: 'B', using the
 The inputs to {\tt bandpass} are:
 \small
 \begin{verbatim}
-CASA <14>: inp bandpass
----------> inp(bandpass)
 #  bandpass :: Calculates a bandpass calibration solution
 vis                 =         ''        #  Name of input visibility file
 caltable            =         ''        #  Name of output gain calibration table
@@ -1554,10 +1661,12 @@ spw                 =         ''        #  Select spectral window/channels
 intent              =         ''        #  Select observing intent
 selectdata          =      False        #  Other data selection parameters
 solint              =      'inf'        #  Solution interval
-combine             =     'scan'        #  Data axes which to combine for solve (scan, spw, and/or field)
-refant              =         ''        #  Reference antenna name
-minblperant         =          2        #  Minimum baselines _per antenna_ required for solve
-minsnr              =        0.0        #  Reject solutions below this SNR (only applies for bandtype = B)
+combine             =     'scan'        #  Data axes which to combine for solve (scan, spw,
+                                        #   and/or field)
+refant              =         ''        #  Reference antenna name(s)
+minblperant         =          4        #  Minimum baselines _per antenna_ required for solve
+minsnr              =        3.0        #  Reject solutions below this SNR (only applies for
+                                        #   bandtype = B)
 solnorm             =      False        #  Normalize average solution amplitudes to 1.0
 bandtype            =        'B'        #  Type of bandpass solution (B or BPOLY)
      fillgaps       =          0        #  Fill flagged solution channels by interpolation
@@ -1566,12 +1675,13 @@ append              =      False        #  Append solutions to the (existing) ta
 gaintable           =       ['']        #  Gain calibration table(s) to apply on the fly
 gainfield           =       ['']        #  Select a subset of calibrators from gaintable(s)
 interp              =       ['']        #  Interpolation mode (in time) to use for each gaintable
-spwmap              =         []        #  Spectral windows combinations to form for gaintables(s)
+spwmap              =         []        #  Spectral windows combinations to form for
+                                        #   gaintables(s)
 gaincurve           =      False        #  Apply internal VLA antenna gain curve correction
-opacity             =        0.0        #  Opacity correction to apply (nepers)
+opacity             =         []        #  Opacity correction to apply (nepers), per spw
 parang              =      False        #  Apply parallactic angle correction
-async               =      False        #  If true the taskname must be started using bandpass(...)
-
+async               =      False        #  If true the taskname must be started using
+                                        #   bandpass(...)
 \end{verbatim}
 \normalsize
 Many of these parameters are in common with the other calibration
@@ -1803,10 +1913,7 @@ the {\tt gaintable} parameter (see below).
 The {\tt gaincal} task has the following inputs:
 \small
 \begin{verbatim}
-
-CASA <15>: inp gaincal
----------> inp(gaincal)
-#  gaincal :: Determine temporal gains from calibrator observations
+  gaincal :: Determine temporal gains from calibrator observations
 vis                 =         ''        #  Name of input visibility file
 caltable            =         ''        #  Name of output gain calibration table
 field               =         ''        #  Select field using field id(s) or field name(s)
@@ -1814,24 +1921,28 @@ spw                 =         ''        #  Select spectral window/channels
 intent              =         ''        #  Select observing intent
 selectdata          =      False        #  Other data selection parameters
 solint              =      'inf'        #  Solution interval: egs. 'inf', '60s' (see help)
-combine             =     'scan'        #  Data axes which to combine for solve (scan, spw, and/or field)
+combine             =     'scan'        #  Data axes which to combine for solve (scan, spw,
+                                        #   and/or field)
 preavg              =       -1.0        #  Pre-averaging interval (sec) (rarely needed)
-refant              =         ''        #  Reference antenna name.  ' '= '0'
-minblperant         =          2        #  Minimum baselines _per antenna_ required for solve
-minsnr              =        0.0        #  Reject solutions below this SNR
-solnorm             =      False        #  Normalize average solution amplitudes to 1.0 (G, T only)
-gaintype            =        'G'        #  Type of gain solution (G, T, or GSPLINE,KCROSS)
+refant              =         ''        #  Reference antenna name(s)
+minblperant         =          4        #  Minimum baselines _per antenna_ required for solve
+minsnr              =        3.0        #  Reject solutions below this SNR
+solnorm             =      False        #  Normalize average solution amplitudes to 1.0 (G, T
+                                        #   only)
+gaintype            =        'G'        #  Type of gain solution (G,T,GSPLINE,K,KCROSS)
 smodel              =         []        #  Point source Stokes parameters for source model.
-calmode             =       'ap'        #  Type of solution" ('ap', 'p', 'a')
+calmode             =       'ap'        #  Type of solution: ('ap', 'p', 'a')
 append              =      False        #  Append solutions to the (existing) table
 gaintable           =       ['']        #  Gain calibration table(s) to apply on the fly
 gainfield           =       ['']        #  Select a subset of calibrators from gaintable(s)
 interp              =       ['']        #  Temporal interpolation for each gaintable (=linear)
-spwmap              =         []        #  Spectral windows combinations to form for gaintables(s)
+spwmap              =         []        #  Spectral windows combinations to form for
+                                        #   gaintables(s)
 gaincurve           =      False        #  Apply internal VLA antenna gain curve correction
-opacity             =        0.0        #  Opacity correction to apply on the fly (nepers)
+opacity             =         []        #  Opacity correction to apply (nepers), per spw
 parang              =      False        #  Apply parallactic angle correction on the fly
-async               =      False        #  If true the taskname must be started using gaincal(...)
+async               =      False        #  If true the taskname must be started using
+                                        #   gaincal(...)
 \end{verbatim}
 \normalsize
 Data selection is done through the standard {\tt field}, {\tt spw},
@@ -2037,6 +2148,25 @@ timescale variations.  Note that the ``phase tracking'' algorithm
 in {\tt 'GSPLINE'} needs some improvement.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Antenna Delays --- 'K' solutions}
+\label{section:cal.solve.gain.k}
+{\tt gaintype='K'} solves for simple antenna-based single-band delays
+                   via Fourier transforms of the spectra on baselines to the
+                   reference antenna. This is not a global fringe fit
+                   but will be useful for deriving delays from data of
+                   reasonable snr. A subsequent {\tt bandpass} is 
+                   recommended to describe higher-order channel-dependent
+		   variation in the phase (and amplitude).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Cross-Hand  Delays --- 'KCROSS' solutions}
+\label{section:cal.solve.gain.kcross}
+{\tt gaintype='KCROSS'} solves for a global cross-hand
+                   delay.  Use {\tt parang=T} and apply prior gain and
+                   bandpass solutions. 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Establishing the Flux Density Scale ({\tt fluxscale}) }
 \label{section:cal.solve.fluxscale}
 
@@ -2054,14 +2184,17 @@ The inputs for fluxscale are:
 \small
 \begin{verbatim}
 #  fluxscale :: Bootstrap the flux density scale from standard calibrators
-vis         =         ''   #   Name of input visibility file
-caltable    =         ''   #   Name of input calibration table
-fluxtable   =         ''   #   Name of output, flux-scaled calibration table
-reference   =         ''   #   Reference field name(s) (transfer flux scale FROM)
-transfer    =         ''   #   Transfer field name(s) (transfer flux scale TO), '' -> all
-append      =      False   #   Append solutions?
-refspwmap   =       [-1]   #   Scale across spectral window boundaries.  See help fluxscale
-async       =      False   #  If true the taskname must be started using fluxscale(...)
+vis                 =         ''        #  Name of input visibility file (MS)
+caltable            =         ''        #  Name of input calibration table
+fluxtable           =         ''        #  Name of output, flux-scaled calibration table
+reference           =       ['']        #  Reference field name(s) (transfer flux scale FROM)
+transfer            =       ['']        #  Transfer field name(s) (transfer flux scale TO), '' ->
+                                        #   all
+append              =      False        #  Append solutions?
+refspwmap           =       [-1]        #  Scale across spectral window boundaries.  See help
+                                        #   fluxscale
+async               =      False        #  If true the taskname must be started using
+                                        #   fluxscale(...)
 \end{verbatim}
 \normalsize
 
@@ -2225,11 +2358,8 @@ the baselines and thus causing problems in the solving.
 Full support for instrumental polarization calibration for the 
 circular feed basis (e.g., EVLA) is provided in CASA.  Support for 
 the linear feed basis (e.g., ALMA) will be deployed and documented
-for the general user in the 3.3 release.  The following examples
+for the general user in the 3.4 release.  The following examples
 assume the circular basis.
-
-the general user; it will 
-
 
 The inputs to {\tt polcal} are:
 \small
@@ -2242,20 +2372,22 @@ spw                 =         ''        #  Select spectral window/channels
 intent              =         ''        #  Select observing intent
 selectdata          =      False        #  Other data selection parameters
 solint              =      'inf'        #  Solution interval
-combine             =     'scan'        #  Data axes which to combine for solve (scan, spw, and/or field)
+combine             =     'scan'        #  Data axes which to combine for solve (scan, spw,
+                                        #   and/or field)
 preavg              =       -1.0        #  Pre-averaging interval (sec)
-refant              =         ''        #  Reference antenna name
-minblperant         =          2        #  Minimum baselines _per antenna_ required for solve
-minsnr              =        0.0        #  Reject solutions below this SNR
+refant              =         ''        #  Reference antenna name(s)
+minblperant         =          4        #  Minimum baselines _per antenna_ required for solve
+minsnr              =        3.0        #  Reject solutions below this SNR
 poltype             =     'D+QU'        #  Type of instrumental polarization solution (see help)
 smodel              =         []        #  Point source Stokes parameters for source model.
 append              =      False        #  Append solutions to the (existing) table
 gaintable           =       ['']        #  Gain calibration table(s) to apply
 gainfield           =       ['']        #  Select a subset of calibrators from gaintable(s)
 interp              =       ['']        #  Interpolation mode (in time) to use for each gaintable
-spwmap              =         []        #  Spectral windows combinations to form for gaintables(s)
+spwmap              =         []        #  Spectral windows combinations to form for
+                                        #   gaintables(s)
 gaincurve           =      False        #  Apply internal VLA antenna gain curve correction
-opacity             =        0.0        #  Opacity correction to apply (nepers)
+opacity             =         []        #  Opacity correction to apply (nepers), per spw
 async               =      False        #  If true the taskname must be started using polcal(...)
 \end{verbatim}
 \normalsize
@@ -2516,7 +2648,6 @@ errors).
 The inputs are:
 \small
 \begin{verbatim}
----------> inp(blcal)
 #  blcal :: Calculate a baseline-based calibration solution (gain or bandpass)
 vis                 =         ''        #  Name of input visibility file
 caltable            =         ''        #  Name of output gain calibration table
@@ -2525,18 +2656,21 @@ spw                 =         ''        #  Select spectral window/channels
 intent              =         ''        #  Select observing intent
 selectdata          =      False        #  Other data selection parameters
 solint              =      'inf'        #  Solution interval
-combine             =     'scan'        #  Data axes which to combine for solve (scan, spw, and/or field)
+combine             =     'scan'        #  Data axes which to combine for solve (scan, spw,
+                                        #   and/or field)
 freqdep             =      False        #  Solve for frequency dependent solutions
 calmode             =       'ap'        #  Type of solution" ('ap', 'p', 'a')
 solnorm             =      False        #  Normalize average solution amplitudes to 1.0
 gaintable           =       ['']        #  Gain calibration table(s) to apply on the fly
 gainfield           =       ['']        #  Select a subset of calibrators from gaintable(s)
 interp              =       ['']        #  Interpolation mode (in time) to use for each gaintable
-spwmap              =         []        #  Spectral windows combinations to form for gaintables(s)
+spwmap              =         []        #  Spectral windows combinations to form for
+                                        #   gaintables(s)
 gaincurve           =      False        #  Apply internal VLA antenna gain curve correction
-opacity             =        0.0        #  Opacity correction to apply (nepers)
+opacity             =         []        #  Opacity correction to apply (nepers), per spw
 parang              =      False        #  Apply parallactic angle correction
 async               =      False        #  If true the taskname must be started using blcal(...)
+
 \end{verbatim}
 \normalsize
 
@@ -3031,12 +3165,12 @@ The {\tt accum} task is used to interpolate calibration solutions onto
 a different time grid, and to {\it accumulate} incremental
 calibrations into a {\it cumulative} calibration table.  The manual
 accumulation of calibration is rarely required and can usually be
-achieved implicitly simply by running {\tt applycal} serially (to the
-extent required to achieve different interpolation or other effects
-for different fields and spectral windows) with all calibration tables
-specified.  However, sometimes it is desirable to see the interpolated
-calibration prior to application, and this section describes how this
-can be done.
+achieved implicitly simply by running {\tt applycal} with all the
+calibration tables given as a list in the {\tt gaintable} parameter
+(and using {\tt gainfiled}, {\tt spwmap}, and {\tt interp}
+appropriately.  However, sometimes it is desirable to see the
+interpolated calibration prior to application, and this section
+describes how this can be done.
 
 Its inputs are:
 \small
@@ -3352,22 +3486,25 @@ column is untouched.
 The {\tt applycal} task does this.  The inputs are:
 \small
 \begin{verbatim}
+#  applycal :: Apply calibrations solutions(s) to data
 vis                 =         ''        #  Name of input visibility file
 field               =         ''        #  Select field using field id(s) or field name(s)
 spw                 =         ''        #  Select spectral window/channels
 intent              =         ''        #  Select observing intent
-selectdata          =       False       #  Other data selection parameters
+selectdata          =      False        #  Other data selection parameters
 gaintable           =       ['']        #  Gain calibration table(s) to apply on the fly
 gainfield           =       ['']        #  Select a subset of calibrators from gaintable(s)
 interp              =       ['']        #  Temporal Interpolation type.  default=linear
-spwmap              =         []        #  Spectral windows combinations to form for gaintables(s)
+spwmap              =         []        #  Spectral windows combinations to form for
+                                        #   gaintables(s)
 gaincurve           =      False        #  Apply internal VLA antenna gain curve correction
-opacity             =        0.0        #  Opacity correction to apply (nepers)
+opacity             =         []        #  Opacity correction to apply (nepers), per spw
 parang              =      False        #  Apply parallactic angle correction
 calwt               =       True        #  Calibrate data weights from all relevant calibrations
-flagbackup          =       True        #  Automatically back up the state of flags before the run?
-async               =      False        #  If true the taskname must be started using applycal(...)
-
+flagbackup          =       True        #  Automatically back up the state of flags before the
+                                        #   run?
+async               =      False        #  If true the taskname must be started using
+                                        #   applycal(...)
 \end{verbatim}
 \normalsize
 As in other tasks, setting {\tt selectdata=True} will open up the
@@ -3642,9 +3779,6 @@ When time averaging, the {\tt ignorables} subparameter can be used to
 specify that the bins should \emph{not} be split by changes in
 {\tt SCAN\_NUMBER}, (sub){\tt ARRAY\_ID}, and/or {\tt STATE\_ID}.
 
-{\bf ALERT:} The {\tt ignorables} subparameter will change name to
-{\tt combine} in the next release.
-
 
 The {\tt width} parameter defines the number of channels to average to
 form a given output channel.  This can be specified globally for all
@@ -3668,6 +3802,48 @@ to average 2 channels of 1st spectral window selected and 3 in the
 second one.
 
 
+{\bf ALERT:} When averaging channels split will produce negative channel widths
+(as reported by listobs) if frequency goes down with increasing channel
+number, whether or not the input channel widths are negative.  The
+\emph{band}widths and channel resolutions will still be positive."
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Recalculation of uvw values ({\tt fixvis})}
+\label{section:cal.other.fixvis}
+
+Sometimes the u,v,w coordinates of a measurement set are not recorded
+correctly by the correlator. In those cases, it may be necessary to
+recalculate them based on the antenna positions. {\tt fixvis} will
+perform this task.
+
+
+\small
+\begin{verbatim}
+#  fixvis :: Recalculates (u, v, w) and/or changes Phase Center 
+vis                 =         ''        #  Name of the input visibility set.
+outputvis           =         ''        #  Name of the output visibility set.  (Can be the same
+                                        #   as vis.)
+field               =         ''        #  Fields to operate on.   = all.
+refcode             =         ''        #  reference frame to convert UVW coordinates to
+reuse               =       True        #  base UVW calculation on the old values?
+phasecenter         =         ''        #  use this direction as phase center
+async               =      False        #  If true the taskname must be started using fixvis(...)
+\end{verbatim}
+\normalsize
+
+A useful feature of {\tt fixvis} is that it can also change the pahse
+center of a measrement set. This can be done with absolute corrdinates
+or using offsets. An example is:
+\small
+\begin{verbatim}
+fixvis(vis='Moon.ms',outpuvis='Moon-fixed.ms',field='Moon', phasedir='J2000 9h25m00s 05d12m00s')
+\end{verbatim}
+\normalsize
+
+that will recalculate the u,v,w coordinates relative to the new phase
+center for the field 'Moon'.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Hanning smoothing of uv data ({\tt hanningsmooth})}
@@ -3690,9 +3866,12 @@ spectral line uv data measurement set.  The inputs are:
 \begin{verbatim}
 #  hanningsmooth :: Hanning smooth frequency channel data to remove Gibbs ringing
 vis                 =         ''        #  Name of input visibility file (MS)
-datacolumn          =      'all'        #  the name of the MS column into which to write the smoothed data
-outputvis           =         ''        #  name of the output visibility file (MS)
-async               =      False        #  If true the taskname must be started using hanningsmooth(...)
+datacolumn          =      'all'        #  the name of the MS column into which
+                                        #   to write the smoothed data
+outputvis           =         ''        #  name of the output visibility file
+                                        #   (MS)
+async               =      False        #  If true the taskname must be started
+                                        #   using hanningsmooth(...)
 \end{verbatim}
 \normalsize
 
@@ -3751,12 +3930,6 @@ handle these columns behind the scenes and to write out a new MS.
 \subsection{UV-Plane Continuum Subtraction ({\tt uvcontsub})}
 \label{section:cal.other.uvcontsub}
 
-{\bf Alert:} For most applications you should now use {\tt
-  uvcontsub2}. It has much more functionality than {\tt uvcontsub} and
-better output options. In the future we will replace {\tt uvcontsub}
-by {\tt uvcontsub2}.
-
-
 At this point, consider whether you are likely to need continuum
 subtraction.  If there is significant continuum emission present in
 what is intended as a spectral line observation, continuum subtraction
@@ -3780,36 +3953,29 @@ described in the Image Analysis section of this cookbook.  Here, we
 describe how to do continuum subtraction in the $uv$-plane.
 
 The $uv$-plane continuum subtraction is performed by the {\tt
-  uvcontsub} and {\tt uvcontsub2} tasks.  First, determine which
-channels in your data cube do not have line emission, perhaps by
-forming a preliminary image as described in the next chapter.  This
-image will also help you decide whether or not you need to come back
-and do $uv$-plane continuum subtraction at all. Note that {\tt
-  uvcontsub} only accepts line free channels in the same spw where the
-line resides. To fit continuum across many spws {\tt uvcontsub2}
-should be used.
+  uvcontsub} task.  First, determine which channels in your data cube
+do not have line emission, perhaps by forming a preliminary image as
+described in the next chapter.  This image will also help you decide
+whether or not you need to come back and do $uv$-plane continuum
+subtraction at all. 
 
 
-The inputs to {\tt uvcontsub2} are:
+The inputs to {\tt uvcontsub} are:
 \small
 \begin{verbatim}
-#  uvcontsub2 :: Continuum fitting and subtraction in the uv plane CALIBRATION VERSION
-vis                 =         ''        #  Name of input MS.  Output goes to vis
-                                        #   + ".contsub"
-field               =         ''        #  Select field(s) using id(s) or
-                                        #   name(s)
-fitspw              =         ''        #  Spectral window:channel selection for
-                                        #   fitting the continuum
-combine             =         ''        #  Data axes to combine for the
-                                        #   continuum estimation (spw, scan,
-                                        #   and/or field)
-solint              =      'int'        #  Continuum fit timescale
+#  uvcontsub :: Continuum fitting and subtraction in the uv plane
+vis                 =         ''        #  Name of input MS.  Output goes to vis + ".contsub"
+field               =         ''        #  Select field(s) using id(s) or name(s)
+fitspw              =         ''        #  Spectral window:channel selection for fitting the
+                                        #   continuum
+combine             =     'scan'        #  Data axes to combine for the continuum estimation
+                                        #   (spw, scan, and/or field)
+solint              =      'inf'        #  Continuum fit timescale
 fitorder            =          0        #  Polynomial order for the fits
 spw                 =         ''        #  Spectral window selection for output
-want_cont           =      False        #  Create vis + ".cont" to hold the
-                                        #   continuum estimate.
-async               =      False        #  If true the taskname must be started
-                                        #   using uvcontsub2(...)
+want_cont           =      False        #  Create vis + ".cont" to hold the continuum estimate.
+async               =      False        #  If true the taskname must be started using
+                                        #   uvcontsub(...)
 \end{verbatim}
 
 For each baseline, and over the timescale specified in {\tt solint},
@@ -3831,29 +3997,26 @@ can also use scan averaging, {\it solint='inf'}. Be warned, setting solint too
 large will introduce ``time smearing'' in the estimated continuum and thus
 not properly subtract emission not at the phase center.  Increasing solint
 speeds up the calculation but it does not improve the overall result
-quality of {\tt uvcontsub2} - although the continuum estimates of each baseline
+quality of {\tt uvcontsub} - although the continuum estimates of each baseline
 may be noisy (just like each visibility in a continuum MS may be noisy),
 it is better to use the ensemble of individual fits than to average the
 ensemble before fitting.  Note that {\tt plotms} can do time and baseline
 averaging on the fly to help you examine noisy data.
 
 
-Unlike {\tt uvcontsub}, there is no need to run split before running
-{\tt uvcontsub2}.
-
 So, the recommended procedure is as follows:
 \begin{itemize}
 \item Finish calibration as described in the previous chapter.
 \item Use the invert or clean task on the split result to form an exploratory
   image that is useful for determining the line-free channels.
-\item Use {\tt uvcontsub2} with {\it fitorder = 0} or {\it 1} to estimate and subtract the
+\item Use {\tt uvcontsub} with {\it fitorder = 0} or {\it 1} to estimate and subtract the
   continuum from {\it vis}, and write the continuum-subtracted dataset
   to {\it vis + '.contsub'}.
 \item Use {\tt clean} with {\it vis + '.contsub'} to make an image cube of the line emission.
 \item If a continuum image is desired, clean the line-free channels of the
   original MS with {\it mode='mfs'} and {\it spw=fitspw}. Note that
   using the line free channels directly is preferred over the imaging
-  the 'continuum' model fitted by {\tt uvcontsub2}. The fitting
+  the 'continuum' model fitted by {\tt uvcontsub}. The fitting
   procedure will also fit noise and artifacts which produce a nice
   line cube when subtracted, but the model may not represent the true
   underlying continuum.   
@@ -3864,7 +4027,7 @@ dataset:
 \small
 \begin{verbatim}
 # Want to use channels 4-6 and 50-59 for continuum
-uvcontsub2(vis='ngc5921.usecase.msâ€™,
+uvcontsub(vis='ngc5921.usecase.msâ€™,
 field='N5921',
 spw='',              # all spw (only 0 in this data)
 fitspw='0:4~7;50~59' # channels 4-6 and 50-59
@@ -3891,26 +4054,23 @@ The inputs are:
 #  cvel :: regrid an MS to a new spectral window / channel structure or frame
 vis                 =         ''        #  Name of input measurement set
 outputvis           =         ''        #  Name of output measurement set
-passall             =      False        #  Pass through (write to output MS) non-selected data with no change
+passall             =      False        #  Pass through (write to output MS) non-selected data
+                                        #   with no change
 field               =         ''        #  Select field using field id(s) or field name(s)
 spw                 =         ''        #  Select spectral window/channels
-selectdata          =       True        #  Other data selection parameters
-     timerange      =         ''        #  Range of time to select from data
-     array          =         ''        #  (sub)array indices
-     antenna        =         ''        #  Select data based on antenna/baseline
-     scan           =         ''        #  scan number range
-
-mode                =  'channel'        #   Regridding mode
+selectdata          =      False        #  Other data selection parameters
+mode                = 'velocity'        #   Regridding mode
      nchan          =         -1        #  Number of channels in output spw (-1=all)
-     start          =          0        #  first input channel to use
-     width          =          1        #  Number of input channels to average
+     start          =          0        #  Velocity of first image channel: e.g '0.0km/s'
+     width          =          1        #  image channel width in velocity units: e.g '-1.0km/s'
      interpolation  =   'linear'        #  Spectral interpolation method
 
 phasecenter         =         ''        #  Image phase center: position or field index
 restfreq            =         ''        #  rest frequency (see help)
 outframe            =         ''        #  Output frame (''=keep input frame)
 veltype             =    'radio'        #  velocity definition
-hanning             =      False        #   If true, Hanning smooth data before regridding to remove Gibbs ringing.
+hanning             =      False        #   If true, Hanning smooth data before regridding to
+                                        #   remove Gibbs ringing.
 async               =      False        #  If true the taskname must be started using cvel(...)
 
 \end{verbatim}
@@ -4022,7 +4182,7 @@ regridding artifacts in {\tt cvel}.
 If {\tt cvel} has already established the grid that is desired for the
 imaging, {\tt clean} should be run with the default channel mode ({\tt
   > width=1}) or with exactly the same frequency/velocity parameters
-as > used in {\tt cvel}. This will avoid additional regridding in {\tt
+as was used in {\tt cvel}. This will avoid additional regridding in {\tt
   clean}. Hanning smoothing is optionally offered in {\tt cvel}, but
 tests have shown that already the regridding process itself, if it
 involved a transformation from TOPO to a non-terrestrial reference
@@ -4030,6 +4190,17 @@ frame, implies some smoothing (due to channel interpolation) such that
 Hanning smoothing may not be necessary.
 
 
+The interpolation method {\tt fftshift} calculates the transformed
+visibilities by applying a FFT, then a phase ramp, and then an inverse
+FFT.  Note that if you want to use this interpolation method, your
+frequency grid needs to be equidistant, i.e. it only works in mode
+{\tt velocity} with {\tt veltype}=radio, in mode {\tt frequency}, and
+in mode {\tt channel} (in the latter only if the input grid is itself
+equidistant in frequency). Note also that, as opposed to all other
+interpolation methods, this method will apply a {\it constant}
+(frequency-independent) shift in frequency which is not fully correct
+in the case of large fractional bandwidth of the given spectral
+window.
 
 
 
