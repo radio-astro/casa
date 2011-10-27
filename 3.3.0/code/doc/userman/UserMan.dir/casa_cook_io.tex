@@ -19,6 +19,7 @@
 % JO 2010-03-10     edits for Release 3.0.1
 % JO 2010-10-12 edits Release 3.1.0 
 % STM 2011-05-03  Release 3.2.0 importevla and importasdm update
+% JO 2011-10-03 Release 3.3 edits
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -317,9 +318,9 @@ into CASA as a Measurement Set:
   \begin{boxedminipage}{2.5in}
      \centerline{\underline{\bf Under the Hood:}}
      The {\tt importasdm} task is just an interface to the stand-alone
-     {\tt asdm2MS} application.  To find out the command-line
-     arguments to this application, do {\tt asdm2MS --help}.
-  \end{boxedminipage}
+     {\tt asdm2MS} and {\tt asdm2MS\_v3} applications.  To find out the command-line
+     arguments to this application, do {\tt asdm2MS --help} or {\tt asdm2MS\_v3 --help} respectively.
+ \end{boxedminipage}
 \end{wrapfigure}
 
 The ALMA and EVLA projects have agreed upon a common archival science
@@ -330,35 +331,113 @@ and ancillary information in XML tables.  This is structured as a
 directory, like the MS, and was designed to be similar to the MS to 
 facilitate conversion.
 
-The {\bf importasdm} task will fill SDM1 format data (Oct 2009 or
-later) into a CASA visibility data set (MS).  The default inputs are:
+The {\bf importasdm} task will fill SDM1.2 and SDM1.3 format data into a 
+CASA visibility data set (MS). ALMA data was recorded in SDM1.2 format from October 2009
+until May 2011. Since May 2011, ALMA is using the SDM 1.3 format. In particular all science
+data from cycle 0 will be in SDM1.3. The EVLA also started using SDM1.2 in October 2009 
+and continues to use this format as of October 2011.  
+
+{\bf ALERT}: The underlying implementation of the filler for SDM1.3, {\tt asdm2MS\_v3}, can import both
+SDM1.2 and SDM1.3 and recognizes both versions automatically. However, to stay on the safe side,
+CASA release 3.3 still contains the previous version of the filler,  {\tt asdm2MS}, which is
+only able to read SDM1.2. The new task parameter {\tt useversion} of {\tt importasdm} controls
+which of the two fillers is used. Default is {\tt asdm2MS\_v3}. 
+
+The default inputs of {\tt importasdm} are:
 
 \small
 \begin{verbatim}
-#  importasdm :: Convert an Science Data Model observation into a CASA visibility file
-asdm                =     ''   #  Name of input asdm directory (on disk)
-vis                 =     ''   #  Root name of the ms to be created. Note the .ms is NOT added
-singledish          =  False   #  Set true to output single-dish data format
-corr_mode           =  'all'   #  correlation mode to be input (ao, co, ac, all)
-srt                 =  'all'   #  spectral resolution type (fr, ca, bw, or all)
-time_sampling       =  'all'   #  time sampling (INTEGRATION and/or SUBINTEGRATION) (i, si, or all)
-ocorr_mode          =   'ca'   #  output correlation mode AUTO_ONLY (ao), CROSS_ONLY (co), CROSS_AND_AUTO (ca)
-compression         =  False   #  Flag for turning on data compression
-asis                =     ''   #  string of table names separated by spaces to be passed verbatim (* allowed)
-wvr_corrected_data  =   'no'   #  'no' (default), 'yes'= WVR corrected, 'both'= output separate MS
-scans               =     ''   #  processes only the specified scans (see help importasdm)
-ignore_time         =  False   #  rows of tables processed independently of the time range of exec blocks
-process_syspower    =  False   #  The SysPower table is processed if and only if this parameter is set to true.
-process_caldevice   =  False   #  The CalDevice table is processed if and only if this parameter is set to true.
-verbose             =  False   #  Output lots of information while the filler is working
-overwrite           =  False   #  Over write an existing MS
-showversion         =  False   #  Report the version of asdm2MS being used
-async               =  False   #  If true the taskname must be started using importasdm(...)
+#  importasdm :: Convert an ALMA Science Data Model observation into a CASA visibility file
+asdm                =         ''        #  Name of input asdm directory (on disk)
+vis                 =         ''        #  Root name of the ms to be created.
+                                        #   Note the .ms is NOT added
+singledish          =      False        #  Set true to output single-dish data
+                                        #   format
+corr_mode           =      'all'        #  specifies the correlation mode to be
+                                        #   considered on input. A quoted string
+                                        #   containing a sequence of ao, co,
+                                        #   ac,or all separated by whitespaces is
+                                        #   expected
+srt                 =      'all'        #  specifies the spectral resolution type
+                                        #   to be considered on input. A quoted
+                                        #   string containing a sequence of fr,
+                                        #   ca, bw, or all separated by
+                                        #   whitespaces is expected
+time_sampling       =      'all'        #  specifies the time sampling
+                                        #   (INTEGRATION and/or SUBINTEGRATION)
+                                        #   to be considered on input. A quoted
+                                        #   string containing a sequence of i,
+                                        #   si, or all separated by whitespaces
+                                        #   is expected
+ocorr_mode          =       'ca'        #  output data for correlation mode
+                                        #   AUTO_ONLY (ao) or CROSS_ONLY (co) or
+                                        #   CROSS_AND_AUTO (ca)
+compression         =      False        #  Flag for turning on data compression
+asis                =         ''        #  Creates verbatim copies of the
+                                        #   ASDMtables in the ouput measurement
+                                        #   set.  Value given must be a string of
+                                        #   table names separated by spaces; A *
+                                        #   wildcard is allowed.
+wvr_corrected_data  =       'no'        #   Specifies which values are considerd
+                                        #   in the SDM binary data to fill the
+                                        #   DATA column in the MAIN table of the
+                                        #   MS. Expected values for this option
+                                        #   are: no, for uncorrected data
+                                        #   (default), yes, for the corrected
+                                        #   data, and both, for for corrected and
+                                        #   uncorrected data. Note if both is
+                                        #   selected two measurement sets are
+                                        #   created, one with uncorrected data
+                                        #   and the other with corrected data.
+scans               =         ''        #  processes only the specified scans.
+                                        #   This value is a semicolon separated
+                                        #   list of scan specifications. A scan
+                                        #   specification consists in an exec
+                                        #   bock index followed by the :
+                                        #   character;  followed by a comma
+                                        #   separated list of scan indexes or
+                                        #   scan index ranges. A scan index is
+                                        #   relative to the exec block it belongs
+                                        #   to. Scan indexes are 1-based while
+                                        #   exec blocks are 0-based. "0:1" or
+                                        #   "2:2~6" or "0:1,1:2~6,8;2:,3:24~30"
+                                        #   "1,2" are valid values for the
+                                        #   option. "3:" alone will be
+                                        #   interpreted as, all the scans of the
+                                        #   exec block#3.  An scan index or a
+                                        #   scan index range not preceded by an
+                                        #   exec block index will be interpreted
+                                        #   as, all the scans with such indexes
+                                        #   in all the exec blocks.  By default
+                                        #   all the scans are considered.
+ignore_time         =      False        #  All the rows of the tables Feed,
+                                        #   History, Pointing, Source, SysCal,
+                                        #   CalDevice, SysPower, and Weather are
+                                        #   processed independently of the time
+                                        #   range of the selected exec block /
+                                        #   scan.
+process_syspower    =       True        #   The SysPower table is processed if
+                                        #   and only if this parameter is set to
+                                        #   true.
+process_caldevice   =       True        #   The CalDevice table is processed if
+                                        #   and only if this parameter is set to
+                                        #   true.
+process_pointing    =       True        #   The Pointing table is processed if
+                                        #   and only if this parameter is set to
+                                        #   true.
+verbose             =      False        #  Output lots of information while the
+                                        #   filler is working
+overwrite           =      False        #  Over write an existing MS
+showversion         =      False        #  Report the version of asdm2MS being
+                                        #   used
+useversion          =       'v3'        #  Selects the version of asdm2MS to be
+                                        #   used ('v3' (default, works for all
+                                        #   ALMA data) or 'v2' (only for ALMA
+                                        #   data taken before May 2011))
+async               =      False        #  If true the taskname must be started
+                                        #   using importasdm(...)
 \end{verbatim}
 \normalsize
-
-{\bf ALERT}: As of release 3.2, there are now options for filling
-selected scans. This is through the {\tt scans} parameter. 
 
 If {\tt scans} is set, then {\tt importasdm} processes only the scans
 specified in the option's value. This value is a semicolon separated
@@ -488,7 +567,7 @@ out (but can catch erroneous zeros also).
 need to get flagged out.
 
 The {\tt shadow} parameter turns on creation of flag commands to remove antenna
-timeranges where they are shadowed by other antennas in the array.  By default
+time ranges where they are shadowed by other antennas in the array.  By default
 it will flag based on the antenna diameter, but if you want more lenient or 
 conservative flagging then set the {\tt diameter} sub-parameter to a value 
 smaller or larger respectively than the actual diameter.
@@ -584,7 +663,7 @@ The other parameters are:
 \subsubsection{Parameter {\tt applytsys} }
 \label{section:io.import.vla.applytsys}
 
-The {\tt applytys} parameter controls whether the nominal sensitivity
+The {\tt applytsys} parameter controls whether the nominal sensitivity
 scaling (based on the measured TSYS, with the weights scaled
 accordingly using the integration time) is
 applied to the visibility amplitudes or not.  If {\tt True}, then it
@@ -596,7 +675,7 @@ applied online.
 In all cases {\tt importvla} will do
 the correct thing to data and weights based on an internal flag in the
 VLA Archive file, either scaling it or unscaling based on your choice
-for {\tt applytys}.
+for {\tt applytsys}.
 
 If {\tt applytsys=True} and you see strange behavior in data
 amplitudes, it may be due to erroneous TSYS values from the online
@@ -902,14 +981,17 @@ get a summary of the MS contents with the {\tt listobs} task.
 The inputs are:
 \small
 \begin{verbatim}
-vis                 =         ''        #   Name of input visibility file (MS)
-verbose             =       True        #   Extended summary list of data set in logger
+vis                 =         ''        #  Name of input visibility file (MS)
+verbose             =       True        
+listfile            =         ''        #  Name of disk file to write output:
+                                        #   ''==>to terminal
+async               =      False        #  If true the taskname must be started                                        #   using listobs(...)
 \end{verbatim}
 \normalsize
 
-The summary will be written to the logger and to the {\tt casapy.log}
-file.  For example,
-\small
+The summary will be written to the logger, to the {\tt casapy.log}
+file, and optionally to a file specified in the {\tt listfile}
+parameter.  For example, \small
 \begin{verbatim}
    listobs('n5921.ms')
 \end{verbatim}
@@ -1108,7 +1190,7 @@ CASA <29>: vishead('ngc5921.demo.ms',mode='list',listitems=[])
 \end{verbatim}
 \normalsize
 
-You can use {\tt mode='get'} to retrieve the valuses of specific
+You can use {\tt mode='get'} to retrieve the values of specific
 keywords, and likewise {\tt mode='put'} to change them.
 The inputs are:
 \small
@@ -1231,13 +1313,19 @@ If you need to combine multiple datasets, you can use the {\tt concat} task.
 The default inputs are:
 \small
 \begin{verbatim}
-#  concat :: Concatenate two or more visibility data sets.
-vis         =    ['']   #  Name of input visibility files to be concatenated
-concatvis   =      ''   #  Name of output visibility file
-freqtol     =      ''   #  Frequency tolerance for considering data as the same spwid
-dirtol      =      ''   #  Direction tolerance for considering data as the same field
-timesort    =   False   #  If true, sort by TIME in ascending order
-async       =   False   #  If true the taskname must be started using concat(...)
+#  concat :: Concatenate several visibility data sets.
+vis                 =         ''        #  Name of input visibility files to be
+                                        #   concatenated
+concatvis           =         ''        #  Name of output visibility file
+freqtol             =         ''        #  Frequency shift tolerance for
+                                        #   considering data as the same spwid
+dirtol              =         ''        #  Direction shift tolerance for
+                                        #   considering data as the same field
+timesort            =      False        #  If true, sort by TIME in ascending
+                                        #   order
+copypointing        =       True        #  Copy all rows of the POINTING table.
+async               =      False        #  If true the taskname must be started
+                                        #   using concat(...)
 \end{verbatim}
 \normalsize
 
@@ -1252,6 +1340,14 @@ is created to contain the concatenated data.  Be careful here!
 The {\tt timesort} parameter can be used to make sure the output
 MS is in time order (e.g.\ if your input MS have concurrent times).
 This can possibly speed up some subsequent calibration operations.
+
+Furthermore, the parameter {\tt copypointing} can be used to control
+whether the POINTING table will be carried along in the concatenation
+process or if the output MS should not contain a POINTING table. This
+table is quite large for some data (e.g. ALMA) and is mainly needed
+for mosaic imaging.  If you are certain that you will not need it, you
+can save time and diskspace by setting {\tt copypointing} to {\tt
+  False}.
 
 The parameters {\tt freqtol} and {\tt dirtol} control how close
 together in frequency and angle on the sky spectral windows or field
@@ -1278,32 +1374,21 @@ combines the two days in {\tt 'n4826\_16apr.split.ms'} and
 {\tt 'n4826\_22apr.split.ms'} into a new output MS called
 {\tt 'n4826\_tboth.ms'}.
 
-{\bf ALERT:} There are additional issues when concatenating
-individual MS files with different spectral windows.  In this
-case, the rest frequencies (if set) of these windows may be lost
-in subsequent operations (e.g. {\tt split}).  If this occurs,
-then you can either set the {\tt restfreq} explicitly in certain
-tasks ({\tt plotxy} and {\tt clean}), or use the following snippet
-of code to fix this up after {\tt concat} has run:
-\small
-\begin{verbatim}
-   #
-   ##########################################################################
-   #
-   # Fix up the MS after concat (NOTE: STILL NECESSARY IN 2.4 and 3.0)
-   # This ensures that the rest freq will be found for all spws. 
-   # print '--Fixing up spw rest frequencies in MS--'
-   vis='ngc4826.tutorial.ms'              # Example vis name, put yours here!
-   tb.open(vis+'/SOURCE',nomodify=false)
-   spwid=tb.getcol('SPECTRAL_WINDOW_ID')
-   # The following is for 64bit systems 08-Jul-2008. ok on 32bit also.
-   spwid.setfield(-1,'int32')
-   tb.putcol('SPECTRAL_WINDOW_ID',spwid)
-   tb.close()
-\end{verbatim}
-\normalsize
-For example, this is used in the NGC4826 BIMA mosaic script
-(Appendix~\ref{section:scripts.ngc4826}).
+
+{\bf ALERT:} Note that if you are concatenating MSs which use
+antennas which were moved between observations, the MS definition 
+does only foresee a unique antenna ID, but not a unique name(!). 
+The moved antenna will
+appear twice in the antenna list under the same name but on different
+{\it stations} and with two different IDs. The pair (NAME, STATION)
+will be the unique identifier.
+
+If you would like to only concatenate the subtables of several 
+MSs, not the bulk visibility data, you can use the task {\tt testconcat}
+instead of {\tt concat} to save time and diskspace. {\tt testconcat} has
+the same parameters as {\tt concat}. It produces an output MS with
+the concatenated subtables and an empty Main table.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
