@@ -5,7 +5,7 @@ import os
 import shutil
 import tempfile
 
-def plotcomp(compdict, showplot=True, wantdict=False):
+def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
     """
     Given a dict including
     
@@ -16,6 +16,9 @@ def plotcomp(compdict, showplot=True, wantdict=False):
      'freqs (GHz)': pl.array of frequencies,
      'antennalist': An array configuration file as used by simdata,
      'savedfig': False or, if specified, the filename to save the plot to.},
+
+    and symb: One of matplotlib's codes for plot symbols: .:,o^v<>s+xDd234hH|_
+          default: ',':  The smallest points I could find,
 
     make a plot of visibility amplitude vs. baseline length for clist at epoch.
 
@@ -59,18 +62,10 @@ def plotcomp(compdict, showplot=True, wantdict=False):
         posobs = myme.observatory(telescopename)
         #print "posobs:", posobs
 
-        mounttype = 'alt-az'
-        if telescopename.upper() in ('ASKAP',  # Effectively, if not BIZARRE.
-                                     'DRAO',
-                                     'WSRT'):
-            mounttype = 'EQUATORIAL'
+        su.setcfg(mysm, telescopename, stnx, stny, stnz, diam,
+                  padnames, posobs)
 
-        if not mysm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz,
-                              dishdiameter=diam.tolist(), 
-                              mount=[mounttype], padname=padnames,
-                              coordsystem='global', referencelocation=posobs):
-            mysm.close()
-            raise ValueError("Error setting the configuration")
+        #print "cfg set"
 
         # Only 1 polarization is wanted for now.
         stokes, feeds = su.polsettings(telescopename, 'RR')
@@ -120,7 +115,8 @@ def plotcomp(compdict, showplot=True, wantdict=False):
         shutil.rmtree(tempms)
 
         if blunit[1] != blunit[0]:
-            casalog.post('The baseline units are mismatched!: %s' % blunit, 'SEVERE')
+            casalog.post('The baseline units are mismatched!: %s' % blunit,
+                         'SEVERE')
             return False
         blunit = blunit[0]
         baselines = pl.hypot(baselines[0], baselines[1])
@@ -136,10 +132,16 @@ def plotcomp(compdict, showplot=True, wantdict=False):
         for freqnum in xrange(nfreqs):
             freq = compdict['freqs (GHz)'][freqnum]
             casalog.post("Plotting " + str(freq) + " GHz.")
-            pl.plot(baselines, data[freqnum], ',', label="%.3g GHz" % freq)
+            pl.plot(baselines, data[freqnum], symb, label="%.3g GHz" % freq)
         pl.xlabel("Baseline length (" + blunit + ")")
         pl.ylabel("Visibility amplitude (Jy)")
-        pl.title(objname + " at %s" % myme.show(epoch))
+        epstr = mepoch_to_str(epoch)
+        pl.suptitle(objname + " (predicted)", fontsize=14)
+
+        # Unlike compdict['antennalist'], antennalist might have had repodir
+        # prefixed to it.
+        pl.title('at ' + epstr + ' for ' + compdict['antennalist'], fontsize=10)
+        
         pl.legend(loc='best')
         pl.ion()
         pl.draw()
@@ -149,13 +151,37 @@ def plotcomp(compdict, showplot=True, wantdict=False):
 
         if wantdict:
             retval = {'amps': data,
+                      'antennalist': antennalist,  # Absolute path, now.
                       'baselines': baselines,
                       'blunit': blunit,
                       'savedfig': compdict.get('savedfig')}
         else:
             retval = True
     except Exception, instance:
-        casalog.post(instance, 'SEVERE')
+        casalog.post(str(instance), 'SEVERE')
         if os.path.isdir(tempms):
             shutil.rmtree(tempms)
     return retval
+
+def mepoch_to_str(mepoch, showdate=True, showtime=True, showmjd=True):
+    """
+    Given an epoch as a measure, return it as a nicely formatted string.
+    """
+    tdic = qa.splitdate(mepoch['m0'])
+    fmt = ""
+    if showdate:
+        fmt += '%(year)d-%(month)02d-%(monthday)02d'
+    if showtime:
+        if fmt:
+            fmt += '/'            
+        fmt += '%(hour)02d:%(min)02d:%(sec)02d %(tz)s'
+        tdic['tz'] = mepoch['refer']
+    if showmjd:
+        islast = False
+        if fmt:
+            fmt += ' ('
+            islast = True
+        fmt += 'MJD %(mjd).2f'
+        if islast:
+            fmt += ')'
+    return fmt % tdic

@@ -72,12 +72,17 @@
 	    <description>Save a plot of S vs |u| to this filename</description>
 	    <value></value>
 	  </param>
+          <param type="string" name="symb">
+	    <description>A matplotlib plot symbol code</description>
+	    <value>,</value>
+          </param>
 
 	  <constraints>
 	    <when param="antennalist">
 	      <notequals value="">
 		<default param="showplot"><value>True</value></default>
 		<default param="savefig"><value type="string"></value></default>
+                <default param="symb"><value type="string">,</value></default>
 	      </notequals>
 	    </when>
 	  </constraints>
@@ -125,6 +130,8 @@
                      .:casa['dirs']['data'] + '/alma/simmos/'
              Default: '' (None, just make clist.)
 	     Example: 'alma.cycle0.extended.cfg'
+
+    Subparameters of antennalist:
     showplot: Whether or not to show a plot of S vs. |u| on screen.
               Subparameter of antennalist.
               Default: Necessarily False if antennalist is not specified.
@@ -132,8 +139,11 @@
     savefig: Filename for saving a plot of S vs. |u|.
              Subparameter of antennalist.
              Default: False (necessarily if antennalist is not specified)
-             Examples: True (save to prefix + '.png')
-                       'myplot.png' (save to myplot.png) 
+             Examples: ''           (do not save the plot)
+                       'myplot.png' (save to myplot.png)
+    symb: One of matplotlib's codes for plot symbols: .:,o^v&lt;&gt;s+xDd234hH|_
+          Default: ',':  The smallest points I could find.
+
      
 </example>
 </task>
