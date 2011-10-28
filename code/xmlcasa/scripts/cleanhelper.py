@@ -386,17 +386,27 @@ class cleanhelper:
         a check to make sure selected channel plane is not entirely flagged
         (for chinter=T interactive clean)
         """
-        lerange=range(self.nimages)
-        lerange.reverse()
-        for n in lerange:
-            #self.getchanimage(self.finalimages[n]+'_template.psf',self.imagelist[n]+'.test.psf',chan)
-            self.getchanimage(self.finalimages[n]+'.psf',self.imagelist[n]+'.test.psf',chan)
-            ia.open(self.imagelist[n]+'.test.psf')
-            imdata=ia.getchunk()
-            if self.skipclean:
-                pass
-            elif imdata.sum()==0.0:
-                self.skipclean=True
+        #lerange=range(self.nimages)
+        #lerange.reverse()
+        #for n in lerange:
+        #    self.getchanimage(self.finalimages[n]+'.psf',self.imagelist[n]+'.test.psf',chan)
+        #    ia.open(self.imagelist[n]+'.test.psf')
+        #    imdata=ia.getchunk()
+        #    print "imagelist[", n, "]=", self.imagelist[n], " imdata.sum()=",imdata.sum()
+            #if n==0 and imdata.sum()==0.0:
+            #    self.skipclean=True 
+        #    if self.skipclean:
+        #        pass
+        #    elif imdata.sum()==0.0:
+        #        self.skipclean=True
+        
+        # need to check only for main field
+        self.getchanimage(self.finalimages[0]+'.psf',self.imagelist[0]+'.test.psf',chan)
+        ia.open(self.imagelist[0]+'.test.psf')
+        imdata=ia.getchunk()
+        if imdata.sum()==0.0:
+            self.skipclean=True
+
 
     def makeEmptyimages(self):
         """
@@ -1842,9 +1852,15 @@ class cleanhelper:
                     if key == "imsize":
                         imsizes.append(dparm[fld][key])
                     if key == "mask":
-                        masks.append(dparm[fld][key])
+                        if type(dparm[fld][key])==str:
+                            masks.append([dparm[fld][key]])
+                        else:
+                            masks.append(dparm[fld][key])
                     if key == "modelimage":
-                        modelimages.append(dparm[fld][key])
+                        if type(dparm[fld][key])==str:
+                            modelimages.append([dparm[fld][key]])
+                        else:
+                            modelimages.append(dparm[fld][key])
                 if not dparm[fld].has_key("mask"):
                     masks.append([])
                 if not dparm[fld].has_key("modelimage"):
@@ -3183,8 +3199,11 @@ class cleanhelper:
         phasecenters=[]
         rootname=''
         multifield=False
+        loc_modelimage=modelimage
+        newformat=False
 
         if len(outlierfile) != 0:
+            #pdb.set_trace()
             #imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
             f_imageids,f_imsizes,f_phasecenters,f_masks,f_modelimages,parms,newformat=self.newreadoutlier(outlierfile)
             if type(imagename) == list or newformat:
@@ -3195,39 +3214,54 @@ class cleanhelper:
 
             # combine with the task parameter input
             if type(imagename) == str:
-                imageids.append(imagename)
-                imsizes.append(imsize)
-                phasecenters.append(phasecenter)
+                if newformat:
+                    imageids.append(imagename)
+                    imsizes.append(imsize)
+                    phasecenters.append(phasecenter)
             else:
                 imageids=imagename
                 imsizes=imsize
                 phasecenters=phasecenter
 
-            if type(mask) !=  list:
-                mask=[mask]
-            elif type(mask[0]) != list:
-                mask=[mask]
-            if type(modelimage) != list:
-                modelimage=[modelimage]
-            elif type(modelimage[0]) != list and type(imagename) != str:
-                modelimage=[modelimage]
+            #if type(mask) !=  list:
+            #    mask=[mask]
+            #elif type(mask[0]) != list:
+            #    mask=[mask]
+            if type(loc_modelimage) != list:
+                loc_modelimage=[loc_modelimage]
+
+            #elif type(loc_modelimage[0]) != list and type(imagename) != str:
+            #if type(loc_modelimage[0]) != list and \
+            #    (type(imagename) != str or (type(imageids)==list and len(imageids)=1)):
+            #    loc_modelimage=[loc_modelimage]
+            if type(loc_modelimage[0]) != list:
+                loc_modelimage=[loc_modelimage]
 
             # now append readoutlier content
             for indx, name in enumerate(f_imageids):
                 imageids.append(name)
                 imsizes.append(f_imsizes[indx])
                 phasecenters.append(f_phasecenters[indx])
-                mask.append(f_masks[indx])
-                modelimage.append(f_modelimages[indx])
+               
+                if newformat:
+                    #mask.append(f_masks[indx])
+                    loc_modelimage.append([f_modelimages[indx]])
+                else:
+                    if indx!=0:
+                        loc_modelimage.append([f_modelimages[indx]])
 
-            if len(imageids) > 1:
-                multifield=True
+            ##if len(imageids) > 1:
+            #    multifield=True
         else:
             imsizes=imsize
             phasecenters=phasecenter
             #imageids=imagename+'_template'
             imageids=imagename
+               
+        if len(imageids) > 1:
+            multifield=True
 
+        self.imageids=imageids
         # readoutlier need to be run first....
         #pdb.set_trace() 
         self.datsel(field=field, spw=spw, timerange=timerange, uvrange=uvrange, 
@@ -3290,15 +3324,19 @@ class cleanhelper:
             #    ia.rename(self.imagelist[k]+'.model',overwrite=True)
             #else:
             #    ia.remove(verbose=False)
-            if ((modelimage =='' or modelimage==[]) or \
-                (type(modelimage)==list and modelimage[k]=='')) and multifield:
+            if ((loc_modelimage =='' or loc_modelimage==[]) or \
+                (type(loc_modelimage)==list and \
+                 (loc_modelimage[k]=='' or loc_modelimage[k]==[''] or loc_modelimage[k]==[]))) and multifield:
                 ia.rename(self.imagelist[k]+'.model',overwrite=True)
             else:
                 modlist=[]
                 if type(modelimage)==str:
                     modlist=[modelimage]
-                if not any([inmodel == self.imagelist[k] for inmodel in modlist]):
-                    ia.remove(verbose=False)
+                # make sure input model image is not removed
+                if (not any([inmodel == self.imagelist[k] for inmodel in modlist])) and \
+                    (not any([inmodel == self.imagelist[k]+'.model' for inmodel in modlist])):
+                #    ia.remove(verbose=False)
+                     ia.rename(self.imagelist[k]+'.model',overwrite=True)
             ia.close()
 
             modelimages.append(self.imagelist[k]+'.model')
@@ -3308,7 +3346,13 @@ class cleanhelper:
             if(imagermode=='mosaic'):
                 fluximage.append(self.imagelist[k]+'.flux')
 
-        self.im.clean(algorithm='clark', niter=0,
+        # make dirty image cube
+        if multifield:
+           alg='mfclark'
+        else:
+           alg='clark'
+       
+        self.im.clean(algorithm=alg, niter=0,
                    model=modelimages, residual=residualimage,
                    image=restoredimage, psfimage=psfimage,
                    mask='', interactive=False)
@@ -3376,19 +3420,26 @@ class cleanhelper:
         chanmodimg=[]
         if type(modelimage)==str:
             modelimage=[modelimage]
+        indx=0
         for modimg in modelimage:
+            if modimg=='':
+                return 
             if type(modimg)==list:
                 chanmodimg=[]
                 for img in modimg:
-                    if os.path.dirname(img) != '':
-                        chanmodimg.append(tmppath[0] + '_tmp.' +
-                                           os.path.basename(img))
-                    else:
-                        chanmodimg.append(tmppath[0] + '_tmp.' + img)
-                    self.getchanimage(cubeimage=img, outim=chanmodimg[-1], chan=chan)
+                    if img!='':
+                        if os.path.dirname(img) != '':
+                            chanmodimg.append(tmppath[0] + '_tmp.' +
+                                              os.path.basename(img))
+                        else:
+                            chanmodimg.append(tmppath[0] + '_tmp.' + img)
+                        self.getchanimage(cubeimage=img, outim=chanmodimg[-1], chan=chan)
+                #self.convertmodelimage(modelimages=chanmodimg,
+                #                        outputmodel=self.imagelist.values()[0]+'.model')
                 self.convertmodelimage(modelimages=chanmodimg,
-                                        outputmodel=self.imagelist.values()[0]+'.model')
+                                        outputmodel=self.imagelist.values()[indx]+'.model', imindex=indx)
                 chanmodimg=[]
+                indx+=1
             else:
                 if os.path.dirname(modimg) != '':
                     chanmodimg.append(tmppath[0] + '_tmp.' + os.path.basename(modimg))
@@ -3396,11 +3447,14 @@ class cleanhelper:
                     chanmodimg.append(tmppath[0] + '_tmp.' + modimg)
                 self.getchanimage(cubeimage=modimg, outim=chanmodimg[-1],chan=chan)
 
+                #self.convertmodelimage(modelimages=chanmodimg,
+                #                        outputmodel=self.imagelist.values()[0]+'.model')
                 self.convertmodelimage(modelimages=chanmodimg,
-                                        outputmodel=self.imagelist.values()[0]+'.model')
+                                        outputmodel=self.imagelist.values()[indx]+'.model',imindex=indx)
             # clean up temporary channel model image
             self.cleanupTempFiles(chanmodimg)
 
+          
     def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
         """
         Put channel images back into CubeImages for chaniter=T mode
