@@ -410,10 +410,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
           Cube<Int> spwchansels_tmp=spwchansels_p;
 	  for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-            Vector<Double> chanFreq=spwc.chanFreq()(k);
-            Vector<Double> freqResolution = spwc.chanWidth()(k);
+	    uInt curspwid=dataspectralwindowids_p[k];
+	    Vector<Double> chanFreq=spwc.chanFreq()(curspwid);
+            Vector<Double> freqResolution = spwc.chanWidth()(curspwid);
 
-            uInt curspwid=dataspectralwindowids_p[k];
+            
 	    //dataStep_p[k]=chanselmat.row(k)(3);
             if (nrow==0) {
               //dataStep_p=step[0];
