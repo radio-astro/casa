@@ -56,7 +56,6 @@ set( ASAP_SRCS
      ${SRCDIR}/MSFiller.cpp
      ${SRCDIR}/MSWriter.cpp
      ${SRCDIR}/AsapLogSink.cpp
-     ${SRCDIR}/STUpgrade.cpp 
      ${SRCDIR}/Templates.cpp )
 
 set( ASAP_PYSRCS
