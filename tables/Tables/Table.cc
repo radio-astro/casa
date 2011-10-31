@@ -456,20 +456,21 @@ void Table::open (const String& name, const String& type, int tableOption,
         // using stale data (Jim Jacobs 2011/10/5)
 
         Bool dirExists = False;
-	if(!EnvironmentVariable::isDefined("CASA_NOLUSTRE_CHECK")){
+	if(dir.getFSType() == "Lustre" && !EnvironmentVariable::isDefined("CASA_NOLUSTRE_CHECK")){
           for (int i = 0; i < 3; i++){
-            if (dir.exists()){
-                dirExists = True;
+            dirExists = dir.exists();
+            if (dirExists){
                 break;
             }
             usleep (1000000); // one second
-	    if(i==2)
+	    if(i==2){
 	      std::cerr << "Lustre Latency Check is on. To turn off set environment variable CASA_NOLUSTRE_CHECK=1." << std::endl;
+	      std::cerr << "Missing file is " << absName << std::endl;
+	    }
           }
 
-        } else {
-           dirExists = dir.exists();
-	}
+        }
+        dirExists = dir.exists();
         if (! dirExists){
             throw TableNoFile(absName);
         }
