@@ -456,8 +456,14 @@ void File::checkTarget (Path& targetName, Bool overwrite,
     }
 }
 
+
+#ifdef AIPS_DARWIN
 #include <sys/param.h>
 #include <sys/mount.h>
+#else
+#include <sys/vfs.h>
+#endif
+
 
 String File::getFSType() const
 {
