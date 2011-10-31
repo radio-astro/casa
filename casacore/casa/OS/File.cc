@@ -474,7 +474,7 @@ String File::getFSType() const
 	rstat = String(statbuf.f_fstypename);
 #else
 	if(statbuf.f_type == 0x0BD00BD0)
-	   rstat = "Lustre"
+	   rstat = "Lustre";
 #endif
 	return rstat;
 }
