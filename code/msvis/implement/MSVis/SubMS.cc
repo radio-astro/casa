@@ -1622,6 +1622,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
         keepShape_p = false;
 
+        // The sign of CHAN_WIDTH defaults to +.  Its determination assumes
+        // that chanFreqIn is monotonic, but not that the sign of the
+        // chanWidthIn is correct.
+        Bool neginc = chanFreqIn[chanFreqIn.nelements() - 1] < chanFreqIn[0];
+
         effBWOut.set(0.0);
         Double totalBW = 0.0;
         for(uInt rangeNum = 0;
@@ -1636,17 +1641,31 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
             if(span > 1){
               Int lastChan = inpChan + span - 1;
 
-              if(lastChan > chanEnd_p[k])
+              if(lastChan > chanEnd_p[k]){
                 // The averaging width is not a factor of the number of
                 // selected input channels, so the last output bin receives
                 // fewer input channels than the other bins.
                 lastChan = chanEnd_p[k];
 
+                Int nchan = lastChan - inpChan + 1;
+                os << LogIO::WARN
+                   << "The last output channel of spw " << k
+                   << " will only include " << nchan << " channel";
+                if(nchan > 1){
+                  os << "s." << LogIO::POST;
+                }
+                else{
+                  os << "." << LogIO::POST;
+                  os << LogIO::WARN
+                     << "Remember that MS selection ranges (unlike Python), *include* the last number."
+                     << LogIO::POST;
+                }
+              }
+
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
                                       chanFreqIn[lastChan]) / 2;
 
               Double sep = chanFreqIn[lastChan] - chanFreqIn[inpChan];
-              Bool neginc = sep < 0.0;
 
               if(neginc)
                 sep = -sep;
