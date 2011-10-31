@@ -56,6 +56,7 @@ set( ASAP_SRCS
      ${SRCDIR}/MSFiller.cpp
      ${SRCDIR}/MSWriter.cpp
      ${SRCDIR}/AsapLogSink.cpp
+     ${SRCDIR}/STUpgrade.cpp 
      ${SRCDIR}/Templates.cpp )
 
 set( ASAP_PYSRCS
@@ -80,11 +81,10 @@ set( ASAP_PYSRCS
 
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} ${ASAP_PYSRCS} )
 
-# library name must be _asap.so
+# library name must be _asap.${CMAKE_SHARED_LIBRARY_SUFFIX}
 set_target_properties( ${ASAPLIB}
                        PROPERTIES
-                       PREFIX _
-                       SUFFIX .so )
+                       PREFIX _ )
 
 target_link_libraries( ${ASAPLIB} 
                        #${Boost_LIBRARIES}
@@ -95,6 +95,24 @@ target_link_libraries( ${ASAPLIB}
 
 add_dependencies( inst ${ASAPLIB} )
 
-# install directory
+# Install ASAPLIB with platform default extension in lib directory.
 install( TARGETS ${ASAPLIB}
-         LIBRARY DESTINATION ${PYTHON_INSTALL_DIR} )
+         LIBRARY DESTINATION ${CMAKE_INSTALL_NAME_DIR} )
+
+#
+# Create a symbolic link from LIB_INSTALL_DIR/ASAPLIB. to PYTHON_INSTALL_DIR/ASAPLIB.so
+# to work around Python issue loading dylib files on OS X.  On Linux, it appears to be 
+# sufficient to copy _asap.so to the Python directory, but handling Linux and OS X the
+# same way reduces confusion and does not create any issues.
+
+set ( FULL_LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR} ) 
+set ( LINK_SOURCE ${FULL_LIB_INSTALL_DIR}/_${ASAPLIB}${CMAKE_SHARED_LIBRARY_SUFFIX} )
+
+set ( FULL_PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_DIR} ) 
+set ( LINK_TARGET ${FULL_PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ) 
+
+install ( CODE "
+    EXECUTE_PROCESS ( COMMAND 
+        ln -s ${LINK_SOURCE} ${LINK_TARGET}
+    )
+" )
