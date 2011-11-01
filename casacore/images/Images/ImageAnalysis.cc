@@ -3362,13 +3362,14 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 	return pImOut;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
-		const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
-		Record& Region, const String& mask, const String& methodU,
-		const Int decimate, const Bool replicate, const Bool doRefChange,
-		const Bool dropDegenerateAxes, const Bool overwrite,
-		const Bool forceRegrid) {
+ImageInterface<Float>* ImageAnalysis::_regrid(
+	const String& outFile, const Vector<Int>& inshape,
+	const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
+	Record& Region, const String& mask, const String& methodU,
+	const Int decimate, const Bool replicate, const Bool doRefChange,
+	const Bool dropDegenerateAxes, const Bool overwrite,
+	const Bool forceRegrid
+) {
 	*itsLog << LogOrigin("ImageAnalysis", "regrid1");
 
 	Int dbg = 0;
@@ -3474,13 +3475,15 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 	return pImOut;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
-		const Record& coordinates, const Vector<Int>& inaxes, Record& Region,
-		const String& mask, const String& methodU, const Int decimate,
-		const Bool replicate, const Bool doRefChange,
-		const Bool dropDegenerateAxes, const Bool overwrite,
-		const Bool forceRegrid) {
+ImageInterface<Float>* ImageAnalysis::regrid(
+	const String& outFile, const Vector<Int>& inshape,
+	const Record& coordinates, const Vector<Int>& inaxes,
+	Record& Region, const String& mask,
+	const String& methodU, const Int decimate,
+	const Bool replicate, const Bool doRefChange,
+	const Bool dropDegenerateAxes, const Bool overwrite,
+	const Bool forceRegrid, const Bool specAsVelocity
+) {
 	*itsLog << LogOrigin("ImageAnalysis", "regrid2");
 
 	// must deal with default shape and dropDegenerateAxes
@@ -3504,18 +3507,125 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 		tmpShape = inshape;
 	}
 
-	CoordinateSystem *csys = new CoordinateSystem();
-	if (coordinates.nfields() > 0) {
-		delete csys;
-		csys = makeCoordinateSystem(coordinates, IPosition(tmpShape));
-	}
-	ImageInterface<Float> * pimout;
-	pimout = regrid(outFile, inshape, *csys, inaxes, Region, mask, methodU,
-			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
-			forceRegrid);
-	delete csys;
-	return pimout;
+	std::auto_ptr<CoordinateSystem> csys(
+		coordinates.nfields() > 0
+		? makeCoordinateSystem(coordinates, IPosition(tmpShape))
+		: new CoordinateSystem()
+	);
 
+	Bool regridByVel = False;
+	if (
+		specAsVelocity && pImage_p->coordinates().hasSpectralAxis()
+		&& csys->hasSpectralAxis()
+	) {
+		if (inaxes.size() == 0) {
+			regridByVel = True;
+		}
+		else {
+			Int specAxis = pImage_p->coordinates().spectralAxisNumber();
+			for (uInt i=0; i<inaxes.size(); i++) {
+				if (inaxes[i] == specAxis) {
+					regridByVel = True;
+					break;
+				}
+			}
+		}
+	}
+	if (regridByVel) {
+		return _regridByVelocity(
+			outFile, inshape, *csys, inaxes,
+			Region, mask, methodU, decimate,
+			replicate, doRefChange, dropDegenerateAxes,
+			overwrite, forceRegrid
+		);
+	}
+	else {
+		return _regrid(
+			outFile, inshape, *csys, inaxes, Region, mask, methodU,
+			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
+			forceRegrid
+		);
+	}
+}
+
+ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
+	const String& outfile, const Vector<Int>& shape,
+	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
+    Record& region, const String& mask,
+    const String& method, const Int decimate,
+    const Bool replicate, const Bool doref,
+    const Bool dropdeg, const Bool overwrite,
+    const Bool force
+) const {
+	std::auto_ptr<CoordinateSystem> csys(
+		dynamic_cast<CoordinateSystem *>(csysTemplate.clone())
+	);
+	std::auto_ptr<ImageInterface<Float> > clone(
+		new SubImage<Float>(
+			SubImage<Float>::createSubImage(*pImage_p, Record(), "", 0, False)
+		)
+	);
+	std::auto_ptr<CoordinateSystem> coordClone(
+		dynamic_cast<CoordinateSystem *>(clone->coordinates().clone())
+	);
+	const SpectralCoordinate saveSpecCoord = csys->spectralCoordinate();
+
+	for (uInt i=0; i<2; i++) {
+		CoordinateSystem *cs = i == 0 ? csys.get() : coordClone.get();
+		// create and replace the coordinate system's spectral coordinate with
+		// a linear coordinate which describes the velocity axis. In this way
+		// we can regrid by velocity.
+		Int specCoordNum = cs->spectralCoordinateNumber();
+		SpectralCoordinate specCoord = cs->spectralCoordinate();
+		Double freqRefVal = specCoord.referenceValue()[0];
+		Double velRefVal;
+		if (! specCoord.frequencyToVelocity(velRefVal, freqRefVal)) {
+			*itsLog << LogIO::SEVERE << "Unable to determine reference velocity";
+		}
+		Double vel0, vel1;
+		if (
+			! specCoord.pixelToVelocity(vel0, 0.0)
+			|| ! specCoord.pixelToVelocity(vel1, 1.0)
+		) {
+			*itsLog << LogIO::SEVERE << "Unable to determine velocity increment";
+		}
+		Matrix<Double> pc(1, 1, 0);
+		pc.diagonal() = 1.0;
+		LinearCoordinate lin(
+			Vector<String>(1, "velocity"),
+			specCoord.worldAxisUnits(),
+			Vector<Double>(1, velRefVal),
+			Vector<Double>(1, vel1 - vel0),
+			pc, specCoord.referencePixel()
+		);
+		if (! cs->replaceCoordinate(lin, specCoordNum)) {
+			*itsLog << "Unable to replace spectral with linear coordinate";
+		}
+	}
+	clone->setCoordinateInfo(*coordClone);
+	ImageAnalysis newIA(clone.get());
+	std::auto_ptr<ImageInterface<Float> > outImage(
+		newIA._regrid(
+			outfile, shape, *csys, axes, region, mask, method,
+			decimate, replicate, doref, dropdeg, overwrite,
+			force
+		)
+	);
+	// replace the temporary linear coordinate with the saved spectral coordinate
+	std::auto_ptr<CoordinateSystem> newCoords(
+		dynamic_cast<CoordinateSystem *>(outImage->coordinates().clone())
+	);
+	if (
+		! newCoords->replaceCoordinate(
+			saveSpecCoord,
+			clone->coordinates().linearCoordinateNumber()
+		)
+	) {
+		*itsLog << LogIO::SEVERE
+			<< "Unable to replace coordinate for velocity regridding";
+	}
+	outImage->setCoordinateInfo(*newCoords);
+	return outImage.release();
 }
 
 ImageInterface<Float> *
