@@ -2175,50 +2175,44 @@ image::rebin(const std::string& outfile, const std::vector<int>& bin,
 	return rstat;
 }
 
-::casac::image *
-image::regrid(const std::string& outfile, const std::vector<int>& inshape,
-		const ::casac::record& csys, const std::vector<int>& inaxes,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const std::string& method, const int decimate, const bool replicate,
-		const bool doRefChange, const bool dropDegenerateAxes,
-		const bool overwrite, const bool forceRegrid, const bool /* async */) {
-	::casac::image *rstat = 0;
+image* image::regrid(
+	const string& outfile, const vector<int>& inshape,
+	const record& csys, const vector<int>& inaxes,
+	const record& region, const variant& vmask,
+	const string& method, const int decimate, const bool replicate,
+	const bool doRefChange, const bool dropDegenerateAxes,
+	const bool overwrite, const bool forceRegrid,
+	const bool specAsVelocity, const bool /* async */
+) {
 	try {
-		*_log << LogOrigin("image", "regrid");
-		if (detached())
-			return rstat;
-
-		String outFile(outfile);
-		Record *coordinates = toRecord(csys);
-
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
+		std::auto_ptr<Record> coordinates(toRecord(csys));
 		String methodU(method);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
+		}
 		Vector<Int> axes;
 		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
 			axes = inaxes;
 		}
-
-		ImageInterface<Float> * pImOut;
-
-		pImOut = _image->regrid(outFile, Vector<Int> (inshape), *coordinates,
+		std::auto_ptr<ImageInterface<Float> >pImOut(
+			_image->regrid(
+				outfile, Vector<Int> (inshape), *coordinates,
 				axes, *Region, mask, methodU, decimate, replicate, doRefChange,
-				dropDegenerateAxes, overwrite, forceRegrid);
-
-		delete Region;
-		delete coordinates;
-
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
+				dropDegenerateAxes, overwrite, forceRegrid, specAsVelocity
+			)
+		);
+		return new image(pImOut.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::image *

@@ -6720,6 +6720,11 @@ ia.close()
      <description>Force specified axes to be regridded</description>
      <value>false</value>
      </param>
+     
+     <param type="bool" direction="in" name="asvelocity">
+        <description>Regrid spectral axis in velocity space rather than frequency space?</description>
+        <value>false</value>
+     </param>
   
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
@@ -6838,6 +6843,12 @@ pixels per axis in the sparse grid is the number of output pixels for
 that axis divided by the decimation factor.  A factor of 10 does pretty
 well.  You may find that for very non-linear coordinate systems (e.g. 
 very close to the pole) that you have to reduce the decimation factor. 
+
+If one of the axes to be regridded is a spectral axis and asvelocity=T,
+the axis will be regridded to match the velocity, not the frequency,
+description of the template coordinate system. Thus the output pixel
+values will correspond only to the velocity, not the frequency, of the
+output axis.
 
 Sometimes it is useful to drop axes of length one (degenerate axes). 
 Use the {\stfaf dropdeg} argument if you want to do this.  It will

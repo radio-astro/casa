@@ -13,6 +13,8 @@ fail  = 0
 current_test =""
 stars = "*************"
 
+datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imregrid/'
+
 def test_start(msg):
     global total, current_test
     total += 1
@@ -204,6 +206,37 @@ class imregrid_test(unittest.TestCase):
                 imregrid(imagename = IMAGE,
                          template = out5,
                          output = out1)
+                
+    def test_asvelocity(self):
+        """ Test regrid by velocity """
+        image = "byvel.im"
+        expected = "expected.im"
+        shutil.copytree(datapath + image, image)
+        shutil.copytree(datapath + expected, expected)
+        myia = iatool.create()
+        myia.open(expected)
+        csys = myia.coordsys().torecord()
+        myia.done()
+        myia.open(image)
+        ff = myia.regrid("",csys=csys,asvelocity=True)
+        myia.done()
+        myia.open(expected)
+        res = (ff.getchunk() == myia.getchunk()).all()
+        self.assertTrue(res)
+        res = (ff.getchunk(getmask=True) == myia.getchunk(getmask=True)).all()
+        self.assertTrue(res)
+        ff.done()
+        outfile = "junk"
+        myia.regrid(outfile=outfile, csys=csys, asvelocity=True)
+        ff.open(outfile)
+        res = (ff.getchunk() == myia.getchunk()).all()
+        self.assertTrue(res)
+        res = (ff.getchunk(getmask=True) == myia.getchunk(getmask=True)).all()
+        self.assertTrue(res)  
+        shutil.rmtree(outfile)
+        shutil.rmtree(image)
+        shutil.rmtree(expected)      
+        
             
 def suite():
     return [imregrid_test]
