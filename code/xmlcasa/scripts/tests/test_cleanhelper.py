@@ -209,7 +209,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-	print "float box and int box"
+        print "float box and int box"
         fibmask=[[100.0,85.0,120.0,95.0],[145,145,155,155]]
         self.imset.makemaskimage(outputmask=maskimage,imagename=self.imset.imagelist[0],maskobject=fibmask)
         self.assertTrue(os.path.exists(maskimage)," float +int box maskimage does not exist")
@@ -218,7 +218,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-	print "numpy.int boxes"
+        print "numpy.int boxes"
         import numpy as np
         box1=[np.int_(i) for i in ibmask[0]] 
         box2=[np.int_(i) for i in ibmask[1]] 
@@ -230,7 +230,7 @@ class cleanhelper_test(unittest.TestCase):
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
         #
         retval=False
-	print "numpy.float boxes"
+        print "numpy.float boxes"
         box1=[np.float_(i) for i in fibmask[0]]
         box2=[np.float_(i) for i in fibmask[1]]
         numpyintmask=[box1,box2]
@@ -266,7 +266,54 @@ class cleanhelper_test(unittest.TestCase):
         self.assertTrue(retval,"test on box mask failed")
         os.system('rm -rf ' + self.imset.imagelist[0]+'*')
 
-        
+    def testGetOptimumSize(self):
+        import random
+        import time
+        # Check that factors of 2,3, and 5 do the right thing
+        self.assertEqual(cleanhelper.getOptimumSize(1024),1024)    #2^10
+        self.assertEqual(cleanhelper.getOptimumSize(59049), 59049) #3^10
+        self.assertEqual(cleanhelper.getOptimumSize(15625), 15625) #5^6
+
+        # Now lets do some random checks to make sure we get the same value
+        self.assertEqual(cleanhelper.getOptimumSize(1375),1458) #2^1*3^6 
+        self.assertEqual(cleanhelper.getOptimumSize(62354),62500) #2^3*5^7
+        self.assertEqual(cleanhelper.getOptimumSize(981),1000) # 2^3*5^3
+        self.assertEqual(cleanhelper.getOptimumSize(8123), 8192) # 2^13
+        self.assertEqual(cleanhelper.getOptimumSize(82863),82944) # 2^10*3^4
+
+        # Now do some real random checks
+        random.seed(time.time())
+        factorList = [2,3,5]
+
+        for i in xrange(100):
+            x = random.randint(100,1000000)
+            y = cleanhelper.getOptimumSize(x)
+            self.assertTrue(y>x)
+            
+            # Now Factorize this return
+            remainder = float(y)
+            expList = [0,0,0]
+            for idx in range(len(factorList)):
+                while remainder > 0 and \
+                        (remainder/factorList[idx] == int(remainder/factorList[idx])):
+                    expList[idx] += 1
+                    remainder /= factorList[idx]
+
+            # Check that the number is completely factored
+            value = 1
+            for idx in range(len(factorList)):
+                value *= factorList[idx]**expList[idx]
+            self.assertEqual(y,value)
+            self.assertTrue(expList.count(0) > 0)
+            
+
 
 def suite():
     return [cleanhelper_test]
+
+if __name__ == '__main__':
+    testSuite = []
+    for testClass in suite():
+        testSuite.append(unittest.makeSuite(testClass,'test'))
+    allTests = unittest.TestSuite(testSuite)
+    unittest.TextTestRunner(verbosity=2).run(allTests)
