@@ -5067,6 +5067,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           if(reffreq.getValue().getValue() > 0.0){
             siModel.setRefFrequency(reffreq);
             siModel.setIndex(spix);
+            returnFluxes[selspw][0].setValue(fluxUsed[0] * siModel.sample(mfreqs[selspw][0]));
           }
           else{
             if(spix != 0.0){            // If not the default, complain and quit.
@@ -5113,6 +5114,17 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         }
       }
     }   // End of loop over fields.
+
+    if(!precompute && spix != 0.0 && reffreq.getValue().getValue() > 0.0){
+      os << LogIO::NORMAL
+         << "Flux density as a function of frequency (channel 0 of each spw):\n"
+         << "  Frequency (GHz)    Flux Density (Jy, Stokes I)"
+         << LogIO::POST;
+      for(uInt selspw = 0; selspw < nspws; ++selspw)
+        os << "     " << mfreqs[selspw][0].get("GHz").getValue() << "         "
+           << returnFluxes[selspw][0].value(Stokes::I).getValue()
+           << LogIO::POST;
+    }
 
     this->writeHistory(os);
     this->unlock();
