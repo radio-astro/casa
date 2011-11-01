@@ -99,19 +99,19 @@ install( TARGETS ${ASAPLIB}
          LIBRARY DESTINATION ${CMAKE_INSTALL_NAME_DIR} )
 
 #
-# Create a symbolic link from LIB_INSTALL_DIR/ASAPLIB. to PYTHON_INSTALL_DIR/ASAPLIB.so
-# to work around Python issue loading dylib files on OS X.  On Linux, it appears to be 
-# sufficient to copy _asap.so to the Python directory, but handling Linux and OS X the
-# same way reduces confusion and does not create any issues.
+# Copy a library from LIB_INSTALL_DIR/ASAPLIB${CMAKE_SHARED_LIBRARY_SUFFIX} to 
+# PYTHON_INSTALL_DIR/ASAPLIB.so to work around Python issue loading dylib files on OS X.  
+# On Linux, it appears to be sufficient to copy _asap.so to the Python directory rather 
+# than the lib directory, but handling Linux and OS X consistantly reduces confusion and 
+# does not create any issues on Linux.
 
-set ( FULL_LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR} ) 
-set ( LINK_SOURCE ${FULL_LIB_INSTALL_DIR}/_${ASAPLIB}${CMAKE_SHARED_LIBRARY_SUFFIX} )
-
-set ( FULL_PYTHON_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_DIR} ) 
-set ( LINK_TARGET ${FULL_PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ) 
+#
+#
+set ( LIB_SOURCE ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/_${ASAPLIB}${CMAKE_SHARED_LIBRARY_SUFFIX} )
+set ( LIB_DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ) 
 
 install ( CODE "
     EXECUTE_PROCESS ( COMMAND 
-        ln -s ${LINK_SOURCE} ${LINK_TARGET}
+        cp ${LIB_SOURCE} ${LIB_DESTINATION}
     )
 " )
