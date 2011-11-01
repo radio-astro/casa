@@ -516,8 +516,30 @@ Bool testQualImg(FITSQualityImage &fitsQI, const String &in, const uInt &hdu_sci
 
 	   delete pFitsMM;
    }
-
-	return True;
+   // TODO: add some more quantitative tests for the mask!!
+   {
+	   // check the pixel mask
+	   Lattice<Bool> &theMask = fitsQI.pixelMask();
+	   if (theMask.shape() != fitsQI.shape()){
+		   String msg = String("The mask shape must be identical to the shape of the data!");
+		   throw(AipsError(msg));
+	   }
+   }
+   {
+	   FITSImage *fData = fitsQI.fitsData();
+	   if (fData->shape() != fitsDataImg.shape()){
+		   String msg = String("The FITS data image shapes must be identical!");
+		   throw(AipsError(msg));
+	   }
+   }
+   {
+	   FITSErrorImage *fError = fitsQI.fitsError();
+	   if (fError->shape() != fitsErrorImg.shape()){
+		   String msg = String("The FITS error image shapes must be identical!");
+		   throw(AipsError(msg));
+	   }
+   }
+   return True;
 }
 
 

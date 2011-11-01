@@ -31,6 +31,7 @@ Lattices/LattRegionHolder.cc
 Lattices/LatticeNavigator.cc
 Lattices/LatticeExprNode.cc
 Lattices/FITSMask.cc
+Lattices/FITSQualityMask.cc
 Lattices/LatticeHistProgress.cc
 Lattices/LattStatsSpecialize.cc
 Lattices/LatticeBase.cc
@@ -85,6 +86,7 @@ Lattices/CurvedLattice2D.tcc
 Lattices/ExtendLattice.h
 Lattices/ExtendLattice.tcc
 Lattices/FITSMask.h
+Lattices/FITSQualityMask.h
 Lattices/HDF5LattIter.h
 Lattices/HDF5LattIter.tcc
 Lattices/HDF5Lattice.h

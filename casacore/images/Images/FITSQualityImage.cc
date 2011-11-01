@@ -29,6 +29,7 @@
 
 #include <images/Images/FITSImage.h>
 #include <images/Images/FITSErrorImage.h>
+#include <lattices/Lattices/FITSQualityMask.h>
 
 #include <images/Images/FITSImgParser.h>
 #include <fits/FITS/hdu.h>
@@ -122,6 +123,8 @@ FITSQualityImage::FITSQualityImage (const FITSQualityImage& other)
 	if (other.fitserror_p != 0) {
 		fitserror_p = dynamic_cast<FITSErrorImage *>(other.fitserror_p->cloneII());
 	}
+    if (fitsdata_p != 0 && fitserror_p != 0 && fitsdata_p->isMasked())
+  	  pPixelMask_p = new FITSQualityMask(fitsdata_p, fitserror_p);
 }
  
 FITSQualityImage& FITSQualityImage::operator=(const FITSQualityImage& other)
@@ -142,6 +145,8 @@ FITSQualityImage& FITSQualityImage::operator=(const FITSQualityImage& other)
       if (other.fitserror_p != 0) {
     	  fitserror_p = dynamic_cast<FITSErrorImage *>(other.fitserror_p->cloneII());
       }
+      if (fitsdata_p != 0 && fitserror_p != 0 && fitsdata_p->isMasked())
+    	  pPixelMask_p = new FITSQualityMask(fitsdata_p, fitserror_p);
       name_p          = other.name_p;
       shape_p         = other.shape_p;
       whichDataHDU_p  = other.whichDataHDU_p;
@@ -187,12 +192,28 @@ void FITSQualityImage::resize(const TiledShape&)
 
 Bool FITSQualityImage::isMasked() const
 {
-   return True;
+	return fitsdata_p->isMasked();
 }
 
 Bool FITSQualityImage::hasPixelMask() const
 {
-   return True;
+	return fitsdata_p->isMasked();
+}
+
+const Lattice<Bool>& FITSQualityImage::pixelMask() const
+{
+   if (!fitsdata_p->isMasked()) {
+      throw (AipsError ("FITSQualityImage::pixelMask - no pixelmask used"));
+   }
+   return *pPixelMask_p;
+}
+
+Lattice<Bool>& FITSQualityImage::pixelMask()
+{
+   if (!fitsdata_p->isMasked()) {
+      throw (AipsError ("FITSQualityImage::pixelMask - no pixelmask used"));
+   }
+   return *pPixelMask_p;
 }
 
 const LatticeRegion* FITSQualityImage::getRegionPtr() const
@@ -338,144 +359,16 @@ Bool FITSQualityImage::doGetSlice(Array<Float>& buffer, const Slicer& section)
 	return False;
 }
 
-Bool FITSQualityImage::doGetMaskSlice(Array<Bool>& buffer, const Slicer& section)
+Bool FITSQualityImage::doGetMaskSlice (Array<Bool>& buffer, const Slicer& section)
 {
-	// get the section dimension
-	IPosition shp = section.length();
-	uInt ndim=section.ndim();
-
-	// resize the buffer
-	if (!buffer.shape().isEqual(shp)) buffer.resize(shp);
-
-	// set the in all except the last dimension
-	IPosition tmpStart(ndim-1);
-	IPosition tmpEnd(ndim-1);
-	IPosition tmpStride(ndim-1);
-	for (uInt index=0; index<ndim-1; index++) {
-		tmpStart(index)  = section.start()(index);
-		tmpEnd(index)    = section.end()(index);
-		tmpStride(index) = section.stride()(index);
+	if (!fitsdata_p->isMasked()) {
+		buffer.resize (section.length());
+		buffer = True;
+		return False;
 	}
-
-	// generate a slicer for all except the last dimension;
-	// used for getting the data from the individual extensions
-	Slicer subSection(tmpStart, tmpEnd, tmpStride, Slicer::endIsLast);
-
-	// analyze the request
-	if (section.start()(ndim-1) != section.end()(ndim-1)){
-
-		// data and error is requested
-		Array<Bool> subData;
-		Array<Bool> subError;
-		Array<Bool> tmp;
-
-		// prepare the call
-		// for data mask
-		IPosition subStart(ndim);
-		IPosition subEnd(ndim);
-		for (uInt index=0; index<ndim-1; index++) {
-			subStart(index)  = 0;
-			subEnd(index)    = shp(index)-1;
-		}
-		subStart(ndim-1) = 0;
-		subEnd(ndim-1)   = 0;
-
-		// re-size the buffer
-		if (!subData.shape().isEqual(subSection.length())) subData.resize(subSection.length());
-
-		// get the data mask
-		reopenDataIfNeeded();
-		fitsdata_p->doGetMaskSlice(subData, subSection);
-		tempCloseData();
-
-		// insert the retrieved data
-		// into the output buffer
-		tmp.reference(buffer(subStart, subEnd));
-		tmp=subData.addDegenerate(1);
-
-		// prepare the call
-		// for error mask values
-		subStart(ndim-1) = 1;
-		subEnd(ndim-1)   = 1;
-
-		// re-size the buffer
-		if (!subError.shape().isEqual(subSection.length())) subError.resize(subSection.length());
-
-		// get the error mask
-		reopenErrorIfNeeded();
-		fitserror_p->doGetMaskSlice(subError, subSection);
-		tempCloseError();
-
-		// insert the retrieved data
-		// into the output buffer
-		tmp.reference(buffer(subStart, subEnd));
-		tmp=subError.addDegenerate(1);
-	}
-
-	else if (section.start()(ndim-1)==0) {
-
-		// only data is requested
-		Array<Bool> subData;
-		Array<Bool> tmp;
-
-		// prepare the call
-		// for data mask values
-		IPosition subStart(ndim);
-		IPosition subEnd(ndim);
-		for (uInt index=0; index<ndim-1; index++) {
-			subStart(index)  = 0;
-			subEnd(index)    = shp(index)-1;
-		}
-		subStart(ndim-1) = 0;
-		subEnd(ndim-1)   = 0;
-
-		// re-size the buffer
-		if (!subData.shape().isEqual(subSection.length())) subData.resize(subSection.length());
-
-		// get the data mask
-		reopenDataIfNeeded();
-		fitsdata_p->doGetMaskSlice(subData, subSection);
-		tempCloseData();
-
-		// insert the retrieved data
-		// into the output buffer
-		tmp.reference(buffer(subStart, subEnd));
-		tmp=subData.addDegenerate(1);
-
-	}
-
-	else if (section.start()(ndim-1)==1) {
-
-		// only error is requested
-		Array<Bool> subError;
-		Array<Bool> tmp;
-
-		// prepare the call
-		// for error mask values
-		IPosition subStart(ndim);
-		IPosition subEnd(ndim);
-		for (uInt index=0; index<ndim-1; index++) {
-			subStart(index)  = 0;
-			subEnd(index)    = shp(index)-1;
-		}
-		subStart(ndim-1) = 0;
-		subEnd(ndim-1)   = 0;
-
-		// re-size the buffer
-		if (!subError.shape().isEqual(subSection.length())) subError.resize(subSection.length());
-
-		// get the error mask
-		reopenErrorIfNeeded();
-		fitserror_p->doGetMaskSlice(subError, subSection);
-		tempCloseError();
-
-		// insert the retrieved data
-		// into the output buffer
-		tmp.reference(buffer(subStart, subEnd));
-		tmp=subError.addDegenerate(1);
-	}
-
-	return False;
+//
+	reopenIfNeeded();
+	return pPixelMask_p->getSlice (buffer, section);
 }
 
 void FITSQualityImage::doPutSlice (const Array<Float>&, const IPosition&,
@@ -695,6 +588,9 @@ void FITSQualityImage::setup()
 	// do some checks on the input images
 	Bool ok;
 	ok = checkInput();
+
+	// create the pixel mask
+	pPixelMask_p = new FITSQualityMask(fitsdata_p, fitserror_p);
 
 	IPosition data_shape=fitsdata_p->shape();
 	IPosition mm_shape(data_shape.nelements()+1);
