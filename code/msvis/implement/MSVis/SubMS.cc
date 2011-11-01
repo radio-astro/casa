@@ -1650,16 +1650,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                 Int nchan = lastChan - inpChan + 1;
                 os << LogIO::WARN
                    << "The last output channel of spw " << k
-                   << " will only include " << nchan << " channel";
-                if(nchan > 1){
-                  os << "s." << LogIO::POST;
-                }
-                else{
-                  os << "." << LogIO::POST;
-                  os << LogIO::WARN
-                     << "Remember that MS selection ranges (unlike Python), *include* the last number."
-                     << LogIO::POST;
-                }
+                   << " has only " << nchan << " input channel";
+                if(nchan > 1)
+                  os << "s.";
+                else
+                  os << ".\nRemember that MS selection ranges (unlike Python), *include* the last number.";
+                os << LogIO::POST;
               }
 
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
