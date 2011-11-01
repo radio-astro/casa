@@ -321,30 +321,22 @@ class ImageAnalysis
     //regrids to a given coordinate system...one uses a record that is 
     //converted to a CoordinateSytem 
 
-    ImageInterface<Float> * regrid(const String& outfile, 
-                                   const Vector<Int>& shape, 
-                                   const Record& csys, const Vector<Int>& axes,
-                                   Record& region, const String& mask, 
-                                   const String& method = "linear", 
-                                   const Int decimate = 10, 
-                                   const Bool replicate = False, 
-                                   const Bool doref = True, 
-                                   const Bool dropdeg = False, 
-                                   const Bool overwrite = False, 
-                                   const Bool force = False);
+    ImageInterface<Float> * regrid(
+    	const String& outfile,
+    	const Vector<Int>& shape,
+        const Record& csys, const Vector<Int>& axes,
+        Record& region, const String& mask,
+        const String& method = "linear",
+        const Int decimate = 10,
+        const Bool replicate = False,
+        const Bool doref = True,
+        const Bool dropdeg = False,
+        const Bool overwrite = False,
+        const Bool force=False,
+        const Bool specAsVelocity=False
+    );
     
-    ImageInterface<Float> * regrid(const String& outfile, 
-                                   const Vector<Int>& shape, 
-                                   const CoordinateSystem& csys, 
-                                   const Vector<Int>& axes,
-                                   Record& region, const String& mask, 
-                                   const String& method = "linear", 
-                                   const Int decimate = 10, 
-                                   const Bool replicate = False, 
-                                   const Bool doref = True, 
-                                   const Bool dropdeg = False, 
-                                   const Bool overwrite = False, 
-                                   const Bool force = False);
+
 
     ImageInterface<Float> * rotate(const String& outfile, 
                                    const Vector<int>& shape, 
@@ -668,6 +660,27 @@ class ImageAnalysis
 			    const String& freqFrame="");
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
+
+
+    ImageInterface<Float> * _regrid(
+    	const String& outfile, const Vector<Int>& shape,
+        const CoordinateSystem& csys, const Vector<Int>& axes,
+        Record& region, const String& mask,
+        const String& method, const Int decimate,
+        const Bool replicate, const Bool doref,
+        const Bool dropdeg, const Bool overwrite,
+        const Bool force
+    );
+
+    ImageInterface<Float>* _regridByVelocity(
+    	const String& outfile, const Vector<Int>& shape,
+    	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
+    	Record& region, const String& mask,
+    	const String& method, const Int decimate,
+    	const Bool replicate, const Bool doref,
+    	const Bool dropdeg, const Bool overwrite,
+    	const Bool force
+    ) const;
 };
 
 } // casac namespace
