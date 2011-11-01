@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static inline int FLOOR( double v ) { return ifloor(v + .5); }
 
     MultiRectTool::MultiRectTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd, Display::KeySym keysym, const Bool persistent ) :
-	MultiWCTool(keysym),
+	RegionTool(keysym),
 	itsRectanglePersistent(persistent),
 	itsrectangleexists(False),
 	itsActive(False),

@@ -93,7 +93,7 @@ namespace casa {
 		enum Units { Degrees, Radians, HMS, DMS, DefaultUnits };
 
 		// state returned from mouse functions for regions...
-		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseHandle = 1 << 2 };
+		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseStickySelected = 1 << 2, MouseUnselected = 1 << 3, MouseHandle = 1 << 4 };
 
 		enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion };
 
@@ -171,12 +171,12 @@ namespace casa {
 		// blank out the statistics for this region
 		virtual void clearStatistics( ) DISPLAY_PURE_VIRTUAL(Region::clearStatistics,);
 
-		virtual bool clickWithin( double x, double y ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
-		virtual int clickHandle( double x, double y ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
+		virtual bool clickWithin( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
+		virtual int clickHandle( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
-		virtual int moveHandle( int handle, double x, double y ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
-		virtual void move( double dx, double dy ) DISPLAY_PURE_VIRTUAL(Region::move,);
+		virtual int moveHandle( int handle, double /*x*/, double /*y*/ ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
+		virtual void move( double /*dx*/, double /*dy*/ ) DISPLAY_PURE_VIRTUAL(Region::move,);
 
 
 	    protected:

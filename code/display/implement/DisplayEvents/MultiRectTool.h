@@ -31,7 +31,7 @@
 #include <list>
 #include <casa/aips.h>
 #include <casadbus/types/ptr.h>
-#include <display/DisplayEvents/MultiWCTool.h>
+#include <display/DisplayEvents/RegionTool.h>
 #include <display/DisplayEvents/DTVisible.h>
 #include <display/region/RegionCreator.h>
 #include <display/region/RegionSourceFactory.h>
@@ -86,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // A nice example is zooming.
 // </motivation>
 
-    class MultiRectTool : public MultiWCTool, public DTVisible, public viewer::RegionCreator {
+    class MultiRectTool : public RegionTool, public DTVisible, public viewer::RegionCreator {
   
 	public:
   

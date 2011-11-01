@@ -50,6 +50,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtMouseTools.qo.h
   implement/QtViewer/QtOldMouseTools.qo.h
   implement/QtViewer/QtMouseToolState.qo.h
+  implement/QtViewer/RegionToolManager.qo.h
   implement/QtViewer/QtPixelCanvas.qo.h
   implement/QtViewer/QtRegionManager.qo.h
   implement/QtViewer/QtViewerBase.qo.h
@@ -194,6 +195,7 @@ casa_add_library( display
   implement/DisplayEvents/DisplayTool.cc
   implement/DisplayEvents/DTVisible.cc
   implement/DisplayEvents/MultiWCTool.cc
+  implement/DisplayEvents/RegionTool.cc
   implement/DisplayEvents/MWCAnimator.cc
   implement/DisplayEvents/MWCCrosshairTool.cc
   implement/DisplayEvents/MWCPannerTool.cc
@@ -328,6 +330,7 @@ casa_add_library( display
   implement/QtViewer/QtMouseTools.cc
   implement/QtViewer/QtOldMouseTools.cc
   implement/QtViewer/QtMouseToolState.cc
+  implement/QtViewer/RegionToolManager.cc
   implement/QtViewer/QtPCColorTable.cc
   implement/QtViewer/QtPixelCanvas.cc
   implement/QtViewer/QtRegionManager.cc

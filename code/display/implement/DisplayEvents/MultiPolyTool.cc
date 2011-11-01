@@ -36,7 +36,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     MultiPolyTool::MultiPolyTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd,
 			      Display::KeySym keysym, const Bool persistent ) :
-		MultiWCTool(keysym),itsPolygonPersistent(persistent), itsMode(Off),
+		RegionTool(keysym),itsPolygonPersistent(persistent), itsMode(Off),
 		itsEmitted(False), itsNPoints(0), itsHandleSize(7),
 		rfactory(rcs->newSource(this)), pd_(pd) {
 	reset();

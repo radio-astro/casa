@@ -29,7 +29,7 @@
 #define DISPLAY_MULTIPOLYTOOL_H
 
 #include <casa/aips.h>
-#include <display/DisplayEvents/MultiWCTool.h>
+#include <display/DisplayEvents/RegionTool.h>
 #include <display/DisplayEvents/DTVisible.h>
 #include <display/region/RegionSourceFactory.h>
 
@@ -86,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Add time constraint to double click detection
 // </todo>
 
-    class MultiPolyTool : public MultiWCTool, public DTVisible, public viewer::RegionCreator {
+    class MultiPolyTool : public RegionTool, public DTVisible, public viewer::RegionCreator {
 
 	 public:
 
