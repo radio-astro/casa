@@ -495,7 +495,8 @@ class ImageAnalysis
    		 const Int& whichLinear=0,
    		 const String& xunits="",
    		 const String& specframe="",
-   		 const Int& whichQuality=0);
+   		 const Int& whichQuality=0,
+   		 const String& restValue="");
 
     //how about using this ?
     //for x.shape(xn) & y shape(yn)
@@ -513,7 +514,8 @@ class ImageAnalysis
    		 const String& xunits="",
    		 const String& specframe="",
    		 const Int &combineType=0,
-   		 const Int& whichQuality=0);
+   		 const Int& whichQuality=0,
+   		 const String& restValue="");
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -657,7 +659,7 @@ class ImageAnalysis
     //e.g "vel", "fre" or "pix"..specVal has to be sized already 
     Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
                             const CoordinateSystem& cSys, const String& xunits, 
-			    const String& freqFrame="");
+                            const String& freqFrame="", const String& restValue="");
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
 
