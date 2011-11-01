@@ -2,7 +2,10 @@
 <qresource>
     <file>images/zoomin.png</file>
     <file>images/zoomout.png</file>
-    <file>images/prev.png</file>
+    <file>images/zoomi.png</file>
+    <file>images/zoomo.png</file>
+    <file>images/zoomn.png</file>
+	<file>images/prev.png</file>
     <file>images/next.png</file>
     <file>images/tick.png</file>
     <file>images/cross.png</file>
