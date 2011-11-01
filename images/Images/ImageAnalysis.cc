@@ -5754,14 +5754,36 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		Vector<Float>& specVal, const CoordinateSystem& cs,
-		const String& xunits, const String& specFrame) {
+		const String& xunits, const String& specFrame, const String& restValue) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	CoordinateSystem cSys=cs;
 	if(specFrame != ""){
 		String errMsg;
 		if(!CoordinateUtil::setSpectralConversion(errMsg, cSys, specFrame)){
-			cerr << "Failed to convert with error: " << errMsg << endl;
+			//cerr << "Failed to convert with error: " << errMsg << endl;
+			*itsLog << LogIO::WARN << "Failed to convert with error: " << errMsg << LogIO::POST;
 		}
+	}
+	if (restValue!=""){
+		String errMsg;
+	   Quantity restQuant;
+	   Bool ok = Quantity::read(restQuant, restValue);
+	   if (!ok) {
+	   	errMsg = "Can not convert value to rest wavelength/frequency: " + restValue;
+	      //os << errorMsg << LogIO::EXCEPTION;
+	   	*itsLog << LogIO::WARN << errMsg << LogIO::POST;
+	   }
+	   else if (restQuant.getValue() > 0 && restQuant.getUnit().empty()){
+	   	errMsg = "Can not retrieve unit for rest wavelength/frequency in: " + restValue;
+	      //os << errorMsg << LogIO::EXCEPTION;
+	   	*itsLog << LogIO::WARN << errMsg << LogIO::POST;
+	   }
+	   if (!CoordinateUtil::setRestFrequency (errMsg, cSys,
+	   	                                    restQuant.getUnit(), restQuant.getValue())) {
+	   	//os << errorMsg << LogIO::EXCEPTION;
+	   	*itsLog << LogIO::WARN << errMsg << LogIO::POST;
+	   }
 	}
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
@@ -5820,7 +5842,7 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		return False;
 
 	convertArray(specVal, xworld);
-
+	//cout << xworld << endl;
 	return True;
 }
 
@@ -5830,7 +5852,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 				   const String& xytype,
 				   const String& specaxis, const Int&,
 				   const Int&, const Int&,
-				   const String& xunits, const String& specFrame, const Int& whichQuality) {
+				   const String& xunits, const String& specFrame,
+				   const Int& whichQuality, const String& restValue) {
 
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (xy.size() != 2) {
@@ -5920,7 +5943,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue);
 }
 
 
@@ -5931,7 +5954,7 @@ Bool ImageAnalysis::getFreqProfile(
 		const Int& whichStokes, const Int& whichTabular,
 		const Int& whichLinear, const String& xunits,
 		const String& specFrame, const Int &combineType,
-		const Int& whichQuality)
+		const Int& whichQuality, const String& restValue)
 {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -5957,7 +5980,7 @@ Bool ImageAnalysis::getFreqProfile(
 		xy[0] = x[0];
 		xy[1] = y[0];
 		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality);
+				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality, restValue);
 	}
 
 	// n > 1, i.e. region to average over is a rectangle or polygon
@@ -6161,7 +6184,7 @@ Bool ImageAnalysis::getFreqProfile(
 
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue);
 }
 
 // These should really go in a coordsys inside the casa name space
