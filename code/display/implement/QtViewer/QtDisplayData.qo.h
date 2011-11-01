@@ -80,6 +80,9 @@ class QtDisplayData : public QObject {
   virtual String dataType() const { return dataType_;  }
   virtual String displayType() { return displayType_;  }
 
+  virtual Bool delTmpData() const;
+  virtual void setDelTmpData(Bool delTmpData);
+
   String description( ) const;
   
   virtual String errMsg() { return errMsg_;  }
@@ -286,6 +289,7 @@ class QtDisplayData : public QObject {
 //# void dying(QtDisplayData*);
   
   void axisChanged(String, String, String, std::vector<int> );
+  void spectrumChanged(String spcType, String spcUnit, String spcRval, String spcSys);
 
   void statsReady(const String&);
 
@@ -344,7 +348,7 @@ class QtDisplayData : public QObject {
   ImageInterface<Float>* im_;
   ImageInterface<Complex>* cim_;
   DisplayData* dd_;
-  
+
   String name_;
   
   // Name of colormap used by dd_  ("" if none)

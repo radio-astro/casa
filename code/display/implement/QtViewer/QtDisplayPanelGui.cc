@@ -174,6 +174,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		    mainToolBar_->addAction(dpSaveAct_);
 		    mainToolBar_->addAction(dpRstrAct_);
 		    mainToolBar_->addSeparator();
+		    mainToolBar_->addAction(profileAct_);
 //		    mainToolBar_->addAction(rgnMgrAct_);
 		    mainToolBar_->addSeparator();
 		    mainToolBar_->addAction(printAct_);
@@ -485,6 +486,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpOptsAct_ ->setIcon(QIcon(":/icons/DP_Options.png"));
     dpSaveAct_ ->setIcon(QIcon(":/icons/Save.png"));
     dpRstrAct_ ->setIcon(QIcon(":/icons/Restore.png"));
+    profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
     // rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
     printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
     unzoomAct_ ->setIcon(QIcon(":/icons/Zoom0_OutExt.png"));
@@ -500,6 +502,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpNewAct_  ->setToolTip("New Display Panel");
     dpOptsAct_ ->setToolTip("Panel Display Options");
     dpSaveAct_ ->setToolTip("Save Display Panel State to File");
+    profileAct_->setToolTip("Open the Spectrum Profiler");
     dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
     // rgnMgrAct_ ->setToolTip("Save/Control Regions");
     if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
@@ -702,6 +705,15 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String
   emit ddCreated(qdd, autoRegister);
   
   return qdd;  }
+
+void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData) {
+	// create a new DD
+	QtDisplayData* dd = createDD(path, dataType, displayType, autoRegister);
+
+	// set flagg if requested
+	if (tmpData)
+		dd->setDelTmpData(True);
+}
 
 void QtDisplayPanelGui::removeAllDDs() {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
@@ -1298,11 +1310,16 @@ void QtDisplayPanelGui::showImageProfile() {
 		    if (!profile_) {
 			// Set up profiler for first time.
 	        
-			profile_ = new QtProfile(img, pdd->name().chars());
+		    	profile_ = new QtProfile(img, pdd->name().chars());
 			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
 			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
 				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+			connect( pdd, SIGNAL(spectrumChanged(String, String, String, String )),
+					profile_, SLOT(changeSpectrum(String, String, String, String )));
+
+			connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool)),
+					this, SLOT(addDD(String, String, String, Bool, Bool)));
 
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
@@ -1699,9 +1716,17 @@ void TrackBox::setTrackingHeight_() {
 
 
 // Etc.
-  
-void QtDisplayPanelGui::quit( ) {
 
+void QtDisplayPanelGui::close( ) {
+	// shit down the DD's
+	removeAllDDs();
+
+	// shut down the window
+	QtPanelBase::closeMainPanel();
+}
+
+void QtDisplayPanelGui::quit( ) {
+	removeAllDDs();
     emit closed( this );
 
     if ( v_->server( ) ) {

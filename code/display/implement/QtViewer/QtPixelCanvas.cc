@@ -1248,8 +1248,39 @@ void QtPixelCanvas::keyPressEvent (QKeyEvent* e ) {
   uInt kmods = dlKeyMods_(e->modifiers());
 
   // Mouse position is not part of Qt kbd events, but it can be retrieved...
-  
+
   QPoint posn = mapFromGlobal(QCursor::pos());
+
+  // react to arrow keys
+  if (qkey==Qt::Key_Right){
+	  if (posn.x() > 0 && posn.x() < (this->size()).width()-2){
+		  QPoint cposn = QCursor::pos();
+		  cposn.setX(cposn.x()+1);
+		  QCursor::setPos(cposn);
+	  }
+  }
+  else if (qkey==Qt::Key_Left){
+	  if (posn.x() > 1 && posn.x() < (this->size()).width()-1){
+		  QPoint cposn = QCursor::pos();
+		  cposn.setX(cposn.x()-1);
+		  QCursor::setPos(cposn);
+	  }
+  }
+  else if (qkey==Qt::Key_Down){
+	  if (posn.y() > 0 &&  posn.y() < (this->size()).height()-2){
+		  QPoint cposn = QCursor::pos();
+		  cposn.setY(cposn.y()+1);
+		  QCursor::setPos(cposn);
+	  }
+  }
+  else if (qkey==Qt::Key_Up){
+	  if (posn.y() > 1 && posn.y() < (this->size()).height()-1){
+		  QPoint cposn = QCursor::pos();
+		  cposn.setY(cposn.y()-1);
+		  QCursor::setPos(cposn);
+	  }
+  }
+
   Int x = posn.x(),  y = q_(posn.y());
 
   //cerr<<"         ksym:"<<ksym<<" kmods:"<<kmods<<

@@ -653,6 +653,12 @@ public:
     if(uibase==0 || uibase==1) uiBase_ = uibase;  }
   // </group>
 
+  // Get and set method for the flag
+  // <group>
+  virtual Bool getDelTmpData( ){return delTmpData_;}
+  virtual void setDelTmpData(Bool delTmpData){delTmpData_ = delTmpData;}
+  // </group>
+
 
 protected:
 
@@ -696,6 +702,10 @@ protected:
   // by setActiveZIndex_() in this class or derived classes.
   Int activeZIndex_;
   
+  // Flag indicating that temporary data should be removed when deleting
+  // the object.
+  Bool delTmpData_;
+
   // Somewhat limited-use state, saved here for 'efficiency'.  Indicates
   // that the last call to conformsToRstrs(), conformsToCS(), or
   // conformsToZIndex(), passed the respective compatibility tests.
@@ -716,6 +726,11 @@ protected:
   // in the class synopsis above).
   virtual Bool sizeControl(WorldCanvasHolder& wcHolder, 
                            AttributeBuffer& holderBuf) = 0;
+
+  // Delete temporary data. To be called by sub-classe
+  // that now the filenames.
+  virtual void delTmpData(String &tmpData);
+
 
   // Retrieve position, motion, refresh and display event handler lists.
   // <group>

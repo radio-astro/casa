@@ -29,6 +29,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtPlotter/QtOldMWCTools.qo.h
   implement/QtPlotter/QtPlotter.qo.h
   implement/QtPlotter/QtProfile.qo.h
+  implement/QtPlotter/QtProfilePrefs.qo.h
   implement/QtPlotter/QtDrawCanvas.qo.h
   implement/QtPlotter/QtDrawColors.qo.h
   implement/QtPlotter/QtDrawer.qo.h
@@ -89,6 +90,8 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtViewer/QtDataOptionsPanel.ui
   implement/QtViewer/QtRegionMgr.ui
   implement/QtViewer/QtDataMgrMsSelect.ui
+  implement/QtPlotter/QtProfileGUI.ui
+  implement/QtPlotter/QtProfilePrefsGUI.ui
   implement/RegionShapes/QtDS9WriteOptions.ui
   implement/RegionShapes/QtEditRegionShape.ui
   implement/RegionShapes/QtNewRegionShape.ui
@@ -309,6 +312,7 @@ casa_add_library( display
   implement/QtPlotter/QtPlotSettings.cc
   implement/QtPlotter/QtPlotter.cc
   implement/QtPlotter/QtProfile.cc
+  implement/QtPlotter/QtProfilePrefs.cc
   implement/QtPlotter/QtDrawCanvas.cc
   implement/QtPlotter/QtDrawColors.cc
   implement/QtPlotter/QtDrawSettings.cc

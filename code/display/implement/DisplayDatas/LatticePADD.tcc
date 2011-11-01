@@ -55,6 +55,8 @@
 #include <casa/Logging/LogOrigin.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/Quanta/Unit.h>
+#include <casa/OS/RegularFile.h>
+#include <casa/OS/Directory.h>
 #include <display/Display/WorldCanvas.h>
 
 
@@ -231,6 +233,10 @@ LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
 // Destructor
 template <class T> 
 LatticePADisplayData<T>::~LatticePADisplayData() {
+
+  if (delTmpData_)
+	delTmpImage();
+
   if (itsLatticeStatisticsPtr) {
     delete itsLatticeStatisticsPtr;
   }
@@ -1028,7 +1034,13 @@ Bool LatticePADisplayData<T>::transferPreferences (CoordinateSystem& cSysInOut,
    return True;
 }
 
-
+template<class T>
+void LatticePADisplayData<T>::delTmpImage(){
+	if (itsBaseImagePtr){
+		String tmpImage(itsBaseImagePtr->name(False));
+		delTmpData(tmpImage);
+	}
+}
 
 template<class T>
 Bool LatticePADisplayData<T>::useStriding(

@@ -230,6 +230,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void hideStats();
   //</group>
  
+  // add a new DD
+  virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False);
+
  
   // (Attempts to) restore panel state from named file.
   virtual Bool restorePanelState(String filename);
@@ -260,8 +263,10 @@ class QtDisplayPanelGui : public QtPanelBase,
     void closed( const QtDisplayPanelGui * );
 
  protected slots:
-  
-  virtual void quit( );
+
+ virtual void close( );
+
+ virtual void quit( );
 
   //# overrides of base QMainWindow slots
   

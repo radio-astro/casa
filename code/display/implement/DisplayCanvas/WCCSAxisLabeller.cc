@@ -372,38 +372,9 @@ Record WCCSAxisLabeller::getOptions() const
         stunits(3) = "air wavelength";
         stunits(4) = "frequency";
 
-//  depending on the spectral coordinate, set the default "quantity"
-
-        if (spcType == SpectralCoordinate::FREQ && restFreq > 0){
-      	  veltype.define("default", stunits(1));
-           unitSet = 1;
-        }
-        else if (spcType == SpectralCoordinate::VRAD && restFreq > 0){
-           veltype.define("default", stunits(1));
-           unitSet = 1;
-        }
-       else if (spcType == SpectralCoordinate::VOPT && restFreq > 0){
-           veltype.define("default", stunits(0));
-           unitSet = 1;
-        }
-        else if (spcType == SpectralCoordinate::WAVE){
-           veltype.define("default", stunits(2));
-           unitSet = 2;
-        }
-        else if (spcType == SpectralCoordinate::AWAV){
-           veltype.define("default", stunits(3));
-           unitSet = 2;
-        }
-        else if (spcType == SpectralCoordinate::FREQ){
-           veltype.define("default", stunits(4));
-           unitSet = 0;
-        }
-        else{
-           veltype.define("default", stunits(4));
-           unitSet = 0;
-        }
         veltype.define("popt", stunits);
         veltype.define("value", itsSpectralQuantity);
+        veltype.define("default", itsSpectralQuantity);
         veltype.define("allowunset", False);
         rec.defineRecord("axislabelspectraltype", veltype);
 
@@ -424,18 +395,8 @@ Record WCCSAxisLabeller::getOptions() const
         specunits(7) = "nm";
         specunits(8) = "Angstrom";
 
-//  depending on the spectral coordinate, set the default "quantity"
-
-        if (unitSet == 2) {
-           spectralunit.define("default", specunits(7));
-        }
-        else if (unitSet == 1) {
-           spectralunit.define("default", specunits(0));
-        }
-        else {
-           spectralunit.define("default", specunits(2));
-        }
         spectralunit.define("popt", specunits);
+        spectralunit.define("default", itsSpectralUnit);
         spectralunit.define("value", itsSpectralUnit);
         spectralunit.define("allowunset", False);
         rec.defineRecord("axislabelspectralunit", spectralunit);

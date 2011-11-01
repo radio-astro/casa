@@ -112,7 +112,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
   errMsg_ = "";
     
   try {
-    
+
     if (displayType_=="skycatalog") {
       dd_ = new SkyCatOverlayDD(path);
       if (dd_==0) throw(AipsError("Couldn't create skycatalog"));  }
@@ -484,10 +484,18 @@ String QtDisplayData::description( ) const {
   return name_ + " (" + path_ + ") " + dataType_ + "/" + displayType_;
 }
 
+Bool QtDisplayData::delTmpData() const {
+	dd_->getDelTmpData();
+}
+
+void QtDisplayData::setDelTmpData(Bool delTmpData){
+	dd_->setDelTmpData(delTmpData);
+}
+
 void QtDisplayData::done() { 
   if(dd_==0) return;		// (already done).
   //emit dying(this);
-  
+
   if(usesClrMap_()) {
     removeColormap_();
 
@@ -590,28 +598,45 @@ Record QtDisplayData::getOptions() {
   
   
 void QtDisplayData::checkAxis() {
-   //cout << "checkAxis" << endl;
-   Record rec = getOptions();
-   //cout << "dd=" << rec << endl;
-   try {
+	Record rec = getOptions();
 
-	String xaxis = rec.subRecord("xaxis").asString("value");
-	String yaxis = rec.subRecord("yaxis").asString("value");
-	String zaxis = rec.subRecord("zaxis").asString("value");
+	try {
+		// get the axis names
+		String xaxis = rec.subRecord("xaxis").asString("value");
+		String yaxis = rec.subRecord("yaxis").asString("value");
+		String zaxis = rec.subRecord("zaxis").asString("value");
 
-	std::vector<int> hidden;
-	char field[24];
-	int index = 0;
-	while ( 1 ) {
-	    sprintf( field, "haxis%d", ++index );
-	    if ( rec.fieldNumber( field ) < 0 ) { break; }
-	    Int haxis = rec.subRecord("haxis1").asInt("value");
-	    hidden.push_back(haxis);
+		std::vector<int> hidden;
+		char field[24];
+		int index = 0;
+		while ( 1 ) {
+			sprintf( field, "haxis%d", ++index );
+			if ( rec.fieldNumber( field ) < 0 ) { break; }
+			Int haxis = rec.subRecord("haxis1").asInt("value");
+			hidden.push_back(haxis);
+		}
+		emit axisChanged(xaxis, yaxis, zaxis, hidden);
+
+		// get the spectral type, units, rest frequency/wavelength
+		// and the frequency system
+		String spcType, spcUnit, spcRval, spcSys;
+		if (rec.fieldNumber("axislabelspectraltype") >-1)
+			spcType = rec.subRecord("axislabelspectraltype").asString("value");
+		if (rec.fieldNumber("axislabelspectralunit") >-1)
+			spcUnit = rec.subRecord("axislabelspectralunit").asString("value");
+		if (rec.fieldNumber("axislabelrestvalue") >-1)
+			spcRval = rec.subRecord("axislabelrestvalue").asString("value");
+		if (rec.fieldNumber("axislabelfrequencysystem") >-1)
+			spcSys = rec.subRecord("axislabelfrequencysystem").asString("value");
+		emit spectrumChanged(spcType, spcUnit, spcRval, spcSys);
+
 	}
-       emit axisChanged(xaxis, yaxis, zaxis, hidden);
-   }
-   catch(...) {
-   } 
+	catch(const casa::AipsError& err) {
+		errMsg_ = err.getMesg();
+	}
+	catch(...) {
+		errMsg_ = "Unknown error checking axis";
+	}
 }      
 
   
@@ -624,7 +649,6 @@ void QtDisplayData::setOptions(Record opts, Bool emitAll) {
   // itself (e.g. via scripting or save-restore); that will ensure that
   // the options gui does receive all option updates (via the optionsChanged
   // signal) and updates its user interface accordingly.
-  
 
   if(dd_==0) return;  // (safety, in case construction failed.).
 
