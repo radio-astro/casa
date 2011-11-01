@@ -4935,6 +4935,7 @@ const Vector<Double> &MeasTable::mulAber1950(uInt which, Double T) {
   static Double checkT = -1e30;
   static Vector<Double> argArray[132];
   static Double factor = 0;
+  // From V.S. Gubanov, Astron. Zh. 49, p1112, 1972
   static const Short MABER[130][6] = {
     // Order:
     //  Delta xdot       Delta ydot     Delta zdot
