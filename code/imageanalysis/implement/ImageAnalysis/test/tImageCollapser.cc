@@ -120,7 +120,8 @@ int main() {
     ostringstream os;
 	String *parts = new String[2];
 	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
-	String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
+	//String datadir = parts[0] + "/data/regression/unittest/imageanalysis/ImageAnalysis/";
+	String datadir = parts[0] + "/data/regression/unittest/imcollapse/";
 	delete [] parts;
     os << "tImageCollapser_tmp_" << pid;
     dirName = os.str();
