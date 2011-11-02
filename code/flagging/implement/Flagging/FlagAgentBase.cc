@@ -130,6 +130,7 @@ FlagAgentBase::initialize()
    profiling_p = false;
    backgroundMode_p = true;
    iterationApproach_p = ROWS;
+   preProcessBuffer_p = false;
    multiThreading_p = false;
    nThreads_p = 0;
    threadId_p = 0;
@@ -319,17 +320,20 @@ FlagAgentBase::runCore()
 			// Iterate trough rows (i.e. baselines)
 			case ROWS:
 			{
+				if (preProcessBuffer_p) preProcessBuffer();
 				iterateRows();
 				break;
 			}
 			// Iterate inside every row (i.e. channels) applying a mapping expression
 			case IN_ROWS:
 			{
+				if (preProcessBuffer_p) preProcessBuffer();
 				iterateInRows();
 				break;
 			}
 			default:
 			{
+				if (preProcessBuffer_p) preProcessBuffer();
 				iterateRows();
 				break;
 			}
@@ -898,6 +902,12 @@ FlagAgentBase::checkIfProcessBuffer()
 	if ((!rowsIndex_p.size()) || (!channelIndex_p.size()) || (!polarizationIndex_p.size())) return false;
 
 	return true;
+}
+
+void
+FlagAgentBase::preProcessBuffer()
+{
+	return;
 }
 
 void

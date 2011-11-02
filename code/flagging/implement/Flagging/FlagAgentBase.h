@@ -98,6 +98,9 @@ protected:
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();
 
+	// Common functionality for each visBuffer (don't repeat at the row level)
+	virtual void preProcessBuffer();
+
 	// Iterate trough list of rows
 	void iterateRows();
 
@@ -120,10 +123,11 @@ protected:
 	// Compute flags for a given (time,freq) antenna pair map
 	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
 
-	// Common used members that must be accessible to derivaded classes
+	// Common used members that must be accessible to derived classes
 	casa::LogIO *logger_p;
 	VisBufferAutoPtr *visibilityBuffer_p;
 	FlagDataHandler *flagDataHandler_p;
+	Bool preProcessBuffer_p;
 	Bool multiThreading_p;
 	Int nThreads_p;
 	Int threadId_p;
