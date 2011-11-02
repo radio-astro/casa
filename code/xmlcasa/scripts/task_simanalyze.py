@@ -5,7 +5,7 @@ import re
 import pylab as pl
 import pdb
 
-def sim_analyze(
+def simanalyze(
     project=None,
     image=None,
     vis=None, modelimage=None, cell=None, imsize=None, imdirection=None,
@@ -23,7 +23,7 @@ def sim_analyze(
     import re
     import glob
 
-    casalog.origin('sim_analyze')
+    casalog.origin('simanalyze')
     if verbose: casalog.filter(level="DEBUG2")
 
     a = inspect.stack()
@@ -46,7 +46,7 @@ def sim_analyze(
 
 
     saveinputs = myf['saveinputs']
-    saveinputs('sim_analyze',fileroot+"/"+project+".sim_analyze.last")
+    saveinputs('simanalyze',fileroot+"/"+project+".simanalyze.last")
 
 
     grscreen = False
@@ -744,10 +744,10 @@ def sim_analyze(
 
 
     except TypeError, e:
-        msg("task_sim_analyze -- TypeError: %s" % e,priority="error")
+        msg("task_simanalyze -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
-        print "task_sim_analyze -- OptionError: ", e
+        print "task_simanalyze -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance

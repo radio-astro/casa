@@ -5,11 +5,11 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
-<task type="function" name="sim_analyze" category="simulation">
+<task type="function" name="simanalyze" category="simulation">
 
   <shortdescription>image and analyze simulated datasets</shortdescription>
   <description>
-    This task is for imaging and analyzing datasets simulated with sim_observe
+    This task is for imaging and analyzing datasets simulated with simobserve
     Please contact CASA helpdesk with questions.
   </description>
   
@@ -25,7 +25,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--  IMAGE   -->    
 
     <param type="bool" name="image">
-      <description>(re)image $project.ms to $project.image</description>
+      <description>(re)image $project.*.ms to $project.image</description>
       <value>True</value>
     </param>    
 
@@ -258,7 +258,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
 
     This task is for imaging and analyzing datasets created with 
-    sim_observe or simdata.  New functionality is actively 
+    simobserve or simdata.  New functionality is actively 
     being added, so if you have changed versions of CASA, check 
     the inputs carefully.
     Please contact CASA experts with any questions.
@@ -277,8 +277,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
     vis -- the simulated interferometric MS, or total-power one, or both
-       * you can use '$project' to let the task automatically replace it to
-         the project name, e.g., vis='$project.noisy.ms,$project.nosisy.sd.ms'.
+       * one can use '$project' to let the task automatically replace it to
+         the project name, e.g., vis='$project.noisy.ms,$project.noisy.sd.ms'.
+         However, note that if you created measurement set(s) using simobserve,
+         they will have names including the configuration, e.g. 
+         $project.alma_out20.noisy.ms
+       * setting this paramter to "default" will find and attempt to image
+         all measurement sets (interferometric and single dish) in the 
+         project directory
     modelimage -- prior (e.g. SD) image to be used in clean
     cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
     imsize -- image size in spatial pixels (x,y)
@@ -341,7 +347,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     project.[cfg].fidelity = fidelity image
     project.[cfg].analysis.png = diagnostic figure of difference and fidelity
 	    
-    project.[cfg].sim_analyze.last = saved input parameters for simdata task
+    project.[cfg].simanalyze.last = saved input parameters for simdata task
 
 </example>
 </task>

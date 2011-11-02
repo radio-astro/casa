@@ -5,7 +5,7 @@ import re
 import pylab as pl
 import pdb
 
-def sim_observe(
+def simobserve(
     project=None, 
     skymodel=None, inbright=None, indirection=None, incell=None, 
     incenter=None, inwidth=None, # innchan=None,
@@ -38,7 +38,7 @@ def sim_observe(
         # interally the code is clearer if we stick with predict, predict_sd, predict_int so
         predict=observe
     
-        casalog.origin('sim_observe')
+        casalog.origin('simobserve')
         if verbose: casalog.filter(level="DEBUG2")
     
         a = inspect.stack()
@@ -95,7 +95,7 @@ def sim_observe(
     
     
         saveinputs = myf['saveinputs']
-        saveinputs('sim_observe',fileroot+"/"+project+".sim_observe.last")
+        saveinputs('simobserve',fileroot+"/"+project+".simobserve.last")
     
     
     
@@ -173,7 +173,7 @@ def sim_observe(
                         shutil.rmtree(modelflat)
                     shutil.move(newmodel+".flat",modelflat)
 
-            casalog.origin('sim_observe')
+            casalog.origin('simobserve')
 
             # set startfeq and bandwidth in util object after modifymodel
             bandwidth = qa.mul(qa.quantity(model_nchan),qa.quantity(model_width))
@@ -265,7 +265,7 @@ def sim_observe(
             aveant = stnd.mean()
             # TODO use max ant = min PB instead?  
             # (set back to simdata - there must be an automatic way to do this)
-            casalog.origin('sim_observe')
+            casalog.origin('simobserve')
             predict_uv = True
             pb = 1.2*0.3/qa.convert(qa.quantity(model_center),'GHz')['value']/aveant*3600.*180/pl.pi # arcsec
 
@@ -307,7 +307,7 @@ def sim_observe(
             tp_padnames = [tp_padnames[sdant]]
             tp_nant = 1
             tp_aveant = tpd.mean()
-            casalog.origin('sim_observe')
+            casalog.origin('simobserve')
             predict_sd = True
             if not predict_uv:
                 aveant = tp_aveant
@@ -651,9 +651,9 @@ def sim_observe(
             # position overlap already checked above in pointing section
 
             if verbose:
-                msg("preparing empty measurement set",origin="sim_observe",priority="warn")
+                msg("preparing empty measurement set",origin="simobserve",priority="warn")
             else:
-                msg("preparing empty measurement set",origin="sim_observe")
+                msg("preparing empty measurement set",origin="simobserve")
 
             nbands = 1;    
             fband  = 'band' + qa.tos(model_center,prec=1)
@@ -828,24 +828,24 @@ def sim_observe(
                 if not components_only:
                     if len(complist) > 1:
                         if verbose:
-                            msg("predicting from "+newmodel+" and "+complist,priority="warn",origin="sim_observe")
+                            msg("predicting from "+newmodel+" and "+complist,priority="warn",origin="simobserve")
                         else:
-                            msg("predicting from "+newmodel+" and "+complist,origin="sim_observe")
+                            msg("predicting from "+newmodel+" and "+complist,origin="simobserve")
                     else:
                         if verbose:
-                            msg("predicting from "+newmodel,priority="warn",origin="sim_observe")
+                            msg("predicting from "+newmodel,priority="warn",origin="simobserve")
                         else:
-                            msg("predicting from "+newmodel,origin="sim_observe")
+                            msg("predicting from "+newmodel,origin="simobserve")
                     sm.predict(imagename=newmodel,complist=complist)
                 else:   # if we're doing only components
                     if verbose:
-                        msg("predicting from "+complist,priority="warn",origin="sim_observe")
+                        msg("predicting from "+complist,priority="warn",origin="simobserve")
                     else:
-                        msg("predicting from "+complist,origin="sim_observe")
+                        msg("predicting from "+complist,origin="simobserve")
                     sm.predict(complist=complist)
             
                 sm.done()
-                msg('generation of measurement set '+msfile+' complete',origin="sim_observe")
+                msg('generation of measurement set '+msfile+' complete',origin="simobserve")
 
 
             ##################################################################
@@ -1013,7 +1013,7 @@ def sim_observe(
                     util.ephemeris(refdate,direction=util.direction,telescope=telescopename,ms=msfile,usehourangle=usehourangle)
                 if predict_sd:
                     util.ephemeris(refdate,direction=util.direction,telescope=tp_telescopename,ms=sdmsfile,usehourangle=usehourangle)
-                casalog.origin('sim_observe')
+                casalog.origin('simobserve')
                 if predict_uv:
                     util.nextfig()
                     util.plotants(stnx, stny, stnz, stnd, padnames)
@@ -1279,10 +1279,10 @@ def sim_observe(
             shutil.rmtree(fileroot+"/"+project+".noisy.T.cal")  
 
     except TypeError, e:
-        msg("task_sim_observe -- TypeError: %s" % e,priority="error")
+        msg("task_simobserve -- TypeError: %s" % e,priority="error")
         return
     except ValueError, e:
-        print "task_sim_observe -- OptionError: ", e
+        print "task_simobserve -- OptionError: ", e
         return
     except Exception, instance:
         print '***Error***',instance

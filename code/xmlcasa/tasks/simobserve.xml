@@ -5,7 +5,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   
-<task type="function" name="sim_observe" category="simulation">
+<task type="function" name="simobserve" category="simulation">
 
   <shortdescription>mosaic simulation task:</shortdescription>
   <description>
@@ -561,7 +561,7 @@ mosaic simulation task:
     project.[cfg].observe.png = diagnostic figure of uv coverage and 
          visibilities
 	    
-    project.[cfg].sim_observe.last = saved input parameters for simdata task
+    project.[cfg].simobserve.last = saved input parameters for simdata task
 
 </example>
 </task>
