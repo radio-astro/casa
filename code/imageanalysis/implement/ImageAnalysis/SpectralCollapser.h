@@ -83,7 +83,7 @@ public:
 
 	String summaryHeader() const;
 
-    void collapseTypeToString(const SpectralCollapser::CollapseType &collType, String &collType);
+    void collapseTypeToString(const SpectralCollapser::CollapseType &collType, String &colType);
 
 	static void stringToCollapseType(const String &text,  SpectralCollapser::CollapseType &collType);
     static void stringToCollapseError(const String &text, SpectralCollapser::CollapseError &collError);
