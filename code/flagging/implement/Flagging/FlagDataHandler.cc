@@ -456,11 +456,11 @@ FlagDataHandler::setDataSelection(Record record)
 	if (exists >= 0)
 	{
 		record.get (record.fieldNumber ("observation"), observationSelection_p);
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " observationSelection_pselection is " << observationSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " observationSelection selection is " << observationSelection_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection_p selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("intent");
