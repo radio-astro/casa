@@ -80,10 +80,11 @@ set( ASAP_PYSRCS
 
 add_library( ${ASAPLIB} SHARED ${ASAP_SRCS} ${ASAP_PYSRCS} )
 
-# library name must be _asap.${CMAKE_SHARED_LIBRARY_SUFFIX}
+# library name must be _asap.so
 set_target_properties( ${ASAPLIB}
                        PROPERTIES
-                       PREFIX _ )
+                       PREFIX _
+                       SUFFIX .so )
 
 target_link_libraries( ${ASAPLIB} 
                        #${Boost_LIBRARIES}
@@ -94,24 +95,11 @@ target_link_libraries( ${ASAPLIB}
 
 add_dependencies( inst ${ASAPLIB} )
 
-# Install ASAPLIB with platform default extension in lib directory.
+# install directory
 install( TARGETS ${ASAPLIB}
-         LIBRARY DESTINATION ${CMAKE_INSTALL_NAME_DIR} )
+         LIBRARY DESTINATION ${PYTHON_INSTALL_DIR} )
 
-#
-# Copy a library from LIB_INSTALL_DIR/ASAPLIB${CMAKE_SHARED_LIBRARY_SUFFIX} to 
-# PYTHON_INSTALL_DIR/ASAPLIB.so to work around Python issue loading dylib files on OS X.  
-# On Linux, it appears to be sufficient to copy _asap.so to the Python directory rather 
-# than the lib directory, but handling Linux and OS X consistantly reduces confusion and 
-# does not create any issues on Linux.
+execute_process( 
+        COMMAND ln -Fs ../${PYTHON_INSTALL_DIR}/_asap.so ${CMAKE_INSTALL_PREFIX}/lib/_asap.so 
+        OUTPUT_VARIABLE stuff)
 
-#
-#
-set ( LIB_SOURCE ${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/_${ASAPLIB}${CMAKE_SHARED_LIBRARY_SUFFIX} )
-set ( LIB_DESTINATION ${CMAKE_INSTALL_PREFIX}/${PYTHON_INSTALL_DIR}/_${ASAPLIB}.so ) 
-
-install ( CODE "
-    EXECUTE_PROCESS ( COMMAND 
-        cp ${LIB_SOURCE} ${LIB_DESTINATION}
-    )
-" )
