@@ -38,6 +38,9 @@ public:
 
 protected:
 
+	// Common functionality for each visBuffer (don't repeat at the row level)
+	void preProcessBuffer();
+
 	// Compute flags afor a given mapped visibility point
 	void computeRowFlags(FlagMapper &flags, uInt row);
 
@@ -60,6 +63,18 @@ private:
     std::map<Int, std::map<std::string, uInt64> > accumPolarizationtotal;
 
     uInt64 accumTotalFlags, accumTotalCount;
+
+	Int arrayId;
+	Int fieldId;
+	Int spw;
+	Int scan;
+	Int observationId;
+
+	string arrayId_str;
+	string fieldId_str;
+	string spw_str;
+	string scan_str;
+	string observationId_str;
 
 };
 

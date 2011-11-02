@@ -45,7 +45,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::ARRAY_FIELD,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -152,9 +152,6 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
-
-			// IMPORTANT: Pre-load vis cube, antenna1 and antenna2
-			dh->visibilityBuffer_p->get()->visCube();
 
 			// Queue flagging process
 			agentList.queueProcess();
@@ -275,6 +272,18 @@ int main(int argc, char **argv)
 			agentParameters.define ("nThreads", nThreadsParam);
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
+		}
+		else if (parameter == string("-spwchan"))
+		{
+			bool spwchan = casa::Bool(argv[i+1]);
+			agentParameters.define ("spwchan", spwchan);
+			cout << "spwchan is: " << spwchan << endl;
+		}
+		else if (parameter == string("-spwcorr"))
+		{
+			bool spwcorr = casa::Bool(argv[i+1]);
+			agentParameters.define ("spwcorr", spwcorr);
+			cout << "spwcorr is: " << spwcorr << endl;
 		}
 	}
 
