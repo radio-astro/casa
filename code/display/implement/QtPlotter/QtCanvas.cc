@@ -845,8 +845,7 @@ void QtCanvas::drawCurves(QPainter *painter)
 
     int siz = curveMap.size();
     int sz = siz > 1 ? siz - 1 : 1;
-    //QColor *colorFolds = new QColor[sz];
-    QColor colorFolds[sz];
+    QColor *colorFolds = new QColor[sz];
 
     while (it != curveMap.end())
     {
@@ -951,7 +950,7 @@ void QtCanvas::drawCurves(QPainter *painter)
    	 ++it;
     }
 
-    //delete [] colorFolds;
+    delete [] colorFolds;
     painter->setPen(pen);                   
     painter->setFont(ft);
 }
