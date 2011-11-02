@@ -262,8 +262,8 @@ namespace casa {
 	    return trc || brc || blc || tlc;
 	}
 
-	int Rectangle::mouseMovement( double x, double y, bool other_selected ) {
-	    int result = 0;
+	unsigned int Rectangle::mouseMovement( double x, double y, bool other_selected ) {
+	    unsigned int result = 0;
 
 	    if ( visible_ == false ) return result;
 

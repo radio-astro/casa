@@ -57,7 +57,7 @@ namespace casa {
 		int clickHandle( double x, double y ) const;
 
 		// returns mouse movement state
-		int mouseMovement( double x, double y, bool other_selected );
+		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...

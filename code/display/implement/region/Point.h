@@ -55,7 +55,7 @@ namespace casa {
 		bool clickWithin( double x, double y ) const;
 
 		// returns mouse movement state
-		int mouseMovement( double x, double y, bool other_selected );
+		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		AnnotationBase *annotation( ) const;
 

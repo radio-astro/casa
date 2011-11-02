@@ -136,7 +136,7 @@ void MultiRectTool::disable() {
 	}
 
 	for ( rectanglelist::reverse_iterator iter = rectangles.rbegin(); iter != rectangles.rend(); ++iter ) {
-	    int result = (*iter)->mouseMovement(linx,liny,region_selected);
+	    unsigned int result = (*iter)->mouseMovement(linx,liny,region_selected);
 	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
 	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
@@ -297,7 +297,7 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 	bool refresh_needed = false;
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ) {
 	    if ( (*iter)->regionVisible( ) ) {
-		int result = (*iter)->mouseMovement(linx,liny,false);
+		unsigned int result = (*iter)->mouseMovement(linx,liny,false);
 		if ( viewer::Region::regionSelected(result) ) {
 		    if ( ev.key() == Display::K_Escape ) {
 			rectanglelist::iterator xi = iter; ++xi;

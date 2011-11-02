@@ -106,8 +106,8 @@ namespace casa {
 		return false;
 	}
 
-	int Point::mouseMovement( double xd, double yd, bool other_selected ) {
-	    int result = 0;
+	unsigned int Point::mouseMovement( double xd, double yd, bool other_selected ) {
+	    unsigned int result = 0;
 
 	    if ( visible_ == false ) return result;
 

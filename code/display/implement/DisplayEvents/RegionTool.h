@@ -57,7 +57,7 @@ namespace casa {
 		    
 	    };
 	    // Constructor taking the primary key to which this tool will respond.
-	    RegionTool(const Display::KeySym &keysym = Display::K_Pointer_Button1) : MultiWCTool( keysym ) { }
+	    RegionTool(const Display::KeySym &keysym = Display::K_Pointer_Button1) : MultiWCTool( keysym, false ) { }
 	    ~RegionTool( ) { }
 
 	    void keyPressed(const WCPositionEvent &ev);
@@ -74,6 +74,12 @@ namespace casa {
 				 int /*font_style*/, const std::string &/*font_color*/,
 				 const std::string &/*line_color*/, viewer::Region::LineStyle /*line_style*/ )
 			DISPLAY_PURE_VIRTUAL(MultiWCTool::create,true);
+
+	    // defeat the registering/unregistering done by MultiWCTool (because polygon regions stop working
+	    // because they see a double-click from both the RegionToolManager and MultiWCTool)...
+	    void enable() { }
+	    void disable() { }
+
     };
 }
 

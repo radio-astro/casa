@@ -41,13 +41,13 @@ MultiWCTool::MultiWCTool() :
   itsWCListIter = new ListIter<WorldCanvas *>(&itsWCList);
 }
 
-MultiWCTool::MultiWCTool(const Display::KeySym &keysym) :
+MultiWCTool::MultiWCTool(const Display::KeySym &keysym, bool enable_events ) :
   DisplayTool(keysym),
   itsWCListIter(0),
   itsCurrentWC(0),
   itsEventHandlersRegistered(False) {
   itsWCListIter = new ListIter<WorldCanvas *>(&itsWCList);
-  enable();
+  if ( enable_events ) enable();
 }
 
 MultiWCTool::~MultiWCTool() {

@@ -51,7 +51,7 @@ namespace casa {
 		    Rectangle( wc, x1, y1, x2, y2 ) { }
 
 		// returns mouse movement state
-		int mouseMovement( double x, double y, bool other_selected );
+		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		AnnotationBase *annotation( ) const;
 

@@ -94,7 +94,7 @@ class MultiWCTool : public DisplayTool,
   
   // Constructor taking the primary key to which this tool will
   // respond.
-  MultiWCTool(const Display::KeySym &keysym = Display::K_Pointer_Button1);
+  MultiWCTool(const Display::KeySym &keysym = Display::K_Pointer_Button1, bool enable_events=true );
   
   // Destructor.
   virtual ~MultiWCTool();

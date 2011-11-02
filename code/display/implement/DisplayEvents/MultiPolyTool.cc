@@ -233,7 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
-	    int result = (*iter)->mouseMovement(linx,liny,region_selected);
+	    unsigned int result = (*iter)->mouseMovement(linx,liny,region_selected);
 	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
 	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
@@ -352,7 +352,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    bool refresh_needed = false;
 	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ) {
 		if ( (*iter)->regionVisible( ) ) {
-		    int result = (*iter)->mouseMovement(linx,liny,false);
+		    unsigned int result = (*iter)->mouseMovement(linx,liny,false);
 		    if ( viewer::Region::regionSelected(result) ) {
 			if ( ev.key() == Display::K_Escape ) {
 			    polygonlist::iterator xi = iter; ++xi;

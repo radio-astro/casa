@@ -135,8 +135,8 @@ namespace casa {
 
 	}
 
-	int Ellipse::mouseMovement( double x, double y, bool other_selected ) {
-	    int result = 0;
+	unsigned int Ellipse::mouseMovement( double x, double y, bool other_selected ) {
+	    unsigned int result = 0;
 
 	    if ( visible_ == false ) return result;
 

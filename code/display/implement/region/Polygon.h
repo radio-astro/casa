@@ -58,7 +58,7 @@ namespace casa {
 		// for rectangles, moving a handle is resizing...
 		int moveHandle( int handle, double x, double y );
 		void move( double dx, double dy );
-		int mouseMovement( double x, double y, bool other_selected );
+		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		void regionCenter( double &x, double &y ) const;
 

@@ -155,7 +155,7 @@ namespace casa {
 		void refresh( );
 
 		// returns OR'ed set of MouseState...
-		virtual int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
+		virtual unsigned int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
 		virtual void draw( );
 
