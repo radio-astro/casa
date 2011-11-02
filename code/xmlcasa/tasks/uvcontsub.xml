@@ -28,12 +28,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	</param>
 
         <param type="string" name="combine">
-                <description>Data axes to combine for the continuum estimation (spw, scan, and/or field)</description>
+                <description>Data axes to combine for the continuum estimation (none, or spw and/or scan)</description>
                 <value></value>
         </param>
 
 	<param type="any" name="solint">
-		<description>Continuum fit timescale</description>
+		<description>Continuum fit timescale (int recommended!)</description>
                 <any type="variant"/>
                 <value type="string">int</value>
 	</param>
@@ -77,13 +77,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         made by simply excluding the line channels (and probably averaging the
         remaining ones) in clean.
 
-        Unlike uvcontsub, there are no "scratch columns" (MODEL_DATA and
-        CORRECTED_DATA) in the output MS(es).
-
 	Keyword arguments:
 	vis -- Name of input visibility file
 		default: none; example: vis='ngc5921.ms'
         field -- Field selection for continuum estimation and subtraction.
+                 The estimation and subtraction is done for each selected field
+                 in turn.
                 default: field = '' means select all fields
                 field = 1 # will get field_id=1 (if you give it an 
                         integer, it will retrieve the source with that index.
@@ -100,8 +99,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	        fitspw!
                 default: '' --> solutions will break at scan, field, and spw
                       boundaries according to solint
-              Options: '', 'spw'', 'scan', 'field', or any comma-separated
-                       combination
+              Options: '', 'spw'', 'scan', or 'spw, scan'
               example: combine='spw' --> form spw-merged continuum estimate
 	solint -- Timescale for per-baseline fit (units optional)
 		default (recommended): 'int' --&gt; no time averaging, do a
