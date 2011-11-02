@@ -476,9 +476,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// if it drops by more than 2 magnitudes per pixel
 	trial=5;
       }
-      
+
       if(trial < 15*convSampling) 
-	trial=15*convSampling;
+	trial=( convSize_p > (30*convSampling)) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
       
       if(found) {
 	convSupport_p=Int(0.5+Float(trial)/Float(convSampling))+1;
@@ -489,12 +489,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	   << "Or no unflagged data in a given pointing"
 	   << LogIO::EXCEPTION;
       }
-      
+
       // Normalize such that plane 0 sums to 1 (when jumping in
       // steps of convSampling)
       
       Double pbSum=0.0;
       
+      
+
       for (Int iy=-convSupport_p;iy<=convSupport_p;iy++) {
 	for (Int ix=-convSupport_p;ix<=convSupport_p;ix++) {
 	  Complex val=convFunc_p(ix*convSampling+convSize_p/2,
@@ -546,14 +548,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	convFunc_p.resize();//break any reference
 	weightConvFunc_p.resize();
 	convFunc_p.reference(convFunctions_p[actualConvIndex_p]->xyPlane(0));
-	weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
-	(*convSizes_p[actualConvIndex_p])[0]=convSize_p;
+	
       }
       else{
 	convFunctions_p[actualConvIndex_p]->resize(convSize_p, convSize_p,1);
 	convFunctions_p[actualConvIndex_p]->xyPlane(0)=convFunc_p;
+	convWeights_p[actualConvIndex_p]->resize(convSize_p, convSize_p, 1);
+	convWeights_p[actualConvIndex_p]->xyPlane(0)=twoDPB2.get(True)*Complex(1.0/pbSum,0.0);
       }
-      
+      weightConvFunc_p.reference(convWeights_p[actualConvIndex_p]->xyPlane(0));
+      (*convSizes_p[actualConvIndex_p])[0]=convSize_p;
       doneMainConv_p=True;
       convSave_p.resize();
       weightSave_p.resize();

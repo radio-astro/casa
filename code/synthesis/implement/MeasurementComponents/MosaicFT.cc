@@ -285,7 +285,8 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
   
   
   //oversample if image is small
-  convSampling=Int(ceil(5000.0/max(nx, ny)));
+  //But not more than 5000 pixels
+  convSampling=(max(nx, ny) < 50) ? 100: Int(ceil(5000.0/max(nx, ny)));
   if(convSampling <1) 
     convSampling=1;
   if(pbConvFunc_p.null())

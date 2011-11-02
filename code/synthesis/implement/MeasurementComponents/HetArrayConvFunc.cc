@@ -262,6 +262,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //Matrix<Complex> screen(convSize_p, convSize_p);
 	  //screen=1.0;
 	  //pBScreen.putSlice(screen, start);
+	  cerr << "k " << k << " shape " << pBScreen.shape() <<  " direction1 " << direction1_p << " direction2 " << direction2_p << endl;
 	  pBScreen.set(Complex(1.0, 0.0));
 	  //one antenna 
 	  (antMath_p[k])->applyVP(pBScreen, pBScreen, direction1_p);
@@ -392,7 +393,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Locate support
 	Int convSupport=-1;
 	Float maxAbsConvFunc=max(amplitude(convFunc_p.xyPlane(plane)));
-    
 	Float minAbsConvFunc=min(amplitude(convFunc_p.xyPlane(plane)));
 	Bool found=False;
 	Int trial=0;
@@ -408,12 +408,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
-	  trial=15*convSampling;
+	  trial=( (30*convSampling) < convSize_p) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
 	}
 	
 				 
 	if(found) {
-	  if(trial < 15*convSampling) trial=15*convSampling;
+	  if(trial < 15*convSampling) 
+	    trial= ( (30*convSampling) < convSize_p) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
 	  convSupport=Int(0.5+Float(trial)/Float(convSampling))+1;
 	  //support is really over the edge
 	  if( (convSupport*convSampling) >= convSize_p/2){
