@@ -160,8 +160,8 @@ from polcal import  polcal
 from rmtables import  rmtables
 from setjy import  setjy
 from simdata import  simdata
-from sim_observe import  sim_observe
-from sim_analyze import  sim_analyze
+from simobserve import  simobserve
+from simanalyze import  simanalyze
 from smoothcal import  smoothcal
 from specfit import  specfit
 from split import  split

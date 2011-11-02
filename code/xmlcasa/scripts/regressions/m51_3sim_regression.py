@@ -31,7 +31,7 @@ shutil.copytree(datadir+modelname,modelname)
 #======================================
 # 12m INT
 
-default("sim_observe")
+default("simobserve")
 
 project = 'm51c'
 # Clear out results from previous runs.
@@ -78,7 +78,7 @@ go()
 # 12m TP
 
 
-default("sim_observe")
+default("simobserve")
 
 project = 'm51c'
 
@@ -123,7 +123,7 @@ go()
 # ACA
 
 
-default("sim_observe")
+default("simobserve")
 
 project = 'm51c'
 
@@ -169,7 +169,7 @@ go()
 # clean
 
 
-default("sim_analyze")
+default("simanalyze")
 
 project = 'm51c'
 
@@ -191,7 +191,7 @@ go()
 
 
 
-default("sim_analyze")
+default("simanalyze")
 
 project = 'm51c'
 
