@@ -7,6 +7,9 @@ from taskutil import get_global_namespace
 def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
                      whichdatacol='DATA'):
     """
+    Note: This has been more or less obsoleted by label_itered_ms and could
+    probably be replaced by it after a little testing.
+    
     Transform one measurement set into another with the same (ideally small but
     nontrivial) shape and reference frames, but data set to a sequence
     according to labelbases.  The output MS is useful for testing tasks or
@@ -319,7 +322,12 @@ def label_itered_ms(msname, labelbases, debug=False, datacol='DATA',
             ismore = ms.iternext()
 
     try:
-        addendum = msname + " labelled by labelbases = {\n"
+        addendum = msname + " "
+        if incremental:
+            addendum += "added to"
+        else:
+            addendum += "labelled"
+        addendum += " by labelbases = {\n"
         qbs = []
         for q, b in labelbases.items():
             qb = "\t%16s: " % ("'" + q + "'")
