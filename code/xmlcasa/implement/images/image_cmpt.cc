@@ -1274,7 +1274,6 @@ image* image::transpose(
 	if (excludepix.size() == 1 && excludepix[0] == -1) {
 		excludepix.resize();
 	}
-	::casac::record *rstat = 0;
 	*_log << LogOrigin("image", __FUNCTION__);
 	String mask = vmask.toString();
 	if (mask == "[]") {
@@ -1284,9 +1283,11 @@ image* image::transpose(
 		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = _image->getImage();
 		ImageFitter::CompListWriteControl writeControl =
-				complist.empty() ? ImageFitter::NO_WRITE
-						: overwrite ? ImageFitter::OVERWRITE
-								: ImageFitter::WRITE_NO_REPLACE;
+			complist.empty()
+			? ImageFitter::NO_WRITE
+			: overwrite
+				? ImageFitter::OVERWRITE
+				: ImageFitter::WRITE_NO_REPLACE;
 		String sChans;
 		if (chans.type() == variant::BOOLVEC) {
 			// for some reason which eludes me, the default variant type is boolvec
@@ -1297,26 +1298,32 @@ image* image::transpose(
 			sChans = String::toString(chans.toInt());
 		} else {
 			*_log
-					<< "Unsupported type for chans. chans must be either an integer or a string"
-					<< LogIO::EXCEPTION;
+				<< "Unsupported type for chans. chans must be either an integer or a string"
+				<< LogIO::EXCEPTION;
 		}
-		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
-			String regionString = (region.size() == 0) ? "" : region.toString();
-			fitter.reset(new ImageFitter(image, regionString, box, sChans,
-					stokes, mask, includepix, excludepix, residual, model,
-					estimates, logfile, append, newestimates, complist,
-					writeControl));
-		} else if (region.type() == ::casac::variant::RECORD) {
-			::casac::variant regionCopy = region;
-			Record *regionRecord = toRecord(regionCopy.asRecord());
-			fitter.reset(new ImageFitter(image, regionRecord, box, sChans,
-					stokes, mask, includepix, excludepix, residual, model,
-					estimates, logfile, append, newestimates, complist,
-					writeControl));
-		} else {
+		if (region.type() != variant::BOOLVEC && region.type() != variant::STRING && region.type() != variant::RECORD) {
 			*_log << "Unsupported type for region " << region.type()
-					<< LogIO::EXCEPTION;
+				<< LogIO::EXCEPTION;
 		}
+		std::auto_ptr<Record> regionRecord(0);
+		String regionString = (
+			region.type() == variant::STRING || region.size() == 0
+		) ? region.size() == 0
+			? ""
+				: region.toString()
+			: "";
+		if (region.type() == variant::RECORD) {
+			variant regionCopy = region;
+			regionRecord.reset(
+				toRecord(regionCopy.asRecord())
+			);
+		}
+		fitter.reset(new ImageFitter(
+			image, regionString, regionRecord.get(), box, sChans,
+			stokes, mask, includepix, excludepix, residual, model,
+			estimates, logfile, append, newestimates, complist,
+			writeControl)
+		);
 		ComponentList compList = fitter->fit();
 		Vector<Bool> converged = fitter->converged();
 		Record returnRecord, compListRecord;
@@ -1327,20 +1334,19 @@ image* image::transpose(
 
 		if (!compList.toRecord(error, compListRecord)) {
 			*_log << "Failed to generate output record from result. " << error
-					<< LogIO::POST;
+				<< LogIO::EXCEPTION;
 		}
 		FluxRep<Double>::clearAllowedUnits();
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
-		rstat = fromRecord(returnRecord);
+		return fromRecord(returnRecord);
 	}
 	catch (AipsError x) {
 		FluxRep<Double>::clearAllowedUnits();
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-			<< LogIO::POST;
+		*_log << "Exception Reported: " << x.getMesg()
+			<< LogIO::EXCEPTION;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::variant*

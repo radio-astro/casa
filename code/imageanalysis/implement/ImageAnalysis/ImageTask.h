@@ -86,11 +86,15 @@ protected:
 
     inline const ImageInterface<Float>* _getImage() const {return _image;}
 
-    inline const String _getMask() const {return _mask;}
+    inline const String& _getMask() const {return _mask;}
 
     inline const Record* _getRegion() const {return &_regionRecord;}
 
-    inline const String _getOutname() const {return _outname; }
+    inline const String& _getStokes() const {return _stokesString;}
+
+    inline const String& _getChans() const {return _chan;}
+
+    inline const String& _getOutname() const {return _outname; }
 
     virtual vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
 

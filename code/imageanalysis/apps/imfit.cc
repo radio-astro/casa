@@ -81,7 +81,7 @@ Int main(Int argc, char *argv[]) {
 	ImageUtilities::openImage(image, imagename, log);
 
 	ImageFitter imFitter(
-		image, region, box, chans, stokes, mask, includePixelRange,
+		image, region, 0, box, chans, stokes, mask, includePixelRange,
 		excludePixelRange, residual, model, estimatesFilename, logfile,
 		append, newEstimatesFileName
 	);

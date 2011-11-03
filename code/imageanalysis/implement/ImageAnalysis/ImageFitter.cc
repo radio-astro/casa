@@ -67,56 +67,42 @@
 // #define DEBUG cout << __FILE__ << " " << __LINE__ << endl;
 
 namespace casa {
+
+const String ImageFitter::_class = "ImageFitter";
+
 ImageFitter::ImageFitter(
-	const ImageInterface<Float>* const image, const String& region, const String& box,
+	const ImageInterface<Float>* const image, const String& region,
+	const Record *const regionRec,
+	const String& box,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const Vector<Float>& includepix,
 	const Vector<Float>& excludepix, const String& residualInp,
 	const String& modelInp, const String& estimatesFilename,
 	const String& logfile, const Bool& append,
 	const String& newEstimatesInp, const String& compListName,
-	const CompListWriteControl writeControl
-) : _log(new LogIO()), _image(image->cloneII()), _chans(chanInp), _stokesString(stokes),
-	_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
-	regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
-	_compListName(compListName),
-	_includePixelRange(includepix), _excludePixelRange(excludepix),
-	estimates(), fixed(0), logfileAppend(append), fitDone(False), _noBeam(False),
-	_deleteImageOnDestruct(False), _fitConverged(Vector<Bool>(0)), _peakIntensities(),
-	_writeControl(writeControl) {
-	_construct(_image, box, region, 0, estimatesFilename);
+	const CompListWriteControl writeControl,
+	const Bool doZeroLevel, const Float zeroLevelOffset
+) : ImageTask(
+		image, region, regionRec, box, chanInp, stokes,
+		maskInp, "", False
+	), _regionString(region), _residual(residualInp),_model(modelInp), _logfileName(logfile),
+	estimatesString(""), _newEstimatesFileName(newEstimatesInp),
+	_compListName(compListName), _includePixelRange(includepix),
+	_excludePixelRange(excludepix), estimates(), fixed(0),
+	logfileAppend(append), fitDone(False), _noBeam(False),
+	_doZeroLevel(doZeroLevel),
+	_fitConverged(Vector<Bool>(0)), _peakIntensities(),
+	_writeControl(writeControl), _zeroLevelOffset(zeroLevelOffset) {
+	//_construct(_image, box, region, 0, estimatesFilename);
+	_construct();
+	_finishConstruction(estimatesFilename);
 }
 
-ImageFitter::ImageFitter(
-	const ImageInterface<Float>* const image, const Record* regionPtr, const String& box,
-	const String& chanInp, const String& stokes,
-	const String& maskInp, const Vector<Float>& includepix,
-	const Vector<Float>& excludepix, const String& residualInp,
-	const String& modelInp, const String& estimatesFilename,
-	const String& logfile, const Bool& append,
-	const String& newEstimatesInp, const String& compListName,
-	const CompListWriteControl writeControl
-) : _log(new LogIO()), _image(image->cloneII()), _chans(chanInp), _stokesString(stokes),
-_mask(maskInp), _residual(residualInp),_model(modelInp), _logfileName(logfile),
-	regionString(""), estimatesString(""), _newEstimatesFileName(newEstimatesInp),
-	_compListName(compListName),
-	_includePixelRange(includepix), _excludePixelRange(excludepix),
-	estimates(), fixed(0), logfileAppend(append), fitDone(False), _noBeam(False),
-	_deleteImageOnDestruct(False), _fitConverged(Vector<Bool>(0)), _peakIntensities(),
-	_writeControl(writeControl) {
-	_construct(_image, box, "", regionPtr, estimatesFilename);
-}
-
-ImageFitter::~ImageFitter() {
-	delete _log;
-	if (_deleteImageOnDestruct) {
-		delete _image;
-	}
-}
+ImageFitter::~ImageFitter() {}
 
 ComponentList ImageFitter::fit() {
 	LogOrigin origin("ImageFitter", __FUNCTION__);
-	*_log << origin;
+	*_getLog() << origin;
 	Bool converged;
 	SubImage<Float> templateImage;
 	std::auto_ptr<TempImage<Float> > modelImage, residualImage;
@@ -150,13 +136,14 @@ ComponentList ImageFitter::fit() {
 	Record estimatesRecord;
 
 	if (! estimates.toRecord(errmsg, estimatesRecord)) {
-		*_log << "Could not convert estimates correctly. Check syntax. "
+		*_getLog() << "Could not convert estimates correctly. Check syntax. "
 			<< errmsg << LogIO::EXCEPTION;
 	}
-	ImageAnalysis myImage(_image);
+	ImageAnalysis myImage(_getImage());
+	Record region = *_getRegion();
 	myImage.statistics(
-		inputStats, _image->coordinates().directionAxesNumbers(),
-		_regionRecord, "", Vector<String>(0),
+		inputStats, _getImage()->coordinates().directionAxesNumbers(),
+		region, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
 	);
 
@@ -169,7 +156,7 @@ ComponentList ImageFitter::fit() {
 	Array<Float> residPixels, modelPixels;
 
 	for (_curChan=_chanVec[0]; _curChan<=_chanVec[1]; _curChan++) {
-		Fit2D fitter(*_log);
+		Fit2D fitter(*_getLog());
 		_setIncludeExclude(fitter);
 		Array<Float> pixels, curResidPixels, curModelPixels;
 		Array<Bool> pixelMask;
@@ -177,17 +164,17 @@ ComponentList ImageFitter::fit() {
 			_curResults = _fitsky(
 				fitter, pixels,
 				pixelMask, converged,
-				_regionRecord, _curChan, _kludgedStokes,
-				_mask, models, estimatesRecord, fixed,
+				_curChan, _kludgedStokes,
+				models, estimatesRecord, fixed,
 				fit, deconvolve, list
 			);
 		}
 		catch (AipsError err) {
-			*_log << origin << LogIO::WARN << "Fit failed to converge because of exception: "
+			*_getLog() << origin << LogIO::WARN << "Fit failed to converge because of exception: "
 				<< err.getMesg() << LogIO::POST;
 			converged = false;
 		}
-		*_log << origin;
+		*_getLog() << origin;
 		anyConverged |= converged;
 		if (converged) {
 			compList.addList(_curResults);
@@ -236,39 +223,51 @@ ComponentList ImageFitter::fit() {
 			_setFluxes();
 			_setSizes();
 			_curResults.toRecord(errmsg, estimatesRecord);
-			*_log << origin;
+			*_getLog() << origin;
 		}
 		String currentResultsString = _resultsToString();
 		resultsString += currentResultsString;
-		*_log << LogIO::NORMAL << currentResultsString << LogIO::POST;
+		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
 	}
 
 	if (anyConverged) {
 		_writeCompList(compList);
 	}
 	else {
-		*_log << LogIO::WARN
+		*_getLog() << LogIO::WARN
 			<< "No fits converged. Will not write component list"
 			<< LogIO::POST;
 	}
 
 	if (residualImage.get() != 0) {
-		ImageUtilities::writeImage(
-			residualImage->shape(),
-			residualImage->coordinates(),
-			_residual,
-			residualImage->get(),
-			*_log, completePixelMask->get(False)
-		);
+		try {
+			ImageUtilities::writeImage(
+				residualImage->shape(),
+				residualImage->coordinates(),
+				_residual,
+				residualImage->get(),
+				*_getLog(), completePixelMask->get(False)
+			);
+		}
+		catch (AipsError x) {
+			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
+				<< x.getMesg() << LogIO::POST;
+		}
 	}
 	if (modelImage.get() != 0) {
-		ImageUtilities::writeImage(
-			modelImage->shape(),
-			modelImage->coordinates(),
-			_model,
-			modelImage->get(),
-			*_log, completePixelMask->get(False)
-		);
+		try {
+			ImageUtilities::writeImage(
+				modelImage->shape(),
+				modelImage->coordinates(),
+				_model,
+				modelImage->get(),
+				*_getLog(), completePixelMask->get(False)
+			);
+		}
+		catch (AipsError x) {
+			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
+				<< x.getMesg() << LogIO::POST;
+		}
 	}
 	FluxRep<Double>::clearAllowedUnits();
 	if (converged && ! _newEstimatesFileName.empty()) {
@@ -281,15 +280,15 @@ ComponentList ImageFitter::fit() {
 }
 
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
-    *_log << LogOrigin("ImageFitter", __FUNCTION__);
+    *_getLog() << LogOrigin("ImageFitter", __FUNCTION__);
 	Bool doInclude = (_includePixelRange.nelements() > 0);
 	Bool doExclude = (_excludePixelRange.nelements() > 0);
 	if (doInclude && doExclude) {
-		*_log << "You cannot give both an include and an exclude pixel range"
+		*_getLog() << "You cannot give both an include and an exclude pixel range"
 			<< LogIO::EXCEPTION;
 	}
 	else if (!doInclude && !doExclude) {
-		*_log << LogIO::NORMAL << "Selecting all pixel values because neither "
+		*_getLog() << LogIO::NORMAL << "Selecting all pixel values because neither "
 			<< "includepix nor excludepix was specified" << LogIO::POST;
 		return;
 	}
@@ -298,14 +297,14 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 			fitter.setIncludeRange(
 				-abs(_includePixelRange(0)), abs(_includePixelRange(0))
 			);
-			*_log << LogIO::NORMAL << "Selecting pixels from "
+			*_getLog() << LogIO::NORMAL << "Selecting pixels from "
 				<< -abs(_includePixelRange(0)) << " to " << abs(_includePixelRange(0))
 				<< LogIO::POST;
 		} else if (_includePixelRange.nelements() > 1) {
 			fitter.setIncludeRange(
 				_includePixelRange(0), _includePixelRange(1)
 			);
-			*_log << LogIO::NORMAL << "Selecting pixels from "
+			*_getLog() << LogIO::NORMAL << "Selecting pixels from "
 				<< _includePixelRange(0) << " to " << _includePixelRange(1)
 				<< LogIO::POST;
 		}
@@ -315,7 +314,7 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 			fitter.setExcludeRange(
 				-abs(_excludePixelRange(0)), abs(_excludePixelRange(0))
 			);
-			*_log << LogIO::NORMAL << "Excluding pixels from "
+			*_getLog() << LogIO::NORMAL << "Excluding pixels from "
 				<< -abs(_excludePixelRange(0)) << " to " << abs(_excludePixelRange(0))
 				<< LogIO::POST;
 		}
@@ -323,7 +322,7 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 			fitter.setExcludeRange(
 				_excludePixelRange(0), _excludePixelRange(1)
 			);
-			*_log << LogIO::NORMAL << "Excluding pixels from "
+			*_getLog() << LogIO::NORMAL << "Excluding pixels from "
 				<< _excludePixelRange(0) << " to " << _excludePixelRange(1)
 				<< LogIO::POST;
 		}
@@ -359,7 +358,7 @@ Double ImageFitter::_getStatistic(const String& type, const uInt index, const Re
 
 vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
-	*_log << logOrigin;
+	*_getLog() << logOrigin;
 
 	ImageInputProcessor::OutputStruct residualIm;
 	residualIm.label = "residual image";
@@ -391,69 +390,58 @@ vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
 	return outputs;
 }
 
-void ImageFitter::_construct(
-		const ImageInterface<Float> *image, const String& box, const String& regionName,
-		const Record* regionPtr, const String& estimatesFilename
-) {
-	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
-	*_log << logOrigin;
-	vector<ImageInputProcessor::OutputStruct> outputs = _getOutputs();
+vector<Coordinate::Type> ImageFitter::_getNecessaryCoordinates() const {
+	vector<Coordinate::Type> coordType(1);
+	coordType[0] = Coordinate::DIRECTION;
+	return coordType;
+}
 
-	String diagnostics;
-	vector<Coordinate::Type> reqCoordTypes(1, Coordinate::DIRECTION);
-	ImageInputProcessor inputProcessor;
-
-	inputProcessor.process(
-			_regionRecord, diagnostics, &outputs,
-			_stokesString, image, regionPtr,
-			regionName, box, _chans,
-			CasacRegionManager::USE_FIRST_STOKES, False,
-			&reqCoordTypes
-	);
-	_finishConstruction(estimatesFilename);
+CasacRegionManager::StokesControl ImageFitter::_getStokesControl() const {
+	return CasacRegionManager::USE_FIRST_STOKES;
 }
 
 void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
-	*_log << logOrigin;
+	*_getLog() << logOrigin;
 	// <todo> kludge because Flux class is really only made for I, Q, U, and V stokes
 
 	String iquv = "IQUV";
-	_kludgedStokes = (iquv.index(_stokesString) == String::npos) || _stokesString.empty()
-        ? "I" : _stokesString;
+	_kludgedStokes = (iquv.index(_getStokes()) == String::npos)
+		|| _getStokes().empty()
+        ? "I" : String(_getStokes());
 	// </todo>
 
 	if(estimatesFilename.empty()) {
-		*_log << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
+		*_getLog() << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
 			<< LogIO::POST;
 	}
 	else {
-		FitterEstimatesFileParser parser(estimatesFilename, *_image);
+		FitterEstimatesFileParser parser(estimatesFilename, *_getImage());
 		estimates = parser.getEstimates();
 		estimatesString = parser.getContents();
 		fixed = parser.getFixed();
 		Record rec;
 		String errmsg;
 		estimates.toRecord(errmsg, rec);
-		*_log << LogIO::NORMAL << "File " << estimatesFilename
+		*_getLog() << LogIO::NORMAL << "File " << estimatesFilename
 			<< " has " << estimates.nelements()
         	<< " specified, so will attempt to fit that many gaussians "
         	<< LogIO::POST;
 	}
-	CasacRegionManager rm(_image->coordinates());
+	CasacRegionManager rm(_getImage()->coordinates());
 	uInt nSelectedChannels;
-	Int specAxisNumber = _image->coordinates().spectralAxisNumber();
+	Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
 
-	 uInt nChannels = specAxisNumber >= 0 ? _image->shape()[specAxisNumber] : 0;
+	 uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
 
-	_chanVec = rm.setSpectralRanges(_chans, nSelectedChannels, nChannels);
+	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, nChannels);
 	if (_chanVec.size() == 0) {
 		_chanVec.resize(2);
 		_chanVec.set(0);
 		nSelectedChannels = 1;
 	}
 	if (_chanVec.size() > 2) {
-		*_log << "Only a single contiguous channel range is supported" << LogIO::EXCEPTION;
+		*_getLog() << "Only a single contiguous channel range is supported" << LogIO::EXCEPTION;
 	}
 	_fitConverged.resize(nSelectedChannels);
 }
@@ -462,11 +450,11 @@ String ImageFitter::_resultsHeadder() const {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << "Input parameters ---" << endl;
-	summary << "       --- imagename:           " << _image->name() << endl;
-	summary << "       --- region:              " << regionString << endl;
-	summary << "       --- channel:             " << _chans << endl;
-	summary << "       --- stokes:              " << _stokesString << endl;
-	summary << "       --- mask:                " << _mask << endl;
+	summary << "       --- imagename:           " << _getImage()->name() << endl;
+	summary << "       --- region:              " << _regionString << endl;
+	summary << "       --- channel:             " << _getChans() << endl;
+	summary << "       --- stokes:              " << _getStokes() << endl;
+	summary << "       --- mask:                " << _getMask() << endl;
 	summary << "       --- include pixel ragne: " << _includePixelRange << endl;
 	summary << "       --- exclude pixel ragne: " << _excludePixelRange << endl;
 	summary << "       --- initial estimates:   " << estimatesString << endl;
@@ -479,14 +467,14 @@ String ImageFitter::_resultsToString() {
 
 	if (converged(_curChan - _chanVec[0])) {
 		if (_noBeam) {
-			*_log << LogIO::WARN << "Flux density not reported because "
+			*_getLog() << LogIO::WARN << "Flux density not reported because "
 					<< "there is no clean beam in image header so these quantities cannot "
 					<< "be calculated" << LogIO::POST;
 		}
 		summary << _statisticsToString() << endl;
 		for (uInt i = 0; i < _curResults.nelements(); i++) {
-			summary << "Fit on " << _image->name(True) << " component " << i << endl;
-			summary << _curResults.component(i).positionToString(&(_image->coordinates())) << endl;
+			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
+			summary << _curResults.component(i).positionToString(&(_getImage()->coordinates())) << endl;
 			summary << _sizeToString(i) << endl;
 			summary << _fluxToString(i) << endl;
 			summary << _spectrumToString(i) << endl;
@@ -533,13 +521,13 @@ void ImageFitter::_setFluxes() {
 	Double rmsPeak = Vector<Double>(_residStats.asArrayDouble("rms"))[0];
 	Quantity rmsPeakError(
 		rmsPeak,
-		_image->units()
+		_getImage()->units()
 	);
 
-	ImageMetaData md(*_image);
+	ImageMetaData md(*_getImage());
 	Quantity resArea;
 	Bool found = False;
-	Quantity intensityToFluxConversion = _image->units().getName().contains("/beam")
+	Quantity intensityToFluxConversion = _getImage()->units().getName().contains("/beam")
     	? Quantity(1.0, "beam")
     	: Quantity(1.0, "pixel");
 
@@ -548,7 +536,7 @@ void ImageFitter::_setFluxes() {
 			found = True;
 		}
 		else {
-			*_log << LogIO::WARN
+			*_getLog() << LogIO::WARN
 				<< "Image units are per beam but beam area could not "
 				<< "be determined. Assume beam area is pixel area."
 				<< LogIO::POST;
@@ -556,12 +544,12 @@ void ImageFitter::_setFluxes() {
 	}
 	if (! found) {
 		if (! md.getDirectionPixelArea(resArea)) {
-			*_log << LogIO::EXCEPTION
+			*_getLog() << LogIO::EXCEPTION
 				<< "Pixel area could not be determined";
 		}
 	}
 	ImageAnalysis ia;
-	ia.open(_image->name());
+	ia.open(_getImage()->name());
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {
 		_curResults.getFlux(fluxQuant, i);
@@ -598,7 +586,7 @@ void ImageFitter::_setFluxes() {
 				peakErrorFromFluxErrorValue
 			)
 		);
-		_peakIntensityErrors[i].setUnit(_image->units());
+		_peakIntensityErrors[i].setUnit(_getImage()->units());
 		if (rmsPeakErrorValue > peakErrorFromFluxErrorValue) {
 			const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
 			Quantity compArea = gaussShape->getArea();
@@ -629,10 +617,10 @@ void ImageFitter::_setSizes() {
 
 	Quantity rmsPeakError(
 			rmsPeak,
-			_image->units()
+			_getImage()->units()
 	);
 
-	Vector<Quantity> beam = _image->imageInfo().restoringBeam();
+	Vector<Quantity> beam = _getImage()->imageInfo().restoringBeam();
 	Bool hasBeam = beam.nelements() == 3;
 
 	Quantity xBeam;
@@ -645,9 +633,9 @@ void ImageFitter::_setSizes() {
 		paBeam = beam[2];
 	}
 	else {
-		ImageMetaData md(*_image);
+		ImageMetaData md(*_getImage());
 		Int dirCoordNumber = md.directionCoordinateNumber();
-		Vector<Double> pixInc = _image->coordinates().directionCoordinate(dirCoordNumber).increment();
+		Vector<Double> pixInc = _getImage()->coordinates().directionCoordinate(dirCoordNumber).increment();
 		xBeam = Quantity(pixInc[0], "rad");
 		yBeam = Quantity(pixInc[1], "rad");
 		paBeam = Quantity(0, "rad");
@@ -755,7 +743,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 	const ComponentShape* compShape = _curResults.getShape(compNumber);
 	AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
 
-	Vector<Quantum<Double> > beam = _image->imageInfo().restoringBeam();
+	Vector<Quantum<Double> > beam = _getImage()->imageInfo().restoringBeam();
 	Bool hasBeam = beam.nelements() == 3;
 	size << "Image component size";
 	if (hasBeam) {
@@ -785,7 +773,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 
 		Vector<Quantity> bestFit(3);
 		Bool isPointSource = ImageUtilities::deconvolveFromBeam(
-			bestFit[0], bestFit[1], bestFit[2], fitSuccess, *_log, best, beam
+			bestFit[0], bestFit[1], bestFit[2], fitSuccess, *_getLog(), best, beam
 		);
 		size << "Image component size (deconvolved from beam) ---" << endl;
 
@@ -812,7 +800,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 							paFit = Quantity();
 							isPointSource = ImageUtilities::deconvolveFromBeam(
 								majFit, minFit, paFit, fitSuccess,
-								*_log, sourceIn, beam, False
+								*_getLog(), sourceIn, beam, False
 							);
 							while (paFit.getValue() < 0) {
 								paFit += Quantity(180, "deg");
@@ -846,7 +834,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			}
 		}
 		else {
-			*_log << LogIO::SEVERE << "Could not deconvolve source from beam" << LogIO::POST;
+			*_getLog() << LogIO::SEVERE << "Could not deconvolve source from beam" << LogIO::POST;
 		}
 	}
 	return size.str();
@@ -881,7 +869,7 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	fd[0] = fluxDensity.getValue();
 	fd[1] = fluxDensityError.getValue();
 	Quantity peakIntensity = _peakIntensities[compNumber];
-	Quantity intensityToFluxConversion = _image->units().getName().contains("/beam")
+	Quantity intensityToFluxConversion = _getImage()->units().getName().contains("/beam")
     				? Quantity(1.0, "beam")
     						: Quantity(1.0, "pixel");
 
@@ -923,7 +911,7 @@ String ImageFitter::_fluxToString(uInt compNumber) const {
 	fluxes << "       --- Peak:         " << peakIntensity.getValue()
  					<< " +/- " << peakIntensityError.getValue() << " "
  					<< peakIntensity.getUnit() << endl;
-	fluxes << "       --- Polarization: " << _stokesString << endl;
+	fluxes << "       --- Polarization: " << _getStokes() << endl;
 	return fluxes.str();
 }
 
@@ -973,7 +961,7 @@ void ImageFitter::_writeLogfile(const String& output) const {
 			FiledesIO fio(fd, _logfileName.c_str());
 			fio.write(output.length(), output.c_str());
 			FiledesIO::close(fd);
-			*_log << LogIO::NORMAL << "Appended results to file "
+			*_getLog() << LogIO::NORMAL << "Appended results to file "
 					<< _logfileName << LogIO::POST;
 		}
 		// no break here to fall through to the File::CREATABLE block if logFileAppend is false
@@ -985,7 +973,7 @@ void ImageFitter::_writeLogfile(const String& output) const {
 			FiledesIO fio (fd, _logfileName.c_str());
 			fio.write(output.length(), output.c_str());
 			FiledesIO::close(fd);
-			*_log << LogIO::NORMAL << action << " file "
+			*_getLog() << LogIO::NORMAL << action << " file "
 					<< _logfileName << " with new log file"
 					<< LogIO::POST;
 		}
@@ -994,16 +982,16 @@ void ImageFitter::_writeLogfile(const String& output) const {
 		// checks to see if the log file is not creatable or not writeable should have already been
 		// done and if so _logFileName set to the empty string so this method wouldn't be called in
 		// those cases.
-		*_log << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
+		*_getLog() << "Programming logic error. This block should never be reached" << LogIO::EXCEPTION;
 	}
 }
 
 SubImage<Float> ImageFitter::_createImageTemplate() const {
-	IPosition imShape = _image->shape();
+	IPosition imShape = _getImage()->shape();
 	IPosition startPos(imShape.nelements(), 0);
 	IPosition endPos(imShape - 1);
 	IPosition stride(imShape.nelements(), 1);
-	const CoordinateSystem& imcsys = _image->coordinates();
+	const CoordinateSystem& imcsys = _getImage()->coordinates();
 	if (imcsys.hasSpectralAxis()) {
 		uInt spectralAxisNumber = imcsys.spectralAxisNumber();
 		startPos[spectralAxisNumber] = _chanVec[0];
@@ -1011,15 +999,16 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 	}
 	if (imcsys.hasPolarizationCoordinate()) {
 		uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
-		startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(_stokesString);
+		startPos[stokesAxisNumber] = imcsys.stokesPixelNumber(_getStokes());
 		endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
 	}
 
 	Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
-	SubImage<Float> subImageTmp = SubImage<Float>(*_image, slice, False);
+	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
+	SubImage<Float> subImageTmp = SubImage<Float>(*imageClone, slice, False);
 	SubImage<Float> x = SubImage<Float>::createSubImage(
-		subImageTmp, _regionRecord,
-		_mask, 0, False
+		subImageTmp, *_getRegion(),
+		_getMask(), 0, False
 	);
 	return x;
 }
@@ -1032,17 +1021,17 @@ void ImageFitter::_writeNewEstimatesFile() const {
 		Quantity lat = mdir.getValue().getLat("rad");
 		Quantity longitude = mdir.getValue().getLong("rad");
 		Vector<Double> world(4,0), pixel(4,0);
-		_image->coordinates().toWorld(world, pixel);
+		_getImage()->coordinates().toWorld(world, pixel);
 		world[0] = longitude.getValue();
 		world[1] = lat.getValue();
-		if (_image->coordinates().toPixel(pixel, world)) {
+		if (_getImage()->coordinates().toPixel(pixel, world)) {
 			out << _peakIntensities[i].getValue() << ", "
 					<< pixel[0] << ", " << pixel[1] << ", "
 					<< _majorAxes[i] << ", " << _minorAxes[i] << ", "
 					<< _positionAngles[i] << endl;
 		}
 		else {
-			*_log << LogIO::WARN << "Unable to calculate pixel location of "
+			*_getLog() << LogIO::WARN << "Unable to calculate pixel location of "
 					<< "component number " << i << " so cannot write new estimates"
 					<< "file" << LogIO::POST;
 			return;
@@ -1055,7 +1044,7 @@ void ImageFitter::_writeNewEstimatesFile() const {
 	FiledesIO fio(fd, _logfileName.c_str());
 	fio.write(output.length(), output.c_str());
 	FiledesIO::close(fd);
-	*_log << LogIO::NORMAL << action << " file "
+	*_getLog() << LogIO::NORMAL << action << " file "
 			<< _newEstimatesFileName << " with new estimates file"
 			<< LogIO::POST;
 }
@@ -1070,8 +1059,8 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 			File file(_compListName);
 			if (file.exists()) {
 				LogOrigin logOrigin("ImageFitter", __FUNCTION__);
-				*_log << logOrigin;
-				*_log << LogIO::WARN << "Requested persistent component list " << _compListName
+				*_getLog() << logOrigin;
+				*_getLog() << LogIO::WARN << "Requested persistent component list " << _compListName
 						<< " already exists and user does not wish to overwrite it so "
 						<< "the component list will not be written" << LogIO::POST;
 				return;
@@ -1081,7 +1070,7 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 		case OVERWRITE: {
 			Path path(_compListName);
 			list.rename(path, Table::New);
-			*_log << LogIO::NORMAL << "Wrote component list table " << _compListName << endl;
+			*_getLog() << LogIO::NORMAL << "Wrote component list table " << _compListName << endl;
 		}
 		return;
 		default:
@@ -1098,14 +1087,13 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 ComponentList ImageFitter::_fitsky(
 	Fit2D& fitter, Array<Float>& pixels,
     Array<Bool>& pixelMask, Bool& converged,
-    Record& region, const uInt& chan,
-	const String& stokesString, const String& mask,
+    const uInt& chan, const String& stokesString,
 	const Vector<String>& models, Record& inputEstimate,
 	const Vector<String>& fixed, const Bool fitIt,
 	const Bool deconvolveIt, const Bool list
 ) {
 	LogOrigin origin("ImageFitter", __FUNCTION__);
-	*_log << origin;
+	*_getLog() << origin;
 
 	String error;
 
@@ -1113,7 +1101,7 @@ ComponentList ImageFitter::_fitsky(
 
 	ComponentList compList;
 	if (!compList.fromRecord(error, inputEstimate)) {
-		*_log << LogIO::WARN
+		*_getLog() << LogIO::WARN
 				<< "Can not  convert input parameter to ComponentList "
 				<< error << LogIO::POST;
 	}
@@ -1130,20 +1118,24 @@ ComponentList ImageFitter::_fitsky(
 	const uInt nMasks = fixed.nelements();
 	const uInt nEstimates = estimate.nelements();
 	if (nModels == 0) {
-		*_log << "You have not specified any models" << LogIO::EXCEPTION;
+		*_getLog() << "You have not specified any models" << LogIO::EXCEPTION;
 	}
 	if (nModels > 1 && estimate.nelements() < nModels) {
-		*_log << "You must specify one estimate for each model component"
+		*_getLog() << "You must specify one estimate for each model component"
 			<< LogIO::EXCEPTION;
 	}
 	if (!fitIt && nModels > 1) {
-		*_log << "Parameter estimates are only available for a single model"
+		*_getLog() << "Parameter estimates are only available for a single model"
 			<< LogIO::EXCEPTION;
 	}
-	SubImage<Float> subImageTmp = SubImage<Float>::createSubImage(
-		*_image, *(ImageRegion::tweakedRegionRecord(&region)),
-		mask, (list ? _log : 0), False, AxesSpecifier(True)
-	);
+	SubImage<Float> subImageTmp;
+	{
+		std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
+		subImageTmp = SubImage<Float>::createSubImage(
+			*imageClone, *_getRegion(),
+			_getMask(), (list ? _getLog().get() : 0), False, AxesSpecifier(True)
+		);
+	}
 
 	SubImage<Float> allAxesSubImage;
 	{
@@ -1182,7 +1174,7 @@ ComponentList ImageFitter::_fitsky(
 
     // Make sure the region is 2D and that it holds the sky.  Exception if not.
 	const CoordinateSystem& cSys = subImage.coordinates();
-	Bool xIsLong = CoordinateUtil::isSky(*_log, cSys);
+	Bool xIsLong = CoordinateUtil::isSky(*_getLog(), cSys);
 
 	pixels = subImage.get(True);
 	IPosition shape = pixels.shape();
@@ -1214,7 +1206,7 @@ ComponentList ImageFitter::_fitsky(
 		Vector<SkyComponent> result(1);
 		Double facToJy;
 		result(0) = ImageUtilities::encodeSkyComponent(
-			*_log, facToJy, allAxesSubImage,
+			*_getLog(), facToJy, allAxesSubImage,
 			_convertModelType(Fit2D::GAUSSIAN), parameters, stokes, xIsLong,
 			deconvolveIt
 		);
@@ -1274,7 +1266,7 @@ ComponentList ImageFitter::_fitsky(
 				}
 			}
 			else if (modelType == Fit2D::LEVEL) {
-				*_log << LogIO::EXCEPTION; // Levels not supported yet
+				*_getLog() << LogIO::EXCEPTION; // Levels not supported yet
 			}
 		}
 		fitter.addModel(modelType, parameters, parameterMask);
@@ -1285,14 +1277,14 @@ ComponentList ImageFitter::_fitsky(
 	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
 
 	if (status == Fit2D::OK) {
-		*_log << LogIO::NORMAL << "Number of iterations = "
+		*_getLog() << LogIO::NORMAL << "Number of iterations = "
 				<< fitter.numberIterations() << LogIO::POST;
 		converged = True;
 	}
 	else {
 		converged = False;
-		*_log << LogOrigin("ImageAnalysis", __FUNCTION__);
-		*_log << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
+		*_getLog() << LogOrigin("ImageAnalysis", __FUNCTION__);
+		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return cl;
 	}
 
@@ -1309,11 +1301,11 @@ ComponentList ImageFitter::_fitsky(
 
 
 	    result(i) = ImageUtilities::encodeSkyComponent(
-		    *_log, facToJy, allAxesSubImage, modelType,
+		    *_getLog(), facToJy, allAxesSubImage, modelType,
 			solution, stokes, xIsLong, deconvolveIt
 		);
 		_encodeSkyComponentError(
-			*_log, result(i), facToJy, allAxesSubImage,
+			*_getLog(), result(i), facToJy, allAxesSubImage,
 			solution, errors, stokes, xIsLong
 		);
 
@@ -1331,7 +1323,7 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 
 	// Return the initial fit guess as either the model, an auto guess,
 	// or some combination.
-	*_log << LogOrigin("ImageFitter", __FUNCTION__);
+	*_getLog() << LogOrigin("ImageFitter", __FUNCTION__);
 	Vector<Double> parameters;
 	if (model == Fit2D::GAUSSIAN || model == Fit2D::DISK) {
 		//
@@ -1342,7 +1334,7 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 		//
 		if (parameters.nelements() == 0) {
 			// Fall back parameters
-			*_log << LogIO::WARN
+			*_getLog() << LogIO::WARN
 				<< "The primary initial estimate failed.  Fallback may be poor"
 				<< LogIO::POST;
 			parameters.resize(6);
@@ -1360,12 +1352,12 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 			parameters(4) = 0.9 * parameters(3); // minor axis
 			parameters(5) = 0.0; // position angle
 		} else if (parameters.nelements() != 6) {
-			*_log << "Not enough parameters returned by fitter estimate"
+			*_getLog() << "Not enough parameters returned by fitter estimate"
 					<< LogIO::EXCEPTION;
 		}
 	} else {
 		// points, levels etc
-		*_log << "Only Gaussian/Disk auto-single estimates are available"
+		*_getLog() << "Only Gaussian/Disk auto-single estimates are available"
 				<< LogIO::EXCEPTION;
 	}
 	return parameters;
@@ -1410,7 +1402,7 @@ void ImageFitter::_fitskyExtractBeam(
 	Bool doRef = True;
 	Vector<Double> dParameters;
 	ImageUtilities::worldWidthsToPixel(
-		*_log, dParameters,
+		*_getLog(), dParameters,
 		wParameters, cSys, pixelAxes, doRef
 	);
 	parameters.resize(6, True);
