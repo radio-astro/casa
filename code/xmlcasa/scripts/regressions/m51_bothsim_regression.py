@@ -132,6 +132,21 @@ diffstats = {'max': 0.053971,
              'sigma': 0.0089992,
              'sum': 357.14 }
 
+# Kumar's rev 16734
+# reference statistic values for simulated image
+refstats = { 'max': 0.11984,
+             'min': -0.033664,
+             'rms': 0.014076,
+             'sigma': 0.013263,
+             'sum': 538.3 }
+
+# reference statistic values for diff image
+diffstats = {'max': 0.05527,
+             'min': -0.055855,
+             'rms': 0.0099677,
+             'sigma': 0.0094809,
+             'sum': 351.13 }
+
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
