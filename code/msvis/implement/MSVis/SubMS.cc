@@ -1197,20 +1197,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
                                  const Int nCorr, const String& telescop,
                                  const Vector<MS::PredefinedColumns>& colNames,
-                                 const Int obstype)
-                                 //const Bool compress)
+                                 const Int obstype,
+                                 const Bool compress)
   {
     //Choose an appropriate tileshape
     IPosition dataShape(2, nCorr, nchan);
     IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
-    //return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress);
-    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector());
+    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress);
+    //return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector());
   }
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
                                  const Int nCorr, 
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
-                                 const Vector<Int>& tshape)
-                                 //const Vector<Int>& tshape, const Bool compress)
+                                 const Vector<Int>& tshape, const Bool compress)
   {
     if(tshape.nelements() != 3)
       throw(AipsError("TileShape has to have 3 elements ") );
@@ -1249,8 +1248,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     if (mustWriteOnlyToData)
       {
         MS::addColumnToDesc(td, MS::DATA, 2);
-        //diable data compression for now -tt 08/15/11
-        //if (compress) MS::addColumnCompression(td,MS::DATA,true);
+        if (compress) MS::addColumnCompression(td,MS::DATA,true);
         String hcolName=String("Tiled")+String("DATA");
         td.defineHypercolumn(hcolName, 3,
                              stringToVector("DATA"));
@@ -1268,8 +1266,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
            colNamesTok[i] == MS::FLOAT_DATA ||
            colNamesTok[i] == MS::LAG_DATA) {
           MS::addColumnToDesc(td, colNamesTok[i], 2);
-          //disable data compression for now
-          //if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
+          if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
         }
         else {
           throw(AipsError(MS::columnName(colNamesTok[i]) +
@@ -1283,13 +1280,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }
 
     //other cols for compression
-    // disable data compression for now
-    /***
     if (compress) {
       MS::addColumnCompression(td, MS::WEIGHT, true);
       MS::addColumnCompression(td, MS::SIGMA, true);
     }
-    ***/ 
     
     // add this optional column because random group fits has a
     // weight per visibility
