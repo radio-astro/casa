@@ -1047,7 +1047,7 @@ void VisSet::addScratchCols(MeasurementSet& ms, Bool compress){
 String VisSet::msName(){
 
   String a=ms_p.antenna().tableName();
-  return a.before("/ANTENNA");
+  return a.erase(a.length()-8);
 }
 
 
