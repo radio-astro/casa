@@ -1,4 +1,4 @@
-//# tFlagAgentBase.cc This file contains the unit tests of the FlagAgentBase class.
+//# tFlagAgentClipping.cc This file contains the unit tests of the FlagAgentBase class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
