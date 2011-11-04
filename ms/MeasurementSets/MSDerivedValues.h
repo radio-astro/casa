@@ -109,6 +109,7 @@ class String;
 
 class MSDerivedValues
 {
+    friend class VisBufferAsync;
 public:
   MSDerivedValues();
   ~MSDerivedValues();

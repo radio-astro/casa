@@ -61,6 +61,7 @@ MSDerivedValues::operator=(const MSDerivedValues& other)
   init();
 
   radialVelocityType_p = other.radialVelocityType_p;
+  mount_p = other.mount_p;
 
   return *this;
 }
