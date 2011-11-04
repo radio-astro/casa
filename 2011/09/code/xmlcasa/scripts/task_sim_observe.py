@@ -517,7 +517,7 @@ def sim_observe(
         if mra['value'] >= 359.999:
             mra['value'] = mra['value'] - 360.
         shift = [ (qa.convert(ra,'deg')['value'] - 
-                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(mdec,'rad')['value'] ), 
+                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
@@ -606,7 +606,7 @@ def sim_observe(
 
             #if offsets.shape[1] > 16 or pb <= 0 or pb > pl.absolute(max(max(lims))):
             if offsets.shape[1] > 19 or pb <= 0:
-                lims = pl.xlim(),pl.ylim()
+                lims = pl.xlim(),pl.ylim()                
                 pl.plot((offsets[0]+shift[0])*3600.,(offsets[1]+shift[1])*3600.,
                         plotcolor+'+',markeredgewidth=1)
                 #if pb > 0 and pl.absolute(lims[0][0]) > pb:
