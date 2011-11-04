@@ -25,6 +25,7 @@
 // Needed for the factory method (create)
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
 #include <flagging/Flagging/FlagAgentClipping.h>
+#include <flagging/Flagging/FlagAgentSummary.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -143,6 +144,7 @@ FlagAgentBase::initialize()
    dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
+   checkFlags_p = false;
 
    /////////////////////////////////
 
@@ -162,15 +164,20 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	}
 	else
 	{
-		cout << "FlagAgentBase::" << __FUNCTION__ << " Mode not provided" << endl;
+		cerr << "FlagAgentBase::" << __FUNCTION__ << " Mode not provided" << endl;
 		return ret;
 	}
 
-	// Manual mode
+	// Write private flags only if extension is required
 	bool writePrivateFlags = false;
+	if ((config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true))
+	{
+		writePrivateFlags = true;
+	}
+
+	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
 		ret = new FlagAgentBase(dh,config,ROWS,writePrivateFlags);
 		return ret;
 	}
@@ -178,7 +185,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Unflag mode
 	if (mode.compare("unflag")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
 		ret = new FlagAgentBase(dh,config,ROWS,writePrivateFlags,false);
 		return ret;
 	}
@@ -186,7 +192,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags);
 		return agent;
 	}
@@ -194,8 +199,14 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Clip
 	if (mode.compare("clip")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
 		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags);
+		return agent;
+	}
+
+	// Summary
+	if (mode.compare("summary")==0)
+	{
+		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
 
@@ -919,6 +930,9 @@ FlagAgentBase::iterateRows()
 	// Set CubeViews in FlagMapper
 	setFlagsMap(NULL,&flagsMap);
 
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
+
 	// Some log info
 	if (multiThreading_p)
 	{
@@ -976,6 +990,9 @@ FlagAgentBase::iterateInRows()
 	// Set CubeViews in FlagMapper
 	setFlagsMap(NULL,&flagsMap);
 
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
+
 	// Some log info
 	if (multiThreading_p)
 	{
@@ -1028,6 +1045,9 @@ FlagAgentBase::iterateAntennaPairs()
 	// Create VisMapper and FlagMapper objects and parse the polarization expression
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
 	FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
+
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
 
 	// Some log info
 	if (multiThreading_p)
@@ -1175,13 +1195,6 @@ void
 FlagAgentBase::computeRowFlags(FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
-	IPosition flagCubeShape = flags.shape();
-	uInt nChannels = flagCubeShape(0);
-	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-	{
-		flags.applyFlag(chan_i,row);
-	}
-
 	return;
 }
 
@@ -1302,6 +1315,16 @@ void FlagAgentList::setProfiling(bool enable)
 	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
 		(*iterator_p)->setProfiling(enable);
+	}
+
+	return;
+}
+
+void FlagAgentList::setCheckMode(bool enable)
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->setCheckMode(enable);
 	}
 
 	return;

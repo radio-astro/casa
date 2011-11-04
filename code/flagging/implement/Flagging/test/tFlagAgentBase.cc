@@ -483,7 +483,7 @@ void checkFlags(string inputFile,Record record,vector<Record> recordList)
 	agentList->setProfiling(false);
 
 	// Enable check mode in the Flag Agent
-	agentList->setCheckMode();
+	agentList->setCheckMode(true);
 
 	// Start Flag Agent
 	agentList->start();

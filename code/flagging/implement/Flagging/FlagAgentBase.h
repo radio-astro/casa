@@ -65,6 +65,9 @@ public:
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
 
+	// Set function to activate check mode
+	void setCheckMode(bool enable) {checkFlags_p = enable;}
+
 
 protected:
 
@@ -185,7 +188,11 @@ private:
 	string expression_p;
 	string dataColumn_p;
 	uShort dataReference_p;
+
+	// Debuging configuration
 	Bool profiling_p;
+	Bool checkFlags_p;
+
 
 	// Running mode configuration
 	uShort iterationApproach_p;
@@ -216,6 +223,7 @@ class FlagAgentList
 		void queueProcess();
 		void completeProcess();
 		void setProfiling(bool enable);
+		void setCheckMode(bool enable);
 
 	protected:
 

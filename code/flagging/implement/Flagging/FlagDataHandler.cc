@@ -1790,5 +1790,16 @@ FlagMapper::applyPrivateFlags(uInt pol, uInt channel, uInt row)
 	return;
 }
 
+void
+FlagMapper::checkCommonFlags(uInt pol, uInt channel, uInt row)
+{
+	// NOTE: Notice that the position is pol,channel,row, not the other way around
+	if (commonFlagsView_p->operator()(pol,channel,row) != flag_p)
+	{
+		cerr << "FlagMapper::" << __FUNCTION__ <<  " Flag missmatch at pol=" << pol << ",channel=" << channel << ",row=" << row << endl;
+	}
+	return;
+}
+
 } //# NAMESPACE CASA - END
 

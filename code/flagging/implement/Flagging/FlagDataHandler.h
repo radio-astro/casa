@@ -345,6 +345,8 @@ public:
 
     vector<uInt> getSelectedCorrelations() {return selectedCorrelations_p;}
 
+    void activateCheckMode() {applyFlag_p = &FlagMapper::checkCommonFlags;}
+
 protected:
 
 	void setExpressionMapping(vector<uInt> selectedCorrelations);
@@ -353,6 +355,8 @@ protected:
 	void applyCommonFlags(uInt pol, uInt channel, uInt row);
 	// Apply flags to common and private flag cubes
 	void applyPrivateFlags(uInt pol, uInt channel, uInt row);
+	// Apply flags to common and private flag cubes
+	void checkCommonFlags(uInt pol, uInt channel, uInt row);
 
 
 private:
