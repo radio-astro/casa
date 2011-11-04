@@ -355,6 +355,7 @@ ROVisIteratorImpl::operator=(const ROVisIteratorImpl& other)
     useNewSlicer_p = other.useNewSlicer_p;
 
   }
+
   return *this;
 }
 

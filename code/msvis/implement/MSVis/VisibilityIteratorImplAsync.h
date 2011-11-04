@@ -101,11 +101,11 @@ public:
                                         Int increment=1,
                                         Int spectralWindow=-1);
 
-    VisibilityIteratorReadImpl& selectChannel(Block< Vector<Int> >& blockNGroup,
-                                        Block< Vector<Int> >& blockStart,
-                                        Block< Vector<Int> >& blockWidth,
-                                        Block< Vector<Int> >& blockIncr,
-                                        Block< Vector<Int> >& blockSpw);
+    VisibilityIteratorReadImpl& selectChannel(const Block< Vector<Int> >& blockNGroup,
+                                        const Block< Vector<Int> >& blockStart,
+                                        const Block< Vector<Int> >& blockWidth,
+                                        const Block< Vector<Int> >& blockIncr,
+                                        const Block< Vector<Int> >& blockSpw);
 
 
     VisibilityIteratorReadImpl&
@@ -175,7 +175,7 @@ public:
     Vector<Double>& lsrFrequency(Vector<Double>& ) const { NotImplementedROVIA; }
     void lsrFrequency(const Int& , Vector<Double>& , Bool& ) { NotImplementedROVIA; }
     const MeasurementSet& ms() const  { NotImplementedROVIA; }
-    const ROMSColumns& msColumns() const { NotImplementedROVIA; }
+    //////const ROMSColumns& msColumns() const { NotImplementedROVIA; }
     Int msId() const  { NotImplementedROVIA; }
     Int nCorr() const { NotImplementedROVIA; }
     Int nRow() const { NotImplementedROVIA; }

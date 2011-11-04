@@ -7,6 +7,7 @@
 #include <msvis/MSVis/VisBufferAsync.h>
 #include <msvis/MSVis/VisibilityIteratorImplAsync.h>
 
+#include <ostream>
 #include <utility>
 #include <boost/lexical_cast.hpp>
 
@@ -33,7 +34,7 @@ AsynchronousInterface::AsynchronousInterface (int maxNBuffers)
   sweepTerminationRequested_p (False),
   viResetComplete_p (False),
   viResetRequested_p (False),
-  vlaData_p (maxNBuffers),
+  vlaData_p (maxNBuffers, mutex_p),
   vlat_p (NULL),
   writeQueue_p ()
 {}
@@ -324,7 +325,7 @@ RoviaModifiers::apply (ROVisibilityIterator * rovi)
     // Free the objects owned by the vector
 
     for (Data::iterator i = data_p.begin(); i != data_p.end(); i++){
-        Log (1, "Applying vi modifier: %s\n", lexical_cast<String> (** i).c_str());
+        Log (1, "Applying vi modifier: %s\n", lexical_cast<string> (** i).c_str());
         (* i) -> apply (rovi);
     }
 
@@ -531,8 +532,9 @@ SetRowBlockingModifier::print (std::ostream & os) const
 
 //Semaphore VlaData::debugBlockSemaphore_p (0); // used to block a thread for debugging
 
-VlaData::VlaData (Int maxNBuffers)
-: MaxNBuffers_p (maxNBuffers)
+VlaData::VlaData (Int maxNBuffers, async::Mutex & mutex)
+: MaxNBuffers_p (maxNBuffers),
+  mutex_p (mutex)
 {
     timing_p.fillCycle_p = DeltaThreadTimes (True);
     timing_p.fillOperate_p = DeltaThreadTimes (True);
@@ -615,7 +617,7 @@ VlaData::fillComplete (VlaDatum * datum)
 Bool
 VlaData::fillCanStart () const
 {
-    LockGuard lg (mutex_p);
+    // Caller must lock
 
     Bool canStart = (int) data_p.size() < MaxNBuffers_p;
 
@@ -830,7 +832,7 @@ VlaData::readStart (SubChunkPair subchunk)
              utilj::format ("Reader wanted subchunk %s while next subchunk is %s",
                             subchunk.toString().c_str(), datum->getSubChunkPair().toString().c_str()));
 
-    Log (2, "VlaData::readStart on (%d, %d)\n", subchunk.toString().c_str());
+    Log (2, "VlaData::readStart on %s\n", subchunk.toString().c_str());
 
     statsEnabled () && (timing_p.read2_p = ThreadTimes(), True);
 

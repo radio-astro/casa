@@ -157,7 +157,7 @@ VisibilityIteratorReadImpl::initialize (const Block<MeasurementSet> &mss)
 VisibilityIteratorReadImpl::VisibilityIteratorReadImpl (const VisibilityIteratorReadImpl & other,
                                                         ROVisibilityIterator * rovi)
 : rovi_p (rovi),
-  selRows_p (other.selRows_p)
+  selRows_p (other.selRows_p) // no default constructor so init it here
 {
     operator=(other);
 }
@@ -1933,49 +1933,56 @@ VisibilityIteratorReadImpl::weightSpectrum (Cube<Float> & wtsp) const
     return wtsp;
 }
 
-Matrix<Float> &
-VisibilityIteratorReadImpl::imagingWeight (Matrix<Float> & wt) const
+const VisImagingWeight &
+VisibilityIteratorReadImpl::getImagingWeightGenerator () const
 {
-    if (imwgt_p.getType () == "none") {
-        throw (AipsError ("Programmer Error... imaging weights not set"));
-    }
-    Vector<Float> weightvec;
-    weight (weightvec);
-    Matrix<Bool> flagmat;
-    flag (flagmat);
-    wt.resize (flagmat.shape ());
-    if (imwgt_p.getType () == "uniform") {
-        Vector<Double> fvec;
-        frequency (fvec);
-        Matrix<Double> uvwmat;
-        uvwMat (uvwmat);
-        imwgt_p.weightUniform (wt, flagmat, uvwmat, fvec, weightvec, msId (), fieldId ());
-        if (imwgt_p.doFilter ()) {
-            imwgt_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
-        }
-    } else if (imwgt_p.getType () == "radial") {
-        Vector<Double> fvec;
-        frequency (fvec);
-        Matrix<Double> uvwmat;
-        uvwMat (uvwmat);
-        imwgt_p.weightRadial (wt, flagmat, uvwmat, fvec, weightvec);
-        if (imwgt_p.doFilter ()) {
-            imwgt_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
-        }
-    } else {
-        imwgt_p.weightNatural (wt, flagmat, weightvec);
-        if (imwgt_p.doFilter ()) {
-            Matrix<Double> uvwmat;
-            uvwMat (uvwmat);
-            Vector<Double> fvec;
-            frequency (fvec);
-            imwgt_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
-
-        }
-    }
-
-    return wt;
+    return imwgt_p;
 }
+
+
+//Matrix<Float> &
+//VisibilityIteratorReadImpl::imagingWeight (Matrix<Float> & wt) const
+//{
+//    if (imwgt_p.getType () == "none") {
+//        throw (AipsError ("Programmer Error... imaging weights not set"));
+//    }
+//    Vector<Float> weightvec;
+//    weight (weightvec);
+//    Matrix<Bool> flagmat;
+//    flag (flagmat);
+//    wt.resize (flagmat.shape ());
+//    if (imwgt_p.getType () == "uniform") {
+//        Vector<Double> fvec;
+//        frequency (fvec);
+//        Matrix<Double> uvwmat;
+//        uvwMat (uvwmat);
+//        imwgt_p.weightUniform (wt, flagmat, uvwmat, fvec, weightvec, msId (), fieldId ());
+//        if (imwgt_p.doFilter ()) {
+//            imwgt_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
+//        }
+//    } else if (imwgt_p.getType () == "radial") {
+//        Vector<Double> fvec;
+//        frequency (fvec);
+//        Matrix<Double> uvwmat;
+//        uvwMat (uvwmat);
+//        imwgt_p.weightRadial (wt, flagmat, uvwmat, fvec, weightvec);
+//        if (imwgt_p.doFilter ()) {
+//            imwgt_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
+//        }
+//    } else {
+//        imwgt_p.weightNatural (wt, flagmat, weightvec);
+//        if (imwgt_p.doFilter ()) {
+//            Matrix<Double> uvwmat;
+//            uvwMat (uvwmat);
+//            Vector<Double> fvec;
+//            frequency (fvec);
+//            imwgt_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
+//
+//        }
+//    }
+//
+//    return wt;
+//}
 
 Int
 VisibilityIteratorReadImpl::nSubInterval () const
@@ -2147,11 +2154,11 @@ VisibilityIteratorReadImpl::selectChannel (Int nGroup, Int start, Int width,
 }
 
 VisibilityIteratorReadImpl &
-VisibilityIteratorReadImpl::selectChannel (Block<Vector<Int> > & blockNGroup,
-        Block<Vector<Int> > & blockStart,
-        Block<Vector<Int> > & blockWidth,
-        Block<Vector<Int> > & blockIncr,
-        Block<Vector<Int> > & blockSpw)
+VisibilityIteratorReadImpl::selectChannel (const Block<Vector<Int> > & blockNGroup,
+                                           const Block<Vector<Int> > & blockStart,
+                                           const Block<Vector<Int> > & blockWidth,
+                                           const Block<Vector<Int> > & blockIncr,
+                                           const Block<Vector<Int> > & blockSpw)
 {
     /*
     No longer needed
@@ -2351,7 +2358,7 @@ VisibilityIteratorReadImpl::getSpwInFreqRange (Block<Vector<Int> > & spw,
         Double freqStart,
         Double freqEnd,
         Double freqStep,
-        MFrequency::Types freqframe)
+        MFrequency::Types freqframe) const
 {
     // This functionality was relocated from MSIter in order to support this operation
     // within the VI to make the VisibilityIteratorReadImplAsync implementation feasible.

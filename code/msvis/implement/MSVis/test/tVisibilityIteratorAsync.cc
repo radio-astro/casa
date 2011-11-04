@@ -36,13 +36,17 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/BasicSL/Constants.h>
+#include <casa/System/Aipsrc.h>
 #include <memory>
 #include <mcheck.h>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 
 using namespace std;
 using namespace casa::utilj;
 using namespace casa;
 using namespace casa::asyncio;
+using namespace boost;
 
 #include <tables/Tables/ForwardCol.h>
 
@@ -78,18 +82,92 @@ Double BufferInfo::tolerance_p = 0;
 
 typedef vector<BufferInfo> Buffers;
 
+class Rovia_Test_Configuration;
+
 class Rovia_Test {
 
 public:
 
-    static void compareTimesAsyncToSync (const String & msName);
-    static void compareWeightsAsyncToSync (const String & msNameSync, const String & msNameAsync);
+    static Bool compareComponents (const String & msNameSync,
+                                   const String & msNameAsync,
+                                   const String & componentName,
+                                   String (* compareComponentSubchunk) (int, int, Rovia_Test_Configuration &));
+    static String compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc);
+    static String compareImagingWeights (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc);
+    static Bool compareTimesAsyncToSync (const String & msName);
+    static Bool compareWeightsAsyncToSync (const String & msNameSync, const String & msNameAsync);
     static void fillWeights (VisibilityIterator & vi, VisBuffer & vb);
     static void fillWeightsBoth (const String & msNameSync, const String & msNameAsync);
     static void sweepAsync (const String & msName, Buffers & buffers);
     static void sweepSync (const String & msName, Buffers & buffers);
     static void sweepVi (ROVisibilityIterator & vi, VisBuffer & vb, Buffers & buffers);
+
 };
+
+class Rovia_Test_Configuration {
+
+public:
+
+    Rovia_Test_Configuration (const String & msNameSync, const String & msNameAsync,
+                              const PrefetchColumns * prefetchColumnsParam = NULL)
+    : msAsync (0),
+      msSync (0),
+      vbAsync (),
+      vbSync (0),
+      viAsync (0),
+      viSync (0)
+    {
+        msSync = new MeasurementSet (msNameSync, Table::Update);
+        Block<Int> bi(0); // create empty block with sortColumns
+
+        viSync = new ROVisibilityIterator (* msSync, bi);
+        vbSync = new VisBuffer (* viSync);
+
+
+        PrefetchColumns prefetchColumns;
+
+        if (prefetchColumnsParam == NULL){
+            prefetchColumns =
+                    PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
+                                                     VisBufferComponents::Ant2,
+                                                     VisBufferComponents::Freq,
+                                                     VisBufferComponents::Time,
+                                                     VisBufferComponents::ObservedCube,
+                                                     VisBufferComponents::Sigma,
+                                                     VisBufferComponents::Flag,
+                                                     VisBufferComponents::Uvw,
+                                                     -1);
+        }
+        else{
+            prefetchColumns = * prefetchColumnsParam;
+        }
+
+        msAsync = new MeasurementSet (msNameAsync, Table::Update);
+
+        viAsync = new ROVisibilityIterator (& prefetchColumns, * msAsync, bi);
+        vbAsync.set (* viAsync, True);
+    }
+
+    ~Rovia_Test_Configuration ()
+    {
+        delete msAsync;
+        delete msSync;
+        delete vbSync;
+        delete vbAsync.release();
+        delete viAsync;
+        delete viSync;
+    }
+
+    MeasurementSet * msAsync;
+    MeasurementSet * msSync;
+    VisBufferAutoPtr vbAsync;
+    VisBuffer * vbSync;
+    ROVisibilityIterator * viAsync;
+    ROVisibilityIterator * viSync;
+};
+
+
+
 
 }
 
@@ -99,6 +177,9 @@ main(int argc, char **argv)
 {
     // register forward col engine
     ForwardColumnEngine::registerClass();
+
+    uInt vid = Aipsrc::registerRC ("VisibilityIterator.disabled", "");
+    Aipsrc::set (vid, "True"); // force async enabled
 
     if (argc<2) {
         cout <<"Usage: tVisibilityIterator ms-table-name"<<endl;
@@ -111,10 +192,23 @@ main(int argc, char **argv)
 
         mtrace();
 
-        Rovia_Test::compareTimesAsyncToSync (argv[1]);
-        Rovia_Test::compareWeightsAsyncToSync (argv[1], argv[2]);
+        Bool ok = True;
+        ok = Rovia_Test::compareComponents (argv[1], argv[2], "Imaging Weights", Rovia_Test::compareImagingWeights) && ok;
+        ok = Rovia_Test::compareTimesAsyncToSync (argv[1]) && ok;
+        ok = Rovia_Test::compareComponents (argv[1], argv[2], "Flag Cubes", Rovia_Test::compareFlagCubes) && ok;
+        ok = Rovia_Test::compareWeightsAsyncToSync (argv[1], argv[2]) && ok;
+
+        if (ok){
+            cout << "--- Passed all tests!" << endl;
+        }
+        else{
+            cout << "***" << endl;
+            cout << "***" << " Failed one or more tests ;-(" << endl;
+            cout << "***" << endl;
+        }
 
         cout << "Exiting scope of tVisibilityIterator" << endl;
+
     } catch (AipsError x) {
         cout << "Caught exception " << endl;
         cout << x.getMesg() << endl;
@@ -126,10 +220,130 @@ main(int argc, char **argv)
 
 namespace casa {
 
-void
+String
+Rovia_Test::compareFlagCubes (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
+{
+    ostringstream out;
+
+    Cube<Bool> flagCubeSync = rtc.vbSync->flagCube ();
+    Cube<Bool> flagCubeAsync = rtc.vbAsync->flagCube ();
+
+    boost::tuple<Int,Int,Int> dimsSync (flagCubeSync.nrow(), flagCubeSync.ncolumn(),flagCubeSync.nplane());
+    boost::tuple<Int,Int,Int> dimsAsync (flagCubeAsync.nrow(), flagCubeAsync.ncolumn(),flagCubeAsync.nplane());
+
+    if (dimsSync != dimsAsync){
+        out << "Flag Cube dims mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
+        out << "Sync dims = " << get<0> (dimsSync) << ". "
+                << get<1> (dimsSync) << ". "
+                << get<2> (dimsSync) << endl;
+        out << "Async dims = " << get<0> (dimsAsync) << ". "
+                << get<1> (dimsAsync) << ". "
+                << get<2> (dimsAsync) << endl;
+
+        return out.str();
+    }
+
+    for (int i = 0; i < (int) flagCubeSync.nrow(); i++){
+        for (int j = 0; j < (int) flagCubeSync.ncolumn(); j++){
+            for (int k = 0; k < (int) flagCubeSync.nplane (); k++){
+
+                if (flagCubeSync (i,j,k) != flagCubeAsync (i,j,k)){
+
+                    out << "Flag Cube dims mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
+                    out << "flagCubeSync (" << i << "," << j << "," << k << ") = " << flagCubeSync(i,j,k) << endl;
+                    out << "flagCubeAsync (" << i << "," << j << "," << k << ") = " << flagCubeAsync(i,j,k) << endl;
+
+                    return out.str();
+                }
+
+            }
+        }
+    }
+
+    return "";
+}
+
+//void
+//Rovia_Test::compareFlagCubes (const String & msNameSync, const String & msNameAsync)
+//{
+//
+//    cout << "---Comparing flag cubes ..." << endl;
+//
+//    PrefetchColumns prefetchColumns =
+//            PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
+//                                             VisBufferComponents::Ant2,
+//                                             VisBufferComponents::FlagCube,
+//                                             VisBufferComponents::Time,
+//                                             VisBufferComponents::ObservedCube,
+//                                             VisBufferComponents::Sigma,
+//                                             VisBufferComponents::Flag,
+//                                             VisBufferComponents::Uvw,
+//                                             -1);
+//
+//    Rovia_Test_Configuration rtc (msNameSync, msNameAsync, & prefetchColumns);
+//
+//    int chunkNumber, subchunkNumber;
+//
+//    for (rtc.viSync->originChunks(), rtc.viAsync->originChunks (), chunkNumber = 0;
+//         rtc.viSync->moreChunks();
+//         rtc.viSync->nextChunk(), rtc.viAsync->nextChunk(), chunkNumber ++){
+//
+//        for (rtc.viSync->origin (), rtc.viAsync->origin(), subchunkNumber = 0;
+//             rtc.viSync->more();
+//             (* rtc.viSync) ++, (* rtc.viAsync) ++, subchunkNumber ++){
+//        }
+//
+//        Cube<Bool> flagCubeSync = rtc.vbSync->flagCube ();
+//        Cube<Bool> flagCubeAsync = rtc.vbAsync->flagCube ();
+//
+//        boost::tuple<Int,Int,Int> dimsSync (flagCubeSync.nrow(), flagCubeSync.ncolumn(),flagCubeSync.nplane());
+//        boost::tuple<Int,Int,Int> dimsAsync (flagCubeAsync.nrow(), flagCubeAsync.ncolumn(),flagCubeAsync.nplane());
+//
+//        if (dimsSync != dimsAsync){
+//            cout << "Flag Cube dims mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
+//            cout << "Sync dims = " << get<0> (dimsSync) << ". "
+//                                   << get<1> (dimsSync) << ". "
+//                                   << get<2> (dimsSync) << endl;
+//            cout << "Async dims = " << get<0> (dimsAsync) << ". "
+//                                    << get<1> (dimsAsync) << ". "
+//                                    << get<2> (dimsAsync) << endl;
+//
+//            goto done;
+//        }
+//
+//        for (int i = 0; i < (int) flagCubeSync.nrow(); i++){
+//            for (int j = 0; j < (int) flagCubeSync.ncolumn(); j++){
+//                for (int k = 0; k < (int) flagCubeSync.nplane (); k++){
+//
+//                    if (flagCubeSync (i,j,k) != flagCubeAsync (i,j,k)){
+//
+//                        cout << "Flag Cube dims mismatch at (" << chunkNumber << "," << subchunkNumber << ")" << endl;
+//                        cout << "flagCubeSync (" << i << "," << j << "," << k << ") = " << flagCubeSync(i,j,k) << endl;
+//                        cout << "flagCubeAsync (" << i << "," << j << "," << k << ") = " << flagCubeAsync(i,j,k) << endl;
+//                        goto done;
+//                    }
+//
+//                }
+//            }
+//        }
+//
+//    }
+//
+//    cout << "... Passed Flag Cube Test" << endl;
+//
+//    return;
+//
+//done:
+//
+//    cout << "*** Failed Flag Cube Test" << endl;
+//
+//    return;
+//}
+
+Bool
 Rovia_Test::compareWeightsAsyncToSync (const String & msNameSync, const String & msNameAsync)
 {
-    cout << "\n--- Starting Write Tests:\n\n";
+    cout << "\n--- Starting Write Tests ...\n\n";
 
     // Fill the weights column of both MSs with a ramp
 
@@ -184,17 +398,21 @@ Rovia_Test::compareWeightsAsyncToSync (const String & msNameSync, const String &
         }
     }
 
-    cout << "Comparison of written 'weight' data was successful!!!" << endl;
+    cout << "... Comparison of written 'weight' data was successful!!!" << endl;
+    return True;
 
 done:
 
-    return;
+    cout << "*** Failed write test " << endl;
+    return False;
 
 }
 
-void
+Bool
 Rovia_Test::compareTimesAsyncToSync (const String & msName)
 {
+    cout << "---Comparing Times ..." << endl;
+
     Buffers asyncBuffers, syncBuffers;
     sweepSync (msName, syncBuffers);
     sweepAsync (msName, asyncBuffers);
@@ -249,19 +467,84 @@ Rovia_Test::compareTimesAsyncToSync (const String & msName)
             cout << "a=" << aText << "; b=" << sText << "; dt=" << dt << endl;
     }
 
+    Bool result = True;
+
     if (syncBuffers.size() != asyncBuffers.size()){
         cout << "Different number of buffers: nSync=" << syncBuffers.size()
              << "; nAsync=" << asyncBuffers.size() << endl;
+        cout << "*** Failed Time Comparison test" << endl;
+
+        result = False;
+
     }
     else {
         cout << "ROVI and ROVIA results match.  " << asyncBuffers.size() << " buffers read." << endl;
+        cout << "... Passed Time Comparison test" << endl;
     }
     Int n = asyncBuffers.size();
     Double avg = sumDt / n;
     Double stdDev = sqrt (sumDtSq / n - avg * avg) * (n / (n - 1.0));
     cout << format ("max(dt)=%f; avg(dt)=%f; stdev(dt)=%f (%f %%)", maxDt, avg, stdDev, stdDev / avg * 100) << endl;
 
+    return result;
+
 }
+
+Bool
+Rovia_Test::compareComponents (const String & msNameSync, const String & msNameAsync,
+                               const String & componentName,
+                               String (* compareComponentSubchunk) (int, int, Rovia_Test_Configuration &))
+{
+
+    cout << "---Comparing " << componentName << " ..." << endl;
+
+    PrefetchColumns prefetchColumns =
+            PrefetchColumns::prefetchColumns(VisBufferComponents::Ant1,
+                                             VisBufferComponents::Ant2,
+                                             VisBufferComponents::FlagCube,
+                                             VisBufferComponents::Time,
+                                             VisBufferComponents::ObservedCube,
+                                             VisBufferComponents::Sigma,
+                                             VisBufferComponents::Flag,
+                                             VisBufferComponents::Uvw,
+                                             VisBufferComponents::Weight,
+                                             -1);
+
+    Rovia_Test_Configuration rtc (msNameSync, msNameAsync, & prefetchColumns);
+
+    int chunkNumber, subchunkNumber;
+
+    for (rtc.viSync->originChunks(), rtc.viAsync->originChunks (), chunkNumber = 0;
+            rtc.viSync->moreChunks();
+            rtc.viSync->nextChunk(), rtc.viAsync->nextChunk(), chunkNumber ++){
+
+        for (rtc.viSync->origin (), rtc.viAsync->origin(), subchunkNumber = 0;
+                rtc.viSync->more();
+                (* rtc.viSync) ++, (* rtc.viAsync) ++, subchunkNumber ++){
+
+            String message = compareComponentSubchunk (chunkNumber, subchunkNumber, rtc);
+
+            if (! message.empty()){
+
+                cout << message << endl;
+                goto done;
+            }
+        }
+    }
+
+    cout << "... Passed " << componentName << " Test" << endl;
+
+    return True;
+
+done:
+
+    cout << "***" << endl;
+    cout << "*** Failed " << componentName << " Test" << endl;
+    cout << "***" << endl;
+
+    return False;
+}
+
 
 void
 Rovia_Test::sweepAsync (const String & msName, Buffers & buffers)
@@ -328,7 +611,7 @@ Rovia_Test::fillWeights (VisibilityIterator & vi, VisBuffer & vb)
 
             Vector<Float> weights = vb.weight ();
 
-	    cout << "Writing subchunk (" << chunkNumber << "," << subchunkNumber << ") [0] = " << n << endl;
+	    //cout << "Writing subchunk (" << chunkNumber << "," << subchunkNumber << ") [0] = " << n << endl;
 
             for (Vector<Float>::iterator i = weights.begin(); i != weights.end(); i++){
                 * i = n ++;
@@ -373,6 +656,52 @@ Rovia_Test:: fillWeightsBoth (const String & msNameSync, const String & msNameAs
 
     fillWeights (asyncVi, * asyncVb);
 }
+
+String
+Rovia_Test::compareImagingWeights (int chunkNumber, int subchunkNumber, Rovia_Test_Configuration & rtc)
+{
+    static Bool initialized = False;
+
+
+    if (! initialized){
+        initialized = True;
+        rtc.viSync->useImagingWeight (VisImagingWeight ("natural"));
+        rtc.viAsync->useImagingWeight (VisImagingWeight ("natural"));
+    }
+
+    Matrix<Float> iwSync = rtc.vbSync->imagingWeight();
+    Matrix<Float> iwAsync = rtc.vbAsync->imagingWeight();
+
+    Float syncMin, syncMax;
+    IPosition minPos, maxPos;
+
+    minMax (syncMin, syncMax, minPos, maxPos, iwSync);
+
+    Bool ok = allNearAbs (iwSync, iwAsync, syncMax * 1e-6);
+
+    String message = ok ? "" : utilj::format ("Imaging weight comparison failure at subchunk (%d,%d)",
+                                              chunkNumber, subchunkNumber);
+
+    if (! ok){
+
+        if (iwSync.nrow() != iwAsync.nrow() || iwSync.ncolumn() != iwAsync.ncolumn()){
+            message += utilj::format ("\nDimension mismatch: sync (%d,%d) != async (%d,%d)",
+                                      iwSync.nrow(), iwSync.ncolumn(), iwAsync.nrow() , iwAsync.ncolumn());
+        }
+
+        for (int i = 0; i < (int) iwSync.nrow(); i++){
+            for (int j = 0; j < (int) iwSync.ncolumn(); j++){
+                if (abs(iwSync(i,j) - iwAsync(i,j)) > 1e-6){
+                    message += utilj::format ("\nValue mismatch at (%d,%d): sync=%f, async=%f",
+                                              i, j, iwSync(i,j), iwAsync(i,j));
+                }
+            }
+        }
+    }
+
+    return message;
+}
+
 
 }
 

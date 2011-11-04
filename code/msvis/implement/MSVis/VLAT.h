@@ -77,13 +77,17 @@ class VlatFunctor {
 
 public:
 
+
+    VlatFunctor (const String & name, Int precedence = 0)
+    : id_p (VisBufferComponents::N_VisBufferComponents), name_p (name), precedence_p (precedence)
+    {}
     VlatFunctor (Int precedence = 0)
-    : id_p (VisBufferComponents::N_VisBufferComponents), precedence_p (precedence)
+    : id_p (VisBufferComponents::N_VisBufferComponents), name_p ("NotSpecified"), precedence_p (precedence)
     {}
     virtual ~VlatFunctor () {}
 
-    virtual void operator() (VisBuffer *) = 0;
-    virtual VlatFunctor * clone () = 0;
+    virtual void operator() (VisBuffer *); // Throws an error if not overridden
+    virtual VlatFunctor * clone () { return new VlatFunctor (* this);}
 
     VisBufferComponents::EnumType getId () const { return id_p;}
     void setId (VisBufferComponents::EnumType id) { id_p = id;}
@@ -98,6 +102,7 @@ public:
 private:
 
     VisBufferComponents::EnumType id_p;
+    String name_p;
     Int precedence_p;
 
 };
@@ -250,7 +255,7 @@ protected:
     };
     typedef vector<VlatFunctor *> Fillers;
 
-    void applyModifiers (ROVisibilityIterator * rovi);
+    void applyModifiers (ROVisibilityIterator * rovi, VisibilityIterator * vi);
     void alignWriteIterator (SubChunkPair subchunk);
     void checkFiller (VisBufferComponents::EnumType id);
     void createFillerDictionary ();

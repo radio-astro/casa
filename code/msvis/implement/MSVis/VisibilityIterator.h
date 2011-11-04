@@ -461,7 +461,7 @@ public:
   // Return weightspectrum (a weight for each channel)
   Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
   // Return imaging weight (a weight for each channel)
-  Matrix<Float>& imagingWeight(Matrix<Float>& wt) const;
+  //Matrix<Float>& imagingWeight(Matrix<Float>& wt) const;
   // Return True if FieldId/Source has changed since last iteration
   Bool newFieldId() const;
   // Return True if arrayID has changed since last iteration
@@ -577,6 +577,8 @@ public:
   void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
   //assign a VisImagingWeight object to this iterator
   void useImagingWeight(const VisImagingWeight& imWgt);
+  const VisImagingWeight & getImagingWeightGenerator () const;
+
   //return number  of Ant 
   Int numberAnt();
   //Return number of rows in all selected ms's

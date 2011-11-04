@@ -466,7 +466,8 @@ public:
     virtual Cube<Float> & weightSpectrum (Cube<Float> & wtsp) const;
 
     // Return imaging weight (a weight for each channel)
-    virtual Matrix<Float> & imagingWeight (Matrix<Float> & wt) const;
+    //virtual Matrix<Float> & imagingWeight (Matrix<Float> & wt) const;
+    const VisImagingWeight & getImagingWeightGenerator () const;
 
     // Return True if FieldId/Source has changed since last iteration
     virtual Bool newFieldId () const {
@@ -557,11 +558,11 @@ public:
 
     //Same as above except when multiple ms's are to be accessed
 
-    virtual VisibilityIteratorReadImpl & selectChannel (Block< Vector<Int> > & blockNGroup,
-                                                        Block< Vector<Int> > & blockStart,
-                                                        Block< Vector<Int> > & blockWidth,
-                                                        Block< Vector<Int> > & blockIncr,
-                                                        Block< Vector<Int> > & blockSpw);
+    virtual VisibilityIteratorReadImpl & selectChannel (const Block< Vector<Int> > & blockNGroup,
+                                                        const Block< Vector<Int> > & blockStart,
+                                                        const Block< Vector<Int> > & blockWidth,
+                                                        const Block< Vector<Int> > & blockIncr,
+                                                        const Block< Vector<Int> > & blockSpw);
 
 
     //get the channel selection ...the block over the number of ms's associated
@@ -589,7 +590,7 @@ public:
                                     Block<Vector<Int> > & start,
                                     Block<Vector<Int> > & nchan,
                                     Double freqStart, Double freqEnd,
-                                    Double freqStep, MFrequency::Types freqFrame = MFrequency::LSRK);
+                                    Double freqStep, MFrequency::Types freqFrame = MFrequency::LSRK) const;
 
     // Attach a VisBuffer object.
     // Note that while more than one VisBuffer may be attached, only the
@@ -900,7 +901,7 @@ protected:
     Int                     curStartRow_p;
     Int                     curTableNumRow_p;
     Bool                    floatDataFound_p;
-    VisImagingWeight        imwgt_p;    //object to calculate imaging weight
+    VisImagingWeight        imwgt_p;    // object to calculate imaging weight
     Bool                    initialized_p;
     Bool                    isMultiMS_p;
     MeasurementSets         measurementSets_p; // [use]

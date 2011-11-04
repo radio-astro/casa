@@ -365,7 +365,7 @@ class VlaData {
 
 public:
 
-    VlaData (Int maxNBuffers);
+    VlaData (Int maxNBuffers, async::Mutex & mutex);
     ~VlaData ();
 
     Bool fillCanStart () const;
@@ -420,7 +420,7 @@ private:
     Data                          data_p;             // Buffer queue
     const AsynchronousInterface * interface_p;
     const Int                     MaxNBuffers_p;
-    mutable async::Mutex          mutex_p;
+    async::Mutex &                mutex_p; // provided by Asynchronous interface
     Timing                        timing_p;
     mutable ValidChunks           validChunks_p;       // Queue of valid chunk numbers
     mutable ValidSubChunks        validSubChunks_p; // Queue of valid subchunk pairs

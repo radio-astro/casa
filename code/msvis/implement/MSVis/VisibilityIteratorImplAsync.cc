@@ -70,6 +70,36 @@ ViReadImplAsync::ViReadImplAsync (const PrefetchColumns & prefetchColumns,
 
     construct (mss, prefetchColumns, other.sortColumns_p,
                other.addDefaultSort_p, other.timeInterval_p, writable);
+
+    imwgt_p = other.imwgt_p;
+
+    // Pass over to the VLAT some of the VI modifiers if they are
+    // not at the default value.
+
+    Bool needViReset = False;
+
+    if (other.timeInterval_p != 0){
+        setInterval (other.timeInterval_p);
+        needViReset = True;
+    }
+
+    if (other.nRowBlocking_p != 0){
+        setRowBlocking (other.nRowBlocking_p);
+        needViReset = True;
+    }
+
+    if (other.msChannels_p.nGroups_p.nelements() != 0){
+        selectChannel (other.msChannels_p.nGroups_p,
+                       other.msChannels_p.start_p,
+                       other.msChannels_p.width_p,
+                       other.msChannels_p.inc_p,
+                       other.msChannels_p.spw_p);
+        needViReset = True;
+    }
+
+    if (needViReset){
+        originChunks ();
+    }
 }
 
 
@@ -378,9 +408,13 @@ ViReadImplAsync::nextChunk ()
     // object to expect to access the first subchunk of the next
     // chunk
 
-    readComplete (); // complete any pending read
-
     subchunk_p.incrementChunk ();
+
+    if (moreChunks()){
+
+        readComplete (); // complete any pending read
+
+    }
 
     return * this;
 }
@@ -402,18 +436,10 @@ ViReadImplAsync::originChunks ()
 {
     readComplete (); // complete any pending read
 
-    Bool atOrigin = subchunk_p.atOrigin ();
 
-    if (! atOrigin){
+    subchunk_p.resetToOrigin ();
 
-        subchunk_p.resetToOrigin ();
-
-        interface_p->requestViReset ();
-    }
-
-//    if (linkedVisibilityIterator_p != NULL){
-//        linkedVisibilityIterator_p->originChunks ();
-//    }
+    interface_p->requestViReset ();
 }
 
 
@@ -493,11 +519,11 @@ ViReadImplAsync::selectChannel(Int nGroup,
 }
 
 VisibilityIteratorReadImpl&
-ViReadImplAsync::selectChannel(Block< Vector<Int> >& blockNGroup,
-                               Block< Vector<Int> >& blockStart,
-                               Block< Vector<Int> >& blockWidth,
-                               Block< Vector<Int> >& blockIncr,
-                               Block< Vector<Int> >& blockSpw)
+ViReadImplAsync::selectChannel(const Block< Vector<Int> >& blockNGroup,
+                               const Block< Vector<Int> >& blockStart,
+                               const Block< Vector<Int> >& blockWidth,
+                               const Block< Vector<Int> >& blockIncr,
+                               const Block< Vector<Int> >& blockSpw)
 {
     SelectChannelModifier * scm = new SelectChannelModifier (blockNGroup, blockStart, blockWidth,
                                                              blockIncr, blockSpw);

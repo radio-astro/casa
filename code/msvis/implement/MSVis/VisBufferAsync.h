@@ -52,7 +52,10 @@ public:
     virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const;
     virtual const ROMSColumns& msColumns() const;
     Int msId () const;
+    virtual Bool newArrayId () const;
+    virtual Bool newFieldId () const;
     Bool newMS() const;
+    virtual Bool newSpectralWindow () const;
     Int nRowChunk() const{
       return nRowChunk_p;
     }
@@ -108,6 +111,7 @@ protected:
     void setMSD (const MSDerivedValues & msd);
     void setNAntennas (Int);
     void setNCoh (Int);
+    void setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpectralWindow);
     void setNRowChunk (Int);
     void setReceptor0Angle (const Vector<Float> & receptor0Angle);
     void setRowIds (const Vector<uInt> & rowIds);
@@ -137,6 +141,9 @@ private:
     MSDerivedValues *              msd_p; // [own]
     Int                            nAntennas_p;
     Int                            nCoh_p;
+    Bool                           newArrayId_p;
+    Bool                           newFieldId_p;
+    Bool                           newSpectralWindow_p;
     Int                            nRowChunk_p;
     //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;

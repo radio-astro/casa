@@ -126,25 +126,22 @@ VisBufferAsync::allSelectedSpectralWindows(Vector<Int> & spectralWindows,
 VisBufferAsync &
 VisBufferAsync::assign (const VisBuffer & other, Bool copy)
 {
-
-    //    assert (copy); // The copy parameter is ignored since it makes no sense to
-    //                   // assign a VBA without copying its values
-
-    Log (2, "Assign from VisBufferAsync @ 0x%08x to VisBufferAsync @ 0x%08x\n", & other, this);
-
-    Assert (dynamic_cast<const VisBufferAsync *> (& other) != NULL);
-    Assert (visIter_p == NULL); // shouldn't be attached at sync level
-
-    if (other.corrSorted_p)
-        throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));
-
     if (this != & other){
 
-        // Detach from visibility iterator if attached
+        //    assert (copy); // The copy parameter is ignored since it makes no sense to
+        //                   // assign a VBA without copying its values
+
+        Log (2, "Assign from VisBufferAsync @ 0x%08x to VisBufferAsync @ 0x%08x\n", & other, this);
+
+        Assert (dynamic_cast<const VisBufferAsync *> (& other) != NULL);
+        Assert (visIter_p == NULL); // shouldn't be attached at sync level
+
+        if (other.corrSorted_p)
+            throw(AipsError("Cannot assign a VisBuffer that has had correlations sorted!"));
 
         if (copy){
 
-            // Let the standard VisBuffer to the copying of values
+            // Let the standard VisBuffer do the copying of values
             // from the old VisBuffer
 
             copyCache (other, False);
@@ -152,11 +149,6 @@ VisBufferAsync::assign (const VisBuffer & other, Bool copy)
             // Copy over the async values
 
             copyAsyncValues (dynamic_cast<const VisBufferAsync &> (other));
-
-            // Do not retain any connection to the other's visibility
-            // iterator.
-
-            visIter_p = NULL;
 
         }
     }
@@ -376,10 +368,14 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     measurementSet_p = other.measurementSet_p;
     mEpoch_p = other.mEpoch_p;
 
+
     delete msColumns_p; // kill the current one
     msColumns_p = NULL;
 
     nAntennas_p = other.nAntennas_p;
+    newArrayId_p = other.newArrayId_p;
+    newFieldId_p = other.newFieldId_p;
+    newSpectralWindow_p = other.newSpectralWindow_p;
     nRowChunk_p = other.nRowChunk_p;
 //    obsMFreqTypes_p = other.obsMFreqTypes_p;
     observatoryPosition_p = other.observatoryPosition_p;
@@ -391,6 +387,8 @@ VisBufferAsync::copyAsyncValues (const VisBufferAsync & other)
     selFreq_p = other.selFreq_p;
     velSelection_p = other.velSelection_p;
     visibilityShape_p = other.visibilityShape_p;
+
+    setMSD (* other.msd_p);
 }
 
 
@@ -641,6 +639,25 @@ VisBufferAsync::msId () const
 }
 
 Bool
+VisBufferAsync::newArrayId () const
+{
+    return newArrayId_p;
+}
+
+Bool
+VisBufferAsync::newFieldId () const
+{
+    return newFieldId_p;
+}
+
+Bool
+VisBufferAsync::newSpectralWindow () const
+{
+    return newSpectralWindow_p;
+}
+
+
+Bool
 VisBufferAsync::newMS() const
 {
     return newMS_p;
@@ -650,7 +667,7 @@ VisBufferAsync::newMS() const
 Int
 VisBufferAsync::numberAnt () const
 {
-  return msColumns().antenna().nrow(); // for single (sub)array only..
+  return nAntennas_p;
 }
 
 Int
@@ -787,32 +804,29 @@ VisBufferAsync::setModelVisCube(Complex c)
 void
 VisBufferAsync::setMSD (const MSDerivedValues & msd)
 {
-
     msd_p->setEpoch (mEpoch_p);
 
-    if (newMS_p){
-        // set antennas
+    // set antennas
 
-        const Vector<MPosition> & antennaPositions = msd.getAntennaPositions();
-        Vector<MPosition> unsharedAntennaPositions (antennaPositions.nelements());
+    const Vector<MPosition> & antennaPositions = msd.getAntennaPositions();
+    Vector<MPosition> unsharedAntennaPositions (antennaPositions.nelements());
 
-        for (Vector<MPosition>::const_iterator ap = antennaPositions.begin();
-             ap != antennaPositions.end();
-             ap ++){
+    for (Vector<MPosition>::const_iterator ap = antennaPositions.begin();
+            ap != antennaPositions.end();
+            ap ++){
 
-            unsharedAntennaPositions = unsharedCopyPosition (* ap);
-
-        }
-
-        msd_p->setAntennaPositions (unsharedAntennaPositions);
+        unsharedAntennaPositions = unsharedCopyPosition (* ap);
     }
+
+    msd_p->setAntennaPositions (unsharedAntennaPositions);
+
+    msd_p->mount_p.assign (msd.mount_p);
 
     msd_p->setObservatoryPosition (observatoryPosition_p);
 
     msd_p->setFieldCenter (phaseCenter_p);
 
     msd_p->setVelocityFrame (msd.getRadialVelocityType ());
-
 }
 
 
@@ -826,6 +840,14 @@ void
 VisBufferAsync::setNCoh (Int nCoh)
 {
     nCoh_p = nCoh;
+}
+
+void
+VisBufferAsync::setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpectralWindow)
+{
+    newArrayId_p = newArrayId;
+    newFieldId_p = newFieldId;
+    newSpectralWindow_p = newSpectralWindow;
 }
 
 

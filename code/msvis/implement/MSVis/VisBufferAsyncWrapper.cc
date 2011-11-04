@@ -346,14 +346,14 @@ VisBufferAsyncWrapper::detachFromVisIter ()
 {
     Log (2, "VBAW::detachFromVisIterAsync this=%08x, iter=%08x\n", this, wrappedVisIterAsync_p);
 
-	if (wrappedVisIterAsync_p != NULL){
+    if (wrappedVisIterAsync_p != NULL){
 
-	    Log (2, "VisBufferAsyncWrapper::detachFromVisIter this=%08x\n", this);
+        Log (2, "VisBufferAsyncWrapper::detachFromVisIter this=%08x\n", this);
 
         wrappedVisIterAsync_p->detachVisBuffer(* this);
 
         wrappedVisIterAsync_p = NULL;
-	}
+    }
 }
 
 Vector<MDirection>&
@@ -625,12 +625,12 @@ VisBufferAsyncWrapper::fillFreq ()
   return wrappedVba_p->fillFreq ();
 }
 
-Matrix<Float>&
-VisBufferAsyncWrapper::fillImagingWeight ()
-{
-  CheckWrap ();
-  return wrappedVba_p->fillImagingWeight ();
-}
+//Matrix<Float>&
+//VisBufferAsyncWrapper::fillImagingWeight ()
+//{
+//  CheckWrap ();
+//  return wrappedVba_p->fillImagingWeight ();
+//}
 
 //Vector<Double>&
 //VisBufferAsyncWrapper::fillLSRFreq ()
@@ -920,6 +920,26 @@ VisBufferAsyncWrapper::frequency () const
   return wrappedVba_p->frequency ();
 }
 
+const VisImagingWeight &
+VisBufferAsyncWrapper::getImagingWeightGenerator () const
+{
+    return wrappedVisIterAsync_p->getImagingWeightGenerator();
+}
+
+Int
+VisBufferAsyncWrapper::getOldMsId () const
+{
+    return wrappedVba_p->oldMSId_p;
+}
+
+
+ROVisibilityIterator *
+VisBufferAsyncWrapper::getVisibilityIterator () const
+{
+    return wrappedVisIterAsync_p;
+}
+
+
 Double
 VisBufferAsyncWrapper::hourang (Double time) const
 {
@@ -931,15 +951,22 @@ Matrix<Float>&
 VisBufferAsyncWrapper::imagingWeight ()
 {
   CheckWrap ();
-  return wrappedVba_p->imagingWeight ();
+  static_cast <const VisBufferAsyncWrapper *> (this)->imagingWeight ();
+
+  return wrappedVba_p->imagingWeight_p;
 }
 
 const Matrix<Float>&
 VisBufferAsyncWrapper::imagingWeight () const
 {
   CheckWrap ();
-  return wrappedVba_p->imagingWeight ();
+  Assert (wrappedVisIterAsync_p != NULL);
+
+  const VisImagingWeight & weightGenerator (wrappedVisIterAsync_p->getImagingWeightGenerator());
+
+  return wrappedVba_p->imagingWeight (weightGenerator);
 }
+
 
 void
 VisBufferAsyncWrapper::invalidate ()
@@ -1046,6 +1073,27 @@ VisBufferAsyncWrapper::nCorr () const
   return wrappedVba_p->nCorr ();
 }
 
+Bool
+VisBufferAsyncWrapper::newArrayId () const
+{
+    CheckWrap ();
+    return wrappedVba_p->newArrayId ();
+}
+
+Bool
+VisBufferAsyncWrapper::newFieldId () const
+{
+    CheckWrap ();
+    return wrappedVba_p->newArrayId ();
+}
+
+Bool
+VisBufferAsyncWrapper::newSpectralWindow () const
+{
+    CheckWrap ();
+    return wrappedVba_p->newArrayId ();
+}
+
 Int &
 VisBufferAsyncWrapper::nRow ()
 {
@@ -1130,7 +1178,7 @@ VisBufferAsyncWrapper::phaseCenter ()
   return wrappedVba_p->phaseCenter ();
 }
 
-const MDirection &
+MDirection
 VisBufferAsyncWrapper::phaseCenter () const
 {
   CheckWrap ();

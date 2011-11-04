@@ -69,49 +69,57 @@ PrefetchColumns::columnName (Int id)
 {
     assert (id >= 0 && id < VisBufferComponents::N_VisBufferComponents);
 
-    static String names [] =
-    {"Ant1",
-     "Ant2",
-     "ArrayId",
-     "Channel",
-     "Cjones",
-     "CorrType",
-     "Corrected",
-     "CorrectedCube",
-     "Direction1",
-     "Direction2",
-     "Feed1",
-     "Feed1_pa",
-     "Feed2",
-     "Feed2_pa",
-     "FieldId",
-     "Flag",
-     "FlagCube",
-     "FlagRow",
-     "Freq",
-     "ImagingWeight",
-     "LSRFreq",
-     "Model",
-     "ModelCube",
-     "NChannel",
-     "NCorr",
-     "NRow",
-     "Observed",
-     "ObservedCube",
-     "PhaseCenter",
-     "PolFrame",
-     "Scan",
-     "Sigma",
-     "SigmaMat",
-     "SpW",
-     "Time",
-     "TimeInterval",
-     "Weight",
-     "WeightMat",
-     "WeightSpectrum",
-     "Uvw",
-     "UvwMat"
-    };
+    // This method is called only occasionally for debuggin so at this time a
+    // brute-force implmentation is acceptable.
+
+    map<Int,String> names;
+
+    names [VisBufferComponents::Ant1] = "Ant1";
+    names [VisBufferComponents::Ant2] = "Ant2";
+    names [VisBufferComponents::ArrayId] = "ArrayId";
+    names [VisBufferComponents::Channel] = "Channel";
+    names [VisBufferComponents::Cjones] = "Cjones";
+    names [VisBufferComponents::CorrType] = "CorrType";
+    names [VisBufferComponents::Corrected] = "Corrected";
+    names [VisBufferComponents::CorrectedCube] = "CorrectedCube";
+    names [VisBufferComponents::Direction1] = "Direction1";
+    names [VisBufferComponents::Direction2] = "Direction2";
+    names [VisBufferComponents::Exposure] = "Exposure";
+    names [VisBufferComponents::Feed1] = "Feed1";
+    names [VisBufferComponents::Feed1_pa] = "Feed1_pa";
+    names [VisBufferComponents::Feed2] = "Feed2";
+    names [VisBufferComponents::Feed2_pa] = "Feed2_pa";
+    names [VisBufferComponents::FieldId] = "FieldId";
+    names [VisBufferComponents::Flag] = "Flag";
+    names [VisBufferComponents::FlagCategory] = "FlagCategory";
+    names [VisBufferComponents::FlagCube] = "FlagCube";
+    names [VisBufferComponents::FlagRow] = "FlagRow";
+    names [VisBufferComponents::Freq] = "Freq";
+    names [VisBufferComponents::ImagingWeight] = "ImagingWeight";
+    names [VisBufferComponents::Model] = "Model";
+    names [VisBufferComponents::ModelCube] = "ModelCube";
+    names [VisBufferComponents::NChannel] = "NChannel";
+    names [VisBufferComponents::NCorr] = "NCorr";
+    names [VisBufferComponents::NRow] = "NRow";
+    names [VisBufferComponents::ObservationId] = "ObservationId";
+    names [VisBufferComponents::Observed] = "Observed";
+    names [VisBufferComponents::ObservedCube] = "ObservedCube";
+    names [VisBufferComponents::PhaseCenter] = "PhaseCenter";
+    names [VisBufferComponents::PolFrame] = "PolFrame";
+    names [VisBufferComponents::ProcessorId] = "ProcessorId";
+    names [VisBufferComponents::Scan] = "Scan";
+    names [VisBufferComponents::Sigma] = "Sigma";
+    names [VisBufferComponents::SigmaMat] = "SigmaMat";
+    names [VisBufferComponents::SpW] = "SpW";
+    names [VisBufferComponents::StateId] = "StateId";
+    names [VisBufferComponents::Time] = "Time";
+    names [VisBufferComponents::TimeCentroid] = "TimeCentroid";
+    names [VisBufferComponents::TimeInterval] = "TimeInterval";
+    names [VisBufferComponents::Weight] = "Weight";
+    names [VisBufferComponents::WeightMat] = "WeightMat";
+    names [VisBufferComponents::WeightSpectrum] = "WeightSpectrum";
+    names [VisBufferComponents::Uvw] = "Uvw";
+    names [VisBufferComponents::UvwMat] = "UvwMat";
 
     return names [id];
 }
@@ -228,7 +236,7 @@ ROVisibilityIterator::ROVisibilityIterator (const asyncio::PrefetchColumns * pre
         readImpl_p = new ViReadImplAsync (* prefetchColumns, * other.readImpl_p, writable);
     }
     else{
-        readImpl_p = other.readImpl_p -> clone(this);
+        readImpl_p = new VisibilityIteratorReadImpl (* other.readImpl_p, this);
     }
 }
 
@@ -904,12 +912,20 @@ ROVisibilityIterator::hourangCalculate (Double time, MSDerivedValues & msd, cons
     return VisibilityIteratorReadImpl::hourangCalculate (time, msd, mEpoch0);
 }
 
-Matrix<Float>&
-ROVisibilityIterator::imagingWeight (Matrix<Float>& wt) const
+//Matrix<Float>&
+//ROVisibilityIterator::imagingWeight (Matrix<Float>& wt) const
+//{
+//    CheckImplementationPointerR ();
+//    return readImpl_p->imagingWeight (wt);
+//}
+
+const VisImagingWeight &
+ROVisibilityIterator::getImagingWeightGenerator () const
 {
     CheckImplementationPointerR ();
-    return readImpl_p->imagingWeight (wt);
+    return readImpl_p->getImagingWeightGenerator ();
 }
+
 
 //Bool
 //ROVisibilityIterator::isAsyncEnabled () const

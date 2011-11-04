@@ -133,6 +133,10 @@ public:
     Vector<Int>& channel();
     const Vector<Int>& channel() const;
 
+    Bool newArrayId () const;
+    Bool newFieldId () const;
+    Bool newSpectralWindow () const;
+
     Int & nRow();
     Int nRow() const;
 
@@ -240,7 +244,7 @@ public:
     virtual Int numberCoh () const;
 
     MDirection & phaseCenter();
-    const MDirection & phaseCenter() const;
+    MDirection phaseCenter() const;
 
     Int polFrame() const;
 
@@ -320,8 +324,8 @@ public:
     Cube<Float>& weightSpectrum();
     const Cube<Float>& weightSpectrum() const;
 
-    Matrix<Float>& imagingWeight();
     const Matrix<Float>& imagingWeight() const;
+    Matrix<Float> & imagingWeight ();
 
     Cube<Float>& weightCube();
     //</group>
@@ -453,7 +457,73 @@ protected:
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line) const;
     void copyCache (const VisBuffer & other, Bool force);
+    const VisImagingWeight & getImagingWeightGenerator () const;
+    Int getOldMsId () const;
+    ROVisibilityIterator * getVisibilityIterator () const;
     VisBufferAsync * releaseVba ();
+
+    // Create cache status accessors which relay the request to the wrapped
+    // VBA.
+
+#undef CacheStatus
+#define CacheStatus(item)\
+Bool item ## OK () const\
+{\
+    if (wrappedVba_p == NULL){\
+        throw AipsError ("VisBufferAsyncWrapper: No attached VBA", __FILE__, __LINE__);\
+    }\
+    return wrappedVba_p->item ## OK_p;\
+}
+
+    CacheStatus (antenna1);
+    CacheStatus (antenna2);
+    CacheStatus (arrayId);
+    CacheStatus (channel);
+    CacheStatus (cjones);
+    CacheStatus (correctedVisCube);
+    CacheStatus (correctedVisibility);
+    CacheStatus (corrType);
+    CacheStatus (direction1);
+    CacheStatus (direction2);
+    CacheStatus (exposure);
+    CacheStatus (feed1_pa);
+    CacheStatus (feed1);
+    CacheStatus (feed2_pa);
+    CacheStatus (feed2);
+    CacheStatus (fieldId);
+    CacheStatus (flagCategory);
+    CacheStatus (flagCube);
+    CacheStatus (flag);
+    CacheStatus (flagRow);
+    CacheStatus (floatDataCube);
+    CacheStatus (frequency);
+    CacheStatus (imagingWeight);
+    CacheStatus (modelVisCube);
+    CacheStatus (modelVisibility);
+    CacheStatus (ms);
+    CacheStatus (nChannel);
+    CacheStatus (nCorr);
+    CacheStatus (nRow);
+    CacheStatus (observationId);
+    CacheStatus (phaseCenter);
+    CacheStatus (polFrame);
+    CacheStatus (processorId);
+    CacheStatus (rowIds);
+    CacheStatus (scan);
+    CacheStatus (sigmaMat);
+    CacheStatus (sigma);
+    CacheStatus (spectralWindow);
+    CacheStatus (stateId);
+    CacheStatus (timeCentroid);
+    CacheStatus (timeInterval);
+    CacheStatus (time);
+    CacheStatus (uvwMat);
+    CacheStatus (uvw);
+    CacheStatus (visCube);
+    CacheStatus (visibility);
+    CacheStatus (weightMat);
+    CacheStatus (weight);
+    CacheStatus (weightSpectrum);
 
 private:
 
@@ -516,7 +586,7 @@ private:
     Vector<Bool> & fillFlagRow();
     Cube<Float>& fillFloatDataCube();
     Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
-    Matrix<Float>& fillImagingWeight();
+    //Matrix<Float>& fillImagingWeight();
     //Vector<Double>& fillLSRFreq();
     Int & fillnChannel();
     Int & fillnCorr();

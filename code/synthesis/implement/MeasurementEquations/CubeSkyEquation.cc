@@ -636,9 +636,9 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                               VisBufferComponents::Feed2_pa,
                                               VisBufferComponents::FieldId,
                                               VisBufferComponents::FlagCube,
+                                              VisBufferComponents::Flag,
                                               VisBufferComponents::FlagRow,
                                               VisBufferComponents::Freq,
-                                              VisBufferComponents::ImagingWeight,
                                               VisBufferComponents::NChannel,
                                               VisBufferComponents::NCorr,
                                               VisBufferComponents::NRow,
@@ -648,6 +648,8 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                                               VisBufferComponents::SpW,
                                               VisBufferComponents::Time,
                                               VisBufferComponents::Uvw,
+                                              VisBufferComponents::UvwMat,
+                                              VisBufferComponents::Weight,
                                               -1);
 
     Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
@@ -658,20 +660,23 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         // and without corrected data columns.
     }
 
-
-    //        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
-    ////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
-    ////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
-    ////        }
-    //        destroyVisibilityIterator_p = True;
-    //        vb_p.set (rvi_p); // replace existing VB with a potentially async one
-
     ROVisibilityIterator * oldRvi = NULL;
+    VisibilityIterator * oldWvi = NULL;
 
-    if (! commitModel && ROVisibilityIterator::isAsynchronousIoEnabled()){
+    if (ROVisibilityIterator::isAsynchronousIoEnabled()){
+
+        vb_p->detachFromVisIter();
         oldRvi = rvi_p;
-        rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
-        vb_p.set (rvi_p);  // detach from current vi
+
+        if (wvi_p != NULL){
+            oldWvi = wvi_p;
+            wvi_p = new VisibilityIterator (& prefetchColumns, * wvi_p);
+            rvi_p = wvi_p;
+        }
+        else{
+            rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
+        }
+
     }
     //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
@@ -752,7 +757,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
         //	Timers tVBInValid=Timers::getTime();
-        vb->invalidate();
+        ///////////////////jhj-111103 vb->invalidate();
 
         //	Timers tInitGetSlice=Timers::getTime();
         if(!isEmpty){
@@ -841,11 +846,24 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     // If using async, put things back the way they were.
 
     if (oldRvi != NULL){
+
         delete vb.release(); // get rid of local attached to Vi
-        vb_p.set (oldRvi);   // reattach vb_p to the old vi
-        delete rvi_p;        // kill the new vi
+        //vb_p.set (oldRvi);   // reattach vb_p to the old vi
+
+        if (oldWvi != NULL){
+            delete wvi_p;
+            wvi_p = oldWvi;
+        }
+        else{
+            delete rvi_p;        // kill the new vi
+        }
+
         rvi_p = oldRvi;      // make the old vi the current vi
+        rvi_p->originChunks(); // reset it
+        vb_p->attachToVisIter(* rvi_p);
     }
+
+
     // cerr << "gradChiSq: "
     // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " "
     // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " "
@@ -990,7 +1008,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
             firstOneChangesGet_p=False;
 
         if(!isBeginingOfSkyJonesCache_p){
-            finalizePutSlice(* vb_p,  cubeSlice, nCubeSlice);
+            finalizePutSlice(vb,  cubeSlice, nCubeSlice);
         }
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;

@@ -96,12 +96,19 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
     }
 
     if (this != &other) {
-        if (visIter_p != static_cast<ROVisibilityIterator *>(0) && twoWayConnection_p) {
+        if (visIter_p != static_cast<ROVisibilityIterator *>(0) &&
+            twoWayConnection_p &&
+            visIter_p != other.getVisibilityIterator()) {
+
+            // If this VB is attached to it's visibility iterator and the
+            // assignment will result in association with a different VI then
+            // detach it.
+
             visIter_p->detachVisBuffer(*this);
         }
 
-        visIter_p = other.visIter_p;
-        oldMSId_p = other.oldMSId_p;
+        visIter_p = other.getVisibilityIterator ();
+        oldMSId_p = other.getOldMsId ();
         twoWayConnection_p = False;
 
         if (visIter_p == static_cast<ROVisibilityIterator *>(0)) {
@@ -126,62 +133,63 @@ VisBuffer::copyCache (const VisBuffer & other, Bool force)
     // Keep in order so that finding omitted ones will be easier
     // in the future
 
-    cacheCopyArray  (antenna1OK_p, other.antenna1OK_p, antenna1_p, other.antenna1_p, force);
-    cacheCopyArray  (antenna2OK_p, other.antenna2OK_p, antenna2_p, other.antenna2_p, force);
-    cacheCopyNormal (arrayIdOK_p, other.arrayIdOK_p, arrayId_p, other.arrayId_p, force);
-    ////cacheCopyArray  (chanAveBoundsOK_p, other.chanAveBoundsOK_p, chanAveBounds_p, other.chanAveBounds_p, force);
-    cacheCopyArray  (channelOK_p, other.channelOK_p, channel_p, other.channel_p, force);
-    cacheCopyArray  (cjonesOK_p, other.cjonesOK_p, cjones_p, other.cjones_p, force);
-    cacheCopyArray  (correctedVisCubeOK_p, other.correctedVisCubeOK_p,
-                     correctedVisCube_p, other.correctedVisCube_p, force);
-    cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK_p,
-                     correctedVisibility_p, other.correctedVisibility_p, force);
-    cacheCopyArray  (corrTypeOK_p, other.corrTypeOK_p, corrType_p, other.corrType_p, force);
-    cacheCopyArray  (direction1OK_p, other.direction1OK_p, direction1_p, other.direction1_p, force);
-    cacheCopyArray  (direction2OK_p, other.direction2OK_p, direction2_p, other.direction2_p, force);
-    cacheCopyArray  (exposureOK_p, other.exposureOK_p, exposure_p, other.exposure_p, force);
-    cacheCopyArray  (feed1OK_p, other.feed1OK_p, feed1_p, other.feed1_p, force);
-    cacheCopyArray  (feed1_paOK_p, other.feed1_paOK_p, feed1_pa_p, other.feed1_pa_p, force);
-    cacheCopyArray  (feed2OK_p, other.feed2OK_p, feed2_p, other.feed2_p, force);
-    cacheCopyArray  (feed2_paOK_p, other.feed2_paOK_p, feed2_pa_p, other.feed2_pa_p, force);
-    cacheCopyNormal (fieldIdOK_p, other.fieldIdOK_p, fieldId_p, other.fieldId_p, force);
-    cacheCopyArray  (flagOK_p, other.flagOK_p, flag_p, other.flag_p, force);
-    cacheCopyArray  (flagCategoryOK_p, other.flagCategoryOK_p, flagCategory_p, other.flagCategory_p, force);
-    cacheCopyArray  (flagCubeOK_p, other.flagCubeOK_p, flagCube_p, other.flagCube_p, force);
-    cacheCopyArray  (flagRowOK_p, other.flagRowOK_p, flagRow_p, other.flagRow_p, force);
-    cacheCopyArray  (floatDataCubeOK_p, other.floatDataCubeOK_p, floatDataCube_p, other.floatDataCube_p, force);
-    cacheCopyArray  (frequencyOK_p, other.frequencyOK_p, frequency_p, other.frequency_p, force);
-    cacheCopyArray  (imagingWeightOK_p, other.imagingWeightOK_p, imagingWeight_p, other.imagingWeight_p, force);
-    //cacheCopyArray  (lsrFrequencyOK_p, other.lsrFrequencyOK_p, lsrFrequency_p, other.lsrFrequency_p, force);
-    cacheCopyArray  (modelVisCubeOK_p, other.modelVisCubeOK_p, modelVisCube_p, other.modelVisCube_p, force);
-    cacheCopyArray  (modelVisibilityOK_p, other.modelVisibilityOK_p,
-                     modelVisibility_p, other.modelVisibility_p, force);
-    cacheCopyNormal (nChannelOK_p, other.nChannelOK_p, nChannel_p, other.nChannel_p, force);
-    cacheCopyNormal (nCorrOK_p, other.nCorrOK_p, nCorr_p, other.nCorr_p, force);
-    //cacheCopyNormal (nCatOK_p, other.nCatOK_p, nCat_p, other.nCat_p, force);
-    cacheCopyNormal (nRowOK_p, other.nRowOK_p, nRow_p, other.nRow_p, force);
-    cacheCopyArray  (observationIdOK_p, other.observationIdOK_p, observationId_p, other.observationId_p, force);
-    cacheCopyNormal (phaseCenterOK_p, other.phaseCenterOK_p, phaseCenter_p, other.phaseCenter_p, force);
-    cacheCopyNormal (polFrameOK_p, other.polFrameOK_p, polFrame_p, other.polFrame_p, force);
-    cacheCopyArray  (processorIdOK_p, other.processorIdOK_p, processorId_p, other.processorId_p, force);
-    cacheCopyArray  (rowIdsOK_p, other.rowIdsOK_p, rowIds_p, other.rowIds_p, force);
-    cacheCopyArray  (scanOK_p, other.scanOK_p, scan_p, other.scan_p, force);
-    cacheCopyArray  (sigmaOK_p, other.sigmaOK_p, sigma_p, other.sigma_p, force);
-    cacheCopyArray  (sigmaMatOK_p, other.sigmaMatOK_p, sigmaMat_p, other.sigmaMat_p, force);
-    cacheCopyNormal (spectralWindowOK_p, other.spectralWindowOK_p, spectralWindow_p, other.spectralWindow_p, force);
-    cacheCopyArray  (stateIdOK_p, other.stateIdOK_p, stateId_p, other.stateId_p, force);
-    cacheCopyArray  (timeOK_p, other.timeOK_p, time_p, other.time_p, force);
-    cacheCopyArray  (timeCentroidOK_p, other.timeCentroidOK_p, timeCentroid_p, other.timeCentroid_p, force);
-    cacheCopyArray  (timeIntervalOK_p, other.timeIntervalOK_p, timeInterval_p, other.timeInterval_p, force);
-    cacheCopyArray  (uvwOK_p, other.uvwOK_p, uvw_p, other.uvw_p, force);
-    cacheCopyArray  (uvwMatOK_p, other.uvwMatOK_p, uvwMat_p, other.uvwMat_p, force);
-    cacheCopyArray  (visCubeOK_p, other.visCubeOK_p, visCube_p, other.visCube_p, force);
-    cacheCopyArray  (visibilityOK_p, other.visibilityOK_p, visibility_p, other.visibility_p, force);
-    cacheCopyArray  (weightOK_p, other.weightOK_p, weight_p, other.weight_p, force);
-    ////cacheCopyArray  (weightCubeOK_p, other.weightCubeOK_p, weightCube_p, other.weightCube_p, force);
-    cacheCopyArray  (weightMatOK_p, other.weightMatOK_p, weightMat_p, other.weightMat_p, force);
-    cacheCopyArray  (weightSpectrumOK_p, other.weightSpectrumOK_p,
-                     weightSpectrum_p, other.weightSpectrum_p, force);
+    cacheCopyArray  (antenna1OK_p, other.antenna1OK (), antenna1_p, other, & VisBuffer::antenna1, force);
+    cacheCopyArray  (antenna2OK_p, other.antenna2OK (), antenna2_p, other, & VisBuffer::antenna2, force);
+    cacheCopyNormal (arrayIdOK_p, other.arrayIdOK (), arrayId_p, other, & VisBuffer::arrayId, force);
+    ////cacheCopyArray  (chanAveBoundsOK_p, other.chanAveBoundsOK (), chanAveBounds_p, other, & VisBuffer::chanAveBounds, force);
+    cacheCopyArray  (channelOK_p, other.channelOK (), channel_p, other, & VisBuffer::channel, force);
+    cacheCopyArray  (cjonesOK_p, other.cjonesOK (), cjones_p, other, & VisBuffer::CJones, force);
+    cacheCopyArray  (correctedVisCubeOK_p, other.correctedVisCubeOK (),
+                     correctedVisCube_p, other, & VisBuffer::correctedVisCube, force);
+    cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK (),
+                     correctedVisibility_p, other, & VisBuffer::correctedVisibility, force);
+    cacheCopyArray  (corrTypeOK_p, other.corrTypeOK (), corrType_p, other, & VisBuffer::corrType, force);
+    cacheCopyArray  (direction1OK_p, other.direction1OK (), direction1_p, other, & VisBuffer::direction1, force);
+    cacheCopyArray  (direction2OK_p, other.direction2OK (), direction2_p, other, & VisBuffer::direction2, force);
+    cacheCopyArray  (exposureOK_p, other.exposureOK (), exposure_p, other, & VisBuffer::exposure, force);
+    cacheCopyArray  (feed1OK_p, other.feed1OK (), feed1_p, other, & VisBuffer::feed1, force);
+    cacheCopyArray  (feed1_paOK_p, other.feed1_paOK (), feed1_pa_p, other, & VisBuffer::feed1_pa, force);
+    cacheCopyArray  (feed2OK_p, other.feed2OK (), feed2_p, other, & VisBuffer::feed2, force);
+    cacheCopyArray  (feed2_paOK_p, other.feed2_paOK (), feed2_pa_p, other, & VisBuffer::feed2_pa, force);
+    cacheCopyNormal (fieldIdOK_p, other.fieldIdOK (), fieldId_p, other, & VisBuffer::fieldId, force);
+    cacheCopyArray  (flagOK_p, other.flagOK (), flag_p, other, & VisBuffer::flag, force);
+    cacheCopyArray  (flagCategoryOK_p, other.flagCategoryOK (), flagCategory_p, other, & VisBuffer::flagCategory, force);
+    cacheCopyArray  (flagCubeOK_p, other.flagCubeOK (), flagCube_p, other, & VisBuffer::flagCube, force);
+    cacheCopyArray  (flagRowOK_p, other.flagRowOK (), flagRow_p, other, & VisBuffer::flagRow, force);
+    cacheCopyArray  (floatDataCubeOK_p, other.floatDataCubeOK (), floatDataCube_p, other, & VisBuffer::floatDataCube, force);
+    cacheCopyArray  (frequencyOK_p, other.frequencyOK (), frequency_p, other, & VisBuffer::frequency, force);
+    cacheCopyArray  (imagingWeightOK_p, other.imagingWeightOK (), imagingWeight_p, other, & VisBuffer::imagingWeight, force);
+    //cacheCopyArray  (lsrFrequencyOK_p, other.lsrFrequencyOK (), lsrFrequency_p, other, & VisBuffer::lsrFrequency, force);
+    cacheCopyArray  (modelVisCubeOK_p, other.modelVisCubeOK (), modelVisCube_p, other, & VisBuffer::modelVisCube, force);
+    cacheCopyArray  (modelVisibilityOK_p, other.modelVisibilityOK (),
+                     modelVisibility_p, other, & VisBuffer::modelVisibility, force);
+    cacheCopyNormal (nChannelOK_p, other.nChannelOK (), nChannel_p, other, & VisBuffer::nChannel, force);
+    cacheCopyNormal (nCorrOK_p, other.nCorrOK (), nCorr_p, other, & VisBuffer::nCorr, force);
+    //cacheCopyNormal (nCatOK_p, other.nCatOK (), nCat_p, other, & VisBuffer::nCat, force);
+    cacheCopyNormal (nRowOK_p, other.nRowOK (), nRow_p, other, & VisBuffer::nRow, force);
+    cacheCopyArray  (observationIdOK_p, other.observationIdOK (), observationId_p, other, & VisBuffer::observationId, force);
+    cacheCopyNormal (phaseCenterOK_p, other.phaseCenterOK (), phaseCenter_p, other, & VisBuffer::phaseCenter, force);
+    cacheCopyNormal (polFrameOK_p, other.polFrameOK (), polFrame_p, other, & VisBuffer::polFrame, force);
+    cacheCopyArray  (processorIdOK_p, other.processorIdOK (), processorId_p, other, & VisBuffer::processorId, force);
+    cacheCopyArray  (rowIdsOK_p, other.rowIdsOK (), rowIds_p, other, & VisBuffer::rowIds, force);
+    cacheCopyArray  (scanOK_p, other.scanOK (), scan_p, other, & VisBuffer::scan, force);
+    cacheCopyArray  (sigmaOK_p, other.sigmaOK (), sigma_p, other, & VisBuffer::sigma, force);
+    cacheCopyArray  (sigmaMatOK_p, other.sigmaMatOK (), sigmaMat_p, other, & VisBuffer::sigmaMat, force);
+    cacheCopyNormal (spectralWindowOK_p, other.spectralWindowOK (), spectralWindow_p, other, & VisBuffer::spectralWindow, force);
+    cacheCopyArray  (stateIdOK_p, other.stateIdOK (), stateId_p, other, & VisBuffer::stateId, force);
+    cacheCopyArray  (timeOK_p, other.timeOK (), time_p, other, & VisBuffer::time, force);
+    cacheCopyArray  (timeCentroidOK_p, other.timeCentroidOK (), timeCentroid_p, other, & VisBuffer::timeCentroid, force);
+    cacheCopyArray  (timeIntervalOK_p, other.timeIntervalOK (), timeInterval_p, other, & VisBuffer::timeInterval, force);
+    cacheCopyArray  (uvwOK_p, other.uvwOK (), uvw_p, other, & VisBuffer::uvw, force);
+    cacheCopyArray  (uvwMatOK_p, other.uvwMatOK (), uvwMat_p, other, & VisBuffer::uvwMat, force);
+    cacheCopyArray  (visCubeOK_p, other.visCubeOK (), visCube_p, other, & VisBuffer::visCube, force);
+    cacheCopyArray  (visibilityOK_p, other.visibilityOK (), visibility_p, other, & VisBuffer::visibility, force);
+    cacheCopyArray  (weightOK_p, other.weightOK (), weight_p, other, & VisBuffer::weight, force);
+    ////cacheCopyArray  (weightCubeOK_p, other.weightCubeOK (), weightCube_p, other, & VisBuffer::weightCube, force);
+    cacheCopyArray  (weightMatOK_p, other.weightMatOK (), weightMat_p, other, & VisBuffer::weightMat, force);
+    cacheCopyArray  (weightSpectrumOK_p, other.weightSpectrumOK (),
+                     weightSpectrum_p, other, & VisBuffer::weightSpectrum, force);
+
 }
 
 VisBuffer::~VisBuffer()
@@ -257,60 +265,110 @@ void VisBuffer::validate()
     setAllCacheStatuses (True);
 }
 
-//Matrix<Float> &
+Int
+VisBuffer::getOldMsId () const
+{
+    return oldMSId_p;
+}
+
+ROVisibilityIterator *
+VisBuffer::getVisibilityIterator () const
+{
+    return visIter_p;
+}
+
+Matrix<Float> &
+VisBuffer::imagingWeight ()
+{
+    static_cast<const VisBuffer *> (this) -> imagingWeight ();
+
+    return imagingWeight_p;
+}
+
+const Matrix<Float> &
+VisBuffer::imagingWeight () const
+{
+    const VisImagingWeight & weightGenerator = getVisibilityIterator()->getImagingWeightGenerator ();
+
+    return imagingWeight (weightGenerator);
+}
+
+const Matrix<Float> &
+VisBuffer::imagingWeight (const VisImagingWeight & weightGenerator) const
+{
+    if (imagingWeightOK_p){
+        return imagingWeight_p;
+    }
+
+    if (weightGenerator.getType () == "none") {
+        throw (AipsError ("Programmer Error... imaging weights not set"));
+    }
+
+    Vector<Float> weightvec = weight ();
+    Matrix<Bool> flagmat = flag ();
+    imagingWeight_p.resize (flagmat.shape ());
+
+    Vector<Double> fvec;
+    Matrix<Double> uvwmat;
+
+    String type = weightGenerator.getType();
+    if (weightGenerator.doFilter() || type == "uniform" || type == "radial"){
+        fvec = frequency ();
+        uvwmat = uvwMat ();
+    }
+
+    if (weightGenerator.getType () == "uniform") {
+
+        weightGenerator.weightUniform (imagingWeight_p, flagmat, uvwmat, fvec, weightvec, msId (), fieldId ());
+
+    } else if (weightGenerator.getType () == "radial") {
+
+        weightGenerator.weightRadial (imagingWeight_p, flagmat, uvwmat, fvec, weightvec);
+
+    } else {
+
+        weightGenerator.weightNatural (imagingWeight_p, flagmat, weightvec);
+    }
+
+    if (weightGenerator.doFilter ()) {
+
+        weightGenerator.filter (imagingWeight_p, flagmat, uvwmat, fvec, weightvec);
+    }
+
+    This->imagingWeightOK_p = True;
+
+    return imagingWeight_p;
+}
+
+
+//const Matrix<Float> &
 //VisBuffer::imagingWeight () const
 //{
-//    if (imagingWeightOK_p){
-//        return imagingWeight_p;
-//    }
-//
-//    if (imagingWeight_p.getType () == "none") {
-//
-//        // Try and get one from the VI
-//
-//        imagingWeight_p = visIter_p->imagingWeight();
-//    }
-//
-//    if (imagingWeight_p.getType () == "none") {
-//        throw (AipsError ("Programmer Error... imaging weights not set"));
-//    }
-//
-//    Vector<Float> weightvec = weight ();
-//    Matrix<Bool> flagmat = flag ();
-//    imagingWeight_p.resize (flagmat.shape ());
-//
-//    Vector<Double> fvec;
-//    Matrix<Double> uvwmat;
-//
-//    String type = imagingWeight_p.getType();
-//    if (imagingWeight_p.doFilter() || type == "uniform" || type == "radial"){
-//        fvec = frequency ();
-//        uvwmat = uvwMat ();
-//    }
-//
-//    if (imagingWeight_p.getType () == "uniform") {
-//
-//        imagingWeight_p.weightUniform (imagingWeight_p, flagmat, uvwmat, fvec, weightvec, msId (), fieldId ());
-//
-//    } else if (imagingWeight_p.getType () == "radial") {
-//
-//        imagingWeight_p.weightRadial (imagingWeight_p, flagmat, uvwmat, fvec, weightvec);
-//
-//    } else {
-//
-//        imagingWeight_p.weightNatural (imagingWeight_p, flagmat, weightvec);
-//
-//    }
-//
-//    if (imagingWeight_p.doFilter ()) {
-//
-//        imagingWeight_p.filter (wt, flagmat, uvwmat, fvec, weightvec);
-//    }
-//
-//    imagingWeightOK_p = True;
-//
-//    return imagingWeight_p;
+//    return imagingWeight ();
 //}
+
+Bool
+VisBuffer::newArrayId () const
+{
+    CheckVisIter ();
+    return visIter_p->newArrayId ();
+}
+
+Bool
+VisBuffer::newFieldId () const
+{
+    CheckVisIter ();
+    return visIter_p->newFieldId ();
+}
+
+Bool
+VisBuffer::newSpectralWindow () const
+{
+    CheckVisIter ();
+    return visIter_p->newSpectralWindow ();
+}
+
+
 
 
 void
@@ -1566,25 +1624,30 @@ Vector<uInt>& VisBuffer::rowIds()
 }
 
 
-void VisBuffer::updateCoordInfo(const VisBuffer *, const  Bool dirDependent )
+void
+VisBuffer::updateCoordInfo(const VisBuffer * vb, const  Bool dirDependent )
 {
-  antenna1();
-  antenna2();
-  arrayId();
-  fieldId();
-  spectralWindow();
-  time();
-  frequency();
-  nRow();
-  checkMSId();
-  feed1();
-  feed2();
-  if(dirDependent){
-    feed1_pa();
-    feed2_pa();
-    direction1();
-    direction2();
-  }
+    updateCoord (vb, vb->antenna1OK (), & VisBuffer::antenna1, antenna1_p, antenna1OK_p);
+    updateCoord (vb, vb->antenna2OK (), & VisBuffer::antenna2, antenna2_p, antenna2OK_p);
+    updateCoordS (vb, vb->arrayIdOK (), & VisBuffer::arrayId, arrayId_p, arrayIdOK_p);
+    updateCoordS (vb, vb->fieldIdOK (), & VisBuffer::fieldId, fieldId_p, fieldIdOK_p);
+    updateCoordS (vb, vb->spectralWindowOK (), & VisBuffer::spectralWindow, spectralWindow_p, spectralWindowOK_p);
+    updateCoord (vb, vb->timeOK (), & VisBuffer::time, time_p, timeOK_p);
+    updateCoord (vb, vb->frequencyOK (), & VisBuffer::frequency, frequency_p, frequencyOK_p);
+    updateCoordS (vb, vb->nRowOK (), & VisBuffer::nRow, nRow_p, nRowOK_p);
+
+    vb->copyMsInfo (oldMSId_p, msOK_p, newMS_p);
+
+    updateCoord (vb, vb->feed1OK (), & VisBuffer::feed1, feed1_p, feed1OK_p);
+    updateCoord (vb, vb->feed2OK (), & VisBuffer::feed2, feed2_p, feed2OK_p);
+
+    if(dirDependent){
+        updateCoord (vb, vb->feed1_paOK (), & VisBuffer::feed1_pa, feed1_pa_p, feed1_paOK_p);
+        updateCoord (vb, vb->feed2_paOK (), & VisBuffer::feed2_pa, feed2_pa_p, feed2_paOK_p);
+        updateCoord (vb, vb->direction1OK (), & VisBuffer::direction1, direction1_p, direction1OK_p);
+        updateCoord (vb, vb->direction2OK (), & VisBuffer::direction2, direction2_p, direction2OK_p);
+    }
+
 }
 
 void VisBuffer::setVisCube(Complex c)
@@ -2246,12 +2309,12 @@ Cube<Float>& VisBuffer::fillWeightSpectrum()
   return visIter_p->weightSpectrum(weightSpectrum_p);
 }
 
-Matrix<Float>& VisBuffer::fillImagingWeight()
-{
-  CheckVisIter ();
-  imagingWeightOK_p = True;
-  return visIter_p->imagingWeight(imagingWeight_p);
-}
+//Matrix<Float>& VisBuffer::fillImagingWeight()
+//{
+//  CheckVisIter ();
+//  imagingWeightOK_p = True;
+//  return visIter_p->imagingWeight(imagingWeight_p);
+//}
 
 Vector<Float> VisBuffer::feed_pa(Double time) const
 {
@@ -2330,6 +2393,15 @@ Vector<Int> VisBuffer::unique(const Vector<Int>& indices) const
   };
   return uniqIndices;
 }
+
+void
+VisBuffer::copyMsInfo (Int & msID, Bool & msOk, Bool & newMs) const
+{
+    msID = msId();
+    msOk = msOK_p;
+    newMs = newMS_p;
+}
+
 
 Bool VisBuffer::checkMSId()
 {
@@ -2532,6 +2604,8 @@ VisBufferAutoPtr::get () const
 }
 
 
+
+
 VisBuffer *
 VisBufferAutoPtr::release ()
 {
@@ -2557,17 +2631,16 @@ VisBufferAutoPtr::set (VisBuffer * vb)
 }
 
 void
-VisBufferAutoPtr::set (ROVisibilityIterator * rovi)
+VisBufferAutoPtr::set (ROVisibilityIterator * rovi, Bool attachIt)
 {
     delete visBuffer_p;
-    construct (rovi, False);
+    construct (rovi, attachIt);
 }
 
 void
-VisBufferAutoPtr::set (ROVisibilityIterator & rovi)
+VisBufferAutoPtr::set (ROVisibilityIterator & rovi, Bool attachIt)
 {
-    delete visBuffer_p;
-    construct (& rovi, False);
+    set (& rovi, attachIt);
 }
 
 const VbDirtyComponents VbDirtyComponents::all_p = initializeAll ();

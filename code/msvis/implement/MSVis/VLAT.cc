@@ -109,6 +109,7 @@ VLAT::~VLAT ()
     }
 
     delete visibilityIterator_p;
+    delete writeIterator_p;
 }
 
 void
@@ -159,9 +160,19 @@ VLAT::alignWriteIterator (SubChunkPair subchunk)
 }
 
 void
-VLAT::applyModifiers (ROVisibilityIterator * rovi)
+VLAT::applyModifiers (ROVisibilityIterator * rovi, VisibilityIterator * vi)
 {
+    // Apply modifiers to read iterator and to write iterator (if it exists)
+
     roviaModifiers_p.apply (rovi);
+
+    if (vi != NULL){
+        roviaModifiers_p.apply (vi);
+    }
+
+    // Get the channel selection information from the modified read VI and provide it to the
+    // data object
+
     roviaModifiers_p.clearAndFree ();
 
     Block< Vector<Int> > blockNGroup;
@@ -237,7 +248,7 @@ VLAT::createFillerDictionary ()
     fillerDictionary_p.add (VisBufferComponents::Freq,
                            vlatFunctor0 (& VisBuffer::fillFreq));
     fillerDictionary_p.add (VisBufferComponents::ImagingWeight,
-                           vlatFunctor0 (& VisBuffer::fillImagingWeight));
+                           new VlatFunctor ("ImagingWeight")); // do not fill this one
     fillerDictionary_p.add (VisBufferComponents::Model,
                            vlatFunctor1(& VisBuffer::fillVis,
                                         VisibilityIterator::Model));
@@ -373,6 +384,9 @@ VLAT::fillDatumMiscellanyBefore (VlaDatum * datum)
     datum->getVisBuffer()->setMeasurementSetId (visibilityIterator_p->getMeasurementSetId(),
                                                 datum->getSubChunkPair().second == 0);
 
+    datum->getVisBuffer()->setNewEntityFlags (visibilityIterator_p->newArrayId(),
+                                              visibilityIterator_p->newFieldId(),
+                                              visibilityIterator_p->newSpectralWindow());
     datum->getVisBuffer()->setNAntennas (visibilityIterator_p->getNAntennas ());
     datum->getVisBuffer()->setMEpoch (visibilityIterator_p->getMEpoch ());
     datum->getVisBuffer()->setReceptor0Angle (visibilityIterator_p->getReceptor0Angle());
@@ -588,7 +602,7 @@ VLAT::sweepVi ()
     readSubchunk_p.resetToOrigin ();
     writeSubchunk_p.resetToOrigin ();
 
-    applyModifiers (visibilityIterator_p);
+    applyModifiers (visibilityIterator_p, writeIterator_p);
 
     try {
 
@@ -627,6 +641,11 @@ VLAT::sweepVi ()
     catch (SweepTerminated &){
         Log (1, "VLAT: VI sweep termination requested.\n");
     }
+    catch (AipsError e){
+        Log (1, "AipsError during sweepVi; readSubchunk=%s, writeSubChunk=%s",
+             readSubchunk_p.toString().c_str(), writeSubchunk_p.toString().c_str());
+        throw;
+    }
 }
 
 void
@@ -658,13 +677,7 @@ VLAT::waitForViReset()
     while (! interface_p->viResetRequested () &&
            ! interface_p->isLookaheadTerminationRequested ()){
 
-        {
-            uniqueLock.unlock(); // Unlock interface while handling write
-
-            handleWrite (); // process any pending write requests
-
-            uniqueLock.lock(); // lock it back up
-        }
+        handleWrite (); // process any pending write requests
 
         // Wait for the interface to change:
         //
@@ -701,13 +714,7 @@ VLAT::waitUntilFillCanStart ()
     while ( ! vlaData_p->fillCanStart () &&
             ! interface_p->isSweepTerminationRequested ()){
 
-        {
-            uniqueLock.unlock(); // Unlock interface while handling write
-
-            handleWrite (); // process any pending write requests
-
-            uniqueLock.lock(); // lock it back up
-        }
+        handleWrite (); // process any pending write requests
 
         // Wait for the interface to change:
         //
@@ -718,6 +725,13 @@ VLAT::waitUntilFillCanStart ()
         interface_p->waitForInterfaceChange (uniqueLock);
     }
 }
+
+void
+VlatFunctor::operator() (VisBuffer *)
+{
+    ThrowIf (True, "No filler is defined for this VisBuffer component: " + name_p);
+}
+
 
 } // end namespace asyncio
 
