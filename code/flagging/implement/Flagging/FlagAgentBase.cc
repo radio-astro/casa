@@ -26,6 +26,7 @@
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
 #include <flagging/Flagging/FlagAgentClipping.h>
 #include <flagging/Flagging/FlagAgentSummary.h>
+#include <flagging/Flagging/FlagAgentManual.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -178,15 +179,15 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		ret = new FlagAgentBase(dh,config,ROWS,writePrivateFlags);
-		return ret;
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
+		return agent;
 	}
 
 	// Unflag mode
 	if (mode.compare("unflag")==0)
 	{
-		ret = new FlagAgentBase(dh,config,ROWS,writePrivateFlags,false);
-		return ret;
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
+		return agent;
 	}
 
 	// TimeFreqCrop
