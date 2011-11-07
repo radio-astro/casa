@@ -119,22 +119,41 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 }
 
   void MSConcat::concatenate(const MeasurementSet& otherMS, 
-			     const Bool dontModifyMain)
+			     const uInt handlingSwitch)
 {
   LogIO log(LogOrigin("MSConcat", "concatenate", WHERE));
 
   log << "Appending " << otherMS.tableName() 
       << " to " << itsMS.tableName() << endl << LogIO::POST;
 
-  if(dontModifyMain){
-    log << "*** At user\'s request, MAIN table will not be modified!" << LogIO::POST;
+  switch(handlingSwitch){
+  case 0: // normal concat
+    break;
+  case 1:
+    log << "*** At user\'s request, MAIN table will not be concatenated!" << LogIO::POST;
+    break;
+  case 2:
+    log << "*** At user\'s request, POINTING table will not be concatenated!" << LogIO::POST;
+    break;
+  case 3:
+    log << "*** At user\'s request, MAIN and POINTING tables will not be concatenated!" << LogIO::POST;
+    break;
+  case 4:
+    log << "*** At user\'s request, MAIN and POINTING table will be concatenated virtually!" << LogIO::POST;
+    log << "*** NOTE: do not remove the original input MSs." << LogIO::POST;
+    log << "*** (not yet implemented)" << LogIO::POST;
+    break;
+  default:
+    log << "Invalid value for handling switch: " << handlingSwitch << " (valid range is 0 - 4)"
+	<< LogIO::EXCEPTION;
+    break;
   }
-
+ 
   // check if certain columns are present and set flags accordingly
   Bool doCorrectedData=False, doModelData=False;
   Bool doFloatData=False;
 
-  if(!dontModifyMain){
+  if(handlingSwitch==0 || handlingSwitch==2){
 
     if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
 	otherMS.tableDesc().isColumn("FLOAT_DATA"))
@@ -303,12 +322,20 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation());
 
   // POINTING
-  if(!copyPointing(otherMS.pointing(), newAntIndices)){
-    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  if(handlingSwitch<2){
+    if(!copyPointing(otherMS.pointing(), newAntIndices)){
+      log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+    }
+  }
+  else{ // delete the POINTING table
+    log << LogIO::NORMAL << "Deleting all rows in the Pointing subtable ..." << LogIO::POST ;
+    Vector<uInt> delrows(itsMS.pointing().nrow());
+    indgen(delrows);
+    itsMS.pointing().removeRow(delrows); 
   }
 
   // STOP HERE if Main is not to be modified
-  if(dontModifyMain){
+  if(handlingSwitch==1 || handlingSwitch==3){
     return;
   }
   //////////////////////////////////////////////////////
