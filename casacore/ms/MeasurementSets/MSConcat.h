@@ -95,7 +95,11 @@ class MSConcat: public MSColumns
 public:
   MSConcat(MeasurementSet& ms);
   void concatenate(const MeasurementSet& otherMS,
-		   const Bool dontModifyMain=False); // if true, MAIN is not touched
+		   const uInt handlingSwitch=0); // 0 (default): complete concat of all tables
+                                                     // 1 : don't concatenate the MAIN table
+                                                     // 2 : don't concatenate the POINTING table
+                                                     // 3 : neither concat MAIN nor POINTING table
+                                                     // 4 : virtual concat of MAIN and POINTING table 
   void setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol); 
 private:
   MSConcat();
