@@ -107,6 +107,13 @@ MSSelectionFieldParseError::MSSelectionFieldParseError (const String& str,Catego
 {}
 MSSelectionFieldParseError::~MSSelectionFieldParseError () throw()
 {}
+
+MSSelectionFieldWarning::MSSelectionFieldWarning (const String& str,Category c)
+: MSSelectionFieldError(str,c)
+{}
+
+MSSelectionFieldWarning::~MSSelectionFieldWarning () throw()
+{}
 //
 //------------------------UVDist selection expression parser exceptions--------------
 //

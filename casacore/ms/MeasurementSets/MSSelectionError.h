@@ -121,6 +121,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
+  class MSSelectionFieldWarning: public MSSelectionFieldError {
+  public:
+    MSSelectionFieldWarning (const String& message,Category c=GENERAL);
+    ~MSSelectionFieldWarning () throw();
+  };
+  //
+  //-------------------------------------------------------------------
+  //  
   class MSSelectionUvDistError : public MSSelectionError {
   public:
     // Add given message to string "MSSelection time error: ".

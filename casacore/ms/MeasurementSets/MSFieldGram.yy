@@ -99,8 +99,8 @@ fieldstatement: indexcombexpr
                   {
                     $$ = $1;
                   }
-                 | LPAREN indexcombexpr RPAREN //Parenthesis are syntactically 
-		                               // not useful here
+               | LPAREN indexcombexpr RPAREN //Parenthesis are syntactically 
+                                             // not useful here
                   {
 		    $$ = $2;
 		  }
@@ -109,7 +109,7 @@ indexcombexpr  : indexlist
                  {
 		   ostringstream m;
 	           MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
-		   Vector<Int> selectedIDs(myMSFI.maskFieldIDs(*($1)));
+		   Vector<Int> selectedIDs(myMSFI.maskFieldIDs(myMSFI.validateIndices(*($1))));
                    $$ = MSFieldParse().selectFieldIds(selectedIDs);
 		   m << "Partial or no match for Field ID list " << (*($1));
                    checkFieldError(selectedIDs, m);
