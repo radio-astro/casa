@@ -89,7 +89,6 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 				casalog.post('***    Input POINTING table was already empty.', 'INFO')
 				shutil.move(tmptabname, concatvis+'/POINTING')
 				t.close()
-			casalog.post('***    (Subsequent warnings about the POINTING table can be ignored.)', 'INFO')				
 
 		# Determine if scratch columns should be considered at all
 		# by checking if any of the MSs has them.
@@ -132,6 +131,11 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 			cb.open(concatvis) # calibrator-open creates scratch columns
 			cb.close()
 
+		# determine handling switch value
+		handlingswitch = 0
+		if not copypointing:
+			handlingswitch = 2
+
 		m.open(concatvis,False) # nomodify=False to enable writing
 	
 		for elvis in vis : 
@@ -146,16 +150,17 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 				cb.open(tempname) # calibrator-open creates scratch columns
 				cb.close()
 				# concatenate copy instead of original file
-				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol)
+				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,handling=handlingswitch)
 				os.system('rm -rf '+tempname)
 			else:
-				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
+				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,handling=handlingswitch)
 
 			m.writehistory(message='taskname=concat',origin='concat')
-			m.writehistory(message='vis         = "'+str(concatvis)+'"',origin='concat')
-			m.writehistory(message='concatvis   = "'+str(elvis)+'"',origin='concat')
-			m.writehistory(message='freqtol     = "'+str(freqtol)+'"',origin='concat')
-			m.writehistory(message='dirtol      = "'+str(dirtol)+'"',origin='concat')
+			m.writehistory(message='vis          = "'+str(concatvis)+'"',origin='concat')
+			m.writehistory(message='concatvis    = "'+str(elvis)+'"',origin='concat')
+			m.writehistory(message='freqtol      = "'+str(freqtol)+'"',origin='concat')
+			m.writehistory(message='dirtol       = "'+str(dirtol)+'"',origin='concat')
+			m.writehistory(message='copypointing = "'+str(copypointing)+'"',origin='concat')
 
 		if(timesort):
 			casalog.post('Sorting main table by TIME ...', 'INFO')

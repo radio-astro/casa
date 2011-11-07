@@ -74,19 +74,24 @@ def testconcat(vislist,testconcatvis,freqtol,dirtol,copypointing):
  						tb.copy(testconcatvis+'/'+subt, deep=False, valuecopy=True, norows=no_rows)
  						tb.close()
  				vis.remove(vis[0])
+		# determine handling switch value
+		handlingswitch = 1
+		if not copypointing:
+			handlingswitch = 3
 	
 		m.open(testconcatvis,False) # nomodify=False to enable writing
 	
 		for elvis in vis : 
 			casalog.post('concatenating subtables from '+elvis+' into '+testconcatvis , 'INFO')
 
-			m.testconcatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol)
+			m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,handling=handlingswitch)
 
 			m.writehistory(message='taskname=testconcat',origin='testconcat')
 			m.writehistory(message='vis         = "'+str(testconcatvis)+'"',origin='testconcat')
 			m.writehistory(message='concatvis   = "'+str(elvis)+'"',origin='testconcat')
 			m.writehistory(message='freqtol     = "'+str(freqtol)+'"',origin='testconcat')
 			m.writehistory(message='dirtol      = "'+str(dirtol)+'"',origin='testconcat')
+			m.writehistory(message='copypointing = "'+str(copypointing)+'"',origin='concat')
 
 		m.close()
 
