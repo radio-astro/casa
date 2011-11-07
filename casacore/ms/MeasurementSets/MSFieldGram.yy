@@ -110,12 +110,6 @@ indexcombexpr  : indexlist
 		   ostringstream m;
 	           MSFieldIndex myMSFI(MSFieldParse::thisMSFParser->ms()->field());
 		   Vector<Int> selectedIDs(myMSFI.maskFieldIDs(*($1)));
-		   if (selectedIDs.nelements() != set_intersection(selectedIDs,(*($1))).nelements())
-		     {
-		       m << "Possible out of range index in the list " << *($1)
-			 << " [TIP: Double-quoted strings forces name matching]";
-		       checkFieldError(selectedIDs, m , True);
-		     }
                    $$ = MSFieldParse().selectFieldIds(selectedIDs);
 		   m << "Partial or no match for Field ID list " << (*($1));
                    checkFieldError(selectedIDs, m);
@@ -140,7 +134,7 @@ fieldid: IDENTIFIER
 	  $$=new Vector<Int>(myMSFI.matchFieldNameOrCode($1));
 	  //$$=new Vector<Int>(myMSAI.matchFieldRegexOrPattern($1));
 
-	  ostringstream m; m << "No match found for \"" << $1 << "\"";
+	  ostringstream m; m << "No match found for name \"" << $1 << "\"";
 	  checkFieldError(*($$), m);
 
 	  free($1);
@@ -158,7 +152,7 @@ fieldid: IDENTIFIER
 	  if (!$$) delete $$;
 	  $$ = new Vector<Int>(myMSFI.matchFieldRegexOrPattern($1));
 
-	  ostringstream m; m << "No match found for \"" << $1 << "\"";
+	  ostringstream m; m << "No match found for name \"" << $1 << "\"";
 	  checkFieldError(*($$), m);
 	  String s(m.str());
 

@@ -33,6 +33,7 @@
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Utilities/Regex.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+//#include <casa/Logging/LogIO.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   //-------------------------------------------------------------------------
@@ -111,6 +112,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Vector<Int> MSFieldIndex::maskFieldIDs(const Vector<Int>& ids)
   {
+    for (uInt i=0;i<ids.nelements();i++)
+      if ((ids[i] < 0) || (ids[i] > (Int)fieldIds_p.nelements()))
+	{
+	  LogIO logIO;
+	  ostringstream Mesg;
+	  Mesg << "Field Expression: Out of range index in the list (" << ids[i] << ")"
+	       << " [TIP: Double-quoted strings forces name matching]";
+	  //	  throw(MSSelectionFieldParseError(Mesg.str()));
+	  logIO << Mesg.str() << LogIO::WARN;
+	}
+    cerr << fieldIds_p << endl << ids << endl;
     Vector<Int> tmp = set_intersection(fieldIds_p,ids); 
     return tmp;
   }
