@@ -122,7 +122,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //	  throw(MSSelectionFieldParseError(Mesg.str()));
 	  logIO << Mesg.str() << LogIO::WARN;
 	}
-    cerr << fieldIds_p << endl << ids << endl;
     Vector<Int> tmp = set_intersection(fieldIds_p,ids); 
     return tmp;
   }
