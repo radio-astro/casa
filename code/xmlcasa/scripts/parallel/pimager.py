@@ -100,13 +100,15 @@ class pimager():
                 if(endch>nextend):
                     row+=1
                     nextend=thesel['channel'][row,2]
-                    sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch-1)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch-1))
+                    if(startch <= (endch-1)):
+                        sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch-1)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch-1))
                     startch=thesel['channel'][row,1] 
                     endch=startch
                     nextstart=endch+1
                     spwsel=thesel['channel'][row,0]
                     nextspw=spwsel
-            sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch))
+            if(startch <= (endch)):
+                sel[k]=(sel[k]+','+str(spwsel)+':'+str(startch)+'~'+str(endch)) if(sel[k] != '-1') else (str(spwsel)+':'+str(startch)+'~'+str(endch))
             if(startch==endch):
                 nextstart=nextstart-1
         freqrange[0]=beginfreq
@@ -671,7 +673,7 @@ class pimager():
             shutil.rmtree(imlist[k]+'.residual', True)
             shutil.rmtree(imlist[k]+'.image', True)
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
-        c.stop_cluster()
+        #c.stop_cluster()
 
     def pcube_try(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
               pixsize=['1arcsec', '1arcsec'], phasecenter='', 
@@ -900,7 +902,7 @@ class pimager():
                 buddy_is_ready[bud]=self.c.check_job(buddy_ref[bud], False)
         time2=time.time()
         print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
-        self.c.stop_cluster()
+        #self.c.stop_cluster()
 
 #################
     def pcube(self, msname=None, imagename='elimage', imsize=[1000, 1000], 
@@ -1133,7 +1135,7 @@ class pimager():
 
         time2=time.time()
         print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
-        self.c.stop_cluster()
+        #self.c.stop_cluster()
 
 ##############################
 #################
@@ -1380,7 +1382,7 @@ class pimager():
 
         time2=time.time()
         print 'Time to image after cleaning is ', (time2-time1)/60.0, 'mins'
-        self.c.stop_engine(numcpu)
+        #self.c.stop_engine(numcpu)
 
 ##############################
 
@@ -1555,7 +1557,7 @@ class pimager():
             shutil.rmtree(imlist+'.image', True)
             shutil.rmtree(imlist+'.psf', True)
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
-        self.c.stop_cluster()
+        #self.c.stop_cluster()
    
 
     def pcontmultims2(self, msnames=[], workdirs=[], imagename=None, imsize=[1000, 1000], 
@@ -1752,7 +1754,7 @@ class pimager():
             shutil.rmtree(imlist+'.image', True)
             shutil.rmtree(imlist+'.psf', True)
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
-        self.c.stop_cluster()
+        #self.c.stop_cluster()
 
     def incrementaldecon(self, alg, scales,residual, model, niter, psf,  mask, thr, cpuid, imholder):
         ##############
@@ -2131,7 +2133,7 @@ class pimager():
         #  shutil.rmtree(imlist[k]+'.residual', True)
         # shutil.rmtree(imlist[k]+'.image', True)
         print 'Time to image is ', (time2-time1)/60.0, 'mins'
-        c.stop_cluster()
+        #c.stop_cluster()
 
 
         return
