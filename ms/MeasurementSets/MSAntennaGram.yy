@@ -80,15 +80,26 @@
 %type <dv> blengthlist
 
 %{
+#include <casa/Logging/LogIO.h>
+
   int MSAntennaGramlex (YYSTYPE*);
   Bool MSAntennaGramNegate=False;
   void reportError(char *str)
   {
-    String errorMesg;
     ostringstream Mesg;
-    Mesg << "Antenna Expression: No match found for \"" << str << "\"";
-    errorMesg = String(Mesg.str().c_str());
-    throw(MSSelectionAntennaParseError(errorMesg));
+    Mesg << "Antenna Expression: No match found for \"";
+    if (MSAntennaGramNegate) Mesg << "!" << str << "\"";
+    else Mesg << str << "\"";
+
+    if (MSAntennaGramNegate)
+      {
+	LogIO logIO;
+	logIO << Mesg.str() 
+	      << " (just a helpful message (from your friendly MSAntennaSelection object))" 
+	      << LogIO::WARN;
+      }
+    else
+      throw(MSSelectionAntennaParseError(Mesg.str()));
   }
 %}
 
