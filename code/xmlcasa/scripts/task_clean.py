@@ -244,7 +244,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
-            #(localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
             # new version: uses  ms.cvelfreqs
             (localnchan, localstart, localwidth)=imset.setChannelizeDefault(mode,spw,field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
 
