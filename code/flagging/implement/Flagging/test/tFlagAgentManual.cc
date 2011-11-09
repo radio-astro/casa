@@ -50,9 +50,10 @@ void clearFlags(string inputFile,Bool flag)
 	dh->generateIterator();
 
 	// Now we can create the Flag Agent list
-	Record dummySelection;
+	Record dummyConfig;
+	dummyConfig.define("name","FlagAgentUnflag");
 	FlagAgentList *agentList = new FlagAgentList();
-	FlagAgentBase *agent_i = new FlagAgentManual(dh,dummySelection,false,!flag);
+	FlagAgentBase *agent_i = new FlagAgentManual(dh,dummyConfig,false,!flag);
 	agentList->push_back(agent_i);
 
 	// Start Flag Agent
@@ -192,10 +193,14 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 	// Now we can create the Flag Agent list
 	FlagAgentBase *agent_i = NULL;
 	FlagAgentList *agentList = new FlagAgentList();
+	Int agentNumber = 1;
 	for (vector<Record>::iterator iter = recordList.begin();iter != recordList.end(); iter++)
 	{
+		stringstream agentName;
+		agentName << agentNumber;
 		agent_i= new FlagAgentManual(dh,*iter,false,flag);
 		agentList->push_back(agent_i);
+		agentNumber++;
 	}
 
 	// Start Flag Agent
@@ -336,6 +341,7 @@ void checkFlags(string inputFile,Record dataSelection,Bool flag)
 
 	// Now we can create the Flag Agent list
 	Record dummyConfig;
+	dummyConfig.define("name","FlagAgentCheck");
 	FlagAgentList *agentList = new FlagAgentList();
 	FlagAgentBase *agent_i = new FlagAgentManual(dh,dummyConfig,false,flag);
 	agent_i->setCheckMode(true);
@@ -479,6 +485,7 @@ void summaryFlags(string inputFile)
 	// Now we can create the Flag Agent list
 	Record dummyConfig;
 	FlagAgentList *agentList = new FlagAgentList();
+	dummyConfig.define("name","FlagAgentSummary");
 	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,dummyConfig);
 	agentList->push_back(summaryAgent);
 
@@ -782,9 +789,68 @@ int main(int argc, char **argv)
 		}
 	}
 
+	// MultiThreading and naming within each agent
 	if (!multipleAgents)
 	{
-		recordList.push_back(agentParameters);
+		if (nThreads>1)
+		{
+			stringstream nThreadsParam;
+			nThreadsParam << nThreads;
+			for (Int threadId=0;threadId<nThreads;threadId++)
+			{
+				Record agentParameters_i = agentParameters;
+				stringstream threadIdParam;
+				threadIdParam << threadId;
+				agentParameters_i.define("threadId",threadIdParam.str());
+				agentParameters_i.define("nThreads",nThreadsParam.str());
+				agentParameters_i.define("name","FlagAgentManual_1_Thread_" + threadIdParam.str());
+				recordList.push_back(agentParameters_i);
+			}
+		}
+		else
+		{
+			agentParameters.define("name","FlagAgentManual");
+			recordList.push_back(agentParameters);
+		}
+	}
+	else
+	{
+		if (nThreads>1)
+		{
+			stringstream nThreadsParam;
+			nThreadsParam << nThreads;
+			Int agentNumber=1;
+			vector<Record> recordListMulithreading;
+			for (vector<Record>::iterator iter = recordList.begin();iter != recordList.end(); iter++)
+			{
+				stringstream agentNumberParam;
+				agentNumberParam << agentNumber;
+
+				for (Int threadId=0;threadId<nThreads;threadId++)
+				{
+					stringstream threadIdParam;
+					threadIdParam << threadId;
+					iter->define("threadId",threadIdParam.str());
+					iter->define("nThreads",nThreadsParam.str());
+					iter->define("name","FlagAgentManual_" + agentNumberParam.str() + "_Thread_" + threadIdParam.str());
+					recordListMulithreading.push_back(*iter);
+				}
+
+				agentNumber++;
+			}
+			recordList = recordListMulithreading;
+		}
+		else
+		{
+			Int agentNumber=1;
+			for (vector<Record>::iterator iter = recordList.begin();iter != recordList.end(); iter++)
+			{
+				stringstream agentNumberParam;
+				agentNumberParam << agentNumber;
+				iter->define("name","FlagAgentManual_" + agentNumberParam.str());
+				agentNumber++;
+			}
+		}
 	}
 
 	clearFlags(inputFile,flag);
