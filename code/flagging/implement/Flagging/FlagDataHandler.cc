@@ -88,8 +88,8 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// only one time step, thus invalidating the time interval effect.
 	// See: MSIter.h
 
-	// Always map polarizations
-	mapPolarizations_p = true;
+	// By default don't map polarizations
+	mapPolarizations_p = false;
 
 	switch (iterationApproach_p)
 	{

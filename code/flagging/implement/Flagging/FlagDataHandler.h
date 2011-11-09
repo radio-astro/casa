@@ -441,6 +441,11 @@ public:
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
 	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
 
+	// Functions to switch on/off mapping functions
+	void setMapPolarizations(bool activated) {mapPolarizations_p=activated;}
+	void setMapAntennaPairs(bool activated) {mapAntennaPairs_p=activated;}
+	void setMapSubIntegrations(bool activated) {mapSubIntegrations_p=activated;}
+
 	// Old CubeView accessors
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
 	CubeView<Bool> * getFlagsView(Double timestep);
