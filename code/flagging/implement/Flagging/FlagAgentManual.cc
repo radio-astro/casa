@@ -27,7 +27,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FlagAgentManual::FlagAgentManual(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
 		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
 {
-	setAgentParameters(config);
+
 }
 
 FlagAgentManual::~FlagAgentManual()
@@ -36,7 +36,7 @@ FlagAgentManual::~FlagAgentManual()
 }
 
 void
-FlagAgentManual::computeRowFlags(FlagMapper &flags, uInt row)
+FlagAgentManual::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	IPosition flagCubeShape = flags.shape();

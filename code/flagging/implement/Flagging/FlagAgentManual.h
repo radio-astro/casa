@@ -37,7 +37,7 @@ public:
 protected:
 
 	// Flag entire row
-	void computeRowFlags(FlagMapper &flags, uInt row);
+	void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 private:
 
