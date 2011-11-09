@@ -2696,6 +2696,11 @@ for i in range(len(tcoord)):
      <value>1mas</value>
      </param>
 
+     <param type="float" direction="in" name="weightscale">
+     <description>Scale the weights of the MS to be appended by this factor</description>
+     <value>1.</value>
+     </param>
+
      <param type="int" direction="in" name="handling">
      <description>Switch for the handling of the Main and Pointing tables: 0=standard, 
      1=no Main, 2=no Pointing, 3=no Main and Pointing, 4=virtual</description>

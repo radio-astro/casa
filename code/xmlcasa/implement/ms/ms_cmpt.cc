@@ -2049,7 +2049,7 @@ ms::putdata(const ::casac::record& items)
 }
 
 bool
-ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const int handling)
+ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale, const int handling)
 {
     Bool rstat(False);
     try {
@@ -2086,6 +2086,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    
 	    *itsLog << LogIO::DEBUGGING << "MSConcat created" << LogIO::POST;
 	    mscat.setTolerance(freqtolerance, dirtolerance);
+	    mscat.setWeightScale(weightscale);
 	    mscat.concatenate(appendedMS, static_cast<uint>(handling));
 
 	    String message = String(msfile) + " appended to " + itsMS->tableName();

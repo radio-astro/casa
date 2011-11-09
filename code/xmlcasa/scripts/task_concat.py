@@ -20,7 +20,7 @@ def initcal(vis=None):
 	cb.close()
 
 
-def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
+def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale):
 	"""Concatenate two visibility data sets.
 	A second data set is appended to the input data set with
 	checking of the frequency and position.
@@ -46,6 +46,8 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 	        default: false; example: timesort=true
 	copypointing -- copy all rows of the pointing table
 	        default: True
+	visweightscale -- list of the weight scales to be applied to the individual MSs
+	        default: [] (don't modify weights, equivalent to setting scale to 1 for each MS)
 
 	"""
 
@@ -61,6 +63,17 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 			vis=[vislist]
 		else:
 			vis=list(vislist)
+
+		doweightscale = False
+		if(len(visweightscale)>0):
+			if (len(visweightscale) != len(vis)):
+				raise Exception, 'parameter visweightscale must have same number of elements as parameter vis'
+			for factor in visweightscale:
+				if factor<0.:
+					raise Exception, 'parameter visweightscale must only contain positive numbers'
+				elif factor!=1.:
+					doweightscale=True
+			
 		if((type(concatvis)!=str) or (len(concatvis.split()) < 1)):
 			raise Exception, 'parameter concatvis is invalid'
 		if(vis.count(concatvis) > 0):
@@ -131,16 +144,41 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 			cb.open(concatvis) # calibrator-open creates scratch columns
 			cb.close()
 
+		# scale the weights of the first MS in the chain
+		if doweightscale:
+			wscale = visweightscale[i]
+			if(wscale==1.):
+				casalog.post('Will leave the weights for this MS unchanged.', 'INFO')
+			else:
+				casalog.post('Scaling weights for first MS by factor '+str(wscale), 'INFO')
+				t.open(concatvis, nomodify=False)
+				for colname in [ 'WEIGHT', 'WEIGHT_SPECTRUM']:
+					if (colname in t.colnames()) and (t.iscelldefined(colname,0)):
+						for j in xrange(0,t.nrows()):
+							a = t.getcell(colname, j)
+							a *= wscale
+							t.putcell(colname, j, a)
+				t.close()
+
 		# determine handling switch value
 		handlingswitch = 0
 		if not copypointing:
 			handlingswitch = 2
 
-		m.open(concatvis,False) # nomodify=False to enable writing
+		m.open(concatvis,nomodify=False)
 	
 		for elvis in vis : 
 			i = i + 1
 			casalog.post('concatenating '+elvis+' into '+concatvis , 'INFO')
+
+			wscale = 1.
+			if doweightscale:
+				wscale = visweightscale[i]
+				if(wscale==1.):
+					casalog.post('Will leave the weights for this MS unchanged.', 'INFO')
+				else:
+					casalog.post('Will scale weights for this MS by factor '+str(wscale) , 'INFO')
+
 			if(considerscrcols and needscrcols[i]):
 				# create scratch cols			
 				casalog.post('creating scratch columns for '+elvis+' (original MS unchanged)', 'INFO')
@@ -150,10 +188,10 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing):
 				cb.open(tempname) # calibrator-open creates scratch columns
 				cb.close()
 				# concatenate copy instead of original file
-				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,handling=handlingswitch)
+				m.concatenate(msfile=tempname,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch)
 				os.system('rm -rf '+tempname)
 			else:
-				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,handling=handlingswitch)
+				m.concatenate(msfile=elvis,freqtol=freqtol,dirtol=dirtol,weightscale=wscale,handling=handlingswitch)
 
 			m.writehistory(message='taskname=concat',origin='concat')
 			m.writehistory(message='vis          = "'+str(concatvis)+'"',origin='concat')
