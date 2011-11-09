@@ -199,21 +199,6 @@ FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMappe
 
 	IPosition flagCubeShape = visibilities.shape();
 
-	// Some logging info
-	if (multiThreading_p)
-	{
-		*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__
-				<<  " Thread Id " << threadId_p << ":" << nThreads_p
-				<<  " Processing [freq,time] data cube for baseline ("
-				<< antenna1 << "," << antenna2 << ") with shape " << flagCubeShape << LogIO::POST;
-	}
-	else
-	{
-		*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__
-				<<  " Processing [freq,time] data cube for baseline ("
-				<< antenna1 << "," << antenna2 << ") with shape " << flagCubeShape << LogIO::POST;
-	}
-
  /// Justo - This code demonstrates a current problem with the FlagMapper.
 	uInt nChannels,nRows;
 	nChannels = flagCubeShape(0);
