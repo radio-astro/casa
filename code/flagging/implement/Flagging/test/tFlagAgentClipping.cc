@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagAgentClipping.h>
+#include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
 using namespace casa;
@@ -66,11 +67,16 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 
 	// Create agent list
 	FlagAgentList agentList;
-	FlagAgentBase *flaggingAgent = NULL;
+	Int agentNumber = 1;
+	FlagAgentManual *flaggingAgent = NULL;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
-		flaggingAgent = new FlagAgentBase(dh,*iter,false,false,false);
+		stringstream agentName;
+		agentName << agentNumber;
+		iter->define("name","FlagAgentManual_" + agentName.str());
+		flaggingAgent = new FlagAgentManual(dh,*iter,false,false);
 		agentList.push_back(flaggingAgent);
+		agentNumber++;
 	}
 
 	// Enable profiling in the Flag Agent
@@ -230,10 +236,15 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	// Create agent list
 	FlagAgentList agentList;
 	FlagAgentClipping *flaggingAgent = NULL;
+	Int agentNumber = 1;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
+		stringstream agentName;
+		agentName << agentNumber;
+		iter->define("name","FlagAgentClipping_" + agentName.str());
 		flaggingAgent = new FlagAgentClipping(dh,*iter);
 		agentList.push_back(flaggingAgent);
+		agentNumber++;
 	}
 
 	// Enable profiling mode

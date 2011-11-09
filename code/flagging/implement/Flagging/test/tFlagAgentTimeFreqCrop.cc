@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
+#include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
 using namespace casa;
@@ -65,12 +66,17 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 	dh->generateIterator();
 
 	// Create agent list
+	Int agentNumber = 1;
 	FlagAgentList agentList;
-	FlagAgentBase *flaggingAgent = NULL;
+	FlagAgentManual *flaggingAgent = NULL;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
-		flaggingAgent = new FlagAgentBase(dh,*iter,FlagAgentBase::ROWS,false,false);
+		stringstream agentName;
+		agentName << agentNumber;
+		iter->define("name","FlagAgentManual_" + agentName.str());
+		flaggingAgent = new FlagAgentManual(dh,*iter,false,false);
 		agentList.push_back(flaggingAgent);
+		agentNumber++;
 	}
 
 	// Enable profiling in the Flag Agent
@@ -228,12 +234,17 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	dh->generateIterator();
 
 	// Create agent list
+	Int agentNumber = 1;
 	FlagAgentList agentList;
 	FlagAgentTimeFreqCrop *flaggingAgent = NULL;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
+		stringstream agentName;
+		agentName << agentNumber;
+		iter->define("name","FlagAgentTimeFreqCrop_" + agentName.str());
 		flaggingAgent = new FlagAgentTimeFreqCrop(dh,*iter);
 		agentList.push_back(flaggingAgent);
+		agentNumber++;
 	}
 
 	// Enable profiling mode
