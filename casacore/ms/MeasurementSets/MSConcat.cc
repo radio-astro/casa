@@ -72,6 +72,7 @@ MSConcat::MSConcat(MeasurementSet& ms):
 {
   itsDirTol=Quantum<Double>(1.0, "mas");
   itsFreqTol=Quantum<Double>(1.0, "Hz");
+  itsWeightScale = 1.;
   doSource_p=False;
   doObsA_p = doObsB_p = False;
 }
@@ -506,6 +507,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
  
   // MAIN
 
+  Bool doWeightScale = (itsWeightScale!=1.);
+
   for (uInt r = 0; r < newRows; r++, curRow++) {
 
     thisTime.put(curRow, otherTime, r);
@@ -674,11 +677,17 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     } // end if itsChanReversed
 
     thisSigma.put(curRow, otherSigma, r);
-    thisWeight.put(curRow, otherWeight, r);
     thisFlag.put(curRow, otherFlag, r);
     if (copyFlagCat) thisFlagCat.put(curRow, otherFlagCat, r);
     thisFlagRow.put(curRow, otherFlagRow, r);
-    if (copyWtSp) thisWeightSp.put(curRow, otherWeightSp, r);
+    if(doWeightScale){
+      thisWeight.put(curRow, otherWeight(r)*itsWeightScale);
+      if (copyWtSp) thisWeightSp.put(curRow, otherWeightSp(r)*itsWeightScale);
+    }
+    else{
+      thisWeight.put(curRow, otherWeight, r);
+      if (copyWtSp) thisWeightSp.put(curRow, otherWeightSp, r);
+    }
   } 
 
   if(doModelData){
@@ -692,6 +701,13 @@ void MSConcat::setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol){
 
   itsFreqTol=freqTol;
   itsDirTol=dirTol;
+}
+
+void MSConcat::setWeightScale(const Float weightScale){
+  if(weightScale<0){
+    throw(AipsError(String("MSConcat::setWeightScale: weight scale must be >= 0.")));
+  }
+  itsWeightScale=weightScale;
 }
 
 void MSConcat::checkShape(const IPosition& otherShape) const 
