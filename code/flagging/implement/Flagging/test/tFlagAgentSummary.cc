@@ -289,6 +289,7 @@ int main(int argc, char **argv)
 
 
 	vector<Record> agentParamersList;
+	agentParameters.define("name","FlagAgentSummary");
 	agentParamersList.push_back(agentParameters);
 	summarizeFlags(targetFile,dataSelection,agentParamersList);
 
