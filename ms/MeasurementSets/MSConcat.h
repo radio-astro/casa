@@ -96,11 +96,12 @@ public:
   MSConcat(MeasurementSet& ms);
   void concatenate(const MeasurementSet& otherMS,
 		   const uInt handlingSwitch=0); // 0 (default): complete concat of all tables
-                                                     // 1 : don't concatenate the MAIN table
-                                                     // 2 : don't concatenate the POINTING table
-                                                     // 3 : neither concat MAIN nor POINTING table
-                                                     // 4 : virtual concat of MAIN and POINTING table 
+                                                 // 1 : don't concatenate the MAIN table
+                                                 // 2 : don't concatenate the POINTING table
+                                                 // 3 : neither concat MAIN nor POINTING table
+                                                 // 4 : virtual concat of MAIN and POINTING table 
   void setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol); 
+  void setWeightScale(const Float weightScale); 
 private:
   MSConcat();
   static IPosition isFixedShape(const TableDesc& td);
@@ -136,6 +137,7 @@ private:
   IPosition itsFixedShape;
   Quantum<Double> itsFreqTol;
   Quantum<Double> itsDirTol;
+  Float itsWeightScale;
   Vector<Bool> itsChanReversed;
   SimpleOrderedMap <Int, Int> newSourceIndex_p;
   SimpleOrderedMap <Int, Int> newSourceIndex2_p;
