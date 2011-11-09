@@ -25,9 +25,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
-		FlagAgentBase(dh,config,ROWS,false)
+		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,false)
 {
-	preProcessBuffer_p = true;
 	arrayId = 0;
 	fieldId = 0;
 	spw = 0;
@@ -101,29 +100,29 @@ FlagAgentSummary::setAgentParameters(Record config)
 }
 
 void
-FlagAgentSummary::preProcessBuffer()
+FlagAgentSummary::preProcessBuffer(VisBuffer &visBuffer)
 {
-	arrayId = visibilityBuffer_p->get()->arrayId();
+	arrayId = visBuffer.arrayId();
 	stringstream arrayId_stringStream;
 	arrayId_stringStream << arrayId;
 	arrayId_str = arrayId_stringStream.str();
 
-	fieldId = visibilityBuffer_p->get()->fieldId();
+	fieldId = visBuffer.fieldId();
 	stringstream fieldId_stringStream;
 	fieldId_stringStream << fieldId;
 	fieldId_str = fieldId_stringStream.str();
 
-	spw = visibilityBuffer_p->get()->spectralWindow();
+	spw = visBuffer.spectralWindow();
 	stringstream spw_stringStream;
 	spw_stringStream << spw;
 	spw_str = spw_stringStream.str();
 
-	scan = visibilityBuffer_p->get()->scan()[0];
+	scan = visBuffer.scan()[0];
 	stringstream scan_stringStream;
 	scan_stringStream << scan;
 	scan_str = scan_stringStream.str();
 
-	observationId = visibilityBuffer_p->get()->observationId()[0];
+	observationId = visBuffer.observationId()[0];
 	stringstream observationId_stringStream;
 	observationId_stringStream << observationId;
 	observationId_str = observationId_stringStream.str();
@@ -132,10 +131,10 @@ FlagAgentSummary::preProcessBuffer()
 }
 
 void
-FlagAgentSummary::computeRowFlags(FlagMapper &flags, uInt row)
+FlagAgentSummary::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
-	Int antenna1 = visibilityBuffer_p->get()->antenna1()[row];
-	Int antenna2 = visibilityBuffer_p->get()->antenna2()[row];
+	Int antenna1 = visBuffer.antenna1()[row];
+	Int antenna2 = visBuffer.antenna2()[row];
 	String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antenna1);
 	String antenna2Name = flagDataHandler_p->antennaNames_p->operator()(antenna2);
     String baseline = antenna1Name + "&&" + antenna2Name;
