@@ -32,9 +32,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   MSArrayParse* MSArrayParse::thisMSAParser = 0x0; // Global pointer to the parser object
-  TableExprNode* MSArrayParse::node_p = 0x0;
-  std::vector<Int> MSArrayParse::parsedIDList_p;
-  Vector<Int> MSArrayParse::idList;
+  // TableExprNode* MSArrayParse::node_p = 0x0;
+  // std::vector<Int> MSArrayParse::parsedIDList_p;
+  // Vector<Int> MSArrayParse::idList;
   
   //# Constructor
   MSArrayParse::MSArrayParse ()
@@ -46,8 +46,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   MSArrayParse::MSArrayParse (const MeasurementSet* ms)
     : MSParse(ms, "Array"), colName(MS::columnName(MS::ARRAY_ID)), maxArrays_p(1000)
   {
-    if(node_p) delete node_p;
-    node_p = new TableExprNode();
     idList.resize(0);
     parsedIDList_p.resize(0);
   }
@@ -61,7 +59,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Also accumulate IDs in the global ID list which contains IDs
 	// generated from all expressions (INT, INT DASH INT, and bounds
 	// expressions (>ID, <ID, etc.)).
-	//	appendToIDList(theIDs);
       }
     else
       {
@@ -90,20 +87,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if ((n0 < 0) || (n1 < 0) || (n1 <= n0))
       {
 	ostringstream os;
-	os << "Array Expression: Malformed range bounds " << n0 << " (lower bound) and " << n1 << " (upper bound)";
+	os << "Array Expression: Malformed range bounds " 
+	   << n0 << " (lower bound) and " 
+	   << n1 << " (upper bound)";
 	throw(MSSelectionArrayParseError(os.str()));
       }
     Vector<Int> tmp(n1-n0-1);
     Int j=n0+1;
     for(uInt i=0;i<tmp.nelements();i++) tmp[i]=j++;
     appendToIDList(tmp);
-
-    if (node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p, condition);
     
-    return node_p;
+    return &node_p;
   }
   
   const TableExprNode *MSArrayParse::selectRangeGEAndLE(const Int& n0,const Int& n1)
@@ -113,20 +108,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if ((n0 < 0) || (n1 < 0) || (n1 <= n0))
       {
 	ostringstream os;
-	os << "Array Expression: Malformed range bounds " << n0 << " (lower bound) and " << n1 << " (upper bound)";
+	os << "Array Expression: Malformed range bounds " 
+	   << n0 << " (lower bound) and " 
+	   << n1 << " (upper bound)";
 	throw(MSSelectionArrayParseError(os.str()));
       }
     Vector<Int> tmp(n1-n0+1);
     Int j=n0;
     for(uInt i=0;i<tmp.nelements();i++) tmp[i]=j++;
     appendToIDList(tmp);
-
-    if (node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p, condition);
     
-    return node_p;
+    return &node_p;
   }
   
   const TableExprNode *MSArrayParse::selectArrayIds(const Vector<Int>& arrayids)
@@ -136,13 +129,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	TableExprNode condition = TableExprNode(ms()->col(colName).in(arrayids));
     
 	appendToIDList(arrayids);
-
-	if(node_p->isNull())
-	  *node_p = condition;
-	else
-	  *node_p = *node_p || condition;
+	addCondition(node_p, condition);
       }
-    return node_p;
+    return &node_p;
   }
   
   const TableExprNode *MSArrayParse::selectArrayIdsGT(const Vector<Int>& arrayids)
@@ -154,13 +143,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     j=arrayids[0]+1;
     for(Int i=0;i<n;i++) tmp[i]=j++;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p, condition);
     
-    return node_p;
+    return &node_p;
   }
   
   const TableExprNode *MSArrayParse::selectArrayIdsLT(const Vector<Int>& arrayids)
@@ -169,13 +154,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> tmp(arrayids[0]);
     for(Int i=0;i<arrayids[0];i++) tmp[i] = i;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p, condition);
     
-    return node_p;
+    return &node_p;
   }
 
   const TableExprNode *MSArrayParse::selectArrayIdsGTEQ(const Vector<Int>& arrayids)
@@ -187,13 +168,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     j=arrayids[0];
     for(Int i=0;i<n;i++) tmp[i]=j++;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p, condition);
     
-    return node_p;
+    return &node_p;
   }
   
   const TableExprNode *MSArrayParse::selectArrayIdsLTEQ(const Vector<Int>& arrayids)
@@ -202,16 +179,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Vector<Int> tmp(arrayids[0]+1);
     for(Int i=0;i<=arrayids[0];i++) tmp[i] = i;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p, condition);
     
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode* MSArrayParse::node()
+  const TableExprNode MSArrayParse::node()
   {
     return node_p;
   }

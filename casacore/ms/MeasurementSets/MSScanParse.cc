@@ -33,9 +33,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   MSScanParse* MSScanParse::thisMSSParser = 0x0; // Global pointer to the parser object
-  TableExprNode* MSScanParse::node_p = 0x0;
-  Vector<Int> MSScanParse::idList;
-  std::vector<Int> MSScanParse::parsedIDList_p;
+  // TableExprNode* MSScanParse::node_p = 0x0;
+  // Vector<Int> MSScanParse::idList;
+  //  std::vector<Int> MSScanParse::parsedIDList_p;
   
   //# Constructor
   MSScanParse::MSScanParse ()
@@ -54,7 +54,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Also accumulate IDs in the global ID list which contains IDs
 	// generated from all expressions (INT, INT DASH INT, and bounds
 	// expressions (>ID, <ID, etc.)).
-	appendToIDList(theIDs);
+	//	appendToIDList(theIDs);
       }
     else
       {
@@ -72,8 +72,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //      maxScans_p(std::numeric_limits<Int>::max())
       maxScans_p(1000)
   {
-    if(node_p) delete node_p;
-    node_p = new TableExprNode();
     idList.resize(0);
     parsedIDList_p.resize(0);
   }
@@ -88,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(Int i=currentSize;i<n;i++) idList[i] = v[j++];
   }
 
-  const TableExprNode *MSScanParse::selectRangeGTAndLT(const Int& n0,const Int& n1)
+  const TableExprNode* MSScanParse::selectRangeGTAndLT(const Int& n0,const Int& n1)
   {
     TableExprNode condition = TableExprNode( (ms()->col(colName) > n0) &&
 					     (ms()->col(colName) < n1));
@@ -103,15 +101,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt i=0;i<tmp.nelements();i++) tmp[i]=j++;
     appendToIDList(tmp);
 
-    if (node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p,condition);
     
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode *MSScanParse::selectRangeGEAndLE(const Int& n0,const Int& n1)
+  const TableExprNode* MSScanParse::selectRangeGEAndLE(const Int& n0,const Int& n1)
   {
     TableExprNode condition = TableExprNode( (ms()->col(colName) >= n0) &&
 					     (ms()->col(colName) <= n1));
@@ -126,32 +121,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for(uInt i=0;i<tmp.nelements();i++) tmp[i]=j++;
     appendToIDList(tmp);
 
-    if (node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p,condition);
     
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode *MSScanParse::selectScanIds(const Vector<Int>& scanids)
+  const TableExprNode* MSScanParse::selectScanIds(const Vector<Int>& scanids)
   {
     if (scanids.size() > 0)
       {
 	//	cerr << "Selecting disjoint list: " << scanids << endl;
 	TableExprNode condition = TableExprNode(ms()->col(colName).in(scanids));
-    
-	//    appendToIDList(scanids);
-	
-	if(node_p->isNull())
-	  *node_p = condition;
-	else
-	  *node_p = *node_p || condition;
+	appendToIDList(scanids);
+	addCondition(node_p,condition);
       }
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode *MSScanParse::selectScanIdsGT(const Vector<Int>& scanids)
+  const TableExprNode* MSScanParse::selectScanIdsGT(const Vector<Int>& scanids)
   {
     TableExprNode condition = TableExprNode(ms()->col(colName) > scanids[0]);
     
@@ -160,31 +147,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     j=scanids[0]+1;
     for(Int i=0;i<n;i++) tmp[i]=j++;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p,condition);
     
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode *MSScanParse::selectScanIdsLT(const Vector<Int>& scanids)
+  const TableExprNode* MSScanParse::selectScanIdsLT(const Vector<Int>& scanids)
   {
     TableExprNode condition = TableExprNode(ms()->col(colName) < scanids[0]);
     Vector<Int> tmp(scanids[0]);
     for(Int i=0;i<scanids[0];i++) tmp[i] = i;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p,condition);
     
-    return node_p;
+    return &node_p;
   }
 
-  const TableExprNode *MSScanParse::selectScanIdsGTEQ(const Vector<Int>& scanids)
+  const TableExprNode* MSScanParse::selectScanIdsGTEQ(const Vector<Int>& scanids)
   {
     TableExprNode condition = TableExprNode(ms()->col(colName) >= scanids[0]);
     
@@ -193,31 +172,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     j=scanids[0];
     for(Int i=0;i<n;i++) tmp[i]=j++;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p,condition);
     
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode *MSScanParse::selectScanIdsLTEQ(const Vector<Int>& scanids)
+  const TableExprNode* MSScanParse::selectScanIdsLTEQ(const Vector<Int>& scanids)
   {
     TableExprNode condition = TableExprNode(ms()->col(colName) <= scanids[0]);
     Vector<Int> tmp(scanids[0]+1);
     for(Int i=0;i<=scanids[0];i++) tmp[i] = i;
     appendToIDList(tmp);
-
-    if(node_p->isNull())
-      *node_p = condition;
-    else
-      *node_p = *node_p || condition;
+    addCondition(node_p,condition);
     
-    return node_p;
+    return &node_p;
   }
   
-  const TableExprNode* MSScanParse::node()
+  const TableExprNode MSScanParse::node()
   {
     return node_p;
   }

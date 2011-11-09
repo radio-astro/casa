@@ -106,18 +106,20 @@ public:
   std::vector<Int>& accumulateIDs(const Int id0, const Int id1=-1);
 
     // Get table expression node object.
-  static const TableExprNode* node();
+  const TableExprNode node();
 
-  static MSArrayParse* thisMSAParser;
-  static Vector<Int> selectedIDs() {return idList;};
-  static void reset(){idList.resize(0);parsedIDList_p.resize(0);};
-  static void cleanup() {if (node_p) delete node_p;node_p=0x0;};
+  Vector<Int> selectedIDs() {return idList;};
+  void reset(){idList.resize(0);parsedIDList_p.resize(0);};
+  void cleanup() {};
 
   void setMaxArray(const Int& n) {maxArrays_p=n;};
+
+  static MSArrayParse* thisMSAParser;
+
 private:
-  static TableExprNode* node_p;
-  static Vector<Int> idList;
-  static std::vector<Int> parsedIDList_p;
+  TableExprNode node_p;
+  Vector<Int> idList;
+  std::vector<Int> parsedIDList_p;
   const String colName;
   void appendToIDList(const Vector<Int>& v);
   Int maxArrays_p;

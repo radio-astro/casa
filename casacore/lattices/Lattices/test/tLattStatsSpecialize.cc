@@ -109,8 +109,6 @@ int main() {
 			AlwaysAssert(sumSq == DComplex(1140, 285), AipsError);
 			AlwaysAssert(dataMin == Complex(0, 0), AipsError);
 			AlwaysAssert(dataMax == Complex(18, 9), AipsError);
-			AlwaysAssert(minPos == 0, AipsError);
-			AlwaysAssert(maxPos == 9, AipsError);
 
 
 			/*

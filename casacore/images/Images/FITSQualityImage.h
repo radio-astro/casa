@@ -40,6 +40,7 @@ template <class T> class Array;
 template <class T> class Lattice;
 //
 class FITSImage;
+class FITSQualityMask;
 class IPosition;
 class Slicer;
 
@@ -109,6 +110,12 @@ public:
   // Make a copy of the object with new (reference semantics).
   virtual ImageInterface<Float>* cloneII() const;
 
+  // Get the FITS data
+  FITSImage      *fitsData() const {return fitsdata_p;};
+
+  // Get the FITS error
+  FITSErrorImage *fitsError() const {return fitserror_p;};
+
   // Get the image type (returns FITSImage).
   virtual String imageType() const;
 
@@ -123,6 +130,13 @@ public:
 
   // FITSQualityImage always has a pixel mask so returns True
   virtual Bool hasPixelMask() const;
+
+  // Get access to the pixelmask.  FITSQualityImage always has a pixel mask.
+  // <group>
+  virtual const Lattice<Bool>& pixelMask() const;
+  virtual Lattice<Bool>& pixelMask();
+  // </group>
+
 
   // Get the region used.  There is no region. 
   // Always returns 0.
@@ -212,6 +226,7 @@ private:
   String         fullname_p;
   FITSImage      *fitsdata_p;
   FITSErrorImage *fitserror_p;
+  Lattice<Bool>  *pPixelMask_p;
   TiledShape     shape_p;
   uInt           whichDataHDU_p;
   uInt           whichErrorHDU_p;

@@ -2752,16 +2752,17 @@ Record ImageAnalysis::maxfit(Record& Region, const Bool doPoint,
 	return outrec;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
-		Record& Region, const String& mask, const Vector<String>& method,
-		const Vector<Int>& smoothaxes, const Vector<String>& kernels,
-		const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
-		const Vector<Float>& excludepix, const Double peaksnr,
-		const Double stddev, const String& velocityType, const String& out,
-		const String& smoothout, const String& pgdevice, const Int nx,
-		const Int ny, const Bool yind, const Bool overwrite,
-		const Bool removeAxis) {
+ImageInterface<Float> * ImageAnalysis::moments(
+	const Vector<Int>& whichmoments, const Int axis,
+	Record& Region, const String& mask, const Vector<String>& method,
+	const Vector<Int>& smoothaxes, const Vector<String>& kernels,
+	const Vector<Quantity>& kernelwidths, const Vector<Float>& includepix,
+	const Vector<Float>& excludepix, const Double peaksnr,
+	const Double stddev, const String& velocityType, const String& out,
+	const String& smoothout, const String& pgdevice, const Int nx,
+	const Int ny, const Bool yind, const Bool overwrite,
+	const Bool removeAxis, const Bool stretchMask
+) {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// check that we can write to smoothout if specified
@@ -2781,7 +2782,7 @@ ImageAnalysis::moments(const Vector<Int>& whichmoments, const Int axis,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), stretchMask
 	);
 	// Create ImageMoments object
 	ImageMoments<Float> momentMaker(subImage, *itsLog, overwrite, True);
@@ -3361,13 +3362,14 @@ ImageAnalysis::rebin(const String& outFile, const Vector<Int>& factors,
 	return pImOut;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
-		const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
-		Record& Region, const String& mask, const String& methodU,
-		const Int decimate, const Bool replicate, const Bool doRefChange,
-		const Bool dropDegenerateAxes, const Bool overwrite,
-		const Bool forceRegrid) {
+ImageInterface<Float>* ImageAnalysis::_regrid(
+	const String& outFile, const Vector<Int>& inshape,
+	const CoordinateSystem& coordinates, const Vector<Int>& inaxes,
+	Record& Region, const String& mask, const String& methodU,
+	const Int decimate, const Bool replicate, const Bool doRefChange,
+	const Bool dropDegenerateAxes, const Bool overwrite,
+	const Bool forceRegrid
+) {
 	*itsLog << LogOrigin("ImageAnalysis", "regrid1");
 
 	Int dbg = 0;
@@ -3418,6 +3420,7 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 	// Deal with axes
 	Vector<Int> axes(inaxes);
 	IPosition axes2(axes);
+	//cout << "axes2 " << axes2 << endl;
 	Vector<Int> shape(tmpShape);
 	IPosition outShape(shape);
 
@@ -3472,13 +3475,15 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 	return pImOut;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
-		const Record& coordinates, const Vector<Int>& inaxes, Record& Region,
-		const String& mask, const String& methodU, const Int decimate,
-		const Bool replicate, const Bool doRefChange,
-		const Bool dropDegenerateAxes, const Bool overwrite,
-		const Bool forceRegrid) {
+ImageInterface<Float>* ImageAnalysis::regrid(
+	const String& outFile, const Vector<Int>& inshape,
+	const Record& coordinates, const Vector<Int>& inaxes,
+	Record& Region, const String& mask,
+	const String& methodU, const Int decimate,
+	const Bool replicate, const Bool doRefChange,
+	const Bool dropDegenerateAxes, const Bool overwrite,
+	const Bool forceRegrid, const Bool specAsVelocity
+) {
 	*itsLog << LogOrigin("ImageAnalysis", "regrid2");
 
 	// must deal with default shape and dropDegenerateAxes
@@ -3502,18 +3507,125 @@ ImageAnalysis::regrid(const String& outFile, const Vector<Int>& inshape,
 		tmpShape = inshape;
 	}
 
-	CoordinateSystem *csys = new CoordinateSystem();
-	if (coordinates.nfields() > 0) {
-		delete csys;
-		csys = makeCoordinateSystem(coordinates, IPosition(tmpShape));
-	}
-	ImageInterface<Float> * pimout;
-	pimout = regrid(outFile, inshape, *csys, inaxes, Region, mask, methodU,
-			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
-			forceRegrid);
-	delete csys;
-	return pimout;
+	std::auto_ptr<CoordinateSystem> csys(
+		coordinates.nfields() > 0
+		? makeCoordinateSystem(coordinates, IPosition(tmpShape))
+		: new CoordinateSystem()
+	);
 
+	Bool regridByVel = False;
+	if (
+		specAsVelocity && pImage_p->coordinates().hasSpectralAxis()
+		&& csys->hasSpectralAxis()
+	) {
+		if (inaxes.size() == 0) {
+			regridByVel = True;
+		}
+		else {
+			Int specAxis = pImage_p->coordinates().spectralAxisNumber();
+			for (uInt i=0; i<inaxes.size(); i++) {
+				if (inaxes[i] == specAxis) {
+					regridByVel = True;
+					break;
+				}
+			}
+		}
+	}
+	if (regridByVel) {
+		return _regridByVelocity(
+			outFile, inshape, *csys, inaxes,
+			Region, mask, methodU, decimate,
+			replicate, doRefChange, dropDegenerateAxes,
+			overwrite, forceRegrid
+		);
+	}
+	else {
+		return _regrid(
+			outFile, inshape, *csys, inaxes, Region, mask, methodU,
+			decimate, replicate, doRefChange, dropDegenerateAxes, overwrite,
+			forceRegrid
+		);
+	}
+}
+
+ImageInterface<Float>* ImageAnalysis::_regridByVelocity(
+	const String& outfile, const Vector<Int>& shape,
+	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
+    Record& region, const String& mask,
+    const String& method, const Int decimate,
+    const Bool replicate, const Bool doref,
+    const Bool dropdeg, const Bool overwrite,
+    const Bool force
+) const {
+	std::auto_ptr<CoordinateSystem> csys(
+		dynamic_cast<CoordinateSystem *>(csysTemplate.clone())
+	);
+	std::auto_ptr<ImageInterface<Float> > clone(
+		new SubImage<Float>(
+			SubImage<Float>::createSubImage(*pImage_p, Record(), "", 0, False)
+		)
+	);
+	std::auto_ptr<CoordinateSystem> coordClone(
+		dynamic_cast<CoordinateSystem *>(clone->coordinates().clone())
+	);
+	const SpectralCoordinate saveSpecCoord = csys->spectralCoordinate();
+
+	for (uInt i=0; i<2; i++) {
+		CoordinateSystem *cs = i == 0 ? csys.get() : coordClone.get();
+		// create and replace the coordinate system's spectral coordinate with
+		// a linear coordinate which describes the velocity axis. In this way
+		// we can regrid by velocity.
+		Int specCoordNum = cs->spectralCoordinateNumber();
+		SpectralCoordinate specCoord = cs->spectralCoordinate();
+		Double freqRefVal = specCoord.referenceValue()[0];
+		Double velRefVal;
+		if (! specCoord.frequencyToVelocity(velRefVal, freqRefVal)) {
+			*itsLog << LogIO::SEVERE << "Unable to determine reference velocity";
+		}
+		Double vel0, vel1;
+		if (
+			! specCoord.pixelToVelocity(vel0, 0.0)
+			|| ! specCoord.pixelToVelocity(vel1, 1.0)
+		) {
+			*itsLog << LogIO::SEVERE << "Unable to determine velocity increment";
+		}
+		Matrix<Double> pc(1, 1, 0);
+		pc.diagonal() = 1.0;
+		LinearCoordinate lin(
+			Vector<String>(1, "velocity"),
+			specCoord.worldAxisUnits(),
+			Vector<Double>(1, velRefVal),
+			Vector<Double>(1, vel1 - vel0),
+			pc, specCoord.referencePixel()
+		);
+		if (! cs->replaceCoordinate(lin, specCoordNum)) {
+			*itsLog << "Unable to replace spectral with linear coordinate";
+		}
+	}
+	clone->setCoordinateInfo(*coordClone);
+	ImageAnalysis newIA(clone.get());
+	std::auto_ptr<ImageInterface<Float> > outImage(
+		newIA._regrid(
+			outfile, shape, *csys, axes, region, mask, method,
+			decimate, replicate, doref, dropdeg, overwrite,
+			force
+		)
+	);
+	// replace the temporary linear coordinate with the saved spectral coordinate
+	std::auto_ptr<CoordinateSystem> newCoords(
+		dynamic_cast<CoordinateSystem *>(outImage->coordinates().clone())
+	);
+	if (
+		! newCoords->replaceCoordinate(
+			saveSpecCoord,
+			clone->coordinates().linearCoordinateNumber()
+		)
+	) {
+		*itsLog << LogIO::SEVERE
+			<< "Unable to replace coordinate for velocity regridding";
+	}
+	outImage->setCoordinateInfo(*newCoords);
+	return outImage.release();
 }
 
 ImageInterface<Float> *
@@ -4162,7 +4274,7 @@ Bool ImageAnalysis::statistics(
 	const Bool verbose
 ) {
 	String pgdevice("/NULL");
-	*itsLog << LogOrigin("ImageAnalysis", "statistics");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -4174,9 +4286,10 @@ Bool ImageAnalysis::statistics(
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
 		mtmp,  (verbose ? itsLog : 0), False
 	);
-	/*
 	{
-		cout << "mask " << subImage.getMask() << endl;
+        /*
+		// block for debug only
+		//cout << "mask " << subImage.getMask() << endl;
 		Array<Bool> mymask = subImage.getMask();
 		IPosition shape = mymask.shape();
 		IPosition index = shape-1;
@@ -4228,8 +4341,8 @@ Bool ImageAnalysis::statistics(
 				break;
 			}
 		}
+        */
 	}
-	*/
 	// Reset who is logging stuff.
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -5641,14 +5754,36 @@ ImageAnalysis::echo(Record& v, const bool godeep) {
 
 Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		Vector<Float>& specVal, const CoordinateSystem& cs,
-		const String& xunits, const String& specFrame) {
+		const String& xunits, const String& specFrame, const String& restValue) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	CoordinateSystem cSys=cs;
 	if(specFrame != ""){
 		String errMsg;
 		if(!CoordinateUtil::setSpectralConversion(errMsg, cSys, specFrame)){
-			cerr << "Failed to convert with error: " << errMsg << endl;
+			//cerr << "Failed to convert with error: " << errMsg << endl;
+			*itsLog << LogIO::WARN << "Failed to convert with error: " << errMsg << LogIO::POST;
 		}
+	}
+	if (restValue!=""){
+		String errMsg;
+	   Quantity restQuant;
+	   Bool ok = Quantity::read(restQuant, restValue);
+	   if (!ok) {
+	   	errMsg = "Can not convert value to rest wavelength/frequency: " + restValue;
+	      //os << errorMsg << LogIO::EXCEPTION;
+	   	*itsLog << LogIO::WARN << errMsg << LogIO::POST;
+	   }
+	   else if (restQuant.getValue() > 0 && restQuant.getUnit().empty()){
+	   	errMsg = "Can not retrieve unit for rest wavelength/frequency in: " + restValue;
+	      //os << errorMsg << LogIO::EXCEPTION;
+	   	*itsLog << LogIO::WARN << errMsg << LogIO::POST;
+	   }
+	   if (!CoordinateUtil::setRestFrequency (errMsg, cSys,
+	   	                                    restQuant.getUnit(), restQuant.getValue())) {
+	   	//os << errorMsg << LogIO::EXCEPTION;
+	   	*itsLog << LogIO::WARN << errMsg << LogIO::POST;
+	   }
 	}
 
 	Int specAx = cSys.findCoordinate(Coordinate::SPECTRAL);
@@ -5707,7 +5842,7 @@ Bool ImageAnalysis::getSpectralAxisVal(const String& specaxis,
 		return False;
 
 	convertArray(specVal, xworld);
-
+	//cout << xworld << endl;
 	return True;
 }
 
@@ -5717,7 +5852,8 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 				   const String& xytype,
 				   const String& specaxis, const Int&,
 				   const Int&, const Int&,
-				   const String& xunits, const String& specFrame, const Int& whichQuality) {
+				   const String& xunits, const String& specFrame,
+				   const Int& whichQuality, const String& restValue) {
 
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 	if (xy.size() != 2) {
@@ -5807,7 +5943,7 @@ Bool ImageAnalysis::getFreqProfile(const Vector<Double>& xy,
 
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue);
 }
 
 
@@ -5818,7 +5954,7 @@ Bool ImageAnalysis::getFreqProfile(
 		const Int& whichStokes, const Int& whichTabular,
 		const Int& whichLinear, const String& xunits,
 		const String& specFrame, const Int &combineType,
-		const Int& whichQuality)
+		const Int& whichQuality, const String& restValue)
 {
 	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
@@ -5844,7 +5980,7 @@ Bool ImageAnalysis::getFreqProfile(
 		xy[0] = x[0];
 		xy[1] = y[0];
 		return getFreqProfile(xy, zxaxisval, zyaxisval, xytype, specaxis,
-				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality);
+				whichStokes, whichTabular, whichLinear, xunits, specFrame, whichQuality, restValue);
 	}
 
 	// n > 1, i.e. region to average over is a rectangle or polygon
@@ -6048,7 +6184,7 @@ Bool ImageAnalysis::getFreqProfile(
 
 	// get the spectral values
 	zxaxisval.resize(zyaxisval.nelements());
-	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame);
+	return getSpectralAxisVal(specaxis, zxaxisval, cSys, xunits, specFrame, restValue);
 }
 
 // These should really go in a coordsys inside the casa name space

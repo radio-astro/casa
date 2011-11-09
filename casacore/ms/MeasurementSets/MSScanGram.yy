@@ -80,14 +80,14 @@
 %}
 
 %%
-scanstatement: compoundexpr                {$$ = MSScanParse().selectScanIds();}
+scanstatement: compoundexpr                {$$ = MSScanParse::thisMSSParser->selectScanIds();}
              ;
 // Here, for ID-list expressions (INT and INT DASH INT), we only
 // collect the list of IDs generated (accumulated internally in
 // MSScanPrase).  The accumulated IDs are used for selection in the
 // terminal node above.  Bounds expressions are however used for
 // selection as they are parsed.
-compoundexpr: scanids                           {$$ = MSScanParse().node();}
+compoundexpr: scanids                           {/*$$ = &MSScanParse::thisMSSParser->node();*/}
             | scanboundsexpr                    {$$=$1;}
             | compoundexpr COMMA scanids        {$$=$1;}
             | compoundexpr COMMA scanboundsexpr {$$=$1;}
@@ -96,38 +96,38 @@ compoundexpr: scanids                           {$$ = MSScanParse().node();}
 scanidbounds: LT INT // <ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
-		  $$ = MSScanParse().selectScanIdsLT(idv);
+		  $$ = MSScanParse::thisMSSParser->selectScanIdsLT(idv);
 		  free($2);
 		}
             | GT INT // >ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
-		  $$ = MSScanParse().selectScanIdsGT(idv);
+		  $$ = MSScanParse::thisMSSParser->selectScanIdsGT(idv);
 		  free($2);
 		}
             | LE INT // <=ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
-		  $$ = MSScanParse().selectScanIdsLTEQ(idv);
+		  $$ = MSScanParse::thisMSSParser->selectScanIdsLTEQ(idv);
 		  free($2);
 		}
             | GE INT // >=ID
                 {
 		  const Vector<Int> idv(1,atoi($2));
-		  $$ = MSScanParse().selectScanIdsGTEQ(idv);
+		  $$ = MSScanParse::thisMSSParser->selectScanIdsGTEQ(idv);
 		  free($2);
 		}
             | GE INT AMPERSAND LE INT // >=ID & <=ID
                 {
 		  Int n0=atoi($2), n1=atoi($5);
-		  $$ = MSScanParse().selectRangeGEAndLE(n0,n1);
+		  $$ = MSScanParse::thisMSSParser->selectRangeGEAndLE(n0,n1);
 
 		  free($2); free($5);
 		}
             | GT INT AMPERSAND LT INT // >ID & <ID
                 {
 		  Int n0=atoi($2), n1=atoi($5);
-		  $$ = MSScanParse().selectRangeGTAndLT(n0,n1);
+		  $$ = MSScanParse::thisMSSParser->selectRangeGTAndLT(n0,n1);
 
 		  free($2); free($5);
 		}
@@ -140,12 +140,12 @@ scanboundsexpr: scanidbounds {$$=$1;}
 //
 scanids: INT
            {
-	     $$=&MSScanParse().accumulateIDs(atoi($1));
+	     $$=&MSScanParse::thisMSSParser->accumulateIDs(atoi($1));
 	     free($1);
 	   }
        | INT DASH INT
            {
-	     $$=&MSScanParse().accumulateIDs(atoi($1),atoi($3));
+	     $$=&MSScanParse::thisMSSParser->accumulateIDs(atoi($1),atoi($3));
 	     free($1); free($3);
 	   }
         ;

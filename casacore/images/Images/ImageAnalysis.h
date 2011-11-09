@@ -280,23 +280,21 @@ class ImageAnalysis
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);
 
-    ImageInterface<Float> * moments(const Vector<Int>& moments, const Int axis,
-                                    Record& region, const String& mask, 
-                                    const Vector<String>& method, 
-                                    const Vector<Int>& smoothaxes, 
-                                    const Vector<String>& smoothtypes, 
-                                    const Vector<Quantity>& smoothwidths, 
-                                    const Vector<Float>& includepix, 
-                                    const Vector<Float>& excludepix, 
-                                    const Double peaksnr, const Double stddev, 
-                                    const String& doppler = "RADIO", 
-                                    const String& outfile = "", 
-                                    const String& smoothout = "", 
-                                    const String& plotter = "/NULL", 
-                                    const Int nx = 1, const Int ny = 1, 
-                                    const Bool yind = False, 
-                                    const Bool overwrite = False, 
-                                    const Bool drop = True);
+    ImageInterface<Float> * moments(
+    	const Vector<Int>& moments, const Int axis, Record& region,
+    	const String& mask, const Vector<String>& method,
+    	const Vector<Int>& smoothaxes,
+    	const Vector<String>& smoothtypes,
+        const Vector<Quantity>& smoothwidths,
+        const Vector<Float>& includepix,
+        const Vector<Float>& excludepix,
+        const Double peaksnr, const Double stddev,
+        const String& doppler = "RADIO",  const String& outfile = "",
+        const String& smoothout="", const String& plotter="/NULL",
+        const Int nx=1, const Int ny=1,  const Bool yind=False,
+        const Bool overwrite=False, const Bool drop=True,
+        const Bool stretchMask=False
+    );
 
     String name(const Bool strippath = False);
 
@@ -323,30 +321,22 @@ class ImageAnalysis
     //regrids to a given coordinate system...one uses a record that is 
     //converted to a CoordinateSytem 
 
-    ImageInterface<Float> * regrid(const String& outfile, 
-                                   const Vector<Int>& shape, 
-                                   const Record& csys, const Vector<Int>& axes,
-                                   Record& region, const String& mask, 
-                                   const String& method = "linear", 
-                                   const Int decimate = 10, 
-                                   const Bool replicate = False, 
-                                   const Bool doref = True, 
-                                   const Bool dropdeg = False, 
-                                   const Bool overwrite = False, 
-                                   const Bool force = False);
+    ImageInterface<Float> * regrid(
+    	const String& outfile,
+    	const Vector<Int>& shape,
+        const Record& csys, const Vector<Int>& axes,
+        Record& region, const String& mask,
+        const String& method = "linear",
+        const Int decimate = 10,
+        const Bool replicate = False,
+        const Bool doref = True,
+        const Bool dropdeg = False,
+        const Bool overwrite = False,
+        const Bool force=False,
+        const Bool specAsVelocity=False
+    );
     
-    ImageInterface<Float> * regrid(const String& outfile, 
-                                   const Vector<Int>& shape, 
-                                   const CoordinateSystem& csys, 
-                                   const Vector<Int>& axes,
-                                   Record& region, const String& mask, 
-                                   const String& method = "linear", 
-                                   const Int decimate = 10, 
-                                   const Bool replicate = False, 
-                                   const Bool doref = True, 
-                                   const Bool dropdeg = False, 
-                                   const Bool overwrite = False, 
-                                   const Bool force = False);
+
 
     ImageInterface<Float> * rotate(const String& outfile, 
                                    const Vector<int>& shape, 
@@ -505,7 +495,8 @@ class ImageAnalysis
    		 const Int& whichLinear=0,
    		 const String& xunits="",
    		 const String& specframe="",
-   		 const Int& whichQuality=0);
+   		 const Int& whichQuality=0,
+   		 const String& restValue="");
 
     //how about using this ?
     //for x.shape(xn) & y shape(yn)
@@ -523,7 +514,8 @@ class ImageAnalysis
    		 const String& xunits="",
    		 const String& specframe="",
    		 const Int &combineType=0,
-   		 const Int& whichQuality=0);
+   		 const Int& whichQuality=0,
+   		 const String& restValue="");
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -667,9 +659,30 @@ class ImageAnalysis
     //e.g "vel", "fre" or "pix"..specVal has to be sized already 
     Bool getSpectralAxisVal(const String& specaxis, Vector<Float>& specVal, 
                             const CoordinateSystem& cSys, const String& xunits, 
-			    const String& freqFrame="");
+                            const String& freqFrame="", const String& restValue="");
     //return a vector of the spectral axis values in units requested
     //e.g "vel", "fre" or "pix"..specVal has to be sized already
+
+
+    ImageInterface<Float> * _regrid(
+    	const String& outfile, const Vector<Int>& shape,
+        const CoordinateSystem& csys, const Vector<Int>& axes,
+        Record& region, const String& mask,
+        const String& method, const Int decimate,
+        const Bool replicate, const Bool doref,
+        const Bool dropdeg, const Bool overwrite,
+        const Bool force
+    );
+
+    ImageInterface<Float>* _regridByVelocity(
+    	const String& outfile, const Vector<Int>& shape,
+    	const CoordinateSystem& csysTemplate, const Vector<Int>& axes,
+    	Record& region, const String& mask,
+    	const String& method, const Int decimate,
+    	const Bool replicate, const Bool doref,
+    	const Bool dropdeg, const Bool overwrite,
+    	const Bool force
+    ) const;
 };
 
 } // casac namespace

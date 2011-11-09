@@ -241,7 +241,7 @@ void MSIter::construct(const Block<Int>& sortColumns,
 	  // check if #rows in input table is the same as the base table
 	  // i.e., this is the entire table, if so, use sorted version instead
 	  String anttab = bms_p[i].antenna().tableName(); // see comments below
-	  Table base (anttab.before("/ANTENNA"));
+	  Table base (anttab.erase(anttab.length()-8));
 	  if (base.nrow()==bms_p[i].nrow()) {
 	    useSorted = True;
 	  } else {
@@ -263,7 +263,7 @@ void MSIter::construct(const Block<Int>& sortColumns,
 	// There is no table function to get this, so we use the name of
 	// the antenna subtable to get at it.
 	String anttab = bms_p[i].antenna().tableName();
-	sorted.rename(anttab.before("ANTENNA")+"SORTED_TABLE",Table::New); 
+	sorted.rename(anttab.erase(anttab.length()-7)+"SORTED_TABLE",Table::New); 
 	sorted.flush();
 	bms_p[i].rwKeywordSet().defineTable("SORTED_TABLE",sorted);
 	bms_p[i].rwKeywordSet().define("SORT_COLUMNS", Vector<String>(columns));

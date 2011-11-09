@@ -53,13 +53,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #if defined(AIPS_DARWIN) || defined(AIPS_BSD)
 # define fileLSTAT lstat
 # define fileSTAT  stat
+# define fileSTATFS  statfs
 #else
 # define fileLSTAT lstat64
 # define fileSTAT  stat64
+# define fileSTATFS  statfs64
 #endif
 #else
 # define fileLSTAT lstat
 # define fileSTAT  stat
+# define fileSTATFS  statfs
 #endif
 
 
@@ -451,6 +454,29 @@ void File::checkTarget (Path& targetName, Bool overwrite,
 			      " already exists and is not writable"));
 	}
     }
+}
+
+
+#ifdef AIPS_DARWIN
+#include <sys/param.h>
+#include <sys/mount.h>
+#else
+#include <sys/vfs.h>
+#endif
+
+
+String File::getFSType() const
+{
+	String rstat("Normal");
+	struct fileSTATFS  statbuf;
+        fileSTATFS(itsPath.dirName().chars(), &statbuf);
+#ifdef AIPS_DARWIN
+	rstat = String(statbuf.f_fstypename);
+#else
+	if(statbuf.f_type == 0x0BD00BD0)
+	   rstat = "Lustre";
+#endif
+	return rstat;
 }
 
 } //# NAMESPACE CASA - END

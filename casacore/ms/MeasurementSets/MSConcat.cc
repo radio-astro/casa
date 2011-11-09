@@ -119,22 +119,41 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 }
 
   void MSConcat::concatenate(const MeasurementSet& otherMS, 
-			     const Bool dontModifyMain)
+			     const uInt handlingSwitch)
 {
   LogIO log(LogOrigin("MSConcat", "concatenate", WHERE));
 
   log << "Appending " << otherMS.tableName() 
       << " to " << itsMS.tableName() << endl << LogIO::POST;
 
-  if(dontModifyMain){
-    log << "*** At user\'s request, MAIN table will not be modified!" << LogIO::POST;
+  switch(handlingSwitch){
+  case 0: // normal concat
+    break;
+  case 1:
+    log << "*** At user\'s request, MAIN table will not be concatenated!" << LogIO::POST;
+    break;
+  case 2:
+    log << "*** At user\'s request, POINTING table will not be concatenated!" << LogIO::POST;
+    break;
+  case 3:
+    log << "*** At user\'s request, MAIN and POINTING tables will not be concatenated!" << LogIO::POST;
+    break;
+  case 4:
+    log << "*** At user\'s request, MAIN and POINTING table will be concatenated virtually!" << LogIO::POST;
+    log << "*** NOTE: do not remove the original input MSs." << LogIO::POST;
+    log << "*** (not yet implemented)" << LogIO::POST;
+    break;
+  default:
+    log << "Invalid value for handling switch: " << handlingSwitch << " (valid range is 0 - 4)"
+	<< LogIO::EXCEPTION;
+    break;
   }
-
+ 
   // check if certain columns are present and set flags accordingly
   Bool doCorrectedData=False, doModelData=False;
   Bool doFloatData=False;
 
-  if(!dontModifyMain){
+  if(handlingSwitch==0 || handlingSwitch==2){
 
     if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
 	otherMS.tableDesc().isColumn("FLOAT_DATA"))
@@ -285,7 +304,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
 
   //for(uint ii=0; ii<newAntIndices.size(); ii++){
-  //  cout << "i, newAntIndices(i)" << ii << " " << newAntIndices[ii] << endl;
+  //  cout << "i, newAntIndices(i) " << ii << " " << newAntIndices[ii] << endl;
   //}
 
   // FIELD
@@ -303,12 +322,20 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation());
 
   // POINTING
-  if(!copyPointing(otherMS.pointing(), newAntIndices)){
-    log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+  if(handlingSwitch<2){
+    if(!copyPointing(otherMS.pointing(), newAntIndices)){
+      log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
+    }
+  }
+  else{ // delete the POINTING table
+    log << LogIO::NORMAL << "Deleting all rows in the Pointing subtable ..." << LogIO::POST ;
+    Vector<uInt> delrows(itsMS.pointing().nrow());
+    indgen(delrows);
+    itsMS.pointing().removeRow(delrows); 
   }
 
   // STOP HERE if Main is not to be modified
-  if(dontModifyMain){
+  if(handlingSwitch==1 || handlingSwitch==3){
     return;
   }
   //////////////////////////////////////////////////////
@@ -774,9 +801,17 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
 
   if(rowToBeAdded > 0){
     MSPointingColumns pointCol(point);
+    // check antenna IDs
     Vector<Int> antennaIDs=pointCol.antennaId().getColumn();
-    if(( min(antennaIDs) <0) || ( uInt(max(antennaIDs)) > newAntIndices.nelements())){
-      
+    Bool idsOK = True;
+    uInt maxID = newAntIndices.nelements()-1;
+    for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
+      if(antennaIDs[k] < 0 || antennaIDs[k] > maxID){
+	idsOK = False;
+	break;
+      }
+    }
+    if(!idsOK){
       os << LogIO::WARN 
 	 << "Found invalid antenna ids in the POINTING table; the POINTING table will be emptied as it is inconsistent" 
 	 << LogIO::POST;
@@ -784,7 +819,6 @@ Bool MSConcat::copyPointing(const MSPointing& otherPoint,const
       indgen(rowtodel);
       point.removeRow(rowtodel);
       return False;
-  
     } 
 
     for (Int k=origNRow; k <  (origNRow+rowToBeAdded); ++k){
@@ -1595,7 +1629,8 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
 
   // loop over the rows of the other data description table
   for (uInt d = 0; d < nDDs; d++) {
-    Bool matchedDD = True;
+    //cout << "other DD " << d << endl;
+    Bool matchedSPW = False;
     DebugAssert(otherDDCols.spectralWindowId()(d) >= 0 &&
 		otherDDCols.spectralWindowId()(d) < static_cast<Int>(otherSpw.nrow()), 
 		AipsError);
@@ -1626,19 +1661,18 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
       // fill map to be used by updateSource()
       newSPWIndex_p.define(otherSpwId, *newSpwPtr); 
       // There cannot be an entry in the DATA_DESCRIPTION Table
-      matchedDD = False;
       doSPW_p = True;      
     }
-    //else{
-    //cout << "counterpart found for other spw " << otherSpwId 
-    //	   << " found in this spw " << *newSpwPtr << endl;
-    //}      
+    else{
+      //cout << "counterpart found for other spw " << otherSpwId 
+      //     << " found in this spw " << *newSpwPtr << endl;
+      matchedSPW = True;
+    }      
     
     DebugAssert(otherDDCols.polarizationId()(d) >= 0 &&
 		otherDDCols.polarizationId()(d) < 
 		static_cast<Int>(otherPol.nrow()), AipsError);
-    const uInt otherPolId = 
-      static_cast<uInt>(otherDDCols.polarizationId()(d));
+    const uInt otherPolId = static_cast<uInt>(otherDDCols.polarizationId()(d));
 
     otherPolCols.corrType().get(otherPolId, corrInt, True);
     const uInt nCorr = corrInt.nelements();
@@ -1646,25 +1680,24 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
     for (uInt p = 0; p < nCorr; p++) {
       corrPol(p) = Stokes::type(corrInt(p));
     }
-    Bool matchedBoth=False;
+    Bool matchedDD=False;
     uInt numActPol =0;
-    while ( !matchedBoth && (numActPol < polCols.nrow()) ){
+    while ( numActPol < polCols.nrow() ){
       *newPolPtr = polCols.match(corrPol, numActPol);
       if (*newPolPtr < 0) {
-	// need to add a new entry in the POLARIZATION subtable
+	// cout << "need to add a new entry in the POLARIZATION subtable" << endl;
 	*newPolPtr= pol.nrow();
 	pol.addRow();
 	polRow.putMatchingFields(*newPolPtr, otherPolRow.get(otherPolId));
-	// Again there cannot be an entry in the DATA_DESCRIPTION Table
-	matchedDD = False;
-	matchedBoth = True; // just to break out of while loop
+	break; // break out of the while loop
       }
-      else{
-	// We need to check if there exists an entry in the DATA_DESCRIPTION
-	// table with the required spectral window and polarization index.
-	//if we had a match on spw
-	if(matchedDD)
-	  ddMap[d] = ddIndex.getRowNumber(matchedBoth);
+      else{ // we have a Pol match
+	if(matchedSPW){ 
+	  // We need to check if there exists an entry in the DATA_DESCRIPTION
+	  // table with the required spectral window and polarization index.
+	  ddMap[d] = ddIndex.getRowNumber(matchedDD); // sets matchedDD to True if a matching DD table entry is found
+	}
+	//cout << "Found matching pol. Fould matching DD? " << matchedDD << " d ddMap[d] " << d << " " << ddMap[d] << endl;
       }
       ++numActPol;
     }
