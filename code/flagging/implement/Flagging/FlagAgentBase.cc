@@ -63,22 +63,60 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	// Set vis buffer
 	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
 
-	// Set data selection
-	setDataSelection(config);
+	// Activate FlagDataHandler mappings depending on iteration approach
+	switch (iterationApproach_p)
+	{
+		case ANTENNA_PAIRS:
+		{
+			flagDataHandler_p->setMapPolarizations(true);
+			break;
+		}
+		case ROWS:
+		{
+			break;
+		}
+		case IN_ROWS:
+		{
+			flagDataHandler_p->setMapPolarizations(true);
+			break;
+		}
+		case ANTENNA_PAIRS_PREPROCESS_BUFFER:
+		{
+			flagDataHandler_p->setMapPolarizations(true);
+			break;
+		}
+		case ROWS_PREPROCESS_BUFFER:
+		{
+			flagDataHandler_p->setMapPolarizations(true);
+			break;
+		}
+		case IN_ROWS_PREPROCESS_BUFFER:
+		{
+			flagDataHandler_p->setMapPolarizations(true);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
 
 	// Set agent parameters
 	setAgentParameters(config);
+
+	// Set data selection
+	setDataSelection(config);
 
 	// Check if async processing is enabled
 	backgroundMode_p = false;
 	AipsrcValue<Bool>::find (backgroundMode_p,"FlagAgent.background", false);
 	if (backgroundMode_p)
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " Background mode enabled" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Background mode enabled" << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " Background mode enabled" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Background mode enabled" << LogIO::POST;
 	}
 }
 
@@ -117,6 +155,7 @@ FlagAgentBase::initialize()
    polarizationIndex_p.clear();
 
    // Initialize filters
+   antennaNegation_p = false;
    filterChannels_p = false;
    filterRows_p = false;
    filterPols_p = false;
@@ -132,10 +171,10 @@ FlagAgentBase::initialize()
    profiling_p = false;
    backgroundMode_p = true;
    iterationApproach_p = ROWS;
-   preProcessBuffer_p = false;
    multiThreading_p = false;
    nThreads_p = 0;
    threadId_p = 0;
+   agentName_p = String("");
    /// Flag/Unflag config
    writePrivateFlagCube_p = false;
    flag_p = true;
@@ -165,7 +204,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	}
 	else
 	{
-		cerr << "FlagAgentBase::" << __FUNCTION__ << " Mode not provided" << endl;
+		cerr << "FlagAgentFactory::" << __FUNCTION__ << " Mode not provided" << endl;
 		return ret;
 	}
 
@@ -332,20 +371,38 @@ FlagAgentBase::runCore()
 			// Iterate trough rows (i.e. baselines)
 			case ROWS:
 			{
-				if (preProcessBuffer_p) preProcessBuffer();
 				iterateRows();
 				break;
 			}
 			// Iterate inside every row (i.e. channels) applying a mapping expression
 			case IN_ROWS:
 			{
-				if (preProcessBuffer_p) preProcessBuffer();
+				iterateInRows();
+				break;
+			}
+			case ANTENNA_PAIRS_PREPROCESS_BUFFER:
+			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				iterateAntennaPairs();
+				break;
+			}
+			// Iterate trough rows (i.e. baselines)
+			case ROWS_PREPROCESS_BUFFER:
+			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				iterateRows();
+				break;
+			}
+			// Iterate inside every row (i.e. channels) applying a mapping expression
+			case IN_ROWS_PREPROCESS_BUFFER:
+			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateInRows();
 				break;
 			}
 			default:
 			{
-				if (preProcessBuffer_p) preProcessBuffer();
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateRows();
 				break;
 			}
@@ -374,12 +431,12 @@ FlagAgentBase::setDataSelection(Record config)
 		arrayList_p=parser.getSubArrayList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " array ids are " << arrayList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array ids are " << arrayList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("field");
@@ -392,12 +449,12 @@ FlagAgentBase::setDataSelection(Record config)
 		fieldList_p=parser.getFieldList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " field ids are " << fieldList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field ids are " << fieldList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("scan");
@@ -410,12 +467,12 @@ FlagAgentBase::setDataSelection(Record config)
 		scanList_p=parser.getScanList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " scan ids are " << scanList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan ids are " << scanList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("timerange");
@@ -428,12 +485,12 @@ FlagAgentBase::setDataSelection(Record config)
 		timeList_p=parser.getTimeList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " time ranges in MJD are " << timeList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " time ranges in MJD are " << timeList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no time selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no time selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("spw");
@@ -449,19 +506,19 @@ FlagAgentBase::setDataSelection(Record config)
 		channelList_p=parser.getChanList();
 		filterChannels_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " Frequency selection is " << spwSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " Frequency ids are " << channelList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channel selection are " << channelList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("antenna");
 	if (exists >= 0)
 	{
 		config.get (config.fieldNumber ("antenna"), baselineSelection_p);
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
 
 		// Remove antenna negation operator (!) and set antenna negation flag
 		size_t pos = baselineSelection_p.find(String("!"));
@@ -469,7 +526,7 @@ FlagAgentBase::setDataSelection(Record config)
 		{
 			antennaNegation_p = true;
 			baselineSelection_p.replace(pos,1,String(""));
-			*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " antenna selection is the negation of " << baselineSelection_p << LogIO::POST;
 			pos = baselineSelection_p.find(String("!"));
 		}
 
@@ -480,11 +537,11 @@ FlagAgentBase::setDataSelection(Record config)
 		baselineList_p=parser.getBaselineList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no baseline selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no baseline selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("uvrange");
@@ -497,12 +554,12 @@ FlagAgentBase::setDataSelection(Record config)
 		uvwList_p=parser.getUVList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " uvrange ids are " << uvwList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange ids are " << uvwList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("correlation");
@@ -519,12 +576,12 @@ FlagAgentBase::setDataSelection(Record config)
 		ostringstream polarizationListToPrint (ios::in | ios::out);
 		polarizationListToPrint << polarizationList_p;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " correlation selection is " << polarizationSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no polarization selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no polarization selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("observation");
@@ -537,12 +594,12 @@ FlagAgentBase::setDataSelection(Record config)
 		observationList_p=parser.getObservationList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " observation selection is " << observationList_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " observation ids are " << observationList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation selection is " << observationList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation ids are " << observationList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("intent");
@@ -555,12 +612,12 @@ FlagAgentBase::setDataSelection(Record config)
 		scanIntentList_p=parser.getStateObsModeList();
 		filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " scan intent selection is " << scanIntentList_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent selection is " << scanIntentList_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent ids are " << scanIntentList_p << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
 	}
 
 	return;
@@ -573,6 +630,16 @@ FlagAgentBase::setAgentParameters(Record config)
 	// the specific parameters although here we handle the common ones
 
 	int exists;
+
+	exists = config.fieldNumber ("name");
+	if (exists >= 0)
+	{
+		agentName_p = config.asString("name");
+	}
+	else if (agentName_p.empty())
+	{
+		agentName_p = "FlagAgentUnknown";
+	}
 
 	exists = config.fieldNumber ("expression");
 	if (exists >= 0)
@@ -592,13 +659,13 @@ FlagAgentBase::setAgentParameters(Record config)
 			(expression_p.find("abs") == string::npos) and
 			(expression_p.find("norm") == string::npos))
 	{
-		*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ <<
+		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
 				" Unsupported mapping expression: " <<
 				expression_p << ", selecting abs by default. Supported expressions: real,imag,arg,abs,norm." << LogIO::POST;
 		expression_p = "abs I";
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " visibility expression is " << expression_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " visibility expression is " << expression_p << LogIO::POST;
 
 	exists = config.fieldNumber ("datacolumn");
 	if (exists >= 0)
@@ -633,19 +700,19 @@ FlagAgentBase::setAgentParameters(Record config)
 	}
 	else
 	{
-		*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ <<
+		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
 				" Unsupported data column: " <<
 				expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
 		dataColumn_p = "data";
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
 
 	exists = config.fieldNumber ("nThreads");
 	if (exists >= 0)
 	{
 		nThreads_p = atoi(config.asString("nThreads").c_str());
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " nThreads is " << nThreads_p << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " nThreads is " << nThreads_p << LogIO::POST;
 
 		if (nThreads_p > 0)
 		{
@@ -654,22 +721,22 @@ FlagAgentBase::setAgentParameters(Record config)
 			if (exists >= 0)
 			{
 				threadId_p = atoi(config.asString("threadId").c_str());
-				*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ << " threadId is " << threadId_p << LogIO::POST;
+				*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " threadId is " << threadId_p << LogIO::POST;
 
 				if (threadId_p < 0 or threadId_p>=nThreads_p)
 				{
-					*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ << " Thread Id range is [0,nThreads-1], disabling multithreading" << LogIO::POST;
+					*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " Thread Id range is [0,nThreads-1], disabling multithreading" << LogIO::POST;
 				}
 			}
 			else
 			{
-				*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ << " Thread Id not provided, disabling multithreading" << LogIO::POST;
+				*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " Thread Id not provided, disabling multithreading" << LogIO::POST;
 				multiThreading_p = false;
 			}
 		}
 		else
 		{
-			*logger_p << LogIO::WARN << "FlagAgentBase::" << __FUNCTION__ << " Number of threads must be positive, disabling multithreading" << LogIO::POST;
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " Number of threads must be positive, disabling multithreading" << LogIO::POST;
 			dataColumn_p = "data";
 		}
 	}
@@ -917,7 +984,7 @@ FlagAgentBase::checkIfProcessBuffer()
 }
 
 void
-FlagAgentBase::preProcessBuffer()
+FlagAgentBase::preProcessBuffer(VisBuffer &visBuffer)
 {
 	return;
 }
@@ -937,7 +1004,7 @@ FlagAgentBase::iterateRows()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p << " from a total of " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
@@ -948,7 +1015,7 @@ FlagAgentBase::iterateRows()
 	else
 	{
 		// Some logging info
-		*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
+		*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Going to process a buffer with: " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
 				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
@@ -969,7 +1036,7 @@ FlagAgentBase::iterateRows()
 		}
 
 		// Compute flags for this row
-		computeRowFlags(flagsMap,*rowIter);
+		computeRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()), flagsMap,*rowIter);
 
 		// Increment row index
 		rowIdx++;
@@ -997,7 +1064,7 @@ FlagAgentBase::iterateInRows()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p
 				<< " from a total of " << rowsIndex_p.size() << " rows with " << channelIndex_p.size() << " channels ("
@@ -1006,7 +1073,7 @@ FlagAgentBase::iterateInRows()
 	else
 	{
 		// Some logging info
-		*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
+		*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Going to process a buffer with: " <<
 				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
 				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") "<< LogIO::POST;
 	}
@@ -1053,14 +1120,14 @@ FlagAgentBase::iterateAntennaPairs()
 	// Some log info
 	if (multiThreading_p)
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 				<<  " Thread Id " << threadId_p << ":" << nThreads_p
 				<< " Will process every " << nThreads_p << " baselines starting with baseline " << threadId_p
 				<< " from a total of " << flagDataHandler_p->getAntennaPairMap()->size() << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__ <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Iterating trough " << flagDataHandler_p->getAntennaPairMap()->size() <<  " antenna pair maps " << LogIO::POST;
 	}
 
 
@@ -1193,7 +1260,7 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 }
 
 void
-FlagAgentBase::computeRowFlags(FlagMapper &flags, uInt row)
+FlagAgentBase::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;

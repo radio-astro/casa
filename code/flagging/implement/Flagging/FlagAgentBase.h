@@ -49,7 +49,10 @@ public:
 
 		ROWS=0,
 		IN_ROWS,
-		ANTENNA_PAIRS
+		ANTENNA_PAIRS,
+		ROWS_PREPROCESS_BUFFER,
+		IN_ROWS_PREPROCESS_BUFFER,
+		ANTENNA_PAIRS_PREPROCESS_BUFFER
 	};
 
 	FlagAgentBase(FlagDataHandler *dh, Record config, uShort iterationApproach, Bool writePrivateFlagCube = false, Bool flag = true);
@@ -102,7 +105,7 @@ protected:
 	bool checkIfProcessBuffer();
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	virtual void preProcessBuffer();
+	virtual void preProcessBuffer(VisBuffer &visBuffer);
 
 	// Iterate trough list of rows
 	void iterateRows();
@@ -118,7 +121,7 @@ protected:
 	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
 
 	// Compute flags for a given visibilities point
-	virtual void computeRowFlags(FlagMapper &flags, uInt row);
+	virtual void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
 	virtual void computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row);
@@ -127,16 +130,13 @@ protected:
 	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
 
 	// Common used members that must be accessible to derived classes
-	casa::LogIO *logger_p;
-	VisBufferAutoPtr *visibilityBuffer_p;
 	FlagDataHandler *flagDataHandler_p;
-	Bool preProcessBuffer_p;
-	Bool multiThreading_p;
-	Int nThreads_p;
-	Int threadId_p;
+	casa::LogIO *logger_p;
 
 private:
 	
+	VisBufferAutoPtr *visibilityBuffer_p;
+
 	// MS-related objects
 	MeasurementSet *selectedMeasurementSet_p;
 	Cube<Bool> *commonFlagCube_p;
@@ -184,15 +184,20 @@ private:
 	volatile Bool threadTerminated_p;
 	volatile Bool processing_p;
 
+	// Multithreading configuration and agent id
+	Bool multiThreading_p;
+	Int nThreads_p;
+	Int threadId_p;
+	String agentName_p;
+
 	// Data source configuration
 	string expression_p;
 	string dataColumn_p;
 	uShort dataReference_p;
 
-	// Debuging configuration
+	// Debugging configuration
 	Bool profiling_p;
 	Bool checkFlags_p;
-
 
 	// Running mode configuration
 	uShort iterationApproach_p;
