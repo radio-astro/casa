@@ -109,8 +109,7 @@ class String;
 
 class MSDerivedValues
 {
-    friend class VisBufferAsync; // to work around dysfunctional operator= and
-                                 // thread-hostile shared pointers (Jim Jacobs 111104)
+    friend class VisBufferAsync;
 public:
   MSDerivedValues();
   ~MSDerivedValues();

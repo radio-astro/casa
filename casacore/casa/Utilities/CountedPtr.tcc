@@ -30,8 +30,6 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-#if ! defined (USE_BOOST_SHARED_PTR)
-
 template<class t> 
 void PtrRep<t>::freeVal() {
   if (val && deletable)
@@ -57,8 +55,6 @@ SimpleCountedConstPtr<t>::~SimpleCountedConstPtr() {
     ref = 0;
   }
 }
-
-#endif
 
 //
 // All of these CountedPtr<t> ctors were moved out-of-line because

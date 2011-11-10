@@ -262,28 +262,6 @@ public:
   String id( ) const;
 
 private:
-
-  class LsiIntermediate {
-
-  public:
-
-
-      LsiIntermediate () : logSinkInterface_p (0) {}
-      LsiIntermediate (LogSinkInterface * lsi) : logSinkInterface_p (lsi) {}
-      ~LsiIntermediate () { delete logSinkInterface_p;}
-
-      LogSinkInterface & operator* () { return * logSinkInterface_p;}
-      LogSinkInterface * operator-> () { return logSinkInterface_p;}
-      Bool operator! () const { return ! logSinkInterface_p;}
-
-      void replace (LogSinkInterface * newLsi) { delete logSinkInterface_p; logSinkInterface_p = newLsi;}
-
-  private:
-
-      LogSinkInterface * logSinkInterface_p;
-
-  };
-
   // Prepare for postThenThrow function.
   void preparePostThenThrow(const LogMessage &message, const AipsError& x) ;
 
@@ -292,14 +270,14 @@ private:
 
   //# Data members.
   CountedPtr<LogSinkInterface> local_sink_p;
-  static CountedPtr<LsiIntermediate> * global_sink_p;
+  static CountedPtr<LogSinkInterface> *global_sink_p;
   static Mutex theirMutex;
 
   // The following is a reference to the global sink. It is created to
   // ensure that the global sink is not destroyed before the last local
   // reference to it is destroyed. This can happen if you have a static
   // LogSink (or LogIO).
-  CountedPtr<LsiIntermediate> local_ref_to_global_p;
+  CountedPtr<LogSinkInterface> local_ref_to_global_p;
   Bool useGlobalSink_p;
 };
 
