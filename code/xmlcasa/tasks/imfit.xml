@@ -196,7 +196,7 @@ for easier inspection using tool methods, eg
 
 cl.fromrecord(res['results'])
 
-If doofset is True, in addtion to the specified number of
+If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
 offset is specified using the offset parameter. Units are assumed to be the
 same as the image brightness units. In this case, the returned
