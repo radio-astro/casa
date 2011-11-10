@@ -42,8 +42,6 @@ template<class T>
 AutoDiff<T> ConstantND<AutoDiff<T> >::
 eval(typename Function<AutoDiff<T> >::FunctionArg) const {
   AutoDiff<T> tmp = param_p[0];
-
-  tmp.deriv(0) = param_p.mask(0) ? 1 : 0;
   return tmp;
 }
 
