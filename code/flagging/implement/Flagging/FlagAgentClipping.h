@@ -45,6 +45,8 @@ protected:
 private:
 
 	/// Input parameters ///
+	Bool clipoutside_p;
+	Bool channelavg_p;
 	Float clipmin_p;
 	Float clipmax_p;
 

@@ -86,7 +86,7 @@ namespace casa {
 
 		// qt-event -> QtRegion -> QtEllipse -> Region::refresh( )
 		void refresh( ) { Ellipse::refresh( ); }
-		AnnRegion *annotation( ) const { return Ellipse::annotation( ); }
+		AnnotationBase *annotation( ) const { return Ellipse::annotation( ); }
 
 		// indicates that the user has selected this ellipse...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
@@ -95,6 +95,12 @@ namespace casa {
 		void updateStateInfo( bool region_modified ) { QtRegion::updateStateInfo( region_modified ); }
 
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
+
+		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
+		void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" )
+				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
+		void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine )
+				{ QtRegion::setLine( line_color, line_style ); }
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Ellipse::generate_dds_statistics( ); }

@@ -39,15 +39,20 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
+#include <msvis/MSVis/VisibilityProcessing.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>Controls the solution of calibration components (Jones Matrices)</summary>
 
+class CorrectorVp;
 
 class Calibrater 
 {
+
+  friend class CorrectorVp;
+
  public:
   // Default constructor
   Calibrater();
@@ -326,6 +331,8 @@ class Calibrater
   void writeHistory(LogIO& os, 
 		    Bool cliCommand=False);
 
+  CorrectorVp * getCorrectorVp ();
+
   
  private:
   // Log functions and variables
@@ -335,6 +342,8 @@ class Calibrater
   // Time functions and variables
   String timerString();
   Timer timer_p;
+
+  Bool correctUsingVpf ();
 
   // Select on channel using MSSelection
   void selectChannel(const String& spw);
@@ -415,6 +424,34 @@ class Calibrater
   // channel masking 
   PtrBlock<Vector<Bool>*> chanmask_;
 
+};
+
+class CorrectorVp : public vpf::VisibilityProcessor {
+
+public:
+
+    CorrectorVp (Calibrater * calibrater, const String & name = "Corrector");
+    ROVisibilityIterator * getVisibilityIterator ();
+
+    static const String In;
+    static const String Out;
+
+protected:
+
+    void chunkStartImpl (const vpf::SubchunkIndex &);
+    ProcessingResult
+    doProcessingImpl (ProcessingType processingType,
+                      vpf::VpData & inputData,
+                      const vpf::SubchunkIndex & subChunkIndex);
+    void processingStartImpl ();
+    void validateImpl ();
+
+private:
+
+    Calibrater * calibrater_p;
+    Bool calculateWeights_p;
+    Vector<Bool> uncalibratedSpectralWindows_p;
+    VisibilityIterator::DataColumn  whichOutputColumn_p;
 };
 
 

@@ -286,7 +286,7 @@ def simdata(
             cx=pl.mean(stnx)
             cy=pl.mean(stny)
             cz=pl.mean(stnz)
-            lat,lon = util.irtf2loc(stnx,stny,stnz,cx,cy,cz)
+            lat,lon = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
             maxbase=max(lat)-min(lat) # in meters
             maxbase2=max(lon)-min(lon)
             if maxbase2>maxbase:
@@ -684,7 +684,7 @@ def simdata(
                 msg("preparing empty measurement set",origin="simdata")
 
             nbands = 1;    
-            fband  = 'band' + qa.tos(model_center,prec=1)
+            fband = util.bandname(qa.convert(model_center, 'GHz')['value'])
 
             ############################################
             # predict interferometry observation
@@ -733,9 +733,14 @@ def simdata(
                 # but the "start" is the center of the first channel:
                 model_start = qa.sub(model_center,qa.mul(model_width,0.5*(model_nchan-1)))
 
+                mounttype = 'alt-az'
+                if telescopename in ['DRAO', 'WSRT']:
+                    mounttype = 'EQUATORIAL'
+                # Should ASKAP be BIZARRE or something else?  It may be effectively equatorial.
+
                 sm.setconfig(telescopename=telescopename, x=stnx, y=stny, z=stnz, 
                              dishdiameter=diam.tolist(), 
-                             mount=['alt-az'], antname=antnames, padname=padnames, 
+                             mount=[mounttype], antname=antnames, padname=padnames, 
                              coordsystem='global', referencelocation=posobs)
                 if str.upper(telescopename).find('VLA') > 0:
                     sm.setspwindow(spwname=fband, freq=qa.tos(model_start), 

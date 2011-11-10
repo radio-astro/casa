@@ -143,7 +143,7 @@ public:
 
 	bool initAgents();
 
-	void run();
+	bool run();
 
 
 private:
@@ -155,7 +155,7 @@ private:
 	// Sink used to store history
 	LogSink logSink_p;
 
-	// Debug Message flag
+	// Debug message flag
 	static const bool dbg;
 
 };

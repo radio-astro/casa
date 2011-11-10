@@ -264,15 +264,24 @@ StationRow* StationTable::newRow(StationRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void StationTable::addWithoutCheckingUnique(StationRow * x) {
+		if (getRowByKey(
+						x->getStationId()
+						) != (StationRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "StationTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -298,7 +307,7 @@ StationRow* StationTable::newRow(StationRow* row) {
 		,
 			x->getType()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table StationTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -314,6 +323,16 @@ StationRow* StationTable::newRow(StationRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void StationTable::append(StationRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -486,12 +505,17 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		StationRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"StationTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -500,10 +524,27 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 			catch (...) {
 				// cout << "Unexpected error in StationTable::checkAndAdd called from StationTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"StationTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in StationTable::addWithoutCheckingUnique called from StationTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</StationTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -734,19 +775,27 @@ StationRow* StationTable::lookup(string name, vector<Length > position, StationT
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	StationRow* aRow = StationRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				StationRow* aRow = StationRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Station");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Station");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			StationRow* aRow = StationRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -871,6 +920,7 @@ void StationTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Station");

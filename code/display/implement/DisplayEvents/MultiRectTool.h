@@ -31,7 +31,7 @@
 #include <list>
 #include <casa/aips.h>
 #include <casadbus/types/ptr.h>
-#include <display/DisplayEvents/MultiWCTool.h>
+#include <display/DisplayEvents/RegionTool.h>
 #include <display/DisplayEvents/DTVisible.h>
 #include <display/region/RegionCreator.h>
 #include <display/region/RegionSourceFactory.h>
@@ -86,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // A nice example is zooming.
 // </motivation>
 
-    class MultiRectTool : public MultiWCTool, public DTVisible, public viewer::RegionCreator {
+    class MultiRectTool : public RegionTool, public DTVisible, public viewer::RegionCreator {
   
 	public:
   
@@ -114,6 +114,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    void revokeRegion( viewer::Region * );
 
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
+
+	    virtual bool create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				 const std::string &font, int font_size, int font_style, const std::string &font_color,
+				 const std::string &line_color, viewer::Region::LineStyle line_style );
 
 	protected:
 
@@ -153,7 +157,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    virtual memory::cptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
 
-	protected:
 	    viewer::RegionSource *rfactory;
 
 	private:

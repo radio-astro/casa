@@ -671,6 +671,22 @@ private:
 	 
 	 */
 	SpectralWindowRow* checkAndAdd(SpectralWindowRow* x) ;
+	
+	/**
+	 * Brutally append an SpectralWindowRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SpectralWindowRow* x a pointer onto the SpectralWindowRow to be appended.
+	 */
+	 void append(SpectralWindowRow* x) ;
+	 
+	/**
+	 * Brutally append an SpectralWindowRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SpectralWindowRow* x a pointer onto the SpectralWindowRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SpectralWindowRow* x) ;
+	 
+	 
 
 
 

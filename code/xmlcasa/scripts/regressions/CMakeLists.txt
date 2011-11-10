@@ -47,11 +47,13 @@ casa_add_python( xmlcasa xmlcasa_regressions_python python/${PYTHONV}/regression
   m51_bothsim_regression.py
   maclog_regression.py
   nf_regression.py
+  ngc1333_regression.py
   ngc2403_tutorial_regression.py
   ngc4826c_regression.py
   ngc4826_regression.py
   ngc4826_tutorial_regression.py
   ngc5921_regression.py
+  ngc7538_regression.py
   ori_hc3n_task_regression.py
   orion_regression.py
   ori_sio_task_regression.py

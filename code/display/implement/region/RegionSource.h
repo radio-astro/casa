@@ -43,9 +43,9 @@ namespace casa {
 
 	class RegionSource {
 	    public:
-		/* virtual memory::cptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) = 0; */
 		virtual memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
 		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) = 0;
+		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
 		virtual memory::cptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
 		virtual memory::cptr<Rectangle> point( WorldCanvas *wc, double x, double y ) = 0;
 

@@ -20,7 +20,12 @@
 #include <sys/time.h>
 
 #include <casa/Exceptions/Error.h>
+#include <casa/Logging/LogIO.h>
+
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp>
+#include <boost/thread/thread.hpp>
 
 #include "AsynchronousTools.h"
 #include "UtilJ.h"
@@ -38,21 +43,23 @@ class ConditionImpl {
 
 private:
 
-    ConditionImpl () : condition_p (NULL) {}
+    ConditionImpl () : condition_p () {}
 
-    pthread_cond_t * condition_p;
+    boost::condition_variable condition_p;
 };
 
 class MutexImpl {
 
     friend class Mutex;
+    friend class Condition;
 
 private:
 
-    MutexImpl () : mutex_p (NULL) {}
+    MutexImpl () : mutex_p () {}
+    ~MutexImpl () {}
 
-    pthread_mutex_t * mutex_p;
-
+    boost::thread::id lockingThreadId_p;
+    boost::mutex mutex_p;
 };
 
 class SemaphoreImpl {
@@ -102,40 +109,41 @@ convertMsDeltaToTimespec (Int milliseconds)
 Condition::Condition ()
 {
     impl_p = new ConditionImpl ();
-    impl_p->condition_p = new pthread_cond_t ();
-    int code = pthread_cond_init (impl_p->condition_p, NULL);
-    ThrowIfError (code, "Condition::init");
 }
 
 Condition::~Condition ()
 {
-    int code = pthread_cond_destroy (impl_p->condition_p);
-    ThrowIfError (code, "Condition::destroy");
-
-    delete impl_p->condition_p;
-
     delete impl_p;
 }
 
 void
 Condition::broadcast ()
 {
-    int code = pthread_cond_broadcast (impl_p->condition_p);
-    ThrowIfError (code, "Condition::broadcast");
+    notify_all ();
+}
+
+void
+Condition::notify_all ()
+{
+    impl_p->condition_p.notify_all ();
+}
+
+void
+Condition::notify_one ()
+{
+    impl_p->condition_p.notify_one ();
 }
 
 void
 Condition::signal ()
 {
-    int code = pthread_cond_signal (impl_p->condition_p);
-    ThrowIfError (code, "Condition::signal");
+    notify_one ();
 }
 
 void
-Condition::wait (Mutex & mutex)
+Condition::wait (UniqueLock & uniqueLock)
 {
-    int code = pthread_cond_wait (impl_p->condition_p, mutex.getRep());
-    ThrowIfError (code, "Condition::wait");
+    impl_p->condition_p.wait (uniqueLock.uniqueLock_p);
 }
 /*
 Bool
@@ -157,6 +165,53 @@ Condition::wait (Mutex & mutex, int milliseconds)
     return gotWait;
 }
 */
+
+LockGuard::LockGuard (Mutex & mutex)
+{
+    mutex_p = & mutex;
+    mutex_p->lock ();
+}
+
+LockGuard::LockGuard (Mutex * mutex)
+{
+    Assert (mutex != NULL);
+
+    mutex_p = mutex;
+    mutex_p->lock ();
+}
+
+LockGuard::~LockGuard ()
+{
+    mutex_p->unlock ();
+}
+
+LockGuardInverse::LockGuardInverse (Mutex & mutex)
+{
+    mutex_p = & mutex;
+    mutex_p->unlock ();
+}
+
+LockGuardInverse::LockGuardInverse (Mutex * mutex)
+{
+    Assert (mutex != NULL);
+
+    mutex_p = mutex;
+    mutex_p->unlock ();
+}
+
+LockGuardInverse::LockGuardInverse (LockGuard & lg)
+{
+    mutex_p = lg.mutex_p;
+    mutex_p->unlock();
+}
+
+
+LockGuardInverse::~LockGuardInverse ()
+{
+    mutex_p->lock ();
+}
+
+
 
 Logger* Logger::singleton_p = NULL;
 
@@ -280,13 +335,17 @@ Logger::LoggerThread::log (const string & text)
 
     outputQueue_p.push (text);
 
-    loggerChanged_p.broadcast ();
+    loggerChanged_p.notify_all ();
 }
 
 
 void *
 Logger::LoggerThread::run ()
 {
+    LogIO logIo (LogOrigin ("Logger::LoggerThread"));
+   	logIo << "starting execution; tid=" << gettid() << endl << LogIO::POST;
+
+
     try {
         // Determine where to write the logging info.  If nothing is specified or either "cerr" or
         // "stdout" are specified then use standard error.  If "cout" or "stdout" are specified then
@@ -318,10 +377,10 @@ Logger::LoggerThread::run ()
                 // Pop the front block of output off of the queue
                 // Keep mutex locked while accessing queue.
 
-                MutexLocker locker (mutex_p);
+                UniqueLock uniqueLock (mutex_p);
 
                 while (! isTerminationRequested() && outputQueue_p.empty()){
-                    loggerChanged_p.wait (mutex_p);
+                    loggerChanged_p.wait (uniqueLock);
                 }
 
                 if (isTerminationRequested() && outputQueue_p.empty()){
@@ -388,43 +447,42 @@ Logger::LoggerThread::terminate ()
 {
     Thread::terminate();
 
-    loggerChanged_p.broadcast();
+    loggerChanged_p.notify_all ();
 }
 
 Mutex::Mutex ()
 {
     impl_p = new MutexImpl ();
-
-    pthread_mutex_t init = PTHREAD_MUTEX_INITIALIZER;
-
-    impl_p->mutex_p = new pthread_mutex_t;
-    * (impl_p->mutex_p) =(init);
-
-    int code = pthread_mutex_init (impl_p->mutex_p, NULL);
-    ThrowIfError (code, "Mutex::init failed");
-
+    isLocked_p = False;
 }
 
 Mutex::~Mutex ()
 {
-    pthread_mutex_destroy (impl_p->mutex_p);
-
-    delete impl_p->mutex_p;
-
     delete impl_p;
 }
 
-pthread_mutex_t *
-Mutex::getRep ()
+boost::mutex &
+Mutex::getMutex ()
 {
     return impl_p->mutex_p;
 }
 
+//Bool
+//Mutex::isLockedByThisThread () const
+//{
+//    // Only for use in debugs or asserts
+//
+//    Bool itIs = isLocked_p && boost::this_thread::get_id () == impl_p->lockingThreadId_p;
+//
+//    return itIs;
+//}
+
 void
 Mutex::lock ()
 {
-    int code = pthread_mutex_lock (impl_p->mutex_p);
-    ThrowIfError (code, "Mutex::lock failed");
+    impl_p->mutex_p.lock();
+    impl_p->lockingThreadId_p = boost::this_thread::get_id ();
+    isLocked_p = True;
 }
 
 /*
@@ -452,14 +510,10 @@ Mutex::lock (Int milliseconds)
 Bool
 Mutex::trylock ()
 {
-    bool gotLock = true;
-    int code = pthread_mutex_trylock (impl_p->mutex_p);
-
-    if (code == EBUSY){
-        gotLock = false;
-    }
-    else{
-        ThrowIfError (code, "Mutex::trylock");
+    bool gotLock = impl_p->mutex_p.try_lock ();
+    isLocked_p = gotLock;
+    if (isLocked_p){
+        impl_p->lockingThreadId_p = boost::this_thread::get_id ();
     }
 
     return gotLock;
@@ -468,8 +522,8 @@ Mutex::trylock ()
 void
 Mutex::unlock ()
 {
-    int code = pthread_mutex_unlock (impl_p->mutex_p);
-    ThrowIfError (code, "Mutex::unlock");
+    isLocked_p = False;
+    impl_p->mutex_p.unlock ();
 }
 
 // jagonzal: Useful when locking is mandatory
@@ -482,16 +536,23 @@ Mutex::acquirelock()
    }
 } 
 
-
 MutexLocker::MutexLocker (Mutex & mutex)
+  : mutex_p (& mutex)
+{
+    mutex_p->lock();
+}
+
+MutexLocker::MutexLocker (Mutex * mutex)
   : mutex_p (mutex)
 {
-    mutex_p.lock();
+    Assert (mutex_p != NULL);
+
+    mutex_p->lock();
 }
 
 MutexLocker::~MutexLocker ()
 {
-    mutex_p.unlock();
+    mutex_p->unlock();
 }
 
 Semaphore::Semaphore (int initialValue)
@@ -647,7 +708,8 @@ void *
 Thread::join ()
 {
     void * result;
-    pthread_join (* id_p, & result);
+    int code = pthread_join (* id_p, & result);
+    ThrowIfError (code, "Thread::join");
 
     return result;
 }
@@ -691,6 +753,24 @@ Thread::threadFunction (void * arg)
 
     return result; // use thread variable to store any results
 }
+
+UniqueLock::UniqueLock (Mutex & mutex)
+: uniqueLock_p (mutex.getMutex())
+{}
+
+void
+UniqueLock::lock ()
+{
+    uniqueLock_p.lock ();
+}
+
+void
+UniqueLock::unlock ()
+{
+    uniqueLock_p.unlock ();
+}
+
+
 
 } // end namespace Async
 

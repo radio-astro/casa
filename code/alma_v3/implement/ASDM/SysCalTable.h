@@ -475,6 +475,9 @@ public:
 	 *
 	 * @return a pointer on a vector<SysCalRow *>. A null returned value means that the table contains
 	 * no SysCalRow for the given ( antennaId, spectralWindowId, feedId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <SysCalRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
@@ -581,6 +584,22 @@ private:
 	 
 	 */
 	SysCalRow* checkAndAdd(SysCalRow* x) ;
+	
+	/**
+	 * Brutally append an SysCalRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SysCalRow* x a pointer onto the SysCalRow to be appended.
+	 */
+	 void append(SysCalRow* x) ;
+	 
+	/**
+	 * Brutally append an SysCalRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SysCalRow* x a pointer onto the SysCalRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SysCalRow* x) ;
+	 
+	 
 
 
 	

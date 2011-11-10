@@ -75,8 +75,7 @@
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisSetUtil.h>
 #include <msvis/MSVis/VisImagingWeight.h>
-#include <msvis/MSVis/VisibilityIteratorAsync.h>
-#include <msvis/MSVis/VisBufferAsync.h>
+/////////#include <msvis/MSVis/VisBufferAsync.h>
 
 // Disabling Imager::correct() (gmoellen 06Nov20)
 //#include <synthesis/MeasurementComponents/TimeVarVisJones.h>
@@ -3791,7 +3790,7 @@ Bool Imager::clean(const String& algorithm,
 
 
 
-  ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
+  //ROVisibilityIterator::AsyncEnabler enabler (rvi_p);
 
   if(!valid())
     {
@@ -3876,10 +3875,13 @@ Bool Imager::clean(const String& algorithm,
       maskNames=mask;
     }
     else {
-      /* For msmfs, the one input mask must be replicated for all Taylor-planes */
+      /* For msmfs, the one input mask PER FIELD must be replicated for all 
+	 Taylor-planes PER FIELD */
       if(algorithm=="msmfs" && Int(mask.nelements())>0){
        for(Int tay=0;tay<nmodels;tay++)
-          maskNames[tay] = mask[0];
+	 {
+	   maskNames[tay] = mask[ tay%(nmodels/ntaylor_p)  ];
+	 }
       }
       else {
 	 /* No mask */
@@ -5065,6 +5067,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           if(reffreq.getValue().getValue() > 0.0){
             siModel.setRefFrequency(reffreq);
             siModel.setIndex(spix);
+            returnFluxes[selspw][0].setValue(fluxUsed[0] * siModel.sample(mfreqs[selspw][0]));
           }
           else{
             if(spix != 0.0){            // If not the default, complain and quit.
@@ -5112,6 +5115,17 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       }
     }   // End of loop over fields.
 
+    if(!precompute && spix != 0.0 && reffreq.getValue().getValue() > 0.0){
+      os << LogIO::NORMAL
+         << "Flux density as a function of frequency (channel 0 of each spw):\n"
+         << "  Frequency (GHz)    Flux Density (Jy, Stokes I)"
+         << LogIO::POST;
+      for(uInt selspw = 0; selspw < nspws; ++selspw)
+        os << "     " << mfreqs[selspw][0].get("GHz").getValue() << "         "
+           << returnFluxes[selspw][0].value(Stokes::I).getValue()
+           << LogIO::POST;
+    }
+
     this->writeHistory(os);
     this->unlock();
     return True;
@@ -5127,6 +5141,46 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     return False;
   } 
   return didAnything;
+}
+
+String Imager::make_comp(const String& objName,
+			 const String& standard,
+			 const MEpoch& mtime, const Vector<MFrequency>& freqv,
+			 const String& prefix)
+{
+  Bool foundSrc = false;
+  logSink_p.clearLocally();
+  LogIO os(LogOrigin("imager", "setjy()"), logSink_p);
+
+  Vector<String> clistnames(1);
+  try{
+    FluxStandard::FluxScale fluxScaleEnum;
+    String fluxScaleName("user-specified");
+
+    if(!FluxStandard::matchStandard(standard, fluxScaleEnum, fluxScaleName))
+      throw(AipsError(standard + " is not a recognized flux density scale"));
+
+    FluxStandard fluxStd(fluxScaleEnum);
+
+    Vector<Vector<Flux<Double> > > returnFluxes(1), returnFluxErrs(1);
+    Vector<Vector<MFrequency> > mfreqs(1);
+    uInt nfreqs = freqv.nelements();
+
+    mfreqs[0] = freqv;
+    returnFluxes[0].resize(nfreqs);
+    returnFluxErrs[0].resize(nfreqs);
+
+    MDirection objDir;
+     
+    foundSrc = fluxStd.computeCL(objName, mfreqs, mtime, objDir,
+				 returnFluxes, returnFluxErrs,
+				 clistnames, prefix);
+  }
+  catch(AipsError x){
+    os << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }  
+  return foundSrc ? clistnames[0] : "";
 }
 
 Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
@@ -6950,7 +7004,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 		  threshold, displayprogress,
 		  amodel, fixed, String(complist), amask,  
 		  aimage, aresidual, Vector<String>(0), false);
-	    for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
+	    uInt nmods = aresidual.nelements()/ntaylor_p;
+	    for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 	      if(Table::isReadable(aimage[nIm]) && Table::isWritable(aresidual[nIm]) ){
 		PagedImage<Float> rest(aimage[nIm]);
 		PagedImage<Float> resi(aresidual[nIm]);
@@ -7000,7 +7055,8 @@ Int Imager::interactivemask(const String& image, const String& mask,
 	      }
 	      if(anyEQ(fixed, False) && anyEQ(nointerac,False)){
 		Int remainloop=nloop-k-1;
-		for (uInt nIm=0; nIm < aresidual.nelements(); nIm+=ntaylor_p){
+		uInt nmods = aresidual.nelements()/ntaylor_p;
+		for (uInt nIm=0; nIm < nmods; nIm++){ //=ntaylor_p){
 		  if(!nointerac(nIm)){
 		    continter=interactivemask(aresidual[nIm], amask[nIm],
 					      

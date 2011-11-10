@@ -227,80 +227,89 @@ void QtViewerBase::release() {
 
   
 String QtViewerBase::fileType(const String pathname) {
-  // (static) function to aid typing files of interest to the viewer.
-  // Moved from QtDataManager to be available for non-gui use.
+    // (static) function to aid typing files of interest to the viewer.
+    // Moved from QtDataManager to be available for non-gui use.
 
-  QDomDocument restoredoc;
-  if(isRestoreFile(pathname, restoredoc)) return "Restore File";
+    QDomDocument restoredoc;
+    if(isRestoreFile(pathname, restoredoc)) return "Restore File";
    
-  QString pathName = pathname.chars();
-  QFileInfo fileInfo(pathName);
+    QString pathName = pathname.chars();
+    QFileInfo fileInfo(pathName);
 
 
-  if (!fileInfo.isFile() && !fileInfo.isDir()){
-	  // try to cut any possible FITS extension specified
-	  // as part of the input
-	  if (!(int)pathname.compare(pathname.length()-1, 1, "]", 1) && (int)pathname.rfind("[", pathname.length()) > -1){
-		  pathName = String(pathname, 0, pathname.rfind("[", pathname.length())).chars();
-		  fileInfo = QFileInfo(pathName);
-	  }
-  }
+    if (!fileInfo.isFile() && !fileInfo.isDir()){
+	// try to cut any possible FITS extension specified
+	// as part of the input
+	if ( ! (int) pathname.compare(pathname.length()-1, 1, "]", 1) && 
+	       (int) pathname.rfind("[", pathname.length()) > -1 ) {
+	    pathName = String(pathname, 0, pathname.rfind("[", pathname.length())).chars();
+	    fileInfo = QFileInfo(pathName);
+	}
+    }
 
-  if (fileInfo.isFile()) {
-    QFile file(pathName);
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-      char buf[10240];
-      qint64 lineLength = file.readLine(buf, sizeof(buf));
-      if (lineLength > 0) {
-        QString line(buf);
-        if (line.remove(' ').contains("SIMPLE=T")) {
-               
-	  return "FITS Image";  }  }  }  }
-    
-    
-  else if (fileInfo.isDir()) {	// Directory
+    if (fileInfo.isFile()) {
+
+	if ( pathName.endsWith(".crtf") )
+	    return "CASA Region File";
+
+	QFile file(pathName);
+	if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+	    char buf[10240];
+	    qint64 lineLength = file.readLine(buf, sizeof(buf));
+	    if (lineLength > 0) {
+		QString line(buf);
+		if ( line.startsWith("#CRTFv") ) {
+		    return "CASA Region File";
+		}
+		if ( line.remove(' ').contains("SIMPLE=T") ) {
+		    return "FITS Image";
+		}
+	    }
+	}
+    } else if (fileInfo.isDir()) {	// Directory
+
+	QFileInfo tab(pathName + "/table.dat");
         
-    QFileInfo tab(pathName + "/table.dat");
-        
-    if (tab.isFile ())  {
+	if (tab.isFile ())  {
 
-      try {				// Table
+	    try {				// Table
 
-	TableInfo tblinfo = TableInfo(pathName.toStdString()+"/table.info");
+		TableInfo tblinfo = TableInfo(pathName.toStdString()+"/table.info");
 
-        QString result = tblinfo.type().chars();
-        if (result =="IERS" || result =="IERSe" || result =="Skycatalog") {
+		QString result = tblinfo.type().chars();
+		if (result =="IERS" || result =="IERSe" || result =="Skycatalog") {
  
-	  return "Sky Catalog";  }
+		    return "Sky Catalog";
+		}
 
-	if (result.simplified()=="")  return "Table";
+		if (result.simplified()=="")  return "Table";
 
-	return result.toStdString();  }
+		return result.toStdString();
+
+	    } catch (...)  { return "Bad Table";  }
+
+	} else {				// Non-Table Directory
+
+	    QFileInfo hd(pathName,  "header");
+	    QFileInfo imt(pathName +  "/image" );
           
-      catch (...)  { return "Bad Table";  }  }
+	    if (hd.isFile() && imt.exists())  return "Miriad Image";
         
-        
-    else {				// Non-Table Directory
-
-      QFileInfo hd(pathName,  "header");
-      QFileInfo imt(pathName +  "/image" );
-          
-      if (hd.isFile() && imt.exists())  return "Miriad Image";
-        
-      QFileInfo vis(pathName + "/visdata" );
+	    QFileInfo vis(pathName + "/visdata" );
             
-      if (hd.isFile() && vis.exists())  return "Miriad Vis";
+	    if (hd.isFile() && vis.exists())  return "Miriad Vis";
             
       
-      return "Directory";  }  }
+	    return "Directory";
+	}
+    }
 
 
-  if (fileInfo.isSymLink())  return "SymLink";
-    
-  if (!fileInfo.exists())  return "Invalid";
-    
-    
-  return  "Unknown";
+    if (fileInfo.isSymLink())  return "SymLink";
+
+    if (!fileInfo.exists())  return "Invalid";
+
+    return  "Unknown";
 
 }
 

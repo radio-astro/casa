@@ -128,6 +128,7 @@ namespace casa {
     copyObservation();
     copyPointing();
     // copyWeather();
+    // copySyscal();   // ?
     /////////////Done with the sub tables...now to the main
     fillAccessoryMainCols();
     msc_p->weight().putColumn(mscIn_p->weight());

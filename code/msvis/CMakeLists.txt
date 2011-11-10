@@ -19,6 +19,7 @@
 #
 
 casa_add_library( msvis
+  implement/MSVis/AsynchronousInterface.cc
   implement/MSVis/AsynchronousTools.cc
   implement/MSVis/CalVisBuffer.cc
   implement/MSVis/MSAnalysis.cc
@@ -41,7 +42,9 @@ casa_add_library( msvis
   implement/MSVis/VisBufferUtil.cc
   implement/MSVis/VisBuffGroupAcc.cc
   implement/MSVis/VisibilityIterator.cc
-  implement/MSVis/VisibilityIteratorAsync.cc
+  implement/MSVis/VisibilityIteratorImpl.cc
+  implement/MSVis/VisibilityIteratorImplAsync.cc
+  implement/MSVis/VisibilityProcessing.cc
   implement/MSVis/VisImagingWeight.cc
   implement/MSVis/VisIterator.cc
   implement/MSVis/VisSet.cc
@@ -57,4 +60,5 @@ casa_add_assay( msvis implement/MSVis/test/tMSCalEnums.cc )
 casa_add_assay( msvis implement/MSVis/test/tUVSub.cc )
 casa_add_assay( msvis implement/MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( msvis implement/MSVis/test/tVisibilityIteratorAsync.cc )
+casa_add_assay( msvis implement/MSVis/test/VisibilityProcessing_Test.cc )
 casa_add_assay( msvis implement/MSVis/test/tVisIter.cc )

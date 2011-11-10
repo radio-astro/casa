@@ -284,15 +284,24 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void AnnotationTable::addWithoutCheckingUnique(AnnotationRow * x) {
+		if (getRowByKey(
+						x->getAnnotationId()
+						) != (AnnotationRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "AnnotationTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -318,7 +327,7 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 		,
 			x->getDetails()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table AnnotationTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -334,6 +343,16 @@ AnnotationRow* AnnotationTable::newRow(AnnotationRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void AnnotationTable::append(AnnotationRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -506,12 +525,17 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		AnnotationRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"AnnotationTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -520,10 +544,27 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 			catch (...) {
 				// cout << "Unexpected error in AnnotationTable::checkAndAdd called from AnnotationTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"AnnotationTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in AnnotationTable::addWithoutCheckingUnique called from AnnotationTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</AnnotationTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -784,19 +825,27 @@ AnnotationRow* AnnotationTable::lookup(ArrayTime time, string issue, string deta
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	AnnotationRow* aRow = AnnotationRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				AnnotationRow* aRow = AnnotationRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Annotation");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Annotation");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			AnnotationRow* aRow = AnnotationRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -921,6 +970,7 @@ void AnnotationTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Annotation");

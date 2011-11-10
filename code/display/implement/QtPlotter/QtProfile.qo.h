@@ -23,8 +23,8 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef QTPROFILE_H
-#define QTPROFILE_H
+#ifndef QtProfile_H
+#define QtProfile_H
 
 #include <casa/aips.h>
 #include <casa/BasicSL/String.h>
@@ -45,6 +45,7 @@
 #include <images/Images/ImageInterface.h>
 #include <measures/Measures/Stokes.h>
 #include <images/Images/ImageAnalysis.h>
+#include <imageanalysis/ImageAnalysis/SpectralCollapser.h>
 #include <msvis/MSVis/StokesVector.h>
 
 
@@ -52,7 +53,7 @@
 #include <QDir>
 #include <QColor>
 #include <QHash>
-#include <QWidget>
+#include <QMainWindow>
 #include <QMouseEvent>
 #include <QToolButton>
 #include <QDialog>
@@ -66,44 +67,47 @@
 #include <QHashIterator>
 #include <graphics/X11/X_exit.h>
 
+#include <display/QtPlotter/QtProfileGUI.ui.h>
+
 inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
 
 
 namespace casa { 
 
-class LogIO;
+class QtProfilePrefs;
 
-class QtProfile : public QWidget//, public MWCCrosshairTool
+class QtProfile : public QMainWindow, Ui::QtProfileGUI
 {
-    Q_OBJECT
+	Q_OBJECT
+
 public:
+	enum ExtrType {
+		MEAN     =0,
+		MEDIAN   =1,
+		SUM      =2,
+		MSE      =3,
+		RMSE     =4,
+		SQRTSUM  =5,
+		NSQRTSUM =6,
+	};
 
-    enum ExtrType {
-		 MEAN     =0,
-		 MEDIAN   =1,
-		 SUM      =2,
-		 MSE      =3,
-		 RMSE     =4,
-		 SQRTSUM  =5,
-		 NSQRTSUM =6,
-	 };
+	enum PlotType {
+		PMEAN,
+		PMEDIAN,
+		PSUM,
+		//PVRMSE,
+	};
 
-    enum PlotType {
-		 PMEAN,
-		 PMEDIAN,
-		 PSUM,
-		 //PVRMSE,
-	 };
+	enum ErrorType {
+		PNOERROR,
+		PERMSE,
+		PPROPAG
+	};
 
-    enum ErrorType {
-		 PNOERROR,
-		 PERMSE,
-		 PPROPAG
-    };
+	QtProfile(ImageInterface<Float>* img, const char *name = 0,
+			QWidget *parent = 0, std::string rcstr="prf");
 
-	 QtProfile(ImageInterface<Float>* img, const char *name = 0,
-	      QWidget *parent = 0, std::string rcstr="prf");
-    ~QtProfile();
+	~QtProfile();
     MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
 
     virtual std::string rcid( ) const { return rcid_; }
@@ -111,6 +115,7 @@ public:
 public slots:
     void zoomIn();
     void zoomOut();
+    void zoomNeutral();
     void print();
     void save();
     void printExp();
@@ -120,27 +125,31 @@ public slots:
     void down();
     void left();
     void right();
-    void setMultiProfile(int);
-    void setRelativeProfile(int);
-    void setAutoScaleX(int);
-    void setAutoScaleY(int);
+    void preferences();
+	void setPreferences(int stateAutoX, int stateAutoY, int stateMProf, int stateRel);
+
     void setPlotError(int);
-    //void setImgCollapse(int);
-    void changeCoordinate(const QString &text); 
+    void changeCoordinate(const QString &text);
     void changeFrame(const QString &text);
-    void changeCoordinateType(const QString &text); 
-    void updateZoomer();
-    //virtual void crosshairReady(const String& evtype);
-    void changePlotType(const QString &text);
-    void changeErrorType(const QString &text);
-    virtual void closeEvent ( QCloseEvent *); 
+    void changeCoordinateType(const QString &text);
+    virtual void closeEvent ( QCloseEvent *);
     void resetProfile(ImageInterface<Float>* img, const char *name = 0);
     void wcChanged( const String,
 		    const Vector<Double>, const Vector<Double>,
 		    const Vector<Double>, const Vector<Double>,
 		    const ProfileType);
     void redraw( );
-    void changeAxis(String, String, String, std::vector<int> );
+    void changePlotType(const QString &text);
+    void changeErrorType(const QString &text);
+    void changeCollapseType(const QString &text);
+    void changeCollapseError(const QString &text);
+
+    void changeAxisOld(String xa, String ya, String za, std::vector<int>);
+    void changeAxis(String xa, String ya, String za, std::vector<int>);
+    void changeSpectrum(String spcType, String spcUnit, String spcRval, String spcSys);
+    void doImgCollapse();
+    void setCollapseRange(float xmin, float xmax);
+
 
     void overplot(QHash<QString, ImageInterface<float>*>);
 
@@ -151,78 +160,56 @@ public slots:
 
     void updateRegion( int, const QList<double> &world_x, const QList<double> &world_y,
 		       const QList<int> &pixel_x, const QList<int> &pixel_y );
-signals:
-    void hideProfile();
-    void coordinateChange(const String&);
 
-    void add2DImage(String path, String dataType, String displayType, Bool autoRegister);
+signals:
+   void hideProfile();
+   void coordinateChange(const String&);
+   void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData);
 
 private:
 
-    void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
+	void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
     void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
     void fillPlotTypes();
     void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
-    //void doImgCollapse();
     void printIt(QPrinter*);
-
-    QToolButton *zoomInButton;
-    QToolButton *zoomOutButton;
-    QToolButton *leftButton;
-    QToolButton *rightButton;
-    QToolButton *upButton;
-    QToolButton *downButton;
-    QCheckBox *multiProf;
-    QCheckBox *relative;
-    QCheckBox *autoScaleX;
-    QCheckBox *autoScaleY;
-    //QCheckBox *collapseImg;
-    
-    QToolButton *printButton;
-    QToolButton *saveButton;
-    //QToolButton *printExpButton;
-    //QToolButton *saveExpButton;
-    QToolButton *writeButton;
-    
-    QtCanvas *pc;
-    QLineEdit *te;
-    QComboBox *chk;
-    QComboBox *ctype;
-    QComboBox *plotMode;
-    QComboBox *errorMode;
-    QComboBox *frameButton_p;
-    
-    ImageAnalysis* analysis;
-    ImageInterface<Float>* image;
-
-    QHash<QString, ImageAnalysis*> *over;
-    String coordinate;
-    String coordinateType;
-    String xaxisUnit;
-    String ctypeUnit;
-    String frameType_p;
-    QString fileName;
-    QString position;
-    QString yUnit;
-    QString yUnitPrefix;
-
-    QString xpos;
-    QString ypos;
-    int cube;
-
-    int npoints;
-    int npoints_old;
-
-    Vector<Double> lastPX, lastPY;
-    Vector<Double> lastWX, lastWY;
-    Vector<Float> z_xval;
-    Vector<Float> z_yval;
-    Vector<Float> z_eval;
-    QString region;
-
     QString getRaDec(double x, double y);
 
-    String last_event_cs;
+	ImageAnalysis* analysis;
+	ImageInterface<Float>* image;
+
+	SpectralCollapser *collapser;
+
+	QHash<QString, ImageAnalysis*> *over;
+	String coordinate;
+	String coordinateType;
+	String xaxisUnit;
+	String ctypeUnit;
+	String spcRefFrame;
+	String cSysRval;
+	QString fileName;
+	QString position;
+	QString yUnit;
+	QString yUnitPrefix;
+
+	QString xpos;
+	QString ypos;
+	int cube;
+
+	int npoints;
+	int npoints_old;
+
+	int stateMProf;
+	int stateRel;
+
+	Vector<Double> lastPX, lastPY;
+	Vector<Double> lastWX, lastWY;
+	Vector<Float> z_xval;
+	Vector<Float> z_yval;
+	Vector<Float> z_eval;
+	QString region;
+
+	String last_event_cs;
     Vector<Double> last_event_px, last_event_py;
     Vector<Double> last_event_wx, last_event_wy;
 
@@ -233,6 +220,8 @@ private:
 
     QtProfile::PlotType  itsPlotType;
     QtProfile::ErrorType itsErrorType;
+    SpectralCollapser::CollapseType  itsCollapseType;
+    SpectralCollapser::CollapseError itsCollapseError;
     LogIO *itsLog;
 
     class spectra_info {
@@ -248,6 +237,7 @@ private:
 
     typedef std::map<int,spectra_info> SpectraInfoMap;
     SpectraInfoMap spectra_info_map;
+
 };
 
 }

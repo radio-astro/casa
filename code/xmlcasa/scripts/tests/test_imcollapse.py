@@ -74,6 +74,7 @@ from __main__ import *
 import unittest
 
 good_image = "collapse_in.fits"
+masked_image = "im_w_mask.im"
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imcollapse/'
 
 
@@ -121,6 +122,7 @@ class imcollapse_test(unittest.TestCase):
             got = gotImage
         self.assertTrue(got.shape() == expected.shape())
         diffData = got.getchunk() - expected.getchunk()
+        print "diff data" + str(abs(diffData).max())
         self.assertTrue(abs(diffData).max() == 0)
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
@@ -130,6 +132,11 @@ class imcollapse_test(unittest.TestCase):
             gotCsys.referencevalue()['numeric'] - expectedCsys.referencevalue()['numeric']
         )/expectedCsys.referencevalue()['numeric'];
         self.assertTrue(abs(fracDiffRef).max() <= 1.5e-6)
+        beam = got.restoringbeam()
+        self.assertTrue(len(beam) == 3)
+        self.assertTrue(abs(beam["major"]["value"] - 1) < 1.5e-6)
+        self.assertTrue(abs(beam["minor"]["value"] - 1) < 1.5e-6)
+        self.assertTrue(abs(beam["positionangle"]["value"] - 40) < 1.5e-6)
         got.close()
         got.done()
         expected.close()
@@ -373,28 +380,56 @@ class imcollapse_test(unittest.TestCase):
                     xx.maskhandler("set", "mask0")
                     xx.close()
                     xx.done()
-                for outfile in ["", "test_8_"+str(i) + str(j)]:
-                    if i == 0:
-                        mytool = run_collapse(
-                            good_image_im, "mean", axes, outfile, "", "",
-                            "", "", mask, False
-                        )
-                        self.assertTrue(type(mytool) == type(ia))
-                    else:
-                        mytool = run_imcollapse(
-                            good_image_im, "mean", axes, outfile, "", "",
-                            "", "", mask, False, True
-                        )
-                        self.assertTrue(type(mytool) == type(ia))
-                    npts = mytool.statistics()["npts"]
-                    mytool.close()
-                    mytool.done()
-                    if (j == 0):
-                        self.assertTrue(npts == 25)
-                    elif (j == 1):
-                        self.assertTrue(npts == 26)
-                    else:
-                        self.assertTrue(npts == 24)
+                for func in ["mean", "median"]:
+                    for outfile in ["", "test_8_"+str(i) + str(j) + func]:
+                        if i == 0:
+                            mytool = run_collapse(
+                                good_image_im, func, axes, outfile, "", "",
+                                "", "", mask, False
+                            )
+                            self.assertTrue(type(mytool) == type(ia))
+                        else:
+                            mytool = run_imcollapse(
+                                good_image_im, func, axes, outfile, "", "",
+                                "", "", mask, False, True
+                            )
+                            self.assertTrue(type(mytool) == type(ia))
+                        npts = mytool.statistics()["npts"]
+                        mytool.close()
+                        mytool.done()
+                        if (j == 0):
+                            self.assertTrue(npts == 25)
+                        elif (j == 1):
+                            self.assertTrue(npts == 26)
+                        else:
+                            self.assertTrue(npts == 24)
+
+    def test_CAS_3418(self):
+        """imcollapse: Test seperate code for median due to performance issues"""
+        for i in range(0,4):
+            xx = iatool.create()
+            xx.open(good_image)
+            exp = xx.statistics(robust=T, axes=i)["median"]
+            xx.done()
+            mytool = run_collapse(
+                good_image, "median", i, "", "", "",
+                "", "", "", False
+            )
+            zz = mytool.subimage("", dropdeg=T)
+            got = zz.getchunk()
+            self.assertTrue((got == exp).all())
+            
+            mytool = run_imcollapse(
+                good_image, "median", i, "", "", "",
+                "", "", "", False, True
+            )
+            zz = mytool.subimage("", dropdeg=T)
+            got = zz.getchunk()
+            self.assertTrue((got == exp).all())
+            mytool.done()
+            zz.done()
+
+
 
 def suite():
     return [imcollapse_test]

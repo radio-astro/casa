@@ -36,7 +36,7 @@
 
 namespace casa {
 
-    class AnnRegion;
+    class AnnotationBase;
 
     namespace viewer {
 
@@ -47,6 +47,9 @@ namespace casa {
 				_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
 				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1)
 				{ _ref_points_.push_back(pt(x1,y1)); _drawing_points_.push_back(pt(x1,y1)); }
+
+		Polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+
 		~Polygon( ) { }
 
 		bool clickWithin( double x, double y ) const;
@@ -55,14 +58,14 @@ namespace casa {
 		// for rectangles, moving a handle is resizing...
 		int moveHandle( int handle, double x, double y );
 		void move( double dx, double dy );
-		int mouseMovement( double x, double y, bool other_selected );
+		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		void regionCenter( double &x, double &y ) const;
 
 		void closeFigure( );
 		void addVertex( double x, double y, bool rewrite_last_point=false );
 
-		AnnRegion *annotation( ) const;
+		AnnotationBase *annotation( ) const;
 
 	    protected:
 		enum YScaleTo { ScaleTop, ScaleBottom };

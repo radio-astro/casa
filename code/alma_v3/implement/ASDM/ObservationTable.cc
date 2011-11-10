@@ -221,15 +221,24 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void ObservationTable::addWithoutCheckingUnique(ObservationRow * x) {
+		if (getRowByKey(
+						x->getObservationId()
+						) != (ObservationRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "ObservationTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -261,6 +270,16 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void ObservationTable::append(ObservationRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -411,12 +430,17 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		ObservationRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"ObservationTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -425,10 +449,27 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in ObservationTable::checkAndAdd called from ObservationTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ObservationTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in ObservationTable::addWithoutCheckingUnique called from ObservationTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</ObservationTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -647,19 +688,27 @@ ObservationRow* ObservationTable::newRow(ObservationRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	ObservationRow* aRow = ObservationRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				ObservationRow* aRow = ObservationRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Observation");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Observation");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			ObservationRow* aRow = ObservationRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -784,6 +833,7 @@ void ObservationTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Observation");

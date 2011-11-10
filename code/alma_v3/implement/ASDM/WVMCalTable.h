@@ -385,6 +385,9 @@ public:
 	 *
 	 * @return a pointer on a vector<WVMCalRow *>. A null returned value means that the table contains
 	 * no WVMCalRow for the given ( antennaId, spectralWindowId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <WVMCalRow*> *getByContext(Tag antennaId, Tag spectralWindowId);
 	 
@@ -495,6 +498,22 @@ private:
 	 
 	 */
 	WVMCalRow* checkAndAdd(WVMCalRow* x) ;
+	
+	/**
+	 * Brutally append an WVMCalRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param WVMCalRow* x a pointer onto the WVMCalRow to be appended.
+	 */
+	 void append(WVMCalRow* x) ;
+	 
+	/**
+	 * Brutally append an WVMCalRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param WVMCalRow* x a pointer onto the WVMCalRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(WVMCalRow* x) ;
+	 
+	 
 
 
 	

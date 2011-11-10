@@ -462,6 +462,22 @@ private:
 	 
 	 */
 	SwitchCycleRow* checkAndAdd(SwitchCycleRow* x) ;
+	
+	/**
+	 * Brutally append an SwitchCycleRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SwitchCycleRow* x a pointer onto the SwitchCycleRow to be appended.
+	 */
+	 void append(SwitchCycleRow* x) ;
+	 
+	/**
+	 * Brutally append an SwitchCycleRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SwitchCycleRow* x a pointer onto the SwitchCycleRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SwitchCycleRow* x) ;
+	 
+	 
 
 
 

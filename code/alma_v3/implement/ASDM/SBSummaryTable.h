@@ -592,6 +592,22 @@ private:
 	 
 	 */
 	SBSummaryRow* checkAndAdd(SBSummaryRow* x) ;
+	
+	/**
+	 * Brutally append an SBSummaryRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SBSummaryRow* x a pointer onto the SBSummaryRow to be appended.
+	 */
+	 void append(SBSummaryRow* x) ;
+	 
+	/**
+	 * Brutally append an SBSummaryRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param SBSummaryRow* x a pointer onto the SBSummaryRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(SBSummaryRow* x) ;
+	 
+	 
 
 
 

@@ -925,9 +925,9 @@ class simutil:
 
             posobs=me.observatory(telescope)
             obs=me.measure(posobs,'WGS84')
-            obslat=qa.convert(obs['m1'],'deg')['value']
-            obslon=qa.convert(obs['m0'],'deg')['value']
-            obsalt=qa.convert(obs['m2'],'m')['value']
+            #obslat=qa.convert(obs['m1'],'deg')['value']
+            #obslon=qa.convert(obs['m0'],'deg')['value']
+            #obsalt=qa.convert(obs['m2'],'m')['value']
 
  
         if (telescope==None or diam==None):
@@ -936,10 +936,8 @@ class simutil:
 
         # copied from task_simdata:
 
-        sm.setconfig(telescopename=telescope, x=stnx, y=stny, z=stnz, 
-                     dishdiameter=diam.tolist(), 
-                     mount=['alt-az'], antname=antnames, padname=padnames, 
-                     coordsystem='global', referencelocation=posobs)
+        self.setcfg(sm, telescope, stnx, stny, stnz, diam,
+                    padnames, posobs)
                 
         model_nchan=1
         # RI TODO isquantity checks
@@ -947,21 +945,13 @@ class simutil:
 
         # start is center of first channel.  for nch=1, that equals center
         model_start=qa.quantity(freq)
-       
-        if str.upper(telescope).find('VLA')>0:
-            sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
-                           deltafreq=qa.tos(model_width), 
-                           freqresolution=qa.tos(model_width), 
-                           nchannels=model_nchan, 
-                           stokes='RR LL')
-            sm.setfeed(mode='perfect R L',pol=[''])
-        else:            
-            sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
-                           deltafreq=qa.tos(model_width), 
-                           freqresolution=qa.tos(model_width), 
-                           nchannels=model_nchan, 
-                           stokes='XX YY')            
-            sm.setfeed(mode='perfect X Y',pol=[''])
+
+        stokes, feeds = self.polsettings(telescope)
+        sm.setspwindow(spwname="band1", freq=qa.tos(model_start), 
+                       deltafreq=qa.tos(model_width), 
+                       freqresolution=qa.tos(model_width), 
+                       nchannels=model_nchan, stokes=stokes)
+        sm.setfeed(mode=feeds, pol=[''])
 
         sm.setlimits(shadowlimit=0.01, elevationlimit='10deg')
         sm.setauto(0.0)
@@ -1060,11 +1050,48 @@ class simutil:
             return theoreticalnoise 
 
 
+    def setcfg(self, mysm, telescope, x, y, z, diam,
+               padnames, posobs, mounttype=None):
+        """
+        Sets the antenna positions for the mysm sm instance, which should have
+        already opened an MS, given
+        telescope - telescope name
+        x         - array of X positions, i.e. stnx from readantenna
+        y         - array of Y positions, i.e. stny from readantenna
+        z         - array of Z positions, i.e. stnz from readantenna
+        diam      - numpy.array of antenna diameters, i.e. from readantenna
+        padnames  - list of pad names
+        posobs    - The observatory position as a measure.
 
+        Optional:
+        mounttype   (Defaults to a guess based on telescope.)
 
+        Returns the mounttype that it uses.
 
+        Closes mysm and throws a ValueError if it can't set the configuration.
+        """
+        if not mounttype:
+            mounttype = 'alt-az'
+            if telescope.upper() in ('ASKAP',  # Effectively, if not BIZARRE.
+                                     'DRAO',
+                                     'WSRT'):
+                mounttype = 'EQUATORIAL'
+            elif telescope.upper() in ('LOFAR', 'LWA', 'MOST'):
+                # And other long wavelength arrays...like that one in WA that
+                # has 3 orthogonal feeds so they can go to the horizon.
+                #
+                # The SKA should go here too once people accept
+                # that it will have to be correlated as stations.
+                mounttype = 'BIZARRE'  # Ideally it would be 'FIXED' or
+                                       # 'GROUND'.
 
-
+        if not mysm.setconfig(telescopename=telescope, x=x, y=y, z=z,
+                              dishdiameter=diam.tolist(), 
+                              mount=[mounttype], padname=padnames,
+                              coordsystem='global', referencelocation=posobs):
+            mysm.close()
+            raise ValueError("Error setting the configuration")
+        return mounttype
 
 
 
@@ -1828,7 +1855,7 @@ class simutil:
 
 
 
-    def irtf2loc(self, x,y,z, cx,cy,cz):
+    def itrf2loc(self, x,y,z, cx,cy,cz):
         """
         itrf xyz and COFA cx,cy,cz -> latlon WGS84
         """
@@ -1874,7 +1901,7 @@ class simutil:
         cx=pl.mean(x)
         cy=pl.mean(y)
         cz=pl.mean(z)
-        lat,lon = self.irtf2loc(x,y,z,cx,cy,cz)
+        lat,lon = self.itrf2loc(x,y,z,cx,cy,cz)
         n=lat.__len__()
         
         dolam=0
@@ -2729,7 +2756,77 @@ class simutil:
         ia.done()
 
 
+    def bandname(self, freq):
+        """
+        Given freq in GHz, return the silly and in some cases deliberately
+        confusing band name that some people insist on using.
+        """
+        # TODO: add a trivia argument to optionally provide the historical
+        #       radar band info from Wikipedia.
+        band = ''
+        if freq > 90:   # Use the ALMA system.
+            band = 'band%.0f' % (0.01 * freq)   # () are mandatory!
+        # Now switch to radar band names.  Above 40 GHz different groups used
+        # different names.  Wikipedia uses ones from Baytron, a now defunct company
+        # that made test equipment.
+        elif freq > 75:    # used as a visual sensor for experimental autonomous vehicles
+            band = 'W' 
+        elif freq > 50:    # Very strongly absorbed by atmospheric O2,
+            band = 'V'     # which resonates at 60 GHz.
+        elif freq >= 40:
+            band = 'Q'
+        elif freq >= 26.5: # mapping, short range, airport surveillance;
+            band = 'Ka'    # frequency just above K band (hence 'a')
+                           # Photo radar operates at 34.300 +/- 0.100 GHz.
+        elif freq >= 18:
+            band = 'K'     # from German kurz, meaning 'short'; limited use due to
+                           # absorption by water vapor, so Ku and Ka were used
+                           # instead for surveillance. Used for detecting clouds
+                           # and at 24.150 +/- 0.100 GHz for speeding motorists.
+        elif freq >= 12:
+            band = 'U'     # or Ku
+        elif freq >= 8:    # Missile guidance, weather, medium-resolution mapping and ground
+            band = 'X'     # surveillance; in the USA the narrow range 10.525 GHz +/- 25 MHz
+                           # is used for airport radar and short range tracking.  Named X
+                           # band because the frequency was a secret during WW2.
+        elif freq >= 4:
+            band = 'C'     # Satellite transponders; a compromise (hence 'C') between X
+                           # and S bands; weather; long range tracking
+        elif freq >= 2:
+            band = 'S'     # Moderate range surveillance, air traffic control,
+                           # long-range weather; 'S' for 'short'
+        elif freq >= 1:
+            band = 'L'     # Long range air traffic control and surveillance; 'L' for 'long'
+        elif freq >= 0.3:
+            band = 'UHF'
+        else:
+            band = 'P'     # for 'previous', applied retrospectively to early radar systems
+                           # Includes HF and VHF.  Worse, it leaves no space for me
+                           # to put in rock band easter eggs.
+        return band
 
+
+    def polsettings(self, telescope, poltype=None, listall=False):
+        """
+        Returns stokes parameters (for use as stokes in sm.setspwindow)
+        and feed type (for use as mode in sm.setfeed).
+
+        If poltype is not specified or recognized, a guess is made using
+        telescope.  Defaults to 'XX YY', 'perfect X Y'
+
+        If listall is True, return the options instead.
+        """
+        psets = {'circular': ('RR LL', 'perfect R L'),
+                 'linear':   ('XX YY', 'perfect X Y'),
+                 'RR':       ('RR',    'perfect R L')}
+        if listall:
+            return psets
+        if poltype not in psets:
+            poltype = 'linear'
+            for circ in ('VLA', 'DRAO'):       # Done this way to
+                if circ in telescope.upper():  # catch EVLA.
+                    poltype = 'circular'
+        return psets[poltype]
 
 #######################################
 # ALMA calcpointings

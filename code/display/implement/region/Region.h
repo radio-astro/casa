@@ -70,10 +70,13 @@ namespace casa {
 	void linear_to_world( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
 	// convert world coordinates to linear coordinates...
 	void world_to_linear( WorldCanvas *wc_, double, double, double &, double & );
+	void world_to_linear( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double& );
 	// convert casa pixel coordinates to world coordinates...
 	void pixel_to_world( WorldCanvas *wc_, int, int, double &, double & );
 	// convert casa pixel coordinates to linear coordinates...
 	void pixel_to_linear( WorldCanvas *wc_, int, int, double &, double & );
+
+	void screen_offset_to_linear_offset( WorldCanvas *wc_, int, int, double &, double & );
 
 	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
 	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
@@ -90,7 +93,7 @@ namespace casa {
 		enum Units { Degrees, Radians, HMS, DMS, DefaultUnits };
 
 		// state returned from mouse functions for regions...
-		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseHandle = 1 << 2 };
+		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseStickySelected = 1 << 2, MouseUnselected = 1 << 3, MouseHandle = 1 << 4 };
 
 		enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion };
 
@@ -114,6 +117,10 @@ namespace casa {
 		virtual std::string textValue( ) const DISPLAY_PURE_VIRTUAL(Region::textValue,"");
 		virtual TextPosition textPosition( ) const DISPLAY_PURE_VIRTUAL(Region::textPosition,BottomText);
 		virtual void textPositionDelta( int &x, int &y ) const DISPLAY_PURE_VIRTUAL(Region::textPositionDelta,);
+
+		virtual void setLabel( const std::string &l ) = 0;
+		virtual void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" ) = 0;
+		virtual void setLine( const std::string &line_color="", Region::LineStyle line_style=Region::SolidLine ) = 0;
 
 		void getCoordinatesAndUnits( Region::Coord &c, Region::Units &u ) const;
 		void getPositionString( std::string &x, std::string &y, std::string &angle,
@@ -148,7 +155,7 @@ namespace casa {
 		void refresh( );
 
 		// returns OR'ed set of MouseState...
-		virtual int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
+		virtual unsigned int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
 		virtual void draw( );
 
@@ -164,12 +171,12 @@ namespace casa {
 		// blank out the statistics for this region
 		virtual void clearStatistics( ) DISPLAY_PURE_VIRTUAL(Region::clearStatistics,);
 
-		virtual bool clickWithin( double x, double y ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
-		virtual int clickHandle( double x, double y ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
+		virtual bool clickWithin( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickWithin,false);
+		virtual int clickHandle( double /*x*/, double /*y*/ ) const DISPLAY_PURE_VIRTUAL(Region::clickHandle,0);
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
-		virtual int moveHandle( int handle, double x, double y ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
-		virtual void move( double dx, double dy ) DISPLAY_PURE_VIRTUAL(Region::move,);
+		virtual int moveHandle( int handle, double /*x*/, double /*y*/ ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
+		virtual void move( double /*dx*/, double /*dy*/ ) DISPLAY_PURE_VIRTUAL(Region::move,);
 
 
 	    protected:

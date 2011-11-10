@@ -11,6 +11,7 @@
 % STM 2009-05-29  start Patch 4 versions, add ngc4826 tutorial
 % STM 2009-12-20  Release 0 versions (3.0.0)
 % JO 2010-03-01 Release 3.0.1 edits
+% JO 2011-10-03 Release 3.2. edits
 
 \chapter[Appendix: Annotated Example Scripts]{Annotated Example Scripts}
 \label{chapter:scripts}
@@ -74,6 +75,10 @@ The latest version of this script can be found at:
 # Updated      STM 2009-05-26 (Beta Patch 4.0) McMaster demo             #
 # Updated      STM 2009-12-02 (Release 0)                                #
 # Revised      JO  2010-04-13 (Release 3.0.1) edit viewer call           #
+# Checked      JO  2010-10-07 (Release 3.1.0)                            #
+#                                                                        #
+#                                                                        #
+#   data packaged with CASA                                              #
 #                                                                        #
 # Features Tested:                                                       #
 #    The script illustrates end-to-end processing with CASA              #
@@ -800,8 +805,6 @@ print "Created "+splitms
 #
 #print "The return value for this exportuvfits async task for tm is "+str(myhandle)
 
-\end{verbatim}
-\begin{verbatim}
 #=====================================================================
 #
 # UV-plane continuum subtraction on the target
@@ -1336,6 +1339,11 @@ The latest version of this script can be found at:
 # Updated STM 2009-05-29 (Beta Patch 4.0) for mcmaster tutorial      #
 # Updated STM 2009-12-20 (Release 0)      for Version 3.0.0          #
 # Revised JO  2010-04-13 (Release 3.0.1) edit viewer call            #
+# Checked JO  2010-10-07 (Release 3.1.0)                             #
+#                                                                    #
+#                                                                    #
+#  download data at:                                                 #
+#  http://casa.nrao.edu/Data/VLA/Planets6cm/planets_6cm.fits         #
 #                                                                    #
 # This is a VLA 6cm dataset that was observed in 1999 to set the     #
 # flux scale for calibration of the VLA.  Included in the program    #
@@ -1782,8 +1790,6 @@ listobs()
 #    STATE                <empty>  
 #    SYSCAL              <absent>  
 #    WEATHER             <absent>  
-\end{verbatim}
-\begin{verbatim}
 
 # 
 #=====================================================================
@@ -2273,11 +2279,9 @@ yaxis = 'phase'
 
 #figfile = caltable + '.plotcal.phase.png'
 #print "Plotting calibration to file "+figfile
-#saveinputs('plotcal','caltable.plotcal.phase.saved')
+#saveinputs('plotcal',caltable.plotcal.phase.saved')
 #plotcal()
 
-\end{verbatim}
-\begin{verbatim}
 #
 #=====================================================================
 # Polarization Calibration
@@ -2640,8 +2644,6 @@ yaxis = 'phase'
 #plotxy()
 
 print 'Calibration completed'
-\end{verbatim}
-\begin{verbatim}
 #
 #=====================================================================
 #
@@ -3364,8 +3366,12 @@ The latest version of this script can be found at:
 # Updated by CB     2009-05-19                  removed clearcals        #
 # Updated by STM    2009-06-26                  Patch 4, web download    #
 # Updated by STM    2009-12-20                  Release 3.0 final        #
+# Checked by JO     2010-10-08                  Release 3.1.0            #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
+#                                                                        #
+#  download data at:                                                     #
+#  http://casa.nrao.edu/Data/BIMA/NGC4826/ngc4826.fitsfiles.tgz          #
 #                                                                        #
 # This data is from the BIMA Survey of Nearby Galaxies (BIMA SONG)       #
 # Helfer, Thornley, Regan, et al., 2003, ApJS, 145, 259                  #
@@ -3811,8 +3817,6 @@ flagmanager(vis='ngc4826.tutorial.ms',mode='save',versionname='myflags',
 #
 #flagmanager(vis='ngc4826.tutorial.ms',mode='list')
 
-\end{verbatim}
-\begin{verbatim}
 #
 ##########################################################################
 #

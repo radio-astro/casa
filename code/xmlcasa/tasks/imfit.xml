@@ -110,11 +110,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
         <example>overwrite=true</example>
     </param>
-    <param type="int" name="chan">
-        <description>DEPRECATED. USE chans INSTEAD.</description>
-        <value>-1</value>
-        <example>chan=14</example>
-    </param>
     <constraints>
         <when param="logfile">
             <notequals type="string" value="">
@@ -164,7 +159,6 @@ newestimates     File to write fit results which can be used as initial estimate
                  for next run.
 complist         Name of output component list table.
 overwrite        Overwrite component list table if it exists?
-chan             DEPRECATED. USE chans INSTEAD.
 
 OVERVIEW
 imfit is used to fit one or more gaussians to sources in an image.

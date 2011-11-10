@@ -849,7 +849,7 @@ and available in Glish as mycl.
 
  
    <method type="function" name="rename">
-   <shortdescription>Give the list a name so it can save itself.</shortdescription>
+   <shortdescription>Give the list a name so it can save itself. use close to save to disk</shortdescription>
    
   <keyword>rename</keyword>
   <description>
@@ -859,22 +859,26 @@ and available in Glish as mycl.
     
     When a componentlist is created using the
     <link anchor="componentmodels:componentlist.emptycomponentlist.constructor">emptycomponentlist</link>
-    constructor it is not associated with an \aipspp\ table. So when the
+    constructor it is not associated with an casa table. So when the
     componentlist is removed from memory its contents are lost. But if
     a name is attached to the componentlist, using the rename function,
-    then its contents are saved in a table with the specified name.
+    then its contents are saved in a table with the specified name when the componentlist is closed
     
+    {\bf NOTE: that by just using {\tt rename} the componentlist is not ensured to be on disk; 
+    to be sure use {\tt close} after rename} 
+
     If the componentlist is created using the
     <link anchor="componentmodels:componentlist.componentlist.constructor">componentlist</link>
     constructor then this function will rename the table associated
     with the list to the user specified name. You cannot rename a
     componentlist that has been opened read only.
     
+<!--
     If a table with the specified name already exists then the user is
     prompted, using a popup dialog window, to see whether it should be
     overwritten. In a non-windows environment the file is not
     overwritten.
-    
+-->    
     <!--    If the supplied filename is the null string then any table
     currently associated with the list is removed. But the list itself
     still contains all its components. -->
@@ -894,24 +898,25 @@ and available in Glish as mycl.
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := emptycomponentlist();
-      cl.simulate(1);
-      cl.setshape(1, 'gaussian', '35mas', '27mas', '-10d')
-      cl.setflux(1, [1.0, 0.2, 0.1, 0.01]);
-      cl.rename('smallblob.cl');
-      cl.close();
-      n := cl.length();
     
-  </example>
-  <comments>
-    This example creates and empty componentlist tool and then adds
+    cl.simulate(1);
+    cl.setshape(0, 'gaussian', '35mas', '27mas', '-10d')
+    cl.setflux(0, [1.0, 0.2, 0.1, 0.01]);
+    cl.rename('smallblob.cl');
+    cl.close();
+    
+    cl.open('smallblob.cl')
+    n=cl.length()
+
+     This example starts with an  empty componentlist tool and then adds
     one component to it. The parameters of this component are then
     modified to change the shape and flux and the list saved in the
-    \aipspp\ table called 'smallblob.cl' The data is not written to
+    casa table called 'smallblob.cl' The data is not written to
     disk until the list is closed, and when it is the componentlist is
-    reset. So \texttt{n} contains zero at the end of this example.
-  </comments>
+    reset. So you need to reopen it if you want to interact with it.
+  </example>
+ 
+
 </method>
 
  

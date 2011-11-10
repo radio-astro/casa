@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static inline int FLOOR( double v ) { return ifloor(v + .5); }
 
     MultiRectTool::MultiRectTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd, Display::KeySym keysym, const Bool persistent ) :
-	MultiWCTool(keysym),
+	RegionTool(keysym),
 	itsRectanglePersistent(persistent),
 	itsrectangleexists(False),
 	itsActive(False),
@@ -136,7 +136,7 @@ void MultiRectTool::disable() {
 	}
 
 	for ( rectanglelist::reverse_iterator iter = rectangles.rbegin(); iter != rectangles.rend(); ++iter ) {
-	    int result = (*iter)->mouseMovement(linx,liny,region_selected);
+	    unsigned int result = (*iter)->mouseMovement(linx,liny,region_selected);
 	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
 	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
@@ -277,8 +277,14 @@ void MultiRectTool::disable() {
 
 
 void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
+    const int pixel_step = 1;
     WorldCanvas *wc = ev.worldCanvas( );
-    if ( wc == itsCurrentWC && ev.key() == Display::K_Escape) {
+    if ( wc == itsCurrentWC && 
+	 ( ev.key() == Display::K_Escape ||
+	   ev.key() == Display::K_Left ||
+	   ev.key() == Display::K_Right ||
+	   ev.key() == Display::K_Up ||
+	   ev.key() == Display::K_Down ) ) {
 	uInt x = ev.pixX();
 	uInt y = ev.pixY();
 
@@ -288,19 +294,42 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 	double linx, liny;
 	viewer::screen_to_linear( wc, x, y, linx, liny );
 
-	bool region_removed = false;
+	bool refresh_needed = false;
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ) {
 	    if ( (*iter)->regionVisible( ) ) {
-		int result = (*iter)->mouseMovement(linx,liny,false);
+		unsigned int result = (*iter)->mouseMovement(linx,liny,false);
 		if ( viewer::Region::regionSelected(result) ) {
-		    rectanglelist::iterator xi = iter; ++xi;
-		    rectangles.erase( iter );
-		    region_removed = true;
-		    iter = xi;
+		    if ( ev.key() == Display::K_Escape ) {
+			rectanglelist::iterator xi = iter; ++xi;
+			rectangles.erase( iter );
+			refresh_needed = true;
+			iter = xi;
+		    } else {
+			double dx=0, dy=0;
+			switch ( ev.key( ) ) {
+			    case Display::K_Left:
+				viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+				break;
+			    case Display::K_Right:
+				viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+				break;
+			    case Display::K_Down:
+				viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+				break;
+			    case Display::K_Up:
+				viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+				break;
+			    default:
+				break;
+			}
+			(*iter)->move( dx, dy );
+			refresh_needed = true;
+			++iter;
+		    }
 		} else { ++iter; }
 	    } else { ++iter; }
 	}
-	if ( region_removed ) refresh( );
+	if ( refresh_needed ) refresh( );
     }
 }
 
@@ -828,6 +857,20 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
     memory::cptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
+    }
+
+    bool MultiRectTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				const std::string &font, int font_size, int font_style, const std::string &font_color,
+				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+	if ( pts.size( ) != 2 ) return false;
+	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
+	memory::cptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
+	result->setLabel( label );
+	result->setFont( font, font_size, font_style, font_color );
+	result->setLine( line_color, line_style );
+	rectangles.push_back( result );
+	refresh( );
+	return true;
     }
 
     void MultiRectTool::start_new_rectangle( WorldCanvas *wc, int x, int y ) {

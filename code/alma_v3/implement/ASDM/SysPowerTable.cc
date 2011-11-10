@@ -294,17 +294,21 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void SysPowerTable::addWithoutCheckingUnique(SysPowerRow * x) {
+		SysPowerRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -337,6 +341,16 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void SysPowerTable::append(SysPowerRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -360,6 +374,9 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 	
 		
 	 vector<SysPowerRow *> *SysPowerTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "SysPowerTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -549,12 +566,17 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SysPowerRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"SysPowerTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -563,10 +585,27 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in SysPowerTable::checkAndAdd called from SysPowerTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SysPowerTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SysPowerTable::addWithoutCheckingUnique called from SysPowerTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</SysPowerTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -806,19 +845,27 @@ SysPowerRow* SysPowerTable::newRow(SysPowerRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	SysPowerRow* aRow = SysPowerRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				SysPowerRow* aRow = SysPowerRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "SysPower");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "SysPower");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			SysPowerRow* aRow = SysPowerRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -943,6 +990,7 @@ void SysPowerTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SysPower");

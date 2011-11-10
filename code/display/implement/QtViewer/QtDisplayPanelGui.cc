@@ -54,13 +54,14 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
 		   profileDD_(0), colorBarsVertical_(True), autoDDOptionsShow(True),
 		   showdataoptionspanel_enter_count(0), rc(viewer::getrc()), rcid_(rcstr),
-		   regionDock_(0) {
+		   regionDock_(0), use_new_regions(false),
+		   shpMgrAct_(0), fboxAct_(0), annotAct_(0), mkRgnAct_(0), rgnMgrAct_(0) {
 
     // initialize the "pix" unit, et al...
     QtWCBox::unitInit( );
     
     setWindowTitle("Viewer Display Panel");
-    bool use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
+    use_new_regions = std::find(args.begin(),args.end(),"--newregions") != args.end();
 
     std::string apos = rc.get("viewer." + rcid() + ".position.animator");
     if ( apos != "bottom" && apos != "right" && apos != "left" && apos != "top" ) {
@@ -135,17 +136,24 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
                     dpMenu_->addAction(dpCloseAct_);
   
     tlMenu_       = menuBar()->addMenu("&Tools");
-    fboxAct_      = tlMenu_->addAction("&Box in File");
-    annotAct_     = tlMenu_->addAction("Region in &File");
-    mkRgnAct_     = tlMenu_->addAction("Region in &Image");
+    if ( ! use_new_regions ) {
+	fboxAct_      = tlMenu_->addAction("&Box in File");
+	annotAct_     = tlMenu_->addAction("Region in &File");
+	mkRgnAct_     = tlMenu_->addAction("Region in &Image");
 //                  annotAct_->setEnabled(False);
+	connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
+	connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
+	connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
+    }
 
-    profileAct_   = tlMenu_->addAction("Spectral Profi&le");
-    rgnMgrAct_    = new QAction("Region Manager...", 0);
-//  rgnMgrAct_    = tlMenu_->addAction("Region Manager...");
-                    rgnMgrAct_->setEnabled(False);
+    profileAct_   = tlMenu_->addAction("Spectral Profi&le...");
+    // rgnMgrAct_    = new QAction("Region Manager...", 0);
+                    // rgnMgrAct_->setEnabled(False);
 
-    shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
+    if ( ! use_new_regions ) {
+	shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
+	connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
+    }
   
     vwMenu_       = menuBar()->addMenu("&View");
 			// (populated after creation of toolbars/dockwidgets).
@@ -166,6 +174,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		    mainToolBar_->addAction(dpSaveAct_);
 		    mainToolBar_->addAction(dpRstrAct_);
 		    mainToolBar_->addSeparator();
+		    mainToolBar_->addAction(profileAct_);
 //		    mainToolBar_->addAction(rgnMgrAct_);
 		    mainToolBar_->addSeparator();
 		    mainToolBar_->addAction(printAct_);
@@ -388,15 +397,15 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     stopTB_->setCheckable(True);
     playTB_->setCheckable(True);
   
-    rateEdit_ ->setReadOnly(True);
-	//#dk~ temporary only: no edits allowed here yet.
+    // rateEdit_ ->setReadOnly(True);
+    // 	//#dk~ temporary only: no edits allowed here yet.
 
 //  frameEdit_->setReadOnly(True);
     frameEdit_->setValidator(new QIntValidator(frameEdit_));
 	// (Assures only validated Ints will signal editingFinished).
   
-    animAuxButton_->setToolTip( "Press 'Full' for more animation controls.\n"
-			      "Press 'Compact' to hide the extra controls." );
+    // animAuxButton_->setToolTip( "Press 'Full' for more animation controls.\n"
+    // 			      "Press 'Compact' to hide the extra controls." );
 	// (...More animator widgets still need these help texts as well...)
   
     
@@ -404,13 +413,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
   
     updateAnimUi_();
   
-    animAuxButton_->setText("Compact");
+    // animAuxButton_->setText("Compact");
 	// Puts animator initially in 'Full' configuration.
 //  animAuxButton_->setText("Full");
 	// (This would put it in 'Compact' configuration).
   
   
-    setAnimExtrasVisibility_();
+    // setAnimExtrasVisibility_();
 	// Hides or shows extra animator widgets according to
 	// the 'Compact/Full' button.
   
@@ -477,7 +486,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpOptsAct_ ->setIcon(QIcon(":/icons/DP_Options.png"));
     dpSaveAct_ ->setIcon(QIcon(":/icons/Save.png"));
     dpRstrAct_ ->setIcon(QIcon(":/icons/Restore.png"));
-    rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
+    profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
+    // rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
     printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
     unzoomAct_ ->setIcon(QIcon(":/icons/Zoom0_OutExt.png"));
     zoomInAct_ ->setIcon(QIcon(":/icons/Zoom1_In.png"));
@@ -492,9 +502,10 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     dpNewAct_  ->setToolTip("New Display Panel");
     dpOptsAct_ ->setToolTip("Panel Display Options");
     dpSaveAct_ ->setToolTip("Save Display Panel State to File");
+    profileAct_->setToolTip("Open the Spectrum Profiler");
     dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
-    rgnMgrAct_ ->setToolTip("Save/Control Regions");
-    shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
+    // rgnMgrAct_ ->setToolTip("Save/Control Regions");
+    if ( shpMgrAct_ ) shpMgrAct_ ->setToolTip("Load/Control Region Shapes");
     printAct_  ->setToolTip("Print...");
     unzoomAct_ ->setToolTip("Zoom Out to Entire Image");
     zoomInAct_ ->setToolTip("Zoom In");
@@ -530,18 +541,14 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     connect(dpRstrAct_,  SIGNAL(triggered()),  SLOT(restorePanelState_()));
     connect(dpCloseAct_, SIGNAL(triggered()),  SLOT(close()));
     connect(dpQuitAct_,  SIGNAL(triggered()),  SLOT(quit()));
-    connect(fboxAct_,    SIGNAL(triggered()),  SLOT(showFileBoxPanel()));
-    connect(annotAct_,   SIGNAL(triggered()),  SLOT(showAnnotatorPanel()));
-    connect(mkRgnAct_,   SIGNAL(triggered()),  SLOT(showMakeRegionPanel()));
     connect(profileAct_, SIGNAL(triggered()),  SLOT(showImageProfile()));
-    connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
-    connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
+    // connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
     connect(ddAdjAct_,   SIGNAL(triggered()),  SLOT(showDataOptionsPanel()));
     connect(printAct_,   SIGNAL(triggered()),  SLOT(showPrintManager()));
     connect(unzoomAct_,  SIGNAL(triggered()),  qdp_, SLOT(unzoom()));
     connect(zoomInAct_,  SIGNAL(triggered()),  qdp_, SLOT(zoomIn()));
     connect(zoomOutAct_, SIGNAL(triggered()),  qdp_, SLOT(zoomOut()));
-    connect(animAuxButton_, SIGNAL(clicked()),    SLOT(toggleAnimExtras_()));
+    // connect(animAuxButton_, SIGNAL(clicked()),    SLOT(toggleAnimExtras_()));
 
     //## docking changes
     connect( trkgDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(trackingMoved(Qt::DockWidgetArea)) );
@@ -555,7 +562,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
   
     connect(frameSlider_, SIGNAL(valueChanged(int)), qdp_, SLOT(goTo(int)));
     connect(frameEdit_, SIGNAL(editingFinished()),  SLOT(frameNumberEdited_()));
-    connect(rateSlider_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
+    // connect(rateSlider_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
+    connect(rateEdit_,  SIGNAL(valueChanged(int)), qdp_, SLOT(setRate(int)));
     connect(normalRB_,    SIGNAL(toggled(bool)),     qdp_, SLOT(setMode(bool)));
   
     connect(toStartTB_, SIGNAL(clicked()),  qdp_, SLOT(toStart()));
@@ -698,6 +706,15 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String
   
   return qdd;  }
 
+void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData) {
+	// create a new DD
+	QtDisplayData* dd = createDD(path, dataType, displayType, autoRegister);
+
+	// set flagg if requested
+	if (tmpData)
+		dd->setDelTmpData(True);
+}
+
 void QtDisplayPanelGui::removeAllDDs() {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
     QtDisplayData* qdd = qdds.getRight();
@@ -727,9 +744,11 @@ Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
   for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
     if(qdd == qdds.getRight()) return True;  }
   return False;  }
-      
 
-  
+void QtDisplayPanelGui::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+    qdp_->loadRegions( path, datatype, displaytype );
+}
+
 QtDisplayData* QtDisplayPanelGui::dd(const String& name) {
   // retrieve DD with given name (0 if none).
   QtDisplayData* qdd;
@@ -796,7 +815,7 @@ void QtDisplayPanelGui::updateAnimUi_() {
   // (The signal used from text boxes is only emitted on user edits).
   Bool nrbSav = normalRB_->blockSignals(True),
        brbSav = blinkRB_->blockSignals(True),
-       rslSav = rateSlider_->blockSignals(True),
+       // rslSav = rateSlider_->blockSignals(True),
        fslSav = frameSlider_->blockSignals(True);
   
   // Current animator state.
@@ -816,10 +835,12 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	// NB: QRadioButton::setChecked(false)  doesn't work
 	// (not what we want here anyway).
   
-  rateSlider_->setMinimum(minr);
-  rateSlider_->setMaximum(maxr);
-  rateSlider_->setValue(rate);
-  rateEdit_  ->setText(QString::number(rate));
+  // rateSlider_->setMinimum(minr);
+  // rateSlider_->setMaximum(maxr);
+  // rateSlider_->setValue(rate);
+  rateEdit_->setMinimum(minr);
+  rateEdit_->setMaximum(maxr);
+  rateEdit_->setValue(rate);
   
   frameSlider_->setMinimum(0);
   frameSlider_->setMaximum(len-1);
@@ -827,9 +848,9 @@ void QtDisplayPanelGui::updateAnimUi_() {
   //frameSlider_->setMaximum(lst);
   frameSlider_->setValue(frm);
   
-  stFrmEdit_ ->setText(QString::number(strt));
-  lstFrmEdit_->setText(QString::number(lst));
-  stepEdit_  ->setText(QString::number(stp));
+  // stFrmEdit_ ->setText(QString::number(strt));
+  // lstFrmEdit_->setText(QString::number(lst));
+  // stepEdit_  ->setText(QString::number(stp));
   
   
   
@@ -837,15 +858,15 @@ void QtDisplayPanelGui::updateAnimUi_() {
   
   // enabled in any case:
   modeGB_->setEnabled(True);		// Blink mode
-  animAuxButton_->setEnabled(True);	// 'Compact/Full' button.
+  // animAuxButton_->setEnabled(True);	// 'Compact/Full' button.
   
   // Enabled only if there is more than 1 frame to animate:
   Bool multiframe = (len > 1);
   
   rateLbl_->setEnabled(multiframe);	// 
-  rateSlider_->setEnabled(multiframe);	// Rate controls.
+  // rateSlider_->setEnabled(multiframe);	// Rate controls.
   rateEdit_->setEnabled(multiframe);	//
-  perSecLbl_->setEnabled(multiframe);	//
+  // perSecLbl_->setEnabled(multiframe);	//
   
   toStartTB_->setEnabled(multiframe);	//
   revStepTB_->setEnabled(multiframe);	//
@@ -856,14 +877,14 @@ void QtDisplayPanelGui::updateAnimUi_() {
   toEndTB_->setEnabled(multiframe);	//
   frameEdit_->setEnabled(multiframe);	// Frame number entry.
   nFrmsLbl_->setEnabled(multiframe);	// Total frames label.
-  curFrmLbl_->setEnabled(multiframe);	//
+  // curFrmLbl_->setEnabled(multiframe);	//
   frameSlider_->setEnabled(multiframe);	// Frame number slider.
-  stFrmLbl_->setEnabled(multiframe);	//
-  stFrmEdit_->setEnabled(multiframe);	// first and last frames
-  lstFrmLbl_->setEnabled(multiframe);	// to include in animation
-  lstFrmEdit_->setEnabled(multiframe);	// and animation step.
-  stepLbl_->setEnabled(multiframe);	//
-  stepEdit_->setEnabled(multiframe);	//
+  // stFrmLbl_->setEnabled(multiframe);	//
+  // stFrmEdit_->setEnabled(multiframe);	// first and last frames
+  // lstFrmLbl_->setEnabled(multiframe);	// to include in animation
+  // lstFrmEdit_->setEnabled(multiframe);	// and animation step.
+  // stepLbl_->setEnabled(multiframe);	//
+  // stepEdit_->setEnabled(multiframe);	//
   
   
   revTB_ ->setChecked(play<0);
@@ -874,19 +895,19 @@ void QtDisplayPanelGui::updateAnimUi_() {
   //#dk  (For now, always disable the following animator
   //      interface, because it is not yet fully supported).
  
-  stFrmLbl_->setEnabled(False);		// 
-  stFrmEdit_->setEnabled(False);	// 
-  lstFrmLbl_->setEnabled(False);	// first and last frames
-  lstFrmEdit_->setEnabled(False);	// to include in animation,
-  stepLbl_->setEnabled(False);		// and animation step.
-  stepEdit_->setEnabled(False);		// 
+  // stFrmLbl_->setEnabled(False);		// 
+  // stFrmEdit_->setEnabled(False);	// 
+  // lstFrmLbl_->setEnabled(False);	// first and last frames
+  // lstFrmEdit_->setEnabled(False);	// to include in animation,
+  // stepLbl_->setEnabled(False);		// and animation step.
+  // stepEdit_->setEnabled(False);		// 
   
   
   // restore signal-blocking state (to 'unblocked', in all likelihood).
   
   normalRB_->blockSignals(nrbSav),
   blinkRB_->blockSignals(brbSav),
-  rateSlider_->blockSignals(rslSav),
+  // rateSlider_->blockSignals(rslSav),
   frameSlider_->blockSignals(fslSav);  
 
 //cout << "updataAni============" << endl;
@@ -914,11 +935,11 @@ void QtDisplayPanelGui::hideImageMenus() {
          //      << ppd->isCSmaster(pdd->dd()) << endl;
          if (ppd != 0 && ppd->isCSmaster(pdd->dd())) { 
             if (pdd->dataType() == "image" && img !=0) {
-               fboxAct_->setEnabled(True);
-               mkRgnAct_->setEnabled(True);
-               annotAct_->setEnabled(True);
+	       if ( fboxAct_ ) fboxAct_->setEnabled(True);
+               if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
+               if ( annotAct_ ) annotAct_->setEnabled(True);
                profileAct_->setEnabled(True);
-               shpMgrAct_->setEnabled(True);
+               if ( shpMgrAct_ ) shpMgrAct_->setEnabled(True);
                setUseRegion(False);
                break;
             }
@@ -932,11 +953,11 @@ void QtDisplayPanelGui::hideImageMenus() {
                hideShapeManager();
                hideStats();
 
-               fboxAct_->setEnabled(False);
-               mkRgnAct_->setEnabled(False);
-               annotAct_->setEnabled(False);
+               if ( fboxAct_ ) fboxAct_->setEnabled(False);
+               if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
+               if ( annotAct_ ) annotAct_->setEnabled(False);
                profileAct_->setEnabled(False);
-               shpMgrAct_->setEnabled(False);
+               if ( shpMgrAct_ ) shpMgrAct_->setEnabled(False);
                setUseRegion(False);
                //cout << "hide image menus" << endl;
                break;
@@ -1177,8 +1198,8 @@ void QtDisplayPanelGui::showFileBoxPanel() {
   }
   qfb_->showNormal();
   qfb_->raise();  
-  annotAct_->setEnabled(False);
-  mkRgnAct_->setEnabled(False);
+  if ( annotAct_ ) annotAct_->setEnabled(False);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
   setUseRegion(True);
 
 }
@@ -1187,8 +1208,8 @@ void QtDisplayPanelGui::hideFileBoxPanel() {
   if (qfb_==0) 
      return;
   qfb_->hide();  
-  annotAct_->setEnabled(True);
-  mkRgnAct_->setEnabled(True);
+  if ( annotAct_ ) annotAct_->setEnabled(True);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
   setUseRegion(False);
 }
     
@@ -1216,8 +1237,8 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
   }
   qap_->showNormal();
   qap_->raise();  
-  fboxAct_->setEnabled(False);
-  mkRgnAct_->setEnabled(False);
+  if ( fboxAct_ ) fboxAct_->setEnabled(False);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
   setUseRegion(True);
 
 }
@@ -1227,8 +1248,8 @@ void QtDisplayPanelGui::hideAnnotatorPanel() {
   if (qap_==0) 
      return;
   qap_->hide();  
-  fboxAct_->setEnabled(True);
-  mkRgnAct_->setEnabled(True);
+  if ( fboxAct_ ) fboxAct_->setEnabled(True);
+  if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
   setUseRegion(False);
 }
 
@@ -1253,8 +1274,8 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
         }
       }
   }
-  fboxAct_->setEnabled(False);
-  annotAct_->setEnabled(False);
+  if ( fboxAct_ ) fboxAct_->setEnabled(False);
+  if ( annotAct_ ) annotAct_->setEnabled(False);
   setUseRegion(True);
 
 }
@@ -1264,8 +1285,8 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
   if (qmr_==0) 
      return;
   qmr_->hide();  
-  fboxAct_->setEnabled(True);
-  annotAct_->setEnabled(True);
+  if ( fboxAct_ ) fboxAct_->setEnabled(True);
+  if ( annotAct_ ) annotAct_->setEnabled(True);
   setUseRegion(False);
 }
 
@@ -1289,11 +1310,16 @@ void QtDisplayPanelGui::showImageProfile() {
 		    if (!profile_) {
 			// Set up profiler for first time.
 	        
-			profile_ = new QtProfile(img, pdd->name().chars());
+		    	profile_ = new QtProfile(img, pdd->name().chars());
 			connect( profile_, SIGNAL(hideProfile()), SLOT(hideImageProfile()));
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
 			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
 				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+			connect( pdd, SIGNAL(spectrumChanged(String, String, String, String )),
+					profile_, SLOT(changeSpectrum(String, String, String, String )));
+
+			connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool)),
+					this, SLOT(addDD(String, String, String, Bool, Bool)));
 
 			{
 			    QtCrossTool *pos = dynamic_cast<QtCrossTool*>(ppd->getTool(QtMouseToolNames::POSITION));
@@ -1690,9 +1716,17 @@ void TrackBox::setTrackingHeight_() {
 
 
 // Etc.
-  
-void QtDisplayPanelGui::quit( ) {
 
+void QtDisplayPanelGui::close( ) {
+	// shit down the DD's
+	removeAllDDs();
+
+	// shut down the window
+	QtPanelBase::closeMainPanel();
+}
+
+void QtDisplayPanelGui::quit( ) {
+	removeAllDDs();
     emit closed( this );
 
     if ( v_->server( ) ) {
@@ -1702,38 +1736,38 @@ void QtDisplayPanelGui::quit( ) {
     }
 }
 
-void QtDisplayPanelGui::toggleAnimExtras_() {
+// void QtDisplayPanelGui::toggleAnimExtras_() {
 
-  if(animAuxButton_->text()=="Full") animAuxButton_->setText("Compact");
-  else				     animAuxButton_->setText("Full");  
-  setAnimExtrasVisibility_();  }
+//   if(animAuxButton_->text()=="Full") animAuxButton_->setText("Compact");
+//   else				     animAuxButton_->setText("Full");  
+//   setAnimExtrasVisibility_();  }
 
    
        
-void QtDisplayPanelGui::setAnimExtrasVisibility_() {
+// void QtDisplayPanelGui::setAnimExtrasVisibility_() {
     
-//#dg  ...of failure of dockWidgets/areas to downsize when needed.
-// (also, of improper dependencies of szHints on event processing).
-// (Leave these until promised Qt fixes arrive...).
+// //#dg  ...of failure of dockWidgets/areas to downsize when needed.
+// // (also, of improper dependencies of szHints on event processing).
+// // (Leave these until promised Qt fixes arrive...).
     
-/*  //#dg
-cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()	    
-          <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHb:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()	    
-          <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHb:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+// /*  //#dg
+// cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()	    
+//           <<","<<animWidget_->minimumSizeHint().height()
+//     <<"   SzHb:"<<animWidget_->sizeHint().width()	    
+//           <<","<<animWidget_->sizeHint().height()<<endl; 
+// cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()	    
+//           <<","<<trkgWidget_->minimumSizeHint().height()
+//     <<"   SzHb:"<<trkgWidget_->sizeHint().width()	    
+//           <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
+// //*/  //#dg  
 
   
   
-  if(animAuxButton_->text()=="Full") {
-    animAuxFrame_->hide(); modeGB_->hide();  }
-  else {
-    animAuxFrame_->show(); modeGB_->show();
-    animAuxButton_->setText("Compact");  }  
+//   if(animAuxButton_->text()=="Full") {
+//     animAuxFrame_->hide(); modeGB_->hide();  }
+//   else {
+//     animAuxFrame_->show(); modeGB_->show();
+//     animAuxButton_->setText("Compact");  }  
     
     
 /*  //#dg
@@ -1788,7 +1822,7 @@ cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()
 //*/  //#dg  
 
 
-}
+// }
 
 
 
@@ -2177,7 +2211,5 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
   v_->hold();	// (avoid unnecessary extra refreshes).
   emit colorBarOrientationChange();
   v_->release();  }
- 
-
 
 }

@@ -66,7 +66,7 @@ class DParameterChoice;
 class RegionShape;
 class QtRegionShapeManager;
 
-
+namespace viewer { class RegionToolManager; }
 
 class QtDisplayPanel : public QWidget,
                        public WCMotionEH,  public PCPositionEH {
@@ -341,6 +341,9 @@ public:
 
   panel_state getPanelState( ) const;
   void setPanelState( const panel_state & );
+
+  // load casa (or DS9?) region files...
+  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
 
  public slots:
 
@@ -747,26 +750,15 @@ public:
   
   
   //# mouse tools.
+  viewer::RegionToolManager *toolmgr;
   
   //<group>
   MWCRTZoomer* zoom_;
   MWCPannerTool* panner_;
   
-  //# MWCCrosshairTool* crosshair_;
-  QtCrossTool* crosshair_;
   QtOldCrossTool* ocrosshair_;
-  
-  //# QtRTRegion* rtregion_;
-  QtRectTool* rtregion_;
   QtOldRectTool* ortregion_;
-
-  // ellipse tool
-  QtEllipseTool *elregion_;
   QtOldEllipseTool *oelregion_;
-  
-  //# MWCPTRegion* ptregion_;
-  //# QtPTRegion* ptregion_;
-  QtPolyTool* ptregion_;
   QtOldPolyTool* optregion_;
 
   viewer::QtRegionSourceFactory *region_source_factory;

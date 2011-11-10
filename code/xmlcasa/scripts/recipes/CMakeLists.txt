@@ -21,8 +21,10 @@
 casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   benchmark.py
   checknan.py
+  cl2skycat.py
   cluster.py
   cmpmses.py
+  field2skycat.py
   find_autocorr.py
   __init__.py
   lsms.py
@@ -31,6 +33,7 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   taskutil.py
   listshapes.py
   astro_stations2simdata.py
+  setOrder.py
 )
 
 add_subdirectory( ephemerides )

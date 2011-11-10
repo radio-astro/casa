@@ -29,7 +29,7 @@
 #include <ms/MeasurementSets/MSSelection.h>
 
 // Async I/O infrastructure
-#include <msvis/MSVis/VisibilityIteratorAsync.h>
+///////////////#include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBufferAsync.h>
 #include <msvis/MSVis/VWBT.h>
 
@@ -63,6 +63,7 @@ typedef std::map< uShort,uShort >::iterator polartizationMapIterator;
 typedef std::map< std::pair<Int,Int>,std::vector<uInt> > antennaPairMap;
 typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
 typedef std::map< uShort,uShort > polarizationMap;
+typedef std::map< uInt,String > polarizationIndexMap;
 
 const Complex ImaginaryUnit = Complex(0,1);
 
@@ -328,6 +329,8 @@ public:
 
 	Bool operator()(uInt chan, uInt row);
 
+	Bool operator()(uInt pol, uInt channel, uInt row);
+
     const IPosition &shape() const
     {
     	return reducedLength_p;
@@ -340,15 +343,20 @@ public:
     	return;
     }
 
+    vector<uInt> getSelectedCorrelations() {return selectedCorrelations_p;}
+
+    void activateCheckMode() {applyFlag_p = &FlagMapper::checkCommonFlags;}
 
 protected:
 
 	void setExpressionMapping(vector<uInt> selectedCorrelations);
 
 	// Apply flags to common flag cube
-	void applyCommonFlags(uInt row, uInt channel, uInt pol);
+	void applyCommonFlags(uInt pol, uInt channel, uInt row);
 	// Apply flags to common and private flag cubes
-	void applyPrivateFlags(uInt row, uInt channel, uInt pol);
+	void applyPrivateFlags(uInt pol, uInt channel, uInt row);
+	// Apply flags to common and private flag cubes
+	void checkCommonFlags(uInt pol, uInt channel, uInt row);
 
 
 private:
@@ -431,6 +439,7 @@ public:
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
+	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
 
 	// Old CubeView accessors
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
@@ -461,6 +470,7 @@ public:
 	MeasurementSet *selectedMeasurementSet_p;
 	MeasurementSet *originalMeasurementSet_p;
 	MSSelection *measurementSetSelection_p;
+	Vector<String> *antennaNames_p;
 
 	// Iteration counters
 	uShort chunkNo;
@@ -504,6 +514,7 @@ private:
 	antennaPairMap *antennaPairMap_p;
 	subIntegrationMap *subIntegrationMap_p;
 	polarizationMap *polarizationMap_p;
+	polarizationIndexMap *polarizationIndexMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 	bool mapPolarizations_p;

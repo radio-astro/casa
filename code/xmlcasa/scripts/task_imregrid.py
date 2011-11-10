@@ -2,7 +2,7 @@ import os
 import shutil
 from taskinit import *
 
-def imregrid(imagename, template, output):
+def imregrid(imagename, template, output, asvelocity):
     casalog.origin('imregrid')
     if hasattr(template, 'lower') and not template.lower() == "get":
         # First check to see if the output file exists.  If it
@@ -15,6 +15,7 @@ def imregrid(imagename, template, output):
         if os.path.exists(output):
             raise Exception, 'Output destination ' + output + \
               " exists.\nPlease remove it or change the output file name."
+    _myia = iatool.create()
 
     try:
         if not os.path.isdir(imagename) or not os.access(imagename, os.R_OK):
@@ -23,10 +24,10 @@ def imregrid(imagename, template, output):
         # Figure out what the user wants.
         if not isinstance(template, dict):
             if template.lower() == 'get':
-                ia.open(imagename)
-                csys = ia.coordsys().torecord()
-                shap = ia.shape()
-                ia.done()
+                _myia.open(imagename)
+                csys = _myia.coordsys().torecord()
+                shap = _myia.shape()
+                _myia.done()
                 tb.clearlocks()                        # Still needed?
                 return {'csys': csys, 'shap': shap}
             elif template.upper() in ('J2000', 'B1950', 'B1950_VLA',
@@ -34,10 +35,10 @@ def imregrid(imagename, template, output):
                                       'AZELSW', 'AZELNE', 'ECLIPTIC',
                                       'MECLIPTIC', 'TECLIPTIC',
                                       'SUPERGAL'):       
-                ia.open(imagename)
-                csys = ia.coordsys().torecord()
-                shap = ia.shape()
-                ia.done()
+                _myia.open(imagename)
+                csys = _myia.coordsys().torecord()
+                shap = _myia.shape()
+                _myia.done()
                 tb.clearlocks()                        # Still needed?
 
                 newrefcode = template.upper()
@@ -66,26 +67,26 @@ def imregrid(imagename, template, output):
                                                                 os.R_OK):
                     raise TypeError, 'Cannot read template image ' + template
 
-                ia.open(template)
-                csys = ia.coordsys().torecord()
-                shap = ia.shape()
-                ia.done()
+                _myia.open(template)
+                csys = _myia.coordsys().torecord()
+                shap = _myia.shape()
+                _myia.done()
         else:
             csys = template['csys']
             shap = template['shap']
 
         # The actual regridding.
-        ia.open(imagename)
-        ib=ia.regrid(outfile=output, shape=shap, csys=csys, overwrite=True)
-        ia.done()
-        ib.done()
+        _myia.open(imagename)
+        _tmp = _myia.regrid(outfile=output, shape=shap, csys=csys, overwrite=True, asvelocity=asvelocity)
+        _myia.done()
+        _tmp.done()
         tb.clearlocks()
         return True
         
     except Exception, instance:
         print '*** Error ***',instance
         try:
-            ia.close()
+            _myia.close()
             tb.clearlocks()
         except: pass
         return False

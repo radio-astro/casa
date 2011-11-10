@@ -584,6 +584,9 @@ public:
 	 *
 	 * @return a pointer on a vector<DelayModelRow *>. A null returned value means that the table contains
 	 * no DelayModelRow for the given ( antennaId, spectralWindowId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <DelayModelRow*> *getByContext(Tag antennaId, Tag spectralWindowId);
 	 
@@ -694,6 +697,22 @@ private:
 	 
 	 */
 	DelayModelRow* checkAndAdd(DelayModelRow* x) ;
+	
+	/**
+	 * Brutally append an DelayModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DelayModelRow* x a pointer onto the DelayModelRow to be appended.
+	 */
+	 void append(DelayModelRow* x) ;
+	 
+	/**
+	 * Brutally append an DelayModelRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param DelayModelRow* x a pointer onto the DelayModelRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(DelayModelRow* x) ;
+	 
+	 
 
 
 	

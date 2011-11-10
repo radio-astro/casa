@@ -170,11 +170,13 @@ class test_concat(unittest.TestCase):
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
 
+        self.assertTrue(retValue['success'])
+
 
     def test2(self):
-        '''Concat 2: 3 parts, different sources, different spws,  copypointing=False'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
-        self.res = concat(vis=['part1.ms','part2-mod.ms','part3.ms'],concatvis=msname, copypointing=False)
+        '''Concat 2: 3 parts, different sources, different spws,  copypointing=False, visweightscale=[3.,2.,1.]'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        self.res = concat(vis=['part1.ms','part2-mod.ms','part3.ms'],concatvis=msname, copypointing=False, visweightscale=[3.,2.,1.])
         self.assertEqual(self.res,None)
         
         print myname, ": Success! Now checking output ..."
@@ -258,6 +260,37 @@ class test_concat(unittest.TestCase):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
+            # collecting parameters for subsequent test of MAIN table
+            msnrows = []
+            oldweightbeg = []
+            oldweightend = []
+            ii = 0
+            for myms in ['part1.ms','part2-mod.ms','part3.ms']:
+                tb.open(myms)
+                msnrows.append(tb.nrows())
+                oldweightbeg.append(tb.getcell('WEIGHT',0))
+                oldweightend.append(tb.getcell('WEIGHT',tb.nrows()-1))
+                tb.close()
+
+
+            name = "" # i.e. Main
+            #             col name, row number, expected value, tolerance
+            expected = [
+                    ['WEIGHT', 0, 3.*oldweightbeg[0], 1E-6], # scaling uses float precision
+                    ['WEIGHT', msnrows[0]-1, 3.*oldweightend[0], 1E-6],
+                    ['WEIGHT', msnrows[0], 2.*oldweightbeg[1], 1E-6],
+                    ['WEIGHT', msnrows[0]+msnrows[1]-1, 2.*oldweightend[1], 1E-6],
+                    ['WEIGHT', msnrows[0]+msnrows[1], oldweightbeg[2], 1E-6],
+                    ['WEIGHT', msnrows[0]+msnrows[1]+msnrows[2]-1, oldweightend[2], 1E-6]
+                ]
+
+            results = checktable(name, expected)
+            if not results:
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
+
+        self.assertTrue(retValue['success'])
 
 
     def test3(self):
@@ -347,7 +380,9 @@ class test_concat(unittest.TestCase):
             if not results:
                 retValue['success']=False
                 retValue['error_msgs']=retValue['error_msgs']+'Check of table '+name+' failed'
-    
+
+        self.assertTrue(retValue['success'])
+
 
     def test4(self):
         '''Concat 4: five MSs with identical sources but different time/intervals on them (CSV-268)'''

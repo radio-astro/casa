@@ -33,6 +33,7 @@
 
 #include <algorithm> //required for std::swap
 #include <iostream>
+#include <sstream>
 
 #include <libxml/xmlmemory.h>
 #include <libxml/debugXML.h>
@@ -289,7 +290,7 @@ namespace asdm {
 	break; 
       node = node->next;
     }
-    return node;      
+    return (node != NULL);      
   }
 
   string ASDMUtils::parseRow(xmlDocPtr doc, xmlNodePtr node, const xmlChar* childName) {
@@ -359,7 +360,7 @@ namespace asdm {
       autoOrigin = EVLA;
     else if (numALMA == telescopeNames.size())
       autoOrigin = ALMA;
-
+    
     return autoOrigin;
   }
 
@@ -373,8 +374,7 @@ namespace asdm {
   }
 
   string ASDMUtils::pathToxslTransform( const string& xsltFilename) {
-
-    char * envVars[] = {"INTROOT", "ACSROOT", "CASAPATH"};
+    char * envVars[] = {"INTROOT", "ACSROOT"};
     char * rootDir_p;
     for (unsigned int i = 0; i < sizeof(envVars) ; i++) 
       if ((rootDir_p = getenv(envVars[i])) != 0) {
@@ -385,11 +385,32 @@ namespace asdm {
 	  string xsltPath = *iter;
 	  if (!ends_with(xsltPath, "/")) xsltPath+="/";
 	  xsltPath+=rootSubdir[string(envVars[i])]+ xsltFilename;
+	  if (getenv("ASDM_DEBUG"))
+	    cout << "pathToxslTransform tries to locate '" << xsltPath << "'." << endl;
 	  if (exists(path(xsltPath)))
 	    return xsltPath;
 	}
       }
-    
+
+    // Ok it seems that we are not in an ALMA/ACS environment, then look for $CASAPATH/data.
+    if ((rootDir_p = getenv("CASAPATH")) != 0) {
+      string rootPath(rootDir_p);
+      vector<string> rootPathElements;
+      split(rootPathElements, rootPath, is_any_of(" "));
+      string xsltPath = rootPathElements[0];
+      if (!ends_with(xsltPath, "/")) xsltPath+="/";
+      xsltPath+="data/alma/asdm/";
+      xsltPath+=xsltFilename;
+      if (getenv("ASDM_DEBUG"))
+	cout << "pathToxslTransform tries to locate '" << xsltPath << "'." << endl;
+
+      if (exists(path(xsltPath)))
+	return xsltPath;
+    }
+
+    if (getenv("ASDM_DEBUG"))
+      cout  << "pathToxslTransform returns an empty xsltPath " << endl;
+
     // Here rootDir_p == NULL , let's return an empty string.
     return "" ;  // An empty string will be interpreted as no file found.
   }
@@ -405,27 +426,54 @@ namespace asdm {
     detectOrigin_       = true;
     version_    	= "UNKNOWN";
     detectVersion_      = true;
-    loadTablesOnDemand_ = true;
+    loadTablesOnDemand_ = false;
+    checkRowUniqueness_ = true;
+  }
+
+  ASDMParseOptions::ASDMParseOptions(const ASDMParseOptions& x) {
+    origin_				       = x.origin_;
+    detectOrigin_			       = x.detectOrigin_;
+    version_				       = x.version_;
+    detectVersion_			       = x.detectVersion_;
+    loadTablesOnDemand_			       = x.loadTablesOnDemand_;
+    checkRowUniqueness_                        = x.checkRowUniqueness_;
   }
 
   ASDMParseOptions::~ASDMParseOptions() {;}
 
+  ASDMParseOptions& ASDMParseOptions::operator = (const ASDMParseOptions& rhs) {
+    origin_				       = rhs.origin_;
+    detectOrigin_			       = rhs.detectOrigin_;
+    version_				       = rhs.version_;
+    detectVersion_			       = rhs.detectVersion_;
+    loadTablesOnDemand_			       = rhs.loadTablesOnDemand_;
+    checkRowUniqueness_                        = rhs.checkRowUniqueness_;
+    return *this;
+  }
   ASDMParseOptions& ASDMParseOptions::asALMA() { origin_ = ASDMUtils::ALMA; detectOrigin_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asIRAM_PDB() { origin_ = ASDMUtils::ALMA; detectOrigin_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asEVLA() { origin_ = ASDMUtils::EVLA; detectOrigin_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asV2() { version_ = "2"; detectVersion_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::asV3() { version_ = "3"; detectVersion_ = false; return *this; }
   ASDMParseOptions& ASDMParseOptions::loadTablesOnDemand(bool b) { loadTablesOnDemand_ = b;  return *this; }
+  ASDMParseOptions& ASDMParseOptions::checkRowUniqueness(bool b) { checkRowUniqueness_ = b;  return *this; }
+  string ASDMParseOptions::toString() const {
+    ostringstream oss;
+    oss << *this;
+    return oss.str();
+  }
 
   XSLTransformer::XSLTransformer() : cur(NULL) {
     xmlSubstituteEntitiesDefault(1);
     xmlLoadExtDtdDefaultValue = 1;
-    // cout << "XSLTransformer::XSLTransformer() called " << endl;
   }
 
   XSLTransformer::XSLTransformer(const string& xsltPath) {
-    // cout << "XSLTransformer::XSLTransformer(const string& xsltPath) called " << endl;
-    // cout << "About parse the style sheet contained in " << xsltPath << endl;
+    if (getenv("ASDM_DEBUG")) {
+	cout << "XSLTransformer::XSLTransformer(const string& xsltPath) called " << endl;
+	cout << "About parse the style sheet contained in " << xsltPath << endl;
+    }
+
     xmlSubstituteEntitiesDefault(1);
     xmlLoadExtDtdDefaultValue = 1;
     
@@ -435,7 +483,8 @@ namespace asdm {
   }
 
   void XSLTransformer::setTransformation(const string& xsltPath) {
-    // cout << "XSLTransformer::setTransformation(const string& xsltPath) called " << endl;
+    if (getenv("ASDM_DEBUG")) 
+      cout << "XSLTransformer::setTransformation(const string& xsltPath) called on '" << xsltPath << "'." << endl;
     
     if (cur) {
       xsltFreeStylesheet(cur);
@@ -465,7 +514,7 @@ namespace asdm {
     xmlChar* docTxtPtr = NULL;
     int docTxtLen = 0;
     
-    // cout << "About to read and parse " << xmlPath << endl;
+    if (getenv("ASDM_DEBUG")) cout << "About to read and parse " << xmlPath << endl;
     doc = xmlParseFile(xmlPath.c_str());
     if (doc == NULL) {
       throw XSLTransformerException("Could not parse the XML file '" + xmlPath + "'." );
@@ -487,7 +536,8 @@ namespace asdm {
 	throw XSLTransformerException("Could not dump the result of the XSL transformation into memory.");
     }
 
-    // cout << "Making a string out of the result of applying the XSL transformation" << endl;
+    if (getenv("ASDM_DEBUG")) 
+      cout << "Making a string from the result of the XSL transformation" << endl;
     string docXML((char *) docTxtPtr, docTxtLen);
     // cout << "docXML = " << docXML << endl;
 
@@ -499,6 +549,22 @@ namespace asdm {
     return docXML;
   } 
 
+  std::ostream& operator<<(std::ostream& output, const ASDMParseOptions& p) {
+    string s;
+    switch (p.origin_) {
+    case ASDMUtils::UNKNOWN:
+      s = "UNKNOWN";
+      break;
+    case ASDMUtils::ALMA:
+      s = "ALMA";
+      break;
+    case ASDMUtils::EVLA:
+      s = "EVLA";
+      break;
+    }
+    output << "Origin=" << s << ",Version=" << p.version_ << ",LoadTablesOnDemand=" << p.loadTablesOnDemand_ << ",CheckRowUniqueness=" << p.checkRowUniqueness_;
+    return output;  // for multiple << operators.
+  }
 } // end namespace asdm
  
  

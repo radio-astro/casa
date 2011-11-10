@@ -41,6 +41,7 @@
 #include <display/Display/AttributeBuffer.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <display/QtViewer/RegionToolManager.qo.h>
 #include <display/DisplayDatas/WedgeDD.h>
 #include <casa/BasicMath/Math.h>
 #include <display/Display/DParameterChoice.h>
@@ -54,7 +55,6 @@
 #include <images/Regions/RegionHandler.h>
 #include <images/Images/ImageInterface.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
@@ -65,10 +65,8 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 		pd_(0), pc_(0),
 		qdds_(),
 		zoom_(0), panner_(0),
-		crosshair_(0), ocrosshair_(0),
-		rtregion_(0), ortregion_(0),
-		elregion_(0), oelregion_(0),
-		ptregion_(0), optregion_(0),
+		toolmgr(0),
+		ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
 		polyline_(0), rulerline_(0), snsFidd_(0), bncFidd_(0),
 		region_source_factory(0),
 		mouseToolNames_(),
@@ -230,26 +228,9 @@ void QtDisplayPanel::setupMouseTools_( bool new_region_tools ) {
   //ptregion_  = new MWCPTRegion;       pd_->addTool(POLYGON, ptregion_);
   //rtregion_  = new QtRTRegion(pd_);   pd_->addTool(RECTANGLE, rtregion_);
   if ( new_region_tools ) {
-      crosshair_ = new QtCrossTool(region_source_factory,pd_);  pd_->addTool(POSITION, crosshair_);
-      ptregion_  = new QtPolyTool(region_source_factory,pd_);   pd_->addTool(POLYGON, ptregion_);
-      rtregion_  = new QtRectTool(region_source_factory,pd_);   pd_->addTool(RECTANGLE, rtregion_);
-      elregion_  = new QtEllipseTool(region_source_factory,pd_); pd_->addTool(ELLIPSE, elregion_);
-      connect( rtregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-      connect( rtregion_, SIGNAL(echoClicked(Record)),
-			  SLOT(clicked(Record)) );
-      connect( ptregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-      connect( ptregion_, SIGNAL(echoClicked(Record)),
-			  SLOT(clicked(Record)) );
-      connect( elregion_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			  SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-      connect( elregion_, SIGNAL(echoClicked(Record)),
-			  SLOT(clicked(Record)) );
-      connect( crosshair_, SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			   SLOT(mouseRegionReady_(Record, WorldCanvasHolder*)) );
-      connect( crosshair_, SIGNAL(echoClicked(Record)),
-			   SLOT(clicked(Record)) );
+
+      toolmgr = new viewer::RegionToolManager( region_source_factory, pd_ );
+
   } else {
       ocrosshair_ = new QtOldCrossTool;  pd_->addTool(POSITION, ocrosshair_);
       optregion_  = new QtOldPolyTool(pd_);	pd_->addTool(POLYGON, optregion_);
@@ -404,24 +385,20 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
     
 
 void QtDisplayPanel::resetRTRegion()  {
-    if ( rtregion_ ) rtregion_->reset();
     if ( ortregion_ ) ortregion_->reset();
 }
 
 void QtDisplayPanel::resetETRegion()  {
-    if ( elregion_ ) elregion_->reset();
     if ( oelregion_ ) oelregion_->reset();
 }
 
 void QtDisplayPanel::resetPTRegion()  {
-    if ( ptregion_ ) ptregion_->reset( );
     if ( optregion_ ) optregion_->reset( );
 }
 
 void QtDisplayPanel::resetZoomer()    { zoom_->reset();  }
 
 void QtDisplayPanel::resetCrosshair() {
-    if ( crosshair_ ) crosshair_->reset();
     if ( ocrosshair_ ) ocrosshair_->reset();
 }
 
@@ -2342,6 +2319,11 @@ QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
 			colormapstate );
 }
 
+
+// load casa (or DS9?) region files...
+void QtDisplayPanel::loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype ) {
+    toolmgr->loadRegions( path, datatype, displaytype );
+}
 
 const QtDisplayPanel::panel_state::colormap_state *QtDisplayPanel::panel_state::colormap( const std::string &path ) const {
     colormap_map::const_iterator iter = colormaps_.find( path );

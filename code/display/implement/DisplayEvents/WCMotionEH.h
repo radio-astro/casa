@@ -75,7 +75,7 @@ class WCMotionEH {
   WCMotionEH();
   
   // default sends event to cout
-  virtual void operator ()(const WCMotionEvent & ev);
+  virtual void operator ()(const WCMotionEvent & ev) = 0;
 
   // Destructor
   virtual ~WCMotionEH();

@@ -636,6 +636,22 @@ private:
 	 
 	 */
 	CalDelayRow* checkAndAdd(CalDelayRow* x) ;
+	
+	/**
+	 * Brutally append an CalDelayRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalDelayRow* x a pointer onto the CalDelayRow to be appended.
+	 */
+	 void append(CalDelayRow* x) ;
+	 
+	/**
+	 * Brutally append an CalDelayRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalDelayRow* x a pointer onto the CalDelayRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalDelayRow* x) ;
+	 
+	 
 
 
 

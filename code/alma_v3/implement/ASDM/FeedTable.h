@@ -548,6 +548,22 @@ private:
 	 
 	 */
 	FeedRow* checkAndAdd(FeedRow* x) ;
+	
+	/**
+	 * Brutally append an FeedRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FeedRow* x a pointer onto the FeedRow to be appended.
+	 */
+	 void append(FeedRow* x) ;
+	 
+	/**
+	 * Brutally append an FeedRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FeedRow* x a pointer onto the FeedRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FeedRow* x) ;
+	 
+	 
 
 
 	

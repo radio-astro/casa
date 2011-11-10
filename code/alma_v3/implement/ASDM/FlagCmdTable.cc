@@ -266,13 +266,17 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 	}
 		
 	
-
+		
+	void FlagCmdTable::addWithoutCheckingUnique(FlagCmdRow * x) {
+		FlagCmdRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -292,6 +296,16 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 					
 		
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void FlagCmdTable::append(FlagCmdRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -446,12 +460,17 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FlagCmdRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"FlagCmdTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -460,10 +479,27 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in FlagCmdTable::checkAndAdd called from FlagCmdTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FlagCmdTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FlagCmdTable::addWithoutCheckingUnique called from FlagCmdTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</FlagCmdTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -700,19 +736,27 @@ FlagCmdRow* FlagCmdTable::newRow(FlagCmdRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	FlagCmdRow* aRow = FlagCmdRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				FlagCmdRow* aRow = FlagCmdRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "FlagCmd");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "FlagCmd");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			FlagCmdRow* aRow = FlagCmdRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -837,6 +881,7 @@ void FlagCmdTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "FlagCmd");

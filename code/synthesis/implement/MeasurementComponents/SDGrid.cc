@@ -140,11 +140,22 @@ SDGrid& SDGrid::operator=(const SDGrid& other)
     wLattice=other.wLattice;
     wArrayLattice=other.wArrayLattice;
     convType=other.convType;
-    pointingToImage=other.pointingToImage;
-    userSetSupport_p=other.userSetSupport_p;
-    xyPosMovingOrig_p=other.xyPosMovingOrig_p;
+    if(other.wImage !=0)
+      wImage=(TempImage<Float> *)other.wImage->cloneII();
+    else
+      wImage=0;
     pointingDirCol_p=other.pointingDirCol_p;
-
+    pointingToImage=0;
+    xyPos.resize();    
+    xyPos=other.xyPos;
+    xyPosMovingOrig_p=other.xyPosMovingOrig_p;
+    convFunc.resize();
+    convFunc=other.convFunc;
+    convSampling=other.convSampling;
+    convSize=other.convSize;
+    convSupport=other.convSupport;
+    userSetSupport_p=other.userSetSupport_p;
+    lastIndex_p=0;
   };
   return *this;
 };
@@ -284,7 +295,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
 
   // Set up the convolution function: make the buffer plenty
   // big so that we can trim it back
-  convSupport=128;
+  convSupport=max(128, sj_p->support(vb, coords));
   convSampling=100;
   convSize=convSampling*convSupport;
   
@@ -306,8 +317,10 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     const ROMSPointingColumns& act_mspc = vb.msColumns().pointing();
     Bool nullPointingTable=(act_mspc.nrow() < 1);
     // uInt pointIndex=getIndex(*mspc, vb.time()(row), vb.timeInterval()(row));
-    Int pointIndex=getIndex(act_mspc, vb.time()(row), 
-			     vb.timeInterval()(row));
+    Int pointIndex=-1;
+    if(!nullPointingTable)
+      pointIndex=getIndex(act_mspc, vb.time()(row), 
+			  vb.timeInterval()(row));
     if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
       ostringstream o;
       o << "Failed to find pointing information for time " <<
@@ -345,7 +358,10 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
     delete pointingToImage;
     pointingToImage=0;
   }
+  
   directionCoord=coords.directionCoordinate(directionIndex);
+  //make sure we use the same units
+  worldPosMeas.set(dc.worldAxisUnits()(0));
   dc.setReferenceValue(worldPosMeas.getAngle().getValue());
   Vector<Double> unitVec(2);
   unitVec=0.0;
@@ -362,6 +378,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
 
   AlwaysAssert(sj_p, AipsError);
   sj_p->apply(onedPB, onedPB, vb, 0);
+ 
   IPosition pbSlice(4, convSize, 1, 1, 1);
   Vector<Float> tempConvFunc=real(onedPB.getSlice(start, pbSlice, True));
   // Find number of significant points
@@ -380,7 +397,6 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
 
   // Now fill in the convolution function vector
   convSupport=cfLen/convSampling;
-  convSampling=100;
   convSize=convSampling*(2*convSupport+2);
   convFunc.resize(convSize);
   convFunc=0.0;
@@ -1062,8 +1078,11 @@ Bool SDGrid::getXYPos(const VisBuffer& vb, Int row) {
   Bool nullPointingTable=False;
   const ROMSPointingColumns& act_mspc=vb.msColumns().pointing();
   nullPointingTable=(act_mspc.nrow() < 1);
-
-  Int pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+  Int pointIndex=-1;
+  if(!nullPointingTable){
+    pointIndex=getIndex(act_mspc, vb.time()(row), vb.timeInterval()(row));
+    
+  }
   if(!nullPointingTable && ((pointIndex<0)||(pointIndex>=Int(act_mspc.time().nrow())))) {
     ostringstream o;
     o << "Failed to find pointing information for time " <<

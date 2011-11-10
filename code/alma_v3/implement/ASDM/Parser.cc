@@ -38,14 +38,14 @@
  
 #include <OutOfBoundsException.h>
 #include <NumberFormatException.h>
-#include <Boolean.h>
-#include <Byte.h>
-#include <Character.h>
-#include <Double.h>
-#include <Float.h>
-#include <Integer.h>
-#include <Long.h>
-#include <Short.h>
+#include <BooleanWrapper.h>
+#include <ByteWrapper.h>
+#include <CharacterWrapper.h>
+#include <DoubleWrapper.h>
+#include <FloatWrapper.h>
+#include <IntegerWrapper.h>
+#include <LongWrapper.h>
+#include <ShortWrapper.h>
 using asdm::OutOfBoundsException;
 using asdm::NumberFormatException;
 using asdm::Boolean;

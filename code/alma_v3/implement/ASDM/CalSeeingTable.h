@@ -558,6 +558,22 @@ private:
 	 
 	 */
 	CalSeeingRow* checkAndAdd(CalSeeingRow* x) ;
+	
+	/**
+	 * Brutally append an CalSeeingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalSeeingRow* x a pointer onto the CalSeeingRow to be appended.
+	 */
+	 void append(CalSeeingRow* x) ;
+	 
+	/**
+	 * Brutally append an CalSeeingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalSeeingRow* x a pointer onto the CalSeeingRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalSeeingRow* x) ;
+	 
+	 
 
 
 

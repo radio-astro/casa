@@ -82,10 +82,10 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   Bool isQualImg(const QString &extexpr);
 
 
-  enum DATATYPE {UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
-                 DIRECTORY, QUALIMG};
-  enum DISPLAYTYPE {RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
-                    NEWPANEL, OLDPANEL};
+  enum DATATYPE { UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
+		  DIRECTORY, QUALIMG, CASAREGION };
+  enum DISPLAYTYPE { RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
+		     NEWPANEL, OLDPANEL };
 
   QHash<int, QString> dataType_;
   QHash<QString, int> uiDataType_;
@@ -102,7 +102,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   void returnPressed();
   void buildDirTree();
   void lelGotFocus_();
-  
+  void load_regions_clicked( );
+
   // Restore viewer state to existing panel.
   // Use the first empty panel, or if none, the first panel.
   void restoreToOld_();

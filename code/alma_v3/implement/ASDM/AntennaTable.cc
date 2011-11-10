@@ -304,15 +304,24 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void AntennaTable::addWithoutCheckingUnique(AntennaRow * x) {
+		if (getRowByKey(
+						x->getAntennaId()
+						) != (AntennaRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "AntennaTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -348,7 +357,7 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
 		,
 			x->getStationId()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table AntennaTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -364,6 +373,16 @@ AntennaRow* AntennaTable::newRow(AntennaRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void AntennaTable::append(AntennaRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -546,12 +565,17 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		AntennaRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"AntennaTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -560,10 +584,27 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 			catch (...) {
 				// cout << "Unexpected error in AntennaTable::checkAndAdd called from AntennaTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"AntennaTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in AntennaTable::addWithoutCheckingUnique called from AntennaTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</AntennaTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -809,19 +850,27 @@ AntennaRow* AntennaTable::lookup(string name, AntennaMakeMod::AntennaMake antenn
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	AntennaRow* aRow = AntennaRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				AntennaRow* aRow = AntennaRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Antenna");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Antenna");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			AntennaRow* aRow = AntennaRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -946,6 +995,7 @@ void AntennaTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Antenna");

@@ -154,6 +154,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	thisms=MeasurementSet(msname, TableLock(), 
 			      Table::Old);
       
+      thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
+
       return setDataOnThisMS(thisms, mode, nchan, start, step, spectralwindowids, fieldids, msSelect, timerng, 
 			     fieldnames, antIndex, antnames, spwstring, uvdist, scan, obs);  
       
@@ -408,10 +410,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
           Cube<Int> spwchansels_tmp=spwchansels_p;
 	  for (uInt k =0 ; k < dataspectralwindowids_p.nelements(); ++k){
-            Vector<Double> chanFreq=spwc.chanFreq()(k);
-            Vector<Double> freqResolution = spwc.chanWidth()(k);
+	    uInt curspwid=dataspectralwindowids_p[k];
+	    Vector<Double> chanFreq=spwc.chanFreq()(curspwid);
+            Vector<Double> freqResolution = spwc.chanWidth()(curspwid);
 
-            uInt curspwid=dataspectralwindowids_p[k];
+            
 	    //dataStep_p[k]=chanselmat.row(k)(3);
             if (nrow==0) {
               //dataStep_p=step[0];
@@ -749,72 +752,50 @@ Bool ImagerMultiMS::setimage(const Int nx, const Int ny,
 
   Bool ImagerMultiMS::openSubTables(){
 
-    //If its a memory table who cares 
-    if((ms_p->tableType()) != Table::Memory){
-      antab_p=Table(ms_p->antennaTableName(),
-		    TableLock());
-      datadesctab_p=Table(ms_p->dataDescriptionTableName(),
-			  TableLock());
-      feedtab_p=Table(ms_p->feedTableName(),
-		      TableLock());
-      fieldtab_p=Table(ms_p->fieldTableName(),
-		       TableLock());
-      obstab_p=Table(ms_p->observationTableName(),
-		     TableLock());
-      poltab_p=Table(ms_p->polarizationTableName(),
-		     TableLock());
-      proctab_p=Table(ms_p->processorTableName(),
-		      TableLock());
-      spwtab_p=Table(ms_p->spectralWindowTableName(),
-		     TableLock());
-      statetab_p=Table(ms_p->stateTableName(),
-		       TableLock());
-      
-      if(Table::isReadable(ms_p->dopplerTableName()))
-	dopplertab_p=Table(ms_p->dopplerTableName(),
-			   TableLock());
-      
-      if(Table::isReadable(ms_p->flagCmdTableName()))
-	flagcmdtab_p=Table(ms_p->flagCmdTableName(),
-			   TableLock());
-      if(Table::isReadable(ms_p->freqOffsetTableName()))
-	freqoffsettab_p=Table(ms_p->freqOffsetTableName(),
-			      TableLock());
-      
-      if(ms_p->isWritable()){
-	if(!(Table::isReadable(ms_p->historyTableName()))){
-	  // setup a new table in case its not there
-	  TableRecord &kws = ms_p->rwKeywordSet();
-	  SetupNewTable historySetup(ms_p->historyTableName(),
-				     MSHistory::requiredTableDesc(),Table::New);
-	  kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
-	  
-	}
-	historytab_p=Table(ms_p->historyTableName(),
-			   TableLock(), Table::Update);
-      }
-      if(Table::isReadable(ms_p->pointingTableName()))
-	pointingtab_p=Table(ms_p->pointingTableName(), 
-			    TableLock());
-      
-      if(Table::isReadable(ms_p->sourceTableName()))
-	sourcetab_p=Table(ms_p->sourceTableName(),
-			  TableLock());
-      
-      if(Table::isReadable(ms_p->sysCalTableName()))
-	syscaltab_p=Table(ms_p->sysCalTableName(),
-			  TableLock());
-      if(Table::isReadable(ms_p->weatherTableName()))
-	weathertab_p=Table(ms_p->weatherTableName(),
-			 TableLock());
-    
-      if(ms_p->isWritable()){
-	hist_p= new MSHistoryHandler(*ms_p, "imager");
-      }
-    }
-    
-return True;
+      // Reopen disk-resident tables with the default table lock
 
-  
+      if((ms_p->tableType()) != Table::Memory){
+
+          TableLock tableLock; // default table lock
+
+          openSubTable (ms_p->antenna(), antab_p, tableLock);
+          openSubTable (ms_p->dataDescription (), datadesctab_p, tableLock);
+          openSubTable (ms_p->doppler(), dopplertab_p, tableLock);
+          openSubTable (ms_p->feed(), feedtab_p, tableLock);
+          openSubTable (ms_p->field(), fieldtab_p, tableLock);
+          openSubTable (ms_p->flagCmd(), flagcmdtab_p, tableLock);
+          openSubTable (ms_p->freqOffset(), freqoffsettab_p, tableLock);
+          openSubTable (ms_p->observation(), obstab_p, tableLock);
+          openSubTable (ms_p->pointing(), pointingtab_p, tableLock);
+          openSubTable (ms_p->polarization(), poltab_p, tableLock);
+          openSubTable (ms_p->processor(), proctab_p, tableLock);
+          openSubTable (ms_p->source(), sourcetab_p, tableLock);
+          openSubTable (ms_p->spectralWindow(), spwtab_p, tableLock);
+          openSubTable (ms_p->state(), statetab_p, tableLock);
+          openSubTable (ms_p->sysCal(), syscaltab_p, tableLock);
+          openSubTable (ms_p->weather(), weathertab_p, tableLock);
+
+          // Handle the history table specially
+
+          if(ms_p->isWritable()){
+
+              if(!(Table::isReadable(ms_p->historyTableName()))){
+
+                  // setup a new table in case its not there
+                  TableRecord &kws = ms_p->rwKeywordSet();
+                  SetupNewTable historySetup(ms_p->historyTableName(),
+                                             MSHistory::requiredTableDesc(),Table::New);
+                  kws.defineTable(MS::keywordName(MS::HISTORY), Table(historySetup));
+
+              }
+
+              historytab_p=Table(ms_p->historyTableName(), TableLock(), Table::Update);
+
+              hist_p= new MSHistoryHandler(*ms_p, "imager");
+          }
+      }
+
+      return True;
   }
+
 } //# NAMESPACE CASA - END

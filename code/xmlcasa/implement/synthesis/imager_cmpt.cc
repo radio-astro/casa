@@ -556,6 +556,42 @@ bool imager::make(const std::string& image, const bool async)
     return rstat;
 }
 
+std::string imager::predictcomp(const std::string& objname,
+                                const std::string& standard,
+                                const ::casac::variant& time,
+                                const std::vector<double>& freqs,
+                                const std::string& pfx)
+{
+  std::string rstat("");
+  try{
+    *itsLog << LogOrigin("im", "predictcomp");
+    *itsLog << LogIO::DEBUG1 << "starting imager::predictcomp" << LogIO::POST;
+    MEpoch epoch;
+    if(!casaMEpoch(time, epoch)){
+      *itsLog << LogIO::SEVERE
+	      << "Could not convert time to an epoch measure."
+	      << LogIO::POST;
+      return false;
+    }
+    *itsLog << LogIO::DEBUG1 << "epoch made" << LogIO::POST;
+
+    uInt nfreqs = freqs.size();
+    Vector<MFrequency> freqv(nfreqs);
+
+    for(uInt f = 0; f < nfreqs; ++f)
+      freqv[f].set(MVFrequency(freqs[f]));
+    *itsLog << LogIO::DEBUG1 << "freqs set" << LogIO::POST;
+    rstat = itsImager->make_comp(String(objname), String(standard), epoch,
+				 freqv, String(pfx));
+  }
+  catch(AipsError x){
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+            << LogIO::POST;
+    RETHROW(x);
+  }
+  return rstat;
+}
+
 bool imager::makeimage(const std::string& type, const std::string& image,
                        const std::string& compleximage, const bool verbose,
                        const bool async)
@@ -674,9 +710,12 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
       }
       if(useScratch){
 	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoLocking), Table::Update);
+	itsMS->setMemoryResidentSubtables(MrsEligibility::defaultEligible());
+
       }
       else{
 	itsMS = new MeasurementSet(String(thems), TableLock(TableLock::AutoNoReadLocking), Table::Old);
+	itsMS->setMemoryResidentSubtables(MrsEligibility::defaultEligible());
       }
       // itsImager = new Imager(*itsMS, compress);
       AlwaysAssert(itsMS, AipsError);
@@ -1444,6 +1483,7 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
               const std::string& scan, const std::string& observation)
 {
   Bool rstat = False;
+  *itsLog << LogOrigin("im", "setjy");
 
   if(hasValidMS_p){
     try{

@@ -30,9 +30,8 @@
 
 #include <measures/Measures/Stokes.h>
 #include <lattices/LatticeMath/Fit2D.h>
-#include <casa/Logging/LogIO.h>
 #include <components/ComponentModels/ComponentList.h>
-#include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
+#include <imageanalysis/ImageAnalysis/ImageTask.h>
 #include <images/Images/SubImage.h>
 
 #include <components/ComponentModels/ComponentType.h>
@@ -40,7 +39,7 @@
 
 namespace casa {
 
-class ImageFitter {
+class ImageFitter : public ImageTask {
 	// <summary>
 	// Top level interface to ImageAnalysis::fitsky to handle inputs, bookkeeping etc and
 	// ultimately call fitsky to do fitting
@@ -101,7 +100,9 @@ public:
 	// use these constructors when you already have a pointer to a valid ImageInterface object
 
 	ImageFitter(
-		const ImageInterface<Float>* const image, const String& region, const String& box="",
+		const ImageInterface<Float>* const image, const String& region,
+		const Record *const regionRec,
+		const String& box="",
 		const String& chanInp="0", const String& stokes="I",
 		const String& maskInp="",
 		const Vector<Float>& includepix = Vector<Float>(0),
@@ -110,20 +111,8 @@ public:
 		const String& estiamtesFilename="", const String& logfile="",
 		const Bool& append=True, const String& newEstimatesInp="",
 		const String& compListName="",
-		const CompListWriteControl writeControl=NO_WRITE
-	);
-
-	ImageFitter(
-		const ImageInterface<Float>* const image, const Record* regionPtr, const String& box="",
-		const String& chanInp="0", const String& stokes="I",
-		const String& maskInp="",
-		const Vector<Float>& includepix = Vector<Float>(0),
-		const Vector<Float>& excludepix = Vector<Float>(0),
-		const String& residualInp="", const String& modelInp="",
-		const String& estiamtesFilename="", const String& logfile="",
-		const Bool& append=True, const String& newEstimatesInp="",
-		const String& compListName="",
-		const CompListWriteControl writeControl=NO_WRITE
+		const CompListWriteControl writeControl=NO_WRITE,
+		const Bool doZeroLevel=False, const Float zeroLevelOffest=0
 	);
 
 	// destructor
@@ -132,6 +121,8 @@ public:
 	// Do the fit. If componentList is specified, store the fitted components in
 	// that object.
 	ComponentList fit();
+
+	inline String getClass() const {return _class;}
 
 	// Did the fit converge for the specified channel?
 	// Throw AipsError if the fit has not yet been done.
@@ -144,16 +135,12 @@ public:
 	Vector<Bool> converged() const;
 
 private:
-	LogIO *_log;
-	ImageInterface<Float> *_image;
-	Record _regionRecord;
-	String _chans;
-	String _stokesString, _mask, _residual, _model, _logfileName,
-		regionString, estimatesString, _newEstimatesFileName, _compListName;
+	String _regionString, _residual, _model, _logfileName,
+		estimatesString, _newEstimatesFileName, _compListName;
 	Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList estimates, _curResults;
 	Vector<String> fixed;
-	Bool logfileAppend, fitDone, _noBeam, _deleteImageOnDestruct;
+	Bool logfileAppend, fitDone, _noBeam, _doZeroLevel;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
@@ -164,20 +151,15 @@ private:
 	CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;
 	uInt _curChan;
+	Float _zeroLevelOffset;
 
-	// does the lion's share of constructing the object, ie checks validity of
-	// inputs, etc.
-	void _construct(
-		const String& imagename, const String& box, const String& regionName,
-		const Record* regionPtr, const String& estimatesFilename
-	);
-
-	void _construct(
-		const ImageInterface<Float> *image, const String& box, const String& regionName,
-		const Record* regionPtr, const String& estimatesFilename
-	);
+	const static String _class;
 
 	vector<ImageInputProcessor::OutputStruct> _getOutputs();
+
+	vector<Coordinate::Type> _getNecessaryCoordinates() const;
+
+	CasacRegionManager::StokesControl _getStokesControl() const;
 
 	void _finishConstruction(const String& estimatesFilename);
 
@@ -228,8 +210,7 @@ private:
 	ComponentList _fitsky(
 		Fit2D& fitter, Array<Float>& pixels,
 	    Array<Bool>& pixelMask, Bool& converged,
-	    Record& region, const uInt& chan,
-		const String& stokesString, const String& mask,
+	    const uInt& chan, const String& stokesString,
 		const Vector<String>& models, Record& inputEstimate,
 		const Vector<String>& fixed, const Bool fitIt,
 		const Bool deconvolveIt, const Bool list

@@ -59,7 +59,7 @@ class taskmanager(object):
                         log_message({'out': 'stderr', 'engine': engine}, 2, self.__hub['result map'][receipt]['result output']['stderr'].splitlines() )
                     return self.__hub['result map'][receipt]['result']
                 else:
-                    return { 'result': None, 'state': 'pending' }
+                    return { 'result': None, 'status': 'pending' }
 
         except iperror.InvalidEngineID:
             if self.__hub['result map'].has_key(receipt):

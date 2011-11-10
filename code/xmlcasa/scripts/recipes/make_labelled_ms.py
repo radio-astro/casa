@@ -7,6 +7,9 @@ from taskutil import get_global_namespace
 def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
                      whichdatacol='DATA'):
     """
+    Note: This has been more or less obsoleted by label_itered_ms and could
+    probably be replaced by it after a little testing.
+    
     Transform one measurement set into another with the same (ideally small but
     nontrivial) shape and reference frames, but data set to a sequence
     according to labelbases.  The output MS is useful for testing tasks or
@@ -24,13 +27,13 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
     label, and number is how quickly the label changes with the index.  quant
     should be one of 'SCAN_NUMBER', 'DATA_DESC_ID', 'ANTENNA1', 'ANTENNA2',
     'ARRAY_ID', 'FEED1', 'FEED2', 'FIELD_ID', 'OBSERVATION_ID', 'PROCESSOR_ID',
-    'STATE_ID', 'time', 'time_centroid', 'chan(nel)', or 'pol(whatever)'
-    (case insensitive), but you will be let off with a warning if it isn't.
-    TIME and TIME_CENTROID tend to hover around 4.7e9, so they are offset and scaled
-    by subtracting the first value and dividing by the first integration interval.
-    Example labelbases:
-	labelbases = {'channel': 1.0, 'antenna1': complex(0, 1)}
-        The data column in the output will be complex(channel index, antenna1).
+    'STATE_ID', 'time', 'time_centroid', 'chan(nel)', or 'pol(whatever)' (case
+    insensitive), but you will be let off with a warning if it isn't.
+    TIME and TIME_CENTROID tend to hover around 4.7e9, so they are offset and
+    scaled by subtracting the first value and dividing by the first integration
+    interval.  Example labelbases: labelbases = {'channel': 1.0, 'antenna1':
+    complex(0, 1)} The data column in the output will be complex(channel index,
+    antenna1).
 
 	labelbases = {'SCAN_NUMBER': 1.0,
                       'FIELD_ID':    0.1,
@@ -43,8 +46,8 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
     debug: If True and it hits an error, it will try to return what it has so
            far instead of raising an exception.
 
-    whichdatacol: Which of DATA, MODEL_DATA, or CORRECTED_DATA to modify in the output.
-                  Case insensitive.
+    whichdatacol: Which of DATA, MODEL_DATA, or CORRECTED_DATA to modify in
+                  the output.  Case insensitive.
 
     Returns True or False as a success guess.
     """
@@ -53,7 +56,8 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
     try:
         # Members that they likely have, but imposters (if any) do not.
         have_tools = hasattr(tb, 'colnames') and hasattr(ms, 'selectchannel')
-        have_tools &= hasattr(casalog, 'post') and hasattr(clearcal, 'check_params')
+        have_tools &= hasattr(casalog, 'post') and hasattr(clearcal,
+                                                           'check_params')
     except NameError:
         pass  # through to next clause...
     if not have_tools:
@@ -173,7 +177,8 @@ def make_labelled_ms(srcms, outputms, labelbases, ow=False, debug=False,
                      'SEVERE')
     return True
 
-def label_itered_ms(msname, labelbases, debug=False, datacol='DATA'):
+def label_itered_ms(msname, labelbases, debug=False, datacol='DATA',
+                    incremental=False):
     """
     Set datacol according to labelbases.  Like make_labelled_ms() except it
     modifies in place using ms iteration to handle MSes that are large and/or
@@ -183,17 +188,19 @@ def label_itered_ms(msname, labelbases, debug=False, datacol='DATA'):
 
     msname:   The MS to be modified.
 
-    labelbases: A dictionary of quant: number pairs, where quant is an index to
-    label, and number is how quickly the label changes with the index.  quant
-    should be one of 'SCAN_NUMBER', 'DATA_DESC_ID', 'ANTENNA1', 'ANTENNA2',
-    'ARRAY_ID', 'FEED1', 'FEED2', 'FIELD_ID', 'OBSERVATION_ID', 'PROCESSOR_ID',
-    'STATE_ID', 'time', 'time_centroid', 'chan(nel)', or 'pol(whatever)'
-    (case insensitive), but you will be let off with a warning if it isn't.
-    TIME and TIME_CENTROID tend to hover around 4.7e9, so they are offset and scaled
-    by subtracting the first value and dividing by the first integration interval.
-    Example labelbases:
-	labelbases = {'channel': 1.0, 'antenna1': complex(0, 1)}
-        The data column in the output will be complex(channel index, antenna1).
+    labelbases: A dictionary of quant: number or quant: func pairs, where quant
+    is an index to label, and number is how quickly the label changes with the
+    index.  func should be a function that takes a data chunk as a dictionary
+    (as returned by ms.getdata), and returns either a scalar or a numpy array
+    with the same shape as the chunk's datacol.  quant should be one of
+    'SCAN_NUMBER', 'DATA_DESC_ID', 'ANTENNA1', 'ANTENNA2', 'ARRAY_ID', 'FEED1',
+    'FEED2', 'FIELD_ID', 'OBSERVATION_ID', 'PROCESSOR_ID', 'STATE_ID', 'time',
+    'time_centroid', 'chan(nel)', or 'pol(whatever)' (case insensitive), but
+    you will be let off with a warning if it isn't.  TIME and TIME_CENTROID
+    tend to hover around 4.7e9, so they are offset and scaled by subtracting
+    the first value and dividing by the first integration interval.  Example
+    labelbases: labelbases = {'channel': 1.0, 'antenna1': complex(0, 1)} The
+    data column in the output will be complex(channel index, antenna1).
 
 	labelbases = {'SCAN_NUMBER': 1.0,
                       'FIELD_ID':    0.1,
@@ -206,6 +213,9 @@ def label_itered_ms(msname, labelbases, debug=False, datacol='DATA'):
 
     datacol: Which of DATA, MODEL_DATA, or CORRECTED_DATA to modify in the output.
              Case insensitive.
+
+    incremental: If True, the visibilities of the MS are added to.
+                 Otherwise (default), they are replaced.
 
     Returns True or False as a success guess.
     """
@@ -285,28 +295,45 @@ def label_itered_ms(msname, labelbases, debug=False, datacol='DATA'):
                 chunk['time'] -= chunk['time'][0]
                 #chunk['time'] /= chunk['interval'][0]
 
-            chunk[datacol][:,:,:] = 0.0
+            if not incremental:
+                chunk[datacol][:,:,:] = 0.0
             for q in labelbases:
                 # Relies on all the columns that are both in labelbases and chunk
                 # being scalar.
                 if chunk.has_key(q.lower()):
-                    chunk[datacol][:,:,:] += chunk[q.lower()] * labelbases[q]
+                    if hasattr(labelbases[q], '__call__'):
+                        chunk[datacol][:,:,:] += labelbases[q](chunk)
+                    else:
+                        chunk[datacol][:,:,:] += chunk[q.lower()] * labelbases[q]
             datshape = chunk[datacol].shape
             if polbase:
-                for polind in xrange(datshape[0]):
-                    chunk[datacol][polind, :, :] += polbase * polind
+                if hasattr(polbase, '__call__'):
+                    chunk[datacol] += polbase(chunk)
+                else:
+                    for polind in xrange(datshape[0]):
+                        chunk[datacol][polind, :, :] += polbase * polind
             if chanbase:
-                for cind in xrange(datshape[1]):
-                    chunk[datacol][:, cind, :] += chanbase * cind
+                if hasattr(chanbase, '__call__'):
+                    chunk[datacol] += chanbase(chunk)
+                else:
+                    for cind in xrange(datshape[1]):
+                        chunk[datacol][:, cind, :] += chanbase * cind
             ms.putdata({datacol: chunk[datacol]})
             ismore = ms.iternext()
 
     try:
-        addendum = msname + " labelled by labelbases = {\n"
+        addendum = msname + " "
+        if incremental:
+            addendum += "added to"
+        else:
+            addendum += "labelled"
+        addendum += " by labelbases = {\n"
         qbs = []
         for q, b in labelbases.items():
             qb = "\t%16s: " % ("'" + q + "'")
-            if type(b) == complex:
+            if hasattr(b, '__call__'):
+                qb += b.__name__ + ' (function)'
+            elif type(b) == complex:
                 if b.real != 0.0:
                     qb += "%.1g" % b.real
                 if b.imag != 0.0:
@@ -320,8 +347,8 @@ def label_itered_ms(msname, labelbases, debug=False, datacol='DATA'):
         # don't show it in the logger.
         ms.writehistory(addendum, origin="label_itered_ms")
     except Exception, instance:
-        casalog.post("*** Error %s updating %s's history." % (instance,
-                                                              msname),
+        casalog.post("*** Error updating %s's history: %s" % (msname,
+                                                              instance),
                      'SEVERE')
     finally:
         ms.close()

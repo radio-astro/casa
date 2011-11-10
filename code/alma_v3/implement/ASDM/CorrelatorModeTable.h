@@ -485,6 +485,22 @@ private:
 	 
 	 */
 	CorrelatorModeRow* checkAndAdd(CorrelatorModeRow* x) ;
+	
+	/**
+	 * Brutally append an CorrelatorModeRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CorrelatorModeRow* x a pointer onto the CorrelatorModeRow to be appended.
+	 */
+	 void append(CorrelatorModeRow* x) ;
+	 
+	/**
+	 * Brutally append an CorrelatorModeRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CorrelatorModeRow* x a pointer onto the CorrelatorModeRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CorrelatorModeRow* x) ;
+	 
+	 
 
 
 

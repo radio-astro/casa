@@ -308,17 +308,21 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void GainTrackingTable::addWithoutCheckingUnique(GainTrackingRow * x) {
+		GainTrackingRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -351,6 +355,16 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void GainTrackingTable::append(GainTrackingRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -374,6 +388,9 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 	
 		
 	 vector<GainTrackingRow *> *GainTrackingTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "GainTrackingTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -563,12 +580,17 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		GainTrackingRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"GainTrackingTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -577,10 +599,27 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in GainTrackingTable::checkAndAdd called from GainTrackingTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"GainTrackingTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in GainTrackingTable::addWithoutCheckingUnique called from GainTrackingTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</GainTrackingTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -829,19 +868,27 @@ GainTrackingRow* GainTrackingTable::newRow(GainTrackingRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	GainTrackingRow* aRow = GainTrackingRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				GainTrackingRow* aRow = GainTrackingRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "GainTracking");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "GainTracking");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			GainTrackingRow* aRow = GainTrackingRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -966,6 +1013,7 @@ void GainTrackingTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "GainTracking");

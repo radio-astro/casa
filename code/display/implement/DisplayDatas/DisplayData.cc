@@ -30,6 +30,9 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicSL/String.h>
 #include <casa/Containers/Record.h>
+#include <casa/OS/File.h>
+#include <casa/OS/RegularFile.h>
+#include <casa/OS/Directory.h>
 
 // trial includes:
 
@@ -47,6 +50,7 @@
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/DisplayDatas/DisplayMethod.h>
+#include <display/Display/Options.h>
 
 // this include:
 #include <display/DisplayDatas/DisplayData.h>
@@ -54,7 +58,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 DisplayData::DisplayData() : 
-  activeZIndex_(0),
+  activeZIndex_(0), delTmpData_(False),
   rstrsConformed_(False), csConformed_(False), zIndexConformed_(False),
   itsColormap(0), itsColormapWeight(-1.0), displaystate(LIMBO),
   uiBase_(1) {
@@ -733,6 +737,29 @@ WorldCanvasHolder *DisplayData::findHolder(const WorldCanvas *wCanvas) {
   }
   return tholder;
 }
+
+
+void DisplayData::delTmpData(String &tmpData){
+	Path tmpPath(tmpData);
+	Path tmpDir(String(viewer::options.temporaryPath( )));
+	Path tmpPathDir(tmpPath.dirName());
+	String tmpPathDirString(tmpPathDir.absoluteName());
+	if (tmpPathDirString.find(tmpDir.absoluteName())!=0){
+		return;
+	}
+	File tmpFile(tmpData);
+	if (tmpFile.exists () && tmpFile.isWritable()){
+		if (tmpFile.isRegular()){
+			RegularFile tmpRegFile(tmpData);
+			tmpRegFile.remove();
+		}
+		else{
+			Directory tmpDir(tmpData);
+			tmpDir.removeRecursive(False);
+		}
+	}
+}
+
 
 void DisplayData::positionEH(const WCPositionEvent &ev) {
   WCPositionEH *eh = 0;

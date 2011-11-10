@@ -398,6 +398,9 @@ public:
 	 *
 	 * @return a pointer on a vector<GainTrackingRow *>. A null returned value means that the table contains
 	 * no GainTrackingRow for the given ( antennaId, spectralWindowId, feedId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <GainTrackingRow*> *getByContext(Tag antennaId, Tag spectralWindowId, int feedId);
 	 
@@ -506,6 +509,22 @@ private:
 	 
 	 */
 	GainTrackingRow* checkAndAdd(GainTrackingRow* x) ;
+	
+	/**
+	 * Brutally append an GainTrackingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param GainTrackingRow* x a pointer onto the GainTrackingRow to be appended.
+	 */
+	 void append(GainTrackingRow* x) ;
+	 
+	/**
+	 * Brutally append an GainTrackingRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param GainTrackingRow* x a pointer onto the GainTrackingRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(GainTrackingRow* x) ;
+	 
+	 
 
 
 	

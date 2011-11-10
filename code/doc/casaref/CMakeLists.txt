@@ -24,7 +24,12 @@ set( prefix  ${CASA_DOC_DIR} )
 set( _latex ${prefix}/CasaRef/${_base}.tex )
 set( _latex ${_base}.latex )
 
-set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/casaref/:${CMAKE_SOURCE_DIR}/doc/casaref/CasaRef.dir/:/usr/share/texmf/tex/{latex,generic,}//:/usr/share/texmf/web2c//:/usr/share/texmf/tex4ht//:/usr/share/texmf/tex/:$ENV{TEXINPUTS} )
+if( APPLE )
+   set( TEXROOT /Library/TeX/Root ) 
+else()
+   set( TEXROOT /usr/share ) 
+endif()
+set( _inputs .:${prefix}/helpfiles/:${CMAKE_SOURCE_DIR}/doc/texinputs.dir/:${CMAKE_SOURCE_DIR}/doc/casaref/:${CMAKE_SOURCE_DIR}/doc/casaref/CasaRef.dir/:${TEXROOT}/texmf/tex/{latex,generic,}//:${TEXROOT}/texmf/web2c//:${TEXROOT}/texmf/tex4ht//:${TEXROOT}/texmf/tex/:$ENV{TEXINPUTS} )
 set( CASAGOOGLESEARCH 006707099318971825654:vqush9mvpes )
 
 

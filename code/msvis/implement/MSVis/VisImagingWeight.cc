@@ -36,6 +36,7 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
   VisImagingWeight::VisImagingWeight() : multiFieldMap_p(-1), wgtType_p("none"), doFilter_p(False), robust_p(0.0), rmode_p("norm"), noise_p(Quantity(0.0, "Jy")) {
 
     }
@@ -52,139 +53,139 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
 
 
-    VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
-                                       const Double robust, const Int nx, const Int ny,
-                                       const Quantity& cellx, const Quantity& celly,
-                                       const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
-  
-        LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
-  
-        
+  VisImagingWeight::VisImagingWeight(ROVisibilityIterator& vi, const String& rmode, const Quantity& noise,
+                                     const Double robust, const Int nx, const Int ny,
+                                     const Quantity& cellx, const Quantity& celly,
+                                     const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
 
-        const VisBuffer vb(vi);
-        wgtType_p="uniform";
-        // Float uscale, vscale;
-        //Int uorigin, vorigin;
-        Vector<Double> deltas;
-        uscale_p=(nx*cellx.get("rad").getValue());
-        vscale_p=(ny*celly.get("rad").getValue());
-        uorigin_p=nx/2;
-        vorigin_p=ny/2;
-        nx_p=nx;
-        ny_p=ny;
-        // Simply declare a big matrix
-        //Matrix<Float> gwt(nx,ny);
-	gwt_p.resize(1);
-	multiFieldMap_p.clear();
-	vi.originChunks();
-	vi.origin();
-	String mapid=String::toString(vi.msId())+String("_")+String::toString(vi.fieldId());
-	multiFieldMap_p.define(mapid, 0);
-        gwt_p[0].resize(nx, ny);
-        gwt_p[0].set(0.0);
-	
-	Int fields=0;
-	for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-            for (vi.origin();vi.more();vi++) {
-	      if(vi.newFieldId()){
-		 mapid=String::toString(vi.msId())+String("_")+String::toString(vi.fieldId());
-		if(multiField){
-		  if(!multiFieldMap_p.isDefined(mapid)){
-		    fields+=1;
-		    gwt_p.resize(fields+1);
-		    gwt_p[fields].resize(nx,ny);
-		    gwt_p[fields].set(0.0);
-		  }
-		}
-		if(!multiFieldMap_p.isDefined(mapid))
-		  multiFieldMap_p.define(mapid, fields);		  
-	      }
-	    }
-	}
-	
-        Float u, v;
-        Vector<Double> sumwt(fields+1,0.0);
-	f2_p.resize(fields+1);
-	d2_p.resize(fields+1);
-	Int fid=0;
-        for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-            for (vi.origin();vi.more();vi++) {
-	      if(vi.newFieldId())
-		mapid=String::toString(vi.msId())+String("_")+String::toString(vi.fieldId());
-	      fid=multiFieldMap_p(mapid);
-              Int nRow=vb.nRow();
-              Int nChan=vb.nChannel();
-              for (Int row=0; row<nRow; row++) {
-                for (Int chn=0; chn<nChan; chn++) {
-                  if(!vb.flag()(chn,row)) {
-                    Float f=vb.frequency()(chn)/C::c;
-                    u=vb.uvw()(row)(0)*f;
-                    v=vb.uvw()(row)(1)*f;
-                    Int ucell=Int(uscale_p*u+uorigin_p);
-                    Int vcell=Int(vscale_p*v+vorigin_p);
-                    if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
-                      for (Int iv=-vBox;iv<=vBox;iv++) {
-                        for (Int iu=-uBox;iu<=uBox;iu++) {
-                          gwt_p[fid](ucell+iu,vcell+iv)+=vb.weight()(row);
-                          sumwt[fid]+=vb.weight()(row);
-                        }
+      LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
+
+
+
+      VisBufferAutoPtr vb (vi);
+      wgtType_p="uniform";
+      // Float uscale, vscale;
+      //Int uorigin, vorigin;
+      Vector<Double> deltas;
+      uscale_p=(nx*cellx.get("rad").getValue());
+      vscale_p=(ny*celly.get("rad").getValue());
+      uorigin_p=nx/2;
+      vorigin_p=ny/2;
+      nx_p=nx;
+      ny_p=ny;
+      // Simply declare a big matrix
+      //Matrix<Float> gwt(nx,ny);
+      gwt_p.resize(1);
+      multiFieldMap_p.clear();
+      vi.originChunks();
+      vi.origin();
+      String mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId());
+      multiFieldMap_p.define(mapid, 0);
+      gwt_p[0].resize(nx, ny);
+      gwt_p[0].set(0.0);
+
+      Int fields=0;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+          for (vi.origin();vi.more();vi++) {
+              if(vb->newFieldId()){
+                  mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId());
+                  if(multiField){
+                      if(!multiFieldMap_p.isDefined(mapid)){
+                          fields+=1;
+                          gwt_p.resize(fields+1);
+                          gwt_p[fields].resize(nx,ny);
+                          gwt_p[fields].set(0.0);
                       }
-                    }
-                    ucell=Int(-uscale_p*u+uorigin_p);
-                    vcell=Int(-vscale_p*v+vorigin_p);
-                    if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
-                      for (Int iv=-vBox;iv<=vBox;iv++) {
-                        for (Int iu=-uBox;iu<=uBox;iu++) {
-                          gwt_p[fid](ucell+iu,vcell+iv)+=vb.weight()(row);
-                          sumwt[fid]+=vb.weight()(row);
-                        }
-                      }
-                    }
                   }
-                }
+                  if(!multiFieldMap_p.isDefined(mapid))
+                      multiFieldMap_p.define(mapid, fields);
               }
-            }
-        }
-  
-        // We use the approximation that all statistical weights are equal to
-        // calculate the average summed weights (over visibilities, not bins!)
-        // This is simply to try an ensure that the normalization of the robustness
-        // parameter is similar to that of the ungridded case, but it doesn't have
-        // to be exact, since any given case will require some experimentation.
-  
-        //Float f2, d2;
-	for(fid=0; fid < Int(gwt_p.nelements()); ++fid){
-	  if (rmode=="norm") {
-            os << "Normal robustness, robust = " << robust << LogIO::POST;
-	    Double sumlocwt = 0.;
-	    for(Int vgrid=0;vgrid<ny;vgrid++) {
-	      for(Int ugrid=0;ugrid<nx;ugrid++) {
-		if(gwt_p[fid](ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p[fid](ugrid,vgrid));
-	      }
-	    }
-	    f2_p[fid] = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt[fid]);
-	    d2_p[fid] = 1.0;
-	    
-	  }
-	  else if (rmode=="abs") {
-            os << "Absolute robustness, robust = " << robust << ", noise = "
-	       << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
-	    f2_p[fid] = square(robust);
-	    d2_p[fid] = 2.0 * square(noise.get("Jy").getValue());
-	    
-	  }
-	  else {
-            f2_p[fid] = 1.0;
-            d2_p[fid] = 0.0;
-	  }
-	}
-    }
-
-    VisImagingWeight::~VisImagingWeight(){
-      for (uInt fid=0; fid < gwt_p.nelements(); ++fid){
-	gwt_p[fid].resize();
+          }
       }
-    }
+
+      Float u, v;
+      Vector<Double> sumwt(fields+1,0.0);
+      f2_p.resize(fields+1);
+      d2_p.resize(fields+1);
+      Int fid=0;
+      for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
+          for (vi.origin();vi.more();vi++) {
+              if(vb->newFieldId())
+                  mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId());
+              fid=multiFieldMap_p(mapid);
+              Int nRow=vb->nRow();
+              Int nChan=vb->nChannel();
+              for (Int row=0; row<nRow; row++) {
+                  for (Int chn=0; chn<nChan; chn++) {
+                      if(!vb->flag()(chn,row)) {
+                          Float f=vb->frequency()(chn)/C::c;
+                          u=vb->uvw()(row)(0)*f;
+                          v=vb->uvw()(row)(1)*f;
+                          Int ucell=Int(uscale_p*u+uorigin_p);
+                          Int vcell=Int(vscale_p*v+vorigin_p);
+                          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+                              for (Int iv=-vBox;iv<=vBox;iv++) {
+                                  for (Int iu=-uBox;iu<=uBox;iu++) {
+                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(row);
+                                      sumwt[fid]+=vb->weight()(row);
+                                  }
+                              }
+                          }
+                          ucell=Int(-uscale_p*u+uorigin_p);
+                          vcell=Int(-vscale_p*v+vorigin_p);
+                          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+                              for (Int iv=-vBox;iv<=vBox;iv++) {
+                                  for (Int iu=-uBox;iu<=uBox;iu++) {
+                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(row);
+                                      sumwt[fid]+=vb->weight()(row);
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
+
+      // We use the approximation that all statistical weights are equal to
+      // calculate the average summed weights (over visibilities, not bins!)
+      // This is simply to try an ensure that the normalization of the robustness
+      // parameter is similar to that of the ungridded case, but it doesn't have
+      // to be exact, since any given case will require some experimentation.
+
+      //Float f2, d2;
+      for(fid=0; fid < Int(gwt_p.nelements()); ++fid){
+          if (rmode=="norm") {
+              os << "Normal robustness, robust = " << robust << LogIO::POST;
+              Double sumlocwt = 0.;
+              for(Int vgrid=0;vgrid<ny;vgrid++) {
+                  for(Int ugrid=0;ugrid<nx;ugrid++) {
+                      if(gwt_p[fid](ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p[fid](ugrid,vgrid));
+                  }
+              }
+              f2_p[fid] = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt[fid]);
+              d2_p[fid] = 1.0;
+
+          }
+          else if (rmode=="abs") {
+              os << "Absolute robustness, robust = " << robust << ", noise = "
+                      << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
+              f2_p[fid] = square(robust);
+              d2_p[fid] = 2.0 * square(noise.get("Jy").getValue());
+
+          }
+          else {
+              f2_p[fid] = 1.0;
+              d2_p[fid] = 0.0;
+          }
+      }
+  }
+
+  VisImagingWeight::~VisImagingWeight(){
+      for (uInt fid=0; fid < gwt_p.nelements(); ++fid){
+          gwt_p[fid].resize();
+      }
+  }
 
 
   void VisImagingWeight::setFilter(const String& type, const Quantity& bmaj,

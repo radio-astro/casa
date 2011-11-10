@@ -244,7 +244,6 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         
         #some default value handling for channelization
         if (mode=='velocity' or mode=='frequency' or mode=='channel'):
-            #(localnchan, localstart, localwidth)=imset.setChannelization(mode,spw,field,nchan,start,width,outframe,veltype,restfreq)
             # new version: uses  ms.cvelfreqs
             (localnchan, localstart, localwidth)=imset.setChannelizeDefault(mode,spw,field,nchan,start,width,outframe,veltype,phasecenter, restfreq)
 
@@ -276,11 +275,23 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
             nchaniter=localnchan
             # check nchan in templatecube
-            ia.open(imagename+'.image')
+            if type(imagename)==list:
+               imgname=imagename[0]+'.image'
+               finalimagename=imagename
+            else:
+               try: 
+                  if int(imset.imageids.values()[0])==0:
+                      # must be using outlier file with old syntax
+                      imgname=imagename+'_'+imset.imageids.values()[0]+'.image'
+                      finalimagename=[imagename+'_'+img for img in imset.imageids.values()]
+               except:
+                  imgname=imagename+'.image'
+                  finalimagename=imset.imageids.values()
+            ia.open(imgname)
             if localnchan > ia.shape()[3]:
                 nchaniter = ia.shape()[3]
             ia.close()
-            finalimagename=imagename
+            #finalimagename=imagename
             if type(finalimagename)==str:
                 finalimagename=[finalimagename]
             imset.finalimages=finalimagename
@@ -325,13 +336,17 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                         imset.maskimages[imagename] = imagename + '.mask'
 
             #read outlierfile
+            # - initialize local variables to handle multiple fields
             imageids=[]
             imsizes=[]
             phasecenters=[]
             parms={}
             rootname=''
+            # 
             newformat=False
+            # make a copy of the input, mask, modelimage (will be modified)
             loc_modelimage= modelimage
+            loc_mask = mask
             # new handling:
             # need to combine task parameter inputs and outlier file input
             if len(outlierfile) != 0:
@@ -341,45 +356,63 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                 #print "from outlierfile: f_imsizes=",f_imsizes," f_phasecenters=",f_phasecenters,\
                 # " f_imageids=",f_imageids," f_masks=",f_masks, " parms=",parms
 
-                if type(imagename) == list or newformat:
-
-                    #rootname = imagename[0]
+                if type(imagename) == list or newformat or dochaniter:
                     rootname = ''
                 else:
                     rootname = imagename
                 
                 # combine with the task parameter input
-                if type(imagename) == str:
-                    if newformat: 
-                        imageids.append(imagename)
-                        imsizes.append(imsize)
-                        phasecenters.append(phasecenter)
-                else:
-                    imageids=imagename
-                    imsizes=imsize
-                    phasecenters=phasecenter
+                if dochaniter:
+                    # imagename is already combined
+                   if type(imagename)!=list: 
+                       raise Exception, "imagename=%s expected to be a list." % imagename 
+                   else:
+                       imageids=imagename
+                       if newformat:
+                           if type(imsize[0])==list:
+                               imsizes=imsize
+                           else:
+                               imsizes.append(imsize)
+                           if type(phasecenter)==list:
+                               phasecenters=phaseceneter
+                           else:
+                               phasecenters.append(phasecenter)
+                else:     
+                    if type(imagename) == str:
+                        if newformat: 
+                            imageids.append(imagename)
+                            imsizes.append(imsize)
+                            phasecenters.append(phasecenter)
+                    else:
+                        imageids=imagename
+                        imsizes=imsize
+                        phasecenters=phasecenter
                 # for mask, modelimage  task input 
                 # turn them into list or list of list 
-                if type(mask) !=  list:
-                    mask=[mask] 
-                elif type(mask[0]) != list:
-                    mask=[mask]
+                if type(loc_mask) !=  list:
+                    loc_mask=[loc_mask] 
+                elif type(loc_mask[0]) != list:
+                    loc_mask=[loc_mask]
+
                 if type(loc_modelimage) != list:
                     loc_modelimage=[loc_modelimage]
                 elif type(loc_modelimage[0]) != list and type(imagename) != str:
                     loc_modelimage=[loc_modelimage]
                 # add extra bracket to correct matching to image
-                elif type(loc_modelimage[0]) != list:
-                     if (type(imagename)==list and len(imagename) < len(loc_modelimage)) or \
+                #elif type(loc_modelimage[0]) != list:
+                if type(loc_modelimage[0]) != list:
+                #     if (type(imagename)==list and len(imagename) < len(loc_modelimage)) or \
+                     if (type(imagename)==list and len(imagename) != len(loc_modelimage)) or \
                         (type(imagename)==str and len(loc_modelimage)>1):
                          loc_modelimage=[loc_modelimage]
                 # now append readoutlier content
                 for indx, name in enumerate(f_imageids): 
-                    imageids.append(name)    
+                    if not dochaniter:
+                        imageids.append(name)    
                     imsizes.append(f_imsizes[indx])    
                     phasecenters.append(f_phasecenters[indx])    
                     if newformat:
-                        mask.append(f_masks[indx])
+                        loc_mask.append(f_masks[indx])
                         #modelimage.append(f_modelimages[indx])
                         loc_modelimage.append(f_modelimages[indx])
                     else:
@@ -490,13 +523,14 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
                                     maskobject=mask, slice=chanslice)
 
             else:
+                #print "mask=",loc_mask, " chanslice=", chanslice
                 #imset.makemultifieldmask2(mask,chanslice)
-                imset.makemultifieldmask3(mask,chanslice,newformat, interactive)
+                imset.makemultifieldmask3(loc_mask,chanslice,newformat, interactive)
                 maskimage=[]
                 #for img in sorted(imset.maskimages):
                 for img in imset.maskimages.keys():
                     maskimage.append(imset.maskimages[img])
-	    casalog.post('Used mask(s) : ' + str(mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
+	    casalog.post('Used mask(s) : ' + str(loc_mask) + ' to create mask image(s) : ' + str(maskimage),'INFO');
 
             if dochaniter:
                 imset.checkpsf(chanslice)
@@ -523,7 +557,8 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             #                 outputmodel=imagename+'.model')
 	    if (type(loc_modelimage)!=str and type(loc_modelimage)!=list):
 		    raise Exception,'modelimage must be a string or a list of strings';
-            if loc_modelimage != '' and loc_modelimage != [] and nterms==1:
+            #if loc_modelimage != '' and loc_modelimage != [] and nterms==1 :
+            if (not all(img=='' or img==[] or img==[''] for img in loc_modelimage)) and nterms==1 :
                 if dochaniter:
                     imset.defineChaniterModelimages(loc_modelimage,j,tmppath)
                 else:

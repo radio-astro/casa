@@ -294,13 +294,17 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 			
 		
 	
-
+		
+	void HistoryTable::addWithoutCheckingUnique(HistoryRow * x) {
+		HistoryRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -329,6 +333,16 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void HistoryTable::append(HistoryRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -352,6 +366,9 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 	
 		
 	 vector<HistoryRow *> *HistoryTable::getByContext(Tag execBlockId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "HistoryTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(execBlockId);
  
@@ -529,12 +546,17 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		HistoryRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"HistoryTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -543,10 +565,27 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in HistoryTable::checkAndAdd called from HistoryTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"HistoryTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in HistoryTable::addWithoutCheckingUnique called from HistoryTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</HistoryTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -789,19 +828,27 @@ HistoryRow* HistoryTable::newRow(HistoryRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	HistoryRow* aRow = HistoryRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				HistoryRow* aRow = HistoryRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "History");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "History");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			HistoryRow* aRow = HistoryRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -926,6 +973,7 @@ void HistoryTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "History");

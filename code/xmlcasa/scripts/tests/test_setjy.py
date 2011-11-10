@@ -19,23 +19,35 @@ Features tested:
   3. Solar system (Uranus) flux density calibration.
 '''
 
-def get_last_history_line(vis, origin='setjy::imager::setjy()', nback=0):
+def get_last_history_line(vis, origin='setjy::imager::setjy()',
+                          nback=0, maxnback=20, hint=''):
     """
     Finding the right history line is a bit tricky...it helps to filter
     by origin and read from the back to remain unaffected by changes
     elsewhere.
 
+    This reads up to maxnback lines with origin origin until it finds one
+    including hint in the message, going backwards from nback lines from the
+    end.
+
     Returns 'JUNK' on failure.
     """
-    retline = ''
+    retline = 'JUNK'
     try:
         tb.open(vis + '/HISTORY')
         st = tb.query('ORIGIN == "%s"' % origin, columns='MESSAGE')
-        retline = st.getcell('MESSAGE', st.nrows() - 1 - nback)
+        nstrows = st.nrows()
+        startrow = st.nrows() - 1 - nback
+        stoprow = startrow - maxnback
+        for linenum in xrange(startrow, stoprow - 1, -1):
+            curline = st.getcell('MESSAGE', linenum)
+            if hint in curline:
+                retline = curline
+                break
         st.close()
         tb.close()
     except Exception:
-        retline = 'JUNK'
+        pass
     return retline
 
 def check_history(histline, items):
@@ -147,7 +159,8 @@ class setjy_test_modimage(CheckAfterImportuvfits):
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
                                            async=False)
-            record['history'] = get_last_history_line(self.inpms)
+            record['history'] = get_last_history_line(self.inpms,
+                                                      hint='model image to I')
             ms.open(self.inpms)
             record['short'] = ms.statistics(column='MODEL',
                                             complex_value='amp',
@@ -267,7 +280,7 @@ class Uranus(SplitChecker):
             record['med4'] = tb.getcell('MODEL_DATA', 4)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
             tb.close()
-            record['history'] = get_last_history_line(self.inpms)
+            record['history'] = get_last_history_line(self.inpms, hint='Uranus')
         self.__class__.records[corrsel] = record
         return sjran
 
@@ -351,7 +364,7 @@ class ScaleUranusByChan(SplitChecker):
             record['auto4'] = tb.getcell('MODEL_DATA', 2)
             record['long4'] = tb.getcell('MODEL_DATA', 3)
             tb.close()
-            record['history'] = get_last_history_line(self.inpms)
+            record['history'] = get_last_history_line(self.inpms, hint="V=0] Jy")
         self.__class__.records[corrsel] = record
         return sjran
 

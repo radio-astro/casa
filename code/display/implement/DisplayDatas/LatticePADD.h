@@ -260,6 +260,9 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
    // Transfer preferences between CoordinateSystems
   Bool transferPreferences (CoordinateSystem& cSysInOut,
                              const CoordinateSystem& cSysIn) const;
+
+  // Delete temporary image data
+  void delTmpImage();
 };
 
 

@@ -39,6 +39,14 @@ namespace casa {
 		Region::TextPosition textPosition( ) const;
 		void textPositionDelta( int &x, int &y ) const;
 
+		void setTextValue( const std::string &l );
+		void setTextFont( const std::string &f );
+		void setTextFontSize( int s );
+		void setTextFontStyle( int s );
+		void setTextColor( const std::string &c );
+		void setLineColor( const std::string &c );
+		void setLineStyle( Region::LineStyle s );
+
 		int zMin( ) const;
 		int zMax( ) const;
 		int numFrames( ) const;
@@ -80,6 +88,7 @@ namespace casa {
 		void category_change( int );
 		// keeps text color in sync with line color (if they were the same before)
 		void line_color_change(const QString & );
+		QString default_extension( const QString & );
 		void save_region(bool);
 
 		void frame_min_change(int);

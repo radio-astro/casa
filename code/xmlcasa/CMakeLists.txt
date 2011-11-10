@@ -163,6 +163,8 @@ add_dependencies( libxmlcasa      xmlcasa_definitions )
 
 casa_add_executable( xmlcasa casaparamgui apps/casaparamgui/casaparamgui.cc )
 casa_add_executable( xmlcasa casapy apps/casapy/casapy.cc )
+casa_add_executable( xmlcasa harvestrn apps/harvestrn/harvestrn.cc )
+casa_add_executable( xmlcasa harvestrr apps/harvestrr/harvestrr.cc )
 casa_add_assay( xmlcasa implement/xerces/test/tXMLToRecord.cc )
 
 casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
@@ -187,6 +189,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/parallel_go.py
   scripts/parameter_check.py
   scripts/parameter_dictionary.py
+  scripts/plotcomp.py
   scripts/pointcal.py
   scripts/qtcasapy.py
   scripts/regression.py
@@ -272,6 +275,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_plotxy.py
   scripts/task_partition.py
   scripts/task_polcal.py
+  scripts/task_predictcomp.py
   scripts/task_rmtables.py
   scripts/task_sdaverage.py
   scripts/task_sdbaseline.py
@@ -293,8 +297,8 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_setjy.py
   scripts/task_ssoflux.py
   scripts/task_simdata.py
-  scripts/task_sim_observe.py
-  scripts/task_sim_analyze.py
+  scripts/task_simobserve.py
+  scripts/task_simanalyze.py
   scripts/task_slsearch.py
   scripts/task_smoothcal.py
   scripts/task_specfit.py
@@ -393,6 +397,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/plotxy.xml
   tasks/partition.xml
   tasks/polcal.xml
+  tasks/predictcomp.xml
   tasks/rmtables.xml
   tasks/sdaverage.xml
   tasks/sdbaseline.xml
@@ -414,8 +419,8 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/setjy.xml
   tasks/ssoflux.xml
   tasks/simdata.xml
-  tasks/sim_observe.xml
-  tasks/sim_analyze.xml
+  tasks/simobserve.xml
+  tasks/simanalyze.xml
   tasks/slsearch.xml
   tasks/smoothcal.xml
   tasks/specfit.xml

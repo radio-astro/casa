@@ -29,6 +29,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtPlotter/QtOldMWCTools.qo.h
   implement/QtPlotter/QtPlotter.qo.h
   implement/QtPlotter/QtProfile.qo.h
+  implement/QtPlotter/QtProfilePrefs.qo.h
   implement/QtPlotter/QtDrawCanvas.qo.h
   implement/QtPlotter/QtDrawColors.qo.h
   implement/QtPlotter/QtDrawer.qo.h
@@ -50,6 +51,7 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtMouseTools.qo.h
   implement/QtViewer/QtOldMouseTools.qo.h
   implement/QtViewer/QtMouseToolState.qo.h
+  implement/QtViewer/RegionToolManager.qo.h
   implement/QtViewer/QtPixelCanvas.qo.h
   implement/QtViewer/QtRegionManager.qo.h
   implement/QtViewer/QtViewerBase.qo.h
@@ -88,6 +90,8 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtViewer/QtDataOptionsPanel.ui
   implement/QtViewer/QtRegionMgr.ui
   implement/QtViewer/QtDataMgrMsSelect.ui
+  implement/QtPlotter/QtProfileGUI.ui
+  implement/QtPlotter/QtProfilePrefsGUI.ui
   implement/RegionShapes/QtDS9WriteOptions.ui
   implement/RegionShapes/QtEditRegionShape.ui
   implement/RegionShapes/QtNewRegionShape.ui
@@ -113,6 +117,7 @@ casa_add_library( display
   ${outfiles_qoh} ${outfiles_ui} ${outfiles_qrc}
   implement/Display/AttributeBuffer.cc
   implement/Display/Attribute.cc
+  implement/Display/Options.cc
   implement/Display/AttValBase.cc
   implement/DisplayCanvas/DefaultWCCoordinateHandler.cc
   implement/DisplayCanvas/DefaultWCSizeControlHandler.cc
@@ -193,6 +198,7 @@ casa_add_library( display
   implement/DisplayEvents/DisplayTool.cc
   implement/DisplayEvents/DTVisible.cc
   implement/DisplayEvents/MultiWCTool.cc
+  implement/DisplayEvents/RegionTool.cc
   implement/DisplayEvents/MWCAnimator.cc
   implement/DisplayEvents/MWCCrosshairTool.cc
   implement/DisplayEvents/MWCPannerTool.cc
@@ -306,10 +312,12 @@ casa_add_library( display
   implement/QtPlotter/QtPlotSettings.cc
   implement/QtPlotter/QtPlotter.cc
   implement/QtPlotter/QtProfile.cc
+  implement/QtPlotter/QtProfilePrefs.cc
   implement/QtPlotter/QtDrawCanvas.cc
   implement/QtPlotter/QtDrawColors.cc
   implement/QtPlotter/QtDrawSettings.cc
   implement/QtPlotter/QtDrawer.cc
+  implement/QtViewer/QtOptions.cc
   implement/QtViewer/FileBox.cc
   implement/QtViewer/QtWCBox.cc
   implement/QtViewer/MakeMask.cc
@@ -326,6 +334,7 @@ casa_add_library( display
   implement/QtViewer/QtMouseTools.cc
   implement/QtViewer/QtOldMouseTools.cc
   implement/QtViewer/QtMouseToolState.cc
+  implement/QtViewer/RegionToolManager.cc
   implement/QtViewer/QtPCColorTable.cc
   implement/QtViewer/QtPixelCanvas.cc
   implement/QtViewer/QtRegionManager.cc

@@ -284,7 +284,11 @@ void MosaicFT::findConvFunction(const ImageInterface<Complex>& iimage,
 				const VisBuffer& vb) {
   
   
-  convSampling=1;
+  //oversample if image is small
+  //But not more than 5000 pixels
+  convSampling=(max(nx, ny) < 50) ? 100: Int(ceil(5000.0/max(nx, ny)));
+  if(convSampling <1) 
+    convSampling=1;
   if(pbConvFunc_p.null())
     pbConvFunc_p=new SimplePBConvFunc();
   pbConvFunc_p->setSkyJones(sj_p);
@@ -351,6 +355,7 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
     //if(arrayLattice) delete arrayLattice; arrayLattice=0;
     arrayLattice = new ArrayLattice<Complex>(griddedData);
     lattice=arrayLattice;
+    
   }
   
   //AlwaysAssert(lattice, AipsError);
@@ -375,7 +380,20 @@ void MosaicFT::initializeToVis(ImageInterface<Complex>& iimage,
   */
   // Now do the FFT2D in place
   LatticeFFT::cfft2d(*lattice);
-  
+  ///////////////////////
+  /*{
+    CoordinateSystem ftCoords(image->coordinates());
+    Int directionIndex=ftCoords.findCoordinate(Coordinate::DIRECTION);
+    DirectionCoordinate dc=ftCoords.directionCoordinate(directionIndex);
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
+    Vector<Int> shape(2); shape(0)=griddedData.shape()(0) ;shape(1)=griddedData.shape()(1);
+    Coordinate* ftdc=dc.makeFourierCoordinate(axes,shape);
+    ftCoords.replaceCoordinate(*ftdc, directionIndex);
+    delete ftdc; ftdc=0;
+    PagedImage<Float> thisScreen(griddedData.shape(), ftCoords, String("MODEL_GRID_VIS"));
+    thisScreen.put(amplitude(griddedData));
+    }*/
+  ////////////////////////
   logIO() << LogIO::DEBUGGING << "Finished FFT" << LogIO::POST;
   
 }
@@ -519,14 +537,13 @@ void MosaicFT::finalizeToSky()
   }
 
   
-
+  
   if(!doneWeightImage_p){
-     if(useDoubleGrid_p){
+    if(useDoubleGrid_p){
       convertArray(griddedWeight, griddedWeight2);
       //Don't need the double-prec grid anymore...
       griddedWeight2.resize();
     }
-
     LatticeFFT::cfft2d(*weightLattice, False);
     //Get the stokes right
     CoordinateSystem coords=convWeightImage_p->coordinates();
@@ -617,7 +634,7 @@ void MosaicFT::finalizeToSky()
     doneWeightImage_p=True;
 
     /*
-    if(1){
+    if(0){
       PagedImage<Float> thisScreen(skyCoverage_p->shape(), 
 				   skyCoverage_p->coordinates(), "Screen");
       thisScreen.copyData(*skyCoverage_p);
@@ -1626,4 +1643,5 @@ String MosaicFT::name(){
 }
 
 } //# NAMESPACE CASA - END
+
 

@@ -602,7 +602,8 @@ namespace asdm {
 		
 		// So far it's created ex nihilo.
 		origin = EX_NIHILO;
-		loadTablesOnDemand = false;
+		loadTablesOnDemand_ = false;
+		checkRowUniqueness_ = true;
 	}
 	
 	ASDM::~ASDM () {
@@ -4212,7 +4213,8 @@ namespace asdm {
 	
 	void ASDM::setFromFile(string directory, const ASDMParseOptions& parse) {
 
-		this->loadTablesOnDemand = parse.loadTablesOnDemand_;
+		this->loadTablesOnDemand_ = parse.loadTablesOnDemand_;
+		this->checkRowUniqueness_ = parse.checkRowUniqueness_;
 		
 		string fileName;
 		if (fileAsBin) {
@@ -4263,8 +4265,8 @@ namespace asdm {
     			throw ConversionException("I cannot read this dataset with version='UNKNOWN' and origin='UNKNOWN'", "ASDM");
  		
     		string xsltPath;
- 			bool proceed = ((!version.compare("UNKNOWN")) && ( origin == ASDMUtils::EVLA))
-    						|| ((version.compare("3")) && ( origin == ASDMUtils::ALMA));
+ 			bool proceed = (origin == ASDMUtils::EVLA)   // For the time being an EVLA dataset can be ONLY in version 2 so we must convert it
+    						|| ((version.compare("3")) && ( origin == ASDMUtils::ALMA)); // If it's an ALMA then we must check its version.
 			string xmlDoc;
  			try {
  				if (proceed) {
@@ -4291,7 +4293,7 @@ namespace asdm {
 			fromXML(xmlDoc);
 		}
 		
-		if (!loadTablesOnDemand) {
+		if (!loadTablesOnDemand_) {
 			// Now read and parse all files for the tables whose number of rows appear as
 			// non null in the container just built.
 			Entity entity;
@@ -4745,6 +4747,8 @@ namespace asdm {
 		origin = FILE;
 		this->directory = directory;			
 	}
+	
+	bool ASDM::checkRowUniqueness() const { return checkRowUniqueness_; } 
 	
 
 	

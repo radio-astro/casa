@@ -640,6 +640,22 @@ private:
 	 
 	 */
 	CalPositionRow* checkAndAdd(CalPositionRow* x) ;
+	
+	/**
+	 * Brutally append an CalPositionRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalPositionRow* x a pointer onto the CalPositionRow to be appended.
+	 */
+	 void append(CalPositionRow* x) ;
+	 
+	/**
+	 * Brutally append an CalPositionRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalPositionRow* x a pointer onto the CalPositionRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalPositionRow* x) ;
+	 
+	 
 
 
 

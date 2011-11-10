@@ -41,6 +41,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value>True</value>
   </param>
 
+  <param type="doubleArray" name="visweightscale">
+    <description>List of the weight scales to be applied to the individual MSs</description>
+    <value></value>
+  </param>
+
 </input>
 <example>
 

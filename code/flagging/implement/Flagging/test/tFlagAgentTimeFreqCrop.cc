@@ -1,4 +1,4 @@
-//# tFlagAgentBase.cc This file contains the unit tests of the FlagAgentBase class.
+//# tFlagAgentTimeFreqCrop.cc This file contains the unit tests of the FlagAgentBase class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -69,7 +69,7 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 	FlagAgentBase *flaggingAgent = NULL;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
-		flaggingAgent = new FlagAgentBase(dh,*iter,false,false,false);
+		flaggingAgent = new FlagAgentBase(dh,*iter,FlagAgentBase::ROWS,false,false);
 		agentList.push_back(flaggingAgent);
 	}
 
@@ -526,6 +526,14 @@ int main(int argc, char **argv)
 			referenceFile = value;
 			checkFlagsActivated = true;
 			cout << "Reference file is: " << referenceFile << endl;
+		}
+		else if (parameter == string("-unflag"))
+		{
+			if (value.compare("True") == 0)
+			{
+				deleteFlagsActivated = true;
+				cout << "Clean flags step activated" << endl;
+			}
 		}
 		else if (parameter == string("-array"))
 		{

@@ -44,26 +44,88 @@
 #include <casa/BasicSL/String.h>
 #include <scimath/Mathematics/SquareMatrix.h>
 #include <scimath/Mathematics/RigidVector.h>
-
 #include <ms/MeasurementSets/MSDerivedValues.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisImagingWeight.h>
+#include <msvis/MSVis/VisBufferComponents.h>
 #include <ms/MeasurementSets/MSIter.h>
+#include <map>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forward decl
+
+namespace asyncio {
+
+class VLAT;
+
+
+class PrefetchColumns : public std::set<VisBufferComponents::EnumType>{
+
+public:
+
+    PrefetchColumns operator+ (const PrefetchColumns & other);
+
+    static String columnName (Int id);
+    static PrefetchColumns prefetchColumnsAll ();
+    static PrefetchColumns prefetchAllColumnsExcept (Int firstColumn, ...);
+    static PrefetchColumns prefetchColumns (Int firstColumn, ...);
+};
+
+
+
+} // end namespace asyncio
+
 class VisBuffer;
+class VisibilityIteratorReadImpl;
+class VisibilityIteratorWriteImpl;
+
+class SubChunkPair : public std::pair<Int, Int>{
+
+public:
+
+    // First component is Chunk and second is subchunk
+
+    SubChunkPair () { resetToOrigin ();}
+    SubChunkPair (Int a , Int b) : pair<Int,Int> (a,b) {}
+
+    Bool operator== (const SubChunkPair & other){
+        return first == other.first && second == other.second;
+    }
+
+    Bool operator< (const SubChunkPair & other){
+        return first < other.first ||
+               (first == other.first && second < other.second);
+    }
+
+    Bool atOrigin () const { return * this == SubChunkPair ();}
+    Int chunk () const { return first;}
+    void incrementSubChunk () { second ++;}
+    void incrementChunk () { first ++; second = 0; }
+
+    void resetSubChunk () { second = 0;} // position to start of chunk
+
+    void resetToOrigin () { first = 0; second = 0; }
+       // Make a subchunk pair that is positioned to the first subchunk of the
+       // first chunk (i.e., 0,0)
+
+    Int subchunk () const { return second;}
+    String toString () const;
+
+    static SubChunkPair noMoreData ();
+
+private:
+
+
+};
+
 
 // <summary>
 // ROVisibilityIterator iterates through one or more readonly MeasurementSets
 // </summary>
-
 // <use visibility=export>
-
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-
 // <prerequisite>
 //   <li> <linkto class="MSIter">MSIter</linkto>
 //   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
@@ -104,16 +166,31 @@ class VisBuffer;
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-
 class ROVisibilityIterator
 {
-
     friend class AsyncEnabler;
-    friend class ROVisibilityIteratorAsync;
-    friend class VLAT; // allow VI lookahead thread class to access protected functions
-                       // VLAT should not access private parts, especially variables
-
+    friend class VisibilityIteratorReadImpl;
+    friend class ViReadImplAsync;
+    friend class asyncio::VLAT; // allow VI lookahead thread class to access protected functions
+                                // VLAT should not access private parts, especially variables
 public:
+
+  class Factory {
+
+  public:
+
+      virtual ~Factory () {}
+
+      virtual VisibilityIteratorReadImpl *
+      operator() (const asyncio::PrefetchColumns * /*prefetchColumns*/,
+                  const Block<MeasurementSet>& /*mss*/,
+                  const Block<Int>& /*sortColumns*/,
+                  const Bool /*addDefaultSortCols*/,
+                  Double /*timeInterval*/) const
+      {
+          return NULL;
+      }
+  };
 
   //# the following is a copy of the enum in MSIter
   //# can't think of a way to get one that known to the outside world from here
@@ -124,32 +201,25 @@ public:
     Linear=1
   };
 
-  enum DataColumn {
-    // Observed data
-    Observed=0,
-    // Model data
-    Model,
-    // Corrected data
-    Corrected
-  };
+  typedef enum DataColumn {
+      Observed=0,  // Observed data
+      Model,       // Model data
+      Corrected    // Corrected data
+  } DataColumn;
 
   class AsyncEnabler {
   public:
       AsyncEnabler (ROVisibilityIterator &);
       AsyncEnabler (ROVisibilityIterator *);
       ~AsyncEnabler ();
-
       void release ();
-
   private:
-
       Bool oldEnabledState_p;
       ROVisibilityIterator * roVisibilityIterator_p;
   };
 
   // Default constructor - useful only to assign another iterator later
   ROVisibilityIterator();
-
   // Construct from an MS and a Block of MS column enums specifying the 
   // iteration order.  If no order is specified, it uses the default sort
   // order of MSIter, which is not necessarily the raw order of ms!
@@ -166,315 +236,257 @@ public:
   // before the interval iteration.
   ROVisibilityIterator(const MeasurementSet& ms, 
 		       const Block<Int>& sortColumns,
-		       Double timeInterval=0);
-
+		       Double timeInterval=0,
+		       const Factory & factory = Factory());
   // Same as above, but with the option of using the raw order of ms
   // (addDefaultSortCols=false).
   ROVisibilityIterator(const MeasurementSet& ms, 
-		       const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+		       const Block<Int>& sortColumns,
+		       const Bool addDefaultSortCols,
 		       Double timeInterval=0);
  
   // Same as previous constructors, but with multiple MSs to iterate over.
   ROVisibilityIterator(const Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
+
   ROVisibilityIterator(const Block<MeasurementSet>& mss,
-                       const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
+                       const Block<Int>& sortColumns,
+                       const Bool addDefaultSortCols,
                        Double timeInterval=0);
 
+  ROVisibilityIterator(const asyncio::PrefetchColumns * prefetchColumns,
+                       const MeasurementSet& ms,
+		       const Block<Int>& sortColumns,
+		       const Bool addDefaultSortCols = True,
+		       Double timeInterval = 0);
+
+  ROVisibilityIterator (const asyncio::PrefetchColumns * prefetchColumns,
+                        const Block<MeasurementSet>& mss,
+                        const Block<Int>& sortColumns,
+                        const Bool addDefaultSortCols = True,
+                        Double timeInterval = 0);
 
   // Copy construct. This calls the assigment operator.
   ROVisibilityIterator(const ROVisibilityIterator & other);
-
+  ROVisibilityIterator(const asyncio::PrefetchColumns * prefetchColumns, const ROVisibilityIterator & other);
   // Assigment. Any attached VisBuffers are lost in the assign.
   ROVisibilityIterator & operator=(const ROVisibilityIterator &other);
-
   // Destructor
   virtual ~ROVisibilityIterator();
   
+//  static ROVisibilityIterator * create (const MeasurementSet & ms,
+//                                        const Block<Int>& sortColumns,
+//                                        const asyncio::PrefetchColumns * prefetchColumns = NULL,
+//                                        const Bool addDefaultSortCols = True,
+//                                        Double timeInterval=0);
+//
+//  static ROVisibilityIterator * create (const Block<MeasurementSet>& mss,
+//                                        const Block<Int>& sortColumns,
+//                                        const asyncio::PrefetchColumns * prefetchColumns = NULL,
+//                                        const Bool addDefaultSortCols = True,
+//                                        Double timeInterval=0);
+//
+//  static ROVisibilityIterator * create (const ROVisibilityIterator & rovi,
+//                                        const asyncio::PrefetchColumns * prefetchColumns,
+//                                        Int nReadAheadBuffers = 2);
+
   // Members
   
+  Bool isAsynchronous () const;
+  static Bool isAsynchronousIoEnabled();
+
   Bool isAsyncEnabled () const;
-
-  virtual Bool isWritable () const { return False;}
-
+  Bool isWritable () const;
   // Reset iterator to origin/start of data (of current chunk)
-  virtual void origin();
+  void origin();
   // Reset iterator to true start of data (first chunk)
-  virtual void originChunks();
+  void originChunks();
  
   // Set or reset the time interval (in seconds) to use for iteration.
   // You should call originChunks() to reset the iteration after 
   // calling this.
-  virtual void setInterval(Double timeInterval)
-  { msIter_p.setInterval(timeInterval);}
-
+  void setInterval(Double timeInterval);
   // Set the 'blocking' size for returning data.
   // With the default (0) only a single integration is returned at a time, this
   // is what is currently required for the calibration software. With blocking
   // set, up to nRows can be returned in one go. The chunk 
   // size determines the actual maximum.
-  virtual void setRowBlocking(Int nRows=0);
-
+  void setRowBlocking(Int nRows=0);
   // Return False if no more data (in current chunk)
-  virtual Bool more() const;
-
+  Bool more() const;
+  SubChunkPair getSubchunkId () const;
   // Advance iterator through data
-  virtual ROVisibilityIterator & operator++(int);
-  virtual ROVisibilityIterator & operator++();
-
+  ROVisibilityIterator & operator++(int);
+  ROVisibilityIterator & operator++();
   // Return False if no more 'Chunks' of data left
-  virtual Bool moreChunks() const
-  { return msIter_p.more();}
-
+  Bool moreChunks() const;
   // Check if ms has change since last iteration
-  virtual Bool newMS() const
-    { return msIter_p.newMS();}
-
-  virtual Int msId() const
-    { return msIter_p.msId();}
-
-  virtual VisBuffer * getVisBuffer ();
-
+  Bool newMS() const;
+  Int msId() const;
+  VisBuffer * getVisBuffer ();
   //reference to actual ms in interator 
-  virtual const MeasurementSet& ms() const {
-    return msIter_p.ms();
-  }
+  const MeasurementSet& ms() const;
  // Advance to the next Chunk of data
-  virtual ROVisibilityIterator& nextChunk();
-
+  ROVisibilityIterator& nextChunk();
   // Return antenna1
-  virtual Vector<Int>& antenna1(Vector<Int>& ant1) const;
-
+  Vector<Int>& antenna1(Vector<Int>& ant1) const;
   // Return antenna2
-  virtual Vector<Int>& antenna2(Vector<Int>& ant2) const;
-
+  Vector<Int>& antenna2(Vector<Int>& ant2) const;
   // Return feed1
-  virtual Vector<Int>& feed1(Vector<Int>& fd1) const;
-
+  Vector<Int>& feed1(Vector<Int>& fd1) const;
   // Return feed2
-  virtual Vector<Int>& feed2(Vector<Int>& fd2) const;
-
+  Vector<Int>& feed2(Vector<Int>& fd2) const;
   // Return channel numbers in selected VisSet spectrum
   // (i.e. disregarding possible selection on the iterator, but
   //  including the selection set when creating the VisSet)
   virtual Vector<Int>& channel(Vector<Int>& chan) const;
-
   // Return feed configuration matrix for specified antenna
-  virtual Vector<SquareMatrix<Complex,2> >& 
+  Vector<SquareMatrix<Complex,2> >& 
   CJones(Vector<SquareMatrix<Complex,2> >& cjones) const;
-
   // Return receptor angles for all antennae and feeds
   // First axis of the cube is a receptor number,
   // 2nd is antennaId, 3rd is feedId
   // Note: the method is intended to provide an access to MSIter::receptorAngles
   // for VisBuffer in the multi-feed case. It may be worth to change the
   // interface of feed_pa to return the information for all feeds.
-  virtual const Cube<Double>& receptorAngles() const;
-
+  const Cube<Double>& receptorAngles() const;
   // return a string mount identifier for each antenna
-  virtual const Vector<String>& antennaMounts() const;
-
+  const Vector<String>& antennaMounts() const;
   // Return a cube containing pairs of coordinate offsets for each
   // receptor of each feed (values are in radians, coordinate system is fixed
   // with antenna and is the same one as used to define the BEAM_OFFSET 
   // parameter in the feed table). The cube axes are receptor, antenna, feed.
-  virtual const Cube<RigidVector<Double, 2> >& getBeamOffsets() const;
-
+  const Cube<RigidVector<Double, 2> >& getBeamOffsets() const;
   // True if all elements of the cube returned by getBeamOffsets are zero
-  virtual Bool allBeamOffsetsZero() const;
-
+  Bool allBeamOffsetsZero() const;
   // Return feed parallactic angles Vector(nant) (1 feed/ant)
-  virtual Vector<Float> feed_pa(Double time) const;
+  Vector<Float> feed_pa(Double time) const;
   static Vector<Float> feed_paCalculate(Double time, MSDerivedValues & msd,
   									    Int nAntennas, const MEpoch & mEpoch0,
 									    const Vector<Float> & receptor0Angle);
-
   // Return nominal parallactic angle at specified time
   // (does not include feed position angle offset--see feed_pa)
   // A global value for all antennas (e.g., small array)
-  virtual const Float& parang0(Double time) const;
+  const Float& parang0(Double time) const;
   static Float parang0Calculate (Double time, MSDerivedValues & msd, const MEpoch & epoch0);
-
   // Per antenna:
-  virtual Vector<Float> parang(Double time) const;
+  Vector<Float> parang(Double time) const;
   static Vector<Float> parangCalculate (Double time, MSDerivedValues & msd,
 		                                int nAntennas, const MEpoch mEpoch0);
-
   // Return the antenna AZ/EL Vector(nant) 
-  virtual MDirection azel0(Double time) const;
+  MDirection azel0(Double time) const;
   static void azel0Calculate (Double time, MSDerivedValues & msd,
 		                      MDirection & azel0, const MEpoch & mEpoch0);
-
-  virtual Vector<MDirection> azel(Double time) const;
+  Vector<MDirection> azel(Double time) const;
   static void azelCalculate (Double time, MSDerivedValues & msd, Vector<MDirection> & azel,
 		                     Int nAnt, const MEpoch & mEpoch0);
-
-
   // Return the hour angle for the specified time
-  virtual Double hourang(Double time) const;
+  Double hourang(Double time) const;
   static Double hourangCalculate (Double time, MSDerivedValues & msd, const MEpoch & mEpoch0);
-
   // Return the current FieldId
-  virtual Int fieldId() const
-    { return msIter_p.fieldId(); }
-
+  Int fieldId() const;
   // Return the current ArrayId
-  virtual Int arrayId() const
-    { return msIter_p.arrayId(); }
-
+  Int arrayId() const;
   // Return the current Field Name
-  virtual String fieldName() const
-    { return msIter_p.fieldName(); }
-
+  String fieldName() const;
   // Return the current Source Name
-  virtual String sourceName() const
-    { return msIter_p.sourceName(); }
-
+  String sourceName() const;
   // Return flag for each polarization, channel and row
   virtual Cube<Bool>& flag(Cube<Bool>& flags) const;
-
   // Return flag for each channel & row
-  virtual Matrix<Bool>& flag(Matrix<Bool>& flags) const;
-
+  Matrix<Bool>& flag(Matrix<Bool>& flags) const;
   // Return flags for each polarization, channel, category, and row.
   Array<Bool>& flagCategory(Array<Bool>& flagCategories) const;
-
   // Return row flag
-  virtual Vector<Bool>& flagRow(Vector<Bool>& rowflags) const;
-
+  Vector<Bool>& flagRow(Vector<Bool>& rowflags) const;
   // Return scan number
-  virtual Vector<Int>& scan(Vector<Int>& scans) const;
-
+  Vector<Int>& scan(Vector<Int>& scans) const;
   // Return the OBSERVATION_IDs
   Vector<Int>& observationId(Vector<Int>& obsids) const;
-
   // Return the PROCESSOR_IDs
   Vector<Int>& processorId(Vector<Int>& procids) const;
-
   // Return the STATE_IDs
   Vector<Int>& stateId(Vector<Int>& stateids) const;
-
   // Return current frequencies (in Hz, acc. to the MS def'n v.2)
   virtual Vector<Double>& frequency(Vector<Double>& freq) const;
-
   // Return frequencies  (in Hz, acc. to the MS def'n v.2) in selected velocity frame,
   // returns the same as frequency() if there is no vel selection active.
-  virtual Vector<Double>& lsrFrequency(Vector<Double>& freq) const;
-
+  Vector<Double>& lsrFrequency(Vector<Double>& freq) const;
   // Return the current phase center as an MDirection
-  virtual const MDirection& phaseCenter() const
-  {return msIter_p.phaseCenter(); }
-
+  const MDirection& phaseCenter() const;
   // Return frame for polarization (returns PolFrame enum)
-  virtual Int polFrame() const
-  { return msIter_p.polFrame(); }
-
+  Int polFrame() const;
   // Return the correlation type (returns Stokes enums)
   virtual Vector<Int>& corrType(Vector<Int>& corrTypes) const;
-
   // Return sigma
-  virtual Vector<Float>& sigma(Vector<Float>& sig) const;
-
+  Vector<Float>& sigma(Vector<Float>& sig) const;
   // Return sigma matrix (pol-dep)
   virtual Matrix<Float>& sigmaMat(Matrix<Float>& sigmat) const;
-
   // Return current SpectralWindow
-  virtual Int spectralWindow() const
-  { return msIter_p.spectralWindowId(); }
-
+  Int spectralWindow() const;
   // Return current Polarization Id
-  virtual Int polarizationId() const
-  { return msIter_p.polarizationId(); }
-
+  Int polarizationId() const;
   // Return current DataDescription Id
-  virtual Int dataDescriptionId() const
-  { return msIter_p.dataDescriptionId(); }
-
+  Int dataDescriptionId() const;
   // Return MJD midpoint of interval.
-  virtual Vector<Double>& time(Vector<Double>& t) const;
-
+  Vector<Double>& time(Vector<Double>& t) const;
   // Return MJD centroid of interval.
   Vector<Double>& timeCentroid(Vector<Double>& t) const;
-
   // Return nominal time interval
-  virtual Vector<Double>& timeInterval(Vector<Double>& ti) const;
-
+  Vector<Double>& timeInterval(Vector<Double>& ti) const;
   // Return actual time interval
-  virtual Vector<Double>& exposure(Vector<Double>& expo) const;
-
+  Vector<Double>& exposure(Vector<Double>& expo) const;
   // Return the visibilities as found in the MS, Cube(npol,nchan,nrow).
   virtual Cube<Complex>& visibility(Cube<Complex>& vis,
 				    DataColumn whichOne) const;
-
   // Return FLOAT_DATA as a Cube(npol, nchan, nrow) if found in the MS.
-  virtual Cube<Float>& floatData(Cube<Float>& fcube) const;
-
+  Cube<Float>& floatData(Cube<Float>& fcube) const;
   // Return the visibility 4-vector of polarizations for each channel.
   // If the MS doesn't contain all polarizations, it is assumed it
   // contains one or two parallel hand polarizations.
-  virtual Matrix<CStokesVector>& visibility(Matrix<CStokesVector>& vis, 
+  Matrix<CStokesVector>& visibility(Matrix<CStokesVector>& vis, 
 				    DataColumn whichOne) const;
-
   // Return the shape of the visibility Cube
-  virtual IPosition visibilityShape() const;
-
+  IPosition visibilityShape() const;
   // Return u,v and w (in meters)
   virtual Vector<RigidVector<Double,3> >& uvw(Vector<RigidVector<Double,3> >& uvwvec) const;
-  virtual Matrix<Double>& uvwMat(Matrix<Double>& uvwmat) const;
-
+  Matrix<Double>& uvwMat(Matrix<Double>& uvwmat) const;
   // Return weight
-  virtual Vector<Float>& weight(Vector<Float>& wt) const;
-
+  Vector<Float>& weight(Vector<Float>& wt) const;
   // Returns the nPol_p x curNumRow_p weight matrix
   virtual Matrix<Float>& weightMat(Matrix<Float>& wtmat) const;
-
   // Determine whether WEIGHT_SPECTRUM exists.
   Bool existsWeightSpectrum() const;
-
   // Return weightspectrum (a weight for each channel)
-  virtual Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
-
+  Cube<Float>& weightSpectrum(Cube<Float>& wtsp) const;
   // Return imaging weight (a weight for each channel)
-  virtual Matrix<Float>& imagingWeight(Matrix<Float>& wt) const;
-
+  //Matrix<Float>& imagingWeight(Matrix<Float>& wt) const;
   // Return True if FieldId/Source has changed since last iteration
-  virtual Bool newFieldId() const
-  { return (curStartRow_p==0 && msIter_p.newField()); }
-
+  Bool newFieldId() const;
   // Return True if arrayID has changed since last iteration
-  virtual Bool newArrayId() const
-  { return (curStartRow_p==0 && msIter_p.newArray()); }
-
+  Bool newArrayId() const;
   // Return True if SpectralWindow has changed since last iteration
-  virtual Bool newSpectralWindow() const
-  { return (curStartRow_p==0 && msIter_p.newSpectralWindow()); }
-
+  Bool newSpectralWindow() const;
   // Return the index of the first channel of the current channel group 
   // in the total (selected) spectrum.
-  virtual Int channelIndex() const;
-
+  Int channelIndex() const;
   // Return the width of the current group of channels, i.e.,
   // the number of channels returned by visibility() and frequency().
-  virtual Int channelGroupSize() const;
+  Int channelGroupSize() const;
   
   // Return the number of correlations in the current iteration
-  virtual Int nCorr() const {return nPol_p; };
-
+  Int nCorr() const;;
   // Return the number of rows in the current iteration
-  virtual Int nRow() const;
-
+  Int nRow() const;
   // Return the row ids as from the original root table. This is useful 
   // to find correspondance between a given row in this iteration to the 
   // original ms row
-  virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const; 
-
+  virtual Vector<uInt>& rowIds(Vector<uInt>& rowids) const;
   // Return the numbers of rows in the current chunk
-  virtual Int nRowChunk() const;
-
+  Int nRowChunk() const;
   // Return the number of sub-intervals in the current chunk
-  virtual Int nSubInterval() const;
-
+  Int nSubInterval() const;
   // Call to use the slurp i/o method for all scalar columns. This
   // will set the BucketCache cache size to the full column length
   // and cause the full column to be cached in memory, if
@@ -484,8 +496,7 @@ public:
   // Table i/o code, which uses BucketCache and performs extremely bad
   // for random access. Slurping is useful when iterating non-sequentially
   // an MS or parts of an MS, it is not tested with multiple MSs.
-  virtual void slurp() const;
-
+  void slurp() const;
   // Velocity selection - specify the output channels in velocity:
   // nChan - number of output channels, vStart - start velocity,
   // vInc - velocity increment. So channel i will have velocity 
@@ -500,114 +511,97 @@ public:
   // By default calculations are done for a single velocity with offsets 
   // applied for the others (ok for non-rel velocities with RADIO defn), 
   // set precise to True to do a full conversion for each output channel.(NYI)
-  virtual ROVisibilityIterator& 
+  ROVisibilityIterator& 
   selectVelocity(Int nChan, 
 		 const MVRadialVelocity& vStart, const MVRadialVelocity& vInc,
 		 MRadialVelocity::Types rvType = MRadialVelocity::LSR,
 		 MDoppler::Types dType = MDoppler::RADIO, Bool precise=False);
-
   // Select the velocity interpolation scheme.
   // At present the choice is limited to : nearest and linear, linear
   // is the default. 
   // TODO: add cubic, spline and possibly FFT
-  virtual ROVisibilityIterator& velInterpolation(const String& type);
-
+  ROVisibilityIterator& velInterpolation(const String& type);
   // Channel selection - only the selected channels will be returned by the
   // access functions. The default spectralWindow is the current one (or 0)
   // This allows selection of the input channels, producing
   // nGroup groups of width output channels. Default is to return all channels
   // in a single group.
-  virtual ROVisibilityIterator& selectChannel(Int nGroup=1, Int start=0, Int width=0, 
+  ROVisibilityIterator& selectChannel(Int nGroup=1, Int start=0, Int width=0, 
 				      Int increment=1, Int spectralWindow=-1);
-
   //Same as above except when multiple ms's are to be accessed
-
-  virtual ROVisibilityIterator& selectChannel(Block< Vector<Int> >& blockNGroup,
+  ROVisibilityIterator& selectChannel(Block< Vector<Int> >& blockNGroup,
 				      Block< Vector<Int> >& blockStart,
 				      Block< Vector<Int> >& blockWidth,
 				      Block< Vector<Int> >& blockIncr,
 				      Block< Vector<Int> >& blockSpw);
-
-
   //get the channel selection ...the block over the number of ms's associated
   // with this iterator
-  virtual void getChannelSelection(Block< Vector<Int> >& blockNGroup,
+  void getChannelSelection(Block< Vector<Int> >& blockNGroup,
 			   Block< Vector<Int> >& blockStart,
 			   Block< Vector<Int> >& blockWidth,
 			   Block< Vector<Int> >& blockIncr,
 			   Block< Vector<Int> >& blockSpw);
-
   // Translate slicesv from the form returned by MSSelection::getChanSlices()
   // to matv as used by setChanAveBounds().  widthsv is the channel averaging
   // width for each _selected_ spw.
   void slicesToMatrices(Vector<Matrix<Int> >& matv,
                         const Vector<Vector<Slice> >& slicesv,
                         const Vector<Int>& widthsv) const;
-
   // Get the spw, start  and nchan for all the ms's is this Visiter that 
   // match the frequecy "freqstart-freqStep" and "freqEnd+freqStep" range
   // Can help in doing channel selection above..
   // freqFrame is the frame the caller frequency values are in (freqStart and freqEnd)
   // These will be converted to the frame of the selected spw to match
-
-  virtual void getSpwInFreqRange(Block<Vector<Int> >& spw, 
+  void getSpwInFreqRange(Block<Vector<Int> >& spw, 
 				 Block<Vector<Int> >& start, 
 				 Block<Vector<Int> >& nchan, 
 				 Double freqStart, Double freqEnd, 
 				 Double freqStep, MFrequency::Types freqFrame=MFrequency::LSRK);
-
   // Attach a VisBuffer object.
   // Note that while more than one VisBuffer may be attached, only the
   // last one is actively updated. A Stack is kept internally, so after 
   // a detach, the previous VisBuffer becomes active again.
-  virtual void attachVisBuffer(VisBuffer& vb);
-
+  void attachVisBuffer(VisBuffer& vb);
   // Detach a VisBuffer object.
   // If the object detached is not the last one attached an exception
   // is thrown.
-  virtual void detachVisBuffer(VisBuffer& vb);
-
+  void detachVisBuffer(VisBuffer& vb);
   // Access the current ROMSColumns object in MSIter
-  virtual const ROMSColumns& msColumns() const
-    { return msIter_p.msColumns();}
-
+  const ROMSColumns& msColumns() const;
   // get back the selected spectral windows and spectral channels for
   // current ms 
-
-  virtual void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan);
-
+  void allSelectedSpectralWindows(Vector<Int>& spws, Vector<Int>& nvischan);
   // Convert the frequency from the observe frame to lsr frame.
   // Returns True in convert if given spw was not observed 
   // in the LSRK frame
-  virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
+  void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert);
   //assign a VisImagingWeight object to this iterator
-  virtual void useImagingWeight(const VisImagingWeight& imWgt);
+  void useImagingWeight(const VisImagingWeight& imWgt);
+  const VisImagingWeight & getImagingWeightGenerator () const;
+
   //return number  of Ant 
-  virtual Int numberAnt();
+  Int numberAnt();
   //Return number of rows in all selected ms's
-  virtual Int numberCoh();
-
+  Int numberCoh();
   // Return number of spws, polids, ddids
-  virtual Int numberSpw();
-  virtual Int numberPol();
-  virtual Int numberDDId();
-
-  ROArrayColumn <Double> & getChannelFrequency () const;
-  Block<Int> getChannelGroupNumber () const;
-  Block<Int> getChannelIncrement () const;
-  Block<Int> getChannelStart () const;
-  Block<Int> getChannelWidth () const;
+  Int numberSpw();
+  Int numberPol();
+  Int numberDDId();
+//  ROArrayColumn <Double> & getChannelFrequency () const;
+//  Block<Int> getChannelGroupNumber () const;
+//  Block<Int> getChannelIncrement () const;
+//  Block<Int> getChannelStart () const;
+//  Block<Int> getChannelWidth () const;
   Int getDataDescriptionId () const;
   const MeasurementSet & getMeasurementSet() const;;
   Int getMeasurementSetId() const;
   Int getNAntennas () const;
   MEpoch getMEpoch () const;
-  MFrequency::Types getObservatoryFrequencyType () const; //???
-  MPosition getObservatoryPosition () const;
-  MDirection getPhaseCenter () const;
+  ///////////////MFrequency::Types getObservatoryFrequencyType () const; //???
+  ///////////////MPosition getObservatoryPosition () const;
+  ///////////////MDirection getPhaseCenter () const;
   Vector<Float> getReceptor0Angle ();
   Vector<uInt> getRowIds () const;
-
   static void lsrFrequency (const Int& spw,
                             Vector<Double>& freq,
                             Bool & convert,
@@ -621,31 +615,46 @@ public:
                             const MPosition & obsPos,
                             const MDirection & dir);
 
-
+  static String getAipsRcBase () { return "VisibilityIterator";}
 
 protected:
+
+  ROVisibilityIterator (const asyncio::PrefetchColumns * prefetchColumns,
+                        const Block<MeasurementSet>& mss,
+                        const Block<Int>& sortColumns,
+                        const Bool addDefaultSortCols,
+                        Double timeInterval,
+                        Bool writable);
+
+  void construct (const asyncio::PrefetchColumns * prefetchColumns,
+                  const Block<MeasurementSet>& mss,
+                  const Block<Int>& sortColumns,
+                  const Bool addDefaultSortCols,
+                  Double timeInterval,
+                  Bool writable,
+                  const Factory & factory);
+
+  VisibilityIteratorReadImpl * getReadImpl() const;
+
+  bool existsColumn (VisBufferComponents::EnumType id) const;
   // advance the iteration
   virtual void advance();
   // set the currently selected table
   virtual void setSelTable();
   // set the iteration state
-  virtual void setState();
+  void setState();
   // get the TOPO frequencies from the selected velocities and the obs. vel.
-  virtual void getTopoFreqs();
-  virtual void getTopoFreqs(Vector<Double> & lsrFreq, Vector<Double> & selFreq); // for async i/o
-
-  virtual void getLsrInfo (Block<Int> & channelGroupNumber,
+  void getTopoFreqs();
+  void getTopoFreqs(Vector<Double> & lsrFreq, Vector<Double> & selFreq); // for async i/o
+  void getLsrInfo (Block<Int> & channelGroupNumber,
                            Block<Int> & channelIncrement,
                            Block<Int> & channelStart,
                            Block<Int> & channelWidth,
                            MPosition & observatoryPositon,
                            MDirection & phaseCenter,
                            Bool & velocitySelection) const;
-
-  vector<const MeasurementSet *> getMeasurementSets () const;
-
+  vector<MeasurementSet> getMeasurementSets () const;
   const MSDerivedValues & getMSD () const; // for use by Async I/O *ONLY*
-
   // update the DATA slicer
   virtual void updateSlicer();
   // attach the column objects to the currently selected table
@@ -656,30 +665,22 @@ protected:
   // get the (velocity selected) interpolated visibilities, flags and weights.
   // It is not really const at all (it seems to use This-> trickery so callers
   // like flag() can be declared const).
-  virtual void getInterpolatedVisFlagWeight(DataColumn whichOne) const;
-
+//  void getInterpolatedVisFlagWeight(DataColumn whichOne) const;
   // get the (velocity selected) interpolated FLOAT_DATA (as real Floats),
   // flags and weights.
-  void getInterpolatedFloatDataFlagWeight() const;
-
+//  void getInterpolatedFloatDataFlagWeight() const;
   // get the visibility data (observed, corrected or model);
   // deals with Float and Complex observed data (DATA or FLOAT_DATA)
-  virtual void getDataColumn(DataColumn whichOne, const Slicer& slicer, 
+  void getDataColumn(DataColumn whichOne, const Slicer& slicer, 
 			     Cube<Complex>& data) const;
-  virtual void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
-
+  void getDataColumn(DataColumn whichOne, Cube<Complex>& data) const;
   // get FLOAT_DATA as real Floats.
-  virtual void getFloatDataColumn(const Slicer& slicer, Cube<Float>& data) const;
-  virtual void getFloatDataColumn(Cube<Float>& data) const;
+  void getFloatDataColumn(const Slicer& slicer, Cube<Float>& data) const;
+  void getFloatDataColumn(Cube<Float>& data) const;
 
-  //constructor helpers
-  virtual void initsinglems(const MeasurementSet & mss);
-  virtual void initmultims(const Block<MeasurementSet>& mss);
-
-  virtual void originChunks(Bool forceRewind);
-
+  void originChunks(Bool forceRewind);
   //Re-Do the channel selection in multi ms case 
-  virtual void doChannelSelection();
+  void doChannelSelection();
   //Set the tile cache size....when using slice access if tile cache size is 
   // not set memory usage can go wild.  Specifically, the caching scheme is
   // ephemeral and lives for that instance of setting the caching scheme.
@@ -692,191 +693,46 @@ protected:
   // cache extra tiles.
   virtual void setTileCache();
   //Check if spw is in selected SPW for actual ms
-  virtual Bool isInSelectedSPW(const Int& spw);
-
+  Bool isInSelectedSPW(const Int& spw);
   // Updates, if necessary, rowIds_p member for the current chunk
-  virtual void update_rowIds() const;
-
+  void update_rowIds() const;
   void setAsyncEnabled (Bool enable);
-
   template<class T>
     void getColScalar(const ROScalarColumn<T> &column, Vector<T> &array, Bool resize) const;
-
   template<class T>
     void getColArray(const ROArrayColumn<T> &column, Array<T> &array, Bool resize) const;
-
   // column access functions, can be overridden in derived classes
   virtual void getCol(const ROScalarColumn<Bool> &column, Vector<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROScalarColumn<Int> &column, Vector<Int> &array, Bool resize = False) const;
   virtual void getCol(const ROScalarColumn<Double> &column, Vector<Double> &array, Bool resize = False) const;
-
   virtual void getCol(const ROArrayColumn<Bool> &column, Array<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Float> &column, Array<Float> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Double> &column, Array<Double> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Complex> &column, Array<Complex> &array, Bool resize = False) const;
-
   virtual void getCol(const ROArrayColumn<Bool> &column, const Slicer &slicer, Array<Bool> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Float> &column, const Slicer &slicer, Array<Float> &array, Bool resize = False) const;
   virtual void getCol(const ROArrayColumn<Complex> &column, const Slicer &slicer, Array<Complex> &array, Bool resize = False) const;
-
-  //  virtual void getCol(const String &colName, Array<Double> &array,
+  //  void getCol(const String &colName, Array<Double> &array,
   //                      Array<Double> &all, Bool resize = False) const;
-  //  virtual void getCol(const String &colName, Vector<Bool> &array,
+  //  void getCol(const String &colName, Vector<Bool> &array,
   //                      Vector<Bool> &all, Bool resize = False) const;
-  //  virtual void getCol(const String &colName, Vector<Int> &array,
+  //  void getCol(const String &colName, Vector<Int> &array,
   //                      Vector<Int> &all, Bool resize = False) const;
-  //  virtual void getCol(const String &colName, Vector<Double> &array,
+  //  void getCol(const String &colName, Vector<Double> &array,
   //                      Vector<Double> &all, Bool resize = False) const;
-
   template<class T>
   void swapyz(Cube<T>& out, const Cube<T>& in) const;
 
-  ROVisibilityIterator* This;
-  MSIter msIter_p;
-  RefRows selRows_p; // currently selected rows from msIter_p.table()
-  Int curChanGroup_p, curNumChanGroup_p, channelGroupSize_p, 
-      curTableNumRow_p, curStartRow_p, curEndRow_p,
-      nChan_p, nPol_p, nRowBlocking_p;
-  uInt curNumRow_p;
-  Bool more_p, newChanGroup_p, initialized_p, msIterAtOrigin_p, stateOk_p;
-
-  // channel selection
-  Block<Int> numChanGroup_p, chanStart_p, chanWidth_p, chanInc_p,
-    preselectedChanStart_p,preselectednChan_p;
-  
-  Bool isMultiMS_p;
-  Block< Vector<Int> >blockNumChanGroup_p, blockChanStart_p;
-  Block< Vector<Int> > blockChanWidth_p, blockChanInc_p;
-  Block<Vector<Int> > blockSpw_p;
-  Int msCounter_p;
-  // Stack of VisBuffer objects
-  Stack<VisBuffer *> vbStack_p;
-  vector<const MeasurementSet *> measurementSets_p; // [use]
-
-  //cache for access functions
-  Slicer slicer_p;
-  Slicer weightSlicer_p;
-  Bool useSlicer_p;
-  Vector<Double> time_p;
-  Vector<Double> timeInterval_p;
-  Vector<Double> frequency_p;
-  Bool freqCacheOK_p, flagOK_p, weightSpOK_p;
-  Block<Bool> visOK_p;
-  Bool floatDataCubeOK_p;
-  Cube<Bool> flagCube_p;
-  Cube<Complex> visCube_p;
-  Cube<Float> floatDataCube_p;
-  mutable Matrix<Double> uvwMat_p;
-  Cube<Float> wtSp_p;
-  Matrix<Float> imagingWeight_p;
-  Vector<Float> feedpa_p;
-
-  Float parang0_p;
-  Vector<Float> parang_p;
-  MDirection azel0_p;
-  Vector<MDirection> azel_p;
-  Double hourang_p;
-
-  Bool floatDataFound_p;
-
-  // Does the current MS have a valid WEIGHT_SPECTRUM?
-  // mutable so existsWeightSpectrum() and its callers can pretend to be const.
-  mutable Bool msHasWtSp_p;
-
-  // for PA/AZEL calculations
-  MSDerivedValues msd_p;
-  Double lastazelUT_p;
-  Double lastfeedpaUT_p;
-  Double lastParangUT_p;
-  Double lastParang0UT_p;
-  Int nAnt_p;
-
-  // for velocity selection and conversion
-  Bool velSelection_p, vPrecise_p;
-  Int nVelChan_p;
-  MVRadialVelocity vStart_p;
-  MVRadialVelocity vInc_p;
-  MDoppler::Convert cFromBETA_p;
-  MDoppler::Types vDef_p;
-  Vector<Double> selFreq_p;
-  Vector<Double> lsrFreq_p;
-  String vInterpolation_p;
-
-  mutable Vector<uInt> rowIds_p;
-
-  ROScalarColumn<Int> colAntenna1, colAntenna2;
-  ROScalarColumn<Int> colFeed1, colFeed2;
-  ROScalarColumn<Double> colTime;
-  ROScalarColumn<Double> colTimeCentroid;
-  ROScalarColumn<Double> colTimeInterval;
-  ROScalarColumn<Double> colExposure;
-  ROArrayColumn<Float> colWeight;
-  ROArrayColumn<Float> colWeightSpectrum;
-  ROArrayColumn<Complex> colVis;
-  ROArrayColumn<Float> colFloatVis;
-  ROArrayColumn<Complex> colModelVis;
-  ROArrayColumn<Complex> colCorrVis;
-  ROArrayColumn<Float> colSigma;
-  ROArrayColumn<Bool> colFlag;
-  ROArrayColumn<Bool> colFlagCategory;
-  ROScalarColumn<Bool> colFlagRow;
-  ROScalarColumn<Int> colObservation;
-  ROScalarColumn<Int> colProcessor;
-  ROScalarColumn<Int> colScan;
-  ROScalarColumn<Int> colState;
-  ROArrayColumn<Double> colUVW;
-
-  //object to calculate imaging weight
-  VisImagingWeight imwgt_p;
-
-  Bool asyncEnabled_p; // Allows lower-level code to make an async "copy" of this VI.
-
-  Vector<Bool> tileCacheIsSet_p;
-
+  VisibilityIteratorReadImpl * readImpl_p;
 };
 
-inline Bool ROVisibilityIterator::more() const { return more_p;}
-
-inline Vector<SquareMatrix<Complex,2> >& 
-ROVisibilityIterator::CJones(Vector<SquareMatrix<Complex,2> >& cjones) const 
-{cjones.resize(msIter_p.CJones().nelements());return cjones=msIter_p.CJones();}
-
-inline const Cube<Double>& ROVisibilityIterator::receptorAngles() const
-{return msIter_p.receptorAngles();}
-
-inline const Vector<String>& ROVisibilityIterator::antennaMounts() const
-{return msIter_p.antennaMounts();}
-
-inline const Cube<RigidVector<Double, 2> >& 
-       ROVisibilityIterator::getBeamOffsets() const
-{return msIter_p.getBeamOffsets();}
-
-inline Bool ROVisibilityIterator::allBeamOffsetsZero() const
-{return msIter_p.allBeamOffsetsZero();}
-
-inline Int ROVisibilityIterator::channelGroupSize() const
-{ return velSelection_p ? nVelChan_p : chanWidth_p[msIter_p.spectralWindowId()]; }
-inline Int ROVisibilityIterator::channelIndex() const
-{ return chanInc_p[msIter_p.spectralWindowId()]*curChanGroup_p; }
-inline Int ROVisibilityIterator::nRow() const
-{ return curNumRow_p;}
-inline Int ROVisibilityIterator::nRowChunk() const
-{ return msIter_p.table().nrow();}                                            
-inline ROVisibilityIterator& 
-ROVisibilityIterator::velInterpolation(const String& type)
-{ vInterpolation_p=type; return *this;}
-inline IPosition ROVisibilityIterator::visibilityShape() const
-{return IPosition(3,nPol_p,channelGroupSize(),curNumRow_p);}
 
 // <summary>
 // VisibilityIterator iterates through one or more writable MeasurementSets
 // </summary>
-
 // <use visibility=export>
-
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-
 // <prerequisite>
 //   <li> <linkto class="ROVisibilityIterator">ROVisibilityIterator</linkto>
 // </prerequisite>
@@ -916,11 +772,12 @@ inline IPosition ROVisibilityIterator::visibilityShape() const
 //   <li> cleanup the currently dual interface for visibilities and flags
 //   <li> sort out what to do with weights when interpolating
 // </todo>
-
 class VisibilityIterator : public ROVisibilityIterator
 {
-public:
 
+    friend class VisibilityIteratorWriteImpl;
+
+public:
   // Constructors.
   // Note: The VisibilityIterator is not initialized correctly by default, you
   // need to call origin() before using it to iterate.
@@ -931,47 +788,51 @@ public:
 		     const Bool addDefaultSortCols,
 		     Double timeInterval=0);
   // Same as previous constructor, but with multiple MSs to iterate over.
-  VisibilityIterator(Block<MeasurementSet>& mss,
+  VisibilityIterator(const Block<MeasurementSet>& mss,
 		       const Block<Int>& sortColumns, 
 		       Double timeInterval=0);
-  VisibilityIterator(Block<MeasurementSet>& mss,
+  VisibilityIterator(const Block<MeasurementSet>& mss,
 		     const Block<Int>& sortColumns, const Bool addDefaultSortCols, 
 		       Double timeInterval=0);
-
+  VisibilityIterator (const asyncio::PrefetchColumns * prefetchColumns,
+                      const Block<MeasurementSet>& mss,
+                      const Block<Int>& sortColumns,
+                      const Bool addDefaultSortCols = True,
+                      Double timeInterval = 0);
+  VisibilityIterator (const asyncio::PrefetchColumns * prefetchColumns,
+                      MeasurementSet & mss,
+                      const Block<Int>& sortColumns,
+                      const Bool addDefaultSortCols = True,
+                      Double timeInterval = 0);
   VisibilityIterator(const VisibilityIterator & MSI);
+  VisibilityIterator(const asyncio::PrefetchColumns * prefetchColumns, const VisibilityIterator & other);
+
+  
+  virtual ~VisibilityIterator();
 
   VisibilityIterator & operator=(const VisibilityIterator &MSI);
 
-  // Destructor
 
-  virtual ~VisibilityIterator();
-  
   // Members
   
-  virtual Bool isWritable () const { return True;}
+  Bool isWritable () const;
 
   // Advance iterator through data
   VisibilityIterator & operator++(int);
   VisibilityIterator & operator++();
-
   // Set/modify the flags in the data.
   // This will flag all channels in the original data that contributed to
   // the output channel in the case of channel averaging.
   // All polarizations have the same flag value.
   void setFlag(const Matrix<Bool>& flag);
-
   // Set/modify the flags in the data.
   // This sets the flags as found in the MS, Cube(npol,nchan,nrow),
   // where nrow is the number of rows in the current iteration (given by
   // nRow()).
-  void setFlag(const Cube<Bool>& flag);
-
+  virtual void setFlag(const Cube<Bool>& flag);
   // Set/modify the flag row column; dimension Vector(nrow)
-  void setFlagRow(const Vector<Bool>& rowflags);
+  virtual void setFlagRow(const Vector<Bool>& rowflags);
 
-  // This sets the flags as found in the MS, Array(npol, nchan, ncat, nrow),
-  // where ncat is the number of categories for flagging and nrow is the number
-  // of rows in the current iteration (given by nRow()).
   void setFlagCategory(const Array<Bool>& fc);
 
   // Set/modify the visibilities.
@@ -981,63 +842,37 @@ public:
   // If the MS does not contain all polarizations, only the parallel
   // hand polarizations are used.
   void setVis(const Matrix<CStokesVector>& vis, DataColumn whichOne);
-
   // Set/modify the visibilities
   // This sets the data as found in the MS, Cube(npol,nchan,nrow).
-  void setVis(const Cube<Complex>& vis, DataColumn whichOne);
-
+  virtual void setVis(const Cube<Complex>& vis, DataColumn whichOne);
   // Set the visibility and flags, and interpolate from velocities if needed
-  void setVisAndFlag(const Cube<Complex>& vis, const Cube<Bool>& flag,
-		     DataColumn whichOne);
-
+  virtual void setVisAndFlag(const Cube<Complex>& vis, const Cube<Bool>& flag,
+	   	             DataColumn whichOne);
   // Set/modify the weights
   void setWeight(const Vector<Float>& wt);
-
   // Set/modify the weightMat
-  void setWeightMat(const Matrix<Float>& wtmat);
-
+  virtual void setWeightMat(const Matrix<Float>& wtmat);
   // Set/modify the weightSpectrum
-  void setWeightSpectrum(const Cube<Float>& wtsp);
-
+  virtual void setWeightSpectrum(const Cube<Float>& wtsp);
   // Set/modify the Sigma
   void setSigma(const Vector<Float>& sig);
-
   // Set/modify the ncorr x nrow SigmaMat.
   void setSigmaMat(const Matrix<Float>& sigmat);
+
+  void writeBack (VisBuffer *);
+
 protected:
+
   virtual void attachColumns(const Table &t);
-  void setInterpolatedVisFlag(const Cube<Complex>& vis, 
-			      const Cube<Bool>& flag);
-  void setInterpolatedWeight(const Matrix<Float>& wt); 
-  // Write the data column (observed, model or corrected);
-  // deals with Float or Complex observed data (DATA and FLOAT_DATA).
-  void putDataColumn(DataColumn whichOne, const Slicer& slicer, 
-		     const Cube<Complex>& data);
-  void putDataColumn(DataColumn whichOne, const Cube<Complex>& data);
 
-  // column access functions, can be overridden in derived classes
-  virtual void putCol(ScalarColumn<Bool> &column, const Vector<Bool> &array);
-  virtual void putCol(ArrayColumn<Bool> &column, const Array<Bool> &array);
-  virtual void putCol(ArrayColumn<Float> &column, const Array<Float> &array);
-  virtual void putCol(ArrayColumn<Complex> &column, const Array<Complex> &array);
+  void construct ();
 
-  virtual void putCol(ArrayColumn<Bool> &column, const Slicer &slicer, const Array<Bool> &array);
-  virtual void putCol(ArrayColumn<Float> &column, const Slicer &slicer, const Array<Float> &array);
-  virtual void putCol(ArrayColumn<Complex> &column, const Slicer &slicer, const Array<Complex> &array);
 
-  // non-virtual, no reason to template this function because Bool is the only type needed
-  void putColScalar(ScalarColumn<Bool> &column, const Vector<Bool> &array);
+  VisibilityIteratorWriteImpl * getWriteImpl() const;
 
-  ArrayColumn<Complex> RWcolVis;
-  ArrayColumn<Float> RWcolFloatVis;
-  ArrayColumn<Complex> RWcolModelVis;
-  ArrayColumn<Complex> RWcolCorrVis;
-  ArrayColumn<Float> RWcolWeight;
-  ArrayColumn<Float> RWcolWeightSpectrum;
-  ArrayColumn<Float> RWcolSigma;
-  ArrayColumn<Bool> RWcolFlag;
-  ScalarColumn<Bool> RWcolFlagRow;
-  ArrayColumn<Bool> RWcolFlagCategory;
+  void initializeBackWriters ();
+
+  VisibilityIteratorWriteImpl * writeImpl_p;
 };
 
 } //# NAMESPACE CASA - END
@@ -1047,4 +882,3 @@ protected:
 #endif //# AIPS_NO_TEMPLATE_SRC
 
 #endif
-

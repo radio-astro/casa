@@ -847,7 +847,7 @@ print "\t----\t Intro Ex 10 \t----"
                                               # 'rmerr' and 'rm'
 #
 """
-\begin{verbatim}
+\end{verbatim}
 
 </example>
 
@@ -4007,6 +4007,7 @@ that should be held constant during the fit. Any combination of the characters '
 permitted, eg "fc" means hold the fwhm and the center constant during the fit. Fixed parameters will have no error associated
 with them. Here is an example file:
 
+\begin{verbatim}
 # estimates file indicating that two gaussians should be fit
 # first guassian estimate, peak=40, center at pixel number 10.5, fwhm = 5.8 pixels, all parameters allowed to vary during
 # fit
@@ -4014,6 +4015,7 @@ with them. Here is an example file:
 # second gaussian, peak = 4, center at pixel number 90.2, fwhm = 7.2 pixels, hold fwhm constant
 4, 90.2, 7.2, f
 # end file
+\end{verbatim}
 
 In the case of multifit=True, the initial estimates from the file will be applied to the location of the
 first fit. This is normally the bottom left corner of the region selected. If masked or not enough good
@@ -4217,12 +4219,6 @@ tool attached to the residual (continuum subtracted) image.
             <description>Overwrite component list if it already exists. Default is False.</description>
             <value>false</value>
         </param>
-        
-        <param type="int" direction="in" name="chan">
-            <description>DEPRECATED. USE chans INPUT INSTEAD.</description>
-            <value>-1</value>
-        </param>
-    
     </input>
     <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
     <description>
@@ -4382,9 +4378,6 @@ ia.fitcomponents(region=region, chans=chans, excludepix=excludepix, estimates=es
 </description>
 
 </method>
-
-
-
  
 <method type="function" name="fromrecord">
    <shortdescription>Generate an image from a record</shortdescription>
@@ -5814,6 +5807,11 @@ ia.close()
      <value>true</value>
      </param>
   
+    <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? </description>
+         <value>false</value>
+     </param>
+  
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
@@ -6722,6 +6720,11 @@ ia.close()
      <description>Force specified axes to be regridded</description>
      <value>false</value>
      </param>
+     
+     <param type="bool" direction="in" name="asvelocity">
+        <description>Regrid spectral axis in velocity space rather than frequency space?</description>
+        <value>false</value>
+     </param>
   
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
@@ -6840,6 +6843,12 @@ pixels per axis in the sparse grid is the number of output pixels for
 that axis divided by the decimation factor.  A factor of 10 does pretty
 well.  You may find that for very non-linear coordinate systems (e.g. 
 very close to the pole) that you have to reduce the decimation factor. 
+
+If one of the axes to be regridded is a spectral axis and asvelocity=T,
+the axis will be regridded to match the velocity, not the frequency,
+description of the template coordinate system. Thus the output pixel
+values will correspond only to the velocity, not the frequency, of the
+output axis.
 
 Sometimes it is useful to drop axes of length one (degenerate axes). 
 Use the {\stfaf dropdeg} argument if you want to do this.  It will
@@ -6965,7 +6974,7 @@ ia.close()
 
 
 <method type="function" name="reorder">
-    <shortdescription>Transpose the image.</shortdescription>
+    <shortdescription>THIS METHOD IS DEPRECATED. PLEASE USE ia.transpose() INSTEAD. Transpose the image.</shortdescription>
     <input>
         <param type="string" direction="in" name="outfile">
             <description>Output image file name.  Default is unset.</description>

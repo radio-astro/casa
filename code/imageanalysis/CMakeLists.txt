@@ -41,6 +41,7 @@ implement/ImageAnalysis/ImagePrimaryBeamCorrector.cc
 implement/ImageAnalysis/ImageProfileFitter.cc
 implement/ImageAnalysis/ImageTransposer.cc
 implement/ImageAnalysis/ImageTask.cc
+implement/ImageAnalysis/SpectralCollapser.cc
 
 implement/IO/RegionTextParser.cc
 implement/IO/AsciiAnnotationFileLine.cc

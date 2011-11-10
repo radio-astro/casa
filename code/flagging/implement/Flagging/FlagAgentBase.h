@@ -65,6 +65,9 @@ public:
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
 
+	// Set function to activate check mode
+	void setCheckMode(bool enable) {checkFlags_p = enable;}
+
 
 protected:
 
@@ -98,6 +101,9 @@ protected:
 	// Check if buffer has to be processed
 	bool checkIfProcessBuffer();
 
+	// Common functionality for each visBuffer (don't repeat at the row level)
+	virtual void preProcessBuffer();
+
 	// Iterate trough list of rows
 	void iterateRows();
 
@@ -120,10 +126,11 @@ protected:
 	// Compute flags for a given (time,freq) antenna pair map
 	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
 
-	// Logger
+	// Common used members that must be accessible to derived classes
 	casa::LogIO *logger_p;
-
-	// Running mode configuration
+	VisBufferAutoPtr *visibilityBuffer_p;
+	FlagDataHandler *flagDataHandler_p;
+	Bool preProcessBuffer_p;
 	Bool multiThreading_p;
 	Int nThreads_p;
 	Int threadId_p;
@@ -131,9 +138,7 @@ protected:
 private:
 	
 	// MS-related objects
-	FlagDataHandler *flagDataHandler_p;
 	MeasurementSet *selectedMeasurementSet_p;
-	VisBufferAutoPtr *visibilityBuffer_p;
 	Cube<Bool> *commonFlagCube_p;
 	Cube<Bool> *privateFlagCube_p;
 
@@ -183,7 +188,11 @@ private:
 	string expression_p;
 	string dataColumn_p;
 	uShort dataReference_p;
+
+	// Debuging configuration
 	Bool profiling_p;
+	Bool checkFlags_p;
+
 
 	// Running mode configuration
 	uShort iterationApproach_p;
@@ -214,6 +223,7 @@ class FlagAgentList
 		void queueProcess();
 		void completeProcess();
 		void setProfiling(bool enable);
+		void setCheckMode(bool enable);
 
 	protected:
 

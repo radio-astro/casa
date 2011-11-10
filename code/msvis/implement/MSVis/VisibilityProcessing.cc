@@ -7,23 +7,27 @@
 
 #include "VisibilityProcessing.h"
 #include "VisBufferAsync.h"
-#include "VisibilityIteratorAsync.h"
+#include "VisibilityIteratorImplAsync.h"
 #include "UtilJ.h"
-
-#include <casa/System/AipsrcValue.h>
 
 #include <boost/lambda/lambda.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/tuple/tuple_comparison.hpp>
+
+#include <casa/System/AipsrcValue.h>
+
+#include <algorithm>
 #include <list>
 #include <stdarg.h>
 #include <limits>
 #include <memory>
 #include <numeric>
 
+using namespace casa;
 using namespace casa::asyncio;
 using namespace casa::utilj;
 using namespace std;
+using boost::shared_ptr;
 
 namespace casa {
 
@@ -33,13 +37,60 @@ namespace vpf {
     {if (level <= VpEngine::getLogLevel()) \
          VpEngine::log (__VA_ARGS__);}
 
+SplitterVp::SplitterVp (const String & name,
+                        const vector<String> & inputNames,
+                        const vector<String> & outputNames)
+: VisibilityProcessor (name, inputNames, outputNames)
+{
+    ThrowIf (inputNames.size() != 1, "Exactly one input is required.");
+    ThrowIf (outputNames.size () < 1, "At least one output is required.");
+}
 
-SubChunkIndex::SubChunkIndex (Int chunkNumber, Int subChunkNumber, Int iteration)
+
+
+VisibilityProcessor::ProcessingResult
+SplitterVp::doProcessingImpl (ProcessingType processingType ,
+                              VpData & inputData,
+                              const SubchunkIndex & /*subChunkIndex*/)
+{
+    if (processingType == VisibilityProcessor::EndOfChunk ||
+        processingType == VisibilityProcessor::EndOfData){
+        return ProcessingResult();
+    }
+
+    VpPort inputPort = getInputs () [0];
+    VpPorts outputs = getOutputs();
+    VbPtr inputVbPtr = inputData [inputPort];
+    VpData vpData;
+
+    // Handle the first, required output by reusing the input VB
+
+    vpData [outputs [0]] = inputVbPtr; // reuse in input
+
+    // Handle any additional outputs.
+
+    for (int i = 1; i < (int) outputs.size(); i++){
+
+        VpPort port = outputs [i];
+
+        // Make a copy of the input and add it as an output
+
+        vpData [port] = VbPtr (inputVbPtr->clone());
+
+    }
+
+    ProcessingResult processingResult (Normal, vpData);
+
+    return processingResult;
+}
+
+
+SubchunkIndex::SubchunkIndex (Int chunkNumber, Int subChunkNumber, Int iteration)
 : chunkNumber_p (chunkNumber), iteration_p (iteration), subChunkNumber_p (subChunkNumber)
 {}
 
 Bool
-SubChunkIndex::operator< (const SubChunkIndex & other) const
+SubchunkIndex::operator< (const SubchunkIndex & other) const
 {
     Bool result = boost::make_tuple (chunkNumber_p, subChunkNumber_p, iteration_p) <
                   boost::make_tuple (other.chunkNumber_p, other.subChunkNumber_p, other.iteration_p);
@@ -48,100 +99,28 @@ SubChunkIndex::operator< (const SubChunkIndex & other) const
 }
 
 Int
-SubChunkIndex::getChunkNumber () const
+SubchunkIndex::getChunkNumber () const
 {
     return chunkNumber_p;
 }
 
 Int
-SubChunkIndex::getIteration () const
+SubchunkIndex::getIteration () const
 {
     return iteration_p;
 }
 
 Int
-SubChunkIndex::getSubChunkNumber () const
+SubchunkIndex::getSubchunkNumber () const
 {
     return subChunkNumber_p;
 }
 
 String
-SubChunkIndex::toString() const
+SubchunkIndex::toString() const
 {
     return format ("(%d,%d,%d)", chunkNumber_p, subChunkNumber_p, iteration_p);
 }
-
-VbPtr::VbPtr ()
-: vb_p (new CtdPtr ())
-{}
-
-
-VbPtr::VbPtr (VisBuffer * vb, Bool destroyIt)
-: vb_p (new CtdPtr (vb, destroyIt))
-{}
-
-VbPtr::VbPtr (const VbPtr & other)
-{
-    vb_p = new CtdPtr ();
-
-    // operator= handles the locking
-
-    * this = other;
-}
-
-VbPtr::~VbPtr ()
-{
-    {
-        MutexLocker ml();
-
-        delete vb_p;
-    }
-}
-
-VbPtr &
-VbPtr::operator= (const VbPtr & other)
-{
-    if (this != & other){
-
-        MutexLocker ml ();
-
-        * vb_p = * other.vb_p;
-    }
-
-    return * this;
-}
-
-VisBuffer &
-VbPtr::operator* ()
-{
-    return vb_p->CtdPtr::operator* ();
-}
-
-VisBuffer *
-VbPtr::operator-> ()
-{
-    return vb_p->CtdPtr::operator->();
-}
-
-void
-VbPtr::clear ()
-{
-    MutexLocker ml ();
-    * vb_p = NULL;
-}
-
-Int
-VbPtr::getNRefs () const
-{
-    return vb_p->nrefs();
-}
-
-Bool
-VbPtr::null () const
-{
-    return vb_p->null();
-}
-
 
 
 //VisBuffer *
@@ -161,17 +140,147 @@ VbPtr::null () const
 //    return vb;
 //}
 
+VisibilityProcessor::VisibilityProcessor ()
+: container_p (NULL),
+  nSubchunks_p (0),
+  nSubchunksUnique_p (0),
+  vpEngine_p (0)
+{}
 
 
 VisibilityProcessor::VisibilityProcessor (const String & name,
                                           const vector<String> & inputNames,
-                                          const vector<String> & outputNames)
+                                          const vector<String> & outputNames,
+                                          Bool makeIoPorts)
 : container_p (NULL),
-  name_p (name)
+  name_p (name),
+  nSubchunks_p (0),
+  nSubchunksUnique_p (0),
+  vpEngine_p (0)
+
 {
-    vpInputs_p = definePorts (inputNames, VpPort::Input, "input");
-    vpOutputs_p = definePorts (outputNames, VpPort::Output, "output");
+    VpPort::Type portType = makeIoPorts ? VpPort::InOutput : VpPort::Input;
+    vpInputs_p = definePorts (inputNames, portType, "input");
+    portType = makeIoPorts ? VpPort::InOutput : VpPort::Output;
+    vpOutputs_p = definePorts (outputNames, portType, "output");
 }
+
+void
+VisibilityProcessor::throwIfAnyInputsUnconnected (const vector<String> & exceptThese) const
+{
+    VpPorts inputs = getInputs ();
+
+    VpPorts unconnectedPorts = portsUnconnected (inputs, & VpPort::isConnectedInput, exceptThese);
+
+    ThrowIf (! unconnectedPorts.empty(),
+             format ("Vp '%s' has unconnected inputs: %s",
+                     getName().c_str(),
+                     unconnectedPorts.toString().c_str()));
+}
+
+void
+VisibilityProcessor::throwIfAnyInputsUnconnectedExcept (const String & name) const
+{
+    throwIfAnyInputsUnconnected (vector<String> (1, name));
+}
+
+
+void
+VisibilityProcessor::throwIfAnyOutputsUnconnected (const vector<String> & exceptThese) const
+{
+    VpPorts outputs = getOutputs ();
+
+    VpPorts unconnectedPorts = portsUnconnected (outputs, & VpPort::isConnectedOutput, exceptThese);
+
+    ThrowIf (! unconnectedPorts.empty(),
+             format ("Vp '%s' has unconnected outputs: %s",
+                     getName().c_str(),
+                     unconnectedPorts.toString().c_str()));
+}
+
+void
+VisibilityProcessor::throwIfAnyOutputsUnconnectedExcept (const String & name) const
+{
+    throwIfAnyOutputsUnconnected (vector<String> (1, name));
+}
+
+
+void
+VisibilityProcessor::throwIfAnyPortsUnconnected () const
+{
+    VpPorts inputs = getInputs ();
+
+    VpPorts unconnectedInputs = portsUnconnected (inputs, & VpPort::isConnectedInput);
+
+    VpPorts outputs = getOutputs ();
+
+    VpPorts unconnectedOutputs = portsUnconnected (outputs, & VpPort::isConnectedOutput);
+
+    if (! unconnectedInputs.empty () || ! unconnectedOutputs.empty()){
+
+        String message = format ("Vp '%s' has");
+
+
+        if (! unconnectedInputs.empty()){
+
+            // Format up the inputs portion of the message, if applicable
+
+            message += format (" unconnected inputs: %s",
+                                unconnectedInputs.toString().c_str());
+        }
+
+        if (! unconnectedInputs.empty()){
+
+            // Format up the inputs portion of the message, if applicable.
+            // Determine the appropriate text to join up the previous text.
+
+            string conjunction = (unconnectedInputs.empty()) ? ""
+                                                             : "\n and";
+
+             message += format ("%s has unconnected outputs: %s",
+                                conjunction.c_str (),
+                                unconnectedOutputs.toString().c_str());
+        }
+
+        message += ".";
+
+        ThrowIf (True, message);
+
+    }
+
+}
+
+
+VpPorts
+VisibilityProcessor::portsUnconnected (const VpPorts & ports, Bool (VpPort::* isConnected) () const,
+                                       const vector<String> & except) const
+{
+    VpPorts unconnectedPorts;
+
+    for (VpPorts::const_iterator port = ports.begin(); port != ports.end(); port ++){
+
+        Bool connected = ((* port).*isConnected)();
+
+        if (! connected){
+
+            // See if it's in the list of exceptions
+
+            if (! except.empty() && find (except.begin(), except.end(), port->getName()) == except.end()){
+                unconnectedPorts.push_back (* port);
+            }
+        }
+
+    }
+
+    return unconnectedPorts;
+}
+
+void
+VisibilityProcessor::chunkStart (const SubchunkIndex & sci)
+{
+    chunkStartImpl (sci);
+}
+
 
 VpPorts
 VisibilityProcessor::definePorts (const vector<String> & portNames, VpPort::Type type, const String & typeName)
@@ -191,6 +300,48 @@ VisibilityProcessor::definePorts (const vector<String> & portNames, VpPort::Type
     }
 
     return vpPorts;
+}
+
+VisibilityProcessor::ProcessingResult
+VisibilityProcessor::doProcessing (ProcessingType processingType,
+                                   VpData & inputData,
+                                   VpEngine * vpEngine,
+                                   const SubchunkIndex & subchunkIndex)
+{
+
+    vpEngine_p = vpEngine;
+    pair<Int,Int> originalViPosition = getVi()->getSubchunkId ();
+
+    if (processingType == Subchunk && subchunkIndex != SubchunkIndex::Invalid){
+        nSubchunks_p ++;
+        if (subchunkIndex.getIteration() == 0){
+            nSubchunksUnique_p ++;
+        }
+    }
+
+    ProcessingResult result;
+
+    try {
+        result = doProcessingImpl (processingType, inputData, subchunkIndex);
+
+    }
+    catch (AipsError & e){
+
+        vpEngine_p = 0;
+
+        Rethrow (e, format ("Error in doProcessing of VP '%s': %s on %s", getName().c_str(),
+                            toString (processingType).c_str(), subchunkIndex.toString().c_str()));
+    }
+
+    pair<Int,Int> currentViPosition = getVi()->getSubchunkId ();
+
+    ThrowIf (currentViPosition != originalViPosition,
+             format ("VisibilityIterator moved during processing in VP '%s'", getName().c_str()));
+
+    vpEngine_p = 0;
+
+    return result;
+
 }
 
 
@@ -238,7 +389,7 @@ VpPort
 VisibilityProcessor::getInput (const String & name) const
 {
     ThrowIf (! vpInputs_p.contains (name),
-             format ("No such input port '%s'", name.c_str()));
+             format ("Vp '%s' has no input port '%s'", getName().c_str(), name.c_str()));
 
     return vpInputs_p.get (name);
 }
@@ -247,7 +398,7 @@ VpPort &
 VisibilityProcessor::getInputRef (const String & name)
 {
     ThrowIf (! vpInputs_p.contains (name),
-             format ("No such input port '%s'", name.c_str()));
+             format ("Vp '%s' has no input port '%s'", getName().c_str(), name.c_str()));
 
     return vpInputs_p.getRef (name);
 }
@@ -258,34 +409,84 @@ VisibilityProcessor::getName () const
     return name_p;
 }
 
+Int
+VisibilityProcessor::getNSubchunksProcessed () const
+{
+    return nSubchunks_p;
+}
+
+Int
+VisibilityProcessor::getNSubchunksUniqueProcessed () const
+{
+    return nSubchunksUnique_p;
+}
+
+
 VpPort
 VisibilityProcessor::getOutput (const String & name) const
 {
-    ThrowIf (! vpInputs_p.contains (name),
-             format ("No such input port '%s'", name.c_str()));
+    ThrowIf (! vpOutputs_p.contains (name),
+             format ("Vp '%s' has no output port '%s'", getName().c_str(), name.c_str()));
 
-    return vpInputs_p.get (name);
+    return vpOutputs_p.get (name);
 }
 
 VpPort &
 VisibilityProcessor::getOutputRef (const String & name)
 {
     ThrowIf (! vpOutputs_p.contains (name),
-             format ("No such output port '%s'", name.c_str()));
+             format ("Vp '%s' has no output port '%s'", getName().c_str(), name.c_str()));
 
     return vpOutputs_p.getRef (name);
 }
 
 VpPorts
-VisibilityProcessor::getOutputs () const
+VisibilityProcessor::getOutputs (Bool connectedOnly) const
 {
-    return vpOutputs_p;
+    VpPorts result;
+
+    if (connectedOnly){
+
+        // Copy over the outputs that are output connected.
+        // Need to negate predicate to get the right results --STL is strange sometimes.
+
+        remove_copy_if (vpOutputs_p.begin(), vpOutputs_p.end(), back_inserter (result),
+                        not1 (mem_fun_ref (& VpPort::isConnectedOutput)));
+    }
+    else{
+        result = vpOutputs_p;
+    }
+
+    return result;
 }
 
 PrefetchColumns
 VisibilityProcessor::getPrefetchColumns () const
 {
     return PrefetchColumns ();
+}
+
+ROVisibilityIterator *
+VisibilityProcessor::getVi ()
+{
+    return vpEngine_p->getVi();
+}
+
+VpEngine *
+VisibilityProcessor::getVpEngine ()
+{
+    return vpEngine_p;
+}
+
+void
+VisibilityProcessor::processingStart ()
+{
+    nSubchunks_p = 0;
+    nSubchunksUnique_p = 0;
+
+    validate();
+
+    processingStartImpl ();
 }
 
 void
@@ -300,6 +501,24 @@ VisibilityProcessor::setContainer (const VpContainer * container)
     container_p = container;
 }
 
+String
+toString (VisibilityProcessor::ProcessingType p)
+{
+    static char * names [] = {"Subchunk", "EndOfChunk", "EndOfData"};
+
+    return names [p];
+}
+
+void
+VisibilityProcessor::validate ()
+{
+    validateImpl ();
+}
+
+VpContainer::VpContainer (const String & name, const vector<String> & inputs, const vector<String> & outputs)
+: VisibilityProcessor (name, inputs, outputs, True)
+{}
+
 void
 VpContainer::add (VisibilityProcessor * vp)
 {
@@ -309,6 +528,21 @@ VpContainer::add (VisibilityProcessor * vp)
 
     vp->setContainer (this);
     vps_p.push_back (vp);
+}
+
+void
+VpContainer::chunkStart (const SubchunkIndex & sci)
+{
+    iterator i;
+    try{
+        for (i = begin(); i != end(); i++){
+            i->chunkStart (sci);
+        }
+    }
+    catch (AipsError & e){
+        Rethrow (e, format ("Error during chunkStart for container '%s' VP '%s'",
+                            getName().c_str(), i->getName().c_str()));
+    }
 }
 
 void
@@ -322,21 +556,23 @@ VpContainer::connect (VpPort & output, VpPort & input)
 
     // Do they refer to a VP in this container?
 
-    ThrowIf (! contains (outputVp),
+    ThrowIf (! contains (outputVp) && outputVp != this,
              format ("No such visibility processor %s in %s.",
                      outputVp->getName().c_str(), getName().c_str()));
-    ThrowIf (! contains (inputVp),
+    ThrowIf (! contains (inputVp) && inputVp != this,
              format ("No such visibility processor %s in %s.",
                      inputVp->getName().c_str(), getName().c_str()));
 
     // Does the owning VP really support these ports?
 
-    ThrowIf (! outputVp->getOutputs ().contains (output),
+    ThrowIf (! outputVp->getOutputs ().contains (output) &&
+             ! (outputVp == this && getInputs().contains (output)),
              format ("Visibility processor %s in %s does not have output %s",
                      outputVp->getName().c_str(), getName().c_str(),
                      output.getName().c_str()));
 
-    ThrowIf (! inputVp->getInputs ().contains (input),
+    ThrowIf (! inputVp->getInputs ().contains (input) &&
+             ! (inputVp == this && getOutputs().contains (input)),
              format ("Visibility processor %s in %s does not have input %s",
                      inputVp->getName().c_str(), getName().c_str(),
                      input.getName().c_str()));
@@ -373,10 +609,37 @@ VpContainer::connect (VpPort & output, VpPort & input)
     networkReverse_p.insert (input);
 
     // Inform the real ports (i.e., not the copies) that they are connected
+    // N.B.: Container ports are in/out and are intended to be doubly connected,
+    //       from the inside and from the outside of the container.
 
-    outputVp->getOutputRef (output.getName()).setConnectedOutput ();
-    inputVp->getInputRef (input.getName()).setConnectedInput ();
+    if (output.isType (VpPort::Input)){
+        outputVp->getInputRef (output.getName()).setConnectedOutput ();
+    }
+    else{
+        outputVp->getOutputRef (output.getName()).setConnectedOutput ();
+    }
+
+    if (input.isType (VpPort::Output)){
+        inputVp->getOutputRef (input.getName()).setConnectedInput ();
+    }
+    else{
+        inputVp->getInputRef (input.getName()).setConnectedInput ();
+    }
 }
+
+VpContainer::iterator
+VpContainer::begin()
+{
+    return iterator (vps_p.begin());
+}
+
+VpContainer::const_iterator
+VpContainer::begin() const
+{
+    return const_iterator (vps_p.begin());
+}
+
+
 
 Bool
 VpContainer::contains (const VisibilityProcessor * vp) const
@@ -387,7 +650,7 @@ VpContainer::contains (const VisibilityProcessor * vp) const
 }
 
 VisibilityProcessor::ProcessingResult
-VpContainer::doProcessing (ProcessingType processingType, VpData & data, const SubChunkIndex & sci)
+VpContainer::doProcessingImpl (ProcessingType processingType, VpData & data, const SubchunkIndex & sci)
 {
 
     VpSet vpsWaiting (vps_p.begin(), vps_p.end()); // Set of pending VPs
@@ -400,49 +663,60 @@ VpContainer::doProcessing (ProcessingType processingType, VpData & data, const S
     Log (3, "VpContainer::doProcessing: '%s' starting execution with inputs {%s}.\n",
          getName().c_str(), data.getNames().c_str());
 
-    do {
+    try{
 
-        // Find a VP which can compute given the current set of inputs
+        do {
 
-        boost::tie (vp, vpInputs) = findReadyVp (vpsWaiting, data);
+            // Find a VP which can compute given the current set of inputs
 
-        if (vp != NULL){
+            Bool flushing = processingType != Subchunk;
+            boost::tie (vp, vpInputs) = findReadyVp (vpsWaiting, data, flushing);
 
-            Log (3, "VpContainer::doProcessing: '%s' starting execution of %s.\n",
-                 getName().c_str(), vp->getName().c_str());
+            if (vp != NULL){
 
-            // Have the ready VP process its inputs and
-            // potentially produce more outputs
+                Log (3, "VpContainer::doProcessing: '%s' starting execution of %s.\n",
+                     getName().c_str(), vp->getName().c_str());
 
-            ChunkCode chunkCode;
-            VpData outputs;
+                // Have the ready VP process its inputs and
+                // potentially produce more outputs
 
-            boost::tie (chunkCode, outputs) =
-                vp->doProcessing (processingType, vpInputs, sci);
+                ChunkCode chunkCode;
+                VpData outputs;
 
-            Log (3, "VpContainer::doProcessing: execution of %s output {%s}.\n",
-                 vp->getName().c_str(), outputs.getNames().c_str());
+                boost::tie (chunkCode, outputs) =
+                        vp->doProcessing (processingType, vpInputs, getVpEngine(), sci);
 
-            if (processingType == EndOfChunk && chunkCode == RepeatChunk){
+                Log (3, "VpContainer::doProcessing: execution of %s output {%s}.\n",
+                     vp->getName().c_str(), outputs.getNames().c_str());
 
-                // If any VP in this iteration requests a chunk repeat,
-                // then that's the overall result.
+                if (processingType == EndOfChunk && chunkCode == RepeatChunk){
 
-                chunkCode = RepeatChunk;
+                    // If any VP in this iteration requests a chunk repeat,
+                    // then that's the overall result.
+
+                    overallChunkCode = RepeatChunk;
+                }
+
+                // Remove the VP from the set of pending VPs, remove
+                // the data this VP consumed as inputs and add any outputs
+                // it produced to the set of available data.
+
+                vpsWaiting.erase (vp);
+                for (VpData::const_iterator i = vpInputs.begin(); i != vpInputs.end(); i++){
+                    data.erase (i->first);
+                }
+                remapPorts (outputs, vp);
+                data.insert (outputs.begin(), outputs.end());
+
             }
 
-            // Remove the VP from the set of pending VPs, remove
-            // the data this VP consumed as inputs and add any outputs
-            // it produced to the set of available data.
+        } while (vp != NULL);
 
-            vpsWaiting.erase (vp);
-            data.erase (vpInputs.begin(), vpInputs.end());
-            remapPorts (outputs, vp);
-            data.insert (outputs.begin(), outputs.end());
-
-        }
-
-    } while (vp != NULL);
+    }
+    catch (AipsError & e){
+        Rethrow (e, format ("Error while container '%s' processing VP '%s'",
+                            getName().c_str(), (vp != NULL) ? vp->getName().c_str() : "NULL"));
+    }
 
     if (vpsWaiting.empty()){
         Log (3, "VpContainer::doProcessing: '%s' executed all VPs.\n", getName().c_str());
@@ -453,6 +727,24 @@ VpContainer::doProcessing (ProcessingType processingType, VpData & data, const S
     }
 
     return ProcessingResult (overallChunkCode, data);
+}
+
+Bool
+VpContainer::empty () const
+{
+    return vps_p.empty();
+}
+
+VpContainer::iterator
+VpContainer::end()
+{
+    return iterator (vps_p.end());
+}
+
+VpContainer::const_iterator
+VpContainer::end() const
+{
+    return const_iterator (vps_p.end());
 }
 
 void
@@ -511,10 +803,55 @@ VpContainer::fillWithSequence (VisibilityProcessor * first, ...)
 	}
 }
 
-boost::tuple<VisibilityProcessor *, VpData>
-VpContainer::findReadyVp (VpSet & vps, VpData & data) const
+VpContainer::ReadyVpAndData
+VpContainer::findReadyVp (VpSet & vps, VpData & data, Bool flushing) const
 {
-    boost::tuple<VisibilityProcessor *, VpData> result (NULL, VpData());
+    if (flushing){
+        return findReadyVpFlushing (vps, data);
+    }
+    else{
+        return findReadyVpNormal (vps, data);
+    }
+}
+
+VpContainer::ReadyVpAndData
+VpContainer::findReadyVpFlushing (VpSet & vpsWaiting, VpData & data) const
+{
+
+    VisibilityProcessor * readyVp = NULL;
+
+    // The first vp in the ordered list to also be in the waiting set is the
+    // one we want.
+
+    for (VPs::const_iterator vp = vps_p.begin(); vp != vps_p.end(); vp ++){
+        if (vpsWaiting.find (* vp) != vpsWaiting.end()){
+            readyVp = * vp;
+            break;
+        }
+    }
+
+    if (readyVp == NULL){
+
+        ThrowIf (! vpsWaiting.empty(), "Could not find ready VP during flush (bug)");
+
+        return ReadyVpAndData (NULL, VpData());
+    }
+
+    // The set of input data will be all of the inputs desired by the node that
+    // are available.  They may not be present if an upstream node didn't have any
+    // data to flush out.
+
+    VpPorts connectedInputList = readyVp -> getInputs (True);
+
+    ReadyVpAndData result = ReadyVpAndData (readyVp, data.getSelection (connectedInputList, True));
+
+    return result;
+}
+
+VpContainer::ReadyVpAndData
+VpContainer::findReadyVpNormal (VpSet & vps, VpData & data) const
+{
+    ReadyVpAndData result (NULL, VpData());
 
     set<VpPort> dataPorts;
     for (VpData::const_iterator d = data.begin(); d != data.end(); d++){
@@ -530,14 +867,14 @@ VpContainer::findReadyVp (VpSet & vps, VpData & data) const
         // Subtract from the needed input ports, the set of available data ports.
         // When the comes up empty then the VP can execute.
 
-        set<VpPort> diff;
+        VpPorts diff;
         set_difference (connectedInputSet.begin(), connectedInputSet.end(),
                         dataPorts.begin(), dataPorts.end(),
-                        inserter (diff, diff.begin()));
+                        back_inserter (diff));
 
         if (diff.empty()){
 
-            result = boost::tuple<VisibilityProcessor *, VpData> (* vp, data.getSelection (connectedInputList));
+            result = ReadyVpAndData (* vp, data.getSelection (connectedInputList));
 
             break;
         }
@@ -545,6 +882,107 @@ VpContainer::findReadyVp (VpSet & vps, VpData & data) const
     }
 
     return result;
+}
+
+bool
+VpContainer::follows (const VisibilityProcessor * a, const VisibilityProcessor * b) const
+{
+    // Go through the interconnection network and see if one of processor b's outputs go to
+    // processor a's inputs
+
+    Bool result = False;
+    for (Network::const_iterator arc = network_p.begin(); arc != network_p.end(); arc ++){
+        if (arc->first.getVp() == b && arc->second.getVp() == a){
+            result = True;
+            break;
+        }
+    }
+
+    return result;
+}
+
+bool
+VpContainer::followsSet (const VisibilityProcessor * a, const VpSet & vpSet) const
+{
+    Bool result = False;
+
+    for (VpSet::const_iterator vp = vpSet.begin(); vp != vpSet.end(); vp++){
+        if (follows (a, * vp)){
+            result = True;
+            break;
+        }
+    }
+
+    return result;
+}
+
+casa::asyncio::PrefetchColumns
+VpContainer::getPrefetchColumns () const
+{
+    PrefetchColumns result;
+
+    for (VPs::const_iterator vp = vps_p.begin(); vp != vps_p.end(); vp ++){
+
+        result = result + (* vp)->getPrefetchColumns();
+
+    }
+
+    return result;
+}
+
+
+void
+VpContainer::orderContents ()
+{
+    // Order the VPs in this container using their dependencies.  Nodes that are only dependent
+    // on the container will be first, then nodes dependent on the first set of nodes, etc.
+
+    VpSet unorderedVps (vps_p.begin(), vps_p.end()); // VPs not assigned an order as of yet
+    VPs orderedVps; // sorted list of VPs
+
+    while (! unorderedVps.empty()){
+
+        VPs nextClass;
+
+        // Create the next class of VPs which are only dependent on previous classes of VPs.
+        // These will be VPs which are not dependent on any of the currently unordered nodes.
+
+        for (VpSet::const_iterator vp = unorderedVps.begin(); vp != unorderedVps.end(); vp ++){
+            if (! followsSet (* vp, unorderedVps)){
+                nextClass.push_back (* vp);
+                orderedVps.push_back (* vp);
+            }
+        }
+
+        // Remove the VPs that are
+
+        for (VPs::const_iterator vp = nextClass.begin(); vp != nextClass.end(); vp++){
+            unorderedVps.erase (* vp);
+        }
+
+        // If no nodes were found then there must be a cycle and the loop will never
+        // terminate!
+
+        ThrowIf (nextClass.size() == 0, format ("VpContainer %s contains a cycle", getName().c_str()));
+
+    }
+
+    vps_p = orderedVps;
+}
+
+void
+VpContainer::processingStartImpl ()
+{
+    iterator i;
+    try{
+        for (i = begin(); i != end(); i++){
+            i->processingStart ();
+        }
+    }
+    catch (AipsError & e){
+        Rethrow (e, format ("Error during processingStart for container '%s' VP '%s'",
+                            getName().c_str(), i->getName().c_str()));
+    }
 }
 
 void
@@ -576,6 +1014,31 @@ VpContainer::remapPorts (VpData & data, const VisibilityProcessor * vp)
     }
 }
 
+size_t
+VpContainer::size() const
+{
+    return vps_p.size();
+}
+
+
+
+void
+VpContainer::validateImpl()
+{
+    iterator i;
+    try{
+        for (i = begin(); i != end(); i++){
+            i->validate ();
+        }
+    }
+    catch (AipsError & e){
+        Rethrow (e, format ("Error during validate for container '%s' VP '%s'",
+                            getName().c_str(), i->getName().c_str()));
+    }
+
+    orderContents(); // put vps_p into dependency order
+}
+
 String
 VpContainer::VpSet::getNames () const
 {
@@ -587,19 +1050,18 @@ VpContainer::VpSet::getNames () const
 VpData::VpData ()
 {}
 
-VpData::VpData (const VpPort & port, VisBuffer * vb, Bool deleteIt)
+VpData::VpData (const VpPort & port, VbPtr vb)
 {
-    add (port, vb, deleteIt);
+    add (port, vb);
 }
 
 void
-VpData::add (const VpPort & port, VisBuffer * vb, Bool deleteIt)
+VpData::add (const VpPort & port, VbPtr vb)
 {
     ThrowIf (utilj::containsKey (port, * this),
             format ("VpData::add: data already present for port %s.", port.getFullName ().c_str()));
 
-    VbPtr vbPtr (vb, deleteIt);
-    (* this) [port] = vbPtr;
+    (* this) [port] = vb;
 }
 
 String
@@ -614,12 +1076,20 @@ VpData::getNames () const
 }
 
 VpData
-VpData::getSelection (const VpPorts & ports) const
+VpData::getSelection (const VpPorts & ports, bool missingIsOk) const
 {
     VpData result;
 
     for (VpPorts::const_iterator port = ports.begin(); port != ports.end(); port ++){
-        result [* port] = find (* port)->second;
+
+        const_iterator data = find (* port);
+
+        if (data != end()){
+            result [* port] = data->second;
+        }
+        else{
+            assert (missingIsOk);
+        }
     }
 
     return result;
@@ -628,6 +1098,7 @@ VpData::getSelection (const VpPorts & ports) const
 
 Int VpEngine::logLevel_p = std::numeric_limits<int>::min();
 LogIO * VpEngine::logIo_p = NULL;
+LogSink * VpEngine::logSink_p = NULL;
 Bool VpEngine::loggingInitialized_p = VpEngine::initializeLogging ();
 
 Bool
@@ -638,7 +1109,11 @@ VpEngine::initializeLogging()
 
     if (logLevel_p >= 0){
 
-        logIo_p = new LogIO (LogOrigin ("VisibilityProdessing"));
+        if (logSink_p == 0){
+            logSink_p = new LogSink(LogMessage::NORMAL, False);
+        }
+
+        logIo_p = new LogIO (LogOrigin ("VisibilityProcessing"));
         * logIo_p << "VisibilityProcessing logging enabled; level=" << logLevel_p << endl << LogIO::POST;
 
     }
@@ -656,6 +1131,12 @@ Int
 VpEngine::getLogLevel ()
 {
     return logLevel_p;
+}
+
+ROVisibilityIterator *
+VpEngine::getVi ()
+{
+    return vi_p;
 }
 
 void
@@ -676,11 +1157,16 @@ VpEngine::log (const String & formatString, ...)
 void
 VpEngine::process (VisibilityProcessor & processor,
                    ROVisibilityIterator & vi,
-                   VpPort inputPort)
+                   const VpPort & inputPortProvided)
 {
     Log (1, "VpEngine::process starting on processor '%s'", processor.getName().c_str());
 
-    VisBufferAutoPtr vb (vi);
+    vi_p = & vi;
+
+    VisBufferAutoPtr vbTemp (vi);
+    VbPtr vb (vbTemp.release());
+
+    VpPort inputPort = inputPortProvided;
 
     if (inputPort.empty()){ // Take single input to VP as default if not specified
 
@@ -698,46 +1184,58 @@ VpEngine::process (VisibilityProcessor & processor,
     processor.processingStart ();
 
     Int chunkNumber = 0;
+    Int subchunkNumber = 0;
 
-    for (vi.originChunks ();
-            vi.moreChunks();
-            vi.nextChunk (), chunkNumber ++){
+    try {
 
-        Int iteration = 0;
-        VisibilityProcessor::ChunkCode chunkCode = VisibilityProcessor::Normal;
+        for (vi.originChunks ();
+                vi.moreChunks();
+                vi.nextChunk (), chunkNumber ++){
 
-        do {  // The VP can request repeating a chunk
+            Int iteration = 0;
+            VisibilityProcessor::ChunkCode chunkCode = VisibilityProcessor::Normal;
 
-            Log (2, "VpEngine::process: Starting chunk %d (iteration=%s)\n",
-                 chunkNumber, iteration);
+            do {  // The VP can request repeating a chunk
 
-            processor.chunkStart (SubChunkIndex (chunkNumber, SubChunkIndex::Invalid, iteration));
+                Log (2, "VpEngine::process: Starting chunk %d (iteration=%d)\n",
+                     chunkNumber, iteration);
 
-            Int subChunkNumber = 0;
+                processor.chunkStart (SubchunkIndex (chunkNumber, SubchunkIndex::Invalid, iteration));
 
-            for (vi.origin (); vi.more (); ++ vi, subChunkNumber ++){
+                subchunkNumber = 0;
 
-                VisibilityProcessor::ProcessingResult ignored;
+                for (vi.origin (); vi.more (); ++ vi, subchunkNumber ++){
 
-                SubChunkIndex sci (chunkNumber, subChunkNumber);
+                    vb->dirtyComponentsClear();
+                    VisibilityProcessor::ProcessingResult ignored;
 
-                Log (2, "VpEngine::process: Starting SubChunk %s (iteration=%s)\n",
-                     sci.toString ().c_str(), iteration);
+                    SubchunkIndex sci (chunkNumber, subchunkNumber, iteration);
 
-                VpData data (inputPort, vb.get());
-                ignored = processor.doProcessing (VisibilityProcessor::SubChunk,
-                                                  data,
-                                                  sci);
-            }
+                    Log (2, "VpEngine::process: Starting Subchunk %s \n",
+                         sci.toString ().c_str());
 
-            VpData noData;
-            VpData ignored;
-            boost::tie (chunkCode, ignored) =
-                    processor.doProcessing (VisibilityProcessor::EndOfChunk,
-                                            noData,
-                                            SubChunkIndex (chunkNumber));
+                    VpData data (inputPort, vb);
+                    ignored = processor.doProcessing (VisibilityProcessor::Subchunk,
+                                                      data,
+                                                      this,
+                                                      sci);
+                }
 
-        } while (chunkCode == VisibilityProcessor::RepeatChunk);
+                VpData noData;
+                VpData ignored;
+                boost::tie (chunkCode, ignored) =
+                        processor.doProcessing (VisibilityProcessor::EndOfChunk,
+                                                noData,
+                                                this,
+                                                SubchunkIndex (chunkNumber, SubchunkIndex::Invalid, iteration));
+
+                iteration ++;
+
+            } while (chunkCode == VisibilityProcessor::RepeatChunk);
+
+        }
+    }
+    catch (AipsError & e){
     }
 
     VisibilityProcessor::ProcessingResult ignored;
@@ -745,11 +1243,21 @@ VpEngine::process (VisibilityProcessor & processor,
 
     ignored = processor.doProcessing (VisibilityProcessor::EndOfData,
                                       noData,
-                                      SubChunkIndex ());
+                                      this,
+                                      SubchunkIndex ());
 
     Log (1, "VpEngine::process completed for processor '%s'", processor.getName().c_str());
 
 }
+
+VpPort::VpPort()
+: connectedInput_p (False),
+  connectedOutput_p (False),
+  name_p (""),
+  visibilityProcessor_p (NULL),
+  type_p (Unknown)
+{}
+
 
 VpPort::VpPort (VisibilityProcessor * vp, const String & name, VpPort::Type type)
 : connectedInput_p (False),
@@ -884,6 +1392,135 @@ VpPorts::getRef (const String & name)
     ThrowIf (i == end(), "No such port '" + name + "'");
 
     return * i;
+}
+
+String
+VpPorts::toString () const
+{
+
+    String result;
+
+    result = utilj::containerToString (begin(), end(), & VpPort::getName);
+
+    return result;
+}
+
+
+WriterVp::WriterVp (const String & name,
+                    VisibilityIterator * vi,
+                    Bool advanceVi,
+                    const String & input,
+                    const String & output)
+: VisibilityProcessor (name, vector<String> (1, input), vector<String> (1, output)),
+  advanceVi_p (advanceVi),
+  disableOutput_p (False),
+  vi_p (vi)
+{
+    ThrowIf (advanceVi_p && vi == NULL,
+             format ("Parameter advanceVi can only be True if a VI is provided for WriterVp '%s',",
+                     name.c_str()));
+}
+
+VisibilityProcessor::ProcessingResult
+WriterVp::doProcessingImpl (ProcessingType /*processingType*/,
+                            VpData & inputData,
+                            const SubchunkIndex & /*subChunkIndex*/)
+{
+    if (inputData.empty()){
+        return ProcessingResult();  // Nothing to write
+    }
+
+    VpPort inputPort = getInputs () [0];
+
+    ThrowIf (! utilj::containsKey (inputPort, inputData),
+             format ("Input data not found for port '%s' in VP '%s'",
+                     inputPort.getName().c_str(),
+                     getName().c_str()));
+
+    // Get the (writable) VisibilityIterator
+
+    VisibilityIterator * vi = vi_p;
+
+    if (vi == NULL){
+
+        // If a VI wasn't provided, then use the one being swept by the VI engine
+
+        vi = dynamic_cast <VisibilityIterator *> (getVi());
+    }
+
+
+    ThrowIf (vi == NULL, format ("No writable VI found in VP '%s'", getName().c_str()));
+
+    // Write out the data to the VI
+
+
+
+    try{
+        if (! disableOutput_p){
+            vi->writeBack (inputData [inputPort].get());
+
+            if (advanceVi_p){
+
+                // Advance VI to the next position.  If the current chunk is exhausted then
+                // advance the chunk and reset to the chunk's origin.
+
+                (* vi) ++;
+                if (! vi->more()){
+                    vi->nextChunk();
+                    if (vi->moreChunks()){
+                        vi->origin();
+                    }
+                }
+            }
+        }
+    }
+    catch (AipsError & e){
+        Rethrow (e, format ("While '%s' writing VB to disk", getName().c_str()));
+    }
+
+    inputData [inputPort] -> dirtyComponentsClear();
+
+    // Output the data if the output of this VP is connected.
+
+    VpData outputData; // Start out with empty outputs
+
+    VpPorts outputs = getOutputs(True); // get connected outputs
+
+    if (! outputs.empty()){
+
+        // An output was connected.
+
+        outputData [outputs [0]] = inputData [inputPort];
+    }
+
+    ProcessingResult processingResult (Normal, outputData);
+
+    return processingResult;
+}
+
+Bool
+WriterVp::setDisableOutput (Bool disableIt)
+{
+    Bool old = disableOutput_p;
+    disableOutput_p = disableIt;
+
+    return old;
+}
+
+void
+WriterVp::validateImpl()
+{
+    throwIfAnyInputsUnconnected ();
+}
+
+
+
+ostream &
+operator<< (ostream & os, const VisibilityProcessor::ProcessingType & processingType)
+{
+    os << toString (processingType);
+
+    return os;
 }
 
 

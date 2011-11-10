@@ -74,10 +74,10 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             antenna = str(range(nant))
             antenna = antenna.lstrip('[')
             antenna = antenna.rstrip(']') 
-            if antenna.find(',')==-1:
+            if antenna.find(',') == -1:
                 antsel = antenna + '&&&'
             else:
-                antsel = antenna.replace(',','&&& ; ')
+                antsel = antenna.replace(',','&&& ; ') + '&&&'
         elif antenna.find('&')==-1 and antenna.find(';')==-1:
             antsel = antenna + '&&&'
         else:

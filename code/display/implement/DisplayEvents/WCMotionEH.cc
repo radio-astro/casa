@@ -34,9 +34,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 WCMotionEH::WCMotionEH() {
 }
 
-void WCMotionEH::operator()(const WCMotionEvent &) {
-}
-
 // Destructor
 WCMotionEH::~WCMotionEH() {
 }

@@ -80,14 +80,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //</todo>
 class VisBufferAsyncWrapper : public VisBufferAsync {
 
-    friend class ROVisibilityIteratorAsync;
+    friend class ViReadImplAsync;
 
 public:
     // Create empty VisBuffer you can assign to or attach.
     VisBufferAsyncWrapper();
 //    // Construct VisBuffer for a particular VisibilityIterator
 //    // The buffer will remain synchronized with the iterator.
-    VisBufferAsyncWrapper (ROVisibilityIteratorAsync & iter);
+    VisBufferAsyncWrapper (ROVisibilityIterator & iter);
 //
 //    // Copy construct, looses synchronization with iterator: only use buffer for
 //    // current iteration (or reattach).
@@ -114,7 +114,8 @@ public:
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
     virtual void attachToVisIter(ROVisibilityIterator & iter);
-    void attachToVisIterAsync (ROVisibilityIteratorAsync & iter);
+    void attachToVisIterAsync (ROVisibilityIterator & iter);
+    virtual VisBuffer * clone ();
     virtual void detachFromVisIter ();
 
     // Invalidate the cache
@@ -131,6 +132,10 @@ public:
 
     Vector<Int>& channel();
     const Vector<Int>& channel() const;
+
+    Bool newArrayId () const;
+    Bool newFieldId () const;
+    Bool newSpectralWindow () const;
 
     Int & nRow();
     Int nRow() const;
@@ -239,7 +244,7 @@ public:
     virtual Int numberCoh () const;
 
     MDirection & phaseCenter();
-    const MDirection & phaseCenter() const;
+    MDirection phaseCenter() const;
 
     Int polFrame() const;
 
@@ -319,8 +324,8 @@ public:
     Cube<Float>& weightSpectrum();
     const Cube<Float>& weightSpectrum() const;
 
-    Matrix<Float>& imagingWeight();
     const Matrix<Float>& imagingWeight() const;
+    Matrix<Float> & imagingWeight ();
 
     Cube<Float>& weightCube();
     //</group>
@@ -452,12 +457,78 @@ protected:
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line) const;
     void copyCache (const VisBuffer & other, Bool force);
+    const VisImagingWeight & getImagingWeightGenerator () const;
+    Int getOldMsId () const;
+    ROVisibilityIterator * getVisibilityIterator () const;
     VisBufferAsync * releaseVba ();
+
+    // Create cache status accessors which relay the request to the wrapped
+    // VBA.
+
+#undef CacheStatus
+#define CacheStatus(item)\
+Bool item ## OK () const\
+{\
+    if (wrappedVba_p == NULL){\
+        throw AipsError ("VisBufferAsyncWrapper: No attached VBA", __FILE__, __LINE__);\
+    }\
+    return wrappedVba_p->item ## OK_p;\
+}
+
+    CacheStatus (antenna1);
+    CacheStatus (antenna2);
+    CacheStatus (arrayId);
+    CacheStatus (channel);
+    CacheStatus (cjones);
+    CacheStatus (correctedVisCube);
+    CacheStatus (correctedVisibility);
+    CacheStatus (corrType);
+    CacheStatus (direction1);
+    CacheStatus (direction2);
+    CacheStatus (exposure);
+    CacheStatus (feed1_pa);
+    CacheStatus (feed1);
+    CacheStatus (feed2_pa);
+    CacheStatus (feed2);
+    CacheStatus (fieldId);
+    CacheStatus (flagCategory);
+    CacheStatus (flagCube);
+    CacheStatus (flag);
+    CacheStatus (flagRow);
+    CacheStatus (floatDataCube);
+    CacheStatus (frequency);
+    CacheStatus (imagingWeight);
+    CacheStatus (modelVisCube);
+    CacheStatus (modelVisibility);
+    CacheStatus (ms);
+    CacheStatus (nChannel);
+    CacheStatus (nCorr);
+    CacheStatus (nRow);
+    CacheStatus (observationId);
+    CacheStatus (phaseCenter);
+    CacheStatus (polFrame);
+    CacheStatus (processorId);
+    CacheStatus (rowIds);
+    CacheStatus (scan);
+    CacheStatus (sigmaMat);
+    CacheStatus (sigma);
+    CacheStatus (spectralWindow);
+    CacheStatus (stateId);
+    CacheStatus (timeCentroid);
+    CacheStatus (timeInterval);
+    CacheStatus (time);
+    CacheStatus (uvwMat);
+    CacheStatus (uvw);
+    CacheStatus (visCube);
+    CacheStatus (visibility);
+    CacheStatus (weightMat);
+    CacheStatus (weight);
+    CacheStatus (weightSpectrum);
 
 private:
 
     VisBufferAsync * wrappedVba_p;
-    ROVisibilityIteratorAsync * wrappedVisIterAsync_p;
+    ROVisibilityIterator * wrappedVisIterAsync_p;
 
     // validate the cache
     void validate();
@@ -515,7 +586,7 @@ private:
     Vector<Bool> & fillFlagRow();
     Cube<Float>& fillFloatDataCube();
     Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
-    Matrix<Float>& fillImagingWeight();
+    //Matrix<Float>& fillImagingWeight();
     //Vector<Double>& fillLSRFreq();
     Int & fillnChannel();
     Int & fillnCorr();

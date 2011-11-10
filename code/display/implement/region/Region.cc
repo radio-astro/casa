@@ -26,7 +26,7 @@ namespace casa {
 	int Region::zIndex( ) const { return wc_ == 0 ? last_z_index : wc_->zIndex( ); }
 
 	void Region::setDrawingEnv( ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if(pc==0) return;
 
@@ -61,7 +61,7 @@ namespace casa {
 	}
 
 	void Region::resetDrawingEnv( ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if ( pc == 0 ) return;
 
@@ -101,7 +101,7 @@ namespace casa {
 	}
 
 	void Region::refresh( ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if ( pc == 0 ) return;
 	    pc->copyBackBufferToFrontBuffer();
@@ -110,7 +110,7 @@ namespace casa {
 	}
 
 	void Region::draw( ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    // When stepping through a cube, this detects that a different plane is being displayed...
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -142,7 +142,7 @@ namespace casa {
 	}
 
 	void Region::drawText( ) { 
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 
 	    double lin_blc_x, lin_blc_y, lin_trc_x, lin_trc_y;
@@ -284,11 +284,15 @@ namespace casa {
 	void Region::getPositionString( std::string &x, std::string &y, std::string &angle,
 					Region::Coord coord, Region::Units new_units ) const {
 	    if ( wc_ == 0 ) {
-		x = "internal error";
-		y = "internal error";
-		angle = "internal error";
+		x = y = angle = "internal error";
 		return;
 	    }
+
+	    if ( wc_->csMaster() == 0 ) {
+		x = y = angle = "no wcs";
+		return;
+	    }
+	      
 
 	    if ( coord == DefaultCoord ) coord = current_region_coordsys( );
 	    if ( new_units == DefaultUnits ) new_units = current_units( );
@@ -347,7 +351,7 @@ namespace casa {
 	void Region::movePosition( const std::string &x, const std::string &y,
 				   const std::string &coord, const std::string &units ) {
 
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    double blc_x, blc_y, trc_x, trc_y;
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
@@ -406,7 +410,8 @@ namespace casa {
 	}
 
 	MDirection::Types Region::current_casa_coordsys( ) const {
-	    if ( wc_ == 0 ) return MDirection::J2000;
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return MDirection::J2000;
 
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 	    int index = cs.findCoordinate(Coordinate::DIRECTION);
@@ -418,7 +423,7 @@ namespace casa {
 	}
 
 	Region::Units Region::current_units( ) const {
-	    if ( wc_ == 0 ) return Degrees;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return Degrees;
 	    const Vector<String> &units = wc_->worldAxisUnits();
 	    if ( units(0) == "rad" )
 		return Radians;
@@ -431,7 +436,7 @@ namespace casa {
       
 
 	void Region::set_line_style( LineStyle linestyle ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if ( pc == 0 ) return;
 	    switch ( linestyle ) {
@@ -629,6 +634,14 @@ namespace casa {
 	    // END - critical section
 	}
 
+	void screen_offset_to_linear_offset( WorldCanvas *wc_, int sx, int sy, double &lx, double &ly ) {
+	    const int base = 200;
+	    double blcx, blcy, trcx, trcy;
+	    screen_to_linear( wc_, base, base, base+sx, base+sy, blcx, blcy, trcx, trcy );
+	    lx = trcx - blcx;
+	    ly = trcy - blcy;
+	}
+
 	void linear_to_world( WorldCanvas *wc, double lin_x, double lin_y, double &world_x, double &world_y ) {
 
 	    if ( wc == 0 )
@@ -690,6 +703,30 @@ namespace casa {
 	    // END - critical section
 	}
 
+	void world_to_linear( WorldCanvas *wc, double world_x1, double world_y1, double world_x2, double world_y2,
+			      double &lin_x1, double &lin_y1, double &lin_x2, double &lin_y2 ) {
+
+	    if ( wc == 0 )
+		throw internal_error( "coordinate transformation without coordinate system" );
+
+	    // BEGIN - critical section
+	    static Vector<Double> worldv(2);	// avoid vector allocation for each conversion
+	    static Vector<Double> linearv(2);
+	    worldv(0) = world_x1;
+	    worldv(1) = world_y1;
+	    if ( ! wc->worldToLin( linearv, worldv ) )
+		throw internal_error( "world to linear conversion failed" );
+	    lin_x1 = linearv(0);
+	    lin_y1 = linearv(1);
+
+	    worldv(0) = world_x2;
+	    worldv(1) = world_y2;
+	    if ( ! wc->worldToLin( linearv, worldv ) )
+		throw internal_error( "world to linear conversion failed" );
+	    lin_x2 = linearv(0);
+	    lin_y2 = linearv(1);
+	    // END - critical section
+	}
 
 	void pixel_to_world( WorldCanvas *wc, int pix_x1, int pix_y1, double &world_x1, double &world_y1 ) {
 
@@ -777,7 +814,7 @@ namespace casa {
 
 		    Vector<String> axesNames = padd->worldToPixelAxisNames( cs );
 		    String haxis = axesNames(_axis_h_);
-		    Int hIndex = _axis_h_ - 2 + padd->uiBase( );		// uiBase( ) sets zero/one based
+		    Int hIndex = padd->xlateFixedPixelAxes(_axis_h_) + padd->uiBase( );		// uiBase( ) sets zero/one based
 		    Int zIndex = padd->activeZIndex();
 
 		    String zUnit, zspKey, zspVal;
@@ -911,11 +948,11 @@ namespace casa {
 
 		} catch (const casa::AipsError& err) {
 		    std::string errMsg_ = err.getMesg();
-		    fprintf( stderr, ">*>>*>>*>>*>>*>>*>>*>>*>>*>>*> %s\n", errMsg_.c_str() );
+		    // fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
 		    return 0;
 		} catch (...) {
 		    std::string errMsg_ = "Unknown error computing region statistics.";
-		    fprintf( stderr, ">>>>>>>>>>*>>*>>*>>*>>*>>*>>*> %s\n", errMsg_.c_str() );
+		    // fprintf( stderr, "Region::getLayerStats( ): %s\n", errMsg_.c_str() );
 		    return 0;
 		}
 	}

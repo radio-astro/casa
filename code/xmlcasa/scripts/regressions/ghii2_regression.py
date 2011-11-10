@@ -125,6 +125,19 @@ diffstats = {'max': 0.10808,
              'sigma': 0.021848,
              'sum': 3288.4 }
 
+# Kumar's rev 16734 changes values
+refstats = { 'max': 0.68649,
+             'min': -0.045166,
+             'rms': 0.045177,
+             'sigma': 0.044663,
+             'sum': 1079.1 }
+
+diffstats = {'max': 0.093365,
+             'min': -0.012181,
+             'rms': 0.036545,
+             'sigma': 0.020989,
+             'sum': 3238.2 }
+
 # Allowed tolerance
 reftol   = {'sum':  0.1,
             'max':  0.04,

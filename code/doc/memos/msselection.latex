@@ -27,7 +27,7 @@
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: Sept. 03, 2009)}}
+\date{June 15, 2007\\{\small (Updated: Feb. 05, 2011)}}
 \maketitle
 \normalsize
 \markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
@@ -92,7 +92,7 @@ point number is given where only integers are expected (e.g. indexes),
 the floating point value is truncated to the nearest integer.
 
 \subsection{Range specification}
-
+\label{Sec:RANGE}
 Range of numbers (integers or real numbers) can be given in the format
 N0$\sim$N1.  Integer ranges are expanded into a list of integers
 starting from N0 (inclusive) to N1 (inclusive).  Range of real numbers
@@ -127,7 +127,7 @@ the end) and it applies to both the range boundaries. E.g.
 \end{itemize}
 
 \subsection{Strings}
-
+\label{Sec:STRINGS}
 String matching can be done in three ways.  Any component of a comma
 separated list that cannot be parsed as number/number range/physical
 quantity is treated as a regular expression or a literal string.  If
@@ -316,41 +316,47 @@ Possible forms of baseline specifications are tabulated in
 Table~\ref{BASELINE:TAB}.
 
 \begin{table}[h!]
-\caption{Baseline specification syntax}
-\label{BASELINE:TAB}
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
 {\bf Specification} & {\bf Meaning}\\
 \hline
-ANT    & Select only cross-correlation baselines between all the \\
-       & antennas in ANT and {\it all} other available antennas \\
+ANT    & Select only cross-correlation baselines between all the\\
+       & antennas in ANT and {\it all} other available antennas\\
 \hline
-ANT\&  & Select only cross-correlation baselines between antennas \\
+ANT\&  & Select only cross-correlation baselines between antennas\\
        & in ANT only\\
 \hline
-ANT1\&ANT2 & Select only cross-correlation baselines between \\
+ANT1\&ANT2 & Select only cross-correlation baselines between\\
        & antennas in ANT1 and ANT2\\
 \hline
-ANT\&\& & Select cross- {\it and} auto-correlation baselines \\
+ANT\&\& & Select cross- {\it and} auto-correlation baselines\\
        &between all the antennas in ANT only\\
 \hline
-ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines \\
+ANT\&\&* & Select cross- {\it and} auto-correlation baselines\\
+       &between all the antennas in ANT and {\it all} other\\
+       &available antennas\\
+\hline
+ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines\\
        & between antennas in ANT1 and ANT2\\
 \hline
-ANT\&\&\&  & Select {\it only} auto-correlation baselines for \\
+ANT\&\&\&  & Select {\it only} auto-correlation baselines for\\
        &antennas in ANT\\
 \hline
-!ANT  & Excludes all baselines involving antennas in ANT. ANT can be \\
-      & any of the above expressions \\
+!ANT  & Excludes all baselines involving antennas in ANT.\\
+      & ANT can be any of the above expressions\\
 \hline
-ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions. This\\
-             & selects only cross-correlation baselines between all the \\
-             & antennas in ANT1 and {\it all} other available antennas\\
-             & {\bf except} those involving antennas in ANT2. \\ 
+ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions.\\
+             & This selects only cross-correlation baselines\\
+             & between all the antennas in ANT1 and {\it all}\\
+             & other available antennas {\bf except} those involving\\ 
+             & antennas in ANT2.\\ 
 \hline
 \end{tabular}
 \end{center}
+\caption{Baseline specification syntax: ANT, ANT1 and ANT2 represent a
+  comma-separated list of antennas.} 
+\label{BASELINE:TAB}
 \end{table}
 
 \subsubsection{Baseline negation operator}
@@ -743,7 +749,7 @@ consists of comma separated list of full specifications.  The
 separator for lists for the individual parts of the specification
 (i.e. {\tt SPW}, {\tt POL}, etc.) is semi-colon. However note that if
 the optional qualifiers are omitted (i.e., {\tt SPW} etc.), either of
-the separaters can be used (comma or semi-colon).  Thus {\tt "RR;LL"}
+the separators can be used (comma or semi-colon).  Thus {\tt "RR;LL"}
 is equivalent to {\tt "RR,LL"}.
 
 The {\tt POL} specification is a semi-colon separated list of
@@ -763,6 +769,7 @@ as a comma separated list.  E.g.
   window 0 and LR and RL from spectral window 1.
 \end{itemize}
 
+\section{"Scan intent'' Based Selection}
 
 "Scan intent" selection is based on the entries in the {\tt
   "OBS\_MODE"} column of the {\tt "STATE"} sub-table.  The main table
@@ -928,28 +935,28 @@ hierarchy:
 
 \begin{center}
 \begin{verbatim}
-                          AipsError
-                              o
-                              |
-                              |
-                       MSSelectionError
-                              o
-                              |
-                              |
-     MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray}Error
-                              o
-                              |
-                              |
-   MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray}ParseError
+                             AipsError
+                                 o
+                                 |
+                                 |
+                          MSSelectionError
+                                 o
+                                 |
+                                 |
+  MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}Error
+                                 o
+                                 |
+                                 |
+MSSelection{Time,Spw,UvDist,Antenna,Scan,Subarray,Poln,State}ParseError
 \end{verbatim}
 \end{center}
 
 All parsing errors are reported by throwing the {\tt
   MSSelection\{Time, Spw, Field, UvDist, Antenna, Scan,
-  Subarray\}ParseError} exception.  All other forms of errors
+  Subarray,Poln,State\}ParseError} exception.  All other forms of errors
 (e.g. illegal range specification N0$\sim$N1 where N0 $>$ N1) are
 reported by throwing an exception of type {\tt MSSelection\{Time, Spw,
-  Field, UvDist, Antenna, Scan, Subarray\}Error}.
+  Field, UvDist, Antenna, Scan, Subarray,Poln,State\}Error}.
 
 Hence, to catch all errors thrown from the MSSelection sub-system,
 catch the MSSelectionError object.  For more specific exception

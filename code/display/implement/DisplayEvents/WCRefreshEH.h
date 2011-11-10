@@ -100,7 +100,7 @@ class WCRefreshEH : public DisplayEH {
   WCRefreshEH();
 
   // original handler interface (still used for WCRefreshEvents)
-  virtual void operator ()(const WCRefreshEvent & ev);
+  virtual void operator ()(const WCRefreshEvent & ev) = 0;
 
   // Destructor
   virtual ~WCRefreshEH();

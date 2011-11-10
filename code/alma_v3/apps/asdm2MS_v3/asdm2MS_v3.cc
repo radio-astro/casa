@@ -1178,7 +1178,8 @@ int main(int argc, char *argv[]) {
       ("ignore-time,t", "all the rows of the tables Feed, History, Pointing, Source, SysCal, CalDevice, SysPower and Weather are processed independently of the time range of the selected exec block / scan.")
       ("no-syspower", "the SysPower table will be  ignored.")
       ("no-caldevice", "The CalDevice table will be ignored.")
-      ("no-pointing", "The Pointing table will be ignored.") ;
+      ("no-pointing", "The Pointing table will be ignored.")
+      ("check-row-uniqueness", "The row uniqueness constraint will be checked in the tables where it's defined");
 
     // Hidden options, will be allowed both on command line and
     // in config file, but will not be shown to the user.
@@ -1222,7 +1223,7 @@ int main(int argc, char *argv[]) {
     verbose = vm.count("verbose") > 0;
    
     // Revision ? displays revision's info and don't go further if there is no dataset to process otherwise proceed....
-    string revision = "$Id: asdm2MS.cpp,v 1.83 2011/09/16 14:37:34 mcaillat Exp $\n";
+    string revision = "$Id: asdm2MS.cpp,v 1.84 2011/10/25 14:56:48 mcaillat Exp $\n";
     if (vm.count("revision")) {
       if (!vm.count("asdm-directory")) {
 	errstream.str("");
@@ -1398,12 +1399,22 @@ int main(int argc, char *argv[]) {
   mode = 0; myTimer(&cpu_time_parse_xml, &real_time_parse_xml, &mode);
 
   ASDM* ds = new ASDM();
+  bool  checkRowUniqueness = vm.count("check-row-uniqueness") != 0;
+  infostream.str("");
+
+  if (checkRowUniqueness) 
+    infostream << "Row uniqueness constraint will be applied." << endl;
+  else
+    infostream << "Row uniqueness constraint will be ignored." << endl;
+
+  info(infostream.str());
 
   try {
     infostream.str("");
     infostream << "Input ASDM dataset : " << dsName << endl;
     info(infostream.str());
-    ds->setFromFile(dsName, true);
+    
+    ds->setFromFile(dsName, ASDMParseOptions().loadTablesOnDemand(true).checkRowUniqueness(checkRowUniqueness));
   }
   catch (ConversionException e) {
     errstream.str("");
@@ -1510,10 +1521,10 @@ int main(int argc, char *argv[]) {
     scansOptionInfo = "All scans of all exec blocks will be processed \n";
   }
 
-  bool	ignoreTime	 = vm.count("ignore-time") != 0;
-  bool	processSysPower	 = vm.count("no-syspower") == 0;
-  bool	processCalDevice = vm.count("no-caldevice") == 0;
-  bool  processPointing  = vm.count("no-pointing") == 0;
+  bool	ignoreTime	   = vm.count("ignore-time") != 0;
+  bool	processSysPower	   = vm.count("no-syspower") == 0;
+  bool	processCalDevice   = vm.count("no-caldevice") == 0;
+  bool  processPointing	   = vm.count("no-pointing") == 0;
 
   //
   // Report the selection's parameters.

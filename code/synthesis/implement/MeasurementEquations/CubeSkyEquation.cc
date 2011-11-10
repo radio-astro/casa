@@ -68,10 +68,7 @@
 #include <msvis/MSVis/VisBufferUtil.h>
 #include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisibilityIterator.h>
-#include <msvis/MSVis/VisibilityIteratorAsync.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferAsync.h>
-//#include <synthesis/Utilities/ThreadTimers.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -245,8 +242,10 @@ void CubeSkyEquation::init(FTMachine& ft){
       iftm_p[k]=new MultiTermFT(static_cast<MultiTermFT &>(*ift_));
     }
      for (Int k=0; k < (nmod); ++k){ 
-      ftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
-      iftm_p[k]->setMiscInfo(sm_->getTaylorIndex(k));
+       uInt tayindex = k/(sm_->numberOfModels()/sm_->numberOfTaylorTerms());
+       //       cout << "CubeSkyEqn : model : " << k << " : setting taylor index : " << tayindex << endl;
+       ftm_p[k]->setMiscInfo(tayindex);
+      iftm_p[k]->setMiscInfo(tayindex);
     }
   }
   else if (ft.name() == "SDGrid") {
@@ -625,53 +624,59 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
 
     using namespace casa::asyncio;
 
-    PrefetchColumns prefetchColumns = ROVIA::prefetchColumns (Ant1,
-                                                              Ant2,
-                                                              ArrayId,
-                                                              Direction1,
-                                                              Direction2,
-                                                              Feed1,
-                                                              Feed1_pa,
-                                                              Feed2,
-                                                              Feed2_pa,
-                                                              FieldId,
-                                                              FlagCube,
-                                                              FlagRow,
-                                                              Freq,
-                                                              ImagingWeight,
-                                                              NChannel,
-                                                              NCorr,
-                                                              NRow,
-                                                              ObservedCube,
-                                                              PhaseCenter,
-                                                              PolFrame,
-                                                              SpW,
-                                                              casa::asyncio::Time,
-                                                              Uvw,
-                                                              -1);
+    asyncio::PrefetchColumns prefetchColumns =
+            PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
+                                              VisBufferComponents::Ant2,
+                                              VisBufferComponents::ArrayId,
+                                              VisBufferComponents::Direction1,
+                                              VisBufferComponents::Direction2,
+                                              VisBufferComponents::Feed1,
+                                              VisBufferComponents::Feed1_pa,
+                                              VisBufferComponents::Feed2,
+                                              VisBufferComponents::Feed2_pa,
+                                              VisBufferComponents::FieldId,
+                                              VisBufferComponents::FlagCube,
+                                              VisBufferComponents::Flag,
+                                              VisBufferComponents::FlagRow,
+                                              VisBufferComponents::Freq,
+                                              VisBufferComponents::NChannel,
+                                              VisBufferComponents::NCorr,
+                                              VisBufferComponents::NRow,
+                                              VisBufferComponents::ObservedCube,
+                                              VisBufferComponents::PhaseCenter,
+                                              VisBufferComponents::PolFrame,
+                                              VisBufferComponents::SpW,
+                                              VisBufferComponents::Time,
+                                              VisBufferComponents::Uvw,
+                                              VisBufferComponents::UvwMat,
+                                              VisBufferComponents::Weight,
+                                              -1);
 
-        Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
+    Bool addCorrectedVisCube = !(rvi_p->msColumns().correctedData().isNull());
 
-        if (addCorrectedVisCube){
-            prefetchColumns.insert (CorrectedCube);
-            // This can cause an error if a multi-MS has a mixture of MSs with corrected
-            // and without corrected data columns.
-        }
-
-
-//        rvi_p = ROVisibilityIteratorAsync::create (vi, prefetchColumns);
-////        if (dynamic_cast<VisibilityIterator *> (& vi) != NULL){
-////            dynamic_cast<ROVisibilityIteratorAsync *> (rvi_p) -> linkWithRovi (& vi);
-////        }
-//        destroyVisibilityIterator_p = True;
-//        vb_p.set (rvi_p); // replace existing VB with a potentially async one
+    if (addCorrectedVisCube){
+        prefetchColumns.insert (VisBufferComponents::CorrectedCube);
+        // This can cause an error if a multi-MS has a mixture of MSs with corrected
+        // and without corrected data columns.
+    }
 
     ROVisibilityIterator * oldRvi = NULL;
+    VisibilityIterator * oldWvi = NULL;
 
-    if (! commitModel && ROVisibilityIteratorAsync::isAsynchronousIoEnabled()){
+    if (ROVisibilityIterator::isAsynchronousIoEnabled()){
+
+        vb_p->detachFromVisIter();
         oldRvi = rvi_p;
-        rvi_p = ROVisibilityIteratorAsync::create (* rvi_p, prefetchColumns);
-        vb_p.set (rvi_p);  // detach from current vi
+
+        if (wvi_p != NULL){
+            oldWvi = wvi_p;
+            wvi_p = new VisibilityIterator (& prefetchColumns, * wvi_p);
+            rvi_p = wvi_p;
+        }
+        else{
+            rvi_p = new ROVisibilityIterator (& prefetchColumns, * rvi_p);
+        }
+
     }
     //    Timers tInitGrad=Timers::getTime();
     sm_->initializeGradients();
@@ -685,7 +690,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     checkVisIterNumRows(*rvi_p);
     VisBufferAutoPtr vb (rvi_p);
     //    Timers tVisAutoPtr=Timers::getTime();
-    
+
     /**** Do we need to do this
   if( (sm_->isEmpty(0))  && !initialized && !incremental){ 
     // We are at the begining with an empty model as starting point
@@ -742,86 +747,86 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         //sliceCube(imGetSlice_p, model, cubeSlice, nCubeSlice, 1);
         //Redo the channel selection in case of chunked cube to match
         //data needed for gridding.
-      //        Timers tGetFreqRange=Timers::getTime();
+        //        Timers tGetFreqRange=Timers::getTime();
         changedVI= getFreqRange(*rvi_p, sm_->cImage(0).coordinates(),
                                 cubeSlice, nCubeSlice) || changedVI;
 
-	//	Timers tOrigChunks=Timers::getTime();
+        //	Timers tOrigChunks=Timers::getTime();
         rvi_p->originChunks();
         rvi_p->origin();
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
-	//	Timers tVBInValid=Timers::getTime();
-        vb->invalidate();
+        //	Timers tVBInValid=Timers::getTime();
+        ///////////////////jhj-111103 vb->invalidate();
 
-	//	Timers tInitGetSlice=Timers::getTime();
+        //	Timers tInitGetSlice=Timers::getTime();
         if(!isEmpty){
             initializeGetSlice(* vb, 0, False, cubeSlice, nCubeSlice);
         }
-	//	Timers tInitPutSlice=Timers::getTime();
+        //	Timers tInitPutSlice=Timers::getTime();
         initializePutSlice(* vb, cubeSlice, nCubeSlice);
-	//	Timers tDonePutSlice=Timers::getTime();
+        //	Timers tDonePutSlice=Timers::getTime();
         Int cohDone=0;
         ProgressMeter pm(1.0, Double(vb->numberCoh()),
                          "Gridding residual",
                          "", "", "", True);
-	// aGetFreq += tOrigChunks - tGetFreqRange;
-	// aOrigChunks += tVBInValid - tOrigChunks;
-	// aVBInValid += tInitGetSlice - tVBInValid;
-	// aInitGetSlice += tInitPutSlice - tInitGetSlice;
-	// aInitPutSlice += tDonePutSlice - tInitPutSlice;
+        // aGetFreq += tOrigChunks - tGetFreqRange;
+        // aOrigChunks += tVBInValid - tOrigChunks;
+        // aVBInValid += tInitGetSlice - tVBInValid;
+        // aInitGetSlice += tInitPutSlice - tInitGetSlice;
+        // aInitPutSlice += tDonePutSlice - tInitPutSlice;
 
         for (rvi_p->originChunks();rvi_p->moreChunks();rvi_p->nextChunk()) {
             for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++) {
 
-	      //	      Timers tInitModel=Timers::getTime();
+                //	      Timers tInitModel=Timers::getTime();
                 if(!incremental && !predictedComp) {
                     //This here forces the modelVisCube shape and prevents reading model column
                     vb->setModelVisCube(Complex(0.0,0.0));
                 }
                 // get the model visibility and write it to the model MS
-		//	Timers tGetSlice=Timers::getTime();
-		//		Timers tgetSlice=Timers::getTime();
+                //	Timers tGetSlice=Timers::getTime();
+                //		Timers tgetSlice=Timers::getTime();
                 if(!isEmpty)
                     getSlice(* vb, (predictedComp || incremental), cubeSlice, nCubeSlice);
                 //saving the model for self-cal most probably
-		//	Timers tSetModel=Timers::getTime();
-		//		Timers tsetModel=Timers::getTime();
+                //	Timers tSetModel=Timers::getTime();
+                //		Timers tsetModel=Timers::getTime();
                 if(commitModel && !noModelCol_p)
                     wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
                 // Now lets grid the -ve of residual
                 // use visCube if there is no correctedData
-		//		Timers tGetRes=Timers::getTime();
-		if (!iftm_p[0]->canComputeResiduals())
-		  if(!useCorrected) vb->modelVisCube()-=vb->visCube();
-		  else              vb->modelVisCube()-=vb->correctedVisCube();
-		else
-		  iftm_p[0]->ComputeResiduals(*vb,useCorrected);
+                //		Timers tGetRes=Timers::getTime();
+                if (!iftm_p[0]->canComputeResiduals())
+                    if(!useCorrected) vb->modelVisCube()-=vb->visCube();
+                    else              vb->modelVisCube()-=vb->correctedVisCube();
+                else
+                    iftm_p[0]->ComputeResiduals(*vb,useCorrected);
 
 
-		//		Timers tPutSlice = Timers::getTime();
+                //		Timers tPutSlice = Timers::getTime();
                 putSlice(* vb, False, FTMachine::MODEL, cubeSlice, nCubeSlice);
                 cohDone+=vb->nRow();
                 pm.update(Double(cohDone));
-		// Timers tDoneGridding=Timers::getTime();
-		// aInitModel += tgetSlice - tInitModel;
-		// aGetSlice += tsetModel - tgetSlice;
-		// aSetModel += tGetRes - tsetModel;
-		// aGetRes += tPutSlice - tGetRes;
-		// aPutSlice += tDoneGridding - tPutSlice;
-		// aExtra += tDoneGridding - tInitModel;
+                // Timers tDoneGridding=Timers::getTime();
+                // aInitModel += tgetSlice - tInitModel;
+                // aGetSlice += tsetModel - tgetSlice;
+                // aSetModel += tGetRes - tsetModel;
+                // aGetRes += tPutSlice - tGetRes;
+                // aPutSlice += tDoneGridding - tPutSlice;
+                // aExtra += tDoneGridding - tInitModel;
             }
         }
 
-	//	Timers tFinalizeGetSlice=Timers::getTime();
+        //	Timers tFinalizeGetSlice=Timers::getTime();
         finalizeGetSlice();
         if(!incremental&&!initialized) initialized=True;
-	//	Timers tFinalizePutSlice=Timers::getTime();
+        //	Timers tFinalizePutSlice=Timers::getTime();
         finalizePutSlice(* vb, cubeSlice, nCubeSlice);
-	//	Timers tDoneFinalizePutSlice=Timers::getTime();
-	
-	// aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
-	// aFinalizePutSlice += tDoneFinalizePutSlice - tFinalizePutSlice;
+        //	Timers tDoneFinalizePutSlice=Timers::getTime();
+
+        // aFinalizeGetSlice += tFinalizePutSlice - tFinalizeGetSlice;
+        // aFinalizePutSlice += tDoneFinalizePutSlice - tFinalizePutSlice;
     }
 
     for (Int model=0;model<sm_->numberOfModels();model++) {
@@ -841,34 +846,47 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
     // If using async, put things back the way they were.
 
     if (oldRvi != NULL){
+
         delete vb.release(); // get rid of local attached to Vi
-        vb_p.set (oldRvi);   // reattach vb_p to the old vi
-        delete rvi_p;        // kill the new vi
+        //vb_p.set (oldRvi);   // reattach vb_p to the old vi
+
+        if (oldWvi != NULL){
+            delete wvi_p;
+            wvi_p = oldWvi;
+        }
+        else{
+            delete rvi_p;        // kill the new vi
+        }
+
         rvi_p = oldRvi;      // make the old vi the current vi
+        rvi_p->originChunks(); // reset it
+        vb_p->attachToVisIter(* rvi_p);
     }
-   // cerr << "gradChiSq: "
-   // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " " 
-   // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " " 
-   // 	<< "ChangeStokes = " << aChangeStokes.formatAverage().c_str() << " " 
-   // 	<< "CheckVisRows = " << aCheckVisRows.formatAverage().c_str() << " " 
-   // 	<< "GetFreq = " << aGetFreq.formatAverage().c_str() << " " 
-   // 	<< "OrigChunks = " << aOrigChunks.formatAverage().c_str() << " " 
-   // 	<< "VBInValid = " << aVBInValid.formatAverage().c_str() << " " 
-   // 	<< "InitGetSlice = " << aInitGetSlice.formatAverage().c_str() << " " 
-   // 	<< "InitPutSlice = " << aInitPutSlice.formatAverage().c_str() << " " 
-   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
-   // 	<< "FinalGetSlice = " << aFinalizeGetSlice.formatAverage().c_str() << " " 
-   // 	<< "FinalPutSlice = " << aFinalizePutSlice.formatAverage().c_str() << " " 
-   // 	<< endl;
-   
-   // cerr << "VB loop: " 
-   // 	<< "InitModel = " << aInitModel.formatAverage().c_str() << " " 
-   // 	<< "GetSlice = " << aGetSlice.formatAverage().c_str() << " " 
-   // 	<< "SetModel = " << aSetModel.formatAverage().c_str() << " " 
-   // 	<< "GetRes = " << aGetRes.formatAverage().c_str() << " " 
-   // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " " 
-   // 	<< "Extra = " << aExtra.formatAverage().c_str() << " " 
-   // 	<< endl;
+
+
+    // cerr << "gradChiSq: "
+    // 	<< "InitGrad = " << aInitGrad.formatAverage().c_str() << " "
+    // 	<< "GetChanSel = " << aGetChanSel.formatAverage().c_str() << " "
+    // 	<< "ChangeStokes = " << aChangeStokes.formatAverage().c_str() << " "
+    // 	<< "CheckVisRows = " << aCheckVisRows.formatAverage().c_str() << " "
+    // 	<< "GetFreq = " << aGetFreq.formatAverage().c_str() << " "
+    // 	<< "OrigChunks = " << aOrigChunks.formatAverage().c_str() << " "
+    // 	<< "VBInValid = " << aVBInValid.formatAverage().c_str() << " "
+    // 	<< "InitGetSlice = " << aInitGetSlice.formatAverage().c_str() << " "
+    // 	<< "InitPutSlice = " << aInitPutSlice.formatAverage().c_str() << " "
+    // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " "
+    // 	<< "FinalGetSlice = " << aFinalizeGetSlice.formatAverage().c_str() << " "
+    // 	<< "FinalPutSlice = " << aFinalizePutSlice.formatAverage().c_str() << " "
+    // 	<< endl;
+
+    // cerr << "VB loop: "
+    // 	<< "InitModel = " << aInitModel.formatAverage().c_str() << " "
+    // 	<< "GetSlice = " << aGetSlice.formatAverage().c_str() << " "
+    // 	<< "SetModel = " << aSetModel.formatAverage().c_str() << " "
+    // 	<< "GetRes = " << aGetRes.formatAverage().c_str() << " "
+    // 	<< "PutSlice = " << aPutSlice.formatAverage().c_str() << " "
+    // 	<< "Extra = " << aExtra.formatAverage().c_str() << " "
+    // 	<< endl;
 }
 
 void  CubeSkyEquation::isLargeCube(ImageInterface<Complex>& theIm, 
@@ -990,7 +1008,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
             firstOneChangesGet_p=False;
 
         if(!isBeginingOfSkyJonesCache_p){
-            finalizePutSlice(* vb_p,  cubeSlice, nCubeSlice);
+            finalizePutSlice(vb,  cubeSlice, nCubeSlice);
         }
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;

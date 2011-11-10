@@ -86,7 +86,10 @@
 import os
 from taskinit import *
 
-def immoments( imagename, moments, axis, region, box, chans, stokes, mask, includepix, excludepix, outfile):
+def immoments(
+    imagename, moments, axis, region, box, chans, stokes,
+    mask, includepix, excludepix, outfile, stretch
+):
     
     retValue=None
     casalog.origin('immoments')
@@ -120,7 +123,8 @@ def immoments( imagename, moments, axis, region, box, chans, stokes, mask, inclu
         retValue = _myia.moments(
             moments=moments, axis=int(axis), mask=mask,
             region=reg, includepix=includepix,
-            excludepix=excludepix, outfile=outfile, drop=False
+            excludepix=excludepix, outfile=outfile, drop=False,
+            stretch=stretch
         )
         _myia.done()
         return retValue

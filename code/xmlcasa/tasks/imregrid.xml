@@ -29,35 +29,48 @@ the same coordinate structure.
 		<value></value>
 	</param>
 
+     <param type="bool" direction="in" name="asvelocity">
+        <description>Regrid spectral axis in velocity space rather than frequency space?</description>
+        <value>False</value>
+     </param>
+
 </input>
 <example>
 
-        imregrid: regrid an image to a new coordinate system.
+imregrid: regrid an image to a new coordinate system.
 
-        The new coordinate system is defined by the template parameter,
-        which can be:
-          * a recognized reference code string (see below),
-          * a {'csys': csys_record, 'shap': shape} dictionary,
-          * 'get', which does not regrid but returns the template dictionary
-            for imagename, suitable for modification and reuse, or
-          * the name of an image to get the coordinate system and shape
-            from.  The input and template images must have the same
-            coordinate structure.
-
-    	Keyword arguments:
-    	imagename -- Name of the image that needs to be regridded
-    		default: none; example: imagename='orion.image'
-    	template -- Dictionary, reference code, or imagename defining the new
-                shape and coordinate system, or 'get' to return the template
-                dictionary for imagename.  Recognized reference codes are:
-                'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
-                'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
-                and 'SUPERGAL'.
-    		default: 'get'; example: template='orion_j2000.im'
-    	output -- Name for the regridded image
-    		default: imagename + '.regridded'; example: imagename='orion_shifted.im'
-        async -- Run task in a separate process (return CASA prompt)
-                default: False; example: async=True
+Keyword arguments:
+imagename   Name of the image that needs to be regridded
+            default: none; example: imagename='orion.image'
+template    Dictionary, reference code, or imagename defining the new
+            shape and coordinate system, or 'get' to return the template
+            dictionary for imagename.  Recognized reference codes are:
+            'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
+            'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
+            and 'SUPERGAL'.
+            default: 'get'; example: template='orion_j2000.im'
+output      Name for the regridded image
+            default: imagename + '.regridded'; example: imagename='orion_shifted.im'
+asvelocity  Regrid spectral axis with respect to velocity, not frequency?
+            default: False
+async       Run task in a separate process (return CASA prompt)
+            default: False; example: async=True
+                
+The new coordinate system is defined by the template parameter,
+which can be:
+    * a recognized reference code string (see below),
+    * a {'csys': csys_record, 'shap': shape} dictionary,
+    * 'get', which does not regrid but returns the template dictionary
+      for imagename, suitable for modification and reuse, or
+    * the name of an image to get the coordinate system and shape
+      from.  The input and template images must have the same
+      coordinate structure.
+      
+If one of the axes to be regridded is a spectral axis and asvelocity=T,
+the axis will be regridded to match the velocity, not the frequency,
+description of the template coordinate system. Thus the output pixel
+values will correspond only to the velocity, not the frequency, of the
+output axis.
 
 </example> 
 

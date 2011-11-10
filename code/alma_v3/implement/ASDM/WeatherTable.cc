@@ -286,17 +286,21 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void WeatherTable::addWithoutCheckingUnique(WeatherRow * x) {
+		WeatherRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -325,6 +329,16 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void WeatherTable::append(WeatherRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -348,6 +362,9 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 	
 		
 	 vector<WeatherRow *> *WeatherTable::getByContext(Tag stationId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "WeatherTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(stationId);
  
@@ -537,12 +554,17 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		WeatherRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"WeatherTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -551,10 +573,27 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in WeatherTable::checkAndAdd called from WeatherTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"WeatherTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in WeatherTable::addWithoutCheckingUnique called from WeatherTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</WeatherTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -818,19 +857,27 @@ WeatherRow* WeatherTable::newRow(WeatherRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	WeatherRow* aRow = WeatherRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				WeatherRow* aRow = WeatherRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Weather");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Weather");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			WeatherRow* aRow = WeatherRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -955,6 +1002,7 @@ void WeatherTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Weather");

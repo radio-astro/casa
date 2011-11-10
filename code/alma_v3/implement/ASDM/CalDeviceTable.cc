@@ -304,17 +304,21 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void CalDeviceTable::addWithoutCheckingUnique(CalDeviceRow * x) {
+		CalDeviceRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -347,6 +351,16 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void CalDeviceTable::append(CalDeviceRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -370,6 +384,9 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 	
 		
 	 vector<CalDeviceRow *> *CalDeviceTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "CalDeviceTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -559,12 +576,17 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalDeviceRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"CalDeviceTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -573,10 +595,27 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in CalDeviceTable::checkAndAdd called from CalDeviceTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalDeviceTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalDeviceTable::addWithoutCheckingUnique called from CalDeviceTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</CalDeviceTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -825,19 +864,27 @@ CalDeviceRow* CalDeviceTable::newRow(CalDeviceRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	CalDeviceRow* aRow = CalDeviceRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				CalDeviceRow* aRow = CalDeviceRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "CalDevice");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "CalDevice");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			CalDeviceRow* aRow = CalDeviceRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -962,6 +1009,7 @@ void CalDeviceTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalDevice");

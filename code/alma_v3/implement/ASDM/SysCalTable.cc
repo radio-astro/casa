@@ -322,17 +322,21 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		}
 		
 		return insertByStartTime(x, context[k]);
-	}
+	}	
 			
 		
 	
-
+		
+	void SysCalTable::addWithoutCheckingUnique(SysCalRow * x) {
+		SysCalRow * dummy = add(x);
+	}
+	
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -365,6 +369,16 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 
 
 
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void SysCalTable::append(SysCalRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
+
+
 
 
 
@@ -388,6 +402,9 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 	
 		
 	 vector<SysCalRow *> *SysCalTable::getByContext(Tag antennaId, Tag spectralWindowId, int feedId) {
+	 	//if (getContainer().checkRowUniqueness() == false)
+	 		//throw IllegalAccessException ("The method 'getByContext' can't be called because the dataset has been built without checking the row uniqueness.", "SysCalTable");
+
 	 	checkPresenceInMemory();
 	  	string k = Key(antennaId, spectralWindowId, feedId);
  
@@ -577,12 +594,17 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SysCalRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"SysCalTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -591,10 +613,27 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 			catch (...) {
 				// cout << "Unexpected error in SysCalTable::checkAndAdd called from SysCalTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SysCalTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SysCalTable::addWithoutCheckingUnique called from SysCalTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</SysCalTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -870,19 +909,27 @@ SysCalRow* SysCalTable::newRow(SysCalRow* row) {
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	SysCalRow* aRow = SysCalRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				SysCalRow* aRow = SysCalRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "SysCal");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "SysCal");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			SysCalRow* aRow = SysCalRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -1007,6 +1054,7 @@ void SysCalTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SysCal");

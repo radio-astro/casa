@@ -2049,7 +2049,7 @@ ms::putdata(const ::casac::record& items)
 }
 
 bool
-ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol)
+ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale, const int handling)
 {
     Bool rstat(False);
     try {
@@ -2086,13 +2086,15 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    
 	    *itsLog << LogIO::DEBUGGING << "MSConcat created" << LogIO::POST;
 	    mscat.setTolerance(freqtolerance, dirtolerance);
-	    mscat.concatenate(appendedMS);
+	    mscat.setWeightScale(weightscale);
+	    mscat.concatenate(appendedMS, static_cast<uint>(handling));
 
 	    String message = String(msfile) + " appended to " + itsMS->tableName();
 	    ostringstream param;
 	    param << "msfile= " << msfile
-		  << " freqTol='" << casaQuantity(freqtol) << "' dirTol='"
-		  << casaQuantity(dirtol) << "'";
+		  << " freqTol='" << casaQuantity(freqtol) 
+		  << "' dirTol='" << casaQuantity(dirtol) << "'"
+		  << "' handling= " << handling;
 	    String paramstr=param.str();
 	    writehistory(std::string(message.data()), std::string(paramstr.data()),
 			 std::string("ms::concatenate()"), msfile, "ms");
@@ -2116,7 +2118,7 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 	if(!detached()){
 	    *itsLog << LogOrigin("ms", "testconcatenate");
 	    
-	    *itsLog << LogIO::NORMAL << "*** Note: this method does _not_ merge the Main table!"
+	    *itsLog << LogIO::NORMAL << "*** Note: this method does _not_ merge the Main and Pointing tables!"
 		    << LogIO::POST;
 
 	    if (!Table::isReadable(msfile)) {
@@ -2143,7 +2145,7 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 	    }
 	    
 	    mscat.setTolerance(freqtolerance, dirtolerance);
-	    mscat.concatenate(appendedMS, True); // "True" meaning "don't modify Main table"
+	    mscat.concatenate(appendedMS, 3); // 3 meaning "don't concatenate Main and Pointing table"
 
 	    String message = "Subtables from "+String(msfile) + " appended to those from " + itsMS->tableName();
 	    ostringstream param;

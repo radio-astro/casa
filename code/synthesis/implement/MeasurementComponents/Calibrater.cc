@@ -31,6 +31,7 @@
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableParse.h>
 
+#include <casa/System/AipsrcValue.h>
 #include <casa/Arrays/ArrayUtil.h>
 #include <casa/Arrays/ArrayLogical.h>
 //#include <casa/Arrays/ArrayMath.h>
@@ -54,6 +55,13 @@
 #include <casa/Utilities/Assert.h>
 
 #include <tables/Tables/SetupNewTab.h>
+#include <vector>
+using std::vector;
+#include <msvis/MSVis/UtilJ.h>
+
+using namespace casa::utilj;
+
+using namespace casa::vpf;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -1113,6 +1121,14 @@ Bool Calibrater::correct() {
   
   logSink() << LogOrigin("Calibrater","correct") << LogIO::NORMAL;
   
+  Bool useVpf;
+  AipsrcValue<Bool>::find (useVpf, "Calibrater.useVpf", False);
+
+  if (useVpf){
+      logSink() << "Using VPF for correction" << LogIO::POST;
+      return correctUsingVpf ();
+  }
+
   Bool retval = true;
 
   try {
@@ -1168,6 +1184,19 @@ Bool Calibrater::correct() {
 	  if (calwt) vb.resetWeightMat();
 	  
 	  ve_p->correct(vb);    // throws exception if nothing to apply
+
+//Cube<Complex> & cube = vb.visCube();
+//Int d1, d2, d3;
+//cube.shape (d1, d2, d3);
+//cout << "CorrectedVisCube [" << d1 << "," << d2 << "," << d3 << "] {no-vpf}" << endl;
+//for (int i = 0; i < min(d1, 10); i++){
+//    for (int j = 0; j < min (d2, 10); j++){
+//        for (int k = 0; k < min (d3, 10); k++){
+//            cout << "[" << i << "," << j << "," << k << "] = " << cube(i,j,k) << endl;
+//        }
+//    }
+//}
+
 	  vi.setVis(vb.visCube(),whichOutCol);
 	  vi.setFlag(vb.flag());
 	  
@@ -1196,6 +1225,69 @@ Bool Calibrater::correct() {
   } 
   return retval;
 }
+
+//Bool
+//Calibrater::correctUsingVpf ()
+//{
+//    Bool result = False;
+//
+//    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
+//
+//    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
+//
+//    VpEngine vpEngine;
+//
+//    try{
+//
+//        vpEngine.process (* correctorVp, * vi);
+//        result = True;
+//    }
+//    catch (AipsError & e){
+//
+//        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
+//                   << LogIO::NORMAL;
+//
+//    }
+//
+//    return result;
+//
+//}
+
+Bool
+Calibrater::correctUsingVpf ()
+{
+    Bool result = False;
+
+    auto_ptr<CorrectorVp> correctorVp (getCorrectorVp ());
+    auto_ptr<WriterVp> writerVp ( new WriterVp ("CorrectionWriter"));
+    auto_ptr<VpContainer> vpContainer (new VpContainer ("CalibraterContainer"));
+
+    vpContainer->add (correctorVp.get());
+    vpContainer->add (writerVp.get());
+
+    vpContainer->connect (correctorVp->getOutputRef ("Out"), writerVp->getInputRef ("In"));
+    vpContainer->connect (vpContainer->getInputRef ("In"), correctorVp->getInputRef ("In"));
+
+    ROVisibilityIterator * vi = correctorVp->getVisibilityIterator ();
+
+    VpEngine vpEngine;
+
+    try{
+
+        vpEngine.process (* vpContainer, * vi);
+        result = True;
+    }
+    catch (AipsError & e){
+
+        logSink () << LogIO::SEVERE << "Calibrated::correctUsingVpf: " << e.what() << LogIO::POST
+                   << LogIO::NORMAL;
+
+    }
+
+    return result;
+
+}
+
 
 Bool Calibrater::corrupt() {
   
@@ -3102,5 +3194,153 @@ void Calibrater::writeHistory(LogIO& os, Bool cliCommand)
     os << LogIO::SEVERE << "calibrater is not yet initialized" << LogIO::POST;
   }
 }
+
+CorrectorVp *
+Calibrater::getCorrectorVp ()
+{
+    return new CorrectorVp (this);
+}
+
+const String CorrectorVp::In = "In";
+const String CorrectorVp::Out = "Out";
+
+
+CorrectorVp::CorrectorVp (Calibrater * calibrater, const String & name)
+: VisibilityProcessor (name, vector<String> (1, In), vector<String> (1, Out)),
+  calibrater_p (calibrater)
+{}
+
+
+void
+CorrectorVp::chunkStartImpl (const vpf::SubchunkIndex &)
+{
+}
+
+vpf::VisibilityProcessor::ProcessingResult
+CorrectorVp::doProcessingImpl (ProcessingType processingType,
+                               VpData & inputData,
+                               const SubchunkIndex & /*subchunkIndex*/)
+{
+    VpPort inputPort = getInputs () [0];
+    VbPtr inputVbPtr = inputData [inputPort];
+
+    ProcessingResult result;
+
+    if (processingType == EndOfData){
+        calibrater_p->vs_p->flush(); // flush to disk
+    }
+    else if (processingType != Subchunk){
+        // do nothing
+    }
+    else if (!calibrater_p->ve_p->spwOK (inputVbPtr->spectralWindow())){
+        uncalibratedSpectralWindows_p [inputVbPtr->spectralWindow()] = True;
+    }
+    else {
+
+        // If the VB's spectral window can be calibrated, then do so.
+
+        if (calculateWeights_p){
+            inputVbPtr->resetWeightMat();
+        }
+
+        calibrater_p->ve_p->correct(* inputVbPtr);    // throws exception if nothing to apply
+
+        // Mark the modified columns in the VB as dirty.  The "correct" method makes its
+        // modifications on the observed component of the data.
+
+        if (whichOutputColumn_p == VisibilityIterator::Corrected){
+
+            // Mark the corrected cube as modified and copy the results from the
+            // observed cube to the corrected cube component of the VB.
+
+            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::CorrectedCube);
+            inputVbPtr->correctedVisCube() = inputVbPtr->visCube();
+//VisBuffer * vb = inputVbPtr.get();
+//Cube<Complex> & cube = vb->correctedVisCube();
+//Int d1, d2, d3;
+//cube.shape (d1, d2, d3);
+//cout << "CorrectedVisCube [" << d1 << "," << d2 << "," << d3 << "] {vpf}" << endl;
+//for (int i = 0; i < min(d1, 10); i++){
+//    for (int j = 0; j < min (d2, 10); j++){
+//        for (int k = 0; k < min (d3, 10); k++){
+//            cout << "[" << i << "," << j << "," << k << "] = " << cube(i,j,k) << endl;
+//        }
+//    }
+//}
+        }
+        else{
+
+            // The modifications can be left in place.  Mark the observed cube as
+            // dirty.  N.B., this will overwrite the actual data!
+
+            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::ObservedCube);
+        }
+
+        inputVbPtr->dirtyComponentsAdd (VisBufferComponents::Flag);
+
+        // Write out weight col, if it has changed
+
+        if (calculateWeights_p){
+            inputVbPtr->dirtyComponentsAdd (VisBufferComponents::WeightMat);
+        }
+
+
+        VpData output;
+        VpPort outputPort = getOutputs () [0];
+
+        output [outputPort] = inputVbPtr;
+
+        result = ProcessingResult (Normal, output);
+    }
+
+    return result;
+}
+
+ROVisibilityIterator *
+CorrectorVp::getVisibilityIterator ()
+{
+    if (!calibrater_p->ok())
+      throw(AipsError("Calibrater not prepared for correct!"));
+
+    // Ensure apply list non-zero and properly sorted
+
+    calibrater_p->ve_p->setapply(calibrater_p->vc_p);
+
+    // Report the types that will be applied
+
+    calibrater_p->applystate();
+
+    // Arrange for iteration over data
+
+    Block<Int> columns;
+    columns.resize(5);
+
+    columns[0]=MS::ARRAY_ID;
+    columns[1]=MS::SCAN_NUMBER; // include scan iteration
+    columns[2]=MS::FIELD_ID;
+    columns[3]=MS::DATA_DESC_ID;
+    columns[4]=MS::TIME;
+
+    calibrater_p->vs_p->resetVisIter(columns,0.0);
+
+    return & (calibrater_p->vs_p->iter());
+}
+
+void
+CorrectorVp::processingStartImpl ()
+{
+    calculateWeights_p = calibrater_p->calWt();
+    uncalibratedSpectralWindows_p.resize ();
+    uncalibratedSpectralWindows_p.set (False);
+    whichOutputColumn_p = calibrater_p->scrOk_p ? VisibilityIterator::Corrected
+                                                : VisibilityIterator::Observed;
+}
+
+void
+CorrectorVp::validateImpl ()
+{
+    throwIfAnyPortsUnconnected ();
+}
+
 
 } //# NAMESPACE CASA - END

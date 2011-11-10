@@ -507,6 +507,22 @@ private:
 	 
 	 */
 	AnnotationRow* checkAndAdd(AnnotationRow* x) ;
+	
+	/**
+	 * Brutally append an AnnotationRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param AnnotationRow* x a pointer onto the AnnotationRow to be appended.
+	 */
+	 void append(AnnotationRow* x) ;
+	 
+	/**
+	 * Brutally append an AnnotationRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param AnnotationRow* x a pointer onto the AnnotationRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(AnnotationRow* x) ;
+	 
+	 
 
 
 

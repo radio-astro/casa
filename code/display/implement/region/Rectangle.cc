@@ -1,6 +1,7 @@
 #include <display/region/Rectangle.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
+#include <vector>
 
 #include <display/Display/WorldCanvasHolder.h>
 #include <display/Display/PanelDisplay.h>
@@ -137,8 +138,9 @@ namespace casa {
 	    y = linear_average(blc_y,trc_y);
 	}
 
-	AnnRegion *Rectangle::annotation( ) const {
-	    if ( wc_ == 0 ) return 0;
+	AnnotationBase *Rectangle::annotation( ) const {
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 
@@ -157,7 +159,20 @@ namespace casa {
 	    Vector<Stokes::StokesTypes> stokes;
 	    Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
 
-	    AnnRectBox *box = new AnnRectBox( qblc_x, qblc_y, qtrc_x, qtrc_y, cs, dd->dataShape(), stokes );
+	    AnnRectBox *box = 0;
+
+	    try {
+		std::vector<int> axes = dd->displayAxes( );
+		IPosition shape(cs.nPixelAxes( ));
+		for ( int i=0; i < shape.size( ); ++i )
+		    shape(i) = dd->dataShape( )[axes[i]];
+		box = new AnnRectBox( qblc_x, qblc_y, qtrc_x, qtrc_y, cs, shape, stokes );
+	    } catch ( AipsError &e ) {
+		cerr << "Error encountered creating an AnnRectBox:" << endl;
+		cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
+	    } catch ( ... ) {
+		cerr << "Error encountered creating an AnnRectBox..." << endl;
+	    }
 
 	    return box;
 	}
@@ -169,7 +184,8 @@ namespace casa {
 
 	void Rectangle::fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 					      std::vector<std::pair<double,double> > &world_pts ) const {
-	    if ( wc_ == 0 ) return;
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    type = RectRegion;
 
@@ -194,7 +210,7 @@ namespace casa {
 
 
 	void Rectangle::drawRegion( bool selected ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if(pc==0) return;
@@ -246,8 +262,8 @@ namespace casa {
 	    return trc || brc || blc || tlc;
 	}
 
-	int Rectangle::mouseMovement( double x, double y, bool other_selected ) {
-	    int result = 0;
+	unsigned int Rectangle::mouseMovement( double x, double y, bool other_selected ) {
+	    unsigned int result = 0;
 
 	    if ( visible_ == false ) return result;
 

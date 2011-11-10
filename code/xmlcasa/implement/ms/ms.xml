@@ -2695,6 +2695,24 @@ for i in range(len(tcoord)):
      <any type="variant"/>
      <value>1mas</value>
      </param>
+
+     <param type="float" direction="in" name="weightscale">
+     <description>Scale the weights of the MS to be appended by this factor</description>
+     <value>1.</value>
+     </param>
+
+     <param type="int" direction="in" name="handling">
+     <description>Switch for the handling of the Main and Pointing tables: 0=standard, 
+     1=no Main, 2=no Pointing, 3=no Main and Pointing, 4=virtual</description>
+     <value>0</value>
+     <allowed type="enum">
+	     <value>0</value>
+	     <value>1</value>
+	     <value>2</value>
+	     <value>3</value>
+	     <value>4</value>
+     </allowed>
+     </param>
   </input>
   <returns type="bool"/>
 
@@ -2707,10 +2725,6 @@ for i in range(len(tcoord)):
     take some time. You need to open the measurement set for writing
     in order to use this function.
 
-    This function is new to the ms tool and currently requires that
-    both the measurement sets involved in the concatenation were
-    originally derived from of a \uvfits\  file (and converted using the
-    fromfits function).
   </description>
   <example>
     
@@ -2728,7 +2742,7 @@ for i in range(len(tcoord)):
 
 </method>
    <method type="function" name="testconcatenate">
-   <shortdescription>Concatenate only the subtables of two measurement sets (resulting MAIN table not useful)</shortdescription>
+   <shortdescription>Concatenate only the subtables of two measurement sets excluding the POINTING table (resulting MAIN and POINTING table not useful)</shortdescription>
    
   <keyword>testconcatenate</keyword>
   <input>
@@ -2755,8 +2769,8 @@ for i in range(len(tcoord)):
   <returns type="bool"/>
 
   <description>
-    This function acts like ms.concatenate() except that the MAIN table
-    is not modified. This is useful for generating, e.g.,
+    This function acts like ms.concatenate() with handling==3 (do not concatenate
+    the MAIN and POINTING tables). This is useful for generating, e.g.,
     SPECTRAL_WINDOW and FIELD tables which contain all used SPW and FIELD ids
     for a set of MSs without having to actually carry out a time-consuming
     concatenation on disk. The MAIN table in the resulting output MS is

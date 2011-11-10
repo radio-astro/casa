@@ -174,6 +174,11 @@ class QtDisplayPanelGui : public QtPanelBase,
   viewer::QtRegionDock *regionDock( ) { return regionDock_; }
   int numFrames( ) const { return qdp_->nFrames( ); }
 
+  // load casa (or DS9?) region files...
+  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+
+  bool useNewRegions( ) const { return use_new_regions; }
+
  public slots:
  
   // At least for now, colorbars can only be placed horizontally or vertically,
@@ -225,6 +230,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void hideStats();
   //</group>
  
+  // add a new DD
+  virtual void addDD(String path, String dataType, String displayType, Bool autoRegister=True, Bool tmpDtata=False);
+
  
   // (Attempts to) restore panel state from named file.
   virtual Bool restorePanelState(String filename);
@@ -253,10 +261,12 @@ class QtDisplayPanelGui : public QtPanelBase,
     void ddRemoved(QtDisplayData*);
 
     void closed( const QtDisplayPanelGui * );
-  
+
  protected slots:
-  
-  virtual void quit( );
+
+ virtual void close( );
+
+ virtual void quit( );
 
   //# overrides of base QMainWindow slots
   
@@ -274,8 +284,8 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   //# purely internal slots
  
-  virtual void toggleAnimExtras_();
-  virtual void setAnimExtrasVisibility_();  
+  /* virtual void toggleAnimExtras_(); */
+  /* virtual void setAnimExtrasVisibility_();   */
   
   virtual void frameNumberEdited_();
   
@@ -434,6 +444,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   
      
  private:
+  bool use_new_regions;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
 

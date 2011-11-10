@@ -1249,13 +1249,16 @@ image* image::transpose(
 	}
 }
 
-::casac::record* image::fitcomponents(const string& box, const variant& region,
-		const variant& chans, const string& stokes, const variant& vmask,
+::casac::record* image::fitcomponents(
+		const string& box, const variant& region, const variant& chans,
+		const string& stokes, const variant& vmask,
 		const vector<double>& in_includepix,
 		const vector<double>& in_excludepix, const string& residual,
-		const string& model, const string& estimates, const string& logfile,
-		const bool append, const string& newestimates, const string& complist,
-		const bool overwrite, const int chan) {
+		const string& model, const string& estimates,
+		const string& logfile, const bool append,
+		const string& newestimates, const string& complist,
+		const bool overwrite
+) {
 	if (detached()) {
 		return 0;
 	}
@@ -1271,20 +1274,20 @@ image* image::transpose(
 	if (excludepix.size() == 1 && excludepix[0] == -1) {
 		excludepix.resize();
 	}
-	::casac::record *rstat = 0;
-	*_log << LogOrigin("image", "fitcomponent");
+	*_log << LogOrigin("image", __FUNCTION__);
 	String mask = vmask.toString();
 	if (mask == "[]") {
 		mask = "";
 	}
-	//    cout << "chans " << chans.typeString() << endl;
 	try {
 		std::auto_ptr<ImageFitter> fitter;
 		const ImageInterface<Float> *image = _image->getImage();
 		ImageFitter::CompListWriteControl writeControl =
-				complist.empty() ? ImageFitter::NO_WRITE
-						: overwrite ? ImageFitter::OVERWRITE
-								: ImageFitter::WRITE_NO_REPLACE;
+			complist.empty()
+			? ImageFitter::NO_WRITE
+			: overwrite
+				? ImageFitter::OVERWRITE
+				: ImageFitter::WRITE_NO_REPLACE;
 		String sChans;
 		if (chans.type() == variant::BOOLVEC) {
 			// for some reason which eludes me, the default variant type is boolvec
@@ -1295,35 +1298,32 @@ image* image::transpose(
 			sChans = String::toString(chans.toInt());
 		} else {
 			*_log
-					<< "Unsupported type for chans. chans must be either an integer or a string"
-					<< LogIO::EXCEPTION;
+				<< "Unsupported type for chans. chans must be either an integer or a string"
+				<< LogIO::EXCEPTION;
 		}
-
-		if (chan >= 0) {
-			*_log << LogIO::WARN
-					<< "THE chan PARAMETER HAS BEEN DEPRECATED. PLEASE USE chans INSTEAD."
-					<< LogIO::POST;
-			if (sChans.empty()) {
-				sChans = String::toString(chan);
-			}
-		}
-		if (region.type() == ::casac::variant::STRING || region.size() == 0) {
-			String regionString = (region.size() == 0) ? "" : region.toString();
-			fitter.reset(new ImageFitter(image, regionString, box, sChans,
-					stokes, mask, includepix, excludepix, residual, model,
-					estimates, logfile, append, newestimates, complist,
-					writeControl));
-		} else if (region.type() == ::casac::variant::RECORD) {
-			::casac::variant regionCopy = region;
-			Record *regionRecord = toRecord(regionCopy.asRecord());
-			fitter.reset(new ImageFitter(image, regionRecord, box, sChans,
-					stokes, mask, includepix, excludepix, residual, model,
-					estimates, logfile, append, newestimates, complist,
-					writeControl));
-		} else {
+		if (region.type() != variant::BOOLVEC && region.type() != variant::STRING && region.type() != variant::RECORD) {
 			*_log << "Unsupported type for region " << region.type()
-					<< LogIO::EXCEPTION;
+				<< LogIO::EXCEPTION;
 		}
+		std::auto_ptr<Record> regionRecord(0);
+		String regionString = (
+			region.type() == variant::STRING || region.size() == 0
+		) ? region.size() == 0
+			? ""
+				: region.toString()
+			: "";
+		if (region.type() == variant::RECORD) {
+			variant regionCopy = region;
+			regionRecord.reset(
+				toRecord(regionCopy.asRecord())
+			);
+		}
+		fitter.reset(new ImageFitter(
+			image, regionString, regionRecord.get(), box, sChans,
+			stokes, mask, includepix, excludepix, residual, model,
+			estimates, logfile, append, newestimates, complist,
+			writeControl)
+		);
 		ComponentList compList = fitter->fit();
 		Vector<Bool> converged = fitter->converged();
 		Record returnRecord, compListRecord;
@@ -1334,19 +1334,19 @@ image* image::transpose(
 
 		if (!compList.toRecord(error, compListRecord)) {
 			*_log << "Failed to generate output record from result. " << error
-					<< LogIO::POST;
+				<< LogIO::EXCEPTION;
 		}
 		FluxRep<Double>::clearAllowedUnits();
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
-		rstat = fromRecord(returnRecord);
-	} catch (AipsError x) {
+		return fromRecord(returnRecord);
+	}
+	catch (AipsError x) {
 		FluxRep<Double>::clearAllowedUnits();
-		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+		*_log << "Exception Reported: " << x.getMesg()
+			<< LogIO::EXCEPTION;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::variant*
@@ -1873,7 +1873,8 @@ image::maxfit(const ::casac::record& region, const bool doPoint,
 }
 
 ::casac::image *
-image::moments(const std::vector<int>& moments, const int axis,
+image::moments(
+		const std::vector<int>& moments, const int axis,
 		const ::casac::record& region, const ::casac::variant& vmask,
 		const std::vector<std::string>& in_method,
 		const std::vector<int>& smoothaxes,
@@ -1884,31 +1885,37 @@ image::moments(const std::vector<int>& moments, const int axis,
 		const double stddev, const std::string& velocityType,
 		const std::string& out, const std::string& smoothout,
 		const std::string& pgdevice, const int nx, const int ny,
-		const bool yind, const bool overwrite, const bool removeAxis, const bool /* async */) {
-	::casac::image *rstat = 0;
+		const bool yind, const bool overwrite, const bool removeAxis,
+		const bool stretch, const bool /* async */
+) {
 	try {
-		*_log << LogOrigin("image", "moments");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
 
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Vector<Int> whichmoments(moments);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 		Vector<String> method = toVectorString(in_method);
 
 		Vector<String> kernels;
 		if (smoothtypes.type() == ::casac::variant::BOOLVEC) {
 			kernels.resize(0); // unset
-		} else if (smoothtypes.type() == ::casac::variant::STRING) {
+		}
+		else if (smoothtypes.type() == ::casac::variant::STRING) {
 			sepCommaEmptyToVectorStrings(kernels, smoothtypes.toString());
-		} else if (smoothtypes.type() == ::casac::variant::STRINGVEC) {
+		}
+		else if (smoothtypes.type() == ::casac::variant::STRINGVEC) {
 			kernels = toVectorString(smoothtypes.toStringVec());
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN << "Unrecognized smoothtypes datatype"
-					<< LogIO::POST;
+				<< LogIO::POST;
 		}
 		int num = kernels.size();
 
@@ -1917,7 +1924,6 @@ image::moments(const std::vector<int>& moments, const int axis,
 		for (int i = 0; i < num; i++) {
 			kernelwidths[i] = casa::Quantity(smoothwidths[i], u);
 		}
-		//
 		Vector<Float> includepix;
 		num = d_includepix.size();
 		if (!(num == 1 && d_includepix[0] == -1)) {
@@ -1925,7 +1931,6 @@ image::moments(const std::vector<int>& moments, const int axis,
 			for (int i = 0; i < num; i++)
 				includepix[i] = d_includepix[i];
 		}
-		//
 		Vector<Float> excludepix;
 		num = d_excludepix.size();
 		if (!(num == 1 && d_excludepix[0] == -1)) {
@@ -1934,21 +1939,23 @@ image::moments(const std::vector<int>& moments, const int axis,
 				excludepix[i] = d_excludepix[i];
 		}
 
-		ImageInterface<Float>* outIm = _image->moments(whichmoments, axis,
+		std::auto_ptr<ImageInterface<Float> > outIm(
+			_image->moments(
+				whichmoments, axis,
 				*Region, mask, method, Vector<Int> (smoothaxes), kernels,
 				kernelwidths, includepix, excludepix, peaksnr, stddev,
 				velocityType, out, smoothout, pgdevice, nx, ny, yind,
-				overwrite, removeAxis);
-		//
-		delete Region;
-		rstat = new ::casac::image(outIm);
-		delete outIm;
-	} catch (AipsError x) {
+				overwrite, removeAxis, stretch
+			)
+		);
+
+		return new ::casac::image(outIm.get());
+	}
+	catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::string image::name(const bool strippath) {
@@ -2174,50 +2181,44 @@ image::rebin(const std::string& outfile, const std::vector<int>& bin,
 	return rstat;
 }
 
-::casac::image *
-image::regrid(const std::string& outfile, const std::vector<int>& inshape,
-		const ::casac::record& csys, const std::vector<int>& inaxes,
-		const ::casac::record& region, const ::casac::variant& vmask,
-		const std::string& method, const int decimate, const bool replicate,
-		const bool doRefChange, const bool dropDegenerateAxes,
-		const bool overwrite, const bool forceRegrid, const bool /* async */) {
-	::casac::image *rstat = 0;
+image* image::regrid(
+	const string& outfile, const vector<int>& inshape,
+	const record& csys, const vector<int>& inaxes,
+	const record& region, const variant& vmask,
+	const string& method, const int decimate, const bool replicate,
+	const bool doRefChange, const bool dropDegenerateAxes,
+	const bool overwrite, const bool forceRegrid,
+	const bool specAsVelocity, const bool /* async */
+) {
 	try {
-		*_log << LogOrigin("image", "regrid");
-		if (detached())
-			return rstat;
-
-		String outFile(outfile);
-		Record *coordinates = toRecord(csys);
-
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
+		std::auto_ptr<Record> coordinates(toRecord(csys));
 		String methodU(method);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
+		}
 		Vector<Int> axes;
 		if (!((inaxes.size() == 1) && (inaxes[0] == -1))) {
 			axes = inaxes;
 		}
-
-		ImageInterface<Float> * pImOut;
-
-		pImOut = _image->regrid(outFile, Vector<Int> (inshape), *coordinates,
+		std::auto_ptr<ImageInterface<Float> >pImOut(
+			_image->regrid(
+				outfile, Vector<Int> (inshape), *coordinates,
 				axes, *Region, mask, methodU, decimate, replicate, doRefChange,
-				dropDegenerateAxes, overwrite, forceRegrid);
-
-		delete Region;
-		delete coordinates;
-
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
+				dropDegenerateAxes, overwrite, forceRegrid, specAsVelocity
+			)
+		);
+		return new image(pImOut.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::image *

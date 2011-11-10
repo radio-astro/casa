@@ -603,6 +603,22 @@ private:
 	 
 	 */
 	CalCurveRow* checkAndAdd(CalCurveRow* x) ;
+	
+	/**
+	 * Brutally append an CalCurveRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalCurveRow* x a pointer onto the CalCurveRow to be appended.
+	 */
+	 void append(CalCurveRow* x) ;
+	 
+	/**
+	 * Brutally append an CalCurveRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalCurveRow* x a pointer onto the CalCurveRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalCurveRow* x) ;
+	 
+	 
 
 
 

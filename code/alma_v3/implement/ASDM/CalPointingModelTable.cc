@@ -351,15 +351,30 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
 		return x;
 	}
 
+	
 		
-
+	void CalPointingModelTable::addWithoutCheckingUnique(CalPointingModelRow * x) {
+		if (getRowByKey(
+						x->getAntennaName()
+						,
+						x->getReceiverBand()
+						,
+						x->getCalDataId()
+						,
+						x->getCalReductionId()
+						) != (CalPointingModelRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CalPointingModelTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -393,6 +408,16 @@ CalPointingModelRow* CalPointingModelTable::newRow(CalPointingModelRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void CalPointingModelTable::append(CalPointingModelRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -607,12 +632,17 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CalPointingModelRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"CalPointingModelTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -621,10 +651,27 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 			catch (...) {
 				// cout << "Unexpected error in CalPointingModelTable::checkAndAdd called from CalPointingModelTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CalPointingModelTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CalPointingModelTable::addWithoutCheckingUnique called from CalPointingModelTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</CalPointingModelTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -900,19 +947,27 @@ CalPointingModelRow* CalPointingModelTable::lookup(string antennaName, ReceiverB
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	CalPointingModelRow* aRow = CalPointingModelRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				CalPointingModelRow* aRow = CalPointingModelRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "CalPointingModel");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "CalPointingModel");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			CalPointingModelRow* aRow = CalPointingModelRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -1037,6 +1092,7 @@ void CalPointingModelTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CalPointingModel");

@@ -493,6 +493,22 @@ private:
 	 
 	 */
 	CalGainRow* checkAndAdd(CalGainRow* x) ;
+	
+	/**
+	 * Brutally append an CalGainRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalGainRow* x a pointer onto the CalGainRow to be appended.
+	 */
+	 void append(CalGainRow* x) ;
+	 
+	/**
+	 * Brutally append an CalGainRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalGainRow* x a pointer onto the CalGainRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalGainRow* x) ;
+	 
+	 
 
 
 

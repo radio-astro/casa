@@ -7,7 +7,7 @@
 #include <display/DisplayDatas/PrincipalAxesDD.h>
 #include <images/Regions/WCEllipsoid.h>
 
-#include <imageanalysis/Annotations/AnnRectBox.h>
+#include <imageanalysis/Annotations/AnnSymbol.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 
 namespace casa {
@@ -18,34 +18,41 @@ namespace casa {
 	Point::~Point( ) { }
 
 
-	AnnRegion *Point::annotation( ) const {
-	    if ( wc_ == 0 ) return 0;
+	AnnotationBase *Point::annotation( ) const {
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;
 
 	    const CoordinateSystem &cs = wc_->coordinateSystem( );
 
-	    double wblc_x, wblc_y, wtrc_x, wtrc_y;
-	    linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+	    double wx, wy;
+	    linear_to_world( wc_, blc_x, blc_y, wx, wy );
 	    const Vector<String> &units = wc_->worldAxisUnits( );
 
-	    Quantity qblc_x( wblc_x, units[0] );
-	    Quantity qblc_y( wblc_y, units[1] );
-	    Quantity qtrc_x( wtrc_x, units[0] );
-	    Quantity qtrc_y( wtrc_y, units[1] );
+	    Quantity qx( wx, units[0] );
+	    Quantity qy( wy, units[1] );
 
 	    const DisplayData *dd = wc_->displaylist().front();
-
 
 	    Vector<Stokes::StokesTypes> stokes;
 	    Int polaxis = CoordinateUtil::findStokesAxis(stokes, cs);
 
-	    AnnRectBox *box = new AnnRectBox( qblc_x, qblc_y, qtrc_x, qtrc_y, cs, dd->dataShape(), stokes );
+	    AnnSymbol *symbol = 0;
+	    try {
+		symbol = new AnnSymbol( qx, qy, cs, AnnSymbol::POINT );
+	    } catch ( AipsError &e ) {
+		cerr << "Error encountered creating an AnnSymbol:" << endl;
+		cerr << "\t\"" << e.getMesg( ) << "\"" << endl;
+	    } catch ( ... ) {
+		cerr << "Error encountered creating an AnnSymbol..." << endl;
+	    }
 
-	    return box;
+	    return symbol;
 	}
 
 	void Point::fetch_region_details( Region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 					  std::vector<std::pair<double,double> > &world_pts ) const {
-	    if ( wc_ == 0 ) return;
+
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    type = PointRegion;
 
@@ -65,7 +72,7 @@ namespace casa {
 	}
 
 	void Point::drawRegion( bool selected ) {
-	    if ( wc_ == 0 ) return;
+	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 	    PixelCanvas *pc = wc_->pixelCanvas();
 	    if(pc==0) return;
@@ -99,8 +106,8 @@ namespace casa {
 		return false;
 	}
 
-	int Point::mouseMovement( double xd, double yd, bool other_selected ) {
-	    int result = 0;
+	unsigned int Point::mouseMovement( double xd, double yd, bool other_selected ) {
+	    unsigned int result = 0;
 
 	    if ( visible_ == false ) return result;
 

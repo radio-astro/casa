@@ -115,11 +115,11 @@ def importasdm(asdm=None, vis=None, singledish=None, antenna=None, corr_mode=Non
                                         casaarch = casapath_split[1]
                                 else:
                                         casaarch = 'none'
-                                if os.path.exists( casaroot+'/'+casaarch ):
-                                        cmd = 'find %s -name asap'%(casaroot+'/'+casaarch)
-                                else:
-                                        cmd = 'find %s -name asap'%(casaroot)
+                                cmd = 'find %s -name asap'%(casaroot+'/'+casaarch)
                                 lpath = commands.getoutput( cmd )
+                                if len(lpath) == 0:
+                                        cmd = 'find %s -name asap'%(casaroot)
+                                        lpath = commands.getoutput( cmd )
                                 if lpath.find('\n') != -1:
                                         paths = lpath.split('\n')
                                         for p in paths:

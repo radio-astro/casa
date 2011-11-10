@@ -201,7 +201,8 @@ C                          write(*,*) support, iloc
      $                                   loc(2)+iy,apol,achan)+
      $                                   nvalue*cwt
                                     if(doweightgrid .gt. 0) then
-                                       cwt=sconv2(iloc(1), iloc(2), 
+                                       cwt=sconv2(sampling*ix, 
+     $                                  sampling*iy, 
      $                                      aconvplane)
                                        iiloc(1)=nx/2+1+ix
                                        iiloc(2)=ny/2+1+iy
@@ -549,7 +550,7 @@ C
 C            if((pos(idim)-loc(idim)) < 0.0)then
 C               loc(idim)=loc(idim)-1
 C            end if 
-            off(idim)=nint((pos(idim)-real(loc(idim)))*real(sampling))
+            off(idim)=nint((pos(idim)-real(loc(idim)))*real(-sampling))
 C            if(off(idim).eq.sampling) then
 C               off(idim)=0
 C               loc(idim)=loc(idim)+1

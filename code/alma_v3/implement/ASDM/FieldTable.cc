@@ -294,15 +294,24 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void FieldTable::addWithoutCheckingUnique(FieldRow * x) {
+		if (getRowByKey(
+						x->getFieldId()
+						) != (FieldRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "FieldTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -332,7 +341,7 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
 		,
 			x->getReferenceDir()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table FieldTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -348,6 +357,16 @@ FieldRow* FieldTable::newRow(FieldRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void FieldTable::append(FieldRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -524,12 +543,17 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		FieldRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"FieldTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -538,10 +562,27 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 			catch (...) {
 				// cout << "Unexpected error in FieldTable::checkAndAdd called from FieldTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"FieldTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in FieldTable::addWithoutCheckingUnique called from FieldTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</FieldTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -799,19 +840,27 @@ FieldRow* FieldTable::lookup(string fieldName, int numPoly, vector<vector<Angle 
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	FieldRow* aRow = FieldRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				FieldRow* aRow = FieldRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Field");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Field");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			FieldRow* aRow = FieldRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -936,6 +985,7 @@ void FieldTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Field");

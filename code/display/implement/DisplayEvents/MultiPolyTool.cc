@@ -36,7 +36,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     MultiPolyTool::MultiPolyTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd,
 			      Display::KeySym keysym, const Bool persistent ) :
-		MultiWCTool(keysym),itsPolygonPersistent(persistent), itsMode(Off),
+		RegionTool(keysym),itsPolygonPersistent(persistent), itsMode(Off),
 		itsEmitted(False), itsNPoints(0), itsHandleSize(7),
 		rfactory(rcs->newSource(this)), pd_(pd) {
 	reset();
@@ -233,7 +233,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	for ( polygonlist::reverse_iterator iter = polygons.rbegin(); iter != polygons.rend(); ++iter ) {
-	    int result = (*iter)->mouseMovement(linx,liny,region_selected);
+	    unsigned int result = (*iter)->mouseMovement(linx,liny,region_selected);
 	    refresh_needed = refresh_needed | viewer::Region::refreshNeeded(result);
 	    region_selected = region_selected | viewer::Region::regionSelected(result);
 	}
@@ -332,8 +332,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
     void MultiPolyTool::otherKeyPressed(const WCPositionEvent &ev) {
+	const int pixel_step = 1;
 	WorldCanvas *wc = ev.worldCanvas( );
-	if ( wc == itsCurrentWC && ev.key() == Display::K_Escape) {
+	if ( wc == itsCurrentWC && 
+	     ( ev.key() == Display::K_Escape ||
+	       ev.key() == Display::K_Left ||
+	       ev.key() == Display::K_Right ||
+	       ev.key() == Display::K_Up ||
+	       ev.key() == Display::K_Down ) ) {
 	    uInt x = ev.pixX();
 	    uInt y = ev.pixY();
 
@@ -343,17 +349,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    double linx, liny;
 	    viewer::screen_to_linear( wc, x, y, linx, liny );
 
-	    bool region_removed = false;
-	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
+	    bool refresh_needed = false;
+	    for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ) {
 		if ( (*iter)->regionVisible( ) ) {
-		    int result = (*iter)->mouseMovement(linx,liny,false);
+		    unsigned int result = (*iter)->mouseMovement(linx,liny,false);
 		    if ( viewer::Region::regionSelected(result) ) {
-			polygons.erase( iter );
-			region_removed = true;
-		    }
-		}
+			if ( ev.key() == Display::K_Escape ) {
+			    polygonlist::iterator xi = iter; ++xi;
+			    polygons.erase( iter );
+			    refresh_needed = true;
+			    iter = xi;
+			} else {
+			    double dx=0, dy=0;
+			    switch ( ev.key( ) ) {
+				case Display::K_Left:
+				    viewer::screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Right:
+				    viewer::screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+				    break;
+				case Display::K_Down:
+				    viewer::screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+				    break;
+				case Display::K_Up:
+				    viewer::screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+				    break;
+				default:
+				    break;
+			    }
+			    (*iter)->move( dx, dy );
+			    refresh_needed = true;
+			    ++iter;
+			}
+		    } else { ++iter; }
+		} else { ++iter; }
 	    }
-	    if ( region_removed ) refresh( );
+	    if ( refresh_needed ) refresh( );
 	}
     }
 
@@ -459,6 +490,20 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
 
   return (nabove % 2);  }
 
+
+    bool MultiPolyTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
+				const std::string &font, int font_size, int font_style, const std::string &font_color,
+				const std::string &line_color, viewer::Region::LineStyle line_style ) {
+	if ( pts.size( ) <= 2 ) return false;
+	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
+	memory::cptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
+	result->setLabel( label );
+	result->setFont( font, font_size, font_style, font_color );
+	result->setLine( line_color, line_style );
+	polygons.push_back( result );
+	refresh( );
+	return true;
+    }
 
     void MultiPolyTool::start_new_polygon( WorldCanvas *wc, int x, int y ) {
 

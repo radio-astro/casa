@@ -142,20 +142,20 @@ namespace casa {
 	}
 
 	void QtRegionDock::output_region_event(const QString &what, const QString &where) {
-	    std::list<QtRegionState*> output_list;
+	    std::list<QtRegionState*> regionstate_list;
 	    if ( what == "current" ) {
 		// current region, only...
 		QWidget *current_widget = regions->currentWidget( );
 		QtRegionState *current = dynamic_cast<QtRegionState*>(current_widget);
 		if ( current != 0 )
-		    output_list.push_back(current);
+		    regionstate_list.push_back(current);
 	    } else if ( what == "marked" ) {
 		// all marked regions...
 		for ( int i = 0; i < regions->count( ); ++i ) {
 		    QWidget *widget = regions->widget( i );
 		    QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
 		    if ( state != 0 && state->marked( ) )
-			output_list.push_back(state);
+			regionstate_list.push_back(state);
 		}
 	    } else {
 		// ("all")... all regions...
@@ -163,18 +163,18 @@ namespace casa {
 		    QWidget *widget = regions->widget( i );
 		    QtRegionState *state = dynamic_cast<QtRegionState*>(widget);
 		    if ( state != 0 )
-			output_list.push_back(state);
+			regionstate_list.push_back(state);
 		}
 	    }
 
-	    if ( output_list.size( ) > 0 ) {
+	    if ( regionstate_list.size( ) > 0 ) {
 	        AnnRegion::unitInit();
-		fprintf( stderr, "---------------------------------------- pre emit ----------------------------------------\n" );
+		RegionTextList annotation_list;
+		emit outputRegions(regionstate_list,annotation_list);
 		ofstream sink;
 		sink.open(where.toAscii( ).constData( ));
-		emit outputRegions(output_list,sink);
+		annotation_list.print(sink);
 		sink.close( );
-		fprintf( stderr, "---------------------------------------- post emit ---------------------------------------\n" );
 	    } else {
 		QWidget *current_widget = regions->currentWidget( );
 		QtRegionState *current = dynamic_cast<QtRegionState*>(current_widget);

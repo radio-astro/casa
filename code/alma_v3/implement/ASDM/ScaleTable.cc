@@ -270,15 +270,24 @@ ScaleRow* ScaleTable::newRow(ScaleRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void ScaleTable::addWithoutCheckingUnique(ScaleRow * x) {
+		if (getRowByKey(
+						x->getScaleId()
+						) != (ScaleRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "ScaleTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -306,7 +315,7 @@ ScaleRow* ScaleTable::newRow(ScaleRow* row) {
 		,
 			x->getWeightType()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table ScaleTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -322,6 +331,16 @@ ScaleRow* ScaleTable::newRow(ScaleRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void ScaleTable::append(ScaleRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -496,12 +515,17 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		ScaleRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"ScaleTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -510,10 +534,27 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 			catch (...) {
 				// cout << "Unexpected error in ScaleTable::checkAndAdd called from ScaleTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ScaleTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in ScaleTable::addWithoutCheckingUnique called from ScaleTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</ScaleTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -744,19 +785,27 @@ ScaleRow* ScaleTable::lookup(TimeScaleMod::TimeScale timeScale, DataScaleMod::Da
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	ScaleRow* aRow = ScaleRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				ScaleRow* aRow = ScaleRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "Scale");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "Scale");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			ScaleRow* aRow = ScaleRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -881,6 +930,7 @@ void ScaleTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "Scale");

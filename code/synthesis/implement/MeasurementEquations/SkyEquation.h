@@ -36,7 +36,6 @@
 #include <casa/Logging/LogSink.h>
 #include <synthesis/MeasurementComponents/FTMachine.h>
 #include <msvis/MSVis/VisBuffer.h>
-#include <msvis/MSVis/VisBufferAsync.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN

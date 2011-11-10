@@ -40,29 +40,46 @@ FlagAgentClipping::setAgentParameters(Record config)
 {
 	int exists;
 
-	exists = config.fieldNumber ("clipmin");
+	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
 	{
-		clipmin_p = atof(config.asString("clipmin").c_str());
+		Array<Float> cliprange = config.asArrayFloat("clipminmax");
+		Bool deleteIt = False;
+		clipmin_p = cliprange.getStorage(deleteIt)[0];
+		clipmax_p = cliprange.getStorage(deleteIt)[1];
 	}
 	else
 	{
 		clipmin_p = 0.0;
-	}
-
-	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipmin is " << clipmin_p << LogIO::POST;
-
-	exists = config.fieldNumber ("clipmax");
-	if (exists >= 0)
-	{
-		clipmax_p = atof(config.asString("clipmax").c_str());
-	}
-	else
-	{
 		clipmax_p = 1.5;
 	}
 
+	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipmin is " << clipmin_p << LogIO::POST;
 	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipmax is " << clipmax_p << LogIO::POST;
+
+	exists = config.fieldNumber ("clipoutside");
+	if (exists >= 0)
+	{
+		clipoutside_p = config.asBool("clipoutside");
+	}
+	else
+	{
+		clipoutside_p = True;
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipoutside is " << clipoutside_p << LogIO::POST;
+
+	exists = config.fieldNumber ("channelavg");
+	if (exists >= 0)
+	{
+		channelavg_p = config.asBool("channelavg");
+	}
+	else
+	{
+		channelavg_p = False;
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " channelavg is " << channelavg_p << LogIO::POST;
 
 
 	return;
@@ -75,21 +92,56 @@ FlagAgentClipping::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, 
 	uInt nChannels,chan_i;
 	nChannels = flagCubeShape(0);
 	Float visExpression;
+	uInt nAverage;
 
-	for (chan_i=0;chan_i<nChannels;chan_i++)
+	if (channelavg_p)
 	{
-		visExpression = visibilities(chan_i,row);
-		if ((visExpression <  clipmin_p) or (visExpression >  clipmin_p))
+		visExpression = 0;
+		nAverage = 0;
+
+		for (chan_i=0;chan_i<nChannels;chan_i++)
 		{
-			flags.applyFlag(chan_i,row);
+			// If none of the correlations involved in the expression
+			// are flagged, then take into account this channel
+			if (!flags(chan_i,row))
+			{
+				visExpression += visibilities(chan_i,row);
+				nAverage += 1;
+			}
 		}
 
+		visExpression /= nAverage;
+
+		// If visExpression is out of range we flag the entire row
+		if (	((visExpression >  clipmax_p) and clipoutside_p) or
+				((visExpression <  clipmin_p) and clipoutside_p) or
+				((visExpression <=  clipmax_p) and (visExpression >=  clipmin_p) and !clipoutside_p) or
+				isnan(visExpression))
+		{
+			for (chan_i=0;chan_i<nChannels;chan_i++)
+			{
+				flags.applyFlag(chan_i,row);
+			}
+		}
+
+	}
+	else
+	{
+		for (chan_i=0;chan_i<nChannels;chan_i++)
+		{
+			visExpression = visibilities(chan_i,row);
+			if (	((visExpression >  clipmax_p) and clipoutside_p) or
+					((visExpression <  clipmin_p) and clipoutside_p) or
+					((visExpression <=  clipmax_p) and (visExpression >=  clipmin_p) and !clipoutside_p) or
+					isnan(visExpression))
+			{
+				flags.applyFlag(chan_i,row);
+			}
+		}
 	}
 
 	return;
 }
-
-
 
 } //# NAMESPACE CASA - END
 

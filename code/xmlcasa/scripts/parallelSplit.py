@@ -139,7 +139,7 @@ class MultiMS:
             if line[0] == '!':
                 self.addMS(line[1:].rstrip(), False)
             else:
-                self.addMS(line.rstrip(), true)
+                self.addMS(line.rstrip(), True)
         fd.close()
         print self.__entryDict
 

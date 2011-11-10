@@ -254,15 +254,24 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 		return x;
 	}
 		
+	
 		
-
+	void SquareLawDetectorTable::addWithoutCheckingUnique(SquareLawDetectorRow * x) {
+		if (getRowByKey(
+						x->getSquareLawDetectorId()
+						) != (SquareLawDetectorRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "SquareLawDetectorTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -286,7 +295,7 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 		,
 			x->getBandType()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table SquareLawDetectorTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -302,6 +311,16 @@ SquareLawDetectorRow* SquareLawDetectorTable::newRow(SquareLawDetectorRow* row) 
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void SquareLawDetectorTable::append(SquareLawDetectorRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -472,12 +491,17 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SquareLawDetectorRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -486,10 +510,27 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 			catch (...) {
 				// cout << "Unexpected error in SquareLawDetectorTable::checkAndAdd called from SquareLawDetectorTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SquareLawDetectorTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SquareLawDetectorTable::addWithoutCheckingUnique called from SquareLawDetectorTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</SquareLawDetectorTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -714,19 +755,27 @@ SquareLawDetectorRow* SquareLawDetectorTable::lookup(int numBand, DetectorBandTy
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	SquareLawDetectorRow* aRow = SquareLawDetectorRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				SquareLawDetectorRow* aRow = SquareLawDetectorRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "SquareLawDetector");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "SquareLawDetector");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			SquareLawDetectorRow* aRow = SquareLawDetectorRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -851,6 +900,7 @@ void SquareLawDetectorTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SquareLawDetector");

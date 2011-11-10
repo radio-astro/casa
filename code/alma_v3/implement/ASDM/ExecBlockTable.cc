@@ -414,15 +414,24 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void ExecBlockTable::addWithoutCheckingUnique(ExecBlockRow * x) {
+		if (getRowByKey(
+						x->getExecBlockId()
+						) != (ExecBlockRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "ExecBlockTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -482,7 +491,7 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
 		,
 			x->getSBSummaryId()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table ExecBlockTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -498,6 +507,16 @@ ExecBlockRow* ExecBlockTable::newRow(ExecBlockRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void ExecBlockTable::append(ExecBlockRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -704,12 +723,17 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		ExecBlockRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"ExecBlockTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -718,10 +742,27 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 			catch (...) {
 				// cout << "Unexpected error in ExecBlockTable::checkAndAdd called from ExecBlockTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"ExecBlockTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in ExecBlockTable::addWithoutCheckingUnique called from ExecBlockTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</ExecBlockTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -1024,19 +1065,27 @@ ExecBlockRow* ExecBlockTable::lookup(ArrayTime startTime, ArrayTime endTime, int
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	ExecBlockRow* aRow = ExecBlockRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				ExecBlockRow* aRow = ExecBlockRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "ExecBlock");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "ExecBlock");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			ExecBlockRow* aRow = ExecBlockRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -1161,6 +1210,7 @@ void ExecBlockTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "ExecBlock");

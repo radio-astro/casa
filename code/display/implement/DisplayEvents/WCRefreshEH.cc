@@ -34,9 +34,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 WCRefreshEH::WCRefreshEH() {
 }
 
-void WCRefreshEH::operator()(const WCRefreshEvent &) {
-}
-
 // Destructor
 WCRefreshEH::~WCRefreshEH() {
 }

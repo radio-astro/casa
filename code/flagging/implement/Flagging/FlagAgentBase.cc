@@ -25,6 +25,8 @@
 // Needed for the factory method (create)
 #include <flagging/Flagging/FlagAgentTimeFreqCrop.h>
 #include <flagging/Flagging/FlagAgentClipping.h>
+#include <flagging/Flagging/FlagAgentSummary.h>
+#include <flagging/Flagging/FlagAgentManual.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -130,6 +132,7 @@ FlagAgentBase::initialize()
    profiling_p = false;
    backgroundMode_p = true;
    iterationApproach_p = ROWS;
+   preProcessBuffer_p = false;
    multiThreading_p = false;
    nThreads_p = 0;
    threadId_p = 0;
@@ -142,6 +145,7 @@ FlagAgentBase::initialize()
    dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
+   checkFlags_p = false;
 
    /////////////////////////////////
 
@@ -161,31 +165,34 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	}
 	else
 	{
-		cout << "FlagAgentBase::" << __FUNCTION__ << " Mode not provided" << endl;
+		cerr << "FlagAgentBase::" << __FUNCTION__ << " Mode not provided" << endl;
 		return ret;
 	}
 
-	// Manual mode
+	// Write private flags only if extension is required
 	bool writePrivateFlags = false;
+	if ((config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true))
+	{
+		writePrivateFlags = true;
+	}
+
+	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
-		ret = new FlagAgentBase(dh,config,ROWS,writePrivateFlags);
-		return ret;
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
+		return agent;
 	}
 
 	// Unflag mode
 	if (mode.compare("unflag")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
-		ret = new FlagAgentBase(dh,config,ROWS,writePrivateFlags,false);
-		return ret;
+		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
+		return agent;
 	}
 
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags);
 		return agent;
 	}
@@ -193,8 +200,14 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Clip
 	if (mode.compare("clip")==0)
 	{
-		(config.fieldNumber ("extend")>=0) and (config.asBool("extend")==true)? writePrivateFlags = true:writePrivateFlags = false;
 		FlagAgentClipping* agent = new FlagAgentClipping(dh,config,writePrivateFlags);
+		return agent;
+	}
+
+	// Summary
+	if (mode.compare("summary")==0)
+	{
+		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
 
@@ -319,17 +332,20 @@ FlagAgentBase::runCore()
 			// Iterate trough rows (i.e. baselines)
 			case ROWS:
 			{
+				if (preProcessBuffer_p) preProcessBuffer();
 				iterateRows();
 				break;
 			}
 			// Iterate inside every row (i.e. channels) applying a mapping expression
 			case IN_ROWS:
 			{
+				if (preProcessBuffer_p) preProcessBuffer();
 				iterateInRows();
 				break;
 			}
 			default:
 			{
+				if (preProcessBuffer_p) preProcessBuffer();
 				iterateRows();
 				break;
 			}
@@ -901,6 +917,12 @@ FlagAgentBase::checkIfProcessBuffer()
 }
 
 void
+FlagAgentBase::preProcessBuffer()
+{
+	return;
+}
+
+void
 FlagAgentBase::iterateRows()
 {
 	// Create FlagMapper objects and parse the correlation selection
@@ -909,11 +931,28 @@ FlagAgentBase::iterateRows()
 	// Set CubeViews in FlagMapper
 	setFlagsMap(NULL,&flagsMap);
 
-	// Some logging info
-	*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
-			rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
-			channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
-			polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
+
+	// Some log info
+	if (multiThreading_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagAgentBase::" << __FUNCTION__
+				<<  " Thread Id " << threadId_p << ":" << nThreads_p
+				<< " Will process every " << nThreads_p << " rows starting with row " << threadId_p << " from a total of " <<
+				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
+				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
+				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+
+	}
+	else
+	{
+		// Some logging info
+		*logger_p 	<< LogIO::NORMAL << "Going to process a buffer with: " <<
+				rowsIndex_p.size() << " rows (" << rowsIndex_p[0] << "-" << rowsIndex_p[rowsIndex_p.size()-1] << ") " <<
+				channelIndex_p.size() << " channels (" << channelIndex_p[0] << "-" << channelIndex_p[channelIndex_p.size()-1] << ") " <<
+				polarizationIndex_p.size() << " polarizations (" << polarizationIndex_p[0] << "-" << polarizationIndex_p[polarizationIndex_p.size()-1] << ")" << LogIO::POST;
+	}
 
 	// Loop trough selected rows
 	Int rowIdx = 0;
@@ -951,6 +990,9 @@ FlagAgentBase::iterateInRows()
 
 	// Set CubeViews in FlagMapper
 	setFlagsMap(NULL,&flagsMap);
+
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
 
 	// Some log info
 	if (multiThreading_p)
@@ -1004,6 +1046,9 @@ FlagAgentBase::iterateAntennaPairs()
 	// Create VisMapper and FlagMapper objects and parse the polarization expression
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
 	FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
+
+	// Activate check mode
+	if (checkFlags_p) flagsMap.activateCheckMode();
 
 	// Some log info
 	if (multiThreading_p)
@@ -1271,6 +1316,16 @@ void FlagAgentList::setProfiling(bool enable)
 	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
 	{
 		(*iterator_p)->setProfiling(enable);
+	}
+
+	return;
+}
+
+void FlagAgentList::setCheckMode(bool enable)
+{
+	for (iterator_p = container_p.begin();iterator_p != container_p.end(); iterator_p++)
+	{
+		(*iterator_p)->setCheckMode(enable);
 	}
 
 	return;

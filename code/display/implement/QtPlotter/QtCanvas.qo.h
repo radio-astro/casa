@@ -98,10 +98,8 @@ public:
     void plotPolyLine(const Matrix<Float> &verts);
     void plotPolyLine(const Matrix<Double> &verts);
    // template<class T>
-    void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
-    void drawImage(const Matrix<uInt> &data);
-    void setMarkMode(bool);
-    
+   // void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
+   // void drawImage(const Matrix<uInt> &data);
     QColor getLinearColor(double);
     QSize minimumSizeHint() const;
     QSize sizeHint() const;
@@ -121,20 +119,22 @@ public:
                     const QString &font = "Helvetica [Cronyx]");
     void setAutoScaleX(int a) {autoScaleX = a; }
     void setAutoScaleY(int a) {autoScaleY = a; }
+    int getAutoScaleX( ) {return autoScaleX;}
+    int getAutoScaleY( ) {return autoScaleY;}
     void setPlotError(int a)  {plotError = a; setDataRange();}
 
 public slots:
     void zoomIn();
     void zoomOut();
-    void markPrev();
-    void markNext();
+    void zoomNeutral();
     
 signals:
-    void zoomChanged();    
+    void xRangeChanged(float xmin, float xmax);
    
 protected:
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
+
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
@@ -143,6 +143,7 @@ protected:
 
 protected:
     void updateRubberBandRegion();
+    void updatexRangeBandRegion();
     void refreshPixmap();    
     void drawGrid(QPainter *painter);
     void drawTicks(QPainter *painter);
@@ -150,8 +151,10 @@ protected:
     void drawWelcome(QPainter *painter);
     void drawCurves(QPainter *painter);
     void drawRects(QPainter *painter);
-       
-    enum { Margin = 80 };
+    void defaultZoomIn();
+    void defaultZoomOut();
+
+    enum { MARGIN = 80 , FRACZOOM=20};
 
     GraphLabel title;
     GraphLabel xLabel;
@@ -166,9 +169,11 @@ protected:
     int curZoom;
     int curMarker;
     bool rubberBandIsShown;
+    bool xRangeIsShown;
     bool imageMode;
-    bool markMode;
+    bool xRangeMode;
     QRect rubberBandRect;
+    QRect xRangeRect;
     QPixmap pixmap;
     QPixmap backBuffer;
     Matrix<uInt> *pMask;

@@ -702,6 +702,22 @@ private:
 	 
 	 */
 	CalHolographyRow* checkAndAdd(CalHolographyRow* x) ;
+	
+	/**
+	 * Brutally append an CalHolographyRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalHolographyRow* x a pointer onto the CalHolographyRow to be appended.
+	 */
+	 void append(CalHolographyRow* x) ;
+	 
+	/**
+	 * Brutally append an CalHolographyRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param CalHolographyRow* x a pointer onto the CalHolographyRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(CalHolographyRow* x) ;
+	 
+	 
 
 
 

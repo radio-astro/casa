@@ -52,8 +52,8 @@ casa_add_library( alma_v3
   implement/ASDMBinaries/SDMDataObjectStreamReader.cc
   implement/ASDMBinaries/SDMDataObjectWriter.cc
   implement/ASDMBinaries/SwitchCyclesList.cc
-  implement/ASDM/Boolean.cc
-  implement/ASDM/Byte.cc
+  implement/ASDM/BooleanWrapper.cc
+  implement/ASDM/ByteWrapper.cc
   implement/ASDM/CalAmpliRow.cc
   implement/ASDM/CalAmpliTable.cc
   implement/ASDM/CalAtmosphereRow.cc
@@ -94,8 +94,8 @@ casa_add_library( alma_v3
   implement/ASDM/CalSeeingTable.cc
   implement/ASDM/CalWVRRow.cc
   implement/ASDM/CalWVRTable.cc
-  implement/ASDM/Character.cc
-  implement/ASDM/Complex.cc
+  implement/ASDM/CharacterWrapper.cc
+  implement/ASDM/ComplexWrapper.cc
   implement/ASDM/ConfigDescriptionRow.cc
   implement/ASDM/ConfigDescriptionTable.cc
   implement/ASDM/ConversionException.cc
@@ -107,7 +107,7 @@ casa_add_library( alma_v3
   implement/ASDM/DelayModelTable.cc
   implement/ASDM/DopplerRow.cc
   implement/ASDM/DopplerTable.cc
-  implement/ASDM/Double.cc
+  implement/ASDM/DoubleWrapper.cc
   implement/ASDM/DuplicateKey.cc
   implement/ASDM/EndianStream.cc
   implement/ASDM/Entity.cc
@@ -126,7 +126,7 @@ casa_add_library( alma_v3
   implement/ASDM/FlagTable.cc
   implement/ASDM/FlagCmdRow.cc
   implement/ASDM/FlagCmdTable.cc
-  implement/ASDM/Float.cc
+  implement/ASDM/FloatWrapper.cc
   implement/ASDM/Flux.cc
   implement/ASDM/FocusModelRow.cc
   implement/ASDM/FocusModelTable.cc
@@ -143,12 +143,12 @@ casa_add_library( alma_v3
   implement/ASDM/HolographyTable.cc
   implement/ASDM/Humidity.cc
   implement/ASDM/IllegalAccessException.cc
-  implement/ASDM/Integer.cc
+  implement/ASDM/IntegerWrapper.cc
   implement/ASDM/Interval.cc
   implement/ASDM/InvalidArgumentException.cc
   implement/ASDM/InvalidDataException.cc
   implement/ASDM/Length.cc
-  implement/ASDM/Long.cc
+  implement/ASDM/LongWrapper.cc
   implement/ASDM/MainRow.cc
   implement/ASDM/MainTable.cc
   implement/ASDM/Merger.cc
@@ -181,7 +181,7 @@ casa_add_library( alma_v3
   implement/ASDM/ScanTable.cc
   implement/ASDM/SeeingRow.cc
   implement/ASDM/SeeingTable.cc
-  implement/ASDM/Short.cc
+  implement/ASDM/ShortWrapper.cc
   implement/ASDM/SourceRow.cc
   implement/ASDM/SourceTable.cc
   implement/ASDM/SpectralWindowRow.cc

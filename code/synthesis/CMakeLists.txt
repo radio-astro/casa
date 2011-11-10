@@ -195,3 +195,4 @@ casa_add_assay( synthesis implement/MeasurementEquations/test/tIncCEMemModel.cc 
 casa_add_assay( synthesis implement/MeasurementEquations/test/tLatConvEquation.cc )
 casa_add_assay( synthesis implement/MeasurementEquations/test/tStokesUtil.cc )
 casa_add_assay( synthesis implement/Parallel/test/tApplicator.cc )
+

@@ -310,15 +310,24 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void CorrelatorModeTable::addWithoutCheckingUnique(CorrelatorModeRow * x) {
+		if (getRowByKey(
+						x->getCorrelatorModeId()
+						) != (CorrelatorModeRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "CorrelatorModeTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -356,7 +365,7 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
 		,
 			x->getCorrelatorName()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table CorrelatorModeTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -372,6 +381,16 @@ CorrelatorModeRow* CorrelatorModeTable::newRow(CorrelatorModeRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void CorrelatorModeTable::append(CorrelatorModeRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -556,12 +575,17 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		CorrelatorModeRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"CorrelatorModeTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -570,10 +594,27 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 			catch (...) {
 				// cout << "Unexpected error in CorrelatorModeTable::checkAndAdd called from CorrelatorModeTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"CorrelatorModeTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in CorrelatorModeTable::addWithoutCheckingUnique called from CorrelatorModeTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</CorrelatorModeTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -819,19 +860,27 @@ CorrelatorModeRow* CorrelatorModeTable::lookup(int numBaseband, vector<BasebandN
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	CorrelatorModeRow* aRow = CorrelatorModeRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				CorrelatorModeRow* aRow = CorrelatorModeRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "CorrelatorMode");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "CorrelatorMode");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			CorrelatorModeRow* aRow = CorrelatorModeRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -956,6 +1005,7 @@ void CorrelatorModeTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "CorrelatorMode");

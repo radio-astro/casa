@@ -426,6 +426,9 @@ public:
 	 *
 	 * @return a pointer on a vector<MainRow *>. A null returned value means that the table contains
 	 * no MainRow for the given ( configDescriptionId, fieldId ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <MainRow*> *getByContext(Tag configDescriptionId, Tag fieldId);
 	 
@@ -544,6 +547,22 @@ private:
 	 
 	 */
 	MainRow* checkAndAdd(MainRow* x) ;
+	
+	/**
+	 * Brutally append an MainRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param MainRow* x a pointer onto the MainRow to be appended.
+	 */
+	 void append(MainRow* x) ;
+	 
+	/**
+	 * Brutally append an MainRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param MainRow* x a pointer onto the MainRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(MainRow* x) ;
+	 
+	 
 
 
 	

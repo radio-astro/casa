@@ -37,7 +37,7 @@
 namespace casa {
 
     class PanelDisplay;
-    class AnnRegion;
+    class AnnotationBase;
     class MSAsRaster;
 
     namespace viewer {
@@ -57,7 +57,7 @@ namespace casa {
 		int clickHandle( double x, double y ) const;
 
 		// returns mouse movement state
-		int mouseMovement( double x, double y, bool other_selected );
+		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		// for rectangles, resizing can change the handle...
 		// for rectangles, moving a handle is resizing...
@@ -67,7 +67,7 @@ namespace casa {
 
 		void regionCenter( double &x, double &y ) const;
 
-		AnnRegion *annotation( ) const;
+		AnnotationBase *annotation( ) const;
 
 		virtual bool flag( MSAsRaster *msar );
 

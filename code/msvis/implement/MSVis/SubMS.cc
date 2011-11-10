@@ -1197,20 +1197,19 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
                                  const Int nCorr, const String& telescop,
                                  const Vector<MS::PredefinedColumns>& colNames,
-                                 const Int obstype)
-                                 //const Bool compress)
+                                 const Int obstype,
+                                 const Bool compress)
   {
     //Choose an appropriate tileshape
     IPosition dataShape(2, nCorr, nchan);
     IPosition tileShape = MSTileLayout::tileShape(dataShape, obstype, telescop);
-    //return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress);
-    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector());
+    return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector(),compress);
+    //return setupMS(MSFileName, nchan, nCorr, colNames, tileShape.asVector());
   }
   MeasurementSet* SubMS::setupMS(const String& MSFileName, const Int nchan,
                                  const Int nCorr, 
                                  const Vector<MS::PredefinedColumns>& colNamesTok,
-                                 const Vector<Int>& tshape)
-                                 //const Vector<Int>& tshape, const Bool compress)
+                                 const Vector<Int>& tshape, const Bool compress)
   {
     if(tshape.nelements() != 3)
       throw(AipsError("TileShape has to have 3 elements ") );
@@ -1249,8 +1248,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     if (mustWriteOnlyToData)
       {
         MS::addColumnToDesc(td, MS::DATA, 2);
-        //diable data compression for now -tt 08/15/11
-        //if (compress) MS::addColumnCompression(td,MS::DATA,true);
+        if (compress) MS::addColumnCompression(td,MS::DATA,true);
         String hcolName=String("Tiled")+String("DATA");
         td.defineHypercolumn(hcolName, 3,
                              stringToVector("DATA"));
@@ -1268,8 +1266,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
            colNamesTok[i] == MS::FLOAT_DATA ||
            colNamesTok[i] == MS::LAG_DATA) {
           MS::addColumnToDesc(td, colNamesTok[i], 2);
-          //disable data compression for now
-          //if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
+          if (compress) MS::addColumnCompression(td,colNamesTok[i],true);
         }
         else {
           throw(AipsError(MS::columnName(colNamesTok[i]) +
@@ -1283,13 +1280,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     }
 
     //other cols for compression
-    // disable data compression for now
-    /***
     if (compress) {
       MS::addColumnCompression(td, MS::WEIGHT, true);
       MS::addColumnCompression(td, MS::SIGMA, true);
     }
-    ***/ 
     
     // add this optional column because random group fits has a
     // weight per visibility
@@ -1622,6 +1616,11 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
         keepShape_p = false;
 
+        // The sign of CHAN_WIDTH defaults to +.  Its determination assumes
+        // that chanFreqIn is monotonic, but not that the sign of the
+        // chanWidthIn is correct.
+        Bool neginc = chanFreqIn[chanFreqIn.nelements() - 1] < chanFreqIn[0];
+
         effBWOut.set(0.0);
         Double totalBW = 0.0;
         for(uInt rangeNum = 0;
@@ -1636,17 +1635,27 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
             if(span > 1){
               Int lastChan = inpChan + span - 1;
 
-              if(lastChan > chanEnd_p[k])
+              if(lastChan > chanEnd_p[k]){
                 // The averaging width is not a factor of the number of
                 // selected input channels, so the last output bin receives
                 // fewer input channels than the other bins.
                 lastChan = chanEnd_p[k];
 
+                Int nchan = lastChan - inpChan + 1;
+                os << LogIO::WARN
+                   << "The last output channel of spw " << k
+                   << " has only " << nchan << " input channel";
+                if(nchan > 1)
+                  os << "s.";
+                else
+                  os << ".\nRemember that MS selection ranges (unlike Python), *include* the last number.";
+                os << LogIO::POST;
+              }
+
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
                                       chanFreqIn[lastChan]) / 2;
 
               Double sep = chanFreqIn[lastChan] - chanFreqIn[inpChan];
-              Bool neginc = sep < 0.0;
 
               if(neginc)
                 sep = -sep;
@@ -8336,10 +8345,15 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   // interval[bin_start]).
   //
   // late April 2011: MSIter removed the bias, which threw off the correction.
+  // October 2011: The bias seems to be back, possibly because of a change in
+  //               when MSInterval's "offset" is reset.
+  //               But, then, practically, timebins can be cut short but never
+  //               lengthened by changes in scan, state, or obs ID, so it seems
+  //               better to leave the bias in!
   //
-  ROVisibilityIterator vi(mssel_p, sort,
-                          //timeBin_p - 0.5 * mscIn_p->interval()(0));
-                          timeBin_p);
+  //Double tbin = mscIn_p->interval()(0);
+  //tbin = timeBin_p > tbin ? timeBin_p - 0.5 * tbin : timeBin_p;
+  ROVisibilityIterator vi(mssel_p, sort, timeBin_p);
   //vi.slurp();
   //cerr << "Finished slurping." << endl;
 
@@ -8590,17 +8604,22 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   if(watch_obs)
     sort[colnum] = MS::OBSERVATION_ID;
 
-  // MSIter used to tend toward output INTERVALs that are longer than the
+  // MSIter tends to produce output INTERVALs that are longer than the
   // requested interval length, by ~0.5 input integrations for a random
   // timeBin_p.  Giving it timeBin_p - 0.5 * interval[0] removes the bias and
   // brings it almost in line with binTimes() (which uses -0.5 *
   // interval[bin_start]).
   //
-  // MSIter removed the bias in late April 2011.
+  // late April 2011: MSIter removed the bias, which threw off the correction.
+  // October 2011: The bias seems to be back, possibly because of a change in
+  //               when MSInterval's "offset" is reset.
+  //               But, then, practically, timebins can be cut short but never
+  //               lengthened by changes in scan, state, or obs ID, so it seems
+  //               better to leave the bias in!
   //
-  ROVisIterator vi(mssel_p, sort,
-                   //timeBin_p - 0.5 * mscIn_p->interval()(0));
-                   timeBin_p);
+  //Double tbin = mscIn_p->interval()(0);
+  //tbin = timeBin_p > tbin ? timeBin_p - 0.5 * tbin : timeBin_p;
+  ROVisIterator vi(mssel_p, sort, timeBin_p);
   
   // Apply selection
   vi.selectChannel(chanSlices_p);     // ROVisIterator

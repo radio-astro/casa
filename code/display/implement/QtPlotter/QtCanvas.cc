@@ -58,14 +58,13 @@ QtCanvas::QtCanvas(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     setFocusPolicy(Qt::StrongFocus);
     rubberBandIsShown = false;
+    xRangeIsShown=false;
     imageMode = false;
-    
     setPlotSettings(QtPlotSettings());
-    setMarkMode(false);
+    xRangeMode=false;
     autoScaleX = 2;
     autoScaleY = 2;
     plotError  = 2;
-    
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
@@ -76,12 +75,6 @@ void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
        curZoom = 0;
     }
     else {
-       //cout << "set setting" << endl;
-       //cout << "minX=" << settings.minX 
-       //     << " maxX=" << settings.maxX 
-       //     << " minY=" << settings.minY 
-       //     << " maxY=" << settings.maxY 
-       //     << endl;
        if (zoomStack.size() < 1) {
           zoomStack.resize(1);
           curZoom = 0;
@@ -96,44 +89,85 @@ void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
 
 void QtCanvas::zoomOut()
 {
+	xRangeIsShown=false;
     if (curZoom > 0)
     {
         --curZoom;        
         refreshPixmap();
-        emit zoomChanged();
     }
+    else
+    {
+    	if (curveMap.size() != 0)
+    		defaultZoomOut();
+    }
+    emit xRangeChanged(1.0,0.0);
+}
+void QtCanvas::defaultZoomOut()
+{
+	QtPlotSettings prevSettings = zoomStack[curZoom];
+	QtPlotSettings settings;
+    std::vector<QtPlotSettings>::iterator it;
+    it = zoomStack.begin();
+
+	settings.minX = prevSettings.minX - (double)FRACZOOM/100.0*prevSettings.spanX();
+	settings.maxX = prevSettings.maxX + (double)FRACZOOM/100.0*prevSettings.spanX();
+	settings.minY = prevSettings.minY - (double)FRACZOOM/100.0*prevSettings.spanY();
+	settings.maxY = prevSettings.maxY + (double)FRACZOOM/100.0*prevSettings.spanY();
+	settings.adjust();
+
+	//zoomStack.resize(zoomStack.size() + 1);
+	it = zoomStack.insert ( it , settings);
+    refreshPixmap();
 }
 
 void QtCanvas::zoomIn()
 {
+	//xRangeIsShown=false;
+	//updatexRangeBandRegion();
+	//emit xRangeChanged(1.0,0.0);
+
     if (curZoom < (int)zoomStack.size() - 1)
     {
-        ++curZoom;        
+    	xRangeIsShown=false;
+       ++curZoom;
         refreshPixmap();
-        emit zoomChanged();
+    	emit xRangeChanged(1.0,0.0);
     }
-}
-void QtCanvas::markNext()
-{
-    
-    //cout << " curMarker=" << curMarker 
-    //<< " size=" << (int)markerStack.size() << endl;
-   if (markMode && curMarker < (int)markerStack.size() - 1)
-    {               
-        ++curMarker;	
-    }
-    refreshPixmap();
-}
-void QtCanvas::markPrev()
-{    
-   //cout << " --------------curMarker=" << curMarker 
-   // << " size=" << (int)markerStack.size() << endl;
-   if (markMode && curMarker > 0)
+    else
     {
-        --curMarker; 
-        refreshPixmap();
+    	if (curveMap.size() != 0)
+    		defaultZoomIn();
     }
 }
+
+void QtCanvas::defaultZoomIn()
+{
+	QtPlotSettings prevSettings = zoomStack[curZoom];
+	QtPlotSettings settings;
+
+	settings.minX = prevSettings.minX + (double)FRACZOOM/100.0*prevSettings.spanX();
+	settings.maxX = prevSettings.maxX - (double)FRACZOOM/100.0*prevSettings.spanX();
+	settings.minY = prevSettings.minY + (double)FRACZOOM/100.0*prevSettings.spanY();
+	settings.maxY = prevSettings.maxY - (double)FRACZOOM/100.0*prevSettings.spanY();
+	settings.adjust();
+
+	//zoomStack.resize(curZoom + 1);
+	zoomStack.push_back(settings);
+	zoomIn();
+}
+
+void QtCanvas::zoomNeutral()
+{
+	xRangeIsShown=false;
+
+    zoomStack.resize(1);
+    zoomStack[0] = QtPlotSettings();
+    curZoom = 0;
+
+    setDataRange();
+	emit xRangeChanged(1.0,0.0);
+}
+
 int QtCanvas::getLineCount()
 {
     return curveMap.size();
@@ -256,12 +290,12 @@ void QtCanvas::clearCurve(int id)
 
 QSize QtCanvas::minimumSizeHint() const
 {
-    return QSize(4 * Margin, 4 * Margin);
+    return QSize(4 * MARGIN, 4 * MARGIN);
 }
 
 QSize QtCanvas::sizeHint() const
 {
-    return QSize(8 * Margin, 6 * Margin);
+    return QSize(8 * MARGIN, 6 * MARGIN);
 }
 
 void QtCanvas::paintEvent(QPaintEvent *event)
@@ -277,9 +311,14 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     if (rubberBandIsShown)
     {
         painter.setPen(Qt::yellow);
-        //painter.fillRect(rubberBandRect, Qt::transparent);
-        //painter.fillRect(rubberBandRect, QColor(100,100,100,100));
+        painter.fillRect(rubberBandRect, Qt::transparent);
         painter.drawRect(rubberBandRect.normalized());
+    }
+    if (xRangeIsShown)
+    {
+        painter.setPen(Qt::black);
+        painter.fillRect(xRangeRect, QColor(100,100,100,100));
+        painter.drawRect(xRangeRect.normalized());
     }
     if (hasFocus())
     {
@@ -299,27 +338,37 @@ void QtCanvas::resizeEvent(QResizeEvent *)
 
 void QtCanvas::mousePressEvent(QMouseEvent *event)
 {
-	//cout << "Mouse pressed event-->" << endl;
 	if (event->button() == Qt::LeftButton)
 	{
-		//cout << "Left button! " << endl;
-		rubberBandIsShown = true;
-		rubberBandRect.setTopLeft(event->pos());
-		rubberBandRect.setBottomRight(event->pos());
-		updateRubberBandRegion();
+		if (event->modifiers().testFlag(Qt::ShiftModifier)){
+		    xRangeMode=true;
+			xRangeIsShown = true;
+			xRangeRect.setLeft(event->pos().x());
+			xRangeRect.setRight(event->pos().x());
+			xRangeRect.setBottom(MARGIN);
+			xRangeRect.setTop(height()-MARGIN-1);
+			updatexRangeBandRegion();
+		}
+		else {
+			xRangeIsShown = false;
+			rubberBandIsShown = true;
+			rubberBandRect.setTopLeft(event->pos());
+			rubberBandRect.setBottomRight(event->pos());
+			updateRubberBandRegion();
+		}
 		setCursor(Qt::CrossCursor);
 	}
 	if (event->button() == Qt::RightButton)
 	{
 		//cout << "Right button! " << endl;
-		int x = event->pos().x() - Margin;
-		int y = event->pos().y() - Margin;
+		int x = event->pos().x() - MARGIN;
+		int y = event->pos().y() - MARGIN;
 		//cout << "x=" << x << " y=" << y << endl;
 		QtPlotSettings prevSettings = zoomStack[curZoom];
 		QtPlotSettings settings;
 
-		double dx = prevSettings.spanX() / (width() - 2 * Margin);
-		double dy = prevSettings.spanY() / (height() - 2 * Margin);
+		double dx = prevSettings.spanX() / (width() - 2 * MARGIN);
+		double dy = prevSettings.spanY() / (height() - 2 * MARGIN);
 		x = (int)(prevSettings.minX + dx * x);
 		y = (int)(prevSettings.maxY - dy * y);
 		//cout << "x=" << x << " y=" << y << endl;
@@ -345,85 +394,125 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 }
 void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 {
-    if (event->buttons() & Qt::LeftButton)
-    {
-        updateRubberBandRegion();
-        rubberBandRect.setBottomRight(event->pos());
-        updateRubberBandRegion();
-    }
+	//qDebug()  << "Mouse moved event" << event->pos();
+	if (event->buttons() & Qt::LeftButton)
+	{
+		if (rubberBandIsShown){
+			updateRubberBandRegion();
+			rubberBandRect.setBottomRight(event->pos());
+			updateRubberBandRegion();
+		}
+		else if (xRangeIsShown){
+			updatexRangeBandRegion();
+			xRangeRect.setRight(event->pos().x());
+
+			QRect rect = xRangeRect.normalized();
+
+			// zero the coordinates on the plot region
+			rect.translate(-MARGIN, -MARGIN);
+
+			QtPlotSettings currSettings = zoomStack[curZoom];
+
+			double dx = currSettings.spanX() / (width() - 2 * MARGIN);
+			double minX = currSettings.minX + dx * rect.left();
+			double maxX = currSettings.minX + dx * rect.right();
+			emit xRangeChanged(minX, maxX);
+			updatexRangeBandRegion();
+		}
+	}
 }
 
 void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 {
-    //qDebug() << "mouse release" << event->button() << Qt::LeftButton;
-    if (event->button() == Qt::LeftButton)
-    {
-        rubberBandIsShown = false;
-        updateRubberBandRegion();
-        unsetCursor();
+	//qDebug() << "mouse release" << event->button() << Qt::LeftButton;
+	if (event->button() == Qt::LeftButton)
+	{
+		if (xRangeMode){
+			//xRangeIsShown = false;
+			updatexRangeBandRegion();
+			unsetCursor();
 
-        QRect rect = rubberBandRect.normalized();
-        
-        //qDebug() << "rect: left" << rect.left()
-        //         << "right" << rect.right()
-        //         << "top" << rect.top()
-        //         << "bottom" << rect.bottom()
-        //         << "width" << width()
-        //         << "height" << height()
-        //         << "margin" << Margin;
-        //zoom only if zoom box is in the plot region
-        if (rect.left() < Margin || rect.top() < Margin ||
-            rect.right() > width() - Margin ||
-            rect.bottom() > height() -  Margin)
-            return;
-        //qDebug() << "inside";
-        
-        if (rect.width() < 4 || rect.height() < 4)
-            return;
-        //qDebug() << "big enough";    
-        
-        //cout << "numCurves " << curveMap.size() << endl;
-        //if (curveMap.size() == 0)
-        //    return;
- 
-        rect.translate(-Margin, -Margin);
+			QRect rect = xRangeRect.normalized();
 
-        QtPlotSettings prevSettings = zoomStack[curZoom];
-        QtPlotSettings settings;
+			if (rect.left() < 0 || rect.top() < 0 ||
+					rect.right() > width() ||
+					rect.bottom() > height())
+				return;
 
-        double dx = prevSettings.spanX() / (width() - 2 * Margin);
-        double dy = prevSettings.spanY() / (height() - 2 * Margin);
-        settings.minX = prevSettings.minX + dx * rect.left();
-        settings.maxX = prevSettings.minX + dx * rect.right();
-        settings.minY = prevSettings.maxY - dy * rect.bottom();
-        settings.maxY = prevSettings.maxY - dy * rect.top();
-        settings.adjust();
-        if (!markMode)
-        {
-            if (curveMap.size() != 0) {
-            //qDebug() << "zoomin ";
-            zoomStack.resize(curZoom + 1);
-            zoomStack.push_back(settings);
-            zoomIn();
-            }
-        }
-        else
-        {
-            //qDebug() << "mark ";
-            CurveData data;
-            data.push_back(settings.minX);
-            data.push_back(settings.maxY);
-            data.push_back(settings.maxX);
-            data.push_back(settings.minY);
+			if (rect.width() < 4){
+				xRangeIsShown=false;
+				return;
+			}
 
-            //cout << " minX=" << (int)settings.minX
-            //<< " maxX=" << (int)settings.maxX
-            //<< " minY=" <<  (int)settings.minY
-            //<< " maxY=" << (int)settings.maxY << endl;
-            markerStack[markerStack.size()] = data;
-	    markNext();
-        }
-    }
+			// zero the coordinates on the plot region
+			rect.translate(-MARGIN, -MARGIN);
+
+			QtPlotSettings currSettings = zoomStack[curZoom];
+
+			double dx = currSettings.spanX() / (width() - 2 * MARGIN);
+			double minX = currSettings.minX + dx * rect.left();
+			double maxX = currSettings.minX + dx * rect.right();
+			emit xRangeChanged(minX, maxX);
+
+			//if (!shiftPressed)
+			xRangeMode=false;
+		}
+		else {
+			rubberBandIsShown = false;
+			updateRubberBandRegion();
+			unsetCursor();
+
+			QRect rect = rubberBandRect.normalized();
+
+			//qDebug() << "rect: left" << rect.left()
+			//         << "right" << rect.right()
+			//         << "top" << rect.top()
+			//         << "bottom" << rect.bottom()
+			//         << "width" << width()
+			//         << "height" << height()
+			//         << "MARGIN" << MARGIN;
+			//zoom only if zoom box is in the plot region
+			//if (rect.left() < MARGIN || rect.top() < MARGIN ||
+			//   rect.right() > width() - MARGIN ||
+			//    rect.bottom() > height() -  MARGIN)
+			//    return;
+			//        //zoom only if zoom box is in the plot region
+			if (rect.left() < 0 || rect.top() < 0 ||
+					rect.right() > width() ||
+					rect.bottom() > height())
+				return;
+			//qDebug() << "inside";
+
+			if (rect.width() < 4 || rect.height() < 4)
+				return;
+			//qDebug() << "big enough";
+
+			//cout << "numCurves " << curveMap.size() << endl;
+			//if (curveMap.size() == 0)
+			//    return;
+
+			// zero the coordinates on the plot region
+			rect.translate(-MARGIN, -MARGIN);
+
+			QtPlotSettings prevSettings = zoomStack[curZoom];
+			QtPlotSettings settings;
+
+			double dx = prevSettings.spanX() / (width() - 2 * MARGIN);
+			double dy = prevSettings.spanY() / (height() - 2 * MARGIN);
+			settings.minX = prevSettings.minX + dx * rect.left();
+			settings.maxX = prevSettings.minX + dx * rect.right();
+			settings.minY = prevSettings.maxY - dy * rect.bottom();
+			settings.maxY = prevSettings.maxY - dy * rect.top();
+			//qDebug() << "min-x: " << settings.minX << " max-x: " << settings.maxX;
+			settings.adjust();
+			if (curveMap.size() != 0) {
+				//qDebug() << "zoomin ";
+				zoomStack.resize(curZoom + 1);
+				zoomStack.push_back(settings);
+				zoomIn();
+			}
+		}
+	}
 }
 
 void QtCanvas::keyPressEvent(QKeyEvent *event)
@@ -453,6 +542,13 @@ void QtCanvas::keyPressEvent(QKeyEvent *event)
         zoomStack[curZoom].scroll(0, +1);
         refreshPixmap();
         break;
+    case Qt::Key_Escape:
+    	if (xRangeIsShown){
+    		xRangeIsShown=false;
+    		updatexRangeBandRegion();
+    		emit xRangeChanged(1.0,0.0);
+    	}
+        break;
     default:
         QWidget::keyPressEvent(event);
     }
@@ -480,6 +576,12 @@ void QtCanvas::updateRubberBandRegion()
     update();
 }
 
+void QtCanvas::updatexRangeBandRegion()
+{
+    update();
+}
+
+
 void QtCanvas::refreshPixmap()
 {
     pixmap = QPixmap(size());
@@ -496,8 +598,6 @@ void QtCanvas::refreshPixmap()
     {
         drawBackBuffer(&painter);
         drawTicks(&painter);
-        if (markMode)
-            drawRects(&painter);
     }
     if (welcome.text != "") 
        drawWelcome(&painter);
@@ -505,7 +605,7 @@ void QtCanvas::refreshPixmap()
 }
 void QtCanvas::drawBackBuffer(QPainter *painter)
 {
-    QRect rect(Margin, Margin,  width() - 2 * Margin, height() - 2 * Margin);
+    QRect rect(MARGIN, MARGIN,  width() - 2 * MARGIN, height() - 2 * MARGIN);
     QtPlotSettings settings = zoomStack[curZoom];
     QRect src((int)settings.minX, (int)settings.minY,
               (int)settings.maxX, (int)settings.maxY);
@@ -514,8 +614,8 @@ void QtCanvas::drawBackBuffer(QPainter *painter)
 
 void QtCanvas::drawGrid(QPainter *painter)
 {
-    QRect rect(Margin, Margin,
-               width() - 2 * Margin, height() - 2 * Margin);
+    QRect rect(MARGIN, MARGIN,
+               width() - 2 * MARGIN, height() - 2 * MARGIN);
     QtPlotSettings settings = zoomStack[curZoom];
     QPen quiteDark(QPalette::Dark);
     QPen light(QPalette::Highlight);
@@ -547,8 +647,8 @@ void QtCanvas::drawGrid(QPainter *painter)
         painter->drawLine(rect.left(), y, rect.right(), y);
         painter->setPen(light);
         painter->drawLine(rect.left() - 5, y, rect.left(), y);
-        painter->drawText(rect.left() - Margin, y - 10,
-                          Margin - 5, 20,
+        painter->drawText(rect.left() - MARGIN, y - 10,
+                          MARGIN - 5, 20,
                           Qt::AlignRight | Qt::AlignVCenter,
                           QString::number(label));
     }
@@ -558,8 +658,8 @@ void QtCanvas::drawGrid(QPainter *painter)
 }
 void QtCanvas::drawTicks(QPainter *painter)
 {
-    QRect rect(Margin, Margin,
-               width() - 2 * Margin, height() - 2 * Margin);
+    QRect rect(MARGIN, MARGIN,
+               width() - 2 * MARGIN, height() - 2 * MARGIN);
     QtPlotSettings settings = zoomStack[curZoom];
     QPen quiteDark(QPalette::Dark);
     QPen light(QPalette::Highlight);
@@ -590,8 +690,8 @@ void QtCanvas::drawTicks(QPainter *painter)
         painter->drawLine(rect.right() - 5, y, rect.right(), y);
         painter->setPen(light);
         painter->drawLine(rect.left(), y, rect.left() + 5, y);
-        painter->drawText(rect.left() - Margin / 2, y - 10,
-                          Margin - 5, 20,
+        painter->drawText(rect.left() - MARGIN / 2, y - 10,
+                          MARGIN - 5, 20,
                           Qt::AlignRight | Qt::AlignVCenter,
                           QString::number(label));
     }
@@ -606,12 +706,12 @@ void QtCanvas::drawLabels(QPainter *painter)
     
     painter->setPen(title.color);
     painter->setFont(QFont(title.fontName, title.fontSize));
-    painter->drawText(Margin, 8, width() - 2 * Margin, Margin / 2,
+    painter->drawText(MARGIN, 8, width() - 2 * MARGIN, MARGIN / 2,
                           Qt::AlignHCenter | Qt::AlignTop, title.text);
                           
     painter->setPen(xLabel.color);                  
     painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));                          
-    painter->drawText(Margin, height() - Margin / 2, width() - 2 * Margin, Margin / 2,
+    painter->drawText(MARGIN, height() - MARGIN / 2, width() - 2 * MARGIN, MARGIN / 2,
                           Qt::AlignHCenter | Qt::AlignTop, xLabel.text);
                                           
     QPainterPath text;     
@@ -620,9 +720,9 @@ void QtCanvas::drawLabels(QPainter *painter)
     text.addText(-QPointF(fontBoundingRect.center()), font, yLabel.text);                   
     font.setPixelSize(50);
     painter->rotate(-90);
-    painter->translate(- height() / 2, Margin / 6);  
+    painter->translate(- height() / 2, MARGIN / 6);
     painter->fillPath(text, yLabel.color);
-    painter->translate(height() / 2, - Margin / 4);
+    painter->translate(height() / 2, - MARGIN / 4);
     painter->rotate(90);
     
     painter->setPen(pen);                   
@@ -638,8 +738,8 @@ void QtCanvas::drawWelcome(QPainter *painter)
     
     painter->setPen(welcome.color);
     painter->setFont(QFont(title.fontName, welcome.fontSize));
-    painter->drawText(Margin, Margin, 
-                      width() - 2 * Margin, height() - Margin * 2,
+    painter->drawText(MARGIN, MARGIN,
+                      width() - 2 * MARGIN, height() - MARGIN * 2,
                       Qt::AlignHCenter | Qt::AlignVCenter, 
                       welcome.text);
     painter->setPen(pen);                   
@@ -650,8 +750,8 @@ void QtCanvas::drawWelcome(QPainter *painter)
 void QtCanvas::drawRects(QPainter *painter)
 {
     QtPlotSettings settings = zoomStack[curZoom];
-    QRect rect(Margin, Margin,
-               width() - 2 * Margin, height() - 2 * Margin);
+    QRect rect(MARGIN, MARGIN,
+               width() - 2 * MARGIN, height() - 2 * MARGIN);
 
     painter->setClipRect(rect.x() + 1, rect.y() + 1,
                          rect.width() - 2, rect.height() - 2);
@@ -735,8 +835,8 @@ void QtCanvas::drawCurves(QPainter *painter)
     QPen pen(painter->pen());
     
     QtPlotSettings settings = zoomStack[curZoom];
-    QRect rect(Margin, Margin,
-               width() - 2 * Margin, height() - 2 * Margin);
+    QRect rect(MARGIN, MARGIN,
+               width() - 2 * MARGIN, height() - 2 * MARGIN);
 
     painter->setClipRect(rect.x() + 1, rect.y() + 1,
                          rect.width() - 2, rect.height() - 2);
@@ -843,8 +943,8 @@ void QtCanvas::drawCurves(QPainter *painter)
 
    	 if (siz > 1) {
    		 painter->setFont(QFont(xLabel.fontName, xLabel.fontSize));
-   		 painter->drawText(Margin + 4, Margin + (5 + id * 15),
-   				 width() - 2 * Margin, Margin / 2,
+   		 painter->drawText(MARGIN + 4, MARGIN + (5 + id * 15),
+   				 width() - 2 * MARGIN, MARGIN / 2,
    				 Qt::AlignLeft | Qt::AlignTop, legend[id]);
    	 }
    	 ++it;
@@ -853,12 +953,6 @@ void QtCanvas::drawCurves(QPainter *painter)
     delete [] colorFolds;
     painter->setPen(pen);                   
     painter->setFont(ft);
-}
-
-
-void QtCanvas::setMarkMode(bool b)
-{
-    markMode = b;
 }
 
 void QtCanvas::addPolyLine(const Vector<Float> &x,
@@ -1013,7 +1107,9 @@ void QtCanvas::plotPolyLine(const Matrix<Double> &x)
     int n = min (nr, nc);
     if (n > 0)
     {
-        CurveData *data = new CurveData[n];
+        //CurveData *data = new CurveData[n];
+    	std::vector<CurveData> data;
+        //CurveData data[n];
         if (n < nr)
         {
             for (int i = 0; i < n; i++)
@@ -1039,7 +1135,7 @@ void QtCanvas::plotPolyLine(const Matrix<Double> &x)
             }
         }
 
-	delete [] data;
+	//delete [] data;
 
     }
     setDataRange();
@@ -1055,7 +1151,9 @@ void QtCanvas::plotPolyLine(const Matrix<Int> &x)
     int n = min (nr, nc);
     if (n > 0)
     {
-        CurveData *data = new CurveData[n];
+        //CurveData *data = new CurveData[n];
+    	std::vector<CurveData> data;
+    	//CurveData data[n];
         if (n < nr)
         {
             for (int i = 0; i < n; i++)
@@ -1080,7 +1178,7 @@ void QtCanvas::plotPolyLine(const Matrix<Int> &x)
                 setCurveData(i, data[i]);
             }
         }
-	delete [] data;
+	//delete [] data;
 
     }
 
@@ -1097,7 +1195,9 @@ void QtCanvas::plotPolyLine(const Matrix<Float> &x)
     int n = min (nr, nc);
     if (n > 0)
     {
-        CurveData *data = new CurveData[n];
+        //CurveData *data = new CurveData[n];
+    	std::vector<CurveData> data;
+    	//CurveData data[n];
         if (n < nr)
         {
             for (int i = 0; i < n; i++)
@@ -1122,12 +1222,13 @@ void QtCanvas::plotPolyLine(const Matrix<Float> &x)
                 setCurveData(i, data[i]);
             }
         }
-	delete [] data;
+	//delete [] data;
     }
 
     setDataRange();
     return;
 }
+/*
 //template<class T>
 void QtCanvas::drawImage(const Matrix<uInt> &data, Matrix<uInt>
 *mask)
@@ -1246,6 +1347,7 @@ void QtCanvas::drawImage(const Matrix<uInt> &data)
     setImageMode(true);
     return;
 }
+*/
 void QtCanvas::setPixmap(const QImage &data)
 {
     //std::cout << "pixmap w=" << pixmap.width() << " h=" << pixmap.height() <<

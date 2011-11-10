@@ -83,16 +83,23 @@ namespace casa {
 		void clearStatistics( ) { QtRegion::clearStatistics( ); }
 
 		QtPolygon( QtRegionSource *factory, WorldCanvas *wc, double x1, double y1, bool hold_signals=false );
+		QtPolygon( QtRegionSource *factory, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
 
 		bool regionVisible( ) const { return Region::regionVisible( ); }
 		void regionCenter( double &x, double &y ) const { Polygon::regionCenter( x, y ); }
 
 		// qt-event -> QtRegion -> QtPolygon -> Region::refresh( )
 		void refresh( ) { Polygon::refresh( ); }
-		AnnRegion *annotation( ) const { return Polygon::annotation( ); }
+		AnnotationBase *annotation( ) const { return Polygon::annotation( ); }
 
 		// indicates that the user has selected this rectangle...
 		void selectedInCanvas( ) { QtRegion::selectedInCanvas( ); }
+
+		void setLabel( const std::string &l ) { QtRegion::setLabel(l); }
+		void setFont( const std::string &font="", int font_size=-1, int font_style=0, const std::string &font_color="" )
+				{ QtRegion::setFont( font, font_size, font_style, font_color ); }
+		void setLine( const std::string &line_color="", Region::LineStyle line_style=SolidLine )
+				{ QtRegion::setLine( line_color, line_style ); }
 
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Polygon::generate_dds_statistics( ); }

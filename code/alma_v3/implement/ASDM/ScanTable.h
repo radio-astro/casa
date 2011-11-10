@@ -536,6 +536,22 @@ private:
 	 
 	 */
 	ScanRow* checkAndAdd(ScanRow* x) ;
+	
+	/**
+	 * Brutally append an ScanRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ScanRow* x a pointer onto the ScanRow to be appended.
+	 */
+	 void append(ScanRow* x) ;
+	 
+	/**
+	 * Brutally append an ScanRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param ScanRow* x a pointer onto the ScanRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(ScanRow* x) ;
+	 
+	 
 
 
 

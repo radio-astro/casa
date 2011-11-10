@@ -349,6 +349,9 @@ public:
 	 *
 	 * @return a pointer on a vector<FlagCmdRow *>. A null returned value means that the table contains
 	 * no FlagCmdRow for the given (  ).
+	 *
+	 * @throws IllegalAccessException when a call is done to this method when it's called while the dataset has been imported with the 
+	 * option checkRowUniqueness set to false.
 	 */
 	 std::vector <FlagCmdRow*> *getByContext();
 	 
@@ -451,6 +454,22 @@ private:
 	 
 	 */
 	FlagCmdRow* checkAndAdd(FlagCmdRow* x) ;
+	
+	/**
+	 * Brutally append an FlagCmdRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FlagCmdRow* x a pointer onto the FlagCmdRow to be appended.
+	 */
+	 void append(FlagCmdRow* x) ;
+	 
+	/**
+	 * Brutally append an FlagCmdRow x to the collection of rows already stored in this table. No uniqueness check is done !
+	 *
+	 * @param FlagCmdRow* x a pointer onto the FlagCmdRow to be appended.
+	 */
+	 void addWithoutCheckingUnique(FlagCmdRow* x) ;
+	 
+	 
 
 
 	

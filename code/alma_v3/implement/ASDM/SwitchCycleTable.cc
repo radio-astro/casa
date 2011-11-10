@@ -282,15 +282,24 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void SwitchCycleTable::addWithoutCheckingUnique(SwitchCycleRow * x) {
+		if (getRowByKey(
+						x->getSwitchCycleId()
+						) != (SwitchCycleRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "SwitchCycleTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -320,7 +329,7 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 		,
 			x->getStepDurationArray()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table SwitchCycleTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -336,6 +345,16 @@ SwitchCycleRow* SwitchCycleTable::newRow(SwitchCycleRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void SwitchCycleTable::append(SwitchCycleRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -512,12 +531,17 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SwitchCycleRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"SwitchCycleTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -526,10 +550,27 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 			catch (...) {
 				// cout << "Unexpected error in SwitchCycleTable::checkAndAdd called from SwitchCycleTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SwitchCycleTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SwitchCycleTable::addWithoutCheckingUnique called from SwitchCycleTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</SwitchCycleTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -769,19 +810,27 @@ SwitchCycleRow* SwitchCycleTable::lookup(int numStep, vector<float > weightArray
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	SwitchCycleRow* aRow = SwitchCycleRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				SwitchCycleRow* aRow = SwitchCycleRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "SwitchCycle");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "SwitchCycle");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			SwitchCycleRow* aRow = SwitchCycleRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -906,6 +955,7 @@ void SwitchCycleTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SwitchCycle");

@@ -163,7 +163,7 @@ namespace sdmbin {
     }else{                                       // Case when there are both auto and cross-correlations
       if(coutest)cout << "Auto and cross-correlations use-case " << endl;
       vector<PolarizationRow*>          v_polPtr = datasetPtr_->getPolarization().get();
-      vector<StokesParameter>           v_corrType;
+      vector<StokesParameter>           v_corrType, v_corrTyp;
       vector<vector<PolarizationType> > vv_corrProduct, vv_corrProd;
       vector<PolarizationType>          v_autoProduct;
       Tag                               autoPolarizationId;
@@ -200,9 +200,9 @@ namespace sdmbin {
 	  }
 	  
 	  // for the auto correlations:
-	  v_corrType.clear();
-	  //cout << v_corrType.size() << endl;
-	  v_corrType  = rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getPolarizationUsingPolOrHoloId()->getCorrType();
+	  v_corrTyp.clear();
+	  //cout << v_corrTyp.size() << endl;
+	  v_corrTyp  = rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getPolarizationUsingPolOrHoloId()->getCorrType();
 	  vv_corrProd = rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getPolarizationUsingPolOrHoloId()->getCorrProduct();
 	  v_autoProduct.clear();
 	  autoPolar = false;
@@ -210,8 +210,9 @@ namespace sdmbin {
 	    if (coutest) cout << "index in Polarization table = " << j << endl;
 	    if(v_polPtr[j]->getNumCorr()<=4){                                       //  this row could be for an auto-correlation
 	      vv_corrProduct = v_polPtr[j]->getCorrProduct();
-// 	      EnumSet<StokesParameter> es; es.set(v_corrType); cout<<es.str()<<endl;
-	      if(v_corrType.size()==4){                                             //  all 4 pol products in interfero mode
+	      v_corrType = v_polPtr[j]->getCorrType();
+// 	      EnumSet<StokesParameter> es; es.set(v_corrTyp); cout<<es.str()<<endl;
+	      if(v_corrTyp.size()==4){                                             //  all 4 pol products in interfero mode
 		if(vv_corrProduct.size()==3){                                       //     case of 3 prod, XX, XY and YY ==> single-dish  
 		  autoPolarizationId = v_polPtr[j]->getPolarizationId();
 		  autoPolar = true;
@@ -219,8 +220,10 @@ namespace sdmbin {
 		}
 	      }else{
 		if(vv_corrProduct==vv_corrProd){
-		  autoPolarizationId = v_polPtr[j]->getPolarizationId();
-		  break;
+		  if (v_corrType == v_corrTyp) { 
+		    autoPolarizationId = v_polPtr[j]->getPolarizationId();
+		    break;
+		  }
 		}
 // 		for(int i=0; i<vv_corrProduct.size(); i++){                         // we need to know if it is XX or YY or both
 // 		  // cout << "     " << Enum<PolarizationType>(vv_corrProduct[0][i]).str() 
@@ -253,7 +256,7 @@ namespace sdmbin {
 				    rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId());
 	  if (ddRowPtr == (DataDescriptionRow *) 0) {
 	    ostringstream oss;
-	    oss << "Could not find a row in the Polarization table with 'polarizationId=" << autoPolarizationId.toString()
+	    oss << "Could not find a row in the DataDescription table with 'polarizationId=" << autoPolarizationId.toString()
 		<< "' and 'spectralWindowId=" << (rddSet.getRowByKey(v_dataDescriptionIdArray[n])->getSpectralWindowId()).toString()
 		<< "'.";
 	    Error(FATAL, oss.str());

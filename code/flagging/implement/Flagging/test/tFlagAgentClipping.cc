@@ -1,4 +1,4 @@
-//# tFlagAgentBase.cc This file contains the unit tests of the FlagAgentBase class.
+//# tFlagAgentClipping.cc This file contains the unit tests of the FlagAgentBase class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -47,7 +47,7 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -210,7 +210,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -499,9 +499,14 @@ int main(int argc, char **argv)
 	string parameter, value;
 	string targetFile,referenceFile;
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
-	string clipmin,clipmax;
 	string expression,datacolumn,nThreadsParam,ntime;
 	Int nThreads = 0;
+
+	Float clipmin,clipmax;
+	Array<Float> clipminmax;
+	Bool clipmin_set = false;
+	Bool clipmax_set = false;
+	Bool clipoutside, channelavg;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -526,6 +531,14 @@ int main(int argc, char **argv)
 			referenceFile = value;
 			checkFlagsActivated = true;
 			cout << "Reference file is: " << referenceFile << endl;
+		}
+		else if (parameter == string("-unflag"))
+		{
+			if (value.compare("True") == 0)
+			{
+				deleteFlagsActivated = true;
+				cout << "Clean flags step activated" << endl;
+			}
 		}
 		else if (parameter == string("-array"))
 		{
@@ -614,16 +627,47 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-clipmin"))
 		{
-			clipmin = casa::String(value);
-			agentParameters.define ("clipmin", clipmin);
+			clipmin = casa::Float(atof(value.c_str()));
+			clipmin_set = true;
 			cout << "clipmin is: " << clipmin << endl;
 		}
 		else if (parameter == string("-clipmax"))
 		{
-			clipmax = casa::String(value);
-			agentParameters.define ("clipmax", clipmax);
+			clipmax = casa::Float(atof(value.c_str()));
+			clipmax_set = true;
 			cout << "clipmax is: " << clipmax << endl;
 		}
+		else if (parameter == string("-clipoutside"))
+		{
+			clipoutside = casa::Bool(atoi(argv[i+1]));
+			agentParameters.define ("clipoutside", clipoutside);
+			cout << "clipoutside is: " << clipoutside << endl;
+		}
+		else if (parameter == string("-channelavg"))
+		{
+			channelavg = casa::Bool(atoi(argv[i+1]));
+			agentParameters.define ("channelavg", channelavg);
+			cout << "channelavg is: " << channelavg << endl;
+		}
+	}
+
+	if (clipmin_set && clipmax_set)
+	{
+		casa::IPosition size(1);
+		size[0]=2;
+		casa::Array<Float> cliprange(size);
+		cliprange[0] = clipmin;
+		cliprange[1] = clipmax;
+		agentParameters.define("clipminmax",cliprange);
+	}
+
+	if (clipmin_set && !clipmax_set)
+	{
+		cerr << "clipmin is set but clipmax is not set, will use default values!..." << endl;
+	}
+	else if (clipmax_set && !clipmin_set)
+	{
+		cerr << "clipmax is set but clipmin is not set, will use default values!..." << endl;
 	}
 
 

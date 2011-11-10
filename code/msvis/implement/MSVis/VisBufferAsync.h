@@ -14,14 +14,19 @@ namespace casa {
 
 class ROVisibilityIteratorAsync;
 
+namespace asyncio {
+    class VlaDatum;
+    class VLAT;
+}
+
 class VisBufferAsync : public VisBuffer {
 
     friend class Rovia_Test;
-    friend class ROVisibilityIteratorAsync;
+    friend class ViReadImplAsync;
     friend class VisBufferAsyncWrapper;
     friend class VisBufferAutoPtr;
-    friend class VLAT;
-    friend class VlaDatum;
+    friend class asyncio::VlaDatum;
+    friend class asyncio::VLAT;
 
 public:
 
@@ -47,7 +52,10 @@ public:
     virtual void lsrFrequency(const Int& spw, Vector<Double>& freq, Bool& convert) const;
     virtual const ROMSColumns& msColumns() const;
     Int msId () const;
+    virtual Bool newArrayId () const;
+    virtual Bool newFieldId () const;
     Bool newMS() const;
+    virtual Bool newSpectralWindow () const;
     Int nRowChunk() const{
       return nRowChunk_p;
     }
@@ -103,6 +111,7 @@ protected:
     void setMSD (const MSDerivedValues & msd);
     void setNAntennas (Int);
     void setNCoh (Int);
+    void setNewEntityFlags (bool newArrayId, bool newFieldId, bool newSpectralWindow);
     void setNRowChunk (Int);
     void setReceptor0Angle (const Vector<Float> & receptor0Angle);
     void setRowIds (const Vector<uInt> & rowIds);
@@ -132,6 +141,9 @@ private:
     MSDerivedValues *              msd_p; // [own]
     Int                            nAntennas_p;
     Int                            nCoh_p;
+    Bool                           newArrayId_p;
+    Bool                           newFieldId_p;
+    Bool                           newSpectralWindow_p;
     Int                            nRowChunk_p;
     //const ROScalarColumn<Int> *    obsMFreqTypes_p; // [use]
     MPosition                      observatoryPosition_p;
@@ -143,39 +155,6 @@ private:
     IPosition                      visibilityShape_p;
 };
 
-class VisBufferAutoPtr {
-
-public:
-
-    VisBufferAutoPtr ();
-    VisBufferAutoPtr (VisBufferAutoPtr & other);
-    explicit VisBufferAutoPtr (VisBuffer &);
-    explicit VisBufferAutoPtr (VisBuffer *);
-    explicit VisBufferAutoPtr (ROVisibilityIterator * rovi);
-    explicit VisBufferAutoPtr (ROVisibilityIterator & rovi);
-    ~VisBufferAutoPtr ();
-
-    VisBufferAutoPtr & operator= (VisBufferAutoPtr & other);
-    VisBuffer & operator* () const;
-    VisBuffer * operator-> () const;
-
-    VisBuffer * get () const;
-    VisBuffer * release ();
-    void set (VisBuffer &);
-    void set (VisBuffer *);
-    void set (ROVisibilityIterator * rovi);
-    void set (ROVisibilityIterator & rovi);
-
-protected:
-
-    void construct (ROVisibilityIterator * rovi, Bool attachVi);
-    void constructVb (VisBuffer * rovi);
-
-private:
-
-    VisBuffer * visBuffer_p;
-
-};
 
 template<typename T>
 void VisBufferAsync::copyVector (const Vector<T> & from, Vector<T> & to)

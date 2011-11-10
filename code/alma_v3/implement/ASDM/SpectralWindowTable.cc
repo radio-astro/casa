@@ -340,15 +340,24 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 		return x;
 	}
 		
+	
 		
-
+	void SpectralWindowTable::addWithoutCheckingUnique(SpectralWindowRow * x) {
+		if (getRowByKey(
+						x->getSpectralWindowId()
+						) != (SpectralWindowRow *) 0) 
+			throw DuplicateKey("Dupicate key exception in ", "SpectralWindowTable");
+		row.push_back(x);
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
 
 	// 
 	// A private method to append a row to its table, used by input conversion
-	// methods.
+	// methods, with row uniqueness.
 	//
 
 	
@@ -382,7 +391,7 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 		,
 			x->getWindowFunction()
 		
-		)) throw UniquenessViolationException("Uniqueness violation exception in table SpectralWindowTable");
+		)) throw UniquenessViolationException();
 		
 		
 		
@@ -398,6 +407,16 @@ SpectralWindowRow* SpectralWindowTable::newRow(SpectralWindowRow* row) {
 		return x;	
 	}	
 
+
+
+	//
+	// A private method to brutally append a row to its table, without checking for row uniqueness.
+	//
+
+	void SpectralWindowTable::append(SpectralWindowRow *x) {
+		privateRows.push_back(x);
+		x->isAdded(true);
+	}
 
 
 
@@ -578,12 +597,17 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 		// Get each row in the table.
 		s = xml.getElementContent("<row>","</row>");
 		SpectralWindowRow *row;
-		while (s.length() != 0) {
-			row = newRow();
-			row->setFromXML(s);
+		if (getContainer().checkRowUniqueness()) {
 			try {
-				checkAndAdd(row);
-			} catch (DuplicateKey e1) {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					checkAndAdd(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+				
+			}
+			catch (DuplicateKey e1) {
 				throw ConversionException(e1.getMessage(),"SpectralWindowTable");
 			} 
 			catch (UniquenessViolationException e1) {
@@ -592,10 +616,27 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 			catch (...) {
 				// cout << "Unexpected error in SpectralWindowTable::checkAndAdd called from SpectralWindowTable::fromXML " << endl;
 			}
-			s = xml.getElementContent("<row>","</row>");
 		}
+		else {
+			try {
+				while (s.length() != 0) {
+					row = newRow();
+					row->setFromXML(s);
+					addWithoutCheckingUnique(row);
+					s = xml.getElementContent("<row>","</row>");
+				}
+			}
+			catch (DuplicateKey e1) {
+				throw ConversionException(e1.getMessage(),"SpectralWindowTable");
+			} 
+			catch (...) {
+				// cout << "Unexpected error in SpectralWindowTable::addWithoutCheckingUnique called from SpectralWindowTable::fromXML " << endl;
+			}
+		}				
+				
+				
 		if (!xml.isStr("</SpectralWindowTable>")) 
-			error();
+		error();
 			
 		archiveAsBin = false;
 		fileAsBin = false;
@@ -904,19 +945,27 @@ SpectralWindowRow* SpectralWindowTable::lookup(BasebandNameMod::BasebandName bas
 			 << endl;
     }                                           
 
-    try {
-      for (uint32_t i = 0; i < this->declaredSize; i++) {
-	SpectralWindowRow* aRow = SpectralWindowRow::fromBin(eiss, *this, attributesSeq);
-	checkAndAdd(aRow);
-      }
-    }
-    catch (DuplicateKey e) {
-      throw ConversionException("Error while writing binary data , the message was "
+	if (getContainer().checkRowUniqueness()) {
+    	try {
+      		for (uint32_t i = 0; i < this->declaredSize; i++) {
+				SpectralWindowRow* aRow = SpectralWindowRow::fromBin(eiss, *this, attributesSeq);
+				checkAndAdd(aRow);
+      		}
+    	}
+    	catch (DuplicateKey e) {
+      		throw ConversionException("Error while writing binary data , the message was "
 				+ e.getMessage(), "SpectralWindow");
-    }
-    catch (TagFormatException e) {
-      throw ConversionException("Error while reading binary data , the message was "
+    	}
+    	catch (TagFormatException e) {
+     		 throw ConversionException("Error while reading binary data , the message was "
 				+ e.getMessage(), "SpectralWindow");
+    	}
+    }
+    else {
+ 		for (uint32_t i = 0; i < this->declaredSize; i++) {
+			SpectralWindowRow* aRow = SpectralWindowRow::fromBin(eiss, *this, attributesSeq);
+			append(aRow);
+      	}   	
     }
     archiveAsBin = true;
     fileAsBin = true;
@@ -1041,6 +1090,7 @@ void SpectralWindowTable::setFromXMLFile(const string& directory) {
     string xmlDocument;
     try {
     	xmlDocument = getContainer().getXSLTransformer()(tablePath);
+    	if (getenv("ASDM_DEBUG")) cout << "About to read " << tablePath << endl;
     }
     catch (XSLTransformerException e) {
     	throw ConversionException("Caugth an exception whose message is '" + e.getMessage() + "'.", "SpectralWindow");

@@ -30,7 +30,7 @@
 <xsl:param name="toolname"><xsl:value-of select="@name"/></xsl:param>
 <xsl:param name="modulename"><xsl:value-of select="@module"/></xsl:param>
 \newpage
-\ahtool{<xsl:value-of select="@name"/>}{<xsl:apply-templates select="aps:shortdescription"/>}
+\begin{ahtool}{<xsl:value-of select="@name"/>}{<xsl:apply-templates select="aps:shortdescription"/>}
 Requires:
 <xsl:for-each select="aps:needs">
 	<xsl:value-of select="."/>
@@ -52,7 +52,7 @@ Requires:
       <xsl:with-param name="toolname"><xsl:value-of select="$toolname"/>.</xsl:with-param>
       </xsl:call-template>
 </xsl:for-each>
-
+\end{ahtool}
 </xsl:template>
 
 <xsl:template match="aps:example">
@@ -116,7 +116,7 @@ Requires:
 <xsl:template name="domethod">
 <xsl:param name="toolname"/>
 \newpage
-\ahfunction{<xsl:value-of select="$toolname"/><xsl:value-of select="@name"/>}{<xsl:apply-templates select="aps:shortdescription"/>}
+\begin{ahfunction}{<xsl:value-of select="$toolname"/><xsl:value-of select="@name"/>}{<xsl:apply-templates select="aps:shortdescription"/>}
 <xsl:apply-templates select="aps:description"/>
 \flushleft\vspace{.20in}\textbf{Arguments}\\
 \hfill \\
@@ -128,6 +128,7 @@ Requires:
 \end{tabular}
 <xsl:apply-templates select="aps:returns"/>
 <xsl:apply-templates select="aps:example"/>
+\end{ahfunction}
 </xsl:template>
 
 <xsl:template match="aps:output">

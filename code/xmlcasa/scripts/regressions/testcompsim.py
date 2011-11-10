@@ -59,6 +59,13 @@ reftol   = {'sum':  0.1,
             'min':  0.04,
             'rms':  0.1}
 
+# Kumar's rev 16734
+refstats = { 'max': 5.6306,
+             'min': -.061013,
+             'rms': 0.10197,
+             'sum': 370.6 }
+
+
 import datetime
 datestring = datetime.datetime.isoformat(datetime.datetime.today())
 outfile    = project+"/"+project + '.' + datestring + '.log'

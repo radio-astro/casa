@@ -665,7 +665,7 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
       whichPB = PBMath::ATCA_X;
       band = "X";
     } else if (freqGHz > 4.0 && freqGHz < 7.0) {
-      whichPB = PBMath::ATCA_C;
+      whichPB = PBMath::ATCA_C;      
       band = "C";
     } else if (freqGHz > 2.0 && freqGHz < 4.0) {
       whichPB = PBMath::ATCA_S;
@@ -676,6 +676,10 @@ PBMath::whichCommonPBtoUse(String &telescope, Quantity &freq,
     } else {
       whichPB = PBMath::ATCA_L1;
       band = "UNKNOWN";
+    }
+    if (telescope(0,9)=="ATCA_C_RI") {
+      // Remy Indebetouw measured PB at 5.5GHz 2011/10/20
+      whichPB = PBMath::ATCA_C_RI;
     }
   } else if (telescope(0,8)=="HATCREEK") {
     whichPB = PBMath::HATCREEK;
@@ -759,6 +763,9 @@ void PBMath::nameCommonPB(const PBMath::CommonPB iPB, String & str)
     break;
   case PBMath::ATCA_C:
     str = "ATCA_C";
+    break;
+  case PBMath::ATCA_C_RI:
+    str = "ATCA_C_RI";
     break;
   case PBMath::ATCA_X:
     str = "ATCA_X";
@@ -867,6 +874,8 @@ void PBMath::enumerateCommonPB(const String & str, PBMath::CommonPB& ipb)
     ipb = PBMath::ATCA_S;
   } else if (str == "ATCA_C") {
     ipb = PBMath::ATCA_C;
+  } else if (str == "ATCA_C_RI") {
+    ipb = PBMath::ATCA_C_RI;
   } else if (str == "ATCA_X") {
     ipb = PBMath::ATCA_X;
   } else if (str == "HATCREEK") {
@@ -975,7 +984,7 @@ PBMath::getMDirection(const RecordInterface& rec, const String& item,
 
 void PBMath::initByDiameter(Double diameter, Bool useSymmetricBeam, 
 			    Double frequency){
-
+  
   // This attempts to reproduce the AIRY pattern VLA PB
   Vector<Float> vlanum(19);
   vlanum(0) = 1.000000;
@@ -1019,7 +1028,6 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 
  // Remember, these are fit parameters for the PB, not the PB
 
-  
   LogIO os(LogOrigin("PBMath", "initByTelescope"));
 
   Vector<Double> vlacoef(4);
@@ -1376,6 +1384,44 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 							      MDirection::Ref(MDirection::AZEL)),
 						   Quantity(1.0, "GHz")),
 					False);
+    }
+    break;
+  case ATCA_C_RI:
+    // Remy Indebetouw measured the PB through the second sidelobe 20111020
+    {
+      os << "PBMath using 2011/10/22 5.5GHz PB" << LogIO::POST;
+      Vector<Float> coef(22);
+      coef( 0) =  1.00000;  
+      coef( 1) =  0.98132;  
+      coef( 2) =  0.96365; 
+      coef( 3) =  0.87195;  
+      coef( 4) =  0.75109;  
+      coef( 5) =  0.62176;  
+      coef( 6) =  0.48793;  
+      coef( 7) =  0.34985;  
+      coef( 8) =  0.21586;  
+      coef( 9) =  0.10546;  
+      coef(10) =  0.03669;
+      coef(11) = -0.03556; 
+      coef(12) = -0.08266; 
+      coef(13) = -0.12810; 
+      coef(14) = -0.15440; 
+      coef(15) = -0.16090; 
+      coef(16) = -0.15360; 
+      coef(17) = -0.13566; 
+      coef(18) = -0.10666; 
+      coef(19) = -0.06847; 
+      coef(20) = -0.03136; 
+      coef(21) = -0.00854;
+
+      pb_pointer_p = new PBMath1DNumeric( coef, Quantity(21.07,"'"), 
+					  Quantity(5.5,"GHz"),
+					  True,
+					  BeamSquint(MDirection(Quantity(0.0, "'"),
+								Quantity(0.0, "'"),
+								MDirection::Ref(MDirection::AZEL)),
+						     Quantity(5.5, "GHz")),
+					  True);
     }
     break;
   case ATCA_X:

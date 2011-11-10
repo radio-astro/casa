@@ -37,13 +37,51 @@
 #include <measures/Measures/MEpoch.h>
 #include <msvis/MSVis/StokesVector.h>
 #include <msvis/MSVis/VisibilityIterator.h>
+#include <msvis/MSVis/VisBufferComponents.h>
 #include <msvis/MSVis/MSCalEnums.h>
+#include <set>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+
 //#forward
 
-//<summary>VisBuffers encapulsate one chunk of visibility data for processing.</summary>
+class VbDirtyComponents {
+
+public:
+
+    typedef std::set<VisBufferComponents::EnumType> Set;
+    typedef Set::const_iterator const_iterator;
+
+    VbDirtyComponents operator+ (const VbDirtyComponents & other) const;
+
+    const_iterator begin () const;
+    Bool contains (VisBufferComponents::EnumType component) const;
+    const_iterator end () const;
+
+    static VbDirtyComponents all ();
+    static VbDirtyComponents exceptThese (VisBufferComponents::EnumType component, ...);
+    static VbDirtyComponents none ();
+    static VbDirtyComponents singleton (VisBufferComponents::EnumType component);
+    static VbDirtyComponents these (VisBufferComponents::EnumType component, ...);
+
+protected:
+
+private:
+
+    Set set_p;
+
+    static const VbDirtyComponents all_p;
+
+    static VbDirtyComponents initializeAll ();
+
+};
+
+namespace asyncio {
+    class VLAT;
+} // end namespace asyncio
+
+//<summary>VisBuffers encapsulate one chunk of visibility data for processing.</summary>
 //
 // <use visibility=export>
 //
@@ -78,7 +116,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //</todo>
 class VisBuffer {
 
-    friend class VLAT; // for async i/o
+    friend class asyncio::VLAT; // for async i/o
     friend class VisBufferAsync; // for async i/o
     friend class VisBufferAsyncWrapper; // for async i/o
 
@@ -105,6 +143,8 @@ public:
     // this is identical to normal assignment operator
 
     virtual VisBuffer & assign(const VisBuffer & vb, Bool copy = True);
+
+    virtual VisBuffer * clone () const;
 
     // subtraction: return the difference of the visibilities, flags of
     // this and other are or-ed. An exception is thrown if the number of
@@ -186,6 +226,13 @@ public:
     virtual const Vector<Int>& feed2() const {
         return This->feed2();
     }
+
+    virtual void dirtyComponentsAdd (const VbDirtyComponents & additionalDirtyComponents);
+    virtual void dirtyComponentsAdd (VisBufferComponents::EnumType component);
+    virtual void dirtyComponentsClear ();
+    virtual VbDirtyComponents dirtyComponentsGet () const;
+    virtual void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents);
+    virtual void dirtyComponentsSet (VisBufferComponents::EnumType component);
 
     // feed1_pa() and feed2_pa() return an array of parallactic angles
     // (each corresponds to the first receptor of the feed) one for each
@@ -349,7 +396,7 @@ public:
     virtual MDirection & phaseCenter() {
         return phaseCenterOK_p ? phaseCenter_p : fillPhaseCenter();
     }
-    virtual const MDirection & phaseCenter() const {
+    virtual MDirection phaseCenter() const {
         return This->phaseCenter();
     }
 
@@ -534,12 +581,16 @@ public:
         return This->weightSpectrum();
     }
 
-    virtual Matrix<Float>& imagingWeight() {
-        return imagingWeightOK_p ? imagingWeight_p : fillImagingWeight();
-    }
-    virtual const Matrix<Float>& imagingWeight() const {
-        return This->imagingWeight();
-    }
+    virtual Matrix<Float>& imagingWeight();
+    virtual const Matrix<Float>& imagingWeight() const;
+
+
+//    virtual Matrix<Float>& imagingWeight() {
+//        return imagingWeightOK_p ? imagingWeight_p : fillImagingWeight();
+//    }
+//    virtual const Matrix<Float>& imagingWeight() const {
+//        return This->imagingWeight();
+//    }
 
     virtual Cube<Float>& weightCube() {
         return weightCube_p;
@@ -695,6 +746,10 @@ public:
         return newMS_p;
     }
 
+    virtual Bool newArrayId () const;
+    virtual Bool newFieldId () const;
+    virtual Bool newSpectralWindow () const;
+
     //
 
 protected:
@@ -702,6 +757,45 @@ protected:
     virtual Bool checkMSId();
     virtual void checkVisIter (const char * func, const char * file, int line, const char * extra = "") const;
     virtual void copyCache (const VisBuffer & other, Bool force);
+    virtual void copyMsInfo (Int & msID, Bool & MsOk_p, Bool & newMs) const;
+    virtual const Matrix<Float>& imagingWeight(const VisImagingWeight & weightGenerator) const;
+    virtual Int getOldMsId () const;
+    virtual ROVisibilityIterator * getVisibilityIterator () const;
+
+    template <typename Coord>
+    void updateCoord (const VisBuffer * other,
+                      Bool otherOk,
+                      const Coord & (VisBuffer::* getCoord) () const,
+                      Coord & coord,
+                      Bool & coordOk)
+    {
+        if (otherOk){
+            coord.assign ((other ->* getCoord) ());
+            coordOk = True;
+        }
+        else {
+            ((this ->* getCoord) ());
+        }
+    }
+
+    template <typename Scalar>
+    void updateCoordS (const VisBuffer * other,
+                       Bool otherOk,
+                       Scalar (VisBuffer::* getCoord) () const,
+                       Scalar & coord,
+                       Bool & coordOk)
+    {
+        if (otherOk){
+            coord = (other ->* getCoord) ();
+            coordOk = True;
+        }
+        else {
+            ((this ->* getCoord) ());
+        }
+    }
+
+
+
 
 private:
 
@@ -709,8 +803,12 @@ private:
     virtual void validate();
 
     template<typename T>
-    static void cacheCopyArray (Bool & newStatus, Bool oldStatus, T & newCache,
-                                const T & oldCache, Bool force) {
+    static void cacheCopyArray (Bool & newStatus,
+                                Bool oldStatus,
+                                T & newCache,
+                                const VisBuffer & other,
+                                const T &  (VisBuffer::* oldCache) () const,
+                                Bool force) {
 
         // Leave things unchanged if the old status is false.  This will often
         // leave the value with an empty data structure and an OK status which
@@ -722,13 +820,16 @@ private:
         newStatus = force || oldStatus;
 
         if (newStatus) {
-
-            newCache.assign (oldCache);
+            newCache.assign (((& other) ->* oldCache) ());
         }
     }
 
     template<typename T>
-    static void cacheCopyNormal (Bool & newStatus, Bool oldStatus, T & newCache, const T & oldCache,
+    static void cacheCopyNormal (Bool & newStatus,
+                                 Bool oldStatus,
+                                 T & newCache,
+                                 const VisBuffer & other,
+                                 T (VisBuffer::* oldCache) () const,
                                  Bool force) {
 
         // Leave things unchanged if the old status is false.  This will often
@@ -742,7 +843,7 @@ private:
 
         if (newStatus) {
 
-            newCache = oldCache;
+            newCache = ((& other) ->* oldCache) ();
         }
     }
 
@@ -754,6 +855,7 @@ private:
     virtual Vector<Int> unique(const Vector<Int>& indices) const;
 
     Bool corrSorted_p; // Have correlations been sorted by sortCorr?
+    VbDirtyComponents dirtyComponents_p;
     Int lastPointTableRow_p;
     Int oldMSId_p;
     VisBuffer * This;
@@ -805,7 +907,7 @@ private:
     virtual Vector<Bool> & fillFlagRow();
     virtual Cube<Float>& fillFloatDataCube();
     virtual Vector<Double>& fillFreq();         // Puts SPECTRAL_WINDOW/CHAN_FREQ in frequency_p.
-    virtual Matrix<Float>& fillImagingWeight();
+    //virtual Matrix<Float>& fillImagingWeight();
     //virtual Vector<Double>& fillLSRFreq();
     virtual Int & fillnChannel();
     virtual Int & fillnCorr();
@@ -831,60 +933,76 @@ private:
     virtual Matrix<Float>& fillWeightMat();
     virtual Cube<Float>& fillWeightSpectrum();
 
+    Bool newMS_p;
+
     // Variables to track validity of cache (alphabetical order)
 
-    Bool antenna1OK_p;
-    Bool antenna2OK_p;
-    Bool arrayIdOK_p;
-    Bool channelOK_p;
-    Bool cjonesOK_p;
-    Bool correctedVisCubeOK_p;
-    Bool correctedVisibilityOK_p;
-    Bool corrTypeOK_p;
-    Bool direction1OK_p;
-    Bool direction2OK_p;
-    Bool exposureOK_p;
-    Bool feed1_paOK_p;
-    Bool feed1OK_p;
-    Bool feed2_paOK_p;
-    Bool feed2OK_p;
-    Bool fieldIdOK_p;
-    Bool flagCategoryOK_p;
-    Bool flagCubeOK_p;
-    Bool flagOK_p;
-    Bool flagRowOK_p;
-    Bool floatDataCubeOK_p;
-    Bool frequencyOK_p;
-    Bool imagingWeightOK_p;
-    /////Bool lsrFrequencyOK_p;
-    Bool modelVisCubeOK_p;
-    Bool modelVisibilityOK_p;
-    Bool msOK_p;
-    Bool nChannelOK_p;
-    Bool nCorrOK_p;
-  //    Bool nCatOK_p;
-    Bool newMS_p;
-    Bool nRowOK_p;
-    Bool observationIdOK_p;
-    Bool phaseCenterOK_p;
-    Bool polFrameOK_p;
-    Bool processorIdOK_p;
-    Bool rowIdsOK_p;
-    Bool scanOK_p;
-    Bool sigmaMatOK_p;
-    Bool sigmaOK_p;
-    Bool spectralWindowOK_p;
-    Bool stateIdOK_p;
-    Bool timeCentroidOK_p;
-    Bool timeIntervalOK_p;
-    Bool timeOK_p;
-    Bool uvwMatOK_p;
-    Bool uvwOK_p;
-    Bool visCubeOK_p;
-    Bool visibilityOK_p;
-    Bool weightMatOK_p;
-    Bool weightOK_p;
-    Bool weightSpectrumOK_p;
+#define CacheStatus(item) \
+virtual Bool item ## OK () const\
+{\
+    return item ## OK_p;\
+}\
+Bool item ## OK_p;
+
+    // Define the cache statuses
+    //
+    // For example, CacheStatus (antenna1) defines:
+    //
+    // virtual Bool antenna1OK () const { return antenna1OK_p;}
+    //
+    // and
+    //
+    // Bool antenna1OK_p;
+
+    CacheStatus (antenna1);
+    CacheStatus (antenna2);
+    CacheStatus (arrayId);
+    CacheStatus (channel);
+    CacheStatus (cjones);
+    CacheStatus (correctedVisCube);
+    CacheStatus (correctedVisibility);
+    CacheStatus (corrType);
+    CacheStatus (direction1);
+    CacheStatus (direction2);
+    CacheStatus (exposure);
+    CacheStatus (feed1_pa);
+    CacheStatus (feed1);
+    CacheStatus (feed2_pa);
+    CacheStatus (feed2);
+    CacheStatus (fieldId);
+    CacheStatus (flagCategory);
+    CacheStatus (flagCube);
+    CacheStatus (flag);
+    CacheStatus (flagRow);
+    CacheStatus (floatDataCube);
+    CacheStatus (frequency);
+    CacheStatus (imagingWeight);
+    CacheStatus (modelVisCube);
+    CacheStatus (modelVisibility);
+    CacheStatus (ms);
+    CacheStatus (nChannel);
+    CacheStatus (nCorr);
+    CacheStatus (nRow);
+    CacheStatus (observationId);
+    CacheStatus (phaseCenter);
+    CacheStatus (polFrame);
+    CacheStatus (processorId);
+    CacheStatus (rowIds);
+    CacheStatus (scan);
+    CacheStatus (sigmaMat);
+    CacheStatus (sigma);
+    CacheStatus (spectralWindow);
+    CacheStatus (stateId);
+    CacheStatus (timeCentroid);
+    CacheStatus (timeInterval);
+    CacheStatus (time);
+    CacheStatus (uvwMat);
+    CacheStatus (uvw);
+    CacheStatus (visCube);
+    CacheStatus (visibility);
+    CacheStatus (weightMat);
+    CacheStatus (weight);
+    CacheStatus (weightSpectrum);
 
     // Cached values (alphabetical order)
 
@@ -911,7 +1029,7 @@ private:
     Vector<Bool> flagRow_p;
     Cube<Float> floatDataCube_p;
     Vector<Double> frequency_p;
-    Matrix<Float> imagingWeight_p;
+    mutable Matrix<Float> imagingWeight_p;
     //Vector<Double> lsrFrequency_p;
     Cube<Complex> modelVisCube_p;
     Matrix<CStokesVector> modelVisibility_p;
@@ -942,6 +1060,39 @@ private:
     Cube<Float> weightSpectrum_p;
 };
 
+class VisBufferAutoPtr {
+
+public:
+
+    VisBufferAutoPtr ();
+    VisBufferAutoPtr (VisBufferAutoPtr & other);
+    explicit VisBufferAutoPtr (VisBuffer &);
+    explicit VisBufferAutoPtr (VisBuffer *);
+    explicit VisBufferAutoPtr (ROVisibilityIterator * rovi);
+    explicit VisBufferAutoPtr (ROVisibilityIterator & rovi);
+    ~VisBufferAutoPtr ();
+
+    VisBufferAutoPtr & operator= (VisBufferAutoPtr & other);
+    VisBuffer & operator* () const;
+    VisBuffer * operator-> () const;
+
+    VisBuffer * get () const;
+    VisBuffer * release ();
+    void set (VisBuffer &);
+    void set (VisBuffer *);
+    void set (ROVisibilityIterator * rovi, Bool attachIt = False);
+    void set (ROVisibilityIterator & rovi, Bool attachIt = False);
+
+protected:
+
+    void construct (ROVisibilityIterator * rovi, Bool attachVi);
+    void constructVb (VisBuffer * rovi);
+
+private:
+
+    VisBuffer * visBuffer_p;
+
+};
 
 } //# NAMESPACE CASA - END
 
