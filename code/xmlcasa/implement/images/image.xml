@@ -4219,22 +4219,44 @@ tool attached to the residual (continuum subtracted) image.
             <description>Overwrite component list if it already exists. Default is False.</description>
             <value>false</value>
         </param>
+        <param type="bool" direction="in" name="dooff">
+            <description>Also fit a zero level offset? Default is False</description>
+            <value>false</value>
+        </param>
+        <param type="double" direction="in" name="offset">
+            <description>Initial estimate of zero-level offset. Only used if doff is True. Default is 0.0</description>
+            <value>0.0</value>
+        </param>
     </input>
     <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
     <description>
     OVERVIEW
 
-fitcomponents() is used to fit one or more gaussians to sources in an image.
-Fitting is limited to a single polarization but can be performed over several
-contiguous spectral channels.
+fitcomponents() is used to fit one or more gaussians to sources in an image as
+well as an optional zero-level offset. Fitting is limited to a single polarization
+but can be performed over several contiguous spectral channels.
 If the image has a clean beam, the report will contain both the convolved
 and the deconvolved fit results.
 
-The method returns a dictionary with two keys, 'converged' and 'results'.
+When dooff is False, the method returns a dictionary with two keys, 'converged' and 'results'.
 The value of 'converged' is a boolean array which indicates if the fit converged
 on a channel by channel basis.
-The value of 'results' is a component list reflecting the fit results. In the
-case of a clean image, the results are the convolved results.
+The value of 'results' is a dictionary representing a component list reflecting the
+fit results. In the case of a deconvolved image, the sizes and position angles are those
+of the source convolved with the restoring beam. For convenience, the 'results' dictionary can
+be read into a compoenent list tool (default tool is named cl) using the fromrecord() method
+for easier inspection using tool methods, eg
+
+cl.fromrecord(res['results'])
+
+If doofset is True, in addtion to the specified number of
+gaussians, a zero-level offset will also be fit. The initial estimate for this
+offset is specified using the offset parameter. Units are assumed to be the
+same as the image brightness units. In this case, the returned
+dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are both
+arrays containing the the fitted zero level offset value and its error, respectively,
+for each channel. Both sets of values are in image brightness units.
+In cases where the fit did not converge, these values are set to NaN.
 
 The region can either be specified by a box (blc,trc) or a region (if both
 are given, the box is used). Ranges of pixel values can be included or

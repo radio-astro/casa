@@ -614,19 +614,17 @@ std::string image::brightnessunit() {
 }
 
 bool image::calc(const std::string& expr) {
-	bool rstat(false);
 	try {
-		*_log << LogOrigin("image", "calc");
-		if (detached())
-			return rstat;
-
-		rstat = _image->calc(expr);
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return False;
+		}
+		return _image->calc(expr);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::calcmask(const std::string& mask, const std::string& maskName,
@@ -1257,7 +1255,7 @@ image* image::transpose(
 		const string& model, const string& estimates,
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
-		const bool overwrite
+		const bool overwrite, const bool dooff, const double offset
 ) {
 	if (detached()) {
 		return 0;
@@ -1318,13 +1316,19 @@ image* image::transpose(
 				toRecord(regionCopy.asRecord())
 			);
 		}
-		fitter.reset(new ImageFitter(
-			image, regionString, regionRecord.get(), box, sChans,
-			stokes, mask, includepix, excludepix, residual, model,
-			estimates, logfile, append, newestimates, complist,
-			writeControl)
+		fitter.reset(
+			new ImageFitter(
+				image, regionString, regionRecord.get(), box, sChans,
+				stokes, mask, includepix, excludepix, residual, model,
+				estimates, logfile, append, newestimates, complist,
+				writeControl
+			)
 		);
+		if (dooff) {
+			fitter->setZeroLevelEstimate(offset);
+		}
 		ComponentList compList = fitter->fit();
+		Vector<casa::Quantity> flux;
 		Vector<Bool> converged = fitter->converged();
 		Record returnRecord, compListRecord;
 		String error;
@@ -1339,6 +1343,12 @@ image* image::transpose(
 		FluxRep<Double>::clearAllowedUnits();
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
+		if (dooff) {
+			vector<Double> zeroSol, zeroErr;
+			fitter->getZeroLevelSolution(zeroSol, zeroErr);
+			returnRecord.define("zerooff", Vector<Double>(zeroSol));
+			returnRecord.define("zeroofferr", Vector<Double>(zeroErr));
+		}
 		return fromRecord(returnRecord);
 	}
 	catch (AipsError x) {

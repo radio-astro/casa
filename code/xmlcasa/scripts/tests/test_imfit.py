@@ -90,7 +90,12 @@ msgs = ''
 
 # are the two specified numeric values relatively close to each other? 
 def near (first, second, epsilon):
-    return (abs((first - second)/first) <= abs(epsilon))
+    if first == 0 and second == 0:
+        return True
+    denom = first
+    if first == 0:
+        denom = second
+    return (abs((first - second)/denom) <= abs(epsilon))
 
 def near_abs(first, second, epsilon):
     return abs(first - second) <= epsilon
@@ -1059,6 +1064,88 @@ class imfit_test(unittest.TestCase):
                 "One or more of the converged elements are False"
             )
 
+    def test_zero_level(self):
+        """Test zero level fitting"""
+        
+        method = "test_zero_level"
+        test = "test_zero_level"
+        mycl = cltool.create()
+        myia = iatool.create()
+
+        def run_fitcomponents(imagename):
+            myia = iatool.create()
+            myia.open(imagename)
+            res = myia.fitcomponents(
+                box="130,89,170,129", dooff=True, offset=0.0
+            )
+            myia.done()
+            return res
+        def run_imfit(imagename):
+            default('imfit')
+            return imfit(
+                imagename=imagename, 
+                box="130,89,170,129", dooff=True, offset=0.0
+            )
+        
+        j = 0
+        for code in (run_fitcomponents, run_imfit):
+            for i in range(3):
+                if i == 0:
+                    off = -10
+                if i == 1:
+                    off = 0
+                if i == 2:
+                    off = 5
+                myia.open(noisy_image)
+                myshape = myia.shape()
+                csys = myia.coordsys().torecord()
+                myia.done()
+                myia.fromshape(
+                    "tmp" + str(i) + "_" + str(j) + ".im",
+                    myshape, csys
+                )
+                myia.calc(noisy_image + "+" + str(off))
+                imagename = "xx" + str(i) + "_" + str(j) + ".im"
+                myia.subimage(imagename)
+                myia.done()
+                            
+                res = code(imagename)
+                mycl.fromrecord(res["results"])
+                got = mycl.getfluxvalue(0)[0]
+                expected = 60498.5586
+                epsilon = 1e-5
+                self.assertTrue(near(got, expected, epsilon))
+                got = mycl.getfluxvalue(0)[1]
+                self.assertTrue(got == 0)
+                got = mycl.getrefdir(0)["m0"]["value"]
+                expected = 0.000213372126
+                epsilon = 1e-5
+                self.assertTrue(near(got, expected, epsilon))
+                got = mycl.getrefdir(0)["m1"]["value"]
+                expected = 1.93581236e-05
+                epsilon = 1e-5
+                self.assertTrue(near(got, expected, epsilon))
+                shape = mycl.getshape()
+                got = shape["majoraxis"]["value"]
+                expected = 23.5743464
+                epsilon = 1e-5
+                self.assertTrue(near(got, expected, epsilon))
+                got = shape["minoraxis"]["value"]
+                expected = 18.8905131
+                epsilon = 1e-5
+                self.assertTrue(near(got, expected, epsilon))
+                got = shape["positionangle"]["value"]
+                expected = 119.818744
+                epsilon = 1e-5
+                self.assertTrue(near(got, expected, epsilon))
+                mycl.done()
+                
+                got = res["zerooff"]
+                expected = off - 0.102277
+                self.assertTrue(near(got, expected, epsilon))
+                mycl.done()
+                
+                j = j + 1
 
 def suite():
     return [imfit_test]
