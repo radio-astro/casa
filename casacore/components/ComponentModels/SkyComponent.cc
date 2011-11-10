@@ -51,101 +51,77 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 SkyComponent::SkyComponent()
   :itsCompPtr(new SkyCompRep) 
-{
-  DebugAssert(ok(), AipsError);
-}
+{}
 
 SkyComponent::SkyComponent(const ComponentType::Shape& shape)   
   :itsCompPtr(new SkyCompRep(shape))
-{
-  DebugAssert(ok(), AipsError);
-}
+{}
 
 SkyComponent::SkyComponent(const ComponentType::Shape& shape,
 			   const ComponentType::SpectralShape& spectralModel) 
   :itsCompPtr(new SkyCompRep(shape, spectralModel))
-{
-  DebugAssert(ok(), AipsError);
-}
+{}
 
 SkyComponent::SkyComponent(const Flux<Double>& flux,
 			   const ComponentShape& shape, 
 			   const SpectralModel& spectrum)
   :itsCompPtr(new SkyCompRep(flux, shape, spectrum))
-{
-  DebugAssert(ok(), AipsError);
-}
+{}
 
 SkyComponent::SkyComponent(const SkyComponent& other) 
   :SkyCompBase(other),
    itsCompPtr (other.itsCompPtr)
-{ 
-  DebugAssert(ok(), AipsError);
-}
+{}
 
-SkyComponent::~SkyComponent() {
-  DebugAssert(ok(), AipsError);
-}
+SkyComponent::~SkyComponent() {}
 
 SkyComponent& SkyComponent::operator=(const SkyComponent& other) {
   if (this != &other)
     itsCompPtr = other.itsCompPtr;
-  DebugAssert(ok(), AipsError);
   return *this;
 }
 
 Flux<Double>& SkyComponent::flux() {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->flux();
 }
 
 const Flux<Double>& SkyComponent::flux() const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->flux();
 }
 
 const ComponentShape& SkyComponent::shape() const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->shape();
 }
 
 ComponentShape& SkyComponent::shape() {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->shape();
 }
 
 void SkyComponent::setShape(const ComponentShape& newShape) {
-  DebugAssert(ok(), AipsError);
   itsCompPtr->setShape(newShape);
 }
 
 const SpectralModel& SkyComponent::spectrum() const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->spectrum();
 }
 
 SpectralModel& SkyComponent::spectrum() {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->spectrum();
 }
 
 void SkyComponent::setSpectrum(const SpectralModel& newSpectrum) {
-  DebugAssert(ok(), AipsError);
   itsCompPtr->setSpectrum(newSpectrum);
 }
 
 String& SkyComponent::label() {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->label();
 }
 
 const String& SkyComponent::label() const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->label();
 }
 
 Bool SkyComponent::isPhysical() const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->isPhysical();
 }
 
@@ -153,7 +129,6 @@ Flux<Double> SkyComponent::sample(const MDirection& direction,
 			      const MVAngle& pixelLatSize, 
 			      const MVAngle& pixelLongSize, 
 			      const MFrequency& centerFrequency) const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->sample(direction, pixelLatSize, pixelLongSize, 
 			    centerFrequency);
 }
@@ -165,7 +140,6 @@ void SkyComponent::sample(Cube<Double>& samples, const Unit& reqUnit,
 			  const MVAngle& pixelLongSize, 
 			  const Vector<MVFrequency>& frequencies,
 			  const MeasRef<MFrequency>& freqRef) const {
-  DebugAssert(ok(), AipsError);
   itsCompPtr->sample(samples, reqUnit,
 		     directions, dirRef, pixelLatSize, pixelLongSize,
 		     frequencies, freqRef);
@@ -173,31 +147,26 @@ void SkyComponent::sample(Cube<Double>& samples, const Unit& reqUnit,
 
 Flux<Double> SkyComponent::visibility(const Vector<Double>& uvw,
  				      const Double& frequency) const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->visibility(uvw, frequency);
 }
 
 void SkyComponent::visibility(Cube<DComplex>& visibilities,
 			      const Matrix<Double>& uvws,
 			      const Vector<Double>& frequencies) const {
-  DebugAssert(ok(), AipsError);
   itsCompPtr->visibility(visibilities, uvws, frequencies);
 }
 
 Bool SkyComponent::fromRecord(String& errorMessage, 
  			      const RecordInterface& record) {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->fromRecord(errorMessage, record);
 }
 
 Bool SkyComponent::toRecord(String& errorMessage,
  			    RecordInterface& record) const {
-  DebugAssert(ok(), AipsError);
   return itsCompPtr->toRecord(errorMessage, record);
 }
 
 SkyComponent SkyComponent::copy() const {
-  DebugAssert(ok(), AipsError);
   SkyComponent newComp(flux().copy(), shape(), spectrum());
   newComp.label() = label();
   return newComp;
