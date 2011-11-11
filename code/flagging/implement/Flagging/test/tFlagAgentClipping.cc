@@ -527,6 +527,7 @@ int main(int argc, char **argv)
 	// Parse input parameters
 	Record agentParameters;
 	Record dataSelection;
+	vector<string> expressionList;
 	for (unsigned short i=0;i<argc-1;i++)
 	{
 		parameter = string(argv[i]);
@@ -620,7 +621,7 @@ int main(int argc, char **argv)
 		else if (parameter == string("-expression"))
 		{
 			expression = casa::String(value);
-			agentParameters.define ("expression", expression);
+			expressionList.push_back(expression);
 			cout << "expression is: " << expression << endl;
 		}
 		else if (parameter == string("-datacolumn"))
@@ -683,25 +684,36 @@ int main(int argc, char **argv)
 
 
 	Record agentParameters_i;
+	Record agentParameters_j;
 	vector<Record> agentParamersList;
 
 	if (nThreads>1)
 	{
-		for (Int threadId=0;threadId<nThreads;threadId++)
+		for (vector<string>::iterator exp_i=expressionList.begin();exp_i != expressionList.end();exp_i++)
 		{
 			agentParameters_i = agentParameters;
+			agentParameters_i.define("expression",*exp_i);
+			for (Int threadId=0;threadId<nThreads;threadId++)
+			{
+				agentParameters_j = agentParameters_i;
 
-			stringstream ss;
-			ss << threadId;
-			agentParameters_i.define("threadId",ss.str());
-			agentParameters_i.define("nThreads",nThreadsParam);
+				stringstream ss;
+				ss << threadId;
+				agentParameters_j.define("threadId",ss.str());
+				agentParameters_j.define("nThreads",nThreadsParam);
 
-			agentParamersList.push_back(agentParameters_i);
+				agentParamersList.push_back(agentParameters_j);
+			}
 		}
 	}
 	else
 	{
-		agentParamersList.push_back(agentParameters);
+		for (vector<string>::iterator exp_i=expressionList.begin();exp_i != expressionList.end();exp_i++)
+		{
+			agentParameters_i = agentParameters;
+			agentParameters_i.define("expression",*exp_i);
+			agentParamersList.push_back(agentParameters);
+		}
 	}
 
 	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection,agentParamersList);
