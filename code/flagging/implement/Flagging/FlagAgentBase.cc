@@ -63,44 +63,6 @@ FlagAgentBase::FlagAgentBase(FlagDataHandler *dh, Record config, uShort iteratio
 	// Set vis buffer
 	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
 
-	// Activate FlagDataHandler mappings depending on iteration approach
-	switch (iterationApproach_p)
-	{
-		case ANTENNA_PAIRS:
-		{
-			flagDataHandler_p->setMapPolarizations(true);
-			break;
-		}
-		case ROWS:
-		{
-			break;
-		}
-		case IN_ROWS:
-		{
-			flagDataHandler_p->setMapPolarizations(true);
-			break;
-		}
-		case ANTENNA_PAIRS_PREPROCESS_BUFFER:
-		{
-			flagDataHandler_p->setMapPolarizations(true);
-			break;
-		}
-		case ROWS_PREPROCESS_BUFFER:
-		{
-			flagDataHandler_p->setMapPolarizations(true);
-			break;
-		}
-		case IN_ROWS_PREPROCESS_BUFFER:
-		{
-			flagDataHandler_p->setMapPolarizations(true);
-			break;
-		}
-		default:
-		{
-			break;
-		}
-	}
-
 	// Set agent parameters
 	setAgentParameters(config);
 
