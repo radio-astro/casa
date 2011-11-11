@@ -64,6 +64,7 @@ typedef std::map< std::pair<Int,Int>,std::vector<uInt> > antennaPairMap;
 typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
 typedef std::map< uShort,uShort > polarizationMap;
 typedef std::map< uInt,String > polarizationIndexMap;
+typedef std::vector< vector<Double> > antennaPointingMap;
 
 const Complex ImaginaryUnit = Complex(0,1);
 
@@ -427,26 +428,26 @@ public:
 	Cube<Bool> * getModifiedFlagCube();
 	Cube<Bool> * getOriginalFlagCube();
 
-	// Mapping functions as requested by Urvashi
+	// Mapping functions
 	void generateAntennaPairMap();
 	void generateSubIntegrationMap();
-
-	// Produce correlation-polarization map to determine which position
-	// corresponds to which correlation type i.e.: XX,XY,YX,YY or XX,YY,XY,YX
 	void generatePolarizationsMap();
+	void generateAntennaPointingMap();
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
 	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
+	antennaPointingMap * getMapAntennaPointing() {return antennaPointingMap_p;}
 
 	// Functions to switch on/off mapping functions
-	void setMapPolarizations(bool activated) {mapPolarizations_p=activated;}
 	void setMapAntennaPairs(bool activated) {mapAntennaPairs_p=activated;}
 	void setMapSubIntegrations(bool activated) {mapSubIntegrations_p=activated;}
+	void setMapPolarizations(bool activated) {mapPolarizations_p=activated;}
+	void setMapAntennaPointing(bool activated) {mapAntennaPointing_p=activated;}
 
-	// Old CubeView accessors
+	// TODO: Remove old CubeView accessors and update tFlagDataHandler and tFlagAgentBase
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
 	CubeView<Bool> * getFlagsView(Double timestep);
 	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
@@ -520,9 +521,11 @@ private:
 	subIntegrationMap *subIntegrationMap_p;
 	polarizationMap *polarizationMap_p;
 	polarizationIndexMap *polarizationIndexMap_p;
+	antennaPointingMap *antennaPointingMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 	bool mapPolarizations_p;
+	bool mapAntennaPointing_p;
 
 	// Stats members
 	bool stats_p;

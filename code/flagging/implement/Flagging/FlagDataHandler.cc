@@ -88,8 +88,9 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// only one time step, thus invalidating the time interval effect.
 	// See: MSIter.h
 
-	// By default don't map polarizations
+	// By default don't map polarizations and antennaPointing
 	mapPolarizations_p = false;
+	mapAntennaPointing_p = false;
 
 	switch (iterationApproach_p)
 	{
@@ -263,15 +264,18 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	selectedMeasurementSet_p = NULL;
 	measurementSetSelection_p = NULL;
 	originalMeasurementSet_p = NULL;
-	antennaNames_p = NULL;
+
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
+	vwbt_p = NULL;
+
+	antennaNames_p = NULL;
+	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
 	polarizationMap_p = NULL;
 	polarizationIndexMap_p = NULL;
-	antennaPairMap_p = NULL;
-	vwbt_p = NULL;
+	antennaPointingMap_p = NULL;
 
 	return;
 }
@@ -282,20 +286,27 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 // -----------------------------------------------------------------------
 FlagDataHandler::~FlagDataHandler()
 {
-	// Destroy members
-	if (vwbt_p) delete vwbt_p;
+	// Delete mapping members
+	if (antennaNames_p) delete antennaNames_p;
 	if (antennaPairMap_p) delete antennaPairMap_p;
 	if (subIntegrationMap_p) delete subIntegrationMap_p;
 	if (polarizationMap_p) delete polarizationMap_p;
 	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+
+	// Delete VisBuffers and iterators
+	if (vwbt_p) delete vwbt_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
 	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
 	if ((!asyncio_disabled_p) and (rwVisibilityIterator_p)) delete rwVisibilityIterator_p;
+
+	// Delete MS objects
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-	if (antennaNames_p) delete antennaNames_p;
+
+	// Delete logger
 	if (logger_p) delete logger_p;
 
 	return;
@@ -782,6 +793,7 @@ FlagDataHandler::nextBuffer()
 		if (mapAntennaPairs_p) generateAntennaPairMap();
 		if (mapSubIntegrations_p) generateSubIntegrationMap();
 		if (mapPolarizations_p) generatePolarizationsMap();
+		if (mapAntennaPointing_p) generateAntennaPointingMap();
 		moreBuffers = true;
 		bufferNo++;
 	}
@@ -798,6 +810,7 @@ FlagDataHandler::nextBuffer()
 			if (mapAntennaPairs_p) generateAntennaPairMap();
 			if (mapSubIntegrations_p) generateSubIntegrationMap();
 			if (mapPolarizations_p) generatePolarizationsMap();
+			if (mapAntennaPointing_p) generateAntennaPointingMap();
 			moreBuffers = true;
 			bufferNo++;
 		}
@@ -1039,6 +1052,37 @@ FlagDataHandler::generatePolarizationsMap()
 	{
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Polarization map key: " << iter->first << " value: " << iter->second << LogIO::POST;
 	}
+
+	return;
+}
+
+void
+FlagDataHandler::generateAntennaPointingMap()
+{
+	// Free previous map and create a new one
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+	antennaPointingMap_p = new antennaPointingMap();
+
+	Vector<Double> time = visibilityBuffer_p->get()->time();
+	uInt nRows = time.size();
+	antennaPointingMap_p->reserve(nRows);
+	for (uInt row_i=0;row_i<nRows;row_i++)
+	{
+		Vector<MDirection> azimuth_elevation = visibilityBuffer_p->get()->azel(time[row_i]);
+		Int ant1 = visibilityBuffer_p->get()->antenna1()[row_i];
+		Int ant2 = visibilityBuffer_p->get()->antenna1()[row_i];
+
+	    double antenna1_elevation = azimuth_elevation[ant1].getAngle("deg").getValue()[1];
+	    double antenna2_elevation = azimuth_elevation[ant2].getAngle("deg").getValue()[1];
+
+	    vector<Double> item(2);
+	    item[0] = antenna1_elevation;
+	    item[1] = antenna2_elevation;
+	    antennaPointingMap_p->push_back(item);
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Generated antenna pointing map with "
+			<< antennaPointingMap_p->size() << " elements" << LogIO::POST;
 
 	return;
 }
