@@ -45,6 +45,9 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	spwPolarizationCounts = False;
 
 	setAgentParameters(config);
+
+	// Request loading polarization map to FlagDataHandler
+	flagDataHandler_p->setMapPolarizations(true);
 }
 
 FlagAgentSummary::~FlagAgentSummary()
@@ -117,6 +120,8 @@ FlagAgentSummary::preProcessBuffer(VisBuffer &visBuffer)
 	spw_stringStream << spw;
 	spw_str = spw_stringStream.str();
 
+	// TODO: This is not generic but in all the iteration modes provided
+	// by the FlagDataHandler scan and observation are constant over rows
 	scan = visBuffer.scan()[0];
 	stringstream scan_stringStream;
 	scan_stringStream << scan;
