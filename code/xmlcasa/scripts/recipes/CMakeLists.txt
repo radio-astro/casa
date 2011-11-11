@@ -26,6 +26,7 @@ casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   cmpmses.py
   field2skycat.py
   find_autocorr.py
+  gaincal_unflag_nearest.py
   __init__.py
   lsms.py
   make_labelled_ms.py
