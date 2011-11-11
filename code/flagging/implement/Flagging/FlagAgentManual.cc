@@ -38,7 +38,6 @@ FlagAgentManual::~FlagAgentManual()
 void
 FlagAgentManual::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
-	// TODO: This class must be re-implemented in the derived classes
 	IPosition flagCubeShape = flags.shape();
 	uInt nChannels = flagCubeShape(0);
 	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
