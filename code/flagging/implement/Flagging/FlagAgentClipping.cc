@@ -28,6 +28,9 @@ FlagAgentClipping::FlagAgentClipping(FlagDataHandler *dh, Record config, Bool wr
 		FlagAgentBase(dh,config,IN_ROWS,writePrivateFlagCube)
 {
 	setAgentParameters(config);
+
+	// Request loading polarization map to FlagDataHandler
+	flagDataHandler_p->setMapPolarizations(true);
 }
 
 FlagAgentClipping::~FlagAgentClipping()
