@@ -634,7 +634,6 @@ String CasacRegionManager::_stokesFromRecord(
 ) const {
 	// FIXME This implementation is incorrect for complex, recursive records
 	String stokes = "";
-
 	if(! itsCSys->hasPolarizationCoordinate()) {
 		return stokes;
 	}
@@ -651,7 +650,11 @@ String CasacRegionManager::_stokesFromRecord(
 		stokesEnd = (uInt)((Vector<Float>)trc)[polAxis];
 		oneRelAccountedFor = True;
 	}
-	else if (RegionManager::isPixelRegion(*(ImageRegion::fromRecord(region, "")))) {
+	else if (
+		RegionManager::isPixelRegion(
+			*(ImageRegion::fromRecord(region, ""))
+		)
+	) {
 		region.toArray("blc", blc);
 		region.toArray("trc", trc);
 		stokesBegin = (uInt)((Vector<Float>)blc)[polAxis];
@@ -661,33 +664,42 @@ String CasacRegionManager::_stokesFromRecord(
 		// world polygon
 		oneRelAccountedFor = True;
 		stokesBegin = 0;
-
-		if (stokesControl == USE_FIRST_STOKES) {
-			stokesEnd = 0;
-		}
-		else if (stokesControl == USE_ALL_STOKES) {
-			stokesEnd = shape[polAxis];
-		}
+		stokesEnd = stokesControl == USE_FIRST_STOKES
+			? 0 : stokesEnd = shape[polAxis];
 	}
 	else if (region.fieldNumber("blc") >= 0 && region.fieldNumber("blc") >= 0) {
 		// world box
 		Record blcRec = region.asRecord("blc");
 		Record trcRec = region.asRecord("trc");
-		stokesBegin = (Int)blcRec.asRecord(
-				String("*" + String::toString(polAxis - 1))
-		).asDouble("value");
-		stokesEnd = (Int)trcRec.asRecord(
-				String("*" + String::toString(polAxis - 1))
-		).asDouble("value");
+		String polField = "*" + String::toString(polAxis + 1);
+		stokesBegin = blcRec.isDefined(polField)
+			? (Int)blcRec.asRecord(
+				String(polField)
+			).asDouble("value")
+			: 0;
+		stokesEnd = trcRec.isDefined(polField)
+			? (Int)blcRec.asRecord(
+				String(polField)
+			).asDouble("value")
+			: stokesControl == USE_FIRST_STOKES
+				? 0
+				: stokesEnd = shape[polAxis];
+		if (! blcRec.isDefined(polField)) {
+			oneRelAccountedFor = True;
+		}
 	}
 	else {
 		// FIXME not very nice, but until all can be implemented this will have to do
-		*itsLog << LogIO::WARN << "Stokes cannot be determined because this region type is not handled yet"
-				<< LogIO::POST;
+		*itsLog << LogIO::WARN << "Stokes cannot be determined because this "
+			<< "region type is not handled yet. But chances are very good this is no need to be alarmed."
+			<< LogIO::POST;
 		return stokes;
 	}
-
-	if (! oneRelAccountedFor && region.isDefined("oneRel") && region.asBool("oneRel")) {
+	if (
+		! oneRelAccountedFor
+		&& region.isDefined("oneRel")
+		&& region.asBool("oneRel")
+	) {
 		stokesBegin--;
 		stokesEnd--;
 	}
