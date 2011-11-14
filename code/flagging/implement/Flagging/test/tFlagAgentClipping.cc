@@ -712,7 +712,7 @@ int main(int argc, char **argv)
 		{
 			agentParameters_i = agentParameters;
 			agentParameters_i.define("expression",*exp_i);
-			agentParamersList.push_back(agentParameters);
+			agentParamersList.push_back(agentParameters_i);
 		}
 	}
 
