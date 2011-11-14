@@ -140,6 +140,7 @@ private:
 	// MS-related objects
 	MeasurementSet *selectedMeasurementSet_p;
 	Cube<Bool> *commonFlagCube_p;
+	Cube<Bool> *originalFlagCube_p;
 	Cube<Bool> *privateFlagCube_p;
 
 	// Own data selection ranges
