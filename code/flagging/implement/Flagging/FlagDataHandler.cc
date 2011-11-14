@@ -1734,11 +1734,12 @@ VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 //////////////////////////////////////
 /// FlagMapper implementation ////////
 //////////////////////////////////////
-FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView)
+FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView)
 {
 	commonFlagsView_p = NULL;
+	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
-	setParentCubes(commonFlagsView,privateFlagsView);
+	setParentCubes(commonFlagsView,originalFlagsView,privateFlagsView);
 	setExpressionMapping(selectedCorrelations);
 	flag_p = flag;
 }
@@ -1746,18 +1747,21 @@ FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bo
 FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations)
 {
 	commonFlagsView_p = NULL;
+	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
 	setExpressionMapping(selectedCorrelations);
 	flag_p = flag;
 }
 
 void
-FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView)
+FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView)
 {
 	if (commonFlagsView_p != NULL) delete commonFlagsView_p;
+	if (originalFlagsView_p != NULL) delete originalFlagsView_p;
 	if (privateFlagsView_p != NULL) delete privateFlagsView_p;
 
 	commonFlagsView_p = commonFlagsView;
+	originalFlagsView_p = originalFlagsView;
 	if (privateFlagsView != NULL)
 	{
 		privateFlagsView_p = privateFlagsView;
@@ -1791,7 +1795,7 @@ FlagMapper::~FlagMapper()
 }
 
 Bool
-FlagMapper::operator()(uInt channel, uInt row)
+FlagMapper::getOriginalFlags(uInt channel, uInt row)
 {
 	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
@@ -1803,9 +1807,45 @@ FlagMapper::operator()(uInt channel, uInt row)
 }
 
 Bool
-FlagMapper::operator()(uInt pol, uInt channel, uInt row)
+FlagMapper::getModifiedFlags(uInt channel, uInt row)
+{
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	{
+		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
+}
+
+Bool
+FlagMapper::getPrivateFlags(uInt channel, uInt row)
+{
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	{
+		combinedFlag = combinedFlag | privateFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
+}
+
+Bool
+FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
 	return commonFlagsView_p->operator ()(pol,channel,row);
+}
+
+Bool
+FlagMapper::getModifiedFlags(uInt pol, uInt channel, uInt row)
+{
+	return commonFlagsView_p->operator ()(pol,channel,row);
+}
+
+Bool
+FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
+{
+	return privateFlagsView_p->operator ()(pol,channel,row);
 }
 
 void

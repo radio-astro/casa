@@ -320,17 +320,24 @@ class FlagMapper
 
 public:
 
-	FlagMapper(Bool flag,vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	FlagMapper(Bool flag,vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
 	FlagMapper(Bool flag,vector<uInt> selectedCorrelations);
 	~FlagMapper();
 
-	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
 
 	void applyFlag(uInt chan, uInt row);
 
-	Bool operator()(uInt chan, uInt row);
+	Bool getOriginalFlags(uInt chan, uInt row);
+	Bool getModifiedFlags(uInt chan, uInt row);
+	Bool getPrivateFlags(uInt chan, uInt row);
 
-	Bool operator()(uInt pol, uInt channel, uInt row);
+	Bool getOriginalFlags(uInt pol, uInt channel, uInt row);
+	Bool getModifiedFlags(uInt pol, uInt channel, uInt row);
+	Bool getPrivateFlags(uInt pol, uInt channel, uInt row);
+
+	// Bool operator()(uInt chan, uInt row);
+	// Bool operator()(uInt pol, uInt channel, uInt row);
 
     const IPosition &shape() const
     {
@@ -365,6 +372,7 @@ private:
 	Bool flag_p;
     IPosition reducedLength_p;
 	CubeView<Bool> *commonFlagsView_p;
+	CubeView<Bool> *originalFlagsView_p;
 	CubeView<Bool> *privateFlagsView_p;
 	vector<uInt> selectedCorrelations_p;
 	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);

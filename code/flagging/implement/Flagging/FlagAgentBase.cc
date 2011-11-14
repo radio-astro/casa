@@ -96,6 +96,7 @@ FlagAgentBase::initialize()
    visibilityBuffer_p = NULL;
    privateFlagCube_p = NULL;
    commonFlagCube_p = NULL;
+   originalFlagCube_p = NULL;
 
    // Initialize selection ranges
    timeSelection_p = String("");
@@ -309,6 +310,7 @@ FlagAgentBase::runCore()
 {
 	// Set pointer to common flag cube
 	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
+	originalFlagCube_p = flagDataHandler_p->getOriginalFlagCube();
 
 	// Generate indexes applying data selection filters
 	generateAllIndex();
@@ -1209,14 +1211,16 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 {
 	// First step create common/private CubeViews
 	CubeView<Bool> *commonFlagCube = NULL;
+	CubeView<Bool> *originalFlagCube = NULL;
 	CubeView<Bool> *privateFlagCube = NULL;
 
 	// Second step create CubeViews from selected vis cubes
 	commonFlagCube= new CubeView<Bool>(commonFlagCube_p,rows,&channelIndex_p);
+	originalFlagCube= new CubeView<Bool>(originalFlagCube_p,rows,&channelIndex_p);
 	if (writePrivateFlagCube_p) privateFlagCube= new CubeView<Bool>(privateFlagCube_p,rows,&channelIndex_p);
 
 	// Third step: Set CubeViews in mapper
-	flagMap->setParentCubes(commonFlagCube,privateFlagCube);
+	flagMap->setParentCubes(commonFlagCube,originalFlagCube,privateFlagCube);
 
 	return;
 }

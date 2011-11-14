@@ -106,7 +106,7 @@ FlagAgentClipping::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, 
 		{
 			// If none of the correlations involved in the expression
 			// are flagged, then take into account this channel
-			if (!flags(chan_i,row))
+			if (!flags.getModifiedFlags(chan_i,row))
 			{
 				visExpression += visibilities(chan_i,row);
 				nAverage += 1;

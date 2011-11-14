@@ -169,7 +169,7 @@ FlagAgentSummary::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt 
 		channelFlags = 0;
 		for (pol_i=0;pol_i < nPolarizations;pol_i++)
 		{
-			flag = flags(polarizations[pol_i],channel_i,row);
+			flag = flags.getModifiedFlags(polarizations[pol_i],channel_i,row);
 			channelFlags += flag;
 			polarizationsBreakdownFlags[pol_i] += flag;
 		}

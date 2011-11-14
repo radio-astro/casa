@@ -37,6 +37,9 @@ FlagAgentTimeFreqCrop::FlagAgentTimeFreqCrop(FlagDataHandler *dh, Record config,
 		FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube)
 {
 	setAgentParameters(config);
+
+	// Request loading polarization map to FlagDataHandler
+	flagDataHandler_p->setMapPolarizations(true);
 }
 
 FlagAgentTimeFreqCrop::~FlagAgentTimeFreqCrop()
@@ -197,49 +200,25 @@ void
 FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2)
 {
 
-	IPosition flagCubeShape = visibilities.shape();
-
- /// Justo - This code demonstrates a current problem with the FlagMapper.
-	uInt nChannels,nRows;
-	nChannels = flagCubeShape(0);
-	nRows = flagCubeShape(1);
-	Bool prevCombinedFlag;
-	uInt row_i,chan_i;
-	Float vis;
-	for (row_i=0;row_i<nRows;row_i++)
-	{
-	  	for (chan_i=0;chan_i<nChannels;chan_i++)
-	 	{
-		// Get already existing flags
-		  prevCombinedFlag = flags(chan_i,row_i);
-		// Set flags in all correlations involved
-		  if(prevCombinedFlag) flags.applyFlag(chan_i,row_i);
-	  	}
-		flags.applyFlag(40,row_i);
-	}
-
-  //// Un-comment the following block of code to enable TFCROP.
-	/*
 	// Call 'fltBaseAndFlag' as specified by the user.
 	if(flagDimension_p == String("time"))
-	  {
-	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
-	  }
+	{
+		fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	}
 	else if( flagDimension_p == String("freq") )
-	  {
-	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
-	  }
+	{
+		fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	}
 	else if( flagDimension_p == String("timefreq") )
-	  {
-	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
-	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
-	  }
+	{
+		fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+		fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	}
 	else // freqtime
-	  {
-	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
-	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
-	  }
-	*/
+	{
+		fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+		fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	}
 
 	return;
 }
@@ -300,7 +279,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	{
 	  if(mind[0]==nChannels)// if i0 is channel, and i1 is time
 	    {
-	      if( ! flags(i0,i1) )
+	      if( ! flags.getModifiedFlags(i0,i1) )
 		{
 		  mval += visibilities(i0,i1);
 		  mcnt++;
@@ -308,7 +287,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	    }
 	  else // if i1 is channel, and i0 is time
 	    {
-	      if( ! flags(i1,i0) )
+	      if( ! flags.getModifiedFlags(i1,i0) )
 		{
 		  mval += visibilities(i1,i0);
 		  mcnt++;
@@ -353,12 +332,12 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	    {
 	      if(mind[0]==nChannels)// if i0 is channel, and i1 is time
 		{
-		  avgFlag[i0] = flags(i0,i1);
+		  avgFlag[i0] = flags.getModifiedFlags(i0,i1);
 		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i0,i1)/avgFit(i0);
 		}
 	      else // if i1 is channel, i0 is time
 		{
-		  avgFlag[i0] = flags(i1,i0);
+		  avgFlag[i0] = flags.getModifiedFlags(i1,i0);
 		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i1,i0)/avgFit(i0);
 		}
 	    }//for i0
