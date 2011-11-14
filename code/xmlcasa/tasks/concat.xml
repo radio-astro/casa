@@ -46,6 +46,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <value></value>
   </param>
 
+  <param type="bool" name="createmms">
+    <description>Should this create a multi-MS output</description>
+    <value>False</value>
+  </param>
+
 </input>
 <example>
 
@@ -118,8 +123,13 @@ timesort -- If true, the output visibility table will be sorted in time.
         more than one field; for example multi-source correlation of VLBA data.
 
 copypointing -- Make a proper copy of the POINTING subtable (can be time consuming).
-                If False, the result is an empty POINTING table.
+        If False, the result is an empty POINTING table.
         default: True
+
+createmms -- If true, the output will be a multi-MS, i.e. the input MSs are
+         virtually concatenated. A directory concatvis+'.data' will be created
+	 to contain the individual reindexed MSs.
+	 default: False
 
 </example> 
 

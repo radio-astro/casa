@@ -2710,9 +2710,14 @@ for i in range(len(tcoord)):
 	     <value>1</value>
 	     <value>2</value>
 	     <value>3</value>
-	     <value>4</value>
      </allowed>
      </param>
+
+     <param type="string" direction="in" name="destmsfile">
+     <description>optional support for virtual concat: empty table (no subtables) where to store the appended MS copy </description>
+     <value></value>
+     </param>
+
   </input>
   <returns type="bool"/>
 
