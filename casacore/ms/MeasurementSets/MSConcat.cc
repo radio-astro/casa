@@ -57,9 +57,11 @@
 #include <tables/Tables/TableRow.h>
 #include <tables/Tables/TableVector.h>
 #include <tables/Tables/TabVecMath.h>
+#include <tables/Tables/TableCopy.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
+#include <casa/OS/Path.h>
 
 namespace casa {
 
@@ -120,14 +122,19 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 }
 
   void MSConcat::concatenate(const MeasurementSet& otherMS, 
-			     const uInt handlingSwitch)
+			     const uInt handling,
+			     const String& destMSName)
 {
   LogIO log(LogOrigin("MSConcat", "concatenate", WHERE));
 
-  log << "Appending " << otherMS.tableName() 
-      << " to " << itsMS.tableName() << endl << LogIO::POST;
+  if(destMSName.empty()){
+    log << "Appending " << otherMS.tableName() << " to " << itsMS.tableName() << endl << LogIO::POST;
+  }
+  else{
+    log << "Virtually appending " << otherMS.tableName() << " to " << itsMS.tableName() << endl << LogIO::POST;
+  }
 
-  switch(handlingSwitch){
+  switch(handling){
   case 0: // normal concat
     break;
   case 1:
@@ -139,13 +146,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   case 3:
     log << "*** At user\'s request, MAIN and POINTING tables will not be concatenated!" << LogIO::POST;
     break;
-  case 4:
-    log << "*** At user\'s request, MAIN and POINTING table will be concatenated virtually!" << LogIO::POST;
-    log << "*** NOTE: do not remove the original input MSs." << LogIO::POST;
-    log << "*** (not yet implemented)" << LogIO::POST;
-    break;
   default:
-    log << "Invalid value for handling switch: " << handlingSwitch << " (valid range is 0 - 4)"
+    log << "Invalid value for handling switch: " << handling << " (valid range is 0 - 3)"
 	<< LogIO::EXCEPTION;
     break;
   }
@@ -154,7 +156,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   Bool doCorrectedData=False, doModelData=False;
   Bool doFloatData=False;
 
-  if(handlingSwitch==0 || handlingSwitch==2){
+  if(handling==0 || handling==2){
 
     if (itsMS.tableDesc().isColumn("FLOAT_DATA") && 
 	otherMS.tableDesc().isColumn("FLOAT_DATA"))
@@ -323,7 +325,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   copyObservation(otherMS.observation());
 
   // POINTING
-  if(handlingSwitch<2){
+  if(handling<2){
     if(!copyPointing(otherMS.pointing(), newAntIndices)){
       log << LogIO::WARN << "Could not merge Pointing subtables " << LogIO::POST ;
     }
@@ -336,84 +338,61 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
 
   // STOP HERE if Main is not to be modified
-  if(handlingSwitch==1 || handlingSwitch==3){
+  if(handling==1 || handling==3){
     return;
   }
   //////////////////////////////////////////////////////
 
+  MeasurementSet* destMS = 0;
+  MeasurementSet tempMS;
+
+  if(destMSName.empty()){ // no destination MS was given, write to the first MS
+    destMS = &itsMS;
+  }
+  else{ // copy the structure of otherMS to destMSName, then copy the subtables of itsMS to it
+    String absNewName = Path(destMSName).absoluteName();
+    {
+      Table newtab = TableCopy::makeEmptyTable(absNewName, Record(), otherMS, Table::New,
+					       Table::AipsrcEndian, True, 
+					       True); // noRows
+      TableCopy::copyInfo (newtab, otherMS);
+      TableCopy::copySubTables (newtab, itsMS, 
+				False); // noRows==False, i.e. subtables are copied
+    }
+    tempMS = MeasurementSet(destMSName, Table::Update); // open as the output MS for the new Main rows
+    destMS = &tempMS;
+  }    
+
+  MSMainColumns destMainCols(*destMS);
+  
   // I need to check that the Measures and units are the same.
   const uInt newRows = otherMS.nrow();
-  uInt curRow = itsMS.nrow();
-
-  if (!itsMS.canAddRow()) {
-    log << LogIO::WARN << "Can't add rows to this ms!  Something is seriously wrong with " 
-	<< itsMS.tableName() << endl << LogIO::POST;
-  }
-    
-  log << LogIO::DEBUG1 << "trying to add " << newRows << " data rows to the ms, now at: " 
-      << itsMS.nrow() << endl << LogIO::POST;
-  itsMS.addRow(newRows);
-  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " 
-      << itsMS.nrow() << endl << LogIO::POST;
-
-  ROArrayColumn<Complex> otherModelData, otherCorrectedData;
-  ArrayColumn<Complex> thisModelData, thisCorrectedData;
+  uInt curRow = destMS->nrow();
   
-  if(doCorrectedData){
-    thisCorrectedData.reference(correctedData());
-    otherCorrectedData.reference(otherMainCols.correctedData());
+  if (!destMS->canAddRow()) {
+    log << LogIO::WARN << "Can't add rows to this ms!  Something is seriously wrong with " 
+	<< destMS->tableName() << endl << LogIO::POST;
   }
-  if(doModelData){
-    thisModelData.reference(modelData());
-    otherModelData.reference(otherMainCols.modelData());
-  }
-
+  
+  log << LogIO::DEBUG1 << "trying to add " << newRows << " data rows to the ms, now at: " 
+      << destMS->nrow() << endl << LogIO::POST;
+  destMS->addRow(newRows);
+  log << LogIO::DEBUG1 << "added " << newRows << " data rows to the ms, now at: " 
+      << destMS->nrow() << endl << LogIO::POST;
+  
+  // create column objects for those columns which need not be modified
   const ROScalarColumn<Double>& otherTime = otherMainCols.time();
   ScalarColumn<Double>& thisTime = time();
-  const ROScalarColumn<Int>& otherAnt1 = otherMainCols.antenna1();
-  ScalarColumn<Int>& thisAnt1 = antenna1();
-  const ROScalarColumn<Int>& otherAnt2 = otherMainCols.antenna2();
-  ScalarColumn<Int>& thisAnt2 = antenna2();
-  const ROScalarColumn<Int>& otherFeed1 = otherMainCols.feed1();
-  ScalarColumn<Int>& thisFeed1 = feed1();
-  const ROScalarColumn<Int>& otherFeed2 = otherMainCols.feed2();
-  ScalarColumn<Int>& thisFeed2 = feed2();
-  const ROScalarColumn<Int>& otherDDId = otherMainCols.dataDescId();
-  ScalarColumn<Int>& thisDDId = dataDescId();
-  const ROScalarColumn<Int>& otherFieldId = otherMainCols.fieldId();
-  ScalarColumn<Int>& thisFieldId = fieldId();
   const ROScalarColumn<Double>& otherInterval = otherMainCols.interval();
   ScalarColumn<Double>& thisInterval = interval();
   const ROScalarColumn<Double>& otherExposure = otherMainCols.exposure();
   ScalarColumn<Double>& thisExposure = exposure();
   const ROScalarColumn<Double>& otherTimeCen = otherMainCols.timeCentroid();
   ScalarColumn<Double>& thisTimeCen = timeCentroid();
-  const ROScalarColumn<Int>& otherScan = otherMainCols.scanNumber();
-  ScalarColumn<Int>& thisScan = scanNumber();
   const ROScalarColumn<Int>& otherArrayId = otherMainCols.arrayId();
   ScalarColumn<Int>& thisArrayId = arrayId();
-  const ROScalarColumn<Int>& otherStateId = otherMainCols.stateId();
-  ScalarColumn<Int>& thisStateId = stateId();
-  const ROArrayColumn<Double>& otherUvw = otherMainCols.uvw();
-  ArrayColumn<Double>& thisUvw = uvw();
-
-  ROArrayColumn<Complex> otherData;
-  ArrayColumn<Complex> thisData;
-  ROArrayColumn<Float> otherFloatData;
-  ArrayColumn<Float> thisFloatData;
-  if(doFloatData){
-    thisFloatData.reference(floatData());
-    otherFloatData.reference(otherMainCols.floatData());
-  }
-  else{
-    thisData.reference(data());
-    otherData.reference(otherMainCols.data());
-  }
-
   const ROArrayColumn<Float>& otherSigma = otherMainCols.sigma();
   ArrayColumn<Float>& thisSigma = sigma();
-  const ROArrayColumn<Float>& otherWeight = otherMainCols.weight();
-  ArrayColumn<Float>& thisWeight = weight();
   const ROArrayColumn<Bool>& otherFlag = otherMainCols.flag();
   ArrayColumn<Bool>& thisFlag = flag();
   const ROArrayColumn<Bool>& otherFlagCat = otherMainCols.flagCategory();
@@ -423,15 +402,65 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     && otherFlagCat.isDefined(0);
   const ROScalarColumn<Bool>& otherFlagRow = otherMainCols.flagRow();
   ScalarColumn<Bool>& thisFlagRow = flagRow();
-  const ROScalarColumn<Int>& otherObsId=otherMainCols.observationId();
-  Vector<Int> obsIds=otherObsId.getColumn();
-
-  ScalarColumn<Int>& thisObsId = observationId();
+  const ROScalarColumn<Int>& otherFeed1 = otherMainCols.feed1();
+  ScalarColumn<Int>& thisFeed1 = feed1();
+  const ROScalarColumn<Int>& otherFeed2 = otherMainCols.feed2();
+  ScalarColumn<Int>& thisFeed2 = feed2();
+  
+  // create column objects for those columns which potentially need to be modified
+  
+  ROArrayColumn<Complex> otherData;
+  ArrayColumn<Complex> thisData;
+  ROArrayColumn<Float> otherFloatData;
+  ArrayColumn<Float> thisFloatData;
+  ROArrayColumn<Complex> otherModelData, otherCorrectedData;
+  ArrayColumn<Complex> thisModelData, thisCorrectedData;
+  
+  if(doFloatData){
+    thisFloatData.reference(destMainCols.floatData());
+    otherFloatData.reference(otherMainCols.floatData());
+  }
+  else{
+    thisData.reference(destMainCols.data());
+    otherData.reference(otherMainCols.data());
+  }
+  
+  if(doCorrectedData){
+    thisCorrectedData.reference(destMainCols.correctedData());
+    otherCorrectedData.reference(otherMainCols.correctedData());
+  }
+  if(doModelData){
+    thisModelData.reference(destMainCols.modelData());
+    otherModelData.reference(otherMainCols.modelData());
+  }
+  
+  const ROScalarColumn<Int>& otherAnt1 = otherMainCols.antenna1();
+  const ROScalarColumn<Int>& otherAnt2 = otherMainCols.antenna2();
+  const ROScalarColumn<Int>& otherDDId = otherMainCols.dataDescId();
+  const ROScalarColumn<Int>& otherFieldId = otherMainCols.fieldId();
+  const ROScalarColumn<Int>& otherScan = otherMainCols.scanNumber();
+  const ROScalarColumn<Int>& otherStateId = otherMainCols.stateId();
+  const ROArrayColumn<Double>& otherUvw = otherMainCols.uvw();
+  const ROArrayColumn<Float>& otherWeight = otherMainCols.weight();
   const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
-  ArrayColumn<Float>& thisWeightSp = weightSpectrum();
-  Bool copyWtSp = !(thisWeightSp.isNull() || otherWeightSp.isNull()); 
-  copyWtSp = copyWtSp && thisWeightSp.isDefined(0) 
-    && otherWeightSp.isDefined(0);
+  const ROScalarColumn<Int>& otherObsId=otherMainCols.observationId();
+  
+  ScalarColumn<Int> thisAnt1;
+  ScalarColumn<Int> thisAnt2;
+  ScalarColumn<Int> thisDDId;
+  ScalarColumn<Int> thisFieldId;
+  ScalarColumn<Int> thisScan;
+  ScalarColumn<Int> thisStateId;
+  ArrayColumn<Double> thisUvw;
+  ArrayColumn<Float> thisWeight;
+  ArrayColumn<Float> thisWeightSp;
+  ScalarColumn<Int> thisObsId;
+  
+  thisScan.reference(scanNumber());
+  thisStateId.reference(stateId());
+  thisObsId.reference(observationId());
+  
+  Vector<Int> obsIds=otherObsId.getColumn();
   
   if(doObsA_p){ // the obs ids changed for the first table
     Vector<Int> oldObsIds=thisObsId.getColumn();
@@ -447,7 +476,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       thisStateId.put(r, -1);
     }
   }  
-     
+  
   // SCAN NUMBER
   // find the distinct ObsIds in use in this MS
   // and the maximum scan ID in each of them
@@ -494,7 +523,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     }
     scanOffsetForOid.define(distinctObsIdSet[i], scanOffset); 
   }
-
+  
   Int defaultScanOffset=0;
   {
     ROTableVector<Int> ScanTabVectOther(otherScan);
@@ -504,14 +533,32 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       defaultScanOffset=0;
     }
   }
- 
+  
+  // finished all modifications of the MS Main table going to the first part 
+  
+  // now start modifications of the second (appended) part 
+  
+  thisAnt1.reference(destMainCols.antenna1());
+  thisAnt2.reference(destMainCols.antenna2());
+  thisDDId.reference(destMainCols.dataDescId());
+  thisFieldId.reference(destMainCols.fieldId());
+  thisScan.reference(destMainCols.scanNumber());
+  thisStateId.reference(destMainCols.stateId());
+  thisUvw.reference(destMainCols.uvw());
+  thisWeight.reference(destMainCols.weight());
+  thisWeightSp.reference(destMainCols.weightSpectrum());
+  thisObsId.reference(destMainCols.observationId());
+  
+  Bool copyWtSp = !(thisWeightSp.isNull() || otherWeightSp.isNull()); 
+  copyWtSp = copyWtSp && thisWeightSp.isDefined(0) 
+    && otherWeightSp.isDefined(0);
+  
   // MAIN
-
+  
   Bool doWeightScale = (itsWeightScale!=1.);
-
+  
   for (uInt r = 0; r < newRows; r++, curRow++) {
-
-    thisTime.put(curRow, otherTime, r);
+    
     Int newA1 = newAntIndices[otherAnt1(r)];
     Int newA2 = newAntIndices[otherAnt2(r)];
     Bool doConjugateVis = False;
@@ -519,8 +566,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       //cout << "   corrected order r: " << r << " " << newA2 << " " << newA1 << endl;
       thisAnt1.put(curRow, newA2);
       thisAnt2.put(curRow, newA1);
-      thisFeed1.put(curRow, otherFeed2, r);
-      thisFeed2.put(curRow, otherFeed1, r);
       Array<Double> newUvw;
       newUvw.assign(otherUvw(r));
       //cout << "   old UVW " << newUvw;
@@ -532,18 +577,12 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     else{
       thisAnt1.put(curRow, newA1);
       thisAnt2.put(curRow, newA2);
-      thisFeed1.put(curRow, otherFeed1, r);
-      thisFeed2.put(curRow, otherFeed2, r);
       thisUvw.put(curRow, otherUvw, r);
     }    
-
+    
     thisDDId.put(curRow, newDDIndices[otherDDId(r)]);
     thisFieldId.put(curRow, newFldIndices[otherFieldId(r)]);
-    thisInterval.put(curRow, otherInterval, r);
-    thisExposure.put(curRow, otherExposure, r);
-    thisTimeCen.put(curRow, otherTimeCen, r);
-    thisArrayId.put(curRow, otherArrayId, r);
-
+    
     Int oid = 0;
     if(doObsB_p && newObsIndexB_p.isDefined(obsIds[r])){ 
       // the obs ids have been changed for the table to be appended
@@ -569,7 +608,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     else{
       thisScan.put(curRow, otherScan(r));
     }
-
+    
     if(doState){
       if(itsStateNull || otherStateNull){
 	thisStateId.put(curRow, -1);
@@ -581,7 +620,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     else{
       thisStateId.put(curRow, otherStateId, r);
     }
-
+    
     
     if(itsChanReversed[otherDDId(r)]){
       Vector<Int> datShape;
@@ -601,7 +640,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	for(Int k2=0; k2 < datShape[1]; ++k2){
 	  if(doFloatData){
 	    reversedFloatData(k1,k2)=(Matrix<Float>(otherFloatData(r)))(k1,
-							    datShape[1]-1-k2);
+									datShape[1]-1-k2);
 	  }
 	  else{
 	    reversedData(k1,k2)=(Matrix<Complex>(otherData(r)))(k1,
@@ -609,13 +648,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	  }
 	  if(doModelData){
 	    reversedModData(k1,k2)=(Matrix<Complex>(otherModelData(r)))(k1,
-							     datShape[1]-1-k2);
+									datShape[1]-1-k2);
 	  }
 	  if(doCorrectedData){
-	   reversedCorrData(k1,k2)=(Matrix<Complex>(otherCorrectedData(r)))(k1,
-							    datShape[1]-1-k2);
+	    reversedCorrData(k1,k2)=(Matrix<Complex>(otherCorrectedData(r)))(k1,
+									     datShape[1]-1-k2);
 	  }
- 
+	  
 	}
       } 
       if(doFloatData){
@@ -675,11 +714,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	}
       }
     } // end if itsChanReversed
-
-    thisSigma.put(curRow, otherSigma, r);
-    thisFlag.put(curRow, otherFlag, r);
-    if (copyFlagCat) thisFlagCat.put(curRow, otherFlagCat, r);
-    thisFlagRow.put(curRow, otherFlagRow, r);
+    
     if(doWeightScale){
       thisWeight.put(curRow, otherWeight(r)*itsWeightScale);
       if (copyWtSp) thisWeightSp.put(curRow, otherWeightSp(r)*itsWeightScale);
@@ -688,17 +723,28 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       thisWeight.put(curRow, otherWeight, r);
       if (copyWtSp) thisWeightSp.put(curRow, otherWeightSp, r);
     }
-  } 
+    
+    thisFeed1.put(curRow, otherFeed2, r);
+    thisFeed2.put(curRow, otherFeed1, r);
+    thisTime.put(curRow, otherTime, r);
+    thisInterval.put(curRow, otherInterval, r);
+    thisExposure.put(curRow, otherExposure, r);
+    thisTimeCen.put(curRow, otherTimeCen, r);
+    thisArrayId.put(curRow, otherArrayId, r);
+    thisSigma.put(curRow, otherSigma, r);
+    thisFlag.put(curRow, otherFlag, r);
+    if (copyFlagCat) thisFlagCat.put(curRow, otherFlagCat, r);
+    thisFlagRow.put(curRow, otherFlagRow, r);
 
-  if(doModelData){
-    //update the MODEL_DATA keywords
-    updateModelDataKeywords();
+  } // end for
+
+  if(doModelData){ //update the MODEL_DATA keywords
+    updateModelDataKeywords(*destMS);
   }
 
 }
 
 void MSConcat::setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol){
-
   itsFreqTol=freqTol;
   itsDirTol=dirTol;
 }
@@ -1771,14 +1817,14 @@ Block<uInt> MSConcat::copySpwAndPol(const MSSpectralWindow& otherSpw,
   return ddMap;
 }
 
-void MSConcat::updateModelDataKeywords(){
-  Int nSpw=itsMS.spectralWindow().nrow();
-  MSSpWindowColumns msSpW(itsMS.spectralWindow());
+void MSConcat::updateModelDataKeywords(MeasurementSet& theMS){
+  Int nSpw=theMS.spectralWindow().nrow();
+  MSSpWindowColumns msSpW(theMS.spectralWindow());
   Matrix<Int> selection(2,nSpw);
   // fill in default selection
   selection.row(0)=0; //start
   selection.row(1)=msSpW.numChan().getColumn(); 
-  TableColumn col(itsMS,"MODEL_DATA");
+  TableColumn col(theMS,"MODEL_DATA");
   if (col.keywordSet().isDefined("CHANNEL_SELECTION"))
     col.rwKeywordSet().removeField("CHANNEL_SELECTION");
   col.rwKeywordSet().define("CHANNEL_SELECTION",selection);
