@@ -4227,6 +4227,10 @@ tool attached to the residual (continuum subtracted) image.
             <description>Initial estimate of zero-level offset. Only used if doff is True. Default is 0.0</description>
             <value>0.0</value>
         </param>
+        <param type="bool" direction="in" name="fixoffset">
+            <description>Keep the zero level offset fixed during fit? Default is False </description>
+            <value>false</value>
+        </param>
     </input>
     <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
     <description>
@@ -4252,7 +4256,8 @@ cl.fromrecord(res['results'])
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
 offset is specified using the offset parameter. Units are assumed to be the
-same as the image brightness units. In this case, the returned
+same as the image brightness units. The zero level offset can be held constant during
+the fit by specifying fixoffset=True. In the case of dooff=True, the returned
 dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are both
 arrays containing the the fitted zero level offset value and its error, respectively,
 for each channel. Both sets of values are in image brightness units.

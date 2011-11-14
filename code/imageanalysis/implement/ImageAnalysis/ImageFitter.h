@@ -135,7 +135,7 @@ public:
 
 	// set the zero level estimate. Implies fitting of zero level should be done. Must be
 	// called before fit() to have an effect.
-	void setZeroLevelEstimate(const Double estimate);
+	void setZeroLevelEstimate(const Double estimate, const Bool isFixed);
 
 	// Unset zero level (resets to zero). Implies fitting of zero level should not be done.
 	// Call prior to fit().
@@ -150,8 +150,8 @@ private:
 		estimatesString, _newEstimatesFileName, _compListName;
 	Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList estimates, _curResults;
-	Vector<String> fixed;
-	Bool logfileAppend, _fitDone, _noBeam, _doZeroLevel;
+	Vector<String> _fixed;
+	Bool logfileAppend, _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
@@ -226,8 +226,9 @@ private:
 	    Double& zeroLevelOffsetError,
 	    const uInt& chan, const String& stokesString,
 		const Vector<String>& models, Record& inputEstimate,
-		const Vector<String>& fixed, const Bool fitIt,
-		const Bool deconvolveIt, const Bool list, const Double zeroLevelOffsetEstimate
+		const Bool fitIt,
+		const Bool deconvolveIt, const Bool list,
+		const Double zeroLevelEstimate
 	);
 
 	Vector<Double> _singleParameterEstimate(

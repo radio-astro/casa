@@ -1255,7 +1255,8 @@ image* image::transpose(
 		const string& model, const string& estimates,
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
-		const bool overwrite, const bool dooff, const double offset
+		const bool overwrite, const bool dooff, const double offset,
+		const bool offsetisfixed
 ) {
 	if (detached()) {
 		return 0;
@@ -1325,7 +1326,7 @@ image* image::transpose(
 			)
 		);
 		if (dooff) {
-			fitter->setZeroLevelEstimate(offset);
+			fitter->setZeroLevelEstimate(offset, offsetisfixed);
 		}
 		ComponentList compList = fitter->fit();
 		Vector<casa::Quantity> flux;

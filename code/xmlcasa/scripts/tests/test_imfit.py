@@ -1147,5 +1147,78 @@ class imfit_test(unittest.TestCase):
                 
                 j = j + 1
 
+    def test_fix_zero_level(self):
+        """Test fixing zero level offset"""
+        
+        method = "test_fix_zero_level"
+        test = method
+        mycl = cltool.create()
+        myia = iatool.create()
+        offset = -0.102277
+        imagename = noisy_image
+
+        def run_fitcomponents(imagename):
+            myia = iatool.create()
+            myia.open(imagename)
+            res = myia.fitcomponents(
+                box="130,89,170,129", dooff=True,
+                offset=offset, fixoffset=True
+            )
+            myia.done()
+            return res
+        j = 0
+        def run_imfit(imagename):
+            default('imfit')
+            return imfit(
+                imagename=imagename, 
+                box="130,89,170,129", dooff=True,
+                offset=offset, fixoffset=True
+            )
+        for code in (run_fitcomponents, run_imfit):                    
+            res = code(imagename)
+            mycl.fromrecord(res["results"])
+            got = mycl.getfluxvalue(0)[0]
+            expected = 60498.5586
+            epsilon = 1e-5
+            print "***got " + str(got)
+            self.assertTrue(near(got, expected, epsilon))
+            got = mycl.getfluxvalue(0)[1]
+            self.assertTrue(got == 0)
+            got = mycl.getrefdir(0)["m0"]["value"]
+            expected = 0.000213372126
+            epsilon = 1e-5
+            self.assertTrue(near(got, expected, epsilon))
+            got = mycl.getrefdir(0)["m1"]["value"]
+            expected = 1.93581236e-05
+            epsilon = 1e-5
+            self.assertTrue(near(got, expected, epsilon))
+            shape = mycl.getshape()
+            got = shape["majoraxis"]["value"]
+            expected = 23.5743464
+            epsilon = 1e-5
+            self.assertTrue(near(got, expected, epsilon))
+            got = shape["minoraxis"]["value"]
+            expected = 18.8905131
+            epsilon = 1e-5
+            self.assertTrue(near(got, expected, epsilon))
+            got = shape["positionangle"]["value"]
+            expected = 119.818744
+            epsilon = 1e-5
+            self.assertTrue(near(got, expected, epsilon))
+            mycl.done()
+                
+            got = res["zerooff"]
+            expected = offset
+            self.assertTrue(near(got, expected, epsilon))
+            
+            got = res["zeroofferr"]
+            expected = 0
+            self.assertTrue(near(got, expected, epsilon))
+            mycl.done()
+                
+            j = j + 1
+
+
+
 def suite():
     return [imfit_test]

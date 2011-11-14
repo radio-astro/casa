@@ -685,7 +685,7 @@ int main() {
         		ImageFitter fitter(
         			&scaled, "", 0, "130,89,170,129"
         		);
-        		fitter.setZeroLevelEstimate(0);
+        		fitter.setZeroLevelEstimate(0, False);
         		ComponentList compList = fitter.fit();
         		AlwaysAssert(fitter.converged(0), AipsError);
         		Vector<Quantity> flux;
@@ -713,6 +713,45 @@ int main() {
         		AlwaysAssert(nearAbs(zeroLevelSolution[0], x-0.102277, 1e-6), AipsError);
         		AlwaysAssert(nearAbs(zeroLevelError[0], 0.0679272, 1e-6), AipsError);
         	}
+        }
+        {
+         	writeTestString(
+ 				"test fitting using zero-level offset held constant"
+         	);
+         	TempImage<Float> scaled(noisyImage->shape(), noisyImage->coordinates());
+         	scaled.put(noisyImage->get() + Array<Float>(scaled.shape(), 0.0));
+         	scaled.setUnits(noisyImage->units());
+
+         	ImageFitter fitter(
+         		&scaled, "", 0, "130,89,170,129"
+         	);
+         	fitter.setZeroLevelEstimate(-0.102277, True);
+         	ComponentList compList = fitter.fit();
+         	AlwaysAssert(fitter.converged(0), AipsError);
+         	Vector<Quantity> flux;
+         	compList.getFlux(flux,0);
+
+         	// I stokes flux test
+         	AlwaysAssert(near(flux(0).getValue(), 60498.5586, 1e-5), AipsError);
+         	// Q stokes flux test
+         	AlwaysAssert(flux(1).getValue() == 0, AipsError);
+         	MDirection direction = compList.getRefDirection(0);
+         	AlwaysAssert(nearAbs(direction.getValue().getLong("rad").getValue(), 0.000213372126, 1e-5), AipsError);
+         	AlwaysAssert(nearAbs(direction.getValue().getLat("rad").getValue(), 1.93581236e-05, 1e-5), AipsError);
+         	Vector<Double> parameters = compList.getShape(0)->parameters();
+
+         	Double majorAxis = arcsecsPerRadian*parameters(0);
+         	AlwaysAssert(near(majorAxis, 23.5743464, 1e-7), AipsError);
+
+         	Double minorAxis = arcsecsPerRadian*parameters(1);
+         	AlwaysAssert(near(minorAxis, 18.8905131, 1e-7), AipsError);
+
+         	Double positionAngle = DEGREES_PER_RADIAN*parameters(2);
+         	AlwaysAssert(nearAbs(positionAngle, 119.818744, 1e-5), AipsError);
+         	vector<Double> zeroLevelSolution, zeroLevelError;
+         	fitter.getZeroLevelSolution(zeroLevelSolution, zeroLevelError);
+         	AlwaysAssert(nearAbs(zeroLevelSolution[0], -0.102277, 1e-6), AipsError);
+         	AlwaysAssert(zeroLevelError[0] == 0.0, AipsError);
         }
         cout << "ok" << endl;
     }

@@ -118,6 +118,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Initial estimate of zero-level offset. Only used if doff is True. Default is 0.0</description>
         <value>0.0</value>
     </param>
+    <param type="bool" direction="in" name="fixoffset" subparam="true">
+        <description>Keep the zero level offset fixed during fit? Default is False </description>
+        <value>False</value>
+    </param>
     <constraints>
         <when param="logfile">
             <notequals type="string" value="">
@@ -137,6 +141,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <notequals type="bool" value="False">
                 <default param="offset">
                     <value>0.0</value>
+                </default>
+                <default param="fixoffset">
+                    <value>False</value>
                 </default>
             </notequals>
         </when>
@@ -176,6 +183,7 @@ complist         Name of output component list table.
 overwrite        Overwrite component list table if it exists?
 dooff            Simultaneously fit a zero-level offset?
 offset           Initial estimate for the zero-level offset. Only used if dooff is True.
+fixoffset        Hold zero-level offset constant during fit? Only used if dooff is True.
 
 OVERVIEW
 imfit is used to fit one or more gaussians to sources in an image as
@@ -199,7 +207,8 @@ cl.fromrecord(res['results'])
 If dooff is True, in addtion to the specified number of
 gaussians, a zero-level offset will also be fit. The initial estimate for this
 offset is specified using the offset parameter. Units are assumed to be the
-same as the image brightness units. In this case, the returned
+same as the image brightness units.The zero level offset can be held constant during
+the fit by specifying fixoffset=True. In the case of dooff=True, the returned
 dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are both
 arrays containing the the fitted zero level offset value and its error, respectively,
 for each channel. Both sets of values are in image brightness units.

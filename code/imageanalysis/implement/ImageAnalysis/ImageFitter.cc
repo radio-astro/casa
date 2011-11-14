@@ -87,9 +87,9 @@ ImageFitter::ImageFitter(
 	), _regionString(region), _residual(residualInp),_model(modelInp), _logfileName(logfile),
 	estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 	_compListName(compListName), _includePixelRange(includepix),
-	_excludePixelRange(excludepix), estimates(), fixed(0),
+	_excludePixelRange(excludepix), estimates(), _fixed(0),
 	logfileAppend(append), _fitDone(False), _noBeam(False),
-	_doZeroLevel(False),
+	_doZeroLevel(False), _zeroLevelIsFixed(False),
 	_fitConverged(Vector<Bool>(0)), _peakIntensities(),
 	_writeControl(writeControl), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0) {
@@ -130,6 +130,8 @@ ComponentList ImageFitter::fit() {
 	if (_doZeroLevel) {
 		models.resize(ngauss+1, True);
 		models[ngauss] = "level";
+		_fixed.resize(ngauss+1, True);
+		_fixed[ngauss] = _zeroLevelIsFixed ? "l" : "";
 	}
 	Bool fit = True;
 	Bool deconvolve = False;
@@ -168,7 +170,7 @@ ComponentList ImageFitter::fit() {
 				pixelMask, converged,
 				zeroLevelOffsetSolution, zeroLevelOffsetError,
 				_curChan, _kludgedStokes,
-				models, estimatesRecord, fixed,
+				models, estimatesRecord,
 				fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
 		}
@@ -295,14 +297,16 @@ ComponentList ImageFitter::fit() {
 	return compList;
 }
 
-void ImageFitter::setZeroLevelEstimate(const Double estimate) {
+void ImageFitter::setZeroLevelEstimate(const Double estimate, const Bool isFixed) {
 	_doZeroLevel = True;
 	_zeroLevelOffsetEstimate = estimate;
+	_zeroLevelIsFixed = isFixed;
 }
 
 void ImageFitter::unsetZeroLevelEstimate() {
 	_doZeroLevel = False;
 	_zeroLevelOffsetEstimate = 0;
+	_zeroLevelIsFixed = False;
 }
 
 void ImageFitter::getZeroLevelSolution(vector<Double>& solution, vector<Double>& error) {
@@ -316,7 +320,6 @@ void ImageFitter::getZeroLevelSolution(vector<Double>& solution, vector<Double>&
 	solution = _zeroLevelOffsetSolution;
 	error = _zeroLevelOffsetError;
 }
-
 
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
     *_getLog() << LogOrigin("ImageFitter", __FUNCTION__);
@@ -458,7 +461,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 		FitterEstimatesFileParser parser(estimatesFilename, *_getImage());
 		estimates = parser.getEstimates();
 		estimatesString = parser.getContents();
-		fixed = parser.getFixed();
+		_fixed = parser.getFixed();
 		Record rec;
 		String errmsg;
 		estimates.toRecord(errmsg, rec);
@@ -1133,7 +1136,7 @@ ComponentList ImageFitter::_fitsky(
    	Double& zeroLevelOffsetError,
     const uInt& chan, const String& stokesString,
 	const Vector<String>& models, Record& inputEstimate,
-	const Vector<String>& fixed, const Bool fitIt,
+	const Bool fitIt,
 	const Bool deconvolveIt, const Bool list,
 	const Double zeroLevelEstimate
 ) {
@@ -1161,7 +1164,7 @@ ComponentList ImageFitter::_fitsky(
 	converged = False;
 	const uInt nModels = models.nelements();
 	const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
-	const uInt nMasks = fixed.nelements();
+	const uInt nMasks = _fixed.nelements();
 	const uInt nEstimates = estimate.nelements();
 	if (nModels == 0) {
 		*_getLog() << "You have not specified any models" << LogIO::EXCEPTION;
@@ -1259,7 +1262,7 @@ ComponentList ImageFitter::_fitsky(
 		return cl;
 	}
 	// For ease of use, make each model have a mask string
-	Vector<String> fixedParameters(fixed.copy());
+	Vector<String> fixedParameters(_fixed.copy());
 	fixedParameters.resize(nModels, True);
 	for (uInt j=0; j<nModels; j++) {
 		if (j >= nMasks) {
@@ -1484,7 +1487,7 @@ void ImageFitter::_encodeSkyComponentError(
 //   pars(4) = minor    pix
 //   pars(5) = pa radians (pos +x -> +y)
 //
-//   error values will be zero for fixed parameters
+//   error values will be zero for _fixed parameters
 {
 	//
 	// Flux. The fractional error of the integrated and peak flux
