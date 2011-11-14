@@ -337,10 +337,6 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     itsMS.pointing().removeRow(delrows); 
   }
 
-  // STOP HERE if Main is not to be modified
-  if(handling==1 || handling==3){
-    return;
-  }
   //////////////////////////////////////////////////////
 
   MeasurementSet* destMS = 0;
@@ -363,6 +359,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
     destMS = &tempMS;
   }    
 
+  // STOP HERE if Main is not to be modified
+  if(handling==1 || handling==3){
+    return;
+  }
+  //////////////////////////////////////////////////////
+
+
   MSMainColumns destMainCols(*destMS);
   
   // I need to check that the Measures and units are the same.
@@ -382,30 +385,30 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   
   // create column objects for those columns which need not be modified
   const ROScalarColumn<Double>& otherTime = otherMainCols.time();
-  ScalarColumn<Double>& thisTime = time();
+  ScalarColumn<Double>& thisTime = destMainCols.time();
   const ROScalarColumn<Double>& otherInterval = otherMainCols.interval();
-  ScalarColumn<Double>& thisInterval = interval();
+  ScalarColumn<Double>& thisInterval = destMainCols.interval();
   const ROScalarColumn<Double>& otherExposure = otherMainCols.exposure();
-  ScalarColumn<Double>& thisExposure = exposure();
+  ScalarColumn<Double>& thisExposure = destMainCols.exposure();
   const ROScalarColumn<Double>& otherTimeCen = otherMainCols.timeCentroid();
-  ScalarColumn<Double>& thisTimeCen = timeCentroid();
+  ScalarColumn<Double>& thisTimeCen = destMainCols.timeCentroid();
   const ROScalarColumn<Int>& otherArrayId = otherMainCols.arrayId();
-  ScalarColumn<Int>& thisArrayId = arrayId();
+  ScalarColumn<Int>& thisArrayId = destMainCols.arrayId();
   const ROArrayColumn<Float>& otherSigma = otherMainCols.sigma();
-  ArrayColumn<Float>& thisSigma = sigma();
+  ArrayColumn<Float>& thisSigma = destMainCols.sigma();
   const ROArrayColumn<Bool>& otherFlag = otherMainCols.flag();
-  ArrayColumn<Bool>& thisFlag = flag();
+  ArrayColumn<Bool>& thisFlag = destMainCols.flag();
   const ROArrayColumn<Bool>& otherFlagCat = otherMainCols.flagCategory();
-  ArrayColumn<Bool>& thisFlagCat = flagCategory();
+  ArrayColumn<Bool>& thisFlagCat = destMainCols.flagCategory();
   Bool copyFlagCat = !(thisFlagCat.isNull() || otherFlagCat.isNull());
   copyFlagCat = copyFlagCat && thisFlagCat.isDefined(0) 
     && otherFlagCat.isDefined(0);
   const ROScalarColumn<Bool>& otherFlagRow = otherMainCols.flagRow();
-  ScalarColumn<Bool>& thisFlagRow = flagRow();
+  ScalarColumn<Bool>& thisFlagRow = destMainCols.flagRow();
   const ROScalarColumn<Int>& otherFeed1 = otherMainCols.feed1();
-  ScalarColumn<Int>& thisFeed1 = feed1();
+  ScalarColumn<Int>& thisFeed1 = destMainCols.feed1();
   const ROScalarColumn<Int>& otherFeed2 = otherMainCols.feed2();
-  ScalarColumn<Int>& thisFeed2 = feed2();
+  ScalarColumn<Int>& thisFeed2 = destMainCols.feed2();
   
   // create column objects for those columns which potentially need to be modified
   
@@ -435,25 +438,26 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   }
   
   const ROScalarColumn<Int>& otherAnt1 = otherMainCols.antenna1();
+  ScalarColumn<Int> thisAnt1 = destMainCols.antenna1();
   const ROScalarColumn<Int>& otherAnt2 = otherMainCols.antenna2();
+  ScalarColumn<Int> thisAnt2 = destMainCols.antenna2();
   const ROScalarColumn<Int>& otherDDId = otherMainCols.dataDescId();
+  ScalarColumn<Int> thisDDId = destMainCols.dataDescId();
   const ROScalarColumn<Int>& otherFieldId = otherMainCols.fieldId();
+  ScalarColumn<Int> thisFieldId = destMainCols.fieldId();
+  const ROArrayColumn<Double>& otherUvw = otherMainCols.uvw();
+  ArrayColumn<Double> thisUvw = destMainCols.uvw();
+  const ROArrayColumn<Float>& otherWeight = otherMainCols.weight();
+  ArrayColumn<Float> thisWeight = destMainCols.weight();
+  const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
+  ArrayColumn<Float> thisWeightSp = destMainCols.weightSpectrum();
+
   const ROScalarColumn<Int>& otherScan = otherMainCols.scanNumber();
   const ROScalarColumn<Int>& otherStateId = otherMainCols.stateId();
-  const ROArrayColumn<Double>& otherUvw = otherMainCols.uvw();
-  const ROArrayColumn<Float>& otherWeight = otherMainCols.weight();
-  const ROArrayColumn<Float>& otherWeightSp = otherMainCols.weightSpectrum();
   const ROScalarColumn<Int>& otherObsId=otherMainCols.observationId();
-  
-  ScalarColumn<Int> thisAnt1;
-  ScalarColumn<Int> thisAnt2;
-  ScalarColumn<Int> thisDDId;
-  ScalarColumn<Int> thisFieldId;
+
   ScalarColumn<Int> thisScan;
   ScalarColumn<Int> thisStateId;
-  ArrayColumn<Double> thisUvw;
-  ArrayColumn<Float> thisWeight;
-  ArrayColumn<Float> thisWeightSp;
   ScalarColumn<Int> thisObsId;
   
   thisScan.reference(scanNumber());
@@ -538,15 +542,8 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   
   // now start modifications of the second (appended) part 
   
-  thisAnt1.reference(destMainCols.antenna1());
-  thisAnt2.reference(destMainCols.antenna2());
-  thisDDId.reference(destMainCols.dataDescId());
-  thisFieldId.reference(destMainCols.fieldId());
   thisScan.reference(destMainCols.scanNumber());
   thisStateId.reference(destMainCols.stateId());
-  thisUvw.reference(destMainCols.uvw());
-  thisWeight.reference(destMainCols.weight());
-  thisWeightSp.reference(destMainCols.weightSpectrum());
   thisObsId.reference(destMainCols.observationId());
   
   Bool copyWtSp = !(thisWeightSp.isNull() || otherWeightSp.isNull()); 
