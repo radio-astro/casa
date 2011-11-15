@@ -56,6 +56,7 @@ LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 TestFlagger::TestFlagger ()
 {
 	fdh_p = NULL;
+	summaryAgent_p = NULL;
 	done();
 }
 
@@ -99,14 +100,12 @@ TestFlagger::done()
 		summaryAgent_p = NULL;
 	}
 
-//	if (! flagsummary_p.empty()){
-//		Record temp;
-//		flagsummary_p = temp;
-//	}
-
 	mode_p = "";
 	agents_config_list_p.clear();
 	agents_list_p.clear();
+
+	if(dbg)
+		cout << "done: Run the destructor" << endl;
 
 	return;
 }
@@ -190,17 +189,9 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// If there is a tfcrop agent in the list, we should
 	// change the iterationApproach to all the agents
 	agent_params.get("mode", mode_p);
-	if (mode_p == "tfcrop"){
+
+	if (mode_p.compare("tfcrop") == 0) {
 		iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
-	}
-	else if (mode_p == "summary"){
-		if(dbg)
-			cout << "parseAgentParameters: mode_p="<< mode_p << endl;
-		if(summaryAgent_p == NULL){
-			summaryAgent_p = new FlagAgentSummary(fdh_p, agent_params);
-			if(dbg)
-				cout << "parseAgentParameters: created new summary agent" << endl;
-		}
 	}
 
 	// add this agent to the list
@@ -297,6 +288,15 @@ TestFlagger::initAgents()
 		// TODO: Catch error, print a warning and continue to next agent.
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
 
+		String mode;
+		agent_rec.get("mode", mode);
+		if (mode.compare("summary") == 0) {
+			if(dbg)
+				cout << "initAgents: get the summary agent" << endl;
+
+			summaryAgent_p = (FlagAgentSummary *) fa;
+		}
+
 		// add to list of FlagAgentList
 		agents_list_p.push_back(fa);
 
@@ -349,7 +349,10 @@ TestFlagger::run()
 
 	// Get the record with the summary if there was any summary agent in the list
 	Record summary_stats = Record();
-	if (summaryAgent_p != NULL){
+	if (summaryAgent_p){
+		if(dbg)
+			cout << "run: get the summary results" << endl;
+
 		summary_stats = summaryAgent_p->getResult();
 	}
 
