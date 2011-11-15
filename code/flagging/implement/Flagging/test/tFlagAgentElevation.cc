@@ -509,6 +509,7 @@ int main(int argc, char **argv)
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
 	string nThreadsParam,ntime;
 	Int nThreads = 0;
+	Double lowerlimit,upperlimit;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -605,7 +606,7 @@ int main(int argc, char **argv)
 		else if (parameter == string("-correlation"))
 		{
 			correlation = casa::String(value);
-			agentParameters.define ("correlation", uvrange);
+			agentParameters.define ("correlation", correlation);
 			cout << "Correlation range selection is: " << correlation << endl;
 		}
 		else if (parameter == string("-nThreads"))
@@ -614,6 +615,18 @@ int main(int argc, char **argv)
 			agentParameters.define ("nThreads", nThreadsParam);
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
+		}
+		else if (parameter == string("-lowerlimit"))
+		{
+			lowerlimit = atof(value.c_str());
+			agentParameters.define ("lowerlimit", lowerlimit);
+			cout << "lowerlimit is: " << lowerlimit << endl;
+		}
+		else if (parameter == string("-upperlimit"))
+		{
+			upperlimit = atof(value.c_str());
+			agentParameters.define ("upperlimit", upperlimit);
+			cout << "upperlimit is: " << upperlimit << endl;
 		}
 	}
 
