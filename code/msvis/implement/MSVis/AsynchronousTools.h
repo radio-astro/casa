@@ -126,8 +126,8 @@ public:
     Condition ();
     virtual ~Condition ();
 
-    DEPRECATED_METHOD (void broadcast ()); // use notify_all
-    DEPRECATED_METHOD (void signal ()); // use notify_one
+    void broadcast () __attribute__ ((deprecated)) /*"Use notify_all */;
+    void signal () __attribute__ ((deprecated)) /* Use notify_one */;
 
     void notify_all ();
     void notify_one ();
