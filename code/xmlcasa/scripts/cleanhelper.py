@@ -168,7 +168,8 @@ class cleanhelper:
                      veltype='radio'):
         """
         Define image parameters -calls im.defineimage.
-        for processing a single field  
+        for processing a single field 
+        (also called by definemultiimages for multifield) 
         """
         if((type(cell)==list) and (len(cell)==1)):
             cell.append(cell[0])
@@ -427,10 +428,11 @@ class cleanhelper:
     
     def makemultifieldmask(self, maskobject=''):
         """
-        (deprecated - will be removed for 3.4)
         This function assumes that the function definemultiimages has been run and thus
         self.imagelist is defined
         if single image use the single image version
+        (this is not up to date for current mask handling but used in task_widefield,
+         to be removed after task_widefield is gone)
         """
         if((len(self.maskimages)==(len(self.imagelist)))):
             if(not self.maskimages.has_key(self.imagelist[0])):
@@ -694,16 +696,14 @@ class cleanhelper:
           be removed for 3.4.
 
         * This is a refactored version of the previous one, makemultifieldmask2
-          and  calls makemaskimage() for each field and will be rename to makemultifieldmask
-          in 3.4.
+          and  calls makemaskimage() for each field and will be renamed to makemultifieldmask2 (
+          makemultifieldmask) in 3.4.
         """
         #print "Inside makemultifieldmask3"
         if((len(self.maskimages)==(len(self.imagelist)))):
             if(not self.maskimages.has_key(self.imagelist[0])):
-                #self.maskimages={}
                 self.maskimages=odict()
         else:
-            #self.maskimages={}
             self.maskimages=odict()
         # clean up temp mask image 
         if os.path.exists('__tmp_mask'):
@@ -720,7 +720,7 @@ class cleanhelper:
             maskobject=[maskobject]
         if(type(maskobject) != list):
             ##don't know what to do with this
-            raise TypeError, 'Dont know how to deal with mask object'
+            raise TypeError, 'Dont know how to deal with maskobject with type: %s' % type(maskobject)
         #if(type(maskobject[0])==int or type(maskobject[0])==float):
         if(numpy.issubdtype(type(maskobject[0]),int) or numpy.issubdtype(type(maskobject[0]),float)):
             maskobject=[maskobject] 
@@ -735,9 +735,11 @@ class cleanhelper:
             for k in range(len(self.imageids)):
                 if(not self.maskimages.has_key(self.imagelist[k])):
                     self.maskimages[self.imagelist[k]]=self.imagelist[k]+'.mask'
-        # initialize maskimages
+        # initialize maskimages - create empty maskimages
         # --- use outframe or dataframe for mask creation
-        ##### duplicating with makemasimage?
+        # * It appears somewhat duplicating with makemaskimage 
+        #   but it is necessary to create a maskimage for
+        #   each field at this point...
         if self.usespecframe=='': 
             maskframe=self.dataspecframe
         else:
@@ -770,77 +772,84 @@ class cleanhelper:
                            # extract boxfile name
                         masktext.append(masklets)
 
+        # === boxfile handling ===
         #extract boxfile mask info only for now the rest is
         #processed by makemaskimage. - DEPRECATED and will be removed 
         #in 3.4
         #
         #group circles and boxes in dic for each image field 
         circles, boxes, oldfmts=self.readmultifieldboxfile(masktext)
-        # Loop over imagename
-        # take out text file names contain multifield boxes and field info  
-        # from maskobject and create updated one (updatedmaskobject)
-        # by adding boxlists to it instead.
-        # Use readmultifieldboxfile to read old outlier/box text file format
-        # Note: self.imageids and boxes's key are self.imagelist for new outlier
-        #       format while for the old format, they are 'index' in string.
 
-        #maskobject_tmp = maskobject 
-        # need to do a deep copy
-        import copy
-        maskobject_tmp=copy.deepcopy(maskobject)
+	# Loop over imagename
+	# take out text file names contain multifield boxes and field info  
+	# from maskobject and create updated one (updatedmaskobject)
+	# by adding boxlists to it instead.
+	# Use readmultifieldboxfile to read old outlier/box text file format
+	# Note: self.imageids and boxes's key are self.imagelist for new outlier
+	#       format while for the old format, they are 'index' in string.
+
+	#maskobject_tmp = maskobject 
+	# need to do a deep copy
+	import copy
+	maskobject_tmp=copy.deepcopy(maskobject)
 	updatedmaskobject = [] 
         for maskid in range(len(maskobject_tmp)):
-            if len(circles)!=0 or len(boxes)!=0:
-                # remove the boxfiles from maskobject list
-                for txtf in masktext:
-                    if maskobject_tmp[maskid].count(txtf) and oldfmts[txtf]:
-                        maskobject_tmp[maskid].remove(txtf)
-                updatedmaskobject = maskobject_tmp
+	    if len(circles)!=0 or len(boxes)!=0:
+		# remove the boxfiles from maskobject list
+		for txtf in masktext:
+		    if maskobject_tmp[maskid].count(txtf) and oldfmts[txtf]:
+			maskobject_tmp[maskid].remove(txtf)
+		updatedmaskobject = maskobject_tmp
 
-            else:
-	        updatedmaskobject = maskobject 
-        # adjust no. of elements of maskoject list with []
-        if len(updatedmaskobject)-len(self.imagelist)<0:
-            for k in range(len(self.imagelist)-len(updatedmaskobject)):
-                updatedmaskobject.append([])            
-        #for maskid in range(len(self.maskimages)):
-        for maskid in self.maskimages.keys(): 
-            # for handling old format
-            #if nmaskobj <= maskid:
-            # add circles,boxes back
-            maskindx = self.maskimages.keys().index(maskid)
-            if len(circles) != 0:
-                for key in circles:
-                    if  (newformat and maskid==key) or \
-                        (not newformat and maskid.split('_')[-1]==key):
-                        if len(circles[key])==1:
-                           incircles=circles[key][0]
-                        else: 
-                           incircles=circles[key]
-                        # put in imagelist order
-                        if len(incircles)>1 and isinstance(incircles[0],list):
-                            updatedmaskobject[self.imagelist.values().index(maskid)].extend(incircles)
-                        else:
-                            updatedmaskobject[self.imagelist.values().index(maskid)].append(incircles)
-            if len(boxes) != 0:
-                for key in boxes:
-                    #try: 
-                    #    keyid=int(key)
-                    #except:
-                    #    keyid=key
-                    if  (newformat and maskid==key) or \
-                        (not newformat and maskid.split('_')[-1]==key):
-                        if len(boxes[key])==1:
-                            inboxes=boxes[key][0]
-                        else: 
-                            inboxes=boxes[key]
-                        # add to maskobject (extra list bracket taken out)
-                        # put in imagelist order
-                        # take out extra []
-                        if len(inboxes)>1 and isinstance(inboxes[0],list):
-                           updatedmaskobject[self.imagelist.values().index(maskid)].extend(inboxes)
-                        else:
-                           updatedmaskobject[self.imagelist.values().index(maskid)].append(inboxes)
+	    else:
+		updatedmaskobject = maskobject 
+	# adjust no. of elements of maskoject list with []
+	if len(updatedmaskobject)-len(self.imagelist)<0:
+	    for k in range(len(self.imagelist)-len(updatedmaskobject)):
+		updatedmaskobject.append([])            
+	#for maskid in range(len(self.maskimages)):
+
+	# === boxfile handling ====
+	for maskid in self.maskimages.keys(): 
+	    # for handling old format
+	    #if nmaskobj <= maskid:
+	    # add circles,boxes back
+	    maskindx = self.maskimages.keys().index(maskid)
+	    if len(circles) != 0:
+		for key in circles:
+		    if  (newformat and maskid==key) or \
+			(not newformat and maskid.split('_')[-1]==key):
+			if len(circles[key])==1:
+			   incircles=circles[key][0]
+			else: 
+			   incircles=circles[key]
+			# put in imagelist order
+			if len(incircles)>1 and isinstance(incircles[0],list):
+			    updatedmaskobject[self.imagelist.values().index(maskid)].extend(incircles)
+			else:
+			    updatedmaskobject[self.imagelist.values().index(maskid)].append(incircles)
+	    if len(boxes) != 0:
+		for key in boxes:
+		    #try: 
+		    #    keyid=int(key)
+		    #except:
+		    #    keyid=key
+		    if  (newformat and maskid==key) or \
+			(not newformat and maskid.split('_')[-1]==key):
+			if len(boxes[key])==1:
+			    inboxes=boxes[key][0]
+			else: 
+			    inboxes=boxes[key]
+			# add to maskobject (extra list bracket taken out)
+			# put in imagelist order
+			# take out extra []
+			if len(inboxes)>1 and isinstance(inboxes[0],list):
+			   updatedmaskobject[self.imagelist.values().index(maskid)].extend(inboxes)
+			else:
+			   updatedmaskobject[self.imagelist.values().index(maskid)].append(inboxes)
+	# === boxfile handling ====
+
+        # do maskimage creation (call makemaskimage)
         for maskid in range(len(self.maskimages)):
             if maskid < len(updatedmaskobject):
                 self._casalog.post("Matched masks: maskid=%s mask=%s" % (maskid, updatedmaskobject[maskid]), 'DEBUG1')
@@ -1626,6 +1635,7 @@ class cleanhelper:
                             setonce=True
                             self._casalog.post(boxfile+" is in a deprecated boxfile format,"+\
                                 " will not be supported in the future releases","WARN")
+                            #raise Exception
                     else:
                         ### its an AIPS boxfile
                         splitline=line.split('\n')
@@ -2772,7 +2782,7 @@ class cleanhelper:
         width -- width modified after channelization function
         imagename -- from task input 
         mode  -- from task input
-        tmpdir -- temporary directory to store channel images
+        tmpdir -- temporary directory name to store channel images
         
         returns: 
         frequencies in a list
@@ -3086,12 +3096,12 @@ class cleanhelper:
             # clean up temporary channel model image
             self.cleanupTempFiles(chanmodimg)
 
-          
+
     def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
         """
         Put channel images back into CubeImages for chaniter=T mode
         
-        Keyword argements:
+        Keyword arguments:
         cubeimageroot -- root name for output cube image
         chanimageroot -- root name for channel image
         chan          -- channel plane index
