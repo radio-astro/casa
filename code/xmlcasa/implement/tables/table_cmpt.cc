@@ -581,13 +581,16 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 
 ::casac::table*
 table::query(const std::string& query, const std::string& name,
-             const std::string& sortlist, const std::string& columns)
+             const std::string& sortlist, const std::string& columns,
+             const std::string& style)
 {
  *itsLog << LogOrigin(__func__, this->name());
  ::casac::table *rstat(0);
  try {
    if(itsTable){
      std::ostringstream taqlString;
+     if(!style.empty())
+       taqlString << "usingstyle " << style << " ";
      taqlString << "select";
      if(!columns.empty())
        taqlString << " " << columns;

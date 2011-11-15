@@ -1274,6 +1274,11 @@ interactively.-->
      <description>List of column names separated by commas</description>
      <value></value>
      </param>
+
+     <param type="string" name="style">
+     <description>How to handle numeric ranges and order axes</description>
+     <value></value>
+     </param>
 </input>
 <returns type="casatable">
 <shortdescription>a table tool with the query results
@@ -1291,19 +1296,36 @@ interactively.-->
   subt.close()
   copyt.close()
 
-
-From the original table corresponding to the disk file 3C273XC1.MS,
-only rows with OBSERVATION\_ID equal to 0 are selected and sorted
-by ARRAY\_ID. Only
-the columns TIME DATA UVW are written. Thereafter a deep copy of the
-result is made.
-The table query command is equivalent to:
+From the original table corresponding to the disk file 3C273XC1.MS, only rows
+with OBSERVATION\_ID equal to 0 are selected and sorted by ARRAY\_ID. Only the
+columns TIME DATA UVW are written. Thereafter a deep copy of the result is
+made.  This table query command is equivalent to the Table Query Language
+(TaQL) command
 
   SELECT TIME, DATA, UVW
   FROM 3C273XC1.MS
   WHERE OBSERVATION_ID==0
   ORDERBY ARRAY_ID
 
+See http://www.astron.nl/casacore/trunk/casacore/doc/notes/199.html for an explanation of TaQL.
+
+If "style" is not blank, "using style &lt;style&gt; " is prepended to the
+query.  See
+http://www.astron.nl/casacore/trunk/casacore/doc/notes/199.html#x1-50002.2 for
+an explanation and list of choices for style.  The default (glish) style is
+1-based, inclusive end, and Fortran ordering.  You may prefer python (0-based,
+exclusive end, and C order) style.
+
+tb.open('any_data')
+tsel = tb.selectrows([0])
+print tsel.nrows() # returns 1
+tsel = tb.query('ROWNUMBER()==0')
+print tsel.nrows() # returns 0
+tsel = tb.query('ROWNUMBER()==0', style='python')
+print tsel.nrows() # returns 1
+tb.close()
+
+Note that style had no effect on the "OBSERVATION_ID==0" query above.
 
 </example>
 
