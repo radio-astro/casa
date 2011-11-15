@@ -679,6 +679,15 @@ int main(int argc, char **argv)
 			agentParameters.define ("usewindowstats", usewindowstats);
 			cout << "usewindowstats is: " << usewindowstats << endl;
 		}
+		/*
+		else if (parameter == string("-usepreflags"))
+		{
+		  Bool usepreflags=True;
+		  if (value.compare("False") == 0)   usepreflags=False;
+		  agentParameters.define ("usepreflags", usepreflags);
+		  cout << "usepreflags is: " << usepreflags << endl;
+		}
+		*/
 	}
 
 

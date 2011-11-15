@@ -193,33 +193,45 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 
 	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " usewindowstats is " << winStats_p << LogIO::POST;
 
+	/*
+	exists = config.fieldNumber ("usepreflags");
+	if (exists >= 0)
+	{
+		usePreFlags_p = config.asBool("usepreflags");
+		// Nothing more to check - it's either True or False.
+	}
+	else
+	{
+		usePreFlags_p = True;
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentTimeFreqCrop::" << __FUNCTION__ << " usepreflags is " << usePreFlags_p << LogIO::POST;
+	*/
 	return;
 }
 
 void
 FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2)
 {
-
 	// Call 'fltBaseAndFlag' as specified by the user.
 	if(flagDimension_p == String("time"))
-	{
-		fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
-	}
+	  {
+	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	  }
 	else if( flagDimension_p == String("freq") )
-	{
-		fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
-	}
+	  {
+	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	  }
 	else if( flagDimension_p == String("timefreq") )
-	{
-		fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
-		fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
-	}
-	else // freqtime
-	{
-		fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
-		fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
-	}
-
+	  {
+	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	  }
+	else // freqtime (default)
+	  {
+	    fitBaseAndFlag(freqFitType_p,String("freq"),visibilities,flags);
+	    fitBaseAndFlag(timeFitType_p,String("time"),visibilities,flags);
+	  }
 	return;
 }
 
@@ -279,7 +291,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	{
 	  if(mind[0]==nChannels)// if i0 is channel, and i1 is time
 	    {
-	      if( ! flags.getModifiedFlags(i0,i1) )
+	      if( ! ( flags.getModifiedFlags(i0,i1) ) ) //C// && usePreFlags_p ) )
 		{
 		  mval += visibilities(i0,i1);
 		  mcnt++;
@@ -287,7 +299,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	    }
 	  else // if i1 is channel, and i0 is time
 	    {
-	      if( ! flags.getModifiedFlags(i1,i0) )
+	      if( ! ( flags.getModifiedFlags(i1,i0) ) ) //C// && usePreFlags_p ) )
 		{
 		  mval += visibilities(i1,i0);
 		  mcnt++;
@@ -302,6 +314,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
       if(! avgFlag[i0] ) allzeros=False;
 
     }// for i0
+
 
   // STEP 2 : 
   // If there are any non-zero unflagged values in the average, 
@@ -332,12 +345,12 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	    {
 	      if(mind[0]==nChannels)// if i0 is channel, and i1 is time
 		{
-		  avgFlag[i0] = flags.getModifiedFlags(i0,i1);
+		  avgFlag[i0] = flags.getModifiedFlags(i0,i1); //C// && usePreFlags_p;
 		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i0,i1)/avgFit(i0);
 		}
 	      else // if i1 is channel, i0 is time
 		{
-		  avgFlag[i0] = flags.getModifiedFlags(i1,i0);
+		  avgFlag[i0] = flags.getModifiedFlags(i1,i0); //C// && usePreFlags_p;
 		  if(avgFlag[i0]==False) avgDat[i0] = visibilities(i1,i0)/avgFit(i0);
 		}
 	    }//for i0
@@ -351,7 +364,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	      // Calculate the standard-deviation of the normalized data w.r.to the mean
 	      sd = calcStd(avgDat,avgFlag,mn);
 	      
-	      // Flag if the data differs from 1 by N sd
+	      // Flag if the data differs from mn=1 by N sd
 	      for(Int i0=0;i0<mind[0];i0++)
 		{
 		  if(avgFlag[i0]==False && fabs(avgDat[i0]-mn) > tol*sd) avgFlag[i0]=True ;
@@ -393,7 +406,7 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 
 	  // STEP 3D :
 	  // Fill the flags into the FlagMapper 
-	  // Note : To minimize copies, call flags.applyFlag() directly from STEPS 3B and 3C,
+	  // Note : To minimize copies, we can call flags.applyFlag() directly from STEPS 3B and 3C,
 	  //           in addition to filling in avgFlag for STEP 3B.  
 	  //       However, the following ensures minimal calls to flags.applyFlag().
 	  for(Int i0=0;i0<mind[0];i0++)
@@ -411,7 +424,8 @@ void FlagAgentTimeFreqCrop :: fitBaseAndFlag(String fittype, String direction, V
 	}//for i1
       
     }// if allzeros==False
-  
+
+
   return;
   
 }// end fitBaseAndFlag
@@ -602,6 +616,7 @@ void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool>
 	  if(deg==1) 
 	    lineFit(tdata,flag,fit,left,right);
 	  else 
+	    //lineFit(tdata,flag,fit,left,right);
 	    polyFit(tdata,flag,fit,left,right,deg);
 	}
       
@@ -647,10 +662,10 @@ void FlagAgentTimeFreqCrop :: fitPiecewisePoly(Vector<Float> &data, Vector<Bool>
    * taking care of flags in 'flag', and returning the fitted values in 'fit' */
 void FlagAgentTimeFreqCrop :: polyFit(Vector<Float> &data,Vector<Bool> &flag, Vector<Float> &fit, uInt lim1, uInt lim2,uInt deg)
 {
-  static Vector<Double> x;
-  static Vector<Double> y;
-  static Vector<Double> sig;
-  static Vector<Double> solution;
+  Vector<Double> x;
+  Vector<Double> y;
+  Vector<Double> sig;
+  Vector<Double> solution;
   
   uInt cnt=0;
   for(uInt i=lim1;i<=lim2;i++)

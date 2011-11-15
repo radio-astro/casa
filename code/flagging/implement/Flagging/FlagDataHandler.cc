@@ -1800,7 +1800,7 @@ FlagMapper::getOriginalFlags(uInt channel, uInt row)
 	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
 	{
-		combinedFlag = combinedFlag | commonFlagsView_p->operator ()(*iter,channel,row);
+		combinedFlag = combinedFlag | originalFlagsView_p->operator ()(*iter,channel,row);
 	}
 
 	return combinedFlag;
