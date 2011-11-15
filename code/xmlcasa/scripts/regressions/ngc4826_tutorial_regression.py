@@ -1439,7 +1439,10 @@ clean_offline_rms = 0.049904
 clean_momentzero_rms = 13.737679
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
-model_pbcor_sum = 69.119642
+
+#model_pbcor_sum = 69.119642
+# A PB correction bug was fixed by revision 16742, Sat Oct 22
+model_pbcor_sum = 76.772656
 
 ## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
 ## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems
