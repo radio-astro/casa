@@ -33,6 +33,7 @@
 #include <flagging/Flagging/TestFlagger.h>
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <flagging/Flagging/FlagAgentBase.h>
+#include <flagging/Flagging/FlagAgentSummary.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
 #include <stdarg.h>
@@ -42,7 +43,7 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = false;
+const bool TestFlagger::dbg = true;
 
 LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 
@@ -74,8 +75,8 @@ TestFlagger::done()
 
 	// Default values of parameters
 	msname_p = "";
-	asyncio_p = "";
-	parallel_p = "";
+	iterationApproach_p = FlagDataHandler::SUB_INTEGRATION;
+	timeInterval_p = 0.0;
 	spw_p = "";
 	scan_p = "";
 	field_p = "";
@@ -93,6 +94,17 @@ TestFlagger::done()
 		dataselection_p = temp;
 	}
 
+	if(summaryAgent_p){
+		delete summaryAgent_p;
+		summaryAgent_p = NULL;
+	}
+
+//	if (! flagsummary_p.empty()){
+//		Record temp;
+//		flagsummary_p = temp;
+//	}
+
+	mode_p = "";
 	agents_config_list_p.clear();
 	agents_list_p.clear();
 
@@ -115,10 +127,13 @@ TestFlagger::configTestFlagger(Record config)
 
 	// get the parameters to parse
 	// TODO: Check for the existence later....
-	config.get("msname", msname_p);
-	// TODO: active async and parallel later
-//	config.get("async", asyncio_p);
-//	config.get("parallel", parallel_p);
+	if(dbg){
+		cout << "configTestFlagger: "<< endl;
+		config.get("msname", msname_p);
+		cout << "configTestFlagger: "<< msname_p << endl;
+		config.get("ntime", timeInterval_p);
+		cout << "configTestFlagger: "<< timeInterval_p << endl;
+	}
 
 	return true;
 }
@@ -172,6 +187,22 @@ TestFlagger::parseAgentParameters(Record agent_params)
 
 	// TODO: should I verify the contents of the record?
 
+	// If there is a tfcrop agent in the list, we should
+	// change the iterationApproach to all the agents
+	agent_params.get("mode", mode_p);
+	if (mode_p == "tfcrop"){
+		iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
+	}
+	else if (mode_p == "summary"){
+		if(dbg)
+			cout << "parseAgentParameters: mode_p="<< mode_p << endl;
+		if(summaryAgent_p == NULL){
+			summaryAgent_p = new FlagAgentSummary(fdh_p, agent_params);
+			if(dbg)
+				cout << "parseAgentParameters: created new summary agent" << endl;
+		}
+	}
+
 	// add this agent to the list
 	agents_config_list_p.push_back(agent_params);
 
@@ -200,7 +231,7 @@ TestFlagger::initFlagDataHandler()
 	if(fdh_p) delete fdh_p;
 
 	// create a FlagDataHandler object
-	fdh_p = new FlagDataHandler(msname_p);
+	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
 
 	// Open the MS
 	fdh_p->open();
@@ -280,14 +311,14 @@ TestFlagger::initAgents()
 // Run the agents
 // It assumes that initAgents has been called first
 // ---------------------------------------------------------------------
-bool
+Record
 TestFlagger::run()
 {
 
 	LogIO os(LogOrigin("TestFlagger", "run()", WHERE));
 
 	if (agents_list_p.empty()) {
-		return false;
+		return Record();
 	}
 
 	agents_list_p.start();
@@ -316,7 +347,13 @@ TestFlagger::run()
 	agents_list_p.terminate();
 	agents_list_p.join();
 
-	return true;
+	// Get the record with the summary if there was any summary agent in the list
+	Record summary_stats = Record();
+	if (summaryAgent_p != NULL){
+		summary_stats = summaryAgent_p->getResult();
+	}
+
+	return summary_stats;
 }
 
 
