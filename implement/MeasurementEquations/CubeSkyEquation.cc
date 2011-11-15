@@ -757,7 +757,7 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
         Bool useCorrected= !(vb->msColumns().correctedData().isNull());
 
         //	Timers tVBInValid=Timers::getTime();
-        ///////////////////jhj-111103 vb->invalidate();
+        //vb->invalidate();
 
         //	Timers tInitGetSlice=Timers::getTime();
         if(!isEmpty){
@@ -1008,7 +1008,7 @@ CubeSkyEquation::putSlice(VisBuffer & vb, Bool dopsf, FTMachine::Type col, Int c
             firstOneChangesGet_p=False;
 
         if(!isBeginingOfSkyJonesCache_p){
-            finalizePutSlice(vb,  cubeSlice, nCubeSlice);
+            finalizePutSlice(*vb_p,  cubeSlice, nCubeSlice);
         }
         initializePutSlice(vb, cubeSlice, nCubeSlice);
         isBeginingOfSkyJonesCache_p=False;
