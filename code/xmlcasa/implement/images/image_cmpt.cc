@@ -226,22 +226,25 @@ bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 }
 
 // FIXME need to support region records as input
-casac::image * image::collapse(const string& function, const variant& axes,
-		const string& outfile, const string& region, const string& box,
-		const string& chans, const string& stokes, const string& mask,
-		const bool overwrite) {
-	image *newImageTool = 0;
+casac::image * image::collapse(
+	const string& function, const variant& axes,
+	const string& outfile, const string& region, const string& box,
+	const string& chans, const string& stokes, const string& mask,
+	const bool overwrite, const bool stretch
+) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
-		return NULL;
+		return 0;
 	}
 	try {
 		IPosition myAxes;
 		if (axes.type() == variant::INT) {
 			myAxes = IPosition(1, axes.toInt());
-		} else if (axes.type() == variant::INTVEC) {
+		}
+		else if (axes.type() == variant::INTVEC) {
 			myAxes = IPosition(axes.getIntVec());
-		} else if (
+		}
+		else if (
 			axes.type() == variant::STRINGVEC
 			|| axes.type() == variant::STRING
 		) {
@@ -254,15 +257,16 @@ casac::image * image::collapse(const string& function, const variant& axes,
 				)
 			);
 			for (
-					IPosition::iterator iter = myAxes.begin();
-					iter != myAxes.end(); iter++
-				) {
+				IPosition::iterator iter = myAxes.begin();
+				iter != myAxes.end(); iter++
+			) {
 				if (*iter < 0) {
 					throw AipsError(
 							"At least one specified axis does not exist");
 				}
 			}
-		} else {
+		}
+		else {
 			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
 		}
 		String aggString = function;
@@ -276,13 +280,13 @@ casac::image * image::collapse(const string& function, const variant& axes,
 			aggString, _image->getImage(), region, 0, box,
 			chans, stokes, mask, myAxes, outfile, overwrite
 		);
-		newImageTool = new image(collapser.collapse(True), False);
+		collapser.setStretch(stretch);
+		return new image(collapser.collapse(True), False);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return newImageTool;
 }
 
 image* image::imagecalc(const string& outfile, const string& pixels,
@@ -622,7 +626,7 @@ bool image::calc(const std::string& expr) {
 		return _image->calc(expr);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 }

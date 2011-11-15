@@ -69,7 +69,7 @@ from taskinit import *
 def imcollapse(
     imagename=None, function=None, axes=None, outfile=None, box=None,
     region=None, chans=None, stokes=None, mask=None, wantreturn=None,
-    overwrite=None
+    overwrite=None, stretch=None
 ):
     casalog.origin('imcollapse')
     retval = None
@@ -78,7 +78,8 @@ def imcollapse(
         if (not myia.open(imagename)):
             raise Exception, "Cannot create image analysis tool using " + imagename
         ia_tool = myia.collapse(
-            function, axes, outfile, region, box, chans, stokes, mask, overwrite
+            function, axes, outfile, region, box, chans,
+            stokes, mask, overwrite, stretch
         )
         if wantreturn:
             retval = ia_tool

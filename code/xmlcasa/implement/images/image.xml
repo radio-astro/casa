@@ -1287,7 +1287,7 @@ in this case.  It is evaluated each time it is needed.
             <value></value>
         </param>
         <param type="string" direction="in" name="region">
-            <description>Region name, default is to not use a region.</description>
+            <description>Region specification. See help par.region. Default is to not use a region.</description>
             <value></value>
         </param>
         <param type="string" direction="in" name="box">
@@ -1308,6 +1308,10 @@ in this case.  It is evaluated each time it is needed.
         </param>
         <param type="bool" direction="in" name="overwrite">
             <description>Overwrite (unprompted) pre-existing output file? Ignored if outfile is blank.</description>
+            <value>false</value>
+        </param>
+        <param type="bool" direction="in" name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
             <value>false</value>
         </param>
     </input>
@@ -5725,7 +5729,7 @@ ia.close()
   
      <param type="any" direction="in" name="region">
 	     <any type="record"/>
-     <description>Region of interest.  Default is whole image.</description>
+     <description>Region specification. See help par.region. Default is to not use a region.</description>
      <value></value>
      </param>
   
@@ -5853,10 +5857,7 @@ ia.close()
 The primary goal of this function is to enable you to analyze a
 multi-dimensional image by generating moments of a specified axis.
 This is a time-honoured spectral-line analysis technique used for
-extracting information about spectral lines. <!-- There is also a
-custom GUI interface available via the <link
-anchor="images:image.moments.function">momentsgui</link> function as
-the command line interface is presently rather cumbersome. -->
+extracting information about spectral lines.
 
 You can generate one or more output moment images.  The return value
 of this function is an on-the-fly Image \tool\ holding the {\bf first}
@@ -5868,7 +5869,7 @@ all of the other non-collapsed axes) to something computed from the data
 values along the moment axis.  For example, take an RA-DEC-Velocity
 cube, collapse the velocity axis by computing the mean intensity at each
 RA-DEC pixel.  This function offers many different moments and a variety
-of <!-- interactive and --> automatic methods to compute them. 
+of automatic methods to compute them. 
 
 We try to make a distinction between a `moment' and a `method'.  This
 boundary is a little blurred, but it claims to refer to the distinction
@@ -8537,7 +8538,7 @@ the mask will automatically have the missing dimensions added so
 it conforms to the image.
 
 If stretch is true and if the number of mask dimensions is less than
-or equal to the number of image dimensions and     some axes in the
+or equal to the number of image dimensions and some axes in the
 mask are degenerate while the corresponding axes in the image are not,
 the mask will be stetched in the degenerate dimensions. For example,
 if the input image has shape [100, 200, 10] and the input
