@@ -226,6 +226,9 @@ FlagAgentSummary::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt 
 	accumtotal["baseline"][baseline] += rowTotal;
 	accumflags["baseline"][baseline] += rowFlags;
 
+	accumTotalFlags += rowFlags;
+	accumTotalCount += rowTotal;
+
 	return;
 }
 
@@ -233,8 +236,6 @@ Record
 FlagAgentSummary::getResult()
 {
 	Record result;
-	result.define("flagged", (uInt) accumTotalFlags);
-	result.define("total"  , (uInt) accumTotalCount);
 
 	if (spwChannelCounts)
 	{
@@ -245,14 +246,14 @@ FlagAgentSummary::getResult()
 			{
 				Record stats_key2;
 
-				stats_key2.define("flagged", (uInt) accumChannelflags[key1->first][key2->first]);
-				stats_key2.define("total", (uInt) key2->second);
+				stats_key2.define("flagged", (Double) accumChannelflags[key1->first][key2->first]);
+				stats_key2.define("total", (Double) key2->second);
 				stats_key1.defineRecord(String(key2->first), stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Channel:" << key2->first
-						<< " flagged: " <<  (uInt) accumChannelflags[key1->first][key2->first]
-						<< " total: " <<  (uInt) key2->second
+						<< " flagged: " <<  (Double) accumChannelflags[key1->first][key2->first]
+						<< " total: " <<  (Double) key2->second
 						<< LogIO::POST;
 			}
 
@@ -269,14 +270,14 @@ FlagAgentSummary::getResult()
 			{
 				Record stats_key2;
 
-				stats_key2.define("flagged", (uInt) accumPolarizationflags[key1->first][key2->first]);
-				stats_key2.define("total", (uInt) key2->second);
+				stats_key2.define("flagged", (Double) accumPolarizationflags[key1->first][key2->first]);
+				stats_key2.define("total", (Double) key2->second);
 				stats_key1.defineRecord(key2->first, stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Correlation:" << key2->first
-						<< " flagged: " <<  (uInt) accumPolarizationflags[key1->first][key2->first]
-						<< " total: " <<  (uInt) key2->second
+						<< " flagged: " <<  (Double) accumPolarizationflags[key1->first][key2->first]
+						<< " total: " <<  (Double) key2->second
 						<< LogIO::POST;
 			}
 
@@ -291,20 +292,27 @@ FlagAgentSummary::getResult()
 		{
 			Record stats_key2;
 
-			stats_key2.define("flagged", (uInt) accumflags[key1->first][key2->first]);
-			stats_key2.define("total", (uInt) key2->second);
+			stats_key2.define("flagged", (Double) accumflags[key1->first][key2->first]);
+			stats_key2.define("total", (Double) key2->second);
 			stats_key1.defineRecord(key2->first, stats_key2);
 
 			*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
 					<< " " << key1->first << " " << key2->first
-					<< " flagged: " <<  (uInt) accumflags[key1->first][key2->first]
-					<< " total: " <<  (uInt) key2->second
+					<< " flagged: " <<  (Double) accumflags[key1->first][key2->first]
+					<< " total: " <<  (Double) key2->second
 					<< LogIO::POST;
 		}
 
 		result.defineRecord(key1->first, stats_key1);
 	}
 
+	result.define("flagged", (Double) accumTotalFlags);
+	result.define("total"  , (Double) accumTotalCount);
+
+	*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
+			<< " Total Flagged: " <<  (Double) accumTotalFlags
+			<< " Total Counts: " <<  (Double) accumTotalCount
+			<< LogIO::POST;
 
 
 	return result;
