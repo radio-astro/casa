@@ -1,0 +1,170 @@
+//# FlagAgentQuack.cc: This file contains the implementation of the FlagAgentQuack class.
+//#
+//#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
+//#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
+//#  Copyright (C) European Southern Observatory, 2011, All rights reserved.
+//#
+//#  This library is free software; you can redistribute it and/or
+//#  modify it under the terms of the GNU Lesser General Public
+//#  License as published by the Free software Foundation; either
+//#  version 2.1 of the License, or (at your option) any later version.
+//#
+//#  This library is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY, without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//#  Lesser General Public License for more details.
+//#
+//#  You should have received a copy of the GNU Lesser General Public
+//#  License along with this library; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+//#  MA 02111-1307  USA
+//# $Id: $
+
+#include <flagging/Flagging/FlagAgentQuack.h>
+
+namespace casa { //# NAMESPACE CASA - BEGIN
+
+FlagAgentQuack::FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
+		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube)
+{
+	setAgentParameters(config);
+
+	// Request loading antenna pointing map to FlagDataHandler
+	flagDataHandler_p->setScanStartStopMap(true);
+	if (quackincrement_p) flagDataHandler_p->setScanStartStopFlaggedMap(true);
+}
+
+FlagAgentQuack::~FlagAgentQuack()
+{
+	// Compiler automagically calls FlagAgentBase::~FlagAgentBase()
+}
+
+void
+FlagAgentQuack::setAgentParameters(Record config)
+{
+	int exists;
+
+	exists = config.fieldNumber ("quackinterval");
+	if (exists >= 0)
+	{
+		quackinterval_p = config.asDouble("quackinterval");
+	}
+	else
+	{
+		quackinterval_p = 0.0;
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentQuack::" << __FUNCTION__ << " quackinterval is " << quackinterval_p << LogIO::POST;
+
+	exists = config.fieldNumber ("quackmode");
+	String quackmode;
+	if (exists >= 0)
+	{
+		if (quackmode == "beg")
+		{
+			quackmode_p = BEGINNING_OF_SCAN;
+		}
+		else if (quackmode == "endb")
+		{
+			quackmode_p = END_OF_SCAN;
+		}
+		else if (quackmode == "end")
+		{
+			quackmode_p = ALL_BUT_END_OF_SCAN;
+		}
+		else if (quackmode == "tail")
+		{
+			quackmode_p = ALL_BUT_BEGINNING_OF_SCAN;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << "FlagAgentQuack::" << __FUNCTION__ <<
+					" Unsupported quack mode: " <<
+					quackmode_p << ", selecting beg by default. Supported modes: beg,endb,end,tail." << LogIO::POST;
+			quackmode_p = BEGINNING_OF_SCAN;
+			quackmode = "beg";
+		}
+	}
+	else
+	{
+		quackmode_p = BEGINNING_OF_SCAN;
+		quackmode = "beg";
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagAgentQuack::" << __FUNCTION__ << " quackmode is " << quackmode << LogIO::POST;
+
+	exists = config.fieldNumber ("quackincrement");
+	if (exists >= 0)
+	{
+		quackincrement_p = config.asBool("quackincrement");
+	}
+	else
+	{
+		quackincrement_p = False;
+	}
+	*logger_p << LogIO::NORMAL << "FlagAgentQuack::" << __FUNCTION__ << " quackincrement is " << quackincrement_p << LogIO::POST;
+
+
+	return;
+}
+
+void
+FlagAgentQuack::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+{
+
+	// TODO: This is not generic but in all the iteration modes provided
+	// by the FlagDataHandler scan and observation are constant over rows
+	Int scan = visBuffer.scan()[row];
+
+	// First of all check if this scan is in the scan start/stop map
+	if ( (*flagDataHandler_p->getMapScanStartStop()).find(scan) == (*flagDataHandler_p->getMapScanStartStop()).end())
+	{
+		return;
+	}
+
+	// If the scan is available in the map, then we proceed with the algorithm
+	Double scan_start = (*flagDataHandler_p->getMapScanStartStop())[scan].at(0);
+	Double scan_stop = (*flagDataHandler_p->getMapScanStartStop())[scan].at(1);
+	Double row_time = visBuffer.time()[row];
+	Bool flagRow = False;
+
+	switch (quackmode_p)
+	{
+		case BEGINNING_OF_SCAN:
+		{
+			if (row_time <= (scan_start + quackinterval_p)) flagRow = True;
+			break;
+		}
+		case END_OF_SCAN:
+		{
+			if (row_time >= (scan_stop - quackinterval_p)) flagRow = True;
+			break;
+		}
+		case ALL_BUT_BEGINNING_OF_SCAN:
+		{
+			if (row_time > (scan_start + quackinterval_p)) flagRow = True;
+			break;
+		}
+		case ALL_BUT_END_OF_SCAN:
+		{
+			if (row_time < (scan_stop - quackinterval_p)) flagRow = True;
+			break;
+		}
+	}
+
+	if (flagRow)
+	{
+    	IPosition flagCubeShape = flags.shape();
+    	uInt nChannels = flagCubeShape(0);
+    	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
+    	{
+    		flags.applyFlag(chan_i,row);
+    	}
+	}
+
+	return;
+}
+
+} //# NAMESPACE CASA - END
+
+
