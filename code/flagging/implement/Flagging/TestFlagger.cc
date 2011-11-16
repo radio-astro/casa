@@ -96,7 +96,6 @@ TestFlagger::done()
 	}
 
 	if(summaryAgent_p){
-		delete summaryAgent_p;
 		summaryAgent_p = NULL;
 	}
 
@@ -247,8 +246,6 @@ TestFlagger::initFlagDataHandler()
 		return false;
 	}
 
-	// Generate the iterators
-	fdh_p->generateIterator();
 
 	return true;
 }
@@ -288,6 +285,7 @@ TestFlagger::initAgents()
 		// TODO: Catch error, print a warning and continue to next agent.
 		FlagAgentBase *fa = FlagAgentBase::create(fdh_p, agent_rec);
 
+		// Get the summary agent to list the results later
 		String mode;
 		agent_rec.get("mode", mode);
 		if (mode.compare("summary") == 0) {
@@ -320,6 +318,11 @@ TestFlagger::run()
 	if (agents_list_p.empty()) {
 		return Record();
 	}
+
+	// Generate the iterators
+	// It will iterate through the data to evaluate the necessary memory
+	// and get the START and STOP values of the scans for the quack agent
+	fdh_p->generateIterator();
 
 	agents_list_p.start();
 

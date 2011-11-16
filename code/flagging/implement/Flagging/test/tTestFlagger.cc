@@ -32,6 +32,9 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 {
 	String parameter, value;
 	String mode = "unknown";
+	Float clipmin,clipmax;
+	Bool clipmin_set = false;
+	Bool clipmax_set = false;
 
 
 	for (unsigned short i=0;i<argc-1;i++)
@@ -64,15 +67,21 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 			value = String(argv[i+1]);
 			if (parameter == String("-clipcolumn"))
 			{
-				agent_record->define("clipcolumn", value);
+				agent_record->define("datacolumn", value);
 			}
 			else if (parameter == String("-clipexpr"))
 			{
-				agent_record->define("clipexpr", value);
+				agent_record->define("expression", value);
 			}
-			else if (parameter == String("-clipminmax"))
+			else if (parameter == String("-clipmin"))
 			{
-				agent_record->define("clipminmax", value);
+				clipmin = casa::Float(atof(value.c_str()));
+				clipmin_set = true;
+			}
+			else if (parameter == String("-clipmax"))
+			{
+				clipmax = casa::Float(atof(value.c_str()));
+				clipmax_set = true;
 			}
 			else if (parameter == String("-clipoutside"))
 			{
@@ -85,44 +94,133 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 
 		}
 	}
+	else if (mode == "summary"){
+		agent_record->define("mode", "summary");
+
+		for (unsigned short i=0;i<argc-1;i++)
+		{
+			parameter = String(argv[i]);
+			value = String(argv[i+1]);
+			if (parameter == String("-minrel"))
+			{
+				agent_record->define("minrel", value);
+			}
+			else if (parameter == String("-maxrel"))
+			{
+				agent_record->define("maxrel", value);
+			}
+			else if (parameter == String("-minabs"))
+			{
+				agent_record->define("minabs", value);
+			}
+			else if (parameter == String("-maxabs"))
+			{
+				agent_record->define("maxabs", value);
+			}
+		}
+	}
+	else if (mode == "tfcrop"){
+		agent_record->define("mode", "tfcrop");
+
+		for (unsigned short i=0;i<argc-1;i++)
+		{
+			parameter = String(argv[i]);
+			value = String(argv[i+1]);
+			if (parameter == String("-time_amp_cutoff"))
+			{
+				agent_record->define("time_amp_cutoff", value);
+			}
+			else if (parameter == String("-freq_amp_cutoff"))
+			{
+				agent_record->define("freq_amp_cutoff", value);
+			}
+			else if (parameter == String("-maxnpieces"))
+			{
+				agent_record->define("maxnpieces", value);
+			}
+			else if (parameter == String("-timefit"))
+			{
+				agent_record->define("timefit", value);
+			}
+			else if (parameter == String("-freqfit"))
+			{
+				agent_record->define("freqfit", value);
+			}
+			else if (parameter == String("-flagdimension"))
+			{
+				agent_record->define("flagdimension", value);
+			}
+			else if (parameter == String("-halfwin"))
+			{
+				agent_record->define("halfwin", value);
+			}
+			else if (parameter == String("-usewindowstats"))
+			{
+				agent_record->define("usewindowstats", value);
+			}
+		}
+	}
+	else if (mode == "quack"){
+		agent_record->define("mode", "quack");
+
+		for (unsigned short i=0;i<argc-1;i++)
+		{
+			parameter = String(argv[i]);
+			value = String(argv[i+1]);
+			if (parameter == String("-quackinterval"))
+			{
+				agent_record->define("quackinterval", value);
+			}
+			else if (parameter == String("-quackmode"))
+			{
+				agent_record->define("quackmode", value);
+			}
+			else if (parameter == String("-quackincrement"))
+			{
+				agent_record->define("quackincrement", value);
+			}
+		}
+	}
+	else if (mode == "elevation"){
+		agent_record->define("mode", "elevation");
+		Double lowerlimit,upperlimit;
+
+		for (unsigned short i=0;i<argc-1;i++)
+		{
+			parameter = String(argv[i]);
+			value = String(argv[i+1]);
+			if (parameter == String("-lowerlimit"))
+			{
+				lowerlimit = atof(value.c_str());
+				agent_record->define("lowerlimit", lowerlimit);
+			}
+			else if (parameter == String("-upperlimit"))
+			{
+				upperlimit = atof(value.c_str());
+				agent_record->define("upperlimit", upperlimit);
+			}
+		}
+	}
+
+	if (clipmin_set && clipmax_set)
+	{
+		casa::IPosition size(1);
+		size[0]=2;
+		casa::Array<Float> cliprange(size);
+		cliprange[0] = clipmin;
+		cliprange[1] = clipmax;
+		agent_record->define("clipminmax",cliprange);
+	}
 
 
 	return mode;
 }
 
-bool
-setdata(String field, String spw, String array,
-		String feed, String scan,
-		String baseline,  String uvrange,  String time,
-		String correlation, String intent, String observation)
-{
-	return true;
-}
-
-bool
-setmanualflags(Bool autocorr,
-		Bool unflag,
-		String clipexpr,
-		Vector<Double> cliprange,
-		String clipcolumn,
-		Bool outside,
-		Bool channel_average,
-		Double quackinterval,
-		String quackmode,
-		Bool quackincrement,
-		String opmode,
-		Double diameter,
-		Double lowerlimit,
-		Double upperlimit)
-{
-	return true;
-}
 
 int main(int argc, char **argv)
 {
 	String msname = "";
-	Bool async = False;
-	Bool parallel = False;
+	Double ntime = 0.0;
 	String spw = "";
 	String scan = "";
 	String field = "";
@@ -137,15 +235,16 @@ int main(int argc, char **argv)
 	String parameter, value;
 	unsigned short logLevel = 0;
 
+	Record results = Record();
+
 //	if (argc == 2) {
 //		msname = argv[1];
 //	}
 
 	if (argc < 2) {
-		cout << "usage: tTestFlagger.cc msname -async -parallel <-...>" << endl;
+		cout << "usage: tTestFlagger.cc -msname ngc5921.ms <-...>" << endl;
 		cout << "options:"<<endl;
-		cout <<	"async (True/False)\nparallel(True/False)" << endl;
-		cout << "observation, array, scan, field, antenna, feed, intent, spw, timerange, "
+		cout << "ntime, observation, array, scan, field, antenna, feed, intent, spw, timerange, "
 				"correlation, uvrange" << endl;
 		cout << "mode (manualflag,clip,quack,tfcrop,shadow,elevation,unflag,summary)" << endl;
 
@@ -169,6 +268,8 @@ int main(int argc, char **argv)
 
 	// Create a record to configure the TestFlagger tool
 	Record config;
+	config.define("ntime", ntime);
+
 	for (unsigned short i=0;i<argc-1;i++)
 	{
 		parameter = String(argv[i]);
@@ -180,18 +281,12 @@ int main(int argc, char **argv)
 			config.define("msname", casa::String(value));
 			if (logLevel >= 3) cout << "MS is: " << msname << endl;
 		}
-/*		else if (parameter == String("parallel"))
+		else if (parameter == String("-ntime"))
 		{
-			parallel = (Bool)atoi(value.c_str());
-			config.define ("parallel", casa::String(value));
-			if (logLevel >= 3) cout << "Parallel is: " << parallel << endl;
+			ntime = (Double)atof(value.c_str());
+			if (logLevel >= 3) cout << "Time inteval is: " << ntime << endl;
+			config.define ("ntime", ntime);
 		}
-		else if (parameter == String("async"))
-		{
-			async = (Bool)atoi(value.c_str());
-			config.define ("async", casa::String(value));
-			if (logLevel >= 3) cout << "Async is: " << async << endl;
-		}*/
 	}
 
 	TestFlagger *tf = new TestFlagger();
@@ -303,25 +398,6 @@ int main(int argc, char **argv)
 
 	}
 
-/*	for (unsigned short i=0;i<argc-1;i++)
-	{
-		parameter = String(argv[i]);
-		value = String(argv[i+1]);
-
-		if (parameter == String("-mode"))
-		{
-			mode = value;
-
-			// There is a mode, get the agent's parameters
-			if (not get_agent_parameters(argc, argv, &arecord))
-			{
-				cout << "ERROR: Cannot get agent's parameters for mode= "<< mode << endl;
-
-			}
-			break;
-		}
-	}
-*/
 	cout << "Will parse parameters for mode="<< mode << endl;
 	if (logLevel >= 3)
 	{
@@ -337,7 +413,6 @@ int main(int argc, char **argv)
 		// get clip parameters
 //	}
 	// TODO: do other modes
-
 	// Parse agent data selection parameters
 	if (not tf->parseAgentParameters(arecord)) {
 		cout << "ERROR: Failed to parse agent parameters" << endl;
@@ -350,21 +425,27 @@ int main(int argc, char **argv)
 		cout << "ERROR: Failed to initialize the FlagDataHandler" << endl;
 	}
 
-	if (logLevel >= 3) cout << "Done with initializing the FlagDataHandler: "<< endl;
+	if (logLevel >= 3) cout << "Done with initializing the FlagDataHandler "<< endl;
 
 	// Initialize the agents
 	if (not tf->initAgents()) {
 		cout << "ERROR: Failed to initialize the agents" << endl;
 	}
 
-	if (logLevel >= 3) cout << "Done with initializing the agents: "<< endl;
+	if (logLevel >= 3) cout << "Done with initializing the agents "<< endl;
 
 	// Run the tool
-	tf->run();
+	results = tf->run();
+/*	if(mode == "summary"){
+		ostringstream os;
+		results.print(os);
+		String str(os.str());
+		cout << str << endl;
+	}*/
 
 	if (logLevel >= 3) cout << "Done with running the tool: "<< endl;
 
 	tf->done();
-	delete tf;
+
 	return (0);
 }
