@@ -175,7 +175,7 @@ class ImageAnalysis
             const String& type, const Quantity& major,
             const Quantity& minor, const Quantity& pa,
             Double scale, Record& region, const String& mask,
-            const Bool overwrite = False
+            const Bool overwrite = False, const Bool stretch=False
     );
 
     CoordinateSystem coordsys(const Vector<int>& axes);
