@@ -66,25 +66,49 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		return False;
 	}
 
-	if (specVals.size() > 0 && endVal < specVals(0)){
-		msg = String("Start value: ") + String::toString(endVal) + String(" is smaller than all spectral values!");
-		*_log << LogIO::WARN << msg << LogIO::POST;
-		return False;
+	Bool ascending=True;
+	if (specVals(specVals.size()-1)<specVals(0))
+		ascending=False;
+
+	Int startIndex, endIndex;
+	if (ascending){
+		if (endVal < specVals(0)){
+			msg = String("Start value: ") + String::toString(endVal) + String(" is smaller than all spectral values!");
+			*_log << LogIO::WARN << msg << LogIO::POST;
+			return False;
+		}
+		if (startVal > specVals(specVals.size()-1)){
+			msg = String("End value: ") + String::toString(startVal) + String(" is larger than all spectral values!");
+			*_log << LogIO::WARN << msg << LogIO::POST;
+			return False;
+		}
+		startIndex=0;
+		while (specVals(startIndex)<startVal)
+			startIndex++;
+
+		endIndex=specVals.size()-1;
+		while (specVals(endIndex)>endVal)
+			endIndex--;
 	}
+	else {
+		if (endVal < specVals(specVals.size()-1)){
+			msg = String("Start value: ") + String::toString(endVal) + String(" is smaller than all spectral values!");
+			*_log << LogIO::WARN << msg << LogIO::POST;
+			return False;
+		}
+		if (startVal > specVals(0)){
+			msg = String("End value: ") + String::toString(startVal) + String(" is larger than all spectral values!");
+			*_log << LogIO::WARN << msg << LogIO::POST;
+			return False;
+		}
+		startIndex=0;
+		while (specVals(startIndex)<endVal)
+			startIndex++;
 
-	if (specVals.size() > 0 && startVal > specVals(specVals.size()-1)){
-		msg = String("End value: ") + String::toString(startVal) + String(" is larger than all spectral values!");
-		*_log << LogIO::WARN << msg << LogIO::POST;
-		return False;
+		endIndex=specVals.size()-1;
+		while (specVals(endIndex)>startVal)
+			endIndex--;
 	}
-
-	Int startIndex=0;
-	while (specVals(startIndex)<startVal)
-		startIndex++;
-
-	Int endIndex=specVals.size()-1;
-	while (specVals(endIndex)>endVal)
-		endIndex--;
 
 	String chanInp;
 	chanInp = String::toString(startIndex) + "~" + String::toString(endIndex);
@@ -213,7 +237,6 @@ Bool SpectralCollapser::_getQualitySubImg(const ImageInterface<Float>* image, co
 Bool SpectralCollapser::_getQualitySubImgs(ImageInterface<Float>* image, SubImage<Float> &subData, SubImage<Float> &subError){
 
 	FITSQualityImage *qImg = dynamic_cast<FITSQualityImage*>(image);
-
 
 	// create the data image
 	subData = SubImage<Float>(*(qImg->fitsData()), AxesSpecifier(False));

@@ -300,14 +300,12 @@ QSize QtCanvas::sizeHint() const
 
 void QtCanvas::paintEvent(QPaintEvent *event)
 {
-    QPainter painter(this);
-
+	 QPainter painter(this);
     QVector<QRect> rects = event->region().rects();
     for (int i = 0; i < (int)rects.size(); ++i)
-        painter.drawPixmap(rects[i], pixmap, rects[i]);
+   	 painter.drawPixmap(rects[i], pixmap, rects[i]);
 
-    //painter.drawPixmap(0, 0, pixmap);
-
+	 //painter.drawPixmap(0, 0, pixmap);
     if (rubberBandIsShown)
     {
         painter.setPen(Qt::yellow);
@@ -317,6 +315,23 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     if (xRangeIsShown)
     {
         painter.setPen(Qt::black);
+
+	     QtPlotSettings settings = zoomStack[curZoom];
+	     QRect rect(MARGIN, MARGIN,
+	                width() - 2 * MARGIN, height() - 2 * MARGIN);
+	     double dxStart = xRangeStart - settings.minX;
+	     double dxEnd   = xRangeEnd   - settings.minX;
+	     double xStart = rect.left() + (dxStart * (rect.width()-1) / settings.spanX());
+	     double xEnd   = rect.left() + (dxEnd   * (rect.width()-1) / settings.spanX());
+
+	     //qDebug() << "dxStart: " <<dxStart << " dxEnd: " << dxEnd << " xRangeStart: " << xRangeStart << " xRangeEnd: " << xRangeEnd
+	     //<< " xStart: " << xStart << " xEnd: " << xEnd << " curr left:"<< xRangeRect.left() << " curr right: " << xRangeRect.right();
+	     //qDebug() << "dxStart: " << dxStart << " --> " << " xStart: " << (int)xStart;
+
+	     xRangeRect.setLeft((int)(xStart));
+	     xRangeRect.setRight((int)(xEnd));
+        xRangeRect.setBottom(MARGIN);
+        xRangeRect.setTop(height()-MARGIN-1);
         painter.fillRect(xRangeRect, QColor(100,100,100,100));
         painter.drawRect(xRangeRect.normalized());
     }
@@ -341,16 +356,18 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 	if (event->button() == Qt::LeftButton)
 	{
 		if (event->modifiers().testFlag(Qt::ShiftModifier)){
-		    xRangeMode=true;
+			xRangeMode    = true;
 			xRangeIsShown = true;
 			xRangeRect.setLeft(event->pos().x());
 			xRangeRect.setRight(event->pos().x());
 			xRangeRect.setBottom(MARGIN);
 			xRangeRect.setTop(height()-MARGIN-1);
+			xRectStart= event->pos().x();
+			xRectEnd  = event->pos().x();
 			updatexRangeBandRegion();
 		}
 		else {
-			xRangeIsShown = false;
+			xRangeIsShown     = false;
 			rubberBandIsShown = true;
 			rubberBandRect.setTopLeft(event->pos());
 			rubberBandRect.setBottomRight(event->pos());
@@ -394,7 +411,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 }
 void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 {
-	//qDebug()  << "Mouse moved event" << event->pos();
+	qDebug()  << "Mouse moved event" << event->pos();
 	if (event->buttons() & Qt::LeftButton)
 	{
 		if (rubberBandIsShown){
@@ -404,19 +421,24 @@ void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 		}
 		else if (xRangeIsShown){
 			updatexRangeBandRegion();
-			xRangeRect.setRight(event->pos().x());
+			//xRangeRect.setRight(event->pos().x());
+			xRectEnd = event->pos().x();
 
-			QRect rect = xRangeRect.normalized();
-
+			//QRect rect = xRangeRect.normalized();
 			// zero the coordinates on the plot region
-			rect.translate(-MARGIN, -MARGIN);
-
+			//rect.translate(-MARGIN, -MARGIN);
 			QtPlotSettings currSettings = zoomStack[curZoom];
 
 			double dx = currSettings.spanX() / (width() - 2 * MARGIN);
-			double minX = currSettings.minX + dx * rect.left();
-			double maxX = currSettings.minX + dx * rect.right();
-			emit xRangeChanged(minX, maxX);
+			//xRangeStart = currSettings.minX + dx * rect.left();
+			//xRangeEnd   = currSettings.minX + dx * rect.right();
+			xRangeStart = currSettings.minX + dx * (xRectStart-MARGIN);
+			xRangeEnd   = currSettings.minX + dx * (xRectEnd-MARGIN);
+			//qDebug() << "xRectStart: "<< xRectStart << " xRectEnd: " << xRectEnd;
+			if (xRangeStart<xRangeEnd)
+				emit xRangeChanged(xRangeStart, xRangeEnd);
+			else
+				emit xRangeChanged(xRangeEnd, xRangeStart);
 			updatexRangeBandRegion();
 		}
 	}
@@ -445,14 +467,17 @@ void QtCanvas::mouseReleaseEvent(QMouseEvent *event)
 			}
 
 			// zero the coordinates on the plot region
-			rect.translate(-MARGIN, -MARGIN);
+			//rect.translate(-MARGIN, -MARGIN);
 
 			QtPlotSettings currSettings = zoomStack[curZoom];
 
 			double dx = currSettings.spanX() / (width() - 2 * MARGIN);
-			double minX = currSettings.minX + dx * rect.left();
-			double maxX = currSettings.minX + dx * rect.right();
-			emit xRangeChanged(minX, maxX);
+			xRangeStart = currSettings.minX + dx * (xRectStart-MARGIN);
+			xRangeEnd   = currSettings.minX + dx * (xRectEnd-MARGIN);
+			if (xRangeStart<xRangeEnd)
+				emit xRangeChanged(xRangeStart, xRangeEnd);
+			else
+				emit xRangeChanged(xRangeEnd, xRangeStart);
 
 			//if (!shiftPressed)
 			xRangeMode=false;
@@ -593,6 +618,8 @@ void QtCanvas::refreshPixmap()
     {
         drawGrid(&painter);
         drawCurves(&painter);
+        //if (xRangeIsShown)
+        //	drawxRange(&painter);
     }
     else
     {
@@ -601,6 +628,7 @@ void QtCanvas::refreshPixmap()
     }
     if (welcome.text != "") 
        drawWelcome(&painter);
+    //qDebug() << "Refreshing pixmap...";
     update();
 }
 void QtCanvas::drawBackBuffer(QPainter *painter)
@@ -634,6 +662,7 @@ void QtCanvas::drawGrid(QPainter *painter)
         painter->drawText(x - 50, rect.bottom() + 5, 100, 15,
                           Qt::AlignHCenter | Qt::AlignTop,
                           QString::number(label));
+        //qDebug() << "xxx: " << x;
     }
     for (int j = 0; j <= settings.numYTicks; ++j)
     {
@@ -803,6 +832,28 @@ void QtCanvas::drawRects(QPainter *painter)
         painter->drawPath(points);
         ++it;
     }
+}
+
+
+void QtCanvas::drawxRange(QPainter *painter)
+{
+    QtPlotSettings settings = zoomStack[curZoom];
+
+    QRect rect(MARGIN, MARGIN,
+               width() - 2 * MARGIN, height() - 2 * MARGIN);
+    double dxStart = xRangeStart - settings.minX;
+    double dxEnd   = xRangeEnd - settings.minX;
+    double xStart = rect.left() + (dxStart * (rect.width() - 1)
+    		/ settings.spanX());
+    double xEnd = rect.left() + (dxEnd * (rect.width() - 1)
+    		/ settings.spanX());
+
+    xRangeRect.setBottom(MARGIN);
+	xRangeRect.setTop(height()-MARGIN-1);
+	xRangeRect.setRight((int)xStart);
+	xRangeRect.setLeft((int)xEnd);
+    painter->fillRect(xRangeRect, QColor(100,100,100,100));
+    painter->drawRect(xRangeRect.normalized());
 }
 
 QColor QtCanvas::getLinearColor(double d)
