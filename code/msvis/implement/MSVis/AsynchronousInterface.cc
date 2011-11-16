@@ -117,9 +117,10 @@ AsynchronousInterface::initializeLogging ()
 
         Logger::get()->start (logFilename.c_str());
         AipsrcValue<Int>::find (logLevel_p, ROVisibilityIterator::getAipsRcBase () + ".debug.logLevel", 1);
-        Logger::get()->log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n", logLevel_p,
-                            ViReadImplAsync::isAsynchronousIoEnabled() ? "enabled" : "disabled",
-                                                                                 ViReadImplAsync::getDefaultNBuffers() );
+        Logger::get()->log ("VlaData log-level is %d; async I/O: %s; nBuffers=%d\n",
+                            logLevel_p,
+                            ROVisibilityIterator::isAsynchronousIoEnabled() ? "enabled" : "disabled",
+                            ViReadImplAsync::getDefaultNBuffers() );
 
         return True;
 

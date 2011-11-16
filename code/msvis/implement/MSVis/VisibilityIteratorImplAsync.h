@@ -122,7 +122,6 @@ public:
     // -1.
 
     static int getDefaultNBuffers ();
-    static Bool isAsynchronousIoEnabled ();
 
     // The functions below make no sense (at first glance) for asynchronous operation and are implemented
     // to throw an AipsError if called.  ROVIA is designed to have all the data accessed through the

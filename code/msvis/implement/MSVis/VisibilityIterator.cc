@@ -226,8 +226,7 @@ ROVisibilityIterator::ROVisibilityIterator (const asyncio::PrefetchColumns * pre
 {
     // For potentially creating an asynchronous ROVI from a synchronous one
 
-    Bool createAsAsynchronous = prefetchColumns != NULL &&
-                                ViReadImplAsync::isAsynchronousIoEnabled ();
+    Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
 
     if (createAsAsynchronous){
 
@@ -272,8 +271,7 @@ ROVisibilityIterator::construct (const asyncio::PrefetchColumns * prefetchColumn
         // Factory didn't create the read implementation so decide whether to create a
         // synchronous or asynchronous read implementation.
 
-        Bool createAsAsynchronous = prefetchColumns != NULL &&
-                                    ViReadImplAsync::isAsynchronousIoEnabled ();
+        Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
 
         if (createAsAsynchronous){
             readImpl_p = new ViReadImplAsync (mss, * prefetchColumns, sortColumns,
@@ -951,10 +949,10 @@ ROVisibilityIterator::isAsynchronousIoEnabled()
     // Determines whether asynchronous I/O is enabled by looking for the
     // expected AipsRc value.  If not found then async i/o is disabled.
 
-    Bool isDisabled;
-    AipsrcValue<Bool>::find (isDisabled, getAipsRcBase () + ".disabled", True);
+    Bool isEnabled;
+    AipsrcValue<Bool>::find (isEnabled, getAipsRcBase () + ".enabled", False);
 
-    return ! isDisabled;
+    return isEnabled;
 }
 
 Bool
@@ -1574,8 +1572,7 @@ VisibilityIterator::VisibilityIterator (const asyncio::PrefetchColumns * prefetc
                                         const VisibilityIterator & other)
 : ROVisibilityIterator (prefetchColumns, other)
 {
-    Bool createAsAsynchronous = prefetchColumns != NULL &&
-                                ViReadImplAsync::isAsynchronousIoEnabled ();
+    Bool createAsAsynchronous = prefetchColumns != NULL && isAsynchronousIoEnabled ();
 
     if (createAsAsynchronous){
         writeImpl_p = new ViWriteImplAsync (* prefetchColumns, * other.writeImpl_p, this);

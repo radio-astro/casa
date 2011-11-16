@@ -361,18 +361,6 @@ ViReadImplAsync::getVisBuffer ()
     return vb;
 }
 
-Bool
-ViReadImplAsync::isAsynchronousIoEnabled()
-{
-    // Determines whether asynchronous I/O is enabled by looking for the
-    // expected AipsRc value.  If not found then async i/o is disabled.
-
-    Bool isDisabled;
-    AipsrcValue<Bool>::find (isDisabled, ROVisibilityIterator::getAipsRcBase () + ".disabled", True);
-
-    return ! isDisabled;
-}
-
 //void
 //ViReadImplAsync::linkWithRovi (VisibilityIteratorReadImpl * rovi)
 //{

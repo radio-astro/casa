@@ -241,8 +241,8 @@ private:
 // Normal settings
 // ---------------
 //
-// VisibilityIterator.async.disabled - Boolean value that enables or disables
-//     async I/O.  The default value is currently True (i.e., disabled).
+// VisibilityIterator.async.enabled - Boolean value that enables or disables
+//     async I/O.  The default value is currently False (i.e., disabled).
 // VisibilityIterator.async.nBuffers - The number of lookahead buffers.  This
 //     defaults to 2.
 //
