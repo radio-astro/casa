@@ -513,14 +513,17 @@ image::adddegaxes(const std::string& outfile, const bool direction,
 }
 
 ::casac::image *
-image::convolve(const std::string& outFile, const ::casac::variant& kernel,
-		const double in_scale, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool overwrite, const bool async) {
-	::casac::image *rstat = 0;
+image::convolve(
+	const std::string& outFile, const ::casac::variant& kernel,
+	const double in_scale, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool overwrite,
+	const bool stretch, const bool async
+) {
 	try {
-		*_log << LogOrigin("image", "convolve");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
 
 		Array<Float> kernelArray;
 		String kernelFileName = "";
@@ -530,57 +533,65 @@ image::convolve(const std::string& outFile, const ::casac::variant& kernel,
 			kernelArray.resize(IPosition(shape));
 			Vector<Double> localkern(kernelVector);
 			casa::convertArray(kernelArray, localkern.reform(IPosition(shape)));
-		} else if (kernel.type() == ::casac::variant::INTVEC) {
+		}
+		else if (kernel.type() == ::casac::variant::INTVEC) {
 			std::vector<int> kernelVector = kernel.toIntVec();
 			Vector<Int> shape = kernel.arrayshape();
 			kernelArray.resize(IPosition(shape));
 			Vector<Int> localkern(kernelVector);
 			casa::convertArray(kernelArray, localkern.reform(IPosition(shape)));
-		} else if (kernel.type() == ::casac::variant::STRING || kernel.type()
+		}
+		else if (kernel.type() == ::casac::variant::STRING || kernel.type()
 				== ::casac::variant::STRINGVEC) {
 
 			kernelFileName = kernel.toString();
-		} else {
+		}
+		else {
 			*_log << LogIO::SEVERE
 					<< "kernel is not understood, try using an array or an image "
 					<< LogIO::POST;
-			return rstat;
+			return 0;
 		}
 
 		String theMask;
 		Record *theMaskRegion;
 		if (vmask.type() == ::casac::variant::BOOLVEC) {
 			theMask = "";
-		} else if (vmask.type() == ::casac::variant::STRING || vmask.type()
+		}
+		else if (vmask.type() == ::casac::variant::STRING || vmask.type()
 				== ::casac::variant::STRINGVEC) {
 			theMask = vmask.toString();
-		} else if (vmask.type() == ::casac::variant::RECORD) {
+		}
+		else if (vmask.type() == ::casac::variant::RECORD) {
 			::casac::variant localvar(vmask);
 			theMaskRegion = toRecord(localvar.asRecord());
 			*_log << LogIO::SEVERE
 					<< "Don't support region masking yet, only valid LEL "
 					<< LogIO::POST;
-			return rstat;
-		} else {
+			return 0;
+		}
+		else {
 			*_log << LogIO::SEVERE
 					<< "Mask is not understood, try a valid LEL string "
 					<< LogIO::POST;
-			return rstat;
+			return 0;
 		}
 
 		Record *Region = toRecord(region);
 
-		ImageInterface<Float> * tmpIm = _image->convolve(outFile, kernelArray,
-				kernelFileName, in_scale, *Region, theMask, overwrite, async);
-		rstat = new ::casac::image(tmpIm);
-		delete tmpIm;
-
+		std::auto_ptr<ImageInterface<Float> > tmpIm(
+			_image->convolve(
+				outFile, kernelArray,
+				kernelFileName, in_scale, *Region,
+				theMask, overwrite, async, stretch
+			)
+		);
+		return new ::casac::image(tmpIm.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*
