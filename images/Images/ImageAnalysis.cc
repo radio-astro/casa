@@ -1307,10 +1307,12 @@ casa::Quantity ImageAnalysis::convertflux(
 
 ImageInterface<Float>* ImageAnalysis::convolve2d(
 	const String& outFile, const Vector<Int>& axes,
-		const String& type, const Quantity& majorKernel,
-		const Quantity& minorKernel, const Quantity& paKernel, Double scale,
-		Record& Region, const String& mask, const Bool overwrite
-	) {
+	const String& type, const Quantity& majorKernel,
+	const Quantity& minorKernel,
+	const Quantity& paKernel, Double scale,
+	Record& Region, const String& mask, const Bool overwrite,
+	const Bool stretch
+) {
 	*itsLog << LogOrigin("ImageAnalysis", "convolve2d");
     if (majorKernel < minorKernel) {
     	*itsLog << "Major axis "
@@ -1335,7 +1337,7 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), stretch
 	);
 
 	// Convert inputs
@@ -1360,8 +1362,11 @@ ImageInterface<Float>* ImageAnalysis::convolve2d(
 	} else {
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
-		imOut.set(new PagedImage<Float> (outShape, subImage.coordinates(),
-				outFile));
+		imOut.set(
+			new PagedImage<Float> (
+				outShape, subImage.coordinates(), outFile
+			)
+		);
 	}
 
 	ImageInterface<Float>* pImOut = imOut.ptr()->cloneII();
