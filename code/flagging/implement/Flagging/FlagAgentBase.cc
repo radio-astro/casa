@@ -27,6 +27,7 @@
 #include <flagging/Flagging/FlagAgentClipping.h>
 #include <flagging/Flagging/FlagAgentSummary.h>
 #include <flagging/Flagging/FlagAgentManual.h>
+#include <flagging/Flagging/FlagAgentElevation.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -210,6 +211,14 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	if (mode.compare("summary")==0)
 	{
 		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
+		return agent;
+	}
+
+	// Elevation
+	if (mode.compare("elevation")==0)
+	{
+		cout <<"create: elevation agent" << endl;
+		FlagAgentElevation* agent = new FlagAgentElevation(dh,config);
 		return agent;
 	}
 
