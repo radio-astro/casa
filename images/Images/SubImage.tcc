@@ -257,7 +257,6 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 		std::auto_ptr<LogIO> localLogMgr(0);
 
 		if (! myos) {
-			cout << __FILE__ << " " << __LINE__ << endl;
 			myos = new LogIO();
 			localLogMgr.reset(myos);
 		}
