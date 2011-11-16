@@ -411,7 +411,7 @@ void QtCanvas::mousePressEvent(QMouseEvent *event)
 }
 void QtCanvas::mouseMoveEvent(QMouseEvent *event)
 {
-	qDebug()  << "Mouse moved event" << event->pos();
+	//qDebug()  << "Mouse moved event" << event->pos() << " global: " << event->globalPos();
 	if (event->buttons() & Qt::LeftButton)
 	{
 		if (rubberBandIsShown){
