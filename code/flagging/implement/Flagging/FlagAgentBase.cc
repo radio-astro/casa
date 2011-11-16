@@ -145,7 +145,7 @@ FlagAgentBase::initialize()
    flag_p = true;
    /// Mapping config
    dataColumn_p = "data";
-   expression_p = "abs I";
+   expression_p = "ABS I";
    dataReference_p = DATA;
    /// Profiling and testing config
    profiling_p = false;
@@ -621,73 +621,6 @@ FlagAgentBase::setAgentParameters(Record config)
 		agentName_p = "FlagAgentUnknown";
 	}
 
-	exists = config.fieldNumber ("expression");
-	if (exists >= 0)
-	{
-		expression_p = config.asString("expression");
-	}
-	else
-	{
-		expression_p = "abs I";
-	}
-
-	// Check if expression is one of the supported operators
-	if ((expression_p.find("real") == string::npos) and
-			(expression_p.find("imag") == string::npos) and
-			(expression_p.find("imag") == string::npos) and
-			(expression_p.find("arg") == string::npos) and
-			(expression_p.find("abs") == string::npos) and
-			(expression_p.find("norm") == string::npos))
-	{
-		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
-				" Unsupported mapping expression: " <<
-				expression_p << ", selecting abs by default. Supported expressions: real,imag,arg,abs,norm." << LogIO::POST;
-		expression_p = "abs I";
-	}
-
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " visibility expression is " << expression_p << LogIO::POST;
-
-	exists = config.fieldNumber ("datacolumn");
-	if (exists >= 0)
-	{
-		dataColumn_p = config.asString("datacolumn");
-	}
-	else
-	{
-		dataColumn_p = "data";
-	}
-
-	// Check if dataColumn_p is one of the supported columns (or residues)
-	if (dataColumn_p.compare("data") == 0)
-	{
-		dataReference_p = DATA;
-	}
-	else if (dataColumn_p.compare("corrected") == 0)
-	{
-		dataReference_p = CORRECTED;
-	}
-	else if (dataColumn_p.compare("model") == 0)
-	{
-		dataReference_p = MODEL;
-	}
-	else if (dataColumn_p.compare("residual") == 0)
-	{
-		dataReference_p = RESIDUAL;
-	}
-	else if (dataColumn_p.compare("residual_data") == 0)
-	{
-		dataReference_p = RESIDUAL_DATA;
-	}
-	else
-	{
-		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
-				" Unsupported data column: " <<
-				expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
-		dataColumn_p = "data";
-	}
-
-	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
-
 	exists = config.fieldNumber ("nThreads");
 	if (exists >= 0)
 	{
@@ -719,6 +652,81 @@ FlagAgentBase::setAgentParameters(Record config)
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " Number of threads must be positive, disabling multithreading" << LogIO::POST;
 			dataColumn_p = "data";
 		}
+	}
+
+
+	if (	(iterationApproach_p == IN_ROWS) or
+			(iterationApproach_p == ANTENNA_PAIRS) or
+			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
+			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
+	{
+		exists = config.fieldNumber ("expression");
+		if (exists >= 0)
+		{
+			expression_p = config.asString("expression");
+		}
+		else
+		{
+			expression_p = "ABS I";
+		}
+
+		expression_p.upcase();
+
+		// Check if expression is one of the supported operators
+		if ((expression_p.find("REAL") == string::npos) and
+				(expression_p.find("IMAG") == string::npos) and
+				(expression_p.find("ARG") == string::npos) and
+				(expression_p.find("ABS") == string::npos) and
+				(expression_p.find("NORM") == string::npos))
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
+					" Unsupported mapping expression: " <<
+					expression_p << ", selecting ABS by default. Supported expressions: REAL,IMAG,ARG,ABS,NORM." << LogIO::POST;
+			expression_p = "ABS I";
+		}
+
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " visibility expression is " << expression_p << LogIO::POST;
+
+		exists = config.fieldNumber ("datacolumn");
+		if (exists >= 0)
+		{
+			dataColumn_p = config.asString("datacolumn");
+		}
+		else
+		{
+			dataColumn_p = "data";
+		}
+
+		// Check if dataColumn_p is one of the supported columns (or residues)
+		if (dataColumn_p.compare("data") == 0)
+		{
+			dataReference_p = DATA;
+		}
+		else if (dataColumn_p.compare("corrected") == 0)
+		{
+			dataReference_p = CORRECTED;
+		}
+		else if (dataColumn_p.compare("model") == 0)
+		{
+			dataReference_p = MODEL;
+		}
+		else if (dataColumn_p.compare("residual") == 0)
+		{
+			dataReference_p = RESIDUAL;
+		}
+		else if (dataColumn_p.compare("residual_data") == 0)
+		{
+			dataReference_p = RESIDUAL_DATA;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
+					" Unsupported data column: " <<
+					expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
+			dataColumn_p = "data";
+		}
+
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
 	}
 
 	return;
@@ -1028,6 +1036,15 @@ FlagAgentBase::iterateRows()
 void
 FlagAgentBase::iterateInRows()
 {
+	// Check if the visibility expression is suitable for this spw
+	if (	(iterationApproach_p == IN_ROWS) or
+			(iterationApproach_p == ANTENNA_PAIRS) or
+			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
+			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
+	{
+		if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
+	}
+
 	// Create VisMapper and FlagMapper objects and parse the polarization expression
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
 	FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
@@ -1085,6 +1102,15 @@ FlagAgentBase::iterateInRows()
 void
 FlagAgentBase::iterateAntennaPairs()
 {
+	// Check if the visibility expression is suitable for this spw
+	if (	(iterationApproach_p == IN_ROWS) or
+			(iterationApproach_p == ANTENNA_PAIRS) or
+			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
+			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
+	{
+		if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
+	}
+
 	antennaPairMapIterator myAntennaPairMapIterator;
 	std::pair<Int,Int> antennaPair;
 	std::vector<uInt> *antennaRows = NULL;
@@ -1239,6 +1265,207 @@ FlagAgentBase::setFlagsMap(std::vector<uInt> *rows,FlagMapper *flagMap)
 	flagMap->setParentCubes(commonFlagCube,originalFlagCube,privateFlagCube);
 
 	return;
+}
+
+Bool
+FlagAgentBase::checkVisExpression(polarizationMap *polMap)
+{
+	if (expression_p.find("XX") != string::npos)
+	{
+		if (polMap->find(Stokes::XX) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (XX) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("YY") != string::npos)
+	{
+		if (polMap->find(Stokes::YY) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (YY) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+
+	}
+	else if (expression_p.find("XY") != string::npos)
+	{
+		if (polMap->find(Stokes::XY) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (XY) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("YX") != string::npos)
+	{
+		if (polMap->find(Stokes::YX) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (YX) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("RR") != string::npos)
+	{
+		if (polMap->find(Stokes::RR) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (RR) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("LL") != string::npos)
+	{
+		if (polMap->find(Stokes::LL) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (LL) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("LR") != string::npos)
+	{
+		if (polMap->find(Stokes::LR) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (LR) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("RL") != string::npos)
+	{
+		if (polMap->find(Stokes::RL) != polMap->end())
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (RL) not available in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("I") != string::npos)
+	{
+		if (polMap->find(Stokes::I) != polMap->end())
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::XX) != polMap->end()) and (polMap->find(Stokes::YY) != polMap->end()))
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::RR) != polMap->end()) and (polMap->find(Stokes::LL) != polMap->end()))
+		{
+
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (I) cannot be computed from available polarizations in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("Q") != string::npos)
+	{
+		if (polMap->find(Stokes::Q) != polMap->end())
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::XX) != polMap->end()) and (polMap->find(Stokes::YY) != polMap->end()))
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::RL) != polMap->end()) and (polMap->find(Stokes::LR) != polMap->end()))
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (Q) cannot be computed from available polarizations in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("U") != string::npos)
+	{
+		if (polMap->find(Stokes::U) != polMap->end())
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::XY) != polMap->end()) and (polMap->find(Stokes::YX) != polMap->end()))
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::RL) != polMap->end()) and (polMap->find(Stokes::LR) != polMap->end()))
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (U) cannot be computed from available polarizations in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+			return False;
+		}
+	}
+	else if (expression_p.find("V") != string::npos)
+	{
+		if (polMap->find(Stokes::V) != polMap->end())
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::XY) != polMap->end()) and (polMap->find(Stokes::YX) != polMap->end()))
+		{
+			return True;
+		}
+		else if ((polMap->find(Stokes::RR) != polMap->end()) and (polMap->find(Stokes::LL) != polMap->end()))
+		{
+			return True;
+		}
+		else
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (V) cannot be computed from available polarizations in current spectral window (" <<
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
+			return False;
+		}
+	}
+	else
+	{
+		throw AipsError("Unknown polarization requested, (" + expression_p + ") supported types are: XX,YY,XY,YX,RR,LL,RL,LR,I,Q,U,V");
+		return False;
+	}
+	return False;
 }
 
 void

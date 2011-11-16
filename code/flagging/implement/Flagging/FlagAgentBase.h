@@ -119,6 +119,7 @@ protected:
 	// Mapping functions as requested by Urvashi
 	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
 	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
+	Bool checkVisExpression(polarizationMap *polMap);
 
 	// Compute flags for a given visibilities point
 	virtual void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
@@ -192,8 +193,8 @@ private:
 	Int threadId_p;
 
 	// Data source configuration
-	string expression_p;
-	string dataColumn_p;
+	String expression_p;
+	String dataColumn_p;
 	uShort dataReference_p;
 
 	// Debugging configuration
