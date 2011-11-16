@@ -24,6 +24,7 @@ test_flagdata2                  scastro@eso.org
 test_getchunk                   dmehring@nrao.edu
 test_hanningsmooth              scastro@eso.org
 test_ia_convolve                dmehring@nrao.edu
+test_ia_convolve2d              dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_subimage                dmehring@nrao.edu
 test_imcollapse                 dmehring@nrao.edu

@@ -741,26 +741,29 @@ image::convertflux(const ::casac::variant& qvalue,
 	return rstat;
 }
 
-image* image::convolve2d(const string& outFile, const vector<int>& axes,
-		const string& type, const variant& major, const variant& minor,
-		const variant& pa, const double in_scale, const record& region,
-		const variant& vmask, const bool overwrite) {
-	::casac::image *rstat = 0;
+image* image::convolve2d(
+	const string& outFile, const vector<int>& axes,
+	const string& type, const variant& major, const variant& minor,
+	const variant& pa, const double in_scale, const record& region,
+	const variant& vmask, const bool overwrite, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
-		if (detached())
-			return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
 
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 		String kernel(type);
 		casa::Quantity majorKernel = casaQuantityFromVar(major);
 		casa::Quantity minorKernel = casaQuantityFromVar(minor);
 		casa::Quantity paKernel = casaQuantityFromVar(pa);
-		*_log << LogOrigin("image", __FUNCTION__);
+		*_log << LogOrigin(_class, __FUNCTION__);
 
 		Vector<Int> Axes(axes);
 		if (Axes.size() == 0) {
@@ -771,21 +774,19 @@ image* image::convolve2d(const string& outFile, const vector<int>& axes,
 
 		// Return image
 
-		ImageInterface<Float> * tmpIm = _image->convolve2d(outFile, Axes, type,
-				majorKernel, minorKernel, paKernel, in_scale, *Region, mask,
-				overwrite);
-
-		rstat = new ::casac::image(tmpIm);
-
-		delete tmpIm;
-		return rstat;
-
+		std::auto_ptr<ImageInterface<Float> > tmpIm(
+			_image->convolve2d(
+				outFile, Axes, type, majorKernel, minorKernel,
+				paKernel, in_scale, *Region, mask, overwrite,
+				stretch
+			)
+		);
+		return new image(tmpIm.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::coordsys *
