@@ -132,13 +132,16 @@ class ImageAnalysis
                     const Bool tabular = False, 
                     const Bool overwrite = False);
 
-    ImageInterface<Float> * convolve(const String& outfile, 
-                                     Array<Float>& kernel, 
-                                     const String& kernImage, 
-                                     const Double scale, 
-                                     Record& region, String& mask, 
-                                     const Bool overwrite = False, 
-                                     const Bool async = False);
+    ImageInterface<Float> * convolve(
+    	const String& outfile,
+        Array<Float>& kernel,
+        const String& kernImage,
+        const Double scale,
+        Record& region, String& mask,
+        const Bool overwrite=False,
+        const Bool async=False,
+        const Bool stretch=False
+    );
 
     Record* boundingbox(const Record& region);
 

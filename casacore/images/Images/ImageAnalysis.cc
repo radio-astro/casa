@@ -761,22 +761,26 @@ Bool ImageAnalysis::adddegaxes(const String& outfile, PtrHolder<ImageInterface<
 }
 
 ImageInterface<Float> *
-ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
-		const String& kernelFileName, const Double in_scale, Record& region,
-		String& mask, const Bool overwrite, const Bool) {
+ImageAnalysis::convolve(
+	const String& outFile, Array<Float>& kernelArray,
+	const String& kernelFileName, const Double in_scale, Record& region,
+	String& mask, const Bool overwrite, const Bool, const Bool stretch
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "convolve");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	//Need to deal with the string part
 	//    String kernelFileName(kernel.toString());
-	if (mask == "[]")
+	if (mask == "[]") {
 		mask = "";
+	}
 	Bool autoScale;
 	Double scale(in_scale);
 
 	if (scale > 0) {
 		autoScale = False;
-	} else {
+	}
+	else {
 		autoScale = True;
 		scale = 1.0;
 	}
@@ -793,7 +797,7 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&region)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), stretch
 	);
 
 	// Create output image
@@ -803,7 +807,8 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 		*itsLog << LogIO::NORMAL << "Creating (temp)image of shape "
 				<< outShape << LogIO::POST;
 		imOut.set(new TempImage<Float> (outShape, subImage.coordinates()));
-	} else {
+	}
+	else {
 		*itsLog << LogIO::NORMAL << "Creating image '" << outFile
 				<< "' of shape " << outShape << LogIO::POST;
 		imOut.set(new PagedImage<Float> (outShape, subImage.coordinates(),
@@ -818,18 +823,21 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 	ImageConvolver<Float>::ScaleTypes scaleType(ImageConvolver<Float>::NONE);
 	if (autoScale) {
 		scaleType = ImageConvolver<Float>::AUTOSCALE;
-	} else {
+	}
+	else {
 		scaleType = ImageConvolver<Float>::SCALE;
 	}
 	if (kernelFileName.empty()) {
 		if (kernelArray.nelements() > 1) {
 			aic.convolve(*itsLog, *pImOut, subImage, kernelArray, scaleType,
 					scale, copyMisc);
-		} else {
+		}
+		else {
 			*itsLog << "Kernel array dimensions are invalid"
 					<< LogIO::EXCEPTION;
 		}
-	} else {
+	}
+	else {
 		if (!Table::isReadable(kernelFileName)) {
 			*itsLog << LogIO::SEVERE << "kernel image " << kernelFileName
 					<< " is not available " << LogIO::POST;
@@ -839,7 +847,6 @@ ImageAnalysis::convolve(const String& outFile, Array<Float>& kernelArray,
 		aic.convolve(*itsLog, *pImOut, subImage, kernelImage, scaleType, scale,
 				copyMisc, warnOnly);
 	}
-
 	return pImOut;
 }
 
