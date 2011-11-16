@@ -91,6 +91,8 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// By default don't map polarizations and antennaPointing
 	mapPolarizations_p = false;
 	mapAntennaPointing_p = false;
+	mapScanStartStop_p = false;
+	mapScanStartStopFlagged_p = false;
 
 	switch (iterationApproach_p)
 	{
@@ -576,6 +578,11 @@ FlagDataHandler::checkMaxMemory()
 			memoryNeeded += memoryPerRow*(rwVisibilityIterator_p->nRow());
 
 			if (memoryNeeded > maxMemoryNeeded) maxMemoryNeeded = memoryNeeded;
+
+			if (mapScanStartStop_p)
+			{
+				generateScanStartStopMap();
+			}
 		}
 	}
 
@@ -611,6 +618,120 @@ FlagDataHandler::checkMaxMemory()
 		}
 
 		throw(AipsError("FlagDataHandler::checkMaxMemory() Not enough memory to process"));
+	}
+
+	if (mapScanStartStop_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << scanStartStopMap_p->size() <<" Scans found in MS" << LogIO::POST;
+	}
+
+	return;
+}
+
+void
+FlagDataHandler::generateScanStartStopMap()
+{
+
+	Int scan;
+	Double start,stop;
+	Vector<Int> scans;
+	Vector<Double> times;
+
+	Cube<Bool> flags;
+	uInt scanStartRow;
+	uInt scanStopRow;
+	uInt ncorrs,nchannels,nrows;
+	Bool stopSearch;
+
+	if (mapScanStartStop_p) scanStartStopMap_p = new scanStartStopMap();
+
+	scans = rwVisibilityIterator_p->scan(scans);
+	times = rwVisibilityIterator_p->time(times);
+
+	// Check if anything is flagged in this buffer
+	scanStartRow = 0;
+	scanStopRow = times.size()-1;
+	if (mapScanStartStopFlagged_p)
+	{
+		flags = rwVisibilityIterator_p->flag(flags);
+		IPosition shape = flags.shape();
+		ncorrs = shape[0];
+		nchannels = shape[1];
+		nrows = shape[2];
+
+		// Look for effective scan start
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,row_i))
+					{
+						scanStartRow = row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+
+		// If none of the rows were un-flagged we don't continue checking from the end
+		// As a consequence of this some scans may not be present in the map, and have
+		// to be skipped in the flagging process because they are already flagged.
+		if (!stopSearch) return;
+
+		// Look for effective scan stop
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,nrows-1-row_i))
+					{
+						scanStopRow = nrows-1-row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+	}
+
+	// Check scan start/stop times
+	scan = scans[0];
+	start = times[scanStartRow];
+	stop = times[scanStopRow];
+	if ((*scanStartStopMap_p)[scan].size() == 0)
+	{
+		(*scanStartStopMap_p)[scan].push_back(start);
+		(*scanStartStopMap_p)[scan].push_back(stop);
+	}
+	else
+	{
+		// Check if we have a better start time
+		if ((*scanStartStopMap_p)[scan][0] > start)
+		{
+			(*scanStartStopMap_p)[scan][0] = start;
+		}
+		// Check if we have a better stop time
+		if ((*scanStartStopMap_p)[scan][1] < stop)
+		{
+			(*scanStartStopMap_p)[scan][1] = stop;
+		}
 	}
 
 	return;
@@ -826,9 +947,6 @@ FlagDataHandler::nextBuffer()
 		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
 		originalFlagCube_p.resize(originalFlagCube.shape());
 		originalFlagCube_p = originalFlagCube;
-
-		//IPosition flagCubeShape = modifiedFlagCube_p.shape();
-		//*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Current buffer shape: " << flagCubeShape  << " and indexing:" <<  modifiedFlagCube_p.printConfig() <<LogIO::POST;
 	}
 
 	return moreBuffers;

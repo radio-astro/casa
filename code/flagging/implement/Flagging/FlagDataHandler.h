@@ -65,6 +65,7 @@ typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
 typedef std::map< uShort,uShort > polarizationMap;
 typedef std::map< uInt,String > polarizationIndexMap;
 typedef std::vector< vector<Double> > antennaPointingMap;
+typedef std::map< Int,vector<Double> > scanStartStopMap;
 
 const Complex ImaginaryUnit = Complex(0,1);
 
@@ -441,6 +442,7 @@ public:
 	void generateSubIntegrationMap();
 	void generatePolarizationsMap();
 	void generateAntennaPointingMap();
+	void generateScanStartStopMap();
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
@@ -448,12 +450,15 @@ public:
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
 	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
 	antennaPointingMap * getMapAntennaPointing() {return antennaPointingMap_p;}
+	scanStartStopMap * getMapScanStartStop() {return scanStartStopMap_p;}
 
 	// Functions to switch on/off mapping functions
 	void setMapAntennaPairs(bool activated) {mapAntennaPairs_p=activated;}
 	void setMapSubIntegrations(bool activated) {mapSubIntegrations_p=activated;}
 	void setMapPolarizations(bool activated) {mapPolarizations_p=activated;}
 	void setMapAntennaPointing(bool activated) {mapAntennaPointing_p=activated;}
+	void setScanStartStopMap(bool activated) {mapScanStartStop_p=activated;}
+	void setScanStartStopFlaggedMap(bool activated) {mapScanStartStopFlagged_p=activated;}
 
 	// TODO: Remove old CubeView accessors and update tFlagDataHandler and tFlagAgentBase
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
@@ -530,10 +535,13 @@ private:
 	polarizationMap *polarizationMap_p;
 	polarizationIndexMap *polarizationIndexMap_p;
 	antennaPointingMap *antennaPointingMap_p;
+	scanStartStopMap *scanStartStopMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 	bool mapPolarizations_p;
 	bool mapAntennaPointing_p;
+	bool mapScanStartStop_p;
+	bool mapScanStartStopFlagged_p;
 
 	// Stats members
 	bool stats_p;
