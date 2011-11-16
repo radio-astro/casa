@@ -132,6 +132,7 @@ protected:
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;
 	casa::LogIO *logger_p;
+	String agentName_p;
 
 private:
 	
@@ -189,7 +190,6 @@ private:
 	Bool multiThreading_p;
 	Int nThreads_p;
 	Int threadId_p;
-	String agentName_p;
 
 	// Data source configuration
 	string expression_p;
