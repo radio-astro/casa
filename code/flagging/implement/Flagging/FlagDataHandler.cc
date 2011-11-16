@@ -1470,23 +1470,23 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	polMap_p = polMap;
 
 	// Parse complex unitary function
-	if (expression_p.find("real") != string::npos)
+	if (expression_p.find("REAL") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::real;
 	}
-	else if (expression_p.find("imag") != string::npos)
+	else if (expression_p.find("IMAG") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::imag;
 	}
-	else if (expression_p.find("arg") != string::npos)
+	else if (expression_p.find("ARG") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::arg;
 	}
-	else if (expression_p.find("abs") != string::npos)
+	else if (expression_p.find("ABS") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::abs;
 	}
-	else if (expression_p.find("norm") != string::npos)
+	else if (expression_p.find("NORM") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::norm;
 	}
