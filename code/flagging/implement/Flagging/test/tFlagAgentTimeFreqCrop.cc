@@ -609,7 +609,7 @@ int main(int argc, char **argv)
 		else if (parameter == string("-correlation"))
 		{
 			correlation = casa::String(value);
-			agentParameters.define ("correlation", uvrange);
+			agentParameters.define ("correlation", correlation);
 			cout << "Correlation range selection is: " << correlation << endl;
 		}
 		else if (parameter == string("-expression"))
