@@ -640,6 +640,57 @@ class simutil:
 
     ###########################################################
 
+    def median_direction(self, directions=None):
+        # RI TODO make deal with list of measures as well as list of strings
+        """
+        Returns the median of directions as a string, and relative offsets
+        """
+        if directions==None:
+            directions=self.direction
+        epoch0, x, y = self.direction_splitter(directions[0])
+        i = 1
+        avgx = 0.0
+        avgy = 0.0
+        xx=[]
+        yy=[]
+        for drn in directions:            
+            epoch, x, y = self.direction_splitter(drn)
+            # in principle direction_splitter returns directions in degrees,
+            # but can we be sure?
+            x=qa.convert(x,'deg')
+            y=qa.convert(y,'deg')
+            x = x['value']
+            y = y['value']
+            if epoch != epoch0:                     # Paranoia
+                print "[simutil] WARN: precession not handled by average_direction()"
+            x = self.wrapang(x, avgx, 360.0)
+            xx.append(x)
+            yy.append(y)
+            i += 1
+        avgx = pl.median(xx)
+        avgy = pl.median(yy)
+        offsets=pl.zeros([2,i-1])
+        i=0
+        cosdec=pl.cos(avgy*pl.pi/180.)
+        for drn in directions:
+            epoch, x, y = self.direction_splitter(drn)
+            x=qa.convert(x,'deg')
+            y=qa.convert(y,'deg')
+            x = x['value']
+            y = y['value']
+            x = self.wrapang(x, avgx, 360.0)
+            offsets[:,i]=[(x-avgx)*cosdec,y-avgy]  # apply cosdec to make offsets on sky
+            i+=1
+        avgx = qa.toangle('%17.12fdeg' % avgx)
+        avgy = qa.toangle('%17.12fdeg' % avgy)
+        avgx = qa.formxxx(avgx, format='hms',prec=5)
+        avgy = qa.formxxx(avgy, format='dms',prec=5)
+        return "%s%s %s" % (epoch0, avgx, avgy), offsets
+
+
+
+    ###########################################################
+
     def direction_splitter(self, direction=None):
         """
         Given a direction, return its epoch, x, and y parts.  Epoch will be ''

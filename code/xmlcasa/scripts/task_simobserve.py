@@ -442,6 +442,17 @@ def simobserve(
                 dir = direction
                 dir0 = dir
         util.direction = dir0
+        
+        # if the integration time is a real time quantity
+        if qa.quantity(integration)['unit'] != '':
+            intsec = qa.convert(qa.quantity(integration),"s")['value']
+        else:
+            if len(integration)>0:
+                intsec = float(integration)
+            else:
+                intsec = 0
+        integration="%fs" %intsec
+
 
         if setpointings:
             if verbose: util.msg("calculating map pointings centered at "+str(dir0))
@@ -481,14 +492,6 @@ def simobserve(
                     return False
 
             nfld, pointings, etime = util.read_pointings(ptgfile)
-            # if the integration time is a real time quantity
-            if qa.quantity(integration)['unit'] != '':
-                intsec = qa.convert(qa.quantity(integration),"s")['value']
-            else:
-                if len(integration)>0:
-                    intsec = float(integration)
-                else:
-                    intsec = 0
             if max(etime) <= 0:
                 # integration is a string in input params
                 etime = intsec
@@ -503,10 +506,11 @@ def simobserve(
             if min(etime) < intsec:
                 integration = str(min(etime))+"s"
                 msg("Setting integration to "+integration+" to match the shortest time in the pointing file.",priority="warn")
+                intsec = min(etime)
 
 
         # find imcenter - phase center
-        imcenter , offsets = util.average_direction(pointings)        
+        imcenter , offsets = util.median_direction(pointings)        
         epoch, ra, dec = util.direction_splitter(imcenter)
 
         # model is centered at model_refdir, and has model_size; this is the offset in 
@@ -516,8 +520,9 @@ def simobserve(
             ra['value'] = ra['value'] - 360.
         if mra['value'] >= 359.999:
             mra['value'] = mra['value'] - 360.
+        # XXX put in real angular mod-360 diff here for obs near RA=0
         shift = [ (qa.convert(ra,'deg')['value'] - 
-                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(mdec,'rad')['value'] ), 
+                   qa.convert(mra,'deg')['value'])*pl.cos(qa.convert(dec,'rad')['value'] ), 
                   (qa.convert(dec,'deg')['value'] - qa.convert(mdec,'deg')['value']) ]
         if verbose: 
             msg("pointings are shifted relative to the model by %g,%g arcsec" % (shift[0]*3600,shift[1]*3600))
@@ -540,14 +545,13 @@ def simobserve(
                     return False
             util.write_pointings(ptgfile,pointings,etime.tolist())
 
-        msg("phase center = "+imcenter)
+        msg("center = "+imcenter)
         if nfld > 1 and verbose:
             for idir in range(min(len(pointings),20)):
                 msg("   "+pointings[idir])
             if nfld >= 20:
                 msg("   (printing only first 20 - see pointing file for full list)")
             
- 
         if not overlap:
             msg("No overlap between model and pointings",priority="error")
             return False
@@ -564,6 +568,8 @@ def simobserve(
         if len(caldirection) < 4: caldirection = ""
         if calfluxjy > 0 and caldirection != "":            
             docalibrator = True
+            if os.path.exists(fileroot+"/"+project+'.cal.cclist'):
+                shutil.rmtree(fileroot+"/"+project+'.cal.cclist')
             util.isdirection(caldirection)
             cl.done()
             cl.addcomponent(flux=calfluxjy,dir=caldirection,label="phase calibrator")
@@ -686,7 +692,7 @@ def simobserve(
                 # assume it means number of maps, or # repetitions.
                 totalsec = sum(etime)
                 if docalibrator:
-                    totalsec = totalsec + integration # cal gets one int-time
+                    totalsec = totalsec + intsec # cal gets one int-time
                 totalsec = float(totaltime) * totalsec
                 msg("Total observing time = "+str(totalsec)+"s.",priority="warn")
             else:                
@@ -767,6 +773,16 @@ def simobserve(
                 sttime=sttime+haoffset
                 scanstart=sttime
 
+                # can before sources
+                if docalibrator:                            
+                    endtime = sttime + qa.convert(integration,'s')['value'] 
+                    sm.observe(sourcename="phase calibrator", spwname=fband,
+                               starttime=qa.quantity(sttime, "s"),
+                               stoptime=qa.quantity(endtime, "s"),
+                               state_obs_mode="CALIBRATE_PHASE.ON_SOURCE",state_sig=True,
+                               project=project);
+                    sttime = endtime
+
                 while (sttime-scanstart)<totalsec: # the last scan could exceed totaltime
                     endtime = sttime + etime[kfld]
                     #print kfld,sttime,endtime,totalsec
@@ -826,6 +842,13 @@ def simobserve(
                 # do actual calculation of visibilities:
 
                 if not components_only:
+                    if docalibrator:
+                        if len(complist) <=0:
+                            complist=fileroot+"/"+project+'.cal.cclist'
+                        else:
+                            # XXX will 2 cl work?
+                            complist=complist+","+fileroot+"/"+project+'.cal.cclist'
+
                     if len(complist) > 1:
                         if verbose:
                             msg("predicting from "+newmodel+" and "+complist,priority="warn",origin="simobserve")
@@ -838,7 +861,9 @@ def simobserve(
                             msg("predicting from "+newmodel,origin="simobserve")
                     sm.predict(imagename=newmodel,complist=complist)
                 else:   # if we're doing only components
-                    if verbose:
+                    # XXX will 2 cl work?
+                    complist=complist+","+fileroot+"/"+project+'.cal.cclist'
+                    if verbose:                        
                         msg("predicting from "+complist,priority="warn",origin="simobserve")
                     else:
                         msg("predicting from "+complist,origin="simobserve")
@@ -937,18 +962,6 @@ def simobserve(
                         # calibration obs is disabled for SD but add a gap to synchronize with interferometer
                         endtime = sttime + qa.convert(integration,'s')['value'] 
 
-                        #if docalibrator:
-                        #    sttime = -totalsec/2.0 + scansec*k
-                        #    endtime = sttime + scansec
-                        #    if observemany:
-                        #        srces.append(src)
-                        #        starttimes.append(str(sttime)+"s")
-                        #        stoptimes.append(str(endtime)+"s")
-                        #        dirs.append(caldirection)
-                        #    else:
-                        #        sm.observe(sourcename="phase calibrator", spwname=fband,
-                        #                   starttime=qa.quantity(sttime, "s"),
-                        #                   stoptime=qa.quantity(endtime, "s"));
                         kfld = kfld + 1
                         # advance start time - XX someday slew goes here
                         sttime = endtime
