@@ -1705,10 +1705,12 @@ Bool ImageAnalysis::remove(Bool verbose)
   return rstat;
 }
 
-Bool ImageAnalysis::fft(const String& realOut, const String& imagOut,
-		const String& ampOut, const String& phaseOut, const Vector<Int>& axes,
-		Record& Region, const String& mask) {
-	*itsLog << LogOrigin("ImageAnalysis", "fft");
+Bool ImageAnalysis::fft(
+	const String& realOut, const String& imagOut,
+	const String& ampOut, const String& phaseOut, const Vector<Int>& axes,
+	Record& Region, const String& mask, const Bool stretch
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfiles
 	if (realOut.empty() && imagOut.empty() && ampOut.empty()
@@ -1749,7 +1751,7 @@ Bool ImageAnalysis::fft(const String& realOut, const String& imagOut,
 
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
-		mask, itsLog, False
+		mask, itsLog, False, AxesSpecifier(), stretch
 	);
 
 	// Do the FFT
