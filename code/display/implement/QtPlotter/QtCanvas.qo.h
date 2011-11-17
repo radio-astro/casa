@@ -151,6 +151,7 @@ protected:
     void drawWelcome(QPainter *painter);
     void drawCurves(QPainter *painter);
     void drawRects(QPainter *painter);
+    void drawxRange(QPainter *painter);
     void defaultZoomIn();
     void defaultZoomOut();
 
@@ -172,6 +173,8 @@ protected:
     bool xRangeIsShown;
     bool imageMode;
     bool xRangeMode;
+    double xRangeStart;
+    double xRangeEnd;
     QRect rubberBandRect;
     QRect xRangeRect;
     QPixmap pixmap;
@@ -181,6 +184,9 @@ protected:
     int autoScaleX;
     int autoScaleY;
     int plotError;
+
+    int xRectStart;
+    int xRectEnd;
 
 };
 

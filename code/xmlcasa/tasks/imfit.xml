@@ -110,6 +110,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
         <example>overwrite=true</example>
     </param>
+    <param type="bool" direction="in" name="dooff">
+        <description>Also fit a zero level offset? Default is False</description>
+        <value>False</value>
+    </param>
+    <param type="double" direction="in" name="offset" subparam="true">
+        <description>Initial estimate of zero-level offset. Only used if doff is True. Default is 0.0</description>
+        <value>0.0</value>
+    </param>
+    <param type="bool" direction="in" name="fixoffset" subparam="true">
+        <description>Keep the zero level offset fixed during fit? Default is False </description>
+        <value>False</value>
+    </param>
     <constraints>
         <when param="logfile">
             <notequals type="string" value="">
@@ -121,6 +133,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <when param="complist">
             <notequals type="string" value="">
                 <default param="overwrite">
+                    <value>False</value>
+                </default>
+            </notequals>
+        </when>
+        <when param="dooff">
+            <notequals type="bool" value="False">
+                <default param="offset">
+                    <value>0.0</value>
+                </default>
+                <default param="fixoffset">
                     <value>False</value>
                 </default>
             </notequals>
@@ -159,23 +181,38 @@ newestimates     File to write fit results which can be used as initial estimate
                  for next run.
 complist         Name of output component list table.
 overwrite        Overwrite component list table if it exists?
+dooff            Simultaneously fit a zero-level offset?
+offset           Initial estimate for the zero-level offset. Only used if dooff is True.
+fixoffset        Hold zero-level offset constant during fit? Only used if dooff is True.
 
 OVERVIEW
-imfit is used to fit one or more gaussians to sources in an image.
-Fitting is limited to a single polarization but can be performed over several
-contiguous spectral channels.
+imfit is used to fit one or more gaussians to sources in an image as
+well as an optional zero-level offset. Fitting is limited to a single polarization
+but can be performed over several contiguous spectral channels.
 If the image has a clean beam, the report will contain both the convolved
-and the deconvolved fit results.
+and the deconvolved fit results. It is a simple wrapper around the ia.fitcomponents()
+tool method.
 
-The task returns a dictionary with two keys, 'converged' and 'results'.
+When dooff is False, the method returns a dictionary with two keys, 'converged' and 'results'.
 The value of 'converged' is a boolean array which indicates if the fit converged
 on a channel by channel basis.
-The value of 'results' is a python dictionary representation of a component
-list reflecting the fit results. In the case of a clean image, the results
-are the convolved results. The results can be converted to a componentlist
-(cl) tool via
+The value of 'results' is a dictionary representing a component list reflecting the
+fit results. In the case of a deconvolved image, the sizes and position angles are those
+of the source convolved with the restoring beam. For convenience, the 'results' dictionary can
+be read into a compoenent list tool (default tool is named cl) using the fromrecord() method
+for easier inspection using tool methods, eg
 
-cl.fromrecord(imfit_return['results'])
+cl.fromrecord(res['results'])
+
+If dooff is True, in addtion to the specified number of
+gaussians, a zero-level offset will also be fit. The initial estimate for this
+offset is specified using the offset parameter. Units are assumed to be the
+same as the image brightness units.The zero level offset can be held constant during
+the fit by specifying fixoffset=True. In the case of dooff=True, the returned
+dictionary contains two additional keys, 'zerooff' and 'zeroofferr', which are both
+arrays containing the the fitted zero level offset value and its error, respectively,
+for each channel. Both sets of values are in image brightness units.
+In cases where the fit did not converge, these values are set to NaN.
 
 The region can either be specified by a box(es)
 (blc1, trc1, blc2, trc2, ...) or a region (if both

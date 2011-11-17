@@ -561,20 +561,10 @@ void QtProfile::wcChanged( const String c,
 {
 	if (!isVisible()) return;
     if (!analysis) return;
-
     *itsLog << LogOrigin("QtProfile", "wcChanged");
-//cout << px << " :px <> py: " << py << endl;
-   //cout << "profile wcChanged     cube=" << cube << endl;
-    //qDebug() << "top=" << fileName;
-    // QHashIterator<QString, ImageAnalysis*> j(*over);
-    // while (j.hasNext()) {
-    //   j.next();
-    //   qDebug() << j.key() << ": " << j.value();
-    // }
 
-    //qDebug() << "First parameter: " << c.c_str();
-    //cout << px << " <> " << py << endl;
-    //cout << wx << " <> " << wy << endl;
+    //cout << "px: " << px << " py: " << py << endl;
+    //cout << "wx: " << wx << " wy: " << wy << endl;
 
     if (cube == 0) {
        pixelCanvas->setWelcome("No profile available "

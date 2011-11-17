@@ -59,7 +59,68 @@ namespace asyncio {
 
 class VLAT;
 
-
+// <summary>
+// The PrefetchColumns class is used to specify a set of columns that
+// can be prefetched when the (RO)VisibilityIterator is using asynchronous
+// I/O.
+// </summary>
+//
+// <synopsis>
+// When creating an ROVisibilityIterator or VisibilityIterator that can
+// potentially operate using asynchronous I/O it is necessary to specify
+// which columns of the main table are to be prefetched by the lookahead
+// thread.  This class provides the way to specify those columns.  The
+// class is an STL set object of enum values defined in VisBufferComponents.h.
+// These roughly correspond to the different components that can be access
+// via a VisBuffer.
+//
+// </synopsis>
+//
+// <example>
+// This is a simple example showing the construction of a PrefetchColumns
+// and its use in a VisibilityIterator constructor.  For more complex cases
+// (e.g., where the columns to be prefetched depend on other factors) the
+// class provides some additional utility methods.
+//
+// Usually the file that creates the VI will include VisBuffer which will
+// then include VisBufferComponents.h; if not then the user will also need
+// to add "#include <msvis/MSVis/VisBufferComponents.h>" to their file.
+//
+// <code>
+//    asyncio::PrefetchColumns prefetchColumns =
+//            PrefetchColumns::prefetchColumns (VisBufferComponents::Ant1,
+//                                              VisBufferComponents::Ant2,
+//                                              VisBufferComponents::ArrayId,
+//                                              VisBufferComponents::Direction1,
+//                                              VisBufferComponents::Direction2,
+//                                              VisBufferComponents::Feed1,
+//                                              VisBufferComponents::Feed1_pa,
+//                                              VisBufferComponents::Feed2,
+//                                              VisBufferComponents::Feed2_pa,
+//                                              VisBufferComponents::FieldId,
+//                                              VisBufferComponents::FlagCube,
+//                                              VisBufferComponents::Flag,
+//                                              VisBufferComponents::FlagRow,
+//                                              VisBufferComponents::Freq,
+//                                              VisBufferComponents::NChannel,
+//                                              VisBufferComponents::NCorr,
+//                                              VisBufferComponents::NRow,
+//                                              VisBufferComponents::ObservedCube,
+//                                              VisBufferComponents::PhaseCenter,
+//                                              VisBufferComponents::PolFrame,
+//                                              VisBufferComponents::SpW,
+//                                              VisBufferComponents::Time,
+//                                              VisBufferComponents::Uvw,
+//                                              VisBufferComponents::UvwMat,
+//                                              VisBufferComponents::Weight,
+//                                              -1);
+//
+//     wvi_p = new VisibilityIterator (& prefetchColumns, * wvi_p);
+//
+//
+// </code>
+//
+// </example
 class PrefetchColumns : public std::set<VisBufferComponents::EnumType>{
 
 public:
@@ -130,6 +191,7 @@ private:
 //   <li> <linkto class="MSIter">MSIter</linkto>
 //   <li> <linkto class="MeasurementSet">MeasurementSet</linkto>
 //   <li> <linkto class="VisSet">VisSet</linkto>
+//   <li> <linkto class="PrefetchColumns">PrefetchColumns</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -143,6 +205,56 @@ private:
 //
 // One should use <linkto class="VisBuffer">VisBuffer</linkto>
 // to access chunks of data.
+//
+// ROVisibilityIterators can be either synchronous or asynchronous, depending
+// on the constructor used to create them as well as the current value of
+// a CASARC file setting.  A synchronous instance is works the same as
+// this class ever worked; an asynchronous instance uses a second thread
+// (the Visibility Lookahead Thread or VLAT) to fill the VisBuffers in
+// advance of their use by the original thread.
+//
+// To create an asynchronous instance of ROVI you must use one of the two
+// constructors which have a pointer to a PrefetchColumns object as the
+// first argument.  This object specifies which table columns should be
+// prefetched by the VLAT; accessing columns not specified in the PrefetchColumns
+// object will result in an exception containing an error message indicating
+// that a the VisBuffer does not contain the requested column.  In addition
+// to using the appropriate constructor, the CASARC file setting
+// VisibilityIterator.
+//
+// +-------------------+
+// |                   |
+// | *** Nota Bene *** |
+// |                   |
+// +-------------------+
+//
+// Because of the multithreaded nature of asynchronous I/O, the user
+// needs to be a bit more careful in the use of the VI and it's attached VisBuffer.
+// Data access operations need to be directed to the VisBuffer.  Additionally
+// the user must not attempt to access the data using a separate VI since
+// the underlying casacore objects are not threadsafe and bizarre errors
+// will likely occur.
+//
+// CASARC Settings
+// ===============
+//
+// Normal settings
+// ---------------
+//
+// VisibilityIterator.async.enabled - Boolean value that enables or disables
+//     async I/O.  The default value is currently False (i.e., disabled).
+// VisibilityIterator.async.nBuffers - The number of lookahead buffers.  This
+//     defaults to 2.
+//
+//
+// Debug settings
+// --------------
+//
+// VisibilityIterator.async.doStats: true
+// VisibilityIterator.async.debug.logFile: stderr
+// VisibilityIterator.async.debug.logLevel: 1
+//
+
 // </synopsis>
 //
 // <example>
@@ -615,7 +727,7 @@ public:
                             const MPosition & obsPos,
                             const MDirection & dir);
 
-  static String getAipsRcBase () { return "VisibilityIterator";}
+  static String getAipsRcBase () { return "VisibilityIterator.async";}
 
 protected:
 
@@ -750,6 +862,18 @@ protected:
 //
 // One should use <linkto class="VisBuffer">VisBuffer</linkto>
 // to access chunks of data.
+//
+// As with an ROVI, a VI can be created to only utilize synchronous I/O
+// (the "normal" way) or it can potentially use asynchronous I/O.  To create
+// an asynchronous instance of VI requires using an appropriate constructor
+// (i.e., one that has PrefetchColumns * as its first argument) and setting
+// the CASARC setting "VisibilityIterator.async.disabled: False".
+//
+// When a write operation is performed using the various setX methods of an
+// asynchronous instance of this class, the data is shipped over to the VLAT
+// which writes out when it is not in the middle of performing a read ahead
+// of a VisBuffer.
+//
 // </synopsis>
 //
 // <example>

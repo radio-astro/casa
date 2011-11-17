@@ -25,9 +25,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
-		FlagAgentBase(dh,config,ROWS,false)
+		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,false)
 {
-	preProcessBuffer_p = true;
 	arrayId = 0;
 	fieldId = 0;
 	spw = 0;
@@ -46,6 +45,9 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	spwPolarizationCounts = False;
 
 	setAgentParameters(config);
+
+	// Request loading polarization map to FlagDataHandler
+	flagDataHandler_p->setMapPolarizations(true);
 }
 
 FlagAgentSummary::~FlagAgentSummary()
@@ -101,29 +103,31 @@ FlagAgentSummary::setAgentParameters(Record config)
 }
 
 void
-FlagAgentSummary::preProcessBuffer()
+FlagAgentSummary::preProcessBuffer(VisBuffer &visBuffer)
 {
-	arrayId = visibilityBuffer_p->get()->arrayId();
+	arrayId = visBuffer.arrayId();
 	stringstream arrayId_stringStream;
 	arrayId_stringStream << arrayId;
 	arrayId_str = arrayId_stringStream.str();
 
-	fieldId = visibilityBuffer_p->get()->fieldId();
+	fieldId = visBuffer.fieldId();
 	stringstream fieldId_stringStream;
 	fieldId_stringStream << fieldId;
 	fieldId_str = fieldId_stringStream.str();
 
-	spw = visibilityBuffer_p->get()->spectralWindow();
+	spw = visBuffer.spectralWindow();
 	stringstream spw_stringStream;
 	spw_stringStream << spw;
 	spw_str = spw_stringStream.str();
 
-	scan = visibilityBuffer_p->get()->scan()[0];
+	// TODO: This is not generic but in all the iteration modes provided
+	// by the FlagDataHandler scan and observation are constant over rows
+	scan = visBuffer.scan()[0];
 	stringstream scan_stringStream;
 	scan_stringStream << scan;
 	scan_str = scan_stringStream.str();
 
-	observationId = visibilityBuffer_p->get()->observationId()[0];
+	observationId = visBuffer.observationId()[0];
 	stringstream observationId_stringStream;
 	observationId_stringStream << observationId;
 	observationId_str = observationId_stringStream.str();
@@ -132,10 +136,10 @@ FlagAgentSummary::preProcessBuffer()
 }
 
 void
-FlagAgentSummary::computeRowFlags(FlagMapper &flags, uInt row)
+FlagAgentSummary::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
-	Int antenna1 = visibilityBuffer_p->get()->antenna1()[row];
-	Int antenna2 = visibilityBuffer_p->get()->antenna2()[row];
+	Int antenna1 = visBuffer.antenna1()[row];
+	Int antenna2 = visBuffer.antenna2()[row];
 	String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antenna1);
 	String antenna2Name = flagDataHandler_p->antennaNames_p->operator()(antenna2);
     String baseline = antenna1Name + "&&" + antenna2Name;
@@ -165,7 +169,7 @@ FlagAgentSummary::computeRowFlags(FlagMapper &flags, uInt row)
 		channelFlags = 0;
 		for (pol_i=0;pol_i < nPolarizations;pol_i++)
 		{
-			flag = flags(polarizations[pol_i],channel_i,row);
+			flag = flags.getModifiedFlags(polarizations[pol_i],channel_i,row);
 			channelFlags += flag;
 			polarizationsBreakdownFlags[pol_i] += flag;
 		}
@@ -222,6 +226,9 @@ FlagAgentSummary::computeRowFlags(FlagMapper &flags, uInt row)
 	accumtotal["baseline"][baseline] += rowTotal;
 	accumflags["baseline"][baseline] += rowFlags;
 
+	accumTotalFlags += rowFlags;
+	accumTotalCount += rowTotal;
+
 	return;
 }
 
@@ -229,8 +236,6 @@ Record
 FlagAgentSummary::getResult()
 {
 	Record result;
-	result.define("flagged", (uInt) accumTotalFlags);
-	result.define("total"  , (uInt) accumTotalCount);
 
 	if (spwChannelCounts)
 	{
@@ -241,14 +246,14 @@ FlagAgentSummary::getResult()
 			{
 				Record stats_key2;
 
-				stats_key2.define("flagged", (uInt) accumChannelflags[key1->first][key2->first]);
-				stats_key2.define("total", (uInt) key2->second);
+				stats_key2.define("flagged", (Double) accumChannelflags[key1->first][key2->first]);
+				stats_key2.define("total", (Double) key2->second);
 				stats_key1.defineRecord(String(key2->first), stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Channel:" << key2->first
-						<< " flagged: " <<  (uInt) accumChannelflags[key1->first][key2->first]
-						<< " total: " <<  (uInt) key2->second
+						<< " flagged: " <<  (Double) accumChannelflags[key1->first][key2->first]
+						<< " total: " <<  (Double) key2->second
 						<< LogIO::POST;
 			}
 
@@ -265,14 +270,14 @@ FlagAgentSummary::getResult()
 			{
 				Record stats_key2;
 
-				stats_key2.define("flagged", (uInt) accumPolarizationflags[key1->first][key2->first]);
-				stats_key2.define("total", (uInt) key2->second);
+				stats_key2.define("flagged", (Double) accumPolarizationflags[key1->first][key2->first]);
+				stats_key2.define("total", (Double) key2->second);
 				stats_key1.defineRecord(key2->first, stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Correlation:" << key2->first
-						<< " flagged: " <<  (uInt) accumPolarizationflags[key1->first][key2->first]
-						<< " total: " <<  (uInt) key2->second
+						<< " flagged: " <<  (Double) accumPolarizationflags[key1->first][key2->first]
+						<< " total: " <<  (Double) key2->second
 						<< LogIO::POST;
 			}
 
@@ -287,20 +292,27 @@ FlagAgentSummary::getResult()
 		{
 			Record stats_key2;
 
-			stats_key2.define("flagged", (uInt) accumflags[key1->first][key2->first]);
-			stats_key2.define("total", (uInt) key2->second);
+			stats_key2.define("flagged", (Double) accumflags[key1->first][key2->first]);
+			stats_key2.define("total", (Double) key2->second);
 			stats_key1.defineRecord(key2->first, stats_key2);
 
 			*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
 					<< " " << key1->first << " " << key2->first
-					<< " flagged: " <<  (uInt) accumflags[key1->first][key2->first]
-					<< " total: " <<  (uInt) key2->second
+					<< " flagged: " <<  (Double) accumflags[key1->first][key2->first]
+					<< " total: " <<  (Double) key2->second
 					<< LogIO::POST;
 		}
 
 		result.defineRecord(key1->first, stats_key1);
 	}
 
+	result.define("flagged", (Double) accumTotalFlags);
+	result.define("total"  , (Double) accumTotalCount);
+
+	*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
+			<< " Total Flagged: " <<  (Double) accumTotalFlags
+			<< " Total Counts: " <<  (Double) accumTotalCount
+			<< LogIO::POST;
 
 
 	return result;

@@ -80,20 +80,19 @@ ImageFitter::ImageFitter(
 	const String& modelInp, const String& estimatesFilename,
 	const String& logfile, const Bool& append,
 	const String& newEstimatesInp, const String& compListName,
-	const CompListWriteControl writeControl,
-	const Bool doZeroLevel, const Float zeroLevelOffset
+	const CompListWriteControl writeControl
 ) : ImageTask(
 		image, region, regionRec, box, chanInp, stokes,
 		maskInp, "", False
 	), _regionString(region), _residual(residualInp),_model(modelInp), _logfileName(logfile),
 	estimatesString(""), _newEstimatesFileName(newEstimatesInp),
 	_compListName(compListName), _includePixelRange(includepix),
-	_excludePixelRange(excludepix), estimates(), fixed(0),
-	logfileAppend(append), fitDone(False), _noBeam(False),
-	_doZeroLevel(doZeroLevel),
+	_excludePixelRange(excludepix), estimates(), _fixed(0),
+	logfileAppend(append), _fitDone(False), _noBeam(False),
+	_doZeroLevel(False), _zeroLevelIsFixed(False),
 	_fitConverged(Vector<Bool>(0)), _peakIntensities(),
-	_writeControl(writeControl), _zeroLevelOffset(zeroLevelOffset) {
-	//_construct(_image, box, region, 0, estimatesFilename);
+	_writeControl(writeControl), _zeroLevelOffsetEstimate(0),
+	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0) {
 	_construct();
 	_finishConstruction(estimatesFilename);
 }
@@ -101,7 +100,7 @@ ImageFitter::ImageFitter(
 ImageFitter::~ImageFitter() {}
 
 ComponentList ImageFitter::fit() {
-	LogOrigin origin("ImageFitter", __FUNCTION__);
+	LogOrigin origin("ImageFitter", __FUNCTION__);;
 	*_getLog() << origin;
 	Bool converged;
 	SubImage<Float> templateImage;
@@ -127,8 +126,13 @@ ComponentList ImageFitter::fit() {
 		}
 	}
 	uInt ngauss = estimates.nelements() > 0 ? estimates.nelements() : 1;
-	Vector<String> models(ngauss);
-	models.set("gaussian");
+	Vector<String> models(ngauss, "gaussian");
+	if (_doZeroLevel) {
+		models.resize(ngauss+1, True);
+		models[ngauss] = "level";
+		_fixed.resize(ngauss+1, True);
+		_fixed[ngauss] = _zeroLevelIsFixed ? "l" : "";
+	}
 	Bool fit = True;
 	Bool deconvolve = False;
 	Bool list = True;
@@ -146,7 +150,6 @@ ComponentList ImageFitter::fit() {
 		region, "", Vector<String>(0),
 		Vector<Float>(0), Vector<Float>(0)
 	);
-
 	Vector<String> allowFluxUnits(1);
 	allowFluxUnits[0] = "Jy.km/s";
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
@@ -154,7 +157,8 @@ ComponentList ImageFitter::fit() {
 	ComponentList compList;
 	Bool anyConverged = False;
 	Array<Float> residPixels, modelPixels;
-
+	Double zeroLevelOffsetSolution, zeroLevelOffsetError;
+	Double zeroLevelOffsetEstimate = _doZeroLevel ? _zeroLevelOffsetEstimate : 0;
 	for (_curChan=_chanVec[0]; _curChan<=_chanVec[1]; _curChan++) {
 		Fit2D fitter(*_getLog());
 		_setIncludeExclude(fitter);
@@ -164,9 +168,10 @@ ComponentList ImageFitter::fit() {
 			_curResults = _fitsky(
 				fitter, pixels,
 				pixelMask, converged,
+				zeroLevelOffsetSolution, zeroLevelOffsetError,
 				_curChan, _kludgedStokes,
-				models, estimatesRecord, fixed,
-				fit, deconvolve, list
+				models, estimatesRecord,
+				fit, deconvolve, list, zeroLevelOffsetEstimate
 			);
 		}
 		catch (AipsError err) {
@@ -178,10 +183,21 @@ ComponentList ImageFitter::fit() {
 		anyConverged |= converged;
 		if (converged) {
 			compList.addList(_curResults);
+			if (_doZeroLevel) {
+				_zeroLevelOffsetSolution.push_back(
+					zeroLevelOffsetSolution
+				);
+				_zeroLevelOffsetError.push_back(
+					zeroLevelOffsetError
+				);
+				zeroLevelOffsetEstimate = zeroLevelOffsetSolution;
+			}
 			chiSquared = fitter.chiSquared();
 			fitter.residual(curResidPixels, curModelPixels, pixels);
 			// coordinates arean't important, just need the stats for a masked lattice.
-			TempImage<Float> residPlane(curResidPixels.shape(), CoordinateUtil::defaultCoords2D());
+			TempImage<Float> residPlane(
+				curResidPixels.shape(), CoordinateUtil::defaultCoords2D()
+			);
 			residPlane.put(curResidPixels);
 			LCPixelSet lcResidMask(pixelMask, LCBox(pixelMask.shape()));
 			residPlane.attachMask(lcResidMask);
@@ -191,6 +207,10 @@ ComponentList ImageFitter::fit() {
 			_residStats.define("rms", stat[0]);
 			lStats.getStatistic(stat, LatticeStatistics<Float>::SIGMA, True);
 			_residStats.define("sigma", stat[0]);
+		}
+		else if (_doZeroLevel) {
+			_zeroLevelOffsetSolution.push_back(doubleNaN());
+			_zeroLevelOffsetError.push_back(doubleNaN());
 		}
 		if (residualImage.get() != 0 || modelImage.get() != 0) {
 			IPosition arrShape = templateImage.shape();
@@ -217,7 +237,7 @@ ComponentList ImageFitter::fit() {
 				modelImage->putSlice(curModelPixels, putLocation);
 			}
 		}
-		fitDone = True;
+		_fitDone = True;
 		_fitConverged[_curChan - _chanVec[0]] = converged;
 		if(converged) {
 			_setFluxes();
@@ -229,7 +249,6 @@ ComponentList ImageFitter::fit() {
 		resultsString += currentResultsString;
 		*_getLog() << LogIO::NORMAL << currentResultsString << LogIO::POST;
 	}
-
 	if (anyConverged) {
 		_writeCompList(compList);
 	}
@@ -238,7 +257,6 @@ ComponentList ImageFitter::fit() {
 			<< "No fits converged. Will not write component list"
 			<< LogIO::POST;
 	}
-
 	if (residualImage.get() != 0) {
 		try {
 			ImageUtilities::writeImage(
@@ -277,6 +295,30 @@ ComponentList ImageFitter::fit() {
 		_writeLogfile(resultsString);
 	}
 	return compList;
+}
+
+void ImageFitter::setZeroLevelEstimate(const Double estimate, const Bool isFixed) {
+	_doZeroLevel = True;
+	_zeroLevelOffsetEstimate = estimate;
+	_zeroLevelIsFixed = isFixed;
+}
+
+void ImageFitter::unsetZeroLevelEstimate() {
+	_doZeroLevel = False;
+	_zeroLevelOffsetEstimate = 0;
+	_zeroLevelIsFixed = False;
+}
+
+void ImageFitter::getZeroLevelSolution(vector<Double>& solution, vector<Double>& error) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	if (! _fitDone) {
+		*_getLog() << "Fit hasn't been done yet." << LogIO::EXCEPTION;
+	}
+	if (! _doZeroLevel) {
+		*_getLog() << "Zero level was not fit." << LogIO::EXCEPTION;
+	}
+	solution = _zeroLevelOffsetSolution;
+	error = _zeroLevelOffsetError;
 }
 
 void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
@@ -330,7 +372,7 @@ void ImageFitter::_setIncludeExclude(Fit2D& fitter) const {
 }
 
 Bool ImageFitter::converged(uInt plane) const {
-	if (!fitDone) {
+	if (! _fitDone) {
 		throw AipsError("fit has not yet been performed");
 	}
 	return _fitConverged[plane];
@@ -419,7 +461,7 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 		FitterEstimatesFileParser parser(estimatesFilename, *_getImage());
 		estimates = parser.getEstimates();
 		estimatesString = parser.getContents();
-		fixed = parser.getFixed();
+		_fixed = parser.getFixed();
 		Record rec;
 		String errmsg;
 		estimates.toRecord(errmsg, rec);
@@ -465,13 +507,18 @@ String ImageFitter::_resultsToString() {
 	ostringstream summary;
 	summary << "*** Details of fit for channel number " << _curChan << endl;
 
-	if (converged(_curChan - _chanVec[0])) {
+	uInt relChan = _curChan - _chanVec[0];
+	if (converged(relChan)) {
 		if (_noBeam) {
 			*_getLog() << LogIO::WARN << "Flux density not reported because "
 					<< "there is no clean beam in image header so these quantities cannot "
 					<< "be calculated" << LogIO::POST;
 		}
 		summary << _statisticsToString() << endl;
+		if (_doZeroLevel) {
+			summary << "Zero level offset fit: " << _zeroLevelOffsetSolution[relChan]
+				<< " +/- " << _zeroLevelOffsetError[relChan] << endl;
+		}
 		for (uInt i = 0; i < _curResults.nelements(); i++) {
 			summary << "Fit on " << _getImage()->name(True) << " component " << i << endl;
 			summary << _curResults.component(i).positionToString(&(_getImage()->coordinates())) << endl;
@@ -506,6 +553,7 @@ String ImageFitter::_statisticsToString() const {
 }
 
 void ImageFitter::_setFluxes() {
+
 	uInt ncomps = _curResults.nelements();
 
 	_fluxDensities.resize(ncomps);
@@ -523,7 +571,6 @@ void ImageFitter::_setFluxes() {
 		rmsPeak,
 		_getImage()->units()
 	);
-
 	ImageMetaData md(*_getImage());
 	Quantity resArea;
 	Bool found = False;
@@ -548,8 +595,7 @@ void ImageFitter::_setFluxes() {
 				<< "Pixel area could not be determined";
 		}
 	}
-	ImageAnalysis ia;
-	ia.open(_getImage()->name());
+	ImageAnalysis ia(_getImage());
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {
 		_curResults.getFlux(fluxQuant, i);
@@ -601,7 +647,6 @@ void ImageFitter::_setFluxes() {
 			Vector<std::complex<double> > errors(4, std::complex<double>(0, 0));
 			errors[polNum] = std::complex<double>(_fluxDensityErrors[i].getValue(), 0);
 			_curResults.component(i).flux().setErrors(errors);
-
 		}
 	}
 }
@@ -1087,12 +1132,15 @@ void ImageFitter::_writeCompList(ComponentList& list) const {
 ComponentList ImageFitter::_fitsky(
 	Fit2D& fitter, Array<Float>& pixels,
     Array<Bool>& pixelMask, Bool& converged,
+    Double& zeroLevelOffsetSolution,
+   	Double& zeroLevelOffsetError,
     const uInt& chan, const String& stokesString,
 	const Vector<String>& models, Record& inputEstimate,
-	const Vector<String>& fixed, const Bool fitIt,
-	const Bool deconvolveIt, const Bool list
+	const Bool fitIt,
+	const Bool deconvolveIt, const Bool list,
+	const Double zeroLevelEstimate
 ) {
-	LogOrigin origin("ImageFitter", __FUNCTION__);
+	LogOrigin origin(_class, __FUNCTION__);
 	*_getLog() << origin;
 
 	String error;
@@ -1102,8 +1150,8 @@ ComponentList ImageFitter::_fitsky(
 	ComponentList compList;
 	if (!compList.fromRecord(error, inputEstimate)) {
 		*_getLog() << LogIO::WARN
-				<< "Can not  convert input parameter to ComponentList "
-				<< error << LogIO::POST;
+			<< "Can not  convert input parameter to ComponentList "
+			<< error << LogIO::POST;
 	}
 	else {
 		int n = compList.nelements();
@@ -1115,17 +1163,18 @@ ComponentList ImageFitter::_fitsky(
 
 	converged = False;
 	const uInt nModels = models.nelements();
-	const uInt nMasks = fixed.nelements();
+	const uInt nGauss = _doZeroLevel ? nModels - 1 : nModels;
+	const uInt nMasks = _fixed.nelements();
 	const uInt nEstimates = estimate.nelements();
 	if (nModels == 0) {
 		*_getLog() << "You have not specified any models" << LogIO::EXCEPTION;
 	}
-	if (nModels > 1 && estimate.nelements() < nModels) {
+	if (nGauss > 1 && estimate.nelements() < nGauss) {
 		*_getLog() << "You must specify one estimate for each model component"
 			<< LogIO::EXCEPTION;
 	}
 	if (!fitIt && nModels > 1) {
-		*_getLog() << "Parameter estimates are only available for a single model"
+		*_getLog() << "Parameter estimates are only available for a single Gaussian model"
 			<< LogIO::EXCEPTION;
 	}
 	SubImage<Float> subImageTmp;
@@ -1194,7 +1243,6 @@ ComponentList ImageFitter::_fitsky(
 	// Must use subImage in calls as converting positions to absolute
 	// pixel and vice versa
     ComponentList cl;
-
     if (!fitIt) {
 		Vector<Double> parameters;
 		parameters = _singleParameterEstimate(
@@ -1213,11 +1261,10 @@ ComponentList ImageFitter::_fitsky(
 		cl.add(result(0));
 		return cl;
 	}
-
 	// For ease of use, make each model have a mask string
-	Vector<String> fixedParameters(fixed.copy());
+	Vector<String> fixedParameters(_fixed.copy());
 	fixedParameters.resize(nModels, True);
-	for (uInt j = 0; j < nModels; j++) {
+	for (uInt j=0; j<nModels; j++) {
 		if (j >= nMasks) {
 			fixedParameters(j) = String("");
 		}
@@ -1225,48 +1272,59 @@ ComponentList ImageFitter::_fitsky(
 	// Add models
 	Vector<String> modelTypes(models.copy());
 
+	if (nEstimates == 0 && nGauss > 1) {
+		*_getLog() << "Can only auto estimate for a gaussian model"
+			<< LogIO::EXCEPTION;
+	}
 	for (uInt i = 0; i < nModels; i++) {
 		// If we ask to fit a POINT component, that really means a
 		// Gaussian of shape the restoring beam.  So fix the shape
 		// parameters and make it Gaussian
 		Fit2D::Types modelType;
 		if (ComponentType::shape(models(i)) == ComponentType::POINT) {
-			modelTypes(i) = String("GAUSSIAN");
-			fixedParameters(i) += String("abp");
+			modelTypes(i) = "GAUSSIAN";
+			fixedParameters(i) += "abp";
 		}
 		modelType = Fit2D::type(modelTypes(i));
-
 		Vector<Bool> parameterMask = Fit2D::convertMask(
 			fixedParameters(i),
 			modelType
 		);
 
 		Vector<Double> parameters;
-		if (nModels == 1 && nEstimates == 0) {
+		if (nEstimates == 0 && modelType == Fit2D::GAUSSIAN) {
 			// Auto estimate
 			parameters = _singleParameterEstimate(
 				fitter, modelType, maskedPixels,
 				minVal, maxVal, minPos, maxPos
 			);
 		}
+		else if (modelType == Fit2D::LEVEL) {
+			parameters.resize(1);
+			parameters[0] = zeroLevelEstimate;
+		}
 		else {
 			// Decode parameters from estimate
 			const CoordinateSystem& cSys = subImage.coordinates();
 			const ImageInfo& imageInfo = subImage.imageInfo();
 
-			parameters = ImageUtilities::decodeSkyComponent(estimate(i),
-					imageInfo, cSys, subImage.units(), stokes, xIsLong);
+			if (modelType == Fit2D::GAUSSIAN) {
+				parameters = ImageUtilities::decodeSkyComponent(
+					estimate(i), imageInfo, cSys,
+					subImage.units(), stokes, xIsLong
+				);
+			}
 			// The estimate SkyComponent may not be the same type as the
 			// model type we are fitting for.  Try and do something about
 			// this if need be by adding or removing component shape parameters
 			ComponentType::Shape estType = estimate(i).shape().type();
-			if (modelType == Fit2D::GAUSSIAN || modelType == Fit2D::DISK) {
-				if (estType == ComponentType::POINT) {
-					_fitskyExtractBeam(parameters, imageInfo, xIsLong, cSys);
-				}
-			}
-			else if (modelType == Fit2D::LEVEL) {
-				*_getLog() << LogIO::EXCEPTION; // Levels not supported yet
+			if (
+				(
+					modelType == Fit2D::GAUSSIAN || modelType == Fit2D::DISK
+				)
+				&& estType == ComponentType::POINT
+			) {
+				_fitskyExtractBeam(parameters, imageInfo, xIsLong, cSys);
 			}
 		}
 		fitter.addModel(modelType, parameters, parameterMask);
@@ -1275,41 +1333,42 @@ ComponentList ImageFitter::_fitsky(
 	Array<Float> sigma;
 	// residMask constant so do not recalculate out_pixelmask
 	Fit2D::ErrorTypes status = fitter.fit(pixels, pixelMask, sigma);
-
 	if (status == Fit2D::OK) {
 		*_getLog() << LogIO::NORMAL << "Number of iterations = "
-				<< fitter.numberIterations() << LogIO::POST;
+			<< fitter.numberIterations() << LogIO::POST;
 		converged = True;
 	}
 	else {
 		converged = False;
-		*_getLog() << LogOrigin("ImageAnalysis", __FUNCTION__);
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << fitter.errorMessage() << LogIO::POST;
 		return cl;
 	}
-
-	Vector<SkyComponent> result(nModels);
+	Vector<SkyComponent> result(_doZeroLevel ? nModels - 1 : nModels);
 	Double facToJy;
-
+	uInt j = 0;
 	for (uInt i = 0; i < models.nelements(); i++) {
-		ComponentType::Shape modelType = _convertModelType(
-			Fit2D::type(modelTypes(i))
-		);
-
-		Vector<Double> solution = fitter.availableSolution(i);
-		Vector<Double> errors = fitter.availableErrors(i);
-
-
-	    result(i) = ImageUtilities::encodeSkyComponent(
-		    *_getLog(), facToJy, allAxesSubImage, modelType,
-			solution, stokes, xIsLong, deconvolveIt
-		);
-		_encodeSkyComponentError(
-			*_getLog(), result(i), facToJy, allAxesSubImage,
-			solution, errors, stokes, xIsLong
-		);
-
-		cl.add(result(i));
+		if (fitter.type(i) == Fit2D::LEVEL) {
+			zeroLevelOffsetSolution = fitter.availableSolution(i)[0];
+			zeroLevelOffsetError = fitter.availableErrors(i)[0];
+		}
+		else {
+			ComponentType::Shape modelType = _convertModelType(
+				Fit2D::type(modelTypes(i))
+			);
+			Vector<Double> solution = fitter.availableSolution(i);
+			Vector<Double> errors = fitter.availableErrors(i);
+			result(j) = ImageUtilities::encodeSkyComponent(
+				*_getLog(), facToJy, allAxesSubImage, modelType,
+				solution, stokes, xIsLong, deconvolveIt
+			);
+			_encodeSkyComponentError(
+				*_getLog(), result(j), facToJy, allAxesSubImage,
+				solution, errors, stokes, xIsLong
+			);
+			cl.add(result(j));
+			j++;
+		}
 	}
 	return cl;
 }
@@ -1323,7 +1382,7 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 
 	// Return the initial fit guess as either the model, an auto guess,
 	// or some combination.
-	*_getLog() << LogOrigin("ImageFitter", __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	Vector<Double> parameters;
 	if (model == Fit2D::GAUSSIAN || model == Fit2D::DISK) {
 		//
@@ -1366,9 +1425,11 @@ Vector<Double> ImageFitter::_singleParameterEstimate(
 ComponentType::Shape ImageFitter::_convertModelType(Fit2D::Types typeIn) const {
 	if (typeIn == Fit2D::GAUSSIAN) {
 		return ComponentType::GAUSSIAN;
-	} else if (typeIn == Fit2D::DISK) {
+	}
+	else if (typeIn == Fit2D::DISK) {
 		return ComponentType::DISK;
-	} else {
+	}
+	else {
 		throw(AipsError("Unrecognized model type"));
 	}
 }
@@ -1426,7 +1487,7 @@ void ImageFitter::_encodeSkyComponentError(
 //   pars(4) = minor    pix
 //   pars(5) = pa radians (pos +x -> +y)
 //
-//   error values will be zero for fixed parameters
+//   error values will be zero for _fixed parameters
 {
 	//
 	// Flux. The fractional error of the integrated and peak flux

@@ -183,9 +183,9 @@ int main() {
 			  box = "";
 			  writeTestString("Test valid region text file");
 			  regRec = rm.fromBCS(
-					  diagnostics, nSelectedChannels, stokes,
-					  0, datadir + "goodfile1.txt", chans, stokesControl, box,
-					  imShape
+			      diagnostics, nSelectedChannels, stokes,
+			      0, datadir + "goodfile1.txt", chans, stokesControl, box,
+			      imShape
 			  );
 			  AlwaysAssert(regRec.asRecord("regions").asInt("nr") == 2, AipsError);
 		  }
@@ -759,7 +759,6 @@ int main() {
 			  exptrc[1] = box4;
 			  exptrc[2] = 2.0;
 			  compVecs(gottrc, exptrc);
-
 		  }
 		  {
 			  CasacRegionManager rm(myImageDirOnly->coordinates());
@@ -789,7 +788,6 @@ int main() {
 			  exptrc[0] = box7;
 			  exptrc[1] = box8;
 			  compVecs(gottrc, exptrc);
-
 			  // box="1,2,3,4"
 			  gotblc = recToVec(regRec.asRecord("regions").asRecord("*1").asRecord("blc"));
 			  expblc[0] = box1;
@@ -799,6 +797,24 @@ int main() {
 			  exptrc[0] = box7;
 			  exptrc[1] = box8;
 			  compVecs(gottrc, exptrc);
+		  }
+		  {
+			  TempImage<Float> ti(IPosition(4, 40,40,2,2), CoordinateUtil::defaultCoords4D());
+			  CasacRegionManager rm(ti.coordinates());
+			  diagnostics = "";
+			  nSelectedChannels = 0;
+			  stokes = "";
+			  chans = "";
+			  stokesControl = CasacRegionManager::USE_ALL_STOKES;
+			  box = "";
+			  String region = "box[[1pix, 1pix], [4pix, 4pix]]";
+			  writeTestString("Test CAS-3603 fix");
+			  regRec = rm.fromBCS(
+			      diagnostics, nSelectedChannels, stokes,
+			      0, region, chans, stokesControl, box,
+			      ti.shape()
+			  );
+			  // the verification is just to make sure this call doesn't segfault
 		  }
 	  }
 	  catch (AipsError x) {

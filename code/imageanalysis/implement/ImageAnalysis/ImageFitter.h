@@ -111,8 +111,7 @@ public:
 		const String& estiamtesFilename="", const String& logfile="",
 		const Bool& append=True, const String& newEstimatesInp="",
 		const String& compListName="",
-		const CompListWriteControl writeControl=NO_WRITE,
-		const Bool doZeroLevel=False, const Float zeroLevelOffest=0
+		const CompListWriteControl writeControl=NO_WRITE
 	);
 
 	// destructor
@@ -134,13 +133,25 @@ public:
 	// <src>plane</src> is relative to the first plane in the image chosen to be fit.
 	Vector<Bool> converged() const;
 
+	// set the zero level estimate. Implies fitting of zero level should be done. Must be
+	// called before fit() to have an effect.
+	void setZeroLevelEstimate(const Double estimate, const Bool isFixed);
+
+	// Unset zero level (resets to zero). Implies fitting of zero level should not be done.
+	// Call prior to fit().
+	void unsetZeroLevelEstimate();
+
+	// get the fitted result and error. Throws
+	// an exception if the zero level was not fit for.
+	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
+
 private:
 	String _regionString, _residual, _model, _logfileName,
 		estimatesString, _newEstimatesFileName, _compListName;
 	Vector<Float> _includePixelRange, _excludePixelRange;
 	ComponentList estimates, _curResults;
-	Vector<String> fixed;
-	Bool logfileAppend, fitDone, _noBeam, _doZeroLevel;
+	Vector<String> _fixed;
+	Bool logfileAppend, _fitDone, _noBeam, _doZeroLevel, _zeroLevelIsFixed;
 	Vector<Bool> _fitConverged;
 	Vector<Quantity> _peakIntensities, _peakIntensityErrors, _fluxDensityErrors,
 		_fluxDensities, _majorAxes, _majorAxisErrors, _minorAxes, _minorAxisErrors,
@@ -151,7 +162,8 @@ private:
 	CompListWriteControl _writeControl;
 	Vector<uInt> _chanVec;
 	uInt _curChan;
-	Float _zeroLevelOffset;
+	Double _zeroLevelOffsetEstimate;
+	vector<Double> _zeroLevelOffsetSolution, _zeroLevelOffsetError;
 
 	const static String _class;
 
@@ -210,10 +222,13 @@ private:
 	ComponentList _fitsky(
 		Fit2D& fitter, Array<Float>& pixels,
 	    Array<Bool>& pixelMask, Bool& converged,
+	    Double& zeroLevelOffsetSolution,
+	    Double& zeroLevelOffsetError,
 	    const uInt& chan, const String& stokesString,
 		const Vector<String>& models, Record& inputEstimate,
-		const Vector<String>& fixed, const Bool fitIt,
-		const Bool deconvolveIt, const Bool list
+		const Bool fitIt,
+		const Bool deconvolveIt, const Bool list,
+		const Double zeroLevelEstimate
 	);
 
 	Vector<Double> _singleParameterEstimate(

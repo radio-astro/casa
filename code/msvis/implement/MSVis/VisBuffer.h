@@ -46,6 +46,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#forward
 
+// <summary>
+// VbDirtyComponents allows marking portions of a VisBuffer as
+// modified (aka dirty).  This feature is needed for the Visibility
+// Processing Framework (VPF) which allows a sequence of data processing
+// nodes to work as a bucket brigade operating sequentially on a
+// VisBuffer.  A downstream output node needs to know what data,
+// if any, needs to be written out.
+//
+// <prerequisite>
+//   #<li><linkto class="VisBuffer">VisBuffer</linkto>
+// </prerequisite>
+//
+// </summary>
+//
+// <synopsis>
+//
+// </synopsis>
+// <example>
+//
+// <code>
+//
+// </code>
+// </example>
+//
 class VbDirtyComponents {
 
 public:
@@ -90,6 +114,8 @@ namespace asyncio {
 // <prerequisite>
 //   <li> <linkto class="VisSet">VisSet</linkto>
 //   <li> <linkto class="VisibilityIterator">VisibilityIterator</linkto>
+//   <li> <linkto class="VisBufferAutoPtr">VisBufferAutoPtr</linkto>
+//   <li> <linkto class="VbDirtyComponents">VbDirtyComponents</linkto>
 // </prerequisite>
 //
 // <etymology>
@@ -106,6 +132,13 @@ namespace asyncio {
 //
 // See <linkto module="MeasurementEquations">MeasurementEquations</linkto>
 // for more details on how the VisBuffer is to be used.
+//
+// When the user intends to allow asynchronous I/O they will need to use
+// the VisBufferAsync and VisBufferAsyncWrapper classes; these are
+// publicly derived from VisBuffer.  Normally, the user should not
+// explicitly use these classes but should use the helper class
+// VisBufferAutoPtr which will ensure that the appropriate class is
+// used.
 //</synopsis>
 
 //<todo>
@@ -1060,6 +1093,57 @@ Bool item ## OK_p;
     Cube<Float> weightSpectrum_p;
 };
 
+// <summary>
+// A convenience class to assist in migrating code to potentially use
+// asynchronous I/O.
+//
+// <prerequisite>
+//   <li> <linkto class="VisBuffer">VisBuffer</linkto>
+//   <li> <linkto class="VisBufferAsync">VisBufferAsync</linkto>
+//   <li> <linkto class="ROVisibilityIterator">ROVisibilityIterator</linkto>
+// </prerequisite>
+//
+// </summary>
+//
+// <synopsis>
+//
+// When existing code is modified to potentially use asynchronous I/O the current
+// VisBuffer usage is probably using automatic (stack) storage which will have to
+// be replaced to allow VisBufferAsync objects (which derive from VisBuffer) to be
+// used with asynchronous I/O.  The goal of this class is to make that transition
+// easier.  The user will replace their existing declaration of a VisBuffer object
+// with a declaration of a VisBufferAutoPtr object.  Depending on the attributes
+// of the VisBuffer reference/pointer or the ROVisibilityIterator provided in the
+// VisBufferAutoPtr constructor, the appropriate type of VisBuffer will be created
+// dynamically.  The VisBufferAutoPtr will also function somewhat like an auto_ptr
+// and delete the underlying object when the VisBufferAutoPtr object is destroyed.
+//
+// Once the straight VisBuffer declaration is replaced, then the code in its scope
+// will need to be modified to dereference the VisBufferAutoPtr or to delete use
+// of the address-of operator, "&", applied to the previous VisBuffer variable.
+// See the example below.
+//
+// </synopsis>
+// <example>
+//
+// <code>
+// // Before adding asynchronous I/O support
+//
+// VisBuffer vb (vi);
+//
+// doSomething (vb);        // void doSomething (VisBuffer &);
+// doSomethingElse (& vb);  // void doSomethingElse (VisBuffer *);
+//
+// // After adding asynchronous I/O support
+//
+// VisBufferAutoPtr vb (vi);
+//
+// doSomething (* vb);
+// doSomethingElse (vb.get());
+//
+// </code>
+// </example>
+//
 class VisBufferAutoPtr {
 
 public:

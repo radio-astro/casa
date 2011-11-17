@@ -495,8 +495,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {
       Record r;
 
-      r.define("flagged", (uInt) accumTotalFlags);
-      r.define("total"  , (uInt) accumTotalCount);
+      r.define("flagged", (Double) accumTotalFlags);
+      r.define("total"  , (Double) accumTotalCount);
 
 
       for (map<string, map<string, uInt64> >::iterator j = accumtotal.begin();
@@ -512,8 +512,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
             
               Record t;
 
-              t.define("flagged", (uInt) accumflags[j->first][i->first]);
-              t.define("total", (uInt) i->second);
+              t.define("flagged", (Double) accumflags[j->first][i->first]);
+              t.define("total", (Double) i->second);
               
               prop.defineRecord(i->first, t);
           }

@@ -104,7 +104,7 @@ ms::~ms()
     if(itsSel)          {delete itsSel; itsSel=NULL;}
     if(itsFlag)         {delete itsFlag; itsFlag=NULL;}
     if(itsLog)          {delete itsLog; itsLog=NULL;}
-    if (itsMSS)         {delete itsMSS; itsMSS=NULL;}
+    if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -2049,7 +2049,8 @@ ms::putdata(const ::casac::record& items)
 }
 
 bool
-ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale, const int handling)
+ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, const ::casac::variant& dirtol, const float weightscale, 
+		const int handling, const std::string& destmsfile)
 {
     Bool rstat(False);
     try {
@@ -2066,6 +2067,7 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 			<< "(on the filesystem containing " << itsMS->tableName()
 			<< ") for the concatantion to succeed." << LogIO::EXCEPTION;
 	    }
+
 	    const MeasurementSet appendedMS(msfile);
 	    
 	    MSConcat mscat(*itsMS);
@@ -2087,14 +2089,15 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    *itsLog << LogIO::DEBUGGING << "MSConcat created" << LogIO::POST;
 	    mscat.setTolerance(freqtolerance, dirtolerance);
 	    mscat.setWeightScale(weightscale);
-	    mscat.concatenate(appendedMS, static_cast<uint>(handling));
+	    mscat.concatenate(appendedMS, static_cast<uint>(handling), destmsfile);
 
 	    String message = String(msfile) + " appended to " + itsMS->tableName();
 	    ostringstream param;
-	    param << "msfile= " << msfile
-		  << " freqTol='" << casaQuantity(freqtol) 
-		  << "' dirTol='" << casaQuantity(dirtol) << "'"
-		  << "' handling= " << handling;
+	    param << "msfile='" << msfile
+		  << "' freqTol='" << casaQuantity(freqtol) 
+		  << "' dirTol='" << casaQuantity(dirtol) 
+		  << "' handling= " << handling
+		  << " destmsfile='" << destmsfile << "'";
 	    String paramstr=param.str();
 	    writehistory(std::string(message.data()), std::string(paramstr.data()),
 			 std::string("ms::concatenate()"), msfile, "ms");

@@ -37,6 +37,7 @@
 
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <flagging/Flagging/FlagAgentBase.h>
+#include <flagging/Flagging/FlagAgentSummary.h>
 
 #include <boost/smart_ptr.hpp>
 
@@ -95,12 +96,12 @@ protected:
 
 	static LogIO os;
 
-	// variables to parse to configTestFlagger
+	// variables to parse to FlagDataHandler
 	String msname_p;
-	Bool asyncio_p;
-	Bool parallel_p;
+	uShort iterationApproach_p;
+	Double timeInterval_p;
 
-	// variables to parse to parseDataSelection
+	// members to parse to parseDataSelection
 	String spw_p;
 	String scan_p;
 	String field_p;
@@ -113,6 +114,10 @@ protected:
 	String uvrange_p;
 	String observation_p;
 	Record dataselection_p;
+
+	// agent's members
+	String mode_p;
+	FlagAgentSummary *summaryAgent_p;
 
 
 	// variables for initFlagDataHandler and initAgents
@@ -143,7 +148,7 @@ public:
 
 	bool initAgents();
 
-	bool run();
+	Record run();
 
 
 private:

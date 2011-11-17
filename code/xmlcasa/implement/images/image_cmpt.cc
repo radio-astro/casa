@@ -226,22 +226,25 @@ bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 }
 
 // FIXME need to support region records as input
-casac::image * image::collapse(const string& function, const variant& axes,
-		const string& outfile, const string& region, const string& box,
-		const string& chans, const string& stokes, const string& mask,
-		const bool overwrite) {
-	image *newImageTool = 0;
+casac::image * image::collapse(
+	const string& function, const variant& axes,
+	const string& outfile, const string& region, const string& box,
+	const string& chans, const string& stokes, const string& mask,
+	const bool overwrite, const bool stretch
+) {
 	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
-		return NULL;
+		return 0;
 	}
 	try {
 		IPosition myAxes;
 		if (axes.type() == variant::INT) {
 			myAxes = IPosition(1, axes.toInt());
-		} else if (axes.type() == variant::INTVEC) {
+		}
+		else if (axes.type() == variant::INTVEC) {
 			myAxes = IPosition(axes.getIntVec());
-		} else if (
+		}
+		else if (
 			axes.type() == variant::STRINGVEC
 			|| axes.type() == variant::STRING
 		) {
@@ -254,15 +257,16 @@ casac::image * image::collapse(const string& function, const variant& axes,
 				)
 			);
 			for (
-					IPosition::iterator iter = myAxes.begin();
-					iter != myAxes.end(); iter++
-				) {
+				IPosition::iterator iter = myAxes.begin();
+				iter != myAxes.end(); iter++
+			) {
 				if (*iter < 0) {
 					throw AipsError(
 							"At least one specified axis does not exist");
 				}
 			}
-		} else {
+		}
+		else {
 			*_log << "Unsupported type for parameter axes" << LogIO::EXCEPTION;
 		}
 		String aggString = function;
@@ -276,13 +280,13 @@ casac::image * image::collapse(const string& function, const variant& axes,
 			aggString, _image->getImage(), region, 0, box,
 			chans, stokes, mask, myAxes, outfile, overwrite
 		);
-		newImageTool = new image(collapser.collapse(True), False);
+		collapser.setStretch(stretch);
+		return new image(collapser.collapse(True), False);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return newImageTool;
 }
 
 image* image::imagecalc(const string& outfile, const string& pixels,
@@ -509,14 +513,17 @@ image::adddegaxes(const std::string& outfile, const bool direction,
 }
 
 ::casac::image *
-image::convolve(const std::string& outFile, const ::casac::variant& kernel,
-		const double in_scale, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool overwrite, const bool async) {
-	::casac::image *rstat = 0;
+image::convolve(
+	const std::string& outFile, const ::casac::variant& kernel,
+	const double in_scale, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool overwrite,
+	const bool stretch, const bool async
+) {
 	try {
-		*_log << LogOrigin("image", "convolve");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
 
 		Array<Float> kernelArray;
 		String kernelFileName = "";
@@ -526,57 +533,65 @@ image::convolve(const std::string& outFile, const ::casac::variant& kernel,
 			kernelArray.resize(IPosition(shape));
 			Vector<Double> localkern(kernelVector);
 			casa::convertArray(kernelArray, localkern.reform(IPosition(shape)));
-		} else if (kernel.type() == ::casac::variant::INTVEC) {
+		}
+		else if (kernel.type() == ::casac::variant::INTVEC) {
 			std::vector<int> kernelVector = kernel.toIntVec();
 			Vector<Int> shape = kernel.arrayshape();
 			kernelArray.resize(IPosition(shape));
 			Vector<Int> localkern(kernelVector);
 			casa::convertArray(kernelArray, localkern.reform(IPosition(shape)));
-		} else if (kernel.type() == ::casac::variant::STRING || kernel.type()
+		}
+		else if (kernel.type() == ::casac::variant::STRING || kernel.type()
 				== ::casac::variant::STRINGVEC) {
 
 			kernelFileName = kernel.toString();
-		} else {
+		}
+		else {
 			*_log << LogIO::SEVERE
 					<< "kernel is not understood, try using an array or an image "
 					<< LogIO::POST;
-			return rstat;
+			return 0;
 		}
 
 		String theMask;
 		Record *theMaskRegion;
 		if (vmask.type() == ::casac::variant::BOOLVEC) {
 			theMask = "";
-		} else if (vmask.type() == ::casac::variant::STRING || vmask.type()
+		}
+		else if (vmask.type() == ::casac::variant::STRING || vmask.type()
 				== ::casac::variant::STRINGVEC) {
 			theMask = vmask.toString();
-		} else if (vmask.type() == ::casac::variant::RECORD) {
+		}
+		else if (vmask.type() == ::casac::variant::RECORD) {
 			::casac::variant localvar(vmask);
 			theMaskRegion = toRecord(localvar.asRecord());
 			*_log << LogIO::SEVERE
 					<< "Don't support region masking yet, only valid LEL "
 					<< LogIO::POST;
-			return rstat;
-		} else {
+			return 0;
+		}
+		else {
 			*_log << LogIO::SEVERE
 					<< "Mask is not understood, try a valid LEL string "
 					<< LogIO::POST;
-			return rstat;
+			return 0;
 		}
 
 		Record *Region = toRecord(region);
 
-		ImageInterface<Float> * tmpIm = _image->convolve(outFile, kernelArray,
-				kernelFileName, in_scale, *Region, theMask, overwrite, async);
-		rstat = new ::casac::image(tmpIm);
-		delete tmpIm;
-
+		std::auto_ptr<ImageInterface<Float> > tmpIm(
+			_image->convolve(
+				outFile, kernelArray,
+				kernelFileName, in_scale, *Region,
+				theMask, overwrite, async, stretch
+			)
+		);
+		return new ::casac::image(tmpIm.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*
@@ -614,19 +629,17 @@ std::string image::brightnessunit() {
 }
 
 bool image::calc(const std::string& expr) {
-	bool rstat(false);
 	try {
-		*_log << LogOrigin("image", "calc");
-		if (detached())
-			return rstat;
-
-		rstat = _image->calc(expr);
+		*_log << LogOrigin("image", __FUNCTION__);
+		if (detached()) {
+			return False;
+		}
+		return _image->calc(expr);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 bool image::calcmask(const std::string& mask, const std::string& maskName,
@@ -728,26 +741,29 @@ image::convertflux(const ::casac::variant& qvalue,
 	return rstat;
 }
 
-image* image::convolve2d(const string& outFile, const vector<int>& axes,
-		const string& type, const variant& major, const variant& minor,
-		const variant& pa, const double in_scale, const record& region,
-		const variant& vmask, const bool overwrite) {
-	::casac::image *rstat = 0;
+image* image::convolve2d(
+	const string& outFile, const vector<int>& axes,
+	const string& type, const variant& major, const variant& minor,
+	const variant& pa, const double in_scale, const record& region,
+	const variant& vmask, const bool overwrite, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", __FUNCTION__);
-		if (detached())
-			return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
 
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 		String kernel(type);
 		casa::Quantity majorKernel = casaQuantityFromVar(major);
 		casa::Quantity minorKernel = casaQuantityFromVar(minor);
 		casa::Quantity paKernel = casaQuantityFromVar(pa);
-		*_log << LogOrigin("image", __FUNCTION__);
+		*_log << LogOrigin(_class, __FUNCTION__);
 
 		Vector<Int> Axes(axes);
 		if (Axes.size() == 0) {
@@ -758,21 +774,19 @@ image* image::convolve2d(const string& outFile, const vector<int>& axes,
 
 		// Return image
 
-		ImageInterface<Float> * tmpIm = _image->convolve2d(outFile, Axes, type,
-				majorKernel, minorKernel, paKernel, in_scale, *Region, mask,
-				overwrite);
-
-		rstat = new ::casac::image(tmpIm);
-
-		delete tmpIm;
-		return rstat;
-
+		std::auto_ptr<ImageInterface<Float> > tmpIm(
+			_image->convolve2d(
+				outFile, Axes, type, majorKernel, minorKernel,
+				paKernel, in_scale, *Region, mask, overwrite,
+				stretch
+			)
+		);
+		return new image(tmpIm.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::coordsys *
@@ -1257,7 +1271,8 @@ image* image::transpose(
 		const string& model, const string& estimates,
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
-		const bool overwrite
+		const bool overwrite, const bool dooff, const double offset,
+		const bool offsetisfixed
 ) {
 	if (detached()) {
 		return 0;
@@ -1318,13 +1333,19 @@ image* image::transpose(
 				toRecord(regionCopy.asRecord())
 			);
 		}
-		fitter.reset(new ImageFitter(
-			image, regionString, regionRecord.get(), box, sChans,
-			stokes, mask, includepix, excludepix, residual, model,
-			estimates, logfile, append, newestimates, complist,
-			writeControl)
+		fitter.reset(
+			new ImageFitter(
+				image, regionString, regionRecord.get(), box, sChans,
+				stokes, mask, includepix, excludepix, residual, model,
+				estimates, logfile, append, newestimates, complist,
+				writeControl
+			)
 		);
+		if (dooff) {
+			fitter->setZeroLevelEstimate(offset, offsetisfixed);
+		}
 		ComponentList compList = fitter->fit();
+		Vector<casa::Quantity> flux;
 		Vector<Bool> converged = fitter->converged();
 		Record returnRecord, compListRecord;
 		String error;
@@ -1339,6 +1360,12 @@ image* image::transpose(
 		FluxRep<Double>::clearAllowedUnits();
 		returnRecord.defineRecord("results", compListRecord);
 		returnRecord.define("converged", converged);
+		if (dooff) {
+			vector<Double> zeroSol, zeroErr;
+			fitter->getZeroLevelSolution(zeroSol, zeroErr);
+			returnRecord.define("zerooff", Vector<Double>(zeroSol));
+			returnRecord.define("zeroofferr", Vector<Double>(zeroErr));
+		}
 		return fromRecord(returnRecord);
 	}
 	catch (AipsError x) {

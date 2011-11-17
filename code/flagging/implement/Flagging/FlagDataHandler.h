@@ -64,6 +64,8 @@ typedef std::map< std::pair<Int,Int>,std::vector<uInt> > antennaPairMap;
 typedef std::map< Double,std::vector<uInt> > subIntegrationMap;
 typedef std::map< uShort,uShort > polarizationMap;
 typedef std::map< uInt,String > polarizationIndexMap;
+typedef std::vector< vector<Double> > antennaPointingMap;
+typedef std::map< Int,vector<Double> > scanStartStopMap;
 
 const Complex ImaginaryUnit = Complex(0,1);
 
@@ -319,17 +321,24 @@ class FlagMapper
 
 public:
 
-	FlagMapper(Bool flag,vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	FlagMapper(Bool flag,vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
 	FlagMapper(Bool flag,vector<uInt> selectedCorrelations);
 	~FlagMapper();
 
-	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView=NULL);
+	void setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView=NULL);
 
 	void applyFlag(uInt chan, uInt row);
 
-	Bool operator()(uInt chan, uInt row);
+	Bool getOriginalFlags(uInt chan, uInt row);
+	Bool getModifiedFlags(uInt chan, uInt row);
+	Bool getPrivateFlags(uInt chan, uInt row);
 
-	Bool operator()(uInt pol, uInt channel, uInt row);
+	Bool getOriginalFlags(uInt pol, uInt channel, uInt row);
+	Bool getModifiedFlags(uInt pol, uInt channel, uInt row);
+	Bool getPrivateFlags(uInt pol, uInt channel, uInt row);
+
+	// Bool operator()(uInt chan, uInt row);
+	// Bool operator()(uInt pol, uInt channel, uInt row);
 
     const IPosition &shape() const
     {
@@ -364,6 +373,7 @@ private:
 	Bool flag_p;
     IPosition reducedLength_p;
 	CubeView<Bool> *commonFlagsView_p;
+	CubeView<Bool> *originalFlagsView_p;
 	CubeView<Bool> *privateFlagsView_p;
 	vector<uInt> selectedCorrelations_p;
 	void (casa::FlagMapper::*applyFlag_p)(uInt,uInt,uInt);
@@ -427,21 +437,30 @@ public:
 	Cube<Bool> * getModifiedFlagCube();
 	Cube<Bool> * getOriginalFlagCube();
 
-	// Mapping functions as requested by Urvashi
+	// Mapping functions
 	void generateAntennaPairMap();
 	void generateSubIntegrationMap();
-
-	// Produce correlation-polarization map to determine which position
-	// corresponds to which correlation type i.e.: XX,XY,YX,YY or XX,YY,XY,YX
 	void generatePolarizationsMap();
+	void generateAntennaPointingMap();
+	void generateScanStartStopMap();
 
 	// Accessors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
 	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
+	antennaPointingMap * getMapAntennaPointing() {return antennaPointingMap_p;}
+	scanStartStopMap * getMapScanStartStop() {return scanStartStopMap_p;}
 
-	// Old CubeView accessors
+	// Functions to switch on/off mapping functions
+	void setMapAntennaPairs(bool activated) {mapAntennaPairs_p=activated;}
+	void setMapSubIntegrations(bool activated) {mapSubIntegrations_p=activated;}
+	void setMapPolarizations(bool activated) {mapPolarizations_p=activated;}
+	void setMapAntennaPointing(bool activated) {mapAntennaPointing_p=activated;}
+	void setScanStartStopMap(bool activated) {mapScanStartStop_p=activated;}
+	void setScanStartStopFlaggedMap(bool activated) {mapScanStartStopFlagged_p=activated;}
+
+	// TODO: Remove old CubeView accessors and update tFlagDataHandler and tFlagAgentBase
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
 	CubeView<Bool> * getFlagsView(Double timestep);
 	CubeView<Complex> * getVisibilitiesView(Int antenna1, Int antenna2);
@@ -515,9 +534,14 @@ private:
 	subIntegrationMap *subIntegrationMap_p;
 	polarizationMap *polarizationMap_p;
 	polarizationIndexMap *polarizationIndexMap_p;
+	antennaPointingMap *antennaPointingMap_p;
+	scanStartStopMap *scanStartStopMap_p;
 	bool mapAntennaPairs_p;
 	bool mapSubIntegrations_p;
 	bool mapPolarizations_p;
+	bool mapAntennaPointing_p;
+	bool mapScanStartStop_p;
+	bool mapScanStartStopFlagged_p;
 
 	// Stats members
 	bool stats_p;

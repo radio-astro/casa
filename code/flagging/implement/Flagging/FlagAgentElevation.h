@@ -1,4 +1,4 @@
-//# FlagAgentManual.cc: This file contains the implementation of the FlagAgentManual class.
+//# FlagAgentElevation.h: This file contains the interface definition of the FlagAgentElevation class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,35 +20,37 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <flagging/Flagging/FlagAgentManual.h>
+#ifndef FlagAgentElevation_H_
+#define FlagAgentElevation_H_
+
+#include <flagging/Flagging/FlagAgentBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FlagAgentManual::FlagAgentManual(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
-		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
-{
+class FlagAgentElevation : public FlagAgentBase {
 
-}
+public:
 
-FlagAgentManual::~FlagAgentManual()
-{
-	// Compiler automagically calls FlagAgentBase::~FlagAgentBase()
-}
+	FlagAgentElevation(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	~FlagAgentElevation();
 
-void
-FlagAgentManual::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
-{
-	IPosition flagCubeShape = flags.shape();
-	uInt nChannels = flagCubeShape(0);
-	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-	{
-		flags.applyFlag(chan_i,row);
-	}
+protected:
 
-	return;
+	// Compute flags afor a given mapped visibility point
+	void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
-}
+	// Parse configuration parameters
+	void setAgentParameters(Record config);
+
+private:
+
+	/// Input parameters ///
+	Double lowerlimit_p;
+	Double upperlimit_p;
+};
+
 
 } //# NAMESPACE CASA - END
 
+#endif /* FlagAgentElevation_H_ */
 

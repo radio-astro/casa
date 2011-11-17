@@ -139,7 +139,6 @@ testflagger::init()
 			if (testflagger_p->initFlagDataHandler()) {
 				return testflagger_p->initAgents();
 			}
-			return false;
 		}
 
 		return false;
@@ -149,16 +148,20 @@ testflagger::init()
 	}
 }
 
-void
+::casac::record*
 testflagger::run()
 {
+    casac::record *rstat(0);
 	try
 	{
 		if(testflagger_p){
-			testflagger_p->run();
+			rstat =  fromRecord(testflagger_p->run());
+		}
+		else{
+			rstat = fromRecord(Record());
 		}
 
-		return;
+		return rstat;
 	} catch(AipsError x){
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);

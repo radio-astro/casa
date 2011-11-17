@@ -88,8 +88,11 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	// only one time step, thus invalidating the time interval effect.
 	// See: MSIter.h
 
-	// Always map polarizations
-	mapPolarizations_p = true;
+	// By default don't map polarizations and antennaPointing
+	mapPolarizations_p = false;
+	mapAntennaPointing_p = false;
+	mapScanStartStop_p = false;
+	mapScanStartStopFlagged_p = false;
 
 	switch (iterationApproach_p)
 	{
@@ -263,15 +266,18 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	selectedMeasurementSet_p = NULL;
 	measurementSetSelection_p = NULL;
 	originalMeasurementSet_p = NULL;
-	antennaNames_p = NULL;
+
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
+	vwbt_p = NULL;
+
+	antennaNames_p = NULL;
+	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
 	polarizationMap_p = NULL;
 	polarizationIndexMap_p = NULL;
-	antennaPairMap_p = NULL;
-	vwbt_p = NULL;
+	antennaPointingMap_p = NULL;
 
 	return;
 }
@@ -282,20 +288,27 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 // -----------------------------------------------------------------------
 FlagDataHandler::~FlagDataHandler()
 {
-	// Destroy members
-	if (vwbt_p) delete vwbt_p;
+	// Delete mapping members
+	if (antennaNames_p) delete antennaNames_p;
 	if (antennaPairMap_p) delete antennaPairMap_p;
 	if (subIntegrationMap_p) delete subIntegrationMap_p;
 	if (polarizationMap_p) delete polarizationMap_p;
 	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+
+	// Delete VisBuffers and iterators
+	if (vwbt_p) delete vwbt_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
 	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
 	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
 	if ((!asyncio_disabled_p) and (rwVisibilityIterator_p)) delete rwVisibilityIterator_p;
+
+	// Delete MS objects
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
 	if (measurementSetSelection_p) delete measurementSetSelection_p;
 	if (originalMeasurementSet_p) delete originalMeasurementSet_p;
-	if (antennaNames_p) delete antennaNames_p;
+
+	// Delete logger
 	if (logger_p) delete logger_p;
 
 	return;
@@ -565,6 +578,11 @@ FlagDataHandler::checkMaxMemory()
 			memoryNeeded += memoryPerRow*(rwVisibilityIterator_p->nRow());
 
 			if (memoryNeeded > maxMemoryNeeded) maxMemoryNeeded = memoryNeeded;
+
+			if (mapScanStartStop_p)
+			{
+				generateScanStartStopMap();
+			}
 		}
 	}
 
@@ -600,6 +618,120 @@ FlagDataHandler::checkMaxMemory()
 		}
 
 		throw(AipsError("FlagDataHandler::checkMaxMemory() Not enough memory to process"));
+	}
+
+	if (mapScanStartStop_p)
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << scanStartStopMap_p->size() <<" Scans found in MS" << LogIO::POST;
+	}
+
+	return;
+}
+
+void
+FlagDataHandler::generateScanStartStopMap()
+{
+
+	Int scan;
+	Double start,stop;
+	Vector<Int> scans;
+	Vector<Double> times;
+
+	Cube<Bool> flags;
+	uInt scanStartRow;
+	uInt scanStopRow;
+	uInt ncorrs,nchannels,nrows;
+	Bool stopSearch;
+
+	if (mapScanStartStop_p) scanStartStopMap_p = new scanStartStopMap();
+
+	scans = rwVisibilityIterator_p->scan(scans);
+	times = rwVisibilityIterator_p->time(times);
+
+	// Check if anything is flagged in this buffer
+	scanStartRow = 0;
+	scanStopRow = times.size()-1;
+	if (mapScanStartStopFlagged_p)
+	{
+		flags = rwVisibilityIterator_p->flag(flags);
+		IPosition shape = flags.shape();
+		ncorrs = shape[0];
+		nchannels = shape[1];
+		nrows = shape[2];
+
+		// Look for effective scan start
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,row_i))
+					{
+						scanStartRow = row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+
+		// If none of the rows were un-flagged we don't continue checking from the end
+		// As a consequence of this some scans may not be present in the map, and have
+		// to be skipped in the flagging process because they are already flagged.
+		if (!stopSearch) return;
+
+		// Look for effective scan stop
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,nrows-1-row_i))
+					{
+						scanStopRow = nrows-1-row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+	}
+
+	// Check scan start/stop times
+	scan = scans[0];
+	start = times[scanStartRow];
+	stop = times[scanStopRow];
+	if ((*scanStartStopMap_p)[scan].size() == 0)
+	{
+		(*scanStartStopMap_p)[scan].push_back(start);
+		(*scanStartStopMap_p)[scan].push_back(stop);
+	}
+	else
+	{
+		// Check if we have a better start time
+		if ((*scanStartStopMap_p)[scan][0] > start)
+		{
+			(*scanStartStopMap_p)[scan][0] = start;
+		}
+		// Check if we have a better stop time
+		if ((*scanStartStopMap_p)[scan][1] < stop)
+		{
+			(*scanStartStopMap_p)[scan][1] = stop;
+		}
 	}
 
 	return;
@@ -782,6 +914,7 @@ FlagDataHandler::nextBuffer()
 		if (mapAntennaPairs_p) generateAntennaPairMap();
 		if (mapSubIntegrations_p) generateSubIntegrationMap();
 		if (mapPolarizations_p) generatePolarizationsMap();
+		if (mapAntennaPointing_p) generateAntennaPointingMap();
 		moreBuffers = true;
 		bufferNo++;
 	}
@@ -798,6 +931,7 @@ FlagDataHandler::nextBuffer()
 			if (mapAntennaPairs_p) generateAntennaPairMap();
 			if (mapSubIntegrations_p) generateSubIntegrationMap();
 			if (mapPolarizations_p) generatePolarizationsMap();
+			if (mapAntennaPointing_p) generateAntennaPointingMap();
 			moreBuffers = true;
 			bufferNo++;
 		}
@@ -813,9 +947,6 @@ FlagDataHandler::nextBuffer()
 		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
 		originalFlagCube_p.resize(originalFlagCube.shape());
 		originalFlagCube_p = originalFlagCube;
-
-		//IPosition flagCubeShape = modifiedFlagCube_p.shape();
-		//*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Current buffer shape: " << flagCubeShape  << " and indexing:" <<  modifiedFlagCube_p.printConfig() <<LogIO::POST;
 	}
 
 	return moreBuffers;
@@ -1039,6 +1170,37 @@ FlagDataHandler::generatePolarizationsMap()
 	{
 		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Polarization map key: " << iter->first << " value: " << iter->second << LogIO::POST;
 	}
+
+	return;
+}
+
+void
+FlagDataHandler::generateAntennaPointingMap()
+{
+	// Free previous map and create a new one
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+	antennaPointingMap_p = new antennaPointingMap();
+
+	Vector<Double> time = visibilityBuffer_p->get()->time();
+	uInt nRows = time.size();
+	antennaPointingMap_p->reserve(nRows);
+	for (uInt row_i=0;row_i<nRows;row_i++)
+	{
+		Vector<MDirection> azimuth_elevation = visibilityBuffer_p->get()->azel(time[row_i]);
+		Int ant1 = visibilityBuffer_p->get()->antenna1()[row_i];
+		Int ant2 = visibilityBuffer_p->get()->antenna1()[row_i];
+
+	    double antenna1_elevation = azimuth_elevation[ant1].getAngle("deg").getValue()[1];
+	    double antenna2_elevation = azimuth_elevation[ant2].getAngle("deg").getValue()[1];
+
+	    vector<Double> item(2);
+	    item[0] = antenna1_elevation;
+	    item[1] = antenna2_elevation;
+	    antennaPointingMap_p->push_back(item);
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Generated antenna pointing map with "
+			<< antennaPointingMap_p->size() << " elements" << LogIO::POST;
 
 	return;
 }
@@ -1308,23 +1470,23 @@ VisMapper::setExpressionMapping(String expression,polarizationMap *polMap)
 	polMap_p = polMap;
 
 	// Parse complex unitary function
-	if (expression_p.find("real") != string::npos)
+	if (expression_p.find("REAL") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::real;
 	}
-	else if (expression_p.find("imag") != string::npos)
+	else if (expression_p.find("IMAG") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::imag;
 	}
-	else if (expression_p.find("arg") != string::npos)
+	else if (expression_p.find("ARG") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::arg;
 	}
-	else if (expression_p.find("abs") != string::npos)
+	else if (expression_p.find("ABS") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::abs;
 	}
-	else if (expression_p.find("norm") != string::npos)
+	else if (expression_p.find("NORM") != string::npos)
 	{
 		applyVisExpr_p = &VisMapper::norm;
 	}
@@ -1690,11 +1852,12 @@ VisMapper::stokes_v_from_circular(uInt chan, uInt row)
 //////////////////////////////////////
 /// FlagMapper implementation ////////
 //////////////////////////////////////
-FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView)
+FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView)
 {
 	commonFlagsView_p = NULL;
+	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
-	setParentCubes(commonFlagsView,privateFlagsView);
+	setParentCubes(commonFlagsView,originalFlagsView,privateFlagsView);
 	setExpressionMapping(selectedCorrelations);
 	flag_p = flag;
 }
@@ -1702,18 +1865,21 @@ FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations, CubeView<Bo
 FlagMapper::FlagMapper(Bool flag, vector<uInt> selectedCorrelations)
 {
 	commonFlagsView_p = NULL;
+	originalFlagsView_p = NULL;
 	privateFlagsView_p = NULL;
 	setExpressionMapping(selectedCorrelations);
 	flag_p = flag;
 }
 
 void
-FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *privateFlagsView)
+FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *originalFlagsView,CubeView<Bool> *privateFlagsView)
 {
 	if (commonFlagsView_p != NULL) delete commonFlagsView_p;
+	if (originalFlagsView_p != NULL) delete originalFlagsView_p;
 	if (privateFlagsView_p != NULL) delete privateFlagsView_p;
 
 	commonFlagsView_p = commonFlagsView;
+	originalFlagsView_p = originalFlagsView;
 	if (privateFlagsView != NULL)
 	{
 		privateFlagsView_p = privateFlagsView;
@@ -1747,7 +1913,19 @@ FlagMapper::~FlagMapper()
 }
 
 Bool
-FlagMapper::operator()(uInt channel, uInt row)
+FlagMapper::getOriginalFlags(uInt channel, uInt row)
+{
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	{
+		combinedFlag = combinedFlag | originalFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
+}
+
+Bool
+FlagMapper::getModifiedFlags(uInt channel, uInt row)
 {
 	Bool combinedFlag = False;
 	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
@@ -1759,9 +1937,33 @@ FlagMapper::operator()(uInt channel, uInt row)
 }
 
 Bool
-FlagMapper::operator()(uInt pol, uInt channel, uInt row)
+FlagMapper::getPrivateFlags(uInt channel, uInt row)
+{
+	Bool combinedFlag = False;
+	for (vector<uInt>::iterator iter=selectedCorrelations_p.begin();iter!=selectedCorrelations_p.end();iter++)
+	{
+		combinedFlag = combinedFlag | privateFlagsView_p->operator ()(*iter,channel,row);
+	}
+
+	return combinedFlag;
+}
+
+Bool
+FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
 	return commonFlagsView_p->operator ()(pol,channel,row);
+}
+
+Bool
+FlagMapper::getModifiedFlags(uInt pol, uInt channel, uInt row)
+{
+	return commonFlagsView_p->operator ()(pol,channel,row);
+}
+
+Bool
+FlagMapper::getPrivateFlags(uInt pol, uInt channel, uInt row)
+{
+	return privateFlagsView_p->operator ()(pol,channel,row);
 }
 
 void

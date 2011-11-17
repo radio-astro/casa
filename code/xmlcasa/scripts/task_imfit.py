@@ -4,7 +4,8 @@ def imfit(
     imagename=None, box=None, region=None, chans=None, stokes=None,
     mask=None, includepix=None, excludepix=None, residual=None,
     model=None, estimates=None, logfile=None, append=None,
-    newestimates=None, complist=None, overwrite=None
+    newestimates=None, complist=None, overwrite=None, dooff=None,
+    offset=None, fixoffset=None
 ):
     casalog.origin('imfit')
     myia = iatool.create()
@@ -16,7 +17,8 @@ def imfit(
             mask=mask, includepix=includepix, excludepix=excludepix,
             residual=residual, model=model, estimates=estimates,
             logfile=logfile, append=append, newestimates=newestimates,
-            complist=complist, overwrite=overwrite
+            complist=complist, overwrite=overwrite, dooff=dooff,
+            offset=offset, fixoffset=fixoffset
         )
         myia.done()
         return result_dict

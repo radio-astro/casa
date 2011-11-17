@@ -50,12 +50,10 @@
 #endif
 
 #ifdef __GNUC__
-#define DEPRECATED_METHOD(func) func __attribute__ ((deprecated));
-#elif defined(_MSC_VER)
-#define DEPRECATED(func) __declspec(deprecated) func
+#define DEPRECATED_METHOD(comment) __attribute__ ((deprecated))
 #else
 ///#pragma message("WARNING: You need to implement DEPRECATED for this compiler")
-#define DEPRECATED(func) func
+#define DEPRECATED_METHOD(comment)
 #endif
 
 

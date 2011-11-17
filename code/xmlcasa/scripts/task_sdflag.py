@@ -203,9 +203,10 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
                           myp.set_line(label='spec')
                         x = s._getabcissa(row)
                         y = s._getspectrum(row)
+                        nchan = len(y)
 			
 			if s._getflagrow(row):
-				oldmskarr = array([False]*(s.nchan()))
+				oldmskarr = array([False]*(nchan))
 			else:
 				oldmskarr = array(s._getmask(row))
 				
@@ -213,14 +214,14 @@ def sdflag(infile, antenna, scanlist, field, iflist, pollist, maskflag, flagrow,
 			  if (uthres != None) and (dthres != None) and (uthres > dthres):
 			    masks = array(s._getclipmask(row, uthres, dthres, clipoutside, unflag))
 			  else:
-			    masks = [False]*(s.nchan())
+			    masks = [False]*(nchan)
 			elif (len(flagrow) > 0):
 			  found = False
 			  for i in range(0, len(flagrow)):
 			    if (row == flagrow[i]):
 			      found = True
 			      break
-			  masks = [found and not(unflag)]*(s.nchan())
+			  masks = [found and not(unflag)]*(nchan)
 			#marr = array(masks)
 			
 			marr = logical_not(array(masks))

@@ -1424,9 +1424,9 @@ clean_momentzero_rms = 15.206372
 clean_momentone_median = 422.92
 clean_momentone_planezero = 696.702393
 clean_momentone_planelast = 127.786629
-vis_mean_cal = 194.915085
-vis_mean_src = 54.627020
-model_sum = 71.171693
+vis_mean_cal = 195.0509
+vis_mean_src = 54.665
+model_sum = 75.7516
 model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 
 # RR, 1/19/2011 - The rmses went down, just like in orionmos4sim.  This is
@@ -1439,7 +1439,8 @@ clean_offline_rms = 0.049904
 clean_momentzero_rms = 13.737679
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
-model_pbcor_sum = 69.119642
+
+model_pbcor_sum = 77.7232
 
 ## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
 ## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems
@@ -1452,9 +1453,9 @@ model_pbcor_sum = 69.119642
 ## RR, 3/25 - 4/3/2011, after clean was changed to used the center of output
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
-clean_image_max = 1.4634
-clean_momentone_median = 425.6250
-clean_momentone_planezero = 690.6069
+clean_image_max = 1.4637
+clean_momentone_median = 424.3254
+clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911
 
 canonical = {}

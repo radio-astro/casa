@@ -1,4 +1,4 @@
-//# FlagAgentManual.cc: This file contains the implementation of the FlagAgentManual class.
+//# FlagAgentQuack.h: This file contains the interface definition of the FlagAgentQuack class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,35 +20,46 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <flagging/Flagging/FlagAgentManual.h>
+#ifndef FlagAgentQuack_H_
+#define FlagAgentQuack_H_
+
+#include <flagging/Flagging/FlagAgentBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-FlagAgentManual::FlagAgentManual(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
-		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
-{
+class FlagAgentQuack : public FlagAgentBase {
 
-}
+	enum mode {
 
-FlagAgentManual::~FlagAgentManual()
-{
-	// Compiler automagically calls FlagAgentBase::~FlagAgentBase()
-}
+		BEGINNING_OF_SCAN=0,
+		END_OF_SCAN,
+		ALL_BUT_BEGINNING_OF_SCAN,
+		ALL_BUT_END_OF_SCAN
+	};
 
-void
-FlagAgentManual::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
-{
-	IPosition flagCubeShape = flags.shape();
-	uInt nChannels = flagCubeShape(0);
-	for (uInt chan_i=0;chan_i<nChannels;chan_i++)
-	{
-		flags.applyFlag(chan_i,row);
-	}
+public:
 
-	return;
+	FlagAgentQuack(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube = false);
+	~FlagAgentQuack();
 
-}
+protected:
+
+	// Compute flags afor a given mapped visibility point
+	void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+
+	// Parse configuration parameters
+	void setAgentParameters(Record config);
+
+private:
+
+	/// Input parameters ///
+	Double quackinterval_p;
+	uShort quackmode_p;
+	Bool quackincrement_p;
+};
+
 
 } //# NAMESPACE CASA - END
 
+#endif /* FlagAgentQuack_H_ */
 

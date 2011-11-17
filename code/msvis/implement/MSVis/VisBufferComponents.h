@@ -3,6 +3,32 @@
 
 namespace casa {
 
+// <summary>
+//
+// This class encapsulates an enum with values corresponding to the various
+// data components accessible via a VisBuffer.  Its current usage is to
+// specify the VisBuffer components to be prefetched when asynchronous I/O
+// is in use or to specify the VisBuffer components that have been modified
+// when a Visibility Processing Framework bucket-brigade is operating on
+// a VisBuffer.  This implementation should be replaced by a C++11 when
+// the standard matures a bit.
+//
+// <prerequisite>
+//   <li> <linkto class="VisBuffer">VisBuffer</linkto>
+// </prerequisite>
+//
+// </summary>
+//
+// <synopsis>
+//
+// </synopsis>
+// <example>
+//
+// <code>
+//
+// </code>
+// </example>
+//
 class VisBufferComponents {
 
 public:

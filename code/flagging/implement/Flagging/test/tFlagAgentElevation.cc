@@ -1,4 +1,4 @@
-//# tFlagAgentClipping.cc This file contains the unit tests of the FlagAgentBase class.
+//# tFlagAgentElevation.cc This file contains the unit tests of the FlagAgentBase class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,7 +20,7 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <flagging/Flagging/FlagAgentClipping.h>
+#include <flagging/Flagging/FlagAgentElevation.h>
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
@@ -235,14 +235,14 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 
 	// Create agent list
 	FlagAgentList agentList;
-	FlagAgentClipping *flaggingAgent = NULL;
+	FlagAgentElevation *flaggingAgent = NULL;
 	Int agentNumber = 1;
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
 		stringstream agentName;
 		agentName << agentNumber;
-		iter->define("name","FlagAgentClipping_" + agentName.str());
-		flaggingAgent = new FlagAgentClipping(dh,*iter);
+		iter->define("name","FlagAgentElevation_" + agentName.str());
+		flaggingAgent = new FlagAgentElevation(dh,*iter);
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
@@ -328,9 +328,6 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
-
-			// IMPORTANT: Pre-load vis cube, antenna1 and antenna2
-			dh->visibilityBuffer_p->get()->visCube();
 
 			// Queue flagging process
 			agentList.queueProcess();
@@ -510,14 +507,9 @@ int main(int argc, char **argv)
 	string parameter, value;
 	string targetFile,referenceFile;
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
-	string expression,datacolumn,nThreadsParam,ntime;
+	string nThreadsParam,ntime;
 	Int nThreads = 0;
-
-	Float clipmin,clipmax;
-	Array<Float> clipminmax;
-	Bool clipmin_set = false;
-	Bool clipmax_set = false;
-	Bool clipoutside, channelavg;
+	Double lowerlimit,upperlimit;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -527,7 +519,6 @@ int main(int argc, char **argv)
 	// Parse input parameters
 	Record agentParameters;
 	Record dataSelection;
-	vector<string> expressionList;
 	for (unsigned short i=0;i<argc-1;i++)
 	{
 		parameter = string(argv[i]);
@@ -615,20 +606,8 @@ int main(int argc, char **argv)
 		else if (parameter == string("-correlation"))
 		{
 			correlation = casa::String(value);
-			agentParameters.define ("correlation", uvrange);
+			agentParameters.define ("correlation", correlation);
 			cout << "Correlation range selection is: " << correlation << endl;
-		}
-		else if (parameter == string("-expression"))
-		{
-			expression = casa::String(value);
-			expressionList.push_back(expression);
-			cout << "expression is: " << expression << endl;
-		}
-		else if (parameter == string("-datacolumn"))
-		{
-			datacolumn = casa::String(value);
-			agentParameters.define ("datacolumn", datacolumn);
-			cout << "datacolumn is: " << datacolumn << endl;
 		}
 		else if (parameter == string("-nThreads"))
 		{
@@ -637,83 +616,40 @@ int main(int argc, char **argv)
 			nThreads = atoi(nThreadsParam.c_str());
 			cout << "nThreads is: " << nThreads << endl;
 		}
-		else if (parameter == string("-clipmin"))
+		else if (parameter == string("-lowerlimit"))
 		{
-			clipmin = casa::Float(atof(value.c_str()));
-			clipmin_set = true;
-			cout << "clipmin is: " << clipmin << endl;
+			lowerlimit = atof(value.c_str());
+			agentParameters.define ("lowerlimit", lowerlimit);
+			cout << "lowerlimit is: " << lowerlimit << endl;
 		}
-		else if (parameter == string("-clipmax"))
+		else if (parameter == string("-upperlimit"))
 		{
-			clipmax = casa::Float(atof(value.c_str()));
-			clipmax_set = true;
-			cout << "clipmax is: " << clipmax << endl;
-		}
-		else if (parameter == string("-clipoutside"))
-		{
-			clipoutside = casa::Bool(atoi(argv[i+1]));
-			agentParameters.define ("clipoutside", clipoutside);
-			cout << "clipoutside is: " << clipoutside << endl;
-		}
-		else if (parameter == string("-channelavg"))
-		{
-			channelavg = casa::Bool(atoi(argv[i+1]));
-			agentParameters.define ("channelavg", channelavg);
-			cout << "channelavg is: " << channelavg << endl;
+			upperlimit = atof(value.c_str());
+			agentParameters.define ("upperlimit", upperlimit);
+			cout << "upperlimit is: " << upperlimit << endl;
 		}
 	}
-
-	if (clipmin_set && clipmax_set)
-	{
-		casa::IPosition size(1);
-		size[0]=2;
-		casa::Array<Float> cliprange(size);
-		cliprange[0] = clipmin;
-		cliprange[1] = clipmax;
-		agentParameters.define("clipminmax",cliprange);
-	}
-
-	if (clipmin_set && !clipmax_set)
-	{
-		cerr << "clipmin is set but clipmax is not set, will use default values!..." << endl;
-	}
-	else if (clipmax_set && !clipmin_set)
-	{
-		cerr << "clipmax is set but clipmin is not set, will use default values!..." << endl;
-	}
-
 
 	Record agentParameters_i;
-	Record agentParameters_j;
 	vector<Record> agentParamersList;
 
 	if (nThreads>1)
 	{
-		for (vector<string>::iterator exp_i=expressionList.begin();exp_i != expressionList.end();exp_i++)
+		for (Int threadId=0;threadId<nThreads;threadId++)
 		{
 			agentParameters_i = agentParameters;
-			agentParameters_i.define("expression",*exp_i);
-			for (Int threadId=0;threadId<nThreads;threadId++)
-			{
-				agentParameters_j = agentParameters_i;
 
-				stringstream ss;
-				ss << threadId;
-				agentParameters_j.define("threadId",ss.str());
-				agentParameters_j.define("nThreads",nThreadsParam);
+			stringstream ss;
+			ss << threadId;
+			agentParameters_i.define("threadId",ss.str());
+			agentParameters_i.define("nThreads",nThreadsParam);
 
-				agentParamersList.push_back(agentParameters_j);
-			}
+			agentParamersList.push_back(agentParameters_i);
 		}
 	}
 	else
 	{
-		for (vector<string>::iterator exp_i=expressionList.begin();exp_i != expressionList.end();exp_i++)
-		{
-			agentParameters_i = agentParameters;
-			agentParameters_i.define("expression",*exp_i);
-			agentParamersList.push_back(agentParameters_i);
-		}
+		agentParamersList.push_back(agentParameters);
 	}
 
 	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection,agentParamersList);

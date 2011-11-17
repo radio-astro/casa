@@ -34,7 +34,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Image Region.  Use viewer</description>
+        <description>Region specification. See help par.region. Default is to not use a region.</description>
 	<any type='variant' limittype='string stringArray'/>
         <value type='string'/>
     </param>
@@ -138,11 +138,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 Full description of the syntax can be found at
                 http://www.astron.nl/aips++/docs/notes/223/node11.html>Aips++ Notes series   
    stretch      Stretch the input mask if necessary and possible. See below.
-   region       File path to an ImageRegion file or the name of
-                a region stored within the image..
-                Default: none; 
-                Example: region=&quot;myimage.im.rgn&quot;
-                region=&quot;region1&quot;
+   region       Region specification. See help par.region. Default is to not use a region.
     box         A box region on the directional plane
                 Only pixel values acceptable.
                 Default: none (whole 2-D plane); 
