@@ -1062,37 +1062,40 @@ bool image::done(const bool remove, const bool verbose) {
 	}
 }
 
-bool image::fft(const std::string& realOut, const std::string& imagOut,
-		const std::string& ampOut, const std::string& phaseOut,
-		const std::vector<int>& axes, const ::casac::record& region,
-		const ::casac::variant& vmask) {
-	bool rstat(false);
+bool image::fft(
+	const string& realOut, const string& imagOut,
+	const string& ampOut, const string& phaseOut,
+	const std::vector<int>& axes, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", "fft");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return false;
+		}
 
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 
 		// if default value change it to empty vector
 		Vector<Int> leAxes(axes);
-		if (leAxes.size() == 1) {
-			if (leAxes[0] == -1)
-				leAxes.resize();
+		if (leAxes.size() == 1 && leAxes[0] == -1) {
+			leAxes.resize();
 		}
 
-		rstat = _image->fft(realOut, imagOut, ampOut, phaseOut, leAxes,
-				*Region, mask);
+		return _image->fft(
+			realOut, imagOut, ampOut, phaseOut,
+			leAxes, *Region, mask, stretch
+		);
 
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*

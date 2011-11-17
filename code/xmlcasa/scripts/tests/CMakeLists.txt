@@ -42,6 +42,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_ia_convolve.py
   test_ia_convolve2d.py
   test_ia_decompose.py
+  test_ia_fft.py
   test_ia_isconform.py
   test_ia_subimage.py
   test_imcollapse.py
