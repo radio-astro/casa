@@ -849,51 +849,47 @@ image::coordmeasures(const std::vector<double>&pixel) {
 
 ::casac::record*
 image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
-		const bool simple, const double Threshold, const int nContour,
-		const int minRange, const int nAxis, const bool fit,
-		const double maxrms, const int maxRetry, const int maxIter,
-		const double convCriteria) {
-	::casac::record *rstat = 0;
+	const bool simple, const double Threshold, const int nContour,
+	const int minRange, const int nAxis, const bool fit,
+	const double maxrms, const int maxRetry, const int maxIter,
+	const double convCriteria, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", "decompose");
-		if (detached())
-			return rstat;
-
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
+		if (Threshold < 0) {
+			throw AipsError(
+				"Threshold = " + String::toString(Threshold)
+				+ ". You must specify a nonnegative threshold"
+			);
+		}
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
+		}
 		Matrix<Int> blcs;
 		Matrix<Int> trcs;
 
-		Matrix<Float> cl = _image->decompose(blcs, trcs, *Region, mask, simple,
-				Threshold, nContour, minRange, nAxis, fit, maxrms, maxRetry,
-				maxIter, convCriteria);
+		Matrix<Float> cl = _image->decompose(
+			blcs, trcs, *Region, mask, simple, Threshold,
+			nContour, minRange, nAxis, fit, maxrms,
+			maxRetry, maxIter, convCriteria, stretch
+		);
 
-		/*std::vector<float> cl_v;
-		 cl.tovector(cl_v);
-		 int nelem = cl_v.size();
-		 std::vector<double> cl_dv(nelem);
-		 for (int n=0; n < nelem; n++) {
-		 cl_dv[n] = cl_v[n];
-		 }
-		 std::vector<int> cl_shape;
-		 cl.shape().asVector().tovector(cl_shape);
-		 rstat = new ::casac::variant(cl_dv, cl_shape);
-		 */
 		casa::Record outrec1;
 		outrec1.define("components", cl);
 		outrec1.define("blc", blcs);
 		outrec1.define("trc", trcs);
-		rstat = fromRecord(outrec1);
+		return fromRecord(outrec1);
 
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record *
