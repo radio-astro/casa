@@ -95,11 +95,12 @@ class MSConcat: public MSColumns
 public:
   MSConcat(MeasurementSet& ms);
   void concatenate(const MeasurementSet& otherMS,
-		   const uInt handlingSwitch=0); // 0 (default): complete concat of all tables
-                                                 // 1 : don't concatenate the MAIN table
-                                                 // 2 : don't concatenate the POINTING table
-                                                 // 3 : neither concat MAIN nor POINTING table
-                                                 // 4 : virtual concat of MAIN and POINTING table 
+		   const uInt handling=0,   // 0 (default): complete concat of all tables
+                                            // 1 : don't concatenate the MAIN table
+                                            // 2 : don't concatenate the POINTING table
+                                            // 3 : neither concat MAIN nor POINTING table
+                   const String& destMSName=""); // support for virtual concat
+
   void setTolerance(Quantum<Double>& freqTol, Quantum<Double>& dirTol); 
   void setWeightScale(const Float weightScale); 
 private:
@@ -131,7 +132,7 @@ private:
 			 const uInt& rowi, const uInt& rowj);
 
 
-  void updateModelDataKeywords();
+  void updateModelDataKeywords(MeasurementSet& ms);
 
   MeasurementSet itsMS;
   IPosition itsFixedShape;
