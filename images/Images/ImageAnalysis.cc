@@ -1533,27 +1533,32 @@ Matrix<Float> ImageAnalysis::decompose(Record& Region, const String& mask,
   return decompose(blcs, trcs, Region, mask, simple, Threshold, nContour, minRange,
 		   nAxis, fit, maxrms, maxRetry, maxIter, convCriteria);
 }
-Matrix<Float>
-ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, const String& mask,
-		const Bool simple, const Double Threshold, const Int nContour,
-		const Int minRange, const Int nAxis, const Bool fit,
-		const Double maxrms, const Int maxRetry, const Int maxIter,
-		const Double convCriteria)
-{
+Matrix<Float> ImageAnalysis::decompose(
+	Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, const String& mask,
+	const Bool simple, const Double Threshold, const Int nContour,
+	const Int minRange, const Int nAxis, const Bool fit,
+	const Double maxrms, const Int maxRetry, const Int maxIter,
+	const Double convCriteria, const Bool stretch
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "decompose");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
+
+	if (Threshold < 0) {
+		*itsLog << "Threshold cannot be negative " << LogIO::EXCEPTION;
+	}
 
 	Float threshold(Threshold);
 
 	AxesSpecifier axesSpec(False);
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
-		itsLog, False, axesSpec
+		itsLog, False, axesSpec, stretch
 	);
-
 	// Make finder
 	ImageDecomposer<Float> decomposer(subImage);
 
+	/*
+	 * We no longer allow negative thresholds.
 	// Set auto-threshold at 5-sigma
 	if (threshold <= 0.0) {
 		LatticeStatistics<Float> stats(subImage);
@@ -1562,16 +1567,14 @@ ImageAnalysis::decompose(Matrix<Int>& blcs, Matrix<Int>& trcs, Record& Region, c
 		// Bool ok = stats.getStatistic (out,LatticeStatsBase::SIGMA);
 		threshold = 5.0 * out(IPosition(subImage.ndim(), 0));
 	}
-
+	*/
 	// Do it
 	decomposer.setDeblend(!simple);
 	decomposer.setDeblendOptions(threshold, nContour, minRange, nAxis);
 	decomposer.setFit(fit);
 	decomposer.setFitOptions(maxrms, maxRetry, maxIter, convCriteria);
-
 	decomposer.decomposeImage();
 	decomposer.printComponents();
-
 	Block<IPosition> blcspos(decomposer.numRegions());
 	Block<IPosition> trcspos(decomposer.numRegions());
 	decomposer.boundRegions(blcspos, trcspos);
