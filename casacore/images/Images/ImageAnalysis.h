@@ -220,9 +220,11 @@ class ImageAnalysis
 
     Bool remove(Bool verbose=true);
 
-    Bool fft(const String& real, const String& imag, const String& amp, 
-             const String& phase, const Vector<Int>& axes, Record& region, 
-             const String& mask);
+    Bool fft(
+    	const String& real, const String& imag, const String& amp,
+        const String& phase, const Vector<Int>& axes, Record& region,
+        const String& mask, const Bool stretch
+    );
 
     Record findsources(const Int nmax, const Double cutoff, Record& region, 
                         const String& mask, const Bool point = True, 
