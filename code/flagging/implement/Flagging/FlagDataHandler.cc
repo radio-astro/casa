@@ -21,6 +21,7 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagDataHandler.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -273,6 +274,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	vwbt_p = NULL;
 
 	antennaNames_p = NULL;
+	antennaDiameters_p = NULL;
 	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
 	polarizationMap_p = NULL;
@@ -290,6 +292,7 @@ FlagDataHandler::~FlagDataHandler()
 {
 	// Delete mapping members
 	if (antennaNames_p) delete antennaNames_p;
+	if (antennaDiameters_p) delete antennaDiameters_p;
 	if (antennaPairMap_p) delete antennaPairMap_p;
 	if (subIntegrationMap_p) delete subIntegrationMap_p;
 	if (polarizationMap_p) delete polarizationMap_p;
@@ -328,10 +331,9 @@ FlagDataHandler::open()
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
 	// Read antenna names from Antenna table
-	const MSAntenna msant( originalMeasurementSet_p->antenna() );
-	ROScalarColumn<String> names(msant,"NAME");
-	if (antennaNames_p) delete antennaNames_p;
-	antennaNames_p = new Vector<String>(names.getColumn());
+	ROMSAntennaColumns *antennaSubTable = new ROMSAntennaColumns(originalMeasurementSet_p->antenna());
+	antennaNames_p = new Vector<String>(antennaSubTable->name().getColumn());
+	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
 
 	return true;
 }
