@@ -1218,6 +1218,42 @@ class imfit_test(unittest.TestCase):
                 
             j = j + 1
 
+    def test_stretch(self):
+        """imfit : test mask stretch"""
+        imagename = multiplane_image
+        yy = iatool.create()
+        yy.open(imagename)
+        mycsys = yy.coordsys().torecord()
+        yy.done()
+        mymask = "maskim"
+        yy.fromshape(mymask, [70, 70, 1])
+        yy.setcoordsys(mycsys)
+        yy.addnoise()
+        yy.done()
+        yy.open(imagename)
+        zz = yy.fitcomponents(
+            mask=mymask + ">-100",
+            stretch=False
+        )
+        self.assertTrue(zz['results']['nelements'] == 0)
+        zz = imfit(
+            imagename, mask=mymask + ">-100",
+            stretch=False
+        )
+        self.assertTrue(zz['results']['nelements'] == 0)
+
+        zz = yy.fitcomponents(
+            mask=mymask + ">-100",
+            stretch=True
+        )
+        self.assertTrue(zz['results']['nelements'] == 4)
+
+        yy.done()
+        zz = imfit(
+            imagename, mask=mymask + ">-100",
+            stretch=True
+        )
+        self.assertTrue(zz['results']['nelements'] == 4)
 
 
 def suite():

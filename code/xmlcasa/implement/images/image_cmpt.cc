@@ -1271,7 +1271,7 @@ image* image::transpose(
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
 		const bool overwrite, const bool dooff, const double offset,
-		const bool offsetisfixed
+		const bool offsetisfixed, const bool stretch
 ) {
 	if (detached()) {
 		return 0;
@@ -1288,7 +1288,7 @@ image* image::transpose(
 	if (excludepix.size() == 1 && excludepix[0] == -1) {
 		excludepix.resize();
 	}
-	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogOrigin(_class, __FUNCTION__);
 	String mask = vmask.toString();
 	if (mask == "[]") {
 		mask = "";
@@ -1306,16 +1306,23 @@ image* image::transpose(
 		if (chans.type() == variant::BOOLVEC) {
 			// for some reason which eludes me, the default variant type is boolvec
 			sChans = "";
-		} else if (chans.type() == variant::STRING) {
+		}
+		else if (chans.type() == variant::STRING) {
 			sChans = chans.toString();
-		} else if (chans.type() == variant::INT) {
+		}
+		else if (chans.type() == variant::INT) {
 			sChans = String::toString(chans.toInt());
-		} else {
+		}
+		else {
 			*_log
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		if (region.type() != variant::BOOLVEC && region.type() != variant::STRING && region.type() != variant::RECORD) {
+		if (
+			region.type() != variant::BOOLVEC
+			&& region.type() != variant::STRING
+			&& region.type() != variant::RECORD
+		) {
 			*_log << "Unsupported type for region " << region.type()
 				<< LogIO::EXCEPTION;
 		}
@@ -1340,6 +1347,7 @@ image* image::transpose(
 				writeControl
 			)
 		);
+		fitter->setStretch(stretch);
 		if (dooff) {
 			fitter->setZeroLevelEstimate(offset, offsetisfixed);
 		}

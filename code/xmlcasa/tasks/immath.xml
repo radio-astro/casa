@@ -104,7 +104,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <example>stokes='RR,LL'</example>
     	</param>
         <param type="bool" direction="in" name="stretch" subparam="true">
-            <description>Stretch the mask if necessary and possible? </description>
+            <description>Stretch the mask if necessary and possible? See help stretch.par </description>
              <value>False</value>
         </param>
 	<constraints>

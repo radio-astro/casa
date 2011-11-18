@@ -100,7 +100,7 @@ ImageFitter::ImageFitter(
 ImageFitter::~ImageFitter() {}
 
 ComponentList ImageFitter::fit() {
-	LogOrigin origin("ImageFitter", __FUNCTION__);;
+	LogOrigin origin(_class, __FUNCTION__);;
 	*_getLog() << origin;
 	Bool converged;
 	SubImage<Float> templateImage;
@@ -454,7 +454,8 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	// </todo>
 
 	if(estimatesFilename.empty()) {
-		*_getLog() << LogIO::NORMAL << "No estimates file specified, so will attempt to find and fit one gaussian."
+		*_getLog() << LogIO::NORMAL
+			<< "No estimates file specified, so will attempt to find and fit one gaussian."
 			<< LogIO::POST;
 	}
 	else {
@@ -1050,10 +1051,10 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 
 	Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
-	SubImage<Float> subImageTmp = SubImage<Float>(*imageClone, slice, False);
+	SubImage<Float> subImageTmp(*imageClone, slice, False);
 	SubImage<Float> x = SubImage<Float>::createSubImage(
-		subImageTmp, *_getRegion(),
-		_getMask(), 0, False
+		subImageTmp, *_getRegion(), _getMask(), 0,
+		False, AxesSpecifier(), _getStretch()
 	);
 	return x;
 }
@@ -1181,8 +1182,9 @@ ComponentList ImageFitter::_fitsky(
 	{
 		std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
 		subImageTmp = SubImage<Float>::createSubImage(
-			*imageClone, *_getRegion(),
-			_getMask(), (list ? _getLog().get() : 0), False, AxesSpecifier(True)
+			*imageClone, *_getRegion(), _getMask(),
+			(list ? _getLog().get() : 0), False,
+			AxesSpecifier(True), _getStretch()
 		);
 	}
 

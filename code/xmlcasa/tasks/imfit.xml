@@ -122,7 +122,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <description>Keep the zero level offset fixed during fit? Default is False </description>
         <value>False</value>
     </param>
+    <param type="bool" direction="in" name="stretch" subparam="true">
+        <description>Stretch the mask if necessary and possible? See help stretch.par </description>
+        <value>False</value>
+    </param>
     <constraints>
+        <when param="mask">
+            <notequals type="string" value="">
+                <default param="stretch"><value type="bool">False</value></default>
+            </notequals>
+        </when>
         <when param="logfile">
             <notequals type="string" value="">
                 <default param="append">

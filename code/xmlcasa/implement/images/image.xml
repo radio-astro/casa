@@ -4251,6 +4251,10 @@ tool attached to the residual (continuum subtracted) image.
             <description>Keep the zero level offset fixed during fit? Default is False </description>
             <value>false</value>
         </param>
+        <param type="bool" direction="in" name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
+            <value>false</value>
+        </param>
     </input>
     <returns type="any"><any type="record"/>Componentlist tool or fail</returns>
     <description>
