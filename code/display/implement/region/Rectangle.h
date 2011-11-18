@@ -56,7 +56,11 @@ namespace casa {
 
 		int clickHandle( double x, double y ) const;
 
-		// returns mouse movement state
+
+		// returns point state (Region::PointLocation)
+		PointInfo checkPoint( double x, double y ) const;
+
+		// returns mouse state (Region::MouseState)
 		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		// for rectangles, resizing can change the handle...
@@ -71,12 +75,12 @@ namespace casa {
 
 		virtual bool flag( MSAsRaster *msar );
 
+		// in "linear" coordinates...
+		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
+
 	    protected:
 		RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 		std::list<RegionInfo> *generate_dds_statistics( );
-
-		// in "linear" coordinates...
-		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;
@@ -90,7 +94,7 @@ namespace casa {
 
 	    private:
 		bool within_vertex_handle( double x, double y ) const;
-
+		unsigned int check_handle( double x, double y ) const;
 
 	};
     }

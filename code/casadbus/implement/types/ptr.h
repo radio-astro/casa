@@ -43,6 +43,9 @@ namespace casa {
 		T *operator->( ) { return ptr.val; }
 		T &operator*( ) { return *ptr.val; }
 
+		const T *operator->( ) const { return ptr.val; }
+		const T &operator*( ) const { return *ptr.val; }
+
 		bool isNull( ) const { return ptr.isNull( ); }
 		const cptr<T> &operator=( const cptr<T> &other ) { ptr = other.ptr; return *this; }
 		const cptr<T> &operator=( T *&optr ) { ptr = optr; optr = 0; return *this; }
@@ -76,6 +79,20 @@ namespace casa {
 
 	template<class T> bool operator==( const cptr<T> &l, T *r ) { return l.ptr.eq(r); }
 	template<class T> bool operator==( T *l, const cptr<T> &r ) { return r.ptr.eq(l); }
+
+	// considered introducing something like:
+	//
+	// template <class D, class B> class cptr_ref {
+	//     public:
+	//         cptr_ref(cptr<D> &);
+	//         cptr_ref( const cptr_ref<D,B> &other);
+	//         B *operator->( ) { return ref.operator->( ); }
+	//         B &operator*( ) { return ref.operator*( ); }
+	// };
+	//
+	// to represent a base class (B) reference to a counted pointer based on
+	// a derived class (D). However, the derived class is still intertwined
+	// with the type so it falls short for a number of derived classes.
     }
 
     using memory::operator==;

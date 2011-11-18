@@ -55,6 +55,7 @@ namespace casa {
 	    connect( font_italic, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( font_bold, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( save_now, SIGNAL(clicked(bool)), SLOT(save_region(bool)) );
+	    connect( region_mark, SIGNAL(stateChanged(int)), SLOT(state_change(int)) );
 
 	    int z_max = region_->numFrames( );
 	    frame_min->setMaximum(z_max);

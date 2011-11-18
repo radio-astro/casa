@@ -1242,7 +1242,10 @@ void QtPixelCanvas::keyPressEvent (QKeyEvent* e ) {
       case Qt::Key_End:        ksym = Display::K_End; break;
       case Qt::Key_PageUp:     ksym = Display::K_Page_Up; break;
       case Qt::Key_PageDown:   ksym = Display::K_Page_Down; break;
-      default:                 e->ignore(); return;
+      default:		       if ( dlKeyMods_(e->modifiers()) == 0 ) {
+				   e->ignore();
+				   return;
+			       }
   }
 
   uInt kmods = dlKeyMods_(e->modifiers());

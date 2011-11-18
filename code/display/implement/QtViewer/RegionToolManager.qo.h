@@ -68,9 +68,32 @@ namespace casa {
 		void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
 
 	    private:
+		typedef std::set<viewer::Region*> region_list_type;
+		typedef std::pair<double,double> linear_point_type;
 		PanelDisplay *pd;
 		typedef std::map<ToolTypes,RegionTool*> tool_map;
 		tool_map tools;
+
+		// members for keeping track of marked (sticky-selected) regions...
+		region_list_type marked_regions;
+
+		// members for state when moving selected region...
+		bool inDrawArea( WorldCanvas *wc, const linear_point_type &new_blc, const linear_point_type &new_trc ) const;
+		region_list_type moving_regions;
+		linear_point_type moving_ref_point;
+		linear_point_type moving_blc;
+		linear_point_type moving_trc;
+
+		// members for state when moving a region handle...
+		bool moving_handle;
+		viewer::Region::PointInfo moving_handle_info;
+		viewer::Region *moving_handle_region;
+
+		bool add_mark_select( RegionTool::State &state );
+		void clear_mark_select( RegionTool::State &state );
+		bool setup_moving_regions( RegionTool::State &state );
+		void setup_moving_regions_state( double linx, double liny );
+		void translate_moving_regions( WorldCanvas *wc, double dx, double dy );
 	};
     }
 }

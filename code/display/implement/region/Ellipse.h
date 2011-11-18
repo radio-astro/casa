@@ -31,7 +31,6 @@
 
 #include <display/region/Rectangle.h>
 #include <casa/BasicSL/String.h>
-#include <casadbus/types/ptr.h>
 #include <list>
 
 namespace casa {

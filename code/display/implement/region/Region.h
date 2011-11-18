@@ -93,9 +93,30 @@ namespace casa {
 		enum Units { Degrees, Radians, HMS, DMS, DefaultUnits };
 
 		// state returned from mouse functions for regions...
-		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseStickySelected = 1 << 2, MouseUnselected = 1 << 3, MouseHandle = 1 << 4 };
+		enum MouseState { MouseRefresh = 1 << 0, MouseSelected = 1 << 1, MouseHandle = 1 << 2 };
 
 		enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion };
+
+		enum PointLocation { PointInside = 1 << 0, PointHandle = 1 << 1, PointOutside = 1 << 2 };
+
+		class PointInfo {
+		    public:
+			PointInfo( double x, double y, unsigned int location, unsigned int handle=0 ) :
+							x_(x), y_(y), location_(location), handle_(handle) { }
+			PointInfo( const PointInfo &other) : location_(other.location_), handle_(other.handle_) { }
+			unsigned int handle( ) const { return handle_; }
+			unsigned int &handle( ) { return handle_; }
+			unsigned int location( ) const { return location_; }
+			unsigned int operator&( PointLocation mask ) const { return location_ & mask; }
+			double x( ) const { return x_; }
+			double y( ) const { return y_; }
+			double &x( ) { return x_; }
+			double &y( ) { return y_; }
+		    private:
+			double x_, y_;
+			unsigned int location_;
+			unsigned int handle_;
+		};
 
 		// functions to query results from mouse functions...
 		static bool refreshNeeded( int v ) { return v & MouseRefresh ? true : false; }
@@ -154,6 +175,8 @@ namespace casa {
 		// duplicate of MultiWCTool::refresh( )
 		void refresh( );
 
+		virtual PointInfo checkPoint( double x, double y ) const = 0;
+
 		// returns OR'ed set of MouseState...
 		virtual unsigned int mouseMovement( double x, double y, bool other_selected ) DISPLAY_PURE_VIRTUAL(Region::mouseMovement,0);
 
@@ -178,6 +201,15 @@ namespace casa {
 		virtual int moveHandle( int handle, double /*x*/, double /*y*/ ) DISPLAY_PURE_VIRTUAL(Region::moveHandle,handle);
 		virtual void move( double /*dx*/, double /*dy*/ ) DISPLAY_PURE_VIRTUAL(Region::move,);
 
+		// functions added with the introduction of RegionToolManager and the
+		// unified selection and manipulation of the various region types...
+		virtual void mark( bool set=true ) = 0;
+		virtual bool marked( ) const = 0;
+		virtual void mark_toggle( ) = 0;
+
+		// in "linear" coordinates...
+		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const
+			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
 	    protected:
 		static Int getAxisIndex( ImageInterface<Float> *image, String axtype );
@@ -189,10 +221,6 @@ namespace casa {
 		Units current_units( ) const;
 		Coord current_region_coordsys( ) const;
 		MDirection::Types current_casa_coordsys( ) const;
-
-		// in "linear" coordinates...
-		virtual void boundingRectangle( double &blc_x, double &blc_y, double &trc_x, double &trc_y ) const
-			DISPLAY_PURE_VIRTUAL(Region::boundingRectangle,);
 
 		virtual void drawRegion( bool selected ) DISPLAY_PURE_VIRTUAL(Region::drawRegion,);
 		virtual void drawText( );

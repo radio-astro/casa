@@ -859,6 +859,15 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
+    void MultiRectTool::checkPoint( WorldCanvas *wc, State &state ) {
+	for ( rectanglelist::iterator iter = ((MultiRectTool*) this)->rectangles.begin(); iter != rectangles.end(); ++iter ) {
+	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x(), state.y() );
+	    // should consider introducing a cptr_ref which somehow allows creating a
+	    // base class reference based on a counted pointer to a derived class...
+	    state.insert( this, &*(*iter), point_state );
+	}
+    }
+
     bool MultiRectTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style ) {

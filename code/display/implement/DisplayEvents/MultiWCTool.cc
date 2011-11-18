@@ -156,7 +156,7 @@ void MultiWCTool::disable() {
 }
 
 void MultiWCTool::operator()(const WCPositionEvent &ev) {
-  if (ev.key() != getKey()) {
+  if (ev.key() != getKey() || getKey( ) == Display::K_None ) {
     if (ev.keystate()) {
       otherKeyPressed(ev);
     } else {

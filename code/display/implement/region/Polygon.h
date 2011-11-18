@@ -58,6 +58,11 @@ namespace casa {
 		// for rectangles, moving a handle is resizing...
 		int moveHandle( int handle, double x, double y );
 		void move( double dx, double dy );
+
+		// returns point state (Region::PointLocation)
+		PointInfo checkPoint( double x, double y ) const;
+
+		// returns mouse state (Region::MouseState)
 		unsigned int mouseMovement( double x, double y, bool other_selected );
 
 		void regionCenter( double &x, double &y ) const;
@@ -67,7 +72,13 @@ namespace casa {
 
 		AnnotationBase *annotation( ) const;
 
+		// return the *drawing* bounding rectangle...
+		// in "linear" coordinates...
+		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
+
 	    protected:
+		unsigned int check_handle( double x, double y ) const;
+
 		enum YScaleTo { ScaleTop, ScaleBottom };
 		enum XScaleTo { ScaleLeft, ScaleRight };
 		enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
@@ -75,10 +86,6 @@ namespace casa {
 		std::list<RegionInfo> *generate_dds_statistics( );
 
 		void drawRegion( bool );
-
-		// return the *drawing* bounding rectangle...
-		// in "linear" coordinates...
-		void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
 		virtual void fetch_region_details( RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 						   std::vector<std::pair<double,double> > &world_pts ) const;

@@ -51,7 +51,6 @@ namespace casa {
 		int zMax( ) const;
 		int numFrames( ) const;
 
-		bool marked( ) const { return region_mark->isChecked( ); }
 
 		// reset the widget to its original state...
 		void reset( const QString &name, QtRegion *r );
@@ -66,6 +65,14 @@ namespace casa {
 		// may be called after "outputRegion" signal to notify the
 		// user that no regions were selected for output...
 		void noOutputNotify( );
+
+		// functions added with the introduction of RegionToolManager and the
+		// unified selection and manipulation of the various region types...
+		/* void mark( bool set=true ) { region_mark->setCheckState( set ? Qt::Checked : Qt::Unchecked ); } */
+		/* bool marked( ) const { return region_mark->checkState( ) == Qt::Checked ? true : false; } */
+		void mark( bool set=true ) { region_mark->setChecked( set ); }
+		bool marked( ) const { return region_mark->isChecked( ); }
+		void mark_toggle( ) { region_mark->setChecked(region_mark->isChecked( ) ? false : true); }
 
 	    signals:
 		void refreshCanvas( );

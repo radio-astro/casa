@@ -106,6 +106,19 @@ namespace casa {
 		return false;
 	}
 
+	// returns point state (Region::PointLocation)
+	Region::PointInfo Point::checkPoint( double xd, double yd ) const {
+	    unsigned int result = 0;
+	    int x, y, ptx, pty;
+	    linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
+
+	    if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius )
+		result |= PointInside;
+
+	    return PointInfo(xd,yd,result == 0 ? PointOutside : result);
+	}
+
+        // returns mouse state (Region::MouseState)
 	unsigned int Point::mouseMovement( double xd, double yd, bool other_selected ) {
 	    unsigned int result = 0;
 

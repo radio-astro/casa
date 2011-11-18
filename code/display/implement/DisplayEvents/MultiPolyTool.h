@@ -114,6 +114,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
   
+	    void checkPoint( WorldCanvas *wc, State &state );
+
 	    virtual bool create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				 const std::string &font, int font_size, int font_style, const std::string &font_color,
 				 const std::string &line_color, viewer::Region::LineStyle line_style );

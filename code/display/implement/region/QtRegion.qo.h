@@ -104,6 +104,12 @@ namespace casa {
 		void holdSignals( ) { hold_signals++; }
 		void releaseSignals( );
 
+		// functions added with the introduction of RegionToolManager and the
+		// unified selection and manipulation of the various region types...
+		void mark( bool set=true ) { mystate->mark( set ); }
+		bool marked( ) const { return mystate->marked( ); }
+		void mark_toggle( ) { mystate->mark_toggle( ); }
+
 	    public slots:
 		/* void name( const QString &newname ); */
 		/* void color( const QString &newcolor ); */
