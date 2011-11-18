@@ -43,7 +43,7 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = true;
+const bool TestFlagger::dbg = false;
 
 LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 
@@ -95,6 +95,11 @@ TestFlagger::done()
 		dataselection_p = temp;
 	}
 
+	if (! agentParams_p.empty()) {
+		Record temp;
+		agentParams_p = temp;
+	}
+
 	if(summaryAgent_p){
 		summaryAgent_p = NULL;
 	}
@@ -104,40 +109,152 @@ TestFlagger::done()
 	agents_list_p.clear();
 
 	if(dbg)
-		cout << "done: Run the destructor" << endl;
+		cout << "TestFlagger::done() Run the destructor" << endl;
 
 	return;
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::configTestFlagger
-// Parse some parameters to the FlagDataHandler
+// TestFlagger::open
+// Configure some parameters to the TestFlagger
 // ---------------------------------------------------------------------
 bool
-TestFlagger::configTestFlagger(Record config)
+TestFlagger::open(String msname, Double ntime)
 {
-	// msname, async, parallel
-	LogIO os(LogOrigin("TestFlagger", "configTestFlagger()", WHERE));
 
-	if (config.empty()){
-		return false;
+	LogIO os(LogOrigin("TestFlagger", "open()", WHERE));
+
+	if (msname.empty()) {
+		os << LogIO::SEVERE << "No Measurement Set has been parsed"
+				<< LogIO::POST;
+		return False;
 	}
 
-	// get the parameters to parse
-	// TODO: Check for the existence later....
+	msname_p = msname;
+
+	if (ntime)
+		timeInterval_p = ntime;
+
 	if(dbg){
-		cout << "configTestFlagger: "<< endl;
-		config.get("msname", msname_p);
-		cout << "configTestFlagger: "<< msname_p << endl;
-		config.get("ntime", timeInterval_p);
-		cout << "configTestFlagger: "<< timeInterval_p << endl;
+		os << LogIO::NORMAL << "msname = " << msname_p << " ntime = " << timeInterval_p << LogIO::POST;
 	}
+
+	if(fdh_p) delete fdh_p;
+
+	// create a FlagDataHandler object
+	fdh_p = new FlagDataHandler(msname_p, iterationApproach_p, timeInterval_p);
+
+	// Open the MS
+	fdh_p->open();
 
 	return true;
 }
 
 // ---------------------------------------------------------------------
-// TestFlagger::parseDataSelection
+// TestFlagger::selectData
+// Parse parameters to the FlagDataHandler and select the data
+// ---------------------------------------------------------------------
+bool
+TestFlagger::selectData(Record selrec)
+{
+
+	LogIO os(LogOrigin("TestFlagger", "selectData()", WHERE));
+	if (dbg)
+		os << LogIO::NORMAL << "Called from selectData(Record)" << LogIO::POST;
+
+
+	if (! selrec.empty()) {
+
+		dataselection_p = selrec;
+
+		// Check if all the parameters are in the record. If not,
+		// use the default values
+		if (dataselection_p.isDefined("spw"))
+			dataselection_p.get("spw", spw_p);
+		if (dataselection_p.isDefined("scan"))
+			dataselection_p.get("scan", scan_p);
+		if (dataselection_p.isDefined("field"))
+			dataselection_p.get("field", field_p);
+		if (dataselection_p.isDefined("antenna"))
+			dataselection_p.get("antenna", antenna_p);
+		if (dataselection_p.isDefined("timerange"))
+			dataselection_p.get("timerange", timerange_p);
+		if (dataselection_p.isDefined("correlation"))
+			dataselection_p.get("correlation", correlation_p);
+		if (dataselection_p.isDefined("intent"))
+			dataselection_p.get("intent", intent_p);
+		if (dataselection_p.isDefined("feed"))
+			dataselection_p.get("feed", feed_p);
+		if (dataselection_p.isDefined("array"))
+			dataselection_p.get("array", array_p);
+		if (dataselection_p.isDefined("uvrange"))
+			dataselection_p.get("uvrange", uvrange_p);
+		if (dataselection_p.isDefined("observation"))
+			dataselection_p.get("observation", observation_p);
+
+	}
+
+	bool ret_status = true;
+
+	// Set the data selection
+	ret_status = fdh_p->setDataSelection(dataselection_p);
+	if (!ret_status) {
+		os << LogIO::SEVERE << "Failed to set the data selection."
+				<< LogIO::POST;
+		return false;
+	}
+
+	// Select the data
+	ret_status = fdh_p->selectData();
+	if (!ret_status) {
+		os << LogIO::SEVERE << "Failed to select the data."
+				<< LogIO::POST;
+		return false;
+	}
+
+	return true;
+}
+
+
+// ---------------------------------------------------------------------
+// TestFlagger::selectData
+// Parse parameters to the FlagDataHandler and select the data
+// ---------------------------------------------------------------------
+bool
+TestFlagger::selectData(String field, String spw, String array,
+						String feed, String scan, String antenna,
+						String uvrange,  String timerange, String correlation,
+						String intent, String observation)
+{
+
+	LogIO os(LogOrigin("TestFlagger", "selectData()", WHERE));
+
+	if (dbg)
+		os << LogIO::NORMAL << "Called from selectData(String....)" << LogIO::POST;
+
+	// Create a record with the parameters
+
+	dataselection_p.define("spw", spw);
+	dataselection_p.define("scan", scan);
+	dataselection_p.define("field", field);
+	dataselection_p.define("antenna", antenna);
+	dataselection_p.define("timerange", timerange);
+	dataselection_p.define("correlation", correlation);
+	dataselection_p.define("intent", intent);
+	dataselection_p.define("feed", feed);
+	dataselection_p.define("array", array);
+	dataselection_p.define("uvrange", uvrange);
+	dataselection_p.define("observation", observation);
+
+	// Call the main selectData() method
+	selectData(dataselection_p);
+
+	return true;
+
+}
+
+// ---------------------------------------------------------------------
+// DEPRECATED: TestFlagger::parseDataSelection
 // Parse union of parameters to the FlagDataHandler
 // ---------------------------------------------------------------------
 bool
@@ -180,28 +297,42 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	LogIO os(LogOrigin("TestFlagger", "parseAgentParameters()", WHERE));
 
 	if(agent_params.empty()){
-		return false;
+
+		// TODO: Use the default agent, which is manualflag. In this case
+		// it will rely on the MS selected in selectData().
+		os << LogIO::NORMAL << "Will flag using the default mode = manualflag" << LogIO::POST;
+		mode_p = "manualflag";
+		agentParams_p.define("mode", mode_p);
 	}
+	else {
 
-	// TODO: should I verify the contents of the record?
+		agentParams_p = agent_params;
 
-	// If there is a tfcrop agent in the list, we should
-	// change the iterationApproach to all the agents
-	agent_params.get("mode", mode_p);
+		// TODO: should I verify the contents of the record?
 
-	if (mode_p.compare("tfcrop") == 0) {
-		iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
+		// If there is a tfcrop agent in the list, we should
+		// change the iterationApproach to all the agents
+		agentParams_p.get("mode", mode_p);
+
+		if (mode_p.compare("tfcrop") == 0) {
+			iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
+		}
+
 	}
 
 	// add this agent to the list
-	agents_config_list_p.push_back(agent_params);
+	agents_config_list_p.push_back(agentParams_p);
+
+	if(dbg)
+		os << LogIO::NORMAL << "Will use mode= " << mode_p << LogIO::POST;
+
 
 	return true;
 }
 
 
 // ---------------------------------------------------------------------
-// TestFlagger::initFlagDataHandler
+// DEPRECATED TestFlagger::initFlagDataHandler
 // Initialize the FlagDataHandler
 // ---------------------------------------------------------------------
 bool
@@ -290,7 +421,8 @@ TestFlagger::initAgents()
 		agent_rec.get("mode", mode);
 		if (mode.compare("summary") == 0) {
 			if(dbg)
-				cout << "initAgents: get the summary agent" << endl;
+				os << LogIO::NORMAL << "Get the summary agent from the agent's list."
+						<< LogIO::POST;
 
 			summaryAgent_p = (FlagAgentSummary *) fa;
 		}
@@ -354,14 +486,13 @@ TestFlagger::run()
 	Record summary_stats = Record();
 	if (summaryAgent_p){
 		if(dbg)
-			cout << "run: get the summary results" << endl;
+			os << LogIO::NORMAL << "Get the summary results" << LogIO::POST;
 
 		summary_stats = summaryAgent_p->getResult();
 	}
 
 	return summary_stats;
 }
-
 
 
 

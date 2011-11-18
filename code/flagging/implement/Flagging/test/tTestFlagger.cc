@@ -267,8 +267,6 @@ int main(int argc, char **argv)
 	if (logLevel >= 3) cout << "Reading command line parameters " << endl;
 
 	// Create a record to configure the TestFlagger tool
-	Record config;
-	config.define("ntime", ntime);
 
 	for (unsigned short i=0;i<argc-1;i++)
 	{
@@ -278,20 +276,18 @@ int main(int argc, char **argv)
 		if (parameter == String("-msname"))
 		{
 			msname = value;
-			config.define("msname", casa::String(value));
 			if (logLevel >= 3) cout << "MS is: " << msname << endl;
 		}
 		else if (parameter == String("-ntime"))
 		{
 			ntime = (Double)atof(value.c_str());
 			if (logLevel >= 3) cout << "Time inteval is: " << ntime << endl;
-			config.define ("ntime", ntime);
 		}
 	}
 
 	TestFlagger *tf = new TestFlagger();
-	if(not tf->configTestFlagger(config)) {
-		cout << "ERROR: Failed to run configTestFlagger" << endl;
+	if(not tf->open(msname, ntime)) {
+		cout << "ERROR: Failed to open the tool" << endl;
 	}
 
 
@@ -384,8 +380,8 @@ int main(int argc, char **argv)
 	}
 
 	// Parse the data selection parameters
-	if(not tf->parseDataSelection(record)) {
-		cout << "ERROR: Failed to parse the data selection" << endl;
+	if(not tf->selectData(record)) {
+		cout << "ERROR: Failed to select the data" << endl;
 	}
 
 
@@ -420,12 +416,6 @@ int main(int argc, char **argv)
 
 	if (logLevel >= 3) cout << "Done with parsing agent parameters: "<< endl;
 
-	// Initialize the FlagDataHandler
-	if (not tf->initFlagDataHandler()) {
-		cout << "ERROR: Failed to initialize the FlagDataHandler" << endl;
-	}
-
-	if (logLevel >= 3) cout << "Done with initializing the FlagDataHandler "<< endl;
 
 	// Initialize the agents
 	if (not tf->initAgents()) {
