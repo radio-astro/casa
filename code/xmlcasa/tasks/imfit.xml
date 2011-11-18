@@ -28,7 +28,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="region">
-        <description>Region name or region specified using rg tool.</description>
+        <description>Region. See help par.region for specs.</description>
 	    <any type='variant' limittype='string stringArray record'/>
         <value type='string'/>
         <example>region='myregion'</example>
@@ -123,7 +123,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
     </param>
     <param type="bool" direction="in" name="stretch" subparam="true">
-        <description>Stretch the mask if necessary and possible? See help stretch.par </description>
+        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
         <value>False</value>
     </param>
     <constraints>
@@ -167,10 +167,7 @@ box              One or more box regions to use for fitting,
                  eg "100, 120, 200, 220, 300, 300, 400, 400"
                  to use two boxes. If both box and region
                  parameters are specified, box is used.
-region           Region name or region specified using rg tool.
-                 A region from another image can be specified using the
-                 imagename:regionname syntax, eg "mycontinuumimage:mysourceregion"
-chans            Spectral channels on which to perform fit.
+region           Region of interest. See help par.region for specification options.
 stokes           Stokes parameter to fit. If blank, first polarization plane is used.
 mask             Mask to be applied to the image. Can be a mask associated with the
                  image or an LEL expression. 
@@ -193,6 +190,8 @@ overwrite        Overwrite component list table if it exists?
 dooff            Simultaneously fit a zero-level offset?
 offset           Initial estimate for the zero-level offset. Only used if dooff is True.
 fixoffset        Hold zero-level offset constant during fit? Only used if dooff is True.
+stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
+                 See help par.stretch.
 
 OVERVIEW
 imfit is used to fit one or more gaussians to sources in an image as
