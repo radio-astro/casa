@@ -63,7 +63,7 @@ namespace casa {
 		    ~State( );
 
 		private:
-		    void *operator new( unsigned long ); // { /* refresh( ) with automatic creation/deletion in mind */ }
+		    void *operator new( size_t ); // { /* refresh( ) with automatic creation/deletion in mind */ }
 		    State( const State & ) { }
 		    State( ) { }
 
