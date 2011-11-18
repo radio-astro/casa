@@ -15,14 +15,10 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogOrigin.h>
 #include <casa/Exceptions/Error.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
 #include <flagging/Flagging/TestFlagger.h>
 #include <flagging/Flagging/RFCommon.h>
 #include <casa/Containers/RecordInterface.h>
 #include <casa/Containers/Record.h>
-#include <casa/Arrays/Array.h>
-#include <casa/Arrays/Vector.h>
-#include <casa/Arrays/IPosition.h>
 #include <casa/sstream.h>
 #include <unistd.h>
 #include <xmlcasa/StdCasa/CasacSupport.h>
@@ -59,7 +55,7 @@ testflagger::~testflagger()
 	}
 }
 
-void
+bool
 testflagger::done()
 {
 	try
@@ -68,7 +64,12 @@ testflagger::done()
 			delete testflagger_p;
 			testflagger_p = NULL;
 		}
+		if (logger_p){
+			delete logger_p;
+			logger_p = NULL;
+		}
 
+		return true;
 	} catch (AipsError x) {
 		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 		RETHROW(x);
@@ -77,13 +78,15 @@ testflagger::done()
 }
 
 bool
-testflagger::configTestFlagger(const ::casac::record& tfconfig)
+testflagger::open(const std::string& msname, const double ntime)
 {
 	try
 	{
-		Record config = *toRecord(tfconfig);
+		if ( !testflagger_p ) {
+		    testflagger_p = new TestFlagger();
+		}
 		if (testflagger_p) {
-			return testflagger_p->configTestFlagger(config);
+			return testflagger_p->open(msname, ntime);
 		}
 
 		return false;
@@ -92,6 +95,51 @@ testflagger::configTestFlagger(const ::casac::record& tfconfig)
 		RETHROW(x);
 	}
 
+}
+
+
+bool
+testflagger::selectdata(
+	const ::casac::record& selconfig,
+    const std::string& field,
+    const std::string& spw,
+    const std::string& array,
+    const std::string& feed,
+    const std::string& scan,
+    const std::string& antenna,
+    const std::string& uvrange,
+    const std::string& timerange,
+    const std::string& correlation,
+    const std::string& intent,
+    const std::string& observation)
+{
+
+	try {
+
+	if (testflagger_p) {
+
+		Record config = *toRecord(selconfig);
+		if (! selconfig.empty()) {
+
+			// Select based on the record
+			return testflagger_p->selectData(config);
+		}
+		else {
+
+			// Select based on the parameters
+		    return testflagger_p->selectData(
+			String(field),String(spw),String(array),
+			String(feed),String(scan),String(antenna),
+			String(uvrange),String(timerange),String(correlation),
+	        String(intent), String(observation));
+		}
+    }
+
+	return false;
+    } catch (AipsError x) {
+    	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    	RETHROW(x);
+    }
 }
 
 bool
@@ -136,9 +184,8 @@ testflagger::init()
 	try
 	{
 		if(testflagger_p){
-			if (testflagger_p->initFlagDataHandler()) {
 				return testflagger_p->initAgents();
-			}
+//			}
 		}
 
 		return false;

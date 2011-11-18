@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+    <task type="function" name="tflagger" category="editing">
+        <shortdescription> All purpose flagging task based on selections</shortdescription>
+        <description>
+            The task will select a subset of data explicitly
+            for flagging, quacking, clipping, autocorrelation flagging,
+            or flagging of shadowed antennas. Unflagging is also
+            available.
+
+            In a dual polarization data set, each polarization
+            can be flagged separately. However, at present the
+            calibration and imaging will only use data with both parallel
+            hands unflagged.
+
+            There is a vector mode of operation, which
+            executes several flagging
+            options in one go.
+
+            The current flags
+            are automatically backed up before applying new flags.
+            Previous flag versions can be recovered using the
+            flagmanager task.
+        </description>
+
+        <input>
+            <param type="string" name="vis" mustexist="true">
+                <description>Name of MS file to flag</description>
+                <value />
+            </param>
+
+            <param type="string" name="inputtype">
+                <description>Type of input with flagging commands(None,table,file,xml,cmd)</description>
+                <value />
+                <allowed kind="enum">
+                	<value />
+                    <value>table</value>
+                    <value>file</value>
+                    <value>xml</value>
+                    <value>cmd</value>
+                </allowed>
+            </param>
+
+            <param type="string" name="inputfile" subparam="true">
+                <description>Name of flag command file to input</description>
+                <value />
+            </param>
+
+            <param type="intArray" name="tablerows" subparam="true">
+                <description>Rows of FLAG_CMD table to read</description>
+                <value type="vector" />
+            </param>
+
+            <param type="bool" name="useapplied" subparam="true">
+                <description>Read in rows marked as applied too</description>
+                <value>False</value>
+            </param>
+
+            <param type="double" name="tbuff" subparam="true">
+                <description>Time buffer to pad flags (in seconds)</description>
+                <value>1.0</value>
+            </param>
+
+            <param type="string" name="ants" subparam="true">
+                <description>Select FLAG_CMD table rows based on antenna names</description>
+                <value />
+            </param>
+
+            <param type="any" name="command" subparam="true">
+                <description>List of flag command(s) to input</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+
+            <param type="any" name="reason">
+                <description>Select rows based on REASON(s)</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">Any</value>
+            </param>
+
+            <param type="int" name="ntime">
+                <description>Time-range to use for each chunk (in seconds)</description>
+                <value>0</value>
+            </param>
+
+            <param type="bool" name="extend">
+                <description>Extend the new flags in various ways</description>
+                <value>False</value>
+            </param>
+
+            <param type="string" name="mode">
+                <description>Flagging Mode (manualflag,clip,shadow,quack,elevation,tfcrop,extendflags,unflag,summary)</description>
+                <value>manualflag</value>
+                <allowed kind="enum">
+                    <value>manualflag</value>
+                    <value>clip</value>
+                    <value>shadow</value>
+                    <value>quack</value>
+                    <value>elevation</value>
+                    <value>tfcrop</value>
+                    <value>extendflags</value>
+                    <value>unflag</value>
+                    <value>summary</value>
+                </allowed>
+            </param>
+
+            <param type="bool" name="selectdata">
+                <description>Data selection parameters</description>
+                <value>True</value>
+            </param>
+
+            <param type="any" name="spw" subparam="true">
+                <description>spectral-window/frequency/channel</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="field" subparam="true">
+                <description>Field names or field index numbers: \'\'==>all, field=\'0~2,3C286\'</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="antenna" subparam="true">
+                <description>antenna/baselines: \'\'==>all, antenna =\'3,VA04\'</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="uvrange" subparam="true">
+                <description>uv range: \'\'==>all; uvrange =\'0~100klambda\', default units=meters</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="timerange" subparam="true"><description>time range: \'\'==>all,timerange=\'09:14:0~09:54:0\'</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="correlation" subparam="true">
+                <description>Select data based on correlation</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="scan" subparam="true">
+                <description>scan numbers: \'\'==>all</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="intent" subparam="true">
+                <description>Select data based on observation intent: \'\'==>all</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="feed" subparam="true">
+                <description>multi-feed numbers: Not yet implemented</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="array" subparam="true">
+                <description>(sub)array numbers: \'\'==>all</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string" />
+            </param>
+            <param type="any" name="observation" subparam="true">
+                <description>Select data based on observation ID: \'\'==>all</description>
+                <any type="variant" limittypes="string int" />
+                <value type="string" />
+            </param>
+
+            <param type="any" name="expression" subparam="true">
+                <description>Expression to clip on</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">ABS ALL</value>
+            </param>
+            <param type="any" name="clipminmax" subparam="true">
+                <description>Range to use for clipping</description>
+                <any type="variant" limittypes="doubleArray doubleArrayArray" />
+                <value type="doubleArray" />
+            </param>
+            <param type="any" name="clipcolumn" subparam="true">
+                <description>Data column to use for clipping</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">DATA</value>
+                <!-- <allowed kind="enum"> <value>'DATA'</value> <value>'CORRECTED'</value> 
+                    <value>'MODEL'</value> </allowed> -->
+            </param>
+            <param type="any" name="clipoutside" subparam="true">
+                <description>Clip outside the range, or within it</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">True</value>
+            </param>
+            <param type="any" name="channelavg" subparam="true">
+                <description>Average over channels (scalar average)</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+
+            <param type="any" name="quackinterval" subparam="true">
+                <description>Quack n seconds from scan beginning or end</description>
+                <any type="variant" limittypes="double doubleArray" />
+                <value type="double">0.0</value>
+            </param>
+            <param type="any" name="quackmode" subparam="true">
+                <description>Quack mode. \'beg\' ==> beginning of scan.\'endb\' ==> end of scan. \'end\' ==> all but end of scan. \'tail\' ==> all but beginning of scan</description>
+                <any type="variant" limittypes="string stringArray" />
+                <value type="string">beg</value>
+            </param>
+            <param type="any" name="quackincrement" subparam="true">
+                <description>Flag incrementally in time?</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+
+            <param type="double" name="diameter" subparam="true">
+                <description>Effective diameter to use (in meters)</description>
+                <value>-1.0</value>
+            </param>
+
+            <param type="double" name="timecutoff" subparam="true">
+                <description>Flagging thresholds in units of deviation from the fit</description>
+                <value>4.0</value>
+            </param>
+            <param type="double" name="freqcutoff" subparam="true">
+                <description>Flagging thresholds in units of deviation from the fit</description>
+                <value>3.0</value>
+            </param>
+            <param type="string" name="timefit" subparam="true">
+                <description>Fitting function for the time direction (poly/line)</description>
+                <value>line</value>
+            </param>
+            <param type="string" name="freqfit" subparam="true">
+                <description>Fitting function for the frequency direction (poly/line)</description>
+                <value>poly</value>
+            </param>
+            <param type="int" name="maxnpieces" subparam="true">
+                <description>Number of pieces in the polynomial-fits (for \'freqfit\' or \'timefit\' = \'poly\')</description>
+                <value>7</value>
+            </param>
+
+            <param type="string" name="flagdimension" subparam="true">
+                <description>Dimensions along which to calculate fits (freq/time/freqtime/timefreq)</description>
+                <value>freqtime</value>
+            </param>
+            <param type="string" name="usewindowstats" subparam="true">
+                <description>Calculate additional flags using sliding window statistics (none,sum,std,both)</description>
+                <value>none</value>
+            </param>
+            <param type="int" name="halfwin" subparam="true">
+                <description>Half-width of sliding window to use with \'usewindowstats\' (1,2,3).</description>
+                <value>1</value>
+            </param>
+
+            <param type="double" name="lowerlimit" subparam="true">
+                <description>Lower limiting elevation (in degrees)</description>
+                <value>0.0</value>
+            </param>
+            <param type="double" name="upperlimit" subparam="true">
+                <description>Upper limiting elevation (in degrees)</description>
+                <value>90.0</value>
+            </param>
+
+            <param type="double" name="minrel" subparam="true">
+                <description>minimum number of flags (relative)</description>
+                <value type="double">0.0</value>
+            </param>
+            <param type="double" name="maxrel" subparam="true">
+                <description>maximum number of flags (relative)</description>
+                <value type="double">1.0</value>
+            </param>
+            <param type="int" name="minabs" subparam="true">
+                <description>minimum number of flags (absolute)</description>
+                <value type="int">0</value>
+            </param>
+            <param type="int" name="maxabs" subparam="true">
+                <description>maximum number of flags (absolute). Use a negative value to indicate infinity.</description>
+                <value type="int">-1</value>
+            </param>
+            <param type="any" name="spwchan" subparam="true">
+                <description>Print summary of channels per spw</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+            <param type="any" name="spwcorr" subparam="true">
+                <description>Print summary of correlation per spw</description>
+                <any type="variant" limittypes="bool boolArray" />
+                <value type="bool">False</value>
+            </param>
+
+            <param type="bool" name="extendpols" subparam="true">
+                <description>If any correlation is flagged, flag all correlations</description>
+                <value>False</value>
+            </param>
+            <param type="double" name="growtime" subparam="true">
+                <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
+                <value>50.0</value>
+            </param>
+            <param type="double" name="growfreq" subparam="true">
+                <description>Flag all selected channels if more than X% of the frequency range is flagged(0-100)</description>
+                <value>50.0</value>
+            </param>
+            <param type="bool" name="growaround" subparam="true">
+                <description>Flag data based on surrounding flags</description>
+                <value>True</value>
+            </param>
+            <param type="bool" name="flagneartime" subparam="true">
+                <description>Flag one timestep before and after a flagged one (True/False)</description>
+                <value>False</value>
+            </param>
+            <param type="bool" name="flagnearfreq" subparam="true">
+                <description>Flag one channel before and after a flagged one (True/False)</description>
+                <value>False</value>
+            </param>
+
+            <param type="bool" name="datadisplay">
+                <description>Display data and flags at runtime </description>
+                <value>False</value>
+            </param>
+
+            <param type="bool" name="writeflags">
+                <description>Write Flags to the MS</description>
+                <value>True</value>
+            </param>
+
+            <param type="bool" name="flagbackup">
+                <description>Automatically back up the state of flags before the run</description>
+                <value>True</value>
+            </param>
+
+            <constraints>
+                <when param="inputtype">
+                    <equals value="" />
+                    <equals value="table">
+                        <default param="inputfile"> <value type="string" /></default>
+                        <default param="tablerows"><value type="vector" /></default>
+                        <default param="useapplied"><value>False</value></default>
+                    </equals>
+                    <equals value="file">
+                        <default param="inputfile"><value type="string" /></default>
+                    </equals>
+                    <equals value="cmd">
+                        <default param="command"><value>['']</value></default>
+                    </equals>
+                    <equals value="xml">
+                        <default param="tbuff"><value>1.0</value></default>
+                        <default param="ants"><value type="string" /></default>
+                    </equals>
+                </when>
+                
+                <when param="extend">
+                    <equals type="bool" value="False" />
+                    <equals type="bool" value="True">
+                        <default param="extendpols"><value type="bool">False</value></default>
+                        <default param="growtime"><value type="double">50.0</value></default>
+                        <default param="growfreq"><value type="double">50.0</value></default>
+                        <default param="growaround"><value type="bool">True</value></default>
+                        <default param="flagneartime"><value type="bool">False</value></default>
+                        <default param="flagnearfreq"><value type="bool">False</value></default>
+                    </equals>
+                </when>
+                    
+                <when param="selectdata">
+                    <equals type="bool" value="True">
+                        <default param="field"><value type="string"></value></default>
+                        <default param="spw"><value type="string"></value></default>
+                        <default param="antenna"><value type="string"></value></default>
+                        <default param="timerange"><value type="string"></value></default>
+                        <default param="correlation"><value type="string"></value></default>
+                        <default param="scan"><value type="string"></value></default>
+                        <default param="intent"><value type="string"></value></default>
+                        <default param="feed"><value type="string"></value></default>
+                        <default param="array"><value type="string"></value></default>
+                        <default param="uvrange"><value type="string"></value></default>
+                        <default param="observation"><value type="string"></value></default>
+                    <equals type="bool" value="False"/></equals>
+                </when>                    
+                    
+                <when param="mode">
+                    <equals value="manualflag" />
+                    <equals value="clip">
+                        <default param="expression"><value type="string">ABS ALL</value></default>
+                        <default param="datacolumn"><value type="string">DATA</value></default>
+                        <default param="clipminmax"><value type="doubleArray" /></default>
+                        <default param="clipoutside"><value type="bool">True</value></default>
+                        <default param="channelavg"> <value type="bool">False</value></default>
+                    </equals>
+                    <equals value="quack">
+                        <default param="quackinterval"><value type="double">0.0</value></default>
+                        <default param="quackmode"><value type="string">beg</value></default>
+                        <default param="quackincrement"><value type="bool">False</value></default>                   
+                    </equals>                    
+                    <equals value="shadow">
+                        <default param="diameter"><value type="double">-1.0</value></default>
+                    </equals>
+                    <equals value="elevation">
+                        <default param="lowerlimit"><value type="double">0.0</value></default>
+                        <default param="upperlimit"><value type="double">90.0</value></default>                    
+                    </equals>
+                    <equals value="tfcrop">
+                        <default param="timecutoff"><value type="double">4.0</value></default>
+                        <default param="freqcutoff"><value type="double">3.0</value></default>
+                        <default param="timefit"><value type="string">line</value></default>
+                        <default param="freqfit"><value type="string">poly</value></default>
+                        <default param="maxnpieces"><value type="int">7</value></default>
+                        <default param="flagdimension"><value type="string">freqtime</value></default>
+                        <default param="usewindowstats"><value type="string">none</value></default>
+                        <default param="halfwin"><value type="int">1</value></default>                    
+                    </equals>
+                    <equals value="extendflags">
+                        <default param="extendpols"><value type="bool">False</value></default>
+                        <default param="growtime"><value type="double">50.0</value></default>
+                        <default param="growfreq"><value type="double">50.0</value></default>
+                        <default param="growaround"><value type="bool">True</value></default>
+                        <default param="flagneartime"><value type="bool">False</value></default>
+                        <default param="flagnearfreq"><value type="bool">False</value></default>                    
+                    </equals>
+                    <equals value="summary">
+                        <default param="minrel"><value type="double">0.0</value></default>
+                        <default param="maxrel"><value type="double">1.0</value></default>
+                        <default param="minabs"><value type="int">0</value></default>
+                        <default param="maxabs"><value type="int">-1</value></default>
+                        <default param="spwchan"><value type="bool">False</value></default>
+                        <default param="spwcorr"><value type="bool">False</value></default>                    
+                    </equals>
+                </when>
+            </constraints>
+        </input>
+<returns type="void"/>
+<example>
+    
+    
+</example>
+
+
+    </task>
+</casaxml>
+        
