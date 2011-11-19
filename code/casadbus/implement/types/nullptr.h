@@ -1,5 +1,6 @@
-//# MultiEllipseTool.cc: Base class for MultiWorldCanvas event-based ellipse tools
-//# Copyright (C) 2000,2001,2002
+//# nullptr.h: pointer classes (currently only counted pointer) used within casadbus
+//#
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,13 +26,35 @@
 //#
 //# $Id$
 
-#include <display/DisplayEvents/MultiEllipseTool.h>
+#ifndef __casadbus_nullptr_h__
+#define __casadbus_nullptr_h__
+#include <tr1/memory>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiEllipseTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
-	return rfactory->ellipse( wc, x1, y1, x2, y2 );
+    namespace memory {
+
+	class _nullptr_t_ {
+	    public:
+		template<typename T> operator std::tr1::shared_ptr<T>( ) const { return std::tr1::shared_ptr<T>( ); }
+		template<typename T> bool check( const std::tr1::shared_ptr<T> &o ) const { return o == std::tr1::shared_ptr<T>( ); }
+	    private:
+		friend class nullptr_init_;
+		void do_init( ) { }
+	};
+
+	extern _nullptr_t_ nullptr;
+
+	static class nullptr_init_ {
+	    public:
+		nullptr_init_( ) { if ( count++ == 0 ) do_init( ); }
+		~nullptr_init_( ) { if ( --count == 0 ) { /* could destruct nullptr */ } }
+	    private:
+		static unsigned int count;
+		void do_init( );
+	} _nullptr_init_object_;
+
     }
+}
 
-
-} //# NAMESPACE CASA - END
+#endif

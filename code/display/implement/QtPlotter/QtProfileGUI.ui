@@ -223,7 +223,7 @@
       <property name="minimumSize">
        <size>
         <width>0</width>
-        <height>55</height>
+        <height>63</height>
        </size>
       </property>
       <property name="tabPosition">
@@ -248,7 +248,7 @@
           <x>0</x>
           <y>0</y>
           <width>580</width>
-          <height>27</height>
+          <height>34</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -260,7 +260,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="startValue"/>
+          <widget class="QLineEdit" name="startValue">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="toLabel">
@@ -270,7 +277,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="endValue"/>
+          <widget class="QLineEdit" name="endValue">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="collapseUnits">
@@ -365,7 +379,7 @@
   <widget class="QStatusBar" name="profileStatus"/>
   <action name="actionWrite">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/write.png</normaloff>:/images/write.png</iconset>
    </property>
    <property name="text">
@@ -377,7 +391,7 @@
   </action>
   <action name="actionPrint">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/print.png</normaloff>:/images/print.png</iconset>
    </property>
    <property name="text">
@@ -389,7 +403,7 @@
   </action>
   <action name="actionPreferences">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/cross.png</normaloff>:/images/cross.png</iconset>
    </property>
    <property name="text">
@@ -401,7 +415,7 @@
   </action>
   <action name="actionMoveLeft">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/leftarrow.png</normaloff>:/images/leftarrow.png</iconset>
    </property>
    <property name="text">
@@ -413,7 +427,7 @@
   </action>
   <action name="actionMoveRight">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/rightarrow.png</normaloff>:/images/rightarrow.png</iconset>
    </property>
    <property name="text">
@@ -425,7 +439,7 @@
   </action>
   <action name="actionMoveUp">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/uparrow.png</normaloff>:/images/uparrow.png</iconset>
    </property>
    <property name="text">
@@ -437,7 +451,7 @@
   </action>
   <action name="actionMoveDown">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/downarrow.png</normaloff>:/images/downarrow.png</iconset>
    </property>
    <property name="text">
@@ -449,7 +463,7 @@
   </action>
   <action name="actionZoomIn">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/zoomi.png</normaloff>:/images/zoomi.png</iconset>
    </property>
    <property name="text">
@@ -461,7 +475,7 @@
   </action>
   <action name="actionZoomOut">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/zoomo.png</normaloff>:/images/zoomo.png</iconset>
    </property>
    <property name="text">
@@ -473,7 +487,7 @@
   </action>
   <action name="actionSave">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/save.png</normaloff>:/images/save.png</iconset>
    </property>
    <property name="text">
@@ -485,7 +499,7 @@
   </action>
   <action name="actionZoomNeutral">
    <property name="icon">
-    <iconset resource="../../../../../../../../../home/mkuemmel/alma/active_dev/code/display/implement/QtPlotter/QtPlotter.qrc">
+    <iconset>
      <normaloff>:/images/zoomn.png</normaloff>:/images/zoomn.png</iconset>
    </property>
    <property name="text">

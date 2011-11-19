@@ -38,12 +38,12 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/SubImage.h>
 #include <images/Images/ImageStatistics.h>
-#include <casadbus/types/ptr.h>
 #include <display/DisplayDatas/MSAsRaster.h>
+#include <casadbus/types/nullptr.h>
 
 // sometimes (?) gcc fails to instantiate this function, so this
 // explicit instantiation request may be necessary... <drs>
-// template bool casa::memory::operator==(casa::memory::cptr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
+// template bool casa::memory::operator==(casa::std::tr1::shared_ptr<casa::viewer::Rectangle> const&, casa::viewer::Rectangle*);
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -96,7 +96,7 @@ void MultiRectTool::disable() {
 	}
 
 	// check for click within one (or more) regions...
-	resizing_region.clear( );
+	resizing_region = memory::nullptr;
 	moving_regions.clear( );			// ensure that moving state is clear...
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
 	    if ( (*iter)->clickWithin( linx1, liny1 ) )
@@ -126,7 +126,7 @@ void MultiRectTool::disable() {
 
 	bool refresh_needed = false;
 	bool region_selected = false;
-	if ( ! resizing_region.isNull( ) ) {
+	if ( memory::nullptr.check(resizing_region) == false ) {
 	    // resize the rectangle
 	    double linx1, liny1;
 	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
@@ -206,9 +206,9 @@ void MultiRectTool::disable() {
 
 	if ( ev.worldCanvas() != itsCurrentWC ) { reset(); return;  }	// shouldn't happen.
 
-	if ( ! resizing_region.isNull( ) ) {
+	if ( memory::nullptr.check(resizing_region) == false ) {
 	    // resize finished
-	    resizing_region.clear( );
+	    resizing_region = memory::nullptr;
 	}
 
 	if ( moving_regions.size( ) > 0 ) {
@@ -288,7 +288,7 @@ void MultiRectTool::otherKeyPressed(const WCPositionEvent &ev) {
 	uInt x = ev.pixX();
 	uInt y = ev.pixY();
 
-	resizing_region.clear( );
+	resizing_region = memory::nullptr;
 	moving_regions.clear( );		// ensure that moving state is clear...
 
 	double linx, liny;
@@ -374,7 +374,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 
 	// rectanglelist::iterator iter = find( rectangles.begin(), rectangles.end(), (viewer::Rectangle*) r );
 	for ( rectanglelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
-	    if ( *iter == rect ) {
+	    if ( (*iter).get( ) == rect ) {
 		rectangles.erase( iter );
 		refresh( );
 		break;
@@ -855,7 +855,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 	}
     }
 
-    memory::cptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
+    std::tr1::shared_ptr<viewer::Rectangle> MultiRectTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
 	return rfactory->rectangle( wc, x1, y1, x2, y2 );
     }
 
@@ -873,7 +873,7 @@ void MultiRectTool::reset(Bool skipRefresh) {
 				const std::string &line_color, viewer::Region::LineStyle line_style ) {
 	if ( pts.size( ) != 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-	memory::cptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
+	std::tr1::shared_ptr<viewer::Rectangle> result = allocate_region( wc, pts[0].first, pts[0].second, pts[1].first, pts[1].second );
 	result->setLabel( label );
 	result->setFont( font, font_size, font_style, font_color );
 	result->setLine( line_color, line_style );

@@ -31,7 +31,6 @@
 
 #include <list>
 #include <string>
-#include <casadbus/types/ptr.h>
 #include <images/Images/ImageStatistics.h>
 #include <measures/Measures/MDirection.h>
 #include <display/region/RegionInfo.h>

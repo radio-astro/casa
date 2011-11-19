@@ -229,7 +229,7 @@ private:
 	    spectra_info( ) { }
 	    spectra_info( const QString &s ) : shape_(s) { }
 	    spectra_info( const spectra_info &other ) : shape_(other.shape_) { }
-	    const spectra_info &operator=( const spectra_info &other ) { shape_ = other.shape_; }
+	    const spectra_info &operator=( const spectra_info &other ) { shape_ = other.shape_; return *this; }
 	    const QString &shape( ) { return shape_; }
 	private:
 	    QString shape_;

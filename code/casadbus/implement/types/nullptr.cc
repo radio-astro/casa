@@ -1,5 +1,6 @@
-//# MultiEllipseTool.cc: Base class for MultiWorldCanvas event-based ellipse tools
-//# Copyright (C) 2000,2001,2002
+//# variant.cc: variant implementation
+//#
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,13 +26,13 @@
 //#
 //# $Id$
 
-#include <display/DisplayEvents/MultiEllipseTool.h>
+#include <casadbus/types/nullptr.h>
 
-namespace casa { //# NAMESPACE CASA - BEGIN
+namespace casa {
+    namespace memory {
 
-    std::tr1::shared_ptr<viewer::Rectangle> MultiEllipseTool::allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const {
-	return rfactory->ellipse( wc, x1, y1, x2, y2 );
+	_nullptr_t_ nullptr;
+	unsigned int nullptr_init_::count = 0;
+	void nullptr_init_::do_init( ) { nullptr.do_init( ); }
     }
-
-
-} //# NAMESPACE CASA - END
+}
