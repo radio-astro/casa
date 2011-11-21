@@ -87,12 +87,14 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             spwid=-1
             tb.open(spwtab)
             nrows=tb.nrows()
-            tb.close()
             if spw < nrows:
                 spwid=spw
             else:
+                tb.close()
                 msg='spw id %s does not exist' % (spw)
                 raise Exception, msg
+            allchannels=tb.getcell('NUM_CHAN',spwid)
+            tb.close()
 
             # antenna
             if type(antenna)==int:
@@ -174,7 +176,7 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             else:
                 if mode!='channel':
                     casalog.post('Setting imaging mode as \'channel\'','INFO')
-                im.defineimage(mode='channel', nx=nx, ny=ny, cellx=cellx, celly=celly, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
+                im.defineimage(mode='channel', nx=nx, ny=ny, cellx=cellx, celly=celly, nchan=1, start=0, step=allchannels, phasecenter=phasecenter, spw=spwid, restfreq=restfreq, stokes=stokes, movingsource=ephemsrcname)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             im.setsdoptions(pointingcolumntouse=pointingcolumn)
             im.makeimage(type='singledish', image=outfile)
