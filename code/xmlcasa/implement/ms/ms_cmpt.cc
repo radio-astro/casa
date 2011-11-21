@@ -60,6 +60,7 @@
 #include <tables/Tables/TableLock.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/ConcatTable.h>
+#include <tables/Tables/TableCopy.h>
 #include <casa/System/ObjectID.h>
 #include <casa/Utilities/Assert.h>
 #include <msvis/MSVis/VisSet.h>
@@ -133,9 +134,10 @@ ms::createmultims(const std::string &outputTableName,
                   const std::vector<std::string> &tableNames,
                   const std::vector<std::string> &subtableNames,
                   const bool nomodify,
-                  const bool lock)
+                  const bool lock,
+		  const bool copysubtables)
 {
-  *itsLog << LogOrigin(__func__, this->name());
+  *itsLog << LogOrigin(__func__, outputTableName);
 
   try {
     Block<String> tableNameVector(tableNames.size());
@@ -159,6 +161,18 @@ ms::createmultims(const std::string &outputTableName,
       concatTable.tableInfo().setSubType("CONCATENATED");
       concatTable.rename(outputTableName, Table::New);
     }
+
+    if((tableNameVector.nelements()>1) && copysubtables){
+      *itsLog << LogIO::NORMAL << "Copying subtables from " << tableNameVector[0] 
+	      << " to the other MMS members." << LogIO::POST;
+      Table firstTab(tableNameVector[0]);
+      for(uInt idx=1; idx<tableNameVector.nelements(); idx++){
+	Table otherTab(tableNameVector[idx], Table::Update);
+	TableCopy::copySubTables (otherTab, firstTab, 
+				  False); // noRows==False, i.e. subtables are copied
+      }
+    }
+
   } catch (AipsError ex) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << ex.getMesg()
             << LogIO::POST;
