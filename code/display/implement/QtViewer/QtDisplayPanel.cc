@@ -884,6 +884,7 @@ String QtDisplayPanel::regionPathname(String origPath) {
     catch(...) { return False;  }
     
     return True;  }
+
   String QtDisplayPanel::saveRegionInImage(String regname, 
 					   const ImageRegion& imreg) {
     // (The ImageRegion is stored in the image/table as a keyworrd).
