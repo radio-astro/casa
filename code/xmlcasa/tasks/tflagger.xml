@@ -398,6 +398,8 @@
                         <default param="upperlimit"><value type="double">90.0</value></default>                    
                     </equals>
                     <equals value="tfcrop">
+                        <default param="expression"><value type="string">ABS ALL</value></default>
+                        <default param="datacolumn"><value type="string">DATA</value></default>
                         <default param="timecutoff"><value type="double">4.0</value></default>
                         <default param="freqcutoff"><value type="double">3.0</value></default>
                         <default param="timefit"><value type="string">line</value></default>
