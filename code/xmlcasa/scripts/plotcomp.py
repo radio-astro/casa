@@ -31,18 +31,29 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
     baselines on success.  Otherwise, it returns True or False as its estimated
     success value.
     """
-    retval = False
+    def failval():
+        """
+        Returns an appropriate failure value.
+        Note that mydict.update(plotcomp(wantdict=True, ...)) would give a
+        confusing error message if plotcomp returned False.
+        """
+        retval = False
+        if wantdict:
+            retval = {}
+        return retval
+    retval = failval()  # Default
     try:
         clist = compdict['clist']
         objname = compdict['objname']
         epoch = compdict['epoch']
+        epstr = mepoch_to_str(epoch)
         antennalist = compdict['antennalist']
 
         # Read the configuration info.
         if not antennalist:
             print "compdict['antennalist'] must be set!"
             print "Try something in", os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
-            return False
+            return failval()
         # Try repodir if raw antennalist doesn't work.
         if not os.path.exists(antennalist):
             repodir = os.getenv("CASAPATH").split(' ')[0] + "/data/alma/simmos/"
@@ -52,15 +63,35 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
         stnx, stny, stnz, diam, padnames, nant, telescopename = su.readantenna(antennalist)
         #print "telescopename:", telescopename
 
+        # Check that the source is up.
+        myme = metool.create()
+        posobs = myme.observatory(telescopename)
+        #print "posobs:", posobs
+        myme.doframe(epoch)
+        myme.doframe(posobs)
+        azel = myme.measure(compdict['shape']['direction'], 'azel')
+        casalog.post("(az, el): (%.2f, %.2f) degrees" %
+                     tuple([qa.convert(azel[m], 'deg')['value']
+                            for m in ('m0', 'm1')]))
+        riset = myme.riseset(compdict['shape']['direction'])
+        for t in riset:
+            riset[t]['str'] = mepoch_to_str(riset[t]['utc'])
+        casalog.post(objname + " rises at %s and sets at %s." % (riset['rise']['str'],
+                                                                 riset['set']['str']))
+        if not azel['m1']['value'] > 0.0:
+            casalog.post(objname + " is not visible from " + telescopename + " at " + epstr,
+                         'SEVERE')
+            if wantdict:
+                return riset
+            else:
+                return False
+
         # Start a temp MS.
         workingdir = os.path.abspath(os.path.dirname(clist.rstrip('/')))
         tempms = tempfile.mkdtemp(prefix=objname, dir=workingdir)
 
         mysm = smtool.create()
-        myme = metool.create()
         mysm.open(tempms)
-        posobs = myme.observatory(telescopename)
-        #print "posobs:", posobs
 
         su.setcfg(mysm, telescopename, stnx, stny, stnz, diam,
                   padnames, posobs)
@@ -117,7 +148,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
         if blunit[1] != blunit[0]:
             casalog.post('The baseline units are mismatched!: %s' % blunit,
                          'SEVERE')
-            return False
+            return failval()
         blunit = blunit[0]
         baselines = pl.hypot(baselines[0], baselines[1])
 
@@ -135,7 +166,6 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
             pl.plot(baselines, data[freqnum], symb, label="%.3g GHz" % freq)
         pl.xlabel("Baseline length (" + blunit + ")")
         pl.ylabel("Visibility amplitude (Jy)")
-        epstr = mepoch_to_str(epoch)
         pl.suptitle(objname + " (predicted)", fontsize=14)
 
         # Unlike compdict['antennalist'], antennalist might have had repodir
@@ -152,8 +182,10 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
         if wantdict:
             retval = {'amps': data,
                       'antennalist': antennalist,  # Absolute path, now.
+                      'azel': azel,
                       'baselines': baselines,
                       'blunit': blunit,
+                      'riseset': riset,
                       'savedfig': compdict.get('savedfig')}
         else:
             retval = True
