@@ -250,21 +250,22 @@ template<class T> SubImage<T> SubImage<T>::createSubImage(
 	// The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
 	std::auto_ptr<ImageRegion> outMaskMgr(0);
-	try {
-		outMaskMgr.reset(ImageRegion::fromLatticeExpression(mask));
-	} catch (AipsError x) {
-		LogIO *myos = os;
-		std::auto_ptr<LogIO> localLogMgr(0);
-
-		if (! myos) {
-			myos = new LogIO();
-			localLogMgr.reset(myos);
-		}
-		*myos << LogOrigin("SubImage", __FUNCTION__);
-		*myos << "Input mask specification is incorrect: "
-			<< x.getMesg() << LogIO::EXCEPTION;
+    if (! mask.empty()) {
+        try {
+		    outMaskMgr.reset(ImageRegion::fromLatticeExpression(mask));
+	    } catch (AipsError x) {
+		    LogIO *myos = os;
+		    std::auto_ptr<LogIO> localLogMgr(0);
+		    if (! myos) {
+			    myos = new LogIO();
+			    localLogMgr.reset(myos);
+		    }
+		    *myos << LogOrigin("SubImage", __FUNCTION__);
+		    *myos << "Input mask specification is incorrect: "
+			    << x.getMesg() << LogIO::EXCEPTION;
+        }
 	}
-	if (
+    if (
 		extendMask
 		&& outMaskMgr->asWCRegionPtr()->type() == "WCLELMask"
 		&& ! dynamic_cast<const WCLELMask *>(
