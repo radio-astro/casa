@@ -1197,23 +1197,23 @@ class simutil:
         ntime=int(1./timeinc)
 
         # check for circumpolar:
-        rise=me.riseset(src)['rise']
+        rset = me.riseset(src)
+        rise = rset['rise']
         if rise == 'above':
             rise = time
             rise['m0']['value'] = rise['m0']['value'] - 0.5
+            settime = time
+            settime['m0']['value'] = settime['m0']['value'] + 0.5
+        elif rise == 'below':
+            raise ValueError(direction + ' is not visible from ' + telescope)
         else:
-            rise=me.measure(rise['utc'],'tai')
-
-        set=me.riseset(src)['set']
-        if set == 'above':
-            set = time
-            set['m0']['value'] = set['m0']['value'] + 0.5
-        else:
-            set=me.measure(set['utc'],'tai')
+            settime = rset['set']
+            rise = me.measure(rise['utc'],'tai')
+            settime = me.measure(settime['utc'],'tai')
 
         # where to start plotting?
         offset=-0.5
-        if set < time: offset-=0.5
+        if settime < time: offset-=0.5
         if rise > time: offset+=0.5
         time['m0']['value']+=offset
 
@@ -1231,10 +1231,10 @@ class simutil:
     
 #        self.msg(" ref="+date,origin='ephemeris')
         self.msg("rise="+qa.time(rise['m0'],form='dmy'),origin='ephemeris')
-        self.msg(" set="+qa.time(set['m0'],form='dmy'),origin='ephemeris')
+        self.msg(" set="+qa.time(settime['m0'],form='dmy'),origin='ephemeris')
     
         pl.plot((pl.array(times)-reftime_floor)*24,el)
-#        peak=(rise['m0']['value']+set['m0']['value'])/2        
+#        peak=(rise['m0']['value']+settime['m0']['value'])/2        
 #        self.msg("peak="+qa.time('%fd' % peak,form='dmy'),origin='ephemeris')
         self.msg("peak="+qa.time('%fd' % reftime_float,form='dmy'),origin='ephemeris')
 
