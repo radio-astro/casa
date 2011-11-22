@@ -15,7 +15,8 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
      'shape': component shape dict, including direction.
      'freqs (GHz)': pl.array of frequencies,
      'antennalist': An array configuration file as used by simdata,
-     'savedfig': False or, if specified, the filename to save the plot to.},
+     'savedfig': False or, if specified, the filename to save the plot to,
+     'standard': setjy fluxstandard type},
 
     and symb: One of matplotlib's codes for plot symbols: .:,o^v<>s+xDd234hH|_
           default: ',':  The smallest points I could find,
@@ -70,14 +71,33 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
         myme.doframe(epoch)
         myme.doframe(posobs)
         azel = myme.measure(compdict['shape']['direction'], 'azel')
-        casalog.post("(az, el): (%.2f, %.2f) degrees" %
-                     tuple([qa.convert(azel[m], 'deg')['value']
-                            for m in ('m0', 'm1')]))
+        azeldegs = tuple([qa.convert(azel[m], 'deg')['value'] for m in ('m0', 'm1')])
+        casalog.post("(az, el): (%.2f, %.2f) degrees" % azeldegs)
+        # riseset blabs to the logger, so introduce it now.
+        casalog.post('Rise and set times of ' + objname + " from " + telescopename + ':')
+        approx = ''
+        if 'JPL' in compdict.get('standard', 'JPL'):
+            # The object is in the Solar System or not known to be extragalactic.
+            approx = "APPROXIMATE.  The times do not account for the apparent motion of "\
+                     + objname + "."
+            casalog.post("  (" + approx + ")")
         riset = myme.riseset(compdict['shape']['direction'])
-        for t in riset:
-            riset[t]['str'] = mepoch_to_str(riset[t]['utc'])
-        casalog.post(objname + " rises at %s and sets at %s." % (riset['rise']['str'],
-                                                                 riset['set']['str']))
+        msg = ''
+        if riset['rise'] == 'above':
+            msg = objname + " is circumpolar"
+        elif riset['rise'] == 'below':
+            msg = objname + ' is not visible from ' + telescopename
+        if msg:
+            if approx:
+                msg += ' around ' + mepoch_to_str(epoch)
+            casalog.post(msg)
+        else:
+            for t in riset:
+                riset[t]['str'] = mepoch_to_str(riset[t]['utc'])
+            casalog.post(objname + " rises at %s and sets at %s." % (riset['rise']['str'],
+                                                                     riset['set']['str']))
+        if approx:
+            riset['NOTE'] = approx
         if not azel['m1']['value'] > 0.0:
             casalog.post(objname + " is not visible from " + telescopename + " at " + epstr,
                          'SEVERE')
@@ -172,7 +192,7 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=','):
         # prefixed to it.
         pl.title('at ' + epstr + ' for ' + compdict['antennalist'], fontsize=10)
         
-        pl.legend(loc='best')
+        pl.legend(loc='best', title='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs)
         pl.ion()
         pl.draw()
         if compdict.get('savedfig'):
