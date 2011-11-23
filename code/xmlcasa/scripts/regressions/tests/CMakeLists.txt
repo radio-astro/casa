@@ -44,6 +44,7 @@ casa_add_python( xmlcasa xmlcasa_regressions_tests_python python/${PYTHONV}/regr
   polcal_20080224_cband.py
   pylabmem.py
   third4826.py
+  third4826-mms.py
   time_then_chan_avg.py
   wideband.py
   wproject_regression.py
