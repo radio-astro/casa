@@ -61,8 +61,6 @@ public:
 
     virtual String getClass() const = 0;
 
-    inline void setStretch(const Bool stretch) { _stretch = stretch;}
-
 protected:
 
 	// if <src>outname</src> is empty, no image will be written
@@ -108,12 +106,9 @@ protected:
     	return _log;
     }
 
-    inline Bool _getStretch() const {return _stretch;}
-
 private:
     const ImageInterface<Float> *const _image;
     std::auto_ptr<LogIO> _log;
-    Bool _stretch;
 
     const Record *const _regionPtr;
     Record _regionRecord;

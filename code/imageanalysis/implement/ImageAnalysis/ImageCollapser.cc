@@ -90,8 +90,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
-		*clone, *_getRegion(), _getMask(), _getLog().get(),
-		False, AxesSpecifier(), _getStretch()
+		*clone, *_getRegion(), _getMask(), _getLog().get(), False
 	);
 	clone.reset(0);
 	IPosition inShape = subImage.shape();
@@ -110,6 +109,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	Vector<Double> refPixels = outCoords.referencePixel();
 	IPosition outShape = inShape;
 	IPosition shape(outShape.nelements(), 1);
+
 	for (
 		IPosition::const_iterator iter=_axes.begin();
 		iter != _axes.end(); iter++
@@ -120,12 +120,14 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 		outShape[i] = 1;
 		shape[i] = inShape[i];
 	}
+
 	if (! outCoords.setReferenceValue(refValues)) {
 		*_getLog() << "Unable to set reference value" << LogIO::EXCEPTION;
 	}
 	if (! outCoords.setReferencePixel(refPixels)) {
 		*_getLog() << "Unable to set reference pixel" << LogIO::EXCEPTION;
 	}
+
 	std::auto_ptr<ImageInterface<Float> > outImage(0);
 	if (_getOutname().empty()) {
 		outImage.reset(new TempImage<Float>(outShape, outCoords));

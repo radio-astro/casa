@@ -2220,23 +2220,11 @@ class par(str):
 	@staticmethod
 	def region():
 		"""
-             Region over which to carry out the operation. For ia tool methods, this is usually specified
-             as a python dictionary returned from an rg tool method (rg.box(), rg.fromtextfile() etc).
-             In image analysis tasks, the region can be specified in one of several ways:
-               (a) Using the CASA region format
-                    (http://casaguides.nrao.edu/index.php?title=CASA_Region_Format)
-                    Example : region='box [ [ 100pix , 130pix] , [120pix, 150pix ] ]'
-                       region='circle [ [ 120pix , 40pix] ,6pix ]'
-                       region='circle[[19h58m52.7s,+40d42m06.04s ], 30.0arcsec]'
-                   Multiple regions may be specified as a list of pixel ranges.
-               (b) Filename with cleanbox shapes defined using the CASA region format.
-                   Example: region='myregion.txt'
-                     The file 'myregion.txt' contains : 
-                          box [ [ 100pix , 130pix ] , [ 120pix, 150pix ] ]
-                          circle [ [ 150pix , 150pix] ,10pix ]
-                          rotbox [ [ 60pix , 50pix ] , [ 30pix , 30pix ] , 30deg ]
-               (c) Filename for region in binary format (e.g. from viewer or rg.tofile()).
-                   Example: region='myregion.rgn'
+		region -- File path of a file containing an ImageRegion.
+		ImageRegion files can be created with the region manager of CASA viewer,
+		and typically have the suffix '.rgn'
+		default: None
+		example: region='myimage.im.rgn'
 		"""
 
         @staticmethod
@@ -2601,20 +2589,6 @@ class par(str):
                     default: '2199/1/31/23:59:59'
                     stoptime = '' gives error message
 		"""
-
-        @staticmethod
-        def stretch():
-            """
-                If mask is specified, stretch is true and if the number of mask
-                dimensions is less than or equal to the number of image dimensions
-                and some axes in the mask are degenerate while the corresponding
-                axes in the image are not, the mask will be stetched in the
-                degenerate dimensions. For example, if the input image has shape
-                [100, 200, 10] and the input mask has shape [100, 200, 1] and stretch
-                is true, the mask will be stretched along the third dimension to shape
-                [100, 200, 10]. However if the mask is shape [100, 200, 2], stretching
-                is not possible and an error will result.
-            """
 
 	@staticmethod
 	def subplot():

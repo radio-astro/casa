@@ -80,14 +80,14 @@ datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imcoll
 
 def run_collapse(
     imagename, function, axes, outfile, region, box, chans,
-    stokes, mask, overwrite, stretch=False
+    stokes, mask, overwrite
 ):
     myia = iatool.create()
     myia.open(imagename)
     res = myia.collapse(
         function=function, axes=axes, outfile=outfile,
         region=region, box=box, chans=chans, stokes=stokes,
-        mask=mask, overwrite=overwrite, stretch=stretch
+        mask=mask, overwrite=overwrite
     )
     myia.close()
     myia.done()
@@ -95,13 +95,13 @@ def run_collapse(
 
 def run_imcollapse(
     imagename, function, axes, outfile, region, box, chans,
-    stokes, mask, overwrite, wantreturn, stretch=False
+    stokes, mask, overwrite, wantreturn
 ):
     return imcollapse(
         imagename=imagename, function=function, axes=axes,
         outfile=outfile, region=region, box=box, chans=chans,
         stokes=stokes, mask=mask, overwrite=overwrite,
-        wantreturn=wantreturn, stretch=stretch
+        wantreturn=wantreturn
     )
 
 class imcollapse_test(unittest.TestCase):
@@ -122,6 +122,7 @@ class imcollapse_test(unittest.TestCase):
             got = gotImage
         self.assertTrue(got.shape() == expected.shape())
         diffData = got.getchunk() - expected.getchunk()
+        print "diff data" + str(abs(diffData).max())
         self.assertTrue(abs(diffData).max() == 0)
         gotCsys = got.coordsys()
         expectedCsys = expected.coordsys()
@@ -427,30 +428,8 @@ class imcollapse_test(unittest.TestCase):
             self.assertTrue((got == exp).all())
             mytool.done()
             zz.done()
-            
-    def test_stretch(self):
-        """ imcollapse: Test stretch parameter"""
-        yy = iatool.create()
-        yy.open(good_image)
-        mycs = yy.coordsys().torecord()
-        yy.done()
-        maskim = "ymask"
-        yy.fromshape(maskim,[3,3,1,1])
-        yy.addnoise()
-        yy.setcoordsys(mycs)
-        yy.done()
-        for i in [0,1]:
-            if i == 1:
-                yy = run_collapse(
-                    good_image, "mean", 0, "", "", "", "",
-                    "", maskim + ">0", False, stretch=True
-                )
-            else:
-                yy = run_imcollapse(
-                    good_image, "mean", 0, "", "", "", "",
-                    "", maskim + ">0", False, True, True
-                )
-            self.assertTrue(type(yy) == type(ia))
+
+
 
 def suite():
     return [imcollapse_test]

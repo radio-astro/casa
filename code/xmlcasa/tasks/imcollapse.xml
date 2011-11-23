@@ -43,7 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>box="100,100,200,200"</example>
     </param>
     <param type="string" name="region" subparam="true">
-        <description>Region specification. See help par.region. Default is to not use a region.</description>
+        <description>Name of optional region file to use.</description>
         <value>""</value>
         <example>region="my.rgn"</example>
     </param>
@@ -72,10 +72,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>False</value>
         <example>overwrite=true</example>
     </param>
-    <param type="bool" direction="in" name="stretch">
-        <description>Stretch the mask if necessary and possible? See help par.stretch </description>
-        <value>False</value>
-    </param>
     
     <constraints>
         <when param="outfile">
@@ -91,13 +87,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     <value>""</value>
                 </default>
             </equals>
-        </when>
-        <when param="mask">
-            <notequals type="string" value="">
-                <default param="stretch">
-                    <value>False</value>
-                </default>
-            </notequals>
         </when>
     </constraints>
 </input>
@@ -120,14 +109,12 @@ box              Direction plane box specification, "blcx, blcy, trcx, trcy". On
                  may be specified. If not specified, region is used if specified. If region
                  is also not specified, entire directional plane unioned with any chans and
                  stokes specification determines the region.
-region           Region specification. See help par.region. Default is to not use a region.
+region           Optional region file to use.
 chans            Optional contiguous frequency channel number specification. Not used if
                  region is specified. Default is all channels.
 stokes           Contiguous stokes planes specification. Not used if region is specified.
                  Default is all stokes.
 mask             Optional mask specification.
-stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.
-                 See help par.stretch.
 wantreturn       If true, return an image analysis tool referencing the collapsed image, if
                  false, return false.
 
