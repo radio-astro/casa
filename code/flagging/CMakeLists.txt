@@ -32,6 +32,7 @@ casa_add_library( flagging
   implement/Flagging/DDMapper.cc
   implement/Flagging/ExtendFlagger.cc
   implement/Flagging/Flagger.cc
+  implement/Flagging/TestFlagger.cc
   implement/Flagging/RFADiffBase.cc
   implement/Flagging/RFAFlagCubeBase.cc
   implement/Flagging/RFAMedianClip.cc
@@ -74,3 +75,4 @@ casa_add_test( flagging implement/Flagging/test/tAutoflag.cc )
 casa_add_test( flagging implement/Flagging/test/tRFASelector.cc )
 casa_add_test( flagging implement/Flagging/test/tFlagger.cc )
 casa_add_test( flagging implement/Flagging/test/tRFCubeLattice.cc )
+casa_add_test( flagging implement/Flagging/test/tTestFlagger.cc )
