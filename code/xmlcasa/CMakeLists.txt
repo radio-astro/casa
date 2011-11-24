@@ -115,6 +115,7 @@ casa_add_library( xmlcasa
   implement/components/componentlist_cmpt.cc
   implement/flagging/flagger_cmpt.cc
   implement/flagging/lightflagger_cmpt.cc
+  implement/flagging/testflagger_cmpt.cc
   implement/images/coordsys_cmpt.cc
   implement/images/image_cmpt.cc
   implement/images/imagepol_cmpt.cc
@@ -305,6 +306,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_splattotable.py
   scripts/task_split.py
   scripts/task_testconcat.py
+  scripts/task_tflagger.py
   scripts/task_uvcontsub2.py
   scripts/task_uvcontsub.py
   scripts/task_uvmodelfit.py
@@ -427,6 +429,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/splattotable.xml
   tasks/split.xml
   tasks/testconcat.xml
+  tasks/tflagger.xml
   tasks/uvcontsub2.xml
   tasks/uvcontsub.xml
   tasks/uvmodelfit.xml
@@ -447,6 +450,7 @@ casa_add_tools( tools_idl tools_sources
   implement/components/componentlist.xml
   implement/flagging/flagger.xml
   implement/flagging/lightflagger.xml
+  implement/flagging/testflagger.xml
   implement/images/coordsys.xml
   implement/images/imagepol.xml
   implement/images/image.xml
