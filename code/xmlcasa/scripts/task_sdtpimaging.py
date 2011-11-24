@@ -10,7 +10,7 @@ interactive=False
 # This is a task version of the script originally made for reducing ATF raster scan data 
 # in total power mode. Still experimental...
 # 
-def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, stokes, createimage, outfile, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
+def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, spw, stokes, createimage, outfile, imsize, cell, phasecenter, ephemsrcname, pointingcolumn, gridfunction, plotlevel):
     # NEED to include spw, src? name for movingsource param. in function argument
     # put implementation here....
     casalog.origin('sdtpimaging')
@@ -114,13 +114,25 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, st
         tb.close()
         tb.open(infile+'/DATA_DESCRIPTION')
         polids=tb.getcol('POLARIZATION_ID').take(ddids)
+        spwids=tb.getcol('SPECTRAL_WINDOW_ID').take(ddids)
         tb.close()
+        idx=[]
+        casalog.post('spw=%s, spwids=%s'%(spw,spwids),'INFO')
+        for id in xrange(len(spwids)):
+            if spwids[id] == spw:
+                idx.append(id)
+        if len(idx) == 0:
+            msg='No matching spw ID in the data, please check spw parameter'
+            raise Exception, msg
+        polid=polids[idx[0]]
         tb.open(infile+'/POLARIZATION')
         #only use first line of POLARIZATION table
         #npol=tb.getcol('NUM_CORR')[0]
-        npol=tb.getcol('NUM_CORR')[polids[0]]
+        #npol=tb.getcol('NUM_CORR')[polids[0]]
+        npol=tb.getcell('NUM_CORR',polid)
         #corrtype=tb.getcol('CORR_TYPE')
-        corrtype=tb.getcell('CORR_TYPE',polids[0])
+        #corrtype=tb.getcell('CORR_TYPE',polids[0])
+        corrtype=tb.getcell('CORR_TYPE',polid)
         #corrtypestr = (stokestypes[corrtype[0][0]],stokestypes[corrtype[1][0]])
         #corrtypestr = ([stokestypes[corrtype[i][0]] for i in range(npol)])
         corrtypestr = ([stokestypes[corrtype[i]] for i in range(npol)])
@@ -597,7 +609,8 @@ def sdtpimaging(infile, calmode, masklist, blpoly, backup, flaglist, antenna, st
             casalog.post( "Imaging...." )
             im.open(infile)
             im.selectvis(field=0, spw='', baseline=antsel)
-            im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
+            #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname)
+            im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=spw, stokes=stokes, movingsource=ephemsrcname)
             #im.defineimage(nx=nx, ny=ny, cellx=cellx, celly=celly,  phasecenter=phasecenter, spw=0, stokes=stokes, movingsource=ephemsrcname,restfreq=1.14e11)
             im.setoptions(ftmachine='sd', gridfunction=gridfunction)
             #im.setsdoptions(convsupport=5)
