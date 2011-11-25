@@ -35,7 +35,7 @@
             </param>
 
             <param type="string" name="inputtype">
-                <description>Type of input with flagging commands(None,table,file,xml,cmd)</description>
+                <description>Type of input with flag commands (None,table,file,xml,cmd)</description>
                 <value />
                 <allowed kind="enum">
                 	<value />
@@ -83,21 +83,26 @@
                 <value type="string">Any</value>
             </param>
 
+            <param type="string" name="outfile">
+                <description>Name of output file to save flag commands</description>
+                <value type="string" />
+            </param>
+
             <param type="int" name="ntime">
                 <description>Time-range to use for each chunk (in seconds)</description>
                 <value>0</value>
             </param>
 
-            <param type="bool" name="extend">
-                <description>Extend the new flags in various ways</description>
-                <value>False</value>
-            </param>
-
             <param type="string" name="mode">
-                <description>Flagging Mode (manualflag,clip,shadow,quack,elevation,tfcrop,extendflags,unflag,summary)</description>
+                <description>Type of operation to perform on inputfile or flagging mode \
+                             (list, save, clear, manualflag, clip, shadow, quack, elevation \
+                              tfcrop, extendflags, unflag, summary)</description>
                 <value>manualflag</value>
                 <allowed kind="enum">
                     <value>manualflag</value>
+                    <value>list</value>
+                    <value>save</value>
+                    <value>clear</value>
                     <value>clip</value>
                     <value>shadow</value>
                     <value>quack</value>
@@ -167,6 +172,16 @@
                 <description>Select data based on observation ID: \'\'==>all</description>
                 <any type="variant" limittypes="string int" />
                 <value type="string" />
+            </param>
+
+            <param type="bool" name="clearall" subparam="true">
+                <description>Confirmation to clear all flag commands in FLAG_CMD table</description>
+                <value>False</value>
+            </param>
+
+            <param type="intArray" name="rowlist" subparam="true">
+                <description>FLAG_CMD rows to operate on</description>
+                <value type="vector"></value>
             </param>
 
             <param type="any" name="expression" subparam="true">
@@ -274,7 +289,8 @@
                 <value type="int">0</value>
             </param>
             <param type="int" name="maxabs" subparam="true">
-                <description>maximum number of flags (absolute). Use a negative value to indicate infinity.</description>
+                <description>maximum number of flags (absolute). \
+                             Use a negative value to indicate infinity.</description>
                 <value type="int">-1</value>
             </param>
             <param type="any" name="spwchan" subparam="true">
@@ -310,6 +326,11 @@
             </param>
             <param type="bool" name="flagnearfreq" subparam="true">
                 <description>Flag one channel before and after a flagged one (True/False)</description>
+                <value>False</value>
+            </param>
+
+            <param type="bool" name="extend">
+                <description>Extend the new flags in various ways</description>
                 <value>False</value>
             </param>
 
@@ -378,6 +399,13 @@
                     
                 <when param="mode">
                     <equals value="manualflag" />
+                    <equals value="list" />
+                        <description>List flag commands on the screen/logger</description>
+                    <equals value="save" />
+                    <equals value="clear">
+                        <default param="clearll"><value type="bool">False</value></default>
+                        <default param="rowlist"><value type="vector"></value></default>
+                    </equals>
                     <equals value="clip">
                         <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
