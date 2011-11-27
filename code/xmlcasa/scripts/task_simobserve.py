@@ -224,6 +224,19 @@ def simobserve(
                      mapsize = model_size
                      if verbose: msg("setting map size to "+str(model_size))
 
+        if components_only:
+            if type(mapsize) == type([]):
+                map_asec = qa.convert(mapsize[0],"arcsec")['value']
+            else:
+                map_asec = qa.convert(mapsize,"arcsec")['value']
+            if type(model_size) == type([]):
+                mod_asec = qa.convert(model_size[0],"arcsec")['value']
+            else:
+                mod_asec = qa.convert(model_size,"arcsec")['value']
+            if map_asec>mod_asec:
+                model_size=["%farcsec" % map_asec,"%farcsec" % map_asec]
+            
+    
 
 
         ##################################################################
