@@ -71,6 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     strpMSAntennaGram = command.chars();     // get pointer to command string
     posMSAntennaGram  = 0;                   // initialize string position
     MSAntennaParse parser(ms);               // setup measurement set
+    parser.setComplexity();
     MSAntennaParse::thisMSAParser = &parser; // The global pointer to the parser
     MSAntennaGramparse();                    // parse command string
     

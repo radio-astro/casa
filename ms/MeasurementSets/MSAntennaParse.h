@@ -31,6 +31,7 @@
 //# Includes
 #include <ms/MeasurementSets/MSParse.h>
 #include <casa/Arrays/Matrix.h>
+#include <bitset>
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   //# Forward Declarations
@@ -88,6 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     // Define the operator types (&&&, &&, and &).
     enum BaselineListType {AutoCorrOnly=0, AutoCorrAlso, CrossOnly};
+    enum ComplexityLevels {RESET=0,ANTREGEX,ANTLIST,STATIONREGEX, STATIONLIST, ANTATSTATIONLIST, BASELINELIST,HIGHESTLEVEL};
 
     // Default constructor
     MSAntennaParse();
@@ -136,7 +138,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get the factor to convert the given unit to m.
     static double getUnitFactor (const char* unit);
-
+    
+    void setComplexity(const ComplexityLevels& level=RESET) 
+    {if (level==RESET) complexity.reset(); else complexity.set(level,True);};
+    std::bitset<HIGHESTLEVEL> getComplexity() {return complexity;};
   private:
     const TableExprNode* setTEN(TableExprNode& condition, 
                                 BaselineListType autoCorr=CrossOnly,
@@ -154,6 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //# Data members.
   public:
     static MSAntennaParse* thisMSAParser;
+    std::bitset<HIGHESTLEVEL> complexity;
   private:
     TableExprNode node_p;
     const String colName1, colName2;
