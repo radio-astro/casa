@@ -34,7 +34,9 @@
 
 	</description>
 	<input>
-		<param type="string" name="vis" mustexist="true">
+          <!-- No longer have mustexist="true", because vis is not used when
+               listmodimages is true.  -->
+		<param type="string" name="vis" >
 			<description>Name of input visibility file</description>
 			<value></value>
 		</param>
