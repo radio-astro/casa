@@ -126,12 +126,10 @@ def findCalModels(target='CalModels',
                                   'geodetic', 'gui'],
                   exts=['.ms', '.im', '.tab']):
   """
-  Returns a set of directories ending in target that are in the
-  trees of roots.
+  Returns a set of directories ending in target that are in the trees of roots.
   
-  Because casa['dirs']['data'] can contain a lot, and CASA tables
-  are directories,and CASA tables are directories, branches matching
-  permexcludes or exts are excluded for speed.
+  Because casa['dirs']['data'] can contain a lot, and CASA tables are
+  directories, branches matching permexcludes or exts are excluded for speed.
   """
   retset = set([])
   for root in roots:
