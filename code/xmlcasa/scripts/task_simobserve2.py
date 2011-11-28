@@ -17,7 +17,7 @@ def simobserve2(
     obsmode=None, 
     refdate=None, hourangle=None, 
     totaltime=None, antennalist=None, 
-    # sdantlist=None,
+    sdantlist=None,
     sdant=None,
     thermalnoise=None,
     user_pwv=None, t_ground=None, t_sky=None, tau0=None, seed=None,
@@ -40,8 +40,16 @@ def simobserve2(
         predict = obsmode.startswith('i') or obsmode.startswith('s')
         if predict:
             uvmode = obsmode.startswith('i')
+            if not uvmode: antennalist = sdantlist
+        elif sdantlist != "":
+            if antennalist == "":
+                uvmode = False
+                antennalist = sdantlist
+            else:
+                uvmode = True
+                msg("Both antennalist and sdantlist are defined. sdantlist will be ignored",priority="warn")
         else:
-            uvmode = True #for now assume INT mode if not sure
+            uvmode = True
         #    uvmode = (sdant < 0) #when flexible default values come available
 
         casalog.origin('simobserve')
@@ -273,7 +281,7 @@ def simobserve2(
                     util.msg("antennalist contains only 1 antenna", priority="error")
                 uvmode = False
             antnames = []
-            if predict and (not uvmode): #Single-dish
+            if not uvmode: #Single-dish
                 # KS TODO: what if not predicting but SD with multi-Ants
                 # in antennalist (e.g., aca.tp)? In that case, PB on plots and
                 # pointingspacing="??PB" will not be correct for heterogeneous list.

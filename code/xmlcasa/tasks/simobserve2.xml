@@ -156,12 +156,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--  observe always reads from $project.skymodel file now -->
 
     <param type="string" name="obsmode">
-      <description>observation mode to simulate [i(interferometer)|s(singledish)|none]</description>
-      <value>none</value>
+      <description>observation mode to simulate [int(interferometer)|sd(singledish)|""(none)]</description>
+      <value></value>
       <allowed kind="enum">
-	<value type="string">none</value>
-	<value type="string">interferometer</value>
-	<value type="string">singledish</value>
+	<value type="string"></value>
+	<value type="string">int</value>
+	<value type="string">sd</value>
       </allowed>
     </param>
 
@@ -181,12 +181,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="antennalist" subparam="true">
-      <description>antenna position file</description>
+      <description>interferometer antenna position file</description>
       <value></value>
     </param>
 
 <!-- TODO put in more than one synth_antfile to do ALMA and ACA config - 
 it'll do them for the same amount of time -->
+
+    <param type="string" name="sdantlist" subparam="true">
+      <description>single dish antenna position file</description>
+      <value></value>
+    </param>
 
     <param type="int" name="sdant" subparam="true">
       <description>single dish antenna index in file</description>
@@ -318,13 +323,14 @@ it'll do them for the same amount of time -->
       </when>
       <!-- **********************************************************  -->
       <when param="obsmode">
-	  <equals type="string" value="none">
+	<equals type="string" value="">
 	  <default param="antennalist"><value type="string"></value>
-	  <default param="sdantlist"><value type="string"></value></default>
 	  <description>antenna info can be used to calculate the primary beam</description></default>
-	  <default param="sdant"><value type="int">-1</value></default>
+	  <default param="sdantlist"><value type="string"></value>
+	  <description>antenna info can be used to calculate the primary beam</description></default>
+	  <default param="sdant"><value type="int">0</value></default>
 	</equals>
-	<equals type="string" value="interferometer">
+	<equals type="string" value="int">
 	  <default param="antennalist"><value type="string">alma.out10.cfg</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>
@@ -332,8 +338,9 @@ it'll do them for the same amount of time -->
 	  <default param="caldirection"><value type="string"></value></default>
 	  <default param="calflux"><value type="string">1Jy</value></default>
 	</equals>
-	<equals type="string" value="singledish">
-	  <default param="antennalist"><value type="string">aca.tp.cfg</value></default>
+	<equals type="string" value="sd">
+	  <!-- <default param="antennalist"><value type="string">aca.tp.cfg</value></default> -->
+	  <default param="sdantlist"><value type="string">aca.tp.cfg</value></default>
 	  <default param="sdant"><value type="int">0</value></default>
 	  <default param="refdate"><value type="string">2012/05/21</value></default>
 	  <default param="hourangle"><value type="string">transit</value></default>
