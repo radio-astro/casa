@@ -43,6 +43,7 @@
 }
 
 
+%token AT
 %token COMMA
 %token SEMICOLON
 %token AMPERSAND
@@ -72,24 +73,31 @@
 %type <dval> unit
 %type <dval> flintunit
 %type <dval> flunit
-%type <iv> indexlist
+%type <iv> antlist
 %type <iv> antidrange
-%type <iv> antidlist
+%type <iv> antids
 %type <iv> antid
+%type <iv> stationid
+%type <iv> stationlist
+%type <iv> antatstation
+%type <iv> rowlist
 %type <dv> blength
 %type <dv> blengthlist
 
 %{
 #include <casa/Logging/LogIO.h>
+#include <ms/MeasurementSets/MSSelectionTools.h>
 
   int MSAntennaGramlex (YYSTYPE*);
   Bool MSAntennaGramNegate=False;
-  void reportError(char *str)
+  void reportError(char *token,String source=String(""))
   {
     ostringstream Mesg;
-    Mesg << "Antenna Expression: No match found for \"";
-    if (MSAntennaGramNegate) Mesg << "!" << str << "\"";
-    else Mesg << str << "\"";
+    if (source != "") Mesg << source; else Mesg << "Antenna Expression";
+
+    Mesg << ": No match found for \"";
+    if (MSAntennaGramNegate) Mesg << "!" << token << "\"";
+    else Mesg << token << "\"";
 
     if (MSAntennaGramNegate)
       {
@@ -108,82 +116,131 @@ antennastatement: indexcombexpr                {$$ = $1;}
                  | LPAREN indexcombexpr RPAREN {$$ = $2;}
                 ;
 
-
 indexcombexpr: gbaseline                         {$$=$1;}
              | indexcombexpr SEMICOLON gbaseline {$$ = $1;}
              ;
 
 gbaseline: NOT {MSAntennaGramNegate=True;}  baseline {$$=$3;}
          |     {MSAntennaGramNegate=False;} baseline {$$=$2;}
+         ;
 
-baseline: indexlist AMPERSAND indexlist 
-            {
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
-	      Vector<Int> a2 = myMSAI.matchId(*($3)); 
-	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,a2,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
-	      delete $1;
-              delete $3;
-	    } 
-        | indexlist AMPERSAND  //Match INDEXLIST & INDEXLIST
-            {
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
-	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,a1,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
-	      delete $1;
-	    }
-        | indexlist           //Match INDEXLIST & ALLANTENNAS
-            {
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
- 	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
-	      delete $1;
-	    }
-        | indexlist AMPERSAND AMPERSAND indexlist // Include self-correlations
-            {
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
-	      Vector<Int> a2 = myMSAI.matchId(*($4)); 
- 	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,a2,MSAntennaParse::AutoCorrAlso, MSAntennaGramNegate); 
-	      delete $1;
-              delete $4;
-	    } 
-        | indexlist AMPERSAND AMPERSAND // Include self-correlations 
-            {
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
- 	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,a1,MSAntennaParse::AutoCorrAlso, MSAntennaGramNegate); 
-	      delete $1;
-	    }
-        | indexlist AMPERSAND AMPERSAND AMPERSAND // Only self-correlations :-)
-            {
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
-	      Vector<Int> a1 = myMSAI.matchId(*($1)); 
- 	      $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
-                (a1,MSAntennaParse::AutoCorrOnly, MSAntennaGramNegate); 
-	      delete $1;
-	    }
+rowlist: antlist {$$ = $1;}
+        | antatstation {$$ = $1;}
+        ;
+
+baseline: rowlist AMPERSAND rowlist  // Two non-identical lists for the '&' operator
+           {
+	     MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
+	     Vector<Int> a1 = myMSAI.matchId(*($1)); 
+	     Vector<Int> a2 = myMSAI.matchId(*($3)); 
+	     $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
+	       (a1,a2,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
+	     delete $1;
+	     delete $3;
+	   } 
+        | rowlist AMPERSAND  // Implicit same list on the RHS of '&' operator
+           {
+	     MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
+	     Vector<Int> a1 = myMSAI.matchId(*($1)); 
+	     $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
+	       (a1,a1,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
+	     delete $1;
+	   }
+        | rowlist           //Match ROWLIST & ALLANTENNAS (implicit "&*")
+           {
+	     MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
+	     Vector<Int> a1 = myMSAI.matchId(*($1)); 
+	     $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
+	       (a1,MSAntennaParse::CrossOnly, MSAntennaGramNegate); 
+	     delete $1;
+	   }
+        | rowlist AMPERSAND AMPERSAND rowlist // Include self-correlations
+           {
+	     MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
+	     Vector<Int> a1 = myMSAI.matchId(*($1)); 
+	     Vector<Int> a2 = myMSAI.matchId(*($4)); 
+	     $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
+	       (a1,a2,MSAntennaParse::AutoCorrAlso, MSAntennaGramNegate); 
+	     delete $1;
+	     delete $4;
+	   } 
+        | rowlist AMPERSAND AMPERSAND // Include self-correlations 
+           {
+	     MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
+	     Vector<Int> a1 = myMSAI.matchId(*($1)); 
+	     $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
+	       (a1,a1,MSAntennaParse::AutoCorrAlso, MSAntennaGramNegate); 
+	     delete $1;
+	   }
+        | rowlist AMPERSAND AMPERSAND AMPERSAND // Only self-correlations :-)
+           {
+	     MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna()); 
+	     Vector<Int> a1 = myMSAI.matchId(*($1)); 
+	     $$ = MSAntennaParse::thisMSAParser->selectAntennaIds
+	       (a1,MSAntennaParse::AutoCorrOnly, MSAntennaGramNegate); 
+	     delete $1;
+	   }
         | blengthlist  // baseline length list
-            {
-              $$ = MSAntennaParse::thisMSAParser->selectLength
-                (*$1, MSAntennaGramNegate);
-              delete $1;
-            }
+           {
+	     $$ = MSAntennaParse::thisMSAParser->selectLength
+	       (*$1, MSAntennaGramNegate);
+	     delete $1;
+           }
         ;
 
 ident:   IDENTIFIER
-           { $$ = $1; }
+          { $$ = $1; }
        | UNIT             // a unit is an aphabetic name, so here it is a name
-           { $$ = $1; }
+          { $$ = $1; }
+
+// A single station name (this could be a regex and hence produce a
+// list inf indices)
+stationid: IDENTIFIER  
+            { // Use the string as-is.  This cannot include patterns/regex
+	      // which has characters that are part of range or list
+	      // syntax (',', '-') (that's all I think).
+	      //
+	      // Convert name to index
+	      //
+	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+	      if (!($$)) delete $$;
+	      $$=new Vector<Int>(myMSAI.matchStationName($1));
+	      if ((*($$)).nelements() == 0) reportError($1,"Station Expression");
+	      free($1);
+	    }
+
+       | QSTRING 
+          { // Quoted string: This is a pattern which will be converted
+	    // to regex internally.  E.g. "VLA{20,21}*" becomes
+	    // "VLA((20)|(21)).*" regex.  This can include any character
+	    // string.
+	    //
+	    // Convert name to index
+	    //
+	    MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(myMSAI.matchStationRegexOrPattern($1));
+	    if ((*($$)).nelements() == 0) reportError($1,"Station Expression");
+	    free($1);
+	  }
+
+       | REGEX
+          { // A string delimited by a pair of '/': This will be treated
+	    // as a regular expression internally.
+	    //
+	    // Convert name to index
+	    //
+	    MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(myMSAI.matchStationRegexOrPattern($1,True));
+	    if ((*($$)).nelements() == 0) reportError($1,"Station Expression");
+	    free($1);
+	  }
+       ;
 
 antid: ident  // A single antenna name (this could be a regex and
-		   // hence produce a list inf indices)
-                   // 
+              // hence produce a list inf indices)
+              // 
         { // Use the string as-is.  This cannot include patterns/regex
 	  // which has characters that are part of range or list
 	  // syntax (',', '-') (that's all I think).
@@ -199,114 +256,141 @@ antid: ident  // A single antenna name (this could be a regex and
 	}
 
        | QSTRING 
-        { // Quoted string: This is a pattern which will be converted
-	  // to regex internally.  E.g. "VLA{20,21}*" becomes
-	  // "VLA((20)|(21)).*" regex.  This can include any character
-	  // string.
-	  //
-	  // Convert name to index
-	  //
-	  MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
-	  if (!$$) delete $$;
-	  $$ = new Vector<Int>(myMSAI.matchAntennaRegexOrPattern($1));
-	  if ((*($$)).nelements() == 0) reportError($1);
-	  free($1);
-	}
+          { // Quoted string: This is a pattern which will be converted
+	    // to regex internally.  E.g. "VLA{20,21}*" becomes
+	    // "VLA((20)|(21)).*" regex.  This can include any character
+	    // string.
+	    //
+	    // Convert name to index
+	    //
+	    MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(myMSAI.matchAntennaRegexOrPattern($1));
+	    if ((*($$)).nelements() == 0) reportError($1);
+	    free($1);
+	  }
 
        | REGEX
-        { // A string delimited by a pair of '/': This will be treated
-	  // as a regular expression internally.
-	  //
-	  // Convert name to index
-	  //
-	  MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
-	  if (!$$) delete $$;
-	  $$ = new Vector<Int>(myMSAI.matchAntennaRegexOrPattern($1,True));
-	  if ((*($$)).nelements() == 0) reportError($1);
-	  free($1);
-	}
+          { // A string delimited by a pair of '/': This will be treated
+	    // as a regular expression internally.
+	    //
+	    // Convert name to index
+	    //
+	    MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+	    if (!$$) delete $$;
+	    $$ = new Vector<Int>(myMSAI.matchAntennaRegexOrPattern($1,True));
+	    if ((*($$)).nelements() == 0) reportError($1);
+	    free($1);
+	  }
        ;
 
 antidrange: INT // A single antenna index
-            {
-	      if (!($$)) delete $$;
-	      //
-	      // This code is due to VLA specienfic complication
-	      // arising due to the fact that VLA antennam "NAMES" are
-	      // strings that can be parsed as valid integers! Believe
-	      // it or not, VLA antenna NAMES are "1", "2", "3" and so
-	      // on.....  So (phew).  Just for antenna selection (and
-	      // this *just* because of silly convention for VLA
-	      // antenna naming!), if we get an INT, treat it as name
-	      // still and first attempt a match with the NAME column.
-	      // If that fails, treat it as an integer index and do the
-	      // right thing.
-	      //
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
-	      Vector<Int> tmp(myMSAI.matchAntennaName($1));
-	      $$ = new Vector<Int>(1);
-	      if (tmp.nelements() > 0)
-		(*($$))(0) = tmp[0];
-	      else
-		(*($$))(0) = atoi($1);
-	      free($1);
-	    }
+             {
+	       if (!($$)) delete $$;
+	       //
+	       // This code is due to VLA specienfic complication
+	       // arising due to the fact that VLA antennam "NAMES" are
+	       // strings that can be parsed as valid integers! Believe
+	       // it or not, VLA antenna NAMES are "1", "2", "3" and so
+	       // on.....  So (phew).  Just for antenna selection (and
+	       // this *just* because of silly convention for VLA
+	       // antenna naming!), if we get an INT, treat it as name
+	       // still and first attempt a match with the NAME column.
+	       // If that fails, treat it as an integer index and do
+	       // the right thing.
+	       //
+	       MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+	       Vector<Int> tmp(myMSAI.matchAntennaName($1));
+	       $$ = new Vector<Int>(1);
+	       if (tmp.nelements() > 0) (*($$))(0) = tmp[0];
+	       else                     (*($$))(0) = atoi($1);
+	       free($1);
+	     }
            | INT DASH INT // A range of integer antenna indices
-            {
-              Int start = atoi($1);
-              Int end   = atoi($3);
-              Int len = end - start + 1;
-              Vector<Int> antennaids(len);
-              for(Int i = 0; i < len; i++) antennaids[i] = start + i;
+              {
+		Int start = atoi($1);
+		Int end   = atoi($3);
+		Int len = end - start + 1;
+		Vector<Int> antennaids(len);
+		for(Int i = 0; i < len; i++) antennaids[i] = start + i;
 
-	      if (!($$)) delete $$;
-	      //              $$ = new Vector<Int>(antennaids);	   
-              $$ = new Vector<Int>(len);
+		if (!($$)) delete $$;
+		$$ = new Vector<Int>(len);
 
-	      MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
-	      for (Int i=0; i<len; i++) {
-		  ostringstream vlaName;
-		  vlaName << antennaids[i];
-		  Vector<Int> tmp(myMSAI.matchAntennaName(vlaName));
-		  if (tmp.nelements() > 0) ((*$$))[i] = tmp[0];
-		  else ((*$$))[i] = antennaids[i];
-		}
-	      free($1);
-              free($3);
-            }
+		MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
+		for (Int i=0; i<len; i++) 
+		  {
+		    ostringstream vlaName;
+		    vlaName << antennaids[i];
+		    Vector<Int> tmp(myMSAI.matchAntennaName(vlaName));
+		    if (tmp.nelements() > 0) ((*$$))[i] = tmp[0];
+		    else ((*$$))[i] = antennaids[i];
+		  }
+		free($1);
+		free($3);
+	      }
           ;
 
-antidlist: antid       {$$ = $1;}// A singe antenna ID
-          | antidrange {$$ = $1;}
-          ;
+antids: antid       {$$ = $1;}// A singe antenna ID
+       | antidrange {$$ = $1;}
+       ;
 
-indexlist : antidlist
+stationlist: stationid
+              {
+		if (!($$)) delete $$;
+		$$ = new Vector<Int>(*$1);
+		delete $1;
+	      }
+            | stationlist COMMA stationid
+               {
+		 Int N0=(*($1)).nelements(), N1 = (*($3)).nelements();
+		 (*($$)).resize(N0+N1,True);  // Resize the existing list
+		 for(Int i=N0;i<N0+N1;i++) (*($$))(i) = (*($3))(i-N0);
+		 delete $3;
+	       }
+               ;
+
+antlist: antids
             {
 	      if (!($$)) delete $$;
 	      $$ = new Vector<Int>(*$1);
 	      delete $1;
 	    }
-          | indexlist COMMA antidlist  // AntnnaID, AntnnaID,...
-            {
-	      Int N0=(*($1)).nelements(), 
-		N1 = (*($3)).nelements();
-	      (*($$)).resize(N0+N1,True);  // Resize the existing list
-	      for(Int i=N0;i<N0+N1;i++)
-		(*($$))(i) = (*($3))(i-N0);
-	      delete $3;
-            }
+          | antlist COMMA antids  // AntnnaID, AntnnaID,...
+             {
+	       Int N0=(*($1)).nelements(), N1 = (*($3)).nelements();
+	       (*($$)).resize(N0+N1,True);  // Resize the existing list
+	       for(Int i=N0;i<N0+N1;i++) (*($$))(i) = (*($3))(i-N0);
+	       delete $3;
+	     }
+            ;
+
+antatstation: antlist AT stationlist
+               {
+		 if (!($$)) delete $$;
+		 $$ = new Vector<Int>(set_intersection(*($1),*($3)));
+		 delete $1;
+		 delete $3;
+	       }
+            | AT stationlist  //Implicit ANT. 
+	       {
+		 if (!($$)) delete $$;
+		 $$ = new Vector<Int>(*($2));
+		 delete $2;
+	       }
+             ;
 
 blengthlist: blength
-             {
-               $$ = $1;
-             }
+              {
+		$$ = $1;
+	      }
            | blengthlist COMMA blength
-             {
-               $$ = $1;
-               $$->push_back ((*$3)[0]);
-               $$->push_back ((*$3)[1]);
-               delete $3;
-             }
+              {
+		$$ = $1;
+		$$->push_back ((*$3)[0]);
+		$$->push_back ((*$3)[1]);
+		delete $3;
+	      }
 
 blength:     LT flunit
              {
