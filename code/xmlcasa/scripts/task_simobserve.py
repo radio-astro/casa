@@ -875,7 +875,8 @@ def simobserve(
                     sm.predict(imagename=newmodel,complist=complist)
                 else:   # if we're doing only components
                     # XXX will 2 cl work?
-                    complist=complist+","+fileroot+"/"+project+'.cal.cclist'
+                    if docalibrator:
+                        complist=complist+","+fileroot+"/"+project+'.cal.cclist'
                     if verbose:                        
                         msg("predicting from "+complist,priority="warn",origin="simobserve")
                     else:
