@@ -94,8 +94,11 @@ def simobserve2(
 
 
         if not overwrite:
-            if (predict and os.path.exists(fileroot+"/"+project+".ms")):
+            if (predict and uvmode and os.path.exists(fileroot+"/"+project+".ms")):
                 msg(fileroot+"/"+project+".ms exists but overwrite=F",priority="error")
+                return False
+            if (predict and (not uvmode) and os.path.exists(fileroot+"/"+project+".sd.ms")):
+                msg(fileroot+"/"+project+".sd.ms exists but overwrite=F",priority="error")
                 return False
             if (image and os.path.exists(fileroot+"/"+project+".model")):
                 msg(fileroot+"/"+project+".model, image, and other imaging products exist but overwrite=F",priority="error")
@@ -649,7 +652,10 @@ def simobserve2(
         # set up observatory, feeds, etc        
         quickpsf_current = False
 
-        msfile = fileroot + "/" + project + '.ms'
+        if uvmode:
+            msfile = fileroot + "/" + project + '.ms'
+        else:
+            msfile = fileroot + "/" + project + '.sd.ms'
 
         if predict:
             # TODO check for frequency overlap here - if zero stop
@@ -956,7 +962,7 @@ def simobserve2(
             elif thermalnoise != "" or leakage > 0:
                 # Not predicting this time but corrupting. Get obsmode from ms.
                 if not os.path.exists(msfile):
-                    msg("Couldn't find "+msroot+".ms",priority="error")
+                    msg("Couldn't find "+msfile,priority="error")
                 uvmode = (not util.ismstp(msfile,halt=False))
 
 
@@ -972,6 +978,9 @@ def simobserve2(
             noise_any = True
 
             noisymsroot = msroot + ".noisy"
+            if not uvmode: #Single-dish
+                msroot += ".sd"
+                noisymsroot += ".sd"
  
             # Cosmic background radiation temperature in K. 
             t_cmb = 2.725
@@ -1072,6 +1081,7 @@ def simobserve2(
 
         if leakage > 0:
             noise_any = True
+            # TODO: need to handle SD name when leakage is available
             if msroot == fileroot+"/"+project:
                 noisymsroot = fileroot + "/" + project + ".noisy"
             else:
