@@ -1,3 +1,4 @@
+from glob import glob
 import os
 import sys
 from taskinit import *
@@ -93,6 +94,17 @@ def setjy(vis=None, field=None, spw=None,
     print '*** Error ***',instance
   return retval
 
+def better_glob(pats):
+  """
+  Unlike ls, glob.glob('pat1 pat2') does not return the union of matches to pat1
+  and pat2.  This does.
+  """
+  retset = set([])
+  patlist = pats.split()
+  for p in patlist:
+    retset.update(glob(p))
+  return retset
+  
 def lsmodims(path, modpat='*', header='Candidate modimages'):
   """
   Does an ls -d of files or directories in path matching modpat.
@@ -100,9 +112,13 @@ def lsmodims(path, modpat='*', header='Candidate modimages'):
   header describes what is being listed.
   """
   if os.path.isdir(path):
-    print "\n%s (%s) in %s:" % (header, modpat, path)
-    sys.stdout.flush()
-    os.system('cd ' + path + ';ls -d ' + modpat)
+    if better_glob(path + '/' + modpat):
+      print "\n%s (%s) in %s:" % (header, modpat, path)
+      sys.stdout.flush()
+      os.system('cd ' + path + ';ls -d ' + modpat)
+    else:
+      print "\nNo %s matching '%s' found in %s" % (header.lower(),
+                                                   modpat, path)
 
 def findCalModels(target='CalModels',
                   roots=['.', casa['dirs']['data']],
@@ -133,4 +149,3 @@ def findCalModels(target='CalModels',
       if path.split('/')[-1] == target:
         retset.add(path)
   return retset             
-
