@@ -15,12 +15,18 @@ def setjy(vis=None, field=None, spw=None,
 
     if listmodimages:
       casalog.post("Listing modimage candidates (listmodimages == True).")
-      casalog.post("%s is NOT being modified." % vis)
+      if vis:
+        casalog.post("%s is NOT being modified." % vis)
       lsmodims('.', modpat='*.im* *.mod*')
       calmoddirs = findCalModels()
       for d in calmoddirs:
         lsmodims(d)
     else:
+      if not os.path.isdir(vis):
+        casalog.post(vis + " must be a valid MS unless listmodimages is True.",
+                     "SEVERE")
+        return False
+      
       # Take care of the trivial parallelization
       if ParallelTaskHelper.isParallelMS(vis):
         # To be safe convert file names to absolute paths.
@@ -104,14 +110,14 @@ def findCalModels(target='CalModels',
                                   'geodetic', 'gui'],
                   exts=['.ms', '.im', '.tab']):
   """
-  Returns a list of directories ending in target that are in the
+  Returns a set of directories ending in target that are in the
   trees of roots.
   
   Because casa['dirs']['data'] can contain a lot, and CASA tables
   are directories,and CASA tables are directories, branches matching
   permexcludes or exts are excluded for speed.
   """
-  retlist = []
+  retset = set([])
   for root in roots:
     # Do a walk to find target directories in root.
     # 7/5/2011:
@@ -124,7 +130,7 @@ def findCalModels(target='CalModels',
       for d in excludes:
         if d in dirs:
           dirs.remove(d)
-        if path.split('/')[-1] == target:
-          retlist.append(path)
-  return retlist             
+      if path.split('/')[-1] == target:
+        retset.add(path)
+  return retset             
 
