@@ -196,6 +196,7 @@ VisibilityIteratorReadImpl::operator=(const VisibilityIteratorReadImpl & other)
     msCounter_p = other.msCounter_p;
     msIterAtOrigin_p = other.msIterAtOrigin_p;
     msIter_p = other.msIter_p;
+    msIter_p.origin();
     msd_p = other.msd_p;
     nAnt_p = other.nAnt_p;
     nChan_p = other.nChan_p;
