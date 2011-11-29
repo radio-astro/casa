@@ -94,6 +94,23 @@ PBMath2DImage::PBMath2DImage(ImageInterface<Float>& reJonesImage,
   incrementsImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).increment());
   referencePixelImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).referencePixel());
 };
+PBMath2DImage::PBMath2DImage(const ImageInterface<Complex>& jonesImage) :
+  PBMath2D(), reJonesImage_p(0), reRegridJonesImage_p(0),
+  imJonesImage_p(0), imRegridJonesImage_p(0), 
+  incrementsReJones_p(0), incrementsImJones_p(0),
+  referencePixelReJones_p(0), referencePixelImJones_p(0),
+  pa_p(0.0){
+  reJonesImage_p = new TempImage<Float>(jonesImage.shape(), jonesImage.coordinates());
+  reJonesImage_p->copyData(LatticeExpr<float> (real(jonesImage)));
+  imJonesImage_p = new TempImage<Float>(jonesImage.shape(), jonesImage.coordinates());
+  imJonesImage_p->copyData(LatticeExpr<float> (imag(jonesImage)));
+  incrementsReJones_p=new Vector<Double>(reJonesImage_p->coordinates().directionCoordinate(0).increment());
+  referencePixelReJones_p=new Vector<Double>(reJonesImage_p->coordinates().directionCoordinate(0).referencePixel());
+  incrementsImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).increment());
+  referencePixelImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).referencePixel());
+}
+
+
 
 PBMath2DImage::~PBMath2DImage()
 {
@@ -1028,7 +1045,7 @@ Int PBMath2DImage::support(const CoordinateSystem& cs){
  Vector<String> dirunit=directionCoord.worldAxisUnits();
 
  npixels=npixels/fabs(directionCoord.increment()(0));
- dirIndex=reJonesImage_p->coordinates().findCoordinate(Coordinate::SPECTRAL);
+ dirIndex=reJonesImage_p->coordinates().findCoordinate(Coordinate::DIRECTION);
 
  directionCoord=(reJonesImage_p->coordinates()).directionCoordinate(dirIndex);
  directionCoord.setWorldAxisUnits(dirunit);

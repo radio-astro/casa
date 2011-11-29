@@ -55,7 +55,7 @@ typedef SquareMatrix<Float,2> mjJones2F;
 // </prerequisite>
 //
 // <etymology>
-//  PBMath2DImage: derived from  PBMath2D, implements a numeric PB and VP
+//  PBMath2DImage: derived from  PBMath2D, implements PB and VP from sampled 2D VP
 // </etymology>
 //
 // <synopsis> 
@@ -76,20 +76,7 @@ typedef SquareMatrix<Float,2> mjJones2F;
 //
 // <example>
 // <srcblock>
-//    Vector<Float> vp(10);
-//    vp(0) = 1.0f;
-//    vp(1) = 0.932f;
-//    vp(2) = 0.7462f;
-//    vp(3) = 0.4914f;
-//    vp(4) = 0.2308f;
-//    vp(5) = 0.02183f;   // first null
-//    vp(6) = -0.1005f;
-//    vp(7) = -0.1318f;
-//    vp(8) = -0.09458f;
-//    vp(9) = -0.0269f;
-//    Quantity maxRad(1.032,"deg");  
-//    Quantity refFreq(1.414, "GHz");
-//    PBMath2DImage numPB (vp, maxRad, refFreq);
+
 //    numPB.applyPB( im1, im2, pointingDir);
 // </srcblock>
 // </example>
@@ -119,6 +106,8 @@ public:
   PBMath2DImage(ImageInterface<Float>& reJonesImage);
   PBMath2DImage(ImageInterface<Float>& reJonesImage,
 		ImageInterface<Float>& imJonesImage);
+
+  PBMath2DImage(const ImageInterface<Complex>& jonesImage);
 
   // Copy constructor
   // PBMath2DGImage(const PBMath2DImage& other);
