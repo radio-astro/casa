@@ -27,19 +27,32 @@ def setjy(vis=None, field=None, spw=None,
         casalog.post(vis + " must be a valid MS unless listmodimages is True.",
                      "SEVERE")
         return False
-      
-      # Take care of the trivial parallelization
-      if ParallelTaskHelper.isParallelMS(vis):
-        # To be safe convert file names to absolute paths.
-        helper = ParallelTaskHelper('setjy', locals())
-        helper.go()
-        return                
 
-      myim = imtool.create()
       myms = mstool.create()
+      myim = imtool.create()
 
       if type(vis) == str and os.path.isdir(vis):
-        myim.open(vis, usescratch=True)
+        n_selected_rows = nselrows(vis, field, spw, observation, timerange,
+                                   scan)
+
+        if not n_selected_rows:
+          casalog.post("No rows were selected.", "SEVERE")
+          return False
+        elif isinstance(n_selected_rows, dict):
+        #if ParallelTaskHelper.isParallelMS(vis):
+          # 11/28/2011: task_flagdata makes parellization look really easy, but it
+          # doesn't actually work on either of the computers I tried.
+          # Take care of the trivial parallelization
+          #helper = ParallelTaskHelper('setjy', locals())
+          #helper.go()
+          #return
+
+          # setjy should only operate on member MSes that have the selection anyway.
+          for m in n_selected_rows:
+            if n_selected_rows[m] > 0:
+              myim.selectvis(vis=m, usescratch=True)
+        else:
+          myim.open(vis, usescratch=True)
       else:
         raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -81,9 +94,6 @@ def setjy(vis=None, field=None, spw=None,
       except Exception, instance:
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
                      'WARN')
-
-      #if observation or scan or timerange:
-      #       myim.selectvis(vis='', observation=observation, scan=scan, time=timerange)
 
       myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
@@ -147,3 +157,59 @@ def findCalModels(target='CalModels',
       if path.split('/')[-1] == target:
         retset.add(path)
   return retset             
+
+def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
+  """
+  Returns the number of rows in vis selected by field, spw, obs,
+  timerange, and scan.  Empty strings or Nones are treated as '*'.
+
+  If vis is a multims, the return value will be a dict keyed by
+  the paths of the member MSes.
+  """
+  retval = 0
+  myms = mstool.create()
+  if ParallelTaskHelper.isParallelMS(vis):
+    myms.open(vis)
+    mses = myms.getreferencedtables()
+    myms.close()
+    retval = {}
+    for m in mses:
+      retval[m] = nselrows(m, field, spw, obs, timerange, scan)
+  else:
+    msselargs = {'vis': vis}
+    if field:
+      msselargs['field'] = field
+    if spw:
+      msselargs['spw'] = spw
+    if obs:
+      msselargs['observation'] = obs
+    if timerange:
+      msselargs['time'] = timerange
+    if scan:
+      msselargs['scan'] = scan
+      
+    # ms.msseltoindex only goes by the subtables - it does NOT check
+    # whether the main table has any rows matching the selection.
+    selindices = myms.msseltoindex(**msselargs)
+
+    query = []
+    if field:
+      query.append("FIELD_ID in " + str(selindices['field'].tolist()))
+    if spw:
+      query.append("DATA_DESC_ID in " + str(selindices['spw'].tolist()))
+    if obs:
+      query.append("OBSERVATION_ID in " + str(selindices['obsids'].tolist()))
+
+    # I don't know why ms.msseltoindex takes a time argument - it doesn't seem to
+    # appear in the output.
+    
+    if scan:
+      query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
+
+    mytb = tbtool.create()
+    mytb.open(vis)
+    st = mytb.query(' and '.join(query),
+                    style='python')  # Does style matter here?
+    mytb.close()
+    retval = st.nrows()
+  return retval
