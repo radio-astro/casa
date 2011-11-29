@@ -308,8 +308,8 @@ list must be enclosed in a left- and right-parenthesis pair to
 distinguish it from a comma-separated list of {\tt ANT@STATION}.  The
 two forms of specifications that are interpreted differently are:
 \begin{enumerate}
-\item List of {\tt ANT@STATION}: {\tt A1@S1, A2@S2, A3@S3,....}
-\item {\tt (List of ANT)@(List of STATION)}: {\tt (A1, A2, A3)@(S1,S2,S3)}
+\item List of ANT@STATION: {\tt A1@S1, A2@S2, A3@S3,....}
+\item (List of ANT)@(List of STATION): {\tt (A1, A2, A3)@(S1,S2,S3)}
 \end{enumerate}
 First form is similar to the comma-separated list of antenna
 specifications used to construct the baseline to be selected (see
