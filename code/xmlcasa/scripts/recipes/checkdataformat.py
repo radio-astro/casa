@@ -1,5 +1,10 @@
 # guess what kind (format) of the input data is
 import commands
+import os
+import casac
+
+tbtool = casac.homefinder.find_home_by_name('tableHome')
+tb = tbtool.create()
 
 # main function 
 def dataformat(dataname):
@@ -16,6 +21,8 @@ def dataformat(dataname):
     isASAP = False
     isCASAimage = False
     dataformat = 'unknown'
+
+
     # directory?
     if(commands.getoutput('file '+dataname).count('directory')):
         # check for MS, ASDM, scantable..., CASA image, ... 
@@ -39,6 +46,13 @@ def dataformat(dataname):
                          if tb.keywordnames().count('imageinfo')>0:
                              isCASAimage=True
                              dataformat = "CASA image"
+                         elif tb.colnames()=='map' and \
+                           any([k=='coords' for k in tb.colkeywordnames()]):
+                             isCASAimage=True
+                             dataformat ="CASA image" 
+
+                         # todo: check for component?
+    
                          tb.close()
         finally:
             if isMS:
@@ -135,7 +149,6 @@ def checkscantable(dname):
                       ]) 
     for dat in scantables:
         if not os.path.exists(dname+'/'+dat):
-            isASAP=False
             raise Exception
     tb.open(dname)
     version=tb.getkeyword('VERSION')

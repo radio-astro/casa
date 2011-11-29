@@ -21,6 +21,7 @@
 casa_add_python( xmlcasa xmlcasa_recipes_python python/${PYTHONV}/recipes
   benchmark.py
   checknan.py
+  checkdataformat.py
   cl2skycat.py
   cluster.py
   cmpmses.py
