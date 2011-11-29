@@ -82,7 +82,8 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
          coordinate("world"), coordinateType(""),xaxisUnit(""),ctypeUnit(""),
          cSysRval(""), fileName(name), position(""), yUnit(""),
          yUnitPrefix(""), xpos(""), ypos(""), cube(0),
-         npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
+//         npoints(0), npoints_old(0), stateMProf(2), stateRel(0),
+         npoints(0), npoints_old(0), stateMProf(0), stateRel(0),
          lastPX(Vector<Double>()), lastPY(Vector<Double>()),
          lastWX(Vector<Double>()), lastWY(Vector<Double>()),
          z_xval(Vector<Float>()), z_yval(Vector<Float>()),
@@ -1298,6 +1299,14 @@ void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
 	// re-set the images
 	// that are overplotted
 	if (over) {
+		// TODO: put that in to avoid memory loss
+		//QHashIterator<QString, ImageAnalysis*> ih(*over);
+		//while (ih.hasNext()) {
+		//	ih.next();
+		//	//cout << ih.key() << ": " << ih.value() << endl;
+		//	delete ih.value();
+		//	qDebug() << "the frame: " << (QString)ih.key();
+		//}
 		delete over;
 		over = 0;
 	}

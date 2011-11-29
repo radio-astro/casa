@@ -56,7 +56,9 @@ SpectralCollapser::~SpectralCollapser(){delete _log;}
 
 Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float startVal, const Float endVal,
 		const String &unit, const SpectralCollapser::CollapseType &collType, SpectralCollapser::CollapseError &collError, String &outname, String &msg){
+
 	Bool ok;
+	String unit_(unit);
 
 	*_log << LogOrigin("SpectralCollapser", "collapse");
 
@@ -64,6 +66,12 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 		msg = String("No spectral values provided!");
 		*_log << LogIO::WARN << msg << LogIO::POST;
 		return False;
+	}
+
+	// in the unit, replace a "/" with "_p_"
+	if (unit_.find(String("/"))!=String::npos)	{
+		String::size_type slashPos=unit_.find(String("/"));
+		unit_.replace(slashPos, 1, String("_p_"));
 	}
 
 	Bool ascending=True;
@@ -114,7 +122,7 @@ Bool SpectralCollapser::collapse(const Vector<Float> &specVals, const Float star
 	chanInp = String::toString(startIndex) + "~" + String::toString(endIndex);
 
 	String wcsInp;
-	wcsInp = String::toString(startVal) + "~" + String::toString(endVal) + unit;
+	wcsInp = String::toString(startVal) + "~" + String::toString(endVal) + unit_;
 
 	if (startIndex > endIndex){
 		msg = String("Spectral window ") + wcsInp + String(" too narrow!");
