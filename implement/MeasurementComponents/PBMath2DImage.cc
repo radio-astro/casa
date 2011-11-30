@@ -481,8 +481,9 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
   Bool circular=(polframe==SkyModel::CIRCULAR);
 	      
   // Now get the polarization remapping for the Jones image
-  //Int jsm=StokesImageUtil::CStokesPolMap(polmap, polframe,
-  //					 reJonesImage_p->coordinates());
+  //Int jsm=    // CStokesPolMap sets polmap and polframe.
+  StokesImageUtil::CStokesPolMap(polmap, polframe,
+                                 reJonesImage_p->coordinates());
 
   // For the input and output images, get all polarizations for x, y plane
   IPosition inPlane(4, nx, ny, npol, 1);
@@ -634,7 +635,6 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
 
   // jsm (= circular or linear) is not used, but CStokesPolMap also sets polframe.
   //Int jsm=
-  //  					 reJonesImage_p->coordinates());
   StokesImageUtil::CStokesPolMap(polmap, polframe, reJonesImage_p->coordinates());
 
   // First get the frequency of the output image
