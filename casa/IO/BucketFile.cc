@@ -34,6 +34,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/DOos.h>
+#include <casa/OS/EnvVar.h> // needed for Lustre workaround (jjacobs:30-Nov-11)
 #include <casa/Utilities/Assert.h>
 #include <casa/Exceptions/Error.h>
 #include <sys/types.h>
@@ -216,9 +217,31 @@ Int64 BucketFile::fileSize () const
         else{
             size = ::traceLSEEK (fd_p, 0, SEEK_END);
         }
-        if (size > 0){
+        if (size > 0 || i == 2){
             break;
         }
+
+        // The file size returned was zero.  Check to see if the file is on a Lustre
+        // file system.  If it is and Lustre waiting is not disabled then wait a
+        // second between retries.
+
+        File asFile (name_p);
+
+	if(asFile.getFSType() != "Lustre" || EnvironmentVariable::isDefined("CASA_NOLUSTRE_CHECK")){
+	    break; // either not Lustre or not enabled
+	}
+
+	if (bufferedFile_p == 0){
+	    int i = fcntl (fd_p, F_GETFL);
+	    if (i != -1 && (i & O_ACCMODE) != O_RDONLY){
+	        break; // file is not readonly
+	    }
+	}
+	else if (bufferedFile_p->isWritable()){
+	    break; // file is not readonly
+	}
+
+	usleep (1000000); // sleep for 1 second
     }
 
 // original code:
