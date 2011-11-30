@@ -50,7 +50,7 @@ def flagdata(vis = None,
              maxrel = None,
              minabs = None,
              maxabs = None):
-
+        retval = True
         casalog.origin('flagdata')
 
         # Take care of the trivial parallelization
@@ -279,12 +279,15 @@ def flagdata(vis = None,
                 raise
         
         #write history
-        mslocal.open(vis,nomodify=False)
-        mslocal.writehistory(message='taskname = flagdata', origin='flagdata')
-        mslocal.writehistory(message='vis      = "' + str(vis) + '"', origin='flagdata')
-        mslocal.writehistory(message='mode     = "' + str(mode) + '"', origin='flagdata')
-        mslocal.close()
-
+        try:
+                param_names = flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]
+                param_vals = [eval(p) for p in param_names]
+                retval &= write_history(mslocal, vis, 'flagdata', param_names,
+                                        param_vals, casalog)
+        except Exception, instance:
+                casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                             'WARN')
+        
         return
 
 #

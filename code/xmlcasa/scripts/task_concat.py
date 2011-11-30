@@ -233,7 +233,11 @@ def concat(vislist,concatvis,freqtol,dirtol,timesort,copypointing,visweightscale
 			m.timesort()
 
 		if createmms:
-			m.createmultims(concatvis, mmsmembers)
+			m.createmultims(concatvis, mmsmembers,
+					[],
+					True, # nomodify
+					False,# lock
+					True) # copysubtables from first to all other members
 
 		m.close()
 

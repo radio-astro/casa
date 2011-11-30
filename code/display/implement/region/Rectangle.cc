@@ -19,13 +19,17 @@ namespace casa {
 	Rectangle::~Rectangle( ) { }
 
 
-	int Rectangle::clickHandle( double x, double y ) const {
-	    if ( visible_ == false ) return 0;
+	unsigned int Rectangle::check_handle( double x, double y ) const {
 	    bool blc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= blc_y && y <= (blc_y + handle_delta_y);
 	    bool tlc = x >= blc_x && x <= (blc_x + handle_delta_x) && y >= (trc_y - handle_delta_y) && y <= trc_y;
 	    bool brc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= blc_y && y <= (blc_y + handle_delta_y);
 	    bool trc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= (trc_y - handle_delta_y) && y <= trc_y;
 	    return trc ? 1 : brc ? 2 : blc ? 3 : tlc ? 4 : 0;
+	}
+
+	int Rectangle::clickHandle( double x, double y ) const {
+	    if ( visible_ == false ) return 0;
+	    return check_handle( x, y );
 	}
 
 
@@ -260,6 +264,17 @@ namespace casa {
 	    bool brc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= blc_y && y <= (blc_y + handle_delta_y);
 	    bool trc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= (trc_y - handle_delta_y) && y <= trc_y;
 	    return trc || brc || blc || tlc;
+	}
+
+	// returns point state (Region::PointLocation)
+	Region::PointInfo Rectangle::checkPoint( double x, double y )  const {
+	    unsigned int result = 0;
+	    if ( x > blc_x && x < trc_x && y > blc_y && y < trc_y )
+		result |= PointInside;
+	    unsigned int handle = check_handle( x, y );
+	    if ( handle )
+		result |= PointHandle;
+	    return PointInfo( x, y, result == 0 ? PointOutside : result, handle );
 	}
 
 	unsigned int Rectangle::mouseMovement( double x, double y, bool other_selected ) {

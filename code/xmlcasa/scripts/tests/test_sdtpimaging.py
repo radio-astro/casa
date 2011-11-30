@@ -149,7 +149,7 @@ class sdtpimaging_test1(unittest.TestCase,sdtpimaging_unittest_base):
 
     def test100(self):
         """Test 100: test to image data without spatial baseline subtraction"""
-        self.res=sdtpimaging(infile=self.infile,calmode='none',stokes='XX',createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
+        self.res=sdtpimaging(infile=self.infile,calmode='none',stokes='XX',spw=2,createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
         
@@ -205,7 +205,7 @@ class sdtpimaging_test2(unittest.TestCase,sdtpimaging_unittest_base):
 
     def test200(self):
         """Test 200: test to image data with spatial baseline subtraction"""
-        self.res=sdtpimaging(infile=self.infile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
+        self.res=sdtpimaging(infile=self.infile,calmode='baseline',masklist=[10,10],blpoly=1,stokes='XX',spw=2,createimage=True,outfile=self.outimage,imsize=[64],cell=['15arcsec'],phasecenter='J2000 05h35m07s -5d21m00s',pointingcolumn='direction',gridfunction='SF')
         self.assertEqual(self.res,None)
         self.assertTrue(self._compare() < 0.001)
         

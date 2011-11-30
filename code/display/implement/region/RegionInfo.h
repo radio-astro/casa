@@ -32,7 +32,7 @@
 #include <list>
 #include <string>
 #include <images/Images/ImageStatistics.h>
-#include <casadbus/types/ptr.h>
+#include <tr1/memory>
 
 namespace casa {
 
@@ -49,7 +49,7 @@ namespace casa {
 		RegionInfo( const RegionInfo &other ) : stat_list_(other.stat_list_), label_(other.label_), type_( other.type_) { }
 		virtual ~RegionInfo( ) { }
 
-		memory::cptr<stats_t> &list( ) { return stat_list_; }
+		std::tr1::shared_ptr<stats_t> &list( ) { return stat_list_; }
 		const std::string &label( ) const { return label_; }
 		InfoTypes type( ) const { return type_; }
 
@@ -57,7 +57,7 @@ namespace casa {
 		RegionInfo( const std::string &label, stats_t *si, InfoTypes t ) : stat_list_(si), label_(label), type_(t) { }
 
 	    private:
-		memory::cptr<stats_t> stat_list_;
+		std::tr1::shared_ptr<stats_t> stat_list_;
 		std::string label_;
 		InfoTypes type_;
 	};

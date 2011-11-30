@@ -30,7 +30,6 @@
 
 #include <list>
 #include <casa/aips.h>
-#include <casadbus/types/ptr.h>
 #include <display/DisplayEvents/MultiRectTool.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -98,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 	protected:
 
-	    virtual memory::cptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
+	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
 
     };
 

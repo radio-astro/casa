@@ -116,6 +116,23 @@ namespace casa {
 	    return false;
 	}
 
+	// returns point state (Region::PointLocation)
+	Region::PointInfo Polygon::checkPoint( double x, double y )  const {
+
+	    if ( closed == false )
+		return PointInfo( x, y, PointOutside );
+
+	    unsigned int result = 0;
+	    double blc_x, blc_y, trc_x, trc_y;
+	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+	    if ( x >= blc_x && x <= trc_x && y >= blc_y && y <= trc_y )
+		result |= PointInside;
+	    unsigned int handle = check_handle( x, y );
+	    if ( handle )
+		result |= PointHandle;
+	    return PointInfo( x, y, result == 0 ? PointOutside : result, handle );
+	}
+
         // returns mouse movement state
 	unsigned int Polygon::mouseMovement( double x, double y, bool other_selected ) {
 	    unsigned int result = 0;
@@ -149,8 +166,7 @@ namespace casa {
 	}
 
 
-	int Polygon::clickHandle( double x, double y ) const {
-
+	unsigned int Polygon::check_handle( double x, double y ) const {
 	    double blc_x, blc_y, trc_x, trc_y;
 	    boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 	    if ( visible_ == false ) return 0;
@@ -159,6 +175,8 @@ namespace casa {
 	    bool brc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= blc_y && y <= (blc_y + handle_delta_y);
 	    bool trc = x >= (trc_x - handle_delta_x) && x <= trc_x && y >= (trc_y - handle_delta_y) && y <= trc_y;
 
+	    // state for resizing (upon click & moving within a handle)...
+	    // may not be needed with the new RegionToolManager... or might be...
 	    if ( blc ) {
 		((Polygon*)this)->_x_origin_ = ScaleRight;
 		((Polygon*)this)->_y_origin_ = ScaleTop;
@@ -185,8 +203,11 @@ namespace casa {
 		     y <= (_drawing_points_[i].second + half_handle_delta_y) )
 		    return i + 5;
 	    }
+
 	    return 0;
 	}
+
+	int Polygon::clickHandle( double x, double y ) const { return check_handle( x, y ); }
 
 	int Polygon::moveHandle( int handle, double x, double y ) {
 

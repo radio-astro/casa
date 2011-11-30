@@ -28,7 +28,7 @@
 
 #ifndef REGION_REGIONSOURCE_H_
 #define REGION_REGIONSOURCE_H_
-#include <casadbus/types/ptr.h>
+#include <tr1/memory>
 #include <display/region/RegionCreator.h>
 
 namespace casa {
@@ -43,11 +43,11 @@ namespace casa {
 
 	class RegionSource {
 	    public:
-		virtual memory::cptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) = 0;
-		virtual memory::cptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
-		virtual memory::cptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
-		virtual memory::cptr<Rectangle> point( WorldCanvas *wc, double x, double y ) = 0;
+		virtual std::tr1::shared_ptr<Rectangle> rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
+		virtual std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, double x1, double y1 ) = 0;
+		virtual std::tr1::shared_ptr<Polygon> polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) = 0;
+		virtual std::tr1::shared_ptr<Rectangle> ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) = 0;
+		virtual std::tr1::shared_ptr<Rectangle> point( WorldCanvas *wc, double x, double y ) = 0;
 
 		virtual void revokeRegion( Region *r ) { region_creator->revokeRegion(r); }
 

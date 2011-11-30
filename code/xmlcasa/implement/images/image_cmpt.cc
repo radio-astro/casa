@@ -845,51 +845,47 @@ image::coordmeasures(const std::vector<double>&pixel) {
 
 ::casac::record*
 image::decompose(const ::casac::record& region, const ::casac::variant& vmask,
-		const bool simple, const double Threshold, const int nContour,
-		const int minRange, const int nAxis, const bool fit,
-		const double maxrms, const int maxRetry, const int maxIter,
-		const double convCriteria) {
-	::casac::record *rstat = 0;
+	const bool simple, const double Threshold, const int nContour,
+	const int minRange, const int nAxis, const bool fit,
+	const double maxrms, const int maxRetry, const int maxIter,
+	const double convCriteria, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", "decompose");
-		if (detached())
-			return rstat;
-
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return 0;
+		}
+		if (Threshold < 0) {
+			throw AipsError(
+				"Threshold = " + String::toString(Threshold)
+				+ ". You must specify a nonnegative threshold"
+			);
+		}
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
+		}
 		Matrix<Int> blcs;
 		Matrix<Int> trcs;
 
-		Matrix<Float> cl = _image->decompose(blcs, trcs, *Region, mask, simple,
-				Threshold, nContour, minRange, nAxis, fit, maxrms, maxRetry,
-				maxIter, convCriteria);
+		Matrix<Float> cl = _image->decompose(
+			blcs, trcs, *Region, mask, simple, Threshold,
+			nContour, minRange, nAxis, fit, maxrms,
+			maxRetry, maxIter, convCriteria, stretch
+		);
 
-		/*std::vector<float> cl_v;
-		 cl.tovector(cl_v);
-		 int nelem = cl_v.size();
-		 std::vector<double> cl_dv(nelem);
-		 for (int n=0; n < nelem; n++) {
-		 cl_dv[n] = cl_v[n];
-		 }
-		 std::vector<int> cl_shape;
-		 cl.shape().asVector().tovector(cl_shape);
-		 rstat = new ::casac::variant(cl_dv, cl_shape);
-		 */
 		casa::Record outrec1;
 		outrec1.define("components", cl);
 		outrec1.define("blc", blcs);
 		outrec1.define("trc", trcs);
-		rstat = fromRecord(outrec1);
+		return fromRecord(outrec1);
 
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record *
@@ -1062,37 +1058,40 @@ bool image::done(const bool remove, const bool verbose) {
 	}
 }
 
-bool image::fft(const std::string& realOut, const std::string& imagOut,
-		const std::string& ampOut, const std::string& phaseOut,
-		const std::vector<int>& axes, const ::casac::record& region,
-		const ::casac::variant& vmask) {
-	bool rstat(false);
+bool image::fft(
+	const string& realOut, const string& imagOut,
+	const string& ampOut, const string& phaseOut,
+	const std::vector<int>& axes, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool stretch
+) {
 	try {
-		*_log << LogOrigin("image", "fft");
-		if (detached())
-			return rstat;
+		*_log << LogOrigin(_class, __FUNCTION__);
+		if (detached()) {
+			return false;
+		}
 
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 
 		// if default value change it to empty vector
 		Vector<Int> leAxes(axes);
-		if (leAxes.size() == 1) {
-			if (leAxes[0] == -1)
-				leAxes.resize();
+		if (leAxes.size() == 1 && leAxes[0] == -1) {
+			leAxes.resize();
 		}
 
-		rstat = _image->fft(realOut, imagOut, ampOut, phaseOut, leAxes,
-				*Region, mask);
+		return _image->fft(
+			realOut, imagOut, ampOut, phaseOut,
+			leAxes, *Region, mask, stretch
+		);
 
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*
@@ -1268,7 +1267,7 @@ image* image::transpose(
 		const string& logfile, const bool append,
 		const string& newestimates, const string& complist,
 		const bool overwrite, const bool dooff, const double offset,
-		const bool offsetisfixed
+		const bool offsetisfixed, const bool stretch
 ) {
 	if (detached()) {
 		return 0;
@@ -1285,7 +1284,7 @@ image* image::transpose(
 	if (excludepix.size() == 1 && excludepix[0] == -1) {
 		excludepix.resize();
 	}
-	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogOrigin(_class, __FUNCTION__);
 	String mask = vmask.toString();
 	if (mask == "[]") {
 		mask = "";
@@ -1303,16 +1302,23 @@ image* image::transpose(
 		if (chans.type() == variant::BOOLVEC) {
 			// for some reason which eludes me, the default variant type is boolvec
 			sChans = "";
-		} else if (chans.type() == variant::STRING) {
+		}
+		else if (chans.type() == variant::STRING) {
 			sChans = chans.toString();
-		} else if (chans.type() == variant::INT) {
+		}
+		else if (chans.type() == variant::INT) {
 			sChans = String::toString(chans.toInt());
-		} else {
+		}
+		else {
 			*_log
 				<< "Unsupported type for chans. chans must be either an integer or a string"
 				<< LogIO::EXCEPTION;
 		}
-		if (region.type() != variant::BOOLVEC && region.type() != variant::STRING && region.type() != variant::RECORD) {
+		if (
+			region.type() != variant::BOOLVEC
+			&& region.type() != variant::STRING
+			&& region.type() != variant::RECORD
+		) {
 			*_log << "Unsupported type for region " << region.type()
 				<< LogIO::EXCEPTION;
 		}
@@ -1337,6 +1343,7 @@ image* image::transpose(
 				writeControl
 			)
 		);
+		fitter->setStretch(stretch);
 		if (dooff) {
 			fitter->setZeroLevelEstimate(offset, offsetisfixed);
 		}

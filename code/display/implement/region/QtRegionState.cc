@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <display/region/QtRegion.qo.h>
 #include <display/region/QtRegionState.qo.h>
+#include <casadbus/types/nullptr.h>
 
 namespace casa {
     namespace viewer {
@@ -55,6 +56,7 @@ namespace casa {
 	    connect( font_italic, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( font_bold, SIGNAL(clicked(bool)), SLOT(state_change(bool)) );
 	    connect( save_now, SIGNAL(clicked(bool)), SLOT(save_region(bool)) );
+	    connect( region_mark, SIGNAL(stateChanged(int)), SLOT(state_change(int)) );
 
 	    int z_max = region_->numFrames( );
 	    frame_min->setMaximum(z_max);
@@ -119,7 +121,7 @@ namespace casa {
 	    QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 	    if ( first == 0 ) throw internal_error( );
 	    std::list<RegionInfo>::iterator stat_iter = stats->begin();
-	    if ( stat_iter->list( ).isNull( ) ) {
+	    if ( memory::nullptr.check(stat_iter->list( )) ) {
 		// fprintf( stderr, "YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1YESYES1\n" );
 	    } else {
 		first->updateStatistics(*stat_iter);
@@ -131,7 +133,7 @@ namespace casa {
 	    for ( int i=1; i < statistics_group->count() && ++stat_iter != stats->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( stat_iter->list( ).isNull( ) ) {
+		if ( memory::nullptr.check(stat_iter->list( )) ) {
 		    // fprintf( stderr, "YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2YESYES2\n" );
 		} else {
 		    cur->updateStatistics(*stat_iter);

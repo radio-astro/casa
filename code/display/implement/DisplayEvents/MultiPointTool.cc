@@ -29,7 +29,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    memory::cptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double ) const {
+    std::tr1::shared_ptr<viewer::Rectangle> MultiPointTool::allocate_region( WorldCanvas *wc, double x, double y, double, double ) const {
 	return rfactory->point( wc, x, y );
     }
 

@@ -376,7 +376,7 @@ namespace asdm {
   string ASDMUtils::pathToxslTransform( const string& xsltFilename) {
     char * envVars[] = {"INTROOT", "ACSROOT"};
     char * rootDir_p;
-    for (unsigned int i = 0; i < sizeof(envVars) ; i++) 
+    for (unsigned int i = 0; i < sizeof(envVars) / sizeof(char *) ; i++) 
       if ((rootDir_p = getenv(envVars[i])) != 0) {
 	string rootPath(rootDir_p);
 	vector<string> rootPathElements;

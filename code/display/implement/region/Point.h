@@ -31,7 +31,6 @@
 
 #include <display/region/Rectangle.h>
 #include <casa/BasicSL/String.h>
-#include <casadbus/types/ptr.h>
 #include <list>
 
 namespace casa {
@@ -53,6 +52,9 @@ namespace casa {
 		int clickHandle( double x, double y ) const { return 0; }
 
 		bool clickWithin( double x, double y ) const;
+
+		// returns point state (Region::PointLocation)
+		PointInfo checkPoint( double x, double y ) const;
 
 		// returns mouse movement state
 		unsigned int mouseMovement( double x, double y, bool other_selected );

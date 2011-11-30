@@ -114,6 +114,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
   
+	    void checkPoint( WorldCanvas *wc, State &state );
+
 	    virtual bool create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				 const std::string &font, int font_size, int font_style, const std::string &font_color,
 				 const std::string &line_color, viewer::Region::LineStyle line_style );
@@ -157,7 +159,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // </group>
 
 	private:
-	    typedef std::list<memory::cptr<viewer::Polygon> > polygonlist;
+	    typedef std::list<std::tr1::shared_ptr<viewer::Polygon> > polygonlist;
 
 	    void start_new_polygon( WorldCanvas *, int x, int y );
 
@@ -168,7 +170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // replace a single vertex.
 	    virtual void set(const Int x, const Int y, const Int pt);
 
-	    memory::cptr<viewer::Polygon> resizing_region;
+	    std::tr1::shared_ptr<viewer::Polygon> resizing_region;
 
 	    // push/pop last vertex
 	    // <group>
@@ -228,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    double moving_linx_;
 	    double moving_liny_;
 
-	    memory::cptr<viewer::Polygon> building_polygon;
+	    std::tr1::shared_ptr<viewer::Polygon> building_polygon;
 	    viewer::RegionSource *rfactory;
 	    polygonlist polygons;
 	    PanelDisplay *pd_;

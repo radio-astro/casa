@@ -707,6 +707,12 @@ the ms definition itself. -->
                   <description>lock the table for exclusive use by this tool</description>
                   <value>false</value>
                 </param>
+
+                <param type="bool" direction="in" name="copysubtables">
+                  <description>copy the subtables from the first to all other member MSs</description>
+                  <value>false</value>
+                </param>		
+
         </input>
         <returns type="bool"/>
         <example>

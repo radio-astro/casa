@@ -61,21 +61,21 @@ class sdimaging_unittest_base:
     cell=['3.0arcmin','3.0arcmin']
     gridfunction='PB'
     statsinteg={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-                'blcf': '17:32:18.690, +57.37.28.536, I, 1.419395e+09Hz',
-                'max': numpy.array([ 0.03589965]),
-                'maxpos': numpy.array([60, 71,  0,  0], dtype=numpy.int32),
-                'maxposf': '17:08:55.879, +61.12.09.501, I, 1.419395e+09Hz',
-                'mean': numpy.array([ 0.01769218]),
+                'blcf': '17:32:18.690, +57.37.28.536, I, 1.42064e+09Hz',
+                'max': numpy.array([ 0.6109162]),
+                'maxpos': numpy.array([4, 62,  0,  0], dtype=numpy.int32),
+                'maxposf': '17:31:59.439, +60.43.52.421, I, 1.42064e+09Hz',
+                'mean': numpy.array([ 0.39524983]),
                 'min': numpy.array([ 0.]),
                 'minpos': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
-                'minposf': '17:32:18.690, +57.37.28.536, I, 1.419395e+09Hz',
+                'minposf': '17:32:18.690, +57.37.28.536, I, 1.42064e+09Hz',
                 'npts': numpy.array([ 5625.]),
-                'rms': numpy.array([ 0.01939845]),
-                'sigma': numpy.array([ 0.007956]),
-                'sum': numpy.array([ 99.51852731]),
-                'sumsq': numpy.array([ 2.11668729]),
+                'rms': numpy.array([ 0.43127564]),
+                'sigma': numpy.array([ 0.17257331]),
+                'sum': numpy.array([ 2223.28028646]),
+                'sumsq': numpy.array([ 1046.2425779]),
                 'trc': numpy.array([74, 74,  0,  0], dtype=numpy.int32),
-                'trcf': '17:03:03.151, +61.19.10.757, I, 1.419395e+09Hz'}
+                'trcf': '17:03:03.151, +61.19.10.757, I, 1.42064e+09Hz'}
     keys=['max','mean','min','npts','rms','blc','blcf','trc','trcf','sigma','sum','sumsq']
 
     def _checkfile( self, name ):
@@ -271,7 +271,22 @@ class sdimaging_test1(sdimaging_unittest_base,unittest.TestCase):
         self.assertEqual(res,None,
                          msg='Any error occurred during imaging')
         self._checkshape(self.outfile,self.imsize[0],self.imsize[1],1,1)
-        refstats=self.statsinteg
+        refstats={'blc': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'blcf': '17:32:18.690, +57.37.28.536, I, 1.419395e+09Hz',
+                  'max': numpy.array([ 0.03589965]),
+                  'maxpos': numpy.array([60, 71,  0,  0], dtype=numpy.int32),
+                  'maxposf': '17:08:55.879, +61.12.09.501, I, 1.419395e+09Hz',
+                  'mean': numpy.array([ 0.01769218]),
+                  'min': numpy.array([ 0.]),
+                  'minpos': numpy.array([0, 0, 0, 0], dtype=numpy.int32),
+                  'minposf': '17:32:18.690, +57.37.28.536, I, 1.419395e+09Hz',
+                  'npts': numpy.array([ 5625.]),
+                  'rms': numpy.array([ 0.01939845]),
+                  'sigma': numpy.array([ 0.007956]),
+                  'sum': numpy.array([ 99.51852731]),
+                  'sumsq': numpy.array([ 2.11668729]),
+                  'trc': numpy.array([74, 74,  0,  0], dtype=numpy.int32),
+                  'trcf': '17:03:03.151, +61.19.10.757, I, 1.419395e+09Hz'}
         self._checkstats(self.outfile,refstats)
         
     def test102(self):

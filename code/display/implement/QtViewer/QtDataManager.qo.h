@@ -46,6 +46,7 @@
 #include <display/QtViewer/QtDataManager.ui.h>
 #include <display/QtViewer/QtDataMgrMsSelect.ui.h>
 #include <graphics/X11/X_exit.h>
+#include <display/Utilities/Lowlevel.h>
 
  
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -117,6 +118,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   
   void showDDCreateError_(String);
 
+  void leaveopenButtonClicked( bool checked );
+  void showlelButtonClicked( bool checked );
  
  private:
   
@@ -125,6 +128,9 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   QDir dir_;
   Ui::QtDataMgrMsSelect *ms_selection;
   
+  // connection to rc file
+  Casarc &rc;
+
 };
 
 

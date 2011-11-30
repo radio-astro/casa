@@ -60,121 +60,146 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
 		QWidget(parent),
 		parent_(parent),
 		panel_(panel),
-		ms_selection(new Ui::QtDataMgrMsSelect) {
+		ms_selection(new Ui::QtDataMgrMsSelect),
+		rc(viewer::getrc()) {
   
-  setWindowTitle(name);
+    setWindowTitle(name);
   
-  setupUi(this);
-  ms_selection->setupUi(ms_selection_scroll_widget);
-  // Tue Sep  6 12:17:21 EDT 2011
-  // don't think people really use the lel entry, and while it's removal wasn't
-  // required (with the addition of the ms selection to the "loading options"),
-  // originally the lel expression was supposed to be replace with ms selection
-  // options... so we'll remove it and see what happens <drs>...
-  lelGB_->hide( );
-  
-  //updateButton_->setEnabled(false);	//#dk until this works.
+    setupUi(this);
+    ms_selection->setupUi(ms_selection_scroll_widget);
 
-  lelEdit_->setToolTip("Enter an image expression, such as\n"
-		       "'clean.im' - 'dirty.im'.  For details, see:\n"
-		       "aips2.nrao.edu/docs/notes/223/223.html");
+    std::string show_lel = rc.get("viewer." + panel_->rcid() + ".datamgr.show_lel");
+    if ( show_lel != "true" && show_lel != "false" ) {
+	rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
+	show_lel = "false";
+    }
+    std::string leave_up = rc.get("viewer." + panel_->rcid() + ".datamgr.leave_up");
+    if ( leave_up != "true" && leave_up != "false" ) {
+	rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
+	leave_up = "true";
+    }
   
-  
-  hideDisplayButtons();
+    // Tue Sep  6 12:17:21 EDT 2011
+    // don't think people really use the lel entry, and while it's removal wasn't
+    // required (with the addition of the ms selection to the "loading options"),
+    // originally the lel expression was supposed to be replace with ms selection
+    // options... so we'll remove it and see what happens <drs>...
+    // Fri Nov 18 22:39:26 UTC 2011
+    // some complaints make it reasonable to re-enable it as an option <drs>...
+    if ( show_lel == "false" ) {
+	lelGB_->hide( );
+	showLEL_->setChecked( false );
+    } else {
+	showLEL_->setChecked( true );
+    }
+    connect(showLEL_, SIGNAL(clicked(bool)), SLOT(showlelButtonClicked(bool)));
 
-  uiDataType_["Unknown"]          = UNKNOWN;
-  uiDataType_["Image"]            = IMAGE;
-  uiDataType_["Measurement Set"]  = MEASUREMENT_SET;
-  uiDataType_["Sky Catalog"]      = SKY_CATALOG;
-  uiDataType_["Directory"]        = DIRECTORY;
-  uiDataType_["FITS Image"]       = IMAGE;
-  uiDataType_["FITS Ext."]        = IMAGE;
-  uiDataType_["Quality Ext."]     = QUALIMG;
-  uiDataType_["Miriad Image"]     = IMAGE;
-  uiDataType_["Gipsy"]            = IMAGE;
-  uiDataType_["Restore File"]     = RESTORE;
-  uiDataType_["CASA Region File"] = CASAREGION;
   
-  dataType_[UNKNOWN]              = "unknown";
-  dataType_[IMAGE]                = "image";
-  dataType_[QUALIMG]              = "image";
-  dataType_[MEASUREMENT_SET]      = "ms";
-  dataType_[SKY_CATALOG]          = "skycatalog";
-  dataType_[RESTORE]              = "restore";
-  dataType_[CASAREGION]           = "casa region";
+    //updateButton_->setEnabled(false);	//#dk until this works.
 
-  uiDisplayType_["raster image"]  = RASTER;
-  uiDisplayType_["contour map"]   = CONTOUR;
-  uiDisplayType_["vector map"]    = VECTOR;
-  uiDisplayType_["marker map"]    = MARKER;
-  uiDisplayType_["sky catalog"]   = SKY_CAT;
-  uiDisplayType_["old window"]    = OLDPANEL;
-  uiDisplayType_["new window"]    = NEWPANEL;
+    lelEdit_->setToolTip( "Enter an image expression, such as\n"
+			  "'clean.im' - 'dirty.im'.  For details, see:\n"
+			  "aips2.nrao.edu/docs/notes/223/223.html" );
   
-  displayType_["raster"]          = RASTER;
-  displayType_["contour"]         = CONTOUR;
-  displayType_["vector"]          = VECTOR;
-  displayType_["marker"]          = MARKER;
-  displayType_["skycatalog"]      = SKY_CAT;
-  displayType_["oldpanel"]        = OLDPANEL;
-  displayType_["newpanel"]        = NEWPANEL;
   
-  leaveOpen_->setToolTip("Uncheck to close this window after "
-    "data and display type selection.\n"
-    "Use 'Open' button/menu on Display Panel to show it again.");
-  leaveOpen_->setChecked(True);
+    hideDisplayButtons();
+
+    uiDataType_["Unknown"]          = UNKNOWN;
+    uiDataType_["Image"]            = IMAGE;
+    uiDataType_["Measurement Set"]  = MEASUREMENT_SET;
+    uiDataType_["Sky Catalog"]      = SKY_CATALOG;
+    uiDataType_["Directory"]        = DIRECTORY;
+    uiDataType_["FITS Image"]       = IMAGE;
+    uiDataType_["FITS Ext."]        = IMAGE;
+    uiDataType_["Quality Ext."]     = QUALIMG;
+    uiDataType_["Miriad Image"]     = IMAGE;
+    uiDataType_["Gipsy"]            = IMAGE;
+    uiDataType_["Restore File"]     = RESTORE;
+    uiDataType_["CASA Region File"] = CASAREGION;
+  
+    dataType_[UNKNOWN]              = "unknown";
+    dataType_[IMAGE]                = "image";
+    dataType_[QUALIMG]              = "image";
+    dataType_[MEASUREMENT_SET]      = "ms";
+    dataType_[SKY_CATALOG]          = "skycatalog";
+    dataType_[RESTORE]              = "restore";
+    dataType_[CASAREGION]           = "casa region";
+
+    uiDisplayType_["raster image"]  = RASTER;
+    uiDisplayType_["contour map"]   = CONTOUR;
+    uiDisplayType_["vector map"]    = VECTOR;
+    uiDisplayType_["marker map"]    = MARKER;
+    uiDisplayType_["sky catalog"]   = SKY_CAT;
+    uiDisplayType_["old window"]    = OLDPANEL;
+    uiDisplayType_["new window"]    = NEWPANEL;
+  
+    displayType_["raster"]          = RASTER;
+    displayType_["contour"]         = CONTOUR;
+    displayType_["vector"]          = VECTOR;
+    displayType_["marker"]          = MARKER;
+    displayType_["skycatalog"]      = SKY_CAT;
+    displayType_["oldpanel"]        = OLDPANEL;
+    displayType_["newpanel"]        = NEWPANEL;
+  
+    leaveOpen_->setToolTip( "Uncheck to close this window after "
+			    "data and display type selection.\n"
+			    "Use 'Open' button/menu on Display Panel to show it again." );
+
+    if ( leave_up == "true" ) {
+	leaveOpen_->setChecked(true);
+    } else {
+	leaveOpen_->setChecked(false);
+    }
+    connect(leaveOpen_, SIGNAL(clicked(bool)), SLOT(leaveopenButtonClicked(bool)));
     
-  dir_.setFilter(QDir::AllDirs | //QDir::NoSymLinks |
-                 QDir::Files);
-  dir_.setSorting(QDir::Name);
+    dir_.setFilter( QDir::AllDirs | QDir::Files);
+    dir_.setSorting(QDir::Name);
 
-  //#dk  QSettings are often useful, but users
-  //     want to begin in their cwd in this case....
-  //
-  // QSettings settings("NRAO", "casa");
-  // QString lastDir = settings.value("lastDir", dir_.currentPath())
-  //                          .toString();
-  // //cout << "lastDir=" << lastDir.toStdString() << endl;
-  // dir_.cd(lastDir);
-  // dirLineEdit_->setText(lastDir);
+    //#dk  QSettings are often useful, but users
+    //     want to begin in their cwd in this case....
+    //
+    // QSettings settings("NRAO", "casa");
+    // QString lastDir = settings.value("lastDir", dir_.currentPath())
+    //                          .toString();
+    // //cout << "lastDir=" << lastDir.toStdString() << endl;
+    // dir_.cd(lastDir);
+    // dirLineEdit_->setText(lastDir);
   
-  dirLineEdit_->setText(dir_.currentPath());
-  panel_->selectedDMDir = dirLineEdit_->text().toStdString();
-  
-  
-  buildDirTree();
+    dirLineEdit_->setText(dir_.currentPath());
+    panel_->selectedDMDir = dirLineEdit_->text().toStdString();
   
   
-  connect(rasterButton_,  SIGNAL(clicked()), SLOT(createButtonClicked()));
-  connect(contourButton_, SIGNAL(clicked()), SLOT(createButtonClicked()));
-  connect(vectorButton_,  SIGNAL(clicked()), SLOT(createButtonClicked()));
-  connect(markerButton_,  SIGNAL(clicked()), SLOT(createButtonClicked()));
-  connect(catalogButton_, SIGNAL(clicked()), SLOT(createButtonClicked()));
-  connect(oldPanelButton_,  SIGNAL(clicked()), SLOT(restoreToOld_()));
-  connect(newPanelButton_,  SIGNAL(clicked()), SLOT(restoreToNew_()));
-  connect(updateButton_,  SIGNAL(clicked()), SLOT(buildDirTree()));
-  connect(regionButton_, SIGNAL(clicked()), SLOT(load_regions_clicked()));
+    buildDirTree();
+  
+  
+    connect(rasterButton_,  SIGNAL(clicked()), SLOT(createButtonClicked()));
+    connect(contourButton_, SIGNAL(clicked()), SLOT(createButtonClicked()));
+    connect(vectorButton_,  SIGNAL(clicked()), SLOT(createButtonClicked()));
+    connect(markerButton_,  SIGNAL(clicked()), SLOT(createButtonClicked()));
+    connect(catalogButton_, SIGNAL(clicked()), SLOT(createButtonClicked()));
+    connect(oldPanelButton_,  SIGNAL(clicked()), SLOT(restoreToOld_()));
+    connect(newPanelButton_,  SIGNAL(clicked()), SLOT(restoreToNew_()));
+    connect(updateButton_,  SIGNAL(clicked()), SLOT(buildDirTree()));
+    connect(regionButton_, SIGNAL(clicked()), SLOT(load_regions_clicked()));
 
-  //connect(registerCheck, SIGNAL(clicked()), 
-  //      SLOT(registerClicked()));
+    //connect(registerCheck, SIGNAL(clicked()), 
+    //      SLOT(registerClicked()));
   
-  connect(dirLineEdit_,   SIGNAL(returnPressed()), SLOT(returnPressed()));
+    connect(dirLineEdit_,   SIGNAL(returnPressed()), SLOT(returnPressed()));
   
-  connect(treeWidget_,    SIGNAL(itemSelectionChanged()),
-			 SLOT(changeItemSelection()));
+    connect(treeWidget_,    SIGNAL(itemSelectionChanged()),
+			    SLOT(changeItemSelection()));
   
-  connect(treeWidget_,    SIGNAL(itemClicked(QTreeWidgetItem*,int)),
-			 SLOT(clickItem(QTreeWidgetItem*)));
+    connect(treeWidget_,    SIGNAL(itemClicked(QTreeWidgetItem*,int)),
+			    SLOT(clickItem(QTreeWidgetItem*)));
 
-  connect(treeWidget_, SIGNAL(itemExpanded(QTreeWidgetItem*)),
-			SLOT(expandItem(QTreeWidgetItem*)));
+    connect(treeWidget_, SIGNAL(itemExpanded(QTreeWidgetItem*)),
+			 SLOT(expandItem(QTreeWidgetItem*)));
   
-  connect(panel_, SIGNAL(createDDFailed(String, String, String, String)),
-		     SLOT(showDDCreateError_(String)));
+    connect(panel_, SIGNAL(createDDFailed(String, String, String, String)),
+		    SLOT(showDDCreateError_(String)));
   
-  connect(lelEdit_, SIGNAL(gotFocus(QFocusEvent*)),  SLOT(lelGotFocus_()));
-
-
+    connect(lelEdit_, SIGNAL(gotFocus(QFocusEvent*)),  SLOT(lelGotFocus_()));
 
 }
 
@@ -653,5 +678,24 @@ QStringList QtDataManager::analyseFITSImage(QString path){
 Bool QtDataManager::isQualImg(const QString &extexpr){
 	return True;
 }
+
+ void QtDataManager::showlelButtonClicked( bool clicked ) {
+     if ( clicked ) {
+	lelGB_->show( );
+	rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "true" );
+     } else {
+	lelGB_->hide( );
+	rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
+     }
+ }
+
+ void QtDataManager::leaveopenButtonClicked( bool clicked ) {
+     if ( clicked ) {
+	rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
+     } else {
+	rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "false" );
+     }
+ }
+
 
 } //# NAMESPACE CASA - END

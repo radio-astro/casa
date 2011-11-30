@@ -133,7 +133,7 @@ namespace casa {
 	    // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 	    setDrawingEnv( );
-	    drawRegion( selected( ) );
+	    drawRegion( selected( ) || marked( ) );
 	    resetDrawingEnv( );
 
 	    setTextEnv( );

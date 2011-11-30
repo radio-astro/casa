@@ -208,16 +208,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         dochannelmap -- channel map image or total power image
                 default: False (total power)
                 options: True (channel map), False
-  &gt;&gt;&gt; dochannelmap=True expandable parameters
+            &gt;&gt;&gt; dochannelmap=True expandable parameters
                nchan -- number of spectral channel for created image
                    default: 1 
-                   options: to do total power imaging, set -1 
+                   example: 100
                start -- reference value of start channel (in units of specunit)
                    default: 0 (0th channel if specunit='channel')
                    example: 100
                step -- width of each spectral channel for created image
-                   default: 1 (channel width of 1 channel if specunit='channel')
-                   aexample: 100
+                   default: 1 (width of 1 channel if specunit='channel')
+                   example: 100
         phasecenter -- image phase center: direction measure or fieldid 
                 default: 0
                 example: 'J2000 13h44m00 -17d02m00', 'AZEL -123d48m29 15d41m41'

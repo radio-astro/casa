@@ -27,7 +27,7 @@
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: Feb. 05, 2011)}}
+\date{June 15, 2007\\{\small (Updated: Nov. 29, 2011)}}
 \maketitle
 \normalsize
 \markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
@@ -298,8 +298,37 @@ follows:
   column is attempted.
 \end{enumerate}
 
+\subsubsection{Antenna@Station specification}
+
+A fully qualified antenna specification can also include the station
+name via the {\tt ANT@STATION} syntax.  {\tt STATION} specification
+follows the same rules as antenna specification. When antenna or
+station in a {\tt ANT@STATION} syntax is a comma-separated list, the
+list must be enclosed in a left- and right-parenthesis pair to
+distinguish it from a comma-separated list of {\tt ANT@STATION} (i.e.,
+{\tt "A1@S1, A2@S2, A3@S3" versus "(A1,A2,A3)@(S1,S2,S3)"}).  All
+antennas in the {\tt ANT} part of the specification on {\it any} of
+the stations in the {\tt STATION} part of the specification will be
+selected.  The {\tt ANT} part of the specification is optional and
+when not specified is replaced with the wild-card {\tt "*"} (i.e. {\tt
+  "@STATION"} is equivalent to {\tt "*@STATION"}).
+
+The two forms of specifications that are interpreted differently are:
+\begin{enumerate}
+\item List of ANT@STATION: {\tt A1@S1, A2@S2, A3@S3,....}
+\item (List of ANT)@(List of STATION): {\tt (A1, A2, A3)@(S1,S2,S3)}
+\end{enumerate}
+First form is similar to the comma-separated list of antenna
+specifications used to construct the baseline to be selected (see
+Section~\ref{BASELINE_SPEC}).  The latter will select all members of
+the antenna list that are on any of the stations listed in the station
+list.  E.g. if antenna {\tt A1} appears on stations {\tt S1} and {\tt
+  S3}, both will be selected in the second form, but only the antenna
+{\tt A1} on station {\tt S1} will be selected in the first form.
+
 
 \subsubsection{Baseline specification}
+\label{BASELINE_SPEC}
 
 A baseline specification consists of an ANT, an ANT followed by an
 operator or a pair of antenna specifications separated by an operator.
@@ -321,36 +350,36 @@ Table~\ref{BASELINE:TAB}.
 \hline
 {\bf Specification} & {\bf Meaning}\\
 \hline
-ANT    & Select only cross-correlation baselines between all the\\
-       & antennas in ANT and {\it all} other available antennas\\
+{\tt ANT}    & Select only cross-correlation baselines between all the\\
+       & antennas in {\tt ANT} and {\it all} other available antennas\\
 \hline
-ANT\&  & Select only cross-correlation baselines between antennas\\
-       & in ANT only\\
+{\tt ANT\&}  & Select only cross-correlation baselines between antennas\\
+       & in {\tt ANT} only\\
 \hline
-ANT1\&ANT2 & Select only cross-correlation baselines between\\
-       & antennas in ANT1 and ANT2\\
+{\tt ANT1 \& ANT2} & Select only cross-correlation baselines between\\
+       & antennas in {\tt ANT1} and {\tt ANT2}\\
 \hline
-ANT\&\& & Select cross- {\it and} auto-correlation baselines\\
-       &between all the antennas in ANT only\\
+{\tt ANT\&\&} & Select cross- {\it and} auto-correlation baselines\\
+       &between all the antennas in {\tt ANT} only\\
 \hline
-ANT\&\&* & Select cross- {\it and} auto-correlation baselines\\
-       &between all the antennas in ANT and {\it all} other\\
+{\tt ANT\&\&*} & Select cross- {\it and} auto-correlation baselines\\
+       &between all the antennas in {\tt ANT} and {\it all} other\\
        &available antennas\\
 \hline
-ANT1\&\&ANT2 & Select cross- {\it and} auto-correlation baselines\\
-       & between antennas in ANT1 and ANT2\\
+{\tt ANT1 \&\& ANT2} & Select cross- {\it and} auto-correlation baselines\\
+       & between antennas in {\tt ANT1} and {\tt ANT2}\\
 \hline
-ANT\&\&\&  & Select {\it only} auto-correlation baselines for\\
-       &antennas in ANT\\
+{\tt ANT\&\&\&}  & Select {\it only} auto-correlation baselines for\\
+       &antennas in {\tt ANT}\\
 \hline
-!ANT  & Excludes all baselines involving antennas in ANT.\\
-      & ANT can be any of the above expressions\\
+{\tt !ANT}  & Excludes all baselines involving antennas in {\tt ANT}.\\
+      & {\tt ANT} can be any of the above expressions\\
 \hline
-ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions.\\
+{\tt ANT1 ; !ANT2} & {\tt ANT1} and {\tt ANT2} can be any of the above expressions.\\
              & This selects only cross-correlation baselines\\
-             & between all the antennas in ANT1 and {\it all}\\
+             & between all the antennas in {\tt ANT1} and {\it all}\\
              & other available antennas {\bf except} those involving\\ 
-             & antennas in ANT2.\\ 
+             & antennas in {\tt ANT2}.\\ 
 \hline
 \end{tabular}
 \end{center}
@@ -361,7 +390,7 @@ ANT1 ; !ANT2 & ANT1 and ANT2 can be any of the above expressions.\\
 
 \subsubsection{Baseline negation operator}
 
-The negation operator '!' can be used to exclude a baseline
+The negation operator {\tt '!'} can be used to exclude a baseline
 specification from the final selection. {\it Note that this is a
   baseline negation operator and not an antenna negation operator}.
 The negation operator applies only to the baseline specification {\it
@@ -1264,316 +1293,526 @@ token '-' (near char. 12 in string "25/22:40:0 - 26/03:30:0")
 (Did you know we use "~" as the range operator (for a good reason)?)
 \end{verbatim}
 
-\newpage
-\section{Appendix: Formal Grammar Specifications}
+% \newpage
+% \section{Appendix: Formal Grammar Specifications}
+
+% {\tt TEN} in the following refers to the TableExprNode object of the
+% {\tt Tables} module of CASA.
+
+% \subsection{Baseline Selection Expression}
+
+% \begin{verbatim}
+% %union {
+%   const TableExprNode* node;
+%   char* str;
+%   double dval;
+%   Vector<Int>* iv;
+%   std::vector<double>* dv;
+%   Vector<String>* is;
+% }
+
+% %token AT
+% %token COMMA
+% %token SEMICOLON
+% %token AMPERSAND
+% %token DASH
+% %token NOT
+% %token LPAREN
+% %token RPAREN
+% %token LT
+% %token LE
+% %token GT
+% %token GE
+
+% %token <str> INT
+% %token <str> FLOAT
+% %token <str> UNIT
+% %token <str> QSTRING
+% %token <str> REGEX
+% %token <str> IDENTIFIER
+
+% %type <node> antennastatement 
+% %type <node> indexcombexpr    
+% %type <node> baseline         
+% %type <node> gbaseline        
+% %type <str> identstr          
+% %type <dval> flt              
+% %type <dval> flint            
+% %type <dval> unit             
+% %type <dval> flintunit        
+% %type <dval> flunit           
+% %type <iv> antlist            
+% %type <iv> antidrange
+% %type <iv> antids
+% %type <iv> antid
+% %type <iv> stationid
+% %type <iv> stationlist
+% %type <iv> antatstation
+% //%type <iv> antatstationlist
+% %type <iv> antcomp
+% %type <iv> stancomp
+% %type <dv> blength
+% %type <dv> blengthlist
+
+%     0 $accept: antennastatement $end
+
+%     1 antennastatement: indexcombexpr
+
+%     2 indexcombexpr: gbaseline
+%     3              | indexcombexpr SEMICOLON gbaseline
+
+%     4 @1: /* empty */
+
+%     5 gbaseline: NOT @1 baseline
+
+%     6 @2: /* empty */
+
+%     7 gbaseline: @2 baseline
+
+%     8 baseline: antlist AMPERSAND antlist
+%     9         | antlist AMPERSAND
+%    10         | antlist
+%    11         | antlist AMPERSAND AMPERSAND antlist
+%    12         | antlist AMPERSAND AMPERSAND
+%    13         | antlist AMPERSAND AMPERSAND AMPERSAND
+%    14         | blengthlist
+
+%    15 identstr: IDENTIFIER
+%    16         | UNIT
+
+%    17 stationid: IDENTIFIER
+%    18          | QSTRING
+%    19          | REGEX
+
+%    20 antid: identstr
+%    21      | QSTRING
+%    22      | REGEX
+
+%    23 antidrange: INT
+%    24           | INT DASH INT
+
+%    25 stationlist: stationid
+%    26            | stationlist COMMA stationid
+
+%    27 antlist: antids
+%    28        | antlist COMMA antids
 
-{\tt TEN} in the following refers to the TableExprNode object of the
-{\tt Tables} module of CASA.
+%    29 antcomp: antid
+%    30        | antidrange
+%    31        | LPAREN antlist RPAREN
 
-\subsection{Baseline Selection Expression}
+%    32 stancomp: stationid
+%    33         | LPAREN stationlist RPAREN
 
-\begin{verbatim}
+%    34 antatstation: antcomp AT stancomp
+%    35             | AT stancomp
 
-token IDENTIFIER of type String
-token COMMA
+%    36 antids: antid
+%    37       | antidrange
+%    38       | antatstation
 
-token LPAREN
-token RPAREN
-token WHITE
-
-token INT      of type String
-token QSTRING  of type String
-token REGEX    of type String
+%    39 blengthlist: blength
+%    40            | blengthlist COMMA blength
 
-token COLON
-token SEMICOLON
+%    41 blength: LT flunit
+%    42        | LE flunit
+%    43        | GT flunit
+%    44        | GE flunit
+%    45        | flt DASH flt
+%    46        | flt DASH flt unit
+%    47        | flintunit DASH flintunit
 
-type TEN antennastatement
-type TEN indexcombexpr
-type Vector<int> indexlist
-type Vector<int> antidrange
-type Vector<int> antidlist
-type Vector<int> antid
+%    48 flunit: flint
+%    49       | flintunit
 
-antennastatement: indexcombexpr 
-                | LPAREN indexcombexpr RPAREN
+%    50 flintunit: flint unit
 
-indexcombexpr: indexcombexpr SEMICOLON indexcombexpr
-             | indexlist AMPERSAND indexlist 
-             | indexlist AMPERSAND 
-             | indexlist 
+%    51 unit: UNIT
 
-antid: IDENTIFIER 
-     | QSTRING 
-     | REGEX
+%    52 flint: flt
+%    53      | INT
 
-antidrange: INT 
-          | INT TILDA INT 
- 
-antidlist: antid 
-         | antidrange
- 
-indexlist: antidlist
-         | indexlist COMMA antidlist
-         | LPAREN indexlist RPAREN 
-\end{verbatim}
+%    54 flt: FLOAT
+% \end{verbatim}
 
 
-\subsection{Frequency Selection Expression}
+% \subsection{Frequency Selection Expression}
 
-\begin{verbatim}
+% \begin{verbatim}
 
-token UNIT       of type String
-token INT        of type String
-token FNUMBER    of type String
-token QSTRING    of type String
-token REGEX      of type String
-token IDENTIFIER of type String
+% %union {
+%   const TableExprNode* node;
+%   Block<TableExprNode>* exprb;
+%   TableExprNodeSetElem* elem;
+%   TableExprNodeSet* settp;
+%   Float fval2[2], fval4[4],fval;
+%   char * str;
+%   Int ival;
+%   Vector<Float>* fv;
+%   Vector<Int>* iv;
+% }
 
-type TEN SpwStatement
-type TEN FullSpec
-type TEN FullExpr
-type Float[2] OneFreq
-type Float[2] FreqRange
-type Float[2] Physical
-type Float[4] IndexRange
-type Float[4] PhyRange
-type Vector<int>    Spw
-type Float[2] FListElements
-type Vector<Float>   FreqList
-type Float PhyVal
 
+% %token SQUOTE
+% %token <str> IDENTIFIER
+% %token COMMA
 
-SpwStatement: FullExpr | LPAREN FullExpr RPAREN
+% %token LPAREN
+% %token RPAREN
+% %token WHITE
+% %token COLON
+% %token CARET
+% %token SEMICOLON
+
+% %token <str> UNIT
+% %token <str> INT
+% %token <str> FNUMBER
+% %token <str> QSTRING
+% %token <str> REGEX
 
-PhyVal: FNUMBER
+% %type <node> SpwStatement
+% %type <node> FullSpec
+% %type <node> FullExpr
+% %type <fval2> OneFreq
+% %type <fval4> FreqRange
+% %type <fval2> Physical
+% %type <fval4> IndexRange
+% %type <fval4> PhyRange
+% %type <iv>    Spw
+% %type <fval4> FListElements
+% %type <fv>   FreqList
+% %type <fval> PhyVal
+% %type <fval2> UnitCode
 
-Physical: PhyVal UNIT
+% %nonassoc GT GE LT LE NE COMMA DASH AMPERSAND SEMICOLON COLON CARET
+% %right TILDA
 
-PhyRange: Physical TILDA Physical
-        | PhyVal TILDA PhyVal UNIT
-        | PhyRange CARET Physical 
+%     0 $accept: SpwStatement $end
 
-IndexRange: PhyVal TILDA PhyVal
-          | IndexRange CARET PhyVal
+%     1 SpwStatement: FullExpr
+%     2             | LPAREN FullExpr RPAREN
 
-FreqRange: IndexRange
-         | PhyRange
+%     3 PhyVal: FNUMBER
 
-OneFreq:  PhyVal
-        | Physical
+%     4 UnitCode: UNIT
 
-FListElements: FreqRange
-             | OneFreq
+%     5 Physical: PhyVal UnitCode
 
-FreqList: FListElements
-        | FreqList SEMICOLON FListElements
+%     6 PhyRange: Physical DASH Physical
+%     7         | PhyVal DASH PhyVal UnitCode
+%     8         | PhyRange CARET Physical
+%     9         | CARET Physical
 
-Spw: IDENTIFIER
-   | QSTRING
-   | REGEX
-   | OneFreq
-   | GT OneFreq
-   | LT OneFreq
-   | TILDA OneFreq
-   | FreqRange
-   
-FullSpec: Spw 
-        | Spw COLON FreqList
+%    10 IndexRange: PhyVal DASH PhyVal
+%    11           | IndexRange CARET PhyVal
+%    12           | CARET PhyVal
 
-FullExpr: FullSpec
-        | FullExpr COMMA FullSpec
+%    13 FreqRange: IndexRange
+%    14          | PhyRange
 
-\end{verbatim}
+%    15 OneFreq: PhyVal
+%    16        | Physical
 
+%    17 FListElements: FreqRange
+%    18              | OneFreq
 
-\subsection{Field Selection Expression}
+%    19 FreqList: FListElements
+%    20         | FreqList SEMICOLON FListElements
 
-\begin{verbatim}
-token SQUOTE
-token IDENTIFIER  of type String
-token COMMA
+%    21 Spw: IDENTIFIER
+%    22    | QSTRING
+%    23    | REGEX
+%    24    | GT OneFreq
+%    25    | LT OneFreq
+%    26    | DASH OneFreq
+%    27    | FreqList
 
-token LPAREN
-token RPAREN
-token WHITE
+%    28 FullSpec: Spw
+%    29         | Spw COLON FreqList
 
-token INT      of type String
-token QSTRING  of type String
-token REGEX    of type String
+%    30 FullExpr: FullSpec
+%    31         | FullExpr COMMA FullSpec
+% \end{verbatim}
 
-token COLON
-token SEMICOLON
+
+% \subsection{Field Selection Expression}
+
+% \begin{verbatim}
+% %union {
+%   const TableExprNode* node;
+%   Block<TableExprNode>* exprb;
+%   TableExprNodeSetElem* elem;
+%   TableExprNodeSet* settp;
+%   Int ival[2];
+%   char * str;
+%   Double dval;
+%   Vector<Int>* iv;
+%   Vector<String>* is;
+% }
+
+
+% %token EQASS
+% %token SQUOTE
+% %token <str> IDENTIFIER
+% %token COMMA
 
-type TEN fieldstatement
-type TEN indexcombexpr
-type Vector<int> indexlist
-type Vector<int> fieldidrange
-type Vector<int> fieldidlist
-type Vector<int> fieldid
-type Vector<int> fieldidbounds
+% %token LBRACKET
+% %token LPAREN
+% %token RBRACKET
+% %token RPAREN
+% %token LBRACE
+% %token RBRACE
+% %token WHITE
 
-fieldstatement: indexcombexpr 
-              | LPAREN indexcombexpr RPAREN
+% %token <str> INT
+% %token <str> QSTRING
+% %token <str> REGEX
+
+% %token COLON
+% %token SEMICOLON
 
-indexcombexpr: indexlist 
-
-fieldid: IDENTIFIER   
-       | QSTRING 
-       | REGEX
+% %type <node> fieldstatement
+% %type <node> indexcombexpr
+% %type <iv> indexlist
+% %type <iv> fieldidrange
+% %type <iv> fieldidlist
+% %type <iv> fieldid
+% %type <iv> fieldidbounds
 
-fieldidrange: INT                     
-            | INT TILDA INT           
+% %nonassoc EQ EQASS GT GE LT LE NE COMMA DASH AMPERSAND
 
-fieldidbounds: LT INT                  
-             | GT INT                  
-             | GT INT AMPERSAND LT INT 
+%     0 $accept: fieldstatement $end
 
-fieldidlist: fieldid                   
-           | fieldidrange              
-           | fieldidbounds             
+%     1 fieldstatement: indexcombexpr
+%     2               | LPAREN indexcombexpr RPAREN
 
-indexlist : fieldidlist
-          | indexlist COMMA fieldidlist  
-          | LPAREN indexlist RPAREN
-\end{verbatim}
+%     3 indexcombexpr: indexlist
+
+%     4 fieldid: IDENTIFIER
+%     5        | QSTRING
+%     6        | REGEX
+
+%     7 fieldidrange: INT
+%     8             | INT DASH INT
+
+%     9 fieldidbounds: LT INT
+%    10              | GT INT
+%    11              | GT INT AMPERSAND LT INT
+
+%    12 fieldidlist: fieldid
+%    13            | fieldidrange
+%    14            | fieldidbounds
+
+%    15 indexlist: fieldidlist
+%    16          | indexlist COMMA fieldidlist
+% \end{verbatim}
+
+
+% \subsection{Scan/Sub-Array Selection Expression}
+
+% \begin{verbatim}
+% %union {
+%   const TableExprNode* node;
+%   Block<TableExprNode>* exprb;
+%   TableExprNodeSetElem* elem;
+%   TableExprNodeSet* settp;
+%   Int ival[2];
+%   char * str;
+%   Double dval;
+%   std::vector<Int>* iv; // std::vectors have push_back, insert, etc.
+%   Vector<String>* is;
+% }
+
+
+% %token EQASS
+% %token SQUOTE
+% %token <str> IDENTIFIER
+% %token COMMA
+
+% %token LBRACKET
+% %token LPAREN
+% %token RBRACKET
+% %token RPAREN
+% %token LBRACE
+% %token RBRACE
+% %token WHITE
+
+% %token <str> INT
+% %token <str> QSTRING
+% %token <str> REGEX
+
+% %token COLON
+% %token SEMICOLON
+
+% %type <node> scanstatement
+% %type <node> compoundexpr
+% %type <node> scanboundsexpr
+% %type <node> scanidbounds
+% %type <iv> scanids
+
+% %nonassoc EQ EQASS GT GE LT LE NE COMMA DASH AMPERSAND
+
+%     0 $accept: scanstatement $end
+
+%     1 scanstatement: compoundexpr
+
+%     2 compoundexpr: scanids
+%     3             | scanboundsexpr
+%     4             | compoundexpr COMMA scanids
+%     5             | compoundexpr COMMA scanboundsexpr
+
+%     6 scanidbounds: LT INT
+%     7             | GT INT
+%     8             | LE INT
+%     9             | GE INT
+%    10             | GE INT AMPERSAND LE INT
+%    11             | GT INT AMPERSAND LT INT
+
+%    12 scanboundsexpr: scanidbounds
+
+%    13 scanids: INT
+%    14        | INT DASH INT
+% \end{verbatim}
+
+
+% \subsection{Time Selection Expression}
+
+% \begin{verbatim}
+% %union {
+%   const TableExprNode* node;
+%   Block<TableExprNode>* exprb;
+%   TableExprNodeSetElem* elem;
+%   TableExprNodeSet* settp;
+%   const MEpoch* tval;
+%   Int ival;
+%   Double dval;
+%   Double dval3[3];
+%   Int ival3[3];
+%   TimeFields timeFields;
+% }
+
+% %token <ival> NUMBER
+% %token <dval> FNUMBER
+% %token SQUOTE
+
+% %token DASH
+% %token LT
+% %token GT
+% %token COLON
+% %token COMMA
+% %token SLASH
+% %token DOT
+% %token PERCENT
+% %token STAR
+
+% %token UNKNOWN
+
+% %type <node> timestatement
+% %type <node> timeexpr
+% %type <node> singletimeexpr
+% %type <node> rangetimeexpr
+% %type <node> upboundtimeexpr
+% %type <node> lowboundtimeexpr
+% %type <timeFields> yeartimeexpr
+% %type <dval> wildFloat
+% %type <ival> wildNumber
+% %type <ival> tFields
+% %type <dval3> timeObj
+% %type <ival> yFields
+% %type <ival3> yearObj
+
+% %left OR
+% %left AND
+% %nonassoc GT LT LE COLON SLASH
+% %left PLUS MINUS
+% %left TIMES DIVIDE MODULO
+% %nonassoc UNARY
+% %nonassoc NOT
+% %right POWER
+
+%     0 $accept: timestatement $end
+
+%     1 timestatement: timeexpr
+%     2              | timestatement COMMA timeexpr
+
+%     3 timeexpr: singletimeexpr
+%     4         | rangetimeexpr
+%     5         | lowboundtimeexpr
+%     6         | upboundtimeexpr
+
+%     7 wildNumber: STAR
+%     8           | NUMBER
+
+%     9 wildFloat: wildNumber
+%    10          | FNUMBER
+
+%    11 singletimeexpr: yeartimeexpr
+
+%    12 rangetimeexpr: yeartimeexpr DASH yeartimeexpr
+%    13              | yeartimeexpr PLUS yeartimeexpr
+
+%    14 lowboundtimeexpr: GT yeartimeexpr
+
+%    15 upboundtimeexpr: LT yeartimeexpr
+
+%    16 tFields: wildNumber COLON
+%    17        | COLON
+
+%    18 yFields: wildNumber SLASH
+%    19        | SLASH
+
+%    20 timeObj: tFields tFields wildFloat
+%    21        | tFields tFields
+%    22        | tFields wildFloat
+%    23        | tFields
+%    24        | wildNumber
+
+%    25 yearObj: yFields yFields wildNumber
+%    26        | yFields yFields
+
+%    27 yeartimeexpr: yearObj SLASH timeObj
+%    28             | yearObj
+%    29             | timeObj
+% \end{verbatim}
+
+% \subsection{UV-distance Selection Expression}
+
+% \begin{verbatim}
+% %union {
+%   const TableExprNode* node;
+%   char * str;
+%   Double dval;
+% }
+
+% %token <str> UNIT
+% %token <dval> FNUMBER
+% %token COLON
+% %token COMMA
+% %token PERCENT
+
+% %type <dval> fnumwithunits
+% %type <node> uvwdiststatement
+% %type <node> uvwdistexprlist
+% %type <node> uvwdistexpr
+% %left UNIT
+% %right PERCENT
+% %nonassoc EQ EQASS GT GE LT LE NE DASH COLON 
+
+%     0 $accept: uvwdiststatement $end
+
+%     1 uvwdiststatement: uvwdistexprlist
+
+%     2 uvwdistexprlist: uvwdistexpr
+%     3                | uvwdistexprlist COMMA uvwdistexpr
+
+%     4 fnumwithunits: FNUMBER
+%     5              | FNUMBER UNIT
+
+%     6 uvwdistexpr: fnumwithunits
+%     7            | FNUMBER DASH fnumwithunits
+%     8            | LT fnumwithunits
+%     9            | GT fnumwithunits
+%    10            | fnumwithunits COLON FNUMBER PERCENT
+% \end{verbatim}
 
-
-\subsection{Scan/Sub-Array Selection Expression}
-
-\begin{verbatim}
-token IDENTIFIER  of type String
-token COMMA
-
-token LPAREN
-token RPAREN
-token WHITE
-
-token INT      of type String
-token QSTRING  of type String
-token REGEX    of type String
-
-token COLON
-token SEMICOLON
-
-type TEN scanstatement
-type TEN indexcombexpr
-type TEN scanidrange
-type TEN scanidbounds
-
-scanstatement: indexcombexpr 
-             | LPAREN indexcombexpr RPAREN
-
-indexcombexpr: scanidrange
-             | scanidbounds
-             | scanidrange COMMA indexcombexpr
-             | scanidbounds COMMA indexcombexpr
-
-scanidbounds: LT INT
-            | GT INT
-            | LE INT
-            | GE INT
-            | GE INT AMPERSAND LE INT
-            | GT INT AMPERSAND LT INT
-
-scanidrange: INT
-           | INT TILDA INT
-
-\end{verbatim}
-
-
-\subsection{Time Selection Expression}
-
-\begin{verbatim}
-token NUMBER  of type Integer
-token FNUMBER of type Double
-
-token TILDA
-token LT
-token GT
-token COLON
-token COMMA
-token SLASH
-token DOT
-token STAR
-
-type TEN timestatement
-type TEN timeexpr
-type TEN singletimeexpr
-type TEN rangetimeexpr
-type TEN upboundtimeexpr
-type TEN lowboundtimeexpr
-type Struct TimeFields yeartimeexpr
-type Double FLOAT
-type Vector<int> WNUMBER
-
-timestatement: timeexpr 
-
-timeexpr: singletimeexpr
-        | rangetimeexpr
-        | lowboundtimeexpr
-        | upboundtimeexpr
-        | timeexpr COMMA timeexpr 
-
-WNUMBER: STAR 
-       | NUMBER
-
-FLOAT: WNUMBER 
-     | FNUMBER {$$ = $1;}
-
-singletimeexpr: yeartimeexpr 
-
-rangetimeexpr: yeartimeexpr TILDA yeartimeexpr 
-             | yeartimeexpr PLUS yeartimeexpr
-
-lowboundtimeexpr: GT yeartimeexpr 
-
-upboundtimeexpr: LT yeartimeexpr 
-
-yeartimeexpr: WNUMBER SLASH WNUMBER SLASH WNUMBER SLASH WNUMBER
-                COLON WNUMBER COLON FLOAT
-            | WNUMBER SLASH WNUMBER SLASH WNUMBER SLASH WNUMBER
-                COLON WNUMBER 
-            | WNUMBER SLASH WNUMBER SLASH WNUMBER SLASH WNUMBER 
-            | WNUMBER SLASH WNUMBER SLASH WNUMBER 
-            | WNUMBER SLASH WNUMBER SLASH WNUMBER 
-                COLON WNUMBER COLON FLOAT
-            | WNUMBER COLON WNUMBER COLON FLOAT
-            | WNUMBER COLON FLOAT
-            | FLOAT
-            | WNUMBER SLASH WNUMBER COLON WNUMBER COLON FLOAT 
-            | WNUMBER SLASH WNUMBER COLON WNUMBER 
-            | WNUMBER SLASH WNUMBER 
-
-\end{verbatim}
-
-\subsection{UV-distance Selection Expression}
-
-\begin{verbatim}
-token UNIT     of type String
-token FNUMBER of type Double
-token COLON  
-token COMMA
-token PERCENT
-
-type Double fnumwithunits
-type TEN uvwdiststatement
-type TEN uvwdistexprlist
-type TEN uvwdistexpr
-
-uvwdiststatement:uvwdistexprlist
-
-uvwdistexprlist: uvwdistexpr 
-               | uvwdistexprlist COMMA uvwdistexpr 
-
-fnumwithunits: FNUMBER
-             | FNUMBER UNIT
-
-uvwdistexpr: fnumwithunits
-           | FNUMBER TILDA fnumwithunits
-           | LT fnumwithunits
-           | GT fnumwithunits
-           | fnumwithunits COLON FNUMBER PERCENT 
-
-\end{verbatim}
 \end{document}

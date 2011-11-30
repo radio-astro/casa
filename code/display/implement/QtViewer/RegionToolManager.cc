@@ -37,7 +37,8 @@
 namespace casa {
     namespace viewer {
 
-	RegionToolManager::RegionToolManager( QtRegionSourceFactory *rsf, PanelDisplay *pd_ ) : pd(pd_) {
+	RegionToolManager::RegionToolManager( QtRegionSourceFactory *rsf, PanelDisplay *pd_ ) : pd(pd_), moving_handle(false),
+							moving_handle_info(0,0,Region::PointOutside), moving_handle_region(0) {
 	    // register for world canvas events...
 	    pd->myWCLI->toStart( );
 	    while ( ! pd->myWCLI->atEnd( ) ) {
@@ -71,9 +72,199 @@ namespace casa {
 
 	}
 
+	bool RegionToolManager::add_mark_select( RegionTool::State &state ) {
+	    if ( state.count( viewer::Region::PointInside ) > 0 ) {
+		const region_list_type &new_marked_regions = state.regions(viewer::Region::PointInside);
+		for ( region_list_type::iterator it=new_marked_regions.begin( );
+		      it != new_marked_regions.end( ); ++it ) {
+		    (*it)->mark_toggle( );
+		    marked_regions.insert(*it);
+		}
+		state.refresh( );
+		return true;
+	    }
+	    return false;
+	}
+
+	void RegionToolManager::clear_mark_select( RegionTool::State &state ) {
+	    const region_list_type &all_regions = state.regions( );
+	    // shift-click outside of all regions (but perhaps inside of a handle?)
+	    for ( region_list_type::const_iterator it = marked_regions.begin( ); it != marked_regions.end( ); ++it ) {
+		region_list_type::const_iterator contains = all_regions.find(*it);
+		if ( contains != all_regions.end( ) ) (*it)->mark(false);
+	    }
+	    marked_regions.clear( );
+	    return;
+	}
+
+	void RegionToolManager::setup_moving_regions_state( double linx, double liny ) {
+	    // prevent sliding regions out of the viewing area...
+	    bool first_trip = true;
+	    for ( region_list_type::iterator it = moving_regions.begin( ); it != moving_regions.end( ); ++it ) {
+		double blc_x, blc_y;
+		double trc_x, trc_y;
+		(*it)->boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+		if ( blc_x < moving_blc.first || first_trip ) moving_blc.first = blc_x;
+		if ( blc_y < moving_blc.second || first_trip ) moving_blc.second = blc_y;
+		if ( trc_x > moving_trc.first || first_trip ) moving_trc.first = trc_x;
+		if ( trc_y > moving_trc.second || first_trip ) moving_trc.second = trc_y;
+		first_trip = false;
+	    }
+	    moving_ref_point = linear_point_type(linx,liny);
+	}
+
+	bool RegionToolManager::setup_moving_regions( RegionTool::State &state ) {
+	    region_list_type &point_inside = state.regions( viewer::Region::PointInside );
+	    region_list_type intersection;
+	    // intersection of marked regions and regions inclosing the current point...
+	    std::set_intersection( marked_regions.begin( ), marked_regions.end( ),
+				   point_inside.begin( ), point_inside.end( ),
+				   std::insert_iterator<region_list_type>(intersection,intersection.begin( )) );
+
+	    if ( intersection.size( ) > 0 ) {
+		region_list_type new_marked_regions;
+		region_list_type &all_regions = state.regions( );
+		std::set_intersection( marked_regions.begin( ), marked_regions.end( ),
+				       all_regions.begin( ), all_regions.end( ),
+				       std::insert_iterator<region_list_type>(new_marked_regions,new_marked_regions.begin( )) );
+		moving_regions.clear( );
+		std::set_union( new_marked_regions.begin( ), new_marked_regions.end( ),
+				point_inside.begin( ), point_inside.end( ),
+				std::insert_iterator<region_list_type>(moving_regions,moving_regions.begin( )) );
+
+		setup_moving_regions_state( state.x( ), state.y( ) );
+		return true;
+	    } else if ( point_inside.size( ) > 0 ) {
+		moving_regions = point_inside;
+		setup_moving_regions_state( state.x( ), state.y( ) );
+		return true;
+	    }
+	    return false;
+	}
+
+	void RegionToolManager::translate_moving_regions( WorldCanvas *wc, double dx, double dy ) {
+
+	    linear_point_type new_blc(moving_blc);
+	    linear_point_type new_trc(moving_trc);
+
+	    new_blc.first += dx;
+	    new_blc.second += dy;
+	    new_trc.first += dx;
+	    new_trc.second += dy;
+
+	    if ( ! inDrawArea(wc, new_blc,new_trc) ) return;
+
+	    moving_blc = new_blc;
+	    moving_trc = new_trc;
+
+	    // we do not verify moving_regions (against the regions returned by
+	    // Region::checkPoint(...) because the moving_regions list is created
+	    // when the user clicks and cleared when the click is released (so
+	    // there is no opportunity for the user to delete regions (thus
+	    // invalidating the pointers in moving_regions) in between)
+	    for ( region_list_type::iterator it = moving_regions.begin( );
+		  it != moving_regions.end( ); ++it ) {
+		(*it)->move(dx,dy);
+	    }
+	    moving_ref_point.first += dx;
+	    moving_ref_point.second += dy;
+	}
+
 	void RegionToolManager::operator()(const WCPositionEvent& ev) {
+
+	    Int x = ev.pixX( );
+	    Int y = ev.pixY( );
+	    WorldCanvas *wc = ev.worldCanvas( );
+
+	    if ( ! wc->inDrawArea(x,y) ) return;
+
+	    double linx, liny;
+	    viewer::screen_to_linear( wc, x, y, linx, liny );
+
+	    // checkPixel( ): inside, outside, handle
+	    RegionTool::State state(wc,linx,liny);
 	    for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it ) {
-		if ( ev.key() != (*it).second->getKey() ) {
+		(*it).second->checkPoint( wc, state );
+	    }
+
+	    if ( ev.keystate() ) {
+		if ( ev.key( ) == Display::K_Pointer_Button1 ) {
+
+		    if ( ev.modifiers( ) & Display::KM_Shift ) {
+			// shift-click within a region
+			if ( add_mark_select( state ) ) return;
+			else return clear_mark_select( state );
+
+		    } else {
+			region_list_type &handles = state.regions( viewer::Region::PointHandle );
+			if ( handles.size( ) > 0 ) {
+			    moving_handle = true;
+			    moving_handle_info = state.state(*handles.begin());
+			    moving_handle_region = *handles.begin();
+			    return;
+			} else {
+
+			    if ( setup_moving_regions( state ) ) {
+				return;
+			    } else {
+				// click outside of all regions...
+				if ( marked_regions.size( ) > 0 ) {
+				    clear_mark_select(state);
+				    return;
+				}	// go on to (perhaps) create a new region if no regions are marked...
+			    }
+			}
+		    }
+		} else if ( ev.key( ) == Display::K_Escape ) {
+		    if ( marked_regions.size( ) > 0 ) {
+			// escape clears marked regions...
+			clear_mark_select(state);
+			return;
+		    } else if ( moving_regions.size( ) > 0 ) {
+			// escape while moving regions has no effect...
+			return;
+		    }
+		} else if ( ev.key() == Display::K_Left ||
+			    ev.key() == Display::K_Right ||
+			    ev.key() == Display::K_Up ||
+			    ev.key() == Display::K_Down ) {
+		    if ( setup_moving_regions( state) ) {
+			const int pixel_step = 1;
+
+			double dx=0, dy=0;
+			switch ( ev.key( ) ) {
+			    case Display::K_Left:
+				screen_offset_to_linear_offset( wc, -pixel_step, 0, dx, dy );
+				break;
+			    case Display::K_Right:
+				screen_offset_to_linear_offset( wc, pixel_step, 0, dx, dy );
+				break;
+			    case Display::K_Down:
+				screen_offset_to_linear_offset( wc, 0, -pixel_step, dx, dy );
+				break;
+			    case Display::K_Up:
+				screen_offset_to_linear_offset( wc, 0, pixel_step, dx, dy );
+				break;
+			    default:
+				break;
+			}
+			
+			translate_moving_regions( wc, dx, dy );
+			wc->refresh( );
+			moving_regions.clear( );
+			moving_handle = false;
+			return;
+		    }
+		}
+	    } else {
+		// key-release clear list of regions being moved...
+		moving_regions.clear( );
+		moving_handle = false;
+	    }
+
+	    for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it ) {
+		if ( ev.key() != (*it).second->getKey() ||
+		     (*it).second->getKey( ) == Display::K_None ) {
 		    if (ev.keystate()) {
 			(*it).second->otherKeyPressed(ev);
 		    } else {
@@ -90,6 +281,40 @@ namespace casa {
 	}
 
 	void RegionToolManager::operator()(const WCMotionEvent& ev) {
+
+	    Int x = ev.pixX( );
+	    Int y = ev.pixY( );
+	    WorldCanvas *wc = ev.worldCanvas( );
+
+	    if ( ! wc->inDrawArea(x,y) ) return;
+
+	    if ( moving_handle ) {
+
+		if ( ! wc->inDrawArea(x,y) ) return;
+
+		double linx, liny;
+		viewer::screen_to_linear( wc, x, y, linx, liny );
+
+		moving_handle_info.handle( ) = moving_handle_region->moveHandle( moving_handle_info.handle( ), linx, liny );
+		moving_handle_info.x( ) = linx;
+		moving_handle_info.y( ) = liny;
+
+		wc->refresh( );
+		return;
+
+	    } else if ( moving_regions.size( ) > 0 ) {
+
+		double linx, liny;
+		viewer::screen_to_linear( wc, x, y, linx, liny );
+
+		double dx = linx - moving_ref_point.first;
+		double dy = liny - moving_ref_point.second;
+
+		translate_moving_regions( wc, dx, dy );
+		wc->refresh( );
+		return;
+	    }
+
 	    for ( tool_map::iterator it = tools.begin( ); it != tools.end( ); ++it )
 		(*it).second->moved(ev);
 	}
@@ -265,7 +490,7 @@ namespace casa {
 				std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
 				bool error = false;
-				for ( int i = 0; i < points.size( ); ++i ) {
+				for ( unsigned int i = 0; i < points.size( ); ++i ) {
 				    double lx, ly;
 				    viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
 				    int px, py;
@@ -323,6 +548,11 @@ namespace casa {
 		}
 		first_trip = false;
 	    }
+	}
+
+	bool RegionToolManager::inDrawArea( WorldCanvas *wc, const linear_point_type &new_blc, const linear_point_type &new_trc ) const {
+	    return new_blc.first >= wc->linXMin( ) && new_blc.second >= wc->linYMin( ) &&
+		   new_trc.first <= wc->linXMax( ) && new_trc.second <= wc->linYMax( );
 	}
     }
 }

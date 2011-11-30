@@ -8,7 +8,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="importasdm" category="import/export" >
 
-  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file</shortdescription>
+  <shortdescription>Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable)</shortdescription>
 
   <input>
 
@@ -126,7 +126,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </constraints>
 
     <param type="string" name="useversion" >
-	    <description>Version of asdm2MS to be used (\'v3\' (default, use for ALMA data) or \'v2\' (for EVLA data, better: use task importevla))</description>
+	    <description>Version of asdm2MS to be used (\'v3\' (default, should work for all data) or \'v2\' (only works for ALMA data before May 2011 or EVLA data; for EVLA consider task importevla))</description>
 	    <value>v3</value>
 	    <allowed kind="enum">
 	      <value>v2</value>
@@ -140,10 +140,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <returns type="void"/>
 
-  <example>
-Convert an ALMA Science Data Model observation into a CASA visibility file (MS) or single-dish data format (Scantable).
-The conversion of the ALMA SDM archive format into a measurement set.  
-				          
+  <example>		          
 Keyword arguments:
 asdm -- Name of input ASDM file (directory)
         default: none; example: asdm='ExecBlock3'
@@ -229,8 +226,8 @@ verbose     -- produce log output as asdm2MS is being run
 showversion -- report the version of the asdm2MS being used.
                     default: False
 
-useversion -- Selects the version of asdm2MS to be used (\'v3\' (default, use for ALMA) 
-              or \'v2\' (e.g. for EVLA, better use task importevla))
+useversion -- Selects the version of asdm2MS to be used (\'v3\' (default, should work for all data) or 
+             \'v2\' (only for ALMA data before May 2011 or EVLA data; for EVLA consider task importevla))
               default: v3
 
   </example>

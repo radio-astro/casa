@@ -101,6 +101,12 @@ namespace casa {
 		void setLine( const std::string &line_color="", Region::LineStyle line_style=SolidLine )
 				{ QtRegion::setLine( line_color, line_style ); }
 
+		// functions added with the introduction of RegionToolManager and the
+		// unified selection and manipulation of the various region types...
+		void mark( bool set=true ) { QtRegion::mark( set ); }
+		bool marked( ) const { return QtRegion::marked( ); }
+		void mark_toggle( ) { QtRegion::mark_toggle( ); }
+
 	    protected:
 		std::list<RegionInfo> *generate_dds_statistics( ) { return Polygon::generate_dds_statistics( ); }
 		virtual Region *fetch_my_region( ) { return (Region*) this; }

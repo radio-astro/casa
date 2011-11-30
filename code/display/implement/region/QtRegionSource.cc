@@ -38,10 +38,10 @@ namespace casa {
 
 	QtRegionSource::~QtRegionSource( ) { }
 
-	// memory::cptr<Rectangle> QtRegionSource::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
-	//     return memory::cptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
+	// std::tr1::shared_ptr<Rectangle> QtRegionSource::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
+	//     return std::tr1::shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
 	// }
-	memory::cptr<Rectangle> QtRegionSource::rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSource::rectangle( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    QtRectangle *result = new QtRectangle( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -52,10 +52,10 @@ namespace casa {
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    result->releaseSignals( );
-	    return memory::cptr<Rectangle>(result);
+	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	memory::cptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, double x1, double y1 ) {
+	std::tr1::shared_ptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, double x1, double y1 ) {
 	    QtPolygon *result = new QtPolygon( this, wc, x1, y1, true );
 
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -66,11 +66,11 @@ namespace casa {
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    result->releaseSignals( );
-	    return memory::cptr<Polygon>(result);
-	    // return memory::cptr<Polygon>( );
+	    return std::tr1::shared_ptr<Polygon>(result);
+	    // return std::tr1::shared_ptr<Polygon>( );
 	}
 
-	memory::cptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
+	std::tr1::shared_ptr<Polygon> QtRegionSource::polygon( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
 	    QtPolygon *result = new QtPolygon( this, wc, pts, true );
 
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -81,11 +81,11 @@ namespace casa {
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    result->releaseSignals( );
-	    return memory::cptr<Polygon>(result);
-	    // return memory::cptr<Polygon>( );
+	    return std::tr1::shared_ptr<Polygon>(result);
+	    // return std::tr1::shared_ptr<Polygon>( );
 	}
 
-	memory::cptr<Rectangle> QtRegionSource::ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSource::ellipse( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
 	    QtEllipse *result = new QtEllipse( this, wc, blc_x, blc_y, trc_x, trc_y, true );
 
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -96,10 +96,10 @@ namespace casa {
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    result->releaseSignals( );
-	    return memory::cptr<Rectangle>(result);
+	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
-	memory::cptr<Rectangle> QtRegionSource::point( WorldCanvas *wc, double x, double y ) {
+	std::tr1::shared_ptr<Rectangle> QtRegionSource::point( WorldCanvas *wc, double x, double y ) {
 	    QtPoint *result = new QtPoint( this, wc, x, y, true );
 
 	    connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
@@ -110,7 +110,7 @@ namespace casa {
 		     this, SIGNAL( regionUpdate( int, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
 
 	    result->releaseSignals( );
-	    return memory::cptr<Rectangle>(result);
+	    return std::tr1::shared_ptr<Rectangle>(result);
 	}
 
 	QtRegionDock *QtRegionSource::dock( ) { return panel_->regionDock( ); }

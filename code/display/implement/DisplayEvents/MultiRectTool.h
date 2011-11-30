@@ -30,7 +30,6 @@
 
 #include <list>
 #include <casa/aips.h>
-#include <casadbus/types/ptr.h>
 #include <display/DisplayEvents/RegionTool.h>
 #include <display/DisplayEvents/DTVisible.h>
 #include <display/region/RegionCreator.h>
@@ -115,6 +114,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
 
+	    void checkPoint( WorldCanvas *wc, State &state );
+
 	    virtual bool create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				 const std::string &font, int font_size, int font_style, const std::string &font_color,
 				 const std::string &line_color, viewer::Region::LineStyle line_style );
@@ -155,12 +156,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // to be used by them, as well as internally.
 	    virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
 
-	    virtual memory::cptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
+	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2 ) const;
 
 	    viewer::RegionSource *rfactory;
 
 	private:
-	    typedef std::list<memory::cptr<viewer::Rectangle> > rectanglelist;
+	    typedef std::list<std::tr1::shared_ptr<viewer::Rectangle> > rectanglelist;
 
 	    void update_stats(const WCMotionEvent &ev);
 	    void start_new_rectangle( WorldCanvas *, int x, int y );
@@ -182,7 +183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    // and not yet released/reset?
 	    Bool itsActive;
 	    // itsActive is being replaced by resizing_region
-	    memory::cptr<viewer::Rectangle> resizing_region;
+	    std::tr1::shared_ptr<viewer::Rectangle> resizing_region;
 	    int resizing_region_handle;
 
 	    // (valid only if itsActive==True):

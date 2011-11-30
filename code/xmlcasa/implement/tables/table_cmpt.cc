@@ -580,6 +580,27 @@ table::toasciifmt(const std::string& asciifile, const std::string& headerfile, c
 }
 
 ::casac::table*
+table::taql(const std::string& taqlcommand)
+{
+ *itsLog << LogOrigin(__func__, this->name());
+ ::casac::table *rstat(0);
+ try {
+   if(itsTable){
+     casa::TableProxy *theQTab = new TableProxy(tableCommand(taqlcommand));
+     rstat = new ::casac::table(theQTab);
+   } else {
+     *itsLog << LogIO::WARN
+             << "No table specified, please open first" << LogIO::POST;
+   }
+ } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() 
+            << LogIO::POST;
+    RETHROW(x);
+ }
+ return rstat;
+}
+
+::casac::table*
 table::query(const std::string& query, const std::string& name,
              const std::string& sortlist, const std::string& columns,
              const std::string& style)

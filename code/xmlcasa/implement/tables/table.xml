@@ -1230,6 +1230,24 @@ with the first two lines containing a format description.
 
  
 
+<method type="function" name="taql">
+	<shortdescription>Make a table from a TaQL command. </shortdescription>
+	<description>This method Expose TaQL to the user.
+		Details on TaQL maybe found at http://www.astron.nl/aips++/docs/notes/199</description>
+	<input>
+		<param type="string" name="taqlcommand">
+			<description>TaQL expression></description>
+                <value>TaQL expression</value>
+		</param>
+	</input>
+<returns type="casatable">
+<shortdescription>a table tool with the TaQL results
+</shortdescription>
+</returns>
+<example>
+	For more information on TaQL see http://www.astron.nl/aips++/docs/notes/199
+</example>
+</method>
  
 <method type="function" name="query">
   <shortdescription>Make a table from a query</shortdescription>

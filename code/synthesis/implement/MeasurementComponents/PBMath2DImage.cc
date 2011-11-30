@@ -283,9 +283,12 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
 {
   LogIO os(LogOrigin("PBMath2DImage", "applyJones"));
 
+
   Matrix<Complex> s(4,4), sAdjoint(4,4);
   Matrix<Complex> Lambda(4,4);
-  Lambda=0.0;
+  s.set(Complex(0.0,0.0));
+  sAdjoint.set(Complex(0.0));
+  Lambda.set(Complex(0.0,0.0));
   s=0;
   if(!circular) {
     s(0,0)=Complex(0.5);
@@ -313,22 +316,28 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
   Int ny=in.shape()(1);
   Int npol=in.shape()(2);
 
-
   Matrix<Complex> cmat(2,2);
   Matrix<Complex> prod(4,4);
-  for (Int ix=0; ix<nx; ix++) {
-
-    IPosition sp0(4, ix, 0, polmap(3), 0);
-    IPosition sp1(4, ix, 0, polmap(2), 0);
-    IPosition sp2(4, ix, 0, polmap(1), 0);
-    IPosition sp3(4, ix, 0, polmap(0), 0);
-
-    IPosition ip0(4, ix, 0, 0, 0);
-    IPosition ip1(4, ix, 0, 1, 0);
-    IPosition ip2(4, ix, 0, 2, 0);
-    IPosition ip3(4, ix, 0, 3, 0);
-
-    for (Int iy=0; iy<ny; iy++) {
+  prod.set(Complex(0.0));
+  IPosition sp0(4, 0, 0, polmap(3), 0);
+  IPosition sp1(4, 0, 0, polmap(2), 0);
+  IPosition sp2(4, 0, 0, polmap(1), 0);
+  IPosition sp3(4, 0, 0, polmap(0), 0);
+  
+  IPosition ip0(4, 0, 0, 0, 0);
+  IPosition ip1(4, 0, 0, 1, 0);
+  IPosition ip2(4, 0, 0, 2, 0);
+  IPosition ip3(4, 0, 0, 3, 0);
+  for (Int ix=0; ix<nx; ++ix) {
+    sp0(0)=ix;
+    sp1(0)=ix;
+    sp2(0)=ix;
+    sp3(0)=ix;
+    ip0(0)=ix;
+    ip1(0)=ix;
+    ip2(0)=ix;
+    ip3(0)=ix;
+    for (Int iy=0; iy<ny; ++iy) {
 
       sp0(1)=iy;
       sp1(1)=iy;
@@ -359,7 +368,7 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
       }
 
       // E Jones for this pixel
-      mjJones4 j4;
+      mjJones4 j4(Matrix<Complex>(4, 4, Complex(0.0, 0.0)));
       if(imJones) {
 	cmat(0,0)=Complex((*reJones)(sp0), (*imJones)(sp0));
 	cmat(1,0)=Complex((*reJones)(sp1), (*imJones)(sp1));
@@ -399,6 +408,7 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
       }
     }
   }
+
 }
 
 ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
@@ -454,8 +464,9 @@ ImageInterface<Complex>& PBMath2DImage::apply(const ImageInterface<Complex>& in,
   Bool circular=(polframe==SkyModel::CIRCULAR);
 	      
   // Now get the polarization remapping for the Jones image
-  //Int jsm=StokesImageUtil::CStokesPolMap(polmap, polframe,
-  //					 reJonesImage_p->coordinates());
+  //Int jsm=    // CStokesPolMap sets polmap and polframe.
+  StokesImageUtil::CStokesPolMap(polmap, polframe,
+                                 reJonesImage_p->coordinates());
 
   // For the input and output images, get all polarizations for x, y plane
   IPosition inPlane(4, nx, ny, npol, 1);
@@ -544,9 +555,12 @@ ImageInterface<Float>& PBMath2DImage::apply(const ImageInterface<Float>& in,
   Bool circular=(insm<1);
 
   // Now get the polarization remapping for the Jones image
-  //Int jsm=StokesImageUtil::CStokesPolMap(polmap, polframe,
-  //					 reJonesImage_p->coordinates());
-
+  //Int jsm=  PLEASE do not shush compiler by commenting a call to a function
+  //without realizing what it was doing !
+  // get rid of the unused variable !! 
+  //wasted 5 hours of my life by having a wrongly-initialized polmap.
+  StokesImageUtil::CStokesPolMap(polmap, polframe,
+  					 reJonesImage_p->coordinates());
   // For the input and output images, get all polarizations for x, y plane
   IPosition inPlane(4, nx, ny, npol, 1);
   LatticeStepper inls(iShape, inPlane, IPosition(4, 0, 1, 2, 3));
@@ -604,7 +618,6 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
 
   // jsm (= circular or linear) is not used, but CStokesPolMap also sets polframe.
   //Int jsm=
-  //					 reJonesImage_p->coordinates());
   StokesImageUtil::CStokesPolMap(polmap, polframe, reJonesImage_p->coordinates());
 
   // First get the frequency of the output image
@@ -850,9 +863,11 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
     desiredCoords.replaceCoordinate(imageSpectralCoord, spectralIndex);
     reRegridJonesImage_p = new TempImage<Float>(desiredShape,
 						desiredCoords);
+    reRegridJonesImage_p->set(0.0);
     if(imJonesImage_p) {
       imRegridJonesImage_p = new TempImage<Float>(desiredShape,
 						  desiredCoords);
+      imRegridJonesImage_p->set(0.0);
     }
     if(0) {
       os << "Regridded image of the real part of Jones matrix:" << LogIO::POST;

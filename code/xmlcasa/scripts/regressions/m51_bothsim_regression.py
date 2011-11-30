@@ -145,7 +145,7 @@ diffstats = {'max': 0.05527,
              'min': -0.055855,
              'rms': 0.0099677,
              'sigma': 0.0094809,
-             'sum': 351.13 }
+             'sum': 345.74 }
 
 
 # relative tolerances to reference values

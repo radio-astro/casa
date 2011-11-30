@@ -99,7 +99,7 @@ void PCTool::disable() {
 
 // Required operators for event handling.
 void PCTool::operator()(const PCPositionEvent &ev) {
-  if (ev.key() != itsKeySym) {
+  if (ev.key() != itsKeySym || getKey( ) == Display::K_None) {
     if (ev.keystate()) {
       otherKeyPressed(ev);
     } else {

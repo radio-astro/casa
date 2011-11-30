@@ -31,6 +31,7 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/region/Polygon.h>
 #include <display/DisplayEvents/MultiPolyTool.h>
+#include <casadbus/types/nullptr.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -64,9 +65,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// finish building the polygon...
 	// could still be needed for flagging measurement sets...
 	if (ev.timeOfEvent()-its2ndLastPressTime < doubleClickInterval())  {
-	    if ( building_polygon.isNull( ) == false ) {
+	    if ( memory::nullptr.check(building_polygon) == false ) {
 		building_polygon->closeFigure( );
-		building_polygon.clear( );
+		building_polygon = memory::nullptr;
 		refresh( );
 		return;
 	    }
@@ -77,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	viewer::screen_to_linear( wc, x, y, linx1, liny1 );
 
 	// constructing a polygon...
-	if ( building_polygon.isNull( ) == false ) {
+	if ( memory::nullptr.check(building_polygon) == false ) {
 	    building_polygon->addVertex( linx1, liny1, true );
 	    building_polygon->addVertex( linx1, liny1 );
 	    refresh( );
@@ -95,7 +96,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	// check for click within one (or more) regions...
-	resizing_region.clear( );
+	resizing_region = memory::nullptr;
 	moving_regions.clear( );			// ensure that moving state is clear...
 	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
 	    if ( (*iter)->clickWithin( linx1, liny1 ) )
@@ -214,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	double linx, liny;
 	viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
 
-	if ( ! building_polygon.isNull( ) ) {
+	if ( memory::nullptr.check(building_polygon) == false ) {
 	    building_polygon->addVertex( linx, liny, true );
 	    refresh( );
 	    return;
@@ -222,7 +223,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	bool refresh_needed = false;
 	bool region_selected = false;
-	if ( ! resizing_region.isNull( ) ) {
+	if ( memory::nullptr.check(resizing_region) == false ) {
 	    // resize the rectangle
 	    double linx1, liny1;
 	    viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
@@ -286,9 +287,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     void MultiPolyTool::keyReleased(const WCPositionEvent &ev) {
 
-	if ( ! resizing_region.isNull( ) ) {
+	if ( memory::nullptr.check(resizing_region) == false ) {
 	    // resize finished
-	    resizing_region.clear( );
+	    resizing_region = memory::nullptr;
 	}
 
 	if ( moving_regions.size( ) > 0 ) {
@@ -343,7 +344,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    uInt x = ev.pixX();
 	    uInt y = ev.pixY();
 
-	    resizing_region.clear( );
+	    resizing_region = memory::nullptr;
 	    moving_regions.clear( );		// ensure that moving state is clear...
 
 	    double linx, liny;
@@ -399,7 +400,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ( poly == 0 ) return;
 
 	for ( polygonlist::iterator iter = polygons.begin(); iter != polygons.end(); ++iter ) {
-	    if ( *iter == poly ) {
+	    if ( (*iter).get( ) == poly ) {
 		polygons.erase( iter );
 		refresh( );
 		break;
@@ -491,12 +492,21 @@ Bool MultiPolyTool::inPolygon(const Int &x, const Int &y) const {
   return (nabove % 2);  }
 
 
+    void MultiPolyTool::checkPoint( WorldCanvas *wc, State &state ) {
+	for ( polygonlist::iterator iter = ((MultiPolyTool*) this)->polygons.begin(); iter != polygons.end(); ++iter ) {
+	    viewer::Region::PointInfo point_state = (*iter)->checkPoint( state.x( ), state.y( ) );
+	    // should consider introducing a cptr_ref which somehow allows creating a
+	    // base class reference based on a counted pointer to a derived class...
+	    state.insert( this, &*(*iter), point_state );
+	}
+    }
+
     bool MultiPolyTool::create( WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, const std::string &label,
 				const std::string &font, int font_size, int font_style, const std::string &font_color,
 				const std::string &line_color, viewer::Region::LineStyle line_style ) {
 	if ( pts.size( ) <= 2 ) return false;
 	if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
-	memory::cptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
+	std::tr1::shared_ptr<viewer::Polygon> result = (rfactory->polygon( wc, pts ));
 	result->setLabel( label );
 	result->setFont( font, font_size, font_style, font_color );
 	result->setLine( line_color, line_style );

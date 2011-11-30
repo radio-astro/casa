@@ -958,14 +958,14 @@ public:
   // within bounds of the WC's inner draw area, the WC, or the underlying PC.
   // <group>
 
-  Bool inDrawArea(Int x, Int y) {
+  Bool inDrawArea(Int x, Int y) const {
     Int x0 = itsCanvasXOffset + itsCanvasDrawXOffset;
     Int x1 = x0 + itsCanvasDrawXSize;
     Int y0 = itsCanvasYOffset + itsCanvasDrawYOffset;
     Int y1 = y0 + itsCanvasDrawYSize;
     return  x>=x0 && x<x1  &&  y>=y0  && y<y1 ;  }
 
-  Bool inWC(Int x, Int y) {
+  Bool inWC(Int x, Int y) const {
     Int x0 = itsCanvasXOffset;  Int x1 = x0 + itsCanvasXSize;
     Int y0 = itsCanvasYOffset;  Int y1 = y0 + itsCanvasYSize;
     return  x>=x0 && x<x1  &&  y>=y0  && y<y1 ;  }

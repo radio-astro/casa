@@ -490,6 +490,7 @@ public:
 	MeasurementSet *originalMeasurementSet_p;
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
+	Vector<Double> *antennaDiameters_p;
 
 	// Iteration counters
 	uShort chunkNo;

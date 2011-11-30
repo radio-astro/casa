@@ -28,6 +28,7 @@ casa_add_library( casadbus
   implement/session/Dispatcher.cc
   implement/types/record.cc
   implement/types/variant.cc
+  implement/types/nullptr.cc
   implement/utilities/BusAccess.cc
   implement/utilities/Conversion.cc
   implement/viewer/ViewerProxy.cc

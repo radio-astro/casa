@@ -117,6 +117,7 @@ protected:
 
 	// agent's members
 	String mode_p;
+	Record agentParams_p;
 	FlagAgentSummary *summaryAgent_p;
 
 
@@ -136,10 +137,14 @@ public:
 	void done();
 
 	// configure the tool
-	bool configTestFlagger(Record config);
+	bool open(String msname, Double ntime);
 
 	// parse the data selection
 	bool parseDataSelection(Record selrec);
+	bool selectData(Record selrec);
+	bool selectData(String field, String spw, String array, String feed, String scan,
+		       	    String antenna, String uvrange, String timerange,
+		       	    String correlation, String intent, String observation="");
 
 	// parse the parameters of the agent
 	bool parseAgentParameters(Record agent_params);
@@ -149,6 +154,7 @@ public:
 	bool initAgents();
 
 	Record run();
+
 
 
 private:

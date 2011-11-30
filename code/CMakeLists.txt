@@ -636,7 +636,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.96
+           VERSION 1.0.98
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h
@@ -1072,7 +1072,7 @@ casa_add_module( msvis CASACORE graphics Boost )
 casa_add_module( casaqt CASACORE QT4 QWT PYTHON XERCES graphics )
 casa_add_module( plotms CASACORE QT4 casaqt msvis Boost )
 casa_add_module( imageanalysis CASACORE Boost)
-casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis imageanalysis Boost )
+casa_add_module( display CASACORE WCSLIB QT4 casaqt msvis imageanalysis Boost casadbus )
 #casa_add_module( display3d CASACORE QT4 OPENGL display )
 casa_add_module( flagging CASACORE Boost casadbus tableplot msvis casaqt QT4)
 casa_add_module( calibration CASACORE tableplot msvis Boost )

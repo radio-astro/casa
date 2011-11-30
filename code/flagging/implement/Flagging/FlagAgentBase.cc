@@ -183,6 +183,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
+		config.define("name","FlagAgentManual_1");
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
@@ -190,6 +191,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Unflag mode
 	if (mode.compare("unflag")==0)
 	{
+		config.define("name","FlagAgentUnflag_1");
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
 		return agent;
 	}
@@ -197,6 +199,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
+		config.define("name","FlagAgentTimeFreqCrop_1");
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags);
 		return agent;
 	}
@@ -211,6 +214,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Summary
 	if (mode.compare("summary")==0)
 	{
+		config.define("name","FlagAgentSummary_1");
 		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
@@ -330,7 +334,6 @@ FlagAgentBase::runCore()
 
 	// Generate indexes applying data selection filters
 	generateAllIndex();
-
 	if (checkIfProcessBuffer())
 	{
 		// Set pointer to private flag cube
@@ -406,13 +409,21 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("array"), arraySelection_p);
 
-		parser.setArrayExpr(arraySelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		arrayList_p=parser.getSubArrayList();
-		filterRows_p=true;
+		if (arraySelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+		}
+		else
+		{
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array ids are " << arrayList_p << LogIO::POST;
+			parser.setArrayExpr(arraySelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			arrayList_p=parser.getSubArrayList();
+			filterRows_p=true;
+
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array ids are " << arrayList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -424,13 +435,21 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("field"), fieldSelection_p);
 
-		parser.setFieldExpr(fieldSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		fieldList_p=parser.getFieldList();
-		filterRows_p=true;
+		if (fieldSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+		}
+		else
+		{
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field ids are " << fieldList_p << LogIO::POST;
+			parser.setFieldExpr(fieldSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			fieldList_p=parser.getFieldList();
+			filterRows_p=true;
+
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field ids are " << fieldList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -442,13 +461,20 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("scan"), scanSelection_p);
 
-		parser.setScanExpr(scanSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		scanList_p=parser.getScanList();
-		filterRows_p=true;
+		if (scanSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setScanExpr(scanSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			scanList_p=parser.getScanList();
+			filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan ids are " << scanList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan ids are " << scanList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -460,13 +486,20 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("timerange"), timeSelection_p);
 
-		parser.setTimeExpr(timeSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		timeList_p=parser.getTimeList();
-		filterRows_p=true;
+		if (timeSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no time selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setTimeExpr(timeSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			timeList_p=parser.getTimeList();
+			filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " time ranges in MJD are " << timeList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " time ranges in MJD are " << timeList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -478,16 +511,23 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("spw"), spwSelection_p);
 
-		parser.setSpwExpr(spwSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		spwList_p=parser.getSpwList();
-		filterRows_p=true;
+		if (spwSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setSpwExpr(spwSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			spwList_p=parser.getSpwList();
+			filterRows_p=true;
 
-		channelList_p=parser.getChanList();
-		filterChannels_p=true;
+			channelList_p=parser.getChanList();
+			filterChannels_p=true;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channel selection are " << channelList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channel selection are " << channelList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -498,26 +538,34 @@ FlagAgentBase::setDataSelection(Record config)
 	if (exists >= 0)
 	{
 		config.get (config.fieldNumber ("antenna"), baselineSelection_p);
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
 
-		// Remove antenna negation operator (!) and set antenna negation flag
-		size_t pos = baselineSelection_p.find(String("!"));
-		while (pos != String::npos)
+		if (baselineSelection_p.empty())
 		{
-			antennaNegation_p = true;
-			baselineSelection_p.replace(pos,1,String(""));
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " antenna selection is the negation of " << baselineSelection_p << LogIO::POST;
-			pos = baselineSelection_p.find(String("!"));
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 		}
+		else
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " antenna selection is " << baselineSelection_p << LogIO::POST;
 
-		parser.setAntennaExpr(baselineSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		antenna1List_p=parser.getAntenna1List();
-		antenna2List_p=parser.getAntenna2List();
-		baselineList_p=parser.getBaselineList();
-		filterRows_p=true;
+			// Remove antenna negation operator (!) and set antenna negation flag
+			size_t pos = baselineSelection_p.find(String("!"));
+			while (pos != String::npos)
+			{
+				antennaNegation_p = true;
+				baselineSelection_p.replace(pos,1,String(""));
+				*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " antenna selection is the negation of " << baselineSelection_p << LogIO::POST;
+				pos = baselineSelection_p.find(String("!"));
+			}
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
+			parser.setAntennaExpr(baselineSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			antenna1List_p=parser.getAntenna1List();
+			antenna2List_p=parser.getAntenna2List();
+			baselineList_p=parser.getBaselineList();
+			filterRows_p=true;
+
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -529,13 +577,20 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("uvrange"), uvwSelection_p);
 
-		parser.setUvDistExpr(uvwSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		uvwList_p=parser.getUVList();
-		filterRows_p=true;
+		if (uvwSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setUvDistExpr(uvwSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			uvwList_p=parser.getUVList();
+			filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange ids are " << uvwList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange ids are " << uvwList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -547,17 +602,24 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("correlation"), polarizationSelection_p);
 
-		parser.setPolnExpr(polarizationSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		polarizationList_p=parser.getPolMap();
-		filterPols_p=true;
+		if (polarizationSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setPolnExpr(polarizationSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			polarizationList_p=parser.getPolMap();
+			filterPols_p=true;
 
-		// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
-		ostringstream polarizationListToPrint (ios::in | ios::out);
-		polarizationListToPrint << polarizationList_p;
+			// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
+			ostringstream polarizationListToPrint (ios::in | ios::out);
+			polarizationListToPrint << polarizationList_p;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " correlation selection is " << polarizationSelection_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " correlation selection is " << polarizationSelection_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -569,13 +631,20 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("observation"), observationSelection_p);
 
-		parser.setPolnExpr(observationSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		observationList_p=parser.getObservationList();
-		filterRows_p=true;
+		if (observationSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setPolnExpr(observationSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			observationList_p=parser.getObservationList();
+			filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation selection is " << observationList_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation ids are " << observationList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation selection is " << observationList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation ids are " << observationList_p << LogIO::POST;
+		}
 	}
 	else
 	{
@@ -587,13 +656,20 @@ FlagAgentBase::setDataSelection(Record config)
 	{
 		config.get (config.fieldNumber ("intent"), scanIntentSelection_p);
 
-		parser.setPolnExpr(scanIntentSelection_p);
-		parser.toTableExprNode(selectedMeasurementSet_p);
-		scanIntentList_p=parser.getStateObsModeList();
-		filterRows_p=true;
+		if (scanIntentSelection_p.empty())
+		{
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no intent selection" << LogIO::POST;
+		}
+		else
+		{
+			parser.setPolnExpr(scanIntentSelection_p);
+			parser.toTableExprNode(selectedMeasurementSet_p);
+			scanIntentList_p=parser.getStateObsModeList();
+			filterRows_p=true;
 
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent selection is " << scanIntentList_p << LogIO::POST;
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent selection is " << scanIntentList_p << LogIO::POST;
+			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent ids are " << scanIntentList_p << LogIO::POST;
+		}
 	}
 	else
 	{

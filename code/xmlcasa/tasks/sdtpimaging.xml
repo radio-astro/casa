@@ -58,6 +58,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value></value>
     </param>
 
+    <param type="int" name="spw">
+	    <description>spectral window id for imaging</description>
+	    <value>0</value>
+    </param>
+
     <param type="string" name="stokes">
             <description>stokes or correlation name (e.g. "I", "XX")</description>
             <value></value>
@@ -161,7 +166,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: choose mode 'none' if you have
                          already calibrated and want to do
                          plotting nd/or imaging 
-  &gt;&gt;&gt; calmode='baseline' expandable parameters
+            &gt;&gt;&gt; calmode='baseline' expandable parameters
                masklist -- mask in numbers of rows from each edge of each scan 
                            to be included for baseline fitting
                  default: none
@@ -181,12 +186,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 example: '0,1', 'DV01'
                 WARNING: currently baseline subtraction properly 
                          only one of the antennas.
+        spw -- spectral window id
+                default: 0
+                example: 1
         stokes -- select data based on stokes or polarization type 
                 default: '' (use all polarizations)
                 example: 'XX'
         createimage -- do imaging? 
                 default: False 
-  &gt;&gt;&gt; createimage=True expandable parameters
+            &gt;&gt;&gt; createimage=True expandable parameters
                outfile -- output image name
                  default: none
                  example: 'mySDimage.im'
