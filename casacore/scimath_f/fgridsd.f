@@ -47,7 +47,7 @@ C
       double precision sumwt(npol, nchan)
       integer irow
       integer support, sampling
-      integer chanmap(nvischan), polmap(nvischan)
+      integer chanmap(nvischan), polmap(nvispol)
       integer dowt
 
       complex nvalue
