@@ -305,8 +305,15 @@ name via the {\tt ANT@STATION} syntax.  {\tt STATION} specification
 follows the same rules as antenna specification. When antenna or
 station in a {\tt ANT@STATION} syntax is a comma-separated list, the
 list must be enclosed in a left- and right-parenthesis pair to
-distinguish it from a comma-separated list of {\tt ANT@STATION}.  The
-two forms of specifications that are interpreted differently are:
+distinguish it from a comma-separated list of {\tt ANT@STATION} (i.e.,
+{\tt "A1@S1, A2@S2, A3@S3" versus "(A1,A2,A3)@(S1,S2,S3)"}).  All
+antennas in the {\tt ANT} part of the specification on {\it any} of
+the stations in the {\tt STATION} part of the specification will be
+selected.  The {\tt ANT} part of the specification is optional and
+when not specified is replaced with the wild-card {\tt "*"} (i.e. {\tt
+  "@STATION"} is equivalent to {\tt "*@STATION"}).
+
+The two forms of specifications that are interpreted differently are:
 \begin{enumerate}
 \item List of ANT@STATION: {\tt A1@S1, A2@S2, A3@S3,....}
 \item (List of ANT)@(List of STATION): {\tt (A1, A2, A3)@(S1,S2,S3)}
@@ -319,11 +326,6 @@ list.  E.g. if antenna {\tt A1} appears on stations {\tt S1} and {\tt
   S3}, both will be selected in the second form, but only the antenna
 {\tt A1} on station {\tt S1} will be selected in the first form.
 
-Antennas in the {\tt ANT} part of the specification on stations
-in the {\tt STATION} part of the specification will be selected.  The
-{\tt ANT} part of the specification is optional and when not specified
-is replaced with the wild-card {\tt "*"} (i.e. {\tt "@STATION"} is
-equivalent to {\tt "*@STATION}").
 
 \subsubsection{Baseline specification}
 \label{BASELINE_SPEC}
