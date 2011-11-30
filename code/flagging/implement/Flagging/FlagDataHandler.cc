@@ -1953,7 +1953,7 @@ FlagMapper::getPrivateFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
-	return commonFlagsView_p->operator ()(pol,channel,row);
+	return originalFlagsView_p->operator ()(pol,channel,row);
 }
 
 Bool
