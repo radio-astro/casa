@@ -119,8 +119,8 @@
 		 complexity.test(MSAntennaParse::ANTLIST)  &
 		 complexity.test(MSAntennaParse::BASELINELIST));
     Bool level2=(level1 & complexity.test(MSAntennaParse::STATIONLIST));
-    Bool level3=(level2 & (complexity.test(MSAntennaParse::STATIONREGEX) & 
-			   complexity.test(MSAntennaParse::ANTATSTATIONLIST)));
+    Bool level3=(level2 & (complexity.test(MSAntennaParse::STATIONREGEX)));  
+    //			   & complexity.test(MSAntennaParse::ANTATSTATIONLIST)));
     if (level3)
       logIO << "Oh the brave one!  You successfully passed the deepest abyss of parsing in baseline selection without error. "
 	"May The Force (or the CASA User Support Group) be with you.  Good luck."
