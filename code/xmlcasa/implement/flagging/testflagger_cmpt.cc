@@ -118,9 +118,8 @@ testflagger::selectdata(
 
 	if (testflagger_p) {
 
-		Record config = *toRecord(selconfig);
 		if (! selconfig.empty()) {
-
+			Record config = *toRecord(selconfig);
 			// Select based on the record
 			return testflagger_p->selectData(config);
 		}

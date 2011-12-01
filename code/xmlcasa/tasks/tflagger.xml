@@ -34,14 +34,13 @@
                 <value />
             </param>
 
-            <param type="int" name="ntime">
+            <param type="double" name="ntime">
                 <description>Time-range to use for each chunk (in seconds)</description>
-                <value>0</value>
+                <value>0.0</value>
             </param>
 
             <param type="string" name="mode">
-                <description>Type of operation to perform on inputfile or flagging mode \
-                             (manualflag, clip, shadow, quack, elevation \
+                <description>Flagging mode (manualflag, clip, shadow, quack, elevation \
                               tfcrop, extendflags, unflag, summary)</description>
                 <value>manualflag</value>
                 <allowed kind="enum">
@@ -226,20 +225,18 @@
                              Use a negative value to indicate infinity.</description>
                 <value type="int">-1</value>
             </param>
-            <param type="any" name="spwchan" subparam="true">
+            <param type="bool" name="spwchan" subparam="true">
                 <description>Print summary of channels per spw</description>
-                <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
-            <param type="any" name="spwcorr" subparam="true">
+            <param type="bool" name="spwcorr" subparam="true">
                 <description>Print summary of correlation per spw</description>
-                <any type="variant" limittypes="bool boolArray" />
                 <value type="bool">False</value>
             </param>
 
             <param type="bool" name="extendpols" subparam="true">
                 <description>If any correlation is flagged, flag all correlations</description>
-                <value>False</value>
+                <value type="bool">False</value>
             </param>
             <param type="double" name="growtime" subparam="true">
                 <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
@@ -251,15 +248,15 @@
             </param>
             <param type="bool" name="growaround" subparam="true">
                 <description>Flag data based on surrounding flags</description>
-                <value>True</value>
+                <value type="bool">True</value>
             </param>
             <param type="bool" name="flagneartime" subparam="true">
                 <description>Flag one timestep before and after a flagged one (True/False)</description>
-                <value>False</value>
+                <value type="bool">False</value>
             </param>
             <param type="bool" name="flagnearfreq" subparam="true">
                 <description>Flag one channel before and after a flagged one (True/False)</description>
-                <value>False</value>
+                <value type="bool">False</value>
             </param>
 
             <param type="bool" name="extend">
@@ -283,17 +280,17 @@
             </param>
 
             <constraints>
-                <when param="extend">
-                    <equals type="bool" value="False" />
-                    <equals type="bool" value="True">
-                        <default param="extendpols"><value type="bool">False</value></default>
-                        <default param="growtime"><value type="double">50.0</value></default>
-                        <default param="growfreq"><value type="double">50.0</value></default>
-                        <default param="growaround"><value type="bool">True</value></default>
-                        <default param="flagneartime"><value type="bool">False</value></default>
-                        <default param="flagnearfreq"><value type="bool">False</value></default>
-                    </equals>
-                </when>
+               <when param="extend">
+                 <equals type="bool" value="False" />
+                 <equals type="bool" value="True">
+                    <default param="growtime"><value type="double">50.0</value></default>
+                    <default param="growfreq"><value type="double">50.0</value></default>
+                    <default param="growaround"><value type="bool">True</value></default>
+                    <default param="flagneartime"><value type="bool">False</value></default>
+                    <default param="flagnearfreq"><value type="bool">False</value></default>
+                    <default param="extendpols"><value type="bool">False</value></default>
+                </equals>
+               </when>
                     
                 <when param="selectdata">
                     <equals type="bool" value="True">

@@ -75,6 +75,9 @@ def tflagger(vis=None,
                         
     # TODO:
     # * what to do about flagbackup
+    # * Check extendpols, because it is always FALSE
+    # * move correlation to agent's parameters
+    # * implement saving parameters in FLAG_CMD
     
     
     #
@@ -106,43 +109,142 @@ def tflagger(vis=None,
 
         
         # Select the data 
-        selection = []
-        tflocal.selectdata(selection, field, spw, array, feed, scan, antenna,\
-                           uvrange, timerange, correlation, intent, observation)   
+        tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
+                           baseline=antenna, uvrange=uvrange, time=timerange, \
+                           correlation=correlation, intent=intent, observation=str(observation))   
+
         
-                 
+        # Setup global parameters
+        agent_pars = {}
+        if mode == '':
+            mode = 'manualflag'
+            
+        agent_pars['mode'] = mode
+        agent_pars['extend'] = extend
+        agent_pars['datadisplay'] = datadisplay
+        agent_pars['writeflags'] = writeflags
+
+        # Get extend sub parameters
+        if (extend == True and mode != 'unflag' and mode != 'summary' and mode != 'extendflags'):
+            
+            agent_pars['extendpols'] = bool(extendpols)
+            agent_pars['growtime'] = growtime
+            agent_pars['growfreq'] = growfreq
+            agent_pars['growaround'] = growaround
+            agent_pars['flagneartime'] = flagneartime
+            agent_pars['flagnearfreq'] = flagnearfreq
+        
+        
+        # Set agent's parameters
         if mode == 'manualflag':
-            # Get specific + global parameters
-            setupAgent(tflocal, mode)
+            casalog.post('Manualflag mode is active')
             
-        elif mode == "clip":
-            # Get clip parameters
-            setupAgent(tflocal, mode, expression=expression, datacolumn=datacolumn,\
-                       clipminmax=clipminmax, clipoutside=clipoutside, channelavg=channelavg)
+        elif mode == 'clip':
+            agent_pars['expression'] = expression
+            agent_pars['datacolumn'] = datacolumn
+            agent_pars['clipminmax'] = clipminmax
+            agent_pars['clipoutside'] = clipoutside
+            agent_pars['channelavg'] = channelavg
+            casalog.post('Clip mode is active')
             
-#            elif mode == 'quack':#            elif (mode == 'shadow'):
+        elif mode == 'shadow':
+            agent_pars['diameter'] = diameter
+            casalog.post('Shadow mode is active')
+
+        elif mode == 'quack':
+            agent_pars['quackmode'] = quackmode
+            agent_pars['quackinterval'] = quackinterval
+            agent_pars['quackincrement'] = quackincrement
+            casalog.post('Quack mode is active')
+
+        elif mode == 'elevation':
+            agent_pars['lowerlimit'] = lowerlimit
+            agent_pars['upperlimit'] = upperlimit
+            casalog.post('Elevation mode is active')
+
+        elif mode == 'tfcrop':
+            agent_pars['timecutoff'] = timecutoff
+            agent_pars['freqcutoff'] = freqcutoff
+            agent_pars['timefit'] = timefit
+            agent_pars['freqfit'] = freqfit
+            agent_pars['maxnpieces'] = maxnpieces
+            agent_pars['flagdimension'] = flagdimension
+            agent_pars['usewindowstats'] = usewindowstas
+            agent_pars['halfwin'] = halfwin
+            casalog.post('Time and Frequency (tfcrop) mode is active')
+
+        elif mode == 'extendflags':
+            agent_pars['extendpols'] = bool(extendpols)
+            agent_pars['growtime'] = growtime
+            agent_pars['growfreq'] = growfreq
+            agent_pars['growaround'] = growaround
+            agent_pars['flagneartime'] = flagneartime
+            agent_pars['flagnearfreq'] = flagnearfreq
+            casalog.post('Extendflags mode is active')
+            
+        elif mode == 'unflag':
+            # Remove extend if set
+            if extend:
+                agent_pars['extend'] = False
+
+            casalog.post('Unflag mode is active')
                 
+            
+        elif mode == 'summary':
+            # Remove extend if set
+            if extend:
+                agent_pars['extend'] = False
+            if writeflags:
+                agent_pars['writeflags'] = False
 
-#            elif (mode == 'summary'):
+            agent_pars['minrel'] = minrel
+            agent_pars['maxrel'] = maxrel
+            agent_pars['minabs'] = minabs
+            agent_pars['maxabs'] = maxabs
+            agent_pars['spwchan'] = spwchan
+            agent_pars['spwcorr'] = spwcorr
+            casalog.post('Summary mode is active')
+        
+        # Now Parse the agent's parameters
+        casalog.post('Parsing the agent\'s parameters')
+        if debug:
+            print agent_pars
+            
+        if (not tflocal.parseAgentParameters(agent_pars)):
+            casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
+        
 
-            # filter out baselines/antennas/fields/spws/...
-            # which do not fall within limits
-#                if type(stats) is dict:
-#                    for x in stats.keys():
-#                        if type(stats[x]) is dict:
-#                            for xx in stats[x].keys():
-#                                flagged = stats[x][xx]
-#                                assert type(flagged) is dict
-#                                assert flagged.has_key('flagged')
-#                                assert flagged.has_key('total')
-#                                if flagged['flagged'] < minabs or \
-#                                   (flagged['flagged'] > maxabs and maxabs >= 0) or \
-#                                   flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
-#                                   flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
-#                                        del stats[x][xx]
-#                
-#                return stats
+        # Initialize the agent
+        casalog.post('Initializing the agent')
+        tflocal.init()
+        
+        # Run the tool
+        casalog.post('Running the tflagger tool')
+        summary_stats = tflocal.run()
 
+        if mode == 'summary':
+            #filter out baselines/antennas/fields/spws/...
+            #which do not fall within limits
+            if type(summary_stats) is dict:
+                for x in summary_stats.keys():
+                    if type(summary_stats[x]) is dict:
+                        for xx in summary_stats[x].keys():
+                            flagged = summary_stats[x][xx]
+                            assert type(flagged) is dict
+                            assert flagged.has_key('flagged')
+                            assert flagged.has_key('total')
+                            if flagged['flagged'] < minabs or \
+                               (flagged['flagged'] > maxabs and maxabs >= 0) or \
+                               flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
+                               flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
+                                    del summary_stats[x][xx]
+                
+        
+        # Destroy the tool
+        tflocal.done()
+        
+        return summary_stats
+    
     except Exception, instance:
             print '*** Error ***', instance
             raise
@@ -159,60 +261,3 @@ def tflagger(vis=None,
         
     return
 
-def setupAgent(tflocal,mode,**pars):
-    ''' Setup agent with its own parameters '''
-        
-    # TODO: correlation is to be considered here
-    
-    if debug:
-        print pars
-        
-    # Create a dictionary of the parameters
-    params = {}
-    
-    # Common global parameters for every mode
-    params['mode'] = mode
-    params['extend'] = ''
-    params['writeflags'] = ''
-    params['datadisplay'] = ''
-    
-    if mode == "manualflag":
-        for x in pars.keys():
-            if x == "mode":
-                params['mode'] = pars[x]
-    if mode == "clip":
-        for x in pars.keys():
-            if x == "expression":
-                params['expression'] = pars[x]
-                
-    print params
-    
-    
-    # Parameters for each mode
-    manualpars = []
-    quackpars = ['quackinterval','quackmode','quackincrement']
-    shadowpars = ['diameter']
-    clippars = ['clipminmax', 'expression', 'clipoutside','datacolumn', 'channelavg']
-    elevationpars = ['lowerlimit', 'upperlimit']
-    tfcroppars = ['datacolumn','expression','timecutoff','freqcutoff','timefit','freqfit','maxnpieces',\
-              'flagdimentsion','usewindowstats','halfwin']
-    extendflagspars = ['extendpols','growtime','growfreq','growaround','flagneartime','flagnearfreq']
-    summarypars = ['minrel', 'maxrel', 'minabs', 'maxabs', 'spwchan', 'spwcorr']
-    
-    # command list of successful agents to save to outfile
-    savelist = []
-
-    # Parse the dictionary of agents
-    # It should take the mode and mode-specific parameters
-#    if (not tflocal.parseAgentParameters(modepars)):
-#        casalog.post('Failed to parse parameters of agent %s' %mode, 'WARN')
-                            
-        # add this command line to list to save in outfile
-#        savelist[i] = cmdline
-        
-        # FIXME: Backup the flags
-#        if (flagbackup):
-#            backup_cmdflags(tflocal, 'tflagger_' + mode)
-    
-    return savelist
-        
