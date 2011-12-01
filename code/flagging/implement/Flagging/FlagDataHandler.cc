@@ -379,7 +379,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("field");
@@ -390,7 +390,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("scan");
@@ -401,7 +401,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("timerange");
@@ -412,7 +412,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no timerange selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no timerange selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("spw");
@@ -423,7 +423,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("antenna");
@@ -434,7 +434,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("uvrange");
@@ -445,7 +445,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no uvrange selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no uvrange selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("correlation");
@@ -456,7 +456,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("observation");
@@ -467,7 +467,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("intent");
@@ -478,7 +478,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
 	}
 
 	return true;
@@ -522,21 +522,59 @@ FlagDataHandler::selectData()
 	}
 
 	// More debugging information from MS-Selection
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected observation ids are " << measurementSetSelection_p->getObservationList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan intent ids are " << measurementSetSelection_p->getStateObsModeList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected uv range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
+	if (!arraySelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
+	}
 
-	ostringstream polarizationListToPrint (ios::in | ios::out);
-	polarizationListToPrint << measurementSetSelection_p->getPolMap();
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+	if (!observationSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected observation ids are " << measurementSetSelection_p->getObservationList() << LogIO::POST;
+	}
+
+	if (!fieldSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
+	}
+
+	if (!scanSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
+	}
+
+	if (!scanIntentSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan intent ids are " << measurementSetSelection_p->getStateObsModeList() << LogIO::POST;
+	}
+
+	if (!timeSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
+	}
+
+	if (!spwSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
+	}
+
+	if (!baselineSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
+	}
+
+	if (!uvwSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected uv range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
+	}
+
+	if (!polarizationSelection_p.empty())
+	{
+		ostringstream polarizationListToPrint (ios::in | ios::out);
+		polarizationListToPrint << measurementSetSelection_p->getPolMap();
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+	}
 
 	return true;
 }
@@ -549,7 +587,7 @@ FlagDataHandler::preLoadColumn(uInt column)
 {
 	if (std::find (preLoadColumns_p.begin(), preLoadColumns_p.end(), column) == preLoadColumns_p.end())
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Adding column to list: " <<  column << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Adding column to list: " <<  column << LogIO::POST;
 		preLoadColumns_p.push_back(column);
 	}
 
@@ -1240,24 +1278,6 @@ FlagDataHandler::generateIterator()
 		// Set preFetchColumns
 		prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,VisBufferComponents::NRow);
 		preFetchColumns();
-		/*
-	    prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(
-				VisBufferComponents::ArrayId,
-				VisBufferComponents::FieldId,
-				VisBufferComponents::SpW,
-				VisBufferComponents::ObservationId,
-				VisBufferComponents::StateId,
-				VisBufferComponents::Scan,
-				VisBufferComponents::Ant1,
-				VisBufferComponents::Ant2,
-				VisBufferComponents::Time,
-				VisBufferComponents::Uvw,
-				VisBufferComponents::CorrType,
-				VisBufferComponents::ObservedCube,
-				VisBufferComponents::FlagCube,
-				VisBufferComponents::NRow,
-				-1);
-		 */
 
 		// Then create and initialize RO Async iterator
 		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
@@ -1470,7 +1490,7 @@ FlagDataHandler::generateAntennaPairMap()
 			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)].push_back(row_idx);
 		}
 	}
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
 
 	return;
 }
@@ -1518,7 +1538,7 @@ FlagDataHandler::generatePolarizationsMap()
 
 	uShort pos = 0;
 	Vector<Int> corrTypes = visibilityBuffer_p->get()->corrType();
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Correlation type: " <<  corrTypes << LogIO::POST;
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation type: " <<  corrTypes << LogIO::POST;
 
 	for (Vector<Int>::iterator iter = corrTypes.begin(); iter != corrTypes.end();iter++)
 	{
@@ -1526,91 +1546,91 @@ FlagDataHandler::generatePolarizationsMap()
 		{
 			case Stokes::I:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is I" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is I" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::I] = pos;
 				(*polarizationIndexMap_p)[pos] = "I";
 				break;
 			}
 			case Stokes::Q:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is Q" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is Q" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::Q] = pos;
 				(*polarizationIndexMap_p)[pos] = "Q";
 				break;
 			}
 			case Stokes::U:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is U" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is U" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::U] = pos;
 				(*polarizationIndexMap_p)[pos] = "U";
 				break;
 			}
 			case Stokes::V:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is V" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is V" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::V] = pos;
 				(*polarizationIndexMap_p)[pos] = "V";
 				break;
 			}
 			case Stokes::XX:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XX" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XX" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::XX] = pos;
 				(*polarizationIndexMap_p)[pos] = "XX";
 				break;
 			}
 			case Stokes::YY:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YY" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YY" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::YY] = pos;
 				(*polarizationIndexMap_p)[pos] = "YY";
 				break;
 			}
 			case Stokes::XY:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XY" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XY" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::XY] = pos;
 				(*polarizationIndexMap_p)[pos] = "XY";
 				break;
 			}
 			case Stokes::YX:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YX" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YX" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::YX] = pos;
 				(*polarizationIndexMap_p)[pos] = "YX";
 				break;
 			}
 			case Stokes::RR:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RR" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RR" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::RR] = pos;
 				(*polarizationIndexMap_p)[pos] = "RR";
 				break;
 			}
 			case Stokes::LL:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LL" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LL" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::LL] = pos;
 				(*polarizationIndexMap_p)[pos] = "LL";
 				break;
 			}
 			case Stokes::RL:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RL" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RL" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::RL] = pos;
 				(*polarizationIndexMap_p)[pos] = "RL";
 				break;
 			}
 			case Stokes::LR:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LR" << LogIO::POST;
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LR" << LogIO::POST;
 				(*polarizationMap_p)[Stokes::LR] = pos;
 				(*polarizationIndexMap_p)[pos] = "LR";
 				break;
 			}
 			default:
 			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is unknown: " << *iter << LogIO::POST;
+				*logger_p << LogIO::WARN << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is unknown: " << *iter << LogIO::POST;
 				break;
 			}
 		}
@@ -1619,7 +1639,7 @@ FlagDataHandler::generatePolarizationsMap()
 
 	for (polarizationMap::iterator iter =polarizationMap_p->begin();iter != polarizationMap_p->end();iter++)
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Polarization map key: " << iter->first << " value: " << iter->second << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Polarization map key: " << iter->first << " value: " << iter->second << LogIO::POST;
 	}
 
 	return;
