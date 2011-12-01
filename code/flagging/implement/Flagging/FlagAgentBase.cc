@@ -183,7 +183,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		config.define("name","FlagAgentManual_1");
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
@@ -191,7 +190,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Unflag mode
 	if (mode.compare("unflag")==0)
 	{
-		config.define("name","FlagAgentUnflag_1");
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
 		return agent;
 	}
@@ -199,7 +197,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
-		config.define("name","FlagAgentTimeFreqCrop_1");
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags);
 		return agent;
 	}
@@ -214,7 +211,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Summary
 	if (mode.compare("summary")==0)
 	{
-		config.define("name","FlagAgentSummary_1");
 		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
@@ -332,6 +328,9 @@ FlagAgentBase::runCore()
 	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
 	originalFlagCube_p = flagDataHandler_p->getOriginalFlagCube();
 
+	// Set vis buffer
+	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
+
 	// Generate indexes applying data selection filters
 	generateAllIndex();
 	if (checkIfProcessBuffer())
@@ -421,6 +420,9 @@ FlagAgentBase::setDataSelection(Record config)
 			arrayList_p=parser.getSubArrayList();
 			filterRows_p=true;
 
+			// Request to pre-load ArrayId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array ids are " << arrayList_p << LogIO::POST;
 		}
@@ -447,6 +449,9 @@ FlagAgentBase::setDataSelection(Record config)
 			fieldList_p=parser.getFieldList();
 			filterRows_p=true;
 
+			// Request to pre-load FieldId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field ids are " << fieldList_p << LogIO::POST;
 		}
@@ -472,6 +477,9 @@ FlagAgentBase::setDataSelection(Record config)
 			scanList_p=parser.getScanList();
 			filterRows_p=true;
 
+			// Request to pre-load scan
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan ids are " << scanList_p << LogIO::POST;
 		}
@@ -496,6 +504,10 @@ FlagAgentBase::setDataSelection(Record config)
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			timeList_p=parser.getTimeList();
 			filterRows_p=true;
+
+			// Request to pre-load time
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
+
 
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " time ranges in MJD are " << timeList_p << LogIO::POST;
@@ -524,6 +536,9 @@ FlagAgentBase::setDataSelection(Record config)
 
 			channelList_p=parser.getChanList();
 			filterChannels_p=true;
+
+			// Request to pre-load spw
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
 
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channel selection are " << channelList_p << LogIO::POST;
@@ -564,6 +579,10 @@ FlagAgentBase::setDataSelection(Record config)
 			baselineList_p=parser.getBaselineList();
 			filterRows_p=true;
 
+			// Request to pre-load antenna1/2
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
 		}
 	}
@@ -587,6 +606,9 @@ FlagAgentBase::setDataSelection(Record config)
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			uvwList_p=parser.getUVList();
 			filterRows_p=true;
+
+			// Request to pre-load uvw
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange ids are " << uvwList_p << LogIO::POST;
@@ -612,6 +634,9 @@ FlagAgentBase::setDataSelection(Record config)
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			polarizationList_p=parser.getPolMap();
 			filterPols_p=true;
+
+			// Request to pre-load CorrType
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
 			// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
 			ostringstream polarizationListToPrint (ios::in | ios::out);
@@ -642,6 +667,9 @@ FlagAgentBase::setDataSelection(Record config)
 			observationList_p=parser.getObservationList();
 			filterRows_p=true;
 
+			// Request to pre-load ObservationId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation selection is " << observationList_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation ids are " << observationList_p << LogIO::POST;
 		}
@@ -666,6 +694,9 @@ FlagAgentBase::setDataSelection(Record config)
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			scanIntentList_p=parser.getStateObsModeList();
 			filterRows_p=true;
+
+			// Request to pre-load StateId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
 
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent selection is " << scanIntentList_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent ids are " << scanIntentList_p << LogIO::POST;
@@ -748,6 +779,10 @@ FlagAgentBase::setAgentParameters(Record config)
 
 		expression_p.upcase();
 
+		// Request to pre-load spw and corrType
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
+
 		// Check if expression is one of the supported operators
 		if ((expression_p.find("REAL") == string::npos) and
 				(expression_p.find("IMAG") == string::npos) and
@@ -777,22 +812,39 @@ FlagAgentBase::setAgentParameters(Record config)
 		if (dataColumn_p.compare("data") == 0)
 		{
 			dataReference_p = DATA;
+
+			// Request to pre-load ObservedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
 		else if (dataColumn_p.compare("corrected") == 0)
 		{
 			dataReference_p = CORRECTED;
+
+			// Request to pre-load CorrectedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
 		}
 		else if (dataColumn_p.compare("model") == 0)
 		{
 			dataReference_p = MODEL;
+
+			// Request to pre-load ModelCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else if (dataColumn_p.compare("residual") == 0)
 		{
 			dataReference_p = RESIDUAL;
+
+			// Request to pre-load CorrectedCube and ModelCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else if (dataColumn_p.compare("residual_data") == 0)
 		{
 			dataReference_p = RESIDUAL_DATA;
+
+			// Request to pre-load ObservedCube and ModelCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else
 		{
@@ -800,6 +852,9 @@ FlagAgentBase::setAgentParameters(Record config)
 					" Unsupported data column: " <<
 					expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
 			dataColumn_p = "data";
+
+			// Request to pre-load ObservedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
 
 		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
