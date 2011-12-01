@@ -119,6 +119,8 @@ FlagAgentQuack::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt ro
 	// First of all check if this scan is in the scan start/stop map
 	if ( (*flagDataHandler_p->getMapScanStartStop()).find(scan) == (*flagDataHandler_p->getMapScanStartStop()).end())
 	{
+		*logger_p << LogIO::WARN << "FlagAgentQuack::" << __FUNCTION__ << " start/stop time for scan "
+				<< scan << " not found" << LogIO::POST;
 		return;
 	}
 

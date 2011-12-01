@@ -28,6 +28,11 @@ FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writeP
 		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube)
 {
 	setAgentParameters(config);
+
+	// Request loading antenna1,antenna2 and uvw
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 }
 
 FlagAgentShadow::~FlagAgentShadow()

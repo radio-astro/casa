@@ -33,11 +33,11 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 	scan = 0;
 	observationId = 0;
 
-	arrayId_str = String("");;
-	fieldId_str = String("");;
-	spw_str = String("");;
-	scan_str = String("");;
-	observationId_str = String("");;
+	arrayId_str = String("");
+	fieldId_str = String("");
+	spw_str = String("");
+	scan_str = String("");
+	observationId_str = String("");
 
 	accumTotalFlags = 0;
 	accumTotalCount = 0;
@@ -48,6 +48,15 @@ FlagAgentSummary::FlagAgentSummary(FlagDataHandler *dh, Record config):
 
 	// Request loading polarization map to FlagDataHandler
 	flagDataHandler_p->setMapPolarizations(true);
+
+	// Request pre-loading array,field,spw, scan, observation, antenna1, antenna2
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
 }
 
 FlagAgentSummary::~FlagAgentSummary()
