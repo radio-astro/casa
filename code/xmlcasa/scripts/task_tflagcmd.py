@@ -6,7 +6,7 @@ import sys
 debug = True
 
 
-def testflagcmd(
+def tflagcmd(
     vis=None,
     flagmode=None,
     flagfile=None,
@@ -37,7 +37,7 @@ def testflagcmd(
     except:
         raise Exception, 'Failed to load xml.dom.minidom into python'
 
-    casalog.origin('testflagcmd')
+    casalog.origin('tflagcmd')
 #    casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
 
     tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
