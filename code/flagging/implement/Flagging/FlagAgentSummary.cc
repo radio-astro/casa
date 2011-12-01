@@ -82,11 +82,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 
 	if (spwChannelCounts)
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__ << " Spw-Channel count activated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Channel count activated " << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__ << " Spw-Channel count deactivated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Channel count deactivated " << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("spwcorr");
@@ -101,11 +101,11 @@ FlagAgentSummary::setAgentParameters(Record config)
 
 	if (spwPolarizationCounts)
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__ << " Spw-Correlation count activated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Correlation count activated " << LogIO::POST;
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__ << " Spw-Correlation count deactivated " << LogIO::POST;
+		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " Spw-Correlation count deactivated " << LogIO::POST;
 	}
 
 	return;
@@ -259,7 +259,7 @@ FlagAgentSummary::getResult()
 				stats_key2.define("total", (Double) key2->second);
 				stats_key1.defineRecord(String(key2->first), stats_key2);
 
-				*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
+				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Channel:" << key2->first
 						<< " flagged: " <<  (Double) accumChannelflags[key1->first][key2->first]
 						<< " total: " <<  (Double) key2->second
@@ -283,7 +283,7 @@ FlagAgentSummary::getResult()
 				stats_key2.define("total", (Double) key2->second);
 				stats_key1.defineRecord(key2->first, stats_key2);
 
-				*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
+				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Correlation:" << key2->first
 						<< " flagged: " <<  (Double) accumPolarizationflags[key1->first][key2->first]
 						<< " total: " <<  (Double) key2->second
@@ -305,7 +305,7 @@ FlagAgentSummary::getResult()
 			stats_key2.define("total", (Double) key2->second);
 			stats_key1.defineRecord(key2->first, stats_key2);
 
-			*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
+			*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 					<< " " << key1->first << " " << key2->first
 					<< " flagged: " <<  (Double) accumflags[key1->first][key2->first]
 					<< " total: " <<  (Double) key2->second
@@ -318,7 +318,7 @@ FlagAgentSummary::getResult()
 	result.define("flagged", (Double) accumTotalFlags);
 	result.define("total"  , (Double) accumTotalCount);
 
-	*logger_p 	<< LogIO::NORMAL << "FlagAgentSummary::" << __FUNCTION__
+	*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 			<< " Total Flagged: " <<  (Double) accumTotalFlags
 			<< " Total Counts: " <<  (Double) accumTotalCount
 			<< LogIO::POST;

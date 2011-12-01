@@ -57,8 +57,8 @@ FlagAgentClipping::setAgentParameters(Record config)
 		clipmax_p = 1.5;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipmin is " << clipmin_p << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipmax is " << clipmax_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " clipmin is " << clipmin_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " clipmax is " << clipmax_p << LogIO::POST;
 
 	exists = config.fieldNumber ("clipoutside");
 	if (exists >= 0)
@@ -70,7 +70,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		clipoutside_p = True;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " clipoutside is " << clipoutside_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " clipoutside is " << clipoutside_p << LogIO::POST;
 
 	exists = config.fieldNumber ("channelavg");
 	if (exists >= 0)
@@ -82,7 +82,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 		channelavg_p = False;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentClipping::" << __FUNCTION__ << " channelavg is " << channelavg_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channelavg is " << channelavg_p << LogIO::POST;
 
 
 	return;
