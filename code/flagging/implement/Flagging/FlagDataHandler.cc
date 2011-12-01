@@ -21,7 +21,6 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagDataHandler.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -43,7 +42,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 
 	// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
 	asyncio_disabled_p = true;
-	AipsrcValue<Bool>::find (asyncio_disabled_p,"ROVisibilityIteratorAsync.disabled", true);
+	AipsrcValue<Bool>::find (asyncio_disabled_p,"VisibilityIterator.disabled", true);
 	if (!asyncio_disabled_p)
 	{
 		// Check Flag Data Handler config
@@ -271,7 +270,6 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
-	vwbt_p = NULL;
 
 	antennaNames_p = NULL;
 	antennaDiameters_p = NULL;
@@ -280,6 +278,10 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	polarizationMap_p = NULL;
 	polarizationIndexMap_p = NULL;
 	antennaPointingMap_p = NULL;
+	scanStartStopMap_p = NULL;
+
+	// Initialize Pre-Load columns
+	preLoadColumns_p.clear();
 
 	return;
 }
@@ -300,11 +302,9 @@ FlagDataHandler::~FlagDataHandler()
 	if (antennaPointingMap_p) delete antennaPointingMap_p;
 
 	// Delete VisBuffers and iterators
-	if (vwbt_p) delete vwbt_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
-	if ((!asyncio_disabled_p) and (rwVisibilityIterator_p)) delete rwVisibilityIterator_p;
+	// ROVisIter is in fact RWVisIter
+	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
 
 	// Delete MS objects
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
@@ -347,14 +347,6 @@ FlagDataHandler::close()
 {
 	if (selectedMeasurementSet_p)
 	{
-		// Wait until all the pending writing operations are done
-		if (!asyncio_disabled_p)
-		{
-			vwbt_p->terminate();
-			vwbt_p->join();
-		}
-
-
 		// Flush and unlock MS
 		selectedMeasurementSet_p->flush();
 		selectedMeasurementSet_p->relinquishAutoLocks(True);
@@ -550,6 +542,587 @@ FlagDataHandler::selectData()
 }
 
 // -----------------------------------------------------------------------
+// Function to handled columns pre-load (to avoid problems with parallelism)
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::preLoadColumn(uInt column)
+{
+	if (std::find (preLoadColumns_p.begin(), preLoadColumns_p.end(), column) == preLoadColumns_p.end())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Adding column to list: " <<  column << LogIO::POST;
+		preLoadColumns_p.push_back(column);
+	}
+
+	return;
+}
+
+void
+FlagDataHandler::preFetchColumns()
+{
+	for (vector<uInt>::iterator iter=preLoadColumns_p.begin();iter!=preLoadColumns_p.end();iter++)
+	{
+		switch (*iter)
+		{
+			case VisBufferComponents::Ant1:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->antenna1();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Ant1);
+				}
+				break;
+			}
+			case VisBufferComponents::Ant2:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->antenna2();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Ant2);
+				}
+				break;
+			}
+			case VisBufferComponents::ArrayId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->arrayId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ArrayId);
+				}
+				break;
+			}
+			case VisBufferComponents::Channel:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->channel();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Channel);
+				}
+				break;
+			}
+			case VisBufferComponents::Cjones:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->CJones();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Cjones);
+				}
+				break;
+			}
+			case VisBufferComponents::CorrType:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->corrType();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::CorrType);
+				}
+				break;
+			}
+			case VisBufferComponents::Corrected:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->correctedVisibility();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Corrected);
+				}
+				break;
+			}
+			case VisBufferComponents::CorrectedCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->correctedVisCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::CorrectedCube);
+				}
+				break;
+			}
+			case VisBufferComponents::Direction1:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->direction1();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Direction1);
+				}
+				break;
+			}
+			case VisBufferComponents::Direction2:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->direction2();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Direction2);
+				}
+				break;
+			}
+			case VisBufferComponents::Exposure:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->exposure();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Exposure);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed1:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed1();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed1);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed1_pa:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed1_pa();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed1_pa);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed2:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed2();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed2);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed2_pa:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed2_pa();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed2_pa);
+				}
+				break;
+			}
+			case VisBufferComponents::FieldId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->fieldId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FieldId);
+				}
+				break;
+			}
+			case VisBufferComponents::Flag:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flag();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Flag);
+				}
+				break;
+			}
+			case VisBufferComponents::FlagCategory:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flagCategory();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FlagCategory);
+				}
+				break;
+			}
+			case VisBufferComponents::FlagCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flagCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FlagCube);
+				}
+				break;
+			}
+			case VisBufferComponents::FlagRow:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flagRow();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FlagRow);
+				}
+				break;
+			}
+			case VisBufferComponents::Freq:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->frequency();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Freq);
+				}
+				break;
+			}
+			case VisBufferComponents::ImagingWeight:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->imagingWeight();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ImagingWeight);
+				}
+				break;
+			}
+			case VisBufferComponents::Model:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->modelVisibility();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Model);
+				}
+				break;
+			}
+			case VisBufferComponents::ModelCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->modelVisCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ModelCube);
+				}
+				break;
+			}
+			case VisBufferComponents::NChannel:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->nChannel();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::NChannel);
+				}
+				break;
+			}
+			case VisBufferComponents::NCorr:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->nCorr();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::NCorr);
+				}
+				break;
+			}
+			case VisBufferComponents::NRow:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->nRow();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::NRow);
+				}
+				break;
+			}
+			case VisBufferComponents::ObservationId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->observationId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ObservationId);
+				}
+				break;
+			}
+			case VisBufferComponents::Observed:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->visibility();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Observed);
+				}
+				break;
+			}
+			case VisBufferComponents::ObservedCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->visCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ObservedCube);
+				}
+				break;
+			}
+			case VisBufferComponents::PhaseCenter:
+			{
+				visibilityBuffer_p->get()->phaseCenter();
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->phaseCenter();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ObservedCube);
+				}
+				break;
+			}
+			case VisBufferComponents::PolFrame:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->polFrame();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::PolFrame);
+				}
+				break;
+			}
+			case VisBufferComponents::ProcessorId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->processorId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ProcessorId);
+				}
+				break;
+			}
+			case VisBufferComponents::Scan:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->scan();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Scan);
+				}
+				break;
+			}
+			case VisBufferComponents::Sigma:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->sigma();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Sigma);
+				}
+				break;
+			}
+			case VisBufferComponents::SigmaMat:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->sigmaMat();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::SigmaMat);
+				}
+				break;
+			}
+			case VisBufferComponents::SpW:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->spectralWindow();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::SpW);
+				}
+				break;
+			}
+			case VisBufferComponents::StateId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->stateId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::StateId);
+				}
+				break;
+			}
+			case VisBufferComponents::Time:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->time();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Time);
+				}
+				break;
+			}
+			case VisBufferComponents::TimeCentroid:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->timeCentroid();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::TimeCentroid);
+				}
+				break;
+			}
+			case VisBufferComponents::TimeInterval:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->timeInterval();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::TimeInterval);
+				}
+				break;
+			}
+			case VisBufferComponents::Weight:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->weight();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Weight);
+				}
+				break;
+			}
+			case VisBufferComponents::WeightMat:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->weightMat();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::WeightMat);
+				}
+				break;
+			}
+			case VisBufferComponents::WeightSpectrum:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->weightSpectrum();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::WeightSpectrum);
+				}
+				break;
+			}
+			case VisBufferComponents::Uvw:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->uvw();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Uvw);
+				}
+				break;
+			}
+			case VisBufferComponents::UvwMat:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->uvwMat();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::UvwMat);
+				}
+				break;
+			}
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
 // Swap MS to check what is the maximum RAM memory needed
 // -----------------------------------------------------------------------
 void
@@ -630,116 +1203,6 @@ FlagDataHandler::checkMaxMemory()
 	return;
 }
 
-void
-FlagDataHandler::generateScanStartStopMap()
-{
-
-	Int scan;
-	Double start,stop;
-	Vector<Int> scans;
-	Vector<Double> times;
-
-	Cube<Bool> flags;
-	uInt scanStartRow;
-	uInt scanStopRow;
-	uInt ncorrs,nchannels,nrows;
-	Bool stopSearch;
-
-	if (mapScanStartStop_p) scanStartStopMap_p = new scanStartStopMap();
-
-	scans = rwVisibilityIterator_p->scan(scans);
-	times = rwVisibilityIterator_p->time(times);
-
-	// Check if anything is flagged in this buffer
-	scanStartRow = 0;
-	scanStopRow = times.size()-1;
-	if (mapScanStartStopFlagged_p)
-	{
-		flags = rwVisibilityIterator_p->flag(flags);
-		IPosition shape = flags.shape();
-		ncorrs = shape[0];
-		nchannels = shape[1];
-		nrows = shape[2];
-
-		// Look for effective scan start
-		stopSearch = False;
-		for (uInt row_i=0;row_i<nrows;row_i++)
-		{
-			if (stopSearch) break;
-
-			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
-			{
-				if (stopSearch) break;
-
-				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
-				{
-					if (stopSearch) break;
-
-					if (!flags(corr_i,channel_i,row_i))
-					{
-						scanStartRow = row_i;
-						stopSearch = True;
-					}
-				}
-			}
-		}
-
-		// If none of the rows were un-flagged we don't continue checking from the end
-		// As a consequence of this some scans may not be present in the map, and have
-		// to be skipped in the flagging process because they are already flagged.
-		if (!stopSearch) return;
-
-		// Look for effective scan stop
-		stopSearch = False;
-		for (uInt row_i=0;row_i<nrows;row_i++)
-		{
-			if (stopSearch) break;
-
-			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
-			{
-				if (stopSearch) break;
-
-				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
-				{
-					if (stopSearch) break;
-
-					if (!flags(corr_i,channel_i,nrows-1-row_i))
-					{
-						scanStopRow = nrows-1-row_i;
-						stopSearch = True;
-					}
-				}
-			}
-		}
-	}
-
-	// Check scan start/stop times
-	scan = scans[0];
-	start = times[scanStartRow];
-	stop = times[scanStopRow];
-	if ((*scanStartStopMap_p)[scan].size() == 0)
-	{
-		(*scanStartStopMap_p)[scan].push_back(start);
-		(*scanStartStopMap_p)[scan].push_back(stop);
-	}
-	else
-	{
-		// Check if we have a better start time
-		if ((*scanStartStopMap_p)[scan][0] > start)
-		{
-			(*scanStartStopMap_p)[scan][0] = start;
-		}
-		// Check if we have a better stop time
-		if ((*scanStartStopMap_p)[scan][1] < stop)
-		{
-			(*scanStartStopMap_p)[scan][1] = stop;
-		}
-	}
-
-	return;
-}
-
-
 // -----------------------------------------------------------------------
 // Generate Visibility Iterator with a given sort order and time interval
 // -----------------------------------------------------------------------
@@ -774,62 +1237,52 @@ FlagDataHandler::generateIterator()
 	}
 	else
 	{
+		// Set preFetchColumns
+		prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,VisBufferComponents::NRow);
+		preFetchColumns();
+		/*
+	    prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(
+				VisBufferComponents::ArrayId,
+				VisBufferComponents::FieldId,
+				VisBufferComponents::SpW,
+				VisBufferComponents::ObservationId,
+				VisBufferComponents::StateId,
+				VisBufferComponents::Scan,
+				VisBufferComponents::Ant1,
+				VisBufferComponents::Ant2,
+				VisBufferComponents::Time,
+				VisBufferComponents::Uvw,
+				VisBufferComponents::CorrType,
+				VisBufferComponents::ObservedCube,
+				VisBufferComponents::FlagCube,
+				VisBufferComponents::NRow,
+				-1);
+		 */
 
-	    throw AipsError ("FlagDataHandler.asyncio temporally disabled ", __FILE__, __LINE__);
+		// Then create and initialize RO Async iterator
+		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+		rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
 
-		// Determine columns to be pre-fetched
-//		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
-//															casa::asyncio::Ant2,
-//															casa::asyncio::ArrayId,
-//															casa::asyncio::CorrType,
-//															casa::asyncio::Feed1,
-//															casa::asyncio::Feed2,
-//															casa::asyncio::FieldId,
-//															casa::asyncio::Flag,
-//															casa::asyncio::FlagCube,
-//															casa::asyncio::FlagRow,
-//															casa::asyncio::ObservationId,
-//															casa::asyncio::ObservedCube,
-//															casa::asyncio::Freq,
-//															casa::asyncio::NChannel,
-//															casa::asyncio::NCorr,
-//															casa::asyncio::NRow,
-//															casa::asyncio::PhaseCenter,
-//															casa::asyncio::Scan,
-//															casa::asyncio::SpW,
-//															casa::asyncio::StateId,
-//															casa::asyncio::Time,
-//															casa::asyncio::TimeInterval,
-//															casa::asyncio::Uvw,-1);
-//
-//		// Then create and initialize RO Async iterator
-//		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-//		roVisibilityIterator_p = ROVisibilityIteratorAsync::create(*selectedMeasurementSet_p,prefetchColumns,sortOrder_p,true,timeInterval_p,-1,groupTimeSteps_p);
-//
-//		// Set the table data manager (ISM and SSM) cache size to the full column size, for
-//		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-//		if (slurp_p) roVisibilityIterator_p->slurp();
-//
-//		// Apply channel selection
-//		applyChannelSelection(roVisibilityIterator_p);
-//
-//		// Attach Visibility Buffer to Visibility Iterator
-//		if (visibilityBuffer_p) delete visibilityBuffer_p;
-//		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
-//
-//		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
-//		// NOTE: We have to do this before starting the flag agents,
-//		// otherwise we have some seg. faults related with RegEx parser
-//		// which is used when applying the ROVIA modifiers
-//		roVisibilityIterator_p->originChunks();
-//
-//		// Finally, initialize Visibility Write Behind Thread
-//		if (vwbt_p) delete vwbt_p;
-//		ROVisibilityIteratorAsync * roVisibilityIteratorAsync = (ROVisibilityIteratorAsync*) roVisibilityIterator_p;
-//		casa::async::Mutex * mutex = roVisibilityIteratorAsync->getMutex();
-//		vwbt_p = new VWBT(rwVisibilityIterator_p,mutex,groupTimeSteps_p);
-//		vwbt_p->start();
+		// Cast RW conventional iterator into RO conventional iterator
+		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
 
+		// Set the table data manager (ISM and SSM) cache size to the full column size, for
+		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+		if (slurp_p) roVisibilityIterator_p->slurp();
+
+		// Apply channel selection
+		applyChannelSelection(roVisibilityIterator_p);
+
+		// Attach Visibility Buffer to Visibility Iterator
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
+		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+
+		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
+		// NOTE: We have to do this before starting the flag agents,
+		// otherwise we have some seg. faults related with RegEx parser
+		// which is used when applying the ROVIA modifiers
+		roVisibilityIterator_p->originChunks();
 	}
 
 	iteratorGenerated_p = true;
@@ -913,6 +1366,8 @@ FlagDataHandler::nextBuffer()
 		}
 		roVisibilityIterator_p->origin();
 		buffersInitialized_p = true;
+
+		if (asyncio_disabled_p) preFetchColumns();
 		if (mapAntennaPairs_p) generateAntennaPairMap();
 		if (mapSubIntegrations_p) generateSubIntegrationMap();
 		if (mapPolarizations_p) generatePolarizationsMap();
@@ -930,6 +1385,7 @@ FlagDataHandler::nextBuffer()
 		// WARNING: We iterate and afterwards check if the iterator is valid
 		if (roVisibilityIterator_p->more())
 		{
+			if (asyncio_disabled_p) preFetchColumns();
 			if (mapAntennaPairs_p) generateAntennaPairMap();
 			if (mapSubIntegrations_p) generateSubIntegrationMap();
 			if (mapPolarizations_p) generatePolarizationsMap();
@@ -961,14 +1417,7 @@ FlagDataHandler::nextBuffer()
 bool
 FlagDataHandler::flushFlags()
 {
-	if (asyncio_disabled_p)
-	{
-		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
-	}
-	else
-	{
-		vwbt_p->setFlag(modifiedFlagCube_p);
-	}
+	rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
 
 	return true;
 }
@@ -1205,6 +1654,175 @@ FlagDataHandler::generateAntennaPointingMap()
 			<< antennaPointingMap_p->size() << " elements" << LogIO::POST;
 
 	return;
+}
+
+void
+FlagDataHandler::generateScanStartStopMap()
+{
+
+	Int scan;
+	Double start,stop;
+	Vector<Int> scans;
+	Vector<Double> times;
+
+	Cube<Bool> flags;
+	uInt scanStartRow;
+	uInt scanStopRow;
+	uInt ncorrs,nchannels,nrows;
+	Bool stopSearch;
+
+	if (scanStartStopMap_p == NULL) scanStartStopMap_p = new scanStartStopMap();
+
+	scans = rwVisibilityIterator_p->scan(scans);
+	times = rwVisibilityIterator_p->time(times);
+
+	// Check if anything is flagged in this buffer
+	scanStartRow = 0;
+	scanStopRow = times.size()-1;
+	if (mapScanStartStopFlagged_p)
+	{
+		flags = rwVisibilityIterator_p->flag(flags);
+		IPosition shape = flags.shape();
+		ncorrs = shape[0];
+		nchannels = shape[1];
+		nrows = shape[2];
+
+		// Look for effective scan start
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,row_i))
+					{
+						scanStartRow = row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+
+		// If none of the rows were un-flagged we don't continue checking from the end
+		// As a consequence of this some scans may not be present in the map, and have
+		// to be skipped in the flagging process because they are already flagged.
+		if (!stopSearch) return;
+
+		// Look for effective scan stop
+		stopSearch = False;
+		for (uInt row_i=0;row_i<nrows;row_i++)
+		{
+			if (stopSearch) break;
+
+			for (uInt channel_i=0;channel_i<nchannels;channel_i++)
+			{
+				if (stopSearch) break;
+
+				for (uInt corr_i=0;corr_i<ncorrs;corr_i++)
+				{
+					if (stopSearch) break;
+
+					if (!flags(corr_i,channel_i,nrows-1-row_i))
+					{
+						scanStopRow = nrows-1-row_i;
+						stopSearch = True;
+					}
+				}
+			}
+		}
+	}
+
+	// Check scan start/stop times
+	scan = scans[0];
+	start = times[scanStartRow];
+	stop = times[scanStopRow];
+
+	if (scanStartStopMap_p->find(scan) == scanStartStopMap_p->end())
+	{
+		(*scanStartStopMap_p)[scan].push_back(start);
+		(*scanStartStopMap_p)[scan].push_back(stop);
+	}
+	else
+	{
+		// Check if we have a better start time
+		if ((*scanStartStopMap_p)[scan][0] > start)
+		{
+			(*scanStartStopMap_p)[scan][0] = start;
+		}
+		// Check if we have a better stop time
+		if ((*scanStartStopMap_p)[scan][1] < stop)
+		{
+			(*scanStartStopMap_p)[scan][1] = stop;
+		}
+	}
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+// Functions to switch on/off mapping functions
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::setMapAntennaPairs(bool activated)
+{
+	mapAntennaPairs_p=activated;
+	// Pre-Load antenna1, antenna2
+	preLoadColumn(VisBufferComponents::Ant1);
+	preLoadColumn(VisBufferComponents::Ant2);
+}
+
+void
+FlagDataHandler::setMapSubIntegrations(bool activated)
+{
+	mapSubIntegrations_p=activated;
+	// Pre-Load time
+	preLoadColumn(VisBufferComponents::Time);
+}
+
+void
+FlagDataHandler::setMapPolarizations(bool activated)
+{
+	mapPolarizations_p=activated;
+	// Pre-Load corrType
+	preLoadColumn(VisBufferComponents::CorrType);
+}
+
+void
+FlagDataHandler::setMapAntennaPointing(bool activated)
+{
+	mapAntennaPointing_p=activated;
+	// Pre-Load time, antenna1 and antenna2
+	// Azel is derived and this only restriction
+	// is that it can be access by 1 thread only
+	preLoadColumn(VisBufferComponents::Time);
+	preLoadColumn(VisBufferComponents::Ant1);
+	preLoadColumn(VisBufferComponents::Ant2);
+
+}
+
+void
+FlagDataHandler::setScanStartStopMap(bool activated)
+{
+	mapScanStartStop_p=activated;
+	// Pre-Load scan and time
+	preLoadColumn(VisBufferComponents::Scan);
+	preLoadColumn(VisBufferComponents::Time);
+}
+
+void
+FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
+{
+	mapScanStartStopFlagged_p=activated;
+	// Pre-Load scan and time
+	preLoadColumn(VisBufferComponents::Scan);
+	preLoadColumn(VisBufferComponents::Time);
 }
 
 CubeView<Bool> *

@@ -27,11 +27,11 @@
 // Measurement Set selection
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <ms/MeasurementSets/MSAntennaColumns.h>
 
 // Async I/O infrastructure
-///////////////#include <msvis/MSVis/VisibilityIteratorAsync.h>
+#include <msvis/MSVis/AsynchronousTools.h>
 #include <msvis/MSVis/VisBufferAsync.h>
-#include <msvis/MSVis/VWBT.h>
 
 // .casarc interface
 #include <casa/System/AipsrcValue.h>
@@ -39,12 +39,13 @@
 // Records interface
 #include <casa/Containers/Record.h>
 
-// Data mapping
-#include <map>
-
 // System utilities (for profiling macros)
 #include <casa/OS/HostInfo.h>
 #include <sys/time.h>
+
+// Data mapping
+#include <algorithm>
+#include <map>
 
 #define STARTCLOCK timeval start,stop; double elapsedTime; if (profiling_p) gettimeofday(&start,0);
 #define STOPCLOCK if (profiling_p) \
@@ -418,6 +419,11 @@ public:
 	// Generate selected Measurement Set
 	bool selectData();
 
+	// Pre-Load columns (in order to avoid parallelism problems when not using
+	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
+	void preLoadColumn(uInt column);
+	void preFetchColumns();
+
 	// Generate Visibility Iterator
 	bool generateIterator();
 
@@ -437,6 +443,14 @@ public:
 	Cube<Bool> * getModifiedFlagCube();
 	Cube<Bool> * getOriginalFlagCube();
 
+	// Functions to switch on/off mapping functions
+	void setMapAntennaPairs(bool activated);
+	void setMapSubIntegrations(bool activated);
+	void setMapPolarizations(bool activated);
+	void setMapAntennaPointing(bool activated);
+	void setScanStartStopMap(bool activated);
+	void setScanStartStopFlaggedMap(bool activated);
+
 	// Mapping functions
 	void generateAntennaPairMap();
 	void generateSubIntegrationMap();
@@ -444,21 +458,13 @@ public:
 	void generateAntennaPointingMap();
 	void generateScanStartStopMap();
 
-	// Accessors for the mapping functions
+	// Accesors for the mapping functions
 	antennaPairMap * getAntennaPairMap() {return antennaPairMap_p;}
 	subIntegrationMap * getSubIntegrationMap() {return subIntegrationMap_p;}
 	polarizationMap * getPolarizationMap() {return polarizationMap_p;}
 	polarizationIndexMap * getPolarizationIndexMap() {return polarizationIndexMap_p;}
 	antennaPointingMap * getMapAntennaPointing() {return antennaPointingMap_p;}
 	scanStartStopMap * getMapScanStartStop() {return scanStartStopMap_p;}
-
-	// Functions to switch on/off mapping functions
-	void setMapAntennaPairs(bool activated) {mapAntennaPairs_p=activated;}
-	void setMapSubIntegrations(bool activated) {mapSubIntegrations_p=activated;}
-	void setMapPolarizations(bool activated) {mapPolarizations_p=activated;}
-	void setMapAntennaPointing(bool activated) {mapAntennaPointing_p=activated;}
-	void setScanStartStopMap(bool activated) {mapScanStartStop_p=activated;}
-	void setScanStartStopFlaggedMap(bool activated) {mapScanStartStopFlagged_p=activated;}
 
 	// TODO: Remove old CubeView accessors and update tFlagDataHandler and tFlagAgentBase
 	CubeView<Bool> * getFlagsView(Int antenna1, Int antenna2);
@@ -473,16 +479,8 @@ public:
 	// Set function to activate profiling
 	void setProfiling(bool enable) {profiling_p = enable;}
 
-	// Visibility Buffer
-	// WARNING: The attach mechanism only works with pointers or
-	// referenced variables. Otherwise the VisBuffer is created
-	// and attached, but when it is assigned to the member it is
-	// detached because of the dynamically called destructor
-	VisBufferAutoPtr *visibilityBuffer_p;
-
-	// RO Visibility Iterator
-	VisibilityIterator *rwVisibilityIterator_p;
-	ROVisibilityIterator *roVisibilityIterator_p;
+	// Make the logger public to that we can use it from FlagAgentBase::create
+	casa::LogIO *logger_p;
 
 	// Measurement set section
 	String msname_p;
@@ -492,12 +490,20 @@ public:
 	Vector<String> *antennaNames_p;
 	Vector<Double> *antennaDiameters_p;
 
+	// RO Visibility Iterator
+	casa::asyncio::PrefetchColumns prefetchColumns_p;
+	VisibilityIterator *rwVisibilityIterator_p;
+	ROVisibilityIterator *roVisibilityIterator_p;
 	// Iteration counters
 	uShort chunkNo;
 	uShort bufferNo;
 
-	// Make the logger public to that we can use it from FlagAgentBase::create
-	casa::LogIO *logger_p;
+	// Visibility Buffer
+	// WARNING: The attach mechanism only works with pointers or
+	// referenced variables. Otherwise the VisBuffer is created
+	// and attached, but when it is assigned to the member it is
+	// detached because of the dynamically called destructor
+	VisBufferAutoPtr *visibilityBuffer_p;
 
 
 protected:
@@ -516,19 +522,27 @@ private:
 	casa::String scanIntentSelection_p;
 	casa::String observationSelection_p;
 
+	// Async I/O stuff
+	bool asyncio_disabled_p;
+	// Pre-Load columns (in order to avoid parallelism problems when not using
+	// async i/o, and also to know what columns to pre-fetch in async i/o mode)
+	vector<uInt> preLoadColumns_p;
+
 	// Iteration parameters
 	uShort iterationApproach_p;
 	Block<int> sortOrder_p;
 	Double timeInterval_p;
 	bool groupTimeSteps_p;
+	// Slurp flag
+	bool slurp_p;
+	// Iteration initialization parameters
+	bool chunksInitialized_p;
+	bool buffersInitialized_p;
+	bool iteratorGenerated_p;
 
 	// Flag Cubes
 	Cube<Bool> originalFlagCube_p;
 	Cube<Bool> modifiedFlagCube_p;
-
-	// Async I/O stuff
-	VWBT * vwbt_p;
-	bool asyncio_disabled_p;
 
 	// Mapping members
 	antennaPairMap *antennaPairMap_p;
@@ -550,14 +564,6 @@ private:
 	double cubeAccessTime_p;
 	uLong cubeAccessCounterTotal_p;
 	double cubeAccessTimeTotal_p;
-
-	// Slurp flag
-	bool slurp_p;
-
-	// Iteration initialization parameters
-	bool chunksInitialized_p;
-	bool buffersInitialized_p;
-	bool iteratorGenerated_p;
 
 	// Profiling
 	bool profiling_p;
