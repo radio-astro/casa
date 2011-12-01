@@ -209,23 +209,27 @@ public:
     //        overwritten if it already exists.
     //   <li> <src>degenerateLast</src> If True, axes of length 1 will be written
     //        last to the header.
+    //   <li> <src>preferWavelength</src> If True, write a wavelength primary axis.
+    //   <li> <src>airWavelength</src> If True and <src>preferWavelength</src> is True write
+    //        an air wavelength primary axis.
     //   <li> <src>origin</src> gives the origin, i.e., the name of the package.
     //        If empty, it defaults to "casacore-"getVersion().
     //   </ul>
     static Bool ImageToFITS(String &error,
-			    ImageInterface<Float> &image,
-			    const String &fitsName, 
-			    uInt memoryInMB = 64,
-			    Bool preferVelocity = True,
-			    Bool opticalVelocity = True,
-			    Int BITPIX=-32,
-			    Float minPix = 1.0, Float maxPix = -1.0,
-			    Bool allowOverwrite=False,
-                            Bool degenerateLast=False,
-                            Bool verbose=True,
-			    Bool stokesLast=False,
-			    Bool preferWavelength=False,
-                            const String& origin = String());
+    		ImageInterface<Float> &image,
+    		const String &fitsName,
+    		uInt memoryInMB = 64,
+    		Bool preferVelocity = True,
+    		Bool opticalVelocity = True,
+    		Int BITPIX=-32,
+    		Float minPix = 1.0, Float maxPix = -1.0,
+    		Bool allowOverwrite=False,
+    		Bool degenerateLast=False,
+    		Bool verbose=True,
+    		Bool stokesLast=False,
+    		Bool preferWavelength=False,
+    		Bool airWavelength=False,
+    		const String& origin = String());
 
     // Helper function - used to calculate a cursor appropriate for the desired
     // memory use. It's not intended that application programmers call this, but

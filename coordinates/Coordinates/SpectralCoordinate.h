@@ -369,7 +369,7 @@ public:
     // according to Greisen et al., 2006, A&A, 464, 746.
     // If airwavelength is used there is an error of the order of 1E-9.
     // Argument must be in micrometers!  
-    static Double refractiveIndex(const Double& lambda_um);
+    //static Double refractiveIndex(const Double& lambda_um);
     // </group>
 
     // Functions to convert from velocity (uses the current active
@@ -535,20 +535,21 @@ public:
     Bool setFormatUnit (const String& unit);
     // </group>
 
-    // Convert to and from a FITS header record.  When writing the FITS record,
+    // Convert to FITS header record.  When writing the FITS record,
     // the fields "ctype, crval, crpix", and "cdelt" must already be created. Other header
     // words are created as needed.  Use <src>oneRelative=True</src> to
     // convert zero-relative SpectralCoordinate pixel coordinates to 
     // one-relative FITS coordinates, and vice-versa.  If <src>preferVelocity=True</src>
     // the primary axis type will be velocity, if <src>preferWavelength=True</src> it will
-    // be wavelength, else frequency.  For a velocity axis,
-    // if <src>opticalVelDef=False</src>, the radio velocity definition will be used,
-    // else optical definition.
+    // be wavelength, else frequency. For a velocity axis, if <src>opticalVelDef=False</src>,
+    // the radio velocity definition will be used, else optical definition. Similarly for a
+    // wavelength axis, if <src>airWaveDef=True</src> air wavelength will be used, the
+    // default is vacuum wavelength.
     //<group>
     void toFITS(RecordInterface &header, uInt whichAxis, 
 		LogIO &logger, Bool oneRelative=True,
 		Bool preferVelocity=True, Bool opticalVelDef=True,
-		Bool preferWavelength=False) const;
+		Bool preferWavelength=False, Bool airWaveDef=False) const;
 
 // Old interface.  Handled by wcs in new interface in FITSCoordinateUtil.cc
 //    static Bool fromFITSOld(SpectralCoordinate &out, String &error,

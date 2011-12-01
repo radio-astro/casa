@@ -2710,14 +2710,15 @@ Bool CoordinateSystem::toFITSHeader(RecordInterface &header,
 				    Char prefix, Bool writeWCS,
 				    Bool preferVelocity, 
 				    Bool opticalVelocity,
-				    Bool preferWavelength) const
+				    Bool preferWavelength,
+				    Bool airWavelength) const
 {
    FITSCoordinateUtil fcu;
    return fcu.toFITSHeader(header, shape, *this, 
                            oneRelative, prefix,
                            writeWCS, 
 			   preferVelocity, opticalVelocity,
-			   preferWavelength);
+			   preferWavelength, airWavelength);
 }
 
 

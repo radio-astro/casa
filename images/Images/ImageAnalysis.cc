@@ -4860,6 +4860,7 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 						  False, //  verbose default
 						  stokesLast, 
 						  wavelength,
+						  True, // for airWavelength=True
 						  origin
 						  );
 	if (!ok)

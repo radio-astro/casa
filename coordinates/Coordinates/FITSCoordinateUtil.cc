@@ -73,7 +73,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					  Char prefix, Bool writeWCS,
 					  Bool preferVelocity, 
 					  Bool opticalVelocity,
-					  Bool preferWavelength) const
+					  Bool preferWavelength,
+					  Bool airWavelength) const
     {
 	LogIO os(LogOrigin("FITSCoordinateUtil", "toFITSHeader", WHERE));
 
@@ -331,7 +332,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if (specAxis >= 0) {
 	    const SpectralCoordinate &spec = coordsys.spectralCoordinate(specCoord);
 	    spec.toFITS(header, specAxis, os, oneRelative, preferVelocity, 
-			opticalVelocity, preferWavelength);
+			opticalVelocity, preferWavelength, airWavelength);
 	}
 
 // Write out the obsinfo
