@@ -210,16 +210,17 @@ Bool ImageFITSConverter::FITSToImage(ImageInterface<Float> *&newImage,
 
 
 Bool ImageFITSConverter::ImageToFITS(String &error,
-				     ImageInterface<Float>& image,
-				     const String &fitsName, 
-				     uInt memoryInMB,
-				     Bool preferVelocity,
-				     Bool opticalVelocity,
-				     Int BITPIX, Float minPix, Float maxPix,
-				     Bool allowOverwrite, Bool degenerateLast,
-                                     Bool verbose, Bool stokesLast,
-				     Bool preferWavelength,
-                                     const String& origin)
+		ImageInterface<Float>& image,
+		const String &fitsName,
+		uInt memoryInMB,
+		Bool preferVelocity,
+		Bool opticalVelocity,
+		Int BITPIX, Float minPix, Float maxPix,
+		Bool allowOverwrite, Bool degenerateLast,
+		Bool verbose, Bool stokesLast,
+		Bool preferWavelength,
+		Bool airWavelength,
+		const String& origin)
 {
 //
 // Make a logger
@@ -508,8 +509,8 @@ Bool ImageFITSConverter::ImageToFITS(String &error,
     IPosition shapeCopy = newShape;
     Record saveHeader(header);
     Bool ok = cSys.toFITSHeader(header, shapeCopy, True, 'c', True, // use WCS 
-                                preferVelocity, opticalVelocity,
-				preferWavelength);
+    		preferVelocity, opticalVelocity,
+    		preferWavelength, airWavelength);
 
     if (!ok) {
 	os << LogIO::SEVERE << "Could not make a standard FITS header. Setting"

@@ -32,6 +32,7 @@
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <fits/FITS/FITSSpectralUtil.h>
 #include <coordinates/Coordinates/ObsInfo.h>
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions/Error.h>
@@ -916,8 +917,8 @@ int main()
 	 // first test refractive index
 
 
-	 if(abs(SpectralCoordinate::refractiveIndex(.480)-1.00029494145L)>1E-9){
-	   cout << (SpectralCoordinate::refractiveIndex(.480)-1.00029494145L)*1E6 << endl;
+	 if(abs(FITSSpectralUtil::refractiveIndex(.480)-1.00029494145L)>1E-9){
+	   cout << (FITSSpectralUtil::refractiveIndex(.480)-1.00029494145L)*1E6 << endl;
 	   throw(AipsError(String("refreactive index in air not correct")));
 	 }	   
 
@@ -927,9 +928,9 @@ int main()
          frequencies(0) = 6.26E14;
          frequencies(1) = 3.21E14;
 	 Double aw0 = C::c/frequencies(0)*1000.; // default unit is mm
-	 aw0 /= SpectralCoordinate::refractiveIndex(aw0*1000.); // takes wavelength in microns
+	 aw0 /= FITSSpectralUtil::refractiveIndex(aw0*1000.); // takes wavelength in microns
 	 Double aw1 = C::c/frequencies(1)*1000.;
-	 aw1 /= SpectralCoordinate::refractiveIndex(aw1*1000.);
+	 aw1 /= FITSSpectralUtil::refractiveIndex(aw1*1000.);
          if (!lc.frequencyToAirWavelength(airWavelengths, frequencies)) {
             throw(AipsError(String("frequencyToAirWavelength conversion failed because ") + lc.errorMessage()));
          }
