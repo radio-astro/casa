@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{html}
+\pagestyle{empty}
+
+%\externallabels{../../user/Utility}{../../user/Utility/labels.pl}
+%\externallabels{../../user/General}{../../user/General/labels.pl}
+%\externallabels{../../user/Display}{../../user/Display/labels.pl}
+%\externallabels{../../user/Dish}{../../user/Dish/labels.pl}
+%\externallabels{../../user/SynthesisRef}{../../user/SynthesisRef/labels.pl}
+%\externallabels{../../user/ATNF}{../../user/ATNF/labels.pl}
+%\externallabels{../../user/NFRA}{../../user/NFRA/labels.pl}
+%\externallabels{../../user/NRAO}{../../user/NRAO/labels.pl}
+
+
+\begin{document}
+
+{\large \textbf{Frequently Asked Questions About DISH}}
+
+\begin{enumerate}
+
+\item \textit{What is DISH?}
+
+DISH is a collection of Glish scripts and clients which provide an 
+environment within AIPS++ intended to be used for single dish radioastronomy
+analysis.
+
+\item \textit{How can I learn about DISH?}
+
+The best way to get started with DISH is to read the {\textbf Single Dish
+Analysis} chapter of the Generic Processing (Volume 2) page, and the 
+{\textbf GBT Standard Data Reduction Guide} of the Telescope Specific
+Processing page.  These are available from the Documentation link on the
+main AIPS++ web page, http://aips2.nrao.edu.
+
+\end{enumerate}
+
+Please E-mail any comments or questions about \textsf{AIPS++} to
+\texttt{aips2-request@nrao.edu}.
+
+\textit{Copyright 1995,1996,1997,1998,1999,2000,2002 Associated Universities Inc.,
+Washington, D.C.}
+
+\end{document}

@@ -1,0 +1,31 @@
+h1, h2, h3, ul {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+a {
+    color: #336699;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #003366;
+    text-decoration: underline;
+}
+
+.toc {
+    margin: 0px 30px 0px 0px;
+    float: left;
+    border: 4px double #000000;
+    background-color: #EEEEEE;
+    padding: 10px;
+}
+
+.highlighted {
+    background-color: #EEEEEE;
+    border-bottom: 2px solid #000000;
+}
+
+.highlighted2 {
+    border-bottom: 2px dashed #000000;
+}
