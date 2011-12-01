@@ -64,6 +64,7 @@ class TrackBox;
 class QtRegionManager;
 class QtRegionShapeManager;
 class QtDataManager;
+class QtExportManager;
 class QtDataOptionsPanel;
 
 template <class T> class ImageInterface;
@@ -191,6 +192,9 @@ class QtDisplayPanelGui : public QtPanelBase,
   virtual void showDataManager();
   virtual void hideDataManager();
  
+  virtual void showExportManager();
+  virtual void hideExportManager();
+
   virtual void showDataOptionsPanel();
   virtual void hideDataOptionsPanel();
   
@@ -364,6 +368,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   
   
   QtDataManager* qdm_;		//# The window for loading data.
+  QtExportManager* qem_;    //# The window for exporting images.
   QtDataOptionsPanel* qdo_;	//# The window for controlling data display.
 
   // Keeps current data directory in sync between
@@ -426,7 +431,7 @@ class QtDisplayPanelGui : public QtPanelBase,
   QMenu *dpMenu_, *ddMenu_, *ddRegMenu_, *ddCloseMenu_, *tlMenu_, *vwMenu_;
   
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
-	  *ddOpenAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_, 
+	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_,
           *profileAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_; 
   

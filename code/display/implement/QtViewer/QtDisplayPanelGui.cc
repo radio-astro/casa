@@ -40,6 +40,7 @@
 #include <display/QtPlotter/QtProfile.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtDataManager.qo.h>
+#include <display/QtViewer/QtExportManager.qo.h>
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
 #include <display/QtViewer/QtWCBox.h>
@@ -48,7 +49,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
-		   QtPanelBase(parent), qdm_(0), qdo_(0), qfb_(0),
+		   QtPanelBase(parent), qdm_(0),qem_(0),qdo_(0), qfb_(0),
 		   v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qmr_(0), qrm_(0), 
 		   qsm_(0), qst_(0),
                    profile_(0), savedTool_(QtMouseToolNames::NONE),
@@ -117,6 +118,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     ddCloseAct_   = ddMenu_->addAction("&Close");
     ddCloseMenu_  = new QMenu; ddCloseAct_->setMenu(ddCloseMenu_);
     ddAdjAct_     = ddMenu_->addAction("&Adjust...");
+    ddSaveAct_    = ddMenu_->addAction("Sa&ve as...");
 		    ddMenu_->addSeparator();
     printAct_     = ddMenu_->addAction("&Print...");
 		    ddMenu_->addSeparator();
@@ -168,6 +170,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     ddCloseBtn_   = new QToolButton(mainToolBar_);
 		    mainToolBar_->addWidget(ddCloseBtn_);
 		    ddCloseBtn_->setMenu(ddCloseMenu_);
+		    mainToolBar_->addAction(ddSaveAct_);
 		    mainToolBar_->addSeparator();
 		    mainToolBar_->addAction(dpNewAct_);
 		    mainToolBar_->addAction(dpOptsAct_);
@@ -477,6 +480,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     mainToolBar_->setMovable(False);
   
     ddOpenAct_ ->setIcon(QIcon(":/icons/File_Open.png"));
+    ddSaveAct_ ->setIcon(QIcon(":/icons/Save_Img.png"));
     ddRegAct_  ->setIcon(QIcon(":/icons/DD_Register.png"));
     ddRegBtn_  ->setIcon(QIcon(":/icons/DD_Register.png"));
     ddCloseAct_->setIcon(QIcon(":/icons/File_Close.png"));
@@ -484,8 +488,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     ddAdjAct_  ->setIcon(QIcon(":/icons/DD_Adjust.png"));
     dpNewAct_  ->setIcon(QIcon(":/icons/DP_New.png"));
     dpOptsAct_ ->setIcon(QIcon(":/icons/DP_Options.png"));
-    dpSaveAct_ ->setIcon(QIcon(":/icons/Save.png"));
-    dpRstrAct_ ->setIcon(QIcon(":/icons/Restore.png"));
+    dpSaveAct_ ->setIcon(QIcon(":/icons/Save_Panel.png"));
+    dpRstrAct_ ->setIcon(QIcon(":/icons/Restore_Panel.png"));
     profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
     // rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
     printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
@@ -499,6 +503,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     ddRegBtn_  ->setToolTip("[Un]register Data");
     ddCloseBtn_->setToolTip("Close Data");
     ddAdjAct_  ->setToolTip("Data Display Options");
+    ddSaveAct_ ->setToolTip("Save as...");
     dpNewAct_  ->setToolTip("New Display Panel");
     dpOptsAct_ ->setToolTip("Panel Display Options");
     dpSaveAct_ ->setToolTip("Save Display Panel State to File");
@@ -534,6 +539,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
     //## Direct reactions to user interface.
 
     connect(ddOpenAct_,  SIGNAL(triggered()),  SLOT(showDataManager()));
+    connect(ddSaveAct_,  SIGNAL(triggered()),  SLOT(showExportManager()));
     // connect(dpNewAct_,   SIGNAL(triggered()),  v_, SLOT(createDPG()));
     connect(dpNewAct_,   SIGNAL(triggered()),  SLOT(createNewPanel()));
     connect(dpOptsAct_,  SIGNAL(triggered()),  SLOT(showCanvasManager()));
@@ -703,7 +709,7 @@ QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String
   qdds.addRight(qdd);
   
   emit ddCreated(qdd, autoRegister);
-  
+
   return qdd;  }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData) {
@@ -976,6 +982,7 @@ void QtDisplayPanelGui::hideAllSubwindows() {
   hideMakeRegionPanel();
   hideImageProfile();  
   hideDataManager();
+  hideExportManager();
   hideDataOptionsPanel();
   hideStats();
 }
@@ -992,6 +999,21 @@ void QtDisplayPanelGui::showDataManager() {
 void QtDisplayPanelGui::hideDataManager() {
   if(qdm_==0) return;
   qdm_->hide();  }
+
+void QtDisplayPanelGui::showExportManager() {
+  if(qem_==0) {
+	  qem_ = new QtExportManager(this);
+	  connect(this, SIGNAL(ddRemoved(QtDisplayData*)), qem_, SLOT(updateEM(QtDisplayData*)));
+	  connect(this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qem_, SLOT(updateEM(QtDisplayData*, Bool)));
+  }
+  qem_->updateEM();
+  qem_->showNormal();
+  qem_->raise();  }
+
+void QtDisplayPanelGui::hideExportManager() {
+  if(qem_==0) return;
+  qem_->hide();  }
+
 
     
 void QtDisplayPanelGui::showDataOptionsPanel() {
