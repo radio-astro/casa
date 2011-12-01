@@ -29,6 +29,7 @@
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <flagging/Flagging/FlagAgentElevation.h>
 #include <flagging/Flagging/FlagAgentQuack.h>
+#include <flagging/Flagging/FlagAgentShadow.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -218,14 +219,21 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Elevation
 	if (mode.compare("elevation")==0)
 	{
-		FlagAgentElevation* agent = new FlagAgentElevation(dh,config);
+		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags);
 		return agent;
 	}
 
 	// Quack
 	if (mode.compare("quack")==0)
 	{
-		FlagAgentQuack* agent = new FlagAgentQuack(dh,config);
+		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags);
+		return agent;
+	}
+
+	// Shadow
+	if (mode.compare("shadow")==0)
+	{
+		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags);
 		return agent;
 	}
 
