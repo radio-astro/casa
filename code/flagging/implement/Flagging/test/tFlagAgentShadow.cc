@@ -26,7 +26,7 @@
 
 using namespace casa;
 
-void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParameters)
+void deleteFlags(string inputFile,Record dataSelection)
 {
 	// Some test execution info
 	cout << "STEP 1: CLEAN FLAGS ..." << endl;
@@ -66,18 +66,11 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 	dh->generateIterator();
 
 	// Create agent list
+	Record dummyConfig;
+	dummyConfig.define("name","FlagAgentManual_1");
+	FlagAgentManual *flaggingAgent = new FlagAgentManual(dh,dummyConfig,false,false);
 	FlagAgentList agentList;
-	Int agentNumber = 1;
-	FlagAgentManual *flaggingAgent = NULL;
-	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
-	{
-		stringstream agentName;
-		agentName << agentNumber;
-		iter->define("name","FlagAgentManual_" + agentName.str());
-		flaggingAgent = new FlagAgentManual(dh,*iter,false,false);
-		agentList.push_back(flaggingAgent);
-		agentNumber++;
-	}
+	agentList.push_back(flaggingAgent);
 
 	// Enable profiling in the Flag Agent
 	agentList.setProfiling(false);
@@ -96,7 +89,7 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -157,7 +150,7 @@ void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParam
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
+*/
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
@@ -230,9 +223,6 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	// Select data (creating selected MS)
 	dh->selectData();
 
-	// Generate iterators and vis buffers
-	dh->generateIterator();
-
 	// Create agent list
 	FlagAgentList agentList;
 	FlagAgentShadow *flaggingAgent = NULL;
@@ -246,6 +236,9 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
+
+	// Generate iterators and vis buffers
+	dh->generateIterator();
 
 	// Enable profiling mode
 	agentList.setProfiling(false);
@@ -264,7 +257,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -325,12 +318,9 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
+*/
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
-
-			// Pre-load uvw
-			dh->visibilityBuffer_p->get()->uvw();
 
 			// Queue flagging process
 			agentList.queueProcess();
@@ -649,7 +639,7 @@ int main(int argc, char **argv)
 		agentParamersList.push_back(agentParameters);
 	}
 
-	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection,agentParamersList);
+	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection);
 	writeFlags(targetFile,dataSelection,agentParamersList);
 	if (checkFlagsActivated) returnCode = checkFlags(targetFile,referenceFile,dataSelection);
 

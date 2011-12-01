@@ -70,7 +70,7 @@ void clearFlags(string inputFile,Bool flag)
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -131,7 +131,7 @@ void clearFlags(string inputFile,Bool flag)
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
+*/
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
@@ -187,9 +187,6 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 	// Select data (creating selected MS)
 	dh->selectData();
 
-	// Generate iterators and vis buffers
-	dh->generateIterator();
-
 	// Now we can create the Flag Agent list
 	FlagAgentBase *agent_i = NULL;
 	FlagAgentList *agentList = new FlagAgentList();
@@ -202,6 +199,9 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 		agentList->push_back(agent_i);
 		agentNumber++;
 	}
+
+	// Generate iterators and vis buffers
+	dh->generateIterator();
 
 	// Start Flag Agent
 	agentList->start();
@@ -217,7 +217,7 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -278,7 +278,7 @@ void writeFlags(string inputFile,vector<Record> recordList,Bool flag)
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
+*/
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
@@ -479,15 +479,15 @@ void summaryFlags(string inputFile)
 	// Select data (creating selected MS)
 	dh->selectData();
 
-	// Generate iterators and vis buffers
-	dh->generateIterator();
-
 	// Now we can create the Flag Agent list
 	Record dummyConfig;
 	FlagAgentList *agentList = new FlagAgentList();
 	dummyConfig.define("name","FlagAgentSummary");
 	FlagAgentSummary *summaryAgent = new FlagAgentSummary(dh,dummyConfig);
 	agentList->push_back(summaryAgent);
+
+	// Generate iterators and vis buffers
+	dh->generateIterator();
 
 	// Start Flag Agent
 	agentList->start();
@@ -503,7 +503,7 @@ void summaryFlags(string inputFile)
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -564,7 +564,7 @@ void summaryFlags(string inputFile)
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
+*/
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
