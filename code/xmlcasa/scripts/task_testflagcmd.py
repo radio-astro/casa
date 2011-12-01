@@ -40,7 +40,7 @@ def testflagcmd(
     casalog.origin('testflagcmd')
 #    casalog.post('You are using flagcmd v3.6 Updated STM 2011-06-28')
 
-    tfglocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
+    tflocal = casac.homefinder.find_home_by_name('testflaggerHome').create()
     mslocal = casac.homefinder.find_home_by_name('msHome').create()
 
     try:
@@ -179,15 +179,22 @@ def testflagcmd(
         unionpars = getUnion(cmdlist)
         casalog.post('The union of all parameters is %s' %(unionpars))
         
-        # Parse the configuration for the tool (msname, async, parallel)
+        # Parse the configuration for the tool (msname and the time interval)
         # Create a dictionary with the configuration
         tfconfig['msname'] = vis
-        tfconfig['async'] = async
-        tfconfig['parallel'] = parallel
-        tfglocal.configTestFlagger(tfconfig)
+        tfconfig['ntime'] = ntime
+#        tfconfig['async'] = async
+#        tfconfig['parallel'] = parallel
+        try:
+            tflocal.configTestFlagger(tfconfig)
+        except:
+            raise Exception, 'Error in configuring the TestFlagger tool'         
 
         # Parse the data selection
-        tfglocal.parseDataSelection(unionpars)
+        try:
+            tflocal.parseDataSelection(unionpars)
+        except:
+            raise Exception, 'Error in parsing the union of parameters to the tool'
                         
 #********************************************************************************
         
@@ -204,7 +211,6 @@ def testflagcmd(
         casalog.post('Extracted ' + str(mycmdlist.__len__())
                      + ' flag command strings')
 
-        print 'Executing optype = ' + optype
         casalog.post('Executing optype = ' + optype)
 
         # Now have list of commands - do something with them
@@ -219,25 +225,31 @@ def testflagcmd(
 
             # Apply flags to data using flagger
             print myflagd
-            nappl = applyflagcmd(tfglocal, vis, flagbackup, myflagd,
+            nappl = applyflagcmd(tflocal, vis, flagbackup, myflagd,
                                  reset)
             
 #*************************************** REFACTORING *************************
             # Hopefully we still have cmdlist, so let's use it
             # Apply the flags
-#            nap = applyFlags(tfglocal,cmdlist,flagbackup,reset)
+#            nap = applyFlags(tflocal,cmdlist,flagbackup,reset)
 
             # Parse the agents parameters
-            setupAgent(tfglocal,cmdlist,flagbackup,reset)
+            list2save = setupAgent(tflocal,cmdlist,flagbackup,reset)
             
             # Initialize the FlagDataHandler and Agents
-            tfglocal.init()
+            tflocal.init()
                         
             # Run the tool
-            tfglocal.run()
+            stats = tflocal.run()
             
-            tfglocal.done()
+            tflocal.done()
             
+            # Save the used command lines to output file
+            if list2save.__len__() > 0:
+                if outfile == '':
+                    if flagmode == 'table' and flagfile == '':
+                        # These flags came from internal FLAG_CMD, update status
+                        print
 #*****************************************************************************
             
             # Save flags to file
@@ -283,7 +295,7 @@ def testflagcmd(
                 myflagd = myflagcmd
 
             # (Un)Apply flags to data using flagger
-            nappl = applyflagcmd(tfglocal, vis, flagbackup, myflagd,
+            nappl = applyflagcmd(tflocal, vis, flagbackup, myflagd,
                                  flagtype='UNFLAG')
             # Save flags to file
             if nappl > 0:
@@ -395,7 +407,7 @@ def testflagcmd(
             return myflagcmd
     except Exception, instance:
 
-                # tfglocal.done()
+                # tflocal.done()
         print '*** Error ***', instance
                 # raise
 
@@ -434,7 +446,7 @@ def testflagcmd(
 
 
 def applyflagcmd(
-    tfglocal,
+    tflocal,
     msfile,
     flagbackup,
     myflags,
@@ -456,8 +468,8 @@ def applyflagcmd(
     #
     ncmd = 0
 
-    # tfglocal.done()
-    # tfglocal.clearflagselection(-1)
+    # tflocal.done()
+    # tflocal.clearflagselection(-1)
 
     if flagtype == 'FLAG' or flagtype == 'flag':
         mytype = 'FLAG'
@@ -468,7 +480,7 @@ def applyflagcmd(
 
     try:
         if (type(msfile) == str) & os.path.exists(msfile):
-            fglocal.open(msfile)
+            tflocal.open(msfile)
         else:
             print 'ERROR MS ' + msfile + ' not found'
             casalog.post('ERROR MS ' + msfile + ' not found', 'SEVERE')
@@ -519,7 +531,7 @@ def applyflagcmd(
         nkeys = keylist.__len__()
         casalog.post('Found ' + str(nkeys) + ' flags to apply')
         if nkeys > 0:
-            tfglocal.setdata()
+            tflocal.setdata()
             cmdlist = []
             param_set = {}
             for key in keylist:
@@ -674,30 +686,30 @@ def applyflagcmd(
                     casalog.post('Processing ' + str(nf)
                                  + ' flagging commands for mode '
                                  + mode)
-                    tfglocal.setdata()
+                    tflocal.setdata()
                     print "Clear flag selection"
-                    tfglocal.clearflagselection(-1)
+                    tflocal.clearflagselection(-1)
                     for s in param_set[mode].keys():
                         param_i = param_set[mode][s]
                         if mode == 'shadow':
                             if debug:
                                 print 'Applying shadow with params: ', param_i
                             if param_i.__len__() > 0:
-                                tfglocal.setshadowflags(**param_i)
+                                tflocal.setshadowflags(**param_i)
                             else:
-                                tfglocal.setshadowflags()
+                                tflocal.setshadowflags()
                         else:
                             if param_i.__len__() > 0:
                                 print 'Applying manualflag with params: ', param_i
-                                tfglocal.setmanualflags(**param_i)
+                                tflocal.setmanualflags(**param_i)
                             else:
-                                tfglocal.setmanualflags()
+                                tflocal.setmanualflags()
                     if flagbackup:
-                        backup_cmdflags(tfglocal, 'flagcmd_' + mode)
+                        backup_cmdflags(tflocal, 'flagcmd_' + mode)
                     if reset:
-                        tfglocal.run(reset=True)
+                        tflocal.run(reset=True)
                     else:
-                        tfglocal.run()
+                        tflocal.run()
                     print 'Applied ' + str(nf) \
                         + ' flagging commands for mode ' + mode
                     casalog.post('Applied ' + str(nf)
@@ -717,10 +729,10 @@ def applyflagcmd(
                              )
     except Exception, instance:
 
-        tfglocal.done()
+        tflocal.done()
         print '*** Error ***', instance
         # raise
-    tfglocal.done()
+    tflocal.done()
 
     return ncmd
 
@@ -783,7 +795,7 @@ def parse_cmdparams(params):
         params['diameter'] = float(params['diameter'])
 
 
-def backup_cmdflags(tfglocal, mode):
+def backup_cmdflags(tflocal, mode):
 
         # Create names like this:
         # before_manualflag_1,
@@ -794,7 +806,7 @@ def backup_cmdflags(tfglocal, mode):
         # Generally  before_<mode>_<i>, where i is the smallest
         # integer giving a name, which does not already exist
 
-    existing = tfglocal.getflagversionlist(printflags=True)
+    existing = tflocal.getflagversionlist(printflags=True)
 
     # remove comments from strings
     existing = [x[0:x.find(' : ')] for x in existing]
@@ -812,7 +824,7 @@ def backup_cmdflags(tfglocal, mode):
     casalog.post('Saving current flags to ' + versionname
                  + ' before applying new flags')
 
-    tfglocal.saveflagversion(versionname=versionname,
+    tflocal.saveflagversion(versionname=versionname,
                             comment='testflagcmd autosave before ' + mode
                             + ' on ' + time_string, merge='replace')
 
@@ -2291,10 +2303,10 @@ def getUnion(cmdlist):
 
     return dicpars
 
-def setupAgent(tfglocal,cmdlist,flagbackup,reset):
+def setupAgent(tflocal,cmdlist,flagbackup,reset):
     ''' for optype = apply '''
         
-    # TO DO: correlation is to be considered here
+    # TODO: correlation is to be considered here
     # Read the mode
     # First remove the blank lines from the list (if any)
     blanks = cmdlist.count('\n')
@@ -2311,6 +2323,9 @@ def setupAgent(tfglocal,cmdlist,flagbackup,reset):
     
     nrows = cmdlist.__len__()
     
+    # command list of successful agents to save to outfile
+    savelist = []
+    
     # Setup the agent for each input line
     for i in range(nrows):
         cmdline = cmdlist[i]
@@ -2320,7 +2335,7 @@ def setupAgent(tfglocal,cmdlist,flagbackup,reset):
         modepars = {}
         # Clear the agents before
         # CHECK this call. We don't want to clear the selection of the union
-#        tfglocal.clearflagselection(-1)
+#        tflocal.clearflagselection(-1)
                             
         # Get the specific parameters for the mode and call the agents
         if cmdline.__contains__('mode'): 
@@ -2343,16 +2358,17 @@ def setupAgent(tfglocal,cmdlist,flagbackup,reset):
             print modepars
         
         # Parse the dictionary of agents
-        tfglocal.parseAgentParameters(agents_list)        
-
+        if (not tflocal.parseAgentParameters(modepars)):
+            casalog.post('Failed to parse parameters to agent %s' %mode, 'WARN')
+                            
+        # add this command line to list to save in outfile
+        savelist[i] = cmdline
+        
         # FIXME: Backup the flags
         if (flagbackup):
-            backup_cmdflags(tfglocal, 'testflagcmd_' + mode)
-
+            backup_cmdflags(tflocal, 'testflagcmd_' + mode)
     
-    
-    
-    return 0
+    return savelist
 
 
 def getLinePars(cmdline, mlist=[]):
