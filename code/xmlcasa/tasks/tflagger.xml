@@ -34,60 +34,6 @@
                 <value />
             </param>
 
-            <param type="string" name="inputtype">
-                <description>Type of input with flag commands (None,table,file,xml,cmd)</description>
-                <value />
-                <allowed kind="enum">
-                	<value />
-                    <value>table</value>
-                    <value>file</value>
-                    <value>xml</value>
-                    <value>cmd</value>
-                </allowed>
-            </param>
-
-            <param type="string" name="inputfile" subparam="true">
-                <description>Name of flag command file to input</description>
-                <value />
-            </param>
-
-            <param type="intArray" name="tablerows" subparam="true">
-                <description>Rows of FLAG_CMD table to read</description>
-                <value type="vector" />
-            </param>
-
-            <param type="bool" name="useapplied" subparam="true">
-                <description>Read in rows marked as applied too</description>
-                <value>False</value>
-            </param>
-
-            <param type="double" name="tbuff" subparam="true">
-                <description>Time buffer to pad flags (in seconds)</description>
-                <value>1.0</value>
-            </param>
-
-            <param type="string" name="ants" subparam="true">
-                <description>Select FLAG_CMD table rows based on antenna names</description>
-                <value />
-            </param>
-
-            <param type="any" name="command" subparam="true">
-                <description>List of flag command(s) to input</description>
-                <any type="variant" limittypes="string stringArray" />
-                <value type="string" />
-            </param>
-
-            <param type="any" name="reason">
-                <description>Select rows based on REASON(s)</description>
-                <any type="variant" limittypes="string stringArray" />
-                <value type="string">Any</value>
-            </param>
-
-            <param type="string" name="outfile">
-                <description>Name of output file to save flag commands</description>
-                <value type="string" />
-            </param>
-
             <param type="int" name="ntime">
                 <description>Time-range to use for each chunk (in seconds)</description>
                 <value>0</value>
@@ -95,14 +41,11 @@
 
             <param type="string" name="mode">
                 <description>Type of operation to perform on inputfile or flagging mode \
-                             (list, save, clear, manualflag, clip, shadow, quack, elevation \
+                             (manualflag, clip, shadow, quack, elevation \
                               tfcrop, extendflags, unflag, summary)</description>
                 <value>manualflag</value>
                 <allowed kind="enum">
                     <value>manualflag</value>
-                    <value>list</value>
-                    <value>save</value>
-                    <value>clear</value>
                     <value>clip</value>
                     <value>shadow</value>
                     <value>quack</value>
@@ -172,16 +115,6 @@
                 <description>Select data based on observation ID: \'\'==>all</description>
                 <any type="variant" limittypes="string int" />
                 <value type="string" />
-            </param>
-
-            <param type="bool" name="clearall" subparam="true">
-                <description>Confirmation to clear all flag commands in FLAG_CMD table</description>
-                <value>False</value>
-            </param>
-
-            <param type="intArray" name="rowlist" subparam="true">
-                <description>FLAG_CMD rows to operate on</description>
-                <value type="vector"></value>
             </param>
 
             <param type="any" name="expression" subparam="true">
@@ -350,25 +283,6 @@
             </param>
 
             <constraints>
-                <when param="inputtype">
-                    <equals value="" />
-                    <equals value="table">
-                        <default param="inputfile"> <value type="string" /></default>
-                        <default param="tablerows"><value type="vector" /></default>
-                        <default param="useapplied"><value>False</value></default>
-                    </equals>
-                    <equals value="file">
-                        <default param="inputfile"><value type="string" /></default>
-                    </equals>
-                    <equals value="cmd">
-                        <default param="command"><value>['']</value></default>
-                    </equals>
-                    <equals value="xml">
-                        <default param="tbuff"><value>1.0</value></default>
-                        <default param="ants"><value type="string" /></default>
-                    </equals>
-                </when>
-                
                 <when param="extend">
                     <equals type="bool" value="False" />
                     <equals type="bool" value="True">
@@ -394,18 +308,12 @@
                         <default param="array"><value type="string"></value></default>
                         <default param="uvrange"><value type="string"></value></default>
                         <default param="observation"><value type="string"></value></default>
-                    <equals type="bool" value="False"/></equals>
+                        </equals>
+                    <equals type="bool" value="False"/>
                 </when>                    
                     
                 <when param="mode">
                     <equals value="manualflag" />
-                    <equals value="list" />
-                        <description>List flag commands on the screen/logger</description>
-                    <equals value="save" />
-                    <equals value="clear">
-                        <default param="clearll"><value type="bool">False</value></default>
-                        <default param="rowlist"><value type="vector"></value></default>
-                    </equals>
                     <equals value="clip">
                         <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
