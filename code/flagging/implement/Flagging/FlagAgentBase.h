@@ -50,6 +50,7 @@ public:
 		ROWS=0,
 		IN_ROWS,
 		ANTENNA_PAIRS,
+		ANTENNA_PAIRS_INTERACTIVE,
 		ROWS_PREPROCESS_BUFFER,
 		IN_ROWS_PREPROCESS_BUFFER,
 		ANTENNA_PAIRS_PREPROCESS_BUFFER
@@ -115,6 +116,10 @@ protected:
 
 	// Iterate trough list of antenna pairs
 	void iterateAntennaPairs();
+
+	// Methods to interactively iterate trough list of antenna pairs
+	void processAntennaPair(Int antenna1,Int antenna2);
+	virtual void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
 
 	// Mapping functions as requested by Urvashi
 	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);

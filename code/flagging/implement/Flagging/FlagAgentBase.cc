@@ -370,20 +370,26 @@ FlagAgentBase::runCore()
 				iterateInRows();
 				break;
 			}
+			case ANTENNA_PAIRS_INTERACTIVE:
+			{
+				iterateAntennaPairsInteractive(flagDataHandler_p->getAntennaPairMap());
+				break;
+			}
+			// Iterate trough (time,freq) maps per antenna pair doing a common pre-processing before
 			case ANTENNA_PAIRS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateAntennaPairs();
 				break;
 			}
-			// Iterate trough rows (i.e. baselines)
+			// Iterate trough rows (i.e. baselines) doing a common pre-processing before
 			case ROWS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateRows();
 				break;
 			}
-			// Iterate inside every row (i.e. channels) applying a mapping expression
+			// Iterate inside every row (i.e. channels) applying a mapping expression doing a common pre-processing before
 			case IN_ROWS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
@@ -772,6 +778,7 @@ FlagAgentBase::setAgentParameters(Record config)
 
 	if (	(iterationApproach_p == IN_ROWS) or
 			(iterationApproach_p == ANTENNA_PAIRS) or
+			(iterationApproach_p == ANTENNA_PAIRS_INTERACTIVE) or
 			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
 			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
 	{
@@ -1176,13 +1183,7 @@ void
 FlagAgentBase::iterateInRows()
 {
 	// Check if the visibility expression is suitable for this spw
-	if (	(iterationApproach_p == IN_ROWS) or
-			(iterationApproach_p == ANTENNA_PAIRS) or
-			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
-			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
-	{
-		if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
-	}
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
 	// Create VisMapper and FlagMapper objects and parse the polarization expression
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
@@ -1242,13 +1243,7 @@ void
 FlagAgentBase::iterateAntennaPairs()
 {
 	// Check if the visibility expression is suitable for this spw
-	if (	(iterationApproach_p == IN_ROWS) or
-			(iterationApproach_p == ANTENNA_PAIRS) or
-			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
-			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
-	{
-		if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
-	}
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
 	antennaPairMapIterator myAntennaPairMapIterator;
 	std::pair<Int,Int> antennaPair;
@@ -1303,6 +1298,8 @@ FlagAgentBase::iterateAntennaPairs()
 		// If none of the antenna pair rows were eligible then go to next pair
 		if (antennaRows->empty())
 		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") does not have any rows in this chunk" << LogIO::POST;
+
 			// Increment antenna pair index
 			antennaPairdIdx++;
 
@@ -1327,6 +1324,73 @@ FlagAgentBase::iterateAntennaPairs()
 
 		// Delete antenna pair rows
 		delete antennaRows;
+	}
+
+	return;
+}
+
+void
+FlagAgentBase::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
+{
+	// Check if the visibility expression is suitable for this spw
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
+
+	// Iterate trough antenna pair map
+	std::pair<Int,Int> antennaPair;
+	antennaPairMapIterator myAntennaPairMapIterator;
+	for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)
+	{
+		// Get antenna pair from map
+		antennaPair = myAntennaPairMapIterator->first;
+
+		// Process antenna pair
+		processAntennaPair(antennaPair.first,antennaPair.second);
+	}
+
+	return;
+}
+
+void
+FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
+{
+	std::pair<Int,Int> antennaPair = std::make_pair(antenna1,antenna2);
+	antennaPairMapIterator index = flagDataHandler_p->getAntennaPairMap()->find(antennaPair);
+	if (index != flagDataHandler_p->getAntennaPairMap()->end())
+	{
+		std::vector<uInt> *antennaRows = generateAntennaPairRowsIndex(antennaPair.first,antennaPair.second);
+		if (antennaRows->empty())
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") does not have any rows in this chunk" << LogIO::POST;
+		}
+		else
+		{
+			// Check if antenna pair is in the baselines list of this agent
+			if ((baselineList_p.size()>0) and (!find(baselineList_p,antennaPair.first,antennaPair.second)))
+			{
+				*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ <<  "Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") is not included in the selected baseline range" << LogIO::POST;
+			}
+			else
+			{
+				*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Going to process requested baseline (" << antennaPair.first << "," << antennaPair.second << ") " << LogIO::POST;
+
+				// Create VisMapper and FlagMapper objects and parse the polarization expression
+				VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
+				FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
+
+				// Set CubeViews in VisMapper
+				setVisibilitiesMap(antennaRows,&visibilitiesMap);
+
+				// Set CubeViews in FlagMapper
+				setFlagsMap(antennaRows,&flagsMap);
+
+				// Flag map
+				computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
+			}
+		}
+	}
+	else
+	{
+		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") is not available in this chunk " << LogIO::POST;
 	}
 
 	return;
