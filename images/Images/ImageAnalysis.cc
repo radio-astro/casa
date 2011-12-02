@@ -4793,7 +4793,7 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 			   const Double maxpix, Record& pRegion, const String& mask,
 			   const Bool overwrite, const Bool dropDeg, const Bool,
 			   const Bool dropStokes, const Bool stokesLast, const Bool wavelength,
-			   const String& origin) {
+			   const Bool airWavelength, const String& origin) {
 
 	*itsLog << LogOrigin("ImageAnalysis", "tofits");
 
@@ -4860,7 +4860,7 @@ Bool ImageAnalysis::tofits(const String& fitsfile, const Bool velocity,
 						  False, //  verbose default
 						  stokesLast, 
 						  wavelength,
-						  True, // for airWavelength=True
+						  airWavelength, // for airWavelength=True
 						  origin
 						  );
 	if (!ok)
