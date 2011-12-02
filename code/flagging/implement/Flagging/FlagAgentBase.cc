@@ -1229,7 +1229,7 @@ FlagAgentBase::iterateInRows()
 		}
 
 		// Compute flags for this row
-		computeInRowFlags(visibilitiesMap,flagsMap,*rowIter);
+		computeInRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,*rowIter);
 
 		// Increment row index
 		rowIdx++;
@@ -1320,7 +1320,7 @@ FlagAgentBase::iterateAntennaPairs()
 		setFlagsMap(antennaRows,&flagsMap);
 
 		// Flag map
-		computeAntennaPairFlags(visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second);
+		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
 
 		// Increment antenna pair index
 		antennaPairdIdx++;
@@ -1615,14 +1615,14 @@ FlagAgentBase::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row
 }
 
 void
-FlagAgentBase::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row)
+FlagAgentBase::computeInRowFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;
 }
 
 void
-FlagAgentBase::computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2)
+FlagAgentBase::computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;

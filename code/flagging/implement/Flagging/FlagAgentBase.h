@@ -125,10 +125,10 @@ protected:
 	virtual void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual void computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row);
+	virtual void computeInRowFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
-	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
+	virtual void computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;
