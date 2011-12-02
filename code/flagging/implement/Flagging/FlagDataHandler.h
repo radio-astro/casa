@@ -260,6 +260,7 @@ public:
     vector<uInt> getSelectedCorrelations() { return selectedCorrelations_p;}
 
 	Float operator()(uInt chan, uInt row);
+	Float operator()(uInt pol, uInt chan, uInt row);
 
     const IPosition &shape() const
     {
@@ -270,6 +271,14 @@ public:
     {
     	chan = reducedLength_p(0);
     	row = reducedLength_p(1);
+    	return;
+    }
+
+    void shape(Int &pol, Int &chan, Int &row) const
+    {
+    	chan = reducedLength_p(0);
+    	row = reducedLength_p(1);
+    	pol = reducedLength_p(2);
     	return;
     }
 
@@ -338,9 +347,6 @@ public:
 	Bool getModifiedFlags(uInt pol, uInt channel, uInt row);
 	Bool getPrivateFlags(uInt pol, uInt channel, uInt row);
 
-	// Bool operator()(uInt chan, uInt row);
-	// Bool operator()(uInt pol, uInt channel, uInt row);
-
     const IPosition &shape() const
     {
     	return reducedLength_p;
@@ -350,6 +356,14 @@ public:
     {
     	chan = reducedLength_p(0);
     	row = reducedLength_p(1);
+    	return;
+    }
+
+    void shape(Int &pol, Int &chan, Int &row) const
+    {
+    	chan = reducedLength_p(0);
+    	row = reducedLength_p(1);
+    	pol = reducedLength_p(2);
     	return;
     }
 

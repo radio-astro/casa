@@ -2088,6 +2088,7 @@ VisMapper::setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis
 	reducedLength_p = IPosition(2);
 	reducedLength_p(0) = leftVisSize(1); // chan
 	reducedLength_p(1) = leftVisSize(2); // row
+	reducedLength_p(2) = leftVisSize(0); // pol
 
 
 	if (rightVis != NULL)
@@ -2349,6 +2350,13 @@ VisMapper::operator()(uInt chan, uInt row)
 	return (*this.*applyVisExpr_p)(val);
 }
 
+Float
+VisMapper::operator()(uInt pol, uInt chan, uInt row)
+{
+	Complex val = (*this.*getVis_p)(pol,chan,row);
+	return (*this.*applyVisExpr_p)(val);
+}
+
 Complex
 VisMapper::leftVis(uInt pol, uInt chan, uInt row)
 {
@@ -2534,6 +2542,7 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *origi
 	reducedLength_p = IPosition(2);
 	reducedLength_p(0) = commonFlagCubeSize(1); // chan
 	reducedLength_p(1) = commonFlagCubeSize(2); // row
+	reducedLength_p(2) = commonFlagCubeSize(0); // pol
 }
 
 void
