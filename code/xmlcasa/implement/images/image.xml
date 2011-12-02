@@ -8790,6 +8790,11 @@ listed in square brackets.
      <value>false</value>
      </param>
   
+     <param type="bool" direction="in" name="airwavelength">
+     <description>When wirting the spectral axis in units of wavelength, use air wavelength instead of vacuum wavelength?</description>
+     <value>false</value>
+     </param>
+  
      <param type="bool" direction="in" name="async">
      <description>Run asynchronously?</description>
      <value>false</value>
