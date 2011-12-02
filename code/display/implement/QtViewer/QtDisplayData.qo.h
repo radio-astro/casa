@@ -289,7 +289,7 @@ class QtDisplayData : public QObject {
 //# void dying(QtDisplayData*);
   
   void axisChanged(String, String, String, std::vector<int> );
-  void spectrumChanged(String spcType, String spcUnit, String spcRval, String spcSys);
+  void spectrumChanged(String spcTypeUnit, String spcRval, String spcSys);
 
   void statsReady(const String&);
 

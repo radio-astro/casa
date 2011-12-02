@@ -1337,8 +1337,8 @@ void QtDisplayPanelGui::showImageProfile() {
 			connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshImageProfile()));
 			connect( pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
 				 profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
-			connect( pdd, SIGNAL(spectrumChanged(String, String, String, String )),
-					profile_, SLOT(changeSpectrum(String, String, String, String )));
+			connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
+					profile_, SLOT(changeSpectrum(String, String, String )));
 
 			connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool)),
 					this, SLOT(addDD(String, String, String, Bool, Bool)));
