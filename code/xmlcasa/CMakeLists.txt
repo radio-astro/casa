@@ -285,6 +285,7 @@ casa_add_python( xmlcasa xmlcasa_python python/${PYTHONV}
   scripts/task_sdfit.py
   scripts/task_sdflag.py
   scripts/task_sdflagmanager.py
+  scripts/task_sdgrid.py
   scripts/task_sdimaging.py
   scripts/task_sdimprocess.py
   scripts/task_sdlist.py
@@ -410,6 +411,7 @@ casa_add_tasks( xmlcasa xmlcasa_tasks
   tasks/sdfit.xml
   tasks/sdflag.xml
   tasks/sdflagmanager.xml
+  tasks/sdgrid.xml
   tasks/sdimaging.xml
   tasks/sdimprocess.xml
   tasks/sdlist.xml

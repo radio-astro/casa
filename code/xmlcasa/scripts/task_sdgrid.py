@@ -1,0 +1,136 @@
+# sd task for imaging
+import os
+import numpy
+import pylab as pl
+import asap as sd
+from taskinit import * 
+
+def sdgrid(infile, scanlist, ifno, polno, antenna, gridfunction, support, outfile, overwrite, npix, cell, center, plot):
+
+        casalog.origin('sdgrid')
+        try:
+            summary =   'Input Parameter Summary:\n' \
+                      + '   infile = %s\n'%(infile) \
+                      + '   antenna = %s\n'%(antenna) \
+                      + '   scanlist = %s\n'%(scanlist) \
+                      + '   ifno = %s\n'%(ifno) \
+                      + '   polno = %s\n'%(polno) \
+                      + '   gridfunction = %s\n'%(gridfunction) \
+                      + '   support = %s\n'%(support) \
+                      + '   outfile = %s\n'%(outfile) \
+                      + '   overwrite = %s\n'%(overwrite) \
+                      + '   npix = %s\n'%(npix) \
+                      + '   cell = %s\n'%(cell) \
+                      + '   center = %s\n'%(center) \
+                      + '   plot = %s'%(plot)
+            casalog.post( summary, 'INFO' )
+            
+            # file check
+            #infile=infile.rstrip('/')+'/'
+
+            # gridfunction and support
+            if gridfunction.upper() == 'PB':
+                msg='Sorry. PB gridding is not implemented yet.'
+                raise Exception, msg
+            elif gridfunction.upper() == 'BOX':
+                support=-1
+                
+
+            # outfile
+            outname=outfile
+            if len(outname) == 0:
+                outname=infile.rstrip('/')+'.grid'
+            if os.path.exists(outname):
+                if overwrite:
+                    casalog.post( 'Overwrite existing file %s'%(outname), 'INFO' )
+                    os.system( 'rm -rf %s'%(outname) )
+                else:
+                    msg='file %s exists' % (outname)
+                    raise Exception, msg
+
+            # npix
+            nx=-1
+            ny=-1
+            if isinstance(npix,list) or isinstance(npix,numpy.ndarray):
+                if len(npix)==1:
+                    nx=npix[0]
+                    ny=npix[0]
+                else:
+                    nx=npix[0]
+                    ny=npix[1]
+            else:
+                nx=npix
+                ny=npix
+
+            # cell
+            cellx=''
+            celly=''
+            if type(cell)==str:
+                cellx=cell
+                celly=cell
+            elif isinstance(cell,list) or isinstance(cell,numpy.ndarray):
+                if len(cell)==1:
+                    if type(cell[0])==str:
+                        cellx=cell[0]
+                    else:
+                        cellx='%sarcmin'%(cell[0])
+                    celly=cell[0]
+                else:
+                    if type(cell[0])==str:
+                        cellx=cell[0]
+                    else:
+                        cellx='%sarcmin'%(cell[0])
+                    if type(cell[1])==str:
+                        celly=cell[1]
+                    else:
+                        celly='%sarcmin'%(cell[1])
+            else:
+                cellx='%sarcmin'%(cell)
+                celly=cellx
+
+            # center
+            centerstr=''
+            if isinstance(center,str):
+                centerstr=center
+            else:
+                # two-element list is assumed
+                l=['J2000']
+                for i in xrange(2):
+                    if isinstance(center[i],str):
+                        l.append(center[i])
+                    else:
+                        l.append('%srad'%(center[i]))
+                centerstr=string.join(l)
+
+            ############
+            # Gridding #
+            ############
+            casalog.post('Start gridding...', "INFO")
+            summary =   'Grid Parameter Summary:\n' \
+                      + '   infile = %s\n'%(infile) \
+                      + '   gridfunction = %s\n'%(gridfunction) \
+                      + '   support = %s\n'%(support) \
+                      + '   outname = %s\n'%(outname) \
+                      + '   nx = %s\n'%(nx) \
+                      + '   ny = %s\n'%(ny) \
+                      + '   cellx = %s\n'%(cellx) \
+                      + '   celly = %s\n'%(celly) \
+                      + '   centerstr = %s\n'%(centerstr) \
+                      + '   plot = %s'%(plot)
+            casalog.post( summary, 'INFO' )
+            gridder = sd.asapgrid( infile=infile )
+            gridder.defineImage( nx=nx, ny=ny,
+                                 cellx=cellx, celly=celly,
+                                 center=centerstr )
+            gridder.setOption( convType=gridfunction,
+                               convSupport=support )
+            gridder.grid()
+            gridder.save( outfile=outname )
+            if plot:
+                gridder.plot()
+            del gridder
+            
+        except Exception, instance:
+            #print '***Error***',instance
+            casalog.post( str(instance), priority = 'ERROR' )
+            return
