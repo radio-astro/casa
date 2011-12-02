@@ -132,21 +132,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      //(via vb.msColumns) and/or diameter and frequency via vb.frequency (indexing will need to 
 	      //be upgraded to account for frequency too) should be done to return the
 	      //right voltage pattern image. 
-	      String beamPath;
-	      cerr << "Using the image VPs" << endl; 
-	      if(!MeasTable::AntennaResponsesPath(beamPath, "ALMA")){
-		throw(AipsError("Alma beam images requested cannot be found ")); 		  
-	      }
-	      else{
-		beamPath=beamPath.before(String("AntennaResponses"));
-		String vpImageName= (abs(dishDiam[k]-7.0) < 1.0) ? beamPath+String("/ALMA_AIRY_7M.VP") : 
-		  beamPath+String("/ALMA_AIRY_12M.VP");
-		if(Table::isReadable(vpImageName))
-		  antMath_p[diamIndex]=new PBMath2DImage(PagedImage<Complex>(vpImageName)); 
-		else
-		  throw(AipsError(String("Cannot find voltage pattern image ") + vpImageName));
-	      }
+	      String vpImageName="";
+	      if (abs(dishDiam[k]-7.0) < 1.0) 
+		Aipsrc::find(vpImageName, "alma.vp.7m", "");
+	      else
+		Aipsrc::find(vpImageName, "alma.vp.12m", "") ;
+	      //cerr << "first vpImagename " << vpImageName  << endl;
+	      if(vpImageName==""){
+		String beamPath; 
+		if(!MeasTable::AntennaResponsesPath(beamPath, "ALMA")){
+		  throw(AipsError("Alma beam images requested cannot be found ")); 		  
+		}
+		else{
+		  beamPath=beamPath.before(String("AntennaResponses"));	
+		  vpImageName= (abs(dishDiam[k]-7.0) < 1.0) ? beamPath
+		    +String("/ALMA_AIRY_7M.VP") : 
+		    beamPath+String("/ALMA_AIRY_12M.VP");
+		}
+		
 
+	      }
+	      //cerr << "Using the image VPs " << vpImageName << endl; 
+	      if(Table::isReadable(vpImageName))
+		antMath_p[diamIndex]=new PBMath2DImage(PagedImage<Complex>(vpImageName)); 
+	      else
+		throw(AipsError(String("Cannot find voltage pattern image ") + vpImageName));
 	    }
 	    else{
 
