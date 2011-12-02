@@ -424,7 +424,8 @@ class ImageAnalysis
                 const Bool overwrite = False, 
                 const Bool dropdeg = False, const Bool deglast = False, 
                 const Bool dropstokes = False, const Bool stokeslast = False,
-		const Bool wavelength = False, const String& origin = String());
+                const Bool wavelength = False, const Bool airWavelength = False,
+                const String& origin = String());
 
     Bool toASCII(const String& outfile, Record& region, const String& mask,
                  const String& sep = " ", const String& format = "%e", 
