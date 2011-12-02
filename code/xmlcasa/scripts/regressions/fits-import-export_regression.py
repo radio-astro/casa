@@ -268,6 +268,13 @@ ia.tofits(outfile='wavelength-test.fits', wavelength=True)
 ia.close()
 passed = ia.open('wavelength-test.fits')
 ia.close()
+
+ia.open('stokeslast-test.image')
+ia.tofits(outfile='wavelength-test2.fits', wavelength=True, airwavelength=True)
+ia.close()
+passed = passed and ia.open('wavelength-test2.fits')
+ia.close()
+
 if passed:
     print myname, ' wavelength parameter test passed.'
     passed_tests.append('wavelength')
@@ -343,22 +350,26 @@ for myctype in ['freq','vrad','vopt','wave','awav']:
             ia.open(myctype+'.im')
             ia.tofits(outfile='spec-test-'+myctype+'-ex.fits', wavelength=True)
             ia.close()
+        elif(myctype=='awav'):
+            ia.open(myctype+'.im')
+            ia.tofits(outfile='spec-test-'+myctype+'-ex.fits', wavelength=True, airwavelength=True)
+            ia.close()
         else:
             print "Skipping export test for ", myctype
 
         passed2 = True
-        if(not myctype=="awav"):
-            importfits(imagename=myctype+'2.im', fitsimage='spec-test-'+myctype+'-ex.fits')
-            cond0 = ia.open(myctype+'2.im')
-            coordm = ia.coordmeasures()
-            cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
-            print 'value, expectation, diff:', coordm['measure']['spectral']['frequency']['m0']['value'],',',\
-                  expecta[myctype], ",", coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype]
-            cond2 = (coordm['measure']['spectral']['frequency']['m0']['unit']==expectb[myctype])
-            cond3 = (coordm['measure']['spectral']['frequency']['refer']==expectc[myctype])
-            print cond0, cond1, cond2, cond3
-            passed2 = cond0 and cond1 and cond2 and cond3
-            ia.close()
+
+        importfits(imagename=myctype+'2.im', fitsimage='spec-test-'+myctype+'-ex.fits')
+        cond0 = ia.open(myctype+'2.im')
+        coordm = ia.coordmeasures()
+        cond1 = (abs(coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype])<1.) # avoid Python precision problems
+        print 'value, expectation, diff:', coordm['measure']['spectral']['frequency']['m0']['value'],',',\
+              expecta[myctype], ",", coordm['measure']['spectral']['frequency']['m0']['value']-expecta[myctype]
+        cond2 = (coordm['measure']['spectral']['frequency']['m0']['unit']==expectb[myctype])
+        cond3 = (coordm['measure']['spectral']['frequency']['refer']==expectc[myctype])
+        print cond0, cond1, cond2, cond3
+        passed2 = cond0 and cond1 and cond2 and cond3
+        ia.close()
             
         passedx[myctype] = passed1 and passed2
         passed = passed and passedx[myctype]
