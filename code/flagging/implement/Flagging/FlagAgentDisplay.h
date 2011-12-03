@@ -30,6 +30,8 @@
 #include <casadbus/utilities/BusAccess.h>
 #include <casadbus/session/DBusSession.h>
 
+#include <ms/MeasurementSets/MSColumns.h>
+
 #include <flagging/Flagging/LFPlotServerProxy.h>
 
 
@@ -45,7 +47,10 @@ public:
 protected:
 
 	// Compute flags for a given (time,freq) map
-	void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2);
+        void computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
+
+        // Choose how to step through the baselines in the current chunk
+  	void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
@@ -72,6 +77,8 @@ private:
   uInt nPolarizations_p;
 
   Bool pause_p;
+
+  Char userchoice_p;
 
 };
 

@@ -25,7 +25,9 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-    FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube), plotter_p(NULL), ShowPlots(True)
+    //    FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube), 
+        FlagAgentBase(dh,config,ANTENNA_PAIRS_INTERACTIVE,writePrivateFlagCube), 
+    plotter_p(NULL), ShowPlots(True), userchoice_p('a')
   {
     setAgentParameters(config);
     
@@ -58,17 +60,92 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     
   }
+
+ 
+void
+FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
+{
+	// Check if the visibility expression is suitable for this spw
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
+
+	cout << "iterate ::::::::::::: pause : " << pause_p << endl;
+
+	// Iterate trough antenna pair map
+	std::pair<Int,Int> antennaPair;
+	antennaPairMapIterator myAntennaPairMapIterator;
+	bool stepback=False;
+	for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)
+	  {
+
+	    if(ShowPlots)
+	      {
+		if(stepback)
+                  {
+		    if( myAntennaPairMapIterator != antennaPairMap_ptr->begin() )
+		      -- myAntennaPairMapIterator; 
+		    if( myAntennaPairMapIterator != antennaPairMap_ptr->begin() )
+		      -- myAntennaPairMapIterator; 
+		    stepback=False;
+		  }
+
+	    // Get antenna pair from map
+	    antennaPair = myAntennaPairMapIterator->first;
+	    
+ 	    // Process antenna pair
+	    processAntennaPair(antennaPair.first,antennaPair.second);
+	    
+	    // If Plot window is visible, and, if asked for, get and react to user-choices.
+	    if(pause_p==True)
+	      {
+		
+		// Wait for User Input
+		userchoice_p = GetUserInput();
+
+		cout << "************ UserChoice : " << userchoice_p << endl;
+
+		// React to user-input
+		if(userchoice_p=='q')
+		  {
+		    ShowPlots = False; 
+		    StopAndExit = True;
+		    cout << "Exiting flagger : Not yet implemented. Will just stop display" << endl;
+		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
+		    //return False;
+		  }
+		else if(userchoice_p=='s')
+		  {
+		    ShowPlots = False;
+		    cout << "Stopping display. Continuing flagging." << endl;
+		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
+		  }
+		else if(userchoice_p=='p')
+		  {
+		    if( myAntennaPairMapIterator==antennaPairMap_ptr->begin() )
+		      cout << "Already on first baseline..." << endl;
+		    stepback=True;
+		  }
+		else if(userchoice_p=='c')
+		  {
+		    cout << "Next chunk " << endl; // Right now, a chunk is one baseline !
+		    return; ////break; // break out of baseline loop
+		  }
+		
+	      }// end if pause=True
+
+	      }// if ShowPlots
+
+	  }// end antennaMapIterator
+	
+	return;
+}
   
   void
-  FlagAgentDisplay::computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2)
+  FlagAgentDisplay::computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
   {
     // Gather shapes
     IPosition flagCubeShape = visibilities.shape();
     uInt nChannels = flagCubeShape(0);
     uInt nTimes = flagCubeShape(1);
-    Vector<uInt> polarizations = flags.getSelectedCorrelations();
-    nPolarizations_p = polarizations.size();
-    nPolarizations_p = 1; /////// TODO : Get rid of this once I can access multiple pols of the data !
     
     // Read antenna names for the current baseline
     String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antenna1);
@@ -76,24 +153,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String baselineName = antenna1Name + "&&" + antenna2Name;
     
     // Read current Field name, SPW id, and correlation string from visBuffer Info.
-    ///// TODO : Read this from somewhere !!
-    uInt fieldID = 0;
-    String fieldName("FLD");
-    String spwID("SPW");
-    Vector<String> corrTypes(4);
-    corrTypes[0]=String("RR");  corrTypes[1]=String("RL");
-    corrTypes[2]=String("LR");  corrTypes[3]=String("LL");
+    uInt fieldID = visBuffer.fieldId();
+    String fieldName = visBuffer.msColumns().field().name().getColumn()[fieldID];
+    String spwID = String::toString(visBuffer.spectralWindow());
+    
+    // Get Polarization Maps
+    Vector<uInt> polarizations = flags.getSelectedCorrelations();
+    nPolarizations_p = polarizations.size();
+    polarizationIndexMap *polMap = flagDataHandler_p->getPolarizationIndexMap();
+    Vector<String> corrTypes(nPolarizations_p);
+    for(uInt pol=0;pol<nPolarizations_p;pol++)
+      corrTypes[pol] = (*polMap)[polarizations[pol]];
+    
+    // Get Frequency List
     Vector<Double> freqList(nChannels);
     for(uInt ch=0;ch<nChannels;ch++) freqList[ch]=(Double)ch;
     
     // Print where we are...
-    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Baseline : " << baselineName << " Field : " << fieldName << " Spw : " << spwID << LogIO::POST;
+    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Baseline : " << baselineName << " Field : " << fieldName << " Spw : " << spwID << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
     
     // Build the Plot Window for the first time
     if(ShowPlots && plotter_p==NULL) BuildPlotWindow();
     
     // Initialize Plot Arrays and other vars
-    char choice = 'a';
     Float runningsum=0, runningflag=0,runningpreflag=0;
     Vector<Float> vecflagdat(0), vecdispdat(0);
     Vector<Float> origspectrum(0), flagspectrum(0), precountspec(0), countspec(0);
@@ -118,16 +200,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    // UUU FOR TEST ONLY -- Later, enable additional ManualFlagAgent in the tFlagAgentDisplay
 		    /////if(ch>10 && ch<20) flags.applyFlag(ch,tm);
 		    
-		    vecdispdat( ch*nTimes + tm ) = visibilities(ch,tm) * ( ! flags.getOriginalFlags(pl,ch,tm) );
-		    vecflagdat( ch*nTimes + tm ) = visibilities(ch,tm) * ( ! flags.getModifiedFlags(pl,ch,tm) );
+		    vecdispdat( ch*nTimes + tm ) = visibilities(pl,ch,tm) * ( ! flags.getOriginalFlags(pl,ch,tm) );
+		    vecflagdat( ch*nTimes + tm ) = visibilities(pl,ch,tm) * ( ! flags.getModifiedFlags(pl,ch,tm) );
 		    
-		    origspectrum[ch] += visibilities(ch,tm) * ( ! flags.getOriginalFlags(pl,ch,tm) );
-		    flagspectrum[ch] += visibilities(ch,tm) * ( ! flags.getModifiedFlags(pl,ch,tm) );
+		    origspectrum[ch] += visibilities(pl,ch,tm) * ( ! flags.getOriginalFlags(pl,ch,tm) );
+		    flagspectrum[ch] += visibilities(pl,ch,tm) * ( ! flags.getModifiedFlags(pl,ch,tm) );
 		    
 		    precountspec[ch] += ( ! flags.getOriginalFlags(pl,ch,tm) );
 		    countspec[ch] += ( ! flags.getModifiedFlags(pl,ch,tm) );
 		    
-		    runningsum += visibilities(ch,tm);
+		    runningsum += visibilities(pl,ch,tm);
 		    runningflag += (Float)(flags.getModifiedFlags(pl,ch,tm));
 		    runningpreflag += (Float)(flags.getOriginalFlags(pl,ch,tm));
 		    
@@ -148,7 +230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    plotter_p->setlabel(" ",pl?" ":"Time",ostr1.str(),panels_p[pl].getInt());
 	    DisplayRaster(nChannels,nTimes,vecflagdat,panels_p[pl+nPolarizations_p].getInt());
 	    plotter_p->setlabel("Frequency",pl?" ":"Time",ostr2.str(),panels_p[pl+nPolarizations_p].getInt());
-	   
+	    
 	    // Make the Before/After bandpass plots
 	    for(uInt ch=0;ch<nChannels;ch++)
 	      {
@@ -164,7 +246,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			String("red"), False, panels_p[pl+(2*nPolarizations_p)].getInt());
 	    DisplayScatter(nChannels, freqList, flagspectrum, String("after:")+corrTypes[pl], 
 			   String("blue"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
-
+	    
 	    //// TODO : Can I query the tfcrop agent for a "view" to overlay here. 
 	    // If available, get a plot from the agents
 	    /*
@@ -182,36 +264,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  }//End Correlation Loop
 	
 	*logger_p << LogIO::POST;
-	
-	// Wait for User Input
-	choice = GetUserInput();
-	
-	// React to user-input
-	if(choice=='q')
-	  {
-	    ShowPlots = False; 
-	    StopAndExit = True;
-	    cout << "Exiting flagger : Not yet implemented. Will just stop display" << endl;
-	    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
-	    //return False;
-	  }
-	else if(choice=='s')
-	  {
-	    ShowPlots = False;
-	    cout << "Stopping display. Continuing flagging." << endl;
-	    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
-	  }
-	else if(choice=='p')
-	  {
-	    cout << "Previous Baseline : Not Implemented ! " << endl;
-	    //	bs -= 2;
-	    //if(bs < 0) {bs=-1; cout << "Reached first baseline !" << endl; }
-	  }
-	else if(choice=='c')
-	  {
-	    cout << "Next chunk " << endl; // Right now, a chunk is one baseline !
-	    ////break; // break out of baseline loop
-	  }
 	
       }// end if ShowPlots
     
@@ -242,8 +294,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   </property>					\
   <property name=\"minimumSize\">		\
    <size>					\
-    <width>485</width>				\
-    <height>80</height>				\
+    <width>485</width>						\
+    <height>80</height>						\
    </size>							\
   </property>							\
   <property name=\"windowTitle\">				\
