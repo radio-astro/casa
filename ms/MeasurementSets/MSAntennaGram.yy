@@ -80,7 +80,6 @@
 %type <iv> stationid
 %type <iv> stationlist
 %type <iv> antatstation
-//%type <iv> antatstationlist
 %type <iv> antcomp
 %type <iv> stancomp
 %type <dv> blength
@@ -111,16 +110,19 @@
     else
       throw(MSSelectionAntennaParseError(Mesg.str()));
   }
-
+  //
+  // Keep life from getting too computer-like (encouragement may be a
+  // defining human need/quality).
+  //
   void kungrachulations(const std::bitset<MSAntennaParse::HIGHESTLEVEL>& complexity)
   {
     LogIO logIO(LogOrigin("MSAntannaParse",""));
-    Bool level1=(complexity.test(MSAntennaParse::ANTREGEX) & 
+    Bool level1=(complexity.test(MSAntennaParse::ANTREGEX) &
 		 complexity.test(MSAntennaParse::ANTLIST)  &
 		 complexity.test(MSAntennaParse::BASELINELIST));
     Bool level2=(level1 & complexity.test(MSAntennaParse::STATIONLIST));
-    Bool level3=(level2 & (complexity.test(MSAntennaParse::STATIONREGEX)));  
-    //			   & complexity.test(MSAntennaParse::ANTATSTATIONLIST)));
+    Bool level3=(level2 & complexity.test(MSAntennaParse::STATIONREGEX)
+		 & complexity.test(MSAntennaParse::ANTATSTATIONLIST));
     if (level3)
       logIO << "Oh the brave one!  You successfully passed the deepest abyss of parsing in baseline selection without error. "
 	"May The Force (or the CASA User Support Group) be with you.  Good luck."
@@ -310,15 +312,15 @@ antidrange: INT // A single antenna index
 	       if (!($$)) delete $$;
 	       //
 	       // This code is due to VLA specienfic complication
-	       // arising due to the fact that VLA antennam "NAMES" are
-	       // strings that can be parsed as valid integers! Believe
-	       // it or not, VLA antenna NAMES are "1", "2", "3" and so
-	       // on.....  So (phew).  Just for antenna selection (and
-	       // this *just* because of silly convention for VLA
-	       // antenna naming!), if we get an INT, treat it as name
-	       // still and first attempt a match with the NAME column.
-	       // If that fails, treat it as an integer index and do
-	       // the right thing.
+	       // arising due to the fact that VLA antennam "NAMES"
+	       // are strings that can be parsed as valid integers!
+	       // Believe it or not, VLA antenna NAMES are "1", "2",
+	       // "3" and so on.....  So (phew).  Just for antenna
+	       // selection (and this *just* because of silly
+	       // convention for VLA antenna naming!), if we get an
+	       // INT, treat it as name still and first attempt a
+	       // match with the NAME column.  If that fails, treat it
+	       // as an integer index and do the right thing.
 	       //
 	       MSAntennaIndex myMSAI(MSAntennaParse::thisMSAParser->ms()->antenna());
 	       Vector<Int> tmp(myMSAI.matchAntennaName($1));
@@ -383,10 +385,10 @@ antlist: antids
 
 antcomp: antid {$$=$1;}
        | antidrange {$$=$1;}
-       | LPAREN antlist RPAREN {$$=$2;}
+       | LPAREN antlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
 
 stancomp: stationid {$$=$1;}
-        | LPAREN stationlist RPAREN {$$=$2;}
+        | LPAREN stationlist RPAREN {$$=$2;MSAntennaParse::thisMSAParser->setComplexity(MSAntennaParse::ANTATSTATIONLIST);}
 
 antatstation: antcomp AT stancomp
                {
