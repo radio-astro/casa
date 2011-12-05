@@ -474,17 +474,60 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if ((!fullTEN_p.isNull()) && (fullTEN_p.nrow() > 0))
       {
 	selectedMS = MS((*ms_p)(fullTEN_p));
+	// If the TEN was not NULL and at least one expression was
+	// non-blank, and still resulted in a zero selected rows.
+	if (selectedMS.nrow() == 0) 
+	  throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected MS was NULL"));
 	if (outMSName!="") selectedMS.rename(outMSName,Table::New);
 	selectedMS.flush();
 	newRefMS=True;
       }
-    //     MSRange msr(selectedMS);
-    //     Vector<String> items(1); items(0)="SCAN_NUMBER";
-    //     Record scanRange=msr.range(items);
-    //     scanRange.get(scanRange.fieldNumber("scan_number"),scanIDs_p);
+
     return newRefMS;
   }
   
+  //----------------------------------------------------------------------------
+  
+  Bool MSSelection::exprIsNull(const MSExprType type)
+  {
+    Bool exprIsNull=False;
+    if (type == NO_EXPR)
+      for(uInt i=0; i<exprOrder_p.nelements();  i++)
+	{
+	  exprIsNull = 
+	    (antennaExpr_p     == "") & 
+	    (fieldExpr_p       == "") & 
+	    (spwExpr_p         == "") &
+	    (scanExpr_p        == "") & 
+	    (arrayExpr_p       == "") &
+	    (timeExpr_p        == "") & 
+	    (uvDistExpr_p      == "") & 
+	    (taqlExpr_p        == "") & 
+	    (polnExpr_p        == "") & 
+	    (stateExpr_p       == "") & 
+	    (observationExpr_p == "");
+	}
+    else
+	{
+	  switch (type)
+	    {
+	    case ANTENNA_EXPR:     exprIsNull = (antennaExpr_p == "");break;
+	    case FIELD_EXPR:       exprIsNull = (fieldExpr_p   == "");break;
+	    case SPW_EXPR:         exprIsNull = (spwExpr_p     == "");break;
+	    case SCAN_EXPR:        exprIsNull = (scanExpr_p    == "");break;
+	    case ARRAY_EXPR:       exprIsNull = (arrayExpr_p   == "");break;
+	    case TIME_EXPR:        exprIsNull = (timeExpr_p    == "");break;
+	    case UVDIST_EXPR:      exprIsNull = (uvDistExpr_p  == "");break;
+	    case TAQL_EXPR:        exprIsNull = (taqlExpr_p    == "");break;
+	    case POLN_EXPR:        exprIsNull = (polnExpr_p    == "");break;
+	    case STATE_EXPR:       exprIsNull = (stateExpr_p   == "");break;
+	    case OBSERVATION_EXPR: exprIsNull = (observationExpr_p    == "");break;
+	    default:;
+	    };
+	}
+    return exprIsNull;
+  }
+
   //----------------------------------------------------------------------------
   
   void MSSelection::clear(const MSExprType type)

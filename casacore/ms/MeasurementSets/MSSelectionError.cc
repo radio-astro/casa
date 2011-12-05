@@ -67,6 +67,26 @@ String constructMessage(const Int pos, const String& command)
 //
 //------------------------Time selection expression parser exceptions----------------
 //
+MSSelectionNullSelection::MSSelectionNullSelection (const String& str,Category c)
+: MSSelectionError(str,c)
+{}
+MSSelectionNullSelection::~MSSelectionNullSelection () throw()
+{}
+
+MSSelectionNullExpr::MSSelectionNullExpr (const String& str,Category c)
+: MSSelectionError(str,c)
+{}
+MSSelectionNullExpr::~MSSelectionNullExpr () throw()
+{}
+
+MSSelectionNullTEN::MSSelectionNullTEN (const String& str,Category c)
+: MSSelectionError(str,c)
+{}
+MSSelectionNullTEN::~MSSelectionNullTEN () throw()
+{}
+//
+//------------------------Time selection expression parser exceptions----------------
+//
 MSSelectionTimeError::MSSelectionTimeError (const String& str,Category c)
 : MSSelectionError(str,c)
 {}

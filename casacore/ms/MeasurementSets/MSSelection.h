@@ -307,6 +307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Clear sub-expression and reset priority.  Default behavior is to
     // reset all sub-expressions.
     void clear(const MSExprType type=NO_EXPR);
+    Bool exprIsNull(const MSExprType type=NO_EXPR);
     
     // Convert to TableExprNode format (C++ interface to TaQL)
     TableExprNode toTableExprNode(const MeasurementSet* ms);
