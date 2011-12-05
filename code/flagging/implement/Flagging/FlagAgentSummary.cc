@@ -120,9 +120,8 @@ FlagAgentSummary::preProcessBuffer(VisBuffer &visBuffer)
 	arrayId_str = arrayId_stringStream.str();
 
 	fieldId = visBuffer.fieldId();
-	stringstream fieldId_stringStream;
-	fieldId_stringStream << fieldId;
-	fieldId_str = fieldId_stringStream.str();
+	// Transform fieldId into field name using the corresponding subtable
+	fieldId_str = flagDataHandler_p->fieldNames_p->operator()(fieldId);
 
 	spw = visBuffer.spectralWindow();
 	stringstream spw_stringStream;
@@ -257,7 +256,11 @@ FlagAgentSummary::getResult()
 
 				stats_key2.define("flagged", (Double) accumChannelflags[key1->first][key2->first]);
 				stats_key2.define("total", (Double) key2->second);
-				stats_key1.defineRecord(String(key2->first), stats_key2);
+
+				// Transform channel id into string
+				stringstream channel_stringStream;
+				channel_stringStream << key2->first;
+				stats_key1.defineRecord(channel_stringStream.str(), stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Channel:" << key2->first
@@ -266,7 +269,11 @@ FlagAgentSummary::getResult()
 						<< LogIO::POST;
 			}
 
-			result.defineRecord(String(key1->first), stats_key1);
+			// Transform spw id into string
+			stringstream spw_stringStream;
+			spw_stringStream << key1->first;
+
+			result.defineRecord(spw_stringStream.str(), stats_key1);
 		}
 	}
 
@@ -281,6 +288,8 @@ FlagAgentSummary::getResult()
 
 				stats_key2.define("flagged", (Double) accumPolarizationflags[key1->first][key2->first]);
 				stats_key2.define("total", (Double) key2->second);
+
+				// Polarization already comes as a string
 				stats_key1.defineRecord(key2->first, stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
@@ -290,7 +299,11 @@ FlagAgentSummary::getResult()
 						<< LogIO::POST;
 			}
 
-			result.defineRecord(String(key1->first), stats_key1);
+			// Transform spw id into string
+			stringstream spw_stringStream;
+			spw_stringStream << key1->first;
+
+			result.defineRecord(spw_stringStream.str(), stats_key1);
 		}
 	}
 
