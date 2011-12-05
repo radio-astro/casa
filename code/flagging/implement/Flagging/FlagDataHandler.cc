@@ -273,6 +273,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 
 	antennaNames_p = NULL;
 	antennaDiameters_p = NULL;
+	fieldNames_p = NULL;
 	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
 	polarizationMap_p = NULL;
@@ -330,10 +331,14 @@ FlagDataHandler::open()
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
-	// Read antenna names from Antenna table
+	// Read antenna names and diameters from Antenna table
 	ROMSAntennaColumns *antennaSubTable = new ROMSAntennaColumns(originalMeasurementSet_p->antenna());
 	antennaNames_p = new Vector<String>(antennaSubTable->name().getColumn());
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
+
+	// Read field names
+	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
+	fieldNames_p = new Vector<String>(fieldSubTable->name().getColumn());
 
 	return true;
 }

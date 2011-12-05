@@ -28,6 +28,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
+#include <ms/MeasurementSets/MSFieldColumns.h>
 
 // Async I/O infrastructure
 #include <msvis/MSVis/AsynchronousTools.h>
@@ -503,6 +504,7 @@ public:
 	MSSelection *measurementSetSelection_p;
 	Vector<String> *antennaNames_p;
 	Vector<Double> *antennaDiameters_p;
+	Vector<String> *fieldNames_p;
 
 	// RO Visibility Iterator
 	casa::asyncio::PrefetchColumns prefetchColumns_p;
