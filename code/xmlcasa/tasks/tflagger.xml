@@ -5,7 +5,7 @@
     xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
       file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-    <task type="function" name="tflagger" category="editing">
+    <task type="function" name="tflagger" category="editing" visibility="experimental">
         <shortdescription> All purpose flagging task based on selections</shortdescription>
         <description>
             The task will select a subset of data explicitly
@@ -117,7 +117,7 @@
             </param>
 
             <param type="any" name="expression" subparam="true">
-                <description>Expression to clip on</description>
+                <description>Expression to flag on</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">ABS ALL</value>
             </param>
@@ -126,8 +126,8 @@
                 <any type="variant" limittypes="doubleArray doubleArrayArray" />
                 <value type="doubleArray" />
             </param>
-            <param type="any" name="clipcolumn" subparam="true">
-                <description>Data column to use for clipping</description>
+            <param type="any" name="datacolumn" subparam="true">
+                <description>Data column on which to operate (data,corrected,model,residual)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
                 <!-- <allowed kind="enum"> <value>'DATA'</value> <value>'CORRECTED'</value> 
@@ -208,10 +208,11 @@
                 <value>90.0</value>
             </param>
 
-            <param type="double" name="minrel" subparam="true">
+             <param type="double" name="minrel" subparam="true">
                 <description>minimum number of flags (relative)</description>
                 <value type="double">0.0</value>
             </param>
+             
             <param type="double" name="maxrel" subparam="true">
                 <description>maximum number of flags (relative)</description>
                 <value type="double">1.0</value>
@@ -234,11 +235,17 @@
                 <value type="bool">False</value>
             </param>
 
-            <param type="bool" name="extendpols" subparam="true">
+            <param type="bool" name="extend">
+                <description>Extend the new flags in various ways</description>
+                <value>False</value>
+            </param>
+
+            <param type="any" name="extendpols" subparam="true">
                 <description>If any correlation is flagged, flag all correlations</description>
                 <value type="bool">False</value>
             </param>
-            <param type="double" name="growtime" subparam="true">
+
+           <param type="double" name="growtime" subparam="true">
                 <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
                 <value>50.0</value>
             </param>
@@ -259,10 +266,6 @@
                 <value type="bool">False</value>
             </param>
 
-            <param type="bool" name="extend">
-                <description>Extend the new flags in various ways</description>
-                <value>False</value>
-            </param>
 
             <param type="bool" name="datadisplay">
                 <description>Display data and flags at runtime </description>
@@ -279,19 +282,7 @@
                 <value>True</value>
             </param>
 
-            <constraints>
-               <when param="extend">
-                 <equals type="bool" value="False" />
-                 <equals type="bool" value="True">
-                    <default param="growtime"><value type="double">50.0</value></default>
-                    <default param="growfreq"><value type="double">50.0</value></default>
-                    <default param="growaround"><value type="bool">True</value></default>
-                    <default param="flagneartime"><value type="bool">False</value></default>
-                    <default param="flagnearfreq"><value type="bool">False</value></default>
-                    <default param="extendpols"><value type="bool">False</value></default>
-                </equals>
-               </when>
-                    
+            <constraints>                   
                 <when param="selectdata">
                     <equals type="bool" value="True">
                         <default param="field"><value type="string"></value></default>
@@ -352,14 +343,25 @@
                     </equals>
                     <equals value="summary">
                         <default param="minrel"><value type="double">0.0</value></default>
-                        <default param="maxrel"><value type="double">1.0</value></default>
+                         <default param="maxrel"><value type="double">1.0</value></default>
                         <default param="minabs"><value type="int">0</value></default>
                         <default param="maxabs"><value type="int">-1</value></default>
                         <default param="spwchan"><value type="bool">False</value></default>
                         <default param="spwcorr"><value type="bool">False</value></default>                    
                     </equals>
                 </when>
-            </constraints>
+               <when param="extend">
+                 <equals type="bool" value="False" />
+                 <equals type="bool" value="True">
+                    <default param="extendpols"><value type="bool">False</value></default>
+                    <default param="growtime"><value type="double">50.0</value></default>
+                    <default param="growfreq"><value type="double">50.0</value></default>
+                    <default param="growaround"><value type="bool">True</value></default>
+                    <default param="flagneartime"><value type="bool">False</value></default>
+                    <default param="flagnearfreq"><value type="bool">False</value></default>
+                </equals>
+               </when>
+             </constraints>
         </input>
 <returns type="void"/>
 <example>

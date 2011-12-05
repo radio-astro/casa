@@ -6,57 +6,57 @@ import sys
 debug = True
 
 
-def tflagger(vis=None,
-             ntime=None, # taken only once per session
-             mode=None,
-             selectdata=None,
-             spw=None, # data selection parameters
-             field=None,
-             antenna=None,
-             uvrange=None,
-             timerange=None,
-             correlation=None,
-             scan=None,
-             intent=None,
-             feed=None,
-             array=None,
-             observation=None,
-             expression=None, # mode=clip parameters
-             clipminmax=None,
-             datacolumn=None,
-             clipoutside=None,
-             channelavg=None,
-             quackinterval=None, # mode=quack parameters
-             quackmode=None,
-             quackincrement=None,
-             diameter=None, # mode=shadow parameter
-             lowerlimit=None, # mode=elevation parameters
-             upperlimit=None,
-             timecutoff=None, # mode=tfcrop parameters
-             freqcutoff=None,
-             timefit=None,
-             freqfit=None,
-             maxnpieces=None,
-             flagdimension=None,
-             usewindowstats=None,
-             halfwin=None,
-             extendpols=None, # mode=extendflags parameters
-             growtime=None,
-             growfreq=None,
-             growaround=None,
-             flagneartime=None,
-             flagnearfreq=None,
-             minrel=None, # mode=summary parameters
-             maxrel=None,
-             minabs=None,
-             maxabs=None,
-             spwchan=None,
-             spwcorr=None,
-             extend=None, # extend the private flags of any agent
-             datadisplay=None,
-             writeflags=None,
-             flagbackup=None,
-             async=None):
+def tflagger(vis,
+             ntime, # taken only once per session
+             mode,
+             selectdata,
+             spw, # data selection parameters
+             field,
+             antenna,
+             uvrange,
+             timerange,
+             correlation,
+             scan,
+             intent,
+             feed,
+             array,
+             observation,
+             expression, # mode=clip parameters
+             clipminmax,
+             datacolumn,
+             clipoutside,
+             channelavg,
+             quackinterval, # mode=quack parameters
+             quackmode,
+             quackincrement,
+             diameter, # mode=shadow parameter
+             lowerlimit, # mode=elevation parameters
+             upperlimit,
+             timecutoff, # mode=tfcrop parameters
+             freqcutoff,
+             timefit,
+             freqfit,
+             maxnpieces,
+             flagdimension,
+             usewindowstats,
+             halfwin,
+             minrel,        # mode summary
+             maxrel,
+             minabs,
+             maxabs,
+             spwchan,
+             spwcorr,
+             extend,    # extend the private flags of any agent
+             extendpols,
+             growtime,
+             growfreq,
+             growaround,
+             flagneartime,
+             flagnearfreq,
+             datadisplay,
+             writeflags,
+             flagbackup):
+    
 
     # Things to consider:
     #
@@ -83,7 +83,6 @@ def tflagger(vis=None,
     #
     # Task tflagger
     #    Flags data based on data selection in various ways
-
 
     if pCASA.is_mms(vis):
         pCASA.execute("tflagger", locals())
@@ -127,7 +126,7 @@ def tflagger(vis=None,
         # Get extend sub parameters
         if (extend == True and mode != 'unflag' and mode != 'summary' and mode != 'extendflags'):
             
-            agent_pars['extendpols'] = bool(extendpols)
+            agent_pars['extendpols'] = extendpols
             agent_pars['growtime'] = growtime
             agent_pars['growfreq'] = growfreq
             agent_pars['growaround'] = growaround
@@ -174,7 +173,7 @@ def tflagger(vis=None,
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
         elif mode == 'extendflags':
-            agent_pars['extendpols'] = bool(extendpols)
+            agent_pars['extendpols'] = extendpols
             agent_pars['growtime'] = growtime
             agent_pars['growfreq'] = growfreq
             agent_pars['growaround'] = growaround
