@@ -247,9 +247,14 @@ FlagAgentSummary::getResult()
 
 	if (spwChannelCounts)
 	{
+		Record stats_key1;
+
 		for (map<Int, map<uInt, uInt64> >::iterator key1 = accumChanneltotal.begin();key1 != accumChanneltotal.end();key1++)
 		{
-			Record stats_key1;
+			// Transform spw id into string
+			stringstream spw_stringStream;
+			spw_stringStream << key1->first;
+
 			for (map<uInt, uInt64>::const_iterator key2 = key1->second.begin();key2 != key1->second.end();key2++)
 			{
 				Record stats_key2;
@@ -260,7 +265,9 @@ FlagAgentSummary::getResult()
 				// Transform channel id into string
 				stringstream channel_stringStream;
 				channel_stringStream << key2->first;
-				stats_key1.defineRecord(channel_stringStream.str(), stats_key2);
+
+				// Construct spw:channel string as first key
+				stats_key1.defineRecord(spw_stringStream.str() + ":" + channel_stringStream.str(), stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Channel:" << key2->first
@@ -269,19 +276,21 @@ FlagAgentSummary::getResult()
 						<< LogIO::POST;
 			}
 
-			// Transform spw id into string
-			stringstream spw_stringStream;
-			spw_stringStream << key1->first;
-
-			result.defineRecord(spw_stringStream.str(), stats_key1);
 		}
+
+		result.defineRecord("spw:channel", stats_key1);
 	}
 
 	if (spwPolarizationCounts)
 	{
+		Record stats_key1;
+
 		for (map<Int, map<string, uInt64> >::iterator key1 = accumPolarizationtotal.begin();key1 != accumPolarizationtotal.end();key1++)
 		{
-			Record stats_key1;
+			// Transform spw id into string
+			stringstream spw_stringStream;
+			spw_stringStream << key1->first;
+
 			for (map<string, uInt64>::const_iterator key2 = key1->second.begin();key2 != key1->second.end();key2++)
 			{
 				Record stats_key2;
@@ -289,8 +298,8 @@ FlagAgentSummary::getResult()
 				stats_key2.define("flagged", (Double) accumPolarizationflags[key1->first][key2->first]);
 				stats_key2.define("total", (Double) key2->second);
 
-				// Polarization already comes as a string
-				stats_key1.defineRecord(key2->first, stats_key2);
+				// Construct spw:correlation string as first key (Polarization already comes as a string)
+				stats_key1.defineRecord(spw_stringStream.str() + ":" + key2->first, stats_key2);
 
 				*logger_p 	<< LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__
 						<< " Spw:" << key1->first << " Correlation:" << key2->first
@@ -298,13 +307,9 @@ FlagAgentSummary::getResult()
 						<< " total: " <<  (Double) key2->second
 						<< LogIO::POST;
 			}
-
-			// Transform spw id into string
-			stringstream spw_stringStream;
-			spw_stringStream << key1->first;
-
-			result.defineRecord(spw_stringStream.str(), stats_key1);
 		}
+
+		result.defineRecord("spw:correlation", stats_key1);
 	}
 
 	for (map<string, map<string, uInt64> >::iterator key1 = accumtotal.begin();key1 != accumtotal.end();key1++)
@@ -335,7 +340,6 @@ FlagAgentSummary::getResult()
 			<< " Total Flagged: " <<  (Double) accumTotalFlags
 			<< " Total Counts: " <<  (Double) accumTotalCount
 			<< LogIO::POST;
-
 
 	return result;
 }
