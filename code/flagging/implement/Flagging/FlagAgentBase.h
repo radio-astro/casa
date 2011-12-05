@@ -127,13 +127,13 @@ protected:
 	Bool checkVisExpression(polarizationMap *polMap);
 
 	// Compute flags for a given visibilities point
-	virtual void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	virtual void computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual void computeInRowFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+	virtual void computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
-	virtual void computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
+	virtual void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;

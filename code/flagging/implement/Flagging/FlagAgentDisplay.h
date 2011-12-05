@@ -47,7 +47,7 @@ public:
 protected:
 
 	// Compute flags for a given (time,freq) map
-        void computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
+        void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
 
         // Choose how to step through the baselines in the current chunk
   	void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);

@@ -112,7 +112,7 @@ FlagAgentSummary::setAgentParameters(Record config)
 }
 
 void
-FlagAgentSummary::preProcessBuffer(VisBuffer &visBuffer)
+FlagAgentSummary::preProcessBuffer(const VisBuffer &visBuffer)
 {
 	arrayId = visBuffer.arrayId();
 	stringstream arrayId_stringStream;
@@ -144,7 +144,7 @@ FlagAgentSummary::preProcessBuffer(VisBuffer &visBuffer)
 }
 
 void
-FlagAgentSummary::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentSummary::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	Int antenna1 = visBuffer.antenna1()[row];
 	Int antenna2 = visBuffer.antenna2()[row];

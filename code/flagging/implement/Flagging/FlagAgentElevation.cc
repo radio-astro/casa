@@ -72,7 +72,7 @@ FlagAgentElevation::setAgentParameters(Record config)
 }
 
 void
-FlagAgentElevation::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentElevation::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
     double antenna1_elevation = flagDataHandler_p->getMapAntennaPointing()->at(row).at(0);
     double antenna2_elevation = flagDataHandler_p->getMapAntennaPointing()->at(row).at(1);

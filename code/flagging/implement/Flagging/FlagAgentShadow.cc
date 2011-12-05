@@ -61,7 +61,7 @@ FlagAgentShadow::setAgentParameters(Record config)
 }
 
 void
-FlagAgentShadow::preProcessBuffer(VisBuffer &visBuffer)
+FlagAgentShadow::preProcessBuffer(const VisBuffer &visBuffer)
 {
 	Vector<Int> antenna1list =  visBuffer.antenna1();
 	Vector<Int> antenna2list =  visBuffer.antenna2();
@@ -125,7 +125,7 @@ FlagAgentShadow::preProcessBuffer(VisBuffer &visBuffer)
 }
 
 void
-FlagAgentShadow::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	// Flag row if either antenna1 or antenna2 are in the list of shadowed antennas
 	Int antenna1 = visBuffer.antenna1()[row];

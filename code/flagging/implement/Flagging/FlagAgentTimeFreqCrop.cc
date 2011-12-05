@@ -211,7 +211,7 @@ void FlagAgentTimeFreqCrop::setAgentParameters(Record config)
 }
 
 void
-FlagAgentTimeFreqCrop::computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+FlagAgentTimeFreqCrop::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// Call 'fltBaseAndFlag' as specified by the user.
 	if(flagDimension_p == String("time"))

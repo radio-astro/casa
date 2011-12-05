@@ -109,7 +109,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 }
 
 void
-FlagAgentQuack::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 
 	// TODO: This is not generic but in all the iteration modes provided

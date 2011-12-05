@@ -36,7 +36,7 @@ FlagAgentManual::~FlagAgentManual()
 }
 
 void
-FlagAgentManual::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentManual::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	IPosition flagCubeShape = flags.shape();
 	uInt nChannels = flagCubeShape(0);

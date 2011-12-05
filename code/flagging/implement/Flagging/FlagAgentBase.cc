@@ -1672,21 +1672,21 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 }
 
 void
-FlagAgentBase::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentBase::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;
 }
 
 void
-FlagAgentBase::computeInRowFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
+FlagAgentBase::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;
 }
 
 void
-FlagAgentBase::computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;

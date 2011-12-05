@@ -140,7 +140,7 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 }
   
   void
-  FlagAgentDisplay::computeAntennaPairFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
+  FlagAgentDisplay::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
   {
     // Gather shapes
     IPosition flagCubeShape = visibilities.shape();

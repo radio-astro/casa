@@ -37,7 +37,7 @@ public:
 protected:
 
 	// Compute flags afor a given mapped visibility point
-	void computeInRowFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
+	void computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);

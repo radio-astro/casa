@@ -89,7 +89,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 }
 
 void
-FlagAgentClipping::computeInRowFlags(VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
+FlagAgentClipping::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	IPosition flagCubeShape= flags.shape();
 	uInt nChannels,chan_i;
