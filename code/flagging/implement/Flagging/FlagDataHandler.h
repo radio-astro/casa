@@ -451,6 +451,9 @@ public:
 	// Move to next buffer
 	bool nextBuffer();
 
+	// Stop iterating
+	bool stopIteration() {stopIteration_p = true;};
+
 	// Write flag cube into MS
 	bool flushFlags();
 
@@ -555,6 +558,7 @@ private:
 	bool chunksInitialized_p;
 	bool buffersInitialized_p;
 	bool iteratorGenerated_p;
+	bool stopIteration_p;
 
 	// Flag Cubes
 	Cube<Bool> originalFlagCube_p;

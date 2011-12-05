@@ -255,6 +255,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	chunksInitialized_p = false;
 	buffersInitialized_p = false;
 	iteratorGenerated_p = false;
+	stopIteration_p = false;
 	chunkNo = 0;
 	bufferNo = 0;
 
@@ -1345,26 +1346,33 @@ bool
 FlagDataHandler::nextChunk()
 {
 	bool moreChunks = false;
-	if (!chunksInitialized_p)
+	if (stopIteration_p)
 	{
-		if (!iteratorGenerated_p) generateIterator();
-		roVisibilityIterator_p->originChunks();
-		chunksInitialized_p = true;
-		buffersInitialized_p = false;
-		chunkNo++;
-		bufferNo = 0;
-		moreChunks = true;
+		moreChunks = false;
 	}
 	else
 	{
-		roVisibilityIterator_p->nextChunk();
-
-		if (roVisibilityIterator_p->moreChunks())
+		if (!chunksInitialized_p)
 		{
+			if (!iteratorGenerated_p) generateIterator();
+			roVisibilityIterator_p->originChunks();
+			chunksInitialized_p = true;
 			buffersInitialized_p = false;
-			moreChunks = true;
 			chunkNo++;
 			bufferNo = 0;
+			moreChunks = true;
+		}
+		else
+		{
+			roVisibilityIterator_p->nextChunk();
+
+			if (roVisibilityIterator_p->moreChunks())
+			{
+				buffersInitialized_p = false;
+				moreChunks = true;
+				chunkNo++;
+				bufferNo = 0;
+			}
 		}
 	}
 
@@ -1379,37 +1387,25 @@ bool
 FlagDataHandler::nextBuffer()
 {
 	bool moreBuffers = false;
-	if (!buffersInitialized_p)
+	if (stopIteration_p)
 	{
-		// Group all the time stamps in one single buffer
-		// NOTE: Otherwise we have to iterate over Visibility Buffers
-		// that contain all the rows with the same time step.
-		if ((groupTimeSteps_p) and (asyncio_disabled_p))
-		{
-			Int nRowChunk = roVisibilityIterator_p->nRowChunk();
-			roVisibilityIterator_p->setRowBlocking(nRowChunk);
-		}
-		roVisibilityIterator_p->origin();
-		buffersInitialized_p = true;
-
-		if (asyncio_disabled_p) preFetchColumns();
-		if (mapAntennaPairs_p) generateAntennaPairMap();
-		if (mapSubIntegrations_p) generateSubIntegrationMap();
-		if (mapPolarizations_p) generatePolarizationsMap();
-		if (mapAntennaPointing_p) generateAntennaPointingMap();
-		moreBuffers = true;
-		bufferNo++;
+		moreBuffers = false;
 	}
 	else
 	{
-		// WARNING: ++ operator is defined for VisibilityIterator class ("advance" function)
-		// but if you define a VisibilityIterator pointer, then  ++ operator does not call
-		// the advance function but increments the pointers.
-		(*roVisibilityIterator_p)++;
-
-		// WARNING: We iterate and afterwards check if the iterator is valid
-		if (roVisibilityIterator_p->more())
+		if (!buffersInitialized_p)
 		{
+			// Group all the time stamps in one single buffer
+			// NOTE: Otherwise we have to iterate over Visibility Buffers
+			// that contain all the rows with the same time step.
+			if ((groupTimeSteps_p) and (asyncio_disabled_p))
+			{
+				Int nRowChunk = roVisibilityIterator_p->nRowChunk();
+				roVisibilityIterator_p->setRowBlocking(nRowChunk);
+			}
+			roVisibilityIterator_p->origin();
+			buffersInitialized_p = true;
+
 			if (asyncio_disabled_p) preFetchColumns();
 			if (mapAntennaPairs_p) generateAntennaPairMap();
 			if (mapSubIntegrations_p) generateSubIntegrationMap();
@@ -1417,6 +1413,25 @@ FlagDataHandler::nextBuffer()
 			if (mapAntennaPointing_p) generateAntennaPointingMap();
 			moreBuffers = true;
 			bufferNo++;
+		}
+		else
+		{
+			// WARNING: ++ operator is defined for VisibilityIterator class ("advance" function)
+			// but if you define a VisibilityIterator pointer, then  ++ operator does not call
+			// the advance function but increments the pointers.
+			(*roVisibilityIterator_p)++;
+
+			// WARNING: We iterate and afterwards check if the iterator is valid
+			if (roVisibilityIterator_p->more())
+			{
+				if (asyncio_disabled_p) preFetchColumns();
+				if (mapAntennaPairs_p) generateAntennaPairMap();
+				if (mapSubIntegrations_p) generateSubIntegrationMap();
+				if (mapPolarizations_p) generatePolarizationsMap();
+				if (mapAntennaPointing_p) generateAntennaPointingMap();
+				moreBuffers = true;
+				bufferNo++;
+			}
 		}
 	}
 
