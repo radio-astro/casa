@@ -643,7 +643,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				obsarriter.next();
 			} // end of OBS/ARR iteration
 
-			os << "           (nVis = Total number of time/baseline visibilities per scan) " << endl;
+			os << "           (nRows = Total number of rows per scan) " << endl;
 			os << LogIO::POST;
 
 		} // end of verbose section
@@ -1208,7 +1208,7 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 
 		}
 
-		os << "   (nVis = Total number of time/baseline visibilities per field) " << endl;
+//		os << "   (nVis = Total number of time/baseline visibilities per field) " << endl;
 
 	}
 	os << endl << LogIO::POST;
