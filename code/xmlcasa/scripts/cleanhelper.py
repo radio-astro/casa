@@ -1770,7 +1770,6 @@ class cleanhelper:
                 break
         f.close()
         if oldformat:
-        #    f.close()
             self._casalog.post("This file format is deprecated. Use of a new format is encouraged.","WARN")
             # do old to new data format conversion....(watch out for different order of return parameters...)
             (imsizes,phasecenters,imageids)=self.readoutlier(outlierfile)
@@ -2849,7 +2848,6 @@ class cleanhelper:
         newformat=False
 
         if len(outlierfile) != 0:
-            #imsizes,phasecenters,imageids=self.readoutlier(outlierfile)
             f_imageids,f_imsizes,f_phasecenters,f_masks,f_modelimages,parms,newformat=self.newreadoutlier(outlierfile)
             if type(imagename) == list or newformat:
                 rootname = ''
@@ -3057,7 +3055,8 @@ class cleanhelper:
 
     def defineChaniterModelimages(self,modelimage,chan,tmppath):
         """
-        Convert input models to a model image for chaniter mode 
+        chaniter=T specific function to convert input models 
+        to a model image 
         """
         chanmodimg=[]
         if type(modelimage)==str:
@@ -3096,6 +3095,34 @@ class cleanhelper:
             # clean up temporary channel model image
             self.cleanupTempFiles(chanmodimg)
 
+    def convertAllModelImages(self,modelimage, mode, nterms, dochaniter, chan, tmppath):
+        """
+        wrapper function for convertmodelimage for all different cases
+        """
+        if (type(modelimage)!=str and type(modelimage)!=list):
+                    raise Exception,'modelimage must be a string or a list of strings';
+        #spectralline modes
+        if (not mode=='mfs') or (mode=='mfs' and nterms==1):
+            if (not all(img=='' or img==[] or img==[''] for img in modelimage)):
+                if dochaniter:
+                    self.defineChaniterModelimages(modelimage,chan,tmppath)
+                else:
+                    if type(modelimage)== str or \
+                       (type(modelimage)==list and len(self.imagelist)==1 and len(modelimage)>1):
+                        modelimage=[modelimage]
+
+                    for j in range(len(self.imagelist)):
+                        self._casalog.post("Use modelimages: "+str(modelimage[j])+" to create a combined modelimage: " \
+                                           +self.imagelist.values()[j]+".model", 'DEBUG1')
+                        if modelimage[j] != '' and modelimage[j] != []:
+                            self.convertmodelimage(modelimages=modelimage[j],
+                                    outputmodel=self.imagelist.values()[j]+'.model',imindex=j)
+
+        # elif .......
+        # put mfs with nterms>1 case here
+
+
+        
 
     def storeCubeImages(self,cubeimageroot,chanimageroot,chan,imagermode):
         """
