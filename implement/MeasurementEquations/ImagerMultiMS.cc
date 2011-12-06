@@ -515,8 +515,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
       if(mssel_p->nrow()!=thisms.nrow()) {
-	os << "Selected " << thisms.nrow() << " out of  "
-	   << mssel_p->nrow() << " rows." << LogIO::POST;
+	os << "Selected " << mssel_p->nrow() << " out of  "
+	   << thisms.nrow() << " rows." << LogIO::POST;
       }
       else {
 	os << "Selected all " << mssel_p->nrow() << " rows" << LogIO::POST;
