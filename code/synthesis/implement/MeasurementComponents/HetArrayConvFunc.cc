@@ -114,10 +114,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    antIndexToDiamIndex_p(k)=diamIndex;
 	    antMath_p.resize(diamIndex+1);
 	    if(pbClass_p== PBMathInterface::AIRY){
-	      Quantity qdiam(dishDiam(k),"m");
-	      
-	      //VLA ratio of blockage to dish
-	      Quantity blockDiam(dishDiam(k)/25.0*2.0, "m");	      
+	      Quantity qdiam(10.7, "m");
+	      Quantity blockDiam(0.75, "m");
+	      ///For ALMA 12m dish it is effectively 10.7 m according to Todd Hunter
+	      ///@ 2011-12-06
+	      if(!((vb.msColumns().observation().telescopeName()(0) =="ALMA") 
+		   && (abs(dishDiam[k] - 12.0) < 0.5))){
+		qdiam= Quantity (dishDiam(k),"m");	
+		//VLA ratio of blockage to dish
+		blockDiam= Quantity(dishDiam(k)/25.0*2.0, "m");
+	      }	      
 	      antMath_p[diamIndex]=new PBMath1DAiry(qdiam, blockDiam,  
 						    Quantity(150,"arcsec"), 
 						    Quantity(100.0,"GHz"));
