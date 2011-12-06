@@ -5,7 +5,7 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weight, outfile, overwrite, npix, cell, center, plot):
 
         casalog.origin('sdgrid')
         try:
@@ -17,13 +17,14 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, outf
                       + '   pollist = %s\n'%(pollist) \
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   support = %s\n'%(support) \
+                      + '   weight = %s\n'%(weight) \
                       + '   outfile = %s\n'%(outfile) \
                       + '   overwrite = %s\n'%(overwrite) \
                       + '   npix = %s\n'%(npix) \
                       + '   cell = %s\n'%(cell) \
                       + '   center = %s\n'%(center) \
                       + '   plot = %s'%(plot)
-            casalog.post( summary, 'INFO' )
+            casalog.post( summary, 'DEBUG' )
             
             # file check
             #infile=infile.rstrip('/')+'/'
@@ -119,6 +120,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, outf
                       + '   pols = %s\n'%(pols) \
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   support = %s\n'%(support) \
+                      + '   weight = %s\n'%(weight) \
                       + '   outname = %s\n'%(outname) \
                       + '   nx = %s\n'%(nx) \
                       + '   ny = %s\n'%(ny) \
@@ -126,9 +128,10 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, outf
                       + '   celly = %s\n'%(celly) \
                       + '   centerstr = %s\n'%(centerstr) \
                       + '   plot = %s'%(plot)
-            casalog.post( summary, 'INFO' )
+            casalog.post( summary, 'DEBUG' )
             gridder = sd.asapgrid( infile=infile )
             gridder.setPolList( pols )
+            gridder.setWeight( weight ) 
             gridder.defineImage( nx=nx, ny=ny,
                                  cellx=cellx, celly=celly,
                                  center=centerstr )

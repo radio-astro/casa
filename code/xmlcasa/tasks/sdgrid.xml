@@ -65,6 +65,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>-1</value>
     </param>
 
+    <param type="string" name="weight">
+      <description>weight type</description>
+      <value>UNIFORM</value>
+      <allowed kind="enum">
+        <value>UNIFORM</value>
+        <value>TINT</value>
+        <value>TSYS</value>
+        <value>TINTSYS</value>
+        <value>uniform</value>
+        <value>tint</value>
+        <value>tsys</value>
+        <value>tintsys</value>
+      </allowed>
+    </param>
+
     <param type="string" name="outfile">
       <description>output image name</description>
       <value></value>
