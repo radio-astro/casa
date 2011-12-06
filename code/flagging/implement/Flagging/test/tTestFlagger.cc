@@ -117,6 +117,16 @@ get_agent_parameters(int argc, char **argv, Record *agent_record)
 			{
 				agent_record->define("maxabs", value);
 			}
+			else if (parameter == String("-spwchan"))
+			{
+				bool spwchan = casa::Bool(atoi(argv[i+1]));
+				agent_record->define("spwchan", spwchan);
+			}
+			else if (parameter == String("-spwcorr"))
+			{
+				bool spwcorr = casa::Bool(atoi(argv[i+1]));
+				agent_record->define("spwcorr", spwcorr);
+			}
 		}
 	}
 	else if (mode == "tfcrop"){
@@ -233,6 +243,7 @@ int main(int argc, char **argv)
 	String uvrange = "";
 	String observation = "";
 	String parameter, value;
+	Bool backup = false;
 	unsigned short logLevel = 0;
 
 	Record results = Record();
@@ -353,12 +364,12 @@ int main(int argc, char **argv)
 			record.define ("uvrange", casa::String(value));
 			if (logLevel >= 3) cout << "UV range selection is: " << uvrange << endl;
 		}
-/*		else if (parameter == String("-correlation"))
+		else if (parameter == String("-correlation"))
 		{
 			correlation = value;
 			record.define ("correlation", casa::String(value));
 			if (logLevel >= 3) cout << "Correlation selection is: " << correlation << endl;
-		}*/
+		}
 		else if (parameter == String("-observation"))
 		{
 			observation = value;
@@ -377,6 +388,12 @@ int main(int argc, char **argv)
 			record.define ("feed", casa::String(value));
 			if (logLevel >= 3) cout << "Feed selection is: " << feed << endl;
 		}
+		else if (parameter == String("-flagbackup"))
+		{
+			backup = casa::Bool(atoi(argv[i+1]));
+			record.define ("flagbackup", backup);
+			if (logLevel >= 3) cout << "Flagbackup is: " << backup << endl;
+		}
 	}
 
 	// Parse the data selection parameters
@@ -387,7 +404,7 @@ int main(int argc, char **argv)
 
 	// Create a record with the agent's parameters
 	Record arecord;
-	String mode = get_agent_parameters(argc, argv, &arecord);
+	String mode = get_agent_parameters(argc, argv, &record);
 	if (mode == "unknown")
 	{
 		cout << "ERROR: Unknown mode requested " << endl;
@@ -399,7 +416,7 @@ int main(int argc, char **argv)
 	{
 		cout << "Parameters of mode " << mode << " are" << endl;
 		ostringstream os;
-		arecord.print(os);
+		record.print(os);
 		String str(os.str());
 		cout << str << endl;
 	}
@@ -410,7 +427,7 @@ int main(int argc, char **argv)
 //	}
 	// TODO: do other modes
 	// Parse agent data selection parameters
-	if (not tf->parseAgentParameters(arecord)) {
+	if (not tf->parseAgentParameters(record)) {
 		cout << "ERROR: Failed to parse agent parameters" << endl;
 	}
 
@@ -424,18 +441,25 @@ int main(int argc, char **argv)
 
 	if (logLevel >= 3) cout << "Done with initializing the agents "<< endl;
 
+	if (backup){
+		tf->printFlagSelections();
+	}
+
 	// Run the tool
 	results = tf->run();
-/*	if(mode == "summary"){
-		ostringstream os;
-		results.print(os);
-		String str(os.str());
-		cout << str << endl;
-	}*/
 
 	if (logLevel >= 3) cout << "Done with running the tool: "<< endl;
 
 	tf->done();
+
+/*
+	if(mode == "summary"){
+		ostringstream os;
+		results.print(os);
+		String str(os.str());
+		cout << str << endl;
+	}
+*/
 
 	return (0);
 }

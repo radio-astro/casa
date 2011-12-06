@@ -271,9 +271,61 @@ Executes a flagging run.
 </example>
 </method>
 
-
---> 
 <!-- ********************************************************************** -->
+
+    <method type="function" name="getflagversionlist">
+   <shortdescription>*** \n Print out a list of saved flag_versions. 
+              ***</shortdescription>
+<description> 
+Print out the list of flag versions in the MS, unless the parameter printflags=False. The list of names is returned.
+</description>
+<input>
+     <param type="bool" name="printflags">
+     <description>Print flagversions in logger?</description>
+     <value>true</value>
+     </param>
+</input>
+<returns type="stringArray"/>
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="printflagselection">
+   <shortdescription>Print out a list of current manual and auto flag selections.
+   </shortdescription>
+   
+<description>
+Print out a list of current manual and auto flag selections.
+</description>
+<input>
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ********************************************************************** -->
+
+   <method type="function" name="saveflagversion">
+   <shortdescription>*** \n Save current flags with a version name.*** 
+            </shortdescription>
+<description> 
+</description>
+<input>
+     <param type="string" name="versionname">
+     <description>Version name </description>
+     <value>""</value>
+     </param>
+     <param type="string" name="comment">
+     <description>Comment for this flag table </description>
+     <value>""</value>
+     </param>
+     <param type="string" name="merge">
+     <description>merge type </description>
+     <value>""</value>
+     </param>
+</input>
+<returns type="bool"/>
+</method>
+
  
 </tool>
 </casaxml>
