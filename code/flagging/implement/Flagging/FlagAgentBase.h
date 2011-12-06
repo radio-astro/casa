@@ -106,7 +106,7 @@ protected:
 	bool checkIfProcessBuffer();
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	virtual void preProcessBuffer(VisBuffer &visBuffer);
+	virtual void preProcessBuffer(const VisBuffer &visBuffer);
 
 	// Iterate trough list of rows
 	void iterateRows();

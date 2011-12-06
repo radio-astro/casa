@@ -70,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 void
-FlagAgentDisplay::preProcessBuffer(VisBuffer &visBuffer)
+FlagAgentDisplay::preProcessBuffer(const VisBuffer &visBuffer)
 {
 
   getChunkInfo(visBuffer);

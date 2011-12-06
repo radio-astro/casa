@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Compute flags for a given (time,freq) map
     void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2,vector<uInt> &rows);
 
-    void preProcessBuffer(VisBuffer &visBuffer);
+    void preProcessBuffer(const VisBuffer &visBuffer);
     
     // Choose how to step through the baselines in the current chunk
     void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);

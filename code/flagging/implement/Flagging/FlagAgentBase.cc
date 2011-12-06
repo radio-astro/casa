@@ -1119,7 +1119,7 @@ FlagAgentBase::checkIfProcessBuffer()
 }
 
 void
-FlagAgentBase::preProcessBuffer(VisBuffer &visBuffer)
+FlagAgentBase::preProcessBuffer(const VisBuffer &visBuffer)
 {
 	return;
 }
