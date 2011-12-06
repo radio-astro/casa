@@ -194,7 +194,8 @@ def tflagger(vis,
             if extend:
                 agent_pars['extend'] = False
             if writeflags:
-                agent_pars['writeflags'] = False
+                writeflags = False
+                agent_pars['writeflags'] = writeflags
 
             agent_pars['minrel'] = minrel
             agent_pars['maxrel'] = maxrel
@@ -237,7 +238,11 @@ def tflagger(vis,
                                flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
                                flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
                                     del summary_stats[x][xx]
-                
+
+
+        if flagbackup and writeflags:
+            print 'Backup the flags before applying new flags'
+            backup_flags(tflocal, mode)
         
         # Destroy the tool
         tflocal.done()
@@ -258,5 +263,46 @@ def tflagger(vis,
 #                casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
 #                             'WARN')
         
+    return
+
+def backup_flags(tflocal, mode):
+    ''' Backup the flags before applying new ones'''
+    
+    # Create names like this:
+    # before_manualflag_1,
+    # before_manualflag_2,
+    # before_manualflag_3,
+    # etc
+    #
+    # Generally  before_<mode>_<i>, where i is the smallest
+    # integer giving a name, which does not already exist
+    
+    # Get the existing flags from the FLAG_VERSION_LIST file
+    # in the MS directory
+    existing = tflocal.getflagversionlist(printflags=True)
+
+    # Remove the comments from strings
+    existing = [x[0:x.find(' : ')] for x in existing]
+
+    i = 1
+    while True:
+        versionname = mode +"_" + str(i)
+#        versionname = mode + str(i)
+
+        if not versionname in existing:
+            break
+        else:
+            i = i + 1
+
+    time_string = str(time.strftime('%Y-%m-%d %H:%M:%S'))
+
+    if debug:
+        casalog.post("Saving current flags to " + versionname + " before applying new flags")
+
+    # Save current flags with a new name
+    tflocal.saveflagversion(versionname=versionname,
+                           comment='flagdata autosave before ' + mode + ' on ' + time_string,
+                           merge='replace')
+
     return
 
