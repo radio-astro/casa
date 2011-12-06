@@ -27,8 +27,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   FlagAgentDisplay::FlagAgentDisplay(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
     //    FlagAgentBase(dh,config,ANTENNA_PAIRS,writePrivateFlagCube), 
         FlagAgentBase(dh,config,ANTENNA_PAIRS_INTERACTIVE,writePrivateFlagCube), 
-    plotter_p(NULL), ShowPlots(True), userchoice_p('a')
+	plotter_p(NULL), ShowPlots(True), 
+	userChoice_p("Continue"), userFixA1_p(""), userFixA2_p(""),
+	skipScan_p(-1), skipSpw_p(-1), skipField_p(-1),pause_p(False),
+	fieldId_p(-1), fieldName_p(""), scanStart_p(-1), scanEnd_p(-1), spwId_p(-1),
+	nPolarizations_p(1), freqList_p(Vector<Double>()),
+	antenna1_p(""),antenna2_p("")
   {
+
+
     setAgentParameters(config);
     
     // Request loading polarization map to FlagDataHandler
@@ -61,35 +68,98 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
   }
 
- 
+
 void
-FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
+FlagAgentDisplay::preProcessBuffer(VisBuffer &visBuffer)
 {
-	// Check if the visibility expression is suitable for this spw
-	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
-	cout << "iterate ::::::::::::: pause : " << pause_p << endl;
+  getChunkInfo(visBuffer);
 
-	// Iterate trough antenna pair map
-	std::pair<Int,Int> antennaPair;
-	antennaPairMapIterator myAntennaPairMapIterator;
-	bool stepback=False;
-	for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)
+    return;
+}
+
+  
+  void
+  FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
+  {
+    // Check if the visibility expression is suitable for this spw
+    if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
+    
+    // Iterate through antenna pair map
+    std::pair<Int,Int> antennaPair;
+    antennaPairMapIterator myAntennaPairMapIterator;
+    bool stepback=False;
+    for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)
+      {
+
+	// Check whether to skip the rest of this chunk or not
+	if(skipSpw_p != -1) 
 	  {
+	    if(skipSpw_p == spwId_p) {ShowPlots=False;} // Skip the rest of this SPW
+	    else {skipSpw_p = -1; ShowPlots=True;} // Reached next SPW. Reset state
+	  }
+	if(skipField_p != -1) 
+	  {
+	    if(skipField_p == fieldId_p) {ShowPlots=False;} // Skip the rest of this Field
+	    else {skipField_p = -1; ShowPlots=True;} // Reached next Field. Reset state
+	  }
+	if(skipScan_p != -1) 
+	  {
+	    if(skipScan_p == scanEnd_p) {ShowPlots=False;} // Skip the rest of this Scan
+	    else {skipScan_p = -1; ShowPlots=True;} // Reached next Scan. Reset state
+	  }
 
-	    if(ShowPlots)
+
+	// Display this baseline
+	if(ShowPlots)
+	  {
+	    
+	    // If choice from previous plot was to go backwards in baseline.
+	    if(stepback)
 	      {
-		if(stepback)
-                  {
-		    if( myAntennaPairMapIterator != antennaPairMap_ptr->begin() )
-		      -- myAntennaPairMapIterator; 
-		    if( myAntennaPairMapIterator != antennaPairMap_ptr->begin() )
-		      -- myAntennaPairMapIterator; 
-		    stepback=False;
+		// Go to previous baseline (decrement by 2)
+		if( myAntennaPairMapIterator != antennaPairMap_ptr->begin() )
+		  -- myAntennaPairMapIterator; 
+		if( myAntennaPairMapIterator != antennaPairMap_ptr->begin() )
+		  -- myAntennaPairMapIterator; 
+		
+		// If antenna constraints exist, keep going back until first match is found. 
+		// If not found, stay on current baseline (continue)
+		if( userFixA1_p != String("") || userFixA2_p != String("") )
+		  {
+		    antennaPairMapIterator tempIterator;
+		    bool found=False;
+		    for(tempIterator = myAntennaPairMapIterator; tempIterator != antennaPairMap_ptr->begin() ; --tempIterator )
+		      {
+			if( ! skipBaseline(tempIterator->first) ) {found=True; break;}
+		      }
+		    if(found) // Jump to this antenna pair
+		      { 
+			myAntennaPairMapIterator = tempIterator; 
+		      }
+		    else 
+		      {
+			cout << "No Previous baseline in this chunk with Ant1 : " 
+			     << ( (userFixA1_p==String(""))?String("any"):userFixA1_p )
+			     << "  and Ant2 : " 
+			     << ( (userFixA2_p==String(""))?String("any"):userFixA2_p )
+			     << endl;
+		
+			// Stay on current baseline
+			if( myAntennaPairMapIterator != antennaPairMap_ptr->end() )
+			  ++myAntennaPairMapIterator; 
+		      }
 		  }
 
+		// Reset state
+		stepback=False;
+	      }
+	    
 	    // Get antenna pair from map
 	    antennaPair = myAntennaPairMapIterator->first;
+	    
+	    // Check whether or not to display this baseline (for going in the forward direction)
+	    if( skipBaseline(antennaPair) ) continue;
 	    
  	    // Process antenna pair
 	    processAntennaPair(antennaPair.first,antennaPair.second);
@@ -99,45 +169,69 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 	      {
 		
 		// Wait for User Input
-		userchoice_p = GetUserInput();
-
-		cout << "************ UserChoice : " << userchoice_p << endl;
-
+		getUserInput(); // Fills in userChoice_p. userfix
+		
 		// React to user-input
-		if(userchoice_p=='q')
+		if(userChoice_p=="Quit")
 		  {
 		    ShowPlots = False; 
 		    StopAndExit = True;
-		    cout << "Exiting flagger : Not yet implemented. Will just stop display" << endl;
+		    cout << "Exiting flagger" << endl;
 		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
-		    //return False;
+		    flagDataHandler_p->stopIteration();
+		    return ;
 		  }
-		else if(userchoice_p=='s')
+		else if(userChoice_p=="StopDisplay")
 		  {
 		    ShowPlots = False;
 		    cout << "Stopping display. Continuing flagging." << endl;
 		    if(plotter_p!=NULL) { plotter_p->done(); plotter_p=NULL; }
 		  }
-		else if(userchoice_p=='p')
+		else if(userChoice_p=="PrevBaseline")
 		  {
 		    if( myAntennaPairMapIterator==antennaPairMap_ptr->begin() )
 		      cout << "Already on first baseline..." << endl;
 		    stepback=True;
 		  }
-		else if(userchoice_p=='c')
+		else if(userChoice_p=="NextScan")
+		  {
+		    cout << "Next Scan " << endl;
+		    skipScan_p = scanEnd_p;
+		  }
+		else if(userChoice_p=="NextSpw")
+		  {
+		    cout << "Next SPW " << endl;
+		    skipSpw_p = spwId_p;
+		  }
+		else if(userChoice_p=="NextField")
+		  {
+		    cout << "Next Field " << endl;
+		    skipField_p = fieldId_p;
+		  }
+		else if(userChoice_p=="Continue")
 		  {
 		    cout << "Next chunk " << endl; // Right now, a chunk is one baseline !
-		    return; ////break; // break out of baseline loop
+		    return; 
 		  }
 		
 	      }// end if pause=True
-
-	      }// if ShowPlots
-
-	  }// end antennaMapIterator
+	    
+	  }// if ShowPlots
 	
-	return;
-}
+      }// end antennaMapIterator
+    
+    return;
+  }
+  
+  
+  Bool 
+  FlagAgentDisplay::skipBaseline(std::pair<Int,Int> antennaPair)
+  {
+    String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antennaPair.first);
+    String antenna2Name = flagDataHandler_p->antennaNames_p->operator()(antennaPair.second);
+    //	    if(userFixA2_p != "") cout << "*********** userfixa2 : " << userFixA2_p << "   thisant : " << antenna1Name << " && " << antenna2Name << endl;
+    return  (  (userFixA1_p != ""  && userFixA1_p != antenna1Name)  ||   (userFixA2_p != ""  && userFixA2_p != antenna2Name) ) ;
+  }
   
   void
   FlagAgentDisplay::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
@@ -151,11 +245,26 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
     String antenna1Name = flagDataHandler_p->antennaNames_p->operator()(antenna1);
     String antenna2Name = flagDataHandler_p->antennaNames_p->operator()(antenna2);
     String baselineName = antenna1Name + "&&" + antenna2Name;
+    antenna1_p = antenna1Name;
+    antenna2_p = antenna2Name;
     
+    String scanRange = (scanStart_p!=scanEnd_p)?String::toString(scanStart_p)+"~"+String::toString(scanEnd_p) : String::toString(scanStart_p);
+    String spwName = String::toString(visBuffer.spectralWindow());
+    
+    // Get Frequency List
+    freqList_p.resize(nChannels);
+    for(uInt ch=0;ch<nChannels;ch++) freqList_p[ch]=(Double)ch;
+    
+    
+    /*    
     // Read current Field name, SPW id, and correlation string from visBuffer Info.
-    uInt fieldID = visBuffer.fieldId();
-    String fieldName = visBuffer.msColumns().field().name().getColumn()[fieldID];
-    String spwID = String::toString(visBuffer.spectralWindow());
+    uInt fieldId_p = visBuffer.fieldId();
+    String fieldName = visBuffer.msColumns().field().name().getColumn()[fieldId_p];
+    String spwName = String::toString(visBuffer.spectralWindow());
+    Int scanstart = visBuffer.scan()[0];
+    int scanend = visBuffer.scan()[ (visBuffer.scan().nelements())-1 ];
+    String scanRange = (scanstart!=scanend)?String::toString(scanstart)+"~"+String::toString(scanend) : String::toString(scanstart);
+    */
     
     // Get Polarization Maps
     Vector<uInt> polarizations = flags.getSelectedCorrelations();
@@ -165,12 +274,8 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
     for(uInt pol=0;pol<nPolarizations_p;pol++)
       corrTypes[pol] = (*polMap)[polarizations[pol]];
     
-    // Get Frequency List
-    Vector<Double> freqList(nChannels);
-    for(uInt ch=0;ch<nChannels;ch++) freqList[ch]=(Double)ch;
-    
     // Print where we are...
-    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Baseline : " << baselineName << " Field : " << fieldName << " Spw : " << spwID << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
+    //    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Baseline : " << baselineName << " Field : " << fieldName_p << " Spw : " << spwName << "  nChan : " << nChannels << " nPol : " << nPolarizations_p << " nTime : " << nTimes << LogIO::POST;
     
     // Build the Plot Window for the first time
     if(ShowPlots && plotter_p==NULL) BuildPlotWindow();
@@ -218,12 +323,12 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 	    
 	    // Make the Labels
 	    stringstream ostr1,ostr2;
-	    ostr1 << "(" << fieldID << ") " << fieldName << "\n[spw:" << spwID << "] " << baselineName << "  ( " << corrTypes[pl] << " )";
+	    ostr1 << "(" << fieldId_p << ") " << fieldName_p << "  [scan:" << scanRange << "]\n[spw:" << spwName << "] " << baselineName << "  ( " << corrTypes[pl] << " )";
 	    ostr2 << fixed;
 	    ostr2.precision(1);
 	    ostr2 << " flag:" << 100 * runningflag/(nChannels*nTimes) << "% (pre-flag:" << 100 * runningpreflag/(nChannels*nTimes) << "%)";
 	    
-	    *logger_p << "[" << corrTypes[pl] << "]:" << 100 * runningflag/(nChannels*nTimes) << "%(" << 100 * runningpreflag/(nChannels*nTimes) << "%) "; 
+	    //*logger_p << "[" << corrTypes[pl] << "]:" << 100 * runningflag/(nChannels*nTimes) << "%(" << 100 * runningpreflag/(nChannels*nTimes) << "%) "; 
 	    
 	    // Make the Before/After Raster Plots
 	    DisplayRaster(nChannels,nTimes,vecdispdat,panels_p[pl].getInt());
@@ -240,11 +345,11 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
 	    
 	    origspectrum = (origspectrum/precountspec);
 	    flagspectrum = (flagspectrum/countspec);
-	    AlwaysAssert( freqList.nelements()==nChannels , AipsError); 
+	    AlwaysAssert( freqList_p.nelements()==nChannels , AipsError); 
 	    
-	    DisplayLine(nChannels, freqList, origspectrum, String("before:")+corrTypes[pl], 
+	    DisplayLine(nChannels, freqList_p, origspectrum, String("before:")+corrTypes[pl], 
 			String("red"), False, panels_p[pl+(2*nPolarizations_p)].getInt());
-	    DisplayScatter(nChannels, freqList, flagspectrum, String("after:")+corrTypes[pl], 
+	    DisplayScatter(nChannels, freqList_p, flagspectrum, String("after:")+corrTypes[pl], 
 			   String("blue"), True, panels_p[pl+(2*nPolarizations_p)].getInt());
 	    
 	    //// TODO : Can I query the tfcrop agent for a "view" to overlay here. 
@@ -272,6 +377,20 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
   
   //----------------------------------------------------------------------------------------------------------
   
+  void 
+  FlagAgentDisplay::getChunkInfo(const VisBuffer &visBuffer)
+  {
+    // Read current Field name, SPW id, and scan info.
+    fieldId_p = visBuffer.fieldId();
+    fieldName_p = flagDataHandler_p->fieldNames_p->operator()(fieldId_p);
+    spwId_p = visBuffer.spectralWindow();
+    scanStart_p = visBuffer.scan()[0];
+    scanEnd_p = visBuffer.scan()[ (visBuffer.scan().nelements())-1 ];
+    
+    *logger_p << LogIO::NORMAL << "FlagAgentDisplay::" << __FUNCTION__ << " Field : " << fieldId_p << " , " << fieldName_p << " Spw : " << spwId_p << " Scan : " << scanStart_p << " : " << scanEnd_p << LogIO::POST;
+  }
+  
+  
   /***********************************************************************/  
   /******************     Plot Functions      ******************************/  
   /***********************************************************************/  
@@ -279,76 +398,8 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
   Bool FlagAgentDisplay::BuildPlotWindow()
   {
     
-    dock_xml_p = "\
-<?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
-<ui version=\"4.0\">				\
- <class>dock01</class>				\
- <widget class=\"QDockWidget\" name=\"dock01\">	\
-  <property name=\"geometry\">			\
-   <rect>					\
-    <x>0</x>					\
-    <y>0</y>					\
-    <width>485</width>				\
-    <height>80</height>				\
-   </rect>					\
-  </property>					\
-  <property name=\"minimumSize\">		\
-   <size>					\
-    <width>485</width>						\
-    <height>80</height>						\
-   </size>							\
-  </property>							\
-  <property name=\"windowTitle\">				\
-   <string/>							\
-  </property>							\
-  <widget class=\"QWidget\" name=\"dockWidgetContents\">	\
-   <layout class=\"QGridLayout\" name=\"gridLayout_2\">		\
-    <item row=\"0\" column=\"0\">				\
-     <layout class=\"QGridLayout\" name=\"gridLayout\">		\
-      <item row=\"0\" column=\"0\">				\
-       <widget class=\"QPushButton\" name=\"PrevBaseline\">	\
-        <property name=\"text\">				\
-         <string>Prev Baseline</string>				\
-        </property>						\
-       </widget>						\
-      </item>							\
-      <item row=\"0\" column=\"1\">				\
-       <widget class=\"QPushButton\" name=\"NextBaseline\">	\
-        <property name=\"text\">				\
-         <string>Next Baseline</string>				\
-        </property>						\
-       </widget>						\
-      </item>							\
-      <item row=\"0\" column=\"2\">				\
-       <widget class=\"QPushButton\" name=\"NextChunk\">	\
-        <property name=\"text\">				\
-         <string>Next Chunk</string>				\
-        </property>						\
-       </widget>						\
-      </item>							\
-      <item row=\"0\" column=\"3\">				\
-       <widget class=\"QPushButton\" name=\"StopDisplay\">	\
-        <property name=\"text\">				\
-         <string>Stop Display</string>				\
-        </property>						\
-       </widget>						\
-      </item>							\
-      <item row=\"0\" column=\"4\">				\
-       <widget class=\"QPushButton\" name=\"Quit\">		\
-        <property name=\"text\">				\
-         <string>Quit</string>					\
-        </property>						\
-       </widget>						\
-      </item>							\
-     </layout>							\
-    </item>							\
-   </layout>							\
-  </widget>							\
- </widget>							\
- <resources/>							\
- <connections/>							\
-</ui>								\
-";
+    setLayout();
+    AlwaysAssert( dock_xml_p != NULL , AipsError );
     
     plotter_p = dbus::launch<FlagPlotServerProxy>();
     
@@ -412,22 +463,50 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
     
     
     
-  }
+  }// end BuildPlotWindow
   
   
-  Char FlagAgentDisplay :: GetUserInput()
+  
+  void FlagAgentDisplay :: getUserInput()
   {
-    Char choice='c';
-    String returnvalue = plotter_p->eventloop();
-    if(returnvalue == "NextBaseline") choice = 'n';
-    else if(returnvalue == "PrevBaseline") choice = 'p';
-    else if(returnvalue == "NextChunk") choice = 'c';
-    else if(returnvalue == "StopDisplay") choice = 's';
-    else if(returnvalue == "Quit") choice = 'q';
+    userChoice_p = "Continue";
+    String returnvalue;
     
-    //cout << "Choice : " << returnvalue << endl;
+    Bool exitEventLoop=False;
     
-    return choice;
+    while( ! exitEventLoop)
+      {
+	
+	returnvalue = plotter_p->eventloop();
+	if(returnvalue == "NextBaseline" || returnvalue == "PrevBaseline" || returnvalue == "NextScan"
+	   || returnvalue == "NextField" || returnvalue == "NextSpw" 
+	   || returnvalue == "StopDisplay" || returnvalue == "Quit") 
+	  {
+	    userChoice_p = returnvalue; 
+	    exitEventLoop=True;
+	  }
+	else if(returnvalue == "FixAntenna1:0" || returnvalue == "FixAntenna1:2" ) 
+	  {
+	    userChoice_p = "Continue";  
+	    //	    userFixA1_p=(returnvalue.lastchar()=='0')?-1:antenna1_p; 
+	    userFixA1_p=(returnvalue.lastchar()=='0')?String(""):antenna1_p; 
+	    exitEventLoop=False;
+	  }
+	else if(returnvalue == "FixAntenna2:0" || returnvalue == "FixAntenna2:2" ) 
+	  {
+	    userChoice_p = "Continue";  
+	    //	    userFixA2_p=(returnvalue.lastchar()=='0')?-1:antenna2_p; 
+	    userFixA2_p=(returnvalue.lastchar()=='0')?String(""):antenna2_p; 
+	    exitEventLoop=False;
+	  }
+	else cout << "Unknown GUI choice" << endl;
+	
+	//    cout << "ReturnValue : " << returnvalue << "   userChoice : " << userChoice_p << "  userFixA1 : " << userFixA1_p << "  userFixA2 : " << userFixA2_p << endl;
+	
+      }
+    
+    
+    return;
   }
   
   void FlagAgentDisplay::DisplayRaster(Int xdim, Int ydim, Vector<Float> &data, uInt frame)
@@ -454,6 +533,251 @@ FlagAgentDisplay::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_
   }
   
   
+  
+  Bool FlagAgentDisplay :: setLayout()
+  {
+    
+    dock_xml_p = "\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
+<ui version=\"4.0\">				\
+ <class>dock01</class>				\
+ <widget class=\"QDockWidget\" name=\"dock01\">	\
+  <property name=\"geometry\">			\
+   <rect>					\
+    <x>0</x>					\
+    <y>0</y>					\
+    <width>770</width>				\
+    <height>80</height>				\
+   </rect>					\
+  </property>					\
+  <property name=\"sizePolicy\">				\
+   <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">	\
+    <horstretch>0</horstretch>					\
+    <verstretch>0</verstretch>					\
+   </sizepolicy>						\
+  </property>							\
+  <property name=\"minimumSize\">				\
+   <size>							\
+    <width>770</width>						\
+    <height>80</height>						\
+   </size>							\
+  </property>							\
+  <property name=\"windowTitle\">				\
+   <string/>							\
+  </property>							\
+  <widget class=\"QWidget\" name=\"dockWidgetContents\">	\
+   <widget class=\"QWidget\" name=\"\">				\
+    <property name=\"geometry\">				\
+     <rect>							\
+      <x>13</x>							\
+      <y>14</y>							\
+      <width>735</width>					\
+      <height>46</height>					\
+     </rect>							\
+    </property>							\
+    <layout class=\"QGridLayout\" name=\"gridLayout\">		\
+     <item row=\"0\" column=\"0\">				\
+      <widget class=\"QPushButton\" name=\"PrevBaseline\">	\
+       <property name=\"text\">					\
+        <string>Prev Baseline</string>				\
+       </property>						\
+      </widget>							\
+     </item>							\
+     <item row=\"0\" column=\"1\">				\
+      <widget class=\"QPushButton\" name=\"NextBaseline\">	\
+       <property name=\"text\">					\
+        <string>Next Baseline</string>				\
+       </property>						\
+      </widget>							\
+     </item>							\
+     <item row=\"0\" column=\"2\">				\
+      <layout class=\"QVBoxLayout\" name=\"verticalLayout\">	\
+       <property name=\"spacing\">				\
+        <number>0</number>					\
+       </property>						\
+       <property name=\"sizeConstraint\">			\
+        <enum>QLayout::SetMinimumSize</enum>			\
+       </property>						\
+       <item>							\
+        <widget class=\"QCheckBox\" name=\"FixAntenna1\">	\
+         <property name=\"text\">				\
+          <string>Fix Antenna1</string>				\
+         </property>						\
+        </widget>						\
+       </item>							\
+       <item>							\
+        <widget class=\"QCheckBox\" name=\"FixAntenna2\">	\
+         <property name=\"text\">				\
+          <string>Fix Antenna2</string>				\
+         </property>						\
+        </widget>						\
+       </item>							\
+      </layout>							\
+     </item>							\
+     <item row=\"0\" column=\"3\">				\
+      <widget class=\"QPushButton\" name=\"NextSpw\">		\
+       <property name=\"text\">					\
+        <string>Next SPW</string>				\
+       </property>						\
+      </widget>							\
+     </item>							\
+     <item row=\"0\" column=\"4\">				\
+      <widget class=\"QPushButton\" name=\"NextScan\">		\
+       <property name=\"text\">					\
+        <string>Next Scan</string>				\
+       </property>						\
+      </widget>							\
+     </item>							\
+     <item row=\"0\" column=\"5\">				\
+      <widget class=\"QPushButton\" name=\"NextField\">		\
+       <property name=\"text\">					\
+        <string>Next Field</string>				\
+       </property>						\
+      </widget>							\
+     </item>							\
+     <item row=\"0\" column=\"6\">				\
+      <widget class=\"QPushButton\" name=\"StopDisplay\">	\
+       <property name=\"text\">					\
+        <string>Stop Display</string>				\
+       </property>						\
+      </widget>							\
+     </item>							\
+     <item row=\"0\" column=\"7\">				\
+      <widget class=\"QPushButton\" name=\"Quit\">		\
+       <property name=\"text\">					\
+        <string>Quit</string>					\
+       </property>						\
+      </widget>							\
+     </item>							\
+    </layout>							\
+   </widget>							\
+  </widget>							\
+ </widget>							\
+ <resources/>							\
+ <connections/>							\
+</ui>								\
+";
+    
+    
+    /*
+      
+      dock_xml_p = "\
+      <?xml version=\"1.0\" encoding=\"UTF-8\"?>	\
+      <ui version=\"4.0\">				\
+      <class>dock01</class>				\
+      <widget class=\"QDockWidget\" name=\"dock01\">		\
+      <property name=\"sizePolicy\">				\
+      <sizepolicy hsizetype=\"Preferred\" vsizetype=\"Preferred\">	\
+      <horstretch>0</horstretch>					\
+      <verstretch>0</verstretch>					\
+      </sizepolicy>							\
+      </property>							\
+      <property name=\"minimumSize\">					\
+      <size>								\
+      <width>770</width>						\
+      <height>80</height>						\
+      </size>								\
+      </property>							\
+      <property name=\"windowTitle\">					\
+      <string/>								\
+      </property>							\
+      <widget class=\"QWidget\" name=\"dockWidgetContents\">		\
+      <widget class=\"QWidget\" name=\"\">				\
+      <property name=\"geometry\">					\
+      <rect>								\
+      <x>12</x>								\
+      <y>13</y>								\
+      <width>735</width>						\
+      <height>46</height>						\
+      </rect>								\
+      </property>							\
+      <layout class=\"QGridLayout\" name=\"gridLayout\">		\
+      <item row=\"0\" column=\"0\">					\
+      <widget class=\"QPushButton\" name=\"PrevBaseline\">		\
+      <property name=\"text\">						\
+      <string>Prev Baseline</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item row=\"0\" column=\"1\">					\
+      <widget class=\"QPushButton\" name=\"NextBaseline\">		\
+      <property name=\"text\">						\
+      <string>Next Baseline</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item row=\"0\" column=\"2\">					\
+      <layout class=\"QVBoxLayout\" name=\"verticalLayout\">		\
+      <property name=\"spacing\">					\
+      <number>0</number>						\
+      </property>							\
+      <property name=\"sizeConstraint\">				\
+      <enum>QLayout::SetMinimumSize</enum>				\
+      </property>							\
+      <item>								\
+      <widget class=\"QCheckBox\" name=\"FixAntenna1\">			\
+      <property name=\"text\">						\
+      <string>Fix Antenna1</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item>								\
+      <widget class=\"QCheckBox\" name=\"FixAntenna2\">			\
+      <property name=\"text\">						\
+      <string>Fix Antenna2</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      </layout>								\
+      </item>								\
+      <item row=\"0\" column=\"3\">					\
+      <widget class=\"QPushButton\" name=\"NextScan\">			\
+      <property name=\"text\">						\
+      <string>Next Scan</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item row=\"0\" column=\"4\">					\
+      <widget class=\"QPushButton\" name=\"NextSpw\">			\
+      <property name=\"text\">						\
+      <string>Next SPW</string>						\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item row=\"0\" column=\"5\">					\
+      <widget class=\"QPushButton\" name=\"NextField\">			\
+      <property name=\"text\">						\
+      <string>Next Field</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item row=\"0\" column=\"6\">					\
+      <widget class=\"QPushButton\" name=\"StopDisplay\">		\
+      <property name=\"text\">						\
+      <string>Stop Display</string>					\
+      </property>							\
+      </widget>								\
+      </item>								\
+      <item row=\"0\" column=\"7\">					\
+      <widget class=\"QPushButton\" name=\"Quit\">			\
+      <property name=\"text\">						\
+      <string>Quit</string>						\
+      </property>							\
+      </widget>								\
+      </item>								\
+      </layout>								\
+      </widget>								\
+      </widget>								\
+      </widget>								\
+      <resources/>							\
+      <connections/>							\
+      </ui>								\
+      ";
+      
+      
+    */
+    
+  }// end of SetLayout
   
   
 } //# NAMESPACE CASA - END

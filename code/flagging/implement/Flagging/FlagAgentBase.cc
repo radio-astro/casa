@@ -372,6 +372,7 @@ FlagAgentBase::runCore()
 			}
 			case ANTENNA_PAIRS_INTERACTIVE:
 			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateAntennaPairsInteractive(flagDataHandler_p->getAntennaPairMap());
 				break;
 			}

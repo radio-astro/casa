@@ -97,7 +97,11 @@ class FlagPlotServerProxy : public PlotServerProxy {
 	}
 
 	void check(const int32_t& panel, const std::string& name, const int32_t& state) {
-	    std::cout << "check: " << name << "/" << panel << " <" << state << ">" << std::endl;
+	  //std::cout << "check: " << name << "/" << panel << " <" << state << ">" << std::endl;
+	  stringstream rval;
+	  rval << name << ":"<< state;
+	  returnvalue = rval.str();
+	  casa::DBusSession::instance().dispatcher().leave();
 	}
 
 	void radio(const int32_t& panel, const std::string& name, const bool& state) {

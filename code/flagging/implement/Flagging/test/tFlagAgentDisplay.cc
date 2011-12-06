@@ -239,7 +239,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	FlagAgentDisplay *flaggingAgent = NULL;
         FlagAgentManual *flaggingAgent2 = NULL;
 
-                
+	                
         // Add a manual-flag agent (the list has only one here)
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
