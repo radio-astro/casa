@@ -78,7 +78,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
   LogIO os(LogOrigin("CSCleanImageSkyModel","solve"));
   Bool converged=True;
   if(modified_p) {
-    makeNewtonRaphsonStep(se, False);
+    makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
   }
 
   if( numberIterations() < 1)

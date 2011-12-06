@@ -226,7 +226,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 	os << LogIO::NORMAL1    // Loglevel INFO
            << "Using visibility-subtraction for residual calculation"
 	   << LogIO::POST;
-	makeNewtonRaphsonStep(se, False);
+	makeNewtonRaphsonStep(se, False, (numberIterations()<1)?True:False);
 	
       }
       else {
