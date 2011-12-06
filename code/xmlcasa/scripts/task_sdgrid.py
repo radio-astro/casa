@@ -5,7 +5,7 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdgrid(infile, scanlist, ifno, polno, antenna, gridfunction, support, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, outfile, overwrite, npix, cell, center, plot):
 
         casalog.origin('sdgrid')
         try:
@@ -14,7 +14,7 @@ def sdgrid(infile, scanlist, ifno, polno, antenna, gridfunction, support, outfil
                       + '   antenna = %s\n'%(antenna) \
                       + '   scanlist = %s\n'%(scanlist) \
                       + '   ifno = %s\n'%(ifno) \
-                      + '   polno = %s\n'%(polno) \
+                      + '   pollist = %s\n'%(pollist) \
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   support = %s\n'%(support) \
                       + '   outfile = %s\n'%(outfile) \
@@ -27,6 +27,14 @@ def sdgrid(infile, scanlist, ifno, polno, antenna, gridfunction, support, outfil
             
             # file check
             #infile=infile.rstrip('/')+'/'
+
+            # pollist
+            if isinstance(pollist,list) or isinstance(pollist,numpy.ndarray):
+                pols = list(pollist)
+            elif pollist == -1:
+                pols = []
+            else:
+                pols = [pollist]
 
             # gridfunction and support
             if gridfunction.upper() == 'PB':
@@ -108,6 +116,7 @@ def sdgrid(infile, scanlist, ifno, polno, antenna, gridfunction, support, outfil
             casalog.post('Start gridding...', "INFO")
             summary =   'Grid Parameter Summary:\n' \
                       + '   infile = %s\n'%(infile) \
+                      + '   pols = %s\n'%(pols) \
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   support = %s\n'%(support) \
                       + '   outname = %s\n'%(outname) \
@@ -119,6 +128,7 @@ def sdgrid(infile, scanlist, ifno, polno, antenna, gridfunction, support, outfil
                       + '   plot = %s'%(plot)
             casalog.post( summary, 'INFO' )
             gridder = sd.asapgrid( infile=infile )
+            gridder.setPolList( pols )
             gridder.defineImage( nx=nx, ny=ny,
                                  cellx=cellx, celly=celly,
                                  center=centerstr )

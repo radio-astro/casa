@@ -39,9 +39,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value>0</value>
     </param>
 
-    <param type="int" name="polno">
+    <param type="any" name="pollist">
       <description>POLNO for gridding</description>
-      <value>0</value>
+      <any type="variant" limittype="int intArray"/>
+      <value type="int">-1</value>
     </param>
 
     <param type="string" name ="gridfunction">
@@ -132,18 +133,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <example>
   Keyword arguments:
         infile -- name of input SD dataset
+        antenna -- select data based on antenna name(s) or id(s)
+                default: -1
+                example: 0, 'DV01'
         scanlist -- list of scan numbers to process
                 default: [] (use all scans)
                 example: [21,22,23,24]
         ifno -- IFNO to be gridded
                 default: 0
                 example: 1
-        polno -- POLNO to be gridded
-                default: 0
-                example: 1
-        antenna -- select data based on antenna name(s) or id(s)
-                default: -1
-                example: 0, 'DV01'
+        pollist -- POLNO to be gridded
+                default: -1 (all)
+                example: 1,[0,1]
         gridfunction -- gridding function 
                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 
                          'GAUSS' (Gaussian), 'PB' (Primary-beam)
