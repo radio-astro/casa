@@ -1149,7 +1149,18 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 							     MDirection::Ref(MDirection::AZEL)),
 						  Quantity(1.0, "GHz")),
 				       useSymmetricBeam);
-
+      /*
+       MathFunc<Float> dd(SPHEROIDAL);
+      Vector<Float> valsph(31);
+      for(Int k=0; k <31; ++k){
+        valsph(k)=dd.value((Float)(k)/10.0);
+      }
+      //
+      Quantity fulrad((52.3/2.0*3.0/1.1117),"arcsec");
+      Quantity lefreq(144.0, "GHz");
+    
+      pb_pointer_p = new PBMath1DNumeric(valsph,fulrad,lefreq);
+      */
     }
   break;
   case VLA_U:
@@ -1462,15 +1473,18 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 				       Quantity(1.784,"deg"), Quantity(1.0,"GHz") );
     break;
   case ALMA:
-      pb_pointer_p = new PBMath1DAiry( Quantity(12.0,"m"), Quantity(1.0,"m"),
+    /////Value suggested as more appropriate for all 3 ALMA dishes
+    ////previously was using the physical dimension of 12 m, 12m,  and 6m
+    /////by Todd Hunter & Crystal Brogan 2011-12-06
+    pb_pointer_p = new PBMath1DAiry( Quantity(10.7,"m"), Quantity(0.75,"m"),
 				       Quantity(1.784,"deg"), Quantity(1.0,"GHz") );
     break;
   case ALMASD:
-      pb_pointer_p = new PBMath1DAiry( Quantity(12.0,"m"), Quantity(1.0,"m"),
+      pb_pointer_p = new PBMath1DAiry( Quantity(10.7,"m"), Quantity(0.75,"m"),
 				       Quantity(1.784,"deg"), Quantity(1.0,"GHz") );
     break;
   case ACA:
-      pb_pointer_p = new PBMath1DAiry( Quantity(6.0,"m"), Quantity(0.5,"m"),
+      pb_pointer_p = new PBMath1DAiry( Quantity(6.25,"m"), Quantity(0.75,"m"),
 				       Quantity(3.568,"deg"), Quantity(1.0,"GHz") );
     break;
   case SMA:
