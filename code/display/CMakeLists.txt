@@ -40,6 +40,8 @@ qt4_wrap_cpp( outfiles_qoh
   implement/QtViewer/QtCanvasManager.qo.h
   implement/QtViewer/QtCleanPanelGui.qo.h
   implement/QtViewer/QtDataManager.qo.h
+  implement/QtViewer/QtExportManager.qo.h
+  implement/QtViewer/QtExportBrowser.qo.h
   implement/QtViewer/QtDataOptionsPanel.qo.h
   implement/QtViewer/QtDBusViewerAdaptor.qo.h
   implement/QtViewer/QtDisplayDataGui.qo.h
@@ -87,6 +89,8 @@ casa_qt4_wrap_ui( outfiles_ui
   implement/QtViewer/QtAnimatorGui.ui
   implement/QtViewer/QtAnnotatorGui.ui
   implement/QtViewer/QtDataManager.ui
+  implement/QtViewer/QtExportManager.ui
+  implement/QtViewer/QtExportBrowser.ui
   implement/QtViewer/QtDataOptionsPanel.ui
   implement/QtViewer/QtRegionMgr.ui
   implement/QtViewer/QtDataMgrMsSelect.ui
@@ -325,6 +329,8 @@ casa_add_library( display
   implement/QtViewer/QtAnnotatorGui.cc
   implement/QtViewer/QtCleanPanelGui.cc
   implement/QtViewer/QtDataManager.cc
+  implement/QtViewer/QtExportManager.cc
+  implement/QtViewer/QtExportBrowser.cc
   implement/QtViewer/QtDataOptionsPanel.cc
   implement/QtViewer/QtDBusViewerAdaptor.cc
   implement/QtViewer/QtDisplayData.cc

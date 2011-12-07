@@ -147,6 +147,7 @@ class WCCSAxisLabeller : public WCAxisLabeller {
   Bool itsHasCoordinateSystem;
   String itsSpectralUnit;
   String itsSpectralQuantity;
+  String itsSpectralTypeUnit;
   String itsDirectionUnit;
   String itsDirectionSystem;
   String itsFrequencySystem;
@@ -172,6 +173,8 @@ class WCCSAxisLabeller : public WCAxisLabeller {
   // Set absolute/relative state in itsCoordinateSystem
   void setAbsRelState();
 
+  // "optical velocity [m/s]" --> "optical velocity" and "m/s"
+  void distributeTypeUnit() ;
 };
 
 

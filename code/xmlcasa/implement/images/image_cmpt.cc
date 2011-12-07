@@ -2725,7 +2725,8 @@ bool image::tofits(const std::string& fitsfile, const bool velocity,
 		const double maxpix, const ::casac::record& region,
 		const ::casac::variant& vmask, const bool overwrite,
 		const bool dropdeg, const bool deglast, const bool dropstokes,
-		const bool stokeslast, const bool wavelength, const bool /* async */) {
+		const bool stokeslast, const bool wavelength, const bool airwavelength,
+		const bool /* async */) {
 	bool rstat(false);
 	try {
 		*_log << LogOrigin("image", "tofits");
@@ -2748,7 +2749,7 @@ bool image::tofits(const std::string& fitsfile, const bool velocity,
 
 		rstat = _image->tofits(fitsfile, velocity, optical, bitpix, minpix,
 				maxpix, *pRegion, mask, overwrite, dropdeg, deglast,
-				dropstokes, stokeslast, wavelength, origin);
+				dropstokes, stokeslast, wavelength, airwavelength, origin);
 		delete pRegion;
 		//
 	} catch (AipsError x) {

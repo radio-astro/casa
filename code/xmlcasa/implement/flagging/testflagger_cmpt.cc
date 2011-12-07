@@ -118,9 +118,8 @@ testflagger::selectdata(
 
 	if (testflagger_p) {
 
-		Record config = *toRecord(selconfig);
 		if (! selconfig.empty()) {
-
+			Record config = *toRecord(selconfig);
 			// Select based on the record
 			return testflagger_p->selectData(config);
 		}
@@ -214,6 +213,65 @@ testflagger::run()
 		RETHROW(x);
 	}
 }
+
+
+std::vector<std::string>
+testflagger::getflagversionlist(const bool printflags)
+{
+    try
+    {
+        std::vector<std::string> result;
+
+        if(testflagger_p)
+        {
+        	Vector<String> versionlist(0);
+        	testflagger_p->getFlagVersionList(versionlist);
+        	for(uInt i = 0; i < versionlist.nelements(); i++) {
+        		if (printflags) *logger_p << versionlist[i] << LogIO::POST;
+        			result.push_back(versionlist[i]);
+        	}
+
+        }
+        return result;
+    } catch (AipsError x) {
+    	*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+        RETHROW(x);
+    }
+}
+
+bool
+testflagger::printflagselection()
+{
+	try
+	{
+		if(testflagger_p)
+		{
+			return testflagger_p->printFlagSelections();
+		}
+		return false;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool
+testflagger::saveflagversion(const std::string& versionname, const std::string& comment,
+							 const std::string& merge)
+{
+	try
+	{
+		if(testflagger_p)
+		{
+			return testflagger_p->saveFlagVersion(String(versionname), String(comment),String(merge));
+		}
+		return False;
+	} catch (AipsError x) {
+		*logger_p << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 
 
 } // casac namespace

@@ -1,4 +1,4 @@
-//# tFlagAgentElevation.cc This file contains the unit tests of the FlagAgentBase class.
+//# tFlagAgentDisplay.cc This file contains the unit tests of the FlagAgentBase class.
 //#
 //#  CASA - Common Astronomy Software Applications (http://casa.nrao.edu/)
 //#  Copyright (C) Associated Universities, Inc. Washington DC, USA 2011, All rights reserved.
@@ -20,13 +20,13 @@
 //#  MA 02111-1307  USA
 //# $Id: $
 
-#include <flagging/Flagging/FlagAgentElevation.h>
+#include <flagging/Flagging/FlagAgentDisplay.h>
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <iostream>
 
 using namespace casa;
 
-void deleteFlags(string inputFile,Record dataSelection)
+void deleteFlags(string inputFile,Record dataSelection,vector<Record> agentParameters)
 {
 	// Some test execution info
 	cout << "STEP 1: CLEAN FLAGS ..." << endl;
@@ -48,7 +48,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_UNMAPPED,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -66,11 +66,18 @@ void deleteFlags(string inputFile,Record dataSelection)
 	dh->generateIterator();
 
 	// Create agent list
-	Record dummyConfig;
-	dummyConfig.define("name","FlagAgentManual_1");
-	FlagAgentManual *flaggingAgent = new FlagAgentManual(dh,dummyConfig,false,false);
+	Int agentNumber = 1;
 	FlagAgentList agentList;
-	agentList.push_back(flaggingAgent);
+	FlagAgentManual *flaggingAgent = NULL;
+	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
+	{
+		stringstream agentName;
+		agentName << agentNumber;
+		iter->define("name","FlagAgentManual_" + agentName.str());
+		flaggingAgent = new FlagAgentManual(dh,*iter,false,false);
+		agentList.push_back(flaggingAgent);
+		agentNumber++;
+	}
 
 	// Enable profiling in the Flag Agent
 	agentList.setProfiling(false);
@@ -89,7 +96,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-/*
+
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -150,7 +157,7 @@ void deleteFlags(string inputFile,Record dataSelection)
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-*/
+
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
@@ -209,7 +216,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	}
 
 	// Create Flag Data Handler
-	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::SUB_INTEGRATION,ntime);
+	FlagDataHandler *dh = new FlagDataHandler(inputFile,FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY,ntime);
 
 	// Enable profiling in the Flag Data Handler
 	dh->setProfiling(false);
@@ -223,22 +230,52 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 	// Select data (creating selected MS)
 	dh->selectData();
 
-	// Create agent list
-	FlagAgentList agentList;
-	FlagAgentElevation *flaggingAgent = NULL;
+	// Generate iterators and vis buffers
+	dh->generateIterator();
+
+	// Create agent list :  One ManualFlag, and One Display
 	Int agentNumber = 1;
+	FlagAgentList agentList;
+	FlagAgentDisplay *flaggingAgent = NULL;
+        FlagAgentManual *flaggingAgent2 = NULL;
+
+	                
+        // Add a manual-flag agent (the list has only one here)
+	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
+	{
+          // (1) Change the spw parameter for manual flag only. Not for the display
+          String spwstr("");
+          if( iter->fieldNumber("spw") >=0 )  
+            {
+              spwstr = iter->asString("spw");
+              cout << "Original SPW string : " << spwstr << endl;
+            }
+          iter->define("spw","*:35~40");
+          // (2) Make the manual-flag agent 
+          stringstream agentName;
+          agentName << agentNumber;
+          iter->define("name","FlagAgentManual_" + agentName.str());
+          flaggingAgent2 = new FlagAgentManual(dh,*iter,false,true);
+          agentList.push_back(flaggingAgent2);
+          agentNumber++;
+          // (3) Change the spw parameter back to what it was...
+          if( spwstr == "" ) iter->removeField( iter->fieldNumber("spw") );
+          else iter->define("spw",spwstr);
+	}
+        cout << "Agent Count after Manual flag only : " << agentNumber-1 << endl;
+        
+
+        // Add the display agent
 	for (vector<Record>::iterator iter=agentParameters.begin();iter != agentParameters.end();iter++)
 	{
 		stringstream agentName;
 		agentName << agentNumber;
-		iter->define("name","FlagAgentElevation_" + agentName.str());
-		flaggingAgent = new FlagAgentElevation(dh,*iter);
+		iter->define("name","FlagAgentDisplay_" + agentName.str());
+		flaggingAgent = new FlagAgentDisplay(dh,*iter);
 		agentList.push_back(flaggingAgent);
 		agentNumber++;
 	}
-
-	// Generate iterators and vis buffers
-	dh->generateIterator();
+        cout << "Agent Count after Display too : " << agentNumber-1 << endl;
 
 	// Enable profiling mode
 	agentList.setProfiling(false);
@@ -257,7 +294,7 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-/*
+
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -318,9 +355,12 @@ void writeFlags(string inputFile,Record dataSelection,vector<Record> agentParame
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-*/
+
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
+
+			// IMPORTANT: Pre-load vis cube, antenna1 and antenna2
+			dh->visibilityBuffer_p->get()->visCube();
 
 			// Queue flagging process
 			agentList.queueProcess();
@@ -500,9 +540,7 @@ int main(int argc, char **argv)
 	string parameter, value;
 	string targetFile,referenceFile;
 	string array,scan,timerange,field,spw,antenna,uvrange,correlation,observation,intent;
-	string nThreadsParam,ntime;
-	Int nThreads = 0;
-	Double lowerlimit,upperlimit;
+	string expression,datacolumn,ntime;
 
 	// Execution control variables declaration
 	bool deleteFlagsActivated=false;
@@ -512,6 +550,7 @@ int main(int argc, char **argv)
 	// Parse input parameters
 	Record agentParameters;
 	Record dataSelection;
+        vector<Record> recordlist;
 	for (unsigned short i=0;i<argc-1;i++)
 	{
 		parameter = string(argv[i]);
@@ -599,53 +638,46 @@ int main(int argc, char **argv)
 		else if (parameter == string("-correlation"))
 		{
 			correlation = casa::String(value);
-			agentParameters.define ("correlation", correlation);
+			agentParameters.define ("correlation", uvrange);
 			cout << "Correlation range selection is: " << correlation << endl;
 		}
-		else if (parameter == string("-nThreads"))
+		else if (parameter == string("-expression"))
 		{
-			nThreadsParam = casa::String(value);
-			agentParameters.define ("nThreads", nThreadsParam);
-			nThreads = atoi(nThreadsParam.c_str());
-			cout << "nThreads is: " << nThreads << endl;
+			expression = casa::String(value);
+			agentParameters.define ("expression", expression);
+			cout << "expression is: " << expression << endl;
 		}
-		else if (parameter == string("-lowerlimit"))
+		else if (parameter == string("-datacolumn"))
 		{
-			lowerlimit = atof(value.c_str());
-			agentParameters.define ("lowerlimit", lowerlimit);
-			cout << "lowerlimit is: " << lowerlimit << endl;
+			datacolumn = casa::String(value);
+			agentParameters.define ("datacolumn", datacolumn);
+			cout << "datacolumn is: " << datacolumn << endl;
 		}
-		else if (parameter == string("-upperlimit"))
+		else if (parameter == string("-pause"))
 		{
-			upperlimit = atof(value.c_str());
-			agentParameters.define ("upperlimit", upperlimit);
-			cout << "upperlimit is: " << upperlimit << endl;
+                        Bool pause=True;
+                        if(value.compare("False")==0) pause=False;
+			agentParameters.define ("pause", pause);
+			cout << "pause is: " << pause << endl;
 		}
+		else if (parameter == string("-flagspw"))
+		{
+			spw = casa::String(value);
+			dataSelection.define ("spw", spw);
+			cout << "SPW selection is: " << spw << endl;
+		}
+
 	}
+
 
 	Record agentParameters_i;
 	vector<Record> agentParamersList;
 
-	if (nThreads>1)
-	{
-		for (Int threadId=0;threadId<nThreads;threadId++)
-		{
-			agentParameters_i = agentParameters;
-
-			stringstream ss;
-			ss << threadId;
-			agentParameters_i.define("threadId",ss.str());
-			agentParameters_i.define("nThreads",nThreadsParam);
-
-			agentParamersList.push_back(agentParameters_i);
-		}
-	}
-	else
 	{
 		agentParamersList.push_back(agentParameters);
 	}
 
-	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection);
+	if (deleteFlagsActivated) deleteFlags(targetFile,dataSelection,agentParamersList);
 	writeFlags(targetFile,dataSelection,agentParamersList);
 	if (checkFlagsActivated) returnCode = checkFlags(targetFile,referenceFile,dataSelection);
 

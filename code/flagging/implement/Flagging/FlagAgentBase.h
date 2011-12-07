@@ -50,6 +50,7 @@ public:
 		ROWS=0,
 		IN_ROWS,
 		ANTENNA_PAIRS,
+		ANTENNA_PAIRS_INTERACTIVE,
 		ROWS_PREPROCESS_BUFFER,
 		IN_ROWS_PREPROCESS_BUFFER,
 		ANTENNA_PAIRS_PREPROCESS_BUFFER
@@ -105,7 +106,7 @@ protected:
 	bool checkIfProcessBuffer();
 
 	// Common functionality for each visBuffer (don't repeat at the row level)
-	virtual void preProcessBuffer(VisBuffer &visBuffer);
+	virtual void preProcessBuffer(const VisBuffer &visBuffer);
 
 	// Iterate trough list of rows
 	void iterateRows();
@@ -116,19 +117,23 @@ protected:
 	// Iterate trough list of antenna pairs
 	void iterateAntennaPairs();
 
+	// Methods to interactively iterate trough list of antenna pairs
+	void processAntennaPair(Int antenna1,Int antenna2);
+	virtual void iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr);
+
 	// Mapping functions as requested by Urvashi
 	void setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap);
 	void setFlagsMap(std::vector<uInt> *rows, FlagMapper *flagMap);
 	Bool checkVisExpression(polarizationMap *polMap);
 
 	// Compute flags for a given visibilities point
-	virtual void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	virtual void computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Compute flags for a given visibilities point
-	virtual void computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row);
+	virtual void computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row);
 
 	// Compute flags for a given (time,freq) antenna pair map
-	virtual void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2);
+	virtual void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Common used members that must be accessible to derived classes
 	FlagDataHandler *flagDataHandler_p;

@@ -29,6 +29,7 @@
 #include <flagging/Flagging/FlagAgentManual.h>
 #include <flagging/Flagging/FlagAgentElevation.h>
 #include <flagging/Flagging/FlagAgentQuack.h>
+#include <flagging/Flagging/FlagAgentShadow.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -183,7 +184,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Manual mode
 	if (mode.compare("manualflag")==0)
 	{
-		config.define("name","FlagAgentManual_1");
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,true);
 		return agent;
 	}
@@ -191,7 +191,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Unflag mode
 	if (mode.compare("unflag")==0)
 	{
-		config.define("name","FlagAgentUnflag_1");
 		FlagAgentManual* agent = new FlagAgentManual(dh,config,writePrivateFlags,false);
 		return agent;
 	}
@@ -199,7 +198,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// TimeFreqCrop
 	if (mode.compare("tfcrop")==0)
 	{
-		config.define("name","FlagAgentTimeFreqCrop_1");
 		FlagAgentTimeFreqCrop* agent = new FlagAgentTimeFreqCrop(dh,config,writePrivateFlags);
 		return agent;
 	}
@@ -214,7 +212,6 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Summary
 	if (mode.compare("summary")==0)
 	{
-		config.define("name","FlagAgentSummary_1");
 		FlagAgentSummary* agent = new FlagAgentSummary(dh,config);
 		return agent;
 	}
@@ -222,14 +219,21 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 	// Elevation
 	if (mode.compare("elevation")==0)
 	{
-		FlagAgentElevation* agent = new FlagAgentElevation(dh,config);
+		FlagAgentElevation* agent = new FlagAgentElevation(dh,config,writePrivateFlags);
 		return agent;
 	}
 
 	// Quack
 	if (mode.compare("quack")==0)
 	{
-		FlagAgentQuack* agent = new FlagAgentQuack(dh,config);
+		FlagAgentQuack* agent = new FlagAgentQuack(dh,config,writePrivateFlags);
+		return agent;
+	}
+
+	// Shadow
+	if (mode.compare("shadow")==0)
+	{
+		FlagAgentShadow* agent = new FlagAgentShadow(dh,config,writePrivateFlags);
 		return agent;
 	}
 
@@ -332,6 +336,9 @@ FlagAgentBase::runCore()
 	commonFlagCube_p = flagDataHandler_p->getModifiedFlagCube();
 	originalFlagCube_p = flagDataHandler_p->getOriginalFlagCube();
 
+	// Set vis buffer
+	visibilityBuffer_p = flagDataHandler_p->visibilityBuffer_p;
+
 	// Generate indexes applying data selection filters
 	generateAllIndex();
 	if (checkIfProcessBuffer())
@@ -363,20 +370,27 @@ FlagAgentBase::runCore()
 				iterateInRows();
 				break;
 			}
+			case ANTENNA_PAIRS_INTERACTIVE:
+			{
+				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
+				iterateAntennaPairsInteractive(flagDataHandler_p->getAntennaPairMap());
+				break;
+			}
+			// Iterate trough (time,freq) maps per antenna pair doing a common pre-processing before
 			case ANTENNA_PAIRS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateAntennaPairs();
 				break;
 			}
-			// Iterate trough rows (i.e. baselines)
+			// Iterate trough rows (i.e. baselines) doing a common pre-processing before
 			case ROWS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
 				iterateRows();
 				break;
 			}
-			// Iterate inside every row (i.e. channels) applying a mapping expression
+			// Iterate inside every row (i.e. channels) applying a mapping expression doing a common pre-processing before
 			case IN_ROWS_PREPROCESS_BUFFER:
 			{
 				preProcessBuffer(*(flagDataHandler_p->visibilityBuffer_p->get()));
@@ -411,7 +425,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (arraySelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 		}
 		else
 		{
@@ -421,13 +435,16 @@ FlagAgentBase::setDataSelection(Record config)
 			arrayList_p=parser.getSubArrayList();
 			filterRows_p=true;
 
+			// Request to pre-load ArrayId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ArrayId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array selection is " << arraySelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " array ids are " << arrayList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("field");
@@ -437,7 +454,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (fieldSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 		}
 		else
 		{
@@ -447,13 +464,16 @@ FlagAgentBase::setDataSelection(Record config)
 			fieldList_p=parser.getFieldList();
 			filterRows_p=true;
 
+			// Request to pre-load FieldId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::FieldId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field selection is " << fieldSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " field ids are " << fieldList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("scan");
@@ -463,7 +483,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (scanSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 		}
 		else
 		{
@@ -472,13 +492,16 @@ FlagAgentBase::setDataSelection(Record config)
 			scanList_p=parser.getScanList();
 			filterRows_p=true;
 
+			// Request to pre-load scan
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Scan);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan selection is " << scanSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan ids are " << scanList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("timerange");
@@ -488,7 +511,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (timeSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no time selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no time selection" << LogIO::POST;
 		}
 		else
 		{
@@ -497,13 +520,17 @@ FlagAgentBase::setDataSelection(Record config)
 			timeList_p=parser.getTimeList();
 			filterRows_p=true;
 
+			// Request to pre-load time
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Time);
+
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " timerange selection is " << timeSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " time ranges in MJD are " << timeList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no time selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no time selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("spw");
@@ -513,7 +540,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (spwSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 		}
 		else
 		{
@@ -525,13 +552,16 @@ FlagAgentBase::setDataSelection(Record config)
 			channelList_p=parser.getChanList();
 			filterChannels_p=true;
 
+			// Request to pre-load spw
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " spw selection is " << spwSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " channel selection are " << channelList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("antenna");
@@ -541,7 +571,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (baselineSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 		}
 		else
 		{
@@ -564,12 +594,16 @@ FlagAgentBase::setDataSelection(Record config)
 			baselineList_p=parser.getBaselineList();
 			filterRows_p=true;
 
+			// Request to pre-load antenna1/2
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " selected baselines are " << baselineList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no baseline selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no baseline selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("uvrange");
@@ -579,7 +613,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (uvwSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
 		}
 		else
 		{
@@ -588,13 +622,16 @@ FlagAgentBase::setDataSelection(Record config)
 			uvwList_p=parser.getUVList();
 			filterRows_p=true;
 
+			// Request to pre-load uvw
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange selection is " << uvwSelection_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " uvrange ids are " << uvwList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no uvw selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("correlation");
@@ -604,7 +641,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (polarizationSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
 		}
 		else
 		{
@@ -612,6 +649,9 @@ FlagAgentBase::setDataSelection(Record config)
 			parser.toTableExprNode(selectedMeasurementSet_p);
 			polarizationList_p=parser.getPolMap();
 			filterPols_p=true;
+
+			// Request to pre-load CorrType
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
 			// NOTE: casa::LogIO does not support outstream from OrderedMap<Int, Vector<Int> > objects yet
 			ostringstream polarizationListToPrint (ios::in | ios::out);
@@ -623,7 +663,7 @@ FlagAgentBase::setDataSelection(Record config)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no polarization selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no polarization selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("observation");
@@ -633,7 +673,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (observationSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
 		}
 		else
 		{
@@ -642,13 +682,16 @@ FlagAgentBase::setDataSelection(Record config)
 			observationList_p=parser.getObservationList();
 			filterRows_p=true;
 
+			// Request to pre-load ObservationId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservationId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation selection is " << observationList_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " observation ids are " << observationList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
 	}
 
 	exists = config.fieldNumber ("intent");
@@ -658,7 +701,7 @@ FlagAgentBase::setDataSelection(Record config)
 
 		if (scanIntentSelection_p.empty())
 		{
-			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no intent selection" << LogIO::POST;
+			*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no intent selection" << LogIO::POST;
 		}
 		else
 		{
@@ -667,13 +710,16 @@ FlagAgentBase::setDataSelection(Record config)
 			scanIntentList_p=parser.getStateObsModeList();
 			filterRows_p=true;
 
+			// Request to pre-load StateId
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::StateId);
+
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent selection is " << scanIntentList_p << LogIO::POST;
 			*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " scan intent ids are " << scanIntentList_p << LogIO::POST;
 		}
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << agentName_p.c_str() << "::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
 	}
 
 	return;
@@ -733,6 +779,7 @@ FlagAgentBase::setAgentParameters(Record config)
 
 	if (	(iterationApproach_p == IN_ROWS) or
 			(iterationApproach_p == ANTENNA_PAIRS) or
+			(iterationApproach_p == ANTENNA_PAIRS_INTERACTIVE) or
 			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
 			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
 	{
@@ -747,6 +794,10 @@ FlagAgentBase::setAgentParameters(Record config)
 		}
 
 		expression_p.upcase();
+
+		// Request to pre-load spw and corrType
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::SpW);
+		flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrType);
 
 		// Check if expression is one of the supported operators
 		if ((expression_p.find("REAL") == string::npos) and
@@ -777,22 +828,39 @@ FlagAgentBase::setAgentParameters(Record config)
 		if (dataColumn_p.compare("data") == 0)
 		{
 			dataReference_p = DATA;
+
+			// Request to pre-load ObservedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
 		else if (dataColumn_p.compare("corrected") == 0)
 		{
 			dataReference_p = CORRECTED;
+
+			// Request to pre-load CorrectedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
 		}
 		else if (dataColumn_p.compare("model") == 0)
 		{
 			dataReference_p = MODEL;
+
+			// Request to pre-load ModelCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else if (dataColumn_p.compare("residual") == 0)
 		{
 			dataReference_p = RESIDUAL;
+
+			// Request to pre-load CorrectedCube and ModelCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else if (dataColumn_p.compare("residual_data") == 0)
 		{
 			dataReference_p = RESIDUAL_DATA;
+
+			// Request to pre-load ObservedCube and ModelCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
 		else
 		{
@@ -800,6 +868,9 @@ FlagAgentBase::setAgentParameters(Record config)
 					" Unsupported data column: " <<
 					expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
 			dataColumn_p = "data";
+
+			// Request to pre-load ObservedCube
+			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
 
 		*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " data column is " << dataColumn_p << LogIO::POST;
@@ -1048,7 +1119,7 @@ FlagAgentBase::checkIfProcessBuffer()
 }
 
 void
-FlagAgentBase::preProcessBuffer(VisBuffer &visBuffer)
+FlagAgentBase::preProcessBuffer(const VisBuffer &visBuffer)
 {
 	return;
 }
@@ -1113,13 +1184,7 @@ void
 FlagAgentBase::iterateInRows()
 {
 	// Check if the visibility expression is suitable for this spw
-	if (	(iterationApproach_p == IN_ROWS) or
-			(iterationApproach_p == ANTENNA_PAIRS) or
-			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
-			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
-	{
-		if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
-	}
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
 	// Create VisMapper and FlagMapper objects and parse the polarization expression
 	VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
@@ -1166,7 +1231,7 @@ FlagAgentBase::iterateInRows()
 		}
 
 		// Compute flags for this row
-		computeInRowFlags(visibilitiesMap,flagsMap,*rowIter);
+		computeInRowFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,*rowIter);
 
 		// Increment row index
 		rowIdx++;
@@ -1179,13 +1244,7 @@ void
 FlagAgentBase::iterateAntennaPairs()
 {
 	// Check if the visibility expression is suitable for this spw
-	if (	(iterationApproach_p == IN_ROWS) or
-			(iterationApproach_p == ANTENNA_PAIRS) or
-			(iterationApproach_p == IN_ROWS_PREPROCESS_BUFFER) or
-			(iterationApproach_p == ANTENNA_PAIRS_PREPROCESS_BUFFER))
-	{
-		if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
-	}
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
 
 	antennaPairMapIterator myAntennaPairMapIterator;
 	std::pair<Int,Int> antennaPair;
@@ -1240,6 +1299,8 @@ FlagAgentBase::iterateAntennaPairs()
 		// If none of the antenna pair rows were eligible then go to next pair
 		if (antennaRows->empty())
 		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") does not have any rows in this chunk" << LogIO::POST;
+
 			// Increment antenna pair index
 			antennaPairdIdx++;
 
@@ -1257,13 +1318,80 @@ FlagAgentBase::iterateAntennaPairs()
 		setFlagsMap(antennaRows,&flagsMap);
 
 		// Flag map
-		computeAntennaPairFlags(visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second);
+		computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
 
 		// Increment antenna pair index
 		antennaPairdIdx++;
 
 		// Delete antenna pair rows
 		delete antennaRows;
+	}
+
+	return;
+}
+
+void
+FlagAgentBase::iterateAntennaPairsInteractive(antennaPairMap *antennaPairMap_ptr)
+{
+	// Check if the visibility expression is suitable for this spw
+	if (!checkVisExpression(flagDataHandler_p->getPolarizationMap())) return;
+
+	// Iterate trough antenna pair map
+	std::pair<Int,Int> antennaPair;
+	antennaPairMapIterator myAntennaPairMapIterator;
+	for (myAntennaPairMapIterator=antennaPairMap_ptr->begin(); myAntennaPairMapIterator != antennaPairMap_ptr->end(); ++myAntennaPairMapIterator)
+	{
+		// Get antenna pair from map
+		antennaPair = myAntennaPairMapIterator->first;
+
+		// Process antenna pair
+		processAntennaPair(antennaPair.first,antennaPair.second);
+	}
+
+	return;
+}
+
+void
+FlagAgentBase::processAntennaPair(Int antenna1,Int antenna2)
+{
+	std::pair<Int,Int> antennaPair = std::make_pair(antenna1,antenna2);
+	antennaPairMapIterator index = flagDataHandler_p->getAntennaPairMap()->find(antennaPair);
+	if (index != flagDataHandler_p->getAntennaPairMap()->end())
+	{
+		std::vector<uInt> *antennaRows = generateAntennaPairRowsIndex(antennaPair.first,antennaPair.second);
+		if (antennaRows->empty())
+		{
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") does not have any rows in this chunk" << LogIO::POST;
+		}
+		else
+		{
+			// Check if antenna pair is in the baselines list of this agent
+			if ((baselineList_p.size()>0) and (!find(baselineList_p,antennaPair.first,antennaPair.second)))
+			{
+				*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ <<  "Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") is not included in the selected baseline range" << LogIO::POST;
+			}
+			else
+			{
+				*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Going to process requested baseline (" << antennaPair.first << "," << antennaPair.second << ") " << LogIO::POST;
+
+				// Create VisMapper and FlagMapper objects and parse the polarization expression
+				VisMapper visibilitiesMap = VisMapper(expression_p,flagDataHandler_p->getPolarizationMap());
+				FlagMapper flagsMap = FlagMapper(flag_p,visibilitiesMap.getSelectedCorrelations());
+
+				// Set CubeViews in VisMapper
+				setVisibilitiesMap(antennaRows,&visibilitiesMap);
+
+				// Set CubeViews in FlagMapper
+				setFlagsMap(antennaRows,&flagsMap);
+
+				// Flag map
+				computeAntennaPairFlags(*(flagDataHandler_p->visibilityBuffer_p->get()),visibilitiesMap,flagsMap,antennaPair.first,antennaPair.second,*antennaRows);
+			}
+		}
+	}
+	else
+	{
+		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested baseline (" << antennaPair.first << "," << antennaPair.second << ") is not available in this chunk " << LogIO::POST;
 	}
 
 	return;
@@ -1355,7 +1483,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (XX) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1368,7 +1496,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (YY) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 
@@ -1382,7 +1510,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (XY) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1395,7 +1523,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (YX) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1408,7 +1536,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (RR) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1421,7 +1549,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (LL) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1434,7 +1562,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (LR) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1447,7 +1575,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested correlation (RL) not available in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1469,7 +1597,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (I) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1490,7 +1618,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (Q) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1511,7 +1639,7 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 		else
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<  " Requested Stokes parameter (U) cannot be computed from available polarizations in current spectral window (" <<
-					visibilityBuffer_p->get()->spectralWindow() << " ) " << LogIO::POST;
+					visibilityBuffer_p->get()->spectralWindow() << ") " << LogIO::POST;
 			return False;
 		}
 	}
@@ -1545,21 +1673,21 @@ FlagAgentBase::checkVisExpression(polarizationMap *polMap)
 }
 
 void
-FlagAgentBase::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentBase::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;
 }
 
 void
-FlagAgentBase::computeInRowFlags(VisMapper &visibilities,FlagMapper &flags, uInt row)
+FlagAgentBase::computeInRowFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags, uInt row)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;
 }
 
 void
-FlagAgentBase::computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2)
+FlagAgentBase::computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows)
 {
 	// TODO: This class must be re-implemented in the derived classes
 	return;

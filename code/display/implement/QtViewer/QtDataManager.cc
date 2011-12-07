@@ -151,7 +151,7 @@ QtDataManager::QtDataManager(QtDisplayPanelGui* panel,
 	leaveOpen_->setChecked(false);
     }
     connect(leaveOpen_, SIGNAL(clicked(bool)), SLOT(leaveopenButtonClicked(bool)));
-    
+
     dir_.setFilter( QDir::AllDirs | QDir::Files);
     dir_.setSorting(QDir::Name);
 

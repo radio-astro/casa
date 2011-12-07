@@ -15,10 +15,11 @@
     <file>icons/File_Open.png</file>
     <file>icons/File_Print.png</file>
     <file>icons/File_Quit.png</file>
-    <file>icons/Save.png</file>
     <file>icons/Save_As.png</file>
+    <file>icons/Save_Img.png</file>
+    <file>icons/Save_Panel.png</file>
 	<file>icons/Spec_Prof.png</file>
-    <file>icons/Restore.png</file>
+    <file>icons/Restore_Panel.png</file>
     <file>icons/Save_Clpbd.png</file>
     <file>icons/Restore_Clpbd.png</file>
     <file>icons/Region_Save.png</file>

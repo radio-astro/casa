@@ -25,9 +25,14 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 FlagAgentShadow::FlagAgentShadow(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube):
-		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube)
+		FlagAgentBase(dh,config,ROWS_PREPROCESS_BUFFER,writePrivateFlagCube)
 {
 	setAgentParameters(config);
+
+	// Request loading antenna1,antenna2 and uvw
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant1);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Ant2);
+	flagDataHandler_p->preLoadColumn(VisBufferComponents::Uvw);
 }
 
 FlagAgentShadow::~FlagAgentShadow()
@@ -50,44 +55,83 @@ FlagAgentShadow::setAgentParameters(Record config)
 		antennaDiameter_p = -1.0;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentShadow::" << __FUNCTION__ << " diameter is " << antennaDiameter_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " diameter is " << antennaDiameter_p << LogIO::POST;
 
 	return;
 }
 
 void
-FlagAgentShadow::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentShadow::preProcessBuffer(const VisBuffer &visBuffer)
 {
-	// First check if this row corresponds to autocorrelation
-	// (Antennas don't shadow themselves)
+	Vector<Int> antenna1list =  visBuffer.antenna1();
+	Vector<Int> antenna2list =  visBuffer.antenna2();
+	shadowedAntennas_p.clear();
+
+	Double u,v,w, uvDistance;
+	Int antenna1, antenna2;
+	Double antennaDiameter1,antennaDiameter2, antennaDistance;
+	for (Int row_i=0;row_i<antenna1list.size();row_i++)
+	{
+		// Retrieve antenna ids
+		antenna1 = antenna1list[row_i];
+		antenna2 = antenna2list[row_i];
+
+		// Check if this row corresponds to autocorrelation (Antennas don't shadow themselves)
+		if (antenna1 == antenna2) continue;
+
+		// Get antenna diameter
+		if (antennaDiameter_p>0)
+		{
+			antennaDiameter1 = antennaDiameter_p;
+			antennaDiameter2 = antennaDiameter_p;
+		}
+		else
+		{
+			Vector<Double> *antennaDiameters = flagDataHandler_p->antennaDiameters_p;
+			antennaDiameter1 = (*antennaDiameters)[antenna1];
+			antennaDiameter2 = (*antennaDiameters)[antenna2];
+		}
+
+		// Compute effective distance for shadowing
+		antennaDistance = (antennaDiameter1+antennaDiameter2)*(antennaDiameter1+antennaDiameter2)/4.0;
+
+		// Compute uv distance
+		u = visBuffer.uvw()(row_i)(0);
+		v = visBuffer.uvw()(row_i)(1);
+		w = visBuffer.uvw()(row_i)(2);
+		uvDistance = u*u + v*v;
+
+		// Check if one of the antennas can be shadowed
+		if (uvDistance < antennaDistance)
+		{
+			if (w>0)
+			{
+				if (std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna1) == shadowedAntennas_p.end())
+				{
+					shadowedAntennas_p.push_back(antenna1);
+				}
+			}
+			else
+			{
+				if (std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna2) == shadowedAntennas_p.end())
+				{
+					shadowedAntennas_p.push_back(antenna2);
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+void
+FlagAgentShadow::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+{
+	// Flag row if either antenna1 or antenna2 are in the list of shadowed antennas
 	Int antenna1 = visBuffer.antenna1()[row];
 	Int antenna2 = visBuffer.antenna2()[row];
-	if (antenna1 == antenna2) return;
-
-	// Get antenna diameter
-	Double antennaDiameter1,antennaDiameter2;
-	if (antennaDiameter_p>0)
-	{
-		antennaDiameter1 = antennaDiameter_p;
-		antennaDiameter2 = antennaDiameter_p;
-	}
-	else
-	{
-		Vector<Double> *antennaDiameters = flagDataHandler_p->antennaDiameters_p;
-		antennaDiameter1 = (*antennaDiameters)[antenna1];
-		antennaDiameter2 = (*antennaDiameters)[antenna2];
-	}
-
-	// Compute effective distance for shadowing
-	Double antennaDistance = (antennaDiameter1+antennaDiameter2)*(antennaDiameter1+antennaDiameter2)/4.0;
-
-	// Compute uv distance
-	Double u = visBuffer.uvw()(row)(0);
-	Double v = visBuffer.uvw()(row)(1);
-	Double uvDistance = u*u + v*v;
-
-	// Check if the baseline is shadowed
-	if (uvDistance < antennaDistance)
+	if (	(std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna1) != shadowedAntennas_p.end()) or
+			(std::find (shadowedAntennas_p.begin(), shadowedAntennas_p.end(), antenna2) != shadowedAntennas_p.end()) )
 	{
     	IPosition flagCubeShape = flags.shape();
     	uInt nChannels = flagCubeShape(0);

@@ -36,8 +36,11 @@ public:
 
 protected:
 
+	// Common functionality for each visBuffer (don't repeat at the row level)
+	void preProcessBuffer(const VisBuffer &visBuffer);
+
 	// Compute flags afor a given mapped visibility point
-	void computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row);
+	void computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);
@@ -46,6 +49,9 @@ private:
 
 	/// Input parameters ///
 	Double antennaDiameter_p;
+
+	// List of shadowed antennas for this buffer
+	vector<Int> shadowedAntennas_p;
 };
 
 

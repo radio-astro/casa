@@ -101,6 +101,7 @@ protected:
 	uShort iterationApproach_p;
 	Double timeInterval_p;
 
+
 	// members to parse to parseDataSelection
 	String spw_p;
 	String scan_p;
@@ -139,8 +140,10 @@ public:
 	// configure the tool
 	bool open(String msname, Double ntime);
 
-	// parse the data selection
+	// DEPRECATED
 	bool parseDataSelection(Record selrec);
+
+	// parse the data selection
 	bool selectData(Record selrec);
 	bool selectData(String field, String spw, String array, String feed, String scan,
 		       	    String antenna, String uvrange, String timerange,
@@ -149,12 +152,19 @@ public:
 	// parse the parameters of the agent
 	bool parseAgentParameters(Record agent_params);
 
+	// DEPRECATED
 	bool initFlagDataHandler();
 
 	bool initAgents();
 
 	Record run();
 
+	// Flag backup methods
+	bool printFlagSelections();
+	bool saveFlagVersion(String versionname, String comment, String merge);
+	bool restoreFlagVersion(Vector<String> versionname, String merge);
+	bool deleteFlagVersion(Vector<String> versionname);
+	bool getFlagVersionList( Vector<String> &verlist);
 
 
 private:

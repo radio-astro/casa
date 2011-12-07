@@ -54,7 +54,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		quackinterval_p = 0.0;
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentQuack::" << __FUNCTION__ << " quackinterval is " << quackinterval_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " quackinterval is " << quackinterval_p << LogIO::POST;
 
 	exists = config.fieldNumber ("quackmode");
 	String quackmode;
@@ -78,7 +78,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		}
 		else
 		{
-			*logger_p << LogIO::WARN << "FlagAgentQuack::" << __FUNCTION__ <<
+			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
 					" Unsupported quack mode: " <<
 					quackmode_p << ", selecting beg by default. Supported modes: beg,endb,end,tail." << LogIO::POST;
 			quackmode_p = BEGINNING_OF_SCAN;
@@ -91,7 +91,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 		quackmode = "beg";
 	}
 
-	*logger_p << LogIO::NORMAL << "FlagAgentQuack::" << __FUNCTION__ << " quackmode is " << quackmode << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " quackmode is " << quackmode << LogIO::POST;
 
 	exists = config.fieldNumber ("quackincrement");
 	if (exists >= 0)
@@ -102,14 +102,14 @@ FlagAgentQuack::setAgentParameters(Record config)
 	{
 		quackincrement_p = False;
 	}
-	*logger_p << LogIO::NORMAL << "FlagAgentQuack::" << __FUNCTION__ << " quackincrement is " << quackincrement_p << LogIO::POST;
+	*logger_p << LogIO::NORMAL << agentName_p.c_str() << "::" << __FUNCTION__ << " quackincrement is " << quackincrement_p << LogIO::POST;
 
 
 	return;
 }
 
 void
-FlagAgentQuack::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt row)
+FlagAgentQuack::computeRowFlags(const VisBuffer &visBuffer, FlagMapper &flags, uInt row)
 {
 
 	// TODO: This is not generic but in all the iteration modes provided
@@ -119,6 +119,8 @@ FlagAgentQuack::computeRowFlags(VisBuffer &visBuffer, FlagMapper &flags, uInt ro
 	// First of all check if this scan is in the scan start/stop map
 	if ( (*flagDataHandler_p->getMapScanStartStop()).find(scan) == (*flagDataHandler_p->getMapScanStartStop()).end())
 	{
+		*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ << " start/stop time for scan "
+				<< scan << " not found" << LogIO::POST;
 		return;
 	}
 

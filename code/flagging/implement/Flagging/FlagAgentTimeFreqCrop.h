@@ -37,7 +37,7 @@ public:
 protected:
 
 	// Compute flags for a given (time,freq) map
-	void computeAntennaPairFlags(VisMapper &visibilities,FlagMapper &flag,Int antenna1,Int antenna2);
+	void computeAntennaPairFlags(const VisBuffer &visBuffer, VisMapper &visibilities,FlagMapper &flags,Int antenna1,Int antenna2,vector<uInt> &rows);
 
 	// Parse configuration parameters
 	void setAgentParameters(Record config);

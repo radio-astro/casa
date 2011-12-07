@@ -21,7 +21,6 @@
 //# $Id: $
 
 #include <flagging/Flagging/FlagDataHandler.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -43,7 +42,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 
 	// Check if async i/o is enabled (double check for ROVisibilityIteratorAsync and FlagDataHandler config)
 	asyncio_disabled_p = true;
-	AipsrcValue<Bool>::find (asyncio_disabled_p,"ROVisibilityIteratorAsync.disabled", true);
+	AipsrcValue<Bool>::find (asyncio_disabled_p,"VisibilityIterator.disabled", true);
 	if (!asyncio_disabled_p)
 	{
 		// Check Flag Data Handler config
@@ -256,6 +255,7 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	chunksInitialized_p = false;
 	buffersInitialized_p = false;
 	iteratorGenerated_p = false;
+	stopIteration_p = false;
 	chunkNo = 0;
 	bufferNo = 0;
 
@@ -271,15 +271,19 @@ FlagDataHandler::FlagDataHandler(string msname, uShort iterationApproach, Double
 	rwVisibilityIterator_p = NULL;
 	roVisibilityIterator_p = NULL;
 	visibilityBuffer_p = NULL;
-	vwbt_p = NULL;
 
 	antennaNames_p = NULL;
 	antennaDiameters_p = NULL;
+	fieldNames_p = NULL;
 	antennaPairMap_p = NULL;
 	subIntegrationMap_p = NULL;
 	polarizationMap_p = NULL;
 	polarizationIndexMap_p = NULL;
 	antennaPointingMap_p = NULL;
+	scanStartStopMap_p = NULL;
+
+	// Initialize Pre-Load columns
+	preLoadColumns_p.clear();
 
 	return;
 }
@@ -300,11 +304,9 @@ FlagDataHandler::~FlagDataHandler()
 	if (antennaPointingMap_p) delete antennaPointingMap_p;
 
 	// Delete VisBuffers and iterators
-	if (vwbt_p) delete vwbt_p;
 	if (visibilityBuffer_p) delete visibilityBuffer_p;
-	if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-	// Apparently there is a problem here, if we destroy the base RO iterator of a RW iterator the pointer is not set to NULL
-	if ((!asyncio_disabled_p) and (rwVisibilityIterator_p)) delete rwVisibilityIterator_p;
+	// ROVisIter is in fact RWVisIter
+	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
 
 	// Delete MS objects
 	if (selectedMeasurementSet_p) delete selectedMeasurementSet_p;
@@ -330,10 +332,14 @@ FlagDataHandler::open()
 	// Activate Memory Resident Sub-tables for everything but Pointing, Syscal and History
 	originalMeasurementSet_p->setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
-	// Read antenna names from Antenna table
+	// Read antenna names and diameters from Antenna table
 	ROMSAntennaColumns *antennaSubTable = new ROMSAntennaColumns(originalMeasurementSet_p->antenna());
 	antennaNames_p = new Vector<String>(antennaSubTable->name().getColumn());
 	antennaDiameters_p = new Vector<Double>(antennaSubTable->dishDiameter().getColumn());
+
+	// Read field names
+	ROMSFieldColumns *fieldSubTable = new ROMSFieldColumns(originalMeasurementSet_p->field());
+	fieldNames_p = new Vector<String>(fieldSubTable->name().getColumn());
 
 	return true;
 }
@@ -347,14 +353,6 @@ FlagDataHandler::close()
 {
 	if (selectedMeasurementSet_p)
 	{
-		// Wait until all the pending writing operations are done
-		if (!asyncio_disabled_p)
-		{
-			vwbt_p->terminate();
-			vwbt_p->join();
-		}
-
-
 		// Flush and unlock MS
 		selectedMeasurementSet_p->flush();
 		selectedMeasurementSet_p->relinquishAutoLocks(True);
@@ -387,7 +385,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("field");
@@ -398,7 +396,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("scan");
@@ -409,7 +407,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("timerange");
@@ -420,7 +418,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no timerange selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no timerange selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("spw");
@@ -431,7 +429,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("antenna");
@@ -442,7 +440,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("uvrange");
@@ -453,7 +451,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no uvrange selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no uvrange selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("correlation");
@@ -464,7 +462,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("observation");
@@ -475,7 +473,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no observationSelection selection" << LogIO::POST;
 	}
 
 	exists = record.fieldNumber ("intent");
@@ -486,7 +484,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
 	}
 
 	return true;
@@ -530,23 +528,642 @@ FlagDataHandler::selectData()
 	}
 
 	// More debugging information from MS-Selection
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected observation ids are " << measurementSetSelection_p->getObservationList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan intent ids are " << measurementSetSelection_p->getStateObsModeList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected uv range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
+	if (!arraySelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected array ids are " << measurementSetSelection_p->getSubArrayList() << LogIO::POST;
+	}
 
-	ostringstream polarizationListToPrint (ios::in | ios::out);
-	polarizationListToPrint << measurementSetSelection_p->getPolMap();
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+	if (!observationSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected observation ids are " << measurementSetSelection_p->getObservationList() << LogIO::POST;
+	}
+
+	if (!fieldSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected field ids are " << measurementSetSelection_p->getFieldList() << LogIO::POST;
+	}
+
+	if (!scanSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan ids are " << measurementSetSelection_p->getScanList() << LogIO::POST;
+	}
+
+	if (!scanIntentSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected scan intent ids are " << measurementSetSelection_p->getStateObsModeList() << LogIO::POST;
+	}
+
+	if (!timeSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected time range is " << measurementSetSelection_p->getTimeList() << LogIO::POST;
+	}
+
+	if (!spwSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected spw-channels ids are " << measurementSetSelection_p->getChanList() << LogIO::POST;
+	}
+
+	if (!baselineSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna1 ids are " << measurementSetSelection_p->getAntenna1List() << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected antenna2 ids are " << measurementSetSelection_p->getAntenna2List() << LogIO::POST;
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected baselines are " << measurementSetSelection_p->getBaselineList() << LogIO::POST;
+	}
+
+	if (!uvwSelection_p.empty())
+	{
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected uv range is " << measurementSetSelection_p->getUVList() << LogIO::POST;
+	}
+
+	if (!polarizationSelection_p.empty())
+	{
+		ostringstream polarizationListToPrint (ios::in | ios::out);
+		polarizationListToPrint << measurementSetSelection_p->getPolMap();
+		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Selected correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
+	}
 
 	return true;
+}
+
+// -----------------------------------------------------------------------
+// Function to handled columns pre-load (to avoid problems with parallelism)
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::preLoadColumn(uInt column)
+{
+	if (std::find (preLoadColumns_p.begin(), preLoadColumns_p.end(), column) == preLoadColumns_p.end())
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Adding column to list: " <<  column << LogIO::POST;
+		preLoadColumns_p.push_back(column);
+	}
+
+	return;
+}
+
+void
+FlagDataHandler::preFetchColumns()
+{
+	for (vector<uInt>::iterator iter=preLoadColumns_p.begin();iter!=preLoadColumns_p.end();iter++)
+	{
+		switch (*iter)
+		{
+			case VisBufferComponents::Ant1:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->antenna1();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Ant1);
+				}
+				break;
+			}
+			case VisBufferComponents::Ant2:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->antenna2();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Ant2);
+				}
+				break;
+			}
+			case VisBufferComponents::ArrayId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->arrayId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ArrayId);
+				}
+				break;
+			}
+			case VisBufferComponents::Channel:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->channel();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Channel);
+				}
+				break;
+			}
+			case VisBufferComponents::Cjones:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->CJones();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Cjones);
+				}
+				break;
+			}
+			case VisBufferComponents::CorrType:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->corrType();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::CorrType);
+				}
+				break;
+			}
+			case VisBufferComponents::Corrected:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->correctedVisibility();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Corrected);
+				}
+				break;
+			}
+			case VisBufferComponents::CorrectedCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->correctedVisCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::CorrectedCube);
+				}
+				break;
+			}
+			case VisBufferComponents::Direction1:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->direction1();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Direction1);
+				}
+				break;
+			}
+			case VisBufferComponents::Direction2:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->direction2();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Direction2);
+				}
+				break;
+			}
+			case VisBufferComponents::Exposure:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->exposure();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Exposure);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed1:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed1();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed1);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed1_pa:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed1_pa();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed1_pa);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed2:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed2();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed2);
+				}
+				break;
+			}
+			case VisBufferComponents::Feed2_pa:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->feed2_pa();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Feed2_pa);
+				}
+				break;
+			}
+			case VisBufferComponents::FieldId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->fieldId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FieldId);
+				}
+				break;
+			}
+			case VisBufferComponents::Flag:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flag();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Flag);
+				}
+				break;
+			}
+			case VisBufferComponents::FlagCategory:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flagCategory();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FlagCategory);
+				}
+				break;
+			}
+			case VisBufferComponents::FlagCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flagCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FlagCube);
+				}
+				break;
+			}
+			case VisBufferComponents::FlagRow:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->flagRow();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::FlagRow);
+				}
+				break;
+			}
+			case VisBufferComponents::Freq:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->frequency();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Freq);
+				}
+				break;
+			}
+			case VisBufferComponents::ImagingWeight:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->imagingWeight();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ImagingWeight);
+				}
+				break;
+			}
+			case VisBufferComponents::Model:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->modelVisibility();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Model);
+				}
+				break;
+			}
+			case VisBufferComponents::ModelCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->modelVisCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ModelCube);
+				}
+				break;
+			}
+			case VisBufferComponents::NChannel:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->nChannel();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::NChannel);
+				}
+				break;
+			}
+			case VisBufferComponents::NCorr:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->nCorr();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::NCorr);
+				}
+				break;
+			}
+			case VisBufferComponents::NRow:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->nRow();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::NRow);
+				}
+				break;
+			}
+			case VisBufferComponents::ObservationId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->observationId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ObservationId);
+				}
+				break;
+			}
+			case VisBufferComponents::Observed:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->visibility();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Observed);
+				}
+				break;
+			}
+			case VisBufferComponents::ObservedCube:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->visCube();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ObservedCube);
+				}
+				break;
+			}
+			case VisBufferComponents::PhaseCenter:
+			{
+				visibilityBuffer_p->get()->phaseCenter();
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->phaseCenter();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ObservedCube);
+				}
+				break;
+			}
+			case VisBufferComponents::PolFrame:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->polFrame();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::PolFrame);
+				}
+				break;
+			}
+			case VisBufferComponents::ProcessorId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->processorId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::ProcessorId);
+				}
+				break;
+			}
+			case VisBufferComponents::Scan:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->scan();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Scan);
+				}
+				break;
+			}
+			case VisBufferComponents::Sigma:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->sigma();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Sigma);
+				}
+				break;
+			}
+			case VisBufferComponents::SigmaMat:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->sigmaMat();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::SigmaMat);
+				}
+				break;
+			}
+			case VisBufferComponents::SpW:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->spectralWindow();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::SpW);
+				}
+				break;
+			}
+			case VisBufferComponents::StateId:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->stateId();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::StateId);
+				}
+				break;
+			}
+			case VisBufferComponents::Time:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->time();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Time);
+				}
+				break;
+			}
+			case VisBufferComponents::TimeCentroid:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->timeCentroid();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::TimeCentroid);
+				}
+				break;
+			}
+			case VisBufferComponents::TimeInterval:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->timeInterval();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::TimeInterval);
+				}
+				break;
+			}
+			case VisBufferComponents::Weight:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->weight();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Weight);
+				}
+				break;
+			}
+			case VisBufferComponents::WeightMat:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->weightMat();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::WeightMat);
+				}
+				break;
+			}
+			case VisBufferComponents::WeightSpectrum:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->weightSpectrum();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::WeightSpectrum);
+				}
+				break;
+			}
+			case VisBufferComponents::Uvw:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->uvw();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::Uvw);
+				}
+				break;
+			}
+			case VisBufferComponents::UvwMat:
+			{
+				if (asyncio_disabled_p)
+				{
+					visibilityBuffer_p->get()->uvwMat();
+				}
+				else
+				{
+					prefetchColumns_p.insert(VisBufferComponents::UvwMat);
+				}
+				break;
+			}
+		}
+	}
+
+	return;
 }
 
 // -----------------------------------------------------------------------
@@ -630,6 +1247,455 @@ FlagDataHandler::checkMaxMemory()
 	return;
 }
 
+// -----------------------------------------------------------------------
+// Generate Visibility Iterator with a given sort order and time interval
+// -----------------------------------------------------------------------
+bool
+FlagDataHandler::generateIterator()
+{
+	// First create and initialize RW iterator
+	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+	rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
+
+	// Set the table data manager (ISM and SSM) cache size to the full column size, for
+	// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+	if (slurp_p) rwVisibilityIterator_p->slurp();
+
+	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator un sync mode)
+	applyChannelSelection(rwVisibilityIterator_p);
+
+	checkMaxMemory();
+
+	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
+	// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
+	// With this configuration the Visibility Buffer is attached to the RO async iterator
+	if (asyncio_disabled_p)
+	{
+		// Cast RW conventional iterator into RO conventional iterator
+		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
+
+		// Finally attach Visibility Buffer to RO conventional iterator
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
+		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+	}
+	else
+	{
+		// Set preFetchColumns
+		prefetchColumns_p = casa::asyncio::PrefetchColumns::prefetchColumns(VisBufferComponents::FlagCube,VisBufferComponents::NRow);
+		preFetchColumns();
+
+		// Then create and initialize RO Async iterator
+		if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
+		rwVisibilityIterator_p = new VisibilityIterator(&prefetchColumns_p,*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
+
+		// Cast RW conventional iterator into RO conventional iterator
+		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
+		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
+
+		// Set the table data manager (ISM and SSM) cache size to the full column size, for
+		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
+		if (slurp_p) roVisibilityIterator_p->slurp();
+
+		// Apply channel selection
+		applyChannelSelection(roVisibilityIterator_p);
+
+		// Attach Visibility Buffer to Visibility Iterator
+		if (visibilityBuffer_p) delete visibilityBuffer_p;
+		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
+
+		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
+		// NOTE: We have to do this before starting the flag agents,
+		// otherwise we have some seg. faults related with RegEx parser
+		// which is used when applying the ROVIA modifiers
+		roVisibilityIterator_p->originChunks();
+	}
+
+	iteratorGenerated_p = true;
+
+	return true;
+}
+
+void
+FlagDataHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
+{
+	// Apply channel selection (in row selection cannot be done with MSSelection)
+	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
+	Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
+	Vector<Int> spwlist = measurementSetSelection_p->getSpwList();
+	Int spw,channelStart,channelStop,channelStep,channelWidth;
+	for(uInt spw_i=0;spw_i<spwlist.nelements();spw_i++ )
+	{
+		// NOTE: selectChannel needs channelStart,channelWidth,channelStep
+		spw = spwlist[spw_i];
+		channelStart = spwchan(spw_i,1);
+		channelStop = spwchan(spw_i,2);
+		channelStep = spwchan(spw_i,3);
+		channelWidth = channelStop-channelStart+1;
+		roVisIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
+	}
+
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+// Move to next chunk
+// -----------------------------------------------------------------------
+bool
+FlagDataHandler::nextChunk()
+{
+	bool moreChunks = false;
+	if (stopIteration_p)
+	{
+		moreChunks = false;
+	}
+	else
+	{
+		if (!chunksInitialized_p)
+		{
+			if (!iteratorGenerated_p) generateIterator();
+			roVisibilityIterator_p->originChunks();
+			chunksInitialized_p = true;
+			buffersInitialized_p = false;
+			chunkNo++;
+			bufferNo = 0;
+			moreChunks = true;
+		}
+		else
+		{
+			roVisibilityIterator_p->nextChunk();
+
+			if (roVisibilityIterator_p->moreChunks())
+			{
+				buffersInitialized_p = false;
+				moreChunks = true;
+				chunkNo++;
+				bufferNo = 0;
+			}
+		}
+	}
+
+	return moreChunks;
+}
+
+
+// -----------------------------------------------------------------------
+// Move to next buffer
+// -----------------------------------------------------------------------
+bool
+FlagDataHandler::nextBuffer()
+{
+	bool moreBuffers = false;
+	if (stopIteration_p)
+	{
+		moreBuffers = false;
+	}
+	else
+	{
+		if (!buffersInitialized_p)
+		{
+			// Group all the time stamps in one single buffer
+			// NOTE: Otherwise we have to iterate over Visibility Buffers
+			// that contain all the rows with the same time step.
+			if ((groupTimeSteps_p) and (asyncio_disabled_p))
+			{
+				Int nRowChunk = roVisibilityIterator_p->nRowChunk();
+				roVisibilityIterator_p->setRowBlocking(nRowChunk);
+			}
+			roVisibilityIterator_p->origin();
+			buffersInitialized_p = true;
+
+			if (asyncio_disabled_p) preFetchColumns();
+			if (mapAntennaPairs_p) generateAntennaPairMap();
+			if (mapSubIntegrations_p) generateSubIntegrationMap();
+			if (mapPolarizations_p) generatePolarizationsMap();
+			if (mapAntennaPointing_p) generateAntennaPointingMap();
+			moreBuffers = true;
+			bufferNo++;
+		}
+		else
+		{
+			// WARNING: ++ operator is defined for VisibilityIterator class ("advance" function)
+			// but if you define a VisibilityIterator pointer, then  ++ operator does not call
+			// the advance function but increments the pointers.
+			(*roVisibilityIterator_p)++;
+
+			// WARNING: We iterate and afterwards check if the iterator is valid
+			if (roVisibilityIterator_p->more())
+			{
+				if (asyncio_disabled_p) preFetchColumns();
+				if (mapAntennaPairs_p) generateAntennaPairMap();
+				if (mapSubIntegrations_p) generateSubIntegrationMap();
+				if (mapPolarizations_p) generatePolarizationsMap();
+				if (mapAntennaPointing_p) generateAntennaPointingMap();
+				moreBuffers = true;
+				bufferNo++;
+			}
+		}
+	}
+
+	// Set new common flag cube
+	if (moreBuffers)
+	{
+		// WARNING: We have to modify the shape of the cube before re-assigning it
+		Cube<Bool> modifiedflagCube= visibilityBuffer_p->get()->flagCube();
+		modifiedFlagCube_p.resize(modifiedflagCube.shape());
+		modifiedFlagCube_p = modifiedflagCube;
+		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
+		originalFlagCube_p.resize(originalFlagCube.shape());
+		originalFlagCube_p = originalFlagCube;
+	}
+
+	return moreBuffers;
+}
+
+
+// -----------------------------------------------------------------------
+// Flush flags to MS
+// -----------------------------------------------------------------------
+bool
+FlagDataHandler::flushFlags()
+{
+	rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
+
+	return true;
+}
+
+
+// -----------------------------------------------------------------------
+// As requested by Urvashi R.V. provide access to the original and modified flag cubes
+// -----------------------------------------------------------------------
+Cube<Bool> *
+FlagDataHandler::getModifiedFlagCube()
+{
+	return &modifiedFlagCube_p;
+}
+
+Cube<Bool> *
+FlagDataHandler::getOriginalFlagCube()
+{
+	return &originalFlagCube_p;
+}
+
+// -----------------------------------------------------------------------
+// Mapping functions as requested by Urvashi
+// -----------------------------------------------------------------------
+void
+FlagDataHandler::generateAntennaPairMap()
+{
+	// Free previous map and create a new one
+	if (antennaPairMap_p) delete antennaPairMap_p;
+	antennaPairMap_p = new antennaPairMap();
+
+	// Retrieve antenna vectors
+	Vector<Int> antenna1Vector = visibilityBuffer_p->get()->antenna1();
+	Vector<Int> antenna2Vector = visibilityBuffer_p->get()->antenna2();
+
+	// Fill map
+	Int ant1_i,ant2_i;
+	uInt nRows = antenna1Vector.size();
+	for (uInt row_idx=0;row_idx<nRows;row_idx++)
+	{
+		ant1_i = antenna1Vector[row_idx];
+		ant2_i = antenna2Vector[row_idx];
+		if (antennaPairMap_p->find(std::make_pair(ant1_i,ant2_i)) == antennaPairMap_p->end())
+		{
+			std::vector<uInt> newPair;
+			newPair.push_back(row_idx);
+			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)] = newPair;
+		}
+		else
+		{
+			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)].push_back(row_idx);
+		}
+	}
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
+
+	return;
+}
+
+
+void
+FlagDataHandler::generateSubIntegrationMap()
+{
+	// Free previous map and create a new one
+	if (subIntegrationMap_p) delete subIntegrationMap_p;
+	subIntegrationMap_p = new subIntegrationMap();
+
+	// Retrieve antenna vectors
+	Vector<Double> timeVector = visibilityBuffer_p->get()->time();
+
+	// Fill map
+	uInt nRows = timeVector.size();
+	for (uInt row_idx=0;row_idx<nRows;row_idx++)
+	{
+		if (subIntegrationMap_p->find(timeVector[row_idx]) == subIntegrationMap_p->end())
+		{
+			std::vector<uInt> newSubIntegration;
+			newSubIntegration.push_back(row_idx);
+			(*subIntegrationMap_p)[timeVector[row_idx]] = newSubIntegration;
+		}
+		else
+		{
+			(*subIntegrationMap_p)[timeVector[row_idx]].push_back(row_idx);
+		}
+	}
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << subIntegrationMap_p->size() <<" Sub-Integrations (time steps) found in current buffer" << LogIO::POST;
+
+	return;
+}
+
+
+void
+FlagDataHandler::generatePolarizationsMap()
+{
+	// Free previous map and create a new one
+	if (polarizationMap_p) delete polarizationMap_p;
+	polarizationMap_p = new polarizationMap();
+	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
+	polarizationIndexMap_p = new polarizationIndexMap();
+
+	uShort pos = 0;
+	Vector<Int> corrTypes = visibilityBuffer_p->get()->corrType();
+	*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Correlation type: " <<  corrTypes << LogIO::POST;
+
+	for (Vector<Int>::iterator iter = corrTypes.begin(); iter != corrTypes.end();iter++)
+	{
+		switch (*iter)
+		{
+			case Stokes::I:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is I" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::I] = pos;
+				(*polarizationIndexMap_p)[pos] = "I";
+				break;
+			}
+			case Stokes::Q:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is Q" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::Q] = pos;
+				(*polarizationIndexMap_p)[pos] = "Q";
+				break;
+			}
+			case Stokes::U:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is U" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::U] = pos;
+				(*polarizationIndexMap_p)[pos] = "U";
+				break;
+			}
+			case Stokes::V:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is V" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::V] = pos;
+				(*polarizationIndexMap_p)[pos] = "V";
+				break;
+			}
+			case Stokes::XX:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XX" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::XX] = pos;
+				(*polarizationIndexMap_p)[pos] = "XX";
+				break;
+			}
+			case Stokes::YY:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YY" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::YY] = pos;
+				(*polarizationIndexMap_p)[pos] = "YY";
+				break;
+			}
+			case Stokes::XY:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XY" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::XY] = pos;
+				(*polarizationIndexMap_p)[pos] = "XY";
+				break;
+			}
+			case Stokes::YX:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YX" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::YX] = pos;
+				(*polarizationIndexMap_p)[pos] = "YX";
+				break;
+			}
+			case Stokes::RR:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RR" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::RR] = pos;
+				(*polarizationIndexMap_p)[pos] = "RR";
+				break;
+			}
+			case Stokes::LL:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LL" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::LL] = pos;
+				(*polarizationIndexMap_p)[pos] = "LL";
+				break;
+			}
+			case Stokes::RL:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RL" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::RL] = pos;
+				(*polarizationIndexMap_p)[pos] = "RL";
+				break;
+			}
+			case Stokes::LR:
+			{
+				*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LR" << LogIO::POST;
+				(*polarizationMap_p)[Stokes::LR] = pos;
+				(*polarizationIndexMap_p)[pos] = "LR";
+				break;
+			}
+			default:
+			{
+				*logger_p << LogIO::WARN << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is unknown: " << *iter << LogIO::POST;
+				break;
+			}
+		}
+		pos++;
+	}
+
+	for (polarizationMap::iterator iter =polarizationMap_p->begin();iter != polarizationMap_p->end();iter++)
+	{
+		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " Polarization map key: " << iter->first << " value: " << iter->second << LogIO::POST;
+	}
+
+	return;
+}
+
+void
+FlagDataHandler::generateAntennaPointingMap()
+{
+	// Free previous map and create a new one
+	if (antennaPointingMap_p) delete antennaPointingMap_p;
+	antennaPointingMap_p = new antennaPointingMap();
+
+	Vector<Double> time = visibilityBuffer_p->get()->time();
+	uInt nRows = time.size();
+	antennaPointingMap_p->reserve(nRows);
+	for (uInt row_i=0;row_i<nRows;row_i++)
+	{
+		Vector<MDirection> azimuth_elevation = visibilityBuffer_p->get()->azel(time[row_i]);
+		Int ant1 = visibilityBuffer_p->get()->antenna1()[row_i];
+		Int ant2 = visibilityBuffer_p->get()->antenna1()[row_i];
+
+	    double antenna1_elevation = azimuth_elevation[ant1].getAngle("deg").getValue()[1];
+	    double antenna2_elevation = azimuth_elevation[ant2].getAngle("deg").getValue()[1];
+
+	    vector<Double> item(2);
+	    item[0] = antenna1_elevation;
+	    item[1] = antenna2_elevation;
+	    antennaPointingMap_p->push_back(item);
+	}
+
+	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Generated antenna pointing map with "
+			<< antennaPointingMap_p->size() << " elements" << LogIO::POST;
+
+	return;
+}
+
 void
 FlagDataHandler::generateScanStartStopMap()
 {
@@ -645,7 +1711,7 @@ FlagDataHandler::generateScanStartStopMap()
 	uInt ncorrs,nchannels,nrows;
 	Bool stopSearch;
 
-	if (mapScanStartStop_p) scanStartStopMap_p = new scanStartStopMap();
+	if (scanStartStopMap_p == NULL) scanStartStopMap_p = new scanStartStopMap();
 
 	scans = rwVisibilityIterator_p->scan(scans);
 	times = rwVisibilityIterator_p->time(times);
@@ -717,7 +1783,8 @@ FlagDataHandler::generateScanStartStopMap()
 	scan = scans[0];
 	start = times[scanStartRow];
 	stop = times[scanStopRow];
-	if ((*scanStartStopMap_p)[scan].size() == 0)
+
+	if (scanStartStopMap_p->find(scan) == scanStartStopMap_p->end())
 	{
 		(*scanStartStopMap_p)[scan].push_back(start);
 		(*scanStartStopMap_p)[scan].push_back(stop);
@@ -739,472 +1806,63 @@ FlagDataHandler::generateScanStartStopMap()
 	return;
 }
 
-
 // -----------------------------------------------------------------------
-// Generate Visibility Iterator with a given sort order and time interval
+// Functions to switch on/off mapping functions
 // -----------------------------------------------------------------------
-bool
-FlagDataHandler::generateIterator()
+void
+FlagDataHandler::setMapAntennaPairs(bool activated)
 {
-	// First create and initialize RW iterator
-	if (rwVisibilityIterator_p) delete rwVisibilityIterator_p;
-	rwVisibilityIterator_p = new VisibilityIterator(*selectedMeasurementSet_p,sortOrder_p,true,timeInterval_p);
-
-	// Set the table data manager (ISM and SSM) cache size to the full column size, for
-	// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-	if (slurp_p) rwVisibilityIterator_p->slurp();
-
-	// Apply channel selection (Notice that is not necessary to do this again with the RO iterator un sync mode)
-	applyChannelSelection(rwVisibilityIterator_p);
-
-	checkMaxMemory();
-
-	// If async I/O is enabled we create an async RO iterator for reading and a conventional RW iterator for writing
-	// Both iterators share a mutex which is resident in the VLAT data (Visibility Look Ahead thread Data Object)
-	// With this configuration the Visibility Buffer is attached to the RO async iterator
-	if (asyncio_disabled_p)
-	{
-		// Cast RW conventional iterator into RO conventional iterator
-		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-		roVisibilityIterator_p = (ROVisibilityIterator*)rwVisibilityIterator_p;
-
-		// Finally attach Visibility Buffer to RO conventional iterator
-		if (visibilityBuffer_p) delete visibilityBuffer_p;
-		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
-	}
-	else
-	{
-
-	    throw AipsError ("FlagDataHandler.asyncio temporally disabled ", __FILE__, __LINE__);
-
-		// Determine columns to be pre-fetched
-//		ROVisibilityIteratorAsync::PrefetchColumns prefetchColumns = ROVisibilityIteratorAsync::prefetchColumns(casa::asyncio::Ant1,
-//															casa::asyncio::Ant2,
-//															casa::asyncio::ArrayId,
-//															casa::asyncio::CorrType,
-//															casa::asyncio::Feed1,
-//															casa::asyncio::Feed2,
-//															casa::asyncio::FieldId,
-//															casa::asyncio::Flag,
-//															casa::asyncio::FlagCube,
-//															casa::asyncio::FlagRow,
-//															casa::asyncio::ObservationId,
-//															casa::asyncio::ObservedCube,
-//															casa::asyncio::Freq,
-//															casa::asyncio::NChannel,
-//															casa::asyncio::NCorr,
-//															casa::asyncio::NRow,
-//															casa::asyncio::PhaseCenter,
-//															casa::asyncio::Scan,
-//															casa::asyncio::SpW,
-//															casa::asyncio::StateId,
-//															casa::asyncio::Time,
-//															casa::asyncio::TimeInterval,
-//															casa::asyncio::Uvw,-1);
-//
-//		// Then create and initialize RO Async iterator
-//		if (roVisibilityIterator_p) delete roVisibilityIterator_p;
-//		roVisibilityIterator_p = ROVisibilityIteratorAsync::create(*selectedMeasurementSet_p,prefetchColumns,sortOrder_p,true,timeInterval_p,-1,groupTimeSteps_p);
-//
-//		// Set the table data manager (ISM and SSM) cache size to the full column size, for
-//		// the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
-//		if (slurp_p) roVisibilityIterator_p->slurp();
-//
-//		// Apply channel selection
-//		applyChannelSelection(roVisibilityIterator_p);
-//
-//		// Attach Visibility Buffer to Visibility Iterator
-//		if (visibilityBuffer_p) delete visibilityBuffer_p;
-//		visibilityBuffer_p = new VisBufferAutoPtr(roVisibilityIterator_p);
-//
-//		// Reset ROVisibilityIteratorAsync in order to apply the channel selection
-//		// NOTE: We have to do this before starting the flag agents,
-//		// otherwise we have some seg. faults related with RegEx parser
-//		// which is used when applying the ROVIA modifiers
-//		roVisibilityIterator_p->originChunks();
-//
-//		// Finally, initialize Visibility Write Behind Thread
-//		if (vwbt_p) delete vwbt_p;
-//		ROVisibilityIteratorAsync * roVisibilityIteratorAsync = (ROVisibilityIteratorAsync*) roVisibilityIterator_p;
-//		casa::async::Mutex * mutex = roVisibilityIteratorAsync->getMutex();
-//		vwbt_p = new VWBT(rwVisibilityIterator_p,mutex,groupTimeSteps_p);
-//		vwbt_p->start();
-
-	}
-
-	iteratorGenerated_p = true;
-
-	return true;
+	mapAntennaPairs_p=activated;
+	// Pre-Load antenna1, antenna2
+	preLoadColumn(VisBufferComponents::Ant1);
+	preLoadColumn(VisBufferComponents::Ant2);
 }
 
 void
-FlagDataHandler::applyChannelSelection(ROVisibilityIterator *roVisIter)
+FlagDataHandler::setMapSubIntegrations(bool activated)
 {
-	// Apply channel selection (in row selection cannot be done with MSSelection)
-	// NOTE: Each row of the Matrix has the following elements: SpwID StartCh StopCh Step
-	Matrix<Int> spwchan = measurementSetSelection_p->getChanList();
-	Vector<Int> spwlist = measurementSetSelection_p->getSpwList();
-	Int spw,channelStart,channelStop,channelStep,channelWidth;
-	for(uInt spw_i=0;spw_i<spwlist.nelements();spw_i++ )
-	{
-		// NOTE: selectChannel needs channelStart,channelWidth,channelStep
-		spw = spwlist[spw_i];
-		channelStart = spwchan(spw_i,1);
-		channelStop = spwchan(spw_i,2);
-		channelStep = spwchan(spw_i,3);
-		channelWidth = channelStop-channelStart+1;
-		roVisIter->selectChannel(1,channelStart,channelWidth,channelStep,spw);
-	}
-
-	return;
-}
-
-
-// -----------------------------------------------------------------------
-// Move to next chunk
-// -----------------------------------------------------------------------
-bool
-FlagDataHandler::nextChunk()
-{
-	bool moreChunks = false;
-	if (!chunksInitialized_p)
-	{
-		if (!iteratorGenerated_p) generateIterator();
-		roVisibilityIterator_p->originChunks();
-		chunksInitialized_p = true;
-		buffersInitialized_p = false;
-		chunkNo++;
-		bufferNo = 0;
-		moreChunks = true;
-	}
-	else
-	{
-		roVisibilityIterator_p->nextChunk();
-
-		if (roVisibilityIterator_p->moreChunks())
-		{
-			buffersInitialized_p = false;
-			moreChunks = true;
-			chunkNo++;
-			bufferNo = 0;
-		}
-	}
-
-	return moreChunks;
-}
-
-
-// -----------------------------------------------------------------------
-// Move to next buffer
-// -----------------------------------------------------------------------
-bool
-FlagDataHandler::nextBuffer()
-{
-	bool moreBuffers = false;
-	if (!buffersInitialized_p)
-	{
-		// Group all the time stamps in one single buffer
-		// NOTE: Otherwise we have to iterate over Visibility Buffers
-		// that contain all the rows with the same time step.
-		if ((groupTimeSteps_p) and (asyncio_disabled_p))
-		{
-			Int nRowChunk = roVisibilityIterator_p->nRowChunk();
-			roVisibilityIterator_p->setRowBlocking(nRowChunk);
-		}
-		roVisibilityIterator_p->origin();
-		buffersInitialized_p = true;
-		if (mapAntennaPairs_p) generateAntennaPairMap();
-		if (mapSubIntegrations_p) generateSubIntegrationMap();
-		if (mapPolarizations_p) generatePolarizationsMap();
-		if (mapAntennaPointing_p) generateAntennaPointingMap();
-		moreBuffers = true;
-		bufferNo++;
-	}
-	else
-	{
-		// WARNING: ++ operator is defined for VisibilityIterator class ("advance" function)
-		// but if you define a VisibilityIterator pointer, then  ++ operator does not call
-		// the advance function but increments the pointers.
-		(*roVisibilityIterator_p)++;
-
-		// WARNING: We iterate and afterwards check if the iterator is valid
-		if (roVisibilityIterator_p->more())
-		{
-			if (mapAntennaPairs_p) generateAntennaPairMap();
-			if (mapSubIntegrations_p) generateSubIntegrationMap();
-			if (mapPolarizations_p) generatePolarizationsMap();
-			if (mapAntennaPointing_p) generateAntennaPointingMap();
-			moreBuffers = true;
-			bufferNo++;
-		}
-	}
-
-	// Set new common flag cube
-	if (moreBuffers)
-	{
-		// WARNING: We have to modify the shape of the cube before re-assigning it
-		Cube<Bool> modifiedflagCube= visibilityBuffer_p->get()->flagCube();
-		modifiedFlagCube_p.resize(modifiedflagCube.shape());
-		modifiedFlagCube_p = modifiedflagCube;
-		const Cube<Bool> originalFlagCube= visibilityBuffer_p->get()->flagCube();
-		originalFlagCube_p.resize(originalFlagCube.shape());
-		originalFlagCube_p = originalFlagCube;
-	}
-
-	return moreBuffers;
-}
-
-
-// -----------------------------------------------------------------------
-// Flush flags to MS
-// -----------------------------------------------------------------------
-bool
-FlagDataHandler::flushFlags()
-{
-	if (asyncio_disabled_p)
-	{
-		rwVisibilityIterator_p->setFlag(modifiedFlagCube_p);
-	}
-	else
-	{
-		vwbt_p->setFlag(modifiedFlagCube_p);
-	}
-
-	return true;
-}
-
-
-// -----------------------------------------------------------------------
-// As requested by Urvashi R.V. provide access to the original and modified flag cubes
-// -----------------------------------------------------------------------
-Cube<Bool> *
-FlagDataHandler::getModifiedFlagCube()
-{
-	return &modifiedFlagCube_p;
-}
-
-Cube<Bool> *
-FlagDataHandler::getOriginalFlagCube()
-{
-	return &originalFlagCube_p;
-}
-
-// -----------------------------------------------------------------------
-// Mapping functions as requested by Urvashi
-// -----------------------------------------------------------------------
-void
-FlagDataHandler::generateAntennaPairMap()
-{
-	// Free previous map and create a new one
-	if (antennaPairMap_p) delete antennaPairMap_p;
-	antennaPairMap_p = new antennaPairMap();
-
-	// Retrieve antenna vectors
-	Vector<Int> antenna1Vector = visibilityBuffer_p->get()->antenna1();
-	Vector<Int> antenna2Vector = visibilityBuffer_p->get()->antenna2();
-
-	// Fill map
-	Int ant1_i,ant2_i;
-	uInt nRows = antenna1Vector.size();
-	for (uInt row_idx=0;row_idx<nRows;row_idx++)
-	{
-		ant1_i = antenna1Vector[row_idx];
-		ant2_i = antenna2Vector[row_idx];
-		if (antennaPairMap_p->find(std::make_pair(ant1_i,ant2_i)) == antennaPairMap_p->end())
-		{
-			std::vector<uInt> newPair;
-			newPair.push_back(row_idx);
-			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)] = newPair;
-		}
-		else
-		{
-			(*antennaPairMap_p)[std::make_pair(ant1_i,ant2_i)].push_back(row_idx);
-		}
-	}
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << antennaPairMap_p->size() <<" Antenna pairs found in current buffer" << LogIO::POST;
-
-	return;
-}
-
-
-void
-FlagDataHandler::generateSubIntegrationMap()
-{
-	// Free previous map and create a new one
-	if (subIntegrationMap_p) delete subIntegrationMap_p;
-	subIntegrationMap_p = new subIntegrationMap();
-
-	// Retrieve antenna vectors
-	Vector<Double> timeVector = visibilityBuffer_p->get()->time();
-
-	// Fill map
-	uInt nRows = timeVector.size();
-	for (uInt row_idx=0;row_idx<nRows;row_idx++)
-	{
-		if (subIntegrationMap_p->find(timeVector[row_idx]) == subIntegrationMap_p->end())
-		{
-			std::vector<uInt> newSubIntegration;
-			newSubIntegration.push_back(row_idx);
-			(*subIntegrationMap_p)[timeVector[row_idx]] = newSubIntegration;
-		}
-		else
-		{
-			(*subIntegrationMap_p)[timeVector[row_idx]].push_back(row_idx);
-		}
-	}
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ <<  " " << subIntegrationMap_p->size() <<" Sub-Integrations (time steps) found in current buffer" << LogIO::POST;
-
-	return;
-}
-
-
-void
-FlagDataHandler::generatePolarizationsMap()
-{
-	// Free previous map and create a new one
-	if (polarizationMap_p) delete polarizationMap_p;
-	polarizationMap_p = new polarizationMap();
-	if (polarizationIndexMap_p) delete polarizationIndexMap_p;
-	polarizationIndexMap_p = new polarizationIndexMap();
-
-	uShort pos = 0;
-	Vector<Int> corrTypes = visibilityBuffer_p->get()->corrType();
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Correlation type: " <<  corrTypes << LogIO::POST;
-
-	for (Vector<Int>::iterator iter = corrTypes.begin(); iter != corrTypes.end();iter++)
-	{
-		switch (*iter)
-		{
-			case Stokes::I:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is I" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::I] = pos;
-				(*polarizationIndexMap_p)[pos] = "I";
-				break;
-			}
-			case Stokes::Q:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is Q" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::Q] = pos;
-				(*polarizationIndexMap_p)[pos] = "Q";
-				break;
-			}
-			case Stokes::U:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is U" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::U] = pos;
-				(*polarizationIndexMap_p)[pos] = "U";
-				break;
-			}
-			case Stokes::V:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is V" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::V] = pos;
-				(*polarizationIndexMap_p)[pos] = "V";
-				break;
-			}
-			case Stokes::XX:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XX" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::XX] = pos;
-				(*polarizationIndexMap_p)[pos] = "XX";
-				break;
-			}
-			case Stokes::YY:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YY" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::YY] = pos;
-				(*polarizationIndexMap_p)[pos] = "YY";
-				break;
-			}
-			case Stokes::XY:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is XY" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::XY] = pos;
-				(*polarizationIndexMap_p)[pos] = "XY";
-				break;
-			}
-			case Stokes::YX:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is YX" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::YX] = pos;
-				(*polarizationIndexMap_p)[pos] = "YX";
-				break;
-			}
-			case Stokes::RR:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RR" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::RR] = pos;
-				(*polarizationIndexMap_p)[pos] = "RR";
-				break;
-			}
-			case Stokes::LL:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LL" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::LL] = pos;
-				(*polarizationIndexMap_p)[pos] = "LL";
-				break;
-			}
-			case Stokes::RL:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is RL" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::RL] = pos;
-				(*polarizationIndexMap_p)[pos] = "RL";
-				break;
-			}
-			case Stokes::LR:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is LR" << LogIO::POST;
-				(*polarizationMap_p)[Stokes::LR] = pos;
-				(*polarizationIndexMap_p)[pos] = "LR";
-				break;
-			}
-			default:
-			{
-				*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " The " << pos << " th correlation is unknown: " << *iter << LogIO::POST;
-				break;
-			}
-		}
-		pos++;
-	}
-
-	for (polarizationMap::iterator iter =polarizationMap_p->begin();iter != polarizationMap_p->end();iter++)
-	{
-		*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Polarization map key: " << iter->first << " value: " << iter->second << LogIO::POST;
-	}
-
-	return;
+	mapSubIntegrations_p=activated;
+	// Pre-Load time
+	preLoadColumn(VisBufferComponents::Time);
 }
 
 void
-FlagDataHandler::generateAntennaPointingMap()
+FlagDataHandler::setMapPolarizations(bool activated)
 {
-	// Free previous map and create a new one
-	if (antennaPointingMap_p) delete antennaPointingMap_p;
-	antennaPointingMap_p = new antennaPointingMap();
+	mapPolarizations_p=activated;
+	// Pre-Load corrType
+	preLoadColumn(VisBufferComponents::CorrType);
+}
 
-	Vector<Double> time = visibilityBuffer_p->get()->time();
-	uInt nRows = time.size();
-	antennaPointingMap_p->reserve(nRows);
-	for (uInt row_i=0;row_i<nRows;row_i++)
-	{
-		Vector<MDirection> azimuth_elevation = visibilityBuffer_p->get()->azel(time[row_i]);
-		Int ant1 = visibilityBuffer_p->get()->antenna1()[row_i];
-		Int ant2 = visibilityBuffer_p->get()->antenna1()[row_i];
+void
+FlagDataHandler::setMapAntennaPointing(bool activated)
+{
+	mapAntennaPointing_p=activated;
+	// Pre-Load time, antenna1 and antenna2
+	// Azel is derived and this only restriction
+	// is that it can be access by 1 thread only
+	preLoadColumn(VisBufferComponents::Time);
+	preLoadColumn(VisBufferComponents::Ant1);
+	preLoadColumn(VisBufferComponents::Ant2);
 
-	    double antenna1_elevation = azimuth_elevation[ant1].getAngle("deg").getValue()[1];
-	    double antenna2_elevation = azimuth_elevation[ant2].getAngle("deg").getValue()[1];
+}
 
-	    vector<Double> item(2);
-	    item[0] = antenna1_elevation;
-	    item[1] = antenna2_elevation;
-	    antennaPointingMap_p->push_back(item);
-	}
+void
+FlagDataHandler::setScanStartStopMap(bool activated)
+{
+	mapScanStartStop_p=activated;
+	// Pre-Load scan and time
+	preLoadColumn(VisBufferComponents::Scan);
+	preLoadColumn(VisBufferComponents::Time);
+}
 
-	*logger_p << LogIO::NORMAL << "FlagDataHandler::" << __FUNCTION__ << " Generated antenna pointing map with "
-			<< antennaPointingMap_p->size() << " elements" << LogIO::POST;
-
-	return;
+void
+FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
+{
+	mapScanStartStopFlagged_p=activated;
+	// Pre-Load scan and time
+	preLoadColumn(VisBufferComponents::Scan);
+	preLoadColumn(VisBufferComponents::Time);
 }
 
 CubeView<Bool> *
@@ -1450,6 +2108,7 @@ VisMapper::setParentCubes(CubeView<Complex> *leftVis,CubeView<Complex> *rightVis
 	reducedLength_p = IPosition(2);
 	reducedLength_p(0) = leftVisSize(1); // chan
 	reducedLength_p(1) = leftVisSize(2); // row
+	reducedLength_p(2) = leftVisSize(0); // pol
 
 
 	if (rightVis != NULL)
@@ -1711,6 +2370,13 @@ VisMapper::operator()(uInt chan, uInt row)
 	return (*this.*applyVisExpr_p)(val);
 }
 
+Float
+VisMapper::operator()(uInt pol, uInt chan, uInt row)
+{
+	Complex val = (*this.*getVis_p)(pol,chan,row);
+	return (*this.*applyVisExpr_p)(val);
+}
+
 Complex
 VisMapper::leftVis(uInt pol, uInt chan, uInt row)
 {
@@ -1896,6 +2562,7 @@ FlagMapper::setParentCubes(CubeView<Bool> *commonFlagsView,CubeView<Bool> *origi
 	reducedLength_p = IPosition(2);
 	reducedLength_p(0) = commonFlagCubeSize(1); // chan
 	reducedLength_p(1) = commonFlagCubeSize(2); // row
+	reducedLength_p(2) = commonFlagCubeSize(0); // pol
 }
 
 void
@@ -1953,7 +2620,7 @@ FlagMapper::getPrivateFlags(uInt channel, uInt row)
 Bool
 FlagMapper::getOriginalFlags(uInt pol, uInt channel, uInt row)
 {
-	return commonFlagsView_p->operator ()(pol,channel,row);
+	return originalFlagsView_p->operator ()(pol,channel,row);
 }
 
 Bool

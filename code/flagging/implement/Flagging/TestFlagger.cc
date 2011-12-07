@@ -34,6 +34,7 @@
 #include <flagging/Flagging/FlagDataHandler.h>
 #include <flagging/Flagging/FlagAgentBase.h>
 #include <flagging/Flagging/FlagAgentSummary.h>
+#include <tableplot/TablePlot/FlagVersion.h>
 #include <casa/stdio.h>
 #include <casa/math.h>
 #include <stdarg.h>
@@ -43,7 +44,7 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = false;
+const bool TestFlagger::dbg = true;
 
 LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 
@@ -108,8 +109,9 @@ TestFlagger::done()
 	agents_config_list_p.clear();
 	agents_list_p.clear();
 
-	if(dbg)
+	if(dbg){
 		cout << "TestFlagger::done() Run the destructor" << endl;
+	}
 
 	return;
 }
@@ -212,6 +214,7 @@ TestFlagger::selectData(Record selrec)
 		return false;
 	}
 
+
 	return true;
 }
 
@@ -296,25 +299,27 @@ TestFlagger::parseAgentParameters(Record agent_params)
 {
 	LogIO os(LogOrigin("TestFlagger", "parseAgentParameters()", WHERE));
 
+	String mode = "manualflag";
+
 	if(agent_params.empty()){
 
-		// TODO: Use the default agent, which is manualflag. In this case
-		// it will rely on the MS selected in selectData().
-		os << LogIO::NORMAL << "Will flag using the default mode = manualflag" << LogIO::POST;
-		mode_p = "manualflag";
-		agentParams_p.define("mode", mode_p);
+		// TODO: Use the default agent, with default selection.
+		// In this case it will be manualflag on the
+		// MS selected in selectData().
+		agentParams_p.define("mode", mode);
 	}
 	else {
 
 		agentParams_p = agent_params;
 
-		// TODO: should I verify the contents of the record?
+		if (! agentParams_p.isDefined("mode"))
+			agentParams_p.define("mode", mode);
+		else
+			agentParams_p.get("mode", mode);
 
 		// If there is a tfcrop agent in the list, we should
 		// change the iterationApproach to all the agents
-		agentParams_p.get("mode", mode_p);
-
-		if (mode_p.compare("tfcrop") == 0) {
+		if (mode.compare("tfcrop") == 0) {
 			iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
 		}
 
@@ -323,8 +328,12 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// add this agent to the list
 	agents_config_list_p.push_back(agentParams_p);
 
+	// sort the vector of records and define names
+	// for each agent.
+
+
 	if(dbg)
-		os << LogIO::NORMAL << "Will use mode= " << mode_p << LogIO::POST;
+		os << LogIO::NORMAL << "Will use mode= " << mode << LogIO::POST;
 
 
 	return true;
@@ -398,11 +407,15 @@ TestFlagger::initAgents()
 		return false;
 	}
 
+
 	// loop through the vector of agents
 	for (size_t i=0; i < agents_config_list_p.size(); i++) {
 
 		// get agent record
 		Record agent_rec = agents_config_list_p[i];
+		if (dbg){
+			os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
+		}
 
 		// TODO: should I check for fdh_p existence here?
 		// Should it call initFlagDataHandler in case it doesn't exist?
@@ -457,6 +470,7 @@ TestFlagger::run()
 	fdh_p->generateIterator();
 
 	agents_list_p.start();
+	if (dbg) cout << "size=" << agents_list_p.size()<<endl;
 
 	// iterate over chunks
 	while (fdh_p->nextChunk())
@@ -467,6 +481,7 @@ TestFlagger::run()
 
 			// Queue flagging process
 			// cout << "Put flag process in queue " << endl;
+
 			agents_list_p.queueProcess();
 
 			// Wait for completion of flagging process
@@ -485,15 +500,99 @@ TestFlagger::run()
 	// Get the record with the summary if there was any summary agent in the list
 	Record summary_stats = Record();
 	if (summaryAgent_p){
-		if(dbg)
-			os << LogIO::NORMAL << "Get the summary results" << LogIO::POST;
-
 		summary_stats = summaryAgent_p->getResult();
+
+/*		if(dbg){
+			os << LogIO::NORMAL << "Get the summary results" << LogIO::POST;
+			ostringstream os;
+			summary_stats.print(os);
+			String str(os.str());
+			cout << str << endl;
+		}*/
 	}
+
 
 	return summary_stats;
 }
 
+
+// ---------------------------------------------------------------------
+// TestFlagger::getFlagVersionList
+// Get the flag versions list from the file FLAG_VERSION_LIST in the
+// MS directory
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::getFlagVersionList(Vector<String> &verlist)
+{
+
+	LogIO os(LogOrigin("TestFlagger", "getFlagVersionList()", WHERE));
+
+	verlist.resize(0);
+	Int num;
+
+	FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
+	Vector<String> vlist = fv.getVersionList();
+
+	num = verlist.nelements();
+	verlist.resize( num + vlist.nelements() + 1, True );
+	verlist[num] = String("\nMS : ") + fdh_p->originalMeasurementSet_p->tableName() + String("\n");
+
+	for(Int j=0; j<(Int)vlist.nelements(); j++)
+		verlist[num+j+1] = vlist[j];
+
+
+	return true;
+}
+
+
+// ---------------------------------------------------------------------
+// TestFlagger::printFlagSelection
+// Get the flag versions list
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::printFlagSelections()
+{
+
+	LogIO os(LogOrigin("TestFlagger", "printFlagSelections()", WHERE));
+
+	if (! agents_config_list_p.empty())
+	{
+//		os << "Current list of agents : " << agents_config_list_p << LogIO::POST;
+
+		// TODO: loop through list
+		// Duplicate the vector... ???
+		for (size_t i=0; i < agents_config_list_p.size(); i++) {
+			ostringstream out;
+			Record agent_rec;
+			agent_rec = agents_config_list_p.at(i);
+			agent_rec.print(out);
+			os << out.str() << LogIO::POST;
+		}
+		cout << "size of original list " << agents_config_list_p.size() << endl;
+
+	}
+	else os << " No current agents " << LogIO::POST;
+
+	return true;
+}
+
+
+// ---------------------------------------------------------------------
+// TestFlagger::saveFlagVersion
+// Save the flag version
+//
+// ---------------------------------------------------------------------
+bool
+TestFlagger::saveFlagVersion(String versionname, String comment, String merge )
+{
+
+	FlagVersion fv(fdh_p->originalMeasurementSet_p->tableName(),"FLAG","FLAG_ROW");
+	fv.saveFlagVersion(versionname, comment, merge);
+
+	return true;
+}
 
 
 } //#end casa namespace

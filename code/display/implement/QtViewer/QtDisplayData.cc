@@ -618,18 +618,15 @@ void QtDisplayData::checkAxis() {
 		emit axisChanged(xaxis, yaxis, zaxis, hidden);
 
 		// get the spectral type, units, rest frequency/wavelength
-		// and the frequency system
-		String spcType, spcUnit, spcRval, spcSys;
-		if (rec.fieldNumber("axislabelspectraltype") >-1)
-			spcType = rec.subRecord("axislabelspectraltype").asString("value");
-		if (rec.fieldNumber("axislabelspectralunit") >-1)
-			spcUnit = rec.subRecord("axislabelspectralunit").asString("value");
+		// and the frequency system //axislabelspectypeunit
+		String spcRval, spcSys, spcTypeUnit;
+		if (rec.fieldNumber("axislabelspectypeunit") >-1)
+			spcTypeUnit = rec.subRecord("axislabelspectypeunit").asString("value");
 		if (rec.fieldNumber("axislabelrestvalue") >-1)
 			spcRval = rec.subRecord("axislabelrestvalue").asString("value");
 		if (rec.fieldNumber("axislabelfrequencysystem") >-1)
 			spcSys = rec.subRecord("axislabelfrequencysystem").asString("value");
-		emit spectrumChanged(spcType, spcUnit, spcRval, spcSys);
-
+		emit spectrumChanged(spcTypeUnit, spcRval, spcSys);
 	}
 	catch(const casa::AipsError& err) {
 		errMsg_ = err.getMesg();

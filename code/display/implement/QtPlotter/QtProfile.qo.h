@@ -146,7 +146,7 @@ public slots:
 
     void changeAxisOld(String xa, String ya, String za, std::vector<int>);
     void changeAxis(String xa, String ya, String za, std::vector<int>);
-    void changeSpectrum(String spcType, String spcUnit, String spcRval, String spcSys);
+    void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
     void doImgCollapse();
     void setCollapseRange(float xmin, float xmax);
 

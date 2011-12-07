@@ -302,6 +302,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
         else:
             nchaniter=1
             finalimagename=''
+            tmppath=''
          
         # loop over channels for per-channel clean
         for j in xrange(nchaniter):
@@ -515,6 +516,7 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 #                                     calready=calready, nchan=visnchan,
 #                                     start=visstart, width=1)
 #
+            # make maskimage 
             if maskimage=='':
                 maskimage=imset.imagelist[0]+'.mask'
 
@@ -551,31 +553,40 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
 
             ##restoring
             imset.setrestoringbeam(restoringbeam)
-            ###model image
+            
+            ### combine input models to a modelimage (per field)
+            # move to cleanhelper..
+            # input: loc_modelimage, nterms, dochaniter, j, tmppath
+            # outout 
+            # imset. 
+            imset.convertAllModelImages(modelimage, mode, nterms, dochaniter, j, tmppath)
+            
+            # -------old code (moved to cleanhelper.convertAllModelImages)
             #if not multifield:
             #         imset.convertmodelimage(modelimages=modelimage,
             #                 outputmodel=imagename+'.model')
-	    if (type(loc_modelimage)!=str and type(loc_modelimage)!=list):
-		    raise Exception,'modelimage must be a string or a list of strings';
+	    ##if (type(loc_modelimage)!=str and type(loc_modelimage)!=list):
+            ##		    raise Exception,'modelimage must be a string or a list of strings';
             #if loc_modelimage != '' and loc_modelimage != [] and nterms==1 :
-            if (not all(img=='' or img==[] or img==[''] for img in loc_modelimage)) and nterms==1 :
-                if dochaniter:
-                    imset.defineChaniterModelimages(loc_modelimage,j,tmppath)
-                else:
-                    if type(loc_modelimage)== str or \
-                       (type(loc_modelimage)==list and len(imset.imagelist)==1 and len(loc_modelimage)>1): 
-                        loc_modelimage=[loc_modelimage]
+            #
+            ##if (not all(img=='' or img==[] or img==[''] for img in loc_modelimage)) and nterms==1 :
+            ##    if dochaniter:
+            ##        imset.defineChaniterModelimages(loc_modelimage,j,tmppath)
+            ##    else:
+            ##        if type(loc_modelimage)== str or \
+            ##           (type(loc_modelimage)==list and len(imset.imagelist)==1 and len(loc_modelimage)>1): 
+            ##            loc_modelimage=[loc_modelimage]
                     #if len(imset.imagelist)!= len(modelimage):
                     #    raise Exception, "Number of modelimage does not match with number of image field"
-                    for j in range(len(imset.imagelist)): 
+            ##        for j in range(len(imset.imagelist)): 
                   # imset.convertmodelimage(modelimages=modelimage,
                   #                outputmodel=imset.imagelist.values()[0]+'.model')
                         #print "modelimage[",j,"]=", modelimage[j]
-                        casalog.post("Use modelimages: "+str(loc_modelimage[j])+" to create a combined modelimage: " \
-                                           +imset.imagelist.values()[j]+".model", 'DEBUG1')
-                        if loc_modelimage[j] != '' and loc_modelimage[j] != []:
-                            imset.convertmodelimage(modelimages=loc_modelimage[j],
-                                             outputmodel=imset.imagelist.values()[j]+'.model',imindex=j)
+            ##            casalog.post("Use modelimages: "+str(loc_modelimage[j])+" to create a combined modelimage: " \
+            ##                               +imset.imagelist.values()[j]+".model", 'DEBUG1')
+            ##            if loc_modelimage[j] != '' and loc_modelimage[j] != []:
+            ##                imset.convertmodelimage(modelimages=loc_modelimage[j],
+            ##                                 outputmodel=imset.imagelist.values()[j]+'.model',imindex=j)
             modelimages=[]
             restoredimage=[]
             residualimage=[]

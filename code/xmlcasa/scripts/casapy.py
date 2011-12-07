@@ -234,7 +234,7 @@ if casa['flags'].has_key('--help') :
 	print "   --nologfile"
 	print "   --nogui"
 	print "   --noipython"
-	print "   -c filename "
+	print "   -c filename-or-expression"
 	print "   --help, print this text and exit"
 	print
 	sys.exit(0) 
@@ -1123,9 +1123,27 @@ if ipython:
     if casa['flags'].has_key('-c') :
         print 'will execute script',casa['flags']['-c']
         if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            if os.path.exists( casa['flags']['-c'] ) :
+                ###
+                ###  assume casa['flags']['-c'] is a file to execute...
+                ###
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            else:
+                ###
+                ###  assume casa['flags']['-c'] is a python command...
+                ###
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
         else:
-            ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            if os.path.exists( casa['flags']['-c'] ) :
+                ###
+                ###  assume casa['flags']['-c'] is a file to execute...
+                ###
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c','execfile("'+casa['flags']['-c']+'")'], user_ns=globals() )
+            else:
+                ###
+                ###  assume casa['flags']['-c'] is a python command...
+                ###
+                ipshell = IPython.Shell.IPShell( argv=['-prompt_in1','CASA <\#>: ','-autocall','2','-colors','LightBG', '-nomessages', '-nobanner','-logfile','ipython.log','-upgrade','-ipythondir',casa['dirs']['rc']+'/ipython','-c',casa['flags']['-c']], user_ns=globals() )
     else:
         if os.path.exists( casa['dirs']['rc']+'/ipython/ipy_user_conf.py' ) :
 	    if(thelogfile != 'null') :

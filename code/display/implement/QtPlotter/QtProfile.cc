@@ -1184,11 +1184,11 @@ void QtProfile::changeAxis(String xa, String ya, String za, std::vector<int> ) {
 	cube = cb;
 }
 
-void QtProfile::changeSpectrum(String spcType, String spcUnit, String spcRval, String spcSys){
+void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys){
    *itsLog << LogOrigin("QtProfile", "changeSpectrum");
 
 	// transform to QString
-	QString  qSpcTypeUnit = QString(spcType.c_str()) + " ["+QString(spcUnit.c_str())+ "]";
+	QString  qSpcTypeUnit = QString(spcTypeUnit.c_str());
 	QString  qSpcRval(spcRval.c_str());
 	QString  qSpcSys(spcSys.c_str());
 

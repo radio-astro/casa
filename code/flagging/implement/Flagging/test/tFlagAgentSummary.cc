@@ -59,9 +59,6 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 	// Select data (creating selected MS)
 	dh->selectData();
 
-	// Generate iterators and vis buffers
-	dh->generateIterator();
-
 	// Create agent list
 	FlagAgentList agentList;
 	FlagAgentSummary *flaggingAgent = NULL;
@@ -70,6 +67,9 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 		flaggingAgent = new FlagAgentSummary(dh,*iter);
 		agentList.push_back(flaggingAgent);
 	}
+
+	// Generate iterators and vis buffers
+	dh->generateIterator();
 
 	// Enable profiling mode
 	agentList.setProfiling(false);
@@ -88,7 +88,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 		{
 			cout << "Chunk:" << dh->chunkNo << " " << "Buffer:" << dh->bufferNo << " ";
 			nBuffers += 1;
-
+/*
 			if (dh->visibilityBuffer_p->get()->observationId().nelements() > 1)
 			{
 				cout << "Observation:"
@@ -149,7 +149,7 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 			{
 				cout << "Antenna2:" << dh->visibilityBuffer_p->get()->antenna2()[0] << " ";
 			}
-
+*/
 			cout << "nRows:" << dh->visibilityBuffer_p->get()->nRow() <<endl;
 			cumRows += dh->visibilityBuffer_p->get()->nRow();
 
@@ -158,9 +158,6 @@ void summarizeFlags(string inputFile,Record dataSelection,vector<Record> agentPa
 
 			// Wait for completion of flagging process
 			agentList.completeProcess();
-
-			// Flush flags to MS
-			dh->flushFlags();
 		}
 	}
 
