@@ -4248,7 +4248,20 @@ void Imager::setMosaicFTMachine(Bool useDoublePrec){
     os << LogIO::NORMAL // Loglevel INFO
        << "Using antenna diameters for determining beams for gridding"
        << LogIO::POST;
-    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc();
+    //Use 1D-Airy
+    PBMathInterface::PBClass pbtype=PBMathInterface::AIRY;
+    //Temporary special case for ALMA to use 2D images
+    //Temporary till it is made fully that with automatic image selections
+    if((kpb==PBMath::ACA) ||  (kpb==PBMath::ALMA)){
+      String useimage="false";
+      Aipsrc::find(useimage, "alma.vp.image", "false");
+      useimage.downcase();
+      if(useimage.contains("true")){
+	pbtype=PBMathInterface::IMAGE;
+
+      }
+    }
+    CountedPtr<SimplePBConvFunc> mospb=new HetArrayConvFunc(pbtype);
     static_cast<MosaicFT &>(*ft_p).setConvFunc(mospb);
   }
   
