@@ -61,132 +61,135 @@ typedef std::vector<double> ErrorData;
 class GraphLabel
 {
 public:
-     QString text;
-     QString fontName;
-     int fontSize;
-     QColor color;
-     GraphLabel() : text(""), fontName("Helvetica [Cronyx]"), fontSize(12), color(Qt::blue) {}   	
+	QString text;
+	QString fontName;
+	int fontSize;
+	QColor color;
+	GraphLabel() : text(""), fontName("Helvetica [Cronyx]"), fontSize(12), color(Qt::blue) {}
 };
 
 class QtCanvas : public QWidget
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    QtCanvas(QWidget *parent = 0);
+	QtCanvas(QWidget *parent = 0);
 
-    void setPlotSettings(const QtPlotSettings &settings);
-    void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
-    CurveData* getCurveData(int);
-    ErrorData* getCurveError(int id);
-    QString getCurveName(int);
-    int getLineCount();
-    void clearCurve(int id = -1);
-    void clearData();
-    void setDataRange();
-    void setImageMode(bool);
-    void setPixmap(const QImage&);
-    QPixmap* graph();
-    void drawBackBuffer(QPainter *);
-    void plotPolyLines(QString);    
-    void plotPolyLine(const Vector<Int>&, const Vector<Int>&);
-    void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
-                      const QString& lb="");
-    void plotPolyLine(const Vector<Double>&, const Vector<Double>&);
-    void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
-                      const QString& lb="");    
-    void plotPolyLine(const Matrix<Int> &verts);
-    void plotPolyLine(const Matrix<Float> &verts);
-    void plotPolyLine(const Matrix<Double> &verts);
-   // template<class T>
-   // void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
-   // void drawImage(const Matrix<uInt> &data);
-    QColor getLinearColor(double);
-    QSize minimumSizeHint() const;
-    QSize sizeHint() const;
-    ~QtCanvas();
-    void increaseCurZoom();
-    int getCurZoom();
-    int getZoomStackSize();
-    
-    void setTitle(const QString &text, int fontSize = 12, double color = 0.5, 
-                  const QString &font = "Helvetica [Cronyx]");
-    void setXLabel(const QString &text, int fontSize = 10, double color = 0.5, 
-                  const QString &font = "Helvetica [Cronyx]");
-    void setYLabel(const QString &text, int fontSize = 10, double color = 0.5, 
-                  const QString &font = "Helvetica [Cronyx]");
-    void setWelcome(const QString &text, int fontSize = 14, 
-                    double color = 1, 
-                    const QString &font = "Helvetica [Cronyx]");
-    void setAutoScaleX(int a) {autoScaleX = a; }
-    void setAutoScaleY(int a) {autoScaleY = a; }
-    int getAutoScaleX( ) {return autoScaleX;}
-    int getAutoScaleY( ) {return autoScaleY;}
-    void setPlotError(int a)  {plotError = a; setDataRange();}
+	void setPlotSettings(const QtPlotSettings &settings);
+	void setCurveData(int id, const CurveData &data, const ErrorData &error=ErrorData(), const QString& lb="");
+	CurveData* getCurveData(int);
+	ErrorData* getCurveError(int id);
+	QString getCurveName(int);
+	int getLineCount();
+	void clearCurve(int id = -1);
+	void clearData();
+	void setDataRange();
+	void setImageMode(bool);
+	void setPixmap(const QImage&);
+	QPixmap* graph();
+	void drawBackBuffer(QPainter *);
+	void plotPolyLines(QString);
+	void plotPolyLine(const Vector<Int>&, const Vector<Int>&);
+	void plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, const Vector<Float> &e,
+			const QString& lb="");
+	void plotPolyLine(const Vector<Double>&, const Vector<Double>&);
+	void addPolyLine(const Vector<Float> &x, const Vector<Float> &y,
+			const QString& lb="");
+	void plotPolyLine(const Matrix<Int> &verts);
+	void plotPolyLine(const Matrix<Float> &verts);
+	void plotPolyLine(const Matrix<Double> &verts);
+	// template<class T>
+	// void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
+	// void drawImage(const Matrix<uInt> &data);
+	//QColor getLinearColor(double);
+	QColor getDiscreteColor(const int &d);
+	QSize minimumSizeHint() const;
+	QSize sizeHint() const;
+	~QtCanvas();
+	void increaseCurZoom();
+	int getCurZoom();
+	int getZoomStackSize();
+
+	void setTitle(const QString &text, int fontSize = 12,   int iclr = 1,
+			const QString &font = "Helvetica [Cronyx]");
+	void setXLabel(const QString &text, int fontSize = 10,  int iclr = 1,
+			const QString &font = "Helvetica [Cronyx]");
+	void setYLabel(const QString &text, int fontSize = 10,  int iclr = 1,
+			const QString &font = "Helvetica [Cronyx]");
+	void setWelcome(const QString &text, int fontSize = 14, int iclr = 1,
+			const QString &font = "Helvetica [Cronyx]");
+	void setAutoScaleX(int a) {autoScaleX = a;}
+	void setAutoScaleY(int a) {autoScaleY = a;}
+	void setShowGrid(int a)   {showGrid = a; refreshPixmap();}
+	int getAutoScaleX( ) {return autoScaleX;}
+	int getAutoScaleY( ) {return autoScaleY;}
+	int getShowGrid( )   {return showGrid;}
+	void setPlotError(int a)  {plotError = a; setDataRange();}
 
 public slots:
-    void zoomIn();
-    void zoomOut();
-    void zoomNeutral();
-    
+   void zoomIn();
+   void zoomOut();
+   void zoomNeutral();
+
 signals:
-    void xRangeChanged(float xmin, float xmax);
-   
-protected:
-    void paintEvent(QPaintEvent *event);
-    void resizeEvent(QResizeEvent *event);
-
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
-    void wheelEvent(QWheelEvent *event);
+	void xRangeChanged(float xmin, float xmax);
 
 protected:
-    void updateRubberBandRegion();
-    void updatexRangeBandRegion();
-    void refreshPixmap();    
-    void drawGrid(QPainter *painter);
-    void drawTicks(QPainter *painter);
-    void drawLabels(QPainter *painter);
-    void drawWelcome(QPainter *painter);
-    void drawCurves(QPainter *painter);
-    void drawRects(QPainter *painter);
-    void drawxRange(QPainter *painter);
-    void defaultZoomIn();
-    void defaultZoomOut();
+	void paintEvent(QPaintEvent *event);
+	void resizeEvent(QResizeEvent *event);
 
-    enum { MARGIN = 80 , FRACZOOM=20};
+	void mousePressEvent(QMouseEvent *event);
+	void mouseMoveEvent(QMouseEvent *event);
+	void mouseReleaseEvent(QMouseEvent *event);
+	void keyPressEvent(QKeyEvent *event);
+	void wheelEvent(QWheelEvent *event);
 
-    GraphLabel title;
-    GraphLabel xLabel;
-    GraphLabel yLabel;
-    GraphLabel welcome;
-    
-    std::map<int, QString> legend;
-    std::map<int, CurveData> curveMap;
-    std::map<int, ErrorData> errorMap;
-    std::vector<QtPlotSettings> zoomStack;
-    std::map<int, CurveData> markerStack;
-    int curZoom;
-    int curMarker;
-    bool rubberBandIsShown;
-    bool xRangeIsShown;
-    bool imageMode;
-    bool xRangeMode;
-    double xRangeStart;
-    double xRangeEnd;
-    QRect rubberBandRect;
-    QRect xRangeRect;
-    QPixmap pixmap;
-    QPixmap backBuffer;
-    Matrix<uInt> *pMask;
+protected:
+	void updateRubberBandRegion();
+	void updatexRangeBandRegion();
+	void refreshPixmap();
+	void drawGrid(QPainter *painter);
+	void drawTicks(QPainter *painter);
+	void drawLabels(QPainter *painter);
+	void drawWelcome(QPainter *painter);
+	void drawCurves(QPainter *painter);
+	void drawRects(QPainter *painter);
+	void drawxRange(QPainter *painter);
+	void defaultZoomIn();
+	void defaultZoomOut();
 
-    int autoScaleX;
-    int autoScaleY;
-    int plotError;
+	enum { MARGIN = 80 , FRACZOOM=20};
 
-    int xRectStart;
-    int xRectEnd;
+	GraphLabel title;
+	GraphLabel xLabel;
+	GraphLabel yLabel;
+	GraphLabel welcome;
+
+	std::map<int, QString> legend;
+	std::map<int, CurveData> curveMap;
+	std::map<int, ErrorData> errorMap;
+	std::vector<QtPlotSettings> zoomStack;
+	std::map<int, CurveData> markerStack;
+	int curZoom;
+	int curMarker;
+	bool rubberBandIsShown;
+	bool xRangeIsShown;
+	bool imageMode;
+	bool xRangeMode;
+	double xRangeStart;
+	double xRangeEnd;
+	QRect rubberBandRect;
+	QRect xRangeRect;
+	QPixmap pixmap;
+	QPixmap backBuffer;
+	Matrix<uInt> *pMask;
+
+	int autoScaleX;
+	int autoScaleY;
+	int plotError;
+	int showGrid;
+
+	int xRectStart;
+	int xRectEnd;
 
 };
 

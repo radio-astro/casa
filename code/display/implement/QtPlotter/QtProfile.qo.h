@@ -126,7 +126,7 @@ public slots:
     void left();
     void right();
     void preferences();
-	void setPreferences(int stateAutoX, int stateAutoY, int stateMProf, int stateRel);
+	void setPreferences(int stateAutoX, int stateAutoY, int showGrid, int stateMProf, int stateRel);
 
     void setPlotError(int);
     void changeCoordinate(const QString &text);

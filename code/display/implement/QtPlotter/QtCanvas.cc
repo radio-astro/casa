@@ -65,6 +65,7 @@ QtCanvas::QtCanvas(QWidget *parent)
     autoScaleX = 2;
     autoScaleY = 2;
     plotError  = 2;
+    showGrid   = 2;
 }
 
 void QtCanvas::setPlotSettings(const QtPlotSettings &settings)
@@ -655,14 +656,16 @@ void QtCanvas::drawGrid(QPainter *painter)
         double label = settings.minX + (i * settings.spanX()
                                         / settings.numXTicks);
         if (abs(label) < 0.00000005) label = 0.f;                                
-        painter->setPen(quiteDark);
-        painter->drawLine(x, rect.top(), x, rect.bottom());
+        //painter->setPen(quiteDark);
+        if (showGrid){
+           painter->setPen(quiteDark);
+           painter->drawLine(x, rect.top(), x, rect.bottom());
+        }
         painter->setPen(light);
         painter->drawLine(x, rect.bottom(), x, rect.bottom() + 5);
         painter->drawText(x - 50, rect.bottom() + 5, 100, 15,
                           Qt::AlignHCenter | Qt::AlignTop,
                           QString::number(label));
-        //qDebug() << "xxx: " << x;
     }
     for (int j = 0; j <= settings.numYTicks; ++j)
     {
@@ -672,8 +675,11 @@ void QtCanvas::drawGrid(QPainter *painter)
                                         / settings.numYTicks);
 
         if (abs(label) < 0.00000005) label = 0.f;                                 
-        painter->setPen(quiteDark);
-        painter->drawLine(rect.left(), y, rect.right(), y);
+        //painter->setPen(quiteDark);
+        if (showGrid) {
+           painter->setPen(quiteDark);
+      	  painter->drawLine(rect.left(), y, rect.right(), y);
+        }
         painter->setPen(light);
         painter->drawLine(rect.left() - 5, y, rect.left(), y);
         painter->drawText(rect.left() - MARGIN, y - 10,
@@ -856,6 +862,7 @@ void QtCanvas::drawxRange(QPainter *painter)
     painter->drawRect(xRangeRect.normalized());
 }
 
+/*
 QColor QtCanvas::getLinearColor(double d)
 {
     double middle = 0.4;
@@ -879,6 +886,67 @@ QColor QtCanvas::getLinearColor(double d)
     //std::cout << "r=" << r << " g=" << g << " b=" << b << std::endl;
     return QColor((int)r, (int)g, (int)b);
 }
+*/
+
+QColor QtCanvas::getDiscreteColor(const int &d)
+{
+	// maps an integer value against the 14 usefull colors
+	// defined in Qt::GlobalColor;
+	// is repetitive, but should suffice for all practical
+	// purposes;
+	QColor lColor;
+	const int cpicker = d % 14;
+
+	switch (cpicker) {
+	case 0:
+		lColor = Qt::red;
+		break;
+	case 1:
+		lColor = Qt::blue;
+		break;
+	case 2:
+		lColor = Qt::green;
+		break;
+	case 3:
+		lColor = Qt::cyan;
+		break;
+	case 4:
+		lColor = Qt::lightGray;
+		break;
+	case 5:
+		lColor = Qt::magenta;
+		break;
+	case 6:
+		lColor = Qt::yellow;
+		break;
+	case 7:
+		lColor = Qt::darkRed;
+		break;
+	case 8:
+		lColor = Qt::darkBlue;
+		break;
+	case 9:
+		lColor = Qt::darkGreen;
+		break;
+	case 10:
+		lColor = Qt::darkCyan;
+		break;
+	case 11:
+		lColor = Qt::darkGray;
+		break;
+	case 12:
+		lColor = Qt::darkMagenta;
+		break;
+	case 13:
+		lColor = Qt::darkYellow;
+		break;
+	default:
+		// should never get here
+		lColor = Qt::gray;
+	}
+	return lColor;
+}
+
 void QtCanvas::drawCurves(QPainter *painter)
 {
 
@@ -893,9 +961,9 @@ void QtCanvas::drawCurves(QPainter *painter)
                          rect.width() - 2, rect.height() - 2);
 
     std::map<int, CurveData>::const_iterator it = curveMap.begin();
-
     int siz = curveMap.size();
-    int sz = siz > 1 ? siz - 1 : 1;
+
+    int sz = siz > 1 ? siz : 1;
     QColor *colorFolds = new QColor[sz];
 
     while (it != curveMap.end())
@@ -906,9 +974,9 @@ void QtCanvas::drawCurves(QPainter *painter)
 
    	 int maxPoints = data.size() / 2;
    	 QPainterPath points;
-   	 double n = (double)id / sz;
 
-   	 colorFolds[id] = getLinearColor(n);
+   	 // get a colour
+   	 colorFolds[id] = getDiscreteColor(id);
 
    	 if (maxPoints == 1) {
 
@@ -963,7 +1031,8 @@ void QtCanvas::drawCurves(QPainter *painter)
    			 {
    				 if (i == 0)
    					 points.moveTo((int)x, (int)y);
-   				 points.lineTo((int)x, (int)y);
+   				 else
+   					 points.lineTo((int)x, (int)y);
    			 }
    		 }
 
@@ -989,7 +1058,7 @@ void QtCanvas::drawCurves(QPainter *painter)
    		 }
 
    	 }
-   	 painter->setPen(colorFolds[(uint)id % 6]);
+   	 painter->setPen(colorFolds[id]);
    	 painter->drawPath(points);
 
    	 if (siz > 1) {
@@ -1111,6 +1180,7 @@ void QtCanvas::plotPolyLine(const Vector<Float> &x, const Vector<Float> &y, cons
     setDataRange();
     return;
 }
+
 void QtCanvas::plotPolyLine(const Vector<Int> &x, const Vector<Int> &y)
 {
     //qDebug() << "plot poly line int";
@@ -1118,8 +1188,7 @@ void QtCanvas::plotPolyLine(const Vector<Int> &x, const Vector<Int> &y)
     x.shape(xl);
     y.shape(yl);
     CurveData data;
-    for (int i = 0; i < min(xl, yl); i++)
-    {
+    for (int i = 0; i < min(xl, yl); i++) {
         data.push_back(x[i]);
         data.push_back(y[i]);
     }
@@ -1128,156 +1197,130 @@ void QtCanvas::plotPolyLine(const Vector<Int> &x, const Vector<Int> &y)
     setDataRange();
     return;
 }
-void QtCanvas::plotPolyLine(
-        const Vector<Double> &x, const Vector<Double>&y)
+
+void QtCanvas::plotPolyLine(const Vector<Double> &x, const Vector<Double>&y)
 {
-    //qDebug() << "plot poly line double";
-    //for (int i=0; i< x.nelements(); i++)
-    //   cout << x(i) << " " << y(i) << endl;
-    Int xl, yl;
-    x.shape(xl);
-    y.shape(yl);
-    CurveData data;
-    for (Int i = 0; i < min(xl, yl); i++)
-    {
-        data.push_back(x[i]);
-        data.push_back(y[i]);
-    }
-    setCurveData(0, data);
+	//qDebug() << "plot poly line double";
+	//for (int i=0; i< x.nelements(); i++)
+	//   cout << x(i) << " " << y(i) << endl;
+	Int xl, yl;
+	x.shape(xl);
+	y.shape(yl);
+	CurveData data;
+	for (Int i = 0; i < min(xl, yl); i++) {
+		data.push_back(x[i]);
+		data.push_back(y[i]);
+	}
+	setCurveData(0, data);
 
-    setDataRange();
-    return;
+	setDataRange();
+	return;
 }
+
 void QtCanvas::plotPolyLine(const Matrix<Double> &x)
 {
 
-    Int xl, yl;
-    x.shape(xl, yl);
-    int nr = xl / 2;
-    int nc = yl / 2;
-    int n = min (nr, nc);
-    if (n > 0)
-    {
-        //CurveData *data = new CurveData[n];
-    	std::vector<CurveData> data;
-        //CurveData data[n];
-        if (n < nr)
-        {
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < xl; j++)
-                {
-                    data[i].push_back(x(uInt(j), uInt(2 * i)));
-                    data[i].push_back(x(uInt(j), uInt(2 * i + 1)));
-                }
-                setCurveData(i, data[i]);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < yl; j++)
-                {
-                    data[i].push_back(x(2 * i, j));
-                    data[i].push_back(x(2 * i + 1, j));
-                }
-                setCurveData(i, data[i]);
-            }
-        }
-
-	//delete [] data;
-
-    }
-    setDataRange();
-    return;
+	Int xl, yl;
+	x.shape(xl, yl);
+	int nr = xl / 2;
+	int nc = yl / 2;
+	int n = min (nr, nc);
+	if (n > 0) {
+		// CurveData *data = new CurveData[n];
+		std::vector<CurveData> data;
+		if (n < nr) {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < xl; j++) {
+					data[i].push_back(x(uInt(j), uInt(2 * i)));
+					data[i].push_back(x(uInt(j), uInt(2 * i + 1)));
+				}
+				setCurveData(i, data[i]);
+			}
+		}
+		else {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < yl; j++) {
+					data[i].push_back(x(2 * i, j));
+					data[i].push_back(x(2 * i + 1, j));
+				}
+				setCurveData(i, data[i]);
+			}
+		}
+		//delete [] data;
+	}
+	setDataRange();
+	return;
 }
+
 void QtCanvas::plotPolyLine(const Matrix<Int> &x)
 {
+	Int xl, yl;
+	x.shape(xl, yl);
+	int nr = xl / 2;
+	int nc = yl / 2;
+	int n = min (nr, nc);
+	if (n > 0) {
+		//  CurveData *data = new CurveData[n];
+		std::vector<CurveData> data;
+		if (n < nr) {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < xl; j++) {
+					data[i].push_back(x(j, 2 * i));
+					data[i].push_back(x(j, 2 * i + 1));
+				}
+				setCurveData(i, data[i]);
+			}
+		}
+		else {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < yl; j++) {
+					data[i].push_back(x(2 * i, j));
+					data[i].push_back(x(2 * i + 1, j));
+				}
+				setCurveData(i, data[i]);
+			}
+		}
+		//delete [] data;
+	}
 
-    Int xl, yl;
-    x.shape(xl, yl);
-    int nr = xl / 2;
-    int nc = yl / 2;
-    int n = min (nr, nc);
-    if (n > 0)
-    {
-        //CurveData *data = new CurveData[n];
-    	std::vector<CurveData> data;
-    	//CurveData data[n];
-        if (n < nr)
-        {
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < xl; j++)
-                {
-                    data[i].push_back(x(j, 2 * i));
-                    data[i].push_back(x(j, 2 * i + 1));
-                }
-                setCurveData(i, data[i]);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < yl; j++)
-                {
-                    data[i].push_back(x(2 * i, j));
-                    data[i].push_back(x(2 * i + 1, j));
-                }
-                setCurveData(i, data[i]);
-            }
-        }
-	//delete [] data;
-
-    }
-
-    setDataRange();
-    return;
+	setDataRange();
+	return;
 }
+
 void QtCanvas::plotPolyLine(const Matrix<Float> &x)
 {
 
-    Int xl, yl;
-    x.shape(xl, yl);
-    int nr = xl / 2;
-    int nc = yl / 2;
-    int n = min (nr, nc);
-    if (n > 0)
-    {
-        //CurveData *data = new CurveData[n];
-    	std::vector<CurveData> data;
-    	//CurveData data[n];
-        if (n < nr)
-        {
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < xl; j++)
-                {
-                    data[i].push_back(x(j, 2 * i));
-                    data[i].push_back(x(j, 2 * i + 1));
-                }
-                setCurveData(i, data[i]);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < yl; j++)
-                {
-                    data[i].push_back(x(2 * i, j));
-                    data[i].push_back(x(2 * i + 1, j));
-                }
-                setCurveData(i, data[i]);
-            }
-        }
-	//delete [] data;
-    }
+	Int xl, yl;
+	x.shape(xl, yl);
+	int nr = xl / 2;
+	int nc = yl / 2;
+	int n = min (nr, nc);
+	if (n > 0) {
+		//  CurveData *data = new CurveData[n];
+		std::vector<CurveData> data;
+		if (n < nr) {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < xl; j++) {
+					data[i].push_back(x(j, 2 * i));
+					data[i].push_back(x(j, 2 * i + 1));
+				}
+				setCurveData(i, data[i]);
+			}
+		}
+		else {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < yl; j++) {
+					data[i].push_back(x(2 * i, j));
+					data[i].push_back(x(2 * i + 1, j));
+				}
+				setCurveData(i, data[i]);
+			}
+		}
+		//delete [] data;
+	}
 
-    setDataRange();
-    return;
+	setDataRange();
+	return;
 }
 /*
 //template<class T>
@@ -1435,33 +1478,33 @@ int QtCanvas::getZoomStackSize()
 {
     return (int)zoomStack.size();
 }
-void QtCanvas::setTitle(const QString &text, int fontSize, double clr, const QString &font)
+void QtCanvas::setTitle(const QString &text, int fontSize, int iclr, const QString &font)
 { 
  	title.text = text;
  	title.fontName = font;
  	title.fontSize = fontSize;
- 	title.color = getLinearColor(clr); 
+ 	title.color = getDiscreteColor(iclr);
 }
-void QtCanvas::setXLabel(const QString &text, int fontSize, double clr, const QString &font)
+void QtCanvas::setXLabel(const QString &text, int fontSize, int iclr, const QString &font)
 { 
 	xLabel.text = text;
  	xLabel.fontName = font;
  	xLabel.fontSize = fontSize;
- 	xLabel.color = getLinearColor(clr); 
+ 	xLabel.color = getDiscreteColor(iclr);
 }
-void QtCanvas::setYLabel(const QString &text, int fontSize, double clr, const QString &font)
+void QtCanvas::setYLabel(const QString &text, int fontSize, int iclr, const QString &font)
 { 
 	yLabel.text = text;
  	yLabel.fontName = font;
  	yLabel.fontSize = fontSize;
- 	yLabel.color = getLinearColor(clr); 
+ 	yLabel.color = getDiscreteColor(iclr);
 } 
-void QtCanvas::setWelcome(const QString &text, int fontSize, double clr, const QString &font)
+void QtCanvas::setWelcome(const QString &text, int fontSize, int iclr, const QString &font)
 { 
  	welcome.text = text;
  	welcome.fontName = font;
  	welcome.fontSize = fontSize;
- 	welcome.color = getLinearColor(clr); 
+ 	welcome.color = getDiscreteColor(iclr);
 }
 QPixmap* QtCanvas::graph()
 {
