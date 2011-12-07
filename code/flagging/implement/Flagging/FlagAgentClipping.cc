@@ -46,7 +46,7 @@ FlagAgentClipping::setAgentParameters(Record config)
 	exists = config.fieldNumber ("clipminmax");
 	if (exists >= 0)
 	{
-		Array<Float> cliprange = config.asArrayFloat("clipminmax");
+		Array<Double> cliprange = config.asArrayDouble("clipminmax");
 		Bool deleteIt = False;
 		clipmin_p = cliprange.getStorage(deleteIt)[0];
 		clipmax_p = cliprange.getStorage(deleteIt)[1];
