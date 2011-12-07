@@ -1473,18 +1473,18 @@ void PBMath::initByTelescope(PBMath::CommonPB myPBType,
 				       Quantity(1.784,"deg"), Quantity(1.0,"GHz") );
     break;
   case ALMA:
-    /////Value suggested as more appropriate for ALMA dishes
-    ////previously was using the physical dimension of 12 m
-    /////by Todd Hunter 2011-12-06
+    /////Value suggested as more appropriate for all 3 ALMA dishes
+    ////previously was using the physical dimension of 12 m, 12m,  and 6m
+    /////by Todd Hunter & Crystal Brogan 2011-12-06
     pb_pointer_p = new PBMath1DAiry( Quantity(10.7,"m"), Quantity(0.75,"m"),
 				       Quantity(1.784,"deg"), Quantity(1.0,"GHz") );
     break;
   case ALMASD:
-      pb_pointer_p = new PBMath1DAiry( Quantity(12.0,"m"), Quantity(1.0,"m"),
+      pb_pointer_p = new PBMath1DAiry( Quantity(10.7,"m"), Quantity(0.75,"m"),
 				       Quantity(1.784,"deg"), Quantity(1.0,"GHz") );
     break;
   case ACA:
-      pb_pointer_p = new PBMath1DAiry( Quantity(6.0,"m"), Quantity(0.5,"m"),
+      pb_pointer_p = new PBMath1DAiry( Quantity(6.25,"m"), Quantity(0.75,"m"),
 				       Quantity(3.568,"deg"), Quantity(1.0,"GHz") );
     break;
   case SMA:
