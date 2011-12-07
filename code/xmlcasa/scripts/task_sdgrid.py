@@ -5,7 +5,7 @@ import pylab as pl
 import asap as sd
 from taskinit import * 
 
-def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weight, outfile, overwrite, npix, cell, center, plot):
+def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight, outfile, overwrite, npix, cell, center, plot):
 
         casalog.origin('sdgrid')
         try:
@@ -16,7 +16,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weig
                       + '   ifno = %s\n'%(ifno) \
                       + '   pollist = %s\n'%(pollist) \
                       + '   gridfunction = %s\n'%(gridfunction) \
-                      + '   support = %s\n'%(support) \
+                      + '   width = %s\n'%(width) \
                       + '   weight = %s\n'%(weight) \
                       + '   outfile = %s\n'%(outfile) \
                       + '   overwrite = %s\n'%(overwrite) \
@@ -37,12 +37,12 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weig
             else:
                 pols = [pollist]
 
-            # gridfunction and support
+            # gridfunction and width
             if gridfunction.upper() == 'PB':
                 msg='Sorry. PB gridding is not implemented yet.'
                 raise Exception, msg
             elif gridfunction.upper() == 'BOX':
-                support=-1
+                width=-1
                 
 
             # outfile
@@ -120,7 +120,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weig
                       + '   ifno = %s\n'%(ifno) \
                       + '   pols = %s\n'%(pols) \
                       + '   gridfunction = %s\n'%(gridfunction) \
-                      + '   support = %s\n'%(support) \
+                      + '   width = %s\n'%(width) \
                       + '   weight = %s\n'%(weight) \
                       + '   outname = %s\n'%(outname) \
                       + '   nx = %s\n'%(nx) \
@@ -139,7 +139,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weig
                                  cellx=cellx, celly=celly,
                                  center=centerstr )
             gridder.setOption( convType=gridfunction,
-                               convSupport=support )
+                               width=width )
             gridder.grid()
             gridder.save( outfile=outname )
             if plot:
