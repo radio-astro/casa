@@ -44,7 +44,7 @@
 
 namespace casa {
 
-const bool TestFlagger::dbg = true;
+const bool TestFlagger::dbg = false;
 
 LogIO TestFlagger::os( LogOrigin("TestFlagger") );
 
@@ -309,6 +309,13 @@ TestFlagger::parseAgentParameters(Record agent_params)
 		agentParams_p.define("mode", mode);
 	}
 	else {
+		if (dbg){
+			ostringstream os;
+			agent_params.print(os);
+			String str(os.str());
+			cout << str << endl;
+
+		}
 
 		agentParams_p = agent_params;
 
@@ -415,6 +422,11 @@ TestFlagger::initAgents()
 		Record agent_rec = agents_config_list_p[i];
 		if (dbg){
 			os<< LogIO::NORMAL<< "Record["<<i<<"].nfields()="<<agent_rec.nfields()<<LogIO::POST;
+			ostringstream os;
+			agent_rec.print(os);
+			String str(os.str());
+			cout << str << endl;
+
 		}
 
 		// TODO: should I check for fdh_p existence here?
