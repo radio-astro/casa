@@ -824,29 +824,31 @@ FlagAgentBase::setAgentParameters(Record config)
 			dataColumn_p = "data";
 		}
 
+		dataColumn_p.upcase();
+
 		// Check if dataColumn_p is one of the supported columns (or residues)
-		if (dataColumn_p.compare("data") == 0)
+		if (dataColumn_p.compare("DATA") == 0)
 		{
 			dataReference_p = DATA;
 
 			// Request to pre-load ObservedCube
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ObservedCube);
 		}
-		else if (dataColumn_p.compare("corrected") == 0)
+		else if (dataColumn_p.compare("CORRECTED") == 0)
 		{
 			dataReference_p = CORRECTED;
 
 			// Request to pre-load CorrectedCube
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
 		}
-		else if (dataColumn_p.compare("model") == 0)
+		else if (dataColumn_p.compare("MODEL") == 0)
 		{
 			dataReference_p = MODEL;
 
 			// Request to pre-load ModelCube
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
-		else if (dataColumn_p.compare("residual") == 0)
+		else if (dataColumn_p.compare("RESIDUAL") == 0)
 		{
 			dataReference_p = RESIDUAL;
 
@@ -854,7 +856,7 @@ FlagAgentBase::setAgentParameters(Record config)
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::CorrectedCube);
 			flagDataHandler_p->preLoadColumn(VisBufferComponents::ModelCube);
 		}
-		else if (dataColumn_p.compare("residual_data") == 0)
+		else if (dataColumn_p.compare("RESIDUAL_DATA") == 0)
 		{
 			dataReference_p = RESIDUAL_DATA;
 
@@ -866,7 +868,7 @@ FlagAgentBase::setAgentParameters(Record config)
 		{
 			*logger_p << LogIO::WARN << agentName_p.c_str() << "::" << __FUNCTION__ <<
 					" Unsupported data column: " <<
-					expression_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
+					dataColumn_p << ", using data by default. Supported columns: data,corrected,model,residual,residual_data" << LogIO::POST;
 			dataColumn_p = "data";
 
 			// Request to pre-load ObservedCube
