@@ -1778,7 +1778,7 @@ Coordinate *SpectralCoordinate::clone() const
 void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis, 
 				LogIO &logger, Bool oneRelative, 
 				Bool preferVelocity,  Bool opticalVelDef, 
-				Bool preferWavelength) const
+				Bool preferWavelength, Bool airWaveDef) const
 {
     const Double offset(1.0*Int(oneRelative == True));
 
@@ -1944,7 +1944,7 @@ void SpectralCoordinate::toFITS(RecordInterface &header, uInt whichAxis,
 						logger,
 						RefFreq, RefPix,
   					        FreqInc, type_p, preferVelocity,
-						VelPreference, preferWavelength), AipsError);
+						VelPreference, preferWavelength, airWaveDef), AipsError);
 
     ctype(whichAxis) = Ctype;
     crval(whichAxis) = Crval;

@@ -70,6 +70,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------
   //  
+  class MSSelectionNullSelection : public MSSelectionError {
+  public:
+    MSSelectionNullSelection (const String& message, Category c=GENERAL);
+    ~MSSelectionNullSelection () throw();
+  };
+  //
+  //-------------------------------------------------------------------
+  //  
+  class MSSelectionNullExpr : public MSSelectionError {
+  public:
+    MSSelectionNullExpr (const String& message, Category c=GENERAL);
+    ~MSSelectionNullExpr () throw();
+  };
+  //
+  //-------------------------------------------------------------------
+  //  
+  class MSSelectionNullTEN : public MSSelectionError {
+  public:
+    MSSelectionNullTEN (const String& message, Category c=GENERAL);
+    ~MSSelectionNullTEN () throw();
+  };
+  //
+  //-------------------------------------------------------------------
+  //  
   class MSSelectionTimeError : public MSSelectionError {
   public:
     // Add given message to string "MSSelection time error: ".
