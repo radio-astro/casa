@@ -117,6 +117,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weig
             casalog.post('Start gridding...', "INFO")
             summary =   'Grid Parameter Summary:\n' \
                       + '   infile = %s\n'%(infile) \
+                      + '   ifno = %s\n'%(ifno) \
                       + '   pols = %s\n'%(pols) \
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   support = %s\n'%(support) \
@@ -131,6 +132,8 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, support, weig
             casalog.post( summary, 'DEBUG' )
             gridder = sd.asapgrid( infile=infile )
             gridder.setPolList( pols )
+            if ( ifno >= 0 ):
+                gridder.setIF( ifno ) 
             gridder.setWeight( weight ) 
             gridder.defineImage( nx=nx, ny=ny,
                                  cellx=cellx, celly=celly,
