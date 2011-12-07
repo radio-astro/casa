@@ -61,13 +61,27 @@ int MSInterval::comp(const void * obj1, const void * obj2) const
   }
   // Shortcut if values are equal.
   if (v1 == v2) return 0;
+
+  // Avoid dividing by interval_p if it is very small.
+  // It only takes a few / DBL_MIN to get inf,
+  // and inf == inf, even if "few" differs.
+  // (Specifying timeInterval = 0 leads to DBL_MAX, which might be the opposite
+  //  of what is wanted!  Avoiding underflow allows those who want no chunking
+  //  by TIME to use an interval_p which is guaranteed to be small enough
+  //  without having to read the INTERVAL column.)
+  //
+  // The 2.0 is a fudge factor.  The result of the comparison should probably
+  // be cached.
+  if(abs(interval_p) < 2.0 * DBL_MIN)
+    return v1 < v2 ? -1 : 1;
+
   // The times are binned in bins with a width of interval_p.
   double t1 = floor((v1 - offset_p) / interval_p);
   double t2 = floor((v2 - offset_p) / interval_p);
 
   return (t1==t2 ? 0 : (t1<t2 ? -1 : 1));
 }
- 
+
 
 MSIter::MSIter():nMS_p(0),msc_p(0),allBeamOffsetsZero_p(True),
   timeComp_p(NULL) {}
