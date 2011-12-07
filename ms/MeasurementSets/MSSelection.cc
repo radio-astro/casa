@@ -477,7 +477,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// If the TEN was not NULL and at least one expression was
 	// non-blank, and still resulted in a zero selected rows.
 	if (selectedMS.nrow() == 0) 
-	  throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected MS was NULL"));
+	  throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected MS has zero rows."));
 	if (outMSName!="") selectedMS.rename(outMSName,Table::New);
 	selectedMS.flush();
 	newRefMS=True;
