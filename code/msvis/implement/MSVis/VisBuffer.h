@@ -267,6 +267,8 @@ public:
     virtual void dirtyComponentsSet (const VbDirtyComponents & dirtyComponents);
     virtual void dirtyComponentsSet (VisBufferComponents::EnumType component);
 
+    virtual Bool fetch(const asyncio::PrefetchColumns *pfc);
+
     // feed1_pa() and feed2_pa() return an array of parallactic angles
     // (each corresponds to the first receptor of the feed) one for each
     // row in the current buffer. In contrast, feed_pa() calculates
@@ -716,6 +718,7 @@ public:
     // antenna from pointing table is avoided
     //Add more as needed.
     virtual void updateCoordInfo(const VisBuffer * vb = NULL, const Bool dirDependent=True);
+    void copyCoordInfo(const VisBuffer& other, Bool force=False);
 
     // Set the visibility to a constant, note that this only changes the buffer,
     // no values are written back to tables from here.

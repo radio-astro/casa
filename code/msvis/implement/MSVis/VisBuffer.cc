@@ -124,6 +124,18 @@ VisBuffer::assign(const VisBuffer & other, Bool copy)
     return *this;
 }
 
+void VisBuffer::copyCoordInfo(const VisBuffer& other, Bool force)
+{
+  // Just do the nominally non-row-dep values
+  cacheCopyNormal(arrayIdOK_p, other.arrayIdOK(), arrayId_p, other, &VisBuffer::arrayId, force);
+  cacheCopyNormal(fieldIdOK_p, other.fieldIdOK(), fieldId_p, other, &VisBuffer::fieldId, force);
+  cacheCopyNormal(spectralWindowOK_p, other.spectralWindowOK(), spectralWindow_p, other,
+                  &VisBuffer::spectralWindow, force);
+  cacheCopyNormal(nCorrOK_p, other.nCorrOK(), nCorr_p, other, &VisBuffer::nCorr, force);
+  cacheCopyNormal(nChannelOK_p, other.nChannelOK(), nChannel_p, other, &VisBuffer::nChannel, force);
+  cacheCopyArray(frequencyOK_p, other.frequencyOK(), frequency_p, other, &VisBuffer::frequency, force);
+}
+
 void
 VisBuffer::copyCache (const VisBuffer & other, Bool force)
 {
@@ -431,11 +443,11 @@ Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol)
 {
   switch(whichcol){
   case MS::DATA:
-    return visCube();
+    return This->visCube();
   case MS::MODEL_DATA:
-    return modelVisCube();
+    return This->modelVisCube();
   case MS::CORRECTED_DATA:
-    return correctedVisCube();
+    return This->correctedVisCube();
   default:
     throw(AipsError(MS::columnName(whichcol) + " is not supported as a data Cube."));
   }
@@ -445,11 +457,11 @@ const Cube<Complex>& VisBuffer::dataCube(const MS::PredefinedColumns whichcol) c
 {
   switch(whichcol){
   case MS::DATA:
-    return visCube();
+    return This->visCube();
   case MS::MODEL_DATA:
-    return modelVisCube();
+    return This->modelVisCube();
   case MS::CORRECTED_DATA:
-    return correctedVisCube();
+    return This->correctedVisCube();
   default:
     throw(AipsError(MS::columnName(whichcol) + " is not supported as a data Cube."));
   }
@@ -2472,6 +2484,152 @@ void
 VisBuffer::dirtyComponentsSet (VisBufferComponents::EnumType component)
 {
     dirtyComponents_p = VbDirtyComponents::singleton (component);
+}
+
+Bool VisBuffer::fetch(const asyncio::PrefetchColumns *pfc)
+{
+  Bool success = True;
+
+  for(asyncio::PrefetchColumns::const_iterator c = pfc->begin();
+      c != pfc->end(); ++c){
+    switch(*c){
+    case VisBufferComponents::Ant1:
+      This->antenna1();
+      break;
+    case VisBufferComponents::Ant2:
+      This->antenna2();
+      break;
+    case VisBufferComponents::ArrayId:
+      This->arrayId();
+      break;
+    case VisBufferComponents::Channel:
+      This->channel();
+      break;
+    case VisBufferComponents::CorrType:
+      This->corrType();
+      break;
+    case VisBufferComponents::Corrected:
+      This->correctedVisibility();
+      break;
+    case VisBufferComponents::CorrectedCube:
+      This->correctedVisCube();
+      break;
+    case VisBufferComponents::Direction1:
+      This->direction1();
+      break;
+    case VisBufferComponents::Direction2:
+      This->direction2();
+      break;
+    case VisBufferComponents::Exposure:
+      This->exposure();
+      break;
+    case VisBufferComponents::Feed1:
+      This->feed1();
+      break;
+    case VisBufferComponents::Feed1_pa:
+      This->feed1_pa();
+      break;
+    case VisBufferComponents::Feed2:
+      This->feed2();
+      break;
+    case VisBufferComponents::Feed2_pa:
+      This->feed2_pa();
+      break;
+    case VisBufferComponents::Flag:
+      This->flag();
+      break;
+    case VisBufferComponents::FlagCube:
+      This->flagCube();
+      break;
+    case VisBufferComponents::FlagCategory:
+      This->flagCategory();
+      break;
+    case VisBufferComponents::FlagRow:
+      This->flagRow();
+      break;
+    case VisBufferComponents::Freq:
+      This->frequency();
+      break;
+    case VisBufferComponents::ImagingWeight:
+      // This->imagingweight();                // do not fill this one
+      break;
+    case VisBufferComponents::Model:
+      This->modelVisibility();
+      break;
+    case VisBufferComponents::ModelCube:
+      This->modelVisCube();
+      break;
+    case VisBufferComponents::NChannel:
+      This->nChannel();
+      break;
+    case VisBufferComponents::NCorr:
+      This->nCorr();
+      break;
+    case VisBufferComponents::NRow:
+      This->nRow();
+      break;
+    case VisBufferComponents::ObservationId:
+      This->observationId();
+      break;
+    case VisBufferComponents::Observed:
+      This->visibility();
+      break;
+    case VisBufferComponents::ObservedCube:
+      This->visCube();
+      break;
+    case VisBufferComponents::PhaseCenter:
+      This->phaseCenter();
+      break;
+    case VisBufferComponents::PolFrame:
+      This->polFrame();
+      break;
+    case VisBufferComponents::ProcessorId:
+      This->processorId();
+      break;
+    case VisBufferComponents::Scan:
+      This->scan();
+      break;
+    case VisBufferComponents::Sigma:
+      This->sigma();
+      break;
+    case VisBufferComponents::SigmaMat:
+      This->sigmaMat();
+      break;
+    case VisBufferComponents::SpW:
+      This->spectralWindow();
+      break;
+    case VisBufferComponents::StateId:
+      This->stateId();
+      break;
+    case VisBufferComponents::Time:
+      This->time();
+      break;
+    case VisBufferComponents::TimeCentroid:
+      This->timeCentroid();
+      break;
+    case VisBufferComponents::TimeInterval:
+      This->timeInterval();
+      break;
+    case VisBufferComponents::Uvw:
+      This->uvw();
+      break;
+    case VisBufferComponents::UvwMat:
+      This->uvwMat();
+      break;
+    case VisBufferComponents::Weight:
+      This->weight();
+      break;
+    case VisBufferComponents::WeightMat:
+      This->weightMat();
+      break;
+    case VisBufferComponents::WeightSpectrum:
+      This->weightSpectrum();
+      break;
+    default:
+      throw(AipsError("Unrecognized column type"));
+    }
+  }
+  return success;
 }
 
 VisBufferAutoPtr::VisBufferAutoPtr ()

@@ -29,7 +29,6 @@
 #include <msvis/MSVis/VisBuffAccumulator.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Arrays/ArrayLogical.h>
-#include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 
 #define PRTLEV_VBA 0
@@ -39,19 +38,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //----------------------------------------------------------------------------
   
 VisBuffAccumulator::VisBuffAccumulator(const Int& nAnt, const Double& interval,
-				       const Bool& prenorm) 
+				       const Bool& prenorm, const Bool fillModel) 
   : avBuf_p(),
     nAnt_p(nAnt), 
     interval_p(interval), 
     prenorm_p(prenorm),
     prtlev_(PRTLEV_VBA),
-    nBuf_p(0)
+    nBuf_p(0),
+    fillModel_p(fillModel)
 {
 // Construct from the number of antennas and the averaging interval
 // Input:
 //    nAnt                 const Int&       No. of antennas
 //    interval             const Double&    Time interval (in seconds).
 //    prenorm              const Bool&      Pre-normalization flag
+//    fillModel            const Bool       Whether or not to accumulate MODEL_DATA
 // Output to private data:
 //    nAnt_p               Int              No. of antennas
 //    interval_p           Double           Time interval (in seconds).
@@ -132,7 +133,9 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
     // Assign main meta info only
     //    avBuf_p.assign(vb,True);  
     avBuf_p.assign(vb,False);  
-    avBuf_p.updateCoordInfo();  // This is (simplified) CalVisBuffer version!
+    //avBuf_p.updateCoordInfo();  // This is (simplified) CalVisBuffer version!
+    avBuf_p.copyCoordInfo(vb, True);    // This only goes to VisIter if vb is
+                                        // missing something needed.
 
     // Zero row count
     avBuf_p.nRow();
@@ -216,8 +219,9 @@ void VisBuffAccumulator::accumulate (const VisBuffer& vb)
 	  for (Int cor=0;cor<nCorr;cor++) {
 	    avBuf_p.visCube()(cor,chn,outrow) += 
 	      (wtM(cor)*vb.visCube()(cor,chn,row));
-	    avBuf_p.modelVisCube()(cor,chn,outrow) += 
-	      (wtM(cor)*vb.modelVisCube()(cor,chn,row));
+            if(fillModel_p)
+              avBuf_p.modelVisCube()(cor,chn,outrow) += 
+                (wtM(cor)*vb.modelVisCube()(cor,chn,row));
 	  }
 	}
       }
@@ -289,7 +293,8 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
   avBuf_p.uvw().resize(nRow, copydata); 
 
   avBuf_p.visCube().resize(nCorr_p,nChan_p, nRow,copydata);
-  avBuf_p.modelVisCube().resize(nCorr_p,nChan_p, nRow,copydata);
+  if(fillModel_p)
+    avBuf_p.modelVisCube().resize(nCorr_p,nChan_p, nRow,copydata);
 
   avBuf_p.weight().resize(nRow, copydata); 
   avBuf_p.weightMat().resize(nCorr_p,nRow, copydata); 
@@ -321,7 +326,8 @@ void VisBuffAccumulator::initialize(const Bool& copydata)
       avBuf_p.flag()(chn,row) = True;
       for (Int cor=0; cor < nCorr_p; cor++) {
 	avBuf_p.visCube()(cor,chn,row) = Complex(0.0);
-	avBuf_p.modelVisCube()(cor,chn,row) = Complex(0.0);
+        if(fillModel_p)
+          avBuf_p.modelVisCube()(cor,chn,row) = Complex(0.0);
       }
     }
     avBuf_p.weight()(row) = 0.0f;
@@ -374,11 +380,13 @@ void VisBuffAccumulator::normalize()
 	    for (Int cor=0;cor<nCorr_p;cor++) {
 	      if (wtM(cor)>0.0f) {
 		avBuf_p.visCube()(cor,chn,row)*=1.0f/wtM(cor);
-		avBuf_p.modelVisCube()(cor,chn,row)*=1.0f/wtM(cor);
+                if(fillModel_p)
+                  avBuf_p.modelVisCube()(cor,chn,row)*=1.0f/wtM(cor);
 	      }
 	      else {
 		avBuf_p.visCube()(cor,chn,row)=0.0;
-		avBuf_p.modelVisCube()(cor,chn,row)=0.0;
+                if(fillModel_p)
+                  avBuf_p.modelVisCube()(cor,chn,row)=0.0;
 	      }
 	    }
 	  }

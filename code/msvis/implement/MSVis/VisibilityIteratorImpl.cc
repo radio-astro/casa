@@ -242,6 +242,7 @@ VisibilityIteratorReadImpl::Cache::Cache()
   lastParangUT_p (-1),
   lastazelUT_p (-1),
   lastfeedpaUT_p (-1),
+  msHasFC_p(False),
   msHasWtSp_p (False),
   parang0_p (0),
   weightSpOK_p (False)
@@ -264,6 +265,7 @@ VisibilityIteratorReadImpl::Cache::operator= (const VisibilityIteratorReadImpl::
     lastfeedpaUT_p = other.lastfeedpaUT_p;
     lastParangUT_p = other.lastParangUT_p;
     lastParang0UT_p = other.lastParang0UT_p;
+    msHasFC_p = other.msHasFC_p;
     msHasWtSp_p = other.msHasWtSp_p;
     parang0_p = other.parang0_p;
     parang_p.assign (other.parang_p);
@@ -362,6 +364,19 @@ VisibilityIteratorReadImpl::existsColumn (VisBufferComponents::EnumType id) cons
 
         result = ! (columns_p.vis_p.isNull() && columns_p.floatVis_p.isNull());
         break;
+
+    // RR: I can't tell if the other columns should checked for here or not.
+    //     It's not true that all the other columns are required.
+    //     existsFlagCategory uses caching anyway.
+    // case VisBufferComponents::FlagCategory:
+    //   result = False;
+    //   if(!columns_p.flagCategory().isNull() &&
+    //      columns_p.flagCategory().isDefined(0)){
+    //     IPosition fcshape(columns_p.flagCategory().shape(0));
+    //     IPosition fshape(columns_p.flag().shape(0));
+
+    //     result = fcshape(0) == fshape(0) && fcshape(1) == fshape(1);
+    //   }
 
     default:
         result = True; // required columns
@@ -493,6 +508,10 @@ VisibilityIteratorReadImpl::getSubchunkId () const
     return subchunk_p;
 }
 
+const Block<Int>& VisibilityIteratorReadImpl::getSortColumns() const
+{
+  return sortColumns_p;
+}
 
 VisibilityIteratorReadImpl &
 VisibilityIteratorReadImpl::nextChunk ()
@@ -1186,6 +1205,19 @@ VisibilityIteratorReadImpl::flag (Matrix<Bool> & flags) const
     cache_p.flagCube_p.freeStorage (pcube, deleteIt1);
     flags.putStorage (pflags, deleteIt2);
     return flags;
+}
+
+Bool VisibilityIteratorReadImpl::existsFlagCategory() const
+{
+  if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
+    try{
+      cache_p.msHasFC_p = columns_p.flagCategory_p.hasContent();
+    }
+    catch (AipsError x){
+      cache_p.msHasFC_p = False;
+    }
+  }
+  return cache_p.msHasFC_p;
 }
 
 Array<Bool> &

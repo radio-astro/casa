@@ -240,6 +240,8 @@ private:
   uInt      nHashes_p;        // Calculated and cached from maxAnt_p.
   uInt      ncorr_p;
   uInt      totnumchan_p;
+
+  PtrBlock<Vector<Bool> * > chanmask_p;
 };
 
 } //# NAMESPACE CASA - END

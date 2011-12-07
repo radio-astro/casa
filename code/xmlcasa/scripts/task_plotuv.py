@@ -9,7 +9,7 @@ from update_spw import expand_tilde
 
 import pylab as pl
 
-def plotuv(vis, field=None, antenna=None, spw=None, observation=None, array=None,
+def plotuv(vis=None, field=None, antenna=None, spw=None, observation=None, array=None,
            maxnpts=None, colors=None, symb=None, ncycles=None, figfile=None):
     """
     Plots the uv coverage of vis in klambda.  ncycles of colors will be

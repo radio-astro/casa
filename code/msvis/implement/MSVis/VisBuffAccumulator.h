@@ -77,7 +77,7 @@ public:
   // Construct from the number of antennas, the averaging interval and
   // the pre-normalization flag
   VisBuffAccumulator (const Int& nAnt, const Double& interval, 
-		      const Bool& prenorm);
+		      const Bool& prenorm, const Bool fillModel=True);
 
   // Null destructor
   ~VisBuffAccumulator();
@@ -159,6 +159,8 @@ private:
 
   // How many VisBuffers have been accumulated.
   uInt nBuf_p;
+
+  Bool fillModel_p;     // Whether or not to accumulate MODEL_DATA
 
   // End of initialization list
 

@@ -220,11 +220,16 @@ public:
     // Reset iterator to true start of data (first chunk)
     virtual void originChunks ();
 
+    // Return the time interval (in seconds) used for iteration.
+    // This is not the same as the INTERVAL column.
+    virtual Double getInterval() const { return timeInterval_p; }
+
     // Set or reset the time interval (in seconds) to use for iteration.
     // You should call originChunks () to reset the iteration after
     // calling this.
     virtual void setInterval (Double timeInterval) {
         msIter_p.setInterval (timeInterval);
+        timeInterval_p = timeInterval;
     }
 
     // Set the 'blocking' size for returning data.
@@ -240,6 +245,8 @@ public:
     virtual Bool more () const;
 
     virtual SubChunkPair getSubchunkId () const;
+
+    virtual const Block<Int>& getSortColumns() const;
 
     // Return False if no more 'Chunks' of data left
     virtual Bool moreChunks () const {
@@ -361,6 +368,9 @@ public:
 
     // Return flag for each channel & row
     virtual Matrix<Bool> & flag (Matrix<Bool> & flags) const;
+
+    // Determine whether FLAG_CATEGORY is valid.
+    Bool existsFlagCategory() const;
 
     // Return flags for each polarization, channel, category, and row.
     Array<Bool> & flagCategory (Array<Bool> & flagCategories) const;
@@ -796,6 +806,7 @@ protected:
         Double             lastParangUT_p;
         Double             lastazelUT_p;
         Double             lastfeedpaUT_p;
+        Bool               msHasFC_p;   // Does the current MS have a valid FLAG_CATEGORY?
         Bool               msHasWtSp_p; // Does the current MS have a valid WEIGHT_SPECTRUM?
         Float              parang0_p;
         Vector<Float>      parang_p;

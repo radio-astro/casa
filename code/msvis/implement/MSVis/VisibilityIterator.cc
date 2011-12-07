@@ -366,6 +366,12 @@ ROVisibilityIterator::antennaMounts () const
     return readImpl_p->antennaMounts ();
 }
 
+const Block<Int>& ROVisibilityIterator::getSortColumns() const
+{
+  CheckImplementationPointerR();
+  return readImpl_p->getSortColumns();
+}
+
 const MeasurementSet &
 ROVisibilityIterator::getMeasurementSet () const
 {
@@ -503,6 +509,11 @@ ROVisibilityIterator::existsColumn (VisBufferComponents::EnumType id) const
     return readImpl_p->existsColumn (id);
 }
 
+Bool ROVisibilityIterator::existsFlagCategory() const
+{
+  CheckImplementationPointerR ();
+  return readImpl_p->existsFlagCategory();
+}
 
 Bool
 ROVisibilityIterator::existsWeightSpectrum () const
@@ -1291,6 +1302,12 @@ ROVisibilityIterator::setAsyncEnabled (Bool enable)
 {
     CheckImplementationPointerR ();
     readImpl_p->setAsyncEnabled (enable);
+}
+
+Double ROVisibilityIterator::getInterval() const
+{
+    CheckImplementationPointerR ();
+    return readImpl_p->getInterval();
 }
 
 void

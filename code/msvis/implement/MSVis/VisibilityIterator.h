@@ -415,10 +415,14 @@ public:
   // Reset iterator to true start of data (first chunk)
   void originChunks();
  
+  // Return the time interval (in seconds) used for iteration.
+  // This is not the same as the INTERVAL column.
+  Double getInterval() const;
   // Set or reset the time interval (in seconds) to use for iteration.
   // You should call originChunks() to reset the iteration after 
   // calling this.
   void setInterval(Double timeInterval);
+
   // Set the 'blocking' size for returning data.
   // With the default (0) only a single integration is returned at a time, this
   // is what is currently required for the calibration software. With blocking
@@ -508,6 +512,10 @@ public:
   virtual Cube<Bool>& flag(Cube<Bool>& flags) const;
   // Return flag for each channel & row
   Matrix<Bool>& flag(Matrix<Bool>& flags) const;
+
+  // Determine whether FLAG_CATEGORY is valid.
+  Bool existsFlagCategory() const;
+
   // Return flags for each polarization, channel, category, and row.
   Array<Bool>& flagCategory(Array<Bool>& flagCategories) const;
   // Return row flag
@@ -714,6 +722,10 @@ public:
   ///////////////MDirection getPhaseCenter () const;
   Vector<Float> getReceptor0Angle ();
   Vector<uInt> getRowIds () const;
+
+  // Returns the columns that the VisibilityIterator is sorting by.
+  const Block<Int>& getSortColumns() const;
+
   static void lsrFrequency (const Int& spw,
                             Vector<Double>& freq,
                             Bool & convert,

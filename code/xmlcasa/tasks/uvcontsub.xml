@@ -82,7 +82,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		default: none; example: vis='ngc5921.ms'
         field -- Field selection for continuum estimation and subtraction.
                  The estimation and subtraction is done for each selected field
-                 in turn.
+                 in turn.  (Run listobs to get lists of the ID and names.)
                 default: field = '' means select all fields
                 field = 1 # will get field_id=1 (if you give it an 
                         integer, it will retrieve the source with that index.
