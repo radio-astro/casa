@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = True
+debug = False
 
 
 def tflagger(vis,
@@ -177,13 +177,14 @@ def tflagger(vis,
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
             casalog.post('Clip mode is active')
-#            print 'exp %s datacol %s clipminmax %s clipoutside %s chan %s'%(type(expression),type(datacolumn),
-#                        type(clipminmax),type(clipoutside),type(channelavg))
             
-#            print expression, datacolumn, clipminmax, clipoutside, channelavg
+            # Replace the white spaces
+            expr = delspace(expression, '_')
             
-            sel_pars = sel_pars+' expression='+expression+' datacolumn='+datacolumn+\
-                       ' clipminmax='+str(clipminmax)+' clipoutside='+str(clipoutside)+\
+            cliprange = delspace(str(clipminmax), '')
+            
+            sel_pars = sel_pars+' expression='+expr+' datacolumn='+datacolumn+\
+                       ' clipminmax='+str(cliprange)+' clipoutside='+str(clipoutside)+\
                        ' channelavg='+str(channelavg)
             
         elif mode == 'shadow':
@@ -209,6 +210,8 @@ def tflagger(vis,
             sel_pars = sel_pars+' lowerlimit='+str(lowerlimit)+' upperlimit='+str(upperlimit)
 
         elif mode == 'tfcrop':
+            agent_pars['expression'] = expression
+            agent_pars['datacolumn'] = datacolumn
             agent_pars['timecutoff'] = timecutoff
             agent_pars['freqcutoff'] = freqcutoff
             agent_pars['timefit'] = timefit
@@ -218,8 +221,11 @@ def tflagger(vis,
             agent_pars['usewindowstats'] = usewindowstas
             agent_pars['halfwin'] = halfwin
             casalog.post('Time and Frequency (tfcrop) mode is active')
+
+            expr = delspace(expression, '_')
             
-            sel_pars = sel_pars+' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
+            sel_pars = sel_pars+' expression=\"'+expr+'\" datacolumn='+datacolumn+\
+                      ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
                       ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
                       ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
                       ' halfwin='+str(halfwin)
@@ -343,7 +349,6 @@ def writeCMD(msfile, selpars, flag, outfile):
     # Extract flags from dictionary into list
     tim_list = []
     intv_list = []
-#    cmd_list = selpars
     reas_list = []
     if flag:
         type = 'FLAG'
@@ -445,6 +450,12 @@ def getLinePars(cmdline):
    
     newstr = ''
     
+    # Before removing the empty parameters, check if
+    # any parameter value contains white spaces and
+    # replace them accordingly
+    
+    
+    
     # split by white space
     keyvlist = cmdline.split()
     if keyvlist.__len__() > 0:  
@@ -461,7 +472,7 @@ def getLinePars(cmdline):
                 if xval.count('"') > 0:
                     xval = xval.strip('"')
             
-            # Remove the parameter from the string with empty
+            # Write only parameters with values
             if xval == '':
                 continue
             else:
@@ -516,3 +527,13 @@ def backupFlags(tflocal, mode):
 
     return
 
+
+def delspace(word, replace):
+    '''Replace the white space of a string'''
+    
+    newword = word
+    if word.count(' ') > 0:
+        newword = word.replace(' ', replace)
+    
+    return newword
+    
