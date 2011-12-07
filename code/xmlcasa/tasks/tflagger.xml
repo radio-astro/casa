@@ -40,8 +40,8 @@
             </param>
 
             <param type="string" name="mode">
-                <description>Flagging mode (manualflag, clip, shadow, quack, elevation \
-                              tfcrop, extendflags, unflag, summary)</description>
+                <description>Flagging mode (manualflag, clip, shadow, quack, elevation, \
+tfcrop, extendflags, unflag, summary)</description>
                 <value>manualflag</value>
                 <allowed kind="enum">
                     <value>manualflag</value>
@@ -123,15 +123,13 @@
             </param>
             <param type="any" name="clipminmax" subparam="true">
                 <description>Range to use for clipping</description>
-                <any type="variant" limittypes="doubleArray doubleArrayArray" />
-                <value type="doubleArray" />
+                <any type="variant" limittypes="doubleArray doubleyArrayArray" />
+                <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
                 <description>Data column on which to operate (data,corrected,model,residual)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
-                <!-- <allowed kind="enum"> <value>'DATA'</value> <value>'CORRECTED'</value> 
-                    <value>'MODEL'</value> </allowed> -->
             </param>
             <param type="any" name="clipoutside" subparam="true">
                 <description>Clip outside the range, or within it</description>
@@ -163,6 +161,15 @@
             <param type="double" name="diameter" subparam="true">
                 <description>Effective diameter to use (in meters)</description>
                 <value>-1.0</value>
+            </param>
+
+            <param type="double" name="lowerlimit" subparam="true">
+                <description>Lower limiting elevation (in degrees)</description>
+                <value>0.0</value>
+            </param>
+            <param type="double" name="upperlimit" subparam="true">
+                <description>Upper limiting elevation (in degrees)</description>
+                <value>90.0</value>
             </param>
 
             <param type="double" name="timecutoff" subparam="true">
@@ -199,14 +206,6 @@
                 <value>1</value>
             </param>
 
-            <param type="double" name="lowerlimit" subparam="true">
-                <description>Lower limiting elevation (in degrees)</description>
-                <value>0.0</value>
-            </param>
-            <param type="double" name="upperlimit" subparam="true">
-                <description>Upper limiting elevation (in degrees)</description>
-                <value>90.0</value>
-            </param>
 
              <param type="double" name="minrel" subparam="true">
                 <description>minimum number of flags (relative)</description>
@@ -266,7 +265,6 @@
                 <value type="bool">False</value>
             </param>
 
-
             <param type="bool" name="datadisplay">
                 <description>Display data and flags at runtime </description>
                 <value>False</value>
@@ -275,6 +273,16 @@
             <param type="bool" name="writeflags">
                 <description>Write Flags to the MS</description>
                 <value>True</value>
+            </param>
+
+            <param type="bool" name="savepars">
+                <description>Save the current parameters to an output</description>
+                <value>True</value>
+            </param>
+
+            <param type="string" name="outfile" subparam="true">
+                    <description>Name of output file to save current parameters</description>
+                    <value></value>
             </param>
 
             <param type="bool" name="flagbackup">
@@ -305,7 +313,7 @@
                     <equals value="clip">
                         <default param="expression"><value type="string">ABS ALL</value></default>
                         <default param="datacolumn"><value type="string">DATA</value></default>
-                        <default param="clipminmax"><value type="doubleArray" /></default>
+                        <default param="clipminmax"><value type="doubleArray"></value></default>
                         <default param="clipoutside"><value type="bool">True</value></default>
                         <default param="channelavg"> <value type="bool">False</value></default>
                     </equals>
@@ -350,6 +358,7 @@
                         <default param="spwcorr"><value type="bool">False</value></default>                    
                     </equals>
                 </when>
+                
                <when param="extend">
                  <equals type="bool" value="False" />
                  <equals type="bool" value="True">
@@ -361,6 +370,14 @@
                     <default param="flagnearfreq"><value type="bool">False</value></default>
                 </equals>
                </when>
+
+               <when param="savepars">
+                 <equals type="bool" value="True">
+                    <default param="outfile"><value type="string"></value></default>
+                </equals>
+                <equals type="bool" value="False" />
+               </when>
+
              </constraints>
         </input>
 <returns type="void"/>
