@@ -94,6 +94,23 @@ PBMath2DImage::PBMath2DImage(ImageInterface<Float>& reJonesImage,
   incrementsImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).increment());
   referencePixelImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).referencePixel());
 };
+PBMath2DImage::PBMath2DImage(const ImageInterface<Complex>& jonesImage) :
+  PBMath2D(), reJonesImage_p(0), reRegridJonesImage_p(0),
+  imJonesImage_p(0), imRegridJonesImage_p(0), 
+  incrementsReJones_p(0), incrementsImJones_p(0),
+  referencePixelReJones_p(0), referencePixelImJones_p(0),
+  pa_p(0.0){
+  reJonesImage_p = new TempImage<Float>(jonesImage.shape(), jonesImage.coordinates());
+  reJonesImage_p->copyData(LatticeExpr<float> (real(jonesImage)));
+  imJonesImage_p = new TempImage<Float>(jonesImage.shape(), jonesImage.coordinates());
+  imJonesImage_p->copyData(LatticeExpr<float> (imag(jonesImage)));
+  incrementsReJones_p=new Vector<Double>(reJonesImage_p->coordinates().directionCoordinate(0).increment());
+  referencePixelReJones_p=new Vector<Double>(reJonesImage_p->coordinates().directionCoordinate(0).referencePixel());
+  incrementsImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).increment());
+  referencePixelImJones_p=new Vector<Double>(imJonesImage_p->coordinates().directionCoordinate(0).referencePixel());
+}
+
+
 
 PBMath2DImage::~PBMath2DImage()
 {
@@ -176,11 +193,15 @@ PBMath2DImage::applyJones(const Array<Float>* reJones,
 
   // Loop through x, y coordinates of this cube
   Matrix<Complex> cmat(2,2);
+  IPosition sp0(4, 0, 0, polmap(3), 0);
+  IPosition sp1(4, 0, 0, polmap(2), 0);
+  IPosition sp2(4, 0, 0, polmap(1), 0);
+  IPosition sp3(4, 0, 0, polmap(0), 0);
   for (Int ix=0; ix<nx; ix++) {
-    IPosition sp0(4, ix, 0, polmap(3), 0);
-    IPosition sp1(4, ix, 0, polmap(2), 0);
-    IPosition sp2(4, ix, 0, polmap(1), 0);
-    IPosition sp3(4, ix, 0, polmap(0), 0);
+    sp0(0)=ix;
+    sp1(0)=ix;
+    sp2(0)=ix;
+    sp3(0)=ix;
 
     for (Int iy=0; iy<ny; iy++) {
 
@@ -555,10 +576,7 @@ ImageInterface<Float>& PBMath2DImage::apply(const ImageInterface<Float>& in,
   Bool circular=(insm<1);
 
   // Now get the polarization remapping for the Jones image
-  //Int jsm=  PLEASE do not shush compiler by commenting a call to a function
-  //without realizing what it was doing !
-  // get rid of the unused variable !! 
-  //wasted 5 hours of my life by having a wrongly-initialized polmap.
+  //Int jsm=  
   StokesImageUtil::CStokesPolMap(polmap, polframe,
   					 reJonesImage_p->coordinates());
   // For the input and output images, get all polarizations for x, y plane
@@ -641,7 +659,6 @@ SkyComponent& PBMath2DImage::apply(SkyComponent& in,
   MVDirection spmvd(sp.getAngle());
   MVDirection compmvd(compLoc.getAngle());
   Vector<Double> world(2);
-
   // Scale for the observing frequency: when the desired frequency
   // is higher than the frequency for the Jones image, the separation
   // should be LARGER.
@@ -1043,7 +1060,7 @@ Int PBMath2DImage::support(const CoordinateSystem& cs){
  Vector<String> dirunit=directionCoord.worldAxisUnits();
 
  npixels=npixels/fabs(directionCoord.increment()(0));
- dirIndex=reJonesImage_p->coordinates().findCoordinate(Coordinate::SPECTRAL);
+ dirIndex=reJonesImage_p->coordinates().findCoordinate(Coordinate::DIRECTION);
 
  directionCoord=(reJonesImage_p->coordinates()).directionCoordinate(dirIndex);
  directionCoord.setWorldAxisUnits(dirunit);

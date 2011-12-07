@@ -34,6 +34,7 @@
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
 #include <casa/Containers/SimOrdMap.h>
+#include <measures/Measures/MeasTable.h>
 #include <scimath/Mathematics/MathFunc.h>
 #include <scimath/Mathematics/ConvolveGridder.h>
 #include <casa/Utilities/Assert.h>
@@ -63,6 +64,7 @@
 
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
 #include <synthesis/MeasurementComponents/PBMath1DNumeric.h>
+#include <synthesis/MeasurementComponents/PBMath2DImage.h>
 #include <synthesis/MeasurementComponents/HetArrayConvFunc.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -122,9 +124,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      
 	      
 	    }
+	    else if(pbClass_p== PBMathInterface::IMAGE){
+	      //Get the image name by calling code for the antenna name and array name
+	      //For now hard wired to ALMA as this part of the code will not be accessed for non-ALMA 
+	      //see Imager::setMosaicFTMachine 
+	      // When ready to generalize then code that calls with telescope name, antenna name 
+	      //(via vb.msColumns) and/or diameter and frequency via vb.frequency (indexing will need to 
+	      //be upgraded to account for frequency too) should be done to return the
+	      //right voltage pattern image. 
+	      String vpImageName="";
+	      if (abs(dishDiam[k]-7.0) < 1.0) 
+		Aipsrc::find(vpImageName, "alma.vp.7m", "");
+	      else
+		Aipsrc::find(vpImageName, "alma.vp.12m", "") ;
+	      //cerr << "first vpImagename " << vpImageName  << endl;
+	      if(vpImageName==""){
+		String beamPath; 
+		if(!MeasTable::AntennaResponsesPath(beamPath, "ALMA")){
+		  throw(AipsError("Alma beam images requested cannot be found ")); 		  
+		}
+		else{
+		  beamPath=beamPath.before(String("AntennaResponses"));	
+		  vpImageName= (abs(dishDiam[k]-7.0) < 1.0) ? beamPath
+		    +String("/ALMA_AIRY_7M.VP") : 
+		    beamPath+String("/ALMA_AIRY_12M.VP");
+		}
+		
+
+	      }
+	      //cerr << "Using the image VPs " << vpImageName << endl; 
+	      if(Table::isReadable(vpImageName))
+		antMath_p[diamIndex]=new PBMath2DImage(PagedImage<Complex>(vpImageName)); 
+	      else
+		throw(AipsError(String("Cannot find voltage pattern image ") + vpImageName));
+	    }
 	    else{
 
-	      cout<< "Don't deal with non airy dishes yet " << endl;
+	      throw(AipsError("Do not  deal with non airy dishes or images of VP yet "));
 	    }
 	    ++diamIndex;
 	  } 
@@ -202,6 +238,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       convSize_p=support*convSampling;
       CompositeNumber cn(convSize_p);
       convSize_p=cn.nearestEven(convSize_p);
+      //cerr << "CONVSIZE " << convSize_p << endl;
+      convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSampling;
     }
     
     
@@ -262,10 +300,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //Matrix<Complex> screen(convSize_p, convSize_p);
 	  //screen=1.0;
 	  //pBScreen.putSlice(screen, start);
-	  cerr << "k " << k << " shape " << pBScreen.shape() <<  " direction1 " << direction1_p << " direction2 " << direction2_p << endl;
+	  //cerr << "k " << k << " shape " << pBScreen.shape() <<  " direction1 " << direction1_p << " direction2 " << direction2_p << endl;
 	  pBScreen.set(Complex(1.0, 0.0));
 	  //one antenna 
 	  (antMath_p[k])->applyVP(pBScreen, pBScreen, direction1_p);
+
 	  //Then the other
 	  (antMath_p[j])->applyVP(pBScreen, pBScreen, direction2_p);
 	  /*****************
@@ -398,19 +437,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	Int trial=0;
 	for (trial=convSize_p/2-2;trial>0;trial--) {
 	  //Searching down a diagonal
-	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-3*maxAbsConvFunc)) {
+	  if(abs(convFunc_p.xyPlane(plane)(convSize_p/2-trial,convSize_p/2-trial)) >  (1.0e-2*maxAbsConvFunc)) {
 	    found=True;
 	    trial=Int(sqrt(2.0*Float(trial*trial)));
 	    break;
 	  }
 	}
 	if(!found){
-	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-3*maxAbsConvFunc)) 
+	  if((maxAbsConvFunc-minAbsConvFunc) > (1.0e-2*maxAbsConvFunc)) 
 	  found=True;
 	  // if it drops by more than 2 magnitudes per pixel
 	  trial=( (30*convSampling) < convSize_p) ? 15*convSampling : (convSize_p/2 - 4*convSampling);
 	}
-	
+	//cerr << "trial1 " << trial << endl;
 				 
 	if(found) {
 	  if(trial < 15*convSampling) 
@@ -432,6 +471,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  //OTF may have flagged stuff ...
 	  convSupport=0;
 	}
+	//cerr << "trial " << trial << " convSupport " << convSupport << " convSize " << convSize_p << endl;
 	convSupport_p(plane)=convSupport;
 	Double pbSum=0.0;
 	/*
@@ -639,4 +679,7 @@ void HetArrayConvFunc::sliceFluxScale(Int npol) {
   }
 
 } //# NAMESPACE CASA - END
+
+
+
 
