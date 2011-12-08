@@ -139,8 +139,6 @@
     else if (level1)
       logIO << "Congratulations.  You are using a respectable level of complextiy in baseline selection." 
 	    << LogIO::POST;
-
-    //    cerr << "Complexity = " << complexity << endl;
   }
 %}
 
