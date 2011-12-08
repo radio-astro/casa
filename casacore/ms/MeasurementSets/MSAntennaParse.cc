@@ -57,13 +57,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   // Add the current condition to the TableExprNode tree.  Mask auto
-  // correlations if autoCorr==CrossOnly
+  // correlations if baselineType==CrossOnly
   // 
   const TableExprNode* MSAntennaParse::setTEN(TableExprNode& condition, 
-                                              BaselineListType autoCorr,
+                                              BaselineListType baselineType,
                                               Bool negate)
   {
-    if (autoCorr==CrossOnly) 
+    if (baselineType==CrossOnly) 
       {
 	TableExprNode noAutoCorr = (ms()->col(colName1) != ms()->col(colName2));
 	condition = noAutoCorr && condition;
@@ -79,11 +79,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   const TableExprNode* MSAntennaParse::selectAntennaIds(const Vector<Int>& antennaIds, 
-							BaselineListType autoCorr,
+							BaselineListType baselineType,
 							Bool negate) 
   {
     TableExprNode condition;
-    if ((autoCorr==AutoCorrAlso) || (autoCorr==AutoCorrOnly)) 
+    if ((baselineType==AutoCorrAlso) || (baselineType==AutoCorrOnly)) 
       {
 	Int n=antennaIds.nelements();
 	if (n) 
@@ -112,11 +112,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       makeAntennaList(ant1List, antennaIds,negate);
       makeAntennaList(ant2List, a2);
-      if (negate) makeBaselineList(-antennaIds,a2,baselineList,autoCorr, negate);
-      else        makeBaselineList(antennaIds,a2,baselineList,autoCorr, negate);
+      if (negate) makeBaselineList(-antennaIds,a2,baselineList,baselineType, negate);
+      else        makeBaselineList(antennaIds,a2,baselineList,baselineType, negate);
     }
     //    setTEN(condition, AutoCorrAlso, negate);
-    return setTEN(condition, autoCorr, negate);
+    return setTEN(condition, baselineType, negate);
   }
 
   void MSAntennaParse::makeAntennaList(Vector<Int>& antList,const Vector<Int>& thisList,
@@ -134,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   const TableExprNode* MSAntennaParse::selectAntennaIds(const Vector<Int>& antennaIds1,
 							const Vector<Int>& antennaIds2,
-							BaselineListType autoCorr,
+							BaselineListType baselineType,
 							Bool negate)
   {
     TableExprNode condition;
@@ -153,14 +153,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     makeAntennaList(ant1List, antennaIds1,negate);
     makeAntennaList(ant2List, antennaIds2,negate);
 
-    if (negate) makeBaselineList(-antennaIds1,-antennaIds2,baselineList,autoCorr, negate);
-    else        makeBaselineList(antennaIds1,antennaIds2,baselineList,autoCorr, negate);
+    if (negate) makeBaselineList(-antennaIds1, -antennaIds2,baselineList, baselineType, negate);
+    else        makeBaselineList(antennaIds1, antennaIds2,baselineList, baselineType, negate);
 
-    return setTEN(condition,autoCorr,negate);
+    return setTEN(condition,baselineType,negate);
   }
   
   const TableExprNode* MSAntennaParse::selectNameOrStation(const Vector<String>& antenna, 
-							   BaselineListType autoCorr,
+							   BaselineListType baselineType,
 							   Bool negate)
   {
     MSAntennaIndex msAI(ms()->antenna());
@@ -169,12 +169,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     TableExprNode condition =(ms()->col(colName1).in(ant) || ms()->col(colName2).in(ant));
     
-    return setTEN(condition,autoCorr,negate);
+    return setTEN(condition,baselineType,negate);
   }
   
   const TableExprNode* MSAntennaParse::selectNameOrStation(const Vector<String>& antenna1,
 							   const Vector<String>& antenna2,
-							   BaselineListType autoCorr,
+							   BaselineListType baselineType,
 							   Bool negate)
   {
     MSAntennaIndex msAI(ms()->antenna());
@@ -186,19 +186,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       (ms()->col(colName1).in(a1) && ms()->col(colName2).in(a2)) ||
       (ms()->col(colName1).in(a2) && ms()->col(colName2).in(a1));
     
-    return setTEN(condition,autoCorr,negate);
+    return setTEN(condition,baselineType,negate);
   }
   
   const TableExprNode* MSAntennaParse::selectNameOrStation(const String& antenna1,
 							   const String& antenna2,
-							   BaselineListType autoCorr,
+							   BaselineListType baselineType,
 							   Bool negate)
   {
     TableExprNode condition =
       (ms()->col(colName1) >= antenna1 && ms()->col(colName2) <= antenna2) ||
       (ms()->col(colName2) >= antenna1 && ms()->col(colName1) <= antenna2);
     
-    return setTEN(condition,autoCorr,negate);
+    return setTEN(condition,baselineType,negate);
   }
   
   
@@ -287,12 +287,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool MSAntennaParse::addBaseline(const Matrix<Int>& baselist,
                                    const Int ant1, const Int ant2, 
- 				   BaselineListType autoCorr)
+ 				   BaselineListType baselineType)
   {
     Bool doAutoCorr;
-    doAutoCorr = (autoCorr==AutoCorrAlso) || (autoCorr==AutoCorrOnly);
+    doAutoCorr = (baselineType==AutoCorrAlso) || (baselineType==AutoCorrOnly);
     if ((ant1 == ant2) && (!doAutoCorr)) return False;
-    if ((autoCorr==AutoCorrOnly) && (ant1!=ant2)) return False;
+    if ((baselineType==AutoCorrOnly) && (ant1!=ant2)) return False;
 
     Int n=baselist.shape()(0);
     for (Int i=0;i<n;i++) {
@@ -312,7 +312,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void MSAntennaParse::makeBaselineList(const Vector<Int>& a1,
                                         const Vector<Int>& a2, 
 					Matrix<Int>& baselist, 
-					BaselineListType autoCorr,
+					BaselineListType baselineType,
 					Bool /*negate*/)
   {
     Int n1,n2,nb0;
@@ -324,7 +324,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       for (int i2=0;i2<n2;i2++) {
         Int ant1, ant2;
         ant1=a1[i1]; ant2=a2[i2];
-        if (addBaseline(baselist,ant1,ant2,autoCorr)) {
+        if (addBaseline(baselist,ant1,ant2,baselineType)) {
           nb0++;
           newSize[0]=nb0;
           baselist.resize(newSize,True);
