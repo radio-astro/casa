@@ -253,6 +253,19 @@ public:
 		    const Int& beamId,
 		    const MFrequency& freq);
 
+  // Get a vector containing all unique antenna type strings for the given constraints
+  Bool getAntennaTypes(Vector<String>& antTypes,
+		       const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
+		       const MEpoch& obsTime,
+		       const MFrequency& freq,
+		       const FuncTypes& requFType = ANY, // the requested function type
+		       const MDirection& center = MDirection(Quantity( 0., "deg"), // the center to be matched with the CENTER column,
+							     Quantity(90., "deg"), // default is the Zenith
+							     MDirection::AZEL), 
+		       const String& receiverType = "",
+		       const Int& beamNumber=0);
+
+
   // Put the given row into the present antenna reponses table (in memory).
   // If the row exists at the position given by uInt row, it is overwritten.
   // If it doesn't exist, the table is resized by one in memory and the new

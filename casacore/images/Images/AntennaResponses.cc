@@ -483,6 +483,113 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   }
 
+  Bool AntennaResponses::getAntennaTypes(Vector<String>& antTypes,
+					 const String& obsName, // (the observatory name, e.g. "ALMA" or "ACA")
+					 const MEpoch& obsTime,
+					 const MFrequency& freq,
+					 const FuncTypes& requFType,
+					 const MDirection& center,
+					 const String& receiverType,
+					 const Int& beamNumber){
+    Bool rval = False;
+    Unit uS("s");
+    Unit uHz("Hz");
+    
+    antTypes.resize(0);
+
+    // for the combination INTERNAL + 0 freq, return the row and index for the first freq found
+    Bool matchFreq = !((freq.get(uHz).getValue() == 0.) && requFType==INTERNAL);
+
+    // calculate azimuth, elevation, and topo frequency
+    // first, get the reference frame 
+    MPosition mp;
+    if (!MeasTable::Observatory(mp,obsName)) {
+      // unknown observatory
+      LogIO os(LogOrigin("AntennaResponses",
+			 String("getRowAndIndex"),
+			 WHERE));
+      os << LogIO::NORMAL << String("Unknown observatory ") << obsName 
+	 << LogIO::POST;
+      return False;
+    }
+    mp=MPosition::Convert(mp, MPosition::ITRF)();
+    MeasFrame frame(mp, obsTime);
+    Vector<Double> azel = MDirection::Convert(center, 
+					      MDirection::Ref(MDirection::AZEL,
+							      frame)		
+			      )().getAngle("deg").getValue();
+
+    Quantity f(0., uHz);
+    if(matchFreq){
+      f = MFrequency::Convert(freq, MFrequency::TOPO)().get(uHz);
+    }
+    
+
+    // loop over rows
+    uInt i,j;
+    SimpleOrderedMap<String, Int > antTypeMap(-1);
+    for(i=0; i<numRows_p; i++){
+      if(ObsName_p(i) == obsName
+	 && StartTime_p(i).get(uS) <= obsTime.get(uS)
+	 && ReceiverType_p(i) == receiverType
+	 && BeamNumber_p(i) == beamNumber
+	 ){
+	// remains to test center and freq and functype
+	// first freq and functype
+	Bool found = False;
+	for(j=0; j<NumSubbands_p(i); j++){
+	  //cout << "f " << f << " min " << SubbandMinFreq_p(i)(j).get() 
+	  //     << " max " << SubbandMaxFreq_p(i)(j).get() << endl;
+	  if( (FuncType_p(i)(j) == requFType
+	       || requFType == AntennaResponses::ANY)
+	      && (
+		  !matchFreq // if matchFreq is False, any frequency is accepted
+		  || (SubbandMinFreq_p(i)(j).get() <= f && f <= SubbandMaxFreq_p(i)(j).get())
+		  )
+	      ){
+	    found = True;
+	    break;
+	  }
+	}
+	if(found){ // now test center
+	  Vector<Double> azelMin = MDirection::Convert(ValidCenterMin_p(i), 
+						       MDirection::Ref(MDirection::AZEL,
+								       frame)
+						       )().getAngle("deg").getValue();
+	  Vector<Double> azelMax = MDirection::Convert(ValidCenterMax_p(i), 
+						       MDirection::Ref(MDirection::AZEL,
+								       frame)
+						       )().getAngle("deg").getValue();
+
+	  // need to accomodate the ambiguity of the AZ
+	  Double modAz = fmod(azel(0) - azelMin(0),360.);
+	  Double modAzMax = fmod(azelMax(0) - azelMin(0), 360.);
+
+	  if((fabs(azelMin(0)-azelMax(0))<1e-5 // all AZ are valid (accomodate numerical problems at 360 deg)
+	      || ( 0. <= modAz  && modAz <= modAzMax))
+	     && azelMin(1) <= azel(1) && azel(1) <= azelMax(1)){
+	    // memorize the antenna type
+	    if(!antTypeMap.isDefined(AntennaType_p(i))){
+	      rval = True;
+	      antTypeMap.define(AntennaType_p(i),1);
+	    }
+	  }
+	}
+      }
+    } // end for
+
+    if(rval){
+      uInt nKeys = antTypeMap.ndefined();
+      antTypes.resize(nKeys);
+      for(uInt i=0; i<nKeys; i++){
+	antTypes(i) = antTypeMap.getKey(i);
+      }
+    }
+
+    return rval;
+
+  }
+
 
   Bool AntennaResponses::putRow(uInt& row,
 				const String& obsName,
