@@ -42,7 +42,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <param type="any" name="pollist">
       <description>POLNO for gridding</description>
       <any type="variant" limittype="int intArray"/>
-      <value type="int">-1</value>
+      <value type="intArray"></value>
     </param>
 
     <param type="string" name ="gridfunction">
@@ -158,7 +158,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 default: -1 (only process IFNO in the first row)
                 example: 1
         pollist -- POLNO to be gridded
-                default: -1 (all)
+                default: [] (all polarizations)
                 example: 1,[0,1]
         gridfunction -- gridding function 
                 options: 'BOX' (Box-car), 'SF' (Spheroidal), 

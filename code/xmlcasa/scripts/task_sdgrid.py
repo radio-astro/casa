@@ -29,11 +29,15 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             # file check
             #infile=infile.rstrip('/')+'/'
 
+            # scanlist
+            if isinstance(scanlist,list) or isinstance(scanlist,numpy.ndarray):
+                scans = list(scanlist)
+            else:
+                scans = [scanlist]
+
             # pollist
             if isinstance(pollist,list) or isinstance(pollist,numpy.ndarray):
                 pols = list(pollist)
-            elif pollist == -1:
-                pols = []
             else:
                 pols = [pollist]
 
@@ -118,6 +122,7 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             summary =   'Grid Parameter Summary:\n' \
                       + '   infile = %s\n'%(infile) \
                       + '   ifno = %s\n'%(ifno) \
+                      + '   scans = %s\n'%(scans) \
                       + '   pols = %s\n'%(pols) \
                       + '   gridfunction = %s\n'%(gridfunction) \
                       + '   width = %s\n'%(width) \
@@ -132,14 +137,15 @@ def sdgrid(infile, antenna, scanlist, ifno, pollist, gridfunction, width, weight
             casalog.post( summary, 'DEBUG' )
             gridder = sd.asapgrid( infile=infile )
             gridder.setPolList( pols )
+            gridder.setScanList( scans )
             if ( ifno >= 0 ):
                 gridder.setIF( ifno ) 
             gridder.setWeight( weight ) 
             gridder.defineImage( nx=nx, ny=ny,
                                  cellx=cellx, celly=celly,
                                  center=centerstr )
-            gridder.setOption( convType=gridfunction,
-                               width=width )
+            gridder.setFunc( func=gridfunction,
+                             width=width )
             gridder.grid()
             gridder.save( outfile=outname )
             if plot:
