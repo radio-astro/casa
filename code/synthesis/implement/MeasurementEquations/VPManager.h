@@ -27,6 +27,9 @@
 #ifndef SYNTHESIS_VPMANAGER_H
 #define SYNTHESIS_VPMANAGER_H
 
+#include <images/Images/AntennaResponses.h>
+
+
 namespace casa {
   //Forward declarations
   class Record;
@@ -39,13 +42,10 @@ namespace casa {
       //      enum Type{NONE, COMMONPB, AIRY, GAUSS, POLY, IPOLY, COSPOLY,
       //		NUMERIC, IMAGE, ZERNIKE, MAX=ZERNIKE};
 
-      // Default constructor                                        
-      
-      VPManager();
-
-      // Destructor
-      virtual ~VPManager();
-      
+      // this is a SINGLETON class
+      static VPManager* Instance();
+      static void reset();
+            
       Bool saveastable(const String& tablename);
 
       Bool summarizevps(const Bool verbose);
@@ -126,10 +126,64 @@ namespace casa {
 		     const Quantity& paincrement,
 		     const Bool usesymmetricbeam,
 		     Record &rec);
+      
+
+      Bool setpbantresptable(const String& telescope, const String& othertelescope,
+			     const String& tablepath=""); // if empty, look it up in Observatories
+                            // no record filled, need to access via getvp()
+
+      // set the default voltage pattern for the given telescope
+      Bool setuserdefault(const Int vplistfield,
+			  const String& telescope,
+			  const String& antennatype="");
+
+      Bool getuserdefault(Int& vplistfield,
+			  const String& telescope,
+			  const String& antennatype="");
+
+      // return number of voltage patterns satisfying the given constraints
+      Int numvps(const String& telescope,
+		 const MEpoch& obstime,
+		 const MFrequency& freq, 
+		 const String& antennatype="", // default: any
+		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							   Quantity(90., "deg"), 
+							   MDirection::AZEL)
+		 ); 
+
+
+      // get the voltage pattern satisfying the given constraints
+      Bool getvp(Record &rec,
+		 const String& telescope,
+		 const MEpoch& obstime,
+		 const MFrequency& freq, 
+		 const String& antennatype="", 
+		 const MDirection& obsdirection=MDirection(Quantity( 0., "deg"), // default is the Zenith
+							   Quantity(90., "deg"), 
+							   MDirection::AZEL)
+		 ); 
+
+    protected:
+      VPManager(Bool verbose=False);
 
     private:
-      Record vplist_p;
+      static VPManager* instance_p;
 
+      Record vplist_p; 
+      SimpleOrderedMap<String, Int > vplistdefaults_p; 
+      AntennaResponses aR_p; 
+
+      inline String antennaDescription(const String& telescope,
+				       const String& antennatype){
+	if(antennatype.empty()) return telescope;
+	return telescope + " " + antennatype;
+      };
+
+      inline String telFromAntDesc(const String& antDesc){
+	String tempstr = antDesc;
+	if(tempstr.contains(" ")) return tempstr.before(" ");
+	return tempstr;
+      };
 
     };
 
