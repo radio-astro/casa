@@ -109,10 +109,6 @@ TestFlagger::done()
 	agents_config_list_p.clear();
 	agents_list_p.clear();
 
-	if(dbg){
-		cout << "TestFlagger::done() Run the destructor" << endl;
-	}
-
 	return;
 }
 
@@ -326,9 +322,9 @@ TestFlagger::parseAgentParameters(Record agent_params)
 			agentParams_p.get("mode", mode);
 
 		// If there is a tfcrop agent in the list, we should
-		// change the iterationApproach to all the agents
+		// change the iterationApproach of all the agents
 		if (mode.compare("tfcrop") == 0) {
-			iterationApproach_p = FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY;
+			fdh_p->setIterationApproach(FlagDataHandler::COMPLETE_SCAN_MAP_ANTENNA_PAIRS_ONLY);
 		}
 
 	}
@@ -336,13 +332,8 @@ TestFlagger::parseAgentParameters(Record agent_params)
 	// add this agent to the list
 	agents_config_list_p.push_back(agentParams_p);
 
-	// sort the vector of records and define names
+	// TODO:sort the vector of records and define names
 	// for each agent.
-
-
-	if(dbg)
-		os << LogIO::NORMAL << "Will use mode= " << mode << LogIO::POST;
-
 
 	return true;
 }
@@ -402,8 +393,7 @@ TestFlagger::initFlagDataHandler()
 // ---------------------------------------------------------------------
 // TestFlagger::initAgents
 // Initialize the Agents
-// It assumes that parseAgentParameters and initFlagDataHander have
-// been called first
+// Call parseAgentParameters and selectData first
 // ---------------------------------------------------------------------
 bool
 TestFlagger::initAgents()
