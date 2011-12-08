@@ -100,7 +100,7 @@ const TableExprNode *MSUvDistParse::selectUVRange(const Double& startUV,
     {
       String Mesg="Unrecognized units " + 
 	units + 
-	" found.  Possible units are [Kk][LAMBDA or lambda] for wavelengths or [Kk][Mm] for distance.";
+	" found.  Possible (case insensitive) units are [KM]LAMBDA for wavelengths or [K]M for distance.";
       throw(MSSelectionUvDistParseError(Mesg));
     }
   
