@@ -129,7 +129,7 @@ namespace casa {
       
 
       Bool setpbantresptable(const String& telescope, const String& othertelescope,
-			     const String& tablepath=""); // if empty, look it up in Observatories
+			     const Bool dopb, const String& tablepath);
                             // no record filled, need to access via getvp()
 
       // set the default voltage pattern for the given telescope

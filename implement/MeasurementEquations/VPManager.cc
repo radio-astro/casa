@@ -179,12 +179,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(vplistdefaults_p.isDefined(telName)
 	 && (vplistdefaults_p(telName)==-1)
 	 ){
-	telName = "  *  " + telName;
+	os << LogIO::NORMAL << "  *  ";
       }
       else{
-	telName = "     " + telName;
+	os << LogIO::NORMAL << "     ";
       }
-      os << LogIO::NORMAL << telName << LogIO::POST;
+      os << telName << LogIO::POST;
     }
     
     os << LogIO::NORMAL << "\nExternally defined voltage patterns (* = set as default):" << LogIO::POST;
@@ -194,14 +194,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	TableRecord antRec(vplist_p.asRecord(i));
 	String telName = antRec.asString("telescope");
 	if(vplistdefaults_p.isDefined(telName)
-	   && (i == vplistdefaults_p(telName))
+	   && ((Int)i == vplistdefaults_p(telName))
 	   ){
-	  telName = String("  *  " + telName+ "             ").resize(18);
+	  os << i << "  *  ";
 	}
 	else{
-	  telName = String("     " + telName+ "             ").resize(18);
+	  os << i << "     ";
 	}
-        os << i << telName << antRec.asString("name");
+        os << String(telName+ "             ").resize(13) << antRec.asString("name");
 	if(antRec.asString("name")=="REFERENCE"){
 	  os << ": " << antRec.asString("antresppath");
 	}
@@ -244,6 +244,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
     vplist_p.defineRecord(vplist_p.nfields(), rec);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
 
     return True;
   }
@@ -345,6 +349,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
@@ -399,6 +408,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
@@ -449,6 +463,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
@@ -500,6 +519,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
@@ -523,6 +547,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.define("dopb", dopb);
     rec.define("realimage", realimage);
     rec.define("imagimage", imagimage);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
 
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
     
@@ -573,6 +601,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
@@ -580,18 +613,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   Bool VPManager::setpbantresptable(const String& telescope, const String& othertelescope,
-				    const String& tablepath){
-    // if path empty, look it up in the Observatories table
+				    const Bool dopb, const String& tablepath){
 
-    cout << "Not implemented." << endl;
+    Record rec;
+    rec.define("name", "REFERENCE");
+    rec.define("isVP", PBMathInterface::REFERENCE);
+    if(telescope=="OTHER"){
+      rec.define("telescope", othertelescope);
+    }
+    else{
+      rec.define("telescope", telescope);
+    }
+    rec.define("dopb", dopb);
+    rec.define("antresppath", tablepath);
+    
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
 
-    // if not in Observatories table, return False
-
-    // check if entry in vplist already exists
-    // if yes, do nothing and return True
-
-    // if not create record with reference to AntennaResponses table,
-    // enter it into vplist and return True
+    vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
 
