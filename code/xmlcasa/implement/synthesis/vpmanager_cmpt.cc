@@ -414,6 +414,16 @@ vpmanager::setpbpoly(const std::string& telescope, const std::string& otherteles
   return r;
 }
 
+bool
+vpmanager::setpbantresptable(const std::string& telescope, const std::string& othertelescope, const bool dopb, const std::string& antresppath)
+{
+  *itsLog << LogOrigin("vp", "setantresptable");
+  if(!itsVPM) return False;
+  return itsVPM->setpbantresptable(telescope, othertelescope, dopb, antresppath);
+
+}
+
+
 bool vpmanager::reset(){
 
   *itsLog << LogOrigin("vp", "reset");

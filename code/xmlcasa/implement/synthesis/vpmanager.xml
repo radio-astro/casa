@@ -745,9 +745,40 @@ VP(x) = \sum_{i} coeff_{i} * x^{2i}.
      </param>
 </input>
 <returns type="any"><any type="record"/>itemcontainer</returns>
-
-
 </method>
+
+   <method type="function" name="setpbantresptable">
+   <shortdescription>Declare a reference to an antenna responses table</shortdescription>
+   
+<description>
+Declare a reference to an antenna responses table containing a set of VP/PB definitions.
+</description>
+<input>
+
+     <param type="string" name="telescope">
+     <description>Which telescope in the MS will use this vp/pb?</description>
+     <value></value>
+     </param>
+
+     <param type="string" name="othertelescope">
+     <description>If telescope=="OTHER", specify name here</description>
+     <value></value>
+     </param>
+
+     <param type="bool" name="dopb">
+     <description>Should we apply the vp/pb to this telescope's data?</description>
+     <value>true</value>
+     </param>
+
+     <param type="string" name="antresppath">
+     <description>The path to the antenna responses table (absolute or relative to CASA data dir.)</description>
+     <value></value>
+     </param>
+
+</input>
+<returns type="bool"></returns>
+</method>
+
    <method type="function" name="reset">
    <shortdescription>Reinitialize the VPManager (will erase all VPs and defaults defined on the command line)</shortdescription>
    

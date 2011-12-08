@@ -8,6 +8,12 @@ import unittest
 
 '''
 Unit tests for the vpmanager tool. Tested methods:
+        reset()
+        summarizevps()
+        getvp()
+        numvps()
+        setpbairy()
+        setpbantresptable()
         createantresp()
         getrespimagename()
 '''
@@ -123,6 +129,21 @@ class vpmanager_test(unittest.TestCase):
         withanttypeok = (myrec['name']=='AIRY' and myrec['telescope']=='ALMA')
 
         self.assertTrue(woanttypeok and withanttypeok)
+
+    def test9(self):
+        '''Test 9: define reference to antresp table for ALMA, then use it'''
+        
+        vp.reset()
+        vp.setpbantresptable(telescope='ALMA',
+                             antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses',
+                             dopb=True)
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'DV',
+                         obsdirection = 'AZEL 30deg 60deg')
+        
+        self.assertTrue(myrec['name']=='BEAMCALC' and myrec['telescope']=='ALMA')
 
     def test10(self):
         '''Test 10: createantresp Default values'''
