@@ -1125,7 +1125,7 @@ class imfit_test(unittest.TestCase):
                 expected = 1.93581236e-05
                 epsilon = 1e-5
                 self.assertTrue(near(got, expected, epsilon))
-                shape = mycl.getshape()
+                shape = mycl.getshape(0)
                 got = shape["majoraxis"]["value"]
                 expected = 23.5743464
                 epsilon = 1e-5
@@ -1192,7 +1192,7 @@ class imfit_test(unittest.TestCase):
             expected = 1.93581236e-05
             epsilon = 1e-5
             self.assertTrue(near(got, expected, epsilon))
-            shape = mycl.getshape()
+            shape = mycl.getshape(0)
             got = shape["majoraxis"]["value"]
             expected = 23.5743464
             epsilon = 1e-5
