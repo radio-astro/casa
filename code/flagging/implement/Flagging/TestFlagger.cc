@@ -236,21 +236,22 @@ TestFlagger::selectData(String field, String spw, String array,
 		os << LogIO::NORMAL << "Called from selectData(String....)" << LogIO::POST;
 
 	// Create a record with the parameters
+	Record selection = Record();
 
-	dataselection_p.define("spw", spw);
-	dataselection_p.define("scan", scan);
-	dataselection_p.define("field", field);
-	dataselection_p.define("antenna", antenna);
-	dataselection_p.define("timerange", timerange);
-	dataselection_p.define("correlation", correlation);
-	dataselection_p.define("intent", intent);
-	dataselection_p.define("feed", feed);
-	dataselection_p.define("array", array);
-	dataselection_p.define("uvrange", uvrange);
-	dataselection_p.define("observation", observation);
+	selection.define("spw", spw);
+	selection.define("scan", scan);
+	selection.define("field", field);
+	selection.define("antenna", antenna);
+	selection.define("timerange", timerange);
+	selection.define("correlation", correlation);
+	selection.define("intent", intent);
+	selection.define("feed", feed);
+	selection.define("array", array);
+	selection.define("uvrange", uvrange);
+	selection.define("observation", observation);
 
 	// Call the main selectData() method
-	selectData(dataselection_p);
+	selectData(selection);
 
 	return true;
 
