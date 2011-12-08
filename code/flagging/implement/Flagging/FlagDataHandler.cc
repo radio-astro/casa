@@ -385,6 +385,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		arraySelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no array selection" << LogIO::POST;
 	}
 
@@ -396,6 +397,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		fieldSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no field selection" << LogIO::POST;
 	}
 
@@ -407,6 +409,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		scanSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan selection" << LogIO::POST;
 	}
 
@@ -418,6 +421,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		timeSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no timerange selection" << LogIO::POST;
 	}
 
@@ -429,6 +433,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		spwSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no spw selection" << LogIO::POST;
 	}
 
@@ -440,6 +445,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		baselineSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no antenna selection" << LogIO::POST;
 	}
 
@@ -451,6 +457,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		uvwSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no uvrange selection" << LogIO::POST;
 	}
 
@@ -462,6 +469,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		polarizationSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no correlation selection" << LogIO::POST;
 	}
 
@@ -473,6 +481,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		observationSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no observation selection" << LogIO::POST;
 	}
 
@@ -484,6 +493,7 @@ FlagDataHandler::setDataSelection(Record record)
 	}
 	else
 	{
+		scanIntentSelection_p = String("");
 		*logger_p << LogIO::DEBUG1 << "FlagDataHandler::" << __FUNCTION__ << " no scan intent selection" << LogIO::POST;
 	}
 
