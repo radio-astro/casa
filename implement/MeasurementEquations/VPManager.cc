@@ -43,6 +43,7 @@
 #include <synthesis/MeasurementEquations/VPManager.h>
 #include <synthesis/MeasurementComponents/PBMathInterface.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
+#include <synthesis/MeasurementComponents/SynthesisError.h>
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
@@ -50,15 +51,94 @@
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-  VPManager::VPManager() {
 
-    vplist_p=Record();
+  VPManager* VPManager::instance_p = 0;
 
+  VPManager* VPManager::Instance(){
+    if(instance_p==0){
+      instance_p = new VPManager();
+    }
+    return instance_p;
   }
-  VPManager::~VPManager(){
 
-    vplist_p=Record();
+  void VPManager::reset(){
+    if(instance_p){
+      delete instance_p;
+      instance_p = new VPManager(True);
+    }
+  }    
+
+  VPManager::VPManager(Bool verbose):
+    vplist_p(),
+    vplistdefaults_p(-1),
+    aR_p()
+  {
+
+    LogIO os;
+    os << LogOrigin("VPManager", "ctor");
+
+    String telName;
+    for(Int pbtype = static_cast<Int>(PBMath::DEFAULT) + 1;
+	pbtype < static_cast<Int>(PBMath::NONE); ++pbtype){
+      PBMath::nameCommonPB(static_cast<PBMath::CommonPB>(pbtype), telName);
+      vplistdefaults_p.define(telName,-1);
+    }
+
+    // check for available AntennaResponses tables in the Observatories table
+    Vector<String> obsName = MeasTable::Observatories();
+    for(uInt i=0; i<obsName.size(); i++){
+
+      String telName = obsName(i);
+
+      String antRespPath;
+      if(!MeasTable::AntennaResponsesPath(antRespPath, telName)) {
+	// unknown observatory
+	continue;
+      }
+      else{ // remember the corresponding telescopes as special vplist entries
+	if(!aR_p.init(antRespPath)){
+	  if(verbose){
+	    os << LogIO::WARN
+	       << "Invalid path defined in Observatories table for \"" << telName << "\":" << endl
+	       << antRespPath << endl
+	       << LogIO::POST;
+	  }
+	}
+	else{
+	  // init successful
+	  Record rec;
+	  rec.define("name", "REFERENCE");
+	  rec.define("isVP", PBMathInterface::REFERENCE);
+	  rec.define("telescope", telName);
+	  rec.define("antresppath", antRespPath);
+	  
+	  if(verbose){
+	    os << LogIO::NORMAL
+	       << "Will use " << telName << " antenna responses from table " 
+	       << antRespPath << LogIO::POST;
+	  }
+
+	  if(vplistdefaults_p.isDefined(telName)){ // there is already a vp for this telName
+	    Int ifield = vplistdefaults_p(telName);
+	    if(ifield>=0){
+	      Record rrec = vplist_p.rwSubRecord(ifield);
+	      rrec.define("dopb", False);
+	    }
+	    vplistdefaults_p.remove(telName);	    
+	  }
+	  vplistdefaults_p.define(telName,vplist_p.nfields()); 
+	  rec.define("dopb", True);
+	  
+	  vplist_p.defineRecord(vplist_p.nfields(), rec);
+	}
+      }
+    }	
+    if(verbose){
+      os << LogIO::NORMAL << "VPManager initialized." << LogIO::POST;
+    }
+    
   }
+
 
   Bool VPManager::saveastable(const String& tablename){
     
@@ -90,22 +170,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     LogIO os(LogOrigin("vpmanager", "summarizevps"));
 
-    os << LogIO::NORMAL << "Voltage patterns in the main CASA repository:"
+    os << LogIO::NORMAL << "Voltage patterns internally defined in CASA (* = set as default):"
        << LogIO::POST;
     String telName;
     for(Int pbtype = static_cast<Int>(PBMath::DEFAULT) + 1;
         pbtype < static_cast<Int>(PBMath::NONE); ++pbtype){
       PBMath::nameCommonPB(static_cast<PBMath::CommonPB>(pbtype), telName);
+      if(vplistdefaults_p.isDefined(telName)
+	 && (vplistdefaults_p(telName)==-1)
+	 ){
+	telName = "  *  " + telName;
+      }
+      else{
+	telName = "     " + telName;
+      }
       os << LogIO::NORMAL << telName << LogIO::POST;
     }
     
-    os << LogIO::NORMAL << "\nUser defined voltage patterns:" << LogIO::POST;
+    os << LogIO::NORMAL << "\nExternally defined voltage patterns (* = set as default):" << LogIO::POST;
     if (vplist_p.nfields() > 0) {
-      os << "VP#  Tel    VP Type" << LogIO::POST;
+      os << "VP#     Tel         VP Type" << LogIO::POST;
       for (uInt i=0; i < vplist_p.nfields(); ++i){
 	TableRecord antRec(vplist_p.asRecord(i));
-        os << i << "    " + antRec.asString("telescope")
-	  + "    " + antRec.asString("name") << LogIO::POST;
+	String telName = antRec.asString("telescope");
+	if(vplistdefaults_p.isDefined(telName)
+	   && (i == vplistdefaults_p(telName))
+	   ){
+	  telName = String("  *  " + telName+ "             ").resize(18);
+	}
+	else{
+	  telName = String("     " + telName+ "             ").resize(18);
+	}
+        os << i << telName << antRec.asString("name");
+	if(antRec.asString("name")=="REFERENCE"){
+	  os << ": " << antRec.asString("antresppath");
+	}
+	os << LogIO::POST;
         if (verbose) {
 	  ostringstream oss;
 	  antRec.print(oss);
@@ -188,6 +288,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     QuantumHolder(paincrement).toRecord(error, tempholder);
     rec.defineRecord("paincrement", tempholder);
     rec.define("usesymmetricbeam", usesymmetricbeam);
+
+    if(dopb){
+      vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
+    } 
+
     vplist_p.defineRecord(vplist_p.nfields(), rec); 
 
     return True;
@@ -472,7 +577,312 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     return True;
 
+  }
+
+  Bool VPManager::setpbantresptable(const String& telescope, const String& othertelescope,
+				    const String& tablepath){
+    // if path empty, look it up in the Observatories table
+
+    cout << "Not implemented." << endl;
+
+    // if not in Observatories table, return False
+
+    // check if entry in vplist already exists
+    // if yes, do nothing and return True
+
+    // if not create record with reference to AntennaResponses table,
+    // enter it into vplist and return True
+
+    return True;
 
   }
+  
+
+  Bool VPManager::setuserdefault(const Int vplistfield, // (-1 means reset to standard default)
+				 const String& telescope,
+				 const String& antennatype){     
+
+    LogIO os;
+    os <<  LogOrigin("VPManager", "setuserdefault");
+
+    if((vplistfield < -1) || ((Int)(vplist_p.nfields()) <= vplistfield)){
+      os << LogIO::SEVERE << " entry " << vplistfield << " does not exist in VP list."
+	 << LogIO::POST;
+      return False;
+    }
+
+    String antennaDesc = antennaDescription(telescope, antennatype);
+
+    if(vplistfield>=0){
+      const Record rec = vplist_p.subRecord(vplistfield);
+      // check if this is a valid VP for this telescope
+      String telName;
+      const Int telFieldNumber=rec.fieldNumber("telescope");
+      if (telFieldNumber!=-1){
+	telName = rec.asString(telFieldNumber);
+	if(telFromAntDesc(telName)!=telescope){
+	  os << LogIO::SEVERE << " entry " << vplistfield << " does not point ot a valid VP for " << telescope
+	     << LogIO::POST;
+	  return False;
+	}
+      }
+      Record srec = vplist_p.rwSubRecord(vplistfield);
+      srec.define("dopb", True);
+    }
+    // unset set an existing default 
+    if(vplistdefaults_p.isDefined(antennaDesc)){ 
+      vplistdefaults_p.remove(antennaDesc);
+    }
+    vplistdefaults_p.define(antennaDesc,vplistfield);
+
+    return True;
+
+  }
+
+  Bool VPManager::getuserdefault(Int& vplistfield,
+				 const String& telescope,
+				 const String& antennatype){
+
+    String antennaDesc = antennaDescription(telescope, antennatype);
+
+    if(!vplistdefaults_p.isDefined(antennaDesc)){
+      return False;
+    }
+    vplistfield = vplistdefaults_p(antennaDesc);
+    return True;
+
+  }
+
+  // return number of voltage patterns satisfying the given constraints
+  Int VPManager::numvps(const String& telescope,
+			const MEpoch& obstime,
+			const MFrequency& freq, 
+			const String& antennatype, // default: any
+			const MDirection& obsdirection // default: Zenith
+			){
+    LogIO os;
+    os << LogOrigin("VPManager", "numvps");
+
+    Int rval=0;
+
+    if(telescope.empty()){ // return number of keys in vplistdefaults_p
+      rval = vplistdefaults_p.ndefined();
+    }
+    else{ // we have a telescope
+      if(vplistdefaults_p.isDefined(telescope)){ // found global entry
+	Int ifield = vplistdefaults_p(telescope);
+	if(ifield==-1){ // internally defined PB does not distinguish antenna types
+	  rval = 1;
+	}
+	else{ // externally defined PB
+	  TableRecord antRec(vplist_p.asRecord(ifield));
+	  String thename = antRec.asString("name");
+	  if(thename=="REFERENCE"){ // points to an AntennaResponses table
+	    // query the antenna responses
+	    String antRespPath = antRec.asString("antresppath");
+	    if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
+	       && !aR_p.init(antRespPath)){
+	      os << LogIO::SEVERE
+		 << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
+		 << antRespPath << endl
+		 << LogIO::POST;
+	    }
+	    else{ // init successful
+	      Vector<String> antTypes;
+	      if(aR_p.getAntennaTypes(antTypes,
+				      telescope, // (the observatory name, e.g. "ALMA" or "ACA")
+				      obstime,
+				      freq,
+				      AntennaResponses::ANY, // the requested function type
+				      obsdirection)){ // success
+	      }
+	      if(antennatype.empty()){ // antenna type was not given
+		rval = antTypes.size();
+	      }
+	      else{
+		for(uInt i=0; i<antTypes.size(); i++){
+		  if(antTypes(i)==antennatype){
+		    rval = 1;
+		    break;
+		  }
+		}
+	      }
+	    }
+	  }
+	  else{ // we have a PBMath response
+	    rval = 1;
+	  }
+	} // end if (ifield==-1)
+      }
+      else if(antennatype.empty()){ // no global entry and antenna type not given: need to count specific entries
+	rval = 0;
+	for(uInt i=0; i<vplistdefaults_p.ndefined(); i++){
+	  String aDesc = vplistdefaults_p.getKey(i);
+	  if(telescope == telFromAntDesc(aDesc)){
+	    rval++;
+	  }
+	}
+      }
+      else{ // no global entry and antenna type given: need to look for specific entry
+	String antDesc = antennaDescription(telescope,antennatype);
+	if(vplistdefaults_p.isDefined(antDesc)){
+	  rval = 1;
+	}
+      } 
+    } // endif(telescope.empty())
+
+    return rval;
+
+  }
+
+    // get the voltage pattern satisfying the given constraints
+  Bool VPManager::getvp(Record &rec,
+			const String& telescope,
+			const MEpoch& obstime,
+			const MFrequency& freq, 
+			const String& antennatype, // default: "" 
+			const MDirection& obsdirection){ // default is the Zenith
+
+    LogIO os;
+    os << LogOrigin("VPManager", "getvp");
+    
+    rec = Record();
+    Int rval=False;
+
+    String antDesc = antennaDescription(telescope, antennatype);
+
+    Int ifield = -2;
+    if(vplistdefaults_p.isDefined(telescope)){ // found global entry
+      ifield = vplistdefaults_p(telescope);
+    }
+    else if(vplistdefaults_p.isDefined(antDesc)){
+      ifield = vplistdefaults_p(antDesc);
+    }
+
+    if(ifield==-1){ // internally defined PB does not distinguish antenna types
+	
+      rec = Record();
+      rec.define("name", "COMMONPB");
+      rec.define("isVP", PBMathInterface::COMMONPB);
+      rec.define("telescope", telescope);
+      rec.define("dopb", True);
+      rec.define("commonpb", telescope);
+      rec.define("dosquint", False);
+      String error;
+      Record tempholder;
+      QuantumHolder(Quantity(10.,"deg")).toRecord(error, tempholder);
+      rec.defineRecord("paincrement", tempholder);
+      rec.define("usesymmetricbeam", False);
+	
+      rval = True;
+	
+    }
+    else if(ifield>=0){ // externally defined PB
+      TableRecord antRec(vplist_p.asRecord(ifield));
+      String thename = antRec.asString("name");
+      if(thename=="REFERENCE"){ // points to an AntennaResponses table
+	// query the antenna responses
+	String antRespPath = antRec.asString("antresppath");
+	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
+	   && !aR_p.init(antRespPath)){
+	  os << LogIO::SEVERE
+	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
+	     << antRespPath << endl
+	     << LogIO::POST;
+	}
+	else{ // init successful
+	  String functionImageName;
+	  uInt funcChannel;
+	  MFrequency nomFreq;
+	  AntennaResponses::FuncTypes fType;
+	  MVAngle rotAngOffset;
+	  
+	  if(!aR_p.getImageName(functionImageName, // the path to the image
+				funcChannel, // the channel to use in the image  
+				nomFreq, // nominal frequency of the image (in the given channel)
+				fType, // the function type of the image
+				rotAngOffset, // the response rotation angle offset
+				/////////////////////
+				telescope,
+				obstime,
+				freq,
+				AntennaResponses::ANY, // the requested function type
+				antennatype,
+				obsdirection)
+	     ){
+	    rec = Record();
+	    rval = False;
+	  }
+	  else{
+	    
+	    // construct record
+	    rec = Record();
+	    Unit uHz("Hz");
+	    switch(fType){
+	    case AntennaResponses::AIF: // complex aperture illumination function
+	      os << LogIO::WARN << "Responses type AIF provided for " << telescope << " in " << endl
+		 << antRespPath << endl
+		 << " not yet supported."
+		 << LogIO::POST;
+	      rval = False;
+	      break;
+	    case AntennaResponses::EFP: // complex electric field pattern
+	      rec.define("name", "IMAGE");
+	      rec.define("isVP", PBMathInterface::IMAGE);
+	      rec.define("telescope", telescope);
+	      rec.define("dopb", True);
+	      rec.define("compleximage", functionImageName);
+	      rec.define("channel", funcChannel);
+	      rec.define("reffreq", nomFreq.get(uHz).getValue());
+	      rval = True;
+	      break;
+	    case AntennaResponses::VP: // real voltage pattern
+	      rec.define("name", "IMAGE");
+	      rec.define("isVP", PBMathInterface::IMAGE);
+	      rec.define("telescope", telescope);
+	      rec.define("dopb", True);
+	      rec.define("realimage", functionImageName);
+	      rec.define("channel", funcChannel);
+	      rec.define("reffreq", nomFreq.get(uHz).getValue());
+	      rval = True;
+	      break;
+	    case AntennaResponses::VPMAN: // the function is available in casa via the vp manager (details t.b.d.)
+	      os << LogIO::WARN << "Responses type VPMAN provided for \"" << telescope << " in " << endl
+		 << antRespPath << endl
+		 << " not yet supported."
+		 << LogIO::POST;
+	      rval = False;
+	      break;
+	    case AntennaResponses::INTERNAL: // the function is generated on the fly internally using the BeamCalc class
+	      rec.define("name", "BEAMCALC");
+	      rec.define("isVP", PBMathInterface::BEAMCALC);
+	      rec.define("telescope", telescope);
+	      rec.define("dopb", True);
+	      rec.define("antraypath", functionImageName);
+	      rec.define("antennatype", antennatype);
+	      rval = True;
+	      break;
+
+	      break;
+	    case AntennaResponses::NA: // not available
+	    default:
+	      rval = False;
+	      break;
+	    }
+	  }
+	}
+      }
+      else{ // we have a PBMath response
+	  
+	rec = vplist_p.subRecord(ifield);
+	rval = True;
+
+      } // end if reference
+    } // end if internally defined
+
+    return rval;
+
+  }
+
 
 } //# NAMESPACE CASA - END
