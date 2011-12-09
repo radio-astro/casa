@@ -286,6 +286,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     rec.defineRecord("maxrad", tempholder);
     QuantumHolder(reffreq).toRecord(error, tempholder);
     rec.defineRecord("reffreq", tempholder);
+    rec.define("isthisvp", False);
     MeasureHolder(squintdir).toRecord(error, tempholder);
     rec.defineRecord("squintdir", tempholder);
     QuantumHolder(squintreffreq).toRecord(error, tempholder);
@@ -534,7 +535,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   Bool VPManager::setpbimage(const String& tel, 
 			     const String& other, 
-			     const Bool dopb, const String& realimage, 
+			     const Bool dopb, 
+			     const String& realimage, 
 			     const String& imagimage,
 			     Record& rec){
     rec=Record();
@@ -547,6 +549,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       rec.define("telescope", tel);
     }
     rec.define("dopb", dopb);
+    rec.define("isthisvp", False);
     rec.define("realimage", realimage);
     rec.define("imagimage", imagimage);
 
@@ -875,6 +878,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  rec.define("isVP", PBMathInterface::IMAGE);
 	  rec.define("telescope", telescope);
 	  rec.define("dopb", True);
+	  rec.define("isthisvp", True);
 	  rec.define("compleximage", functionImageName);
 	  rec.define("channel", funcChannel);
 	  rec.define("reffreq", nomFreq.get(uHz).getValue());
@@ -885,6 +889,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  rec.define("isVP", PBMathInterface::IMAGE);
 	  rec.define("telescope", telescope);
 	  rec.define("dopb", True);
+	  rec.define("isthisvp", True);
 	  rec.define("realimage", functionImageName);
 	  rec.define("channel", funcChannel);
 	  rec.define("reffreq", nomFreq.get(uHz).getValue());
@@ -896,6 +901,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  rec.define("isVP", PBMathInterface::COMMONPB);
 	  rec.define("telescope", telescope);
 	  rec.define("dopb", True);
+	  rec.define("isthisvp", False);
 	  rec.define("commonpb", telescope);
 	  rec.define("dosquint", False);
 	  {
@@ -989,9 +995,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      // construct record
 	      rec.define("name", "IMAGE");
 	      rec.define("isVP", PBMathInterface::IMAGE);
+	      rec.define("isthisvp", False);
 	      rec.define("telescope", telescope);
 	      rec.define("dopb", True);
-	      rec.define("realimage", beamCalcedImagePath);
+	      rec.define("compleximage", beamCalcedImagePath);
 	      rec.define("channel", 0);
 	      rec.define("antennatype", antennatype);
 	      rec.define("reffreq", freq.get(uHz).getValue());
