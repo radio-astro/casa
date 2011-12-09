@@ -277,7 +277,7 @@ tfcrop, extendflags, unflag, summary)</description>
 
             <param type="bool" name="savepars">
                 <description>Save the current parameters to an output</description>
-                <value>True</value>
+                <value>False</value>
             </param>
 
             <param type="string" name="outfile" subparam="true">
