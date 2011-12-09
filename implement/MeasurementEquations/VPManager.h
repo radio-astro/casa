@@ -113,7 +113,7 @@ namespace casa {
 
       Bool setpbimage(const String& telescope, const String& othertelescope, 
 		      const Bool dopb, const String& realimage, 
-		      const String& imagimage, Record& rec);
+		      const String& imagimage, const String& compleximage, Record& rec);
 
       Bool setpbpoly(const String& telescope, const String& othertelescope,
 		     const Bool dopb, const Vector<Double>& coeff,
