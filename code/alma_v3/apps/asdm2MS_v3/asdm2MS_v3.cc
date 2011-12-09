@@ -1612,8 +1612,30 @@ int main(int argc, char *argv[]) {
   sdmBinData.setPriorityDataDescription();
 #endif
 
+  //get numCorr, numChan, telescope name for setupMS
+  
+  ExecBlockTable& temp_execBlockT = ds->getExecBlock();
+  //take first row of the table (assuming telescope name is all the same)
+  ExecBlockRow* temp_ebtrow = temp_execBlockT.get()[0];
+  string telName  = temp_ebtrow->getTelescopeName();
+  //cout<<"telName="<<telName<<endl;
 
-  //
+  int maxNumCorr =1;
+  PolarizationTable& temp_polT = ds->getPolarization();
+  PolarizationRow* temp_poltrow;
+  for (int i=0; i<temp_polT.size(); i++) {
+    temp_poltrow = temp_polT.get()[i];
+    maxNumCorr=max(maxNumCorr, temp_poltrow->getNumCorr());
+  }
+  //need to add analysis of max NumChan
+  int maxNumChan=1;
+  SpectralWindowTable& temp_spwT = ds->getSpectralWindow();
+  SpectralWindowRow* temp_spwtrow;
+  for (int i=0; i<temp_spwT.size(); i++) {
+    temp_spwtrow = temp_spwT.get()[i];
+    maxNumChan=max(maxNumChan, temp_spwtrow->getNumChan());
+  }
+
   // Create the measurement set(s). 
   map<AtmPhaseCorrection, ASDM2MSFiller*> msFillers;
   if (!false) {
@@ -1623,7 +1645,10 @@ int main(int argc, char *argv[]) {
 						   0.0,
 						   false,
 						   complexData,
-						   withCompression);
+						   withCompression,
+                                                   telName,
+                                                   maxNumCorr,
+                                                   maxNumChan);
 	info("About to create a filler for the measurement set '" + msNames[iter->first] + "'");
       }
     }

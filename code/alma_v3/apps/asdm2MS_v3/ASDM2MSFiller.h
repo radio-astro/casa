@@ -192,7 +192,13 @@ class ASDM2MSFiller
   ddMgr    itsDDMgr;
 
          
-  int createMS(const string& msName, bool complexData, bool withCompression, bool withCorrectedData=false);
+  int createMS(const string& msName, 
+               bool complexData, 
+               bool withCompression, 
+               const string& telName, 
+               int maxNumCorr,
+               int maxNumChan,
+               bool withCorrectedData=false);
 
   const char** getPolCombinations(int numCorr);
     
@@ -205,6 +211,9 @@ class ASDM2MSFiller
 		 bool		withRadioMeters,
 		 bool		complexData,
 		 bool		withCompression,
+                 const string&  telName, 
+                 int            intintmaxNumCorr,
+                 int            maxNumChan,
 		 bool		withCorrectedData=false);
   
   // Destructor
