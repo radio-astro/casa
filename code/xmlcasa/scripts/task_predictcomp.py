@@ -5,7 +5,8 @@ import os
 
 def predictcomp(objname=None, standard=None, epoch=None,
                 minfreq=None, maxfreq=None, nfreqs=None, prefix=None,
-                antennalist=None, showplot=None, savefig=None, symb=None):
+                antennalist=None, showplot=None, savefig=None, symb=None,
+                include0amp=None, include0bl=None):
     """
     Writes a component list named clist to disk and returns a dict of
     {'clist': clist,
@@ -50,6 +51,9 @@ def predictcomp(objname=None, standard=None, epoch=None,
                        'myplot.png' (save to myplot.png) 
     symb: One of matplotlib's codes for plot symbols: .:,o^v<>s+xDd234hH|_
           default: ',':  The smallest points I could find.
+    include0amp: Force the lower limit of the amplitude axis to 0.
+                 Default: False
+    include0bl: Force the lower limit of the baseline length axis to 0.
     """
     retval = False
     try:
@@ -113,7 +117,8 @@ def predictcomp(objname=None, standard=None, epoch=None,
                 retval[k] = comp[k]
             if antennalist:
                 retval['savedfig'] = savefig
-                retval.update(plotcomp(retval, showplot, wantdict=True, symb=symb))
+                retval.update(plotcomp(retval, showplot, wantdict=True, symb=symb,
+                                       include0amp=include0amp, include0bl=include0bl))
             else:
                 retval['savedfig'] = None
         else:

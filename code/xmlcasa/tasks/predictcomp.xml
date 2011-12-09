@@ -76,6 +76,14 @@
 	    <description>A matplotlib plot symbol code</description>
 	    <value>,</value>
           </param>
+	  <param type="bool" name="include0amp" subparam="False">
+	    <description>Force the amplitude axis to start at 0?</description>
+	    <value>False</value>
+	  </param>
+	  <param type="bool" name="include0bl" subparam="False">
+	    <description>Force the baseline axis to start at 0?</description>
+	    <value>False</value>
+	  </param>
 
 	  <constraints>
 	    <when param="antennalist">
@@ -83,6 +91,8 @@
 		<default param="showplot"><value>True</value></default>
 		<default param="savefig"><value type="string"></value></default>
                 <default param="symb"><value type="string">,</value></default>
+		<default param="include0amp"><value>False</value></default>
+		<default param="include0bl"><value>False</value></default>
 	      </notequals>
 	    </when>
 	  </constraints>
