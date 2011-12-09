@@ -75,8 +75,34 @@ namespace casa{
 			const VisBuffer &vb,
 			const Vector<Float>& paList,
 			Bool doSquint, Int bandID);
-    void applyPB(ImageInterface<Float>& pbImage, const VisBuffer& vb, Bool doSquint=False, Int cfKey=0);
-    void applyPB(ImageInterface<Complex>& pbImage, const VisBuffer& vb, Bool doSquint=True, Int cfKey=0);
+
+    void regridAperture(CoordinateSystem& skyCS, 
+			IPosition& skyShape, 
+			TempImage<Complex>& uvGrid, 
+			const String& telescope,
+			const MVFrequency& freqQ,
+			Float pa = 0.,
+			Bool doSquint=True,
+			Int bandID=-1);
+
+    void applyPB(ImageInterface<Float>& pbImage, 
+		 const VisBuffer& vb, Bool doSquint=False, Int cfKey=0);
+
+    void applyPB(ImageInterface<Complex>& pbImage, 
+		 const VisBuffer& vb, Bool doSquint=True, Int cfKey=0);
+
+    void applyPB(ImageInterface<Float>& pbImage, 
+		 const String& telescope, const MEpoch& obsTime, 
+		 const String& antType0, const String& antType1,
+		 const MVFrequency& freqQ, Double pa=0.,
+		 Bool doSquint=False);
+
+    void applyPB(ImageInterface<Complex>& pbImage, 
+		 const String& telescope, const MEpoch& obsTime,
+		 const String& antType0, const String& antType1,
+		 const MVFrequency& freqQ, Double pa=0.,
+		 Bool doSquint=True);
+
     void skyMuller(ImageInterface<Complex>& skyJones);
 
     //    Int getALMABandId(const Double& freq);

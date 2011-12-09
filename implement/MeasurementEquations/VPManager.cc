@@ -44,11 +44,13 @@
 #include <synthesis/MeasurementComponents/PBMathInterface.h>
 #include <synthesis/MeasurementComponents/PBMath.h>
 #include <synthesis/MeasurementComponents/SynthesisError.h>
+#include <synthesis/MeasurementComponents/ALMACalcIlluminationConvFunc.h>
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
-
+#include <casa/OS/Directory.h>
+#include <images/Images/PagedImage.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -108,7 +110,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  // init successful
 	  Record rec;
 	  rec.define("name", "REFERENCE");
-	  rec.define("isVP", PBMathInterface::REFERENCE);
+	  rec.define("isVP", PBMathInterface::NONE);
 	  rec.define("telescope", telName);
 	  rec.define("antresppath", antRespPath);
 	  
@@ -617,7 +619,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     Record rec;
     rec.define("name", "REFERENCE");
-    rec.define("isVP", PBMathInterface::REFERENCE);
+    rec.define("isVP", PBMathInterface::NONE);
     if(telescope=="OTHER"){
       rec.define("telescope", othertelescope);
     }
@@ -801,7 +803,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if(ifield==-1){ // internally defined PB does not distinguish antenna types
 	
-      rec = Record();
       rec.define("name", "COMMONPB");
       rec.define("isVP", PBMathInterface::COMMONPB);
       rec.define("telescope", telescope);
@@ -821,6 +822,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       TableRecord antRec(vplist_p.asRecord(ifield));
       String thename = antRec.asString("name");
       if(thename=="REFERENCE"){ // points to an AntennaResponses table
+
 	// query the antenna responses
 	String antRespPath = antRec.asString("antresppath");
 	if(!aR_p.isInit(antRespPath) // don't reread if not necessary 
@@ -829,96 +831,188 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	     << "Invalid path defined in vpmanager for \"" << telescope << "\":" << endl
 	     << antRespPath << endl
 	     << LogIO::POST;
+	  return False;
 	}
-	else{ // init successful
-	  String functionImageName;
-	  uInt funcChannel;
-	  MFrequency nomFreq;
-	  AntennaResponses::FuncTypes fType;
-	  MVAngle rotAngOffset;
-	  
-	  if(!aR_p.getImageName(functionImageName, // the path to the image
-				funcChannel, // the channel to use in the image  
-				nomFreq, // nominal frequency of the image (in the given channel)
-				fType, // the function type of the image
-				rotAngOffset, // the response rotation angle offset
-				/////////////////////
-				telescope,
-				obstime,
-				freq,
-				AntennaResponses::ANY, // the requested function type
-				antennatype,
-				obsdirection)
-	     ){
-	    rec = Record();
-	    rval = False;
+	// init successful
+	String functionImageName;
+	uInt funcChannel;
+	MFrequency nomFreq;
+	AntennaResponses::FuncTypes fType;
+	MVAngle rotAngOffset;
+	
+	if(!aR_p.getImageName(functionImageName, // the path to the image
+			      funcChannel, // the channel to use in the image  
+			      nomFreq, // nominal frequency of the image (in the given channel)
+			      fType, // the function type of the image
+			      rotAngOffset, // the response rotation angle offset
+			      /////////////////////
+			      telescope,
+			      obstime,
+			      freq,
+			      AntennaResponses::ANY, // the requested function type
+			      antennatype,
+			      obsdirection)
+	   ){
+	  rec = Record();
+	  return False;
+	}
+	
+	// getImageName was successful
+	
+	// construct record
+	rec = Record();
+	Unit uHz("Hz");
+	switch(fType){
+	case AntennaResponses::AIF: // complex aperture illumination function
+	  os << LogIO::WARN << "Responses type AIF provided for " << telescope << " in " << endl
+	     << antRespPath << endl
+	     << " not yet supported."
+	     << LogIO::POST;
+	  rval = False;
+	  break;
+	case AntennaResponses::EFP: // complex electric field pattern
+	  rec.define("name", "IMAGE");
+	  rec.define("isVP", PBMathInterface::IMAGE);
+	  rec.define("telescope", telescope);
+	  rec.define("dopb", True);
+	  rec.define("compleximage", functionImageName);
+	  rec.define("channel", funcChannel);
+	  rec.define("reffreq", nomFreq.get(uHz).getValue());
+	  rval = True;
+	  break;
+	case AntennaResponses::VP: // real voltage pattern
+	  rec.define("name", "IMAGE");
+	  rec.define("isVP", PBMathInterface::IMAGE);
+	  rec.define("telescope", telescope);
+	  rec.define("dopb", True);
+	  rec.define("realimage", functionImageName);
+	  rec.define("channel", funcChannel);
+	  rec.define("reffreq", nomFreq.get(uHz).getValue());
+	  rval = True;
+	  break;
+	case AntennaResponses::VPMAN: // the function is available in casa via the vp manager, i.e. use COMMONPB
+	  // same as if ifield == -1
+	  rec.define("name", "COMMONPB");
+	  rec.define("isVP", PBMathInterface::COMMONPB);
+	  rec.define("telescope", telescope);
+	  rec.define("dopb", True);
+	  rec.define("commonpb", telescope);
+	  rec.define("dosquint", False);
+	  {
+	    String error;
+	    Record tempholder;
+	    QuantumHolder(Quantity(10.,"deg")).toRecord(error, tempholder);
+	    rec.defineRecord("paincrement", tempholder);
 	  }
-	  else{
+	  rec.define("usesymmetricbeam", False);
+	  rval = True;
+	  break;
+	case AntennaResponses::INTERNAL: // the function is generated using the BeamCalc class
+	  {
+	    String antRayPath = functionImageName;
+	    String beamCalcedImagePath = "./BeamCalcTmpImage_"+telescope+"_"+antennatype+"_"
+	      +String::toString(freq.get(Unit("MHz")).getValue())+"MHz";
+	  
+	    // calculate the beam
 	    
-	    // construct record
-	    rec = Record();
-	    Unit uHz("Hz");
-	    switch(fType){
-	    case AntennaResponses::AIF: // complex aperture illumination function
-	      os << LogIO::WARN << "Responses type AIF provided for " << telescope << " in " << endl
+	    if(!(telescope=="ALMA" || telescope=="ACA")){
+	      os << LogIO::WARN << "Responses type INTERNAL provided for \"" << telescope << " in " << endl
 		 << antRespPath << endl
 		 << " not yet supported."
 		 << LogIO::POST;
 	      rval = False;
-	      break;
-	    case AntennaResponses::EFP: // complex electric field pattern
-	      rec.define("name", "IMAGE");
-	      rec.define("isVP", PBMathInterface::IMAGE);
-	      rec.define("telescope", telescope);
-	      rec.define("dopb", True);
-	      rec.define("compleximage", functionImageName);
-	      rec.define("channel", funcChannel);
-	      rec.define("reffreq", nomFreq.get(uHz).getValue());
-	      rval = True;
-	      break;
-	    case AntennaResponses::VP: // real voltage pattern
-	      rec.define("name", "IMAGE");
-	      rec.define("isVP", PBMathInterface::IMAGE);
-	      rec.define("telescope", telescope);
-	      rec.define("dopb", True);
-	      rec.define("realimage", functionImageName);
-	      rec.define("channel", funcChannel);
-	      rec.define("reffreq", nomFreq.get(uHz).getValue());
-	      rval = True;
-	      break;
-	    case AntennaResponses::VPMAN: // the function is available in casa via the vp manager (details t.b.d.)
-	      os << LogIO::WARN << "Responses type VPMAN provided for \"" << telescope << " in " << endl
-		 << antRespPath << endl
-		 << " not yet supported."
-		 << LogIO::POST;
-	      rval = False;
-	      break;
-	    case AntennaResponses::INTERNAL: // the function is generated on the fly internally using the BeamCalc class
-	      rec.define("name", "BEAMCALC");
-	      rec.define("isVP", PBMathInterface::BEAMCALC);
-	      rec.define("telescope", telescope);
-	      rec.define("dopb", True);
-	      rec.define("antraypath", functionImageName);
-	      rec.define("antennatype", antennatype);
-	      rval = True;
-	      break;
+	    }
+	    else{ // telescope=="ALMA" || telescope=="ACA"
+	      try{
+		// handle preexisting beam image
+		Directory f(beamCalcedImagePath);
+		if(f.exists()){
+		  os << LogIO::NORMAL << "Will re-use VP image \"" << beamCalcedImagePath << "\"" << LogIO::POST;
+		  //f.removeRecursive();
+		}
+		else{
+		  CoordinateSystem coordsys;
+	      
+		  Double refFreq = freq.get(uHz).getValue();
 
-	      break;
-	    case AntennaResponses::NA: // not available
-	    default:
-	      rval = False;
-	      break;
+		  // DirectionCoordinate
+		  Matrix<Double> xform(2,2);                                    
+		  xform = 0.0; xform.diagonal() = 1.0;                          
+		  DirectionCoordinate dirCoords(MDirection::AZELGEO,                  
+						Projection(Projection::SIN),        
+						0.0, 0.0,
+						0.5*C::pi/180.0/3600.0 * 5E11/refFreq, 
+						0.5*C::pi/180.0/3600.0 * 5E11/refFreq,        
+						xform,                              
+						127.5, 127.5);  // (256-1)/2.
+		  Vector<String> units(2); 
+		  //units = "deg";                       
+		  //dirCoords.setWorldAxisUnits(units);                               
+		  
+		  // StokesCoordinate
+		  Vector<Int> stoks(4);
+		  stoks(0) = Stokes::XX;
+		  stoks(1) = Stokes::XY;
+		  stoks(2) = Stokes::YX;
+		  stoks(3) = Stokes::YY;
+		  StokesCoordinate stokesCoords(stoks);	
+		  
+		  // SpectralCoordinate
+		  SpectralCoordinate spectralCoords(MFrequency::castType(freq.myType()),           
+						    refFreq,                 
+						    1.0E+3, // dummy increment                  
+						    0,                             
+						    refFreq);          
+		  units.resize(1);
+		  units = "Hz";
+		  spectralCoords.setWorldAxisUnits(units);
+		  
+		  coordsys.addCoordinate(dirCoords);
+		  coordsys.addCoordinate(stokesCoords);
+		  coordsys.addCoordinate(spectralCoords);
+		  
+		  TiledShape ts(IPosition(4,256,256,4,1));
+		  PagedImage<Complex> im(ts, coordsys, beamCalcedImagePath);
+		  im.set(Complex(1.0,1.0));
+		  ALMACalcIlluminationConvFunc almaPB;
+		  Long cachesize=(HostInfo::memoryTotal(True)/8)*1024;
+		  almaPB.setMaximumCacheSize(cachesize);
+		  almaPB.applyPB(im, telescope, obstime, antennatype, antennatype, freq.get(uHz));
+		} // endif exists
+	      } catch (AipsError x) {
+		os << LogIO::SEVERE
+		   << "BeamCalc failed."
+		   << LogIO::POST;
+		return False;
+	      }
+	    
+	      // construct record
+	      rec.define("name", "IMAGE");
+	      rec.define("isVP", PBMathInterface::IMAGE);
+	      rec.define("telescope", telescope);
+	      rec.define("dopb", True);
+	      rec.define("realimage", beamCalcedImagePath);
+	      rec.define("channel", 0);
+	      rec.define("antennatype", antennatype);
+	      rec.define("reffreq", freq.get(uHz).getValue());
+	      rval = True;
 	    }
 	  }
-	}
-      }
+	  break;
+	case AntennaResponses::NA: // not available
+	default:
+	  rval = False;
+	  break;
+	} // end switch(ftype)
+      } 
       else{ // we have a PBMath response
-	  
+      
 	rec = vplist_p.subRecord(ifield);
 	rval = True;
-
-      } // end if reference
-    } // end if internally defined
+	
+      } // end if internally defined
+    }
+    // else{} // ifield < -1, i.e. no VP available
 
     return rval;
 
