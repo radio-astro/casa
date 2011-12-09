@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = False
+debug = True
 
 
 def tflagger(vis,
@@ -113,10 +113,11 @@ def tflagger(vis,
             print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
                         type(feed),type(scan),type(antenna),type(uvrange),
                         type(timerange),type(correlation),type(intent),type(observation))
-            
+
+        # Correlation should not go in here            
         tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
                            baseline=antenna, uvrange=uvrange, time=timerange, \
-                           correlation=correlation, intent=intent, observation=str(observation))   
+                           intent=intent, observation=str(observation))   
 
         # Set constraints to some parameters
         if mode == '':
@@ -179,11 +180,10 @@ def tflagger(vis,
             casalog.post('Clip mode is active')
             
             # Replace the white spaces
-            expr = delspace(expression, '_')
-            
+            expr = delspace(expression, '_')            
             cliprange = delspace(str(clipminmax), '')
             
-            sel_pars = sel_pars+' expression='+expr+' datacolumn='+datacolumn+\
+            sel_pars = sel_pars+' expression='+str(expr)+' datacolumn='+datacolumn+\
                        ' clipminmax='+str(cliprange)+' clipoutside='+str(clipoutside)+\
                        ' channelavg='+str(channelavg)
             
@@ -216,15 +216,15 @@ def tflagger(vis,
             agent_pars['freqcutoff'] = freqcutoff
             agent_pars['timefit'] = timefit
             agent_pars['freqfit'] = freqfit
-            agent_pars['maxnpieces'] = maxnpieces
+            agent_pars['maxnpieces'] = str(maxnpieces)
             agent_pars['flagdimension'] = flagdimension
-            agent_pars['usewindowstats'] = usewindowstas
-            agent_pars['halfwin'] = halfwin
+            agent_pars['usewindowstats'] = usewindowstats
+            agent_pars['halfwin'] = str(halfwin)
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
             expr = delspace(expression, '_')
             
-            sel_pars = sel_pars+' expression=\"'+expr+'\" datacolumn='+datacolumn+\
+            sel_pars = sel_pars+' expression=\"'+str(expr)+'\" datacolumn='+datacolumn+\
                       ' timecutoff='+str(timecutoff)+' freqcutoff='+str(freqcutoff)+\
                       ' timefit='+str(timefit)+' freqfit='+str(freqfit)+' maxnpieces='+str(maxnpieces)+\
                       ' flagdimension='+str(flagdimension)+' usewindowstats='+str(usewindowstats)+\
@@ -258,14 +258,16 @@ def tflagger(vis,
             
             # Do not save flag command for this mode
             savepars = False
-#            sel_pars = sel_pars+' minrel='+str(minrel)+' maxrel='+str(maxrel)+' minabs='+str(minabs)+\
-#                       ' maxabs='+str(maxabs)+' spwchan='+str(spwchan)+' spwcorr='+str(spwcorr)
 
         # Now Parse the agent's parameters
         casalog.post('Parsing the agent\'s parameters')
         if debug:
             print agent_pars
             
+        # Due to the way the MS Selection works, the correlation
+        # selection needs to be done in here instead of in the
+        # selectdata()
+        agent_pars['correlation'] = correlation
         if (not tflocal.parseAgentParameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
@@ -296,7 +298,7 @@ def tflagger(vis,
                                     del summary_stats[x][xx]
 
         # Write the current parameters as flag commands to output
-        if savepars:
+        if savepars:            
             ncmd = writeCMD(vis, sel_pars, flag, outfile)
             
         
@@ -347,17 +349,17 @@ def writeCMD(msfile, selpars, flag, outfile):
 #    nkeys = keylist.__len__()
 #    if nkeys > 0:
     # Extract flags from dictionary into list
-    tim_list = []
-    intv_list = []
-    reas_list = []
+    tim_list = [0]
+    intv_list = [0]
+    reas_list = ['']
     if flag:
         type = 'FLAG'
     else:
         type = 'UNFLAG'
         
     typ_list = [type]
-    sev_list = []
-    lev_list = []
+    sev_list = [0]
+    lev_list = [0]
     app_list = [True]
 #        for key in keylist:
 #            tim_list.append(myflags[key]['time'])
@@ -419,19 +421,19 @@ def writeCMD(msfile, selpars, flag, outfile):
         
     tb.addrows(nadd)
     # now fill them in
-#    tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
-#    tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
-#              nrow=nadd)
-#    tb.putcol('REASON', pl.array(reas_list), startrow=nrows,
-#              nrow=nadd)
+    tb.putcol('TIME', pl.array(tim_list), startrow=nrows, nrow=nadd)
+    tb.putcol('INTERVAL', pl.array(intv_list), startrow=nrows,
+              nrow=nadd)
+    tb.putcol('REASON', pl.array(reas_list), startrow=nrows,
+              nrow=nadd)
     tb.putcol('COMMAND', pl.array(cmdline), startrow=nrows,
               nrow=nadd)
     # Other columns
     tb.putcol('TYPE', pl.array(typ_list), startrow=nrows, nrow=nadd)
-#    tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
-#              nrow=nadd)
-#    tb.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
-#              nrow=nadd)
+    tb.putcol('SEVERITY', pl.array(sev_list), startrow=nrows,
+              nrow=nadd)
+    tb.putcol('LEVEL', pl.array(lev_list), startrow=nrows,
+              nrow=nadd)
     tb.putcol('APPLIED', pl.array(app_list), startrow=nrows,
               nrow=nadd)
     tb.close()
@@ -527,6 +529,16 @@ def backupFlags(tflocal, mode):
 
     return
 
+def createstr(selpars):
+    '''Get a string par=value. If value is empty, return
+       accumulated string with only par that has non-empty value'''
+    
+    print selpars
+    
+    # walk through string and get the value after =
+    # if value is empty, get next
+    
+    return strpar
 
 def delspace(word, replace):
     '''Replace the white space of a string'''
