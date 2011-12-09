@@ -76,11 +76,11 @@
 	    <description>A matplotlib plot symbol code</description>
 	    <value>,</value>
           </param>
-	  <param type="bool" name="include0amp" subparam="False">
+	  <param type="bool" name="include0amp" subparam="True">
 	    <description>Force the amplitude axis to start at 0?</description>
 	    <value>False</value>
 	  </param>
-	  <param type="bool" name="include0bl" subparam="False">
+	  <param type="bool" name="include0bl" subparam="True">
 	    <description>Force the baseline axis to start at 0?</description>
 	    <value>False</value>
 	  </param>
