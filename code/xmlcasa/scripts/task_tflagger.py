@@ -280,6 +280,19 @@ def tflagger(vis,
         casalog.post('Running the tflagger tool')
         summary_stats = tflocal.run()
 
+        # Write the current parameters as flag commands to output
+        if savepars:            
+            ncmd = writeCMD(vis, sel_pars, flag, outfile)
+            
+        
+        # Backup the existing flags before applying new ones
+        if flagbackup and writeflags:
+            casalog.post('Backup original flags before applying new flags')
+            backupFlags(tflocal, mode)
+        
+        # Destroy the tool
+        tflocal.done()
+
         if mode == 'summary':
             #filter out baselines/antennas/fields/spws/...
             #which do not fall within limits
@@ -296,19 +309,6 @@ def tflagger(vis,
                                flagged['flagged'] * 1.0 / flagged['total'] < minrel or \
                                flagged['flagged'] * 1.0 / flagged['total'] > maxrel:
                                     del summary_stats[x][xx]
-
-        # Write the current parameters as flag commands to output
-        if savepars:            
-            ncmd = writeCMD(vis, sel_pars, flag, outfile)
-            
-        
-        # Backup the existing flags before applying new ones
-        if flagbackup and writeflags:
-            casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode)
-        
-        # Destroy the tool
-        tflocal.done()
         
         return summary_stats
     
