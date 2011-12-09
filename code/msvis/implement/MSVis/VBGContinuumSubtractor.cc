@@ -45,7 +45,6 @@ VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
   GroupWriteToNewMS(outms),
   fitorder_p(fitorder),
   datacol_p(datacol),
-  fitspw_p(fitspw),
   outspw_p(outspw)
 {
   outvi_p = VisibilityIterator(outms, invi.getSortColumns(),
@@ -116,12 +115,19 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
   for(uInt bufnum = 0; bufnum < nvbs; ++bufnum){
     if(otherToData)
       vbg(bufnum).visCube() = vbg(bufnum).dataCube(datacol_p);
-    if(vbg(bufnum).numberAnt() > maxAnt)
-      maxAnt = vbg(bufnum).numberAnt();
-    if(vbg(bufnum).fieldId() > maxFld)
+    
+    if(vbg(bufnum).numberAnt() > maxAnt)        // Record maxAnt and maxFld
+      maxAnt = vbg(bufnum).numberAnt();         // even for buffers that won't
+    if(vbg(bufnum).fieldId() > maxFld)          // be used in the fit.
       maxFld = vbg(bufnum).fieldId();
-    if(vbg(bufnum).spectralWindow() > maxSpw)
-      maxSpw = vbg(bufnum).spectralWindow();
+
+    Int spw = vbg(bufnum).spectralWindow();
+    if(fitmask_p.count(spw) > 0){               // This requires fitspw to
+                                                // follow the '' = nothing,
+                                                // '*' = everything convention.
+      if(spw > maxSpw)
+        maxSpw = vbg(bufnum).spectralWindow();
+    }
   }
 
   // Find the continuum
@@ -134,7 +140,8 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
                                       // it comes to MODEL_DATA.
 
   for(uInt bufnum = 0; bufnum < nvbs; ++bufnum)
-    vbga.accumulate(vbg(bufnum));
+    if(fitmask_p.count(vbg(bufnum).spectralWindow()) > 0)
+      vbga.accumulate(vbg(bufnum));
 
   // Select the fit channels after loading the VBs into vbga, so the VBs in vbg
   // are unaffected.
@@ -185,8 +192,12 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
 
     outvi_p.setVis(vbg(bufnum).visCube(), VisibilityIterator::Observed);
 
-    if(outvi_p.more())
-      ++outvi_p;
+    if(vbg.chunkEnd(bufnum))
+      if(outvi_p.moreChunks())
+        outvi_p.nextChunk();
+    else
+      if(outvi_p.more())
+        ++outvi_p;
   }
   if(outvi_p.moreChunks())
     outvi_p.nextChunk();

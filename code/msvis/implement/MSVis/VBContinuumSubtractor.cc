@@ -218,10 +218,10 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
 
       for(Int ibuf = 0; ibuf < vbga.nBuf(); ++ibuf){
         VisBuffer& vb(vbga(ibuf));
+        uInt nchan = vb.nChannel();
         //Int vbrow = vbga.outToInRow(ibuf, False)[blind];
 
         if(!vb.flagRow()[blind]){
-          uInt nchan = vb.nChannel();
           Cube<Complex>& viscube(vb.dataCube(whichcol));
           Float w;
 
@@ -268,6 +268,8 @@ void VBContinuumSubtractor::fit(VisBuffGroupAcc& vbga, const Int fitorder,
             ++totchan;
           }
         }
+        else
+          totchan += nchan;
       }
 
       if(totunflaggedchan > 0){                 // OK, try a fit.

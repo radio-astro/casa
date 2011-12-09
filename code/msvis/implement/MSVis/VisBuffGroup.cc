@@ -35,6 +35,7 @@ VisBuffGroup::VisBuffGroup() :
     nBuf_p(0),
     VB_p()
 {
+  endChunk_p.resize(0);
 }
 
 VisBuffGroup::~VisBuffGroup()
@@ -61,7 +62,9 @@ Bool VisBuffGroup::store(const VisBuffer& vb)
   
   try{
     VB_p.resize(nBuf_p + 1, False, True); // n, forceSmaller, copyElements
+    endChunk_p.resize(nBuf_p + 1, True);   // n, copyElements
     VB_p[ibuf] = new VisBuffer(vb);  // The copy is detached from the VisIter.
+    endChunk_p[ibuf] = False;           // until notified otherwise.
     ++nBuf_p;
     retval = True;
   }
@@ -76,6 +79,11 @@ Bool VisBuffGroup::store(const VisBuffer& vb)
        << LogIO::POST;
   }
   return retval;
+}
+
+void VisBuffGroup::endChunk()
+{
+  endChunk_p[nBuf_p - 1] = True;
 }
 
 VisBuffer& VisBuffGroup::operator()(const Int buf) 

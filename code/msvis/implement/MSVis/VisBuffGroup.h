@@ -29,6 +29,7 @@
 
 #include <casa/aips.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <casa/Arrays/Vector.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -90,6 +91,16 @@ public:
   // Add a VisBuffer.  Returns True on success and False on failure.
   Bool store(const VisBuffer& vb);
 
+  // Record the end of a chunk.
+  // Doing so marks that if "playing back" a VisIter vi matching the order that
+  // the VBs were stored in, vi.nextChunk() will be needed at this point
+  // instead of ++vi.
+  void endChunk();
+
+  // (See endChunk())  Returns whether or not vi.nextChunk() should be used
+  // when advancing past buffer number buf.
+  Bool chunkEnd(const Int buf) const {return endChunk_p[buf];}
+
   // Replace the VisBuffer in slot buf with vb.
   // Returns True on success and False on failure.
   // Bool replace(const VisBuffer& vb, const uInt buf);
@@ -130,6 +141,8 @@ private:
   // The list of buffers.
   PtrBlock<VisBuffer*> VB_p;
   
+  Vector<Bool> endChunk_p;
+
   // // Map spw,fld to the buffer id
   // Matrix<Int> spwfldids_p;
 };

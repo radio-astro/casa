@@ -84,6 +84,7 @@ Bool ROGroupProcessor::go()
         //     << "         " << vb.spectralWindow() << endl;
         vbg.store(vb);
       }
+      vbg.endChunk();                   // Record the end of a chunk.
       inrowsdone += vi_p.nRowChunk();
     }
     if(!gw_p->process(vbg))
