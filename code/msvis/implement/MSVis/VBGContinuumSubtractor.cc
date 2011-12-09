@@ -101,10 +101,10 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
 {
   Bool worked = true;
   uInt nvbs = vbg.nBuf();
-  uInt maxAnt = 0;
-  uInt maxSpw = 0;  // VisBuffGroupAcc is 1 of those things that uses SpW when
+  Int maxAnt = 0;
+  Int maxSpw = 0;   // VisBuffGroupAcc is 1 of those things that uses SpW when
                     // it should use DDID.
-  uInt maxFld = 0;
+  Int maxFld = 0;
 
   // Dagnabbit, VisBuffGroupAcc accumulates DATA and MODEL_DATA (even if it
   // isn't there, apparently), but not CORRECTED_DATA or FLOAT_DATA.
@@ -192,6 +192,9 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
 
     outvi_p.setVis(vbg(bufnum).visCube(), VisibilityIterator::Observed);
 
+    Vector<uInt> outrowids = outvi_p.getRowIds();
+    cerr << "out row IDs: " << outrowids[0] << " - " << outrowids[outrowids.nelements() - 1] << endl;
+
     if(vbg.chunkEnd(bufnum))
       if(outvi_p.moreChunks())
         outvi_p.nextChunk();
@@ -199,7 +202,7 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
       if(outvi_p.more())
         ++outvi_p;
   }
-  if(outvi_p.moreChunks())
+  if(nvbs > 0 && !vbg.chunkEnd(nvbs - 1) && outvi_p.moreChunks())
     outvi_p.nextChunk();
   
   return worked;

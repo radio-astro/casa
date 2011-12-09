@@ -1248,6 +1248,13 @@ ROVisibilityIterator::rowIds (Vector<uInt>& rowids) const
     return readImpl_p->rowIds (rowids);
 }
 
+Vector<uInt>
+ROVisibilityIterator::getRowIds() const
+{
+    CheckImplementationPointerR();
+    return readImpl_p->getRowIds();
+}
+
 Vector<Int>&
 ROVisibilityIterator::scan (Vector<Int>& scans) const
 {
