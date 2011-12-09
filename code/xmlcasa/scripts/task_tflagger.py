@@ -3,7 +3,7 @@ import time
 import os
 import sys
 
-debug = True
+debug = False
 
 
 def tflagger(vis,
