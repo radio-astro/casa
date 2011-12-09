@@ -55,6 +55,7 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/GenSort.h>
+#include <ms/MeasurementSets/MSColumns.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   //----------------------------------------------------------------------------
@@ -852,6 +853,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
       return chanIDList.copy();
+    }
+  //----------------------------------------------------------------------------
+  // This function also optionally sorts the matrix of SPWIDs and
+  // associated channel selection indices in ascending order of
+  // SPWIDs.
+  //
+  Matrix<Double> MSSelection::getChanFreqList(const MeasurementSet* ms, 
+					      const Bool sorted) 
+    {
+      if (chanIDs_p.nelements() == 0) getTEN(ms); 
+      Matrix<Int> chanList_l = getChanList(ms, 1, sorted);
+      Matrix<Double> freqList_l;
+      freqList_l.resize(chanList_l.shape());
+
+      const ROMSSpWindowColumns msSpwSubTable(ms_p->spectralWindow());
+
+      IPosition row(1,0);
+      for (uInt i=0; i < chanList_l.shape()(0); i++)
+	{
+	  row(0) = i;
+	  Array<Double> chanFreq(msSpwSubTable.chanFreq()(i));
+	  Double avgChanWidth = sum(msSpwSubTable.chanWidth()(i))/msSpwSubTable.chanWidth()(i).nelements();
+
+	  freqList_l(i,0) = (Double)chanList_l(i,0);
+	  freqList_l(i,1) = chanFreq(IPosition(1,chanList_l(i,1)));
+	  freqList_l(i,2) = chanFreq(IPosition(1,chanList_l(i,2)));
+	  freqList_l(i,3) = avgChanWidth;
+	}
+
+      return freqList_l.copy();
     }
   //----------------------------------------------------------------------------
 

@@ -282,6 +282,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    const Int defaultStep=1,
 			    const Bool sorted=False);
 
+    //
+    // Same as getChanList, except that the channels and steps are in Hz.
+    //    
+    Matrix<Double> getChanFreqList(const MeasurementSet* ms=NULL, 
+				   const Bool sorted=False);
+
     // Accessor for the list of the selected Data Description IDs.
     inline Vector<Int> getDDIDList(const MeasurementSet* ms=NULL) 
     {if (ddIDs_p.nelements() <= 0) getTEN(ms); return ddIDs_p.copy();}
