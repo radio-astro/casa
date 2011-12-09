@@ -60,7 +60,7 @@ class vpmanager_test(unittest.TestCase):
                          antennatype = 'DV',
                          obsdirection = 'AZEL 30deg 60deg')
         
-        self.assertTrue(myrec['name']=='BEAMCALC' and myrec['telescope']=='ALMA')
+        self.assertTrue(myrec['name']=='IMAGE' and myrec['telescope']=='ALMA')
 
     def test4(self):
         '''Test 4: numvps for VLA'''
@@ -134,6 +134,7 @@ class vpmanager_test(unittest.TestCase):
         '''Test 9: define reference to antresp table for ALMA, then use it'''
         
         vp.reset()
+        os.system('rm -rf BeamCalcTmpImage_*')
         vp.setpbantresptable(telescope='ALMA',
                              antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses',
                              dopb=True)
@@ -143,7 +144,7 @@ class vpmanager_test(unittest.TestCase):
                          antennatype = 'DV',
                          obsdirection = 'AZEL 30deg 60deg')
         
-        self.assertTrue(myrec['name']=='BEAMCALC' and myrec['telescope']=='ALMA')
+        self.assertTrue(myrec['name']=='IMAGE' and myrec['telescope']=='ALMA')
 
     def test10(self):
         '''Test 10: createantresp Default values'''

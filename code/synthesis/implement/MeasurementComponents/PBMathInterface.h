@@ -124,11 +124,11 @@ public:
   // COMMPNPB is not really a PB Class, but is here for consistency with
   // glish code in vpmanager
   enum PBClass{NONE, COMMONPB, AIRY, GAUSS, POLY, IPOLY, COSPOLY,
-	       NUMERIC, IMAGE, ZERNIKE, REFERENCE, BEAMCALC};
+	       NUMERIC, IMAGE, ZERNIKE};
 
   // Number of different classes in PBClass enumeration
   enum {
-    NumberOfPBClasses=12
+    NumberOfPBClasses=10
   };
 
   // Useful constructor

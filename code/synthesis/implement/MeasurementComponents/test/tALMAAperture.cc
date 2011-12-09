@@ -97,8 +97,9 @@ int main()
 					 xform,                              
 					 63.5, 63.5);  
 
-      Vector<String> units(2); units = "deg";                       
-      dirCoords.setWorldAxisUnits(units);                               
+      Vector<String> units(2); 
+      //units = "deg";                       
+      //dirCoords.setWorldAxisUnits(units);                               
       
 
       // StokesCoordinate
@@ -124,10 +125,10 @@ int main()
       
       // SpectralCoordinate 3
       SpectralCoordinate spectralCoords3(MFrequency::TOPO,           
-					 43 * 1.0E+9,                 
+					 100. * 1.0E+9,                 
 					 20 * 1.0E+3,                   
 					 0,                             
-					 43 * 1.0E+9);          
+					 100. * 1.0E+9);          
       units.resize(1);
       units = "Hz";
       spectralCoords3.setWorldAxisUnits(units);

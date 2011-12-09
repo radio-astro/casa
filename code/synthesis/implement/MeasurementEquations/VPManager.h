@@ -29,7 +29,6 @@
 
 #include <images/Images/AntennaResponses.h>
 
-
 namespace casa {
   //Forward declarations
   class Record;
