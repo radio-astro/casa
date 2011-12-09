@@ -276,7 +276,7 @@ tfcrop, extendflags, unflag, summary)</description>
             </param>
 
             <param type="bool" name="savepars">
-                <description>Save the current parameters to an output</description>
+                <description>Save the current parameters to the MS or to an output</description>
                 <value>False</value>
             </param>
 
@@ -372,10 +372,10 @@ tfcrop, extendflags, unflag, summary)</description>
                </when>
 
                <when param="savepars">
+                <equals type="bool" value="False" />
                  <equals type="bool" value="True">
                     <default param="outfile"><value type="string"></value></default>
                 </equals>
-                <equals type="bool" value="False" />
                </when>
 
              </constraints>
