@@ -232,25 +232,36 @@ PBMath::PBMath(const RecordInterface& rec)
 					BeamSquint(squintdir, squintreffreq),
 					usesymmetricbeam);
   } else if (name == "IMAGE") {
-
-    String realImageName, imagImageName;
-    realImageName=rec.asString(rec.fieldNumber("realimage"));
-    imagImageName=rec.asString(rec.fieldNumber("imagimage"));
-
-    PagedImage<Float> realImage(realImageName);
-    if(Table::isReadable(imagImageName)) {
-      PagedImage<Float> imagImage(imagImageName);
-      pb_pointer_p = new PBMath2DImage(realImage, imagImage);
+    if(rec.isDefined("compleximage")){
+      String complexIm;
+      rec.get("compleximage", complexIm);
+      if(Table::isReadable(complexIm)) {
+	PagedImage<Complex> cim(complexIm);
+	pb_pointer_p=new  PBMath2DImage(cim);
+      }
+      else{
+	throw(AipsError("Complex Image "+ complexIm + " is not readable"));
+      }
     }
-    else {
-      if(!Table::isReadable(imagImageName)) {
-	pb_pointer_p = new PBMath2DImage(realImage);
+    else{
+      String realImageName, imagImageName;
+      realImageName=rec.asString(rec.fieldNumber("realimage"));
+      imagImageName=rec.asString(rec.fieldNumber("imagimage"));
+      
+      PagedImage<Float> realImage(realImageName);
+      if(Table::isReadable(imagImageName)) {
+	PagedImage<Float> imagImage(imagImageName);
+	pb_pointer_p = new PBMath2DImage(realImage, imagImage);
       }
       else {
-	throw(AipsError("Image "+ realImageName + " is not readable or does not exist"));
+	if(!Table::isReadable(imagImageName)) {
+	  pb_pointer_p = new PBMath2DImage(realImage);
+	}
+	else {
+	  throw(AipsError("Image "+ realImageName + " is not readable or does not exist"));
+	}
       }
     }
-
   } else 
     throw AipsError("Unrecognized PB name: " + name);
 };

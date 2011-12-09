@@ -538,6 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     const Bool dopb, 
 			     const String& realimage, 
 			     const String& imagimage,
+			     const String& compleximage,
 			     Record& rec){
     rec=Record();
     rec.define("name", "IMAGE");
@@ -550,9 +551,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     rec.define("dopb", dopb);
     rec.define("isthisvp", False);
-    rec.define("realimage", realimage);
-    rec.define("imagimage", imagimage);
-
+    if(compleximage==""){
+      rec.define("realimage", realimage);
+      rec.define("imagimage", imagimage);
+    }
+    else{
+      if(Table::isReadable(compleximage)){
+	rec.define("compleximage", compleximage);
+      }
+      else{
+	throw(AipsError("Complex image"+compleximage+" is not readable"));
+      }
+    }
     if(dopb){
       vplistdefaults_p.define(rec.asString(rec.fieldNumber("telescope")), vplist_p.nfields());
     } 

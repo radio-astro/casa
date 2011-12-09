@@ -629,7 +629,12 @@ in the sequence RR, RL, LR, LL or XX, XY, YX, YY.
 \item[Frequency] Only one channel is currently needed - frequency 
 dependence beyond that is ignored. 
 \end{description}
-One or two images may be specified - the real (must be present) and
+
+If a compleximage is specified the real and imaginary images is to be left empty.
+
+The other option is to provide the real and imaginary part of the E-Jones as seperale {\tt float} images
+On that case
+one or two images may be specified - the real (must be present) and
 imaginary parts (optional). 
 
 Note that beamsquint must be intrinsic to the images themselves.
@@ -663,6 +668,12 @@ from Az-El to Ra-Dec according to the parallactic angle.
      <description>Imaginary part of vp as an image</description>
      <value></value>
      </param>
+     
+     <param type="string" name="compleximage">
+     <description>complex vp as an image of complex numbers; if specified realimage and imagimage are ignored </description>
+     <value></value>
+     </param>
+
 </input>
 <returns type="any"><any type="record"/>itemcontainer</returns>
 </method>
