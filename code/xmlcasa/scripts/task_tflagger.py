@@ -110,9 +110,14 @@ def tflagger(vis,
 
         # Select the data 
         if (debug):
-            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
-                        type(feed),type(scan),type(antenna),type(uvrange),
-                        type(timerange),type(correlation),type(intent),type(observation))
+#            print 'selection is: %s %s %s %s %s %s %s %s %s %s %s'%(type(field),type(spw),type(array),
+#                        type(feed),type(scan),type(antenna),type(uvrange),
+#                        type(timerange),type(correlation),type(intent),type(observation))
+
+            print 'selection is: field=%s spw=%s array=%s feed=%s scan=%s antenna=%s uvrange=%s' \
+                        'timerange=%s correlation=%s intent=%s observation=%s'%(field,spw,array,
+                        feed,scan,antenna,uvrange,
+                        timerange,correlation,intent,observation)
 
         # Correlation should not go in here            
         tflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
@@ -133,7 +138,7 @@ def tflagger(vis,
             casalog.post('Parameter writeflags will be reset to False to run together with mode=%s'%mode, 'WARN')
             writeflags = False
                         
-        # Create a list of the selection parameters for saving later
+        # Create a list of the selection parameters to save later
         sel_pars = ''
         sel_pars = 'field='+field+' spw='+spw+' array='+array+' feed='+feed+' scan='+scan+\
                     ' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
@@ -174,9 +179,14 @@ def tflagger(vis,
         elif mode == 'clip':
             agent_pars['expression'] = expression
             agent_pars['datacolumn'] = datacolumn
-            agent_pars['clipminmax'] = clipminmax
             agent_pars['clipoutside'] = clipoutside
             agent_pars['channelavg'] = channelavg
+            
+            # If clipminmax = [], do not write it in the dictionary.
+            # It will be handled by the framework
+            if clipminmax != []:                            
+                agent_pars['clipminmax'] = clipminmax
+                
             casalog.post('Clip mode is active')
             
             # Replace the white spaces
@@ -533,7 +543,6 @@ def createstr(selpars):
     '''Get a string par=value. If value is empty, return
        accumulated string with only par that has non-empty value'''
     
-    print selpars
     
     # walk through string and get the value after =
     # if value is empty, get next
