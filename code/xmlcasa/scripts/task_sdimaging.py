@@ -17,10 +17,13 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
             if os.path.isdir(infile):
                 tb.open(infile)
                 tbkeys=tb.getkeywords()
-                ftab=tbkeys['FIELD'].split()[-1]
-                spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
+                #ftab=tbkeys['FIELD'].split()[-1]
+                ftab=tbkeys['FIELD'].lstrip('Table: ')
+                #spwtab=tbkeys['SPECTRAL_WINDOW'].split()[-1]
+                spwtab=tbkeys['SPECTRAL_WINDOW'].lstrip('Table: ')
                 if tbkeys.has_key('SOURCE'):
-                    srctab=tbkeys['SOURCE'].split()[-1]
+                    #srctab=tbkeys['SOURCE'].split()[-1]
+                    srctab=tbkeys['SOURCE'].lstrip('Table: ')
                 else:
                     srctab = ''
                 tb.close()
