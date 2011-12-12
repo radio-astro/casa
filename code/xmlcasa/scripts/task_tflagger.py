@@ -70,15 +70,13 @@ def tflagger(vis,
     # Configure the TestFlagger tool -> ::open()
     # Parse the union to the data selection -> ::selectdata()
     # Read the mode and specific parameters.
-    # Parse the agent's parameters -> setupAgent() -> ::parseAgentParameters()
+    # Parse the agent's parameters -> ::parseAgentParameters()
     # Initialize the FlagDataHandler and the agents -> ::init()
     # Run the tool
     # Delete the tool
                         
     # TODO:
-    # * move correlation to agent's parameters
-    # * implement saving parameters in FLAG_CMD
-    # Do we want to save the flag commands by default in the FLAG_CMD table?
+    # Implement the new summary schema
     
     
     #
@@ -271,13 +269,13 @@ def tflagger(vis,
 
         # Now Parse the agent's parameters
         casalog.post('Parsing the agent\'s parameters')
-        if debug:
-            print agent_pars
-            
         # Due to the way the MS Selection works, the correlation
         # selection needs to be done in here instead of in the
         # selectdata()
         agent_pars['correlation'] = correlation
+        if debug:
+            print agent_pars
+            
         if (not tflocal.parseAgentParameters(agent_pars)):
             casalog.post('Failed to parse parameters of agent %s' %mode, 'ERROR')
         
@@ -290,15 +288,18 @@ def tflagger(vis,
         casalog.post('Running the tflagger tool')
         summary_stats = tflocal.run()
 
+        # Purge the empty parameters from the selection string
+        flagcmd = getLinePars(sel_pars) 
+
         # Write the current parameters as flag commands to output
-        if savepars:            
-            ncmd = writeCMD(vis, sel_pars, flag, outfile)
+        if savepars:         
+            ncmd = writeCMD(vis, flagcmd, flag, outfile)
             
         
         # Backup the existing flags before applying new ones
         if flagbackup and writeflags:
             casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode)
+            backupFlags(tflocal, mode, flagcmd)
         
         # Destroy the tool
         tflocal.done()
@@ -340,7 +341,7 @@ def tflagger(vis,
 
 
 #def writeCMD(vis, myflags, tag=''):
-def writeCMD(msfile, selpars, flag, outfile):
+def writeCMD(msfile, flagcmd, flag, outfile):
     # Reads a list of parameters and save it on the FLAG_CMD table or on a text file    
     # When saving in the FLAG_CMD table it will also update the APPLIED column to True
     # Returns the number of flag commands written (it's always one!!!)
@@ -353,12 +354,9 @@ def writeCMD(msfile, selpars, flag, outfile):
     except ImportError, e:
         print 'failed to load pylab:\n', e
         exit(1)
-    #
-    # Append new commands to existing table
-#    keylist = myflags.keys()
-#    nkeys = keylist.__len__()
-#    if nkeys > 0:
-    # Extract flags from dictionary into list
+
+    # Create lists for each column in the FLAG_CMD table
+    # TODO: How about the TIME column? How to calculate it?
     tim_list = [0]
     intv_list = [0]
     reas_list = ['']
@@ -371,32 +369,11 @@ def writeCMD(msfile, selpars, flag, outfile):
     sev_list = [0]
     lev_list = [0]
     app_list = [True]
-#        for key in keylist:
-#            tim_list.append(myflags[key]['time'])
-#            intv_list.append(myflags[key]['interval'])
-#            reas_list.append(myflags[key]['reason'])
-#            cmd_list.append(myflags[key]['cmd'])
-#        #
-#            typ_list.append(myflags[key]['type'])
-#            sev_list.append(myflags[key]['severity'])
-#            lev_list.append(myflags[key]['level'])
-#            if tag == 'applied':
-#                appl = True
-#            elif tag == 'unapplied':
-#                appl = False
-#            else:
-#                appl = myflags[key]['applied']
-#            app_list.append(appl)
-#
-        
-    # Remove empty parameters from string
-    if (debug):
-        print selpars
-        
-    cmdline = getLinePars(selpars)
+       
     
     if debug:
-        print cmdline
+        casalog.post("Flag command to save is %s"%flagcmd)
+
 
     # Save to a text file
     if outfile != '':
@@ -407,7 +384,7 @@ def writeCMD(msfile, selpars, flag, outfile):
                 + outfile
         try:
             casalog.post('Will save the current parameters to '+outfile)
-            print >> ffout, '%s' % cmdline
+            print >> ffout, '%s' % flagcmd
         except:
             raise Exception, 'Error writing parameters to file ' \
                 + outfile
@@ -415,6 +392,8 @@ def writeCMD(msfile, selpars, flag, outfile):
         return
     
     # Save to the FLAG_CMD table    
+    cmdline = []
+    cmdline.append(flagcmd)
     nadd = cmdline.__len__()
     mstable = msfile + '/FLAG_CMD'
     try:
@@ -493,12 +472,10 @@ def getLinePars(cmdline):
     else:
         casalog.post('String of parameters is empty','WARN')   
          
-    if (debug):
-        casalog.post("Flag command to save is %s"%[newstr])
     
-    return [newstr]
+    return newstr
 
-def backupFlags(tflocal, mode):
+def backupFlags(tflocal, mode, flagcmd):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
@@ -532,7 +509,13 @@ def backupFlags(tflocal, mode):
     if debug:
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-    # Save current flags with a new name
+    # Send new name and flagcmd to be saved
+    # The flagcmd is the string in save_pars without the empty parameters
+    # Save current flags with a new name. Define the following new method!!!
+#    tflocal.saveflags(versionname=versionname,
+#                      comment='flagdata autosave before ' + mode + ' on ' + time_string,
+#                      merge='replace',flagcmd)
+                      
     tflocal.saveflagversion(versionname=versionname,
                            comment='flagdata autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
