@@ -128,7 +128,6 @@ def simobserve(
         ##################################################################
         # set up skymodel image
 
-
         if os.path.exists(skymodel):
             components_only = False
             # create a new skymodel called skymodel, or if its already there, called newmodel
@@ -346,10 +345,6 @@ def simobserve(
                 maxbase = 0.
             
 
-
-
-
-
         # now we have an estimate of the psf from the antenna configuration, 
         # so we can guess a model_cell for the case of component-only 
         # simulation, 
@@ -368,6 +363,7 @@ def simobserve(
             needmodel=True
 
             modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
+            modimsize=max([modimsize,32])
             newepoch,newlat,newlon = util.direction_splitter(model_refdir)
             
             if os.path.exists(newmodel):
@@ -717,6 +713,7 @@ def simobserve(
                         util.msg("measurement set "+msfile+" already exists and user does not wish to overwrite",priority="error")
                         return False                
                 sm.open(msfile)
+                sm.setlimits(shadowlimit=0.99) # all of dish area
                 posobs = me.observatory(telescopename)
                 diam = stnd;
                 # WARNING: sm.setspwindow is not consistent with clean::center
@@ -1070,7 +1067,7 @@ def simobserve(
                     # show dirty beam from observed uv coverage
                     util.nextfig()
                     im.open(msfile)  
-                    # TODO spectral parms                    
+                    # TODO spectral parms
                     msg("using default model cell "+qa.tos(model_cell[0])+" for PSF calculation",priority="warn")
                     im.defineimage(cellx=qa.tos(model_cell[0]),nx=int(max([minimsize,128])))
                     if os.path.exists(fileroot+"/"+project+".quick.psf"):

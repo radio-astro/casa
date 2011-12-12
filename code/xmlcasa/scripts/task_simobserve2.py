@@ -361,6 +361,7 @@ def simobserve2(
             needmodel=True
 
             modimsize=int((qa.convert(model_size[0],"arcsec")['value'])/(qa.convert(model_cell[0],"arcsec")['value']))
+            modimsize=max([modimsize,32])
             newepoch,newlat,newlon = util.direction_splitter(model_refdir)
             
             if os.path.exists(newmodel):
