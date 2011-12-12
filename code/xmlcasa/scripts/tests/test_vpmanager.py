@@ -146,20 +146,88 @@ class vpmanager_test(unittest.TestCase):
         
         self.assertTrue(myrec['name']=='IMAGE' and myrec['telescope']=='ALMA')
 
+
     def test10(self):
-        '''Test 10: createantresp Default values'''
+        '''Test 10: define Airy beams for ALMA antenna types, then use them'''
+        
+        vp.reset()
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='11m',
+                     blockagediam='0.75m',
+                     maxrad='1.784deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+        myid1 = vp.getuserdefault('ALMA')
+        
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='12m',
+                     blockagediam='1.0m',
+                     maxrad='1.784deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+
+        myid2 = vp.getuserdefault('ALMA')
+
+        vp.setpbairy(telescope='ALMA',
+                     dishdiam='6m',
+                     blockagediam='0.75m',
+                     maxrad='3.5deg',
+                     reffreq='1.0GHz',
+                     dopb=True)
+
+        myid3 = vp.getuserdefault('ALMA')
+
+
+        vp.setuserdefault(myid1, 'ALMA', 'DV')
+        vp.setuserdefault(myid1, 'ALMA', 'DA')
+        vp.setuserdefault(myid2, 'ALMA', 'PM')
+        vp.setuserdefault(myid3, 'ALMA', 'CM')
+        
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'DV',
+                         obsdirection = 'AZEL 30deg 60deg')
+        tdvok = (myrec['name']=='AIRY' and myrec['dishdiam']['value']==11)
+        
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'DA',
+                         obsdirection = 'AZEL 30deg 60deg')
+        tdaok = (myrec['name']=='AIRY' and myrec['dishdiam']['value']==11)
+        
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'PM',
+                         obsdirection = 'AZEL 30deg 60deg')
+        tpmok = (myrec['name']=='AIRY' and myrec['dishdiam']['value']==12)
+        
+        myrec = vp.getvp(telescope='ALMA',
+                         obstime = '2009/07/24/10:00:00',
+                         freq = 'TOPO 100GHz',
+                         antennatype = 'CM',
+                         obsdirection = 'AZEL 30deg 60deg')
+        tcmok = (myrec['name']=='AIRY' and myrec['dishdiam']['value']==6)
+
+        self.assertTrue(tdvok and tdaok and tpmok and tcmok)
+
+
+    def test11(self):
+        '''Test 11: EXPECTED ERROR createantresp Default values'''
         self.res = vp.createantresp()
         self.assertFalse(self.res)
         
         
-    def test11(self):
-        """Test 11: createantresp - no images"""
+    def test12(self):
+        """Test 12: EXPECTED ERROR createantresp - no images"""
         os.system('mkdir '+self.inputdir)
         self.res = vp.createantresp(self.inputdir, "2011-02-02-12:00", ["band1","band2","band3"], ["83GHz","110GHz","230GHz"], ["110GHz","230GHz","350GHz"])
         self.assertFalse(self.res)
 
-    def test12(self):
-        '''Test 2: createantresp - two images have faulty band def'''
+    def test13(self):
+        '''Test 13: EXPECTED ERROR createantresp - two images have faulty band def'''
         os.system('mkdir '+self.inputdir)
         os.system('touch '+self.inputdir+'/ALMA_0_DV__0._0._360._0._45._90._80._100._110._GHz_ticra2007_EFP.im')
         os.system('touch '+self.inputdir+'/ALMA_0_DV__0._0._360._0._45._90._110._200._230._GHz_ticra2007_EFP.im')
@@ -170,8 +238,8 @@ class vpmanager_test(unittest.TestCase):
         self.res = vp.createantresp(self.inputdir, "2011-02-02-12:00", ["band1","band2","band3"], ["83GHz","110GHz","230GHz"], ["110GHz","230GHz","350GHz"])
         self.assertFalse(self.res)
         
-    def test13(self):
-        '''Test 3: createantresp - good input: six images, two antenna types'''
+    def test14(self):
+        '''Test 14: createantresp - good input: six images, two antenna types'''
         os.system('mkdir '+self.inputdir)
         os.system('touch '+self.inputdir+'/ALMA_0_DV__0._0._360._0._45._90._80._100._110._GHz_ticra2007_EFP.im')
         os.system('touch '+self.inputdir+'/ALMA_0_DV__0._0._360._0._45._90._110._200._230._GHz_ticra2007_EFP.im')
@@ -188,15 +256,18 @@ class vpmanager_test(unittest.TestCase):
         self.assertTrue(tb.getcell('NUM_SUBBANDS',1)==3)
         tb.close()
 
-    def test14(self):
-        '''Test 14: get image name from non-existant observatory'''
+    def test15(self):
+        '''Test 15: EXPECTED ERROR get image name from non-existant observatory'''
         self.res = vp.getrespimagename("ALMA2","2011/01/01/10:00","100GHz","AIF","DV","0deg","0deg","",0)
         self.assertFalse(self.res)
 
-    def test15(self):
-        '''Test 15: get image name (fails if AntennaResponses table not in repository)'''
+    def test16(self):
+        '''Test 16: get image name (fails if AntennaResponses table not in repository)'''
         self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","DV","0deg","0deg","",0)
         self.assertTrue(self.res)
+
+    
+
 
 def suite():
     return [vpmanager_test]

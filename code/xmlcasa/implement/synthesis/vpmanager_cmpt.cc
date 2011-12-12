@@ -446,6 +446,80 @@ bool vpmanager::setuserdefault(const int vplistnum,
 
 }
 
+int vpmanager::getuserdefault(const std::string& telescope,
+			      const std::string& anttype)
+{
+
+  int rval = -2;
+
+  *itsLog << LogOrigin("vp", "getuserdefault");
+
+  if(!itsVPM 
+     || !itsVPM->getuserdefault(rval, telescope, anttype)){
+    throw(AipsError("Error in vp::getuserdefault()."));
+  }
+  return rval;
+
+}
+
+
+std::vector<std::string> vpmanager::getanttypes(const std::string& telescope,
+						const casac::variant& obstime, 
+						const casac::variant& freq, 
+						const casac::variant& obsdirection)
+{
+  std::vector<string> rval(0);
+  Vector<String> antTypes;
+
+  try{
+    
+    *itsLog << LogOrigin("vp", "getanttypes");
+    
+    MEpoch mObsTime;
+    MFrequency mFreq;
+    MDirection mObsDir;
+    
+    if(!casaMEpoch(obstime, mObsTime)){
+      *itsLog << LogIO::SEVERE << "Could not interprete obstime parameter "
+	      << toCasaString(obstime) << LogIO::POST;
+      return rval;
+    }
+    if(!casaMFrequency(freq, mFreq)){
+      *itsLog << LogIO::SEVERE << "Could not interprete freq parameter "
+	      << toCasaString(freq) << LogIO::POST;
+      return rval;
+    }
+    if(!casaMDirection(obsdirection, mObsDir)){
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 0deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return rval;
+      }
+    }
+
+    if(!itsVPM->getanttypes(antTypes, telescope, mObsTime, mFreq, mObsDir)){
+      *itsLog << LogIO::SEVERE << "Error determining antenna types for telescope "
+	      << telescope << LogIO::POST;
+      return rval;
+    }      
+
+  } catch(AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+  
+  for(uInt i=0; i<antTypes.size(); i++){
+    rval.push_back(antTypes(i));
+  }
+
+  return rval;
+  
+}
+  
+
 int vpmanager::numvps(const std::string& telescope,
 		      const casac::variant& obstime, 
 		      const casac::variant& freq, 
@@ -472,9 +546,14 @@ int vpmanager::numvps(const std::string& telescope,
       return rval;
     }
     if(!casaMDirection(obsdirection, mObsDir)){
-      *itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
-	      << toCasaString(obsdirection) << LogIO::POST;
-      return rval;
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 0deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return rval;
+      }
     }
 
     rval = itsVPM->numvps(telescope, mObsTime, mFreq, antennatype, mObsDir);
@@ -516,9 +595,14 @@ vpmanager::getvp(const std::string& telescope,
       return r;
     }
     if(!casaMDirection(obsdirection, mObsDir)){
-      *itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
-	      << toCasaString(obsdirection) << LogIO::POST;
-      return r;
+      if(toCasaString(obsdirection).empty()){
+	casaMDirection("AZEL 0deg 0deg", mObsDir);
+      }
+      else{
+	*itsLog << LogIO::SEVERE << "Could not interprete obsdirection parameter "
+		<< toCasaString(obsdirection) << LogIO::POST;
+	return r;
+      }
     }
 
     if(itsVPM->getvp(rec,telescope, mObsTime, mFreq, antennatype, mObsDir)){

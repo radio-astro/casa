@@ -140,6 +140,12 @@ namespace casa {
 			  const String& telescope,
 			  const String& antennatype="");
 
+      Bool getanttypes(Vector<String>& anttypes,
+		       const String& telescope,
+		       const MEpoch& obstime,
+		       const MFrequency& freq, 
+		       const MDirection& obsdirection); // default: Zenith
+			      
       // return number of voltage patterns satisfying the given constraints
       Int numvps(const String& telescope,
 		 const MEpoch& obstime,
@@ -181,6 +187,13 @@ namespace casa {
       inline String telFromAntDesc(const String& antDesc){
 	String tempstr = antDesc;
 	if(tempstr.contains(" ")) return tempstr.before(" ");
+	return tempstr;
+      };
+
+      inline String antTypeFromAntDesc(const String& antDesc){
+	String tempstr = antDesc;
+	if(tempstr.contains(" ")) return tempstr.after(" ");
+	tempstr = "";
 	return tempstr;
       };
 
