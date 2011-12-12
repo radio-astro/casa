@@ -144,7 +144,7 @@ Warning: This version is under development and is geared to handling EVLA
 specific flag and system files, and is otherwise identical to importasdm.
 				          
         HISTORY: Task created v1.0 S.T. Myers 2010-03-11 (3.0.1)
-                 Last updated v8.4 S.T. Myers 2011-03-24 (3.0.2) code+doc
+                 Last updated v8.5 S.T. Myers 2011-12-08 (3.4) code+doc
 
 Keyword arguments:
 asdm         -- Name of input SDM file (directory)
@@ -254,8 +254,8 @@ flagbackup   -- Backup original flags in &gt;ms&lt;.flagversions (default: True)
                 Import only scans 1, 2, 3, 5, 7, 9.
 
 
-HISTORY: Task last updated v8.4 S.T. Myers 2011-03-24 (3.2.0)
-         Docs last updated v8.4 S.T. Myers 2011-03-24 (3.2.0)
+HISTORY: Task last updated v8.5 S.T. Myers 2011-12-08 (3.4.0)
+         Docs last updated v8.5 S.T. Myers 2011-12-08 (3.4.0)
 
   </example>
 
