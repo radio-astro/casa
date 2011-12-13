@@ -269,16 +269,16 @@ Bool ImageFit1D<T>::converged() const {
 }
 
 template <class T>
-Bool ImageFit1D<T>::setAbcissaState (String& errMsg, ImageFit1D<T>::AbcissaType& type,
-                                     CoordinateSystem& cSys, const String& xUnit,
-                                     const String& doppler, uInt pixelAxis)
-{
-   Unit unitKMS(String("km/s"));
-//
+Bool ImageFit1D<T>::setAbcissaState (
+	String& errMsg, ImageFit1D<T>::AbcissaType& type,
+    CoordinateSystem& cSys, const String& xUnit,
+    const String& doppler, uInt pixelAxis
+) {
    if (xUnit.contains(String("pix"))) {
       type = ImageFit1D<T>::PIXEL;
       return True;
    }
+   Unit unitKMS(String("km/s"));
 
 // Is the axis Spectral ?
 
