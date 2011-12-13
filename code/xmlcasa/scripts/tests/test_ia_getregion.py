@@ -30,7 +30,7 @@
 # </author>
 #
 # <summary>
-# Test suite for the CASA tool method ia.getregion()
+# Test suite for the CASA task imcollapse
 # </summary>
 #
 # <reviewed reviwer="" date="" tests="" demos="">
@@ -38,15 +38,16 @@
 #
 # <prerequisite>
 # <ul>
+#   <li> <linkto class="task_imcollapse.py:description">imcollapse</linkto> 
 # </ul>
 # </prerequisite>
 #
 # <etymology>
-# Test for the ia.getregion() tool method
+# Test for the imcollapse task
 # </etymology>
 #
 # <synopsis>
-# Test the ia.getregion() tool method
+# Test the imcollapse task and the ia.collapse() method upon which it is built.
 # </synopsis> 
 #
 # <example>
@@ -54,12 +55,12 @@
 # This test runs as part of the CASA python unit test suite and can be run from
 # the command line via eg
 # 
-# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_ia_getregion[test1,test2,...]
+# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_imcollapse[test1,test2,...]
 #
 # </example>
 #
 # <motivation>
-# To provide a test standard for the ia.getregion() tool method to ensure
+# To provide a test standard for the imcollapse task to ensure
 # coding changes do not break the associated bits 
 # </motivation>
 #
@@ -72,7 +73,7 @@ from taskinit import *
 from __main__ import *
 import unittest
 
-class ia_getregion_test(unittest.TestCase):
+class ia_convolve2d_test(unittest.TestCase):
     
     def setUp(self):
         pass
@@ -81,7 +82,7 @@ class ia_getregion_test(unittest.TestCase):
         pass
     
     def test_stretch(self):
-        """ ia.getregion(): Test stretch parameter"""
+        """ ia.convolve2d(): Test stretch parameter"""
         yy = iatool.create()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
@@ -92,9 +93,11 @@ class ia_getregion_test(unittest.TestCase):
         yy.addnoise()
         self.assertRaises(
             Exception,
-            yy.getregion, mask=mymask + ">0", stretch=False
+            yy.convolve2d, "", [0,1], "gaussian", "4arcmin", 
+            "4arcmin", "0deg", mask=mymask + ">0", stretch=False
         )
-        zz = yy.getregion(
+        zz = yy.convolve2d(
+            "", [0,1], "gaussian", "4arcmin", "4arcmin", "0deg",
             mask=mymask + ">0", stretch=True
         )
         self.assertTrue(type(zz) == type(yy))
@@ -102,4 +105,4 @@ class ia_getregion_test(unittest.TestCase):
         zz.done()
         
 def suite():
-    return [ia_getregion_test]
+    return [ia_convolve2d_test]

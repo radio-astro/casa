@@ -1514,14 +1514,14 @@ image* image::pbcor(
 	}
 }
 
-::casac::variant*
-image::getregion(const ::casac::record& region, const std::vector<int>& axes,
-		const ::casac::variant& mask, const bool list, const bool dropdeg,
-		const bool getmask) {
+::casac::variant* image::getregion(
+	const ::casac::record& region, const std::vector<int>& axes,
+	const ::casac::variant& mask, const bool list, const bool dropdeg,
+	const bool getmask, const bool stretch
+) {
 	// Recover some pixels and their mask from a region in the image
-	::casac::variant *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "getregion");
+		*_log << LogOrigin(_class, __FUNCTION__);
 		if (detached())
 			return false;
 
@@ -1532,45 +1532,53 @@ image::getregion(const ::casac::record& region, const std::vector<int>& axes,
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
 			Mask = "";
-		} else if (mask.type() == ::casac::variant::STRING || mask.type()
-				== ::casac::variant::STRINGVEC) {
+		}
+		else if (
+			mask.type() == ::casac::variant::STRING
+			|| mask.type() == ::casac::variant::STRINGVEC
+		) {
 			Mask = mask.toString();
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN
-					<< "Only LEL string handled for mask...region is yet to come"
-					<< LogIO::POST;
+				<< "Only LEL string handled for mask...region is yet to come"
+				<< LogIO::POST;
 			Mask = "";
 		}
 		Vector<Int> iaxes(axes);
 		// if default value change it to empty vector
-		if (iaxes.size() == 1) {
-			if (iaxes[0] < 0)
-				iaxes.resize();
+		if (iaxes.size() == 1 && iaxes[0] < 0) {
+			iaxes.resize();
 		}
-		_image->getregion(pixels, pixelmask, *Region, iaxes, Mask, list,
-				dropdeg, getmask);
+		_image->getregion(
+			pixels, pixelmask, *Region, iaxes,
+			Mask, list, dropdeg, getmask, stretch
+		);
 		if (getmask) {
 			std::vector<bool> s_pixelmask;
 			std::vector<int> s_shape;
 			pixelmask.tovector(s_pixelmask);
 			pixels.shape().asVector().tovector(s_shape);
-			rstat = new ::casac::variant(s_pixelmask, s_shape);
-		} else {
+			return new ::casac::variant(s_pixelmask, s_shape);
+		}
+		else {
 			std::vector<int> s_shape;
 			pixels.shape().asVector().tovector(s_shape);
 			std::vector<double> d_pixels(pixels.nelements());
 			int i(0);
-			for (Array<Float>::iterator iter = pixels.begin(); iter
-					!= pixels.end(); iter++)
+			for (
+				Array<Float>::iterator iter = pixels.begin();
+				iter != pixels.end(); iter++
+			) {
 				d_pixels[i++] = *iter;
-			rstat = new ::casac::variant(d_pixels, s_shape);
+			}
+			return new ::casac::variant(d_pixels, s_shape);
 		}
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*

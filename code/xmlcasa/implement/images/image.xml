@@ -4623,6 +4623,11 @@ ia.close()
      <description>Get the pixel mask rather than pixel values</description>
      <value>false</value>
      </param>
+     <param type="bool" direction="in" name="stretch">
+        <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+        <value>false</value>
+     </param>
+     
 </input>
 <returns type="any"><any type="variant"/></returns>
 <description>
