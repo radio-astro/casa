@@ -68,7 +68,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_fwhmName(fwhmName), _fwhmErrName(fwhmErrName),
 	_ampName(ampName), _ampErrName(ampErrName),
 	_integralName(integralName), _integralErrName(integralErrName),
-	_multiFit(multiFit), _deleteImageOnDestruct(False),
+	_multiFit(multiFit), _deleteImageOnDestruct(False), _logResults(True),
 	_polyOrder(polyOrder), _fitAxis(axis), _ngauss(ngauss),
 	_minGoodPoints(minGoodPoints), _results(Record()),
 	_estimates(SpectralList()) {
@@ -101,7 +101,7 @@ Record ImageProfileFitter::fit() {
     	_subImage = SubImage<Float>::createSubImage(
     		*clone,
     		*(ImageRegion::tweakedRegionRecord(regionClone.get())),
-    		_getMask(), 0, False
+    		_getMask(), 0, False, AxesSpecifier(), _getStretch()
     	);
     }
 	String weightsImageName = "";
@@ -125,6 +125,7 @@ Record ImageProfileFitter::fit() {
 			_subImage = SubImage<Float>::createSubImage(
 				*x, Record(), "", _getLog().get(),
 				False, AxesSpecifier(), False
+
 			);
 			_fitters.resize(IPosition(1,1));
 			_fitters(IPosition(1, 0)) = fitter;
@@ -135,7 +136,10 @@ Record ImageProfileFitter::fit() {
 			<< LogIO::EXCEPTION;
 	}
 	_setResults();
-	*_getLog() << LogIO::NORMAL << _resultsToString() << LogIO::POST;
+    *_getLog() << logOrigin;
+    if (_logResults) {
+    	_resultsToLog();
+    }
 	return _results;
 }
 
@@ -154,7 +158,6 @@ void ImageProfileFitter::_getOutputStruct(
     	modelImage.required = True;
     	modelImage.replaceable = False;
     	outputs.push_back(modelImage);
-
     }
     if (! _residual.empty()) {
     	ImageInputProcessor::OutputStruct residImage;
@@ -220,6 +223,11 @@ void ImageProfileFitter::_setResults() {
 	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters.begin();
 	SpectralList solutions;
 	uInt count = 0;
+
+	const CoordinateSystem subimCsys = _subImage.coordinates();
+	Vector<Double> world;
+	Double increment = fabs(_fitAxisIncrement());
+
 	for (
 		inIter.reset();
 		! inIter.atEnd() && fitter != _fitters.end();
@@ -229,6 +237,7 @@ void ImageProfileFitter::_setResults() {
 		attemptedArr(idx) = fitter->getList().nelements() > 0;
 		convergedArr(idx) = attemptedArr(idx) && fitter->converged();
 		if (fitter->converged()) {
+			IPosition subimPos = inIter.position();
 			mask(idx) = anyTrue(inIter.getMask());
 			niterArr(idx) = (Int)fitter->getNumberIterations();
 			nCompArr(idx) = (Int)fitter->getList().nelements();
@@ -236,12 +245,11 @@ void ImageProfileFitter::_setResults() {
 			for (uInt i=0; i<solutions.nelements(); i++) {
 				typeMat(count, i) = SpectralElement::fromType(solutions[i].getType());
 				if (solutions[i].getType() == SpectralElement::GAUSSIAN) {
-					centerMat(count, i) = solutions[i].getCenter();
-					fwhmMat(count, i) = solutions[i].getFWHM();
-					ampMat(count, i) = solutions[i].getFWHM();
+					centerMat(count, i) = _centerWorld(solutions[i], subimPos);
+					fwhmMat(count, i) = solutions[i].getFWHM() * increment;
 					ampMat(count, i) = solutions[i].getAmpl();
-					centerErrMat(count, i) = solutions[i].getCenterErr();
-					fwhmErrMat(count, i) = solutions[i].getFWHMErr();
+					centerErrMat(count, i) = solutions[i].getCenterErr() * increment;
+					fwhmErrMat(count, i) = solutions[i].getFWHMErr() * increment;
 					ampErrMat(count, i) = solutions[i].getAmplErr();
 					integralMat(count, i) = integralConst * ampMat(count, i) * fwhmMat(count, i);
 					Double ampFErr = ampErrMat(count, i)/ampMat(count, i);
@@ -346,6 +354,51 @@ void ImageProfileFitter::_setResults() {
 	}
 }
 
+Bool ImageProfileFitter::_inVelocitySpace() const {
+	return _fitAxis == _subImage.coordinates().spectralAxisNumber()
+		&& Quantity(1, _xUnit).isConform("m/s");
+}
+
+Double ImageProfileFitter::_fitAxisIncrement() const {
+	Double increment;
+	if (_inVelocitySpace()) {
+		Vector<Double> pixels(2);
+		pixels[0] = 0;
+		pixels[1] = 1;
+		Vector<Double> velocities(2);
+		_subImage.coordinates().spectralCoordinate().pixelToVelocity(
+			velocities, pixels
+		);
+		return velocities[1] - velocities[0];
+	}
+	else {
+		return _subImage.coordinates().increment()[_fitAxis];
+	}
+
+}
+
+Double ImageProfileFitter::_centerWorld(
+    const SpectralElement solution, const IPosition imPos
+) const {
+	Vector<Double> pixel(imPos.size());
+	for (uInt i=0; i<pixel.size(); i++) {
+		pixel[i] = imPos[i];
+	}
+	Vector<Double> world(pixel.size());
+	// in pixels here
+	pixel[_fitAxis] = solution.getCenter();
+	_subImage.coordinates().toWorld(world, pixel);
+	if (_inVelocitySpace()) {
+		Double velocity;
+		_subImage.coordinates().spectralCoordinate().frequencyToVelocity(velocity, world(_fitAxis));
+		return velocity;
+	}
+	else {
+		return world(_fitAxis);
+	}
+}
+
+
 String ImageProfileFitter::_radToRa(Float ras) const {
 	Int h, m;
 	Float rah = ras * 12 / C::pi;
@@ -363,7 +416,7 @@ String ImageProfileFitter::_radToRa(Float ras) const {
 	return raStr;
 }
 
-String ImageProfileFitter::_resultsToString() const {
+void ImageProfileFitter::_resultsToLog() const {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << _summaryHeader();
@@ -371,12 +424,12 @@ String ImageProfileFitter::_resultsToString() const {
 	summary << "       --- number of Gaussians: " << _ngauss << endl;
 
 	if (_multiFit) {
-		summary << "       --- Multiple spectra fit, one per pixel over selected region" << endl;
+		summary << "       --- Multiple profiles fit, one per pixel over selected region" << endl;
 	}
 	else {
-		summary << "       --- One spectrum fit, averaged over several pixels if necessary" << endl;
+		summary << "       --- One profile fit, averaged over several pixels if necessary" << endl;
 	}
-
+	*_getLog() << LogIO::NORMAL << summary.str() << LogIO::POST;
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
@@ -407,16 +460,17 @@ String ImageProfileFitter::_resultsToString() const {
 	Int basePrecision = summary.precision(1);
 	summary.precision(basePrecision);
 	for (
-			Vector<String>::iterator iter = axesNames.begin();
-			iter != axesNames.end(); iter++
+		Vector<String>::iterator iter = axesNames.begin();
+		iter != axesNames.end(); iter++
 	) {
 		iter->upcase();
 	}
 	for (
-			inIter.reset();
-			! inIter.atEnd() && fitter != _fitters.end();
-			inIter++, fitter++
+		inIter.reset();
+		! inIter.atEnd() && fitter != _fitters.end();
+		inIter++, fitter++
 	) {
+		summary.str("");
 		subimPos = inIter.position();
 		if (csysSub.toWorld(world, subimPos)) {
 			summary << "Fit   :" << endl;
@@ -425,23 +479,23 @@ String ImageProfileFitter::_resultsToString() const {
 					if (axesNames[i].startsWith("RIG")) {
 						// right ascension
 						summary << "    RA           :   "
-								<< _radToRa(world[i]) << endl;
+							<< _radToRa(world[i]) << endl;
 					}
 					else if (axesNames[i].startsWith("DEC")) {
 						// declination
 						summary << "    Dec          : "
-								<< MVAngle(world[i]).string(MVAngle::ANGLE_CLEAN, 8) << endl;
+							<< MVAngle(world[i]).string(MVAngle::ANGLE_CLEAN, 8) << endl;
 					}
 					else if (axesNames[i].startsWith("FREQ")) {
 						// frequency
 						summary << "    Freq         : "
-								<< world[i]
-								         << csysSub.spectralCoordinate(i).formatUnit() << endl;
+							<< world[i]
+							<< csysSub.spectralCoordinate().formatUnit() << endl;
 					}
 					else if (axesNames[i].startsWith("STO")) {
 						// stokes
 						summary << "    Stokes       : "
-								<< Stokes::name(Stokes::type((Int)world[i])) << endl;
+							<< Stokes::name(Stokes::type((Int)world[i])) << endl;
 					}
 				}
 			}
@@ -452,7 +506,6 @@ String ImageProfileFitter::_resultsToString() const {
 		for (uInt i=0; i<pixStart.size(); i++) {
 			imPix[i] = pixStart[i] + subimPos[i];
 		}
-
 		summary.setf(ios::fixed);
 		summary << setprecision(pixPrecision) << "    Pixel        : [";
 		for (uInt i=0; i<imPix.size(); i++) {
@@ -481,7 +534,7 @@ String ImageProfileFitter::_resultsToString() const {
 					summary << "    Results for component " << i << ":" << endl;
 					if (solutions[i].getType() == SpectralElement::GAUSSIAN) {
 						summary << _gaussianToString(
-							solutions[i], csys, world.copy()
+							solutions[i], csys, world.copy(), subimPos
 						);
 					}
 					else if (solutions[i].getType() == SpectralElement::POLYNOMIAL) {
@@ -490,9 +543,8 @@ String ImageProfileFitter::_resultsToString() const {
 				}
 			}
 		}
-		summary << endl;
+		*_getLog() << LogIO::NORMAL << summary.str() << endl << LogIO::POST;
 	}
-	return summary.str();
 }
 
 String ImageProfileFitter::_elementToString(
@@ -561,7 +613,7 @@ String ImageProfileFitter::_elementToString(
 
 String ImageProfileFitter::_gaussianToString(
 	const SpectralElement& gauss, const CoordinateSystem& csys,
-	const Vector<Double> world
+	const Vector<Double> world, const IPosition imPos
 ) const {
 	Vector<Double> myWorld = world;
     String yUnit = _getImage()->units().getName();
@@ -572,10 +624,15 @@ String ImageProfileFitter::_gaussianToString(
 			gauss.getAmpl(), gauss.getAmplErr(), yUnit
 		)
 		<< endl;
-	Double center = gauss.getCenter();
-	Double centerErr = gauss.getCenterErr();
-	Double fwhm = gauss.getFWHM();
-	Double fwhmErr = gauss.getFWHMErr();
+	// Double center = gauss.getCenter();
+	Double center = _centerWorld(
+	    gauss, imPos
+	);
+	Double increment = fabs(_fitAxisIncrement());
+
+	Double centerErr = gauss.getCenterErr() * increment;
+	Double fwhm = gauss.getFWHM() * increment;
+	Double fwhmErr = gauss.getFWHMErr() * increment;
 
 	Double pCenter = 0;
 	Double pCenterErr = 0;
@@ -589,7 +646,7 @@ String ImageProfileFitter::_gaussianToString(
     	specCoordIndex >= 0
     	&& _fitAxis == csys.pixelAxes(specCoordIndex)[0]
     	&& ! csys.spectralCoordinate(specCoordIndex).velocityUnit().empty()
-    ) {;
+    ) {
     	if (csys.spectralCoordinate(specCoordIndex).velocityToPixel(pCenter, center)) {
     		Double nextVel;
     		csys.spectralCoordinate(specCoordIndex).pixelToVelocity(nextVel, pCenter+1);
@@ -671,21 +728,20 @@ String ImageProfileFitter::_polynomialToString(
 	for (uInt j=0; j<parms.size(); j++) {
 		String unit = _getImage()->units().getName();
         if (j > 0) {
-          String denom = _xUnit.find("/") != String::npos
-                ? "(" + _xUnit + ")"
-                : _xUnit;
-			unit = unit + "/" + denom + "^" + String::toString(j);
+			unit = unit + "/((pixel)" + String::toString(j) + ")";
 		}
 		summary << "         c" << j << " : "
             << _elementToString(parms[j], errs[j], unit) << endl;
 	}
-    // coefficents in pixels
-    Double x0, deltaX;
+    // coefficents in pixel
+    Double x0;
+    Double deltaX = _fitAxisIncrement();
+
     if (Quantity(1,_xUnit).isConform(Quantity(1, "m/s"))) {
-        Double x1;
+        // Double x1;
         csys.spectralCoordinate(csys.findCoordinate(Coordinate::SPECTRAL)).pixelToVelocity(x0, 0);
-        csys.spectralCoordinate(csys.findCoordinate(Coordinate::SPECTRAL)).pixelToVelocity(x1, 1);
-        deltaX = x1 - x0;
+       // csys.spectralCoordinate(csys.findCoordinate(Coordinate::SPECTRAL)).pixelToVelocity(x1, 1);
+       // deltaX = x1 - x0;
     }
     else {
         Vector<Double> p0 = imPix;
@@ -693,16 +749,25 @@ String ImageProfileFitter::_polynomialToString(
         Vector<Double> world0 = world;
         csys.toWorld(world0, p0);
         x0 = world0[_fitAxis];
-        deltaX = csys.increment()[_fitAxis];
+       // deltaX = csys.increment()[_fitAxis];
     }
     Vector<Double> pCoeff(_polyOrder + 1, 0);
     Vector<Double> pCoeffErr(_polyOrder + 1, 0);
     for (Int j=0; j<=_polyOrder; j++) {
         Double sumsq = 0;
         for (Int k=j; k<=_polyOrder; k++) {
+        	/*
             Double multiplier = Combinatorics::choose(k, j)
                 * casa::pow(x0, Float(k-j))
                 * casa::pow(deltaX, Float(j));
+            */
+            Double multiplier = Combinatorics::choose(k, k-j)
+				* casa::pow(x0, Float(k - j))
+				* casa::pow(1/deltaX, Float(k));
+            if ((k-j) % 2 == 1) {
+            	multiplier *= -1;
+            }
+
 
             pCoeff[j] += multiplier * parms[k];
             Double errCoeff = multiplier * errs[k];
@@ -710,7 +775,10 @@ String ImageProfileFitter::_polynomialToString(
         }
         pCoeffErr[j] = casa::sqrt(sumsq);
         summary << "         c" << j << " : ";
-		String unit = _getImage()->units().getName() + "/(pixel)^" + String::toString(j);
+		String unit = _getImage()->units().getName();
+		if (j > 0 ) {
+			unit = unit + "/" + "((" + _xUnit + ")" + String::toString(j) + ")";
+		}
         summary << _elementToString(pCoeff[j], pCoeffErr[j], unit) << endl;
     }
 	return summary.str();
@@ -798,8 +866,13 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 	// and set it back in the image
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
+	/*
 	Bool ok = ImageFit1D<Float>::setAbcissaState(
 		errMsg, abcissaType, cSys, _xUnit, doppler, _fitAxis
+	);
+	*/
+	Bool ok = ImageFit1D<Float>::setAbcissaState(
+		errMsg, abcissaType, cSys, "pix", doppler, _fitAxis
 	);
 	_subImage.setCoordinateInfo(cSys);
 
@@ -832,7 +905,7 @@ ImageFit1D<Float> ImageProfileFitter::_fitProfile(
 
 	if (fitIt) {
 		if (_estimates.nelements() > 0) {
-			_convertEstimates();
+			//_convertEstimates();
 			fitter.setElements(_estimates);
 		} else {
 			// Set auto estimate
@@ -958,7 +1031,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 		ImageUtilities::getUnitAndDoppler(
 			_xUnit, doppler, _fitAxis, cSys
 		);
-		_convertEstimates();
+		//_convertEstimates();
 	}
 	return _fitProfiles(
 		pFit, pResid,
@@ -967,11 +1040,14 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitallprofiles(
 	);
 }
 
+/*
 void ImageProfileFitter::_convertEstimates() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	if (_estimates.nelements() == 0) {
 		return;
 	}
+
+	cout << "*** estimates " << _estimates << endl;
 	for (uInt i=0; i<_estimates.nelements(); i++) {
 		Double center = 0;
 		Double fwhm = 0;
@@ -1007,7 +1083,9 @@ void ImageProfileFitter::_convertEstimates() {
 		_estimates[i].setCenter(center);
 		_estimates[i].setFWHM(fwhm);
 	}
+
 }
+*/
 
 // moved from ImageUtilities
 Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
@@ -1051,12 +1129,6 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		);
 	}
 
-	// Make fitter
-
-	// ImageFit1D<T> fitter (inImage, axis);
-
-	// Get hold of masks
-
 	Lattice<Bool>* pFitMask = 0;
 	if (pFit && pFit->hasPixelMask() && pFit->pixelMask().isWritable()) {
 		pFitMask = &(pFit->pixelMask());
@@ -1066,7 +1138,7 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 		pResidMask = &(pResid->pixelMask());
 	}
 	//
-	IPosition sliceShape(nDim,1);
+	IPosition sliceShape(nDim, 1);
 	sliceShape(_fitAxis) = inShape(_fitAxis);
 	Array<Float> failData(sliceShape);
 	failData = 0.0;
@@ -1095,9 +1167,13 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
 
-	if (
+	if ( /*
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, _xUnit, doppler, _fitAxis
+		)
+		*/
+		! ImageFit1D<Float>::setAbcissaState(
+			errMsg, abcissaType, csys, "pix", doppler, _fitAxis
 		)
 	) {
 		throw AipsError(errMsg);
@@ -1118,11 +1194,18 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 	fitterShape[_fitAxis] = 1;
 	Array<ImageFit1D<Float> > fitters(fitterShape);
 	Array<ImageFit1D<Float> *> goodFits(fitterShape);
+	Int nPoints = fitterShape.product();
+	uInt count = 0;
 	vector<IPosition> goodPos(0);
 	goodFits.set(0);
 	Bool checkMinPts = _minGoodPoints > 0 && _subImage.isMasked();
 	SpectralList newEstimates = _estimates;
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
+		if (count % 1000 == 0 && count > 0) {
+			*_getLog() << LogIO::NORMAL << "Fitting profile number "
+				<< count << " of " << nPoints << LogIO::POST;
+		}
 		const IPosition& curPos = inIter.position();
 		if (checkMinPts) {
 			IPosition sliceShape = inShape;
@@ -1146,9 +1229,6 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 
 		fitter.errorMessage();
 		ok = fitter.setData (curPos, abcissaType, True);
-
-		// Could use some cutoff criteria
-
 		ok = ok ? fitter.setGaussianElements (_ngauss) : False;
 		if (_estimates.nelements() > 0) {
 			// user supplied initial estimates
@@ -1218,9 +1298,11 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 			nFit++;
 			try {
 				ok = fitter.fit();                // ok == False means no convergence
-				if (ok && _estimates.nelements() > 0) {
-					goodFits(curPos) = &fitter;
-					goodPos.push_back(curPos);
+				if (ok) {
+					if (_estimates.nelements() > 0) {
+						goodFits(curPos) = &fitter;
+						goodPos.push_back(curPos);
+					}
 				}
 				else if (! ok) {
 					nConv++;
@@ -1231,33 +1313,42 @@ Array<ImageFit1D<Float> > ImageProfileFitter::_fitProfiles(
 			}
 		}
 		fitters(curPos) = fitter;
-
 		// Evaluate and fill
 		if (ok) {
 			Array<Bool> resultMask = fitter.getTotalMask().reform(sliceShape);
 			if (pFit) {
 				Array<Float> resultData = fitter.getFit().reform(sliceShape);
 				pFit->putSlice (resultData, curPos);
-				if (pFitMask) pFitMask->putSlice(resultMask, curPos);
+				if (pFitMask) {
+					pFitMask->putSlice(resultMask, curPos);
+				}
 			}
 			if (pResid) {
 				Array<Float> resultData = fitter.getResidual().reform(sliceShape);
 				pResid->putSlice (resultData, curPos);
 				if (pResidMask) pResidMask->putSlice(resultMask, curPos);
 			}
-		} else {
+		}
+		else {
 			if (pFit) {
 				pFit->putSlice (failData, curPos);
-				if (pFitMask) pFitMask->putSlice(failMask, curPos);
+				if (pFitMask) {
+					pFitMask->putSlice(failMask, curPos);
+				}
 			}
 			if (pResid) {
 				pResid->putSlice (failData, curPos);
-				if (pResidMask) pResidMask->putSlice(failMask, curPos);
+				if (pResidMask) {
+					pResidMask->putSlice(failMask, curPos);
+				}
 			}
 		}
-		if (showProgress) pProgressMeter->update(Double(nProfiles));
+		if (showProgress) {
+			pProgressMeter->update(Double(nProfiles));
+		}
+		count++;
 	}
-	*_getLog() << LogOrigin("ImageUtilties2.tcc", __FUNCTION__);
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	*_getLog() << LogIO::NORMAL << "Number of profiles       = " << nProfiles << LogIO::POST;
 	*_getLog() << LogIO::NORMAL << "Number of fits attempted = " << nFit << LogIO::POST;
 	*_getLog() << LogIO::NORMAL << "Number converged         = " << nFit - nConv - nFail << LogIO::POST;

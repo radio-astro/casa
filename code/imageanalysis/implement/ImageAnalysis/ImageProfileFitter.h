@@ -118,13 +118,16 @@ public:
     	return vector<Coordinate::Type>(0);
     }
 
+    inline void setLogResults(const Bool logResults) { _logResults = logResults; }
+
 private:
 
 	String _residual, _model, _regionString, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName;
-	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit, _deleteImageOnDestruct;
+	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
+		_deleteImageOnDestruct, _logResults;
 	Int _polyOrder, _fitAxis;
 	uInt _ngauss, _minGoodPoints;
 	Array<ImageFit1D<Float> > _fitters;
@@ -135,9 +138,6 @@ private:
 	SpectralList _estimates;
 
 	const static String _class;
-
-	// disallow default constructor
-	ImageProfileFitter();
 
     void _getOutputStruct(
         vector<ImageInputProcessor::OutputStruct>& outputs
@@ -150,7 +150,7 @@ private:
     void _setResults();
 
     String _radToRa(const Float ras) const;
-    String _resultsToString() const;
+    void _resultsToLog() const;
 
     String _elementToString(
     	const Double value, const Double error,
@@ -159,7 +159,7 @@ private:
 
     String _gaussianToString(
     	const SpectralElement& gauss, const CoordinateSystem& csys,
-    	const Vector<Double> world
+    	const Vector<Double> world, const IPosition imPos
     ) const;
 
     String _polynomialToString(
@@ -184,7 +184,7 @@ private:
         const String& weightsImageName = ""
     );
 
-    void _convertEstimates();
+   // void _convertEstimates();
 
     // Fit all profiles in image.  The output images must be already
     // created; if the pointer is 0, that image won't be filled.
@@ -207,6 +207,14 @@ private:
         const ImageInterface<Float> *const &weightsImage=0,
         const Bool showProgress=False
     );
+
+    Double _fitAxisIncrement() const;
+
+    Double _centerWorld(
+    	const SpectralElement solution, const IPosition imPos
+    ) const;
+
+    Bool _inVelocitySpace() const;
 
 };
 }

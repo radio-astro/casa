@@ -1132,9 +1132,10 @@ record* image::fitprofile(const string& box, const string& region,
 	const string& residual, const string& amp,
 	const string& amperr, const string& center, const string& centererr,
 	const string& fwhm, const string& fwhmerr,
-	const string& integral, const string& integralerr
+	const string& integral, const string& integralerr, const bool stretch,
+	const bool logResults
 ) {
-	*_log << LogOrigin("image", __FUNCTION__);
+	*_log << LogOrigin(_class, __FUNCTION__);
 	if (detached()) {
 		return 0;
 	}
@@ -1157,28 +1158,31 @@ record* image::fitprofile(const string& box, const string& region,
 			amp, amperr, center, centererr, fwhm, fwhmerr,
 			integral, integralerr, minpts
 		);
+		fitter.setStretch(stretch);
+		fitter.setLogResults(logResults);
 		rstat = fromRecord(fitter.fit());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
 	return rstat;
 }
 
-::casac::image *
+::casac::image*
 image::fitpolynomial(const std::string& residFile, const std::string& fitFile,
 		const std::string& sigmaFile, const int axis, const int order,
 		const ::casac::record& region, const ::casac::variant& vmask,
 		const bool overwrite) {
 	::casac::image *rstat = 0;
 	try {
-		*_log << LogOrigin("image", "fitpolynomial");
+		*_log << LogOrigin(_class, __FUNCTION__);
 		*_log << LogIO::WARN << "DEPRECATED: " << __FUNCTION__
 				<< " will be removed in an upcoming release. "
 				<< "Use fitprofile instead with ngauss=0." << LogIO::POST;
-		if (detached())
+		if (detached()) {
 			return rstat;
+		}
 
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();

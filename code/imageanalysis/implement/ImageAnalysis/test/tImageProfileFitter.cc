@@ -56,7 +56,7 @@ String dirName;
 void checkImage(
 	const ImageInterface<Float> *gotImage, const String& expectedName
 ) {
-	Float ftol = 1.0e-12; // 3.0e-13 is too small.
+	Float ftol = 2e-11; // 3.0e-13 is too small.
 
 	PagedImage<Float> expectedImage(expectedName);
 	AlwaysAssert(gotImage->shape() == expectedImage.shape(), AipsError);
@@ -87,6 +87,8 @@ void checkImage(
     	cerr << "\tmaxdiff = " << maxdiff << endl;
     	cerr << "\t   ftol = " << ftol << endl;
     }
+    cout << "*** max diff " << abs(diffData) << endl;
+    cout << "*** ftol " << ftol << endl;
 	AlwaysAssert(max(abs(diffData)) <= ftol, AipsError);
 	CoordinateSystem gotCsys = gotImage->coordinates();
 	CoordinateSystem expectedCsys = expectedImage.coordinates();

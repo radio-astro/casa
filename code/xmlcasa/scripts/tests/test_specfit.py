@@ -138,6 +138,7 @@ class specfit_test(unittest.TestCase):
         os.remove(polyim)
 
     def checkImage(self, gotImage, expectedName):
+        print "*** expected name " + expectedName
         expected = iatool.create()                                
         expected.open(expectedName)
         got = iatool.create()
@@ -159,8 +160,7 @@ class specfit_test(unittest.TestCase):
                 if isnan(expchunk[i]):
                     expchunk[i] = nanvalue
         diffData = gotchunk - expchunk
-        print "*** diff data" + str(diffData)
-        self.assertTrue(abs(diffData).max() < 4e-13)
+        self.assertTrue(abs(diffData).max() < 2e-11)
         self.assertTrue(
             (
                 got.getchunk(getmask=T) == expected.getchunk(getmask=T)
@@ -472,6 +472,41 @@ class specfit_test(unittest.TestCase):
             self.assertTrue(res["yUnit"] == "Jy")
 
             
+    def test_stretch(self):
+        """specfit : test mask stretch"""
+        imagename = twogauss
+        yy = iatool.create()
+        yy.open(imagename)
+        mycsys = yy.coordsys().torecord()
+        yy.done()
+        mymask = "maskim"
+        yy.fromshape(mymask, [9, 9, 1, 1])
+        yy.setcoordsys(mycsys)
+        yy.addnoise()
+        yy.done()
+        yy.open(imagename)
+        self.assertRaises(
+            Exception, yy.fitprofile,
+            ngauss=2, mask=mymask + ">-100",
+            stretch=False
+        )
+        zz = specfit(
+            imagename, ngauss=2, mask=mymask + ">-100",
+            stretch=False
+        )
+        self.assertTrue(zz == None)
+        print "*** here 4"
+        zz = yy.fitprofile(
+            ngauss=2, mask=mymask + ">-100",
+            stretch=True
+        )
+        self.assertTrue(len(zz.keys()) > 0)
+        yy.done()
+        zz = specfit(
+            imagename, ngauss=2, mask=mymask + ">-100",
+            stretch=True
+        )
+        self.assertTrue(len(zz.keys()) > 0)
 
 
 def suite():

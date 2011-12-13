@@ -3964,6 +3964,14 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Prefix of name of integral error solution image. Name of image will have gaussian component number appended.  Default: do not write the image ("").</description>
             <value></value>
         </param>
+        <param type="bool" direction="in" name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. </description>
+            <value>false</value>
+        </param>
+        <param type="bool" direction="in" name="logresults">
+            <description>Output results to logger?</description>
+            <value>true</value>
+        </param>
     </input>
 <returns type="any"><any type="record"/></returns>
 
