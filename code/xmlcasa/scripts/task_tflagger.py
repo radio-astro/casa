@@ -138,11 +138,10 @@ def tflagger(vis,
                         
         # Create a list of the selection parameters to save later
         sel_pars = ''
-        sel_pars = 'field='+field+' spw='+spw+' array='+array+' feed='+feed+' scan='+scan+\
-                    ' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
+        sel_pars = 'mode='+mode+' field='+field+' spw='+spw+' array='+array+' feed='+feed+\
+                    ' scan='+scan+' antenna='+antenna+' uvrange='+uvrange+' timerange='+timerange+\
                     ' correlation='+correlation+' intent='+intent+' observation='+str(observation)+\
-                    ' mode='+mode+' datadisplay='+str(datadisplay)+' writeflags='+\
-                    str(writeflags)+' extend='+str(extend)
+                    ' extend='+str(extend)
 
         # Setup global parameters
         agent_pars = {}
@@ -182,7 +181,13 @@ def tflagger(vis,
             
             # If clipminmax = [], do not write it in the dictionary.
             # It will be handled by the framework
-            if clipminmax != []:                            
+            if clipminmax != []:      
+                # Cast to float to avoid the missing decimal point                 
+                clipmin = float(clipminmax[0])
+                clipmax = float(clipminmax[1])
+                clipminmax = []
+                clipminmax.append(clipmin)
+                clipminmax.append(clipmax)     
                 agent_pars['clipminmax'] = clipminmax
                 
             casalog.post('Clip mode is active')
@@ -283,24 +288,26 @@ def tflagger(vis,
         # Initialize the agent
         casalog.post('Initializing the agent')
         tflocal.init()
+
+        # Purge the empty parameters from the selection string
+        flagcmd = getLinePars(sel_pars) 
+
+        # Backup the existing flags before applying new ones
+        if flagbackup and writeflags:
+            casalog.post('Backup original flags before applying new flags')
+            backupFlags(tflocal, mode)
+
         
         # Run the tool
         casalog.post('Running the tflagger tool')
         summary_stats = tflocal.run()
 
-        # Purge the empty parameters from the selection string
-        flagcmd = getLinePars(sel_pars) 
 
         # Write the current parameters as flag commands to output
         if savepars:         
             ncmd = writeCMD(vis, flagcmd, flag, outfile)
             
-        
-        # Backup the existing flags before applying new ones
-        if flagbackup and writeflags:
-            casalog.post('Backup original flags before applying new flags')
-            backupFlags(tflocal, mode, flagcmd)
-        
+            
         # Destroy the tool
         tflocal.done()
 
@@ -441,12 +448,6 @@ def getLinePars(cmdline):
    
     newstr = ''
     
-    # Before removing the empty parameters, check if
-    # any parameter value contains white spaces and
-    # replace them accordingly
-    
-    
-    
     # split by white space
     keyvlist = cmdline.split()
     if keyvlist.__len__() > 0:  
@@ -472,10 +473,9 @@ def getLinePars(cmdline):
     else:
         casalog.post('String of parameters is empty','WARN')   
          
-    
     return newstr
 
-def backupFlags(tflocal, mode, flagcmd):
+def backupFlags(tflocal, mode):
     ''' Backup the flags before applying new ones'''
     
     # Create names like this:
@@ -509,16 +509,25 @@ def backupFlags(tflocal, mode, flagcmd):
     if debug:
         casalog.post("Saving current flags to " + versionname + " before applying new flags")
 
-    # Send new name and flagcmd to be saved
-    # The flagcmd is the string in save_pars without the empty parameters
-    # Save current flags with a new name. Define the following new method!!!
-#    tflocal.saveflags(versionname=versionname,
-#                      comment='flagdata autosave before ' + mode + ' on ' + time_string,
-#                      merge='replace',flagcmd)
                       
     tflocal.saveflagversion(versionname=versionname,
                            comment='flagdata autosave before ' + mode + ' on ' + time_string,
                            merge='replace')
+
+    # Save flagcmd to flagbackup
+    # Need to consider flagmanager when writing this
+    
+    # We already have the flagbackup in disk, now append the FLAG_CMD
+    # sub-table to it
+#    mstable = msfile + '/FLAG_CMD'
+#    try:
+#        tb.open(mstable, nomodify=False)
+#    except:
+#        raise Exception, 'Error opening FLAG_CMD table ' + mstable
+    
+#    tb.copy(newtablename=versionname + '/FLAG_CMD')
+#    tb.done()
+    
 
     return
 
