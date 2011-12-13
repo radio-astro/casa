@@ -243,10 +243,12 @@ class ImageAnalysis
                   const Bool list = False, const Bool dropdeg = False, 
                   const bool getmask = False);
 
-    Bool getregion(Array<Float>& pixels, Array<Bool>& pixmask, Record& region, 
-                   const Vector<Int>& axes, const String& mask, 
-                   const Bool list = False, const Bool dropdeg = False, 
-                   const bool getmask = False);
+    Bool getregion(
+    	Array<Float>& pixels, Array<Bool>& pixmask, Record& region,
+        const Vector<Int>& axes, const String& mask,
+        const Bool list=False, const Bool dropdeg=False,
+        const Bool getmask=False, const Bool extendMask=False
+    );
 
     Record* getslice(const Vector<Double>& x, const Vector<Double>& y, 
                      const Vector<Int>& axes, const Vector<Int>& coord, 

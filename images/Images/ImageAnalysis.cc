@@ -2008,9 +2008,12 @@ const ImageInterface<Float>* ImageAnalysis::getImage() const {
 }
 
 
-Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
-		Record& Region, const Vector<Int>& axes, const String& Mask,
-		const Bool list, const Bool dropdeg, const Bool getmask) {
+Bool ImageAnalysis::getregion(
+	Array<Float>& pixels, Array<Bool>& pixelmask,
+	Record& Region, const Vector<Int>& axes, const String& Mask,
+	const Bool list, const Bool dropdeg, const Bool getmask,
+	const bool extendMask
+) {
 	// Recover some pixels and their mask from a region in the image
 	*itsLog << LogOrigin("ImageAnalysis", "getregion");
 
@@ -2023,7 +2026,8 @@ Bool ImageAnalysis::getregion(Array<Float>& pixels, Array<Bool>& pixelmask,
 
     SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)),
-		Mask, (list ? itsLog : 0), False
+		Mask, (list ? itsLog : 0), False, AxesSpecifier(),
+		extendMask
 	);
 	if (getmask) {
         LatticeUtilities::collapse(pixels, pixelmask, iAxes, subImage, dropdeg);
