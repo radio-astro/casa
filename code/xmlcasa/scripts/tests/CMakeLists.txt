@@ -100,6 +100,7 @@ casa_add_python( xmlcasa xmlcasa_tests_python python/${PYTHONV}/tests
   test_splattotable.py
   test_split.py
   test_testconcat.py
+  test_tflagger.py
   test_uvcontsub.py
   test_viewer.py
   test_vishead.py
