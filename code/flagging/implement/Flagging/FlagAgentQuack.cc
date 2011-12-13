@@ -60,6 +60,7 @@ FlagAgentQuack::setAgentParameters(Record config)
 	String quackmode;
 	if (exists >= 0)
 	{
+		quackmode = config.asString("quackmode");
 		if (quackmode == "beg")
 		{
 			quackmode_p = BEGINNING_OF_SCAN;
