@@ -64,7 +64,9 @@
 #include <msvis/MSVis/GroupProcessor.h>
 //#include <msvis/MSVis/VisSet.h>
 #include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VisBufferComponents.h>
 #include <msvis/MSVis/VBGContinuumSubtractor.h>
+#include <msvis/MSVis/VBRemapper.h>
 #include <msvis/MSVis/VisChunkAverager.h>
 #include <msvis/MSVis/VisIterator.h>
 //#include <msvis/MSVis/VisibilityIterator.h>
@@ -1012,10 +1014,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
   //sameShape_p = areDataShapesConstant();
 
-  if(timeBin_p <= 0.0)
-    success &= fillMainTable(datacols);
+  if(fitorder_p < 0 && timeBin_p <= 0.0)
+    success &= writeAllMainRows(datacols);
   else
-    success &= fillAverMainTable(datacols);
+    success &= writeSomeMainRows(datacols);
   return success;
 }
   
@@ -6660,34 +6662,27 @@ Bool SubMS::fillAccessoryMainCols(){
   return True;
 }
 
-  Bool SubMS::fillMainTable(const Vector<MS::PredefinedColumns>& colNames)
+  Bool SubMS::writeAllMainRows(const Vector<MS::PredefinedColumns>& colNames)
   {  
-    LogIO os(LogOrigin("SubMS", "fillMainTable()"));
+    LogIO os(LogOrigin("SubMS", "writeAllMainRows()"));
     Bool success = true;
     Timer timer;
 
     fillAccessoryMainCols();
 
-    //Deal with data
+    //Deal with data, flags, sigma, and weights.
+    timer.mark();
     if(keepShape_p){
-      ROArrayColumn<Complex> data;
       Vector<MS::PredefinedColumns> complexCols;
       const Bool doFloat = sepFloat(colNames, complexCols);
       const uInt nDataCols = complexCols.nelements();
       const Bool writeToDataCol = mustConvertToData(nDataCols, complexCols);
 
-      timer.mark();
-      if(fitorder_p >= 0){
-        subtractContinuum(complexCols); // writeToDataCol = complexCols == 1
-      }
-      else{
-        copyDataFlagsWtSp(complexCols, writeToDataCol);
-        if(doFloat)
-          msc_p->floatData().putColumn(mscIn_p->floatData());
-      }
+      copyDataFlagsWtSp(complexCols, writeToDataCol);
+      if(doFloat)
+        msc_p->floatData().putColumn(mscIn_p->floatData());
     }
     else{
-      timer.mark();
       doChannelMods(colNames);
     }
     os << LogIO::DEBUG1
@@ -6868,7 +6863,8 @@ Bool SubMS::setSortOrder(Block<Int>& sort, const String& uncombinable,
   return !conflict;
 }
 
-Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames)
+Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
+                              const VBRemapper& vbmaps)
 {
   LogIO os(LogOrigin("SubMS", "subtractContinuum()"));
   Bool retval = True;
@@ -6898,8 +6894,8 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames)
   // Make sure it is initialized before any copies are made.
   viIn.originChunks();
 
-  VBGContinuumSubtractor vbgcs(msOut_p, viIn, fitorder_p, colNames[0],
-                               fitspw_p, fitoutspw_p);
+  VBGContinuumSubtractor vbgcs(msOut_p, msc_p, vbmaps, viIn, fitorder_p,
+                               colNames[0], fitspw_p, fitoutspw_p);
   ROGroupProcessor rogp(viIn, &vbgcs);
 
   retval = rogp.go();
@@ -6911,6 +6907,50 @@ Bool SubMS::subtractContinuum(const Vector<MS::PredefinedColumns>& colNames)
 
   msOut_p.flush();    // Necessary?
   return retval;
+}
+
+void SubMS::fill_vbmaps(std::map<VisBufferComponents::EnumType, std::map<Int, Int> >& vbmaps)
+{
+  // In general, _IDs which are row numbers in a subtable must be
+  // remapped, and those which are not probably shouldn't be.
+  if(antennaSel_p){
+    std::map<Int, Int> antIndexer;
+
+    fillAntIndexer(antIndexer, mscIn_p);
+    vbmaps[VisBufferComponents::Ant1] = antIndexer;
+    vbmaps[VisBufferComponents::Ant2] = antIndexer;
+  }
+
+  if(!allEQ(spwRelabel_p, spw_p)){
+    std::map<Int, Int> ddidMapper;
+
+    for(uInt i = 0; i < oldDDSpwMatch_p.nelements(); ++i)
+      ddidMapper[i] = spwRelabel_p[oldDDSpwMatch_p[i]];
+
+    vbmaps[VisBufferComponents::DataDescriptionId] = ddidMapper;
+  }
+
+  if(fieldid_p.nelements() < mscIn_p->field().nrow()){
+    std::map<Int, Int> fldMapper;
+
+    make_map(fldMapper, fieldRelabel_p);
+    vbmaps[VisBufferComponents::FieldId] = fldMapper;
+  }
+
+  if(selObsId_p.nelements() > 0 && selObsId_p.nelements() < mscIn_p->observation().nrow()){
+    std::map<Int, Int> obsMapper;
+
+    make_map(obsMapper, selObsId_p);
+    vbmaps[VisBufferComponents::ObservationId] = obsMapper;
+  }
+
+  //std::map<Int, Int> procMapper;
+  //make_map(procMapper, mscIn_p->processorId().getColumn());
+
+  if(stateRemapper_p.size() < 1)
+    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
+  if(stateRemapper_p.size() < mscIn_p->state().nrow())
+    vbmaps[VisBufferComponents::StateId] = stateRemapper_p;
 }
 
 Bool SubMS::copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
@@ -7174,26 +7214,32 @@ void SubMS::relabelIDs()
   remapColumn(msc_p->observationId(), mscIn_p->observationId(), selObsId_p);
 }
 
-Bool SubMS::fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames)
+Bool SubMS::writeSomeMainRows(const Vector<MS::PredefinedColumns>& colNames)
 {    
-  LogIO os(LogOrigin("SubMS", "fillAverMainTable()"));
+  LogIO os(LogOrigin("SubMS", "writeSomeMainRows()"));
+  Bool retval = True;
     
   os << LogIO::DEBUG1 // helpdesk ticket in from Oleg Smirnov (ODU-232630)
      << "Before fillAntIndexer(): "
      << Memory::allocatedMemoryInBytes() / (1024.0 * 1024.0) << " MB"
      << LogIO::POST;
 
-  // fill time and timecentroid and antennas
-  if(fillAntIndexer(mscIn_p, antIndexer_p) < 1)
-    return False;
+  // A set of maps from input ID to output ID, keyed by VisBufferComponent.
+  std::map<VisBufferComponents::EnumType, std::map<Int, Int> > vbmaps;
+  fill_vbmaps(vbmaps);
+  VBRemapper remapper(vbmaps);
 
-  //things to be taken care in doTimeAver()...
+  //things to be taken care of in doTimeAver() or subtractContinuum...
   // flagRow		ScanNumber	uvw		weight		
   // sigma		ant1		ant2		time
   // timeCentroid	feed1 		feed2		exposure
   // stateId		processorId	observationId	arrayId
-  return (corrString_p != "") ? doTimeAverVisIterator(colNames)
-                              : doTimeAver(colNames);
+  if(fitorder_p >= 0)
+    retval = subtractContinuum(colNames, remapper); // writeToDataCol = complexCols == 1
+  else
+    retval = (corrString_p != "") ? doTimeAverVisIterator(colNames, remapper)
+                                  : doTimeAver(colNames, remapper);
+  return retval;
 }
 
 uInt SubMS::addOptionalColumns(const Table& inTab, Table& outTab,
@@ -8333,7 +8379,7 @@ uInt SubMS::remapped(const Int ov, const Vector<Int>& mapper, uInt i=0)
   return i;  
 }
 
-uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
+uInt SubMS::fillAntIndexer(std::map<Int, Int>& antIndexer, const ROMSColumns *msc)
 {
   const Vector<Int>& ant1 = msc->antenna1().getColumn();
   const Vector<Int>& ant2 = msc->antenna2().getColumn();
@@ -8353,8 +8399,6 @@ uInt SubMS::fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer)
     ++remaval;
   }
     
-  antIndexer.resize(max(selAnt) + 1);
-  antIndexer = -1;
   for(uInt j = 0; j < nant; ++j)
     antIndexer[selAnt[j]] = static_cast<Int>(j);
   return nant;
@@ -8414,7 +8458,8 @@ Bool SubMS::sepFloat(const Vector<MS::PredefinedColumns>& anyDataCols,
   return doFloat;
 }
 
-Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
+Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
+                       const VBRemapper& remapper)
 {
   LogIO os(LogOrigin("SubMS", "doTimeAver()"));
 
@@ -8424,9 +8469,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
     return False;
   }
-
-  if(stateRemapper_p.size() < 1)
-    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
@@ -8492,18 +8534,6 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
   Matrix<Float> wtmat;
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
-  Vector<Int> spwindex(max(spw_p) + 1);
-  spwindex.set(-1);
-  for(uInt k = 0; k < spw_p.nelements(); ++k)
-    spwindex[spw_p[k]] = k;
-    
-  //std::map<Int, Int> procMapper;
-  //make_map(procMapper, mscIn_p->processorId().getColumn());
-
-  // Vector<Int> inObs;            // mscIn_p->observationId()
-  std::map<Int, Int> obsMapper;
-  make_map(obsMapper, selObsId_p);
-
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
   // All of this ddid/spw confusion really needs cleaning up.
@@ -8546,18 +8576,12 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 
       // msOut_p.addRow(rowsnow, True);
       msOut_p.addRow(rowsnow);            // Try it without initialization.
-        
-      //    relabelIDs();
 
       // avb.freqAveCubes();  // Watch out, weight must currently be handled separately.
 
-      // // Fill in the nonaveraging values from slotv0.
-      // // In general, _IDs which are row numbers in a subtable must be
-      // // remapped, and those which are not probably shouldn't be.
-      if(antennaSel_p){
-        remap(avb.antenna1(), antIndexer_p);
-        remap(avb.antenna2(), antIndexer_p);
-      }
+      remapper.remap(avb);
+
+      // Fill in the nonaveraging values from slotv0.
       msc_p->antenna1().putColumnCells(rowstoadd, avb.antenna1());
       msc_p->antenna2().putColumnCells(rowstoadd, avb.antenna2());
 
@@ -8577,9 +8601,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       if(doFloat)
         msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());
 
-      // remap() with a constant value.
       Vector<Int> ddID(rowsnow);
-      ddID.set(spwRelabel_p[oldDDSpwMatch_p[avb.dataDescriptionId()]]);
+      ddID.set(avb.dataDescriptionId());
       msc_p->dataDescId().putColumnCells(rowstoadd, ddID);
 
       msc_p->exposure().putColumnCells(rowstoadd, avb.exposure());
@@ -8587,7 +8610,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
       msc_p->feed2().putColumnCells(rowstoadd, avb.feed2());
 
       Vector<Int> fieldID(rowsnow);
-      fieldID.set(fieldRelabel_p[avb.fieldId()]);
+      fieldID.set(avb.fieldId());
       msc_p->fieldId().putColumnCells(rowstoadd, fieldID);
 
       msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
@@ -8597,13 +8620,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
         msc_p->flagCategory().putColumnCells(rowstoadd, avb.flagCategory());
 
       msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
-
-      remap(avb.observationId(), obsMapper);
       msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
-
-      //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
-
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());   // Don't remap!
 
       if(doSpWeight)
@@ -8616,9 +8634,7 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
         wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.
       msc_p->sigma().putColumnCells(rowstoadd, wtmat);
 
-      remap(avb.stateId(), stateRemapper_p);
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
-
       msc_p->time().putColumnCells(rowstoadd, avb.time());
       msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());
@@ -8649,7 +8665,8 @@ Bool SubMS::doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames)
 }
 
 // This should become the default soon (with a name change).
-Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames)
+Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames,
+                                  const VBRemapper& remapper)
 {
   LogIO os(LogOrigin("SubMS", "doTimeAverVisIterator()"));
 
@@ -8659,9 +8676,6 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
     throw(AipsError("Simultaneous time and channel averaging is not handled."));
     return False;
   }
-
-  if(stateRemapper_p.size() < 1)
-    make_map(stateRemapper_p, mscIn_p->stateId().getColumn());
 
   os << LogIO::DEBUG1 // helpdesk ticket from Oleg Smirnov (ODU-232630)
      << "Before msOut_p.addRow(): "
@@ -8722,18 +8736,6 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
   Matrix<Float> wtmat;
   const Bool doSpWeight = vi.existsWeightSpectrum();
 
-  Vector<Int> spwindex(max(spw_p) + 1);
-  spwindex.set(-1);
-  for(uInt k = 0; k < spw_p.nelements(); ++k)
-    spwindex[spw_p[k]] = k;
-    
-  //std::map<Int, Int> procMapper;
-  //make_map(procMapper, mscIn_p->processorId().getColumn());
-
-  // Vector<Int> inObs;            // mscIn_p->observationId()
-  std::map<Int, Int> obsMapper;
-  make_map(obsMapper, selObsId_p);
-
   //os << LogIO::NORMAL2 << "outNrow = " << msOut_p.nrow() << LogIO::POST;
 
   // All of this ddid/spw confusion really needs cleaning up.
@@ -8777,17 +8779,12 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       // msOut_p.addRow(rowsnow, True);
       msOut_p.addRow(rowsnow);            // Try it without initialization.
         
-      //    relabelIDs();
+      // avb.freqAveCubes();  // Watch out, weight must currently be handled
+      // separately.
 
-      // avb.freqAveCubes();  // Watch out, weight must currently be handled separately.
+      remapper.remap(avb);
 
-      // // Fill in the nonaveraging values from slotv0.
-      // // In general, _IDs which are row numbers in a subtable must be
-      // // remapped, and those which are not probably shouldn't be.
-      if(antennaSel_p){
-        remap(avb.antenna1(), antIndexer_p);
-        remap(avb.antenna2(), antIndexer_p);
-      }
+      // Fill in the nonaveraging values from slotv0.
       msc_p->antenna1().putColumnCells(rowstoadd, avb.antenna1());
       msc_p->antenna2().putColumnCells(rowstoadd, avb.antenna2());
 
@@ -8807,9 +8804,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       if(doFloat)
         msc_p->floatData().putColumnCells(rowstoadd, avb.floatDataCube());
 
-      // remap() with a constant value.
       Vector<Int> ddID(rowsnow);
-      ddID.set(spwRelabel_p[oldDDSpwMatch_p[avb.dataDescriptionId()]]);
+      ddID.set(avb.dataDescriptionId());
       msc_p->dataDescId().putColumnCells(rowstoadd, ddID);
 
       msc_p->exposure().putColumnCells(rowstoadd, avb.exposure());
@@ -8817,7 +8813,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
       msc_p->feed2().putColumnCells(rowstoadd, avb.feed2());
 
       Vector<Int> fieldID(rowsnow);
-      fieldID.set(fieldRelabel_p[avb.fieldId()]);
+      fieldID.set(avb.fieldId());
       msc_p->fieldId().putColumnCells(rowstoadd, fieldID);
 
       msc_p->flagRow().putColumnCells(rowstoadd, avb.flagRow()); 
@@ -8827,13 +8823,8 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
         msc_p->flagCategory().putColumnCells(rowstoadd, avb.flagCategory());
 
       msc_p->interval().putColumnCells(rowstoadd, avb.timeInterval());
-
-      remap(avb.observationId(), obsMapper);
       msc_p->observationId().putColumnCells(rowstoadd, avb.observationId());
-
-      //remap(avb.processorId(), procMapper);
       msc_p->processorId().putColumnCells(rowstoadd, avb.processorId());
-
       msc_p->scanNumber().putColumnCells(rowstoadd, avb.scan());	// Don't remap!
 
       if(doSpWeight)
@@ -8847,9 +8838,7 @@ Bool SubMS::doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNa
         wtmat.reference(avb.sigmaMat());           // Yes, I'm reusing wtmat.     
       msc_p->sigma().putColumnCells(rowstoadd, wtmat);
 
-      remap(avb.stateId(), stateRemapper_p);
       msc_p->stateId().putColumnCells(rowstoadd, avb.stateId());
-
       msc_p->time().putColumnCells(rowstoadd, avb.time());
       msc_p->timeCentroid().putColumnCells(rowstoadd, avb.timeCentroid());
       msc_p->uvw().putColumnCells(rowstoadd, avb.uvwMat());

@@ -43,6 +43,7 @@ public:
         CorrType,
         Corrected,
         CorrectedCube,
+        DataDescriptionId,
         Direction1,
         Direction2,
         Exposure,

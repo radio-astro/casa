@@ -128,6 +128,7 @@ void VisBuffer::copyCoordInfo(const VisBuffer& other, Bool force)
 {
   // Just do the nominally non-row-dep values
   cacheCopyNormal(arrayIdOK_p, other.arrayIdOK(), arrayId_p, other, &VisBuffer::arrayId, force);
+  cacheCopyNormal(ddidOK_p, other.ddidOK(), ddid_p, other, &VisBuffer::dataDescriptionId, force);
   cacheCopyNormal(fieldIdOK_p, other.fieldIdOK(), fieldId_p, other, &VisBuffer::fieldId, force);
   cacheCopyNormal(spectralWindowOK_p, other.spectralWindowOK(), spectralWindow_p, other,
                   &VisBuffer::spectralWindow, force);
@@ -156,6 +157,7 @@ VisBuffer::copyCache (const VisBuffer & other, Bool force)
     cacheCopyArray  (correctedVisibilityOK_p, other.correctedVisibilityOK (),
                      correctedVisibility_p, other, & VisBuffer::correctedVisibility, force);
     cacheCopyArray  (corrTypeOK_p, other.corrTypeOK (), corrType_p, other, & VisBuffer::corrType, force);
+    cacheCopyNormal(ddidOK_p, other.ddidOK(), ddid_p, other, & VisBuffer::dataDescriptionId, force);
     cacheCopyArray  (direction1OK_p, other.direction1OK (), direction1_p, other, & VisBuffer::direction1, force);
     cacheCopyArray  (direction2OK_p, other.direction2OK (), direction2_p, other, & VisBuffer::direction2, force);
     cacheCopyArray  (exposureOK_p, other.exposureOK (), exposure_p, other, & VisBuffer::exposure, force);
@@ -394,6 +396,7 @@ VisBuffer::setAllCacheStatuses (bool status)
     correctedVisCubeOK_p = status;
     correctedVisibilityOK_p = status;
     corrTypeOK_p = status;
+    ddidOK_p = status;
     direction1OK_p = status;
     direction2OK_p = status;
     exposureOK_p  = status;
@@ -1642,6 +1645,7 @@ VisBuffer::updateCoordInfo(const VisBuffer * vb, const  Bool dirDependent )
     updateCoord (vb, vb->antenna1OK (), & VisBuffer::antenna1, antenna1_p, antenna1OK_p);
     updateCoord (vb, vb->antenna2OK (), & VisBuffer::antenna2, antenna2_p, antenna2OK_p);
     updateCoordS (vb, vb->arrayIdOK (), & VisBuffer::arrayId, arrayId_p, arrayIdOK_p);
+    updateCoordS (vb, vb->ddidOK(), & VisBuffer::dataDescriptionId, ddid_p, ddidOK_p);
     updateCoordS (vb, vb->fieldIdOK (), & VisBuffer::fieldId, fieldId_p, fieldIdOK_p);
     updateCoordS (vb, vb->spectralWindowOK (), & VisBuffer::spectralWindow, spectralWindow_p, spectralWindowOK_p);
     updateCoord (vb, vb->timeOK (), & VisBuffer::time, time_p, timeOK_p);
@@ -2124,6 +2128,14 @@ Int& VisBuffer::fillArrayId()
   return arrayId_p;
 }
 
+Int& VisBuffer::fillDDID()
+{
+  CheckVisIter ();
+  ddidOK_p = True;
+  ddid_p = visIter_p->dataDescriptionId();
+  return ddid_p;
+}
+
 Matrix<Bool>& VisBuffer::fillFlag()
 {
   CheckVisIter ();
@@ -2514,6 +2526,9 @@ Bool VisBuffer::fetch(const asyncio::PrefetchColumns *pfc)
     case VisBufferComponents::CorrectedCube:
       This->correctedVisCube();
       break;
+    case VisBufferComponents::DataDescriptionId:
+      This->dataDescriptionId();
+      break;
     case VisBufferComponents::Direction1:
       This->direction1();
       break;
@@ -2534,6 +2549,9 @@ Bool VisBuffer::fetch(const asyncio::PrefetchColumns *pfc)
       break;
     case VisBufferComponents::Feed2_pa:
       This->feed2_pa();
+      break;
+    case VisBufferComponents::FieldId:
+      This->fieldId();
       break;
     case VisBufferComponents::Flag:
       This->flag();

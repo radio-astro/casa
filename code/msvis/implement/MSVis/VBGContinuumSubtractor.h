@@ -85,6 +85,8 @@ public:
   // present.
   //
   VBGContinuumSubtractor(MeasurementSet& outms,
+                         MSColumns *msc,
+                         const VBRemapper& remapper,
                          const ROVisibilityIterator& invi,
                          const uInt fitorder=1,
                          const MS::PredefinedColumns datacols=MS::DATA,
@@ -123,8 +125,9 @@ private:
 
   String fitspw_p;      // Line-free channels used for the fit.  Can include ;
   String outspw_p;      // Channels to write out.  Does not yet support ;.
+  uInt   rowsdone_p;    // How many rows have been written so far.
+  std::set<Int> outspws_p;  // Spws to write out.
   
-  VisibilityIterator outvi_p;
   Bool doWS_p;                               // Is WEIGHT_SPECTRUM present?
   Bool doFC_p;                               // Is FLAG_CATEGORY present?
 

@@ -27,39 +27,49 @@
 
 #include <msvis/MSVis/VBGContinuumSubtractor.h>
 #include <msvis/MSVis/VBContinuumSubtractor.h>
+#include <msvis/MSVis/VBRemapper.h>
 #include <msvis/MSVis/SubMS.h>
 #include <msvis/MSVis/VisBufferComponents.h>
 #include <msvis/MSVis/VisBuffGroup.h>
 #include <msvis/MSVis/VisBuffGroupAcc.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
+#include <ms/MeasurementSets/MSSelection.h>
 
 namespace casa {
 
 VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
+                                               MSColumns *msc,
+                                               const VBRemapper& remapper,
                                                const ROVisibilityIterator& invi,
                                                const uInt fitorder,
                                                const MS::PredefinedColumns datacol,
                                                const String& fitspw,
                                                const String& outspw) :
-  GroupWriteToNewMS(outms),
+  GroupWriteToNewMS(outms, msc, remapper),
   fitorder_p(fitorder),
   datacol_p(datacol),
-  outspw_p(outspw)
+  outspw_p(outspw),
+  rowsdone_p(0)
 {
-  outvi_p = VisibilityIterator(outms, invi.getSortColumns(),
-                               False, invi.getInterval());
-  outvi_p.originChunks();
   doWS_p = invi.existsWeightSpectrum();
   doFC_p = invi.existsFlagCategory();
 
+  // Almost everything except the derived columns.
   prefetchColumns_p = asyncio::PrefetchColumns::prefetchColumns(
                                   VisBufferComponents::Ant1,
                                   VisBufferComponents::Ant2,
+                                  VisBufferComponents::ArrayId,
+                                  VisBufferComponents::DataDescriptionId,
+                                  VisBufferComponents::Exposure,
+                                  VisBufferComponents::Feed1,
+                                  VisBufferComponents::Feed2,
+                                  VisBufferComponents::FieldId,
                                   VisBufferComponents::FlagCube,
                                   VisBufferComponents::Flag,
                                   VisBufferComponents::FlagRow,
                                   VisBufferComponents::Freq,
+                                  VisBufferComponents::ObservationId,
 
                                   // The cube always gets used, even if its
                                   // contents aren't.
@@ -68,9 +78,16 @@ VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
                                   VisBufferComponents::NChannel,
                                   VisBufferComponents::NCorr,
                                   VisBufferComponents::NRow,
+                                  VisBufferComponents::ProcessorId,
+                                  VisBufferComponents::Scan,
                                   VisBufferComponents::SpW,
                                   VisBufferComponents::SigmaMat,
+                                  VisBufferComponents::StateId,
+                                  VisBufferComponents::Time,
+                                  VisBufferComponents::TimeCentroid,
+                                  VisBufferComponents::TimeInterval,
                                   VisBufferComponents::WeightMat,
+                                  VisBufferComponents::UvwMat,
                                   -1);
   if(datacol == MS::MODEL_DATA)
     prefetchColumns_p.insert(VisBufferComponents::ModelCube);
@@ -83,6 +100,15 @@ VBGContinuumSubtractor::VBGContinuumSubtractor(MeasurementSet& outms,
     prefetchColumns_p.insert(VisBufferComponents::FlagCategory);
 
   VisBuffGroupAcc::fillChanMask(fitmask_p, fitspw, invi.ms());
+
+  MSSelection mssel;
+  mssel.setSpwExpr(outspw);
+  Matrix<Int> chansel = mssel.getChanList(&invi.ms(), 1);
+  Vector<Int> spws(chansel.column(0));
+  uInt nselspws = spws.nelements();
+
+  for(uInt i = 0; i < nselspws; ++i)
+    outspws_p.insert(spws[i]);
 }
 
 VBGContinuumSubtractor::~VBGContinuumSubtractor()
@@ -159,51 +185,37 @@ Bool VBGContinuumSubtractor::process(VisBuffGroup& vbg)
   // datacol_p is in DATA now.
   vbcs.fit(vbga, fitorder_p, MS::DATA, coeffs_p, coeffsOK_p, false, true, false);
 
-  Matrix<Float> wtmat;
-
-  outvi_p.origin();
+  //uInt oldrowsdone = rowsdone_p;
   for(uInt bufnum = 0; bufnum < nvbs; ++bufnum){
-    //vbg(bufnum).attachToVisIter(outvi_p);
-
     uInt spw = vbg(bufnum).spectralWindow();
-    
-    // datacol_p is in DATA now.  Is this repetitious?  Yes it is.
-    if(!vbcs.apply(vbg(bufnum), MS::DATA, coeffs_p, coeffsOK_p, true,
-                   appliedSpWs_p.count(spw) < 1)){
-      worked = false;
-      break;
+
+    if(outspws_p.find(spw) != outspws_p.end()){
+      // datacol_p is in DATA now.  Is this repetitious?  Yes it is.
+      if(!vbcs.apply(vbg(bufnum), MS::DATA, coeffs_p, coeffsOK_p, true,
+                     appliedSpWs_p.count(spw) < 1)){
+        worked = false;
+        break;
+      }
+      appliedSpWs_p.insert(spw);
+
+      // Use SIGMA like a storage place for corrected weights.
+      if(otherToData){
+        vbg(bufnum).sigmaMat() = vbg(bufnum).weightMat();
+        arrayTransformInPlace(vbg(bufnum).sigmaMat(), subms::wtToSigma);
+      }
+
+      rowsdone_p = GroupWriteToNewMS::write(outms_p, msc_p, vbg(bufnum),
+                                            rowsdone_p, remapper_p,
+                                            doFC_p,
+                                            False,      // for now
+                                            doWS_p);
+      //cerr << "Wrote out row IDs " << oldrowsdone << " - " << rowsdone_p - 1 << ",";
     }
-    appliedSpWs_p.insert(spw);
-
-    outvi_p.setFlag(vbg(bufnum).flagCube());
-    if(doFC_p)
-      outvi_p.setFlagCategory(vbg(bufnum).flagCategory());
-
-    wtmat.reference(vbg(bufnum).weightMat());
-    outvi_p.setWeightMat(wtmat);
-    if(otherToData)                             // Use SIGMA like a storage place
-      arrayTransformInPlace(wtmat,              // for corrected weights.
-                            subms::wtToSigma);
-    else                                        
-      wtmat.reference(vbg(bufnum).sigmaMat());          // Yes, I'm reusing wtmat.
-    outvi_p.setSigmaMat(wtmat);
-    if(doWS_p)
-      outvi_p.setWeightSpectrum(vbg(bufnum).weightSpectrum());
-
-    outvi_p.setVis(vbg(bufnum).visCube(), VisibilityIterator::Observed);
-
-    Vector<uInt> outrowids = outvi_p.getRowIds();
-    cerr << "out row IDs: " << outrowids[0] << " - " << outrowids[outrowids.nelements() - 1] << endl;
-
-    if(vbg.chunkEnd(bufnum))
-      if(outvi_p.moreChunks())
-        outvi_p.nextChunk();
-    else
-      if(outvi_p.more())
-        ++outvi_p;
+    //else
+    //  cerr << "No output for";
+    //cerr << " spw " << spw << endl;
+    //oldrowsdone = rowsdone_p;
   }
-  if(nvbs > 0 && !vbg.chunkEnd(nvbs - 1) && outvi_p.moreChunks())
-    outvi_p.nextChunk();
   
   return worked;
 }

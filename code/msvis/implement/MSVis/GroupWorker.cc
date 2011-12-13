@@ -27,6 +27,9 @@
 
 #include <msvis/MSVis/GroupWorker.h>
 #include <msvis/MSVis/VisBufferComponents.h>
+#include <msvis/MSVis/VisBuffer.h>
+#include <msvis/MSVis/VBRemapper.h>
+#include <ms/MeasurementSets/MSColumns.h>
 //#include <casa/Exceptions/Error.h>
 //#include <casa/Logging/LogIO.h>
 
@@ -49,9 +52,70 @@ GroupWorker::GroupWorker(VisibilityIterator& vi) :
 //   return *this;
 // }
 
-GroupWriteToNewMS::GroupWriteToNewMS(MeasurementSet& outms) :
-  outms_p(outms)
+GroupWriteToNewMS::GroupWriteToNewMS(MeasurementSet& outms, MSColumns *msc,
+                                     const VBRemapper& remapper) :
+  outms_p(outms),
+  msc_p(msc),
+  remapper_p(remapper),
+  rowsdone_p(0)
 {
+}
+
+uInt GroupWriteToNewMS::write(MeasurementSet& outms, MSColumns *msc, VisBuffer& vb,
+                              uInt rowsdone, const VBRemapper& remapper, const Bool doFC,
+                              const Bool doFloat, const Bool doSpWeight)
+{
+  uInt rowsnow = vb.nRow();
+  RefRows rowstoadd(rowsdone, rowsdone + rowsnow - 1);
+
+  outms.addRow(rowsnow);
+  remapper.remap(vb, rowsdone == 0);
+
+  msc->antenna1().putColumnCells(rowstoadd, vb.antenna1());
+  msc->antenna2().putColumnCells(rowstoadd, vb.antenna2());
+  Vector<Int> arrID(rowsnow);
+  arrID.set(vb.arrayId());
+  msc->arrayId().putColumnCells(rowstoadd, arrID);
+  msc->data().putColumnCells(rowstoadd, vb.visCube());
+  if(doFloat)
+    msc->floatData().putColumnCells(rowstoadd, vb.floatDataCube());
+
+  Vector<Int> ddID(rowsnow);
+  ddID.set(vb.dataDescriptionId());
+  msc->dataDescId().putColumnCells(rowstoadd, ddID);
+
+  msc->exposure().putColumnCells(rowstoadd, vb.exposure());
+  msc->feed1().putColumnCells(rowstoadd, vb.feed1());
+  msc->feed2().putColumnCells(rowstoadd, vb.feed2());
+
+  Vector<Int> fieldID(rowsnow);
+  fieldID.set(vb.fieldId());
+  msc->fieldId().putColumnCells(rowstoadd, fieldID);
+
+  msc->flagRow().putColumnCells(rowstoadd, vb.flagRow()); 
+  msc->flag().putColumnCells(rowstoadd, vb.flagCube());
+
+  if(doFC)
+    msc->flagCategory().putColumnCells(rowstoadd, vb.flagCategory());
+
+  msc->interval().putColumnCells(rowstoadd, vb.timeInterval());
+  msc->observationId().putColumnCells(rowstoadd, vb.observationId());
+  msc->processorId().putColumnCells(rowstoadd, vb.processorId());
+  msc->scanNumber().putColumnCells(rowstoadd, vb.scan());   // Don't remap!
+
+  if(doSpWeight)
+    msc->weightSpectrum().putColumnCells(rowstoadd, vb.weightSpectrum());
+  msc->weight().putColumnCells(rowstoadd, vb.weightMat());
+  msc->sigma().putColumnCells(rowstoadd, vb.sigmaMat());
+
+  msc->stateId().putColumnCells(rowstoadd, vb.stateId());
+  msc->time().putColumnCells(rowstoadd, vb.time());
+  msc->timeCentroid().putColumnCells(rowstoadd, vb.timeCentroid());
+  msc->uvw().putColumnCells(rowstoadd, vb.uvwMat());
+      
+  rowsdone += rowsnow;
+
+  return rowsdone;
 }
 
 } // end namespace casa

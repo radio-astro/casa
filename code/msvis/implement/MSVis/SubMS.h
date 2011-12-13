@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 //#include <msvis/MSVis/VisIterator.h>
+#include <msvis/MSVis/VisBufferComponents.h>
 #include <casa/aips.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -81,6 +82,7 @@ Double wtToSigma(Double wt);
 // be included in this .h file, but it's only worth it if a lot of other files
 // include this file.
 class MSSelection; // #include <ms/MeasurementSets/MSSelection.h>
+class VBRemapper;
 
   // These typedefs are necessary because a<b::c> doesn't work.
   typedef std::vector<uInt> uivector;
@@ -463,8 +465,17 @@ class SubMS
   Bool fillAllTables(const Vector<MS::PredefinedColumns>& colNames);
   Bool fillDDTables();		// Includes spw and pol.
   Bool fillFieldTable();
-  Bool fillMainTable(const Vector<MS::PredefinedColumns>& colNames);
-  Bool fillAverMainTable(const Vector<MS::PredefinedColumns>& colNames);
+  
+  // Used to be fillMainTable(colnames), but what distinguishes it from
+  // writeSomeMainRows(colnames) is that it is for cases where there is
+  // a 1-1 match between rows in mssel_p and msOut_p (including order).
+  Bool writeAllMainRows(const Vector<MS::PredefinedColumns>& colNames);
+
+  // Used to be fillAverMainTable(colnames), but what distinguishes it from
+  // writeAllMainRows(colnames) is that it is for cases where there is not
+  // necessarily a 1-1 match between rows in mssel_p and msOut_p.
+  Bool writeSomeMainRows(const Vector<MS::PredefinedColumns>& colNames);
+
   Bool copyAntenna();
   Bool copyFeed();
   Bool copyFlag_Cmd();
@@ -517,12 +528,13 @@ class SubMS
   Bool copyDataFlagsWtSp(const Vector<MS::PredefinedColumns>& colNames,
                          const Bool writeToDataCol);
 
-  // Like copyDataFlagsWtSp(), but it subtracts the continuum.
-  // Unlike copyDataFlagsWtSp, it infers writeToDataCol from
-  // colNames.nelements().  (subtractContinuum is intentionally not as general
-  // as copyDataFlagsWtSp.)
-  Bool subtractContinuum(const Vector<MS::PredefinedColumns>& colNames);
-
+  // Like doTimeAver(), but it subtracts the continuum instead of time
+  // averaging.  Unlike doTimeAver(), it infers writeToDataCol from
+  // colNames.nelements() (subtractContinuum is intentionally not as general as
+  // copyDataFlagsWtSp), and writes according to fitoutspw_p instead of spw_p.
+  Bool subtractContinuum(const Vector<MS::PredefinedColumns>& colNames,
+                         const VBRemapper& remapper);
+  
   // Helper function for parseColumnNames().  Converts col to a list of
   // MS::PredefinedColumnss, and returns the # of recognized data columns.
   // static because parseColumnNames() is static.
@@ -530,6 +542,9 @@ class SubMS
                                 Vector<MS::PredefinedColumns>& colvec);
     
   Bool doChannelMods(const Vector<MS::PredefinedColumns>& colNames);
+
+  void fill_vbmaps(std::map<VisBufferComponents::EnumType,
+                            std::map<Int, Int> >& vbmaps);
 
   // return the number of unique antennas selected
   //Int numOfBaselines(Vector<Int>& ant1, Vector<Int>& ant2,
@@ -550,14 +565,16 @@ class SubMS
 				     const Bool writeToDataCol);
 
   // Figures out the number, maximum, and index of the selected antennas.
-  uInt fillAntIndexer(const ROMSColumns *msc, Vector<Int>& antIndexer);
+  uInt fillAntIndexer(std::map<Int, Int>& antIndexer, const ROMSColumns *msc);
 
   // Read the input, time average it to timeBin_p, and write the output.
   // The first version uses VisibilityIterator (much faster), but the second
   // supports correlation selection using VisIterator.  VisIterator should be
   // sped up soon!
-  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames);
-  Bool doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames);
+  Bool doTimeAver(const Vector<MS::PredefinedColumns>& dataColNames,
+                  const VBRemapper& remapper);
+  Bool doTimeAverVisIterator(const Vector<MS::PredefinedColumns>& dataColNames,
+                  const VBRemapper& remapper);
 
   void getDataColMap(ArrayColumn<Complex>* mapper, uInt ntok,
                      const Vector<MS::PredefinedColumns>& colEnums)

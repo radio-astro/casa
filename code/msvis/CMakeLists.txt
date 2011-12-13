@@ -38,6 +38,7 @@ casa_add_library( msvis
   implement/MSVis/UtilJ.cc
   implement/MSVis/VBContinuumSubtractor.cc
   implement/MSVis/VBGContinuumSubtractor.cc
+  implement/MSVis/VBRemapper.cc
   implement/MSVis/VisBuffAccumulator.cc
   implement/MSVis/VisBuffer.cc
   implement/MSVis/VisBufferAsync.cc

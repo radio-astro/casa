@@ -29,8 +29,11 @@
 #define MSVIS_GROUPWORKER_H
 
 #include <casa/aips.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSColumns.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 #include <msvis/MSVis/VisBufferComponents.h>
+#include <msvis/MSVis/VBRemapper.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -159,16 +162,26 @@ private:
 class GroupWriteToNewMS : public ROGroupWorker 
 {
 public:
-  GroupWriteToNewMS(MeasurementSet& outms);
+  GroupWriteToNewMS(MeasurementSet& outms, MSColumns *msc,
+                    const VBRemapper& remapper);
 
   //GroupWriteToNewMS(GroupWriteToNewMS& other);
   virtual ~GroupWriteToNewMS() {}
 
+  // Writes vb to outms/msc, and returns the number of rows in outms afterwards.
+  // vb's ID columns may be remapped by remapper.
+  // rowsdone: How many rows have been done so far.
+  // doFC: do FLAG_CATEGORY?
+  // doFloat: do FLOAT_DATA?
+  // doSpWeight: do WEIGHT_SPECTRUM?
+  static uInt write(MeasurementSet& outms, MSColumns *msc, VisBuffer& vb,
+                    uInt rowsdone, const VBRemapper& remapper, const Bool doFC,
+                    const Bool doFloat, const Bool doSpWeight);
 protected:
-  // Writes vb to outms_p, and returns a success estimate.
-  Bool write(const VisBuffer& vb);
-
   MeasurementSet outms_p;
+  MSColumns      *msc_p;
+  VBRemapper     remapper_p;
+  uInt           rowsdone_p;  // how many rows have been written.
 
 private:
   // Disable default construction.
