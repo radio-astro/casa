@@ -2241,14 +2241,17 @@ Vector<Bool> ImageAnalysis::haslock() {
 	return rstat;
 }
 
-Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
-		Record& regionRec, const String& sMask, const Int nbins, const Vector<
-				Double>& includepix, const Bool gauss, const Bool cumu,
-		const Bool log, const Bool list, const String&,
-		const Int nx, const Int ny, const Vector<Int>& size, const Bool force,
-		const Bool disk) {
+Bool ImageAnalysis::histograms(
+	Record& histout, const Vector<Int>& axes,
+	Record& regionRec, const String& sMask, const Int nbins,
+	const Vector<Double>& includepix, const Bool gauss,
+	const Bool cumu, const Bool log, const Bool list,
+	const String&, const Int nx, const Int ny,
+	const Vector<Int>& size, const Bool force,
+	const Bool disk, const Bool extendMask
+) {
 
-	*itsLog << LogOrigin("ImageAnalysis", "histograms");
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
@@ -2256,14 +2259,13 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion, *pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&regionRec)),
-		sMask, itsLog, False
+		sMask, itsLog, False, AxesSpecifier(), extendMask
 	);
 
 	// Make new object only if we need to.
 	Bool forceNewStorage = force;
-	if (pHistograms_p != 0) {
-		if (oldHistStorageForce_p != disk)
-			forceNewStorage = True;
+	if (pHistograms_p != 0 && oldHistStorageForce_p != disk) {
+		forceNewStorage = True;
 	}
 	if (forceNewStorage) {
 		delete pHistograms_p;
@@ -2273,21 +2275,27 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 		delete pOldHistMaskRegion_p;
 		pOldHistMaskRegion_p = 0;
 		//
-		pHistograms_p = new ImageHistograms<Float> (subImage, *itsLog, True,
-				disk);
-	} else {
+		pHistograms_p = new ImageHistograms<Float> (
+			subImage, *itsLog, True, disk
+		);
+	}
+	else {
 		if (pHistograms_p == 0) {
 			// We are here if this is the first time or the image has changed
-			pHistograms_p = new ImageHistograms<Float> (subImage, *itsLog,
-					True, disk);
-		} else {
+			pHistograms_p = new ImageHistograms<Float> (
+				subImage, *itsLog, True, disk
+			);
+		}
+		else {
 			// We already have a histogram object.  We only have to set
 			// the new image (which will force the accumulation image
 			// to be recomputed) if the region has changed.  If the image itself
 			// changed, pHistograms_p will already have been set to 0
 			pHistograms_p->resetError();
-			if (haveRegionsChanged(pRegionRegion, pMaskRegion,
-					pOldHistRegionRegion_p, pOldHistMaskRegion_p)) {
+			if (
+				haveRegionsChanged(pRegionRegion, pMaskRegion,
+				pOldHistRegionRegion_p, pOldHistMaskRegion_p)
+			) {
 				pHistograms_p->setNewImage(subImage);
 			}
 		}
@@ -2316,8 +2324,9 @@ Bool ImageAnalysis::histograms(Record& histout, const Vector<Int>& axes,
 
 	// Set pixel include ranges
 	Vector<Float> tmpinclude(includepix.size());
-	for (uInt i = 0; i < includepix.size(); i++)
+	for (uInt i = 0; i < includepix.size(); i++) {
 		tmpinclude[i] = includepix[i];
+	}
 	if (!pHistograms_p->setIncludeRange(tmpinclude)) {
 		*itsLog << pHistograms_p->errorMessage() << LogIO::EXCEPTION;
 	}
