@@ -2083,11 +2083,12 @@ ImageAnalysis::getslice(const Vector<Double>& x, const Vector<Double>& y,
 	return outRec;
 }
 
-ImageInterface<Float> *
-ImageAnalysis::hanning(const String& outFile, Record& Region,
-		const String& mask, const Int axis, const Bool drop,
-		const Bool overwrite) {
-	*itsLog << LogOrigin("ImageAnalysis", "hanning");
+ImageInterface<Float>* ImageAnalysis::hanning(
+	const String& outFile, Record& Region,
+	const String& mask, const Int axis, const Bool drop,
+	const Bool overwrite, const Bool extendMask
+) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
 	// Validate outfile
 	if (!overwrite && !outFile.empty()) {
@@ -2119,12 +2120,13 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		pRegionRegion, pMaskRegion,
 		*pImage_p, *(ImageRegion::tweakedRegionRecord(&Region)), mask,
-		itsLog, False
+		itsLog, False, AxesSpecifier(), extendMask
 	);
 	IPosition blc(subImage.ndim(), 0);
 	if (pRegionRegion) {
 		LatticeRegion latRegion = pRegionRegion->toLatticeRegion(
-				pImage_p->coordinates(), pImage_p->shape());
+			pImage_p->coordinates(), pImage_p->shape()
+		);
 		blc = latRegion.slicer().start();
 	}
 	delete pRegionRegion;
@@ -2135,8 +2137,9 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 	IPosition outShape(inShape);
 	if (drop) {
 		outShape(iAxis) = inShape(iAxis) / 2;
-		if (inShape(iAxis) % 2 == 0)
+		if (inShape(iAxis) % 2 == 0) {
 			outShape(iAxis) = outShape(iAxis) - 1;
+		}
 	}
 	*itsLog << LogIO::NORMAL << "Output image shape = " << outShape
 			<< LogIO::POST;
@@ -2152,8 +2155,9 @@ ImageAnalysis::hanning(const String& outFile, Record& Region,
 		cInc(iAxis) = 2.0;
 		cBlc(iAxis) += 1.0;
 	}
-	CoordinateSystem cSys = pImage_p->coordinates().subImage(cBlc, cInc,
-			outShape.asVector());
+	CoordinateSystem cSys = pImage_p->coordinates().subImage(
+		cBlc, cInc, outShape.asVector()
+	);
 
 	// Make output image and mask if needed
 	PtrHolder<ImageInterface<Float> > imOut;
