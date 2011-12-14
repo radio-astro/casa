@@ -21,6 +21,8 @@ def task_statwt(vis):
             raise ValueError(vis + " does not have a data column")        
         
         myms.open(vis)
+        myms.statwt()
+        myms.close()
         
         
     except Exception, e:
