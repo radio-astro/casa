@@ -62,6 +62,8 @@
 #include <msvis/MSVis/VisBuffer.h>
 #include <msvis/MSVis/VisibilityIterator.h>
 
+#include <synthesis/MeasurementComponents/Utils.h>
+
 #include <synthesis/MeasurementComponents/PBMath1DAiry.h>
 #include <synthesis/MeasurementComponents/PBMath1DNumeric.h>
 #include <synthesis/MeasurementComponents/PBMath2DImage.h>
@@ -241,11 +243,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	support=max((antMath_p[ii])->support(coords), support);
       }
       support=Int(max(nx_p, ny_p)*2.0)/2;
-      convSize_p=support*convSampling;
-      CompositeNumber cn(convSize_p);
-      convSize_p=cn.nearestEven(convSize_p);
-      //cerr << "CONVSIZE " << convSize_p << endl;
       convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSampling;
+      // Make this a nice composite number, to speed up FFTs
+      CompositeNumber cn(uInt(convSize_p*2.0));    
+      convSize_p  = cn.nextLargerEven(Int(convSize_p));
+      //cout << "convSize : " << convSize_p << endl;
+
     }
     
     
@@ -338,7 +341,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	  LatticeFFT::cfft2d(pBScreen);
 	  LatticeFFT::cfft2d(pB2Screen);
-	
 
 	  Int plane=0;
 	  for (uInt jj=0; jj < k; ++jj)

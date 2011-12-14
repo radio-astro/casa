@@ -64,6 +64,8 @@
 #include <synthesis/MeasurementComponents/SimplePBConvFunc.h>
 #include <synthesis/MeasurementComponents/SkyJones.h>
 
+#include <casa/Utilities/CompositeNumber.h>
+
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -222,6 +224,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(!doneMainConv_p){
       //convSize_p=4*(sj_p->support(vb, coords));
       convSize_p=Int(max(nx_p, ny_p)*2.0)/2*convSampling;
+      // Make this a nice composite number, to speed up FFTs
+      CompositeNumber cn(uInt(convSize_p*2.0));    
+      convSize_p  = cn.nextLargerEven(Int(convSize_p));
+      //cout << "convSize : " << convSize_p << endl;
+
     }
     
    
