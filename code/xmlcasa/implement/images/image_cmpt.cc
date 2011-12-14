@@ -1662,27 +1662,32 @@ std::vector<bool> image::haslock() {
 	return rstat;
 }
 
-bool image::histograms(::casac::record& histout, const std::vector<int>& axes,
-		const ::casac::record& region, const ::casac::variant& mask,
-		const int nbins, const std::vector<double>& includepix,
-		const bool gauss, const bool cumu, const bool log, const bool list,
-		const std::string& plotter, const int nx, const int ny,
-		const std::vector<int>& size, const bool force, const bool disk,
-		const bool /* async */) {
-	bool rstat(false);
+bool image::histograms(
+	::casac::record& histout, const vector<int>& axes,
+	const ::casac::record& region, const ::casac::variant& mask,
+	const int nbins, const vector<double>& includepix,
+	const bool gauss, const bool cumu, const bool log, const bool list,
+	const string& plotter, const int nx, const int ny,
+	const vector<int>& size, const bool force, const bool disk,
+	const bool /* async */, bool stretch
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	if (detached()) {
+		return false;
+	}
 	try {
-		*_log << LogOrigin("image", "histograms");
-		if (detached())
-			return rstat;
-
-		Record *regionRec = toRecord(region);
+		std::auto_ptr<Record> regionRec(toRecord(region));
 		String Mask;
 		if (mask.type() == ::casac::variant::BOOLVEC) {
 			Mask = "";
-		} else if (mask.type() == ::casac::variant::STRING || mask.type()
-				== ::casac::variant::STRINGVEC) {
+		}
+		else if (
+			mask.type() == ::casac::variant::STRING
+			|| mask.type() == ::casac::variant::STRINGVEC
+		) {
 			Mask = mask.toString();
-		} else {
+		}
+		else {
 			*_log << LogIO::WARN
 					<< "Only LEL string handled for mask...region is yet to come"
 					<< LogIO::POST;
@@ -1699,22 +1704,20 @@ bool image::histograms(::casac::record& histout, const std::vector<int>& axes,
 			includePix.resize(includepix.size());
 			includePix = Vector<Double> (includepix);
 		}
-		_image->histograms(retval, naxes, *regionRec, Mask, nbins, includePix,
-				gauss, cumu, log, list, plotter, nx, ny, Vector<Int> (size),
-				force, disk);
+		_image->histograms(
+			retval, naxes, *regionRec, Mask, nbins, includePix,
+			gauss, cumu, log, list, plotter, nx, ny,
+			Vector<Int> (size), force, disk, stretch
+		);
 
-		delete regionRec;
-		casac::record *tmp = fromRecord(retval); // memory leak???
+		std::auto_ptr<casac::record> tmp(fromRecord(retval));
 		histout = *tmp;
-		//  Cleanup
-		delete tmp;
-		rstat = true;
+		return true;
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::vector<std::string> image::history(const bool list, const bool browse) {
