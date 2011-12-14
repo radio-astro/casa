@@ -1615,32 +1615,35 @@ image::getslice(const std::vector<double>& x, const std::vector<double>& y,
 	return rstat;
 }
 
-::casac::image *
-image::hanning(const std::string& outFile, const ::casac::record& region,
-		const ::casac::variant& vmask, const int axis, const bool drop,
-		const bool overwrite, const bool /* async */) {
-	::casac::image *rstat = 0;
+::casac::image* image::hanning(
+	const string& outFile, const ::casac::record& region,
+	const ::casac::variant& vmask, const int axis, const bool drop,
+	const bool overwrite, const bool /* async */, const bool stretch
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	if (detached()) {
+		return 0;
+	}
 	try {
-		*_log << LogOrigin("image", "hanning");
-		if (detached())
-			return rstat;
-
 		Record *Region = toRecord(region);
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
+		}
 
-		ImageInterface<Float> * pImOut = _image->hanning(outFile, *Region,
-				mask, axis, drop, overwrite);
+		std::auto_ptr<ImageInterface<Float> > pImOut(
+			_image->hanning(
+				outFile, *Region, mask, axis, drop,
+				overwrite, stretch
+			)
+		);
 		// Return handle to new file
-		rstat = new ::casac::image(pImOut);
-		delete pImOut;
+		return new image(pImOut.get());
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
-				<< LogIO::POST;
+			<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 std::vector<bool> image::haslock() {

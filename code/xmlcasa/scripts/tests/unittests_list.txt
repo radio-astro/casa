@@ -28,6 +28,7 @@ test_ia_convolve2d              dmehring@nrao.edu
 test_ia_decompose               dmehring@nrao.edu
 test_ia_fft                     dmehring@nrao.edu
 test_ia_getregion               dmehring@nrao.edu
+test_ia_hanning                 dmehring@nrao.edu
 test_ia_isconform               dmehring@nrao.edu
 test_ia_subimage                dmehring@nrao.edu
 test_imcollapse                 dmehring@nrao.edu
