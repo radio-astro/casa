@@ -1873,32 +1873,32 @@ image::miscinfo() {
 	return rstat;
 }
 
-bool image::modify(const ::casac::record& model, const ::casac::record& region,
-		const ::casac::variant& vmask, const bool subtract, const bool list,
-		const bool /* async */) {
-	bool rstat(false);
+bool image::modify(
+	const ::casac::record& model, const ::casac::record& region,
+	const ::casac::variant& vmask, const bool subtract, const bool list,
+	const bool /* async */, bool stretch
+) {
+	*_log << LogOrigin(_class, __FUNCTION__);
+	if (detached()) {
+		return false;
+	}
 	try {
-		*_log << LogOrigin("image", "modify");
-		if (detached())
-			return rstat;
-
-		//
 		String error;
-		Record *Model = toRecord(model);
-		Record *Region = toRecord(region);
+		std::auto_ptr<Record> Model(toRecord(model));
+		std::auto_ptr<Record> Region(toRecord(region));
 		String mask = vmask.toString();
-		if (mask == "[]")
+		if (mask == "[]") {
 			mask = "";
-
-		rstat = _image->modify(*Model, *Region, mask, subtract, list);
-		delete Region;
-		delete Model;
+		}
+		return _image->modify(
+			*Model, *Region, mask, subtract,
+			list, stretch
+		);
 	} catch (AipsError x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
 	}
-	return rstat;
 }
 
 ::casac::record*
