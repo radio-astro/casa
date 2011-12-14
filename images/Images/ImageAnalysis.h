@@ -254,10 +254,13 @@ class ImageAnalysis
                      const Vector<Int>& axes, const Vector<Int>& coord, 
                      const Int npts = 0, const String& method = "linear");
 
-    ImageInterface<Float> * hanning(const String& outfile, Record& region, 
-                                    const String& mask, const Int axis = -10, 
-                                    const Bool drop = True, 
-                                    const bool overwrite = False);
+    ImageInterface<Float>* hanning(
+    	const String& outfile, Record& region,
+        const String& mask, const Int axis=-10,
+        const Bool drop=True,
+        const bool overwrite=False,
+        const Bool extendMask=True
+    );
 
     Vector<Bool> haslock();
 
