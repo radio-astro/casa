@@ -944,6 +944,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	MFrequency nomFreq;
 	AntennaResponses::FuncTypes fType;
 	MVAngle rotAngOffset;
+
+	// construct a proper MFrequency 
+	MFrequency::Types fromFrameType;
+	MFrequency::getType(fromFrameType, freq.getRefString());
+	MPosition obsPos;
+	MFrequency::Ref fromFrame;
+	MFrequency mFreq = freq;
+	if(fromFrameType!=MFrequency::TOPO){
+	  if(!MeasTable::Observatory(obsPos,telescope)){
+	    os << LogIO::SEVERE << "\"" << telescope << "\" is not listed in the Observatories table."
+	       << LogIO::POST;
+	    return False;
+	  }
+	  fromFrame = MFrequency::Ref(fromFrameType, MeasFrame(obsdirection, obsPos, obstime));
+	  mFreq = MFrequency(freq.get(Unit("Hz")), fromFrame);
+	} 
+
 	
 	if(!aR_p.getImageName(functionImageName, // the path to the image
 			      funcChannel, // the channel to use in the image  
@@ -953,7 +970,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      /////////////////////
 			      telescope,
 			      obstime,
-			      freq,
+			      mFreq,
 			      AntennaResponses::ANY, // the requested function type
 			      antennatype,
 			      obsdirection)
@@ -1018,8 +1035,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	case AntennaResponses::INTERNAL: // the function is generated using the BeamCalc class
 	  {
 	    String antRayPath = functionImageName;
+
+	    Double refFreqHz = 0.; // the TOPO ref freq in Hz
+
+	    // determine TOPO reference frequency
+	    if(fromFrameType!=MFrequency::TOPO){
+	      MFrequency::Ref toFrame = MFrequency::Ref(MFrequency::TOPO, MeasFrame(obsdirection, obsPos, obstime));
+	      MFrequency::Convert freqTrans(uHz, fromFrame, toFrame);
+	      refFreqHz = freqTrans(mFreq.get(uHz).getValue()).get(uHz).getValue();
+	      cout << "old freq " << mFreq.get(uHz).getValue() << ", new freq " << refFreqHz << endl;
+	    }
+	    else{
+	      refFreqHz = mFreq.get(uHz).getValue();
+	    }
+
 	    String beamCalcedImagePath = "./BeamCalcTmpImage_"+telescope+"_"+antennatype+"_"
-	      +String::toString(freq.get(Unit("MHz")).getValue())+"MHz";
+	      +String::toString(refFreqHz/1E6)+"MHz";
 	  
 	    // calculate the beam
 	    
@@ -1036,21 +1067,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Directory f(beamCalcedImagePath);
 		if(f.exists()){
 		  os << LogIO::NORMAL << "Will re-use VP image \"" << beamCalcedImagePath << "\"" << LogIO::POST;
-		  //f.removeRecursive();
 		}
 		else{
 		  CoordinateSystem coordsys;
 	      
-		  Double refFreq = freq.get(uHz).getValue();
-
 		  // DirectionCoordinate
 		  Matrix<Double> xform(2,2);                                    
 		  xform = 0.0; xform.diagonal() = 1.0;                          
 		  DirectionCoordinate dirCoords(MDirection::AZELGEO,                  
 						Projection(Projection::SIN),        
 						0.0, 0.0,
-						0.5*C::pi/180.0/3600.0 * 5E11/refFreq, 
-						0.5*C::pi/180.0/3600.0 * 5E11/refFreq,        
+						-0.5*C::pi/180.0/3600.0 * 5E11/refFreqHz, 
+						0.5*C::pi/180.0/3600.0 * 5E11/refFreqHz,        
 						xform,                              
 						127.5, 127.5);  // (256-1)/2.
 		  Vector<String> units(2); 
@@ -1066,11 +1094,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  StokesCoordinate stokesCoords(stoks);	
 		  
 		  // SpectralCoordinate
-		  SpectralCoordinate spectralCoords(MFrequency::castType(freq.myType()),           
-						    refFreq,                 
+		  SpectralCoordinate spectralCoords(MFrequency::TOPO,           
+						    refFreqHz,                 
 						    1.0E+3, // dummy increment                  
 						    0,                             
-						    refFreq);          
+						    refFreqHz);          
 		  units.resize(1);
 		  units = "Hz";
 		  spectralCoords.setWorldAxisUnits(units);
@@ -1082,14 +1110,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  TiledShape ts(IPosition(4,256,256,4,1));
 		  PagedImage<Complex> im(ts, coordsys, beamCalcedImagePath);
 		  im.set(Complex(1.0,1.0));
+		  // set XY and YX to zero
+		  IPosition windowShape(4,im.shape()(0), im.shape()(1), 1, im.shape()(3));
+		  LatticeStepper stepper(im.shape(), windowShape);
+		  LatticeIterator<Complex> it(im, stepper);
+		  Int planeNumber = 0;
+		  for (it.reset(); !it.atEnd(); it++) {
+		    if(planeNumber==1 || planeNumber==2){
+		      it.woCursor() = Complex(0.,0.);
+		    }
+		    planeNumber++;
+		  }
+		  
+		  // perform the ray tracing
 		  ALMACalcIlluminationConvFunc almaPB;
 		  Long cachesize=(HostInfo::memoryTotal(True)/8)*1024;
 		  almaPB.setMaximumCacheSize(cachesize);
-		  almaPB.applyPB(im, telescope, obstime, antennatype, antennatype, freq.get(uHz));
+		  almaPB.setAntRayPath(antRayPath);
+		  almaPB.applyPB(im, telescope, obstime, antennatype, antennatype, 
+				 MVFrequency(refFreqHz), 
+				 rotAngOffset.radian(), // the parallactic angle offset
+				 True); // doSquint
 		} // endif exists
 	      } catch (AipsError x) {
 		os << LogIO::SEVERE
-		   << "BeamCalc failed."
+		   << "BeamCalc failed with message " << endl
+		   << "   " << x.getMesg()
 		   << LogIO::POST;
 		return False;
 	      }
@@ -1103,7 +1149,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      rec.define("compleximage", beamCalcedImagePath);
 	      rec.define("channel", 0);
 	      rec.define("antennatype", antennatype);
-	      rec.define("reffreq", freq.get(uHz).getValue());
+	      rec.define("reffreq", refFreqHz);
 	      rval = True;
 	    }
 	  }

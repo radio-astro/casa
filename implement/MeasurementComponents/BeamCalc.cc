@@ -102,10 +102,50 @@ namespace casa{
     
     AntennaResponses aR;
     String antRespPath;
+    String antRayPath = otherAntRayPath;
+
+    Bool useInternal = False;
+
+    os <<  LogIO::NORMAL << "Initialisation of geometries for observatory " << obsName_p 
+       << ", antenna type " << antType_p << LogIO::POST;
 
     if(otherAntRayPath.empty()){
       if(!MeasTable::AntennaResponsesPath(antRespPath, obsName_p)) {
-	// unknown observatory
+	useInternal = True;
+      }
+      else{
+	if(!aR.init(antRespPath)){
+	  // init failed
+	  String mesg="Initialisation of antenna response parameters for observatory "
+	    +obsName_p+" failed using path "+antRespPath;
+	  SynthesisError err(mesg);
+	  throw(err);
+	}
+	uInt respImageChannel;
+	MFrequency respImageNomFreq;
+	AntennaResponses::FuncTypes respImageFType;
+	MVAngle respImageRotOffset;
+    
+	if(!aR.getImageName(antRayPath,
+			    respImageChannel,
+			    respImageNomFreq,
+			    respImageFType,
+			    respImageRotOffset,
+			    //
+			    obsName_p,
+			    obsTime_p,
+			    MFrequency(Quantity(0.,Unit("Hz")), MFrequency::TOPO), // any frequency
+			    AntennaResponses::INTERNAL,
+			    antType_p
+			    )
+	   ){ // no matching response found
+	  os <<  LogIO::NORMAL << "No matching antenna response found for observatory "
+	     << obsName_p  << LogIO::POST;
+	  useInternal = True;
+	}
+      }
+
+      if(useInternal){
 	const char *sep=" ";
 	char *aipsPath = strtok(getenv("CASAPATH"),sep);
 	if (aipsPath == NULL)
@@ -124,7 +164,6 @@ namespace casa{
 	    bandMaxFreq_p[i] = VLABandMaxFreqDefaults[i]; 
 	  }
 	  antRespPath_p = fullFileName + "/data/nrao/VLA";
-	  return;
 	}
 	else if(obsName_p=="EVLA" && antType_p=="STANDARD"){
 	  os <<  LogIO::NORMAL << "Will use default geometries for EVLA STANDARD." << LogIO::POST;
@@ -138,7 +177,6 @@ namespace casa{
 	    bandMaxFreq_p[i] = EVLABandMaxFreqDefaults[i]; 
 	  }
 	  antRespPath_p = fullFileName + "/data/nrao/VLA";
-	  return;
 	}
 	else if(obsName_p=="ALMA" && (antType_p=="DA" || antType_p=="DV" || antType_p=="PM")){
 	  os <<  LogIO::NORMAL << "Will use default geometries for ALMA DA, DV, and PM." << LogIO::POST;
@@ -154,8 +192,7 @@ namespace casa{
 	    bandMinFreq_p[i] = ALMABandMinFreqDefaults[i]; 
 	    bandMaxFreq_p[i] = ALMABandMaxFreqDefaults[i]; 
 	  }
-	  antRespPath_p = fullFileName + "/data/alma";
-	  return;
+	  antRespPath_p = fullFileName + "/data/alma/responses";
 	}
 	else{
 	  String mesg="We don't have any antenna ray tracing parameters available for observatory "
@@ -163,47 +200,11 @@ namespace casa{
 	  SynthesisError err(mesg);
 	  throw(err);
 	}
-      }
-      else if(!aR.init(antRespPath)){
-	// init failed
-	String mesg="Initialisation of antenna response parameters for observatory "+obsName_p+" failed using path "+antRespPath;
-	SynthesisError err(mesg);
-	throw(err);
-      }
+	return;  
+      } // end if(useInternal)
     }
     
     
-    os <<  LogIO::NORMAL << "Initialisation of geometries for observatory " << obsName_p 
-       << ", antenna type " << antType_p << LogIO::POST;
-
-    String antRayPath = otherAntRayPath;
-
-    if(otherAntRayPath.empty()){
-      uInt respImageChannel;
-      MFrequency respImageNomFreq;
-      AntennaResponses::FuncTypes respImageFType;
-      MVAngle respImageRotOffset;
-    
-      if(!aR.getImageName(antRayPath,
-			  respImageChannel,
-			  respImageNomFreq,
-			  respImageFType,
-			  respImageRotOffset,
-			  //
-			  obsName_p,
-			  obsTime_p,
-			  MFrequency(Quantity(0.,Unit("Hz")), MFrequency::TOPO), // any frequency
-			  AntennaResponses::INTERNAL,
-			  antType_p
-			  )
-	 ){ // no matching response found
-	ostringstream oss;
-	oss << "No matching antenna response found for observatory "
-	    << obsName_p;
-	throw(SynthesisError(oss.str()));
-      }
-    }
-
     os <<  LogIO::NORMAL << "from file " << antRayPath << endl;
     
     try {
@@ -272,7 +273,12 @@ namespace casa{
       throw(err);
     }
 
-    antRespPath_p = antRespPath;
+    if(antRespPath.empty()){ // use containing directory of the antRayPath
+      antRespPath_p = Path(antRayPath).dirName();
+    }
+    else{
+      antRespPath_p = Path(antRespPath).dirName();
+    }
 
     os <<  LogIO::NORMAL << "... successful." << LogIO::POST;
 
@@ -283,9 +289,10 @@ namespace casa{
   Int BeamCalc::getBandID(Double freq, // in Hz 
 			  const String& obsName,
 			  const String& antType,
-			  const MEpoch& obsTime){
+			  const MEpoch& obsTime,
+			  const String& otherAntRayPath){
 
-    setBeamCalcGeometries(obsName, antType, obsTime); 
+    setBeamCalcGeometries(obsName, antType, obsTime, otherAntRayPath); 
 
     for(Int i=0; i<BeamCalc_NumBandCodes_p; i++){
       if((bandMinFreq_p[i]<=freq)&&(freq<=bandMaxFreq_p[i])){

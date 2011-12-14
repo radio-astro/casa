@@ -54,6 +54,8 @@ namespace casa{
 
     void setBandID(Int bandID) {ap.band=(ALMABeamCalcBandCode)bandID;}
 
+    void setAntRayPath(const String& antRayPath) {otherAntRayPath_p = antRayPath;}
+
     void loadFromImage(String &fileName);
     void getIdealConvFunc(Array<Complex>& buf);
     void ftAperture(TempImage<Complex>& uvgrid);
@@ -108,6 +110,8 @@ namespace casa{
     //    Int getALMABandId(const Double& freq);
     virtual void prepareConvFunction(const VisBuffer& vb, CFStore& cfs){};
 
+    
+
   private:
     
     void fillPB(ImageInterface<Complex>& inImg, ImageInterface<Float>& outImg, Bool Square=False);
@@ -121,6 +125,7 @@ namespace casa{
 
     Bool haveCannedResponses;
 
+    String otherAntRayPath_p;
   };
 
 };

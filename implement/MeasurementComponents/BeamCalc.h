@@ -198,7 +198,8 @@ namespace casa
     Int getBandID(const Double freq, // in Hz 
 		  const String& obsname,
 		  const String& antennaType="STANDARD",
-		  const MEpoch& obsTime = MEpoch(Quantity(50000., "d")));  
+		  const MEpoch& obsTime = MEpoch(Quantity(50000., "d")),
+		  const String& otherAntRayPath=""); // override the AntennaResponses Table in Observatories 
 
     Int calculateAperture(ApertureCalcParams *ap);
 

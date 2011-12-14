@@ -133,22 +133,29 @@ int main()
       units = "Hz";
       spectralCoords3.setWorldAxisUnits(units);
       
+      ObsInfo myObsInfo;
+      myObsInfo.setTelescope("ALMA");
+
       // CoordinateSystem
       coordsys.addCoordinate(dirCoords);
       coordsys.addCoordinate(stokesCoordsBad);
       coordsys.addCoordinate(spectralCoords);
+      coordsys.setObsInfo(myObsInfo);
       
       coordsys3.addCoordinate(dirCoords);
       coordsys3.addCoordinate(stokesCoordsGood);
       coordsys3.addCoordinate(spectralCoords3);      
+      coordsys3.setObsInfo(myObsInfo);
 
       coordsys3Big.addCoordinate(dirCoordsBig);
       coordsys3Big.addCoordinate(stokesCoordsGood);
       coordsys3Big.addCoordinate(spectralCoords3);      
+      coordsys3Big.setObsInfo(myObsInfo);
 
       coordsys3Small.addCoordinate(dirCoordsSmall);
       coordsys3Small.addCoordinate(stokesCoordsGood);
       coordsys3Small.addCoordinate(spectralCoords3);      
+      coordsys3Small.setObsInfo(myObsInfo);
     }
     
     String name("tab1");
