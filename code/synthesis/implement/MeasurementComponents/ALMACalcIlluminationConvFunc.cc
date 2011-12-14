@@ -51,7 +51,9 @@ namespace casa{
   //
   //------------------------------------------------------------------------
   //
-  ALMACalcIlluminationConvFunc::ALMACalcIlluminationConvFunc():IlluminationConvFunc()
+  ALMACalcIlluminationConvFunc::ALMACalcIlluminationConvFunc():
+    IlluminationConvFunc(),
+    otherAntRayPath_p("")
   {
     ap.oversamp = 3;
     ap.x0=-6.5; ap.y0=-6.5;
@@ -101,7 +103,7 @@ namespace casa{
     MVFrequency freqQ(vb.msColumns().spectralWindow().refFrequencyQuant()(0));
     MEpoch obsTime(vb.msColumns().timeQuant()(0));
     String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime);
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime, otherAntRayPath_p);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage);
@@ -122,7 +124,7 @@ namespace casa{
     String antType = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[0]); // take the first antenna
     String antType2 = ALMAAperture::antTypeStrFromType(ALMAAperture::antennaTypesFromCFKey(cfKey)[1]); // take the first antenna
     cout << "cfkey, type1, type2 " << cfKey << " " << antType << " " << antType2 << endl;
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime);
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), "ALMA", antType, obsTime, otherAntRayPath_p);
 
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID);
     pbImage.setCoordinateInfo(skyCS);
@@ -141,7 +143,7 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
 
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime);
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime, otherAntRayPath_p);
     // antType1 ignored for the moment
     regridAperture(skyCS, skyShape, uvGrid, telescope, freqQ, pa, doSquint, bandID);
     fillPB(*(ap.aperture),pbImage);
@@ -159,7 +161,7 @@ namespace casa{
     TempImage<Complex> uvGrid;
     if (maximumCacheSize() > 0) uvGrid.setMaximumCacheSize(maximumCacheSize());
 
-    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime);
+    Int bandID = BeamCalc::Instance()->getBandID(freqQ.getValue(), telescope, antType0, obsTime, otherAntRayPath_p);
     // antType1 ignored for the moment
     regridAperture(skyCS, skyShape, uvGrid, telescope, freqQ, pa, doSquint, bandID);
     pbImage.setCoordinateInfo(skyCS);

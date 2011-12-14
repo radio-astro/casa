@@ -136,7 +136,7 @@ class vpmanager_test(unittest.TestCase):
         vp.reset()
         os.system('rm -rf BeamCalcTmpImage_*')
         vp.setpbantresptable(telescope='ALMA',
-                             antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses',
+                             antresppath=casa['dirs']['data']+'/alma/responses/AntennaResponses-ALMA-RT',
                              dopb=True)
         myrec = vp.getvp(telescope='ALMA',
                          obstime = '2009/07/24/10:00:00',
@@ -262,8 +262,8 @@ class vpmanager_test(unittest.TestCase):
         self.assertFalse(self.res)
 
     def test16(self):
-        '''Test 16: get image name (fails if AntennaResponses table not in repository)'''
-        self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","DV","0deg","0deg","",0)
+        '''Test 16: get image name (fails if AntennaResponses-ALMA table not in repository)'''
+        self.res = vp.getrespimagename("ALMA","2011/01/01/10:00","100GHz","INTERNAL","CM","0deg","0deg","",0)
         self.assertTrue(self.res)
 
     
