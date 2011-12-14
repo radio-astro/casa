@@ -2664,11 +2664,11 @@ Record ImageAnalysis::miscinfo() {
 	return tmp;
 }
 
-Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
-		const Bool subtract, const Bool list) {
-	*itsLog << LogOrigin("ImageAnalysis", "modify");
+Bool ImageAnalysis::modify(
+	Record& Model, Record& Region, const String& mask,
+	const Bool subtract, const Bool list, const Bool extendMask) {
+	*itsLog << LogOrigin("ImageAnalysis", __FUNCTION__);
 
-	//
 	String error;
 	ComponentList cL;
 	if (!cL.fromRecord(error, Model)) {
@@ -2679,10 +2679,10 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 	}
 	int nelem = cL.nelements();
 	Vector<SkyComponent> mod(nelem);
-	for (int i = 0; i < nelem; i++)
+	for (int i = 0; i < nelem; i++) {
 		mod[i] = cL.component(i);
+	}
 
-	//
 	const uInt n = mod.nelements();
 	if (n == 0) {
 		*itsLog << "There are no components in the model componentlist"
@@ -2692,7 +2692,7 @@ Bool ImageAnalysis::modify(Record& Model, Record& Region, const String& mask,
 	SubImage<Float> subImage = SubImage<Float>::createSubImage(
 		*pImage_p,
 		*(ImageRegion::tweakedRegionRecord(&Region)),
-		mask,  (list ? itsLog : 0), True
+		mask,  (list ? itsLog : 0), True, AxesSpecifier(), extendMask
 	);
 
 	// Allow for subtraction/addition

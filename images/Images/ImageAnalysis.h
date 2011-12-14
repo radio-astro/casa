@@ -292,8 +292,10 @@ class ImageAnalysis
 
     Record miscinfo();
 
-    Bool modify(Record& model, Record& region , const String& mask, 
-                const Bool subtract = True, const Bool list = True);
+    Bool modify(
+    	Record& model, Record& region , const String& mask,
+        const Bool subtract = True, const Bool list=True, const Bool extendMask=False
+    );
 
     Record maxfit(Record& region, const Bool point, const Int width = 5, 
                    const Bool negfind = False, const Bool list = True);
