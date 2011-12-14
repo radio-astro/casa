@@ -824,7 +824,7 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
   Double reFrequency=imageSpectralCoord.referenceValue()(0);
 
   Double reFreqScale = reFrequency/desiredFrequency;
-  //  os << "Desired frequency       = " << desiredFrequency << "Hz" << LogIO::POST;  
+  // os << "Desired frequency       = " << desiredFrequency << "Hz" << LogIO::POST;  
   //  os << "Real PB model frequency = " << reFrequency << "Hz" << LogIO::POST;  
   //  os << "Scaling real Jones image cell size by " << reFreqScale << LogIO::POST;
 
@@ -851,7 +851,11 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
   IPosition desiredShape(shape);
   desiredShape(2)=reJonesImage_p->shape()(2);
   desiredShape(3)=reJonesImage_p->shape()(3);
-
+  Int jonesdirectionindex=reJonesImage_p->coordinates().findCoordinate(Coordinate::DIRECTION);
+  Int imdirectionindex=coords.findCoordinate(Coordinate::DIRECTION);
+  DirectionCoordinate
+    imageDirectionCoord=coords.directionCoordinate(imdirectionindex);
+  imageDirectionCoord.setWorldAxisUnits(reJonesImage_p->coordinates().directionCoordinate(jonesdirectionindex).worldAxisUnits());
   // Now set the desired coordinates for the regridded Jones images
   // The desired coordinates should have the same direction axis
   // as the image to input image and the same stokes and frequency
@@ -861,11 +865,7 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
     if(reRegridJonesImage_p) delete reRegridJonesImage_p; reRegridJonesImage_p=0;
     if(imRegridJonesImage_p) delete imRegridJonesImage_p; imRegridJonesImage_p=0;
 
-    Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-    AlwaysAssert(directionIndex>=0, AipsError);
-    DirectionCoordinate
-      imageDirectionCoord=coords.directionCoordinate(directionIndex);
-
+    AlwaysAssert(imdirectionindex>=0, AipsError);
     Int spectralIndex=coords.findCoordinate(Coordinate::SPECTRAL);
     AlwaysAssert(spectralIndex>=0, AipsError);
     SpectralCoordinate
@@ -874,9 +874,8 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
     freq(0)=desiredFrequency;
     imageSpectralCoord.setReferenceValue(freq);
 
-     CoordinateSystem desiredCoords(reJonesImage_p->coordinates());
-    directionIndex=desiredCoords.findCoordinate(Coordinate::DIRECTION);
-    desiredCoords.replaceCoordinate(imageDirectionCoord, directionIndex);
+    CoordinateSystem desiredCoords(reJonesImage_p->coordinates());
+    desiredCoords.replaceCoordinate(imageDirectionCoord, jonesdirectionindex);
     desiredCoords.replaceCoordinate(imageSpectralCoord, spectralIndex);
     reRegridJonesImage_p = new TempImage<Float>(desiredShape,
 						desiredCoords);
@@ -899,12 +898,13 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
   // needed to rotate +pa in angle.
   CoordinateSystem originalReJonesCoords(reJonesImage_p->coordinates());
   {
-    Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-    AlwaysAssert(directionIndex>=0, AipsError);
+    AlwaysAssert(imdirectionindex>=0, AipsError);
     DirectionCoordinate
-      reJonesDirectionCoord=coords.directionCoordinate(directionIndex);
+      reJonesDirectionCoord=coords.directionCoordinate(imdirectionindex);
+    //////////////set the right units
+    reJonesDirectionCoord.setWorldAxisUnits(reJonesImage_p->coordinates().directionCoordinate(jonesdirectionindex).worldAxisUnits());
     // Set the reference value to the pointing center
-    reJonesDirectionCoord.setReferenceValue(pc.getAngle().getValue("rad"));
+    reJonesDirectionCoord.setReferenceValue(pc.getAngle().getValue(reJonesDirectionCoord.worldAxisUnits()(0)));
     // Set the xform for a rotation
     reJonesDirectionCoord.setLinearTransform(xform);
     // Set the increments correctly to the original values, scaled 
@@ -917,7 +917,7 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
 
     // Now reset the coordinates of the Real Jones image
     CoordinateSystem reJonesCoords(reJonesImage_p->coordinates());
-    reJonesCoords.replaceCoordinate(reJonesDirectionCoord, directionIndex);
+    reJonesCoords.replaceCoordinate(reJonesDirectionCoord, jonesdirectionindex);
     reJonesImage_p->setCoordinateInfo(reJonesCoords);
 
     if(0) {
@@ -929,12 +929,12 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
   }
 
   if(imJonesImage_p) {
-    Int directionIndex=coords.findCoordinate(Coordinate::DIRECTION);
-    AlwaysAssert(directionIndex>=0, AipsError);
+    AlwaysAssert(imdirectionindex>=0, AipsError);
     DirectionCoordinate
-      imJonesDirectionCoord=coords.directionCoordinate(directionIndex);
+      imJonesDirectionCoord=coords.directionCoordinate(imdirectionindex);
     // Set the reference value to the pointing center
-    imJonesDirectionCoord.setReferenceValue(pc.getAngle().getValue("rad"));
+    imJonesDirectionCoord.setWorldAxisUnits(imJonesImage_p->coordinates().directionCoordinate(jonesdirectionindex).worldAxisUnits());
+    imJonesDirectionCoord.setReferenceValue(pc.getAngle().getValue(imJonesDirectionCoord.worldAxisUnits()(0)));
     // Set the xform for a rotation
     imJonesDirectionCoord.setLinearTransform(xform);
     // Set the increments correctly to the original values
@@ -943,10 +943,9 @@ void PBMath2DImage::updateJones(const CoordinateSystem& coords,
     increments(0)=-increments(0);
     imJonesDirectionCoord.setIncrement(increments);
     imJonesDirectionCoord.setReferencePixel(*referencePixelImJones_p);
-
     // Now reset the coordinates of the Imag Jones image
     CoordinateSystem imJonesCoords(imJonesImage_p->coordinates());
-    imJonesCoords.replaceCoordinate(imJonesDirectionCoord, directionIndex);
+    imJonesCoords.replaceCoordinate(imJonesDirectionCoord, jonesdirectionindex);
     imJonesImage_p->setCoordinateInfo(imJonesCoords);
   }
 
